@@ -11,7 +11,6 @@ using mozilla::LayoutDeviceIntSize from "Units.h";
 namespace mozilla {
 namespace widget {
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PCompositorWidget
 {
   manager PCompositorBridge;

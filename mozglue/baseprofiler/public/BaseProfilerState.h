@@ -216,10 +216,7 @@ class MOZ_RAII AutoProfilerStats {
           "Record markers from all registered threads")                        \
                                                                                \
     MACRO(22, "unregisteredthreads", UnregisteredThreads,                      \
-          "Discover and profile unregistered threads -- beware: expensive!")   \
-                                                                               \
-    MACRO(23, "processcpu", ProcessCPU,                                        \
-          "Sample the CPU utilization of each process")
+          "Discover and profile unregistered threads -- beware: expensive!")
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

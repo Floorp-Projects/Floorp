@@ -51,7 +51,6 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
@@ -209,15 +208,11 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is called twice
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIDiscardableRunnable> doomed =
         do_QueryInterface(mWrappedRunnable);
     MOZ_ASSERT(doomed);  // We checked this earlier!
     doomed->OnDiscard();
-    return NS_OK;
+    return WorkerRunnable::Cancel();
   }
 };
 
@@ -928,7 +923,7 @@ class CancelingRunnable final : public Runnable {
 } /* anonymous namespace */
 
 nsString ComputeWorkerPrivateId() {
-  nsID uuid = nsID::GenerateUUID();
+  nsID uuid = nsContentUtils::GenerateUUID();
   return NSID_TrimBracketsUTF16(uuid);
 }
 
@@ -2426,7 +2421,7 @@ WorkerPrivate::ComputeAgentClusterIdAndCoop(WorkerPrivate* aParent,
     RefPtr<DocGroup> docGroup = doc->GetDocGroup();
 
     nsID agentClusterId =
-        docGroup ? docGroup->AgentClusterId() : nsID::GenerateUUID();
+        docGroup ? docGroup->AgentClusterId() : nsContentUtils::GenerateUUID();
 
     BrowsingContext* bc = aLoadInfo->mWindow->GetBrowsingContext();
     MOZ_DIAGNOSTIC_ASSERT(bc);
@@ -2435,7 +2430,7 @@ WorkerPrivate::ComputeAgentClusterIdAndCoop(WorkerPrivate* aParent,
 
   // If the window object was failed to be set into the WorkerLoadInfo, we
   // make the worker into another agent cluster group instead of failures.
-  return {nsID::GenerateUUID(), agentClusterCoop};
+  return {nsContentUtils::GenerateUUID(), agentClusterCoop};
 }
 
 // static
@@ -3070,22 +3065,9 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
           }
         }
 
-        // We do not need the timeouts any more, they have been canceled
-        // by NotifyInternal(Killing) above if they were active.
-        UnlinkTimeouts();
-
         // Unroot the globals
-        RefPtr<WorkerDebuggerGlobalScope> debugScope =
-            data->mDebuggerScope.forget();
-        RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
-        if (debugScope) {
-          MOZ_ASSERT(debugScope->mWorkerPrivate == this);
-          debugScope->mWorkerPrivate = nullptr;
-        }
-        if (scope) {
-          MOZ_ASSERT(scope->mWorkerPrivate == this);
-          scope->mWorkerPrivate = nullptr;
-        }
+        data->mScope = nullptr;
+        data->mDebuggerScope = nullptr;
 
         return;
       }
@@ -3852,7 +3834,7 @@ bool WorkerPrivate::ModifyBusyCountFromWorker(bool aIncrease) {
   return runnable->Dispatch();
 }
 
-bool WorkerPrivate::AddChildWorker(WorkerPrivate& aChildWorker) {
+bool WorkerPrivate::AddChildWorker(WorkerPrivate* aChildWorker) {
   auto data = mWorkerThreadAccessible.Access();
 
 #ifdef DEBUG
@@ -3867,20 +3849,20 @@ bool WorkerPrivate::AddChildWorker(WorkerPrivate& aChildWorker) {
   }
 #endif
 
-  NS_ASSERTION(!data->mChildWorkers.Contains(&aChildWorker),
+  NS_ASSERTION(!data->mChildWorkers.Contains(aChildWorker),
                "Already know about this one!");
-  data->mChildWorkers.AppendElement(&aChildWorker);
+  data->mChildWorkers.AppendElement(aChildWorker);
 
   return data->mChildWorkers.Length() == 1 ? ModifyBusyCountFromWorker(true)
                                            : true;
 }
 
-void WorkerPrivate::RemoveChildWorker(WorkerPrivate& aChildWorker) {
+void WorkerPrivate::RemoveChildWorker(WorkerPrivate* aChildWorker) {
   auto data = mWorkerThreadAccessible.Access();
 
-  NS_ASSERTION(data->mChildWorkers.Contains(&aChildWorker),
+  NS_ASSERTION(data->mChildWorkers.Contains(aChildWorker),
                "Didn't know about this one!");
-  data->mChildWorkers.RemoveElement(&aChildWorker);
+  data->mChildWorkers.RemoveElement(aChildWorker);
 
   if (data->mChildWorkers.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
     NS_WARNING("Failed to modify busy count!");
@@ -3950,7 +3932,7 @@ void WorkerPrivate::NotifyWorkerRefs(WorkerStatus aStatus) {
     workerRef->Notify();
   }
 
-  AutoTArray<CheckedUnsafePtr<WorkerPrivate>, 10> children;
+  AutoTArray<WorkerPrivate*, 10> children;
   children.AppendElements(data->mChildWorkers);
 
   for (uint32_t index = 0; index < children.Length(); index++) {
@@ -5287,14 +5269,15 @@ WorkerGlobalScope* WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx) {
   }
 
   if (IsSharedWorker()) {
-    data->mScope =
-        new SharedWorkerGlobalScope(this, CreateClientSource(), WorkerName());
+    data->mScope = new SharedWorkerGlobalScope(
+        WrapNotNull(this), CreateClientSource(), WorkerName());
   } else if (IsServiceWorker()) {
-    data->mScope = new ServiceWorkerGlobalScope(
-        this, CreateClientSource(), GetServiceWorkerRegistrationDescriptor());
+    data->mScope =
+        new ServiceWorkerGlobalScope(WrapNotNull(this), CreateClientSource(),
+                                     GetServiceWorkerRegistrationDescriptor());
   } else {
-    data->mScope = new DedicatedWorkerGlobalScope(this, CreateClientSource(),
-                                                  WorkerName());
+    data->mScope = new DedicatedWorkerGlobalScope(
+        WrapNotNull(this), CreateClientSource(), WorkerName());
   }
 
   JS::Rooted<JSObject*> global(aCx);
@@ -5323,7 +5306,7 @@ WorkerDebuggerGlobalScope* WorkerPrivate::CreateDebuggerGlobalScope(
       GetClientType(), HybridEventTarget(), NullPrincipalInfo());
 
   data->mDebuggerScope =
-      new WorkerDebuggerGlobalScope(this, std::move(clientSource));
+      new WorkerDebuggerGlobalScope(WrapNotNull(this), std::move(clientSource));
 
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(data->mDebuggerScope->WrapGlobalObject(aCx, &global), nullptr);

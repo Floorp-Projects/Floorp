@@ -28,8 +28,9 @@ class XULMenuitemAccessible : public AccessibleWrap {
   virtual uint64_t NativeInteractiveState() const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
   virtual KeyBinding AccessKey() const override;
   virtual KeyBinding KeyboardShortcut() const override;
 
@@ -56,7 +57,9 @@ class XULMenuSeparatorAccessible : public XULMenuitemAccessible {
   virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
  protected:
   // LocalAccessible

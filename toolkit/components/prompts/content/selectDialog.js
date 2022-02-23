@@ -61,7 +61,7 @@ function onLoad() {
   try {
     if (!args.openedWithTabDialog) {
       Cc["@mozilla.org/sound;1"]
-        .getService(Ci.nsISound)
+        .createInstance(Ci.nsISound)
         .playEventSound(Ci.nsISound.EVENT_SELECT_DIALOG_OPEN);
     }
   } catch (e) {}

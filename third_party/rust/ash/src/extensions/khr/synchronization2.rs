@@ -6,15 +6,31 @@ use std::mem;
 
 #[derive(Clone)]
 pub struct Synchronization2 {
-    fp: vk::KhrSynchronization2Fn,
+    handle: vk::Device,
+    synchronization2_fn: vk::KhrSynchronization2Fn,
 }
 
 impl Synchronization2 {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let fp = vk::KhrSynchronization2Fn::load(|name| unsafe {
+        let synchronization2_fn = vk::KhrSynchronization2Fn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { fp }
+        Self {
+            handle: device.handle(),
+            synchronization2_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrSynchronization2Fn::name()
+    }
+
+    pub fn fp(&self) -> &vk::KhrSynchronization2Fn {
+        &self.synchronization2_fn
+    }
+
+    pub fn device(&self) -> vk::Device {
+        self.handle
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPipelineBarrier2KHR.html>"]
@@ -23,7 +39,7 @@ impl Synchronization2 {
         command_buffer: vk::CommandBuffer,
         dependency_info: &vk::DependencyInfoKHR,
     ) {
-        self.fp
+        self.synchronization2_fn
             .cmd_pipeline_barrier2_khr(command_buffer, dependency_info)
     }
 
@@ -34,7 +50,7 @@ impl Synchronization2 {
         event: vk::Event,
         stage_mask: vk::PipelineStageFlags2KHR,
     ) {
-        self.fp
+        self.synchronization2_fn
             .cmd_reset_event2_khr(command_buffer, event, stage_mask)
     }
 
@@ -45,7 +61,7 @@ impl Synchronization2 {
         event: vk::Event,
         dependency_info: &vk::DependencyInfoKHR,
     ) {
-        self.fp
+        self.synchronization2_fn
             .cmd_set_event2_khr(command_buffer, event, dependency_info)
     }
 
@@ -57,7 +73,7 @@ impl Synchronization2 {
         dependency_infos: &[vk::DependencyInfoKHR],
     ) {
         assert_eq!(events.len(), dependency_infos.len());
-        self.fp.cmd_wait_events2_khr(
+        self.synchronization2_fn.cmd_wait_events2_khr(
             command_buffer,
             events.len() as u32,
             events.as_ptr(),
@@ -73,7 +89,7 @@ impl Synchronization2 {
         query_pool: vk::QueryPool,
         query: u32,
     ) {
-        self.fp
+        self.synchronization2_fn
             .cmd_write_timestamp2_khr(command_buffer, stage, query_pool, query)
     }
 
@@ -84,16 +100,8 @@ impl Synchronization2 {
         submits: &[vk::SubmitInfo2KHR],
         fence: vk::Fence,
     ) -> VkResult<()> {
-        self.fp
+        self.synchronization2_fn
             .queue_submit2_khr(queue, submits.len() as u32, submits.as_ptr(), fence)
             .result()
-    }
-
-    pub fn name() -> &'static CStr {
-        vk::KhrSynchronization2Fn::name()
-    }
-
-    pub fn fp(&self) -> &vk::KhrSynchronization2Fn {
-        &self.fp
     }
 }

@@ -9,6 +9,7 @@
 
 #include "base/process.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ipc/Transport.h"
 #include "nsTArrayForwardDeclare.h"
 
 #ifdef DEBUG
@@ -36,9 +37,7 @@ class ContentParent;
 
 namespace ipc {
 
-class BackgroundStarterParent;
 class PBackgroundParent;
-class PBackgroundStarterParent;
 
 template <class PFooSide>
 class Endpoint;
@@ -46,14 +45,14 @@ class Endpoint;
 // This class is not designed for public consumption beyond the few static
 // member functions.
 class BackgroundParent final {
-  friend class mozilla::ipc::BackgroundStarterParent;
   friend class mozilla::dom::ContentParent;
-  friend class mozilla::net::SocketProcessBridgeParent;
-  friend class mozilla::net::SocketProcessParent;
 
   typedef base::ProcessId ProcessId;
   typedef mozilla::dom::BlobImpl BlobImpl;
   typedef mozilla::dom::ContentParent ContentParent;
+  typedef mozilla::ipc::Transport Transport;
+  friend class mozilla::net::SocketProcessBridgeParent;
+  friend class mozilla::net::SocketProcessParent;
 
  public:
   // This function allows the caller to determine if the given parent actor
@@ -82,14 +81,17 @@ class BackgroundParent final {
 
   static uint64_t GetChildID(PBackgroundParent* aBackgroundActor);
 
+  static bool GetLiveActorArray(PBackgroundParent* aBackgroundActor,
+                                nsTArray<PBackgroundParent*>& aLiveActorArray);
+
  private:
   // Only called by ContentParent for cross-process actors.
-  static bool AllocStarter(ContentParent* aContent,
-                           Endpoint<PBackgroundStarterParent>&& aEndpoint);
+  static bool Alloc(ContentParent* aContent,
+                    Endpoint<PBackgroundParent>&& aEndpoint);
 
   // Called by SocketProcessBridgeParent and SocketProcessParent for
   // cross-process actors.
-  static bool AllocStarter(Endpoint<PBackgroundStarterParent>&& aEndpoint);
+  static bool Alloc(Endpoint<PBackgroundParent>&& aEndpoint);
 };
 
 // Implemented in BackgroundImpl.cpp.

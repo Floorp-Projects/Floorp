@@ -78,3 +78,4 @@ So the structure of the memory allocated on the JavaScript heap is an object con
 
 .. image:: monsters.svg
   :class: center
+

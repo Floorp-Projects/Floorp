@@ -874,14 +874,14 @@ bool BytecodeParser::parse() {
 
     uint32_t stackDepth = simulateOp(op, offset, offsetStack, code->stackDepth);
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#ifdef DEBUG
     if (isStackDump) {
       if (!code->captureOffsetStackAfter(alloc(), offsetStack, stackDepth)) {
         reportOOM();
         return false;
       }
     }
-#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
+#endif /* DEBUG */
 
     switch (op) {
       case JSOp::TableSwitch: {

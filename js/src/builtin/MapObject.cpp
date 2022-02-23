@@ -497,7 +497,8 @@ const JSPropertySpec MapObject::staticProperties[] = {
   // 23.1.3.12 Map.prototype[@@iterator]()
   // The initial value of the @@iterator property is the same function object
   // as the initial value of the "entries" property.
-  RootedId iteratorId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
+  RootedId iteratorId(
+      cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator)));
   return NativeDefineDataProperty(cx, nativeProto, iteratorId, entriesFn, 0);
 }
 
@@ -1296,7 +1297,8 @@ const JSPropertySpec SetObject::staticProperties[] = {
 
   // 23.2.3.11 Set.prototype[@@iterator]()
   // See above.
-  RootedId iteratorId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
+  RootedId iteratorId(
+      cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator)));
   return NativeDefineDataProperty(cx, nativeProto, iteratorId, valuesFn, 0);
 }
 

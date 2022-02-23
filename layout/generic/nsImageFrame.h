@@ -159,6 +159,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
       mozilla::layers::RenderRootStateManager*, nsDisplayListBuilder*,
       nsPoint aPt, uint32_t aFlags);
 
+  nsRect GetInnerArea() const;
+
   /**
    * Return a map element associated with this image.
    */
@@ -234,10 +236,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   bool IsServerImageMap();
 
-  // Translate a point that is relative to our frame into a localized CSS pixel
-  // coordinate that is relative to the content area of this frame (inside the
-  // border+padding).
-  mozilla::CSSIntPoint TranslateEventCoords(const nsPoint& aPoint);
+  void TranslateEventCoords(const nsPoint& aPoint, nsIntPoint& aResult);
 
   bool GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
                                   nsIContent** aNode);
@@ -373,11 +372,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
-
-  // The content-box size as if we are not fragmented, cached in the most recent
-  // reflow.
   nsSize mComputedSize;
-
   mozilla::IntrinsicSize mIntrinsicSize;
 
   // Stores mImage's intrinsic ratio, or a default AspectRatio if there's no
@@ -482,7 +477,9 @@ class nsDisplayImage final : public nsPaintedDisplayItem {
 
   nsRect GetBounds(bool* aSnap) const {
     *aSnap = true;
-    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
+
+    nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+    return imageFrame->GetInnerArea() + ToReferenceFrame();
   }
 
   nsRect GetBounds(nsDisplayListBuilder*, bool* aSnap) const final {

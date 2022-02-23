@@ -632,7 +632,6 @@ enum WebIDLProcType {
 #ifdef MOZ_ENABLE_FORKSERVER
  "forkServer",
 #endif
- "utility",
  "preallocated",
  "unknown",
 };

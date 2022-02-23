@@ -139,6 +139,8 @@ async function runTest(url, link, checkFunction, description) {
   await checkPromise;
   ok(true, description);
   BrowserTestUtils.removeTab(tab);
+
+  await SpecialPowers.popPrefEnv();
 }
 
 //Test description:
@@ -154,9 +156,5 @@ add_task(async function test_mixed_download() {
     () => Promise.all([shouldTriggerDownload(), shouldConsoleError()]),
     "Secure -> Insecure should Error"
   );
-  // remove downloaded file
-  let downloadsPromise = Downloads.getList(Downloads.PUBLIC);
-  let downloadList = await downloadsPromise;
-  let [download] = downloadList._downloads;
-  await downloadList.remove(download);
+  await SpecialPowers.popPrefEnv();
 });

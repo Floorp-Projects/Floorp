@@ -1,9 +1,7 @@
 from __future__ import absolute_import
-
-from email.errors import MultipartInvariantViolationDefect, StartBoundaryNotFoundDefect
+from ..packages.six.moves import http_client as httplib
 
 from ..exceptions import HeaderParsingError
-from ..packages.six.moves import http_client as httplib
 
 
 def is_fp_closed(obj):
@@ -44,7 +42,8 @@ def assert_header_parsing(headers):
 
     Only works on Python 3.
 
-    :param http.client.HTTPMessage headers: Headers to verify.
+    :param headers: Headers to verify.
+    :type headers: `httplib.HTTPMessage`.
 
     :raises urllib3.exceptions.HeaderParsingError:
         If parsing errors are found.
@@ -67,25 +66,6 @@ def assert_header_parsing(headers):
 
             if isinstance(payload, (bytes, str)):
                 unparsed_data = payload
-    if defects:
-        # httplib is assuming a response body is available
-        # when parsing headers even when httplib only sends
-        # header data to parse_headers() This results in
-        # defects on multipart responses in particular.
-        # See: https://github.com/urllib3/urllib3/issues/800
-
-        # So we ignore the following defects:
-        # - StartBoundaryNotFoundDefect:
-        #     The claimed start boundary was never found.
-        # - MultipartInvariantViolationDefect:
-        #     A message claimed to be a multipart but no subparts were found.
-        defects = [
-            defect
-            for defect in defects
-            if not isinstance(
-                defect, (StartBoundaryNotFoundDefect, MultipartInvariantViolationDefect)
-            )
-        ]
 
     if defects or unparsed_data:
         raise HeaderParsingError(defects=defects, unparsed_data=unparsed_data)
@@ -96,9 +76,8 @@ def is_response_to_head(response):
     Checks whether the request of a response has been a HEAD-request.
     Handles the quirks of AppEngine.
 
-    :param http.client.HTTPResponse response:
-        Response to check if the originating request
-        used 'HEAD' as a method.
+    :param conn:
+    :type conn: :class:`httplib.HTTPResponse`
     """
     # FIXME: Can we do this somehow without accessing private httplib _method?
     method = response._method

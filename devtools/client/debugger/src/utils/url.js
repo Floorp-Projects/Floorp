@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { memoize } from "lodash";
 import { URL as URLParser } from "whatwg-url";
 
 const defaultUrl = {
@@ -21,12 +22,7 @@ const defaultUrl = {
   username: "",
 };
 
-const stripQueryCache = new Map();
-export function stripQuery(url) {
-  if (stripQueryCache.has(url)) {
-    return stripQueryCache.get(url);
-  }
-
+export const stripQuery = memoize(function stripQueryAndHash(url) {
   let queryStart = url.indexOf("?");
 
   let before = url;
@@ -44,17 +40,10 @@ export function stripQuery(url) {
     before = url.slice(0, queryStart);
   }
 
-  const result = before + after;
-  stripQueryCache.set(url, result);
-  return result;
-}
+  return before + after;
+});
 
-const parseCache = new Map();
-export function parse(url) {
-  if (parseCache.has(url)) {
-    return parseCache.get(url);
-  }
-
+export const parse = memoize(function parse(url) {
   let urlObj;
   try {
     urlObj = new URLParser(url);
@@ -91,10 +80,8 @@ export function parse(url) {
   }
   urlObj.path = urlObj.pathname + urlObj.search;
 
-  // Cache the result
-  parseCache.set(url, urlObj);
   return urlObj;
-}
+});
 
 export function sameOrigin(firstUrl, secondUrl) {
   return parse(firstUrl).origin == parse(secondUrl).origin;

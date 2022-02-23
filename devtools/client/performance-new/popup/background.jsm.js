@@ -131,15 +131,7 @@ const presets = {
   "firefox-platform": {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: [
-      "screenshots",
-      "js",
-      "leaf",
-      "stackwalk",
-      "cpu",
-      "java",
-      "processcpu",
-    ],
+    features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -162,7 +154,7 @@ const presets = {
   graphics: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["leaf", "stackwalk", "js", "cpu", "java", "processcpu"],
+    features: ["leaf", "stackwalk", "js", "cpu", "java"],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -195,7 +187,6 @@ const presets = {
       "cpu",
       "audiocallbacktracing",
       "ipcmessages",
-      "processcpu",
     ],
     threads: [
       "cubeb",
@@ -234,15 +225,7 @@ const presets = {
   networking: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: [
-      "screenshots",
-      "js",
-      "leaf",
-      "stackwalk",
-      "cpu",
-      "java",
-      "processcpu",
-    ],
+    features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
     threads: [
       "Compositor",
       "DNS Resolver",
@@ -336,7 +319,7 @@ async function captureProfile(pageContext) {
   );
 
   const { openProfilerTab } = lazy.BrowserModule();
-  const browser = await openProfilerTab(profilerViewMode);
+  const browser = openProfilerTab(profilerViewMode);
   registerProfileCaptureForBrowser(
     browser,
     profileCaptureResult,

@@ -13,6 +13,7 @@ use crate::media_queries::{Device, MediaType};
 use crate::values::computed::CSSPixelLength;
 use crate::values::computed::Ratio;
 use crate::values::computed::Resolution;
+use crate::Atom;
 use app_units::Au;
 use euclid::default::Size2D;
 
@@ -549,36 +550,20 @@ fn eval_moz_is_resource_document(
     query_value.map_or(is_resource_doc, |v| v == is_resource_doc)
 }
 
-/// Allows front-end CSS to discern platform via media queries.
-#[derive(Clone, Copy, Debug, FromPrimitive, Parse, ToCss)]
-#[repr(u8)]
-pub enum Platform {
-    /// Matches any Android version.
-    Android,
-    /// For our purposes here, "linux" is just "gtk" (so unix-but-not-mac).
-    /// There's no need for our front-end code to differentiate between those
-    /// platforms and they already use the "linux" string elsewhere (e.g.,
-    /// toolkit/themes/linux).
-    Linux,
-    /// Matches any macOS version.
-    Macos,
-    /// Matches any Windows version.
-    Windows,
-    /// Matches only Windows 7.
-    WindowsWin7,
-    /// Matches only Windows 8.
-    WindowsWin8,
-    /// Matches windows 10 and actually matches windows 11 too, as of right now.
-    WindowsWin10,
-}
-
-fn eval_moz_platform(_: &Device, query_value: Option<Platform>) -> bool {
+fn eval_moz_os_version(
+    device: &Device,
+    query_value: Option<Atom>,
+    _: Option<RangeOrOperator>,
+) -> bool {
     let query_value = match query_value {
         Some(v) => v,
         None => return false,
     };
 
-    unsafe { bindings::Gecko_MediaFeatures_MatchesPlatform(query_value) }
+    let os_version =
+        unsafe { bindings::Gecko_MediaFeatures_GetOperatingSystemVersion(device.document()) };
+
+    query_value.as_ptr() == os_version
 }
 
 fn eval_moz_windows_non_native_menus(
@@ -591,7 +576,7 @@ fn eval_moz_windows_non_native_menus(
         0 => false,
         1 => true,
         _ => {
-            eval_moz_platform(device, Some(Platform::WindowsWin10)) &&
+            eval_moz_os_version(device, Some(atom!("windows-win10")), None) &&
                 get_lnf_int_as_bool(bindings::LookAndFeel_IntID::WindowsDefaultTheme as i32)
         },
     };
@@ -884,9 +869,9 @@ pub static MEDIA_FEATURES: [MediaFeatureDescription; 58] = [
         ParsingRequirements::CHROME_AND_UA_ONLY,
     ),
     feature!(
-        atom!("-moz-platform"),
+        atom!("-moz-os-version"),
         AllowsRanges::No,
-        keyword_evaluator!(eval_moz_platform, Platform),
+        Evaluator::Ident(eval_moz_os_version),
         ParsingRequirements::CHROME_AND_UA_ONLY,
     ),
     feature!(

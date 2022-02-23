@@ -23,8 +23,7 @@ struct HandlerInfo {
   int32_t preferredAction;
 };
 
-[ChildImpl=virtual, ParentImpl=virtual]
-sync protocol PHandlerService
+[RefCounted] sync protocol PHandlerService
 {
   manager PContent;
 

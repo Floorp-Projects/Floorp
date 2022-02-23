@@ -1,12 +1,16 @@
-// The use of fields in debug print commands does not count as "used",
-// which causes the fields to trigger an unwanted dead code warning.
-#![allow(dead_code)]
-
 //! This example shows how to do struct and field parsing using darling.
 
-use darling::{ast, FromDeriveInput, FromField, FromMeta};
+#[macro_use]
+extern crate darling;
+extern crate proc_macro2;
+#[macro_use]
+extern crate quote;
+extern crate syn;
+
+use darling::ast;
+use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use syn::parse_str;
 
 /// A speaking volume. Deriving `FromMeta` will cause this to be usable
@@ -97,10 +101,7 @@ impl ToTokens for MyInputReceiver {
                 let field_ident = f.ident
                     .as_ref()
                     .map(|v| quote!(#v))
-                    .unwrap_or_else(|| {
-                        let i = syn::Index::from(i);
-                        quote!(#i)
-                    });
+                    .unwrap_or_else(|| quote!(#i));
 
                 match field_volume {
                     Volume::Normal => quote!(self.#field_ident),

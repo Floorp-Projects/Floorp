@@ -15,7 +15,6 @@ namespace mozilla {
 namespace dom {
 
 // This protocol is used for the MessageChannel/MessagePort API
-[ManualDealloc]
 protocol PMessagePort
 {
   manager PBackground;

@@ -10,8 +10,6 @@
  */
 
 #include "FixedTableLayoutStrategy.h"
-
-#include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"

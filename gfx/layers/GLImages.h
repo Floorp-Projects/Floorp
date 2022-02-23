@@ -59,8 +59,6 @@ class SurfaceTextureImage : public GLImage {
 
   SurfaceTextureImage* AsSurfaceTextureImage() override { return this; }
 
-  Maybe<SurfaceDescriptor> GetDesc() override;
-
   void RegisterSetCurrentCallback(UniquePtr<SetCurrentCallback> aCallback) {
     mSetCurrentCallback = std::move(aCallback);
   }

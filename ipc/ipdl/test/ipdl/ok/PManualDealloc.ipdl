@@ -1,4 +1,0 @@
-[ManualDealloc] async protocol PManualDealloc {
-child:
-    async __delete__();
-};

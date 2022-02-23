@@ -189,11 +189,6 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
   // we want to keep the Accessible alive for reuse later.
   aAcc->SetParent(nullptr);
   mMovingIDs.EnsureRemoved(id);
-  if (aAcc->IsOuterDoc()) {
-    // Leave child documents alone. They are added and removed differently to
-    // normal children.
-    return;
-  }
   // Some children might be removed. Handle children the same way.
   for (RemoteAccessible* child : aAcc->mChildren) {
     ShutdownOrPrepareForMove(child);
@@ -921,10 +916,10 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
   MOZ_ASSERT(rootDocument);
 
   bool isActive = true;
-  LayoutDeviceIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
+  nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
   if (Compatibility::IsDolphin()) {
     rect = Bounds();
-    LayoutDeviceIntRect rootRect = rootDocument->Bounds();
+    nsIntRect rootRect = rootDocument->Bounds();
     rect.MoveToX(rootRect.X() - rect.X());
     rect.MoveToY(rect.Y() - rootRect.Y());
 

@@ -28,7 +28,6 @@ const tabDescriptorSpec = generateActorSpec({
     getWatcher: {
       request: {
         isServerTargetSwitchingEnabled: Option(0, "boolean"),
-        isPopupDebuggingEnabled: Option(0, "boolean"),
       },
       response: RetVal("watcher"),
     },

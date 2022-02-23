@@ -71,17 +71,15 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   // We don't have access to the original event here, as that happened in
   // another process. Therefore we synthesize a new MouseEvent to propagate the
   // inputSource to the subsequently triggered popupshowing event.
-  let newEvent = document.createEvent("MouseEvent");
-  let screenX = context.screenXDevPx / window.devicePixelRatio;
-  let screenY = context.screenYDevPx / window.devicePixelRatio;
+  var newEvent = document.createEvent("MouseEvent");
   newEvent.initNSMouseEvent(
     "contextmenu",
     true,
     true,
     null,
     0,
-    screenX,
-    screenY,
+    context.screenX,
+    context.screenY,
     0,
     0,
     false,
@@ -980,7 +978,7 @@ class nsContextMenu {
       }
       showManage = true;
 
-      // Disable the fill option if the user hasn't unlocked with their primary password
+      // Disable the fill option if the user hasn't unlocked with their master password
       // or if the password field or target field are disabled.
       // XXX: Bug 1529025 to maybe respect signon.rememberSignons.
       let loginFillInfo = this.contentData?.loginFillInfo;
@@ -1159,20 +1157,23 @@ class nsContextMenu {
   }
 
   initPasswordControlItems() {
-    let shouldShow = this.onPassword && REVEAL_PASSWORD_ENABLED;
+    let shouldShow = this.onPassword && SHOW_PASSWORD_ENABLED;
     if (shouldShow) {
-      let revealPassword = document.getElementById("context-reveal-password");
-      if (this.passwordRevealed) {
-        revealPassword.setAttribute("checked", "true");
+      let checked = this.passwordRevealed;
+      let showPasswordMenuItem = document.getElementById(
+        "context-toggle-show-password"
+      );
+      if (checked) {
+        showPasswordMenuItem.setAttribute("checked", "true");
       } else {
-        revealPassword.removeAttribute("checked");
+        showPasswordMenuItem.removeAttribute("checked");
       }
     }
-    this.showItem("context-reveal-password", shouldShow);
+    this.showItem("context-toggle-show-password", shouldShow);
   }
 
-  toggleRevealPassword() {
-    this.actor.toggleRevealPassword(this.targetIdentifier);
+  toggleShowPassword() {
+    this.actor.toggleShowPassword(this.targetIdentifier);
   }
 
   openPasswordManager() {
@@ -2265,7 +2266,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "REVEAL_PASSWORD_ENABLED",
-  "layout.forms.reveal-password-context-menu.enabled",
+  "SHOW_PASSWORD_ENABLED",
+  "layout.forms.input-type-show-password-button.enabled",
   false
 );

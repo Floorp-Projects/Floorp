@@ -6,13 +6,10 @@
 
 namespace mozilla {
 
-[ManualDealloc]
-sync protocol PSandboxTesting {
+async protocol PSandboxTesting {
 parent:
-  async ReportTestResults(nsCString testName, bool passed, nsCString message);
+  async ReportTestResults(nsCString testName, bool shouldSucceed, bool didSucceed, nsCString resultMessage);
   async TestCompleted();
-
-  sync GetSpecialDirectory(nsCString aSpecialDirName) returns (nsString aDirPath);
 
 child:
   async ShutDown();

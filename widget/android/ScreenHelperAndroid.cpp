@@ -14,7 +14,6 @@
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/ScreenManagerHelperNatives.h"
 #include "mozilla/widget/ScreenManager.h"
-#include "nsXULAppAPI.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -37,12 +36,10 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   uint32_t depth = java::GeckoAppShell::GetScreenDepth();
   float density = java::GeckoAppShell::GetDensity();
   float dpi = java::GeckoAppShell::GetDpi();
-  auto orientation =
-      hal::ScreenOrientation(java::GeckoAppShell::GetScreenOrientation());
-  uint16_t angle = java::GeckoAppShell::GetScreenAngle();
-  return MakeAndAddRef<Screen>(
-      bounds, bounds, depth, depth, DesktopToLayoutDeviceScale(density),
-      CSSToLayoutDeviceScale(1.0f), dpi, orientation, angle);
+  RefPtr<Screen> screen = new Screen(bounds, bounds, depth, depth,
+                                     DesktopToLayoutDeviceScale(density),
+                                     CSSToLayoutDeviceScale(1.0f), dpi);
+  return screen.forget();
 }
 
 ScreenHelperAndroid::ScreenHelperAndroid() {
@@ -56,8 +53,21 @@ ScreenHelperAndroid::ScreenHelperAndroid() {
 
 ScreenHelperAndroid::~ScreenHelperAndroid() { gHelper = nullptr; }
 
+/* static */
+ScreenHelperAndroid* ScreenHelperAndroid::GetSingleton() { return gHelper; }
+
 void ScreenHelperAndroid::Refresh() {
-  AutoTArray<RefPtr<Screen>, 1> screens;
-  screens.AppendElement(MakePrimaryScreen());
-  ScreenManager::Refresh(std::move(screens));
+  mScreens.Remove(0);
+
+  if (RefPtr<Screen> screen = MakePrimaryScreen()) {
+    mScreens.InsertOrUpdate(0, std::move(screen));
+  }
+
+  ScreenManager::Refresh(
+      ToTArray<AutoTArray<RefPtr<Screen>, 1>>(mScreens.Values()));
+}
+
+already_AddRefed<Screen> ScreenHelperAndroid::ScreenForId(uint32_t aScreenId) {
+  RefPtr<Screen> screen = mScreens.Get(aScreenId);
+  return screen.forget();
 }

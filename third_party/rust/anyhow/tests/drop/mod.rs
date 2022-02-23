@@ -2,7 +2,8 @@
 
 use std::error::Error as StdError;
 use std::fmt::{self, Display};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -18,7 +19,7 @@ impl Flag {
     }
 
     pub fn get(&self) -> bool {
-        self.atomic.load(Ordering::Relaxed)
+        self.atomic.load(SeqCst)
     }
 }
 
@@ -47,7 +48,7 @@ impl Display for DetectDrop {
 
 impl Drop for DetectDrop {
     fn drop(&mut self) {
-        let already_dropped = self.has_dropped.atomic.swap(true, Ordering::Relaxed);
+        let already_dropped = self.has_dropped.atomic.swap(true, SeqCst);
         assert!(!already_dropped);
     }
 }

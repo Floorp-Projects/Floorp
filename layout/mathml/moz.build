@@ -60,3 +60,5 @@ RESOURCE_FILES.fonts += [
     "mathfontSTIXGeneral.properties",
     "mathfontUnicode.properties",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

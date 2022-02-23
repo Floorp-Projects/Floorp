@@ -10,7 +10,6 @@ include protocol PNecko;
 namespace mozilla {
 namespace net {
 
-[ManualDealloc]
 protocol PAltDataOutputStream
 {
   manager PNecko;

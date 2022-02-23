@@ -32,26 +32,30 @@ license and by oscrypto's:
 from __future__ import absolute_import
 
 import platform
+from ctypes.util import find_library
 from ctypes import (
-    CDLL,
-    CFUNCTYPE,
-    POINTER,
-    c_bool,
-    c_byte,
-    c_char_p,
+    c_void_p,
     c_int32,
-    c_long,
+    c_char_p,
     c_size_t,
+    c_byte,
     c_uint32,
     c_ulong,
-    c_void_p,
+    c_long,
+    c_bool,
 )
-from ctypes.util import find_library
+from ctypes import CDLL, POINTER, CFUNCTYPE
 
-from urllib3.packages.six import raise_from
 
-if platform.system() != "Darwin":
-    raise ImportError("Only macOS is supported")
+security_path = find_library("Security")
+if not security_path:
+    raise ImportError("The library Security could not be found")
+
+
+core_foundation_path = find_library("CoreFoundation")
+if not core_foundation_path:
+    raise ImportError("The library CoreFoundation could not be found")
+
 
 version = platform.mac_ver()[0]
 version_info = tuple(map(int, version.split(".")))
@@ -61,31 +65,8 @@ if version_info < (10, 8):
         % (version_info[0], version_info[1])
     )
 
-
-def load_cdll(name, macos10_16_path):
-    """Loads a CDLL by name, falling back to known path on 10.16+"""
-    try:
-        # Big Sur is technically 11 but we use 10.16 due to the Big Sur
-        # beta being labeled as 10.16.
-        if version_info >= (10, 16):
-            path = macos10_16_path
-        else:
-            path = find_library(name)
-        if not path:
-            raise OSError  # Caught and reraised as 'ImportError'
-        return CDLL(path, use_errno=True)
-    except OSError:
-        raise_from(ImportError("The library %s failed to load" % name), None)
-
-
-Security = load_cdll(
-    "Security", "/System/Library/Frameworks/Security.framework/Security"
-)
-CoreFoundation = load_cdll(
-    "CoreFoundation",
-    "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
-)
-
+Security = CDLL(security_path, use_errno=True)
+CoreFoundation = CDLL(core_foundation_path, use_errno=True)
 
 Boolean = c_bool
 CFIndex = c_long
@@ -294,13 +275,6 @@ try:
 
     Security.SSLSetProtocolVersionMax.argtypes = [SSLContextRef, SSLProtocol]
     Security.SSLSetProtocolVersionMax.restype = OSStatus
-
-    try:
-        Security.SSLSetALPNProtocols.argtypes = [SSLContextRef, CFArrayRef]
-        Security.SSLSetALPNProtocols.restype = OSStatus
-    except AttributeError:
-        # Supported only in 10.12+
-        pass
 
     Security.SecCopyErrorMessageString.argtypes = [OSStatus, c_void_p]
     Security.SecCopyErrorMessageString.restype = CFStringRef

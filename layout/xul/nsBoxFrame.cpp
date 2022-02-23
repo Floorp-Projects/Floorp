@@ -266,6 +266,8 @@ bool nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign) {
         return false;
     }
   }
+
+  return false;
 }
 
 bool nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign) {
@@ -305,6 +307,8 @@ bool nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign) {
         return false;
     }
   }
+
+  return false;
 }
 
 void nsBoxFrame::GetInitialOrientation(bool& aIsHorizontal) {

@@ -20,13 +20,11 @@ SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics)
 }
 
 SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics,
-                                   Maybe<CompositionPayload>&& aPayload,
-                                   APZScrollGeneration aGeneration)
+                                   Maybe<CompositionPayload>&& aPayload)
     : mLayoutViewport(aMetrics.GetLayoutViewport()),
       mVisualScrollOffset(aMetrics.GetVisualScrollOffset()),
       mZoom(aMetrics.GetZoom()),
-      mScrollPayload(std::move(aPayload)),
-      mGeneration(aGeneration) {
+      mScrollPayload(std::move(aPayload)) {
   RemoveFractionalAsyncDelta();
 }
 

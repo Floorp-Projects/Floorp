@@ -12,6 +12,7 @@ namespace mozilla {
 namespace dom {
 namespace locks {
 
+[RefCounted]
 protocol PLockRequest {
   manager PLockManager;
 

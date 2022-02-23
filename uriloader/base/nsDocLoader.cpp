@@ -1562,12 +1562,6 @@ NS_IMETHODIMP nsDocLoader::AdjustPriority(int32_t aDelta) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocLoader::GetDocumentRequest(nsIRequest** aRequest) {
-  NS_IF_ADDREF(*aRequest = mDocumentRequest);
-  return NS_OK;
-}
-
 #if 0
 void nsDocLoader::DumpChannelInfo()
 {

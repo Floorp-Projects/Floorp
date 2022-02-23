@@ -31,6 +31,9 @@ template <>
 struct IsTriviallySerializable<WebGLContextOptions> : std::true_type {};
 
 template <>
+struct IsTriviallySerializable<WebGLPixelStore> : std::true_type {};
+
+template <>
 struct IsTriviallySerializable<WebGLTexImageData> : std::true_type {};
 
 template <>
@@ -43,12 +46,6 @@ struct IsTriviallySerializable<webgl::GetUniformData> : std::true_type {};
 
 template <>
 struct IsTriviallySerializable<mozilla::webgl::PackingInfo> : std::true_type {};
-template <>
-struct IsTriviallySerializable<mozilla::webgl::PixelPackingState>
-    : std::true_type {};
-template <>
-struct IsTriviallySerializable<mozilla::webgl::PixelUnpackStateWebgl>
-    : std::true_type {};
 
 template <>
 struct IsTriviallySerializable<ICRData> : std::true_type {};
@@ -75,8 +72,6 @@ struct IsTriviallySerializable<webgl::ReadPixelsDesc> : std::true_type {};
 // struct IsTriviallySerializable<layers::SurfaceDescriptor> : std::true_type
 // {};
 //  SurfaceDescriptorBuffer is *not* trivial.
-template <>
-struct IsTriviallySerializable<webgl::SwapChainOptions> : std::true_type {};
 
 template <typename T>
 struct QueueParamTraits<RawBuffer<T>> {

@@ -144,8 +144,6 @@ struct Statistics {
   using PhaseKindTimes =
       EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration>;
 
-  using PhaseTimeStamps = EnumeratedArray<Phase, Phase::LIMIT, TimeStamp>;
-
   [[nodiscard]] static bool initialize();
 
   explicit Statistics(gc::GCRuntime* gc);
@@ -274,7 +272,6 @@ struct Statistics {
     size_t startFaults = 0;
     size_t endFaults = 0;
     PhaseTimes phaseTimes;
-    PhaseKindTimes totalParallelTimes;
     PhaseKindTimes maxParallelTimes;
 
     TimeDuration duration() const { return end - start; }
@@ -290,10 +287,6 @@ struct Statistics {
   TimeStamp end() const { return slices_.back().end; }
 
   TimeStamp creationTime() const { return creationTime_; }
-
-  // File to write profiling information to, either stderr or file specified
-  // with JS_GC_PROFILE_FILE.
-  FILE* profileFile() const { return gcProfileFile; }
 
   // Occasionally print header lines for profiling information.
   void maybePrintProfileHeaders();
@@ -332,9 +325,6 @@ struct Statistics {
   /* File used for JS_GC_DEBUG output. */
   FILE* gcDebugFile;
 
-  /* File used for JS_GC_PROFILE output. */
-  FILE* gcProfileFile;
-
   ZoneGCStats zoneStats;
 
   JS::GCOptions gcOptions;
@@ -344,11 +334,11 @@ struct Statistics {
   SliceDataVector slices_;
 
   /* Most recent time when the given phase started. */
-  PhaseTimeStamps phaseStartTimes;
+  EnumeratedArray<Phase, Phase::LIMIT, TimeStamp> phaseStartTimes;
 
 #ifdef DEBUG
   /* Most recent time when the given phase ended. */
-  PhaseTimeStamps phaseEndTimes;
+  EnumeratedArray<Phase, Phase::LIMIT, TimeStamp> phaseEndTimes;
 #endif
 
   TimeStamp creationTime_;
@@ -359,9 +349,6 @@ struct Statistics {
 
   /* Total time in a given phase for this GC. */
   PhaseTimes phaseTimes;
-
-  /* Total parallel time for a given phase kind for this GC. */
-  PhaseKindTimes parallelTimes;
 
   /* Number of events of this type for this GC. */
   EnumeratedArray<Count, COUNT_LIMIT,
@@ -432,7 +419,6 @@ struct Statistics {
 
   enum class ProfileKey {
     Total,
-    Background,
 #define DEFINE_TIME_KEY(name, text, phase) name,
     FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
 #undef DEFINE_TIME_KEY
@@ -485,7 +471,7 @@ struct Statistics {
   double computeMMU(TimeDuration resolution) const;
 
   void printSliceProfile();
-  void printProfileTimes(const ProfileDurations& times);
+  static void printProfileTimes(const ProfileDurations& times);
 };
 
 struct MOZ_RAII AutoGCSlice {

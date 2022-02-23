@@ -61,10 +61,6 @@ class BaseCompileChecks(unittest.TestCase):
             def stlport_cppflags():
                 return []
 
-            @depends(when=True)
-            def linker_ldflags():
-                return []
-
             target = depends(when=True)(lambda: True)
 
             include('%s/compilers-util.configure')

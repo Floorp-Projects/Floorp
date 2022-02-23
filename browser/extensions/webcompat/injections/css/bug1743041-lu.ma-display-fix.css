@@ -1,0 +1,9 @@
+/**
+ * lu.ma - Duration time is not visible when trying to create an event
+ * Bug #1741234 - https://bugzilla.mozilla.org/show_bug.cgi?id=1743041
+ * WebCompat issue #94381 - https://webcompat.com/issues/94381
+ */
+
+.duration-inputs .luma-input-wrapper .inner-wrapper {
+  display: block !important;
+}

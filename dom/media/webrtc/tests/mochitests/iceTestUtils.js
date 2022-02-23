@@ -10,7 +10,7 @@
 // inconsistent enough that we need to be able to track the ipv6 test
 // separately.
 
-async function findStatsRelayCandidates(pc, protocol) {
+const findStatsRelayCandidates = async (pc, protocol) => {
   const stats = await pc.getStats();
   return [...stats.values()].filter(
     v =>
@@ -18,127 +18,57 @@ async function findStatsRelayCandidates(pc, protocol) {
       v.candidateType == "relay" &&
       v.relayProtocol == protocol
   );
-}
+};
 
-// Trickles candidates if pcDst is set, and resolves the candidate list
-async function trickleIce(pc, pcDst) {
-  const candidates = [],
-    addCandidatePromises = [];
-  while (true) {
-    const { candidate } = await new Promise(r =>
-      pc.addEventListener("icecandidate", r, { once: true })
-    );
-    if (!candidate) {
-      break;
-    }
-    candidates.push(candidate);
-    if (pcDst) {
-      addCandidatePromises.push(pcDst.addIceCandidate(candidate));
-    }
-  }
-  await Promise.all(addCandidatePromises);
-  return candidates;
-}
-
-async function gather(pc) {
-  if (pc.signalingState == "stable") {
-    await pc.setLocalDescription(
-      await pc.createOffer({ offerToReceiveAudio: true })
-    );
-  } else if (pc.signalingState == "have-remote-offer") {
-    await pc.setLocalDescription();
-  }
-
-  return trickleIce(pc);
-}
-
-async function gatherWithTimeout(pc, timeout, context) {
-  const throwOnTimeout = async () => {
-    await wait(timeout);
-    throw new Error(
-      `Gathering did not complete within ${timeout} ms with ${context}`
-    );
-  };
-
-  return Promise.race([gather(pc), throwOnTimeout()]);
-}
-
-async function iceConnected(pc) {
-  return new Promise((resolve, reject) => {
-    pc.addEventListener("iceconnectionstatechange", () => {
-      if (["connected", "completed"].includes(pc.iceConnectionState)) {
-        resolve();
-      } else if (pc.iceConnectionState == "failed") {
-        reject(new Error(`ICE failed`));
-      }
-    });
-  });
-}
-
-// Set up trickle, but does not wait for it to complete. Can be used by itself
-// in cases where we do not expect any new candidates, but want to still set up
-// the signal handling in case new candidates _do_ show up.
-async function connectNoTrickleWait(offerer, answerer, timeout, context) {
-  return connect(offerer, answerer, timeout, context, true);
-}
-
-async function connect(
-  offerer,
-  answerer,
-  timeout,
-  context,
-  noTrickleWait = false
-) {
-  const trickle1 = trickleIce(offerer, answerer);
-  const trickle2 = trickleIce(answerer, offerer);
-  try {
-    const offer = await offerer.createOffer({ offerToReceiveAudio: true });
-    await offerer.setLocalDescription(offer);
-    await answerer.setRemoteDescription(offer);
-    const answer = await answerer.createAnswer();
-    await Promise.all([
-      offerer.setRemoteDescription(answer),
-      answerer.setLocalDescription(answer),
-    ]);
-
-    const throwOnTimeout = async () => {
-      if (timeout) {
-        await wait(timeout);
-        throw new Error(
-          `ICE did not complete within ${timeout} ms with ${context}`
-        );
+const gather = async pc => {
+  await pc.setLocalDescription(
+    await pc.createOffer({ offerToReceiveAudio: true })
+  );
+  return new Promise(r => {
+    const candidates = [];
+    const onCandidate = e => {
+      if (e.candidate) {
+        candidates.push(e.candidate);
+      } else {
+        r(candidates);
+        pc.removeEventListener("icecandidate", onCandidate);
       }
     };
+    pc.addEventListener("icecandidate", onCandidate);
+  });
+};
 
-    await Promise.race([
-      Promise.all([iceConnected(offerer), iceConnected(answerer)]),
-      throwOnTimeout(timeout, context),
-    ]);
-  } finally {
-    if (!noTrickleWait) {
-      // TODO(bug 1751509): For now, we need to let gathering finish before we
-      // proceed, because there are races in ICE restart wrt gathering state.
-      await Promise.all([trickle1, trickle2]);
-    }
+const gatherWithTimeout = async (pc, timeout, context) => {
+  const throwOnTimeout = async () => {
+    await wait(timeout);
+    throw `Gathering did not complete within ${timeout} ms with ${context}`;
+  };
+
+  let result = [];
+  try {
+    result = await Promise.race([gather(pc), throwOnTimeout()]);
+  } catch (e) {
+    ok(false, e);
   }
-}
+  return result;
+};
 
-function isV6HostCandidate(candidate) {
+const isV6HostCandidate = candidate => {
   const fields = candidate.candidate.split(" ");
   const type = fields[7];
   const ipAddress = fields[4];
   return type == "host" && ipAddress.includes(":");
-}
+};
 
-async function ipv6Supported() {
+const ipv6Supported = async () => {
   const pc = new RTCPeerConnection();
   const candidates = await gatherWithTimeout(pc, 8000);
   info(`baseline candidates: ${JSON.stringify(candidates)}`);
   pc.close();
   return candidates.some(isV6HostCandidate);
-}
+};
 
-function makeContextString(iceServers) {
+const makeContextString = iceServers => {
   const currentRedirectAddress = SpecialPowers.getCharPref(
     "media.peerconnection.nat_simulator.redirect_address",
     ""
@@ -150,9 +80,9 @@ function makeContextString(iceServers) {
   return `redirect rule: ${currentRedirectAddress}=>${currentRedirectTargets} iceServers: ${JSON.stringify(
     iceServers
   )}`;
-}
+};
 
-async function checkSrflx(iceServers) {
+const checkSrflx = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkSrflx ${context}`);
   const pc = new RTCPeerConnection({
@@ -170,9 +100,9 @@ async function checkSrflx(iceServers) {
     `Should have two srflx candidates with ${context}`
   );
   pc.close();
-}
+};
 
-async function checkNoSrflx(iceServers) {
+const checkNoSrflx = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkNoSrflx ${context}`);
   const pc = new RTCPeerConnection({
@@ -188,9 +118,9 @@ async function checkNoSrflx(iceServers) {
     `Should have no srflx candidates with ${context}`
   );
   pc.close();
-}
+};
 
-async function checkRelayUdp(iceServers) {
+const checkRelayUdp = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkRelayUdp ${context}`);
   const pc = new RTCPeerConnection({
@@ -217,9 +147,9 @@ async function checkRelayUdp(iceServers) {
     `No TCP relay candidates should be present with ${context}`
   );
   pc.close();
-}
+};
 
-async function checkRelayTcp(iceServers) {
+const checkRelayTcp = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkRelayTcp ${context}`);
   const pc = new RTCPeerConnection({
@@ -246,9 +176,9 @@ async function checkRelayTcp(iceServers) {
     `No UDP relay candidates should be present with ${context}`
   );
   pc.close();
-}
+};
 
-async function checkRelayUdpTcp(iceServers) {
+const checkRelayUdpTcp = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkRelayUdpTcp ${context}`);
   const pc = new RTCPeerConnection({
@@ -281,9 +211,9 @@ async function checkRelayUdpTcp(iceServers) {
     `One TCP relay candidates should be present with ${context}`
   );
   pc.close();
-}
+};
 
-async function checkNoRelay(iceServers) {
+const checkNoRelay = async iceServers => {
   const context = makeContextString(iceServers);
   info(`checkNoRelay ${context}`);
   const pc = new RTCPeerConnection({
@@ -299,4 +229,4 @@ async function checkNoRelay(iceServers) {
     `Should have no relay candidates with ${context}`
   );
   pc.close();
-}
+};

@@ -80,14 +80,14 @@ menu.subviewbutton > .menu-right {
   padding: 2px 6px;
 }
 
-.panel-button:not([disabled]):hover {
+.panel-button@buttonStateHover@ {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-.panel-button:not([disabled]):hover:active {
+.panel-button@buttonStateActive@ {
   background-color: var(--panel-item-active-bgcolor);
 }
 
-.panel-button:focus-visible {
-  outline: var(--focus-outline);
+.panel-button:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow);
 }

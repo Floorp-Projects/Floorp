@@ -16,7 +16,6 @@ use crate::Lifetime;
 use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::marker::PhantomData;
 use std::ptr;
-use std::slice;
 
 /// Internal type which is used instead of `TokenTree` to represent a token tree
 /// within a `TokenBuffer`.
@@ -37,30 +36,20 @@ enum Entry {
 ///
 /// *This type is available only if Syn is built with the `"parsing"` feature.*
 pub struct TokenBuffer {
-    // NOTE: Do not implement clone on this - there are raw pointers inside
-    // these entries which will be messed up. Moving the `TokenBuffer` itself is
-    // safe as the data pointed to won't be moved.
-    ptr: *const Entry,
-    len: usize,
-}
-
-impl Drop for TokenBuffer {
-    fn drop(&mut self) {
-        unsafe {
-            let slice = slice::from_raw_parts_mut(self.ptr as *mut Entry, self.len);
-            let _ = Box::from_raw(slice);
-        }
-    }
+    // NOTE: Do not derive clone on this - there are raw pointers inside which
+    // will be messed up. Moving the `TokenBuffer` itself is safe as the actual
+    // backing slices won't be moved.
+    data: Box<[Entry]>,
 }
 
 impl TokenBuffer {
-    // NOTE: Do not mutate the Vec returned from this function once it returns;
-    // the address of its backing memory must remain stable.
+    // NOTE: DO NOT MUTATE THE `Vec` RETURNED FROM THIS FUNCTION ONCE IT
+    // RETURNS, THE ADDRESS OF ITS BACKING MEMORY MUST REMAIN STABLE.
     fn inner_new(stream: TokenStream, up: *const Entry) -> TokenBuffer {
         // Build up the entries list, recording the locations of any Groups
         // in the list to be processed later.
         let mut entries = Vec::new();
-        let mut groups = Vec::new();
+        let mut seqs = Vec::new();
         for tt in stream {
             match tt {
                 TokenTree::Ident(sym) => {
@@ -74,8 +63,8 @@ impl TokenBuffer {
                 }
                 TokenTree::Group(g) => {
                     // Record the index of the interesting entry, and store an
-                    // `End(null)` there temporarily.
-                    groups.push((entries.len(), g));
+                    // `End(null)` there temporarially.
+                    seqs.push((entries.len(), g));
                     entries.push(Entry::End(ptr::null()));
                 }
             }
@@ -89,28 +78,23 @@ impl TokenBuffer {
         // constant address after this point, as we are going to store a raw
         // pointer into it.
         let mut entries = entries.into_boxed_slice();
-        for (idx, group) in groups {
+        for (idx, group) in seqs {
             // We know that this index refers to one of the temporary
             // `End(null)` entries, and we know that the last entry is
             // `End(up)`, so the next index is also valid.
-            let group_up = unsafe { entries.as_ptr().add(idx + 1) };
+            let seq_up = &entries[idx + 1] as *const Entry;
 
             // The end entry stored at the end of this Entry::Group should
             // point to the Entry which follows the Group in the list.
-            let inner = Self::inner_new(group.stream(), group_up);
+            let inner = Self::inner_new(group.stream(), seq_up);
             entries[idx] = Entry::Group(group, inner);
         }
 
-        let len = entries.len();
-        let ptr = Box::into_raw(entries);
-        TokenBuffer {
-            ptr: ptr as *const Entry,
-            len,
-        }
+        TokenBuffer { data: entries }
     }
 
     /// Creates a `TokenBuffer` containing all the tokens from the input
-    /// `proc_macro::TokenStream`.
+    /// `TokenStream`.
     ///
     /// *This method is available only if Syn is built with both the `"parsing"` and
     /// `"proc-macro"` features.*
@@ -118,20 +102,20 @@ impl TokenBuffer {
         not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
         feature = "proc-macro"
     ))]
-    pub fn new(stream: pm::TokenStream) -> Self {
+    pub fn new(stream: pm::TokenStream) -> TokenBuffer {
         Self::new2(stream.into())
     }
 
     /// Creates a `TokenBuffer` containing all the tokens from the input
-    /// `proc_macro2::TokenStream`.
-    pub fn new2(stream: TokenStream) -> Self {
+    /// `TokenStream`.
+    pub fn new2(stream: TokenStream) -> TokenBuffer {
         Self::inner_new(stream, ptr::null())
     }
 
     /// Creates a cursor referencing the first token in the buffer and able to
     /// traverse until the end of the buffer.
     pub fn begin(&self) -> Cursor {
-        unsafe { Cursor::create(self.ptr, self.ptr.add(self.len - 1)) }
+        unsafe { Cursor::create(&self.data[0], &self.data[self.data.len() - 1]) }
     }
 }
 
@@ -226,7 +210,7 @@ impl<'a> Cursor<'a> {
                 // situations where we should immediately exit the span after
                 // entering it are handled correctly.
                 unsafe {
-                    *self = Cursor::create(buf.ptr, self.scope);
+                    *self = Cursor::create(&buf.data[0], self.scope);
                 }
             } else {
                 break;
@@ -270,7 +254,7 @@ impl<'a> Cursor<'a> {
         }
     }
 
-    /// If the cursor is pointing at a `Punct`, returns it along with a cursor
+    /// If the cursor is pointing at an `Punct`, returns it along with a cursor
     /// pointing at the next `TokenTree`.
     pub fn punct(mut self) -> Option<(Punct, Cursor<'a>)> {
         self.ignore_none();
@@ -337,7 +321,9 @@ impl<'a> Cursor<'a> {
             Entry::Literal(lit) => lit.clone().into(),
             Entry::Ident(ident) => ident.clone().into(),
             Entry::Punct(op) => op.clone().into(),
-            Entry::End(..) => return None,
+            Entry::End(..) => {
+                return None;
+            }
         };
 
         Some((tree, unsafe { self.bump() }))

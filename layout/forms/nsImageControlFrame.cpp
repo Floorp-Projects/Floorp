@@ -74,8 +74,8 @@ void nsImageControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     return;
   }
 
-  mContent->SetProperty(nsGkAtoms::imageClickedPoint, new CSSIntPoint(0, 0),
-                        nsINode::DeleteProperty<CSSIntPoint>);
+  mContent->SetProperty(nsGkAtoms::imageClickedPoint, new nsIntPoint(0, 0),
+                        nsINode::DeleteProperty<nsIntPoint>);
 }
 
 NS_QUERYFRAME_HEAD(nsImageControlFrame)
@@ -123,13 +123,13 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
       aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
     // Store click point for HTMLInputElement::SubmitNamesValues
     // Do this on MouseUp because the specs don't say and that's what IE does
-    auto* lastClickedPoint = static_cast<CSSIntPoint*>(
+    nsIntPoint* lastClickPoint = static_cast<nsIntPoint*>(
         mContent->GetProperty(nsGkAtoms::imageClickedPoint));
-    if (lastClickedPoint) {
+    if (lastClickPoint) {
       // normally lastClickedPoint is not null, as it's allocated in Init()
       nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
           aEvent, RelativeTo{this});
-      *lastClickedPoint = TranslateEventCoords(pt);
+      TranslateEventCoords(pt, *lastClickPoint);
     }
   }
   return nsImageFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

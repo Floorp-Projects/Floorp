@@ -12,7 +12,6 @@
 #include "nsIClassOfService.h"
 #include "nsIDNSRecord.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
 #include "nsDNSService2.h"
 #include "nsQueryObject.h"
@@ -24,7 +23,6 @@
 #include "ConnectionEntry.h"
 #include "HttpConnectionUDP.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/net/NeckoChannelParams.h"  // For HttpActivityArgs.
 
 // Log on level :5, instead of default :4.
 #undef LOG
@@ -49,15 +47,6 @@ NS_INTERFACE_MAP_BEGIN(DnsAndConnectSocket)
   NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DnsAndConnectSocket)
 NS_INTERFACE_MAP_END
-
-static void NotifyActivity(nsHttpConnectionInfo* aConnInfo, uint32_t aSubtype) {
-  HttpConnectionActivity activity(
-      aConnInfo->HashKey(), aConnInfo->GetOrigin(), aConnInfo->OriginPort(),
-      aConnInfo->EndToEndSSL(), !aConnInfo->GetEchConfig().IsEmpty(),
-      aConnInfo->IsHttp3());
-  gHttpHandler->ObserveHttpActivityWithArgs(
-      activity, NS_ACTIVITY_TYPE_HTTP_CONNECTION, aSubtype, PR_Now(), 0, ""_ns);
-}
 
 DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
                                          nsAHttpTransaction* trans,
@@ -87,10 +76,6 @@ DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
   }
 
   MOZ_ASSERT(mConnInfo);
-  NotifyActivity(mConnInfo,
-                 mSpeculative
-                     ? NS_HTTP_ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED
-                     : NS_HTTP_ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED);
 }
 
 void DnsAndConnectSocket::CheckIsDone() {
@@ -1004,8 +989,6 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     conn = new HttpConnectionUDP();
   }
 
-  NotifyActivity(ent->mConnInfo, NS_HTTP_ACTIVITY_SUBTYPE_CONNECTION_CREATED);
-
   LOG(
       ("DnsAndConnectSocket::SocketTransport::SetupConn "
        "Created new nshttpconnection %p %s\n",
@@ -1036,8 +1019,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     RefPtr<HttpConnectionUDP> connUDP = do_QueryObject(conn);
     rv = connUDP->Init(ent->mConnInfo, mDNSRecord, status, callbacks, cap);
     if (NS_SUCCEEDED(rv)) {
-      if (StaticPrefs::network_http_http3_enable() &&
-          gHttpHandler->CoalesceSpdy()) {
+      if (gHttpHandler->IsHttp3Enabled() && gHttpHandler->CoalesceSpdy()) {
         if (ent->MaybeProcessCoalescingKeys(mDNSRecord, true)) {
           gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(ent);
         }
@@ -1215,13 +1197,10 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   rv = socketTransport->SetSecurityCallbacks(dnsAndSock);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (gHttpHandler->EchConfigEnabled() && !ci->GetEchConfig().IsEmpty()) {
+  if (gHttpHandler->EchConfigEnabled()) {
     MOZ_ASSERT(!ci->IsHttp3());
-    LOG(("Setting ECH"));
     rv = socketTransport->SetEchConfig(ci->GetEchConfig());
     NS_ENSURE_SUCCESS(rv, rv);
-
-    NotifyActivity(dnsAndSock->mConnInfo, NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET);
   }
 
   RefPtr<ConnectionEntry> ent =

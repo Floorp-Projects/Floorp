@@ -19,7 +19,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
-#include "nsCRT.h"
 #include <stdlib.h>
 
 using namespace mozilla;
@@ -219,7 +218,7 @@ nsresult nsMozIconURI::SetSpecInternal(const nsACString& aSpec) {
     if (!sizeString.IsEmpty()) {
       const char* sizeStr = sizeString.get();
       for (uint32_t i = 0; i < ArrayLength(kSizeStrings); i++) {
-        if (nsCRT::strcasecmp(sizeStr, kSizeStrings[i]) == 0) {
+        if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0) {
           mIconSize = i;
           break;
         }
@@ -236,7 +235,7 @@ nsresult nsMozIconURI::SetSpecInternal(const nsACString& aSpec) {
     if (!stateString.IsEmpty()) {
       const char* stateStr = stateString.get();
       for (uint32_t i = 0; i < ArrayLength(kStateStrings); i++) {
-        if (nsCRT::strcasecmp(stateStr, kStateStrings[i]) == 0) {
+        if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0) {
           mIconState = i;
           break;
         }
@@ -413,7 +412,7 @@ nsMozIconURI::Equals(nsIURI* other, bool* result) {
   rv = other->GetSpec(spec2);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!nsCRT::strcasecmp(spec1.get(), spec2.get())) {
+  if (!PL_strcasecmp(spec1.get(), spec2.get())) {
     *result = true;
   } else {
     *result = false;
@@ -436,7 +435,7 @@ nsMozIconURI::SchemeIs(const char* aScheme, bool* aEquals) {
     return NS_OK;
   }
 
-  *aEquals = nsCRT::strcasecmp("moz-icon", aScheme) == 0;
+  *aEquals = PL_strcasecmp("moz-icon", aScheme) ? false : true;
   return NS_OK;
 }
 

@@ -12,7 +12,6 @@
 #include "nsView.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/dom/DOMRect.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/XULPopupElement.h"
@@ -59,7 +58,7 @@ void XULPopupElement::OpenPopup(Element* aAnchorElement,
     if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
       nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame()->GetParent());
       if (menu) {
-        pm->ShowMenu(menu->GetContent(), false);
+        pm->ShowMenu(menu->GetContent(), false, false);
         return;
       }
     }
@@ -257,7 +256,7 @@ Element* XULPopupElement::GetAnchorNode() const {
 }
 
 already_AddRefed<DOMRect> XULPopupElement::GetOuterScreenRect() {
-  RefPtr<DOMRect> rect = new DOMRect(ToSupports(OwnerDoc()));
+  RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   // Return an empty rectangle if the popup is not open.
   nsMenuPopupFrame* menuPopupFrame =

@@ -309,7 +309,7 @@ class RegisterAllocator {
     return outputOf(ins);
   }
 
-  void dumpInstructions(const char* who);
+  void dumpInstructions();
 
  public:
   template <typename TakeableSet>

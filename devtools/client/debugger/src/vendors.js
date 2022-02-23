@@ -21,6 +21,7 @@ import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 
 // Modules imported without destructuring
 import classnames from "classnames";
+import move from "lodash-move";
 
 // We cannot directly export literals containing special characters
 // (eg. "my-module/Test") which is why they are nested in "vendored".
@@ -30,6 +31,7 @@ export const vendored = {
   classnames,
   "devtools-utils": devtoolsUtils,
   "fuzzaldrin-plus": fuzzaldrinPlus,
+  "lodash-move": move,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition,
 };

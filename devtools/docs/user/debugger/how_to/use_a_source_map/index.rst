@@ -32,3 +32,4 @@ In the video above we load https://mdn.github.io/devtools-examples/sourcemaps-in
   //# sourceMappingURL=main.js.map</pre>
 
 In the Debugger's :ref:`source list pane <debugger-ui-tour-source-list-pane>`, the original CoffeeScript source now appears as "main.coffee", and we can debug it just like any other source.
+

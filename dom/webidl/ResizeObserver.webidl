@@ -17,7 +17,8 @@ dictionary ResizeObserverOptions {
     ResizeObserverBoxOptions box = "content-box";
 };
 
-[Exposed=Window]
+[Exposed=Window,
+ Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserver {
     [Throws]
     constructor(ResizeObserverCallback callback);
@@ -31,7 +32,8 @@ interface ResizeObserver {
 
 callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
-[Exposed=Window]
+[Pref="layout.css.resizeobserver.enabled",
+ Exposed=Window]
 interface ResizeObserverEntry {
     readonly attribute Element target;
     readonly attribute DOMRectReadOnly contentRect;
@@ -45,7 +47,8 @@ interface ResizeObserverEntry {
     readonly attribute sequence<ResizeObserverSize> devicePixelContentBoxSize;
 };
 
-[Exposed=Window]
+[Pref="layout.css.resizeobserver.enabled",
+ Exposed=Window]
 interface ResizeObserverSize {
     readonly attribute unrestricted double inlineSize;
     readonly attribute unrestricted double blockSize;

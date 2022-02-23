@@ -9,6 +9,7 @@
 #include "gmp-video-host.h"
 #include "gmp-video-plane.h"
 #include "gmp-video-frame.h"
+#include "gmp-video-host.h"
 #include "nsTArray.h"
 
 namespace mozilla {

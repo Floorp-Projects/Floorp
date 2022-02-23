@@ -102,17 +102,17 @@ class SessionStoreUtils {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static bool RestoreFormData(const GlobalObject& aGlobal, Document& aDocument,
                               const CollectedData& aData);
-  MOZ_CAN_RUN_SCRIPT static void RestoreFormData(
+  static void RestoreFormData(
       Document& aDocument, const nsString& aInnerHTML,
       const nsTArray<SessionStoreRestoreData::Entry>& aEntries);
 
   static void ComposeInputData(const nsTArray<CollectedInputDataValue>& aData,
                                InputElementData& ret);
 
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<nsISessionStoreRestoreData>
+  static already_AddRefed<nsISessionStoreRestoreData>
   ConstructSessionStoreRestoreData(const GlobalObject& aGlobal);
 
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<Promise> InitializeRestore(
+  static already_AddRefed<Promise> InitializeRestore(
       const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
       nsISessionStoreRestoreData* aData, ErrorResult& aError);
 

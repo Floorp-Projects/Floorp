@@ -1097,13 +1097,6 @@ class SpecialPowersParent extends JSWindowActorParent {
               ext.useAddonManager = "android-only";
             }
           }
-          // delayedStartup is only supported in xpcshell
-          if (ext.delayedStartup !== undefined) {
-            throw new Error(
-              `delayedStartup is only supported in xpcshell, use "useAddonManager".`
-            );
-          }
-
           let extension = ExtensionTestCommon.generate(ext);
 
           let resultListener = (...args) => {

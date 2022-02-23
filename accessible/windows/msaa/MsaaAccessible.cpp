@@ -1005,9 +1005,12 @@ MsaaAccessible::get_accValue(
   if (accessible) {
     return accessible->get_accValue(kVarChildIdSelf, pszValue);
   }
+  if (mAcc->IsRemote()) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   nsAutoString value;
-  Acc()->Value(value);
+  LocalAcc()->Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave
@@ -1281,7 +1284,7 @@ MsaaAccessible::get_accFocus(
  */
 class AccessibleEnumerator final : public IEnumVARIANT {
  public:
-  explicit AccessibleEnumerator(const nsTArray<Accessible*>& aArray)
+  explicit AccessibleEnumerator(const nsTArray<LocalAccessible*>& aArray)
       : mArray(aArray.Clone()), mCurIndex(0) {}
   AccessibleEnumerator(const AccessibleEnumerator& toCopy)
       : mArray(toCopy.mArray.Clone()), mCurIndex(toCopy.mCurIndex) {}
@@ -1301,7 +1304,7 @@ class AccessibleEnumerator final : public IEnumVARIANT {
   STDMETHODIMP Clone(IEnumVARIANT FAR* FAR* ppenum);
 
  private:
-  nsTArray<Accessible*> mArray;
+  nsTArray<LocalAccessible*> mArray;
   uint32_t mCurIndex;
 };
 
@@ -1391,14 +1394,17 @@ MsaaAccessible::get_accSelection(VARIANT __RPC_FAR* pvarChildren) {
   if (!mAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
-  Accessible* acc = Acc();
+  LocalAccessible* localAcc = LocalAcc();
+  if (!localAcc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
-  if (!acc->IsSelect()) {
+  if (!localAcc->IsSelect()) {
     return S_OK;
   }
 
-  AutoTArray<Accessible*, 10> selectedItems;
-  acc->SelectedItems(&selectedItems);
+  AutoTArray<LocalAccessible*, 10> selectedItems;
+  localAcc->SelectedItems(&selectedItems);
   uint32_t count = selectedItems.Length();
   if (count == 1) {
     pvarChildren->vt = VT_DISPATCH;
@@ -1433,9 +1439,12 @@ MsaaAccessible::get_accDefaultAction(
   if (accessible) {
     return accessible->get_accDefaultAction(kVarChildIdSelf, pszDefaultAction);
   }
+  if (mAcc->IsRemote()) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
   nsAutoString defaultAction;
-  mAcc->ActionNameAt(0, defaultAction);
+  LocalAcc()->ActionNameAt(0, defaultAction);
 
   *pszDefaultAction =
       ::SysAllocStringLen(defaultAction.get(), defaultAction.Length());
@@ -1456,17 +1465,15 @@ MsaaAccessible::accSelect(
     return accessible->accSelect(flagsSelect, kVarChildIdSelf);
   }
 
+  LocalAccessible* localAcc = mAcc->AsLocal();
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
     if (XRE_IsContentProcess()) {
       // In this case we might have been invoked while the IPC MessageChannel is
       // waiting on a sync reply. We cannot dispatch additional IPC while that
       // is happening, so we dispatch TakeFocus from the main thread to
       // guarantee that we are outside any IPC.
-      MOZ_ASSERT(mAcc->IsLocal(),
-                 "Content process should only have local accessibles");
       nsCOMPtr<nsIRunnable> runnable = mozilla::NewRunnableMethod(
-          "LocalAccessible::TakeFocus", mAcc->AsLocal(),
-          &LocalAccessible::TakeFocus);
+          "LocalAccessible::TakeFocus", localAcc, &LocalAccessible::TakeFocus);
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
@@ -1474,18 +1481,22 @@ MsaaAccessible::accSelect(
     return S_OK;
   }
 
+  if (!localAcc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
+
   if (flagsSelect & SELFLAG_TAKESELECTION) {
-    mAcc->TakeSelection();
+    localAcc->TakeSelection();
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_ADDSELECTION) {
-    mAcc->SetSelected(true);
+    localAcc->SetSelected(true);
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_REMOVESELECTION) {
-    mAcc->SetSelected(false);
+    localAcc->SetSelected(false);
     return S_OK;
   }
 
@@ -1517,7 +1528,7 @@ MsaaAccessible::accLocation(
                                    kVarChildIdSelf);
   }
 
-  LayoutDeviceIntRect rect = Acc()->Bounds();
+  nsIntRect rect = Acc()->Bounds();
   *pxLeft = rect.X();
   *pyTop = rect.Y();
   *pcxWidth = rect.Width();
@@ -1648,7 +1659,7 @@ MsaaAccessible::accHitTest(
       // This is an OOP iframe. ChildAtPoint can't traverse inside it. If the
       // coordinates are inside this iframe, return the COM proxy for the
       // OOP document.
-      LayoutDeviceIntRect docRect = mAcc->AsLocal()->Bounds();
+      nsIntRect docRect = mAcc->AsLocal()->Bounds();
       if (docRect.Contains(xLeft, yTop)) {
         pvarChild->vt = VT_DISPATCH;
         disp.forget(&pvarChild->pdispVal);
@@ -1673,8 +1684,11 @@ MsaaAccessible::accDoDefaultAction(
   if (accessible) {
     return accessible->accDoDefaultAction(kVarChildIdSelf);
   }
+  if (mAcc->IsRemote()) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
 
-  return mAcc->DoAction(0) ? S_OK : E_INVALIDARG;
+  return LocalAcc()->DoAction(0) ? S_OK : E_INVALIDARG;
 }
 
 STDMETHODIMP

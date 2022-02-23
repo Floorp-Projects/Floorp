@@ -51,12 +51,11 @@ class ThemeColors {
   const LookAndFeel::ColorScheme mColorScheme;
 
  public:
-  explicit ThemeColors(const nsIFrame* aFrame, StyleAppearance aAppearance)
+  explicit ThemeColors(const nsIFrame* aFrame)
       : mAccentColor(*aFrame->Style()),
         mDoc(*aFrame->PresContext()->Document()),
         mHighContrast(ShouldBeHighContrast(*aFrame->PresContext())),
-        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrast)) {
-  }
+        mColorScheme(LookAndFeel::ColorSchemeForFrame(aFrame)) {}
   virtual ~ThemeColors() = default;
 
   [[nodiscard]] static float ScaleLuminanceBy(float aLuminance, float aFactor) {
@@ -93,8 +92,6 @@ class ThemeColors {
 
   // Whether we should use system colors (for high contrast mode).
   static bool ShouldBeHighContrast(const nsPresContext&);
-  static ColorScheme ColorSchemeForWidget(const nsIFrame*, StyleAppearance,
-                                          bool aHighContrast);
 
   static void RecomputeAccentColors();
 

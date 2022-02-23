@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.38"
 name = "anyhow"
-version = "1.0.52"
+version = "1.0.51"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Flexible concrete Error type built on std::error::Error"
 documentation = "https://docs.rs/anyhow"
@@ -32,7 +32,7 @@ version = "0.3"
 default-features = false
 
 [dev-dependencies.rustversion]
-version = "1.0.6"
+version = "1.0"
 
 [dev-dependencies.syn]
 version = "1.0"

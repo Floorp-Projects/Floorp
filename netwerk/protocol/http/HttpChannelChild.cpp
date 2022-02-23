@@ -50,6 +50,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "SerializedLoadContext.h"
 #include "nsInputStreamPump.h"
+#include "InterceptedChannel.h"
 #include "nsContentSecurityManager.h"
 #include "nsICompressConvStats.h"
 #include "mozilla/dom/Document.h"
@@ -84,7 +85,6 @@ HttpChannelChild::HttpChannelChild()
       mKeptAlive(false),
       mIPCActorDeleted(false),
       mSuspendSent(false),
-      mIsFirstPartOfMultiPart(false),
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
@@ -461,7 +461,6 @@ void HttpChannelChild::OnStartRequest(
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
 
   mMultiPartID = aArgs.multiPartID();
-  mIsFirstPartOfMultiPart = aArgs.isFirstPartOfMultiPart();
   mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
 
   if (aArgs.overrideReferrerInfo()) {
@@ -880,9 +879,7 @@ void HttpChannelChild::OnStopRequest(
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mTransferSize, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(),
-        mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0,
-        &mTransactionTimings, std::move(mSource),
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
 
@@ -1368,11 +1365,9 @@ void HttpChannelChild::Redirect1Begin(
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
-        0, kCacheUnknown, mLoadInfo->GetInnerWindowID(),
-        mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0,
-        &mTransactionTimings, std::move(mSource),
-        Some(nsDependentCString(contentType.get())), uri, redirectFlags,
-        channelId);
+        0, kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
+        std::move(mSource), Some(nsDependentCString(contentType.get())), uri,
+        redirectFlags, channelId);
   }
 
   if (!securityInfoSerialization.IsEmpty()) {
@@ -1675,8 +1670,7 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(),
-        mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0);
+        mLoadInfo->GetInnerWindowID());
   }
   StoreIsPending(true);
   StoreWasOpened(true);
@@ -2002,8 +1996,7 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(),
-        mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0);
+        mLoadInfo->GetInnerWindowID());
   }
   StoreIsPending(true);
   StoreWasOpened(true);
@@ -2041,6 +2034,8 @@ void HttpChannelChild::SetEventTarget() {
   if (!target) {
     return;
   }
+
+  gNeckoChild->SetEventTargetForActor(this, target);
 
   {
     MutexAutoLock lock(mEventTargetMutex);
@@ -2486,6 +2481,8 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
   RefPtr<AltDataOutputStreamChild> stream = new AltDataOutputStreamChild();
   stream->AddIPDLReference();
 
+  gNeckoChild->SetEventTargetForActor(stream, neckoTarget);
+
   if (!gNeckoChild->SendPAltDataOutputStreamConstructor(
           stream, nsCString(aType), aPredictedSize, this)) {
     return NS_ERROR_FAILURE;
@@ -2692,15 +2689,6 @@ HttpChannelChild::GetPartID(uint32_t* aPartID) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetIsFirstPart(bool* aIsFirstPart) {
-  if (!mMultiPartID) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aIsFirstPart = mIsFirstPartOfMultiPart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpChannelChild::GetIsLastPart(bool* aIsLastPart) {
   if (!mMultiPartID) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2719,6 +2707,7 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
        aNewTarget));
 
   MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
+  MOZ_ASSERT(!mODATarget);
   MOZ_ASSERT(aNewTarget);
 
   NS_ENSURE_ARG(aNewTarget);
@@ -2756,7 +2745,6 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
   {
     MutexAutoLock lock(mEventTargetMutex);
-    MOZ_ASSERT(!mODATarget);
     mODATarget = aNewTarget;
   }
 
@@ -3027,11 +3015,7 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
     return;
   }
 
-  RefPtr<HttpBackgroundChannelChild> bgChild;
-  {
-    MutexAutoLock lock(mBgChildMutex);
-    bgChild = mBgChild;
-  }
+  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild;
   SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [bgChild]() {

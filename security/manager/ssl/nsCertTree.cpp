@@ -6,8 +6,6 @@
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/intl/AppDateTimeFormat.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsHashKeys.h"
@@ -535,15 +533,6 @@ nsCertTree::GetCellValue(int32_t row, nsTreeColumn* col, nsAString& _retval) {
   return NS_OK;
 }
 
-static void PRTimeToLocalDateString(PRTime time, nsAString& result) {
-  PRExplodedTime explodedTime;
-  PR_ExplodeTime(time, PR_LocalTimeParameters, &explodedTime);
-  intl::DateTimeFormat::StyleBag style;
-  style.date = Some(intl::DateTimeFormat::Style::Long);
-  style.time = Nothing();
-  Unused << intl::AppDateTimeFormat::Format(style, &explodedTime, result);
-}
-
 NS_IMETHODIMP
 nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
   if (!mTreeArray) return NS_ERROR_NOT_INITIALIZED;
@@ -599,22 +588,14 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
-      PRTime notBefore;
-      rv = validity->GetNotBefore(&notBefore);
-      if (NS_SUCCEEDED(rv)) {
-        PRTimeToLocalDateString(notBefore, _retval);
-      }
+      validity->GetNotBeforeLocalDay(_retval);
     }
   } else if (u"expiredcol"_ns.Equals(colID) && cert) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
-      PRTime notAfter;
-      rv = validity->GetNotAfter(&notAfter);
-      if (NS_SUCCEEDED(rv)) {
-        PRTimeToLocalDateString(notAfter, _retval);
-      }
+      validity->GetNotAfterLocalDay(_retval);
     }
   } else if (u"serialnumcol"_ns.Equals(colID) && cert) {
     rv = cert->GetSerialNumber(_retval);

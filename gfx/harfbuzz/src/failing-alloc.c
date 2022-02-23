@@ -25,10 +25,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int alloc_state = 0;
 
 __attribute__((no_sanitize("integer")))
@@ -59,7 +55,3 @@ void  hb_free_impl (void *ptr)
 {
   return free (ptr);
 }
-
-#ifdef __cplusplus
-}
-#endif

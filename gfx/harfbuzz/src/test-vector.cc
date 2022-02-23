@@ -26,7 +26,6 @@
 #include "hb.hh"
 #include "hb-vector.hh"
 #include "hb-set.hh"
-#include <string>
 
 
 int
@@ -136,19 +135,6 @@ main (int argc, char **argv)
     assert (v2.length == 3);
     assert (v2[2] == 3);
   }
-
-#if 0
-  {
-    hb_vector_t<std::string> v;
-
-    std::string s;
-    for (unsigned i = 1; i < 100; i++)
-    {
-      s += "x";
-      v.push (s);
-    }
-  }
-#endif
 
   return 0;
 }

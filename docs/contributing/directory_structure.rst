@@ -373,7 +373,8 @@ nsprpub
 -------
 
 Netscape Portable Runtime. Used as an abstraction layer to things like
-threads, file I/O, and socket I/O. See :ref:`NSPR`.
+threads, file I/O, and socket I/O. See `Netscape Portable
+Runtime <https://www.mozilla.org/projects/nspr/>`__.
 
 nsprpub/lib
 -----------

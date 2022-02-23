@@ -5,19 +5,6 @@
 let gDownloadDir;
 const TestFiles = {};
 
-let ReferrerInfo = Components.Constructor(
-  "@mozilla.org/referrer-info;1",
-  "nsIReferrerInfo",
-  "init"
-);
-
-// Load a new URI with a specific referrer.
-let exampleRefInfo = new ReferrerInfo(
-  Ci.nsIReferrerInfo.EMPTY,
-  true,
-  Services.io.newURI("https://example.org")
-);
-
 const MENU_ITEMS = {
   pause: ".downloadPauseMenuItem",
   resume: ".downloadResumeMenuItem",
@@ -27,10 +14,9 @@ const MENU_ITEMS = {
   alwaysOpenSimilarFiles: '[command="downloadsCmd_alwaysOpenSimilarFiles"]',
   show: '[command="downloadsCmd_show"]',
   commandsSeparator: "menuseparator,.downloadCommandsSeparator",
-  openReferrer: ".downloadOpenReferrerMenuItem",
-  copyLocation: ".downloadCopyLocationMenuItem",
+  openReferrer: '[command="downloadsCmd_openReferrer"]',
+  copyLocation: '[command="downloadsCmd_copyLocation"]',
   separator: "menuseparator",
-  deleteFile: ".downloadDeleteFileMenuItem",
   delete: '[command="cmd_delete"]',
   clearList: '[command="downloadsCmd_clearList"]',
   clearDownloads: '[command="downloadsCmd_clearDownloads"]',
@@ -45,9 +31,6 @@ const TestCasesDefaultMimetypes = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/pdf",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -59,32 +42,6 @@ const TestCasesDefaultMimetypes = [
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
-        MENU_ITEMS.delete,
-        MENU_ITEMS.clearList,
-      ],
-    },
-  },
-  {
-    name:
-      "Completed PDF download with improvements pref disabled and referrer info missing",
-    prefEnabled: false,
-    downloads: [
-      {
-        state: DownloadsCommon.DOWNLOAD_FINISHED,
-        contentType: "application/pdf",
-        target: {},
-      },
-    ],
-    expected: {
-      menu: [
-        MENU_ITEMS.openInSystemViewer,
-        MENU_ITEMS.alwaysOpenInSystemViewer,
-        MENU_ITEMS.show,
-        MENU_ITEMS.commandsSeparator,
-        MENU_ITEMS.copyLocation,
-        MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
         MENU_ITEMS.delete,
         MENU_ITEMS.clearList,
       ],
@@ -98,9 +55,6 @@ const TestCasesDefaultMimetypes = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "application/pdf",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -124,9 +78,6 @@ const TestCasesNewMimetypesPrefDisabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "text/plain",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -136,7 +87,6 @@ const TestCasesNewMimetypesPrefDisabled = [
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
         MENU_ITEMS.delete,
         MENU_ITEMS.clearList,
       ],
@@ -150,9 +100,6 @@ const TestCasesNewMimetypesPrefDisabled = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "text/plain",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -176,9 +123,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "text/plain",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -189,7 +133,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
         MENU_ITEMS.delete,
         MENU_ITEMS.clearList,
       ],
@@ -203,9 +146,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "text/plain",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -228,9 +168,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/octet-stream",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -240,7 +177,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
         MENU_ITEMS.delete,
         MENU_ITEMS.clearList,
       ],
@@ -256,9 +192,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/octet-stream",
         target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
       },
     ],
     expected: {
@@ -269,35 +202,6 @@ const TestCasesNewMimetypesPrefEnabled = [
         MENU_ITEMS.alwaysOpenSimilarFiles,
         MENU_ITEMS.show,
         MENU_ITEMS.commandsSeparator,
-        MENU_ITEMS.openReferrer,
-        MENU_ITEMS.copyLocation,
-        MENU_ITEMS.separator,
-        MENU_ITEMS.deleteFile,
-        MENU_ITEMS.delete,
-        MENU_ITEMS.clearList,
-      ],
-    },
-  },
-];
-
-const TestCasesDeletedFile = [
-  {
-    name: "Deleted PDF download with improvements pref enabled",
-    prefEnabled: true,
-    deleted: true,
-    downloads: [
-      {
-        state: DownloadsCommon.DOWNLOAD_FINISHED,
-        contentType: "application/pdf",
-        target: {},
-        source: {
-          referrerInfo: exampleRefInfo,
-        },
-      },
-    ],
-    expected: {
-      menu: [
-        MENU_ITEMS.alwaysOpenInSystemViewer,
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
@@ -389,27 +293,11 @@ for (let testData of TestCasesNewMimetypesPrefEnabled) {
   add_task(tmp[testData.name]);
 }
 
-for (let testData of TestCasesDeletedFile) {
-  if (testData.skip) {
-    info("Skipping test:" + testData.name);
-    continue;
-  }
-  // use the 'name' property of each test case as the test function name
-  // so we get useful logs
-  let tmp = {
-    async [testData.name]() {
-      await testDownloadContextMenu(testData);
-    },
-  };
-  add_task(tmp[testData.name]);
-}
-
 async function testDownloadContextMenu({
   overrideExtension = null,
   downloads = [],
   expected,
   prefEnabled,
-  deleted,
 }) {
   info(
     `Setting browser.download.improvements_to_download_panel to ${prefEnabled}`
@@ -421,19 +309,9 @@ async function testDownloadContextMenu({
   // prepare downloads
   await prepareDownloads(downloads, overrideExtension);
   let downloadList = await Downloads.getList(Downloads.PUBLIC);
-  let all = await downloadList.getAll();
-  for (let dl of all) {
-    info("Download succeeded? " + dl.succeeded);
-    if (deleted) {
-      let { path } = dl.target;
-      await IOUtils.setPermissions(path, 0o660);
-      await IOUtils.remove(path, { ignoreAbsent: true });
-      await dl.removePartialData();
-      await dl.refresh();
-      await dl.finalize();
-    }
-    info("Download target exists? " + dl.target.exists);
-  }
+  let [firstDownload] = await downloadList.getAll();
+  info("Download succeeded? " + firstDownload.succeeded);
+  info("Download target exists? " + firstDownload.target.exists);
 
   // open panel
   await task_openPanel();

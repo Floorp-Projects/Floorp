@@ -60,6 +60,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
+#include "nsXULElement.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #  include "nsRange.h"
@@ -246,14 +247,13 @@ dom::Element* nsIContent::GetEditingHost() {
     return doc->GetBodyElement();
   }
 
-  dom::Element* editableParentElement = nullptr;
+  nsIContent* content = this;
   for (dom::Element* parent = GetParentElement();
        parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = editableParentElement->GetParentElement()) {
-    editableParentElement = parent;
+       parent = content->GetParentElement()) {
+    content = parent;
   }
-  return editableParentElement ? editableParentElement
-                               : dom::Element::FromNode(this);
+  return content->AsElement();
 }
 
 nsresult nsIContent::LookupNamespaceURIInternal(

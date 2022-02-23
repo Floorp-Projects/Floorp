@@ -111,9 +111,10 @@ struct post
   struct accelerator_t
   {
     friend struct postV2Tail;
-
-    accelerator_t (hb_face_t *face)
+    void init (hb_face_t *face)
     {
+      index_to_offset.init ();
+
       table = hb_sanitize_context_t ().reference_table<post> (face);
       unsigned int table_length = table.get_length ();
 
@@ -131,8 +132,9 @@ struct post
 	   data += 1 + *data)
 	index_to_offset.push (data - pool);
     }
-    ~accelerator_t ()
+    void fini ()
     {
+      index_to_offset.fini ();
       hb_free (gids_sorted_by_name.get ());
       table.destroy ();
     }
@@ -252,9 +254,9 @@ struct post
 
     private:
     uint32_t version;
-    const Array16Of<HBUINT16> *glyphNameIndex = nullptr;
+    const Array16Of<HBUINT16> *glyphNameIndex;
     hb_vector_t<uint32_t> index_to_offset;
-    const uint8_t *pool = nullptr;
+    const uint8_t *pool;
     hb_atomic_ptr_t<uint16_t *> gids_sorted_by_name;
   };
 
@@ -305,10 +307,7 @@ struct post
   DEFINE_SIZE_MIN (32);
 };
 
-struct post_accelerator_t : post::accelerator_t {
-  post_accelerator_t (hb_face_t *face) : post::accelerator_t (face) {}
-};
-
+struct post_accelerator_t : post::accelerator_t {};
 
 } /* namespace OT */
 

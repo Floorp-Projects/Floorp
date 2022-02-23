@@ -634,7 +634,6 @@ void nsIOService::OnProcessLaunchComplete(SocketProcessHost* aHost,
   mSocketProcessLaunchComplete = aSucceeded;
 
   if (mShutdown || !SocketProcessReady() || !aSucceeded) {
-    mPendingEvents.Clear();
     return;
   }
 
@@ -677,7 +676,6 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
   DestroySocketProcess();
-  mPendingEvents.Clear();
 }
 
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
@@ -2036,9 +2034,5 @@ nsIOService::GetSocketProcessLaunched(bool* aResult) {
   return NS_OK;
 }
 
-bool nsIOService::HasObservers(const char* aTopic) {
-  MOZ_ASSERT(false, "Calling this method is unexpected");
-  return false;
-}
 }  // namespace net
 }  // namespace mozilla

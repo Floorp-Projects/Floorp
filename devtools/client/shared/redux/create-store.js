@@ -18,6 +18,12 @@ const flags = require("devtools/shared/flags");
 
 loader.lazyRequireGetter(
   this,
+  "history",
+  "devtools/client/shared/redux/middleware/history",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "log",
   "devtools/client/shared/redux/middleware/log",
   true
@@ -31,6 +37,7 @@ loader.lazyRequireGetter(
  * @param {object} opts:
  *        - enableTaskMiddleware: if true, include the task middleware
  *        - log: log all dispatched actions to console
+ *        - history: an array to store every action in. Should only be used in tests.
  *        - middleware: array of middleware to be included in the redux store
  *        - thunkOptions: object that will be spread within a {dispatch, getState} object,
  *                        that will be passed in each thunk action.
@@ -50,6 +57,10 @@ const createStoreWithMiddleware = (opts = {}) => {
     // should just be normal JSON objects.
     waitUntilService
   );
+
+  if (opts.history) {
+    middleware.push(history(opts.history));
+  }
 
   if (opts.middleware) {
     opts.middleware.forEach(fn => middleware.push(fn));
@@ -74,11 +85,24 @@ module.exports = (
   const reducer =
     typeof reducers === "function" ? reducers : combineReducers(reducers);
 
+  let historyEntries;
+
+  // If testing, store the action history in an array
+  // we'll later attach to the store
+  if (flags.testing) {
+    historyEntries = [];
+  }
+
   const store = createStoreWithMiddleware({
     enableTaskMiddleware,
     log: flags.testing && shouldLog,
+    history: historyEntries,
     thunkOptions,
   })(reducer, initialState);
+
+  if (history) {
+    store.history = historyEntries;
+  }
 
   return store;
 };

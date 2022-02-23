@@ -372,8 +372,7 @@ JSActor::QueryHandler::QueryHandler(JSActor* aActor,
       mQueryId(aMetadata.queryId()) {}
 
 void JSActor::QueryHandler::RejectedCallback(JSContext* aCx,
-                                             JS::Handle<JS::Value> aValue,
-                                             ErrorResult& aRv) {
+                                             JS::Handle<JS::Value> aValue) {
   if (!mActor) {
     // Make sure that this rejection is reported. See comment below.
     if (!JS::CallOriginalPromiseReject(aCx, aValue)) {
@@ -415,8 +414,7 @@ void JSActor::QueryHandler::RejectedCallback(JSContext* aCx,
 }
 
 void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
-                                             JS::Handle<JS::Value> aValue,
-                                             ErrorResult& aRv) {
+                                             JS::Handle<JS::Value> aValue) {
   if (!mActor) {
     return;
   }
@@ -440,7 +438,7 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
 
     JS::Rooted<JS::Value> val(aCx);
     if (ToJSValue(aCx, exc, &val)) {
-      RejectedCallback(aCx, val, aRv);
+      RejectedCallback(aCx, val);
     } else {
       JS_ClearPendingException(aCx);
     }

@@ -1,6 +1,6 @@
 'use strict'
 
-self.test_blob = (fn, expectations) => {
+function test_blob(fn, expectations) {
   var expected = expectations.expected,
       type = expectations.type,
       desc = expectations.desc;
@@ -24,7 +24,7 @@ self.test_blob = (fn, expectations) => {
   });
 }
 
-self.test_blob_binary = (fn, expectations) => {
+function test_blob_binary(fn, expectations) {
   var expected = expectations.expected,
       type = expectations.type,
       desc = expectations.desc;

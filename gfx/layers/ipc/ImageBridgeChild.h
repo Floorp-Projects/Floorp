@@ -292,7 +292,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
   PTextureChild* CreateTexture(
       const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
       LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
-      wr::MaybeExternalImageId& aExternalImageId) override;
+      wr::MaybeExternalImageId& aExternalImageId,
+      nsISerialEventTarget* aTarget = nullptr) override;
 
   bool IsSameProcess() const override;
 

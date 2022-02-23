@@ -62,7 +62,8 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoDecoderConstructor(
   void* vd = nullptr;
   GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
   if (err != GMPNoErr || !vd) {
-    return IPC_FAIL(this, "GMPGetAPI call failed trying to construct decoder.");
+    NS_WARNING("GMPGetAPI call failed trying to construct decoder.");
+    return IPC_FAIL_NO_REASON(this);
   }
 
   vdc->Init(static_cast<GMPVideoDecoder*>(vd));
@@ -77,7 +78,8 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoEncoderConstructor(
   void* ve = nullptr;
   GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_ENCODER, &vec->Host(), &ve);
   if (err != GMPNoErr || !ve) {
-    return IPC_FAIL(this, "GMPGetAPI call failed trying to construct encoder.");
+    NS_WARNING("GMPGetAPI call failed trying to construct encoder.");
+    return IPC_FAIL_NO_REASON(this);
   }
 
   vec->Init(static_cast<GMPVideoEncoder*>(ve));
@@ -93,7 +95,8 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPChromiumCDMConstructor(
   void* cdm = nullptr;
   GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host10, &cdm, aKeySystem);
   if (err != GMPNoErr || !cdm) {
-    return IPC_FAIL(this, "GMPGetAPI call failed trying to get CDM.");
+    NS_WARNING("GMPGetAPI call failed trying to get CDM.");
+    return IPC_FAIL_NO_REASON(this);
   }
 
   child->Init(static_cast<cdm::ContentDecryptionModule_10*>(cdm),

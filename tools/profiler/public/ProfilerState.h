@@ -95,10 +95,7 @@
         "Record markers from all registered threads")                        \
                                                                              \
   MACRO(22, "unregisteredthreads", UnregisteredThreads,                      \
-        "Discover and profile unregistered threads -- beware: expensive!")   \
-                                                                             \
-  MACRO(23, "processcpu", ProcessCPU,                                        \
-        "Sample the CPU utilization of each process")
+        "Discover and profile unregistered threads -- beware: expensive!")
 // *** Synchronize with lists in BaseProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

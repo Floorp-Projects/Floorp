@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# E.g. `./gen_combos.py [--write] color_quads/720p.png`
-
 import concurrent.futures
 import pathlib
 import subprocess
@@ -9,7 +7,6 @@ import sys
 
 ARGS = sys.argv
 SRC_PATH = pathlib.Path(ARGS.pop())
-assert SRC_PATH.exists(), "gen_combos.py [--flags] <src file path>"
 DIR = SRC_PATH.parent
 
 
@@ -237,11 +234,7 @@ def run_cmd(args):
     dest = None
     if "-vv" not in ARGS:
         dest = subprocess.DEVNULL
-    try:
-        subprocess.run(args, stderr=dest)
-    except FileNotFoundError:
-        print("FileNotFoundError, is ffmpeg not in your PATH?")
-        raise
+    subprocess.run(args, stderr=dest)
 
 
 with concurrent.futures.ThreadPoolExecutor() as pool:

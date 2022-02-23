@@ -443,7 +443,7 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       const NativeThreadId& aThreadId);
 
-  already_AddRefed<PNeckoParent> AllocPNeckoParent();
+  PNeckoParent* AllocPNeckoParent();
 
   virtual mozilla::ipc::IPCResult RecvPNeckoConstructor(
       PNeckoParent* aActor) override {
@@ -519,7 +519,7 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
       const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes,
@@ -528,9 +528,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const nsString& aName,
-      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-      nsIReferrerInfo* aReferrerInfo,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const nsString& aName, nsIPrincipal* aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes);
 
   static void BroadcastBlobURLRegistration(
@@ -760,10 +760,10 @@ class ContentParent final
   // window. aURIToLoad should always be provided, if available, to ensure
   // compatibility with GeckoView.
   mozilla::ipc::IPCResult CommonCreateWindow(
-      PBrowserParent* aThisTab, BrowsingContext& aParent, bool aSetOpener,
+      PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
       BrowserParent* aNextRemoteBrowser, const nsString& aName,
       nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
       bool* aWindowIsNew, int32_t& aOpenLocation,
@@ -917,7 +917,7 @@ class ContentParent final
       const nsACString& aContentProcessType);
 
   mozilla::ipc::IPCResult RecvInitBackground(
-      Endpoint<mozilla::ipc::PBackgroundStarterParent>&& aEndpoint);
+      Endpoint<mozilla::ipc::PBackgroundParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
   mozilla::ipc::IPCResult RecvAddPerformanceMetrics(
@@ -965,6 +965,8 @@ class ContentParent final
                                               const bool& wantCacheData);
 
   bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
+
+  bool DeallocPNeckoParent(PNeckoParent* necko);
 
   already_AddRefed<PExternalHelperAppParent> AllocPExternalHelperAppParent(
       nsIURI* aUri, const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
@@ -1350,8 +1352,7 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvHistoryCommit(
       const MaybeDiscarded<BrowsingContext>& aContext, const uint64_t& aLoadID,
       const nsID& aChangeID, const uint32_t& aLoadType, const bool& aPersist,
-      const bool& aCloneEntryChildren, const bool& aChannelExpired,
-      const uint32_t& aCacheKey);
+      const bool& aCloneEntryChildren, const bool& aChannelExpired);
 
   mozilla::ipc::IPCResult RecvHistoryGo(
       const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
@@ -1375,10 +1376,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvSessionHistoryEntryCacheKey(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const uint32_t& aCacheKey);
-
-  mozilla::ipc::IPCResult RecvSessionHistoryEntryWireframe(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      const Wireframe& aWireframe);
 
   mozilla::ipc::IPCResult
   RecvSessionHistoryEntryStoreWindowNameInContiguousEntries(
@@ -1447,7 +1444,7 @@ class ContentParent final
 
   void UpdateNetworkLinkType();
 
-  static bool ShouldSyncPreference(const char* aPref);
+  static bool ShouldSyncPreference(const char16_t* aData);
 
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,

@@ -11,7 +11,6 @@
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
-#include "nsLayoutUtils.h"
 
 using namespace mozilla::dom;
 

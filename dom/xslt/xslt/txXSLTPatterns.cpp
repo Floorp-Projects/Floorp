@@ -15,6 +15,10 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsIContent.h"
 
+#ifdef TX_TO_STRING
+#  include "nsReadableUtils.h"
+#endif
+
 using mozilla::UniquePtr;
 using mozilla::Unused;
 using mozilla::WrapUnique;

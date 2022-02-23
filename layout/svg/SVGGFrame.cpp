@@ -8,7 +8,6 @@
 #include "SVGGFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "mozilla/dom/SVGElement.h"
 #include "mozilla/PresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"

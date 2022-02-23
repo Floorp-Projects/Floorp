@@ -16,8 +16,6 @@ import sys
 import tempfile
 import urllib.parse
 
-from pathlib import Path
-
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 log = logging.getLogger()
 
@@ -184,7 +182,7 @@ def main():
             log.info("Attributing installer %s ..." % job["input"])
             tf = shutil.copy(job["input"], td)
             if write_attribution_data(tf, job["attribution"]):
-                Path(job["output"]).parent.mkdir(parents=True, exist_ok=True)
+                os.makedirs(os.path.dirname(job["output"]), exist_ok=True)
                 shutil.move(tf, job["output"])
                 log.info("Wrote %s" % job["output"])
 

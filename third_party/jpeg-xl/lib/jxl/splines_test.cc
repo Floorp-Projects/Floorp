@@ -11,7 +11,6 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_file.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/testdata.h"
@@ -44,14 +43,12 @@ constexpr float kTolerance = 0.003125;
 std::vector<Spline> DequantizeSplines(const Splines& splines) {
   const auto& quantized_splines = splines.QuantizedSplines();
   const auto& starting_points = splines.StartingPoints();
-  JXL_CHECK(quantized_splines.size() == starting_points.size());
+  JXL_ASSERT(quantized_splines.size() == starting_points.size());
 
   std::vector<Spline> dequantized;
   for (size_t i = 0; i < quantized_splines.size(); ++i) {
-    dequantized.emplace_back();
-    JXL_CHECK(quantized_splines[i].Dequantize(starting_points[i],
-                                              kQuantizationAdjustment, kYToX,
-                                              kYToB, dequantized.back()));
+    dequantized.push_back(quantized_splines[i].Dequantize(
+        starting_points[i], kQuantizationAdjustment, kYToX, kYToB));
   }
   return dequantized;
 }
@@ -277,23 +274,17 @@ TEST(SplinesTest, DuplicatePoints) {
 
 TEST(SplinesTest, Drawing) {
   CodecInOut io_expected;
-  const PaddedBytes orig = ReadTestData("jxl/splines.pfm");
+  const PaddedBytes orig = ReadTestData("jxl/splines.png");
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io_expected,
                            /*pool=*/nullptr));
 
   std::vector<Spline::Point> control_points{{9, 54},  {118, 159}, {97, 3},
                                             {10, 40}, {150, 25},  {120, 300}};
-  // Use values that survive quant/decorellation roundtrip.
   const Spline spline{
       control_points,
       /*color_dct=*/
-      {{0.4989345073699951171875000f, 0.4997999966144561767578125f},
-       {0.4772970676422119140625000f, 0.f, 0.5250000357627868652343750f},
-       {-0.0176776945590972900390625f, 0.4900000095367431640625000f,
-        0.5250000357627868652343750f}},
-      /*sigma_dct=*/
-      {0.9427147507667541503906250f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-       0.6665999889373779296875000f}};
+      {{0.03125f, 0.00625f, 0.003125f}, {1.f, 0.321875f}, {1.f, 0.24375f}},
+      /*sigma_dct=*/{0.3125f, 0.f, 0.f, 0.0625f}};
   std::vector<Spline> spline_data = {spline};
   std::vector<QuantizedSpline> quantized_splines;
   std::vector<Spline::Point> starting_points;
@@ -310,10 +301,13 @@ TEST(SplinesTest, Drawing) {
   ASSERT_TRUE(splines.InitializeDrawCache(image.xsize(), image.ysize(), *cmap));
   splines.AddTo(&image, Rect(image), Rect(image));
 
+  OpsinParams opsin_params{};
+  opsin_params.Init(kDefaultIntensityTarget);
+  (void)OpsinToLinearInplace(&image, /*pool=*/nullptr, opsin_params);
+
   CodecInOut io_actual;
-  io_actual.SetFromImage(CopyImage(image), ColorEncoding::SRGB());
-  ASSERT_TRUE(
-      io_actual.TransformTo(io_expected.Main().c_current(), GetJxlCms()));
+  io_actual.SetFromImage(CopyImage(image), ColorEncoding::LinearSRGB());
+  ASSERT_TRUE(io_actual.TransformTo(io_expected.Main().c_current()));
 
   VerifyRelativeError(*io_expected.Main().color(), *io_actual.Main().color(),
                       1e-2f, 1e-1f);
@@ -330,8 +324,7 @@ TEST(SplinesTest, ClearedEveryFrame) {
       ReadTestData("jxl/spline_on_first_frame.jxl");
   ASSERT_TRUE(DecodeFile(DecompressParams(), bytes_actual, &io_actual,
                          /*pool=*/nullptr));
-
-  ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB(), GetJxlCms()));
+  ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB()));
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < io_actual.ysize(); ++y) {
       float* const JXL_RESTRICT row = io_actual.Main().color()->PlaneRow(c, y);

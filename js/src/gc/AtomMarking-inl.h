@@ -36,7 +36,7 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
   js::gc::TenuredCell* cell = &thing->asTenured();
   MOZ_ASSERT(cell->zoneFromAnyThread()->isAtomsZone());
 
-  // The embedding is allowed to atomize during initialization.
+  // The context's zone will be null during initialization of the runtime.
   if (!cx->zone()) {
     return true;
   }

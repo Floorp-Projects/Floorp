@@ -40,6 +40,7 @@
 #include "nsAttrName.h"
 
 #include "nsNetCID.h"
+#include "nsParserCIID.h"
 #include "mozilla/parser/PrototypeDocumentParser.h"
 #include "mozilla/dom/PrototypeDocumentContentSink.h"
 #include "nsNameSpaceManager.h"
@@ -51,6 +52,7 @@
 #include "nsJSUtils.h"
 #include "DocumentInlines.h"
 #include "nsICachingChannel.h"
+#include "nsIContentViewer.h"
 #include "nsIScriptElement.h"
 #include "nsArrayUtils.h"
 
@@ -72,7 +74,6 @@
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
-#include "nsParser.h"
 #include "nsSandboxFlags.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
@@ -94,6 +95,8 @@ using namespace mozilla::dom;
 #include "prtime.h"
 
 //#define DEBUG_charset
+
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 // ==================================================================
 // =
@@ -383,7 +386,8 @@ nsresult nsHTMLDocument::StartDocumentLoad(
     aChannel->GetOriginalURI(getter_AddRefs(originalURI));
     mParser = new mozilla::parser::PrototypeDocumentParser(originalURI, this);
   } else {
-    mParser = new nsParser();
+    mParser = do_CreateInstance(kCParserCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Look for the parent document.  Note that at this point we don't have our
@@ -502,7 +506,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(
   }
 
   // parser the content of the URI
-  mParser->Parse(uri);
+  mParser->Parse(uri, this);
 
   return rv;
 }

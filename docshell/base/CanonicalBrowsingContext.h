@@ -91,8 +91,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // BrowsingContextGroup.
   uint64_t GetCrossGroupOpenerId() const { return mCrossGroupOpenerId; }
   void SetCrossGroupOpenerId(uint64_t aOpenerId);
-  void SetCrossGroupOpener(CanonicalBrowsingContext& aCrossGroupOpener,
-                           ErrorResult& aRv);
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 
@@ -142,8 +140,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void SessionHistoryCommit(uint64_t aLoadId, const nsID& aChangeID,
                             uint32_t aLoadType, bool aPersist,
-                            bool aCloneEntryChildren, bool aChannelExpired,
-                            uint32_t aCacheKey);
+                            bool aCloneEntryChildren, bool aChannelExpired);
 
   // Calls the session history listeners' OnHistoryReload, storing the result in
   // aCanReload. If aCanReload is set to true and we have an active or a loading
@@ -290,8 +287,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void SetRestoreData(SessionStoreRestoreData* aData, ErrorResult& aError);
   void ClearRestoreState();
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RequestRestoreTabContent(
-      WindowGlobalParent* aWindow);
+  void RequestRestoreTabContent(WindowGlobalParent* aWindow);
   already_AddRefed<Promise> GetRestorePromise();
 
   nsresult WriteSessionStorageToSessionStore(
@@ -464,13 +460,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RemovePendingDiscard();
 
   bool ShouldAddEntryForRefresh(const SessionHistoryEntry* aEntry) {
-    return ShouldAddEntryForRefresh(aEntry->Info().GetURI(),
-                                    aEntry->Info().GetPostData());
-  }
-  bool ShouldAddEntryForRefresh(nsIURI* aNewURI, bool aHasPostData) {
     nsCOMPtr<nsIURI> currentURI = GetCurrentURI();
-    return BrowsingContext::ShouldAddEntryForRefresh(currentURI, aNewURI,
-                                                     aHasPostData);
+    return BrowsingContext::ShouldAddEntryForRefresh(currentURI,
+                                                     aEntry->Info());
   }
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?

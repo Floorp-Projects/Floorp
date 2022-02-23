@@ -18,21 +18,18 @@ async function promiseGetHistoryIndex(browser) {
 
 async function testNavigations() {
   // Load initial site
-
-  let url1 = REQUEST_URL + "file_navigation.html?foo1";
-  let url2 = REQUEST_URL + "file_navigation.html?foo2";
-  let url3 = REQUEST_URL + "file_navigation.html?foo3";
-
   let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, url1);
+  BrowserTestUtils.loadURI(gBrowser, REQUEST_URL + "file_navigation.html?foo1");
   await loaded;
 
   // Load another site
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [url2],
-    async url => (content.location.href = url)
+    [REQUEST_URL],
+    async function(url) {
+      content.location.href = url + "file_navigation.html?foo2";
+    }
   );
   await loaded;
 
@@ -40,8 +37,10 @@ async function testNavigations() {
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [url3],
-    async url => (content.location.href = url)
+    [REQUEST_URL],
+    async function(url) {
+      content.location.href = url + "file_navigation.html?foo3";
+    }
   );
   await loaded;
   is(
@@ -52,7 +51,7 @@ async function testNavigations() {
 
   // Go back one site by clicking the back button
   info("Clicking back button");
-  loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url2);
+  loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   let backButton = document.getElementById("back-button");
   backButton.click();
   await loaded;
@@ -64,7 +63,7 @@ async function testNavigations() {
 
   // Go back again
   info("Clicking back button again");
-  loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url1);
+  loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   backButton.click();
   await loaded;
   is(

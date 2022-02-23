@@ -200,10 +200,8 @@ class ExtensionListenerCallPromiseResultHandler
       dom::ThreadSafeWorkerRef* aWorkerRef);
 
   // PromiseNativeHandler
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   enum class PromiseCallbackType { Resolve, Reject };
 

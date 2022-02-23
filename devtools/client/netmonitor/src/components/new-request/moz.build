@@ -4,5 +4,4 @@
 
 DevToolsModules(
     "HTTPCustomRequestPanel.js",
-    "InputMap.js",
 )

@@ -89,8 +89,6 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
-#include "mozilla/ipc/UtilityProcessHost.h"
-
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNativeCharsetUtils.h"
@@ -161,7 +159,6 @@ class BaseProcessLauncher {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
         mAllowedFilesRead(aHost->mAllowedFilesRead),
         mSandboxLevel(aHost->mSandboxLevel),
-        mSandbox(aHost->mSandbox),
         mIsFileContent(aHost->mIsFileContent),
         mEnableSandboxLogging(aHost->mEnableSandboxLogging),
 #endif
@@ -222,7 +219,6 @@ class BaseProcessLauncher {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::vector<std::wstring> mAllowedFilesRead;
   int32_t mSandboxLevel;
-  SandboxingKind mSandbox;
   bool mIsFileContent;
   bool mEnableSandboxLogging;
 #endif
@@ -502,7 +498,18 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
       MOZ_CRASH("GetModuleFileNameW failed (FIXME)");
     }
-    exePath = FilePath::FromWStringHack(exePathBuf);
+#  if defined(MOZ_SANDBOX)
+    // We need to start the child process using the real path, so that the
+    // sandbox policy rules will match for DLLs loaded from the bin dir after
+    // we have lowered the sandbox.
+    std::wstring exePathStr = exePathBuf;
+    if (widget::WinUtils::ResolveJunctionPointsAndSymLinks(exePathStr)) {
+      exePath = FilePath::FromWStringHack(exePathStr);
+    } else
+#  endif
+    {
+      exePath = FilePath::FromWStringHack(exePathBuf);
+    }
 #elif defined(OS_POSIX)
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
 #else
@@ -603,10 +610,16 @@ void GeckoChildProcessHost::PrepareLaunch() {
         nsString trimmedPath(readPath);
         trimmedPath.Trim(" ", true, true);
         std::wstring resolvedPath(trimmedPath.Data());
-        // Check if path ends with '\' as this indicates we want to give read
-        // access to a directory and so it needs a wildcard.
-        if (resolvedPath.back() == L'\\') {
-          resolvedPath.append(L"*");
+        // Before resolving check if path ends with '\' as this indicates we
+        // want to give read access to a directory and so it needs a wildcard.
+        bool addWildcard = (resolvedPath.back() == L'\\');
+        if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(resolvedPath)) {
+          NS_ERROR("Failed to resolve test read policy rule.");
+          continue;
+        }
+
+        if (addWildcard) {
+          resolvedPath.append(L"\\*");
         }
         mAllowedFilesRead.push_back(resolvedPath);
       }
@@ -829,6 +842,18 @@ void GeckoChildProcessHost::InitializeChannel(
   lock.Notify();
 }
 
+void GeckoChildProcessHost::Join() {
+  AssertIOThread();
+
+  if (!mChildProcessHandle) {
+    return;
+  }
+
+  // If this fails, there's nothing we can do.
+  base::KillProcess(mChildProcessHandle, 0, /*wait*/ true);
+  SetAlreadyDead();
+}
+
 void GeckoChildProcessHost::SetAlreadyDead() {
   if (mChildProcessHandle &&
       mChildProcessHandle != base::kInvalidProcessHandle) {
@@ -846,7 +871,20 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
   // the path against the sanboxing rules as passed to fopen (left relative).
   char absPath[MAX_PATH + 2];
   if (_fullpath(absPath, origLogName, sizeof(absPath))) {
-    buffer.Append(absPath);
+#  ifdef MOZ_SANDBOX
+    // We need to make sure the child log name doesn't contain any junction
+    // points or symlinks or the sandbox will reject rules to allow writing.
+    std::wstring resolvedPath(NS_ConvertUTF8toUTF16(absPath).get());
+    if (widget::WinUtils::ResolveJunctionPointsAndSymLinks(resolvedPath)) {
+      AppendUTF16toUTF8(
+          Span(reinterpret_cast<const char16_t*>(resolvedPath.data()),
+               resolvedPath.size()),
+          buffer);
+    } else
+#  endif
+    {
+      buffer.Append(absPath);
+    }
   } else
 #endif
   {
@@ -1409,15 +1447,6 @@ bool WindowsProcessLauncher::DoSetup() {
         mUseSandbox = true;
       }
       break;
-    case GeckoProcessType_Utility:
-      if (!PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
-        if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
-                mSandbox)) {
-          return false;
-        }
-        mUseSandbox = true;
-      }
-      break;
     case GeckoProcessType_RemoteSandboxBroker:
       // We don't sandbox the sandbox launcher...
       break;
@@ -1693,13 +1722,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
     case GeckoProcessType_GMPlugin:
       sandboxType = gmp::GMPProcessParent::GetMacSandboxType();
       break;
-    case GeckoProcessType_Utility:
-      sandboxType = ipc::UtilityProcessHost::GetMacSandboxType();
-      break;
     default:
       return true;
   }
-
   return mozilla::StartMacSandboxIfEnabled(sandboxType, aArgc, aArgv,
                                            aErrorMessage);
 }

@@ -187,7 +187,8 @@ class nsWindow final : public nsWindowBase {
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
   virtual void CleanupFullscreenTransition() override;
-  virtual nsresult MakeFullScreen(bool aFullScreen) override;
+  virtual nsresult MakeFullScreen(bool aFullScreen,
+                                  nsIScreen* aScreen = nullptr) override;
   virtual void HideWindowChrome(bool aShouldHide) override;
   virtual void Invalidate(bool aEraseBackground = false,
                           bool aUpdateNCArea = false,
@@ -250,8 +251,6 @@ class nsWindow final : public nsWindowBase {
       const LayoutDeviceIntRegion& aOpaqueRegion) override;
   virtual nsresult SetNonClientMargins(
       LayoutDeviceIntMargin& aMargins) override;
-  virtual void SetResizeMargin(
-      mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   void SetDrawsInTitlebar(bool aState) override;
   virtual void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
@@ -302,8 +301,6 @@ class nsWindow final : public nsWindowBase {
 
   void SetSmallIcon(HICON aIcon);
   void SetBigIcon(HICON aIcon);
-  void SetSmallIconNoData();
-  void SetBigIconNoData();
 
   static void SetIsRestoringSession(const bool aIsRestoringSession) {
     sIsRestoringSession = aIsRestoringSession;
@@ -538,8 +535,6 @@ class nsWindow final : public nsWindowBase {
                                        const WinPointerInfo& aPointerInfo,
                                        mozilla::MouseButton aButton);
 
-  void SetSizeModeInternal(nsSizeMode aMode);
-
  protected:
   static bool IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
@@ -642,11 +637,8 @@ class nsWindow final : public nsWindowBase {
 
   // Indicates custom frames are enabled
   bool mCustomNonClient;
-  // Indicates custom resize margins are in effect
-  bool mUseResizeMarginOverrides;
-  // Width of the left and right portions of the resize region
+  // Cached copy of L&F's resize border
   int32_t mHorResizeMargin;
-  // Height of the top and bottom portions of the resize region
   int32_t mVertResizeMargin;
   // Height of the caption plus border
   int32_t mCaptionHeight;

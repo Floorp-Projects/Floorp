@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* import-globals-from /toolkit/content/customElements.js */
+/* import-globals-from ../../../content/customElements.js */
 /* import-globals-from aboutaddonsCommon.js */
 /* exported loadView */
 
@@ -23,7 +23,7 @@ async function recordViewTelemetry(param) {
   let addon;
 
   if (
-    AddonManager.hasAddonType(param) ||
+    param in AddonManager.addonTypes ||
     ["recent", "available"].includes(param)
   ) {
     type = param;

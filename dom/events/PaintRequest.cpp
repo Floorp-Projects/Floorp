@@ -33,7 +33,7 @@ JSObject* PaintRequest::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<DOMRect> PaintRequest::ClientRect() {
-  RefPtr<DOMRect> clientRect = new DOMRect(mParent);
+  RefPtr<DOMRect> clientRect = new DOMRect(this);
   clientRect->SetLayoutRect(mRequest);
   return clientRect.forget();
 }

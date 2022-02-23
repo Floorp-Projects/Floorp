@@ -216,11 +216,6 @@ class SingleTestMixin(object):
                 #   <full-suite> is a unique id for the suite, matching desktop mozharness configs
                 (
                     "mochitest-browser-chrome",
-                    "a11y",
-                    None,
-                ): "mochitest-browser-a11y",
-                (
-                    "mochitest-browser-chrome",
                     "devtools",
                     None,
                 ): "mochitest-devtools-chrome",

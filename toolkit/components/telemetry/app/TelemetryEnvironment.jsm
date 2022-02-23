@@ -249,6 +249,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.formfill.enable", { what: RECORD_PREF_VALUE }],
   ["browser.newtabpage.enabled", { what: RECORD_PREF_VALUE }],
   ["browser.shell.checkDefaultBrowser", { what: RECORD_PREF_VALUE }],
+  ["browser.search.ignoredJAREngines", { what: RECORD_DEFAULTPREF_VALUE }],
   ["browser.search.region", { what: RECORD_PREF_VALUE }],
   ["browser.search.suggest.enabled", { what: RECORD_PREF_VALUE }],
   ["browser.search.widget.inNavBar", { what: RECORD_DEFAULTPREF_VALUE }],
@@ -767,12 +768,10 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveAddons() {
     // Request addons, asynchronously.
-    // "theme" is excluded because it is already handled by _getActiveTheme.
-    let { addons: allAddons, fullData } = await AddonManager.getActiveAddons(
-      AddonManagerPrivate.getAddonTypesByProvider("XPIProvider").filter(
-        addonType => addonType != "theme"
-      )
-    );
+    let { addons: allAddons, fullData } = await AddonManager.getActiveAddons([
+      "extension",
+      "service",
+    ]);
 
     this._environment._addonsAreFull = fullData;
     let activeAddons = {};
@@ -1627,8 +1626,14 @@ EnvironmentCache.prototype = {
       effectiveContentProcessLevel =
         sandboxSettings.effectiveContentSandboxLevel;
 
-      // The possible values for this are defined in the ContentWin32kLockdownState
-      // enum in security/sandbox/common/SandboxSettings.h
+      // See `ContentWin32kLockdownState` in
+      // <security/sandbox/common/SandboxSettings.h>
+      //
+      // Values:
+      // 1 = LockdownEnabled
+      // 2 = MissingWebRender
+      // 3 = OperatingSystemNotSupported
+      // 4 = PrefNotSet
       contentWin32kLockdownState = sandboxSettings.contentWin32kLockdownState;
     } catch (e) {}
     return {
@@ -1801,22 +1806,22 @@ EnvironmentCache.prototype = {
    * @return Object containing the partner data.
    */
   _getPartner() {
-    let defaults = Services.prefs.getDefaultBranch(null);
     let partnerData = {
-      distributionId: defaults.getStringPref(PREF_DISTRIBUTION_ID, null),
-      distributionVersion: defaults.getCharPref(
+      distributionId: Services.prefs.getStringPref(PREF_DISTRIBUTION_ID, null),
+      distributionVersion: Services.prefs.getStringPref(
         PREF_DISTRIBUTION_VERSION,
         null
       ),
-      partnerId: defaults.getCharPref(PREF_PARTNER_ID, null),
-      distributor: defaults.getCharPref(PREF_DISTRIBUTOR, null),
-      distributorChannel: defaults.getCharPref(PREF_DISTRIBUTOR_CHANNEL, null),
+      partnerId: Services.prefs.getStringPref(PREF_PARTNER_ID, null),
+      distributor: Services.prefs.getStringPref(PREF_DISTRIBUTOR, null),
+      distributorChannel: Services.prefs.getStringPref(
+        PREF_DISTRIBUTOR_CHANNEL,
+        null
+      ),
     };
 
     // Get the PREF_APP_PARTNER_BRANCH branch and append its children to partner data.
-    let partnerBranch = Services.prefs.getDefaultBranch(
-      PREF_APP_PARTNER_BRANCH
-    );
+    let partnerBranch = Services.prefs.getBranch(PREF_APP_PARTNER_BRANCH);
     partnerData.partnerNames = partnerBranch.getChildList("");
 
     return partnerData;

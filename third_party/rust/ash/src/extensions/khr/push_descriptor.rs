@@ -6,15 +6,23 @@ use std::mem;
 
 #[derive(Clone)]
 pub struct PushDescriptor {
-    fp: vk::KhrPushDescriptorFn,
+    handle: vk::Instance,
+    push_descriptors_fn: vk::KhrPushDescriptorFn,
 }
 
 impl PushDescriptor {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let fp = vk::KhrPushDescriptorFn::load(|name| unsafe {
+        let push_descriptors_fn = vk::KhrPushDescriptorFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { fp }
+        Self {
+            handle: instance.handle(),
+            push_descriptors_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrPushDescriptorFn::name()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPushDescriptorSetKHR.html>"]
@@ -26,7 +34,7 @@ impl PushDescriptor {
         set: u32,
         descriptor_writes: &[vk::WriteDescriptorSet],
     ) {
-        self.fp.cmd_push_descriptor_set_khr(
+        self.push_descriptors_fn.cmd_push_descriptor_set_khr(
             command_buffer,
             pipeline_bind_point,
             layout,
@@ -45,20 +53,21 @@ impl PushDescriptor {
         set: u32,
         p_data: *const c_void,
     ) {
-        self.fp.cmd_push_descriptor_set_with_template_khr(
-            command_buffer,
-            descriptor_update_template,
-            layout,
-            set,
-            p_data,
-        );
-    }
-
-    pub fn name() -> &'static CStr {
-        vk::KhrPushDescriptorFn::name()
+        self.push_descriptors_fn
+            .cmd_push_descriptor_set_with_template_khr(
+                command_buffer,
+                descriptor_update_template,
+                layout,
+                set,
+                p_data,
+            );
     }
 
     pub fn fp(&self) -> &vk::KhrPushDescriptorFn {
-        &self.fp
+        &self.push_descriptors_fn
+    }
+
+    pub fn instance(&self) -> vk::Instance {
+        self.handle
     }
 }

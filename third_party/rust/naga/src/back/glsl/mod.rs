@@ -90,42 +90,23 @@ impl crate::StorageClass {
             _ => false,
         }
     }
+}
 
-    /// Whether a variable with this storage class can be initialized
-    fn initializable(&self) -> bool {
-        match *self {
-            crate::StorageClass::WorkGroup
-            | crate::StorageClass::Uniform
-            | crate::StorageClass::Storage { .. } => false,
+//Note: similar to `back/spv/helpers.rs`
+fn global_needs_wrapper(ir_module: &crate::Module, global_ty: Handle<crate::Type>) -> bool {
+    match ir_module.types[global_ty].inner {
+        crate::TypeInner::Struct {
+            ref members,
+            span: _,
+        } => match ir_module.types[members.last().unwrap().ty].inner {
+            // Structs with dynamically sized arrays can't be copied and can't be wrapped.
+            crate::TypeInner::Array {
+                size: crate::ArraySize::Dynamic,
+                ..
+            } => false,
             _ => true,
-        }
-    }
-}
-
-#[derive(PartialEq)]
-enum GlobalTypeKind<'a> {
-    WrappedStruct,
-    Unsized(&'a [crate::StructMember]),
-    Other,
-}
-
-impl<'a> GlobalTypeKind<'a> {
-    //Note: similar to `back/spv/helpers.rs`
-    fn new(ir_module: &'a crate::Module, global_ty: Handle<crate::Type>) -> Self {
-        match ir_module.types[global_ty].inner {
-            crate::TypeInner::Struct {
-                ref members,
-                span: _,
-            } => match ir_module.types[members.last().unwrap().ty].inner {
-                // Structs with dynamically sized arrays can't be copied and can't be wrapped.
-                crate::TypeInner::Array {
-                    size: crate::ArraySize::Dynamic,
-                    ..
-                } => Self::Unsized(members),
-                _ => Self::WrappedStruct,
-            },
-            _ => Self::Other,
-        }
+        },
+        _ => false,
     }
 }
 
@@ -178,10 +159,6 @@ impl Version {
 
     fn supports_std430_layout(&self) -> bool {
         *self >= Version::Desktop(430) || *self >= Version::Embedded(310)
-    }
-
-    fn supports_fma_function(&self) -> bool {
-        *self >= Version::Desktop(400) || *self >= Version::Embedded(310)
     }
 }
 
@@ -320,16 +297,6 @@ impl fmt::Display for VaryingName<'_> {
             crate::Binding::BuiltIn(built_in) => {
                 write!(f, "{}", glsl_built_in(built_in, self.output))
             }
-        }
-    }
-}
-
-impl ShaderStage {
-    fn to_str(self) -> &'static str {
-        match self {
-            ShaderStage::Compute => "cs",
-            ShaderStage::Fragment => "fs",
-            ShaderStage::Vertex => "vs",
         }
     }
 }
@@ -554,21 +521,14 @@ impl<'a, W: Write> Writer<'a, W> {
         // struct without adding all of it's members first
         for (handle, ty) in self.module.types.iter() {
             if let TypeInner::Struct { ref members, .. } = ty.inner {
-                let generate_struct = match GlobalTypeKind::new(self.module, handle) {
-                    GlobalTypeKind::WrappedStruct => true,
-                    // If it's a global non-wrapped struct, it will be printed
-                    // with the corresponding global variable.
-                    GlobalTypeKind::Unsized(_) => false,
-                    GlobalTypeKind::Other => {
-                        let used_by_global =
-                            self.module.global_variables.iter().any(|(vh, var)| {
-                                !ep_info[vh].is_empty() && var.class.is_buffer() && var.ty == handle
-                            });
-                        // If not used by a global, it's safe to just spew it here
-                        !used_by_global
-                    }
-                };
-                if generate_struct {
+                let used_by_global = self.module.global_variables.iter().any(|(vh, var)| {
+                    !ep_info[vh].is_empty() && var.class.is_buffer() && var.ty == handle
+                });
+
+                let is_wrapped = global_needs_wrapper(self.module, handle);
+                // If it's a global non-wrapped struct, it will be printed
+                // with the corresponding global variable.
+                if !used_by_global || is_wrapped {
                     let name = &self.names[&NameKey::Type(handle)];
                     write!(self.out, "struct {} ", name)?;
                     self.write_struct_body(handle, members)?;
@@ -941,22 +901,18 @@ impl<'a, W: Write> Writer<'a, W> {
             write!(self.out, "{} ", block_name)?;
             self.reflection_names_globals.insert(handle, block_name);
 
-            match GlobalTypeKind::new(self.module, global.ty) {
-                GlobalTypeKind::WrappedStruct => {
-                    write!(self.out, "{{ ")?;
-                    // Write the type
-                    // `write_type` adds no leading or trailing spaces
-                    self.write_type(global.ty)?;
-                    true
-                }
-                GlobalTypeKind::Unsized(members) => {
-                    self.write_struct_body(global.ty, members)?;
-                    false
-                }
-                GlobalTypeKind::Other => {
-                    return Err(Error::Custom("Non-struct type of a buffer".to_string()));
-                }
+            let needs_wrapper = global_needs_wrapper(self.module, global.ty);
+            if needs_wrapper {
+                write!(self.out, "{{ ")?;
+                // Write the type
+                // `write_type` adds no leading or trailing spaces
+                self.write_type(global.ty)?;
+            } else if let crate::TypeInner::Struct { ref members, .. } =
+                self.module.types[global.ty].inner
+            {
+                self.write_struct_body(global.ty, members)?;
             }
+            needs_wrapper
         } else {
             self.write_type(global.ty)?;
             false
@@ -971,7 +927,7 @@ impl<'a, W: Write> Writer<'a, W> {
             self.write_array_size(size)?;
         }
 
-        if global.class.initializable() && is_value_init_supported(self.module, global.ty) {
+        if is_value_init_supported(self.module, global.ty) {
             write!(self.out, " = ")?;
             if let Some(init) = global.init {
                 self.write_constant(init)?;
@@ -1001,12 +957,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ) -> String {
         match global.binding {
             Some(ref br) => {
-                format!(
-                    "_group_{}_binding_{}_{}",
-                    br.group,
-                    br.binding,
-                    self.entry_point.stage.to_str()
-                )
+                format!("_group_{}_binding_{}", br.group, br.binding)
             }
             None => self.names[&NameKey::GlobalVariable(handle)].clone(),
         }
@@ -1019,13 +970,7 @@ impl<'a, W: Write> Writer<'a, W> {
         global: &crate::GlobalVariable,
     ) -> BackendResult {
         match global.binding {
-            Some(ref br) => write!(
-                self.out,
-                "_group_{}_binding_{}_{}",
-                br.group,
-                br.binding,
-                self.entry_point.stage.to_str()
-            )?,
+            Some(ref br) => write!(self.out, "_group_{}_binding_{}", br.group, br.binding)?,
             None => write!(
                 self.out,
                 "{}",
@@ -1373,9 +1318,6 @@ impl<'a, W: Write> Writer<'a, W> {
             // `type(components)` where `components` is a comma separated list of constants
             crate::ConstantInner::Composite { ty, ref components } => {
                 self.write_type(ty)?;
-                if let TypeInner::Array { size, .. } = self.module.types[ty].inner {
-                    self.write_array_size(size)?;
-                }
                 write!(self.out, "(")?;
 
                 // Write the comma separated constants
@@ -1986,7 +1928,6 @@ impl<'a, W: Write> Writer<'a, W> {
             Expression::ImageSample {
                 image,
                 sampler: _, //TODO?
-                gather,
                 coordinate,
                 array_index,
                 offset,
@@ -2021,7 +1962,6 @@ impl<'a, W: Write> Writer<'a, W> {
                 let workaround_lod_array_shadow_as_grad = (array_index.is_some()
                     || dim == crate::ImageDimension::Cube)
                     && depth_ref.is_some()
-                    && gather.is_none()
                     && !self
                         .options
                         .writer_flags
@@ -2029,7 +1969,6 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 //Write the function to be used depending on the sample level
                 let fun_name = match level {
-                    crate::SampleLevel::Zero if gather.is_some() => "textureGather",
                     crate::SampleLevel::Auto | crate::SampleLevel::Bias(_) => "texture",
                     crate::SampleLevel::Zero | crate::SampleLevel::Exact(_) => {
                         if workaround_lod_array_shadow_as_grad {
@@ -2063,8 +2002,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 if array_index.is_some() {
                     coord_dim += 1;
                 }
-                let merge_depth_ref = depth_ref.is_some() && gather.is_none() && coord_dim < 4;
-                if merge_depth_ref {
+                let cube_array_shadow = coord_dim == 4;
+                if depth_ref.is_some() && !cube_array_shadow {
                     coord_dim += 1;
                 }
 
@@ -2082,17 +2021,21 @@ impl<'a, W: Write> Writer<'a, W> {
                     write!(self.out, ", ")?;
                     self.write_expr(expr, ctx)?;
                 }
-                if merge_depth_ref {
-                    write!(self.out, ", ")?;
-                    self.write_expr(depth_ref.unwrap(), ctx)?;
+                if !cube_array_shadow {
+                    if let Some(expr) = depth_ref {
+                        write!(self.out, ", ")?;
+                        self.write_expr(expr, ctx)?;
+                    }
                 }
                 if is_vec {
                     write!(self.out, ")")?;
                 }
 
-                if let (Some(expr), false) = (depth_ref, merge_depth_ref) {
-                    write!(self.out, ", ")?;
-                    self.write_expr(expr, ctx)?;
+                if cube_array_shadow {
+                    if let Some(expr) = depth_ref {
+                        write!(self.out, ", ")?;
+                        self.write_expr(expr, ctx)?;
+                    }
                 }
 
                 match level {
@@ -2102,7 +2045,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     crate::SampleLevel::Zero => {
                         if workaround_lod_array_shadow_as_grad {
                             write!(self.out, ", vec2(0,0), vec2(0,0)")?;
-                        } else if gather.is_none() {
+                        } else {
                             write!(self.out, ", 0.0")?;
                         }
                     }
@@ -2137,10 +2080,6 @@ impl<'a, W: Write> Writer<'a, W> {
                     if tex_1d_hack {
                         write!(self.out, ", 0)")?;
                     }
-                }
-
-                if let (Some(component), None) = (gather, depth_ref) {
-                    write!(self.out, ", {}", component as usize)?;
                 }
 
                 // End the function
@@ -2300,11 +2239,7 @@ impl<'a, W: Write> Writer<'a, W> {
             // comparison operations on vectors as they are implemented with
             // builtin functions.
             // Once again we wrap everything in parentheses to avoid precedence issues
-            Expression::Binary {
-                mut op,
-                left,
-                right,
-            } => {
+            Expression::Binary { op, left, right } => {
                 // Holds `Some(function_name)` if the binary operation is
                 // implemented as a function call
                 use crate::{BinaryOperator as Bo, ScalarKind as Sk, TypeInner as Ti};
@@ -2339,17 +2274,6 @@ impl<'a, W: Write> Writer<'a, W> {
                     _ => match (left_inner.scalar_kind(), right_inner.scalar_kind()) {
                         (Some(Sk::Float), _) | (_, Some(Sk::Float)) => match op {
                             Bo::Modulo => BinaryOperation::Modulo,
-                            _ => BinaryOperation::Other,
-                        },
-                        (Some(Sk::Bool), Some(Sk::Bool)) => match op {
-                            Bo::InclusiveOr => {
-                                op = crate::BinaryOperator::LogicalOr;
-                                BinaryOperation::Other
-                            }
-                            Bo::And => {
-                                op = crate::BinaryOperator::LogicalAnd;
-                                BinaryOperation::Other
-                            }
                             _ => BinaryOperation::Other,
                         },
                         _ => BinaryOperation::Other,
@@ -2499,8 +2423,6 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Asinh => "asinh",
                     Mf::Acosh => "acosh",
                     Mf::Atanh => "atanh",
-                    Mf::Radians => "radians",
-                    Mf::Degrees => "degrees",
                     // glsl doesn't have atan2 function
                     // use two-argument variation of the atan function
                     Mf::Atan2 => "atan",
@@ -2531,30 +2453,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Refract => "refract",
                     // computational
                     Mf::Sign => "sign",
-                    Mf::Fma => {
-                        if self.options.version.supports_fma_function() {
-                            // Use the fma function when available
-                            "fma"
-                        } else {
-                            // No fma support. Transform the function call into an arithmetic expression
-                            write!(self.out, "(")?;
-
-                            self.write_expr(arg, ctx)?;
-                            write!(self.out, " * ")?;
-
-                            let arg1 =
-                                arg1.ok_or_else(|| Error::Custom("Missing fma arg1".to_owned()))?;
-                            self.write_expr(arg1, ctx)?;
-                            write!(self.out, " + ")?;
-
-                            let arg2 =
-                                arg2.ok_or_else(|| Error::Custom("Missing fma arg2".to_owned()))?;
-                            self.write_expr(arg2, ctx)?;
-                            write!(self.out, ")")?;
-
-                            return Ok(());
-                        }
-                    }
+                    Mf::Fma => "fma",
                     Mf::Mix => "mix",
                     Mf::Step => "step",
                     Mf::SmoothStep => "smoothstep",
@@ -2568,8 +2467,6 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::ReverseBits => "bitfieldReverse",
                     Mf::ExtractBits => "bitfieldExtract",
                     Mf::InsertBits => "bitfieldInsert",
-                    Mf::FindLsb => "findLSB",
-                    Mf::FindMsb => "findMSB",
                     // data packing
                     Mf::Pack4x8snorm => "packSnorm4x8",
                     Mf::Pack4x8unorm => "packUnorm4x8",
@@ -2776,46 +2673,28 @@ impl<'a, W: Write> Writer<'a, W> {
             TypeInner::Scalar { kind, .. } => {
                 self.write_zero_init_scalar(kind)?;
             }
-            TypeInner::Vector { kind, .. } => {
+            TypeInner::Vector { size, kind, .. } => {
                 self.write_value_type(inner)?;
                 write!(self.out, "(")?;
-                self.write_zero_init_scalar(kind)?;
-                write!(self.out, ")")?;
-            }
-            TypeInner::Matrix { .. } => {
-                self.write_value_type(inner)?;
-                write!(self.out, "(")?;
-                self.write_zero_init_scalar(crate::ScalarKind::Float)?;
-                write!(self.out, ")")?;
-            }
-            TypeInner::Array { base, size, .. } => {
-                let count = match size
-                    .to_indexable_length(self.module)
-                    .expect("Bad array size")
-                {
-                    proc::IndexableLength::Known(count) => count,
-                    proc::IndexableLength::Dynamic => return Ok(()),
-                };
-                self.write_type(base)?;
-                self.write_array_size(size)?;
-                write!(self.out, "(")?;
-                for _ in 1..count {
-                    self.write_zero_init_value(base)?;
+                for _ in 1..(size as usize) {
+                    self.write_zero_init_scalar(kind)?;
                     write!(self.out, ", ")?;
                 }
                 // write last parameter without comma and space
-                self.write_zero_init_value(base)?;
+                self.write_zero_init_scalar(kind)?;
                 write!(self.out, ")")?;
             }
-            TypeInner::Struct { ref members, .. } => {
-                let name = &self.names[&NameKey::Type(ty)];
-                write!(self.out, "{}(", name)?;
-                for (i, member) in members.iter().enumerate() {
-                    self.write_zero_init_value(member.ty)?;
-                    if i != members.len().saturating_sub(1) {
-                        write!(self.out, ", ")?;
-                    }
+            TypeInner::Matrix { columns, rows, .. } => {
+                let number_of_components = (columns as usize) * (rows as usize);
+                self.write_value_type(inner)?;
+                write!(self.out, "(")?;
+                for _ in 1..number_of_components {
+                    // IR supports only float matrix
+                    self.write_zero_init_scalar(crate::ScalarKind::Float)?;
+                    write!(self.out, ", ")?;
                 }
+                // write last parameter without comma and space
+                self.write_zero_init_scalar(crate::ScalarKind::Float)?;
                 write!(self.out, ")")?;
             }
             _ => {} // TODO:
@@ -3102,12 +2981,6 @@ fn glsl_storage_format(format: crate::StorageFormat) -> &'static str {
 fn is_value_init_supported(module: &crate::Module, ty: Handle<crate::Type>) -> bool {
     match module.types[ty].inner {
         TypeInner::Scalar { .. } | TypeInner::Vector { .. } | TypeInner::Matrix { .. } => true,
-        TypeInner::Array { base, size, .. } => {
-            size != crate::ArraySize::Dynamic && is_value_init_supported(module, base)
-        }
-        TypeInner::Struct { ref members, .. } => members
-            .iter()
-            .all(|member| is_value_init_supported(module, member.ty)),
         _ => false,
     }
 }

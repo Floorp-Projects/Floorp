@@ -215,11 +215,11 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
   RootedObject obj(cx, objArg);
   RootedId id(cx, idArg);
 
-  if (!id.isString()) {
+  if (!JSID_IS_STRING(id)) {
     return NS_OK;
   }
 
-  RootedString str(cx, id.toString());
+  RootedString str(cx, JSID_TO_STRING(id));
   JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
 
   // we only allow interfaces by name here
@@ -369,7 +369,8 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
   RootedObject obj(cx, objArg);
 
   RootedValue cidv(cx);
-  if (id.isString() && xpc::ContractID2JSValue(cx, id.toString(), &cidv)) {
+  if (JSID_IS_STRING(id) &&
+      xpc::ContractID2JSValue(cx, JSID_TO_STRING(id), &cidv)) {
     *resolvedp = true;
     *_retval = JS_DefinePropertyById(cx, obj, id, cidv,
                                      JSPROP_ENUMERATE | JSPROP_READONLY |
@@ -497,11 +498,11 @@ nsXPCComponents_Results::Resolve(nsIXPConnectWrappedNative* wrapper,
                                  bool* resolvedp, bool* _retval) {
   RootedObject obj(cx, objArg);
   RootedId id(cx, idArg);
-  if (!id.isString()) {
+  if (!JSID_IS_STRING(id)) {
     return NS_OK;
   }
 
-  JS::UniqueChars name = JS_EncodeStringToLatin1(cx, id.toString());
+  JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
   if (name) {
     const char* rv_name;
     const void* iter = nullptr;
@@ -1682,7 +1683,7 @@ class PreciseGCRunnable : public Runnable {
 
   NS_IMETHOD Run() override {
     nsJSContext::GarbageCollectNow(
-        GCReason::COMPONENT_UTILS,
+        GCReason::COMPONENT_UTILS, nsJSContext::NonIncrementalGC,
         mShrinking ? nsJSContext::ShrinkingGC : nsJSContext::NonShrinkingGC);
 
     mCallback->Callback();

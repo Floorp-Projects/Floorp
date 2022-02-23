@@ -17,6 +17,7 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"  // RTCStatsCollection
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIGlobalObject.h"
@@ -141,12 +142,6 @@ class RTCStatsReport final : public nsWrapperCache {
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
-
-void MergeStats(UniquePtr<dom::RTCStatsCollection> aFromStats,
-                dom::RTCStatsCollection* aIntoStats);
-
-void FlattenStats(nsTArray<UniquePtr<dom::RTCStatsCollection>> aFromStats,
-                  dom::RTCStatsCollection* aIntoStats);
 
 }  // namespace dom
 }  // namespace mozilla

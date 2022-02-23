@@ -87,7 +87,7 @@ bool XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
   JS_MarkCrossZoneId(ccx, name);
 
   JSFunction* fun;
-  if (name.isString()) {
+  if (JSID_IS_STRING(name)) {
     fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, name);
   } else {
     fun = js::NewFunctionWithReserved(ccx, callback, argc, 0, nullptr);
@@ -286,7 +286,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       NS_ERROR("bad constant name");
       return nullptr;
     }
-    jsid name = PropertyKey::NonIntAtom(str);
+    jsid name = PropertyKey::fromNonIntAtom(str);
 
     // XXX need better way to find dups
     // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
@@ -311,7 +311,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     return nullptr;
   }
 
-  RootedId interfaceName(cx, PropertyKey::NonIntAtom(str));
+  RootedId interfaceName(cx, PropertyKey::fromNonIntAtom(str));
 
   // Use placement new to create an object with the right amount of space
   // to hold the members array

@@ -56,8 +56,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const HELP_URL =
-  "https://firefox-source-docs.mozilla.org/devtools-user/web_console/helpers/";
+const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 async function getMappedExpression(hud, expression) {
   let mapResult;

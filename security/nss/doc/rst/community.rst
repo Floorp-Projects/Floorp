@@ -1,4 +1,4 @@
-.. _mozilla_projects_nss_community:
+.. _Community:
 
 Community
 ---------

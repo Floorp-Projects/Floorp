@@ -252,7 +252,7 @@ class FaviconLoad {
         this._deferred.reject(
           Components.Exception(
             `Favicon at "${this.icon.iconUri.spec}" failed to load: ${this.channel.responseStatusText}.`,
-            { data: { httpStatus: this.channel.responseStatus } }
+            Cr.NS_ERROR_FAILURE
           )
         );
         return;
@@ -590,9 +590,7 @@ class IconLoader {
       });
     } catch (e) {
       if (e.result != Cr.NS_BINDING_ABORTED) {
-        if (typeof e.data?.wrappedJSObject?.httpStatus !== "number") {
-          Cu.reportError(e);
-        }
+        Cu.reportError(e);
 
         // Used mainly for tests currently.
         this.actor.sendAsyncMessage("Link:SetFailedIcon", {

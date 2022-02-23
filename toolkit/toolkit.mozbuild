@@ -74,7 +74,6 @@ if CONFIG['MOZ_UPDATER'] and CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     '/ipc',
     '/hal',
-    '/js/loader',
     '/js/xpconnect',
     '/modules/libjar',
     '/storage',
@@ -194,7 +193,3 @@ if CONFIG['ENABLE_TESTS']:
 
 if CONFIG['FUZZING']:
     DIRS += ['/tools/fuzzing']
-
-if CONFIG['MOZ_WAYLAND']:
-    DIRS += ['/media/mozva']
-

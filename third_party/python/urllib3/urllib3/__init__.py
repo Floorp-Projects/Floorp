@@ -1,27 +1,28 @@
 """
-Python HTTP library with thread-safe connection pooling, file post support, user friendly, and more
+urllib3 - Thread-safe connection pooling and re-using.
 """
 from __future__ import absolute_import
-
-# Set default logging handler to avoid "No handler found" warnings.
-import logging
 import warnings
-from logging import NullHandler
+
+from .connectionpool import HTTPConnectionPool, HTTPSConnectionPool, connection_from_url
 
 from . import exceptions
-from ._version import __version__
-from .connectionpool import HTTPConnectionPool, HTTPSConnectionPool, connection_from_url
 from .filepost import encode_multipart_formdata
 from .poolmanager import PoolManager, ProxyManager, proxy_from_url
 from .response import HTTPResponse
 from .util.request import make_headers
-from .util.retry import Retry
-from .util.timeout import Timeout
 from .util.url import get_host
+from .util.timeout import Timeout
+from .util.retry import Retry
+
+
+# Set default logging handler to avoid "No handler found" warnings.
+import logging
+from logging import NullHandler
 
 __author__ = "Andrey Petrov (andrey.petrov@shazow.net)"
 __license__ = "MIT"
-__version__ = __version__
+__version__ = "1.25.9"
 
 __all__ = (
     "HTTPConnectionPool",

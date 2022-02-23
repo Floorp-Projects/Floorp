@@ -617,31 +617,19 @@ class NativeObject : public JSObject {
                                                           uint32_t slot);
 
   MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(Shape* newShape) const {
-    Shape* oldShape = shape();
-    MOZ_ASSERT(oldShape->propMapLength() == 0,
-               "object must have no properties");
-    MOZ_ASSERT(newShape->propMapLength() > 0,
-               "new shape must have at least one property");
-    if (oldShape->numFixedSlots() != newShape->numFixedSlots()) {
+    if (shape()->numFixedSlots() != newShape->numFixedSlots()) {
       return false;
     }
-    if (oldShape->isDictionary() || newShape->isDictionary()) {
+    if (shape()->isDictionary() || newShape->isDictionary()) {
       return false;
     }
-    if (oldShape->base() != newShape->base()) {
+    if (shape()->base() != newShape->base()) {
       return false;
     }
-    MOZ_ASSERT(oldShape->getObjectClass() == newShape->getObjectClass());
-    MOZ_ASSERT(oldShape->proto() == newShape->proto());
-    MOZ_ASSERT(oldShape->realm() == newShape->realm());
-    // We only handle the common case where the old shape has no object flags
-    // (expected because it's an empty object) and the new shape has just the
-    // HasEnumerable flag that we can copy safely.
-    if (!oldShape->objectFlags().isEmpty()) {
-      return false;
-    }
-    MOZ_ASSERT(newShape->hasObjectFlag(ObjectFlag::HasEnumerable));
-    return newShape->objectFlags() == ObjectFlags({ObjectFlag::HasEnumerable});
+    MOZ_ASSERT(shape()->getObjectClass() == newShape->getObjectClass());
+    MOZ_ASSERT(shape()->proto() == newShape->proto());
+    MOZ_ASSERT(shape()->realm() == newShape->realm());
+    return shape()->objectFlags() == newShape->objectFlags();
   }
 
   // Newly-created TypedArrays that map a SharedArrayBuffer are

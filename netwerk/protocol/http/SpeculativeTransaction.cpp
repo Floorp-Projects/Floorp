@@ -48,7 +48,6 @@ nsresult SpeculativeTransaction::OnHTTPSRRAvailable(
   LOG(("SpeculativeTransaction::OnHTTPSRRAvailable [this=%p]", this));
 
   if (!aHTTPSSVCRecord || !aHighestPriorityRecord) {
-    gHttpHandler->ConnMgr()->DoSpeculativeConnection(this, false);
     return NS_OK;
   }
 

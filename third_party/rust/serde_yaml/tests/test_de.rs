@@ -339,17 +339,7 @@ fn test_numbers() {
         let value = serde_yaml::from_str::<Value>(yaml).unwrap();
         match value {
             Value::Number(number) => assert_eq!(number.to_string(), expected),
-            _ => panic!("expected number. input={:?}, result={:?}", yaml, value),
-        }
-    }
-
-    // NOT numbers.
-    let cases = ["0127", "+0127", "-0127"];
-    for yaml in &cases {
-        let value = serde_yaml::from_str::<Value>(yaml).unwrap();
-        match value {
-            Value::String(string) => assert_eq!(string, *yaml),
-            _ => panic!("expected string. input={:?}, result={:?}", yaml, value),
+            _ => panic!("expected number"),
         }
     }
 }

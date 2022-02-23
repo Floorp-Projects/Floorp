@@ -17,8 +17,6 @@ const modules = {
 };
 
 XPCOMUtils.defineLazyModuleGetters(modules.root, {
-  browsingContext:
-    "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.jsm",
   log: "chrome://remote/content/webdriver-bidi/modules/root/log.jsm",
   session: "chrome://remote/content/webdriver-bidi/modules/root/session.jsm",
 });

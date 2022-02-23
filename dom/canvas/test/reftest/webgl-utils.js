@@ -55,7 +55,7 @@ function initGL(canvas) {
       premultipliedAlpha: withPremult,
       preserveDrawingBuffer: withPreserve,
     };
-    gl = canvas.getContext("webgl", argDict);
+    gl = canvas.getContext("experimental-webgl", argDict);
   } catch(e) {}
 
   return gl;

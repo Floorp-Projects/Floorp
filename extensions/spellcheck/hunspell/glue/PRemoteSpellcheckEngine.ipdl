@@ -4,12 +4,8 @@
 
 include protocol PContent;
 
-include "mozilla/RemoteSpellCheckEngineParent.h";
-include "mozilla/RemoteSpellCheckEngineChild.h";
-
 namespace mozilla {
 
-[ManualDealloc, ChildImpl="RemoteSpellcheckEngineChild", ParentImpl="RemoteSpellcheckEngineParent"]
 sync protocol PRemoteSpellcheckEngine {
   manager PContent;
 

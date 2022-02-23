@@ -136,11 +136,9 @@ class FetchEventOp final : public ExtendableEventOp,
    * `{Resolved,Reject}Callback()` are use to handle the
    * `FetchEvent::RespondWith()` promise.
    */
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   void MaybeFinished();
 

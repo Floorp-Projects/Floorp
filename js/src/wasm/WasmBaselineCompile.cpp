@@ -1090,15 +1090,11 @@ void BaseCompiler::shuffleStackResultsBeforeBranch(StackHeight srcHeight,
 //
 // Function calls.
 
-void BaseCompiler::beginCall(
-    FunctionCall& call, UseABI useABI,
-    RestoreRegisterStateAndRealm restoreRegisterStateAndRealm) {
-  MOZ_ASSERT_IF(
-      useABI == UseABI::Builtin,
-      restoreRegisterStateAndRealm == RestoreRegisterStateAndRealm::False);
+void BaseCompiler::beginCall(FunctionCall& call, UseABI useABI,
+                             InterModule interModule) {
+  MOZ_ASSERT_IF(useABI == UseABI::Builtin, interModule == InterModule::False);
 
-  call.restoreRegisterStateAndRealm =
-      restoreRegisterStateAndRealm == RestoreRegisterStateAndRealm::True;
+  call.isInterModule = interModule == InterModule::True;
   call.usesSystemAbi = useABI == UseABI::System;
 
   if (call.usesSystemAbi) {
@@ -1127,7 +1123,7 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
   MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
   stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
-  if (call.restoreRegisterStateAndRealm) {
+  if (call.isInterModule) {
     fr.loadTlsPtr(WasmTlsReg);
     masm.loadWasmPinnedRegsFromTls();
     masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
@@ -1353,10 +1349,9 @@ CodeOffset BaseCompiler::callSymbolic(SymbolicAddress callee,
 
 // Precondition: sync()
 
-void BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                                const Stk& indexVal, const FunctionCall& call,
-                                CodeOffset* fastCallOffset,
-                                CodeOffset* slowCallOffset) {
+CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
+                                      uint32_t tableIndex, const Stk& indexVal,
+                                      const FunctionCall& call) {
   const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
   MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
 
@@ -1366,8 +1361,8 @@ void BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
-  masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
-                        mozilla::Nothing(), fastCallOffset, slowCallOffset);
+  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
+                               mozilla::Nothing());
 }
 
 // Precondition: sync()
@@ -3528,9 +3523,7 @@ bool BaseCompiler::emitTry() {
     // Be conservative for BCE due to complex control flow in try blocks.
     controlItem().bceSafeOnExit = 0;
     // Mark the beginning of the try block, the rest is filled in by catch.
-    if (!masm.wasmStartTry(&controlItem().tryNoteIndex)) {
-      return false;
-    }
+    controlItem().tryNoteIndex = masm.wasmStartTry();
   }
 
   return true;
@@ -4324,8 +4317,7 @@ bool BaseCompiler::emitCall() {
 
   FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::Wasm,
-            import ? RestoreRegisterStateAndRealm::True
-                   : RestoreRegisterStateAndRealm::False);
+            import ? InterModule::True : InterModule::False);
 
   if (!emitCallArgs(funcType.args(), results, &baselineCall,
                     CalleeOnStack::False)) {
@@ -4385,9 +4377,7 @@ bool BaseCompiler::emitCallIndirect() {
   }
 
   FunctionCall baselineCall(lineOrBytecode);
-  // State and realm are restored as needed by by callIndirect (really by
-  // MacroAssembler::wasmCallIndirect).
-  beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
+  beginCall(baselineCall, UseABI::Wasm, InterModule::True);
 
   if (!emitCallArgs(funcType.args(), results, &baselineCall,
                     CalleeOnStack::True)) {
@@ -4395,14 +4385,9 @@ bool BaseCompiler::emitCallIndirect() {
   }
 
   const Stk& callee = peek(results.count());
-  CodeOffset fastCallOffset;
-  CodeOffset slowCallOffset;
-  callIndirect(funcTypeIndex, tableIndex, callee, baselineCall, &fastCallOffset,
-               &slowCallOffset);
-  if (!createStackMap("emitCallIndirect", fastCallOffset)) {
-    return false;
-  }
-  if (!createStackMap("emitCallIndirect", slowCallOffset)) {
+  CodeOffset raOffset =
+      callIndirect(funcTypeIndex, tableIndex, callee, baselineCall);
+  if (!createStackMap("emitCallIndirect", raOffset)) {
     return false;
   }
 
@@ -4459,7 +4444,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   StackResultsLoc noStackResults;
 
   FunctionCall baselineCall(lineOrBytecode);
-  beginCall(baselineCall, UseABI::Builtin, RestoreRegisterStateAndRealm::False);
+  beginCall(baselineCall, UseABI::Builtin, InterModule::False);
 
   if (!emitCallArgs(signature, noStackResults, &baselineCall,
                     CalleeOnStack::False)) {
@@ -5209,7 +5194,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   size_t stackSpace = stackConsumed(numNonInstanceArgs);
 
   FunctionCall baselineCall(lineOrBytecode);
-  beginCall(baselineCall, UseABI::System, RestoreRegisterStateAndRealm::True);
+  beginCall(baselineCall, UseABI::System, InterModule::True);
 
   ABIArg instanceArg = reservePointerArgument(&baselineCall);
 
@@ -5222,9 +5207,6 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
         break;
       case MIRType::Int64:
         t = ValType::I64;
-        break;
-      case MIRType::Float32:
-        t = ValType::F32;
         break;
       case MIRType::RefOrNull:
         t = RefType::extern_();
@@ -7767,7 +7749,7 @@ bool BaseCompiler::emitVectorLaneSelect() {
   RegV128 mask = popV128(RegV128(vmm0));
   RegV128 rhsDest = popV128();
   RegV128 lhs = popV128();
-  masm.laneSelectSimd128(mask, lhs, rhsDest, rhsDest);
+  masm.laneSelectSimd128(mask, rhsDest, lhs);
   freeV128(lhs);
   freeV128(mask);
   pushV128(rhsDest);

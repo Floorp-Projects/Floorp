@@ -372,9 +372,8 @@ promise_test(async t => {
       })
       .then(_ => {
         // Ensure feeding the source after closing doesn't crash.
-        assert_throws_js(TypeError, () => {
-          source.addFrame();
-        });
+        source.addFrame();
+        return promise_rejects_dom(t, 'InvalidStateError', decoder.decode());
       });
 }, 'Test ReadableStream of gif');
 

@@ -195,16 +195,8 @@ async function testNavigator() {
     expectedResults.userAgentNavigator,
     `Checking ${testDesc} navigator.userAgent.`
   );
-  is(
-    result.mimeTypesLength,
-    expectedResults.mimeTypesLength,
-    `Navigator.mimeTypes has a length of ${expectedResults.mimeTypesLength}.`
-  );
-  is(
-    result.pluginsLength,
-    expectedResults.pluginsLength,
-    `Navigator.plugins has a length of ${expectedResults.pluginsLength}.`
-  );
+  is(result.mimeTypesLength, 0, "Navigator.mimeTypes has a length of 0.");
+  is(result.pluginsLength, 0, "Navigator.plugins has a length of 0.");
   is(
     result.oscpu,
     expectedResults.oscpu,
@@ -344,10 +336,8 @@ add_task(async function setupDefaultUserAgent() {
     testDesc: "default",
     appVersion: DEFAULT_APPVERSION[AppConstants.platform],
     hardwareConcurrency: navigator.hardwareConcurrency,
-    mimeTypesLength: 2,
     oscpu: DEFAULT_OSCPU[AppConstants.platform],
     platform: DEFAULT_PLATFORM[AppConstants.platform],
-    pluginsLength: 5,
     userAgentNavigator: defaultUserAgent,
     userAgentHeader: defaultUserAgent,
   };
@@ -378,10 +368,8 @@ add_task(async function setupResistFingerprinting() {
     testDesc: "spoofed",
     appVersion: SPOOFED_APPVERSION[AppConstants.platform],
     hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
-    mimeTypesLength: 0,
     oscpu: SPOOFED_OSCPU[AppConstants.platform],
     platform: SPOOFED_PLATFORM[AppConstants.platform],
-    pluginsLength: 0,
     userAgentNavigator: spoofedUserAgentNavigator,
     userAgentHeader: spoofedUserAgentHeader,
   };
@@ -418,57 +406,9 @@ add_task(async function runOverrideTest() {
   await SpecialPowers.popPrefEnv();
 });
 
-const VERSION_100_UA_OS = {
-  linux: "X11; Linux x86_64",
-  win: cpuArch == "x86_64" ? "Windows NT 10.0; Win64; x64" : "Windows NT 10.0",
-  macosx: "Macintosh; Intel Mac OS X 10.15",
-  android: "Android 10; Mobile",
-};
-
-const VERSION_100_UA = `Mozilla/5.0 (${
-  VERSION_100_UA_OS[AppConstants.platform]
-}; rv:100.0) Gecko/20100101 Firefox/100.0`;
-
 // Only test the Firefox and Gecko experiment prefs on desktop.
 if (AppConstants.platform != "android") {
-  add_task(async function testForceVersion100() {
-    await SpecialPowers.pushPrefEnv({
-      set: [["general.useragent.forceVersion100", true]],
-    });
-
-    expectedResults = {
-      testDesc: "forceVersion100",
-      appVersion: DEFAULT_APPVERSION[AppConstants.platform],
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      mimeTypesLength: 2,
-      oscpu: DEFAULT_OSCPU[AppConstants.platform],
-      platform: DEFAULT_PLATFORM[AppConstants.platform],
-      pluginsLength: 5,
-      userAgentNavigator: VERSION_100_UA,
-      userAgentHeader: VERSION_100_UA,
-    };
-
-    await testNavigator();
-
-    await testUserAgentHeader();
-
-    await testWorkerNavigator();
-
-    // Pop general.useragent.override etc
-    await SpecialPowers.popPrefEnv();
-  });
-
   add_task(async function setupFirefoxVersionExperiment() {
-    // In Test Verify mode, this test is run multiple times so we need to
-    // reset the experiment enrollment prefs as if experiment enrollment
-    // never happend.
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["general.useragent.forceVersion100", false],
-        ["general.useragent.handledVersionExperimentEnrollment", false],
-      ],
-    });
-
     // Mock Nimbus experiment settings
     const { ExperimentFakes } = ChromeUtils.import(
       "resource://testing-common/NimbusTestUtils.jsm"
@@ -478,16 +418,32 @@ if (AppConstants.platform != "android") {
       value: { firefoxVersion: 100 },
     });
 
+    let experimentOscpu;
+    switch (AppConstants.platform) {
+      case "win":
+        experimentOscpu =
+          cpuArch == "x86_64"
+            ? "Windows NT 10.0; Win64; x64"
+            : "Windows NT 10.0";
+        break;
+      case "macosx":
+        experimentOscpu = "Macintosh; Intel Mac OS X 10.15";
+        break;
+      default:
+        experimentOscpu = "X11; Linux x86_64";
+        break;
+    }
+
+    let experimentUserAgent = `Mozilla/5.0 (${experimentOscpu}; rv:100.0) Gecko/20100101 Firefox/100.0`;
+
     expectedResults = {
       testDesc: "FirefoxVersionExperimentTest",
       appVersion: DEFAULT_APPVERSION[AppConstants.platform],
       hardwareConcurrency: navigator.hardwareConcurrency,
-      mimeTypesLength: 2,
       oscpu: DEFAULT_OSCPU[AppConstants.platform],
       platform: DEFAULT_PLATFORM[AppConstants.platform],
-      pluginsLength: 5,
-      userAgentNavigator: VERSION_100_UA,
-      userAgentHeader: VERSION_100_UA,
+      userAgentNavigator: experimentUserAgent,
+      userAgentHeader: experimentUserAgent,
     };
 
     await testNavigator();

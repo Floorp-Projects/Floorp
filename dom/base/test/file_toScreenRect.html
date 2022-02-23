@@ -31,7 +31,8 @@ add_task(async () => {
   SpecialPowers.setFullZoom(window, 2.0);
 
   const rect = target.getBoundingClientRect();
-  const screenPixelsPerCSSPixel = window.devicePixelRatio;
+  const screenPixelsPerCSSPixel =
+    SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
   const screenPixelsPerCSSPixelNoOverride =
     SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixelNoOverride;
 

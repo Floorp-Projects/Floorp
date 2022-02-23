@@ -53,7 +53,6 @@ def Libxul(name, output_category=None):
         "usp10.dll",
         "uxtheme.dll",
         "wininet.dll",
-        "winmm.dll",
         "winspool.drv",
         "wtsapi32.dll",
     ]

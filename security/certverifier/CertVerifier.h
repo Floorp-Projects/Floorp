@@ -76,7 +76,6 @@ enum class CRLiteMode {
   Disabled = 0,
   TelemetryOnly = 1,
   Enforce = 2,
-  ConfirmRevocations = 3,
 };
 
 enum class NetscapeStepUpPolicy : uint32_t;
@@ -223,6 +222,7 @@ class CertVerifier {
                BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
+               uint64_t crliteCTMergeDelaySeconds,
                const Vector<EnterpriseCert>& thirdPartyCerts);
   ~CertVerifier();
 
@@ -238,6 +238,7 @@ class CertVerifier {
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
   const CRLiteMode mCRLiteMode;
+  const uint64_t mCRLiteCTMergeDelaySeconds;
 
  private:
   OCSPCache mOCSPCache;

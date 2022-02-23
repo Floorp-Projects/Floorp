@@ -108,7 +108,7 @@ class HTMLContentSink : public nsContentSink, public nsIHTMLContentSink {
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
   NS_IMETHOD WillInterrupt(void) override;
-  void WillResume() override;
+  NS_IMETHOD WillResume(void) override;
   NS_IMETHOD SetParser(nsParserBase* aParser) override;
   virtual void FlushPendingNotifications(FlushType aType) override;
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override;
@@ -648,9 +648,18 @@ NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(nsDTDMode aDTDMode) {
   WillBuildModelImpl();
 
-  mDocument->SetCompatibilityMode(aDTDMode == eDTDMode_full_standards
-                                      ? eCompatibility_FullStandards
-                                      : eCompatibility_NavQuirks);
+  nsCompatibility mode = eCompatibility_NavQuirks;
+  switch (aDTDMode) {
+    case eDTDMode_full_standards:
+      mode = eCompatibility_FullStandards;
+      break;
+    case eDTDMode_almost_standards:
+      mode = eCompatibility_AlmostStandards;
+      break;
+    default:
+      break;
+  }
+  mDocument->SetCompatibilityMode(mode);
 
   // Notify document that the load is beginning
   mDocument->BeginLoad();
@@ -821,7 +830,8 @@ HTMLContentSink::CloseContainer(const ElementType aTag) {
 NS_IMETHODIMP
 HTMLContentSink::WillInterrupt() { return WillInterruptImpl(); }
 
-void HTMLContentSink::WillResume() { WillResumeImpl(); }
+NS_IMETHODIMP
+HTMLContentSink::WillResume() { return WillResumeImpl(); }
 
 void HTMLContentSink::CloseHeadContext() {
   if (mCurrentContext) {

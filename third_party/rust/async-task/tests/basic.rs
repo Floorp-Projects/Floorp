@@ -64,7 +64,7 @@ macro_rules! schedule {
 
             let guard = Guard(Box::new(0));
             move |_runnable| {
-                let _ = &guard;
+                &guard;
                 $sched.fetch_add(1, Ordering::SeqCst);
             }
         };

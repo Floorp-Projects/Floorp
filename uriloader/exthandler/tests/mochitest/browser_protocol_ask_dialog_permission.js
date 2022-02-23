@@ -35,10 +35,6 @@ const PRINCIPAL3 = Services.scriptSecurityManager.createContentPrincipalFromOrig
   ORIGIN3
 );
 
-const NULL_PRINCIPAL_SCHEME = Services.scriptSecurityManager
-  .createNullPrincipal({})
-  .scheme.toLowerCase();
-
 let testExtension;
 
 /**
@@ -240,17 +236,6 @@ async function testOpenProto(
       actionConfirm = false;
     }
 
-    let descriptionEl = dialogEl.querySelector("#description");
-    ok(
-      descriptionEl && BrowserTestUtils.is_visible(descriptionEl),
-      "Has a visible description element."
-    );
-
-    ok(
-      !descriptionEl.innerHTML.toLowerCase().includes(NULL_PRINCIPAL_SCHEME),
-      "Description does not include NullPrincipal scheme."
-    );
-
     await testCheckbox(dialogEl, dialogType, {
       hasCheckbox,
       actionCheckbox,
@@ -339,19 +324,6 @@ async function testCheckbox(
       hasCheckbox,
       "Dialog checkbox has correct visibility."
     );
-
-    let checkboxLabel = dialogEl.ownerDocument.getElementById("remember-label");
-    is(
-      checkbox && BrowserTestUtils.is_visible(checkboxLabel),
-      hasCheckbox,
-      "Dialog checkbox label has correct visibility."
-    );
-    if (hasCheckbox) {
-      ok(
-        !checkboxLabel.innerHTML.toLowerCase().includes(NULL_PRINCIPAL_SCHEME),
-        "Dialog checkbox label does not include NullPrincipal scheme."
-      );
-    }
   }
 
   if (typeof hasCheckboxState == "boolean") {

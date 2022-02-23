@@ -91,6 +91,12 @@ impl PrimitiveOpacity {
             is_opaque: alpha >= 1.0,
         }
     }
+
+    pub fn combine(self, other: PrimitiveOpacity) -> PrimitiveOpacity {
+        PrimitiveOpacity{
+            is_opaque: self.is_opaque && other.is_opaque
+        }
+    }
 }
 
 /// For external images, it's not possible to know the
@@ -1111,8 +1117,8 @@ impl PrimitiveInstance {
 
         if self.is_chased() {
             #[cfg(debug_assertions)] // needed for ".id" part
-            info!("\tpreparing {:?}", self.id);
-            info!("\t{:?}", self.kind);
+            println!("\tpreparing {:?}", self.id);
+            println!("\t{:?}", self.kind);
         }
     }
 

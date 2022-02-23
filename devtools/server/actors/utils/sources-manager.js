@@ -30,9 +30,12 @@ const MINIFIED_SOURCE_REGEXP = /\bmin\.js$/;
  * the sources, etc for ThreadActors.
  */
 class SourcesManager extends EventEmitter {
-  constructor(threadActor) {
+  constructor(threadActor, allowSourceFn = () => true) {
     super();
     this._thread = threadActor;
+    this.allowSource = source => {
+      return !isHiddenSource(source) && allowSourceFn(source);
+    };
 
     this.blackBoxedSources = new Map();
 
@@ -84,10 +87,14 @@ class SourcesManager extends EventEmitter {
    *
    * @param Debugger.Source source
    *        The source to make an actor for.
-   * @returns a SourceActor representing the source.
+   * @returns a SourceActor representing the source or null.
    */
   createSourceActor(source) {
     assert(source, "SourcesManager.prototype.source needs a source");
+
+    if (!this.allowSource(source)) {
+      return null;
+    }
 
     if (this._sourceActors.has(source)) {
       return this._sourceActors.get(source);
@@ -401,12 +408,7 @@ class SourcesManager extends EventEmitter {
         contentType: data.contentType,
       };
     }
-    if (partial) {
-      return {
-        content: "",
-        contentType: "",
-      };
-    }
+
     return this._fetchURLContents(url, partial, canUseCache);
   }
 
@@ -489,6 +491,14 @@ class SourcesManager extends EventEmitter {
   }
 }
 
+/*
+ * Checks if a source should never be displayed to the user because
+ * it's either internal or we don't support in the UI yet.
+ */
+function isHiddenSource(source) {
+  return source.introductionType === "Function.prototype";
+}
+
 function isLocationInRange({ line, column }, range) {
   return (
     (range.start.line <= line ||
@@ -499,3 +509,4 @@ function isLocationInRange({ line, column }, range) {
 }
 
 exports.SourcesManager = SourcesManager;
+exports.isHiddenSource = isHiddenSource;

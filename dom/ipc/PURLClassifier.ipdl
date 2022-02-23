@@ -11,7 +11,6 @@ include PURLClassifierInfo;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc]
 protocol PURLClassifier
 {
   manager PContent;

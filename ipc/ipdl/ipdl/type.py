@@ -9,7 +9,7 @@ import os
 import sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, StructDecl
-from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, StringLiteral
+from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor
 from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
@@ -867,19 +867,12 @@ class GatherDecls(TcheckVisitor):
                         attr.name,
                     )
             elif isinstance(aspec, (list, tuple)):
-                if not any(
-                    isinstance(attr.value, s)
-                    if isinstance(s, type)
-                    else attr.value == s
-                    for s in aspec
-                ):
+                if attr.value not in aspec:
                     self.error(
                         attr.loc,
                         "invalid value for attribute `%s', expected one of: %s",
                         attr.name,
-                        ", ".join(
-                            s.__name__ if isinstance(s, type) else str(s) for s in aspec
-                        ),
+                        ", ".join(str(s) for s in aspec),
                     )
             elif callable(aspec):
                 if not aspec(attr.value):
@@ -923,11 +916,9 @@ class GatherDecls(TcheckVisitor):
             self.checkAttributes(
                 p.attributes,
                 {
-                    "ManualDealloc": None,
+                    "RefCounted": None,
                     "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
                     "NeedsOtherPid": None,
-                    "ChildImpl": ("virtual", StringLiteral),
-                    "ParentImpl": ("virtual", StringLiteral),
                 },
             )
 
@@ -944,7 +935,7 @@ class GatherDecls(TcheckVisitor):
                     qname,
                     p.nestedUpTo(),
                     p.sendSemantics,
-                    "ManualDealloc" not in p.attributes,
+                    "RefCounted" in p.attributes,
                     "NeedsOtherPid" in p.attributes,
                 ),
                 shortname=p.name,

@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
 import platform
 import subprocess
 import sys
@@ -14,11 +15,10 @@ try:
 except ImportError:
     from urllib.request import urlopen
 
-from packaging.version import Version
+from distutils.version import StrictVersion
 
 from mozboot.base import BaseBootstrapper
 from mozfile import which
-from mach.util import to_optional_path, to_optional_str
 
 HOMEBREW_BOOTSTRAP = (
     "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"
@@ -38,6 +38,21 @@ output as packages are built.
 """
 
 NO_BREW_INSTALLED = "It seems you don't have Homebrew installed."
+
+BAD_PATH_ORDER = """
+Your environment's PATH variable lists a system path directory (%s)
+before the path to your package manager's binaries (%s).
+This means that the package manager's binaries likely won't be
+detected properly.
+
+Modify your shell's configuration (e.g. ~/.profile or
+~/.bash_profile) to have %s appear in $PATH before %s. e.g.
+
+    export PATH=%s:$PATH
+
+Once this is done, start a new shell (likely Command+T) and run
+this bootstrap again.
+"""
 
 
 class OSXAndroidBootstrapper(object):
@@ -183,9 +198,9 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
-        self.os_version = Version(version)
+        self.os_version = StrictVersion(version)
 
-        if self.os_version < Version("10.6"):
+        if self.os_version < StrictVersion("10.6"):
             raise Exception("OS X 10.6 or above is required.")
 
         self.minor_version = version.split(".")[1]
@@ -213,7 +228,7 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         pass
 
     def _ensure_homebrew_found(self):
-        self.brew = to_optional_path(which("brew"))
+        self.brew = which("brew")
 
         return self.brew is not None
 
@@ -222,7 +237,7 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         self.ensure_homebrew_installed()
 
         def create_homebrew_cmd(*parameters):
-            base_cmd = [to_optional_str(self.brew)]
+            base_cmd = [self.brew]
             base_cmd.extend(parameters)
             return base_cmd + [package_type_flag]
 
@@ -250,22 +265,18 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def _ensure_homebrew_casks(self, casks):
         self._ensure_homebrew_found()
 
-        known_taps = subprocess.check_output([to_optional_str(self.brew), "tap"])
+        known_taps = subprocess.check_output([self.brew, "tap"])
 
         # Ensure that we can access old versions of packages.
         if b"homebrew/cask-versions" not in known_taps:
-            subprocess.check_output(
-                [to_optional_str(self.brew), "tap", "homebrew/cask-versions"]
-            )
+            subprocess.check_output([self.brew, "tap", "homebrew/cask-versions"])
 
         # "caskroom/versions" has been renamed to "homebrew/cask-versions", so
         # it is safe to remove the old tap. Removing the old tap is necessary
         # to avoid the error "Cask [name of cask] exists in multiple taps".
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1544981
         if b"caskroom/versions" in known_taps:
-            subprocess.check_output(
-                [to_optional_str(self.brew), "untap", "caskroom/versions"]
-            )
+            subprocess.check_output([self.brew, "untap", "caskroom/versions"])
 
         self._ensure_homebrew_packages(casks, is_for_cask=True)
 
@@ -282,6 +293,17 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         homebrew_found = self._ensure_homebrew_found()
         if not homebrew_found:
             self.install_homebrew()
+
+        # Check for correct $PATH ordering.
+        brew_dir = os.path.dirname(self.brew)
+        for path in os.environ["PATH"].split(os.pathsep):
+            if path == brew_dir:
+                break
+
+            for check in ("/bin", "/usr/bin"):
+                if path == check:
+                    print(BAD_PATH_ORDER % (check, brew_dir, brew_dir, check, brew_dir))
+                    sys.exit(1)
 
     def ensure_clang_static_analysis_package(self):
         from mozboot import static_analysis
@@ -329,15 +351,14 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
             sys.exit(1)
 
     def _update_package_manager(self):
-        subprocess.check_call([to_optional_str(self.brew), "-v", "update"])
+        subprocess.check_call([self.brew, "-v", "update"])
 
     def _upgrade_package(self, package):
         self._ensure_homebrew_installed()
 
         try:
             subprocess.check_output(
-                [to_optional_str(self.brew), "-v", "upgrade", package],
-                stderr=subprocess.STDOUT,
+                [self.brew, "-v", "upgrade", package], stderr=subprocess.STDOUT
             )
         except subprocess.CalledProcessError as e:
             if b"already installed" not in e.output:

@@ -24,7 +24,7 @@ class SocketProcessBridgeParent final : public PSocketProcessBridgeParent {
 
   mozilla::ipc::IPCResult RecvTest();
   mozilla::ipc::IPCResult RecvInitBackground(
-      Endpoint<PBackgroundStarterParent>&& aEndpoint);
+      Endpoint<PBackgroundParent>&& aEndpoint);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();

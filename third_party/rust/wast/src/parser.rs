@@ -336,18 +336,8 @@ impl ParseBuffer<'_> {
     ///
     /// Returns an error if `input` fails to lex.
     pub fn new(input: &str) -> Result<ParseBuffer<'_>> {
-        ParseBuffer::new_with_lexer(Lexer::new(input))
-    }
-
-    /// Creates a new [`ParseBuffer`] by lexing the given `input` completely.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if `input` fails to lex.
-    pub fn new_with_lexer(lexer: Lexer<'_>) -> Result<ParseBuffer<'_>> {
         let mut tokens = Vec::new();
-        let input = lexer.input();
-        for token in lexer {
+        for token in Lexer::new(input) {
             tokens.push((token?, Cell::new(NextTokenAt::Unknown)));
         }
         let ret = ParseBuffer {

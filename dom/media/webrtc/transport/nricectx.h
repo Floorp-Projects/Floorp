@@ -226,9 +226,8 @@ class NrIceCtx {
     Maybe<NatSimulatorConfig> mNatSimulatorConfig;
   };
 
-  static RefPtr<NrIceCtx> Create(const std::string& aName);
-
-  nsresult SetIceConfig(const Config& aConfig);
+  static RefPtr<NrIceCtx> Create(const std::string& aName,
+                                 const Config& aConfig);
 
   RefPtr<NrIceMediaStream> CreateStream(const std::string& id,
                                         const std::string& name,
@@ -343,6 +342,10 @@ class NrIceCtx {
   // Notify that the network has gone online/offline
   void UpdateNetworkState(bool online);
 
+  // Finalize the ICE negotiation. I.e., there will be no
+  // more forking.
+  nsresult Finalize();
+
   void AccumulateStats(const NrIceStats& stats);
   NrIceStats Destroy();
 
@@ -362,7 +365,7 @@ class NrIceCtx {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
  private:
-  explicit NrIceCtx(const std::string& name);
+  NrIceCtx(const std::string& name, const Config& aConfig);
 
   virtual ~NrIceCtx();
 

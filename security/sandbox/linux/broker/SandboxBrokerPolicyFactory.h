@@ -22,7 +22,6 @@ class SandboxBrokerPolicyFactory {
 
   static UniquePtr<SandboxBroker::Policy> GetRDDPolicy(int aPid);
   static UniquePtr<SandboxBroker::Policy> GetSocketProcessPolicy(int aPid);
-  static UniquePtr<SandboxBroker::Policy> GetUtilityProcessPolicy(int aPid);
 
  private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;

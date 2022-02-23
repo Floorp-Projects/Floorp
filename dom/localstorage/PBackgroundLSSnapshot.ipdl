@@ -63,7 +63,6 @@ union LSWriteAndNotifyInfo
   LSClearInfo;
 };
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundLSSnapshot
 {
   manager PBackgroundLSDatabase;
@@ -71,15 +70,11 @@ sync protocol PBackgroundLSSnapshot
 parent:
   async DeleteMe();
 
-  async AsyncCheckpoint(LSWriteInfo[] writeInfos);
+  async Checkpoint(LSWriteInfo[] writeInfos);
 
-  async AsyncCheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
+  async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
-  async AsyncFinish();
-
-  // A synchronous finish. This should only be used by the snapshotting code to
-  // end an explicit snapshot.
-  sync SyncFinish();
+  async Finish();
 
   async Loaded();
 
@@ -120,8 +115,13 @@ parent:
    * performance problems, but avoiding I/O completely might need to be done as
    * a futher optimization.
    */
-  sync IncreasePeakUsage(int64_t minSize)
+  sync IncreasePeakUsage(int64_t requestedSize, int64_t minSize)
     returns (int64_t size);
+
+  // A synchronous ping to the parent actor to confirm that the parent actor
+  // has received previous async message. This should only be used by the
+  // snapshotting code to end an explicit snapshot.
+  sync Ping();
 
 child:
   /**

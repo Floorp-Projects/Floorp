@@ -325,13 +325,12 @@ NS_IMETHODIMP
 BaseWebSocketChannel::RetargetDeliveryTo(nsIEventTarget* aTargetThread) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTargetThread);
-  MOZ_ASSERT(!mWasOpened, "Should not be called after AsyncOpen!");
-  MOZ_ASSERT(aTargetThread);
-
-  auto lock = mTargetThread.Lock();
-  MOZ_ASSERT(!lock.ref(),
+  MOZ_ASSERT(!mTargetThread,
              "Delivery target should be set once, before AsyncOpen");
-  lock.ref() = aTargetThread;
+  MOZ_ASSERT(!mWasOpened, "Should not be called after AsyncOpen!");
+
+  mTargetThread = aTargetThread;
+  MOZ_ASSERT(mTargetThread);
   return NS_OK;
 }
 
@@ -339,32 +338,12 @@ NS_IMETHODIMP
 BaseWebSocketChannel::GetDeliveryTarget(nsIEventTarget** aTargetThread) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIEventTarget> target = GetTargetThread();
+  nsCOMPtr<nsIEventTarget> target = mTargetThread;
   if (!target) {
     target = GetCurrentEventTarget();
   }
   target.forget(aTargetThread);
   return NS_OK;
-}
-
-already_AddRefed<nsIEventTarget> BaseWebSocketChannel::GetTargetThread() {
-  nsCOMPtr<nsIEventTarget> target;
-  auto lock = mTargetThread.Lock();
-  target = *lock;
-  return target.forget();
-}
-
-bool BaseWebSocketChannel::IsOnTargetThread() {
-  nsCOMPtr<nsIEventTarget> target = GetTargetThread();
-  if (!target) {
-    MOZ_ASSERT(false);
-    return false;
-  }
-
-  bool isOnTargetThread = false;
-  nsresult rv = target->IsOnCurrentThread(&isOnTargetThread);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  return NS_FAILED(rv) ? false : isOnTargetThread;
 }
 
 BaseWebSocketChannel::ListenerAndContextContainer::ListenerAndContextContainer(

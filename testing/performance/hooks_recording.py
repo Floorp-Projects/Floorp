@@ -4,7 +4,6 @@
 from __future__ import absolute_import
 
 import json
-import os
 import platform
 from pathlib import Path
 
@@ -32,38 +31,7 @@ def before_iterations(kw):
     else:
         site_list = site_list["desktop"]
 
-    def __should_record(test):
-        # If a test page selection was provided, only select those
-        # tests and exclude all the others
-        specified_tests = kw["proxy_perftest_page"]
-        if specified_tests is not None:
-            if test.get("name") in specified_tests:
-                if test.get("login"):
-                    print(f"WARNING: You selected a login test: {test.get('name')}")
-                return True
-            else:
-                return False
-
-        # Only perform login recordings in automation or when
-        # RAPTOR_LOGINS is defined
-        record = False
-        if not test.get("login") or test.get("login-test"):
-            record = True
-            if not (
-                "MOZ_AUTOMATION" in os.environ or "RAPTOR_LOGINS" in os.environ
-            ) and test.get("login-test"):
-                record = False
-                print(
-                    f"Skipping login test `{test.get('name')}` "
-                    f"because login info cannot be obtained."
-                )
-
-        return record
-
-    sites = [test_site for test_site in site_list if __should_record(test_site)]
-
-    if not sites:
-        raise Exception("No tests were selected for recording!")
+    sites = [test_site for test_site in site_list if not test_site.get("login")]
 
     def next_site():
         for site in sites:
@@ -111,7 +79,6 @@ def before_runs(env):
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
         add_option(env, "browsertime.testType", test_site.get("type", "pageload"))
-        add_option(env, "browsertime.login", test_site.get("login", "false"))
 
         prefs = test_site.get("preferences", {})
         for pref, val in prefs.items():

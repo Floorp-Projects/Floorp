@@ -505,7 +505,7 @@ void ScriptProcessorNode::EventListenerAdded(nsAtom* aType) {
 
 void ScriptProcessorNode::EventListenerRemoved(nsAtom* aType) {
   AudioNode::EventListenerRemoved(aType);
-  if (aType == nsGkAtoms::onaudioprocess && mTrack) {
+  if (aType == nsGkAtoms::onaudioprocess) {
     UpdateConnectedStatus();
   }
 }

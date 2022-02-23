@@ -7,7 +7,6 @@
 #include "VRProcessParent.h"
 #include "VRGPUChild.h"
 #include "VRProcessManager.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GPUChild.h"
@@ -23,6 +22,7 @@
 #include "VRThread.h"
 
 #include "nsAppRunner.h"  // for IToplevelProtocol
+#include "mozilla/ipc/ProtocolUtils.h"
 
 using std::string;
 using std::vector;
@@ -43,6 +43,12 @@ VRProcessParent::VRProcessParent(Listener* aListener)
 }
 
 VRProcessParent::~VRProcessParent() {
+  // Cancel all tasks. We don't want anything triggering after our caller
+  // expects this to go away.
+  {
+    MonitorAutoLock lock(mMonitor);
+    mTaskFactory.RevokeAll();
+  }
   MOZ_COUNT_DTOR(VRProcessParent);
 }
 
@@ -56,8 +62,7 @@ bool VRProcessParent::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
-      dom::ContentParent::ShouldSyncPreference);
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }
@@ -128,13 +133,6 @@ void VRProcessParent::Shutdown() {
 
 void VRProcessParent::DestroyProcess() {
   if (mLaunchThread) {
-    // Cancel all tasks. We don't want anything triggering after our caller
-    // expects this to go away.
-    {
-      MonitorAutoLock lock(mMonitor);
-      mTaskFactory.RevokeAll();
-    }
-
     mLaunchThread->Dispatch(NS_NewRunnableFunction("DestroyProcessRunnable",
                                                    [this] { Destroy(); }));
   }
@@ -183,7 +181,7 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
 
 void VRProcessParent::KillHard(const char* aReason) {
   ProcessHandle handle = GetChildProcessHandle();
-  if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER)) {
+  if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
     NS_WARNING("failed to kill subprocess!");
   }
 

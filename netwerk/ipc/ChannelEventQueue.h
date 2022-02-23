@@ -153,10 +153,7 @@ class ChannelEventQueue final {
   }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool IsEmpty() {
-    MutexAutoLock lock(mMutex);
-    return mEventQueue.IsEmpty();
-  }
+  bool IsEmpty() const { return mEventQueue.IsEmpty(); }
 #endif
 
  private:
@@ -201,10 +198,12 @@ class ChannelEventQueue final {
 inline void ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
                                             bool aAssertionWhenNotQueued) {
   MOZ_ASSERT(aCallback);
+
   // Events execution could be a destruction of the channel (and our own
   // destructor) unless we make sure its refcount doesn't drop to 0 while this
   // method is running.
-  nsCOMPtr<nsISupports> kungFuDeathGrip;
+  nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
+  Unused << kungFuDeathGrip;  // Not used in this function
 
   // To avoid leaks.
   UniquePtr<ChannelEvent> event(aCallback);
@@ -212,9 +211,9 @@ inline void ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
   // To guarantee that the running event and all the events generated within
   // it will be finished before events on other threads.
   RecursiveMutexAutoLock lock(mRunningMutex);
+
   {
     MutexAutoLock lock(mMutex);
-    kungFuDeathGrip = mOwner;  // must be under the lock
 
     bool enqueue = !!mForcedCount || mSuspended || mFlushing ||
                    !mEventQueue.IsEmpty() ||
@@ -342,13 +341,8 @@ inline void ChannelEventQueue::MaybeFlushQueue() {
 // when it goes out of scope.
 class MOZ_STACK_CLASS AutoEventEnqueuer {
  public:
-  explicit AutoEventEnqueuer(ChannelEventQueue* queue) : mEventQueue(queue) {
-    {
-      // Probably not actually needed, since NotifyReleasingOwner should
-      // only happen after this, but safer to take it in case things change
-      MutexAutoLock lock(queue->mMutex);
-      mOwner = queue->mOwner;
-    }
+  explicit AutoEventEnqueuer(ChannelEventQueue* queue)
+      : mEventQueue(queue), mOwner(queue->mOwner) {
     mEventQueue->StartForcedQueueing();
   }
   ~AutoEventEnqueuer() { mEventQueue->EndForcedQueueing(); }

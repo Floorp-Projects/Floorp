@@ -61,7 +61,9 @@ class WindowGlobalTargetFront extends TargetMixin(
    * Event listener for `frameUpdate` event.
    */
   _onFrameUpdate(packet) {
-    this.emit("frame-update", packet);
+    // @backward-compat { version 96 } isTopLevel was added on the server in 96, so we
+    // can simply send `packet` when 96 hits release.
+    this.emit("frame-update", { ...packet, isTopLevel: !packet.parentID });
   }
 
   /**
@@ -71,6 +73,7 @@ class WindowGlobalTargetFront extends TargetMixin(
     const event = Object.create(null);
     event.url = packet.url;
     event.title = packet.title;
+    event.nativeConsoleAPI = packet.nativeConsoleAPI;
     event.isFrameSwitching = packet.isFrameSwitching;
 
     // Keep the title unmodified when a developer toolbox switches frame
@@ -107,6 +110,20 @@ class WindowGlobalTargetFront extends TargetMixin(
    */
   setTitle(title) {
     this._title = title;
+  }
+
+  // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+  //                  This can be removed once we drop 95 support
+  async attach() {
+    if (this._attach) {
+      return this._attach;
+    }
+    this._attach = (async () => {
+      const response = await super.attach();
+
+      this.targetForm.threadActor = response.threadActor;
+    })();
+    return this._attach;
   }
 
   async detach() {

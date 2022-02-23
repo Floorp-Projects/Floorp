@@ -12,6 +12,7 @@ tabmodalprompt {
   font-family: sans-serif; /* use content font not system UI font */
 }
 
+.paymentDialogContainerFrame,
 .tabmodalprompt-mainContainer {
   color: FieldText;
   background-color: Field;

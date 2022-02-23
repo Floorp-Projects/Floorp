@@ -12,6 +12,7 @@
 
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"

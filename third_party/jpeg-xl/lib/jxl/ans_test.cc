@@ -87,9 +87,9 @@ TEST(ANSTest, SingleSymbolRoundtrip) {
 
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
-constexpr size_t kReps = 3;
-#else
 constexpr size_t kReps = 10;
+#else
+constexpr size_t kReps = 100;
 #endif
 
 void RoundtripRandomStream(int alphabet_size, size_t reps = kReps,
@@ -229,7 +229,7 @@ void TestCheckpointing(bool ans, bool lz77) {
     ANSSymbolReader reader(&decoded_codes, &br);
 
     ANSSymbolReader::Checkpoint checkpoint;
-    size_t br_pos = 0;
+    size_t br_pos;
     constexpr size_t kInterval = ANSSymbolReader::kMaxCheckpointInterval - 2;
     for (size_t i = 0; i < input_values[0].size(); i++) {
       if (i % kInterval == 0 && i > 0) {

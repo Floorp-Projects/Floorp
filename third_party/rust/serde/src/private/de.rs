@@ -206,7 +206,6 @@ mod content {
     use lib::*;
 
     use __private::size_hint;
-    use actually_private;
     use de::{
         self, Deserialize, DeserializeSeed, Deserializer, EnumAccess, Expected, IgnoredAny,
         MapAccess, SeqAccess, Unexpected, Visitor,
@@ -216,7 +215,7 @@ mod content {
     /// deserializing untagged enums and internally tagged enums.
     ///
     /// Not public API. Use serde-value instead.
-    #[derive(Debug, Clone)]
+    #[derive(Debug)]
     pub enum Content<'de> {
         Bool(bool),
 
@@ -295,7 +294,7 @@ mod content {
             // Untagged and internally tagged enums are only supported in
             // self-describing formats.
             let visitor = ContentVisitor { value: PhantomData };
-            deserializer.__deserialize_content(actually_private::T, visitor)
+            deserializer.deserialize_any(visitor)
         }
     }
 
@@ -1428,18 +1427,6 @@ mod content {
             drop(self);
             visitor.visit_unit()
         }
-
-        fn __deserialize_content<V>(
-            self,
-            _: actually_private::T,
-            visitor: V,
-        ) -> Result<Content<'de>, Self::Error>
-        where
-            V: Visitor<'de, Value = Content<'de>>,
-        {
-            let _ = visitor;
-            Ok(self.content)
-        }
     }
 
     impl<'de, E> ContentDeserializer<'de, E> {
@@ -2150,18 +2137,6 @@ mod content {
             V: Visitor<'de>,
         {
             visitor.visit_unit()
-        }
-
-        fn __deserialize_content<V>(
-            self,
-            _: actually_private::T,
-            visitor: V,
-        ) -> Result<Content<'de>, Self::Error>
-        where
-            V: Visitor<'de, Value = Content<'de>>,
-        {
-            let _ = visitor;
-            Ok(self.content.clone())
         }
     }
 

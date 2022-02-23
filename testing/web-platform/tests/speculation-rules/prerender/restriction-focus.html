@@ -3,7 +3,6 @@
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="/common/utils.js"></script>
 <script src="resources/utils.js"></script>
 <body>
 <input type="text" id = "prerenderTextField">
@@ -19,22 +18,19 @@ promise_test(async t => {
       document.hasFocus(),
       'Initial document should have focus.');
 
-  const {exec} = await create_prerendered_page(t);
-  const result = await exec(() => {
-    const element = document.createElement('input');
-    element.setAttribute('type', 'text');
-    document.body.appendChild(element);
-    element.focus();
+  const gotMessage = new Promise(resolve => {
+    bc.addEventListener('message', e => {
+      resolve(e.data);
+    }, {once:true});
+  });
 
-    // Post the focus and active states to the initiator page.
-    return {
-      activeElementUpdated: document.activeElement === element,
-      documentHasFocus: document.hasFocus()
-    };
-  })
+  // Start prerendering a page that accesses the focus state of the page.
+  startPrerendering(`resources/prerender-focus.html`);
 
-  assert_true(result.activeElementUpdated, 'Active element has been updated');
-  assert_false(result.documentHasFocus, 'Document should not have focus');
+  const result = await gotMessage;
+  assert_true(result.activeElementUpdated);
+  assert_false(result.documentHasFocus);
+  bc.close();
 }, 'Prerendering document should update the active element but not have focus');
 
 </script>

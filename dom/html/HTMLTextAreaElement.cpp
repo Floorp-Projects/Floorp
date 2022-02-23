@@ -38,6 +38,7 @@
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
+#include "nsBaseCommandController.h"
 #include "nsTextControlFrame.h"
 #include "nsXULControllers.h"
 

@@ -3,9 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "reselect";
+import { uniqBy } from "lodash";
 
-import { getBreakpointsList } from "./breakpoints";
-import { getSelectedSource } from "../selectors/sources";
+import { getBreakpointsList } from "../reducers/breakpoints";
+import { getSelectedSource } from "../reducers/sources";
 
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
 import { getSelectedLocation } from "../utils/selected-location";
@@ -40,16 +41,9 @@ export const getFirstVisibleBreakpoints = createSelector(
       return [];
     }
 
-    // Filter the array so it only return the first breakpoint when there's multiple
-    // breakpoints on the same line.
-    const handledLines = new Set();
-    return sortSelectedBreakpoints(breakpoints, selectedSource).filter(bp => {
-      const line = getSelectedLocation(bp, selectedSource).line;
-      if (handledLines.has(line)) {
-        return false;
-      }
-      handledLines.add(line);
-      return true;
-    });
+    return uniqBy(
+      sortSelectedBreakpoints(breakpoints, selectedSource),
+      bp => getSelectedLocation(bp, selectedSource).line
+    );
   }
 );

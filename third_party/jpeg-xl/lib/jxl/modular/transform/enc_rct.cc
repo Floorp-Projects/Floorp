@@ -12,7 +12,7 @@
 
 namespace jxl {
 
-Status FwdRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
+Status FwdRCT(Image& input, size_t begin_c, size_t rct_type) {
   JXL_RETURN_IF_ERROR(CheckEqualChannels(input, begin_c, begin_c + 2));
   if (rct_type == 0) {  // noop
     return false;
@@ -31,7 +31,7 @@ Status FwdRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
   size_t h = input.channel[m + 0].h;
   int second = (custom % 7) >> 1;
   int third = (custom % 7) & 1;
-  const auto do_rct = [&](const int y, const int thread) {
+  for (size_t y = 0; y < h; y++) {
     const pixel_type* in0 = input.channel[m + (permutation % 3)].Row(y);
     const pixel_type* in1 =
         input.channel[m + ((permutation + 1 + permutation / 3) % 3)].Row(y);
@@ -40,8 +40,8 @@ Status FwdRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
     pixel_type* out0 = input.channel[m].Row(y);
     pixel_type* out1 = input.channel[m + 1].Row(y);
     pixel_type* out2 = input.channel[m + 2].Row(y);
-    if (custom == 6) {
-      for (size_t x = 0; x < w; x++) {
+    for (size_t x = 0; x < w; x++) {
+      if (custom == 6) {
         pixel_type R = in0[x];
         pixel_type G = in1[x];
         pixel_type B = in2[x];
@@ -49,9 +49,7 @@ Status FwdRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
         pixel_type tmp = B + (out1[x] >> 1);
         out2[x] = G - tmp;
         out0[x] = tmp + (out2[x] >> 1);
-      }
-    } else {
-      for (size_t x = 0; x < w; x++) {
+      } else {
         pixel_type First = in0[x];
         pixel_type Second = in1[x];
         pixel_type Third = in2[x];
@@ -66,8 +64,8 @@ Status FwdRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
         out2[x] = Third;
       }
     }
-  };
-  return RunOnPool(pool, 0, h, ThreadPool::NoInit, do_rct, "FwdRCT");
+  }
+  return true;
 }
 
 }  // namespace jxl

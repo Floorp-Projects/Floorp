@@ -8,11 +8,12 @@ import {
   selectors,
   actions,
   makeSource,
+  makeOriginalSource,
   waitForState,
 } from "../../utils/test-head";
 
 import readFixture from "./helpers/readFixture";
-const { getSymbols, isSymbolsLoading } = selectors;
+const { getSymbols, isSymbolsLoading, getFramework } = selectors;
 
 const mockCommandClient = {
   sourceContents: async ({ source }) => ({
@@ -25,6 +26,16 @@ const mockCommandClient = {
     expressions.map(expression => ({ result: evaluationResult[expression] })),
   getSourceActorBreakpointPositions: async () => ({}),
   getSourceActorBreakableLines: async () => [],
+};
+
+const sourceMaps = {
+  getOriginalSourceText: async id => ({
+    id,
+    text: sourceTexts[id],
+    contentType: "text/javascript",
+  }),
+  getGeneratedRangesForOriginal: async () => [],
+  getOriginalLocations: async items => items,
 };
 
 const sourceTexts = {
@@ -76,6 +87,39 @@ describe("ast", () => {
         const { getState } = createStore(mockCommandClient);
         const baseSymbols = getSymbols(getState());
         expect(baseSymbols).toEqual(null);
+      });
+    });
+
+    describe("frameworks", () => {
+      it("should detect react components", async () => {
+        const store = createStore(mockCommandClient, {}, sourceMaps);
+        const { cx, dispatch, getState } = store;
+
+        const genSource = await dispatch(
+          actions.newGeneratedSource(makeSource("reactComponent.js"))
+        );
+
+        const source = await dispatch(
+          actions.newOriginalSource(makeOriginalSource(genSource))
+        );
+
+        await dispatch(actions.loadSourceText({ cx, source }));
+        const loadedSource = selectors.getSourceFromId(getState(), source.id);
+        await dispatch(actions.setSymbols({ cx, source: loadedSource }));
+
+        expect(getFramework(getState(), source)).toBe("React");
+      });
+
+      it("should not give false positive on non react components", async () => {
+        const store = createStore(mockCommandClient);
+        const { cx, dispatch, getState } = store;
+        const base = await dispatch(
+          actions.newGeneratedSource(makeSource("base.js"))
+        );
+        await dispatch(actions.loadSourceText({ cx, source: base }));
+        await dispatch(actions.setSymbols({ cx, source: base }));
+
+        expect(getFramework(getState(), base)).toBe(undefined);
       });
     });
   });

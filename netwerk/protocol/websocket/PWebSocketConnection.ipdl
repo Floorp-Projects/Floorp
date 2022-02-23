@@ -9,7 +9,7 @@ include protocol PBackground;
 namespace mozilla {
 namespace net {
 
-protocol PWebSocketConnection
+[RefCounted] protocol PWebSocketConnection
 {
   manager PBackground;
 

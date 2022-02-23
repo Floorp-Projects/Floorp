@@ -82,8 +82,11 @@ inline Accessible* xpcAccessibleHyperLink::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
-inline Accessible* xpcAccessibleSelectable::Intl() {
-  return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
+inline LocalAccessible* xpcAccessibleSelectable::Intl() {
+  if (!static_cast<xpcAccessibleGeneric*>(this)->mIntl) {
+    return nullptr;
+  }
+  return static_cast<xpcAccessibleGeneric*>(this)->mIntl->AsLocal();
 }
 
 inline Accessible* xpcAccessibleValue::Intl() {

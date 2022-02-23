@@ -43,22 +43,15 @@ case $(uname -s) in
         ;;
     *Linux*)
         EXE=""
-        if [ -n "$CRYPTO_LIBDIR" ]
-        then
-            export LD_LIBRARY_PATH="$CRYPTO_LIBDIR"
-        fi
+        export LD_LIBRARY_PATH=$CRYPTO_LIBDIR
         ;;
     *Darwin*)
         EXE=""
-        if [ -n "$CRYPTO_LIBDIR" ]
-        then
-            export DYLD_LIBRARY_PATH="$CRYPTO_LIBDIR"
-        fi
+        export DYLD_LIBRARY_PATH=$CRYPTO_LIBDIR
         ;;
 esac
 
 RTPW=./rtpw$EXE
-[ -n "$MESON_EXE_WRAPPER" ] && RTPW="$MESON_EXE_WRAPPER $RTPW"
 DEST_PORT=9999
 DURATION=3
 
@@ -74,7 +67,7 @@ ARGS="-b $key -a -e 128"
 
 killall rtpw 2>/dev/null
 
-if test -n $MESON_EXE_WRAPPER || test -x $RTPW; then
+if test -x $RTPW; then
 
 echo  $0 ": starting rtpw receiver process... "
 

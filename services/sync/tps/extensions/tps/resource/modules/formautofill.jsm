@@ -19,7 +19,7 @@ const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "formAutofillStorage",
-  "resource://autofill/FormAutofillStorage.jsm"
+  "resource://formautofill/FormAutofillStorage.jsm"
 );
 
 ChromeUtils.defineModuleGetter(

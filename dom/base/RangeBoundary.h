@@ -183,9 +183,7 @@ class RangeBoundaryBase {
 
         if (mParent) {
           DetermineOffsetFromReference();
-          if (mOffset.isSome()) {
-            return mOffset;
-          }
+          return mOffset;
         }
 
         return Some(kFallbackOffset);
@@ -204,13 +202,6 @@ class RangeBoundaryBase {
     MOZ_ASSERT(mParent);
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
-    MOZ_ASSERT(mOffset.isNothing());
-
-    if (mRef->IsBeingRemoved()) {
-      // ComputeIndexOf would return nothing because mRef has already been
-      // removed from the child node chain of mParent.
-      return;
-    }
 
     const Maybe<uint32_t> index = mParent->ComputeIndexOf(mRef);
     MOZ_ASSERT(*index != UINT32_MAX);
@@ -239,10 +230,7 @@ class RangeBoundaryBase {
     }
 
     if (Ref()) {
-      // XXX mRef refers previous sibling of pointing child.  Therefore, it
-      //     seems odd that this becomes invalid due to its removal.  Should we
-      //     change RangeBoundaryBase to refer child at offset directly?
-      return Ref()->GetParentNode() == Container() && !Ref()->IsBeingRemoved();
+      return Ref()->GetParentNode() == Container();
     }
 
     MOZ_ASSERT(mOffset.isSome());

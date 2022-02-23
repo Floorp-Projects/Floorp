@@ -10,6 +10,7 @@
 #include "ScrollbarDrawing.h"
 
 #include "mozilla/Array.h"
+#include "nsNativeBasicTheme.h"
 
 namespace mozilla::widget {
 
@@ -17,6 +18,23 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
  public:
   ScrollbarDrawingCocoa() = default;
   virtual ~ScrollbarDrawingCocoa() = default;
+
+  struct FillRectType {
+    gfx::Rect mRect;
+    nscolor mColor;
+  };
+
+  // The caller can draw this rectangle with rounded corners as appropriate.
+  struct ThumbRect {
+    gfx::Rect mRect;
+    nscolor mFillColor;
+    nscolor mStrokeColor;
+    float mStrokeWidth;
+    float mStrokeOutset;
+  };
+
+  using ScrollbarTrackRects = Array<FillRectType, 4>;
+  using ScrollCornerRects = Array<FillRectType, 7>;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                            StyleAppearance aAppearance,
@@ -29,6 +47,15 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
                                                DPIRatio aDpiRatio);
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
+
+  static ThumbRect GetThumbRect(const gfx::Rect& aRect,
+                                const ScrollbarParams& aParams, float aScale);
+  static bool GetScrollbarTrackRects(const gfx::Rect& aRect,
+                                     const ScrollbarParams& aParams,
+                                     float aScale, ScrollbarTrackRects& aRects);
+  static bool GetScrollCornerRects(const gfx::Rect& aRect,
+                                   const ScrollbarParams& aParams, float aScale,
+                                   ScrollCornerRects& aRects);
 
   template <typename PaintBackendData>
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,

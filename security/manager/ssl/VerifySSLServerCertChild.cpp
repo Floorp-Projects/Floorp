@@ -19,9 +19,11 @@ namespace mozilla {
 namespace psm {
 
 VerifySSLServerCertChild::VerifySSLServerCertChild(
+    const UniqueCERTCertificate& aCert,
     SSLServerCertVerificationResult* aResultTask,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, uint32_t aProviderFlags)
-    : mResultTask(aResultTask),
+    : mCert(CERT_DupCertificate(aCert.get())),
+      mResultTask(aResultTask),
       mPeerCertChain(std::move(aPeerCertChain)),
       mProviderFlags(aProviderFlags) {}
 
@@ -33,13 +35,14 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
           ("[%p] VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess",
            this));
 
+  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
   nsTArray<nsTArray<uint8_t>> certBytesArray;
   for (auto& cert : aBuiltCertChain) {
     certBytesArray.AppendElement(std::move(cert.data()));
   }
 
-  mResultTask->Dispatch(std::move(certBytesArray), std::move(mPeerCertChain),
-                        aCertTransparencyStatus,
+  mResultTask->Dispatch(nsc, std::move(certBytesArray),
+                        std::move(mPeerCertChain), aCertTransparencyStatus,
                         static_cast<EVStatus>(aEVStatus), true, 0, 0,
                         aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
   return IPC_OK();
@@ -53,8 +56,9 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
            "aCollectedErrors=%u",
            this, aFinalError, aCollectedErrors));
 
+  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
   mResultTask->Dispatch(
-      nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
+      nsc, nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, aFinalError, aCollectedErrors, false,
       mProviderFlags);
@@ -62,6 +66,7 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
 }
 
 SECStatus RemoteProcessCertVerification(
+    const UniqueCERTCertificate& aCert,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, const nsACString& aHostName,
     int32_t aPort, const OriginAttributes& aOriginAttributes,
     Maybe<nsTArray<uint8_t>>& aStapledOCSPResponse,
@@ -72,6 +77,9 @@ SECStatus RemoteProcessCertVerification(
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
+
+  const ByteArray serverCertSerialized =
+      CopyableTArray<uint8_t>{aCert->derCert.data, aCert->derCert.len};
 
   nsTArray<ByteArray> peerCertBytes;
   for (auto& certBytes : aPeerCertChain) {
@@ -105,11 +113,12 @@ SECStatus RemoteProcessCertVerification(
   }
 
   RefPtr<VerifySSLServerCertChild> authCert = new VerifySSLServerCertChild(
-      aResultTask, std::move(aPeerCertChain), aProviderFlags);
+      aCert, aResultTask, std::move(aPeerCertChain), aProviderFlags);
   if (!actorChild->SendPVerifySSLServerCertConstructor(
-          authCert, peerCertBytes, PromiseFlatCString(aHostName), aPort,
-          aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
-          aProviderFlags, aCertVerifierFlags)) {
+          authCert, serverCertSerialized, peerCertBytes,
+          PromiseFlatCString(aHostName), aPort, aOriginAttributes,
+          stapledOCSPResponse, sctsFromTLSExtension, dcInfo, aProviderFlags,
+          aCertVerifierFlags)) {
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }

@@ -12,6 +12,7 @@
 #include "mozilla/dom/MessageManagerCallback.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"

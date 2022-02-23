@@ -1,23 +1,29 @@
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Entry, Instance};
+use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
 
 #[derive(Clone)]
 pub struct XcbSurface {
     handle: vk::Instance,
-    fp: vk::KhrXcbSurfaceFn,
+    xcb_surface_fn: vk::KhrXcbSurfaceFn,
 }
 
 impl XcbSurface {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
-        let handle = instance.handle();
-        let fp = vk::KhrXcbSurfaceFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
+    pub fn new<L>(entry: &EntryCustom<L>, instance: &Instance) -> Self {
+        let surface_fn = vk::KhrXcbSurfaceFn::load(|name| unsafe {
+            mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: instance.handle(),
+            xcb_surface_fn: surface_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrXcbSurfaceFn::name()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateXcbSurfaceKHR.html>"]
@@ -27,7 +33,7 @@ impl XcbSurface {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        self.fp
+        self.xcb_surface_fn
             .create_xcb_surface_khr(
                 self.handle,
                 create_info,
@@ -45,22 +51,20 @@ impl XcbSurface {
         connection: &mut vk::xcb_connection_t,
         visual_id: vk::xcb_visualid_t,
     ) -> bool {
-        let b = self.fp.get_physical_device_xcb_presentation_support_khr(
-            physical_device,
-            queue_family_index,
-            connection,
-            visual_id,
-        );
+        let b = self
+            .xcb_surface_fn
+            .get_physical_device_xcb_presentation_support_khr(
+                physical_device,
+                queue_family_index,
+                connection,
+                visual_id,
+            );
 
         b > 0
     }
 
-    pub fn name() -> &'static CStr {
-        vk::KhrXcbSurfaceFn::name()
-    }
-
     pub fn fp(&self) -> &vk::KhrXcbSurfaceFn {
-        &self.fp
+        &self.xcb_surface_fn
     }
 
     pub fn instance(&self) -> vk::Instance {

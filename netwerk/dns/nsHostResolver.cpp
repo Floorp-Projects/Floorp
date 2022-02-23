@@ -1323,7 +1323,8 @@ bool nsHostResolver::MaybeRetryTRRLookup(
   MOZ_ASSERT(!aAddrRec->mResolving);
   if (!StaticPrefs::network_trr_strict_native_fallback()) {
     LOG(("nsHostResolver::MaybeRetryTRRLookup retrying with native"));
-    return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
+    NativeLookup(aAddrRec, aLock);
+    return true;
   }
 
   if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_NXDOMAIN ||
@@ -1333,17 +1334,11 @@ bool nsHostResolver::MaybeRetryTRRLookup(
         ("nsHostResolver::MaybeRetryTRRLookup retrying with native in strict "
          "mode, skip reason was %d",
          static_cast<uint32_t>(aFirstAttemptSkipReason)));
-    return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
+    NativeLookup(aAddrRec, aLock);
+    return true;
   }
 
   if (aAddrRec->mTrrAttempts > 1) {
-    if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_TIMEOUT &&
-        StaticPrefs::network_trr_strict_native_fallback_allow_timeouts()) {
-      LOG(
-          ("nsHostResolver::MaybeRetryTRRLookup retry timed out. Using "
-           "native."));
-      return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
-    }
     LOG(("nsHostResolver::MaybeRetryTRRLookup mTrrAttempts>1, not retrying."));
     return false;
   }
@@ -1359,13 +1354,9 @@ bool nsHostResolver::MaybeRetryTRRLookup(
     auto trrQuery = aAddrRec->mTRRQuery.Lock();
     trrQuery.ref() = nullptr;
   }
-
-  if (NS_SUCCEEDED(TrrLookup(aAddrRec, aLock, nullptr /* pushedTRR */))) {
-    aAddrRec->NotifyRetryingTrr();
-    return true;
-  }
-
-  return false;
+  aAddrRec->NotifyRetryingTrr();
+  TrrLookup(aAddrRec, aLock, nullptr /* pushedTRR */);
+  return true;
 }
 
 //

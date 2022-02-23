@@ -17,7 +17,6 @@ namespace dom {
  * canonically controlled from the PBackground thread.  Exclusively for use from
  * the parent process main thread to the parent process PBackground thread.
  */
-[ManualDealloc]
 protocol PRemoteWorkerController {
   manager PBackground;
 

@@ -7,22 +7,29 @@ use std::mem;
 #[derive(Clone)]
 pub struct ExternalMemoryFd {
     handle: vk::Device,
-    fp: vk::KhrExternalMemoryFdFn,
+    external_memory_fd_fn: vk::KhrExternalMemoryFdFn,
 }
 
 impl ExternalMemoryFd {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let handle = device.handle();
-        let fp = vk::KhrExternalMemoryFdFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
+        let external_memory_fd_fn = vk::KhrExternalMemoryFdFn::load(|name| unsafe {
+            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: device.handle(),
+            external_memory_fd_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrExternalMemoryFdFn::name()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryFdKHR.html>"]
     pub unsafe fn get_memory_fd(&self, create_info: &vk::MemoryGetFdInfoKHR) -> VkResult<i32> {
         let mut fd = -1;
-        self.fp
+
+        self.external_memory_fd_fn
             .get_memory_fd_khr(self.handle, create_info, &mut fd)
             .result_with_success(fd)
     }
@@ -34,17 +41,13 @@ impl ExternalMemoryFd {
         fd: i32,
     ) -> VkResult<vk::MemoryFdPropertiesKHR> {
         let mut memory_fd_properties = Default::default();
-        self.fp
+        self.external_memory_fd_fn
             .get_memory_fd_properties_khr(self.handle, handle_type, fd, &mut memory_fd_properties)
             .result_with_success(memory_fd_properties)
     }
 
-    pub fn name() -> &'static CStr {
-        vk::KhrExternalMemoryFdFn::name()
-    }
-
     pub fn fp(&self) -> &vk::KhrExternalMemoryFdFn {
-        &self.fp
+        &self.external_memory_fd_fn
     }
 
     pub fn device(&self) -> vk::Device {

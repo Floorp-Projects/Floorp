@@ -1,0 +1,58 @@
+{
+  "manifest_version": 2,
+  "commands": {
+    "_execute_sidebar_action": {
+      "suggested_key": {
+        "default": "Ctrl+F3",
+        "mac": "MacCtrl+F3"
+      }
+    }
+  },
+  "background": {
+    "scripts": [
+      "shared/prefix-utils.js",
+      "shared/feed-parser.js",
+      "shared/settings.js",
+      "shared/livemark-store.js",
+      "background/background.js"
+    ]
+  },
+  "sidebar_action": {
+    "default_icon": "icons/feed.png",
+    "default_title" : "__MSG_sidebar__",
+    "default_panel": "pages/settings/settings.html"
+  },
+  "content_scripts": [
+    {
+      "js": ["contentscripts/detector.js"],
+      "matches": ["http://*/*", "https://*/*"],
+      "run_at": "document_start"
+    },
+    {
+      "js": ["contentscripts/feed_finder.js"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "ja",
+  "name": "Floorp RSS reader",
+  "options_ui": {
+    "page": "pages/settings/settings.html",
+    "open_in_tab": true
+  },
+  "page_action": {
+    "default_icon": "icons/feed.png",
+    "default_title": "__MSG_subscribe__",
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": ["storage", "bookmarks", "history", "webRequest", "webRequestBlocking", "<all_urls>", "tabs", "menus"],
+  "version": "1.0",
+  "web_accessible_resources": [
+    "pages/subscribe/subscribe.html"
+  ],
+  "applications": {
+    "gecko": {
+      "id": "floorp-rss-read@mozilla.org"
+    }
+  }
+}

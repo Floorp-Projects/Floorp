@@ -8,8 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Streams")
 
 EXPORTS.mozilla.dom += [
-    "BaseQueuingStrategy.h",
-    "ByteLengthQueuingStrategy.h",
     "ByteStreamHelpers.h",
     "CountQueuingStrategy.h",
     "QueueWithSizes.h",
@@ -21,14 +19,11 @@ EXPORTS.mozilla.dom += [
     "ReadableStreamDefaultController.h",
     "ReadableStreamDefaultReader.h",
     "ReadableStreamGenericReader.h",
-    "ReadableStreamPipeTo.h",
     "ReadableStreamTee.h",
     "ReadIntoRequest.h",
     "ReadRequest.h",
     "StreamUtils.h",
     "TeeState.h",
-    "TransformStream.h",
-    "TransformStreamDefaultController.h",
     "UnderlyingSinkCallbackHelpers.h",
     "UnderlyingSourceCallbackHelpers.h",
     "WritableStream.h",
@@ -37,7 +32,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    "ByteLengthQueuingStrategy.cpp",
     "ByteStreamHelpers.cpp",
     "CountQueuingStrategy.cpp",
     "ReadableByteStreamController.cpp",
@@ -46,12 +40,9 @@ UNIFIED_SOURCES += [
     "ReadableStreamBYOBRequest.cpp",
     "ReadableStreamDefaultController.cpp",
     "ReadableStreamDefaultReader.cpp",
-    "ReadableStreamPipeTo.cpp",
     "ReadableStreamTee.cpp",
     "StreamUtils.cpp",
     "TeeState.cpp",
-    "TransformStream.cpp",
-    "TransformStreamDefaultController.cpp",
     "UnderlyingSinkCallbackHelpers.cpp",
     "UnderlyingSourceCallbackHelpers.cpp",
     "WritableStream.cpp",

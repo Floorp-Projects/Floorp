@@ -3,12 +3,10 @@
 
 const PREF_SVG_DISABLED = "svg.disabled";
 const PREF_WEBP_ENABLED = "image.webp.enabled";
-const PREF_AVIF_ENABLED = "image.avif.enabled";
 const PDF_MIME = "application/pdf";
 const OCTET_MIME = "application/octet-stream";
 const XML_MIME = "text/xml";
 const SVG_MIME = "image/svg+xml";
-const AVIF_MIME = "image/avif";
 const WEBP_MIME = "image/webp";
 
 const { Integration } = ChromeUtils.import(
@@ -72,46 +70,37 @@ function checkWasRegistered(ext, expectedWasRegistered) {
 }
 
 function checkAll(mime, ext, expected) {
-  checkPreferInternal(mime, ext, expected && ext != "xml" && ext != "svg");
+  checkPreferInternal(mime, ext, expected);
   checkShouldView(mime, ext, expected);
-  if (ext != "xml" && ext != "svg") {
-    checkWasRegistered(ext, expected);
-  }
+  checkWasRegistered(ext, expected);
 }
 
 add_task(async function test_viewable_internally() {
-  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "xml , svg,avif,webp");
+  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "xml , svg,webp");
   Services.prefs.setBoolPref(PREF_SVG_DISABLED, false);
   Services.prefs.setBoolPref(PREF_WEBP_ENABLED, true);
-  Services.prefs.setBoolPref(PREF_AVIF_ENABLED, true);
 
   checkAll(XML_MIME, "xml", false);
   checkAll(SVG_MIME, "svg", false);
   checkAll(WEBP_MIME, "webp", false);
-  checkAll(AVIF_MIME, "avif", false);
 
   DownloadsViewableInternally.register();
 
   checkAll(XML_MIME, "xml", true);
   checkAll(SVG_MIME, "svg", true);
   checkAll(WEBP_MIME, "webp", true);
-  checkAll(AVIF_MIME, "avif", true);
 
-  // Remove webp so it won't be cleared
-  Services.prefs.clearUserPref(PREF_BRANCH_WAS_REGISTERED + "webp");
+  // Remove SVG so it won't be cleared
+  Services.prefs.clearUserPref(PREF_BRANCH_WAS_REGISTERED + "svg");
 
-  // Disable xml, avif and webp, check that avif becomes disabled
-  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "svg");
+  // Disable xml and svg, check that xml becomes disabled
+  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "webp");
 
-  // (XML is externally managed, and we just cleared the webp pref)
-  checkAll(XML_MIME, "xml", true);
-  checkPreferInternal(WEBP_MIME, "webp", true);
+  checkAll(XML_MIME, "xml", false);
+  checkAll(WEBP_MIME, "webp", true);
 
-  // Avif should be disabled
-  checkAll(AVIF_MIME, "avif", false);
-
-  // SVG shouldn't be cleared as it's still enabled
-  checkAll(SVG_MIME, "svg", true);
+  // SVG shouldn't be cleared
+  checkPreferInternal(SVG_MIME, "svg", true);
 
   Assert.ok(
     shouldView(PDF_MIME),
@@ -127,16 +116,14 @@ add_task(async function test_viewable_internally() {
   );
   Assert.ok(!shouldView(OCTET_MIME, "exe"), ".exe shouldn't be accepted");
 
-  Assert.ok(!shouldView(WEBP_MIME), "imave/webp should be disabled by pref");
-  Assert.ok(!shouldView(AVIF_MIME), "image/avif should be disabled by pref");
+  Assert.ok(!shouldView(XML_MIME), "text/xml should be disabled by pref");
+  Assert.ok(!shouldView(SVG_MIME), "image/xml+svg should be disabled by pref");
 
   // Enable, check that everything is enabled again
-  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "xml,svg,webp,avif");
+  Services.prefs.setCharPref(PREF_ENABLED_TYPES, "xml,svg,webp");
 
-  checkAll(XML_MIME, "xml", true);
-  checkAll(SVG_MIME, "svg", true);
-  checkPreferInternal(WEBP_MIME, "webp", true);
-  checkPreferInternal(AVIF_MIME, "avif", true);
+  checkPreferInternal(XML_MIME, "xml", true);
+  checkPreferInternal(SVG_MIME, "svg", true);
 
   Assert.ok(
     shouldView(PDF_MIME),
@@ -173,18 +160,18 @@ add_task(async function test_viewable_internally() {
     Assert.equal(handler.alwaysAskBeforeHandling, ask);
   }
 
-  // Enable viewable internally, SVG and XML should not be replaced, WebP should be saved.
+  // Enable viewable internally, XML should not be replaced, SVG and WebP should be saved.
   Services.prefs.setCharPref(PREF_ENABLED_TYPES, "svg,webp,xml");
 
   Assert.equal(
-    Services.prefs.prefHasUserValue(PREF_BRANCH_PREVIOUS_ACTION + "svg"),
-    false,
-    "svg action should not be stored"
+    Services.prefs.getIntPref(PREF_BRANCH_PREVIOUS_ACTION + "svg"),
+    Ci.nsIHandlerInfo.saveToDisk,
+    "svg action should be saved"
   );
   Assert.equal(
-    Services.prefs.prefHasUserValue(PREF_BRANCH_PREVIOUS_ASK + "svg"),
-    false,
-    "svg ask should not be stored"
+    Services.prefs.getBoolPref(PREF_BRANCH_PREVIOUS_ASK + "svg"),
+    true,
+    "svg ask should be saved"
   );
   Assert.equal(
     Services.prefs.getIntPref(PREF_BRANCH_PREVIOUS_ACTION + "webp"),
@@ -198,10 +185,10 @@ add_task(async function test_viewable_internally() {
   );
 
   {
-    let handler = MIMEService.getFromTypeAndExtension(SVG_MIME, "svg");
+    let handler = MIMEService.getFromTypeAndExtension(XML_MIME, "xml");
     Assert.equal(
       handler.preferredAction,
-      Ci.nsIHandlerInfo.saveToDisk,
+      Ci.nsIHandlerInfo.useSystemDefault,
       "svg action should be preserved"
     );
     Assert.equal(
@@ -211,37 +198,27 @@ add_task(async function test_viewable_internally() {
     );
     // Clean up
     HandlerService.remove(handler);
-    handler = MIMEService.getFromTypeAndExtension(XML_MIME, "xml");
-    Assert.equal(
-      handler.preferredAction,
-      Ci.nsIHandlerInfo.useSystemDefault,
-      "xml action should be preserved"
-    );
-    Assert.equal(
-      !!handler.alwaysAskBeforeHandling,
-      true,
-      "xml ask should be preserved"
-    );
-    // Clean up
-    HandlerService.remove(handler);
   }
   // It should still be possible to view XML internally
   checkShouldView(XML_MIME, "xml", true);
+  checkWasRegistered("xml", true);
 
   checkAll(SVG_MIME, "svg", true);
   checkAll(WEBP_MIME, "webp", true);
 
   // Disable SVG to test SVG enabled check (depends on the pref)
   Services.prefs.setBoolPref(PREF_SVG_DISABLED, true);
-  checkAll(SVG_MIME, "svg", false);
-  Services.prefs.setBoolPref(PREF_SVG_DISABLED, false);
+  // Should have restored the settings from above
   {
     let handler = MIMEService.getFromTypeAndExtension(SVG_MIME, "svg");
-    handler.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
-    handler.alwaysAskBeforeHandling = false;
-    HandlerService.store(handler);
+    Assert.equal(handler.preferredAction, Ci.nsIHandlerInfo.saveToDisk);
+    Assert.equal(!!handler.alwaysAskBeforeHandling, true);
+    // Clean up
+    HandlerService.remove(handler);
   }
+  checkAll(SVG_MIME, "svg", false);
 
+  Services.prefs.setBoolPref(PREF_SVG_DISABLED, false);
   checkAll(SVG_MIME, "svg", true);
 
   // Test WebP enabled check (depends on the pref)

@@ -76,3 +76,4 @@ You need to flip these two to ``true`` in Release/Beta to test the feature in Fi
 .. note::
 
   The 3-pane inspector is already enabled in Nightly/Developer edition before Firefox 62.
+

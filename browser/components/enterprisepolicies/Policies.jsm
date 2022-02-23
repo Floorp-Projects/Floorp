@@ -1445,7 +1445,7 @@ var Policies = {
         setAndLockPref("pdfjs.disabled", !param.Enabled);
       }
       if ("EnablePermissions" in param) {
-        setAndLockPref("pdfjs.enablePermissions", param.EnablePermissions);
+        setAndLockPref("pdfjs.enablePermissions", !param.Enabled);
       }
     },
   },
@@ -2158,17 +2158,10 @@ var Policies = {
       if ("UrlbarInterventions" in param && !param.UrlbarInterventions) {
         manager.disallowFeature("urlbarinterventions");
       }
-      if ("SkipOnboarding" in param) {
+      if ("SkipOnboarding") {
         PoliciesUtils.setDefaultPref(
           "browser.aboutwelcome.enabled",
           !param.SkipOnboarding,
-          locked
-        );
-      }
-      if ("MoreFromMozilla" in param) {
-        PoliciesUtils.setDefaultPref(
-          "browser.preferences.moreFromMozilla",
-          param.MoreFromMozilla,
           locked
         );
       }
@@ -2410,10 +2403,7 @@ function clearRunOnceModification(actionName) {
 
 function replacePathVariables(path) {
   if (path.includes("${home}")) {
-    return path.replace(
-      "${home}",
-      Services.dirsvc.get("Home", Ci.nsIFile).path
-    );
+    return path.replace("${home}", FileUtils.getFile("Home", []).path);
   }
   return path;
 }

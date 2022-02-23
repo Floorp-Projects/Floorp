@@ -77,7 +77,7 @@ about-debugging-sidebar-runtime-item-name-no-device =
   .title = { $displayName }
 
 # Text to show in the footer of the sidebar that links to a help page
-# (currently: https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/)
+# (currently: https://developer.mozilla.org/docs/Tools/about:debugging)
 about-debugging-sidebar-support = Debugging Support
 
 # Text to show as the ALT attribute of a help icon that accompanies the help about
@@ -138,7 +138,7 @@ about-debugging-setup-usb-step-enable-debug-firefox2 = Enable USB Debugging in F
 about-debugging-setup-usb-step-plug-device = Connect the Android device to your computer.
 
 # Text shown in the USB section of the setup page with a link to troubleshoot connection errors.
-# The link goes to https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html#connecting-to-a-remote-device
+# The link goes to https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB
 about-debugging-setup-usb-troubleshoot = Problems connecting to the USB device? <a>Troubleshoot</a>
 
 # Network section of the Setup page
@@ -146,7 +146,7 @@ about-debugging-setup-network =
   .title = Network Location
 
 # Text shown in the Network section of the setup page with a link to troubleshoot connection errors.
-# The link goes to https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html#connecting-over-the-network
+# The link goes to https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_over_a_network
 about-debugging-setup-network-troubleshoot = Problems connecting via network location? <a>Troubleshoot</a>
 
 # Text of a button displayed after the network locations "Host" input.
@@ -206,12 +206,12 @@ about-debugging-runtime-processes =
 about-debugging-runtime-profile-button2 = Profile performance
 
 # This string is displayed in the runtime page if the current configuration of the
-# target runtime is incompatible with service workers. "Learn more" points to:
-# https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html#service-workers-not-compatible
+# target runtime is incompatible with service workers. "Learn more" points to MDN.
+# https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging#Service_workers_not_compatible
 about-debugging-runtime-service-workers-not-compatible = Your browser configuration is not compatible with Service Workers. <a>Learn more</a>
 
 # This string is displayed in the runtime page if the remote browser version is too old.
-# "Troubleshooting" link points to https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/
+# "Troubleshooting" link points to https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting
 # { $runtimeVersion } is the version of the remote browser (for instance "67.0a1")
 # { $minVersion } is the minimum version that is compatible with the current Firefox instance (same format)
 about-debugging-browser-version-too-old = The connected browser has an old version ({ $runtimeVersion }). The minimum supported version is ({ $minVersion }). This is an unsupported setup and may cause DevTools to fail. Please update the connected browser. <a>Troubleshooting</a>
@@ -221,7 +221,7 @@ about-debugging-browser-version-too-old = The connected browser has an old versi
 about-debugging-browser-version-too-old-fennec = This version of Firefox cannot debug Firefox for Android (68). We recommend installing Firefox for Android Nightly on your phone for testing. <a>More details</a>
 
 # This string is displayed in the runtime page if the remote browser version is too recent.
-# "Troubleshooting" link points to https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/
+# "Troubleshooting" link points to https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting
 # { $runtimeID } is the build ID of the remote browser (for instance "20181231", format is yyyyMMdd)
 # { $localID } is the build ID of the current Firefox instance (same format)
 # { $runtimeVersion } is the version of the remote browser (for instance "67.0a1")

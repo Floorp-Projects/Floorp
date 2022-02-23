@@ -4,12 +4,10 @@
 
 requestLongerTimeout(10);
 
-const kContentPref = "font.size.variable.x-western";
-
-function countPrefReadsInThread(pref, thread) {
+function countDpiPrefReadsInThread(thread) {
   let count = 0;
   for (let payload of getPayloadsOfType(thread, "PreferenceRead")) {
-    if (payload.prefName === pref) {
+    if (payload.prefName === "layout.css.dpi") {
       count++;
     }
   }
@@ -44,7 +42,7 @@ add_task(async function test_profile_feature_preferencereads() {
 
   startProfiler({ features: ["leaf", "preferencereads"] });
 
-  const url = BASE_URL + "single_frame.html";
+  const url = BASE_URL + "fixed_height.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
       contentBrowser,
@@ -54,20 +52,17 @@ add_task(async function test_profile_feature_preferencereads() {
 
     await waitForPaintAfterLoad();
 
-    // Ensure we read a pref in the content process.
-    await SpecialPowers.spawn(contentBrowser, [kContentPref], pref => {
-      Services.prefs.getIntPref(pref);
-    });
-
     // Check that some PreferenceRead profile markers were generated when the
     // feature is enabled.
     {
       const { contentThread } = await stopProfilerNowAndGetThreads(contentPid);
 
+      const timesReadDpiInContent = countDpiPrefReadsInThread(contentThread);
+
       Assert.greater(
-        countPrefReadsInThread(kContentPref, contentThread),
+        timesReadDpiInContent,
         0,
-        `PreferenceRead profile markers for ${kContentPref} were recorded ` +
+        "PreferenceRead profile markers for layout.css.dpi were recorded " +
           "when the PreferenceRead feature was turned on."
       );
     }
@@ -86,11 +81,6 @@ add_task(async function test_profile_feature_preferencereads() {
 
     await waitForPaintAfterLoad();
 
-    // Ensure we read a pref in the content process.
-    await SpecialPowers.spawn(contentBrowser, [kContentPref], pref => {
-      Services.prefs.getIntPref(pref);
-    });
-
     // Check that no PreferenceRead markers were recorded when the feature
     // is turned off.
     {
@@ -101,15 +91,15 @@ add_task(async function test_profile_feature_preferencereads() {
       Assert.equal(
         getPayloadsOfType(parentThread, "PreferenceRead").length,
         0,
-        "No PreferenceRead profile were recorded " +
-          "when the PreferenceRead feature was turned off."
+        "No PreferenceRead profile markers for layout.css.dpi were recorded " +
+          "when the PreferenceRead feature was turned on."
       );
 
       Assert.equal(
         getPayloadsOfType(contentThread, "PreferenceRead").length,
         0,
-        "No PreferenceRead profile were recorded " +
-          "when the PreferenceRead feature was turned off."
+        "No PreferenceRead profile markers for layout.css.dpi were recorded " +
+          "when the PreferenceRead feature was turned on."
       );
     }
   });

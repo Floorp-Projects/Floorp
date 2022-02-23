@@ -74,5 +74,4 @@ add_task(async function() {
       );
     }
   }
-  widget.destroy();
 });

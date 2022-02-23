@@ -2,20 +2,19 @@
 
 use std::ops::{BitAnd, BitOr, Deref, Not};
 
-use crate::{FromMeta, Result};
+use syn;
+use {FromMeta, Result};
 
 mod ident_string;
 mod ignored;
 mod over_ride;
-mod parse_attribute;
 mod path_list;
-mod spanned_value;
 mod with_original;
+mod spanned_value;
 
 pub use self::ident_string::IdentString;
 pub use self::ignored::Ignored;
 pub use self::over_ride::Override;
-pub use self::parse_attribute::parse_attribute_to_meta_list;
 pub use self::path_list::PathList;
 pub use self::spanned_value::SpannedValue;
 pub use self::with_original::WithOriginal;
@@ -100,7 +99,6 @@ impl BitAnd for Flag {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self {
-        #[allow(clippy::suspicious_arithmetic_impl)]
         (self.into() && rhs.into()).into()
     }
 }
@@ -109,7 +107,6 @@ impl BitOr for Flag {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self {
-        #[allow(clippy::suspicious_arithmetic_impl)]
         (self.into() || rhs.into()).into()
     }
 }

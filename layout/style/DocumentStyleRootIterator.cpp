@@ -6,7 +6,6 @@
 
 #include "DocumentStyleRootIterator.h"
 
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 

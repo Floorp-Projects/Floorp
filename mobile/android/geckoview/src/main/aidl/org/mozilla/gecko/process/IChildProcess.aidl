@@ -5,7 +5,6 @@
 package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.gfx.ICompositorSurfaceManager;
-import org.mozilla.gecko.gfx.ISurfaceAllocator;
 import org.mozilla.gecko.process.IProcessManager;
 
 import android.os.Bundle;
@@ -37,10 +36,4 @@ interface IChildProcess {
 
     /** Must only be called for a GPU child process type. */
     ICompositorSurfaceManager getCompositorSurfaceManager();
-
-    /**
-     * Returns the interface that other processes should use to allocate Surfaces to be
-     * consumed by the GPU process. Must only be called for a GPU child process type.
-     */
-    ISurfaceAllocator getSurfaceAllocator();
 }

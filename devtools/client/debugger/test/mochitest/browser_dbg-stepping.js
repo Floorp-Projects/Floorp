@@ -6,7 +6,7 @@
 requestLongerTimeout(5);
 
 add_task(async function test() {
-  const dbg = await initDebugger("big-sourcemap.html", "bundle.js");
+  const dbg = await initDebugger("big-sourcemap.html", "big-sourcemap");
   invokeInTab("hitDebugStatement");
   await waitForPaused(dbg, "bundle.js");
 

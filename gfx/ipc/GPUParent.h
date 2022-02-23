@@ -43,8 +43,7 @@ class GPUParent final : public PGPUParent {
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,
                                    nsTArray<LayerTreeIdMapping>&& mappings,
-                                   nsTArray<GfxInfoFeatureStatus>&& features,
-                                   uint32_t wrNamespace);
+                                   nsTArray<GfxInfoFeatureStatus>&& features);
   mozilla::ipc::IPCResult RecvInitCompositorManager(
       Endpoint<PCompositorManagerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitVsyncBridge(

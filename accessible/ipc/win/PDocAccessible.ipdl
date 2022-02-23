@@ -43,7 +43,6 @@ struct ShowEventData
   bool EventSuppressed;
 };
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PDocAccessible
 {
   manager PBrowser;
@@ -120,15 +119,11 @@ child:
   async RestoreFocus();
 
   async TakeFocus(uint64_t aID);
-  async TakeSelection(uint64_t aID);
-  async SetSelected(uint64_t aID, bool aSelected);
 
   /*
    * Verify the cache. Used for testing purposes.
    */
   async VerifyCache(uint64_t aID, uint64_t aCacheDomain, AccAttributes aFields);
-
-  async DoActionAsync(uint64_t aID, uint8_t aIndex);
 
   async __delete__();
 };

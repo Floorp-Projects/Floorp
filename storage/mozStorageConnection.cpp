@@ -431,23 +431,21 @@ NS_IMPL_ISUPPORTS(CloseListener, mozIStorageCompletionCallback)
 
 Connection::Connection(Service* aService, int aFlags,
                        ConnectionOperation aSupportedOperations,
-                       bool aInterruptible, bool aIgnoreLockingMode)
+                       bool aIgnoreLockingMode)
     : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex"),
       sharedDBMutex("Connection::sharedDBMutex"),
       threadOpenedOn(do_GetCurrentThread()),
       mDBConn(nullptr),
+      mAsyncExecutionThreadShuttingDown(false),
+      mConnectionClosed(false),
       mDefaultTransactionType(mozIStorageConnection::TRANSACTION_DEFERRED),
       mDestroying(false),
       mProgressHandler(nullptr),
-      mStorageService(aService),
       mFlags(aFlags),
-      mTransactionNestingLevel(0),
-      mSupportedOperations(aSupportedOperations),
-      mInterruptible(aSupportedOperations == Connection::ASYNCHRONOUS ||
-                     aInterruptible),
       mIgnoreLockingMode(aIgnoreLockingMode),
-      mAsyncExecutionThreadShuttingDown(false),
-      mConnectionClosed(false) {
+      mStorageService(aService),
+      mSupportedOperations(aSupportedOperations),
+      mTransactionNestingLevel(0) {
   MOZ_ASSERT(!mIgnoreLockingMode || mFlags & SQLITE_OPEN_READONLY,
              "Can't ignore locking for a non-readonly connection!");
   mStorageService->registerConnection(this);
@@ -1727,8 +1725,8 @@ Connection::Clone(bool aReadOnly, mozIStorageConnection** _connection) {
     flags = (~SQLITE_OPEN_CREATE & flags);
   }
 
-  RefPtr<Connection> clone = new Connection(
-      mStorageService, flags, mSupportedOperations, mInterruptible);
+  RefPtr<Connection> clone =
+      new Connection(mStorageService, flags, mSupportedOperations);
 
   rv = initializeClone(clone, aReadOnly);
   if (NS_FAILED(rv)) {
@@ -1741,32 +1739,16 @@ Connection::Clone(bool aReadOnly, mozIStorageConnection** _connection) {
 
 NS_IMETHODIMP
 Connection::Interrupt() {
-  MOZ_ASSERT(mInterruptible, "Interrupt method not allowed");
-  MOZ_ASSERT_IF(SYNCHRONOUS == mSupportedOperations,
-                threadOpenedOn != NS_GetCurrentThread());
-  MOZ_ASSERT_IF(ASYNCHRONOUS == mSupportedOperations,
-                threadOpenedOn == NS_GetCurrentThread());
-
+  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  if (isClosing()) {  // Closing already in asynchronous case
-    return NS_OK;
+  if (operationSupported(SYNCHRONOUS) || !(mFlags & SQLITE_OPEN_READONLY)) {
+    // Interrupting a synchronous connection from the same thread doesn't make
+    // sense, and read-write connections aren't safe to interrupt.
+    return NS_ERROR_INVALID_ARG;
   }
-
-  {
-    // As stated on https://www.sqlite.org/c3ref/interrupt.html,
-    // it is not safe to call sqlite3_interrupt() when
-    // database connection is closed or might close before
-    // sqlite3_interrupt() returns.
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    if (!isClosed(lockedScope)) {
-      MOZ_ASSERT(mDBConn);
-      ::sqlite3_interrupt(mDBConn);
-    }
-  }
-
+  ::sqlite3_interrupt(mDBConn);
   return NS_OK;
 }
 

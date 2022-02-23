@@ -31,15 +31,14 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static nsresult GetRepoDir(nsIFile** aRepoDir);
   static nsresult GetObjDir(nsIFile** aObjDir);
 
-#if defined(MOZ_SANDBOX) || defined(__aarch64__)
+#if defined(MOZ_SANDBOX)
   static bool GetAppPath(nsCString& aAppPath);
-#endif /* MOZ_SANDBOX || __aarch64__ */
-
-#if defined(MOZ_SANDBOX) && defined(DEBUG)
+#  ifdef DEBUG
   static nsresult GetBloatLogDir(nsCString& aDirectoryPath);
   static nsresult GetDirectoryPath(const char* aPath,
                                    nsCString& aDirectoryPath);
-#endif /* MOZ_SANDBOX && DEBUG */
+#  endif /* DEBUG */
+#endif   /* MOZ_SANDBOX */
 
   static void EnableTCSMIfAvailable();
   static bool IsTCSMAvailable();
@@ -66,7 +65,7 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   // in our binary.
   nsString mBinaryArchs;
 
-#if defined(MOZ_SANDBOX) || defined(__aarch64__)
+#if defined(MOZ_SANDBOX)
   // Cache the appDir returned from GetAppPath to avoid doing I/O
   static StaticAutoPtr<nsCString> sCachedAppPath;
   // For thread safe setting/checking of sCachedAppPath

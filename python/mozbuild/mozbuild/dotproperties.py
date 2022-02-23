@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file contains utility functions for reading .properties files
+# This file contains utility functions for reading .properties files, like
+# region.properties.
 
 from __future__ import absolute_import, print_function, unicode_literals
 

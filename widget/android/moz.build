@@ -51,6 +51,7 @@ classes_with_WrapForJNI = [
     "GeckoProcessType",
     "GeckoResult",
     "GeckoRuntime",
+    "GeckoScreenOrientation",
     "GeckoServiceChildProcess",
     "GeckoServiceGpuProcess",
     "GeckoSession",

@@ -108,12 +108,6 @@ class imgCacheEntry {
 
   bool ForcePrincipalCheck() const { return mForcePrincipalCheck; }
 
-  bool HasNotified() const { return mHasNotified; }
-  void SetHasNotified() {
-    MOZ_ASSERT(!mHasNotified);
-    mHasNotified = true;
-  }
-
   imgLoader* Loader() const { return mLoader; }
 
  private:  // methods
@@ -142,7 +136,6 @@ class imgCacheEntry {
   bool mEvicted : 1;
   bool mHasNoProxies : 1;
   bool mForcePrincipalCheck : 1;
-  bool mHasNotified : 1;
 };
 
 #include <vector>

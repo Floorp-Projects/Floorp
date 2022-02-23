@@ -58,8 +58,7 @@ def cleanup_session(session):
         This also includes bringing it out of maximized, minimized,
         or fullscreened state.
         """
-        if session.capabilities.get("setWindowRect"):
-            session.window.size = defaults.WINDOW_SIZE
+        session.window.size = defaults.WINDOW_SIZE
 
     @ignore_exceptions
     def _restore_windows(session):

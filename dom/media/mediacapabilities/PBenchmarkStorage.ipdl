@@ -7,7 +7,6 @@ include protocol PContent;
 
 namespace mozilla {
 
-[ManualDealloc]
 async protocol PBenchmarkStorage
 {
   manager PContent;

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { has } from "lodash";
 import { clientCommands } from "../../../client/firefox";
 
 import { locColumn } from "./locColumn";
@@ -74,7 +75,7 @@ export function buildGeneratedBindingList(
   for (const generated of generatedGlobalScopes) {
     for (const name of Object.keys(generated.bindings)) {
       const { refs } = generated.bindings[name];
-      const bindings = clientGlobalScopes.find(b => name in b);
+      const bindings = clientGlobalScopes.find(b => has(b, name));
 
       for (const loc of refs) {
         if (bindings) {

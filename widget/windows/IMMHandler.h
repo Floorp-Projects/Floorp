@@ -6,19 +6,17 @@
 #ifndef IMMHandler_h_
 #define IMMHandler_h_
 
-#include "mozilla/ContentData.h"
-#include "mozilla/EventForwards.h"
-#include "mozilla/TextEventDispatcher.h"
-#include "mozilla/WritingModes.h"
-
-#include "npapi.h"
+#include "nscore.h"
+#include <windows.h>
 #include "nsCOMPtr.h"
-#include "nsIWidget.h"
-#include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
-
-#include <windows.h>
+#include "nsIWidget.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/TextEventDispatcher.h"
+#include "nsRect.h"
+#include "WritingModes.h"
+#include "npapi.h"
 
 class nsWindow;
 class nsWindowBase;
@@ -378,35 +376,48 @@ class IMMHandler final {
   int32_t mCursorPosition;
   uint32_t mCompositionStart;
 
-  // mContentSelection stores the latest selection data only when sHasFocus is
-  // true. Don't access mContentSelection directly.  You should use
-  // GetContentSelectionWithQueryIfNothing() for getting proper state.
-  Maybe<ContentSelection> mContentSelection;
+  struct Selection {
+    nsString mString;
+    uint32_t mOffset;
+    mozilla::WritingMode mWritingMode;
+    bool mIsValid;
 
-  const Maybe<ContentSelection>& GetContentSelectionWithQueryIfNothing(
-      nsWindow* aWindow) {
-    // When IME has focus, mContentSelection is automatically updated by
+    Selection() : mOffset(UINT32_MAX), mIsValid(false) {}
+
+    void Clear() {
+      mOffset = UINT32_MAX;
+      mIsValid = false;
+    }
+    uint32_t Length() const { return mString.Length(); }
+    bool Collapsed() const { return !Length(); }
+
+    bool IsValid() const;
+    bool Update(const IMENotification& aIMENotification);
+    bool Init(nsWindow* aWindow);
+    bool EnsureValidSelection(nsWindow* aWindow);
+
+   private:
+    Selection(const Selection& aOther) = delete;
+    void operator=(const Selection& aOther) = delete;
+  };
+  // mSelection stores the latest selection data only when sHasFocus is true.
+  // Don't access mSelection directly.  You should use GetSelection() for
+  // getting proper state.
+  Selection mSelection;
+
+  Selection& GetSelection() {
+    // When IME has focus, mSelection is automatically updated by
     // NOTIFY_IME_OF_SELECTION_CHANGE.
     if (sHasFocus) {
-      if (mContentSelection.isNothing()) {
-        // But if this is the first access of mContentSelection, we need to
-        // query selection now.
-        mContentSelection = QueryContentSelection(aWindow);
-      }
-      return mContentSelection;
+      return mSelection;
     }
     // Otherwise, i.e., While IME doesn't have focus, we cannot observe
     // selection changes.  So, in such case, we need to query selection
     // when it's necessary.
-    static Maybe<ContentSelection> sTempContentSelection;
-    sTempContentSelection = QueryContentSelection(aWindow);
-    return sTempContentSelection;
+    static Selection sTempSelection;
+    sTempSelection.Clear();
+    return sTempSelection;
   }
-
-  /**
-   * Query content selection on aWindow with WidgetQueryContent event.
-   */
-  static Maybe<ContentSelection> QueryContentSelection(nsWindow* aWindow);
 
   bool mIsComposing;
 

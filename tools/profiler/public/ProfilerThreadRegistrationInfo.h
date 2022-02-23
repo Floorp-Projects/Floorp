@@ -7,7 +7,6 @@
 #ifndef ProfilerThreadRegistrationInfo_h
 #define ProfilerThreadRegistrationInfo_h
 
-#include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/TimeStamp.h"
 
@@ -45,16 +44,8 @@ class ThreadRegistrationInfo {
   [[nodiscard]] bool IsMainThread() const { return mIsMainThread; }
 
  private:
-  static TimeStamp ExistingRegisterTimeOrNow() {
-    TimeStamp registerTime = baseprofiler::detail::GetThreadRegistrationTime();
-    if (!registerTime) {
-      registerTime = TimeStamp::Now();
-    }
-    return registerTime;
-  }
-
   const std::string mName;
-  const TimeStamp mRegisterTime = ExistingRegisterTimeOrNow();
+  const TimeStamp mRegisterTime = TimeStamp::Now();
   const ProfilerThreadId mThreadId = profiler_current_thread_id();
   const bool mIsMainThread = profiler_is_main_thread();
 };

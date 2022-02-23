@@ -799,7 +799,6 @@ impl<'w> BlockContext<'w> {
         result_type_id: Word,
         image: Handle<crate::Expression>,
         sampler: Handle<crate::Expression>,
-        gather: Option<crate::SwizzleComponent>,
         coordinate: Handle<crate::Expression>,
         array_index: Option<Handle<crate::Expression>>,
         offset: Option<Handle<crate::Constant>>,
@@ -817,7 +816,7 @@ impl<'w> BlockContext<'w> {
             crate::TypeInner::Image {
                 class: crate::ImageClass::Depth { .. },
                 ..
-            } => depth_ref.is_none() && gather.is_none(),
+            } => depth_ref.is_none(),
             _ => false,
         };
         let sample_result_type_id = if needs_sub_access {
@@ -854,23 +853,8 @@ impl<'w> BlockContext<'w> {
         let mut mask = spirv::ImageOperands::empty();
         mask.set(spirv::ImageOperands::CONST_OFFSET, offset.is_some());
 
-        let mut main_instruction = match (level, gather) {
-            (_, Some(component)) => {
-                let component_id = self.get_index_constant(component as u32);
-                let mut inst = Instruction::image_gather(
-                    sample_result_type_id,
-                    id,
-                    sampled_image_id,
-                    coordinates_id,
-                    component_id,
-                    depth_id,
-                );
-                if !mask.is_empty() {
-                    inst.add_operand(mask.bits());
-                }
-                inst
-            }
-            (crate::SampleLevel::Zero, None) => {
+        let mut main_instruction = match level {
+            crate::SampleLevel::Zero => {
                 let mut inst = Instruction::image_sample(
                     sample_result_type_id,
                     id,
@@ -890,7 +874,7 @@ impl<'w> BlockContext<'w> {
 
                 inst
             }
-            (crate::SampleLevel::Auto, None) => {
+            crate::SampleLevel::Auto => {
                 let mut inst = Instruction::image_sample(
                     sample_result_type_id,
                     id,
@@ -904,7 +888,7 @@ impl<'w> BlockContext<'w> {
                 }
                 inst
             }
-            (crate::SampleLevel::Exact(lod_handle), None) => {
+            crate::SampleLevel::Exact(lod_handle) => {
                 let mut inst = Instruction::image_sample(
                     sample_result_type_id,
                     id,
@@ -921,7 +905,7 @@ impl<'w> BlockContext<'w> {
 
                 inst
             }
-            (crate::SampleLevel::Bias(bias_handle), None) => {
+            crate::SampleLevel::Bias(bias_handle) => {
                 let mut inst = Instruction::image_sample(
                     sample_result_type_id,
                     id,
@@ -938,7 +922,7 @@ impl<'w> BlockContext<'w> {
 
                 inst
             }
-            (crate::SampleLevel::Gradient { x, y }, None) => {
+            crate::SampleLevel::Gradient { x, y } => {
                 let mut inst = Instruction::image_sample(
                     sample_result_type_id,
                     id,

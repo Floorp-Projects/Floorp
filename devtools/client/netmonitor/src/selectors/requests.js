@@ -175,14 +175,7 @@ function getRecordingState(state) {
   return state.requests.recording;
 }
 
-const getClickedRequest = createSelector(
-  state => state.requests,
-  ({ requests, clickedRequestId }) =>
-    requests.find(request => request.id == clickedRequestId)
-);
-
 module.exports = {
-  getClickedRequest,
   getDisplayedRequestById,
   getDisplayedRequests,
   getDisplayedRequestsSummary,

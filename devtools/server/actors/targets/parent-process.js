@@ -55,13 +55,10 @@ const parentProcessTargetPrototype = extend({}, windowGlobalTargetPrototype);
  *        - window: {Window} If the upper class already knows against which
  *          window the actor should attach, it is passed as a constructor
  *          argument here.
- *        - sessionContext Object
- *          The Session Context to help know what is debugged.
- *          See devtools/server/actors/watcher/session-context.js
  */
 parentProcessTargetPrototype.initialize = function(
   connection,
-  { isTopLevelTarget, window, sessionContext }
+  { isTopLevelTarget, window }
 ) {
   // Defines the default docshell selected for the target actor
   if (!window) {
@@ -83,7 +80,6 @@ parentProcessTargetPrototype.initialize = function(
   WindowGlobalTargetActor.prototype.initialize.call(this, connection, {
     docShell: window.docShell,
     isTopLevelTarget,
-    sessionContext,
   });
 
   // This creates a Debugger instance for chrome debugging all globals.

@@ -34,7 +34,7 @@ TASK_TYPES = {
 
 
 def get_secret(secret):
-    # use proxy if configured, otherwise use local credentials from env vars
+    # use proxy if configured, otherwise local credentials from env vars
     if "TASKCLUSTER_PROXY_URL" in os.environ:
         secrets_options = {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]}
     else:
@@ -48,17 +48,20 @@ def configure_ssh(ssh_key_secret):
     if ssh_key_secret is None:
         yield
 
-    # If we get here, we are running in automation.
-    # We use a user hgrc, so that we also get the system-wide hgrc settings.
-    hgrc = Path(user_config_dir("hg")) / "hgrc"
+    # If we get here, we are runnig in automation.
+    # We use a user hgrc, so that we are also get the system-wide hgrc
+    # settings.
+    hgrc = Path(user_config_dir("hg")).joinpath("hgrc")
     if hgrc.exists():
-        raise FailedCommandError(f"Not overwriting `{hgrc}`; cannot configure ssh.")
+        raise FailedCommandError(
+            "Not overwriting `{}`; cannot configure ssh.".format(hgrc)
+        )
 
     try:
         ssh_key_dir = Path(tempfile.mkdtemp())
 
         ssh_key = get_secret(ssh_key_secret)
-        ssh_key_file = ssh_key_dir / "id_rsa"
+        ssh_key_file = ssh_key_dir.joinpath("id_rsa")
         ssh_key_file.write_text(ssh_key["ssh_privkey"])
         ssh_key_file.chmod(0o600)
 
@@ -74,7 +77,7 @@ def configure_ssh(ssh_key_secret):
         yield
     finally:
         shutil.rmtree(str(ssh_key_dir))
-        hgrc.unlink()
+        os.remove(str(hgrc))
 
 
 def push_canary(scriptworkers, addresses, ssh_key_secret):
@@ -93,7 +96,7 @@ def push_canary(scriptworkers, addresses, ssh_key_secret):
         else:
             logger.info("No tasks for {}.".format(scriptworker))
 
-    mach = Path(GECKO) / "mach"
+    mach = Path(GECKO).joinpath("mach")
     base_command = [str(mach), "try", "scriptworker"]
     for address in addresses:
         base_command.extend(

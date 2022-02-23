@@ -15,6 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ToString.h"
+#include "mozilla/ipc/AutoTransportDescriptor.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/mozalloc.h"
@@ -591,7 +592,9 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
   MOZ_ASSERT(aIntroduction.mMyPid == base::GetCurrentProcId(),
              "We're the wrong process to receive this?");
 
-  if (!aIntroduction.mHandle) {
+  UniquePtr<IPC::Channel> channel =
+      aIntroduction.mTransport.Open(aIntroduction.mMode);
+  if (!channel) {
     NODECONTROLLER_WARNING("Could not be introduced to peer %s",
                            ToString(aIntroduction.mName).c_str());
     mNode->LostConnectionToNode(aIntroduction.mName);
@@ -601,8 +604,6 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
     return;
   }
 
-  auto channel = MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
-                                          aIntroduction.mMode, nullptr);
   auto nodeChannel = MakeRefPtr<NodeChannel>(
       aIntroduction.mName, std::move(channel), this, aIntroduction.mOtherPid);
 
@@ -660,8 +661,8 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
   }
 
   RefPtr<NodeChannel> peerB = GetNodeChannel(aName);
-  IPC::Channel::ChannelHandle handleA, handleB;
-  if (!peerB || !IPC::Channel::CreateRawPipe(&handleA, &handleB)) {
+  auto result = AutoTransportDescriptor::Create();
+  if (!peerB || result.isErr()) {
     NODECONTROLLER_WARNING(
         "Rejecting introduction request from '%s' for unknown peer '%s'",
         ToString(aFromNode).c_str(), ToString(aName).c_str());
@@ -669,16 +670,18 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
     // We don't know this peer, or ran into issues creating the descriptor! Send
     // an invalid introduction to content to clean up any pending outbound
     // messages.
-    NodeChannel::Introduction intro{aName, nullptr, IPC::Channel::MODE_SERVER,
+    NodeChannel::Introduction intro{aName, AutoTransportDescriptor{},
+                                    IPC::Channel::MODE_SERVER,
                                     peerA->OtherPid(), -1};
     peerA->Introduce(std::move(intro));
     return;
   }
 
-  NodeChannel::Introduction introA{aName, std::move(handleA),
+  auto [descrA, descrB] = result.unwrap();
+  NodeChannel::Introduction introA{aName, std::move(descrA),
                                    IPC::Channel::MODE_SERVER, peerA->OtherPid(),
                                    peerB->OtherPid()};
-  NodeChannel::Introduction introB{aFromNode, std::move(handleB),
+  NodeChannel::Introduction introB{aFromNode, std::move(descrB),
                                    IPC::Channel::MODE_CLIENT, peerB->OtherPid(),
                                    peerA->OtherPid()};
   peerA->Introduce(std::move(introA));

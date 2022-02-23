@@ -1279,7 +1279,8 @@ var gIdentityHandler = {
     let urlString = value + "\n" + gBrowser.contentTitle;
     let htmlString = '<a href="' + value + '">' + value + "</a>";
 
-    let scale = window.devicePixelRatio;
+    let windowUtils = window.windowUtils;
+    let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
     let canvas = document.createElementNS(
       "http://www.w3.org/1999/xhtml",
       "canvas"

@@ -7,8 +7,6 @@
 
 include protocol PContent;
 
-include "mozilla/LoginReputationIPC.h";
-
 namespace mozilla {
 namespace dom {
 
@@ -16,7 +14,6 @@ namespace dom {
 // on a password field. Right now this is an one way IPC call (No callback
 // will return after parent receives the IPC message) since we just process
 // the URL in parent (LoginReputationService) and stores the result to telemetry.
-[ManualDealloc, ChildImpl=virtual, ParentImpl="LoginReputationParent"]
 protocol PLoginReputation
 {
   manager PContent;

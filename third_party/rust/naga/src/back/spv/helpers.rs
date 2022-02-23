@@ -66,9 +66,7 @@ impl crate::StorageClass {
 // See `back::spv::GlobalVariable::access_id` for details.
 pub fn global_needs_wrapper(ir_module: &crate::Module, var: &crate::GlobalVariable) -> bool {
     match var.class {
-        crate::StorageClass::Uniform
-        | crate::StorageClass::Storage { .. }
-        | crate::StorageClass::PushConstant => {}
+        crate::StorageClass::Uniform | crate::StorageClass::Storage { .. } => {}
         _ => return false,
     };
     match ir_module.types[var.ty].inner {

@@ -9,7 +9,6 @@
 #include "sdp/SdpMediaSection.h"
 #include "sdp/SdpHelper.h"
 #include "nsCRT.h"
-#include "nsString.h"
 #include "mozilla/net/DataChannelProtocol.h"
 
 namespace mozilla {
@@ -20,9 +19,11 @@ namespace mozilla {
 // A single entry in our list of known codecs.
 class JsepCodecDescription {
  public:
-  JsepCodecDescription(const std::string& defaultPt, const std::string& name,
+  JsepCodecDescription(mozilla::SdpMediaSection::MediaType type,
+                       const std::string& defaultPt, const std::string& name,
                        uint32_t clock, uint32_t channels, bool enabled)
-      : mDefaultPt(defaultPt),
+      : mType(type),
+        mDefaultPt(defaultPt),
         mName(name),
         mClock(clock),
         mChannels(channels),
@@ -31,31 +32,16 @@ class JsepCodecDescription {
         mDirection(sdp::kSend) {}
   virtual ~JsepCodecDescription() {}
 
-  virtual SdpMediaSection::MediaType Type() const = 0;
-
   virtual JsepCodecDescription* Clone() const = 0;
 
   bool GetPtAsInt(uint16_t* ptOutparam) const {
     return SdpHelper::GetPtAsInt(mDefaultPt, ptOutparam);
   }
 
-  // The id used for codec stats, to uniquely identify this codec configuration
-  // within a transport.
-  const nsString& StatsId() const {
-    if (!mStatsId) {
-      mStatsId.emplace();
-      mStatsId->AppendPrintf(
-          "_%s_%s/%s_%u_%u_%s", mDefaultPt.c_str(),
-          Type() == SdpMediaSection::kVideo ? "video" : "audio", mName.c_str(),
-          mClock, mChannels, mSdpFmtpLine ? mSdpFmtpLine->c_str() : "nothing");
-    }
-    return *mStatsId;
-  }
-
   virtual bool Matches(const std::string& fmt,
                        const SdpMediaSection& remoteMsection) const {
     // note: fmt here is remote fmt (to go with remoteMsection)
-    if (Type() != remoteMsection.GetMediaType()) {
+    if (mType != remoteMsection.GetMediaType()) {
       return false;
     }
 
@@ -92,26 +78,15 @@ class JsepCodecDescription {
   }
 
   virtual bool Negotiate(const std::string& pt,
-                         const SdpMediaSection& remoteMsection,
-                         bool remoteIsOffer,
-                         Maybe<const SdpMediaSection&> localMsection) {
-    // Configuration might change. Invalidate the stats id.
-    mStatsId = Nothing();
-    if (mDirection == sdp::kSend || remoteIsOffer) {
+                         const SdpMediaSection& remoteMsection, bool isOffer) {
+    if (mDirection == sdp::kSend || isOffer) {
       mDefaultPt = pt;
-    }
-    if (localMsection) {
-      // Offer/answer is concluding. Update the sdpFmtpLine.
-      MOZ_ASSERT(mDirection == sdp::kSend || mDirection == sdp::kRecv);
-      const SdpMediaSection& msection =
-          mDirection == sdp::kSend ? remoteMsection : *localMsection;
-      UpdateSdpFmtpLine(ToMaybeRef(msection.FindFmtp(mDefaultPt)));
     }
     return true;
   }
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const {
-    if (mEnabled && msection.GetMediaType() == Type()) {
+    if (mEnabled && msection.GetMediaType() == mType) {
       if (mDirection == sdp::kRecv) {
         msection.AddCodec(mDefaultPt, mName, mClock, mChannels);
       }
@@ -154,21 +129,9 @@ class JsepCodecDescription {
     return false;
   }
 
-  // TODO Bug 1751671: Take a verbatim fmtp line (std::string or eq.) instead
-  // of fmtp parameters that have to be (re-)serialized.
-  void UpdateSdpFmtpLine(
-      const Maybe<const SdpFmtpAttributeList::Parameters&> aParams) {
-    mSdpFmtpLine = aParams.map([](const auto& aFmtp) {
-      std::stringstream ss;
-      aFmtp.Serialize(ss);
-      return ss.str();
-    });
-  }
-
+  mozilla::SdpMediaSection::MediaType mType;
   std::string mDefaultPt;
   std::string mName;
-  Maybe<std::string> mSdpFmtpLine;
-  mutable Maybe<nsString> mStatsId;
   uint32_t mClock;
   uint32_t mChannels;
   bool mEnabled;
@@ -183,7 +146,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   JsepAudioCodecDescription(const std::string& defaultPt,
                             const std::string& name, uint32_t clock,
                             uint32_t channels, bool enabled = true)
-      : JsepCodecDescription(defaultPt, name, clock, channels, enabled),
+      : JsepCodecDescription(mozilla::SdpMediaSection::kAudio, defaultPt, name,
+                             clock, channels, enabled),
         mMaxPlaybackRate(0),
         mForceMono(false),
         mFECEnabled(false),
@@ -195,40 +159,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mMaxFrameSizeMs(0),
         mCbrEnabled(false) {}
 
-  static constexpr SdpMediaSection::MediaType type = SdpMediaSection::kAudio;
-
-  SdpMediaSection::MediaType Type() const override { return type; }
-
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
-
-  static UniquePtr<JsepAudioCodecDescription> CreateDefaultOpus() {
-    // Per jmspeex on IRC:
-    // For 32KHz sampling, 28 is ok, 32 is good, 40 should be really good
-    // quality.  Note that 1-2Kbps will be wasted on a stereo Opus channel
-    // with mono input compared to configuring it for mono.
-    // If we reduce bitrate enough Opus will low-pass us; 16000 will kill a
-    // 9KHz tone.  This should be adaptive when we're at the low-end of video
-    // bandwidth (say <100Kbps), and if we're audio-only, down to 8 or
-    // 12Kbps.
-    return MakeUnique<JsepAudioCodecDescription>("109", "opus", 48000, 2);
-  }
-
-  static UniquePtr<JsepAudioCodecDescription> CreateDefaultG722() {
-    return MakeUnique<JsepAudioCodecDescription>("9", "G722", 8000, 1);
-  }
-
-  static UniquePtr<JsepAudioCodecDescription> CreateDefaultPCMU() {
-    return MakeUnique<JsepAudioCodecDescription>("0", "PCMU", 8000, 1);
-  }
-
-  static UniquePtr<JsepAudioCodecDescription> CreateDefaultPCMA() {
-    return MakeUnique<JsepAudioCodecDescription>("8", "PCMA", 8000, 1);
-  }
-
-  static UniquePtr<JsepAudioCodecDescription> CreateDefaultTelephoneEvent() {
-    return MakeUnique<JsepAudioCodecDescription>("101", "telephone-event", 8000,
-                                                 1);
-  }
 
   SdpFmtpAttributeList::OpusParameters GetOpusParameters(
       const std::string& pt, const SdpMediaSection& msection) const {
@@ -292,10 +223,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   }
 
   bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
-                 bool remoteIsOffer,
-                 Maybe<const SdpMediaSection&> localMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
-                                    localMsection);
+                 bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
     if (mName == "opus" && mDirection == sdp::kSend) {
       SdpFmtpAttributeList::OpusParameters opusParams(
           GetOpusParameters(mDefaultPt, remoteMsection));
@@ -347,7 +276,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   JsepVideoCodecDescription(const std::string& defaultPt,
                             const std::string& name, uint32_t clock,
                             bool enabled = true)
-      : JsepCodecDescription(defaultPt, name, clock, 0, enabled),
+      : JsepCodecDescription(mozilla::SdpMediaSection::kVideo, defaultPt, name,
+                             clock, 0, enabled),
         mTmmbrEnabled(false),
         mRembEnabled(false),
         mFECEnabled(false),
@@ -359,72 +289,6 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     mNackFbTypes.push_back("");
     mNackFbTypes.push_back(SdpRtcpFbAttributeList::pli);
     mCcmFbTypes.push_back(SdpRtcpFbAttributeList::fir);
-  }
-
-  static constexpr SdpMediaSection::MediaType type = SdpMediaSection::kVideo;
-
-  SdpMediaSection::MediaType Type() const override { return type; }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultVP8(bool aUseRtx) {
-    auto codec = MakeUnique<JsepVideoCodecDescription>("120", "VP8", 90000);
-    // Defaults for mandatory params
-    codec->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-    codec->mConstraints.maxFps = 60;
-    if (aUseRtx) {
-      codec->EnableRtx("124");
-    }
-    return codec;
-  }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultVP9(bool aUseRtx) {
-    auto codec = MakeUnique<JsepVideoCodecDescription>("121", "VP9", 90000);
-    // Defaults for mandatory params
-    codec->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-    codec->mConstraints.maxFps = 60;
-    if (aUseRtx) {
-      codec->EnableRtx("125");
-    }
-    return codec;
-  }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultH264_0(
-      bool aUseRtx) {
-    auto codec = MakeUnique<JsepVideoCodecDescription>("97", "H264", 90000);
-    codec->mPacketizationMode = 0;
-    // Defaults for mandatory params
-    codec->mProfileLevelId = 0x42E00D;
-    if (aUseRtx) {
-      codec->EnableRtx("98");
-    }
-    return codec;
-  }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultH264_1(
-      bool aUseRtx) {
-    auto codec = MakeUnique<JsepVideoCodecDescription>("126", "H264", 90000);
-    codec->mPacketizationMode = 1;
-    // Defaults for mandatory params
-    codec->mProfileLevelId = 0x42E00D;
-    if (aUseRtx) {
-      codec->EnableRtx("127");
-    }
-    return codec;
-  }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultUlpFec() {
-    return MakeUnique<JsepVideoCodecDescription>(
-        "123",     // payload type
-        "ulpfec",  // codec name
-        90000      // clock rate (match other video codecs)
-    );
-  }
-
-  static UniquePtr<JsepVideoCodecDescription> CreateDefaultRed() {
-    return MakeUnique<JsepVideoCodecDescription>(
-        "122",  // payload type
-        "red",  // codec name
-        90000   // clock rate (match other video codecs)
-    );
   }
 
   virtual void EnableTmmbr() {
@@ -695,10 +559,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
   virtual bool Negotiate(const std::string& pt,
                          const SdpMediaSection& remoteMsection,
-                         bool remoteIsOffer,
-                         Maybe<const SdpMediaSection&> localMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
-                                    localMsection);
+                         bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
           GetH264Parameters(mDefaultPt, remoteMsection));
@@ -740,7 +602,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       }
     }
 
-    if (mRtxEnabled && (mDirection == sdp::kSend || remoteIsOffer)) {
+    if (mRtxEnabled && (mDirection == sdp::kSend || isOffer)) {
       Maybe<std::string> rtxPt = GetRtxPtByApt(mDefaultPt, remoteMsection);
       if (rtxPt.isSome()) {
         EnableRtx(*rtxPt);
@@ -964,7 +826,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   virtual void UpdateRedundantEncodings(
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs) {
     for (const auto& codec : codecs) {
-      if (codec->Type() == type && codec->mEnabled && codec->mName != "red") {
+      if (codec->mType == SdpMediaSection::kVideo && codec->mEnabled &&
+          codec->mName != "red") {
         uint16_t pt;
         if (!SdpHelper::GetPtAsInt(codec->mDefaultPt, &pt)) {
           continue;
@@ -1014,31 +877,20 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
                                   uint16_t localPort,
                                   uint32_t localMaxMessageSize,
                                   bool enabled = true)
-      : JsepCodecDescription("", name, 0, channels, enabled),
+      : JsepCodecDescription(mozilla::SdpMediaSection::kApplication, "", name,
+                             0, channels, enabled),
         mLocalPort(localPort),
         mLocalMaxMessageSize(localMaxMessageSize),
         mRemotePort(0),
         mRemoteMaxMessageSize(0),
         mRemoteMMSSet(false) {}
 
-  static constexpr SdpMediaSection::MediaType type =
-      SdpMediaSection::kApplication;
-
-  SdpMediaSection::MediaType Type() const override { return type; }
-
   JSEP_CODEC_CLONE(JsepApplicationCodecDescription)
-
-  static UniquePtr<JsepApplicationCodecDescription> CreateDefault() {
-    return MakeUnique<JsepApplicationCodecDescription>(
-        "webrtc-datachannel", WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
-        WEBRTC_DATACHANNEL_PORT_DEFAULT,
-        WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL);
-  }
 
   // Override, uses sctpport or sctpmap instead of rtpmap
   virtual bool Matches(const std::string& fmt,
                        const SdpMediaSection& remoteMsection) const override {
-    if (type != remoteMsection.GetMediaType()) {
+    if (mType != remoteMsection.GetMediaType()) {
       return false;
     }
 
@@ -1062,7 +914,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   }
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const override {
-    if (mEnabled && msection.GetMediaType() == type) {
+    if (mEnabled && msection.GetMediaType() == mType) {
       if (mDirection == sdp::kRecv) {
         msection.AddDataChannel(mName, mLocalPort, mChannels,
                                 mLocalMaxMessageSize);
@@ -1073,10 +925,8 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   }
 
   bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
-                 bool remoteIsOffer,
-                 Maybe<const SdpMediaSection&> localMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
-                                    localMsection);
+                 bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
 
     uint32_t message_size;
     mRemoteMMSSet = remoteMsection.GetMaxMessageSize(&message_size);

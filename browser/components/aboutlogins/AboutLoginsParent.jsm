@@ -61,7 +61,7 @@ XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const PRIMARY_PASSWORD_NOTIFICATION_ID = "primary-password-login-required";
+const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
@@ -175,13 +175,13 @@ class AboutLoginsParent extends JSWindowActorParent {
 
   #createLogin(newLogin) {
     if (!Services.policies.isAllowed("removeMasterPassword")) {
-      if (!LoginHelper.isPrimaryPasswordSet()) {
+      if (!LoginHelper.isMasterPasswordSet()) {
         this.#ownerGlobal.openDialog(
           "chrome://mozapps/content/preferences/changemp.xhtml",
           "",
           "centerscreen,chrome,modal,titlebar"
         );
-        if (!LoginHelper.isPrimaryPasswordSet()) {
+        if (!LoginHelper.isMasterPasswordSet()) {
           return;
         }
       }
@@ -283,7 +283,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       messageText.value,
       captionText.value
     );
-    this.sendAsyncMessage("AboutLogins:PrimaryPasswordResponse", {
+    this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
       result: isAuthorized,
       telemetryEvent,
     });
@@ -324,7 +324,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         logins,
         selectedSort,
         syncState,
-        primaryPasswordEnabled: LoginHelper.isPrimaryPasswordSet(),
+        masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
         passwordRevealVisible: Services.policies.isAllowed("passwordReveal"),
         importVisible:
           Services.policies.isAllowed("profileImport") &&
@@ -560,13 +560,13 @@ var AboutLogins = {
     }
 
     if (topic == "passwordmgr-crypto-login") {
-      this.removeNotifications(PRIMARY_PASSWORD_NOTIFICATION_ID);
+      this.removeNotifications(MASTER_PASSWORD_NOTIFICATION_ID);
       await this._reloadAllLogins();
       return;
     }
 
     if (topic == "passwordmgr-crypto-loginCanceled") {
-      this.showPrimaryPasswordLoginNotifications();
+      this.showMasterPasswordLoginNotifications();
       return;
     }
 
@@ -686,9 +686,9 @@ var AboutLogins = {
     await this._sendAllLoginRelatedObjects(logins);
   },
 
-  showPrimaryPasswordLoginNotifications() {
+  showMasterPasswordLoginNotifications() {
     this.showNotifications({
-      id: PRIMARY_PASSWORD_NOTIFICATION_ID,
+      id: MASTER_PASSWORD_NOTIFICATION_ID,
       priority: "PRIORITY_WARNING_MEDIUM",
       iconURL: "chrome://browser/skin/login.svg",
       messageId: "about-logins-primary-password-notification-message",
@@ -699,7 +699,7 @@ var AboutLogins = {
         },
       ],
     });
-    this.messageSubscribers("AboutLogins:PrimaryPasswordAuthRequired");
+    this.messageSubscribers("AboutLogins:MasterPasswordAuthRequired");
   },
 
   showNotifications({

@@ -1,7 +1,5 @@
 //! Tests for the after channel flavor.
 
-#![cfg(not(miri))] // TODO: many assertions failed due to Miri is slow
-
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use std::thread;
@@ -58,20 +56,20 @@ fn len_empty_full() {
     let r = after(ms(50));
 
     assert_eq!(r.len(), 0);
-    assert!(r.is_empty());
-    assert!(!r.is_full());
+    assert_eq!(r.is_empty(), true);
+    assert_eq!(r.is_full(), false);
 
     thread::sleep(ms(100));
 
     assert_eq!(r.len(), 1);
-    assert!(!r.is_empty());
-    assert!(r.is_full());
+    assert_eq!(r.is_empty(), false);
+    assert_eq!(r.is_full(), true);
 
     r.try_recv().unwrap();
 
     assert_eq!(r.len(), 0);
-    assert!(r.is_empty());
-    assert!(!r.is_full());
+    assert_eq!(r.is_empty(), true);
+    assert_eq!(r.is_full(), false);
 }
 
 #[test]
@@ -213,7 +211,7 @@ fn select() {
                             break;
                         }
                         i => {
-                            oper.recv(v[i]).unwrap();
+                            oper.recv(&v[i]).unwrap();
                             hits.fetch_add(1, Ordering::SeqCst);
                         }
                     }

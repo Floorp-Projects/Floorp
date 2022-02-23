@@ -235,8 +235,7 @@ class JsepTrack {
                            SdpMediaSection* answer);
 
   virtual void Negotiate(const SdpMediaSection& answer,
-                         const SdpMediaSection& remote,
-                         const SdpMediaSection& local);
+                         const SdpMediaSection& remote);
   static void SetUniquePayloadTypes(std::vector<JsepTrack*>& tracks);
   virtual void GetNegotiatedPayloadTypes(
       std::vector<uint16_t>* payloadTypes) const;
@@ -301,8 +300,7 @@ class JsepTrack {
       JsepTrackNegotiatedDetails* details);
 
   virtual std::vector<UniquePtr<JsepCodecDescription>> NegotiateCodecs(
-      const SdpMediaSection& remote, bool remoteIsOffer,
-      Maybe<const SdpMediaSection&> local);
+      const SdpMediaSection& remote, bool isOffer);
 
   JsConstraints* FindConstraints(
       const std::string& rid,

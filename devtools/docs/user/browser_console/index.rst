@@ -157,3 +157,4 @@ On macOS, this similar code will add a new item to the **Tools** menu:
   parent.appendChild(makeTheTea);
 
 .. image:: browser-console-modify-ui-osx.png
+

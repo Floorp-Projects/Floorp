@@ -813,17 +813,8 @@ class NPZCSupport final
       return;
     }
 
-    APZInputBridge::InputBlockCallback callback;
-    if (aReturnResult) {
-      callback = [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
-                     uint64_t aInputBlockId,
-                     const APZHandledResult& aHandledResult) {
-        aReturnResult->Complete(ConvertAPZHandledResult(aHandledResult));
-      };
-    }
-    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(
-        aInput, std::move(callback));
-
+    APZEventResult result =
+        controller->InputBridge()->ReceiveInputEvent(aInput);
     if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       if (aReturnResult) {
         aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
@@ -840,7 +831,12 @@ class NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
-    if (aReturnResult && result.GetHandledResult() != Nothing()) {
+    if (!aReturnResult) {
+      // We don't care how APZ handled the event so we're done here.
+      return;
+    }
+
+    if (result.GetHandledResult() != Nothing()) {
       // We know conclusively that the root APZ handled this or not and
       // don't need to do any more work.
       switch (result.GetStatus()) {
@@ -864,7 +860,16 @@ class NPZCSupport final
                   java::PanZoomController::OVERSCROLL_FLAG_NONE));
           break;
       }
+      return;
     }
+
+    // Wait to see if APZ handled the event or not...
+    controller->AddInputBlockCallback(
+        result.mInputBlockId,
+        [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
+            uint64_t aInputBlockId, const APZHandledResult& aHandledResult) {
+          aReturnResult->Complete(ConvertAPZHandledResult(aHandledResult));
+        });
   }
 };
 
@@ -889,9 +894,6 @@ class LayerViewSupport final
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
-  // Used to communicate with the gecko compositor from the UI thread.
-  // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
-  RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
 
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
@@ -1000,49 +1002,21 @@ class LayerViewSupport final
 
   bool CompositorPaused() const { return mCompositorPaused; }
 
-  /// Called from the main thread whenever the compositor has been
-  /// (re)initialized.
-  void NotifyCompositorCreated(
-      RefPtr<UiCompositorControllerChild> aUiCompositorControllerChild) {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    mUiCompositorControllerChild = aUiCompositorControllerChild;
-
-    if (auto window{mWindow.Access()}) {
-      nsWindow* gkWindow = window->GetNsWindow();
-      if (gkWindow) {
-        mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-            gkWindow->mWidgetId, mSurface);
-      }
-    }
-
-    if (!mCompositorPaused) {
-      mUiCompositorControllerChild->Resume();
-    }
-  }
-
-  /// Called from the main thread whenever the compositor has been destroyed.
-  void NotifyCompositorSessionLost() {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    mUiCompositorControllerChild = nullptr;
-
-    if (auto window = mWindow.Access()) {
-      while (!mCapturePixelsResults.empty()) {
-        auto result =
-            java::GeckoResult::LocalRef(mCapturePixelsResults.front().mResult);
-        if (result) {
-          result->CompleteExceptionally(
-              java::sdk::IllegalStateException::New(
-                  "Compositor session lost during screen pixels request")
-                  .Cast<jni::Throwable>());
-        }
-        mCapturePixelsResults.pop();
-      }
-    }
-  }
-
   java::sdk::Surface::Param GetSurface() { return mSurface; }
 
  private:
+  already_AddRefed<UiCompositorControllerChild>
+  GetUiCompositorControllerChild() {
+    RefPtr<UiCompositorControllerChild> child;
+    if (auto window = mWindow.Access()) {
+      nsWindow* gkWindow = window->GetNsWindow();
+      if (gkWindow) {
+        child = gkWindow->GetUiCompositorControllerChild();
+      }
+    }
+    return child.forget();
+  }
+
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
       Shmem& aMem, const ScreenIntSize& aInSize, const ScreenRect& aInRegion,
       const IntSize& aOutSize) {
@@ -1122,21 +1096,6 @@ class LayerViewSupport final
     gkWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
   }
 
-  void NotifyMemoryPressure() {
-    MOZ_ASSERT(NS_IsMainThread());
-    auto acc = mWindow.Access();
-    if (!acc) {
-      return;  // Already shut down.
-    }
-
-    nsWindow* gkWindow = acc->GetNsWindow();
-    if (!gkWindow) {
-      return;
-    }
-
-    gkWindow->mCompositorBridgeChild->SendNotifyMemoryPressure();
-  }
-
   void SetDynamicToolbarMaxHeight(int32_t aHeight) {
     MOZ_ASSERT(NS_IsMainThread());
     auto acc = mWindow.Access();
@@ -1157,8 +1116,9 @@ class LayerViewSupport final
 
     mCompositorPaused = true;
 
-    if (mUiCompositorControllerChild) {
-      mUiCompositorControllerChild->Pause();
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->Pause();
     }
 
     if (auto lock{mWindow.Access()}) {
@@ -1179,9 +1139,10 @@ class LayerViewSupport final
   void SyncResumeCompositor() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    if (mUiCompositorControllerChild) {
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
       mCompositorPaused = false;
-      mUiCompositorControllerChild->Resume();
+      child->Resume();
     }
   }
 
@@ -1192,17 +1153,17 @@ class LayerViewSupport final
 
     mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
 
-    if (mUiCompositorControllerChild) {
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
       if (auto window = mWindow.Access()) {
         nsWindow* gkWindow = window->GetNsWindow();
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
-          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, mSurface);
+          child->OnCompositorSurfaceChanged(gkWindow->mWidgetId, mSurface);
         }
       }
 
-      mUiCompositorControllerChild->ResumeAndResize(aX, aY, aWidth, aHeight);
+      child->ResumeAndResize(aX, aY, aWidth, aHeight);
     }
 
     mCompositorPaused = false;
@@ -1258,19 +1219,20 @@ class LayerViewSupport final
   }
 
   void SyncInvalidateAndScheduleComposite() {
-    if (!mUiCompositorControllerChild) {
+    RefPtr<UiCompositorControllerChild> child =
+        GetUiCompositorControllerChild();
+    if (!child) {
       return;
     }
 
     if (AndroidBridge::IsJavaUiThread()) {
-      mUiCompositorControllerChild->InvalidateAndRender();
+      child->InvalidateAndRender();
       return;
     }
 
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(NewRunnableMethod<>(
-                             "LayerViewSupport::InvalidateAndRender",
-                             mUiCompositorControllerChild,
+                             "LayerViewSupport::InvalidateAndRender", child,
                              &UiCompositorControllerChild::InvalidateAndRender),
                          nsIThread::DISPATCH_NORMAL);
     }
@@ -1279,8 +1241,9 @@ class LayerViewSupport final
   void SetMaxToolbarHeight(int32_t aHeight) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    if (mUiCompositorControllerChild) {
-      mUiCompositorControllerChild->SetMaxToolbarHeight(aHeight);
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->SetMaxToolbarHeight(aHeight);
     }
   }
 
@@ -1295,28 +1258,30 @@ class LayerViewSupport final
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(NS_NewRunnableFunction(
           "LayerViewSupport::SetFixedBottomOffset", [this, offset = aOffset] {
-            if (mUiCompositorControllerChild) {
-              mUiCompositorControllerChild->SetFixedBottomOffset(offset);
+            if (RefPtr<UiCompositorControllerChild> child =
+                    GetUiCompositorControllerChild()) {
+              child->SetFixedBottomOffset(offset);
             }
           }));
     }
   }
 
   void SendToolbarAnimatorMessage(int32_t aMessage) {
-    if (!mUiCompositorControllerChild) {
+    RefPtr<UiCompositorControllerChild> child =
+        GetUiCompositorControllerChild();
+    if (!child) {
       return;
     }
 
     if (AndroidBridge::IsJavaUiThread()) {
-      mUiCompositorControllerChild->ToolbarAnimatorMessageFromUI(aMessage);
+      child->ToolbarAnimatorMessageFromUI(aMessage);
       return;
     }
 
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(
           NewRunnableMethod<int32_t>(
-              "LayerViewSupport::ToolbarAnimatorMessageFromUI",
-              mUiCompositorControllerChild,
+              "LayerViewSupport::ToolbarAnimatorMessageFromUI", child,
               &UiCompositorControllerChild::ToolbarAnimatorMessageFromUI,
               aMessage),
           nsIThread::DISPATCH_NORMAL);
@@ -1332,8 +1297,9 @@ class LayerViewSupport final
 
   void SetDefaultClearColor(int32_t aColor) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (mUiCompositorControllerChild) {
-      mUiCompositorControllerChild->SetDefaultClearColor((uint32_t)aColor);
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->SetDefaultClearColor((uint32_t)aColor);
     }
   }
 
@@ -1343,24 +1309,11 @@ class LayerViewSupport final
                            int32_t aSrcHeight, int32_t aOutWidth,
                            int32_t aOutHeight) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    auto result = java::GeckoResult::LocalRef(aResult);
-
-    if (!mUiCompositorControllerChild) {
-      if (result) {
-        if (auto window = mWindow.Access()) {
-          result->CompleteExceptionally(
-              java::sdk::IllegalStateException::New(
-                  "Compositor session lost prior to screen pixels request")
-                  .Cast<jni::Throwable>());
-        }
-      }
-      return;
-    }
 
     int size = 0;
     if (auto window = mWindow.Access()) {
       mCapturePixelsResults.push(CaptureRequest(
-          java::GeckoResult::GlobalRef(result),
+          java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)),
           java::sdk::Bitmap::GlobalRef(java::sdk::Bitmap::LocalRef(aTarget)),
           ScreenRect(aXOffset, aYOffset, aSrcWidth, aSrcHeight),
           IntSize(aOutWidth, aOutHeight)));
@@ -1368,7 +1321,10 @@ class LayerViewSupport final
     }
 
     if (size == 1) {
-      mUiCompositorControllerChild->RequestScreenPixels();
+      if (RefPtr<UiCompositorControllerChild> child =
+              GetUiCompositorControllerChild()) {
+        child->RequestScreenPixels();
+      }
     }
   }
 
@@ -1423,12 +1379,13 @@ class LayerViewSupport final
     }
 
     // Pixels have been copied, so Dealloc Shmem
-    if (mUiCompositorControllerChild) {
-      mUiCompositorControllerChild->DeallocPixelBuffer(aMem);
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->DeallocPixelBuffer(aMem);
 
       if (auto window = mWindow.Access()) {
         if (!mCapturePixelsResults.empty()) {
-          mUiCompositorControllerChild->RequestScreenPixels();
+          child->RequestScreenPixels();
         }
       }
     }
@@ -1436,8 +1393,9 @@ class LayerViewSupport final
 
   void EnableLayerUpdateNotifications(bool aEnable) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (mUiCompositorControllerChild) {
-      mUiCompositorControllerChild->EnableLayerUpdateNotifications(aEnable);
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->EnableLayerUpdateNotifications(aEnable);
     }
   }
 
@@ -1471,7 +1429,7 @@ void GeckoViewSupport::Open(
     jni::Object::Param aQueue, jni::Object::Param aCompositor,
     jni::Object::Param aDispatcher, jni::Object::Param aSessionAccessibility,
     jni::Object::Param aInitData, jni::String::Param aId,
-    jni::String::Param aChromeURI, bool aPrivateMode) {
+    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("mozilla::widget::GeckoViewSupport::Open", OTHER);
@@ -1507,6 +1465,7 @@ void GeckoViewSupport::Open(
   nsCOMPtr<nsPIDOMWindowOuter> pdomWindow = nsPIDOMWindowOuter::From(domWindow);
   const RefPtr<nsWindow> window = nsWindow::From(pdomWindow);
   MOZ_ASSERT(window);
+  window->SetScreenId(aScreenId);
 
   // Attach a new GeckoView support object to the new window.
   GeckoSession::Window::LocalRef sessionWindow(aCls.Env(), aWindow);
@@ -1576,17 +1535,6 @@ void GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
     mWindow->mLayerViewSupport =
         jni::NativeWeakPtrHolder<LayerViewSupport>::Attach(
             compositor, mWindow->mGeckoViewSupport, compositor);
-
-    if (RefPtr<UiCompositorControllerChild> uiCompositorController =
-            mWindow->GetUiCompositorControllerChild()) {
-      DispatchToUiThread(
-          "LayerViewSupport::NotifyCompositorCreated",
-          [lvs = mWindow->mLayerViewSupport, uiCompositorController] {
-            if (auto lvsAccess{lvs.Access()}) {
-              lvsAccess->NotifyCompositorCreated(uiCompositorController);
-            }
-          });
-    }
   }
 
   MOZ_ASSERT(mWindow->mAndroidView);
@@ -1758,6 +1706,7 @@ void nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent) {
 
 nsWindow::nsWindow()
     : mWidgetId(++sWidgetId),
+      mScreenId(0),  // Use 0 (primary screen) as the default value.
       mIsVisible(false),
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
@@ -2195,7 +2144,7 @@ nsEventStatus nsWindow::DispatchEvent(WidgetGUIEvent* aEvent) {
   return nsEventStatus_eIgnore;
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
+nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
   if (!mAndroidView) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2243,15 +2192,17 @@ void nsWindow::CreateLayerManager() {
     LayoutDeviceIntRect rect = GetBounds();
     CreateCompositor(rect.Width(), rect.Height());
     if (mWindowRenderer) {
-      if (mLayerViewSupport.IsAttached()) {
-        DispatchToUiThread(
-            "LayerViewSupport::NotifyCompositorCreated",
-            [lvs = mLayerViewSupport,
-             uiCompositorController = GetUiCompositorControllerChild()] {
-              if (auto lvsAccess{lvs.Access()}) {
-                lvsAccess->NotifyCompositorCreated(uiCompositorController);
-              }
-            });
+      auto lvs(mLayerViewSupport.Access());
+      if (lvs) {
+        GetUiCompositorControllerChild()->OnCompositorSurfaceChanged(
+            mWidgetId, lvs->GetSurface());
+
+        if (!lvs->CompositorPaused()) {
+          CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+          if (remoteRenderer) {
+            remoteRenderer->SendResumeAsync();
+          }
+        }
       }
 
       return;
@@ -2270,14 +2221,6 @@ void nsWindow::CreateLayerManager() {
 void nsWindow::NotifyCompositorSessionLost(
     mozilla::layers::CompositorSession* aSession) {
   nsBaseWidget::NotifyCompositorSessionLost(aSession);
-
-  DispatchToUiThread("nsWindow::NotifyCompositorSessionLost",
-                     [lvs = mLayerViewSupport] {
-                       if (auto lvsAccess{lvs.Access()}) {
-                         lvsAccess->NotifyCompositorSessionLost();
-                       }
-                     });
-
   RedrawAll();
 }
 
@@ -2684,6 +2627,12 @@ void nsWindow::UpdateZoomConstraints(
 CompositorBridgeChild* nsWindow::GetCompositorBridgeChild() const {
   return mCompositorSession ? mCompositorSession->GetCompositorBridgeChild()
                             : nullptr;
+}
+
+already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
+  RefPtr<nsIScreen> screen =
+      ScreenHelperAndroid::GetSingleton()->ScreenForId(mScreenId);
+  return screen.forget();
 }
 
 void nsWindow::SetContentDocumentDisplayed(bool aDisplayed) {

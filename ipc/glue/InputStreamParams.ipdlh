@@ -9,7 +9,6 @@ include protocol PParentToChildStream;
 include protocol PRemoteLazyInputStream;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
-[RefCounted] using class DataPipeReceiver from "mozilla/ipc/DataPipe.h";
 
 namespace mozilla {
 namespace ipc {
@@ -81,11 +80,6 @@ struct IPCRemoteStreamParams
   int64_t length;
 };
 
-struct DataPipeReceiverStreamParams
-{
-  DataPipeReceiver pipe;
-};
-
 union InputStreamParams
 {
   StringInputStreamParams;
@@ -98,7 +92,6 @@ union InputStreamParams
   InputStreamLengthWrapperParams;
   IPCRemoteStreamParams;
   EncryptedFileInputStreamParams;
-  DataPipeReceiverStreamParams;
 };
 
 struct EncryptedFileInputStreamParams

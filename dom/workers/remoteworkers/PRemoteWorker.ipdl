@@ -56,7 +56,6 @@ union RemoteWorkerOp {
 // This protocol is used to make a remote worker controllable from the parent
 // process. The parent process will receive operations from the
 // PRemoteWorkerController protocol.
-[ManualDealloc]
 protocol PRemoteWorker
 {
   manager PBackground;

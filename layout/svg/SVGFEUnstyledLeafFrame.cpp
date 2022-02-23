@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
-#include "mozilla/dom/SVGFilters.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "nsContainerFrame.h"

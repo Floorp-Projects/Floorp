@@ -60,8 +60,6 @@ impl Example for App {
                 (0, 0).by(1000, 1000),
                 scrollbox,
                 LayoutVector2D::zero(),
-                APZScrollGeneration::default(),
-                HasScrollLinkedEffect::No,
                 SpatialTreeItemKey::new(0, 0),
             );
             let space_and_clip1 = SpaceAndClipInfo {
@@ -98,8 +96,6 @@ impl Example for App {
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 LayoutVector2D::zero(),
-                APZScrollGeneration::default(),
-                HasScrollLinkedEffect::No,
                 SpatialTreeItemKey::new(0, 1),
             );
             let space_and_clip2 = SpaceAndClipInfo {
@@ -187,12 +183,9 @@ impl Example for App {
                 if let Some(offset) = offset {
                     self.scroll_offset += offset;
 
-                    txn.set_scroll_offsets(
+                    txn.set_scroll_offset(
                         ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
-                        vec![SampledScrollOffset {
-                            offset: self.scroll_offset,
-                            generation: APZScrollGeneration::default(),
-                        }],
+                        self.scroll_offset,
                     );
                     txn.generate_frame(0, RenderReasons::empty());
                 }
@@ -209,12 +202,9 @@ impl Example for App {
 
                 self.scroll_offset += LayoutVector2D::new(dx, dy);
 
-                txn.set_scroll_offsets(
+                txn.set_scroll_offset(
                     ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
-                    vec![SampledScrollOffset {
-                            offset: self.scroll_offset,
-                            generation: APZScrollGeneration::default(),
-                    }],
+                    self.scroll_offset,
                 );
 
                 txn.generate_frame(0, RenderReasons::empty());

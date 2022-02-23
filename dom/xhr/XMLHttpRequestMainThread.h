@@ -309,8 +309,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void MaybeLowerChannelPriority();
 
  public:
-  bool CanSend(ErrorResult& aRv);
-
   virtual void Send(
       const Nullable<
           DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
@@ -319,9 +317,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   virtual void SendInputStream(nsIInputStream* aInputStream,
                                ErrorResult& aRv) override {
-    if (!CanSend(aRv)) {
-      return;
-    }
     BodyExtractor<nsIInputStream> body(aInputStream);
     SendInternal(&body, false, aRv);
   }

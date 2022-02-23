@@ -17,7 +17,6 @@
 #ifndef SCANNER
 #define SCANNER
 
-#include "nsCharsetSource.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIParser.h"
@@ -45,13 +44,13 @@ class nsScanner final {
   /**
    *  Use this constructor for the XML fragment parsing case
    */
-  nsScanner(const nsAString& anHTMLString, bool aIncremental);
+  explicit nsScanner(const nsAString& anHTMLString);
 
   /**
    *  Use this constructor if you want i/o to be based on
    *  a file (therefore a stream) or just data you provide via Append().
    */
-  explicit nsScanner(nsIURI* aURI);
+  nsScanner(nsString& aFilename, bool aCreateStream);
 
   ~nsScanner();
 
@@ -125,11 +124,14 @@ class nsScanner final {
   bool CopyUnusedData(nsString& aCopyBuffer);
 
   /**
-   *  Retrieve the URI of the file that the scanner is reading from.
+   *  Retrieve the name of the file that the scanner is reading from.
    *  In some cases, it's just a given name, because the scanner isn't
    *  really reading from a file.
+   *
+   *  @update  gess 5/12/98
+   *  @return
    */
-  nsIURI* GetURI(void) const { return mURI; }
+  nsString& GetFilename(void);
 
   static void SelfTest();
 
@@ -161,7 +163,7 @@ class nsScanner final {
   void SetIncremental(bool anIncrValue) { mIncremental = anIncrValue; }
 
  protected:
-  void AppendToBuffer(nsScannerString::Buffer* aBuffer);
+  bool AppendToBuffer(nsScannerString::Buffer* aBuffer);
   bool AppendToBuffer(const nsAString& aStr) {
     nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
     if (!buf) return false;
@@ -169,15 +171,15 @@ class nsScanner final {
     return true;
   }
 
-  mozilla::UniquePtr<nsScannerString> mSlidingBuffer;
+  nsScannerString* mSlidingBuffer;
   nsScannerIterator mCurrentPosition;  // The position we will next read from in
                                        // the scanner buffer
   nsScannerIterator
       mMarkPosition;  // The position last marked (we may rewind to here)
   nsScannerIterator mEndPosition;  // The current end of the scanner buffer
-  nsCOMPtr<nsIURI> mURI;
+  nsString mFilename;
   bool mIncremental;
-  int32_t mCharsetSource = kCharsetUninitialized;
+  int32_t mCharsetSource;
   nsCString mCharset;
   mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
 

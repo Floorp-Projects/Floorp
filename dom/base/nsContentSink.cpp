@@ -687,11 +687,13 @@ nsresult nsContentSink::WillInterruptImpl() {
   return result;
 }
 
-void nsContentSink::WillResumeImpl() {
+nsresult nsContentSink::WillResumeImpl() {
   SINK_TRACE(static_cast<LogModule*>(gContentSinkLogModuleInfo),
              SINK_TRACE_CALLS, ("nsContentSink::WillResume: this=%p", this));
 
   mParsing = true;
+
+  return NS_OK;
 }
 
 nsresult nsContentSink::DidProcessATokenImpl() {

@@ -135,9 +135,18 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
     return false;
   }
 
-  BackgroundChild::Startup();
-  BackgroundChild::InitSocketStarter(this);
+  if (StaticPrefs::network_proxy_parse_pac_on_socket_process()) {
+    // For parsing PAC.
+    const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
+    if (jsInitFailureReason) {
+      MOZ_CRASH_UNSAFE(jsInitFailureReason);
+    }
+    sInitializedJS = true;
 
+    xpc::SelfHostedShmem::GetSingleton();
+  }
+
+  BackgroundChild::Startup();
   SetThisProcessName("Socket Process");
 #if defined(XP_MACOSX)
   // Close all current connections to the WindowServer. This ensures that the
@@ -428,29 +437,6 @@ SocketProcessChild::RecvOnHttpActivityDistributorActivated(
   }
   return IPC_OK();
 }
-
-mozilla::ipc::IPCResult
-SocketProcessChild::RecvOnHttpActivityDistributorObserveProxyResponse(
-    const bool& aIsEnabled) {
-  nsCOMPtr<nsIHttpActivityDistributor> distributor =
-      do_GetService("@mozilla.org/network/http-activity-distributor;1");
-  if (distributor) {
-    Unused << distributor->SetObserveProxyResponse(aIsEnabled);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-SocketProcessChild::RecvOnHttpActivityDistributorObserveConnection(
-    const bool& aIsEnabled) {
-  nsCOMPtr<nsIHttpActivityDistributor> distributor =
-      do_GetService("@mozilla.org/network/http-activity-distributor;1");
-  if (distributor) {
-    Unused << distributor->SetObserveConnection(aIsEnabled);
-  }
-  return IPC_OK();
-}
-
 already_AddRefed<PInputChannelThrottleQueueChild>
 SocketProcessChild::AllocPInputChannelThrottleQueueChild(
     const uint32_t& aMeanBytesPerSecond, const uint32_t& aMaxBytesPerSecond) {
@@ -679,19 +665,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetHttpConnectionData(
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
     Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
-  // For parsing PAC.
-  if (!sInitializedJS) {
-    JS::DisableJitBackend();
-
-    const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
-    if (jsInitFailureReason) {
-      MOZ_CRASH_UNSAFE(jsInitFailureReason);
-    }
-    sInitializedJS = true;
-
-    xpc::SelfHostedShmem::GetSingleton();
-  }
-
   Unused << ProxyAutoConfigChild::Create(std::move(aEndpoint));
   return IPC_OK();
 }

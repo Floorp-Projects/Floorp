@@ -75,7 +75,11 @@ using namespace mozilla::a11y;
     return;
   }
 
-  mGeckoAccessible->SetSelected([selected boolValue]);
+  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
+    acc->SetSelected([selected boolValue]);
+  } else {
+    mGeckoAccessible->AsRemote()->SetSelected([selected boolValue]);
+  }
 
   // We need to invalidate the state because the accessibility service
   // may check the selected attribute synchornously and not wait for

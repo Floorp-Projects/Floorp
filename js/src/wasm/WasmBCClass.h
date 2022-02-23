@@ -130,7 +130,7 @@ struct AccessCheck {
 struct FunctionCall {
   explicit FunctionCall(uint32_t lineOrBytecode)
       : lineOrBytecode(lineOrBytecode),
-        restoreRegisterStateAndRealm(false),
+        isInterModule(false),
         usesSystemAbi(false),
 #ifdef JS_CODEGEN_ARM
         hardFP(true),
@@ -141,7 +141,7 @@ struct FunctionCall {
 
   uint32_t lineOrBytecode;
   WasmABIArgGenerator abi;
-  bool restoreRegisterStateAndRealm;
+  bool isInterModule;
   bool usesSystemAbi;
 #ifdef JS_CODEGEN_ARM
   bool hardFP;
@@ -913,8 +913,7 @@ struct BaseCompiler final {
   //
   // Calls.
 
-  void beginCall(FunctionCall& call, UseABI useABI,
-                 RestoreRegisterStateAndRealm restoreRegisterStateAndRealm);
+  void beginCall(FunctionCall& call, UseABI useABI, InterModule interModule);
   void endCall(FunctionCall& call, size_t stackSpace);
   void startCallArgs(size_t stackArgAreaSizeUnaligned, FunctionCall* call);
   ABIArg reservePointerArgument(FunctionCall* call);
@@ -924,9 +923,8 @@ struct BaseCompiler final {
 
   // Precondition for the call*() methods: sync()
 
-  void callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                    const Stk& indexVal, const FunctionCall& call,
-                    CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
+  CodeOffset callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+                          const Stk& indexVal, const FunctionCall& call);
   CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);
   CodeOffset builtinCall(SymbolicAddress builtin, const FunctionCall& call);
   CodeOffset builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,

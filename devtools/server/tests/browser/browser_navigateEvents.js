@@ -51,6 +51,7 @@ function assertEvent(event, data) {
       );
       is(data.state, "start", "state is start");
       is(data.url, URL2, "url property is correct");
+      is(data.nativeConsoleAPI, true, "nativeConsoleAPI is correct");
       break;
     case isE10s ? 5 : 4:
       is(
@@ -79,6 +80,7 @@ function assertEvent(event, data) {
       is(event, "tabNavigated", "Finally, the receive the client event");
       is(data.state, "stop", "state is stop");
       is(data.url, URL2, "url property is correct");
+      is(data.nativeConsoleAPI, true, "nativeConsoleAPI is correct");
 
       signalAllEventsReceived();
       break;

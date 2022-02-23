@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.util.Log;
 import androidx.annotation.AnyThread;
@@ -121,7 +120,7 @@ public class WebExtension {
   @LongDef(
       flag = true,
       value = {Flags.NONE, Flags.ALLOW_CONTENT_MESSAGING})
-  public @interface WebExtensionFlags {}
+  /* package */ @interface WebExtensionFlags {}
 
   /* package */ WebExtension(final DelegateControllerProvider provider, final GeckoBundle bundle) {
     location = bundle.getString("locationURI");
@@ -193,7 +192,7 @@ public class WebExtension {
         BrowsingDataDelegate.Type.PASSWORDS
       },
       flag = true)
-  public @interface BrowsingDataTypes {}
+  @interface BrowsingDataTypes {}
 
   /**
    * This delegate is used to handle calls from the |browsingData| WebExtension API.
@@ -1094,7 +1093,7 @@ public class WebExtension {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ENV_TYPE_UNKNOWN, ENV_TYPE_EXTENSION, ENV_TYPE_CONTENT_SCRIPT})
-    public @interface EnvType {}
+    /* package */ @interface EnvType {}
     /* package */ static final int ENV_TYPE_UNKNOWN = 0;
     /** This sender originated inside a privileged extension context like a background script. */
     public static final int ENV_TYPE_EXTENSION = 1;
@@ -1259,7 +1258,7 @@ public class WebExtension {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TYPE_BROWSER_ACTION, TYPE_PAGE_ACTION})
-    public @interface ActionType {}
+    /* package */ @interface ActionType {}
 
     /* package */ final @ActionType int type;
 
@@ -1399,9 +1398,6 @@ public class WebExtension {
               return;
             }
 
-            // The .accept method will be called from the UIThread in this case because
-            // the GeckoResult instance was created on the UIThread
-            @SuppressLint("WrongThread")
             final GeckoResult<GeckoSession> popup = delegate.onTogglePopup(mExtension, this);
             openPopup(popup, uri);
           });
@@ -1577,7 +1573,7 @@ public class WebExtension {
           ErrorCodes.ERROR_USER_CANCELED,
           ErrorCodes.ERROR_POSTPONED,
         })
-    public @interface Codes {}
+    /* package */ @interface Codes {}
 
     /** One of {@link ErrorCodes} that provides more information about this exception. */
     public final @Codes int code;
@@ -1655,7 +1651,7 @@ public class WebExtension {
     SignedStateFlags.SYSTEM,
     SignedStateFlags.PRIVILEGED
   })
-  public @interface SignedState {}
+  @interface SignedState {}
 
   /**
    * Describes the blocklist state for a {@link WebExtension}. See <a
@@ -1690,7 +1686,7 @@ public class WebExtension {
     BlocklistStateFlags.VULNERABLE_UPDATE_AVAILABLE,
     BlocklistStateFlags.VULNERABLE_NO_UPDATE
   })
-  public @interface BlocklistState {}
+  @interface BlocklistState {}
 
   public static class DisabledFlags {
     /** The extension has been disabled by the user */
@@ -1714,7 +1710,7 @@ public class WebExtension {
   @IntDef(
       flag = true,
       value = {DisabledFlags.USER, DisabledFlags.BLOCKLIST, DisabledFlags.APP})
-  public @interface EnabledFlags {}
+  @interface EnabledFlags {}
 
   /** Provides information about a {@link WebExtension}. */
   public class MetaData {
@@ -1949,7 +1945,8 @@ public class WebExtension {
         Context.TAB,
         Context.TOOLS_MENU
       })
-  public @interface ContextFlags {}
+
+  /* package */ @interface ContextFlags {}
 
   /**
    * Flags to determine which contexts a menu item should be shown in. See <a
@@ -2050,7 +2047,8 @@ public class WebExtension {
     @IntDef(
         flag = false,
         value = {MenuType.NORMAL, MenuType.CHECKBOX, MenuType.RADIO, MenuType.SEPARATOR})
-    public @interface Type {}
+
+    /* package */ @interface Type {}
 
     /** A set of constants that represents the display type of this menu item. */
     static class MenuType {
@@ -2517,6 +2515,7 @@ public class WebExtension {
     }
 
     @NonNull
+    @UiThread
     /* package */ static GeckoBundle downloadInfoToBundle(final @NonNull Info data) {
       final GeckoBundle dataBundle = new GeckoBundle();
 
@@ -2584,7 +2583,7 @@ public class WebExtension {
     @IntDef(
         flag = true,
         value = {CONFLICT_ACTION_UNIQUIFY, CONFLICT_ACTION_OVERWRITE, CONFLICT_ACTION_PROMPT})
-    public @interface ConflictActionFlags {}
+    /* package */ @interface ConflictActionFlags {}
 
     /** The app should modify the filename to make it unique */
     public static final int CONFLICT_ACTION_UNIQUIFY = 0;

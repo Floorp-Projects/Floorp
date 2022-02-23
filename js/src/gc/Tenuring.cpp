@@ -137,14 +137,7 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   Value post;
   if (value.isObject()) {
     post = JS::ObjectValue(*onObjectEdge(&value.toObject()));
-  }
-#ifdef ENABLE_RECORD_TUPLE
-  else if (value.isExtendedPrimitive()) {
-    post =
-        JS::ExtendedPrimitiveValue(*onObjectEdge(&value.toExtendedPrimitive()));
-  }
-#endif
-  else if (value.isString()) {
+  } else if (value.isString()) {
     post = JS::StringValue(onStringEdge(value.toString()));
   } else if (value.isBigInt()) {
     post = JS::BigIntValue(onBigIntEdge(value.toBigInt()));

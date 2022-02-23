@@ -1664,7 +1664,7 @@ bool DebuggerScript::CallData::getAllOffsets() {
       RootedObject offsets(cx);
       RootedValue offsetsv(cx);
 
-      RootedId id(cx, PropertyKey::Int(lineno));
+      RootedId id(cx, INT_TO_JSID(lineno));
 
       bool found;
       if (!HasOwnProperty(cx, result, id, &found)) {

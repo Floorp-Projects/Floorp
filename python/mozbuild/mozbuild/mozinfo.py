@@ -97,7 +97,6 @@ def build_dict(config, env=os.environ):
     d["ccov"] = substs.get("MOZ_CODE_COVERAGE") == "1"
     d["cc_type"] = substs.get("CC_TYPE")
     d["non_native_theme"] = True
-    d["domstreams"] = substs.get("MOZ_DOM_STREAMS") == "1"
 
     def guess_platform():
         if d["buildapp"] == "browser":

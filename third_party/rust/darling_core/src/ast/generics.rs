@@ -3,7 +3,9 @@
 use std::iter::Iterator;
 use std::slice::Iter;
 
-use crate::{FromGenericParam, FromGenerics, FromTypeParam, Result};
+use syn;
+
+use {FromGenericParam, FromGenerics, FromTypeParam, Result};
 
 /// Extension trait for `GenericParam` to support getting values by variant.
 ///
@@ -140,7 +142,7 @@ pub struct Generics<P, W = syn::WhereClause> {
 }
 
 impl<P, W> Generics<P, W> {
-    pub fn type_params(&self) -> TypeParams<'_, P> {
+    pub fn type_params<'a>(&'a self) -> TypeParams<'a, P> {
         TypeParams(self.params.iter())
     }
 }
@@ -177,8 +179,10 @@ impl<'a, P: GenericParamExt> Iterator for TypeParams<'a, P> {
 
 #[cfg(test)]
 mod tests {
+    use syn;
+
     use super::{GenericParam, Generics};
-    use crate::FromGenerics;
+    use FromGenerics;
 
     #[test]
     fn generics() {

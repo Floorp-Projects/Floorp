@@ -8,9 +8,6 @@ const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { Cc, Ci } = require("chrome");
 
-const {
-  createBrowserSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const {
   processDescriptorSpec,
@@ -92,7 +89,6 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
         // the BrowserToolbox and isTopLevelTarget should always be true here.
         // (It isn't the typical behavior of WindowGlobalTargetActor's base class)
         isTopLevelTarget: true,
-        sessionContext: createBrowserSessionContext(),
       });
       // this is a special field that only parent process with a browsing context
       // have, as they are the only processes at the moment that have child
@@ -161,7 +157,9 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
    */
   getWatcher() {
     if (!this.watcher) {
-      this.watcher = new WatcherActor(this.conn, createBrowserSessionContext());
+      this.watcher = new WatcherActor(this.conn, {
+        type: "all",
+      });
       this.manage(this.watcher);
     }
     return this.watcher;

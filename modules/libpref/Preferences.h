@@ -24,7 +24,6 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include <atomic>
-#include <functional>
 
 class nsIFile;
 
@@ -395,9 +394,7 @@ class Preferences final : public nsIPrefService,
 
   // When a content process is created these methods are used to pass changed
   // prefs in bulk from the parent process, via shared memory.
-  static void SerializePreferences(
-      nsCString& aStr,
-      const std::function<bool(const char*)>& aShouldSerializeFn);
+  static void SerializePreferences(nsCString& aStr);
   static void DeserializePreferences(char* aStr, size_t aPrefsLen);
 
   static mozilla::ipc::FileDescriptor EnsureSnapshot(size_t* aSize);

@@ -10,7 +10,6 @@
 
 #include "BorderCache.h"
 #include "BorderConsts.h"
-#include "nsTHashMap.h"
 
 namespace mozilla {
 

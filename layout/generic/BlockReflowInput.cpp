@@ -32,8 +32,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
                                    bool aBEndMarginRoot,
                                    bool aBlockNeedsFloatManager,
-                                   const nscoord aConsumedBSize,
-                                   const nscoord aEffectiveContentBoxBSize)
+                                   nscoord aConsumedBSize)
     : mBlock(aFrame),
       mPresContext(aPresContext),
       mReflowInput(aReflowInput),
@@ -116,23 +115,15 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   // the "overflow" property. When we don't have a specified style block-size,
   // then we may end up limiting our block-size if the available block-size is
   // constrained (this situation occurs when we are paginated).
-  if (const nscoord availableBSize = aReflowInput.AvailableBSize();
-      availableBSize != NS_UNCONSTRAINEDSIZE) {
-    // We are in a paginated situation. The block-end edge of the available
-    // space to reflow the children is within our block-end border and padding.
-    // If we're cloning our border and padding, and we're going to request
-    // additional continuations because of our excessive content-box block-size,
-    // then reserve some of our available space for our (cloned) block-end
-    // border and padding.
-    const bool reserveSpaceForBlockEndBP =
-        mReflowInput.mStyleBorder->mBoxDecorationBreak ==
-            StyleBoxDecorationBreak::Clone &&
-        (aEffectiveContentBoxBSize == NS_UNCONSTRAINEDSIZE ||
-         aEffectiveContentBoxBSize + mBorderPadding.BStartEnd(wm) >
-             availableBSize);
-    const nscoord bp = reserveSpaceForBlockEndBP ? mBorderPadding.BStartEnd(wm)
-                                                 : mBorderPadding.BStart(wm);
-    mContentArea.BSize(wm) = std::max(0, availableBSize - bp);
+  if (NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize()) {
+    // We are in a paginated situation. The block-end edge is just inside the
+    // block-end border and padding. The content area block-size doesn't include
+    // either border or padding edge.
+    auto bp = aFrame->StyleBorder()->mBoxDecorationBreak ==
+                      StyleBoxDecorationBreak::Clone
+                  ? mBorderPadding.BStartEnd(wm)
+                  : mBorderPadding.BStart(wm);
+    mContentArea.BSize(wm) = std::max(0, aReflowInput.AvailableBSize() - bp);
   } else {
     // When we are not in a paginated situation, then we always use a
     // unconstrained block-size.
@@ -185,22 +176,21 @@ void BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
   aIEndResult = iEndOffset;
 }
 
-LogicalRect BlockReflowInput::ComputeBlockAvailSpace(
+// Compute the amount of available space for reflowing a block frame
+// at the current block-direction coordinate. This method assumes that
+// GetFloatAvailableSpace has already been called.
+void BlockReflowInput::ComputeBlockAvailSpace(
     nsIFrame* aFrame, const nsFlowAreaRect& aFloatAvailableSpace,
-    bool aBlockAvoidsFloats) {
+    bool aBlockAvoidsFloats, LogicalRect& aResult) {
 #ifdef REALLY_NOISY_REFLOW
   printf("CBAS frame=%p has floats %d\n", aFrame,
          aFloatAvailableSpace.HasFloats());
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
-  LogicalRect result(wm);
-  result.BStart(wm) = mBCoord;
-  // Note: ContentBSize() and ContentBEnd() are not our content-box size and its
-  // block-end edge. They really mean "the available block-size for children",
-  // and "the block-end edge of the available space for children".
-  result.BSize(wm) = ContentBSize() == NS_UNCONSTRAINEDSIZE
-                         ? NS_UNCONSTRAINEDSIZE
-                         : ContentBEnd() - mBCoord;
+  const nscoord availBSize = mReflowInput.AvailableBSize();
+  aResult.BStart(wm) = mBCoord;
+  aResult.BSize(wm) = availBSize == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE
+                                                         : availBSize - mBCoord;
   // mBCoord might be greater than ContentBEnd() if the block's top margin
   // pushes it off the page/column. Negative available block-size can confuse
   // other code and is nonsense in principle.
@@ -231,37 +221,35 @@ LogicalRect BlockReflowInput::ComputeBlockAvailSpace(
                                           // runaround of floats
           // The child block will flow around the float. Therefore
           // give it all of the available space.
-          result.IStart(wm) = mContentArea.IStart(wm);
-          result.ISize(wm) = mContentArea.ISize(wm);
+          aResult.IStart(wm) = mContentArea.IStart(wm);
+          aResult.ISize(wm) = mContentArea.ISize(wm);
           break;
         case StyleFloatEdge::MarginBox: {
           // The child block's margins should be placed adjacent to,
           // but not overlap the float.
-          result.IStart(wm) = aFloatAvailableSpace.mRect.IStart(wm);
-          result.ISize(wm) = aFloatAvailableSpace.mRect.ISize(wm);
+          aResult.IStart(wm) = aFloatAvailableSpace.mRect.IStart(wm);
+          aResult.ISize(wm) = aFloatAvailableSpace.mRect.ISize(wm);
         } break;
       }
     } else {
       // Since there are no floats present the float-edge property
       // doesn't matter therefore give the block element all of the
       // available space since it will flow around the float itself.
-      result.IStart(wm) = mContentArea.IStart(wm);
-      result.ISize(wm) = mContentArea.ISize(wm);
+      aResult.IStart(wm) = mContentArea.IStart(wm);
+      aResult.ISize(wm) = mContentArea.ISize(wm);
     }
   } else {
     nscoord iStartOffset, iEndOffset;
     ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace.mRect,
                                          iStartOffset, iEndOffset);
-    result.IStart(wm) = mContentArea.IStart(wm) + iStartOffset;
-    result.ISize(wm) = mContentArea.ISize(wm) - iStartOffset - iEndOffset;
+    aResult.IStart(wm) = mContentArea.IStart(wm) + iStartOffset;
+    aResult.ISize(wm) = mContentArea.ISize(wm) - iStartOffset - iEndOffset;
   }
 
 #ifdef REALLY_NOISY_REFLOW
-  printf("  CBAS: result %d %d %d %d\n", result.IStart(wm), result.BStart(wm),
-         result.ISize(wm), result.BSize(wm));
+  printf("  CBAS: result %d %d %d %d\n", aResult.IStart(wm), aResult.BStart(wm),
+         aResult.ISize(wm), aResult.BSize(wm));
 #endif
-
-  return result;
 }
 
 bool BlockReflowInput::ReplacedBlockFitsInAvailSpace(

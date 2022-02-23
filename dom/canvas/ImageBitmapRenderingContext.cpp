@@ -14,10 +14,7 @@
 namespace mozilla::dom {
 
 ImageBitmapRenderingContext::ImageBitmapRenderingContext()
-    : mWidth(0),
-      mHeight(0),
-      mFrameCaptureState(FrameCaptureState::CLEAN,
-                         "ImageBitmapRenderingContext::mFrameCaptureState") {}
+    : mWidth(0), mHeight(0), mIsCapturedFrameInvalid(false) {}
 
 ImageBitmapRenderingContext::~ImageBitmapRenderingContext() {
   RemovePostRefreshObserver();
@@ -216,7 +213,7 @@ ImageBitmapRenderingContext::Reset() {
   }
 
   mImage = nullptr;
-  mFrameCaptureState = FrameCaptureState::CLEAN;
+  mIsCapturedFrameInvalid = false;
   return NS_OK;
 }
 
@@ -246,7 +243,7 @@ void ImageBitmapRenderingContext::MarkContextClean() {}
 
 NS_IMETHODIMP
 ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
-  mFrameCaptureState = FrameCaptureState::DIRTY;
+  mIsCapturedFrameInvalid = true;
 
   if (mOffscreenCanvas) {
     mOffscreenCanvas->CommitFrameToCompositor();
@@ -262,6 +259,14 @@ NS_IMETHODIMP
 ImageBitmapRenderingContext::SetIsIPC(bool aIsIPC) { return NS_OK; }
 
 void ImageBitmapRenderingContext::DidRefresh() {}
+
+void ImageBitmapRenderingContext::MarkContextCleanForFrameCapture() {
+  mIsCapturedFrameInvalid = false;
+}
+
+bool ImageBitmapRenderingContext::IsContextCleanForFrameCapture() {
+  return !mIsCapturedFrameInvalid;
+}
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmapRenderingContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ImageBitmapRenderingContext)

@@ -867,12 +867,9 @@ class EditorBase : public nsIEditor,
     bool mDidNormalizeWhitespaces;
 
     // Set to true by default.  If somebody inserts an HTML fragment
-    // intentionally, any empty elements shouldn't be cleaned up later.  In the
+    // intentionally, inline elements shouldn't be cleaned up later.  In the
     // case this is set to false.
-    // TODO: We should not do this by default.  If it's necessary, each edit
-    //       action handler do it by itself instead.  Then, we can avoid such
-    //       unnecessary DOM tree scan.
-    bool mNeedsToCleanUpEmptyElements;
+    bool mNeedsToCleanUpEmptyInlineElements;
 
     /**
      * The following methods modifies some data of this struct and
@@ -921,7 +918,7 @@ class EditorBase : public nsIEditor,
       mDidDeleteEmptyParentBlocks = false;
       mRestoreContentEditableCount = false;
       mDidNormalizeWhitespaces = false;
-      mNeedsToCleanUpEmptyElements = true;
+      mNeedsToCleanUpEmptyInlineElements = true;
     }
 
     /**

@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 // Releasing a reader should not result in a promise being tracked as
 // unhandled.
 

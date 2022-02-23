@@ -5,8 +5,6 @@
 job-defaults:
     attributes:
         artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
-        maven_packages:
-            - geckoview
     index:
         product: mobile
     worker:
@@ -16,7 +14,7 @@ job-defaults:
             GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
         artifacts:
             - name: public/build/maven
-              path: /builds/worker/workspace/obj-build/gradle/maven/
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/maven/
               type: directory
             - name: public/build/geckoview-androidTest.apk
               path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk

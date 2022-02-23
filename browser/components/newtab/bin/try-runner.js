@@ -169,25 +169,8 @@ function sasslint() {
   return errors.length === 0 && !exitCode;
 }
 
-function zipCodeCoverage() {
-  logStart("zipCodeCoverage");
-  const { exitCode, out } = execOut("zip", [
-    "-j",
-    "logs/coverage/code-coverage-grcov",
-    "logs/coverage/lcov.info",
-  ]);
-
-  console.log("zipCodeCoverage log output: ", out);
-
-  if (!exitCode) {
-    return true;
-  }
-
-  return false;
-}
-
 const tests = {};
-const success = [checkBundles, karma, zipCodeCoverage, sasslint].every(
+const success = [checkBundles, karma, sasslint].every(
   t => (tests[t.name] = t())
 );
 console.log(tests);

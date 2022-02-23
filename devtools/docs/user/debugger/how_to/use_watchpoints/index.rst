@@ -51,3 +51,4 @@ See also
 ********
 
 - `Debugging variables with watchpoints in Firefox 72 <https://hacks.mozilla.org/2019/12/debugging-variables-with-watchpoints-in-firefox-72/>`_
+

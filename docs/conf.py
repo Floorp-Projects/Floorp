@@ -25,7 +25,6 @@ EXTRA_PATHS = (
     "testing/mozbase/mozprocess",
     "third_party/python/jsmin",
     "third_party/python/which",
-    "docs/_addons",
 )
 
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
@@ -46,7 +45,6 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_markdown_tables",
     "sphinx_panels",
-    "bzlink",
 ]
 
 # JSDoc must run successfully for dirs specified, so running

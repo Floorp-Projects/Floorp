@@ -21,6 +21,7 @@ namespace js {
 namespace jit {
 
 static const uint32_t ShadowStackSpace = 4 * sizeof(uintptr_t);
+static const uint32_t SizeOfReturnAddressAfterCall = 0;
 
 // These offsets are specific to nunboxing, and capture offsets into the
 // components of a js::Value.

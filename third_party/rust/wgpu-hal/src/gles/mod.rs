@@ -230,7 +230,6 @@ enum TextureInner {
     Renderbuffer {
         raw: glow::Renderbuffer,
     },
-    DefaultRenderbuffer,
     Texture {
         raw: glow::Texture,
         target: BindTarget,
@@ -240,7 +239,7 @@ enum TextureInner {
 impl TextureInner {
     fn as_native(&self) -> (glow::Texture, BindTarget) {
         match *self {
-            Self::Renderbuffer { .. } | Self::DefaultRenderbuffer => {
+            Self::Renderbuffer { .. } => {
                 panic!("Unexpected renderbuffer");
             }
             Self::Texture { raw, target } => (raw, target),
@@ -257,27 +256,6 @@ pub struct Texture {
     #[allow(unused)]
     format_desc: TextureFormatDesc,
     copy_size: crate::CopyExtent,
-}
-
-impl Texture {
-    pub fn default_framebuffer(format: wgt::TextureFormat) -> Self {
-        Self {
-            inner: TextureInner::DefaultRenderbuffer,
-            mip_level_count: 1,
-            array_layer_count: 1,
-            format,
-            format_desc: TextureFormatDesc {
-                internal: 0,
-                external: 0,
-                data_type: 0,
-            },
-            copy_size: crate::CopyExtent {
-                width: 0,
-                height: 0,
-                depth: 0,
-            },
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -634,9 +612,7 @@ enum Command {
         dst_target: BindTarget,
         dst_offset: wgt::BufferAddress,
     },
-    ResetFramebuffer {
-        is_default: bool,
-    },
+    ResetFramebuffer,
     BindAttachment {
         attachment: u32,
         view: TextureView,

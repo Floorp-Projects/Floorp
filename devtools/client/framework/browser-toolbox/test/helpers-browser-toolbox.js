@@ -172,13 +172,7 @@ async function initBrowserToolboxTask({
     }
   }
 
-  let destroyed = false;
   async function destroy() {
-    // No need to do anything if `destroy` was already called.
-    if (destroyed) {
-      return null;
-    }
-
     const closePromise = process._dbgProcess.wait();
     evaluateExpression("gToolbox.destroy()").catch(e => {
       // Ignore connection close as the toolbox destroy may destroy
@@ -200,13 +194,7 @@ async function initBrowserToolboxTask({
     );
 
     await client.close();
-    destroyed = true;
   }
-
-  // When tests involving using this task fail, the spawned Browser Toolbox is not
-  // destroyed and might impact the next tests (e.g. pausing the content process before
-  // the debugger from the content toolbox does). So make sure to cleanup everything.
-  registerCleanupFunction(destroy);
 
   return {
     importFunctions,

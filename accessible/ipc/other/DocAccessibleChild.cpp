@@ -419,7 +419,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDefaultTextAttributes(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvTextBounds(
     const uint64_t& aID, const int32_t& aStartOffset, const int32_t& aEndOffset,
-    const uint32_t& aCoordType, LayoutDeviceIntRect* aRetVal) {
+    const uint32_t& aCoordType, nsIntRect* aRetVal) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     *aRetVal = acc->TextBounds(aStartOffset, aEndOffset, aCoordType);
@@ -430,7 +430,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvTextBounds(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvCharBounds(
     const uint64_t& aID, const int32_t& aOffset, const uint32_t& aCoordType,
-    LayoutDeviceIntRect* aRetVal) {
+    nsIntRect* aRetVal) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     *aRetVal = acc->CharBounds(aOffset, aCoordType);
@@ -606,8 +606,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvPasteText(
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvImagePosition(
-    const uint64_t& aID, const uint32_t& aCoordType,
-    LayoutDeviceIntPoint* aRetVal) {
+    const uint64_t& aID, const uint32_t& aCoordType, nsIntPoint* aRetVal) {
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Position(aCoordType);
@@ -616,8 +615,8 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvImagePosition(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvImageSize(
-    const uint64_t& aID, LayoutDeviceIntSize* aRetVal) {
+mozilla::ipc::IPCResult DocAccessibleChild::RecvImageSize(const uint64_t& aID,
+                                                          nsIntSize* aRetVal) {
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Size();
@@ -1240,12 +1239,12 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvSelectedItems(
     const uint64_t& aID, nsTArray<uint64_t>* aSelectedItemIDs) {
   LocalAccessible* acc = IdToAccessibleSelect(aID);
   if (acc) {
-    AutoTArray<Accessible*, 10> selectedItems;
+    AutoTArray<LocalAccessible*, 10> selectedItems;
     acc->SelectedItems(&selectedItems);
     aSelectedItemIDs->SetCapacity(selectedItems.Length());
-    for (Accessible* item : selectedItems) {
+    for (size_t i = 0; i < selectedItems.Length(); ++i) {
       aSelectedItemIDs->AppendElement(
-          reinterpret_cast<uint64_t>(item->AsLocal()->UniqueID()));
+          reinterpret_cast<uint64_t>(selectedItems[i]->UniqueID()));
     }
   }
 
@@ -1266,13 +1265,16 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvSelectedItemCount(
 mozilla::ipc::IPCResult DocAccessibleChild::RecvGetSelectedItem(
     const uint64_t& aID, const uint32_t& aIndex, uint64_t* aSelected,
     bool* aOk) {
+  *aSelected = 0;
+  *aOk = false;
   LocalAccessible* acc = IdToAccessibleSelect(aID);
   if (acc) {
-    Accessible* selected = acc->GetSelectedItem(aIndex);
-    *aSelected = reinterpret_cast<uint64_t>(selected->AsLocal()->UniqueID());
+    LocalAccessible* item = acc->GetSelectedItem(aIndex);
+    if (item) {
+      *aSelected = reinterpret_cast<uint64_t>(item->UniqueID());
+      *aOk = true;
+    }
   }
-
-  *aOk = !!acc;
 
   return IPC_OK();
 }
@@ -1332,6 +1334,26 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvUnselectAll(const uint64_t& aID,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChild::RecvTakeSelection(
+    const uint64_t& aID) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->TakeSelection();
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvSetSelected(
+    const uint64_t& aID, const bool& aSelect) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->SetSelected(aSelect);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChild::RecvDoAction(const uint64_t& aID,
                                                          const uint8_t& aIndex,
                                                          bool* aSuccess) {
@@ -1350,6 +1372,16 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvActionCount(const uint64_t& aID,
   LocalAccessible* acc = IdToAccessible(aID);
   if (acc) {
     *aCount = acc->ActionCount();
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvActionDescriptionAt(
+    const uint64_t& aID, const uint8_t& aIndex, nsString* aDescription) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ActionDescriptionAt(aIndex, *aDescription);
   }
 
   return IPC_OK();
@@ -1611,10 +1643,10 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvExtents(
   *aHeight = 0;
   LocalAccessible* acc = IdToAccessible(aID);
   if (acc && !acc->IsDefunct()) {
-    LayoutDeviceIntRect screenRect = acc->Bounds();
+    nsIntRect screenRect = acc->Bounds();
     if (!screenRect.IsEmpty()) {
       if (aNeedsScreenCoords) {
-        LayoutDeviceIntPoint winCoords =
+        nsIntPoint winCoords =
             nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
         screenRect.x -= winCoords.x;
         screenRect.y -= winCoords.y;

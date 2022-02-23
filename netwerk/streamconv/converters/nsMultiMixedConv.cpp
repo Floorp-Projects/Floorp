@@ -26,11 +26,10 @@
 using namespace mozilla;
 
 nsPartChannel::nsPartChannel(nsIChannel* aMultipartChannel, uint32_t aPartID,
-                             bool aIsFirstPart, nsIStreamListener* aListener)
+                             nsIStreamListener* aListener)
     : mMultipartChannel(aMultipartChannel),
       mListener(aListener),
-      mPartID(aPartID),
-      mIsFirstPart(aIsFirstPart) {
+      mPartID(aPartID) {
   // Inherit the load flags from the original channel...
   mMultipartChannel->GetLoadFlags(&mLoadFlags);
 
@@ -341,12 +340,6 @@ nsPartChannel::GetContentDispositionHeader(
 NS_IMETHODIMP
 nsPartChannel::GetPartID(uint32_t* aPartID) {
   *aPartID = mPartID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPartChannel::GetIsFirstPart(bool* aIsFirstPart) {
-  *aIsFirstPart = mIsFirstPart;
   return NS_OK;
 }
 
@@ -804,10 +797,8 @@ nsresult nsMultiMixedConv::SendStart() {
   MOZ_ASSERT(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
   nsPartChannel* newChannel;
-  newChannel = new nsPartChannel(mChannel, mCurrentPartID, mCurrentPartID == 0,
-                                 partListener);
-
-  ++mCurrentPartID;
+  newChannel = new nsPartChannel(mChannel, mCurrentPartID++, partListener);
+  if (!newChannel) return NS_ERROR_OUT_OF_MEMORY;
 
   if (mIsByteRangeRequest) {
     newChannel->InitializeByteRange(mByteRangeStart, mByteRangeEnd);

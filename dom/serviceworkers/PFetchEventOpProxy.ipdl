@@ -10,7 +10,7 @@ include FetchTypes;
 namespace mozilla {
 namespace dom {
 
-protocol PFetchEventOpProxy {
+[RefCounted] protocol PFetchEventOpProxy {
   manager PRemoteWorker;
 
  parent:

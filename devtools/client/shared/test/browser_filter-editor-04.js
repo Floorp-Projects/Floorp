@@ -100,5 +100,4 @@ add_task(async function() {
   );
 
   widget._mouseUp();
-  widget.destroy();
 });

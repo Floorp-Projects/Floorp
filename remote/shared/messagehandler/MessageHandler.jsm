@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  *     Unique id of a given context for the provided type.
  *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
  *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
- *     WindowManager UUID created by `getIdForBrowser`.
+ *     browserId.
  */
 
 // Enum of ContextDescriptor types.
@@ -114,27 +114,19 @@ class MessageHandler extends EventEmitter {
   }
 
   /**
-   * Emit a message handler event.
+   * Emit a message-handler-event. Such events should bubble up to the root of
+   * a MessageHandler network.
    *
-   * Such events should bubble up to the root of a MessageHandler network.
-   *
-   * @param {String} name
-   *     Name of the event. Protocol level events should be of the
-   *     form [module name].[event name].
-   * @param {Object} data
-   *     The event's data.
-   * @param {Object=} options
-   * @param {boolean=} options.isProtocolEvent
-   *     Flag that indicates if it is a protocol or internal event.
-   *     Defaults to `false`.
+   * @param {String} method
+   *     A string literal of the form [module name].[event name]. This is the
+   *     event name.
+   * @param {Object} params
+   *     The event parameters.
    */
-  emitEvent(name, data, options = {}) {
-    const { isProtocolEvent = false } = options;
-
+  emitMessageHandlerEvent(method, params) {
     this.emit("message-handler-event", {
-      name,
-      data,
-      isProtocolEvent,
+      method,
+      params,
       sessionId: this.sessionId,
     });
   }

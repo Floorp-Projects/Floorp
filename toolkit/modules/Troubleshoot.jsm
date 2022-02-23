@@ -108,7 +108,6 @@ const PREFS_FOR_DISPLAY = [
   "widget.use-xdg-desktop-portal.file-picker",
   "widget.use-xdg-desktop-portal.mime-handler",
   "widget.use-xdg-desktop-portal.print",
-  "widget.gtk.overlay-scrollbars.enabled",
   "widget.wayland",
 ];
 
@@ -202,7 +201,7 @@ var Troubleshoot = {
 // when done, it must pass its data to the callback.  The resulting snapshot
 // object will contain a name => data entry for each provider.
 var dataProviders = {
-  application: async function application(done) {
+  application: function application(done) {
     let data = {
       name: Services.appinfo.name,
       osVersion:
@@ -223,7 +222,7 @@ var dataProviders = {
     };
 
     if (Services.sysinfo.getProperty("name") == "Windows_NT") {
-      if ((await Services.sysinfo.processInfo).isWindowsSMode) {
+      if (Services.sysinfo.processInfo.isWindowsSMode) {
         data.osVersion += " S";
       }
     }

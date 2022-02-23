@@ -96,7 +96,7 @@ hb_syllabic_insert_dotted_circles (hb_font_t *font,
     else
       (void) buffer->next_glyph ();
   }
-  buffer->sync ();
+  buffer->swap_buffers ();
 }
 
 

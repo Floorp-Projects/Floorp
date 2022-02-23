@@ -27,7 +27,7 @@ loader.lazyRequireGetter(
 );
 const {
   getHTTPStatusCodeURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
+} = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 loader.lazyRequireGetter(
   this,

@@ -937,7 +937,6 @@ struct SharedDataContainer {
 
   [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
                                        size_t allScriptCount);
-  [[nodiscard]] bool cloneFrom(JSContext* cx, const SharedDataContainer& other);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
@@ -1026,10 +1025,14 @@ struct CompilationStencil {
   // Used during instantiation.
   bool canLazilyParse = false;
 
+  // FunctionKey is an encoded position of a function within the source text
+  // that is reproducible.
+  using FunctionKey = uint32_t;
+  static constexpr FunctionKey NullFunctionKey = 0;
+
   // If this stencil is a delazification, this identifies location of the
   // function in the source text.
-  using FunctionKey = SourceExtent::FunctionKey;
-  FunctionKey functionKey = SourceExtent::NullFunctionKey;
+  FunctionKey functionKey = NullFunctionKey;
 
   // This holds allocations that do not require destructors to be run but are
   // live until the stencil is released.
@@ -1099,9 +1102,15 @@ struct CompilationStencil {
 #endif
 
  public:
-  bool isInitialStencil() const {
-    return functionKey == SourceExtent::NullFunctionKey;
+  static FunctionKey toFunctionKey(const SourceExtent& extent) {
+    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
+    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
+    auto result = extent.sourceStart + 1;
+    MOZ_ASSERT(result != NullFunctionKey);
+    return result;
   }
+
+  bool isInitialStencil() const { return functionKey == NullFunctionKey; }
 
   [[nodiscard]] static bool instantiateStencilAfterPreparation(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
@@ -1152,15 +1161,13 @@ struct CompilationStencil {
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   void setFunctionKey(BaseScript* lazy) {
-    functionKey = lazy->extent().toFunctionKey();
+    functionKey = toFunctionKey(lazy->extent());
   }
 
   inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
-
-  const ParserAtomSpan& parserAtomsSpan() const { return parserAtomData; }
 
   bool isModule() const;
 
@@ -1198,9 +1205,9 @@ struct CompilationStencil {
 struct ExtensibleCompilationStencil {
   bool canLazilyParse = false;
 
-  using FunctionKey = SourceExtent::FunctionKey;
+  using FunctionKey = CompilationStencil::FunctionKey;
 
-  FunctionKey functionKey = SourceExtent::NullFunctionKey;
+  FunctionKey functionKey = CompilationStencil::NullFunctionKey;
 
   // Data pointed by other fields are allocated in this LifoAlloc,
   // and moved to `CompilationStencil.alloc`.
@@ -1237,9 +1244,6 @@ struct ExtensibleCompilationStencil {
   explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
-  ExtensibleCompilationStencil(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               RefPtr<ScriptSource> source);
 
   ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
       : canLazilyParse(other.canLazilyParse),
@@ -1289,29 +1293,15 @@ struct ExtensibleCompilationStencil {
   }
 
   void setFunctionKey(const SourceExtent& extent) {
-    functionKey = extent.toFunctionKey();
+    functionKey = CompilationStencil::toFunctionKey(extent);
   }
 
   bool isInitialStencil() const {
-    return functionKey == SourceExtent::NullFunctionKey;
+    return functionKey == CompilationStencil::NullFunctionKey;
   }
 
   // Steal CompilationStencil content.
   [[nodiscard]] bool steal(JSContext* cx, RefPtr<CompilationStencil>&& other);
-
-  // Clone ExtensibleCompilationStencil content.
-  [[nodiscard]] bool cloneFrom(JSContext* cx, const CompilationStencil& other);
-  [[nodiscard]] bool cloneFrom(JSContext* cx,
-                               const ExtensibleCompilationStencil& other);
-
- private:
-  template <typename Stencil>
-  [[nodiscard]] bool cloneFromImpl(JSContext* cx, const Stencil& other);
-
- public:
-  const ParserAtomVector& parserAtomsSpan() const {
-    return parserAtoms.entries();
-  }
 
   bool isModule() const;
 
@@ -1665,7 +1655,7 @@ inline ScriptStencilIterable CompilationStencil::functionScriptStencils(
 // ExtensibleCompilationStencil.
 struct CompilationStencilMerger {
  private:
-  using FunctionKey = SourceExtent::FunctionKey;
+  using FunctionKey = ExtensibleCompilationStencil::FunctionKey;
 
   // The stencil for the initial compilation.
   // Delazifications are merged into this.

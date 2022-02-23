@@ -79,9 +79,9 @@ struct SVG
 
   struct accelerator_t
   {
-    accelerator_t (hb_face_t *face)
+    void init (hb_face_t *face)
     { table = hb_sanitize_context_t ().reference_table<SVG> (face); }
-    ~accelerator_t () { table.destroy (); }
+    void fini () { table.destroy (); }
 
     hb_blob_t *reference_blob_for_glyph (hb_codepoint_t glyph_id) const
     {
@@ -116,9 +116,7 @@ struct SVG
   DEFINE_SIZE_STATIC (10);
 };
 
-struct SVG_accelerator_t : SVG::accelerator_t {
-  SVG_accelerator_t (hb_face_t *face) : SVG::accelerator_t (face) {}
-};
+struct SVG_accelerator_t : SVG::accelerator_t {};
 
 } /* namespace OT */
 

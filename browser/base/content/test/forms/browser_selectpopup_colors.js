@@ -461,7 +461,10 @@ let kDefaultSelectStyles = {};
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.forms.select.customstyling", true]],
+    set: [
+      ["dom.select_popup_in_parent.enabled", true],
+      ["dom.forms.select.customstyling", true],
+    ],
   });
   kDefaultSelectStyles = await BrowserTestUtils.withNewTab(
     `data:text/html,<select>`,

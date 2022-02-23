@@ -33,13 +33,13 @@ STEPS = {
 
 
 def test_working_directory_clean_untracked_files(repo):
-    vcs = get_repository_object(repo.dir)
+    vcs = get_repository_object(repo.strpath)
     assert vcs.working_directory_clean()
 
-    repo.execute_next_step()
+    next(repo.step)
     assert not vcs.working_directory_clean()
 
-    repo.execute_next_step()
+    next(repo.step)
     assert vcs.working_directory_clean()
     assert not vcs.working_directory_clean(untracked=True)
 

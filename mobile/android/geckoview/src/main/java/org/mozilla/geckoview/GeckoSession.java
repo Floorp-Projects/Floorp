@@ -90,19 +90,6 @@ public class GeckoSession {
 
   private static final int DATA_URI_MAX_LENGTH = 2 * 1024 * 1024;
 
-  // Delay running compositor memory pressure by 10s to avoid interfering with tab switching.
-  private static final int NOTIFY_MEMORY_PRESSURE_DELAY_MS = 10 * 1000;
-
-  private final Runnable mNotifyMemoryPressure =
-      new Runnable() {
-        @Override
-        public void run() {
-          if (mCompositorReady) {
-            mCompositor.notifyMemoryPressure();
-          }
-        }
-      };
-
   private enum State implements NativeQueue.State {
     INITIAL(0),
     READY(1);
@@ -207,9 +194,6 @@ public class GeckoSession {
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     public native void setDynamicToolbarMaxHeight(int height);
-
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    public native void notifyMemoryPressure();
 
     // Gecko thread pauses compositor; blocks UI thread.
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -998,6 +982,7 @@ public class GeckoSession {
         GeckoBundle initData,
         String id,
         String chromeUri,
+        int screenId,
         boolean privateMode);
 
     @Override // JNIObject
@@ -1320,6 +1305,7 @@ public class GeckoSession {
     }
 
     final String chromeUri = mSettings.getChromeUri();
+    final int screenId = mSettings.getScreenId();
     final boolean isPrivate = mSettings.getUsePrivateMode();
 
     mId = id;
@@ -1338,6 +1324,7 @@ public class GeckoSession {
           createInitData(),
           mId,
           chromeUri,
+          screenId,
           isPrivate);
     } else {
       GeckoThread.queueNativeCallUntil(
@@ -1360,6 +1347,7 @@ public class GeckoSession {
           mId,
           String.class,
           chromeUri,
+          screenId,
           isPrivate);
     }
 
@@ -1459,7 +1447,7 @@ public class GeckoSession {
         LOAD_FLAGS_FORCE_ALLOW_DATA_URI,
         LOAD_FLAGS_REPLACE_HISTORY
       })
-  public @interface LoadFlags {}
+  /* package */ @interface LoadFlags {}
 
   // These flags follow similarly named ones in Gecko's nsIWebNavigation.idl
   // https://searchfox.org/mozilla-central/source/docshell/base/nsIWebNavigation.idl
@@ -1516,7 +1504,7 @@ public class GeckoSession {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(value = {HEADER_FILTER_CORS_SAFELISTED, HEADER_FILTER_UNRESTRICTED_UNSAFE})
-  public @interface HeaderFilter {}
+  /* package */ @interface HeaderFilter {}
 
   /**
    * Main entry point for loading URIs into a {@link GeckoSession}.
@@ -1985,7 +1973,7 @@ public class GeckoSession {
         FINDER_FIND_MATCH_CASE,
         FINDER_FIND_WHOLE_WORD
       })
-  public @interface FinderFindFlags {}
+  /* package */ @interface FinderFindFlags {}
 
   /** Go backwards when finding the next match. */
   public static final int FINDER_FIND_BACKWARDS = 1;
@@ -2004,7 +1992,7 @@ public class GeckoSession {
         FINDER_DISPLAY_DIM_PAGE,
         FINDER_DISPLAY_DRAW_LINK_OUTLINE
       })
-  public @interface FinderDisplayFlags {}
+  /* package */ @interface FinderDisplayFlags {}
 
   /** Highlight all find-in-page matches. */
   public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
@@ -2102,10 +2090,6 @@ public class GeckoSession {
 
     if (!active) {
       mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
-      ThreadUtils.postToUiThreadDelayed(mNotifyMemoryPressure, NOTIFY_MEMORY_PRESSURE_DELAY_MS);
-    } else {
-      // Delete any pending memory pressure events since we're active again.
-      ThreadUtils.removeUiThreadCallbacks(mNotifyMemoryPressure);
     }
 
     ThreadUtils.runOnUiThread(() -> getAutofillSupport().onActiveChanged(active));
@@ -2745,7 +2729,7 @@ public class GeckoSession {
     public class SecurityInformation {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({SECURITY_MODE_UNKNOWN, SECURITY_MODE_IDENTIFIED, SECURITY_MODE_VERIFIED})
-      public @interface SecurityMode {}
+      /* package */ @interface SecurityMode {}
 
       public static final int SECURITY_MODE_UNKNOWN = 0;
       public static final int SECURITY_MODE_IDENTIFIED = 1;
@@ -2753,7 +2737,7 @@ public class GeckoSession {
 
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({CONTENT_UNKNOWN, CONTENT_BLOCKED, CONTENT_LOADED})
-      public @interface ContentType {}
+      /* package */ @interface ContentType {}
 
       public static final int CONTENT_UNKNOWN = 0;
       public static final int CONTENT_BLOCKED = 1;
@@ -2818,9 +2802,9 @@ public class GeckoSession {
 
       /** Empty constructor for tests */
       protected SecurityInformation() {
-        mixedModePassive = CONTENT_UNKNOWN;
-        mixedModeActive = CONTENT_UNKNOWN;
-        securityMode = SECURITY_MODE_UNKNOWN;
+        mixedModePassive = 0;
+        mixedModeActive = 0;
+        securityMode = 0;
         isSecure = false;
         isException = false;
         origin = "";
@@ -2977,7 +2961,7 @@ public class GeckoSession {
     public static class ContextElement {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({TYPE_NONE, TYPE_IMAGE, TYPE_VIDEO, TYPE_AUDIO})
-      public @interface Type {}
+      /* package */ @interface Type {}
 
       public static final int TYPE_NONE = 0;
       public static final int TYPE_IMAGE = 1;
@@ -3473,17 +3457,13 @@ public class GeckoSession {
     SelectionActionDelegate.ACTION_COLLAPSE_TO_START,
     SelectionActionDelegate.ACTION_COLLAPSE_TO_END
   })
-  public @interface SelectionActionDelegateAction {}
+  /* package */ @interface SelectionActionDelegateAction {}
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
-      value = {
-        SelectionActionDelegate.FLAG_IS_COLLAPSED,
-        SelectionActionDelegate.FLAG_IS_EDITABLE,
-        SelectionActionDelegate.FLAG_IS_PASSWORD
-      })
-  public @interface SelectionActionDelegateFlag {}
+      value = {SelectionActionDelegate.FLAG_IS_COLLAPSED, SelectionActionDelegate.FLAG_IS_EDITABLE})
+  /* package */ @interface SelectionActionDelegateFlag {}
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({
@@ -3492,7 +3472,7 @@ public class GeckoSession {
     SelectionActionDelegate.HIDE_REASON_ACTIVE_SELECTION,
     SelectionActionDelegate.HIDE_REASON_ACTIVE_SCROLL
   })
-  public @interface SelectionActionDelegateHideReason {}
+  /* package */ @interface SelectionActionDelegateHideReason {}
 
   public interface NavigationDelegate {
     /**
@@ -3568,7 +3548,7 @@ public class GeckoSession {
       protected LoadRequest() {
         uri = "";
         triggerUri = null;
-        target = TARGET_WINDOW_NONE;
+        target = 0;
         isRedirect = false;
         hasUserGesture = false;
         isDirectNavigation = false;
@@ -3718,7 +3698,7 @@ public class GeckoSession {
     NavigationDelegate.TARGET_WINDOW_CURRENT,
     NavigationDelegate.TARGET_WINDOW_NEW
   })
-  public @interface TargetWindow {}
+  /* package */ @interface TargetWindow {}
 
   /**
    * GeckoSession applications implement this interface to handle prompts triggered by content in
@@ -3941,7 +3921,7 @@ public class GeckoSession {
     public class ButtonPrompt extends BasePrompt {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Type.POSITIVE, Type.NEGATIVE})
-      public @interface ButtonType {}
+      /* package */ @interface ButtonType {}
 
       public static class Type {
         /** Index of positive response button (eg, "Yes", "OK") */
@@ -4031,7 +4011,7 @@ public class GeckoSession {
               Flags.PREVIOUS_FAILED,
               Flags.CROSS_ORIGIN_SUB_RESOURCE
             })
-        public @interface AuthFlag {}
+        /* package */ @interface AuthFlag {}
 
         /** Auth prompt flags. */
         public static class Flags {
@@ -4051,7 +4031,7 @@ public class GeckoSession {
 
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({Level.NONE, Level.PW_ENCRYPTED, Level.SECURE})
-        public @interface AuthLevel {}
+        /* package */ @interface AuthLevel {}
 
         /** Auth prompt levels. */
         public static class Level {
@@ -4092,7 +4072,7 @@ public class GeckoSession {
         protected AuthOptions() {
           flags = 0;
           uri = "";
-          level = Level.NONE;
+          level = 0;
           username = "";
           password = "";
         }
@@ -4210,7 +4190,7 @@ public class GeckoSession {
 
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Type.MENU, Type.SINGLE, Type.MULTIPLE})
-      public @interface ChoiceType {}
+      /* package */ @interface ChoiceType {}
 
       public static class Type {
         /** Display choices in a menu that dismisses as soon as an item is chosen. */
@@ -4353,7 +4333,7 @@ public class GeckoSession {
     public class DateTimePrompt extends BasePrompt {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Type.DATE, Type.MONTH, Type.WEEK, Type.TIME, Type.DATETIME_LOCAL})
-      public @interface DatetimeType {}
+      /* package */ @interface DatetimeType {}
 
       public static class Type {
         /** Prompt for year, month, and day. */
@@ -4422,7 +4402,7 @@ public class GeckoSession {
     public class FilePrompt extends BasePrompt {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Type.SINGLE, Type.MULTIPLE})
-      public @interface FileType {}
+      /* package */ @interface FileType {}
 
       /** Types of file prompts. */
       public static class Type {
@@ -4437,7 +4417,7 @@ public class GeckoSession {
 
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Capture.NONE, Capture.ANY, Capture.USER, Capture.ENVIRONMENT})
-      public @interface CaptureType {}
+      /* package */ @interface CaptureType {}
 
       /** Possible capture attribute values. */
       public static class Capture {
@@ -4597,7 +4577,7 @@ public class GeckoSession {
     public class SharePrompt extends BasePrompt {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({Result.SUCCESS, Result.FAILURE, Result.ABORT})
-      public @interface ShareResult {}
+      /* package */ @interface ShareResult {}
 
       /** Possible results to a {@link SharePrompt}. */
       public static class Result {
@@ -5223,7 +5203,7 @@ public class GeckoSession {
     class ContentPermission {
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({VALUE_PROMPT, VALUE_DENY, VALUE_ALLOW})
-      public @interface Value {}
+      /* package */ @interface Value {}
 
       /** The corresponding permission is currently set to default/prompt behavior. */
       public static final int VALUE_PROMPT = 3;
@@ -5468,7 +5448,7 @@ public class GeckoSession {
         SOURCE_MICROPHONE, SOURCE_AUDIOCAPTURE,
         SOURCE_OTHER
       })
-      public @interface Source {}
+      /* package */ @interface Source {}
 
       /** Constant to indicate that camera will be recorded. */
       public static final int SOURCE_CAMERA = 0;
@@ -5487,7 +5467,7 @@ public class GeckoSession {
 
       @Retention(RetentionPolicy.SOURCE)
       @IntDef({TYPE_VIDEO, TYPE_AUDIO})
-      public @interface Type {}
+      /* package */ @interface Type {}
 
       /** The media type is video. */
       public static final int TYPE_VIDEO = 0;
@@ -5567,8 +5547,8 @@ public class GeckoSession {
         id = null;
         rawId = null;
         name = null;
-        source = SOURCE_CAMERA;
-        type = TYPE_VIDEO;
+        source = 0;
+        type = 0;
       }
     }
 
@@ -5647,7 +5627,7 @@ public class GeckoSession {
     PermissionDelegate.PERMISSION_TRACKING,
     PermissionDelegate.PERMISSION_STORAGE_ACCESS
   })
-  public @interface Permission {}
+  /* package */ @interface Permission {}
 
   /**
    * Interface that SessionTextInput uses for performing operations such as opening and closing the
@@ -5755,7 +5735,7 @@ public class GeckoSession {
     TextInputDelegate.RESTART_REASON_BLUR,
     TextInputDelegate.RESTART_REASON_CONTENT_CHANGE
   })
-  public @interface RestartReason {}
+  /* package */ @interface RestartReason {}
 
   /* package */ void onSurfaceChanged(
       final Surface surface, final int x, final int y, final int width, final int height) {
@@ -6082,13 +6062,13 @@ public class GeckoSession {
       @LongDef(
           flag = true,
           value = {Status.RECORDING, Status.INACTIVE})
-      public @interface RecordingStatus {}
+      /* package */ @interface RecordingStatus {}
 
       @Retention(RetentionPolicy.SOURCE)
       @LongDef(
           flag = true,
           value = {Type.CAMERA, Type.MICROPHONE})
-      public @interface DeviceType {}
+      /* package */ @interface DeviceType {}
 
       /**
        * A long giving the current recording status, must be either Status.RECORDING, Status.PAUSED
@@ -6259,7 +6239,7 @@ public class GeckoSession {
         HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT,
         HistoryDelegate.VISIT_UNRECOVERABLE_ERROR
       })
-  public @interface VisitFlags {}
+  /* package */ @interface VisitFlags {}
 
   private Autofill.Support getAutofillSupport() {
     return mAutofillSupport;

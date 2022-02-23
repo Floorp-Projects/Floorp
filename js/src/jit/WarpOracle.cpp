@@ -422,6 +422,12 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         if (IsAsmJSModule(fun)) {
           return abort(AbortReason::Disable, "asm.js module function lambda");
         }
+
+        if (!AddOpSnapshot<WarpLambda>(alloc_, opSnapshots, offset,
+                                       fun->baseScript(), fun->flags(),
+                                       fun->nargs())) {
+          return abort(AbortReason::Alloc);
+        }
         break;
       }
 
@@ -1040,8 +1046,6 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
-      case StubField::Type::Double:
-        break;
       case StubField::Type::Shape:
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");

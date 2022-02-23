@@ -21,7 +21,7 @@ async function breakpointPreviews(
   { line, column },
   previews
 ) {
-  const url = `${target}://./${fixture}/input.js`;
+  const filename = `${target}://./${fixture}/input.`;
   const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
     c.toUpperCase()
   );
@@ -31,7 +31,7 @@ async function breakpointPreviews(
   await invokeWithBreakpoint(
     dbg,
     fnName,
-    url,
+    filename,
     { line, column },
     async () => {
       await assertPreviews(dbg, previews);

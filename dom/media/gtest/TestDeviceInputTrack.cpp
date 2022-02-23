@@ -73,7 +73,6 @@ class TestDeviceInputTrack : public testing::Test {
 
 TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   const uint32_t flags = 0;
-  const CubebUtils::AudioDeviceID deviceId = (void*)1;
 
   AudioGenerator<AudioDataValue> generator(mChannels, mRate);
   const size_t nrFrames = 10;
@@ -84,10 +83,8 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
-  auto r = NativeInputTrack::OpenAudio(mGraph.get(), deviceId, testPrincipal,
-                                       nullptr);
-  ASSERT_TRUE(r.isOk());
-  RefPtr<NativeInputTrack> track = r.unwrap();
+  RefPtr<NativeInputTrack> track =
+      NativeInputTrack::Create(mGraph.get(), testPrincipal);
 
   generator.GenerateInterleaved(buffer.Elements(), nrFrames);
   track->NotifyInputData(mGraph.get(), buffer.Elements(), nrFrames, mRate,
@@ -123,24 +120,6 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
     EXPECT_EQ(chunk.mPrincipalHandle, testPrincipal);
   }
 
-  NativeInputTrack::CloseAudio(std::move(track), nullptr);
-}
-
-TEST_F(TestDeviceInputTrack, OpenTwiceWithoutCloseFirst) {
-  const CubebUtils::AudioDeviceID deviceId1 = (void*)1;
-  const CubebUtils::AudioDeviceID deviceId2 = (void*)2;
-
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-
-  auto r1 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId1, testPrincipal,
-                                        nullptr);
-  ASSERT_TRUE(r1.isOk());
-  RefPtr<NativeInputTrack> track1 = r1.unwrap();
-
-  auto r2 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId2, testPrincipal,
-                                        nullptr);
-  EXPECT_TRUE(r2.isErr());
-
-  NativeInputTrack::CloseAudio(std::move(track1), nullptr);
+  track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }

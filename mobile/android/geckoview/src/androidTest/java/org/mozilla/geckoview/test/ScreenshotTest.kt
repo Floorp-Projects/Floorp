@@ -29,7 +29,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeThat
-import org.junit.Assume.assumeTrue
 import java.lang.IllegalStateException
 
 private const val SCREEN_HEIGHT = 800
@@ -226,23 +225,6 @@ class ScreenshotTest : BaseSessionTest() {
 
         sessionRule.display?.let {
             assertScreenshotResult(it.capturePixels(), screenshotFile)
-        }
-    }
-
-    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
-    @Test(expected = IllegalStateException::class)
-    fun capturePixelsAfterGpuProcessCrash() {
-        // We need the GPU process for this test
-        assumeTrue(sessionRule.usingGpuProcess())
-
-        sessionRule.display?.let {
-            // Kill the GPU process then immediately request screen pixels. Requesting the pixels
-            // *before* killing the process will often result in the same error, but sometimes the
-            // screenshot request will complete successfully before the crash.
-            sessionRule.killGpuProcess()
-            val result = it.capturePixels()
-
-            sessionRule.waitForResult(result)
         }
     }
 

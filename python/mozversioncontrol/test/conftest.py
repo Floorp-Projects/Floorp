@@ -4,11 +4,8 @@
 
 from __future__ import absolute_import
 
-import shutil
 import os
 import subprocess
-
-from pathlib import Path
 
 import pytest
 
@@ -24,8 +21,7 @@ SETUP = {
         hg phase --public .
         """,
         """
-        echo [paths] > .hg/hgrc
-        echo "default = ../remoterepo" >> .hg/hgrc
+        echo "[paths]\ndefault = ../remoterepo" > .hg/hgrc
         """,
     ],
     "git": [
@@ -33,8 +29,6 @@ SETUP = {
         echo "foo" > foo
         echo "bar" > bar
         git init
-        git config user.name "Testing McTesterson"
-        git config user.email "<test@example.org>"
         git add *
         git commit -am "Initial commit"
         """,
@@ -47,42 +41,35 @@ SETUP = {
 }
 
 
-class RepoTestFixture:
-    def __init__(self, repo_dir: Path, vcs: str, steps: [str]):
-        self.dir = repo_dir
-        self.vcs = vcs
-
-        # This creates a step iterator. Each time execute_next_step()
-        # is called the next set of instructions will be executed.
-        self.steps = (shell(cmd, self.dir) for cmd in steps)
-
-    def execute_next_step(self):
-        next(self.steps)
+def shell(cmd):
+    subprocess.check_call(cmd, shell=True)
 
 
-def shell(cmd, working_dir):
-    for step in cmd.split(os.linesep):
-        subprocess.check_call(step, shell=True, cwd=working_dir)
-
-
-@pytest.fixture(params=["git", "hg"])
+@pytest.yield_fixture(params=["git", "hg"])
 def repo(tmpdir, request):
-    tmpdir = Path(tmpdir)
     vcs = request.param
     steps = SETUP[vcs]
 
     if hasattr(request.module, "STEPS"):
         steps.extend(request.module.STEPS[vcs])
 
-    repo_dir = (tmpdir / "repo").resolve()
-    (tmpdir / "repo").mkdir()
+    # tmpdir and repo are py.path objects
+    # http://py.readthedocs.io/en/latest/path.html
+    repo = tmpdir.mkdir("repo")
+    repo.vcs = vcs
 
-    repo_test_fixture = RepoTestFixture(repo_dir, vcs, steps)
+    # This creates a step iterator. Each time next() is called
+    # on it, the next set of instructions will be executed.
+    repo.step = (shell(cmd) for cmd in steps)
 
-    repo_test_fixture.execute_next_step()
+    oldcwd = os.getcwd()
+    os.chdir(repo.strpath)
 
-    shutil.copytree(str(repo_dir), str(tmpdir / "remoterepo"))
+    next(repo.step)
 
-    repo_test_fixture.execute_next_step()
+    repo.copy(tmpdir.join("remoterepo"))
 
-    yield repo_test_fixture
+    next(repo.step)
+
+    yield repo
+    os.chdir(oldcwd)

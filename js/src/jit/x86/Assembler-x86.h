@@ -473,11 +473,11 @@ class Assembler : public AssemblerX86Shared {
     masm.shrdl_irr(imm.value, src.encoding(), dest.encoding());
   }
 
-  void vhaddpd(FloatRegister rhs, FloatRegister lhsDest) {
+  void vhaddpd(FloatRegister src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE3());
-    MOZ_ASSERT(rhs.size() == 16);
-    MOZ_ASSERT(lhsDest.size() == 16);
-    masm.vhaddpd_rr(rhs.encoding(), lhsDest.encoding(), lhsDest.encoding());
+    MOZ_ASSERT(src.size() == 16);
+    MOZ_ASSERT(dest.size() == 16);
+    masm.vhaddpd_rr(src.encoding(), dest.encoding());
   }
 
   void fild(const Operand& src) {

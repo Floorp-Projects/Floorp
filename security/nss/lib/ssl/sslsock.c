@@ -94,8 +94,7 @@ static sslOptions ssl_defaults = {
     .enablePostHandshakeAuth = PR_FALSE,
     .suppressEndOfEarlyData = PR_FALSE,
     .enableTls13GreaseEch = PR_FALSE,
-    .enableTls13BackendEch = PR_FALSE,
-    .callExtensionWriterOnEchInner = PR_FALSE,
+    .enableTls13BackendEch = PR_FALSE
 };
 
 /*
@@ -4305,7 +4304,6 @@ struct {
     EXP(AddExternalPsk0Rtt),
     EXP(AeadDecrypt),
     EXP(AeadEncrypt),
-    EXP(CallExtensionWriterOnEchInner),
     EXP(CipherSuiteOrderGet),
     EXP(CipherSuiteOrderSet),
     EXP(CreateAntiReplayContext),
@@ -4403,17 +4401,6 @@ SSLExp_EnableTls13BackendEch(PRFileDesc *fd, PRBool enabled)
         return SECFailure;
     }
     ss->opt.enableTls13BackendEch = enabled;
-    return SECSuccess;
-}
-
-SECStatus
-SSLExp_CallExtensionWriterOnEchInner(PRFileDesc *fd, PRBool enabled)
-{
-    sslSocket *ss = ssl_FindSocket(fd);
-    if (!ss) {
-        return SECFailure;
-    }
-    ss->opt.callExtensionWriterOnEchInner = enabled;
     return SECSuccess;
 }
 

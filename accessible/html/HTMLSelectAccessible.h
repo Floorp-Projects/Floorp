@@ -73,8 +73,9 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
   nsresult HandleAccEvent(AccEvent* aEvent) override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
   virtual LocalAccessible* ContainerWidget() const override;
@@ -140,7 +141,9 @@ class HTMLSelectOptGroupAccessible : public HTMLSelectOptionAccessible {
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 };
 
 /** ------------------------------------------------------ */
@@ -169,8 +172,9 @@ class HTMLComboboxAccessible final : public AccessibleWrap {
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
   virtual bool IsWidget() const override;
@@ -201,6 +205,7 @@ class HTMLComboboxListAccessible : public HTMLSelectListAccessible {
   virtual ~HTMLComboboxListAccessible() {}
 
   // LocalAccessible
+  virtual nsIFrame* GetFrame() const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;

@@ -1,4 +1,4 @@
-FROM rust:latest
+FROM rust:1.40
 
 WORKDIR /usr/num_cpus
 

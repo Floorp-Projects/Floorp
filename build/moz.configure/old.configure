@@ -76,7 +76,11 @@ def prepare_configure(mozconfig, old_configure_assignments):
 @template
 def old_configure_options(*options):
     for opt in options:
-        option(opt, nargs="*", help="Help missing for old configure options")
+        if "-system-" in opt and opt != "--enable-system-extension-dirs":
+            cb = system_lib_option
+        else:
+            cb = option
+        cb(opt, nargs="*", help="Help missing for old configure options")
 
     @dependable
     def all_options():
@@ -143,7 +147,9 @@ def old_configure_for(old_configure_path, extra_env=None):
     @imports(_from="mozbuild.shellutil", _import="split")
     @imports(_from="tempfile", _import="NamedTemporaryFile")
     @imports(_from="subprocess", _import="CalledProcessError")
-    @imports(_from="__builtin__", _import="exec")
+    @imports(_from="six", _import="exec_")
+    @imports(_from="six", _import="iteritems")
+    @imports(_from="six", _import="string_types")
     def old_configure(
         prepare_configure,
         prepare_configure_options,
@@ -300,7 +306,7 @@ def old_configure_for(old_configure_path, extra_env=None):
         }
         with open("config.data", "r") as fh:
             code = compile(fh.read(), "config.data", "exec")
-            exec(code, raw_config)
+            exec_(code, raw_config)
 
         # Ensure all the flags known to old-configure appear in the
         # @old_configure_options above.
@@ -320,7 +326,7 @@ def old_configure_for(old_configure_path, extra_env=None):
         return namespace(
             **{
                 c: [
-                    (k[1:-1], v[1:-1] if isinstance(v, str) else v)
+                    (k[1:-1], v[1:-1] if isinstance(v, string_types) else v)
                     for k, v in raw_config[c]
                 ]
                 for c in ("substs", "defines")

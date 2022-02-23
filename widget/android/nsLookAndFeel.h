@@ -6,25 +6,7 @@
 #define __nsLookAndFeel
 
 #include "nsXPLookAndFeel.h"
-
-namespace mozilla {
-// The order and number of the members in this structure must correspond
-// to the attrsAppearance array in GeckoAppShell.getSystemColors()
-struct AndroidSystemColors {
-  nscolor textColorPrimary;
-  nscolor textColorPrimaryInverse;
-  nscolor textColorSecondary;
-  nscolor textColorSecondaryInverse;
-  nscolor textColorTertiary;
-  nscolor textColorTertiaryInverse;
-  nscolor textColorHighlight;
-  nscolor colorForeground;
-  nscolor colorBackground;
-  nscolor panelColorForeground;
-  nscolor panelColorBackground;
-  nscolor colorAccent;
-};
-}  // namespace mozilla
+#include "AndroidBridge.h"
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:

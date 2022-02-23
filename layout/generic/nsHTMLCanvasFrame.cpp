@@ -95,7 +95,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = true;
-    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
+    return f->GetInnerArea() + ToReferenceFrame();
   }
 
   virtual bool CreateWebRenderCommands(
@@ -196,23 +197,55 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         webgpu::CanvasContext* canvasContext =
             canvasElement->GetWebGPUContext();
 
-        if (!canvasContext || !canvasContext->mHandle) {
+        if (!canvasContext) {
           return true;
         }
 
-        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-        IntrinsicSize intrinsicSize =
-            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-        AspectRatio intrinsicRatio =
-            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-        nsRect area =
-            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-        aManager->CommandBuilder().PushInProcessImage(
-            this, canvasContext->mHandle, aBuilder, aResources, aSc, bounds);
+        bool isRecycled;
+        RefPtr<WebRenderLocalCanvasData> canvasData =
+            aManager->CommandBuilder()
+                .CreateOrRecycleWebRenderUserData<WebRenderLocalCanvasData>(
+                    this, &isRecycled);
+        if (!canvasContext->UpdateWebRenderLocalCanvasData(canvasData)) {
+          return true;
+        }
+
+        const wr::ImageDescriptor imageDesc =
+            canvasContext->MakeImageDescriptor();
+
+        wr::ImageKey imageKey;
+        auto imageKeyMaybe = canvasContext->GetImageKey();
+        // Check that the key exists, and its namespace matches the active
+        // bridge. It will mismatch if there was a GPU reset.
+        if (imageKeyMaybe &&
+            aManager->WrBridge()->GetNamespace() == imageKeyMaybe->mNamespace) {
+          imageKey = imageKeyMaybe.value();
+        } else {
+          imageKey = canvasContext->CreateImageKey(aManager);
+          aResources.AddPrivateExternalImage(canvasContext->mExternalImageId,
+                                             imageKey, imageDesc);
+        }
+
+        {
+          nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
+          IntrinsicSize intrinsicSize =
+              IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+          AspectRatio intrinsicRatio =
+              IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+          nsRect area =
+              mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+          nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+              area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
+          LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+              dest, mFrame->PresContext()->AppUnitsPerDevPixel());
+          auto rendering = wr::ToImageRendering(mFrame->UsedImageRendering());
+          aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
+                             !BackfaceIsHidden(), rendering, imageKey);
+        }
+
+        canvasData->mDescriptor = imageDesc;
+        canvasData->mImageKey = imageKey;
+        canvasData->RequestFrameReadback();
         break;
       }
       case CanvasContextType::ImageBitmap: {
@@ -364,6 +397,16 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
+void nsHTMLCanvasFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                             nsIFrame* aPrevInFlow) {
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+
+  // We can fill in the canvas before the canvas frame is created, in
+  // which case we never get around to marking the content as active. Therefore,
+  // we mark it active here when we create the frame.
+  ActiveLayerTracker::NotifyContentChange(this);
+}
+
 void nsHTMLCanvasFrame::DestroyFrom(nsIFrame* aDestroyRoot,
                                     PostDestroyData& aPostDestroyData) {
   if (IsPrimaryFrame()) {
@@ -466,7 +509,19 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  const LogicalSize finalSize = aReflowInput.ComputedSizeWithBorderPadding(wm);
+  LogicalSize finalSize = aReflowInput.ComputedSize();
+
+  // stash this away so we can compute our inner area later
+  mBorderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
+
+  finalSize.ISize(wm) += mBorderPadding.IStartEnd(wm);
+  finalSize.BSize(wm) += mBorderPadding.BStartEnd(wm);
+
+  if (GetPrevInFlow()) {
+    nscoord y = GetContinuationOffset(&finalSize.ISize(wm));
+    finalSize.BSize(wm) -= y + mBorderPadding.BStart(wm);
+    finalSize.BSize(wm) = std::max(0, finalSize.BSize(wm));
+  }
 
   aMetrics.SetSize(wm, finalSize);
   aMetrics.SetOverflowAreasToDesiredBounds();
@@ -493,6 +548,20 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
+// FIXME taken from nsImageFrame, but then had splittable frame stuff
+// removed.  That needs to be fixed.
+// XXXdholbert As in nsImageFrame, this function's clients should probably
+// just be calling GetContentRectRelativeToSelf().
+nsRect nsHTMLCanvasFrame::GetInnerArea() const {
+  nsMargin bp = mBorderPadding.GetPhysicalMargin(GetWritingMode());
+  nsRect r;
+  r.x = bp.left;
+  r.y = bp.top;
+  r.width = mRect.width - bp.left - bp.right;
+  r.height = mRect.height - bp.top - bp.bottom;
+  return r;
+}
+
 bool nsHTMLCanvasFrame::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
   HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
@@ -517,6 +586,29 @@ void nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplaySelectionOverlay(aBuilder, aLists.Content(),
                           nsISelectionDisplay::DISPLAY_IMAGES);
+}
+
+// get the offset into the content area of the image where aImg starts if it is
+// a continuation. from nsImageFrame
+nscoord nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const {
+  nscoord offset = 0;
+  if (aWidth) {
+    *aWidth = 0;
+  }
+
+  if (GetPrevInFlow()) {
+    for (nsIFrame* prevInFlow = GetPrevInFlow(); prevInFlow;
+         prevInFlow = prevInFlow->GetPrevInFlow()) {
+      nsRect rect = prevInFlow->GetRect();
+      if (aWidth) {
+        *aWidth = rect.width;
+      }
+      offset += rect.height;
+    }
+    offset -= mBorderPadding.GetPhysicalMargin(GetWritingMode()).top;
+    offset = std::max(0, offset);
+  }
+  return offset;
 }
 
 void nsHTMLCanvasFrame::AppendDirectlyOwnedAnonBoxes(

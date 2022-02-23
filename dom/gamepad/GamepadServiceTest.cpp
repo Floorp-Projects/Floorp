@@ -17,6 +17,8 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
+#include "mozilla/Unused.h"
+
 namespace mozilla::dom {
 
 /*

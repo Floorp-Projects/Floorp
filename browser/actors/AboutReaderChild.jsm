@@ -22,8 +22,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Readerable.jsm"
 );
 
-var gUrlsToDocContentType = new Map();
-
 class AboutReaderChild extends JSWindowActorChild {
   constructor() {
     super();
@@ -49,10 +47,6 @@ class AboutReaderChild extends JSWindowActorChild {
     switch (message.name) {
       case "Reader:ToggleReaderMode":
         if (!this.isAboutReader) {
-          gUrlsToDocContentType.set(
-            this.document.URL,
-            this.document.contentType
-          );
           this._articlePromise = ReaderMode.parseDocument(this.document).catch(
             Cu.reportError
           );
@@ -109,25 +103,17 @@ class AboutReaderChild extends JSWindowActorChild {
         }
 
         if (this.document.body) {
-          let url = this.document.documentURI;
           if (!this._articlePromise) {
+            let url = this.document.documentURI;
             url = decodeURIComponent(url.substr("about:reader?url=".length));
             this._articlePromise = this.sendQuery("Reader:GetCachedArticle", {
               url,
             });
           }
+
           // Update the toolbar icon to show the "reader active" icon.
           this.sendAsyncMessage("Reader:UpdateReaderButton");
-          let docContentType =
-            gUrlsToDocContentType.get(url) === "text/plain"
-              ? "text/plain"
-              : "document";
-
-          this._reader = new AboutReader(
-            this,
-            this._articlePromise,
-            docContentType
-          );
+          this._reader = new AboutReader(this, this._articlePromise);
           this._articlePromise = null;
         }
         break;

@@ -7,11 +7,9 @@
 #include "FontPreloader.h"
 
 #include "gfxUserFontSet.h"
-#include "mozilla/dom/Document.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpChannel.h"
 #include "nsISupportsPriority.h"
-#include "nsNetUtil.h"
 
 namespace mozilla {
 

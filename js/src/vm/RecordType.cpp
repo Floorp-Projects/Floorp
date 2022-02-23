@@ -32,6 +32,7 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 
@@ -49,14 +50,11 @@ const ClassSpec RecordType::classSpec_ = {
     nullptr,
     nullptr};
 
-Shape* RecordType::getInitialShape(JSContext* cx) {
-  return SharedShape::getInitialShape(cx, &RecordType::class_, cx->realm(),
-                                      TaggedProto(nullptr), SLOT_COUNT);
-}
-
 RecordType* RecordType::createUninitialized(JSContext* cx,
                                             uint32_t initialLength) {
-  RootedShape shape(cx, getInitialShape(cx));
+  RootedShape shape(
+      cx, SharedShape::getInitialShape(cx, &RecordType::class_, cx->realm(),
+                                       TaggedProto(nullptr), SLOT_COUNT));
   if (!shape) {
     return nullptr;
   }
@@ -116,7 +114,7 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
   }
   initSlot(slot, value);
 
-  // Add the key to the SORTED_KEYS internal slot
+  // Add the key to the SORTED_KEYS instenal slot
 
   JSAtom* atomKey = key.isString() ? AtomizeString(cx, key.toString())
                                    : Int32ToAtom(cx, key.toInt());
@@ -180,7 +178,7 @@ bool RecordType::finishInitialization(JSContext* cx) {
   }
 
   // We preallocate 1 element for each object spread. If spreads end up
-  // introducing zero elements, we can then shrink the sortedKeys array.
+  // introducing zero elements, we can then shrink the sordedKeys array.
   sortedKeys.setDenseInitializedLength(length);
   sortedKeys.setLength(length);
   sortedKeys.setNonWritableLength(cx);

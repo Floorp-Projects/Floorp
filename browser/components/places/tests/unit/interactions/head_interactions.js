@@ -8,15 +8,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Interactions: "resource:///modules/Interactions.jsm",
-  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
-  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
   SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
   SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
@@ -291,24 +287,6 @@ async function assertSnapshots(expected, options) {
 }
 
 /**
- * Asserts that the snapshot groups match the expected values.
- *
- * @param {SnapshotGroup} group
- *   The actual snapshot groups.
- * @param {SnapshotGroup} expected
- *   The expected snapshot group.
- */
-function assertSnapshotGroup(group, expected) {
-  for (let [p, v] in Object.entries(expected)) {
-    let comparator = Assert.equal.bind(Assert);
-    if (v && typeof v == "object") {
-      comparator = Assert.deepEqual.bind(Assert);
-    }
-    comparator(group[p], v, `Should have the expected ${p} value`);
-  }
-}
-
-/**
  * Queries overlapping snapshots from the database and asserts their expected values.
  *
  * @param {Snapshot[]} expected
@@ -331,7 +309,10 @@ async function assertOverlappingSnapshots(expected, context) {
  *   @see SnapshotSelector.#context.
  */
 async function assertCommonReferrerSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryCommonReferrer(context.url);
+  let snapshots = await Snapshots.queryCommonReferrer(
+    context.url,
+    context.referrerUrl
+  );
 
   await assertSnapshotList(snapshots, expected);
 }
@@ -371,17 +352,4 @@ function assertSnapshotScores(combinedSnapshots, expectedSnapshots) {
       `Should have set the expected score for ${expectedSnapshots[i].url}`
     );
   }
-}
-
-/**
- * Abstracts getting the right moz-page-thumb url depending on enabled features.
- * @param {string} url
- *  The page url to get a screenshot for.
- * @returns {string} a moz-page-thumb:// url
- */
-function getPageThumbURL(url) {
-  if (PlacesPreviews.enabled) {
-    return PlacesPreviews.getPageThumbURL(url);
-  }
-  return PageThumbs.getThumbnailURL(url);
 }

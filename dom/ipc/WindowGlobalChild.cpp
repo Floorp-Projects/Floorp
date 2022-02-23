@@ -20,6 +20,7 @@
 #include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/SessionStoreDataCollector.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/InProcessParent.h"
@@ -32,6 +33,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
@@ -71,8 +73,7 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
   }
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
-                         embedderInnerWindowID,
-                         BrowsingContext()->UsePrivateBrowsing());
+                         embedderInnerWindowID);
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
@@ -601,8 +602,7 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   }
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
-                         embedderInnerWindowID,
-                         BrowsingContext()->UsePrivateBrowsing());
+                         embedderInnerWindowID);
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);
 }

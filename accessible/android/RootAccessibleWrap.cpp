@@ -133,9 +133,16 @@ RootAccessibleWrap::HandleEvent(Event* aDOMEvent) {
       return NS_OK;
     }
 
-    if (MouseEvent* mouseEvent = aDOMEvent->AsMouseEvent()) {
-      LayoutDeviceIntPoint point = mouseEvent->ScreenPointLayoutDevicePix();
-      ExploreByTouch(point.x, point.y);
+    MouseEvent* mouseEvent = aDOMEvent->AsMouseEvent();
+    if (mouseEvent) {
+      nsPresContext* pc = PresContext();
+
+      int32_t x =
+          pc->CSSPixelsToDevPixels(mouseEvent->ScreenX(CallerType::System));
+      int32_t y =
+          pc->CSSPixelsToDevPixels(mouseEvent->ScreenY(CallerType::System));
+
+      ExploreByTouch(x, y);
     }
 
     return NS_OK;

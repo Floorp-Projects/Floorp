@@ -8,7 +8,6 @@
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h"
-#include "nsCRT.h"
 #include "plstr.h"
 #include "mozilla/UniquePtr.h"
 
@@ -76,14 +75,13 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char* aFromType,
 
   NS_ENSURE_ARG_POINTER(aListener);
 
-  if (!PL_strncasecmp(aToType, ZLIB_TYPE, sizeof(ZLIB_TYPE) - 1)) {
+  if (!PL_strncasecmp(aToType, ZLIB_TYPE, sizeof(ZLIB_TYPE) - 1))
     mWrapMode = WRAP_ZLIB;
-  } else if (!nsCRT::strcasecmp(aToType, GZIP_TYPE) ||
-             !nsCRT::strcasecmp(aToType, X_GZIP_TYPE)) {
+  else if (!PL_strcasecmp(aToType, GZIP_TYPE) ||
+           !PL_strcasecmp(aToType, X_GZIP_TYPE))
     mWrapMode = WRAP_GZIP;
-  } else {
+  else
     mWrapMode = WRAP_NONE;
-  }
 
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);

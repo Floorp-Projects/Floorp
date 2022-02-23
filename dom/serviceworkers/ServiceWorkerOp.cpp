@@ -57,6 +57,7 @@
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/extensions/ExtensionBrowser.h"
@@ -116,13 +117,11 @@ class ExtendableEventKeepAliveHandler final
   /**
    * PromiseNativeHandler interface
    */
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     RemovePromise(Resolved);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     RemovePromise(Rejected);
   }
 
@@ -301,16 +300,12 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerDebuggeeRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is permitted
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     MOZ_ASSERT(mOwner);
 
     mOwner->RejectAll(NS_ERROR_DOM_ABORT_ERR);
     mOwner = nullptr;
 
-    return NS_OK;
+    return WorkerRunnable::Cancel();
   }
 
   RefPtr<ServiceWorkerOp> mOwner;
@@ -1345,8 +1340,7 @@ void FetchEventOp::GetRequestURL(nsAString& aOutRequestURL) {
 }
 
 void FetchEventOp::ResolvedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue,
-                                    ErrorResult& aRv) {
+                                    JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mRespondWithClosure);
   MOZ_ASSERT(!mRespondWithPromiseHolder.IsEmpty());
@@ -1525,8 +1519,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
 }
 
 void FetchEventOp::RejectedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue,
-                                    ErrorResult& aRv) {
+                                    JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mRespondWithClosure);
   MOZ_ASSERT(!mRespondWithPromiseHolder.IsEmpty());

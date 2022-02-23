@@ -4,7 +4,9 @@
 
 "use strict";
 
-const LegacyWorkersWatcher = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
+const {
+  LegacyWorkersWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacySharedWorkersWatcher extends LegacyWorkersWatcher {
   // Flag used from the parent class to listen to process targets.
@@ -16,4 +18,4 @@ class LegacySharedWorkersWatcher extends LegacyWorkersWatcher {
   }
 }
 
-module.exports = LegacySharedWorkersWatcher;
+module.exports = { LegacySharedWorkersWatcher };

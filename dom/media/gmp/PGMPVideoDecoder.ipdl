@@ -10,13 +10,11 @@ using GMPVideoCodec from "gmp-video-codec.h";
 using GMPErr from "gmp-errors.h";
 
 include "GMPMessageUtils.h";
-include "GMPVideoDecoderChild.h";
 
 namespace mozilla {
 namespace gmp {
 
-[ChildImpl="GMPVideoDecoderChild", ParentImpl=virtual]
-sync protocol PGMPVideoDecoder
+[RefCounted] sync protocol PGMPVideoDecoder
 {
   manager PGMPContent;
 child:

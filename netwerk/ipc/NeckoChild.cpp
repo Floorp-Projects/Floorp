@@ -71,8 +71,7 @@ void NeckoChild::InitNeckoChild() {
     if (NS_WARN_IF(cpc->IsShuttingDown())) {
       return;
     }
-    RefPtr<NeckoChild> child = new NeckoChild();
-    gNeckoChild = cpc->SendPNeckoConstructor(child);
+    gNeckoChild = cpc->SendPNeckoConstructor();
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
   }
 }
@@ -184,6 +183,10 @@ PWebSocketEventListenerChild* NeckoChild::AllocPWebSocketEventListenerChild(
 
   RefPtr<WebSocketEventListenerChild> c =
       new WebSocketEventListenerChild(aInnerWindowID, target);
+
+  if (target) {
+    gNeckoChild->SetEventTargetForActor(c, target);
+  }
 
   return c.forget().take();
 }

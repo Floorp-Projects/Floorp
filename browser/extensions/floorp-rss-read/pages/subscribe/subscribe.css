@@ -1,0 +1,58 @@
+body {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+
+#header {
+  margin: 1em auto;
+}
+
+#title-header {
+  align-items: center;
+}
+
+#title {
+  font-size: 1.7em;
+}
+
+#description {
+  margin-top: 0.5em;
+  color: var(--deemphasized-text-color);
+}
+
+#feed-url {
+  padding: 0;
+  display: block;
+  background: none;
+  border: none;
+  box-shadow: none !important;
+  color: inherit;
+  margin-bottom: 0.5em;
+}
+
+#view-source-button {
+  color: inherit;
+}
+
+#view-source-button:not(:hover) {
+  text-decoration: none;
+}
+
+#link-icon::before,
+#view-source-button::before {
+  width: 24px;
+}
+
+#items {
+  width: 100%;
+}
+
+#preview {
+  display: contents;
+}
+
+frame {
+  height:100%;
+  width:100%;
+}

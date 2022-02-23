@@ -678,12 +678,12 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
 }
 
 void ExtensionListenerCallPromiseResultHandler::ResolvedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::Handle<JS::Value> aValue) {
   WorkerRunCallback(aCx, aValue, PromiseCallbackType::Resolve);
 }
 
 void ExtensionListenerCallPromiseResultHandler::RejectedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::Handle<JS::Value> aValue) {
   WorkerRunCallback(aCx, aValue, PromiseCallbackType::Reject);
 }
 

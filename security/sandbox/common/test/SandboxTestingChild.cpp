@@ -8,8 +8,6 @@
 #include "SandboxTestingChildTests.h"
 #include "SandboxTestingThread.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
-#include "mozilla/ipc/UtilityProcessChild.h"
 
 #ifdef XP_LINUX
 #  include "mozilla/Sandbox.h"
@@ -81,20 +79,6 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     RunTestsSocket(this);
   }
 
-  if (XRE_IsUtilityProcess()) {
-    RefPtr<ipc::UtilityProcessChild> s = ipc::UtilityProcessChild::Get();
-    MOZ_ASSERT(s, "Unable to grab a UtilityProcessChild");
-    switch (s->mSandbox) {
-      case ipc::SandboxingKind::GENERIC_UTILITY:
-        RunTestsUtility(this);
-        break;
-
-      default:
-        MOZ_ASSERT(false, "Invalid SandboxingKind");
-        break;
-    }
-  }
-
 #ifdef XP_LINUX
   SetSandboxCrashOnError(sandboxCrashOnError);
 #endif
@@ -122,10 +106,12 @@ bool SandboxTestingChild::RecvShutDown() {
 }
 
 void SandboxTestingChild::ReportNoTests() {
-  SendReportTestResults("dummy_test"_ns, /* passed */ true,
+  SendReportTestResults("dummy_test"_ns, /* shouldSucceed */ true,
+                        /* didSucceed */ true,
                         "The test framework fails if there are no cases."_ns);
 }
 
+#ifdef XP_UNIX
 template <typename F>
 void SandboxTestingChild::ErrnoTest(const nsCString& aName, bool aExpectSuccess,
                                     F&& aFunction) {
@@ -135,48 +121,25 @@ void SandboxTestingChild::ErrnoTest(const nsCString& aName, bool aExpectSuccess,
 
 template <typename F>
 void SandboxTestingChild::ErrnoValueTest(const nsCString& aName,
-                                         int aExpectedErrno, F&& aFunction) {
+                                         bool aExpectEquals, int aExpectedErrno,
+                                         F&& aFunction) {
   int status = aFunction() >= 0 ? 0 : errno;
-  PosixTest(aName, aExpectedErrno == 0, status, Some(aExpectedErrno));
+  PosixTest(aName, aExpectEquals, status == aExpectedErrno);
 }
 
 void SandboxTestingChild::PosixTest(const nsCString& aName, bool aExpectSuccess,
-                                    int aStatus, Maybe<int> aExpectedError) {
+                                    int aStatus) {
+  bool succeeded = aStatus == 0;
   nsAutoCString message;
-  bool passed;
-
-  // The "expected" arguments are a little redundant.
-  MOZ_ASSERT(!aExpectedError || aExpectSuccess == (*aExpectedError == 0));
-
-  // Decide whether the test passed, and stringify the actual result.
-  if (aStatus == 0) {
+  if (succeeded) {
     message = "Succeeded"_ns;
-    passed = aExpectSuccess;
   } else {
     message = "Error: "_ns;
     message += strerror(aStatus);
-    if (aExpectedError) {
-      passed = aStatus == *aExpectedError;
-    } else {
-      passed = !aExpectSuccess;
-    }
   }
 
-  // If something unexpected happened, mention the expected result.
-  if (!passed) {
-    message += "; expected ";
-    if (aExpectSuccess) {
-      message += "success";
-    } else {
-      message += "error";
-      if (aExpectedError) {
-        message += ": ";
-        message += strerror(*aExpectedError);
-      }
-    }
-  }
-
-  SendReportTestResults(aName, passed, message);
+  SendReportTestResults(aName, aExpectSuccess, succeeded, message);
 }
+#endif  // XP_UNIX
 
 }  // namespace mozilla

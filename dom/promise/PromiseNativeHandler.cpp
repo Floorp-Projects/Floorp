@@ -24,8 +24,7 @@ DomPromiseListener::~DomPromiseListener() {
 }
 
 void DomPromiseListener::ResolvedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue,
-                                          ErrorResult& aRv) {
+                                          JS::Handle<JS::Value> aValue) {
   if (mResolve) {
     mResolve(aCx, aValue);
   }
@@ -34,8 +33,7 @@ void DomPromiseListener::ResolvedCallback(JSContext* aCx,
 }
 
 void DomPromiseListener::RejectedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue,
-                                          ErrorResult& aRv) {
+                                          JS::Handle<JS::Value> aValue) {
   if (mReject) {
     nsresult errorCode;
     if (!aValue.isInt32()) {

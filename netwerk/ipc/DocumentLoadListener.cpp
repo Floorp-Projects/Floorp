@@ -30,12 +30,10 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsContentSecurityUtils.h"
-#include "nsContentSecurityManager.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsDSURIContentListener.h"
 #include "nsObjectLoadingContent.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
@@ -1101,7 +1099,7 @@ void DocumentLoadListener::Disconnect() {
     httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
 
-  mEarlyHintsService.Cancel();
+  mEarlyHintsPreloader.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
     ctx->EndDocumentLoad(mDoingProcessSwitch);
@@ -2193,28 +2191,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Block top-level data URI navigations if triggered by the web. Logging is
-  // performed in AllowTopLevelNavigationToDataURI.
-  if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(mChannel)) {
-    mChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-    if (loadingContext) {
-      RefPtr<MaybeCloseWindowHelper> maybeCloseWindowHelper =
-          new MaybeCloseWindowHelper(loadingContext);
-      // If a new window was opened specifically for this request, close it
-      // after blocking the navigation.
-      if (nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(mChannel)) {
-        bool tmp = false;
-        if (NS_SUCCEEDED(props->GetPropertyAsBool(
-                u"docshell.newWindowTarget"_ns, &tmp))) {
-          maybeCloseWindowHelper->SetShouldCloseWindow(tmp);
-        }
-      }
-      Unused << maybeCloseWindowHelper->MaybeCloseWindow();
-    }
-    DisconnectListeners(NS_ERROR_DOM_BAD_URI, NS_ERROR_DOM_BAD_URI);
-    return NS_OK;
-  }
-
   // Generally we want to switch to a real channel even if the request failed,
   // since the listener might want to access protocol-specific data (like http
   // response headers) in its error handling.
@@ -2309,9 +2285,9 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   if (httpChannel) {
     uint32_t responseStatus;
     Unused << httpChannel->GetResponseStatus(&responseStatus);
-    mEarlyHintsService.FinalResponse(responseStatus);
+    mEarlyHintsPreloader.FinalResponse(responseStatus);
   } else {
-    mEarlyHintsService.Cancel();
+    mEarlyHintsPreloader.Cancel();
   }
 
   // If we're going to be delivering this channel to a remote content
@@ -2689,7 +2665,7 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
 
-  mEarlyHintsService.EarlyHint(linkHeader);
+  mEarlyHintsPreloader.EarlyHint(linkHeader);
   return NS_OK;
 }
 

@@ -761,13 +761,11 @@ nsresult PermissionManager::OpenDatabase(nsIFile* aPermissionsFile) {
   }
   // cache a connection to the hosts database
   if (mMemoryOnlyDB) {
-    rv = storage->OpenSpecialDatabase(
-        kMozStorageMemoryStorageKey, VoidCString(),
-        mozIStorageService::CONNECTION_DEFAULT, getter_AddRefs(data->mDBConn));
+    rv =
+        storage->OpenSpecialDatabase(kMozStorageMemoryStorageKey, VoidCString(),
+                                     getter_AddRefs(data->mDBConn));
   } else {
-    rv = storage->OpenDatabase(aPermissionsFile,
-                               mozIStorageService::CONNECTION_DEFAULT,
-                               getter_AddRefs(data->mDBConn));
+    rv = storage->OpenDatabase(aPermissionsFile, getter_AddRefs(data->mDBConn));
   }
   return rv;
 }
@@ -2442,10 +2440,6 @@ NS_IMETHODIMP PermissionManager::GetAll(
 NS_IMETHODIMP PermissionManager::GetAllByTypeSince(
     const nsACString& aPrefix, int64_t aSince,
     nsTArray<RefPtr<nsIPermission>>& aResult) {
-  // Check that aSince is a reasonable point in time, not in the future
-  if (aSince > (PR_Now() / PR_USEC_PER_MSEC)) {
-    return NS_ERROR_INVALID_ARG;
-  }
   return GetPermissionEntries(
       [&](const PermissionEntry& aPermEntry) {
         return mTypeArray[aPermEntry.mType].Equals(aPrefix) &&

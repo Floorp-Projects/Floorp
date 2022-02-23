@@ -18,10 +18,6 @@ AccessibleWrap* ia2AccessibleAction::LocalAcc() {
   return static_cast<MsaaAccessible*>(this)->LocalAcc();
 }
 
-Accessible* ia2AccessibleAction::Acc() {
-  return static_cast<MsaaAccessible*>(this)->Acc();
-}
-
 // IUnknown
 
 STDMETHODIMP
@@ -47,7 +43,7 @@ ia2AccessibleAction::nActions(long* aActionCount) {
 
   *aActionCount = 0;
 
-  Accessible* acc = Acc();
+  AccessibleWrap* acc = LocalAcc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   *aActionCount = acc->ActionCount();
@@ -56,7 +52,7 @@ ia2AccessibleAction::nActions(long* aActionCount) {
 
 STDMETHODIMP
 ia2AccessibleAction::doAction(long aActionIndex) {
-  Accessible* acc = Acc();
+  AccessibleWrap* acc = LocalAcc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   uint8_t index = static_cast<uint8_t>(aActionIndex);
@@ -68,7 +64,7 @@ ia2AccessibleAction::get_description(long aActionIndex, BSTR* aDescription) {
   if (!aDescription) return E_INVALIDARG;
   *aDescription = nullptr;
 
-  Accessible* acc = Acc();
+  AccessibleWrap* acc = LocalAcc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
@@ -123,7 +119,7 @@ ia2AccessibleAction::get_name(long aActionIndex, BSTR* aName) {
 
   *aName = nullptr;
 
-  Accessible* acc = Acc();
+  AccessibleWrap* acc = LocalAcc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;

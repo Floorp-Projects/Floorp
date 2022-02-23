@@ -226,9 +226,6 @@ class gfxTextRun : public gfxShapedText {
     // be constant for a given textrun.
     virtual gfxFloat GetHyphenWidth() const = 0;
 
-    // Return orientation flags to be used when creating a hyphen textrun.
-    virtual mozilla::gfx::ShapedTextFlags GetShapedTextFlags() const = 0;
-
     typedef gfxFont::Spacing Spacing;
 
     /**
@@ -992,9 +989,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
    * The caller is responsible for deleting the returned text run
    * when no longer required.
    */
-  already_AddRefed<gfxTextRun> MakeHyphenTextRun(
-      DrawTarget* aDrawTarget, mozilla::gfx::ShapedTextFlags aFlags,
-      uint32_t aAppUnitsPerDevUnit);
+  already_AddRefed<gfxTextRun> MakeHyphenTextRun(DrawTarget* aDrawTarget,
+                                                 uint32_t aAppUnitsPerDevUnit);
 
   /**
    * Check whether a given font (specified by its gfxFontEntry)

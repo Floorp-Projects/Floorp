@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -723,17 +724,17 @@ void DOMIntersectionObserver::QueueIntersectionObserverEntry(
     bool aIsIntersecting, double aIntersectionRatio) {
   RefPtr<DOMRect> rootBounds;
   if (aRootRect.isSome()) {
-    rootBounds = new DOMRect(mOwner);
+    rootBounds = new DOMRect(this);
     rootBounds->SetLayoutRect(aRootRect.value());
   }
-  RefPtr<DOMRect> boundingClientRect = new DOMRect(mOwner);
+  RefPtr<DOMRect> boundingClientRect = new DOMRect(this);
   boundingClientRect->SetLayoutRect(aTargetRect);
-  RefPtr<DOMRect> intersectionRect = new DOMRect(mOwner);
+  RefPtr<DOMRect> intersectionRect = new DOMRect(this);
   if (aIntersectionRect.isSome()) {
     intersectionRect->SetLayoutRect(aIntersectionRect.value());
   }
   RefPtr<DOMIntersectionObserverEntry> entry = new DOMIntersectionObserverEntry(
-      mOwner, time, rootBounds.forget(), boundingClientRect.forget(),
+      this, time, rootBounds.forget(), boundingClientRect.forget(),
       intersectionRect.forget(), aIsIntersecting, aTarget, aIntersectionRatio);
   mQueuedEntries.AppendElement(entry.forget());
 }

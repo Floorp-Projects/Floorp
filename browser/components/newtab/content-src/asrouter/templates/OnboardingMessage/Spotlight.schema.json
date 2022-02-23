@@ -22,37 +22,19 @@
         "template": {
           "type": "string",
           "description": "Specify the layout template for the Spotlight",
-          "enum": ["logo-and-content", "multistage"]
-        },
-        "backdrop": {
-          "type": "string",
-          "description": "Background css behind modal content"
+          "enum": ["logo-and-content"]
         },
         "logo": {
-          "type": "object",
           "properties": {
             "imageURL": {
               "type": "string",
               "description": "URL for image to use with the content"
-            },
-            "imageId": {
-              "type": "string",
-              "description": "The ID for a remotely hosted image"
-            },
-            "size": {
-              "type": "string",
-              "description": "The logo size."
             }
-          },
-          "oneOf": [
-            {
-              "required": ["imageURL"]
-            },
-            {
-              "required": ["imageId"]
-            }
-          ],
-          "additionalProperties": false
+          }
+        },
+        "logoImageURL": {
+          "type": "string",
+          "description": "URL for image to use with the content"
         },
         "body": {
           "properties": {
@@ -203,14 +185,10 @@
             }
           },
           "additionalProperties": false
-        },
-        "screens": {
-          "type": "array",
-          "description": "Collection of individual screen content"
         }
       },
       "additionalProperties": false,
-      "required": ["template"]
+      "required": ["body", "template"]
     },
     "frequency": {
       "type": "object",

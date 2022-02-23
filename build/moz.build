@@ -21,9 +21,6 @@ else:
 if CONFIG["MOZ_STDCXX_COMPAT"]:
     DIRS += ["unix/stdc++compat"]
 
-if CONFIG["RUSTC"]:
-    DIRS += ["rust/mozbuild"]
-
 CRAMTEST_MANIFESTS += [
     "tests/cram/cram.ini",
 ]

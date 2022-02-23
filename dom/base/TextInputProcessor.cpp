@@ -7,7 +7,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -52,12 +51,8 @@ class TextInputProcessorNotification final
         mSelectionChangeData(aSelectionChangeData) {
     // SelectionChangeDataBase::mString still refers nsString instance owned
     // by aSelectionChangeData.  So, this needs to copy the instance.
-    if (aSelectionChangeData.HasRange()) {
-      mSelectionChangeData.mString =
-          new nsString(aSelectionChangeData.String());
-    } else {
-      mSelectionChangeData.mString = nullptr;
-    }
+    nsString* string = new nsString(aSelectionChangeData.String());
+    mSelectionChangeData.mString = string;
   }
 
   NS_DECL_ISUPPORTS
@@ -73,9 +68,6 @@ class TextInputProcessorNotification final
       return NS_ERROR_INVALID_ARG;
     }
     if (IsSelectionChange()) {
-      if (!mSelectionChangeData.HasRange()) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
       *aOffset = mSelectionChangeData.mOffset;
       return NS_OK;
     }
@@ -87,18 +79,8 @@ class TextInputProcessorNotification final
   }
 
   // "notify-selection-change"
-  NS_IMETHOD GetHasRange(bool* aHasRange) final {
-    if (IsSelectionChange()) {
-      *aHasRange = mSelectionChangeData.HasRange();
-      return NS_OK;
-    }
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   NS_IMETHOD GetText(nsAString& aText) final {
     if (IsSelectionChange()) {
-      if (!mSelectionChangeData.HasRange()) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
       aText = mSelectionChangeData.String();
       return NS_OK;
     }
@@ -121,9 +103,6 @@ class TextInputProcessorNotification final
       return NS_ERROR_INVALID_ARG;
     }
     if (IsSelectionChange()) {
-      if (!mSelectionChangeData.HasRange()) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
       *aLength = mSelectionChangeData.Length();
       return NS_OK;
     }
@@ -135,9 +114,6 @@ class TextInputProcessorNotification final
       return NS_ERROR_INVALID_ARG;
     }
     if (IsSelectionChange()) {
-      if (!mSelectionChangeData.HasRange()) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
       *aReversed = mSelectionChangeData.mReversed;
       return NS_OK;
     }
@@ -256,7 +232,7 @@ class TextInputProcessorNotification final
 
  protected:
   virtual ~TextInputProcessorNotification() {
-    if (IsSelectionChange() && mSelectionChangeData.mString) {
+    if (IsSelectionChange()) {
       delete mSelectionChangeData.mString;
       mSelectionChangeData.mString = nullptr;
     }
@@ -1038,7 +1014,7 @@ nsresult TextInputProcessor::InitEditCommands(
 
   Maybe<WritingMode> writingMode;
   if (RefPtr<TextEventDispatcher> dispatcher = mDispatcher) {
-    writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+    writingMode = dispatcher->MaybeWritingModeAtSelection();
   }
 
   // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
@@ -1046,15 +1022,15 @@ nsresult TextInputProcessor::InitEditCommands(
   //      avoid performance issues so that we need to initialize each
   //      command manually here.
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          NativeKeyBindingsType::SingleLineEditor, writingMode))) {
+          nsIWidget::NativeKeyBindingsForSingleLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          NativeKeyBindingsType::MultiLineEditor, writingMode))) {
+          nsIWidget::NativeKeyBindingsForMultiLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          NativeKeyBindingsType::RichTextEditor, writingMode))) {
+          nsIWidget::NativeKeyBindingsForRichTextEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

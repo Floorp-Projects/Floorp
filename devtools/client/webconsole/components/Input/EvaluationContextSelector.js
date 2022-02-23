@@ -154,10 +154,7 @@ class EvaluationContextSelector extends Component {
       }
     }
 
-    // Note that while debugging popups, we might have a small period
-    // of time where we don't have any top level target when we reload
-    // the original tab
-    const items = mainTarget ? [mainTarget] : [];
+    const items = [mainTarget];
 
     for (const [targetType, menuItems] of Object.entries(dict)) {
       if (menuItems.length > 0) {

@@ -221,7 +221,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
       } else {
         // Dense arrays never get so large that i would not fit into an
         // integer id.
-        if (!Enumerate<CheckForDuplicates>(cx, pobj, PropertyKey::Int(i),
+        if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
                                            /* enumerable = */ true, flags,
                                            visited, props)) {
           return false;
@@ -236,15 +236,15 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
 
       // Fail early if the typed array is enormous, because this will be very
       // slow and will likely report OOM. This also means we don't need to
-      // handle indices greater than PropertyKey::IntMax in the loop below.
-      static_assert(PropertyKey::IntMax == INT32_MAX);
+      // handle indices greater than JSID_INT_MAX in the loop below.
+      static_assert(JSID_INT_MAX == INT32_MAX);
       if (len > INT32_MAX) {
         ReportOutOfMemory(cx);
         return false;
       }
 
       for (size_t i = 0; i < len; i++) {
-        if (!Enumerate<CheckForDuplicates>(cx, pobj, PropertyKey::Int(i),
+        if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
                                            /* enumerable = */ true, flags,
                                            visited, props)) {
           return false;
@@ -273,12 +273,11 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
 
         return true;
       } else {
-        mozilla::Maybe<TupleType&> tup = TupleObject::maybeUnbox(pobj);
-        if (tup) {
-          uint32_t len = (*tup).length();
+        Rooted<TupleType*> tup(cx);
+        if (TupleObject::maybeUnbox(pobj, &tup)) {
           RootedId id(cx);
 
-          for (size_t i = 0; i < len; i++) {
+          for (size_t i = 0; i < tup->length(); i++) {
             if (!JS_IndexToId(cx, i, &id)) {
               return false;
             }
@@ -468,29 +467,15 @@ struct SortComparatorIds {
       return true;
     }
 
-    enum class KeyType { Void, Int, String, Symbol };
-
-    auto keyType = [](PropertyKey key) {
-      if (key.isString()) {
-        return KeyType::String;
-      }
-      if (key.isInt()) {
-        return KeyType::Int;
-      }
-      if (key.isSymbol()) {
-        return KeyType::Symbol;
-      }
-      MOZ_ASSERT(key.isVoid());
-      return KeyType::Void;
-    };
-
-    if (keyType(a) != keyType(b)) {
-      *lessOrEqualp = (keyType(a) <= keyType(b));
+    size_t ta = JSID_BITS(a.get()) & JSID_TYPE_MASK;
+    size_t tb = JSID_BITS(b.get()) & JSID_TYPE_MASK;
+    if (ta != tb) {
+      *lessOrEqualp = (ta <= tb);
       return true;
     }
 
-    if (a.isInt()) {
-      *lessOrEqualp = (a.toInt() <= b.toInt());
+    if (JSID_IS_INT(a)) {
+      *lessOrEqualp = (JSID_TO_INT(a) <= JSID_TO_INT(b));
       return true;
     }
 

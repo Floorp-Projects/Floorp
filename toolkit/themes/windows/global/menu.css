@@ -310,12 +310,13 @@ menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-
 
 /* ::::: checkbox and radio menuitems ::::: */
 
-menuitem:is([type="checkbox"], [checked="true"]) {
+menuitem[type="checkbox"],
+menuitem[checked="true"] {
   appearance: auto;
   -moz-default-appearance: checkmenuitem;
 }
-
-menuitem:is([type="checkbox"], [checked="true"]) > .menu-iconic-left {
+menuitem[type="checkbox"] > .menu-iconic-left,
+menuitem[checked="true"] > .menu-iconic-left {
   appearance: auto;
   -moz-default-appearance: menucheckbox;
   padding-top: 0;
@@ -325,14 +326,15 @@ menuitem[type="radio"] {
   appearance: auto;
   -moz-default-appearance: radiomenuitem;
 }
-
 menuitem[type="radio"] > .menu-iconic-left {
   appearance: auto;
   -moz-default-appearance: menuradio;
   padding-top: 0;
 }
 
-menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) > .menu-iconic-left > .menu-iconic-icon {
+menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   /* prevent .menu-iconic-icon from enforcing a minimal height of 16px (see bug 411064)
      XXXzeniko apply that .menu-iconic-icon rule only for children of .menu-iconic */
   display: none;

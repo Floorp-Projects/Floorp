@@ -1,4 +1,4 @@
-// META: global=window,worker
+// META: global=window,worker,jsshell
 // META: script=../resources/rs-utils.js
 'use strict';
 

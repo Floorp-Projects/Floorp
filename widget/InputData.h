@@ -698,11 +698,7 @@ class ScrollWheelInput : public InputData {
 
   // The following two functions are for auto-dir scrolling. For detailed
   // information on auto-dir, @see mozilla::WheelDeltaAdjustmentStrategy
-  bool IsAutoDir(bool aForce = false) const {
-    if (aForce) {
-      return true;
-    }
-
+  bool IsAutoDir() const {
     switch (mWheelDeltaAdjustmentStrategy) {
       case WheelDeltaAdjustmentStrategy::eAutoDir:
       case WheelDeltaAdjustmentStrategy::eAutoDirWithRootHonour:
@@ -721,10 +717,9 @@ class ScrollWheelInput : public InputData {
   // not an auto-dir scroll.
   // For detailed information on auto-dir,
   // @see mozilla::WheelDeltaAdjustmentStrategy
-  bool HonoursRoot(bool aForce = false) const {
+  bool HonoursRoot() const {
     return WheelDeltaAdjustmentStrategy::eAutoDirWithRootHonour ==
-               mWheelDeltaAdjustmentStrategy ||
-           aForce;
+           mWheelDeltaAdjustmentStrategy;
   }
 
   // Warning, this class is serialized and sent over IPC. Any change to its

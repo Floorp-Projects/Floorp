@@ -4,8 +4,6 @@
 
 import re
 
-_JOINED_SYMBOL_RE = re.compile(r"([^(]*)\(([^)]*)\)$")
-
 
 def split_symbol(treeherder_symbol):
     """Split a symbol expressed as grp(sym) into its two parts.  If no group is
@@ -13,11 +11,7 @@ def split_symbol(treeherder_symbol):
     groupSymbol = "?"
     symbol = treeherder_symbol
     if "(" in symbol:
-        match = _JOINED_SYMBOL_RE.match(symbol)
-        if match:
-            groupSymbol, symbol = match.groups()
-        else:
-            raise Exception(f"`{symbol}` is not a valid treeherder symbol.")
+        groupSymbol, symbol = re.match(r"([^(]*)\(([^)]*)\)", symbol).groups()
     return groupSymbol, symbol
 
 
@@ -55,6 +49,7 @@ def inherit_treeherder_from_dep(job, dep_job):
     dep_th_collection = list(
         dep_job.task.get("extra", {}).get("treeherder", {}).get("collection", {}).keys()
     )[0]
+    # XXX Doesn't yet support non-opt
     treeherder.setdefault("platform", f"{dep_th_platform}/{dep_th_collection}")
     treeherder.setdefault(
         "tier", dep_job.task.get("extra", {}).get("treeherder", {}).get("tier", 1)

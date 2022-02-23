@@ -1,8 +1,8 @@
 use fnv::FnvHashSet;
 use syn::punctuated::Punctuated;
-use syn::{Lifetime, Type};
+use syn::{self, Lifetime, Type};
 
-use crate::usage::Options;
+use usage::Options;
 
 /// A set of lifetimes.
 pub type LifetimeSet = FnvHashSet<Lifetime>;
@@ -176,8 +176,8 @@ impl UsesLifetimes for Type {
             Type::ImplTrait(ref v) => v.uses_lifetimes(options, lifetimes),
             Type::Macro(_) | Type::Verbatim(_) | Type::Infer(_) | Type::Never(_) => {
                 Default::default()
-            }
-            _ => panic!("Unknown syn::Type: {:?}", self),
+            },
+            _ => panic!("Unknown syn::Type: {:?}", self)
         }
     }
 }
@@ -282,11 +282,11 @@ impl UsesLifetimes for syn::TypeParamBound {
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
-    use syn::DeriveInput;
+    use syn::{self, DeriveInput};
 
     use super::UsesLifetimes;
-    use crate::usage::GenericsExt;
-    use crate::usage::Purpose::*;
+    use usage::GenericsExt;
+    use usage::Purpose::*;
 
     #[test]
     fn struct_named() {

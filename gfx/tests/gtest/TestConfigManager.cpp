@@ -23,7 +23,6 @@ class MockGfxInfo final : public nsIGfxInfo {
   int32_t mStatusWrCompositor;
   int32_t mStatusWrShaderCache;
   int32_t mStatusWrOptimizedShaders;
-  int32_t mStatusWrPartialPresent;
   int32_t mMaxRefreshRate;
   bool mHasMixedRefreshRate;
   Maybe<bool> mHasBattery;
@@ -36,7 +35,6 @@ class MockGfxInfo final : public nsIGfxInfo {
         mStatusWrCompositor(nsIGfxInfo::FEATURE_STATUS_OK),
         mStatusWrShaderCache(nsIGfxInfo::FEATURE_STATUS_OK),
         mStatusWrOptimizedShaders(nsIGfxInfo::FEATURE_STATUS_OK),
-        mStatusWrPartialPresent(nsIGfxInfo::FEATURE_STATUS_OK),
         mMaxRefreshRate(-1),
         mHasMixedRefreshRate(false),
         mHasBattery(Some(false)),
@@ -57,9 +55,6 @@ class MockGfxInfo final : public nsIGfxInfo {
         break;
       case nsIGfxInfo::FEATURE_WEBRENDER_OPTIMIZED_SHADERS:
         *_retval = mStatusWrOptimizedShaders;
-        break;
-      case nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT:
-        *_retval = mStatusWrPartialPresent;
         break;
       default:
         return NS_ERROR_NOT_IMPLEMENTED;
@@ -245,6 +240,10 @@ class MockGfxInfo final : public nsIGfxInfo {
                                           bool* _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD EnsureGPUProcessReadyForTests(JSContext* cx,
+                                           dom::Promise** aPromise) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   NS_IMETHOD KillGPUProcessForTests() override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -376,20 +375,12 @@ TEST_F(GfxConfigManager, WebRenderNoPartialPresent) {
   EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
 }
 
-TEST_F(GfxConfigManager, WebRenderPartialBlocked) {
+TEST_F(GfxConfigManager, WebRenderPartialPresentMali) {
   mWrPartialPresent = true;
-  mMockGfxInfo->mStatusWrPartialPresent = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  mMockGfxInfo->mDeviceId = "Mali-T760";
   ConfigureWebRender();
 
   EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderForcePartialBlocked) {
-  mWrForcePartialPresent = true;
-  mMockGfxInfo->mStatusWrPartialPresent = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
 }
 
 TEST_F(GfxConfigManager, WebRenderScaledResolutionWithHwStretching) {

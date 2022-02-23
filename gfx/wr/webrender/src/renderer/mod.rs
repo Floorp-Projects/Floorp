@@ -653,7 +653,6 @@ pub enum BlendMode {
     MultiplyDualSource,
     Screen,
     Exclusion,
-    PlusLighter,
 }
 
 impl BlendMode {
@@ -676,8 +675,6 @@ impl BlendMode {
             MixBlendMode::Screen => BlendMode::Screen,
             // Exclusion can be implemented as Cs + Cd - 2*Cs*Cd => Cs*(1-Cd) + Cd*(1-Cs)
             MixBlendMode::Exclusion => BlendMode::Exclusion,
-            // PlusLighter is basically a clamped add.
-            MixBlendMode::PlusLighter => BlendMode::PlusLighter,
             // Multiply can be implemented as Cs*Cd + Cs*(1-Ad) + Cd*(1-As) => Cs*(1-Ad) + Cd*(1 - SRC1=(As-Cs))
             MixBlendMode::Multiply if dual_source => BlendMode::MultiplyDualSource,
             // Otherwise, use advanced blend without coherency if available.
@@ -948,7 +945,7 @@ impl Renderer {
             unsafe {
                 if let Ok(ref tracy_path) = std::env::var("WR_TRACY_PATH") {
                     let ok = tracy_rs::load(tracy_path);
-                    info!("Load tracy from {} -> {}", tracy_path, ok);
+                    println!("Load tracy from {} -> {}", tracy_path, ok);
                 }
             }
 
@@ -1337,7 +1334,7 @@ impl Renderer {
         } else if device.supports_extension("GL_EXT_debug_marker") {
             GpuDebugMethod::MarkerEXT
         } else {
-            warn!("asking to enable_gpu_markers but no supporting extension was found");
+            println!("Warning: asking to enable_gpu_markers but no supporting extension was found");
             GpuDebugMethod::None
         };
 
@@ -2961,9 +2958,6 @@ impl Renderer {
                         }
                         BlendMode::Exclusion => {
                             self.device.set_blend_mode_exclusion();
-                        }
-                        BlendMode::PlusLighter => {
-                            self.device.set_blend_mode_plus_lighter();
                         }
                     }
                     prev_blend_mode = batch.key.blend_mode;

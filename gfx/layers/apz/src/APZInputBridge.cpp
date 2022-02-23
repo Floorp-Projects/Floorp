@@ -116,8 +116,7 @@ Maybe<APZWheelAction> APZInputBridge::ActionForWheelEvent(
   return EventStateManager::APZWheelActionFor(aEvent);
 }
 
-APZEventResult APZInputBridge::ReceiveInputEvent(
-    WidgetInputEvent& aEvent, InputBlockCallback&& aCallback) {
+APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
   APZThreadUtils::AssertOnControllerThread();
 
   APZEventResult result;
@@ -131,7 +130,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
         input.mOrigin =
             ScreenPoint(mouseEvent.mRefPoint.x, mouseEvent.mRefPoint.y);
 
-        result = ReceiveInputEvent(input, std::move(aCallback));
+        result = ReceiveInputEvent(input);
 
         mouseEvent.mRefPoint.x = input.mOrigin.x;
         mouseEvent.mRefPoint.y = input.mOrigin.y;
@@ -176,7 +175,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
     case eTouchEventClass: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
       MultiTouchInput touchInput(touchEvent);
-      result = ReceiveInputEvent(touchInput, std::move(aCallback));
+      result = ReceiveInputEvent(touchInput);
       // touchInput was modified in-place to possibly remove some
       // touch points (if we are overscrolled), and the coordinates were
       // modified using the APZ untransform. We need to copy these changes
@@ -242,7 +241,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
               &wheelEvent, &input.mUserDeltaMultiplierX,
               &input.mUserDeltaMultiplierY);
 
-          result = ReceiveInputEvent(input, std::move(aCallback));
+          result = ReceiveInputEvent(input);
           wheelEvent.mRefPoint.x = input.mOrigin.x;
           wheelEvent.mRefPoint.y = input.mOrigin.y;
           wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
@@ -264,7 +263,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
 
       KeyboardInput input(keyboardEvent);
 
-      result = ReceiveInputEvent(input, std::move(aCallback));
+      result = ReceiveInputEvent(input);
 
       keyboardEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
       keyboardEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;

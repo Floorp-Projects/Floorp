@@ -79,8 +79,7 @@ class AutoParser(BaseTryParser):
 
 def run(
     message="{msg}",
-    stage_changes=False,
-    dry_run=False,
+    push=True,
     closed_tree=False,
     strategy=None,
     tasks_regex=None,
@@ -107,10 +106,5 @@ def run(
         "parameters": params,
     }
     return push_to_try(
-        "auto",
-        msg,
-        try_task_config=task_config,
-        stage_changes=stage_changes,
-        dry_run=dry_run,
-        closed_tree=closed_tree,
+        "auto", msg, try_task_config=task_config, push=push, closed_tree=closed_tree
     )

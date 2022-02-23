@@ -319,17 +319,15 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_TAB:
         // It's always possible to tab through results when the urlbar was
-        // focused with the mouse or has a search string, or when the view
-        // already has a selection.
+        // focused with the mouse, or has a search string.
         // We allow tabbing without a search string when in search mode preview,
         // since that means the user has interacted with the Urlbar since
         // opening it.
-        // When there's no search string and no view selection, we want to focus
-        // the next toolbar item instead, for accessibility reasons.
+        // When there's no search string, we want to focus the next toolbar item
+        // instead, for accessibility reasons.
         let allowTabbingThroughResults =
           this.input.focusedViaMousedown ||
           this.input.searchMode?.isPreview ||
-          this.view.selectedElement ||
           (this.input.value &&
             this.input.getAttribute("pageproxystate") != "valid");
         if (
@@ -416,7 +414,7 @@ class UrlbarController {
           break;
         }
         if (event.shiftKey) {
-          if (!executeAction || this.handleDeleteEntry()) {
+          if (!executeAction || this._handleDeleteEntry()) {
             event.preventDefault();
           }
         } else if (executeAction) {
@@ -579,61 +577,28 @@ class UrlbarController {
   }
 
   /**
-   * Handles deletion of results from the last query context and the view. There
-   * are two kinds of results that can be deleted:
+   * Internal function handling deletion of entries. We only support removing
+   * of history entries - other result sources will be ignored.
    *
-   * - Results for which `provider.blockResult(result)` returns true
-   * - Results whose source is `HISTORY` are handled specially by this method
-   *   and can always be removed
-   *
-   * No other results can be deleted and this method will ignore them.
-   *
-   * @param {UrlbarResult} [result]
-   *   The result to delete. If given, it must be present in the controller's
-   *   most recent query context. If not given, the currently selected result
-   *   in the view is used.
-   * @returns {boolean}
-   *   Returns true if the result was deleted and false if not.
+   * @returns {boolean} Returns true if the deletion was acted upon.
    */
-  handleDeleteEntry(result = undefined) {
+  _handleDeleteEntry() {
     if (!this._lastQueryContextWrapper) {
       Cu.reportError("Cannot delete - the latest query is not present");
       return false;
     }
 
-    if (!result) {
-      // No result specified, so use the currently selected result.
-      let { selectedElement } = this.input.view;
-      if (selectedElement?.classList.contains("urlbarView-button")) {
-        // For results with buttons, delete them only when the main part of the
-        // row is selected, not a button.
-        return false;
-      }
-      result = this.input.view.selectedResult;
-    }
-
-    if (!result || result.heuristic) {
-      return false;
-    }
-
-    // First call `provider.blockResult(result)`.
-    let provider = UrlbarProvidersManager.getProvider(result.providerName);
-    if (!provider) {
-      Cu.reportError(`Provider not found: ${result.providerName}`);
-    }
-    let blockedByProvider = provider?.tryMethod("blockResult", result);
-
-    // If the provider didn't block the result, then continue only if the result
-    // is from history.
+    const selectedResult = this.input.view.selectedResult;
     if (
-      !blockedByProvider &&
-      result.source != UrlbarUtils.RESULT_SOURCE.HISTORY
+      !selectedResult ||
+      selectedResult.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
+      selectedResult.heuristic
     ) {
       return false;
     }
 
     let { queryContext } = this._lastQueryContextWrapper;
-    let index = queryContext.results.indexOf(result);
+    let index = queryContext.results.indexOf(selectedResult);
     if (index < 0) {
       Cu.reportError("Failed to find the selected result in the results");
       return false;
@@ -642,24 +607,20 @@ class UrlbarController {
     queryContext.results.splice(index, 1);
     this.notify(NOTIFICATIONS.QUERY_RESULT_REMOVED, index);
 
-    if (blockedByProvider) {
-      return true;
-    }
-
     // Form history or url restyled as search.
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+    if (selectedResult.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
       if (!queryContext.formHistoryName) {
         return false;
       }
       // Generate the search url to remove it from browsing history.
-      let { url } = UrlbarUtils.getUrlFromResult(result);
+      let { url } = UrlbarUtils.getUrlFromResult(selectedResult);
       PlacesUtils.history.remove(url).catch(Cu.reportError);
       // Now remove form history.
       FormHistory.update(
         {
           op: "remove",
           fieldname: queryContext.formHistoryName,
-          value: result.payload.suggestion,
+          value: selectedResult.payload.suggestion,
         },
         {
           handleError(error) {
@@ -671,7 +632,9 @@ class UrlbarController {
     }
 
     // Remove browsing history entries from Places.
-    PlacesUtils.history.remove(result.payload.url).catch(Cu.reportError);
+    PlacesUtils.history
+      .remove(selectedResult.payload.url)
+      .catch(Cu.reportError);
     return true;
   }
 
@@ -936,7 +899,7 @@ class TelemetryEvent {
     let row = element.closest(".urlbarView-row");
     if (row.result && row.result.providerName != "UrlbarProviderTopSites") {
       // Element handlers go here.
-      if (element.classList.contains("urlbarView-button-help")) {
+      if (element.classList.contains("urlbarView-help")) {
         return row.result.type == UrlbarUtils.RESULT_TYPE.TIP
           ? "tiphelp"
           : "help";

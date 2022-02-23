@@ -459,8 +459,7 @@ extern "C" {
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86_64",
-                 target_arch = "aarch64",
-                 target_arch = "riscv64"))] {
+                 target_arch = "aarch64"))] {
         mod b64;
         pub use self::b64::*;
     }

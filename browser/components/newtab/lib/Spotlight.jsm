@@ -8,7 +8,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
@@ -38,16 +37,10 @@ const Spotlight = {
     this.sendUserEventTelemetry("IMPRESSION", message, dispatchCFRAction);
     dispatchCFRAction({ type: "IMPRESSION", data: message });
 
-    const unload = await RemoteImages.patchMessage(message.content.logo);
-
     await win.gDialogBox.open("chrome://browser/content/spotlight.html", [
       message.content,
       params,
     ]);
-
-    if (unload) {
-      unload();
-    }
 
     // If dismissed report telemetry and exit
     if (!params.secondaryBtn && !params.primaryBtn) {

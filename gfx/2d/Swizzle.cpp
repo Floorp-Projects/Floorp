@@ -10,7 +10,6 @@
 #include "Tools.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/UniquePtr.h"
 
 #ifdef USE_SSE2
 #  include "mozilla/SSE.h"
@@ -19,8 +18,6 @@
 #ifdef USE_NEON
 #  include "mozilla/arm.h"
 #endif
-
-#include <new>
 
 namespace mozilla {
 namespace gfx {
@@ -1188,92 +1185,6 @@ bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
 
   MOZ_ASSERT(false, "Unsupported swizzle formats");
   return false;
-}
-
-static bool SwizzleYFlipDataInternal(const uint8_t* aSrc, int32_t aSrcStride,
-                                     SurfaceFormat aSrcFormat, uint8_t* aDst,
-                                     int32_t aDstStride,
-                                     SurfaceFormat aDstFormat,
-                                     const IntSize& aSize,
-                                     SwizzleRowFn aSwizzleFn) {
-  if (!aSwizzleFn) {
-    return false;
-  }
-
-  // Guarantee our width and height are both greater than zero.
-  if (aSize.IsEmpty()) {
-    return true;
-  }
-
-  // Unlike SwizzleData/PremultiplyData, we don't use the stride gaps directly,
-  // but we can use it to verify that the stride is valid for our width and
-  // format.
-  int32_t srcGap = GetStrideGap(aSize.width, aSrcFormat, aSrcStride);
-  int32_t dstGap = GetStrideGap(aSize.width, aDstFormat, aDstStride);
-  MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
-  if (srcGap < 0 || dstGap < 0) {
-    return false;
-  }
-
-  // Swapping/swizzling to a new buffer is trivial.
-  if (aSrc != aDst) {
-    const uint8_t* src = aSrc;
-    const uint8_t* srcEnd = aSrc + aSize.height * aSrcStride;
-    uint8_t* dst = aDst + (aSize.height - 1) * aDstStride;
-    while (src < srcEnd) {
-      aSwizzleFn(src, dst, aSize.width);
-      src += aSrcStride;
-      dst -= aDstStride;
-    }
-    return true;
-  }
-
-  if (aSrcStride != aDstStride) {
-    return false;
-  }
-
-  // If we are swizzling in place, then we need a temporary row buffer.
-  UniquePtr<uint8_t[]> rowBuffer(new (std::nothrow) uint8_t[aDstStride]);
-  if (!rowBuffer) {
-    return false;
-  }
-
-  // Swizzle and swap the top and bottom rows until we meet in the middle.
-  int32_t middleRow = aSize.height / 2;
-  uint8_t* top = aDst;
-  uint8_t* bottom = aDst + (aSize.height - 1) * aDstStride;
-  for (int32_t row = 0; row < middleRow; ++row) {
-    memcpy(rowBuffer.get(), bottom, aDstStride);
-    aSwizzleFn(top, bottom, aSize.width);
-    aSwizzleFn(rowBuffer.get(), top, aSize.width);
-    top += aDstStride;
-    bottom -= aDstStride;
-  }
-
-  // If there is an odd numbered row, we haven't swizzled it yet.
-  if (aSize.height % 2 == 1) {
-    top = aDst + middleRow * aDstStride;
-    aSwizzleFn(top, top, aSize.width);
-  }
-  return true;
-}
-
-bool SwizzleYFlipData(const uint8_t* aSrc, int32_t aSrcStride,
-                      SurfaceFormat aSrcFormat, uint8_t* aDst,
-                      int32_t aDstStride, SurfaceFormat aDstFormat,
-                      const IntSize& aSize) {
-  return SwizzleYFlipDataInternal(aSrc, aSrcStride, aSrcFormat, aDst,
-                                  aDstStride, aDstFormat, aSize,
-                                  SwizzleRow(aSrcFormat, aDstFormat));
-}
-
-bool PremultiplyYFlipData(const uint8_t* aSrc, int32_t aSrcStride,
-                          SurfaceFormat aSrcFormat, uint8_t* aDst,
-                          int32_t aDstStride, SurfaceFormat aDstFormat,
-                          const IntSize& aSize) {
-  return SwizzleYFlipDataInternal(aSrc, aSrcStride, aSrcFormat, aDst,
-                                  aDstStride, aDstFormat, aSize,
-                                  PremultiplyRow(aSrcFormat, aDstFormat));
 }
 
 SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat) {

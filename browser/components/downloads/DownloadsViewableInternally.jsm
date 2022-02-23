@@ -115,7 +115,6 @@ let DownloadsViewableInternally = {
       extension: "xml",
       mimeTypes: ["text/xml", "application/xml"],
       available: true,
-      managedElsewhere: true,
     },
     {
       extension: "svg",
@@ -133,7 +132,6 @@ let DownloadsViewableInternally = {
         );
       },
       // available getter is set by initAvailable()
-      managedElsewhere: true,
     },
     {
       extension: "webp",

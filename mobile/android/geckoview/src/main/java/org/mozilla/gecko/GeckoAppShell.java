@@ -67,7 +67,6 @@ import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
-import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.R;
 
 public class GeckoAppShell {
@@ -1206,6 +1205,16 @@ public class GeckoAppShell {
   }
 
   @WrapForJNI(calledFrom = "gecko")
+  private static void enableScreenOrientationNotifications() {
+    GeckoScreenOrientation.getInstance().enableNotifications();
+  }
+
+  @WrapForJNI(calledFrom = "gecko")
+  private static void disableScreenOrientationNotifications() {
+    GeckoScreenOrientation.getInstance().disableNotifications();
+  }
+
+  @WrapForJNI(calledFrom = "gecko")
   private static void notifyWakeLockChanged(final String topic, final String state) {
     final int intState;
     if ("unlocked".equals(state)) {
@@ -1447,15 +1456,4 @@ public class GeckoAppShell {
     final int id = info.labelRes;
     return id == 0 ? info.nonLocalizedLabel.toString() : context.getString(id);
   }
-
-  @WrapForJNI
-  public static native boolean isParentProcess();
-
-  /**
-   * Returns a GeckoResult that will be completed to true if the GPU process is running and false if
-   * it is disabled. If the GPU process is currently being (re)started this will wait until it is
-   * ready before completing.
-   */
-  @WrapForJNI
-  public static native GeckoResult<Boolean> ensureGpuProcessReady();
 }

@@ -9,14 +9,13 @@ import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 
 import android.content.Context;
-import android.graphics.Point;
-import android.os.Build;
+import android.content.res.Configuration;
 import android.util.Log;
-import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 import java.util.ArrayList;
 import java.util.List;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /*
@@ -37,11 +36,6 @@ public class GeckoScreenOrientation {
     LANDSCAPE_PRIMARY(1 << 2),
     LANDSCAPE_SECONDARY(1 << 3),
     LANDSCAPE(LANDSCAPE_PRIMARY.value | LANDSCAPE_SECONDARY.value),
-    ANY(
-        PORTRAIT_PRIMARY.value
-            | PORTRAIT_SECONDARY.value
-            | LANDSCAPE_PRIMARY.value
-            | LANDSCAPE_SECONDARY.value),
     DEFAULT(1 << 4);
 
     public final short value;
@@ -68,6 +62,8 @@ public class GeckoScreenOrientation {
   private static final int DEFAULT_ROTATION = Surface.ROTATION_0;
   // Last updated screen orientation with Gecko value space.
   private ScreenOrientation mScreenOrientation = ScreenOrientation.PORTRAIT_PRIMARY;
+  // Whether the update should notify Gecko about screen orientation changes.
+  private boolean mShouldNotify = true;
 
   public interface OrientationChangeListener {
     void onScreenOrientationChanged(ScreenOrientation newOrientation);
@@ -100,6 +96,21 @@ public class GeckoScreenOrientation {
   }
 
   /*
+   * Enable Gecko screen orientation events on update.
+   */
+  public void enableNotifications() {
+    update();
+    mShouldNotify = true;
+  }
+
+  /*
+   * Disable Gecko screen orientation events on update.
+   */
+  public void disableNotifications() {
+    mShouldNotify = false;
+  }
+
+  /*
    * Update screen orientation.
    * Retrieve orientation and rotation via GeckoAppShell.
    *
@@ -110,22 +121,8 @@ public class GeckoScreenOrientation {
     if (appContext == null) {
       return false;
     }
-    final WindowManager windowManager =
-        (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
-    final Display display = windowManager.getDefaultDisplay();
-    return update(getScreenOrientation(display));
-  }
-
-  /*
-   * Update screen orientation.
-   *  Retrieve orientation and rotation via Display.
-   *
-   * @param aDisplay The Display that has screen orientation information
-   *
-   * @return Whether the screen orientation has changed.
-   */
-  public boolean update(final Display aDisplay) {
-    return update(getScreenOrientation(aDisplay));
+    final Configuration config = appContext.getResources().getConfiguration();
+    return update(config.orientation);
   }
 
   /*
@@ -140,6 +137,9 @@ public class GeckoScreenOrientation {
   public boolean update(final int aAndroidOrientation) {
     return update(getScreenOrientation(aAndroidOrientation, getRotation()));
   }
+
+  @WrapForJNI(dispatchTo = "gecko")
+  private static native void onOrientationChange(short screenOrientation, short angle);
 
   /*
    * Update screen orientation given the screen orientation.
@@ -170,6 +170,21 @@ public class GeckoScreenOrientation {
     mScreenOrientation = screenOrientation;
     Log.d(LOGTAG, "updating to new orientation " + mScreenOrientation);
     notifyListeners(mScreenOrientation);
+    if (mShouldNotify) {
+      if (aScreenOrientation == ScreenOrientation.NONE) {
+        return false;
+      }
+
+      if (GeckoThread.isRunning()) {
+        onOrientationChange(screenOrientation.value, getAngle());
+      } else {
+        GeckoThread.queueNativeCall(
+            GeckoScreenOrientation.class,
+            "onOrientationChange",
+            screenOrientation.value,
+            getAngle());
+      }
+    }
     ScreenManagerHelper.refreshScreenInfo();
     return true;
   }
@@ -230,26 +245,6 @@ public class GeckoScreenOrientation {
       return ScreenOrientation.LANDSCAPE_SECONDARY;
     }
     return ScreenOrientation.NONE;
-  }
-
-  /*
-   * Get the Gecko orientation from Display.
-   *
-   * @param aDisplay The display that has orientation information.
-   *
-   * @return Gecko screen orientation.
-   */
-  private ScreenOrientation getScreenOrientation(final Display aDisplay) {
-    final Point size = new Point();
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      aDisplay.getRealSize(size);
-    } else {
-      size.x = aDisplay.getWidth();
-      size.y = aDisplay.getHeight();
-    }
-
-    final int orientation = size.x >= size.y ? ORIENTATION_LANDSCAPE : ORIENTATION_PORTRAIT;
-    return getScreenOrientation(orientation, aDisplay.getRotation());
   }
 
   /*

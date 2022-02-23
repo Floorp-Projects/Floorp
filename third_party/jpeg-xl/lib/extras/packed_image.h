@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "jxl/codestream_header.h"
-#include "jxl/encode.h"
 #include "jxl/types.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
@@ -70,6 +69,7 @@ class PackedImage {
   JxlPixelFormat format;
   size_t pixels_size;
 
+ private:
   static size_t BitsPerChannel(JxlDataType data_type) {
     switch (data_type) {
       case JXL_TYPE_BOOLEAN:
@@ -89,7 +89,6 @@ class PackedImage {
     return 0;  // Indicate invalid data type.
   }
 
- private:
   static size_t CalcStride(const JxlPixelFormat& format, size_t xsize) {
     size_t stride = xsize * (BitsPerChannel(format.data_type) *
                              format.num_channels / jxl::kBitsPerByte);
@@ -109,7 +108,7 @@ class PackedImage {
 class PackedFrame {
  public:
   template <typename... Args>
-  explicit PackedFrame(Args&&... args) : color(std::forward<Args>(args)...) {}
+  PackedFrame(Args... args) : color(args...) {}
 
   // The Frame metadata.
   JxlFrameHeader frame_info = {};
@@ -164,7 +163,6 @@ class PackedPixelFile {
   std::vector<PackedFrame> frames;
 
   PackedMetadata metadata;
-  PackedPixelFile() { JxlEncoderInitBasicInfo(&info); };
 };
 
 }  // namespace extras

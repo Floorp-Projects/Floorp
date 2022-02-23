@@ -94,7 +94,6 @@ add_task(async function() {
     const filters = container.querySelectorAll(".filter");
     testRenderedFilters(filters, expected);
   }
-  widget.destroy();
 });
 
 function testRenderedFilters(filters, expected) {

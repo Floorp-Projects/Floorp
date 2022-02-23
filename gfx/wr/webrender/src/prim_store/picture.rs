@@ -113,7 +113,6 @@ pub enum PictureCompositeKey {
     Saturation,
     Color,
     Luminosity,
-    PlusLighter,
 }
 
 impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
@@ -137,7 +136,6 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                     MixBlendMode::Saturation => PictureCompositeKey::Saturation,
                     MixBlendMode::Color => PictureCompositeKey::Color,
                     MixBlendMode::Luminosity => PictureCompositeKey::Luminosity,
-                    MixBlendMode::PlusLighter => PictureCompositeKey::PlusLighter,
                 }
             }
             Some(PictureCompositeMode::Filter(op)) => {

@@ -22,8 +22,7 @@ class CallWorkerThread final : public AbstractThread,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDIRECTTASKDISPATCHER
 
-  explicit CallWorkerThread(
-      UniquePtr<TaskQueueWrapper<DeletionPolicy::NonBlocking>> aWebrtcTaskQueue)
+  explicit CallWorkerThread(UniquePtr<TaskQueueWrapper> aWebrtcTaskQueue)
       : AbstractThread(aWebrtcTaskQueue->mTaskQueue->SupportsTailDispatch()),
         mWebrtcTaskQueue(std::move(aWebrtcTaskQueue)) {}
 
@@ -37,8 +36,7 @@ class CallWorkerThread final : public AbstractThread,
   DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                   uint32_t aDelayMs) override;
 
-  const UniquePtr<TaskQueueWrapper<DeletionPolicy::NonBlocking>>
-      mWebrtcTaskQueue;
+  const UniquePtr<TaskQueueWrapper> mWebrtcTaskQueue;
 
  protected:
   ~CallWorkerThread() = default;

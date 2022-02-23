@@ -45,6 +45,10 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString maxHeight;
 
+  // Return the screen coordinates of the element.
+  readonly attribute long screenX;
+  readonly attribute long screenY;
+
   // Tooltip
   [SetterThrows]
   attribute DOMString tooltipText;

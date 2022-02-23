@@ -340,7 +340,10 @@ bool WorkerLoadInfo::PrincipalURIMatchesScriptURL() {
     return true;
   }
 
-  if (mPrincipal->IsSameOrigin(mBaseURI)) {
+  bool isSameOrigin = false;
+  rv = mPrincipal->IsSameOrigin(mBaseURI, false, &isSameOrigin);
+
+  if (NS_SUCCEEDED(rv) && isSameOrigin) {
     return true;
   }
 

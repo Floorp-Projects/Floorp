@@ -78,6 +78,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
   // Limit various parameters to reasonable levels to catch errors.
   const double MaxHeapGrowthFactor = 100;
   const size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
+  const size_t MaxHeapBytesParam = 0xffffffff;  // ~4GB, must fit in 32bit word.
 
   switch (key) {
     case JSGC_MAX_BYTES:
@@ -108,7 +109,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_SMALL_HEAP_SIZE_MAX: {
       size_t newLimit;
-      if (!megabytesToBytes(value, &newLimit)) {
+      if (!megabytesToBytes(value, &newLimit) || newLimit > MaxHeapBytesParam) {
         return false;
       }
       setSmallHeapSizeMaxBytes(newLimit);
@@ -116,7 +117,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_LARGE_HEAP_SIZE_MIN: {
       size_t newLimit;
-      if (!megabytesToBytes(value, &newLimit) || newLimit == 0) {
+      if (!megabytesToBytes(value, &newLimit) || newLimit == 0 ||
+          newLimit > MaxHeapBytesParam) {
         return false;
       }
       setLargeHeapSizeMinBytes(newLimit);
@@ -148,7 +150,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_ALLOCATION_THRESHOLD: {
       size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
         return false;
       }
       gcZoneAllocThresholdBase_ = threshold;
@@ -223,7 +226,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_ZONE_ALLOC_DELAY_KB: {
       size_t delay;
-      if (!kilobytesToBytes(value, &delay) || delay == 0) {
+      if (!kilobytesToBytes(value, &delay) || delay == 0 ||
+          delay > MaxHeapBytesParam) {
         return false;
       }
       zoneAllocDelayBytes_ = delay;
@@ -231,7 +235,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_MALLOC_THRESHOLD_BASE: {
       size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
         return false;
       }
       mallocThresholdBase_ = threshold;
@@ -239,7 +244,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_URGENT_THRESHOLD_MB: {
       size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
         return false;
       }
       urgentThresholdBytes_ = threshold;
@@ -255,10 +261,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
 /* static */
 bool GCSchedulingTunables::megabytesToBytes(uint32_t value, size_t* bytesOut) {
   MOZ_ASSERT(bytesOut);
-
-  // Parameters which represent heap sizes in bytes are restricted to values
-  // which can be represented on 32 bit platforms.
-  CheckedInt<uint32_t> size = CheckedInt<uint32_t>(value) * 1024 * 1024;
+  CheckedInt<size_t> size = CheckedInt<size_t>(value) * 1024 * 1024;
   if (!size.isValid()) {
     return false;
   }

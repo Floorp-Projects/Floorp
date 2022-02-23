@@ -22,6 +22,11 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
+
 add_task(async function setup() {
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
   // storage mode will run in xpcshell-legacy-ep.ini
@@ -599,7 +604,7 @@ add_task(async function test_proxy_settings_permissions() {
   await ExtensionPermissions._uninit();
   resetHandlingUserInput();
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitBackgroundStarted();
+  await extension.awaitStartup();
 
   await withHandlingUserInput(extension, async () => {
     extension.sendMessage("remove");

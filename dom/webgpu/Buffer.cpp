@@ -114,7 +114,7 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
   }
 
   mappingPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
+      GetMainThreadSerialEventTarget(), __func__,
       [promise, self](ipc::Shmem&& aShmem) {
         self->mMapped->mShmem = std::move(aShmem);
         promise->MaybeResolve(0);

@@ -53,13 +53,6 @@ const watcherSpecPrototype = {
       },
     },
 
-    getBlackboxingActor: {
-      request: {},
-      response: {
-        blackboxing: RetVal("blackboxing"),
-      },
-    },
-
     getBreakpointListActor: {
       request: {},
       response: {

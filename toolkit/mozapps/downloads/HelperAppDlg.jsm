@@ -867,9 +867,7 @@ nsUnknownContentTypeDialog.prototype = {
       // If that's the default, then switch to "save to disk."
       if (isSelected) {
         openHandler.selectedIndex = 1;
-        if (this.dialogElement("open").selected) {
-          modeGroup.selectedItem = this.dialogElement("save");
-        }
+        modeGroup.selectedItem = this.dialogElement("save");
       }
     }
 

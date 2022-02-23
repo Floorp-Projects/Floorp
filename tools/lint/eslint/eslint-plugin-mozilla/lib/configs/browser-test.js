@@ -23,7 +23,6 @@ module.exports = {
     TestUtils: false,
     XPCNativeWrapper: false,
     addLoadEvent: false,
-    add_setup: false,
     add_task: false,
     content: false,
     executeSoon: false,

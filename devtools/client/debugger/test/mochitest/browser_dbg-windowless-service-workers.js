@@ -121,14 +121,9 @@ add_task(async function() {
   await removeTab(gBrowser.selectedTab);
 });
 
-
 // Test setting breakpoints while the service worker is starting up.
 add_task(async function() {
   info("Subtest #4");
-  if (Services.appinfo.fissionAutostart) {
-    // Disabled when serviceworker isolation is used due to bug 1749341
-    return;
-  }
 
   const toolbox = await openNewTabAndToolbox(
     EXAMPLE_URL + "doc-service-workers.html",

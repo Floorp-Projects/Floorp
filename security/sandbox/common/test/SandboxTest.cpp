@@ -16,17 +16,10 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/RDDChild.h"
-#include "mozilla/ipc/UtilityProcessManager.h"
-#include "mozilla/ipc/UtilityProcessParent.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "GMPService.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsIOService.h"
-
-#ifdef XP_WIN
-#  include "nsAppDirectoryServiceDefs.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -91,20 +84,6 @@ void InitializeSandboxTestingActors(
 NS_IMETHODIMP
 SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
   MOZ_ASSERT(NS_IsMainThread());
-
-#if defined(XP_WIN)
-  nsCOMPtr<nsIFile> testFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(testFile));
-  MOZ_ASSERT(testFile);
-  nsCOMPtr<nsIFile> testChromeFile;
-  testFile->Clone(getter_AddRefs(testChromeFile));
-  testChromeFile->Append(u"chrome"_ns);
-  testChromeFile->Exists(&mChromeDirExisted);
-  testFile->Append(u"sandboxTest.txt"_ns);
-  testChromeFile->Append(u"sandboxTest.txt"_ns);
-  MOZ_ALWAYS_SUCCEEDS(testFile->Create(nsIFile::NORMAL_FILE_TYPE, 0666));
-  MOZ_ALWAYS_SUCCEEDS(testChromeFile->Create(nsIFile::NORMAL_FILE_TYPE, 0666));
-#endif
 
   for (const auto& processTypeName : aProcessesList) {
     GeckoProcessType type = GeckoProcessStringToType(processTypeName);
@@ -220,29 +199,6 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         break;
       }
 
-      case GeckoProcessType_Utility: {
-        RefPtr<UtilityProcessManager> utilityProc =
-            UtilityProcessManager::GetSingleton();
-        utilityProc->LaunchProcess(SandboxingKind::GENERIC_UTILITY)
-            ->Then(
-                GetMainThreadSerialEventTarget(), __func__,
-                [processPromise, utilityProc]() {
-                  UtilityProcessParent* utilityParent =
-                      utilityProc ? utilityProc->GetProcessParent() : nullptr;
-                  if (utilityParent) {
-                    return InitializeSandboxTestingActors(utilityParent,
-                                                          processPromise);
-                  }
-                  return processPromise->Reject(NS_ERROR_FAILURE, __func__);
-                },
-                [processPromise](nsresult aError) {
-                  MOZ_ASSERT_UNREACHABLE(
-                      "SandboxTest; failure to get Utility process");
-                  return processPromise->Reject(aError, __func__);
-                });
-        break;
-      }
-
       default:
         MOZ_ASSERT_UNREACHABLE(
             "SandboxTest does not yet support this process type");
@@ -298,23 +254,6 @@ SandboxTest::FinishTests() {
   for (SandboxTestingParent* stp : mSandboxTestingParents) {
     SandboxTestingParent::Destroy(stp);
   }
-
-#if defined(XP_WIN)
-  nsCOMPtr<nsIFile> testFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(testFile));
-  MOZ_ASSERT(testFile);
-  nsCOMPtr<nsIFile> testChromeFile;
-  testFile->Clone(getter_AddRefs(testChromeFile));
-  testChromeFile->Append(u"chrome"_ns);
-  testFile->Append(u"sandboxTest.txt"_ns);
-  if (mChromeDirExisted) {
-    // Chrome dir existed, just delete test file.
-    testChromeFile->Append(u"sandboxTest.txt"_ns);
-  }
-  testFile->Remove(false);
-  testChromeFile->Remove(true);
-#endif
-
   return NS_OK;
 }
 

@@ -10,26 +10,15 @@
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPrefs_layout.h"
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 NS_IMPL_ISUPPORTS(Screen, nsIScreen)
-
-static hal::ScreenOrientation EffectiveOrientation(
-    hal::ScreenOrientation aOrientation, const LayoutDeviceIntRect& aRect) {
-  if (aOrientation == hal::ScreenOrientation::None) {
-    return aRect.Width() >= aRect.Height()
-               ? hal::ScreenOrientation::LandscapePrimary
-               : hal::ScreenOrientation::PortraitPrimary;
-  }
-  return aOrientation;
-}
 
 Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aPixelDepth, uint32_t aColorDepth,
                DesktopToLayoutDeviceScale aContentsScale,
-               CSSToLayoutDeviceScale aDefaultCssScale, float aDPI,
-               hal::ScreenOrientation aOrientation,
-               OrientationAngle aOrientationAngle)
+               CSSToLayoutDeviceScale aDefaultCssScale, float aDPI)
     : mRect(aRect),
       mAvailRect(aAvailRect),
       mRectDisplayPix(RoundedToInt(aRect / aContentsScale)),
@@ -38,11 +27,9 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
       mColorDepth(aColorDepth),
       mContentsScale(aContentsScale),
       mDefaultCssScale(aDefaultCssScale),
-      mDPI(aDPI),
-      mScreenOrientation(EffectiveOrientation(aOrientation, aRect)),
-      mOrientationAngle(aOrientationAngle) {}
+      mDPI(aDPI) {}
 
-Screen::Screen(const dom::ScreenDetails& aScreen)
+Screen::Screen(const mozilla::dom::ScreenDetails& aScreen)
     : mRect(aScreen.rect()),
       mAvailRect(aScreen.availRect()),
       mRectDisplayPix(aScreen.rectDisplayPix()),
@@ -51,9 +38,7 @@ Screen::Screen(const dom::ScreenDetails& aScreen)
       mColorDepth(aScreen.colorDepth()),
       mContentsScale(aScreen.contentsScaleFactor()),
       mDefaultCssScale(aScreen.defaultCSSScaleFactor()),
-      mDPI(aScreen.dpi()),
-      mScreenOrientation(aScreen.orientation()),
-      mOrientationAngle(aScreen.orientationAngle()) {}
+      mDPI(aScreen.dpi()) {}
 
 Screen::Screen(const Screen& aOther)
     : mRect(aOther.mRect),
@@ -64,15 +49,18 @@ Screen::Screen(const Screen& aOther)
       mColorDepth(aOther.mColorDepth),
       mContentsScale(aOther.mContentsScale),
       mDefaultCssScale(aOther.mDefaultCssScale),
-      mDPI(aOther.mDPI),
-      mScreenOrientation(aOther.mScreenOrientation),
-      mOrientationAngle(aOther.mOrientationAngle) {}
+      mDPI(aOther.mDPI) {}
 
-dom::ScreenDetails Screen::ToScreenDetails() const {
-  return dom::ScreenDetails(mRect, mRectDisplayPix, mAvailRect,
-                            mAvailRectDisplayPix, mPixelDepth, mColorDepth,
-                            mContentsScale, mDefaultCssScale, mDPI,
-                            mScreenOrientation, mOrientationAngle);
+mozilla::dom::ScreenDetails Screen::ToScreenDetails() {
+  return mozilla::dom::ScreenDetails(
+      mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix, mPixelDepth,
+      mColorDepth, mContentsScale, mDefaultCssScale, mDPI);
+}
+
+mozilla::hal::ScreenConfiguration Screen::ToScreenConfiguration() {
+  return mozilla::hal::ScreenConfiguration(
+      nsIntRect(mRect.x, mRect.y, mRect.width, mRect.height),
+      hal::eScreenOrientation_None, 0, mColorDepth, mPixelDepth);
 }
 
 NS_IMETHODIMP
@@ -138,4 +126,5 @@ Screen::GetDpi(float* aDPI) {
   return NS_OK;
 }
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla

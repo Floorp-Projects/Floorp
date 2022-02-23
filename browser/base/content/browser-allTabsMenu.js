@@ -77,11 +77,12 @@ var gTabsPanel = {
       ).hidden = !hasHiddenTabs;
     });
 
-    this.allTabsView.addEventListener("ViewShown", e =>
-      this.allTabsView
-        .querySelector(".all-tabs-item[selected]")
-        ?.scrollIntoView({ block: "center" })
-    );
+    this.allTabsView.addEventListener("ViewShown", e => {
+      let selectedRow = this.allTabsView.querySelector(
+        ".all-tabs-item[selected]"
+      );
+      selectedRow.scrollIntoView({ block: "center" });
+    });
 
     let containerTabsMenuSeparator = this.containerTabsView.querySelector(
       "toolbarseparator"

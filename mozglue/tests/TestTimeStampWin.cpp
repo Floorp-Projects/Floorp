@@ -42,7 +42,8 @@ static nsReturnRef<HANDLE> CreateProcessWrapper(const wchar_t* aPath) {
 int ChildMain() {
   // Make sure a process creation timestamp is always not bigger than
   // the current timestamp.
-  auto t0 = mozilla::TimeStamp::ProcessCreation();
+  bool inconsistent = false;
+  auto t0 = mozilla::TimeStamp::ProcessCreation(&inconsistent);
   auto t1 = mozilla::TimeStamp::Now();
   if (t0 > t1) {
     printf(

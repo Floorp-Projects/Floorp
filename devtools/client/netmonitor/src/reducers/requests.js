@@ -17,7 +17,6 @@ const {
   REMOVE_SELECTED_CUSTOM_REQUEST,
   RIGHT_CLICK_REQUEST,
   SELECT_REQUEST,
-  PRESELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
@@ -34,8 +33,6 @@ function Requests() {
     requests: [],
     // Selected request ID
     selectedId: null,
-    // Right click request represents the last request that was clicked
-    clickedRequestId: null,
     // @backward-compact { version 85 } The preselectedId can either be
     // the actor id on old servers, or the resourceId on new ones.
     preselectedId: null,
@@ -79,9 +76,14 @@ function requestsReducer(state = Requests(), action) {
 
     // Select specific request.
     case SELECT_REQUEST: {
+      // Selected request represents the last request that was clicked
+      // before the context menu is shown
+      const clickedRequest = state.requests.find(
+        needle => needle.id === action.id
+      );
       return {
         ...state,
-        clickedRequestId: action.id,
+        clickedRequest,
         selectedId: action.id,
       };
     }
@@ -96,16 +98,12 @@ function requestsReducer(state = Requests(), action) {
     }
 
     case RIGHT_CLICK_REQUEST: {
+      const clickedRequest = state.requests.find(
+        needle => needle.id === action.id
+      );
       return {
         ...state,
-        clickedRequestId: action.id,
-      };
-    }
-
-    case PRESELECT_REQUEST: {
-      return {
-        ...state,
-        preselectedId: action.id,
+        clickedRequest,
       };
     }
 

@@ -74,6 +74,8 @@ class RemoteLazyInputStreamParent final : public PRemoteLazyInputStreamParent {
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 
+  bool HasValidStream() const;
+
  private:
   template <typename M>
   static already_AddRefed<RemoteLazyInputStreamParent> CreateCommon(

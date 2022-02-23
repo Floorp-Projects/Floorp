@@ -7,7 +7,6 @@
 #ifndef MOZILLA_GFX_DCLAYER_TREE_H
 #define MOZILLA_GFX_DCLAYER_TREE_H
 
-#include <dxgiformat.h>
 #include <unordered_map>
 #include <vector>
 #include <windows.h>
@@ -52,16 +51,6 @@ class DCSurface;
 class DCSurfaceVideo;
 class RenderTextureHost;
 
-struct GpuOverlayInfo {
-  bool mSupportsOverlays = false;
-  bool mSupportsHardwareOverlays = false;
-  DXGI_FORMAT mOverlayFormatUsed = DXGI_FORMAT_B8G8R8A8_UNORM;
-  DXGI_FORMAT mOverlayFormatUsedHdr = DXGI_FORMAT_R10G10B10A2_UNORM;
-  UINT mNv12OverlaySupportFlags = 0;
-  UINT mYuy2OverlaySupportFlags = 0;
-  UINT mRgb10a2OverlaySupportFlags = 0;
-};
-
 /**
  * DCLayerTree manages direct composition layers.
  * It does not manage gecko's layers::Layer.
@@ -72,9 +61,6 @@ class DCLayerTree {
                                        ID3D11Device* aDevice,
                                        ID3D11DeviceContext* aCtx, HWND aHwnd,
                                        nsACString& aError);
-
-  static void Shutdown();
-
   explicit DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
                        ID3D11Device* aDevice, ID3D11DeviceContext* aCtx,
                        IDCompositionDevice2* aCompositionDevice);
@@ -124,9 +110,6 @@ class DCLayerTree {
   // Get or create an FBO with depth buffer suitable for specified dimensions
   GLuint GetOrCreateFbo(int aWidth, int aHeight);
 
-  bool SupportsHardwareOverlays();
-  DXGI_FORMAT GetOverlayFormatForSDR();
-
  protected:
   bool Initialize(HWND aHwnd, nsACString& aError);
   bool InitializeVideoOverlaySupport();
@@ -155,6 +138,8 @@ class DCLayerTree {
   RefPtr<ID3D11VideoProcessor> mVideoProcessor;
   RefPtr<ID3D11VideoProcessorEnumerator> mVideoProcessorEnumerator;
   gfx::IntSize mVideoSize;
+
+  bool mVideoOverlaySupported;
 
   bool mDebugCounter;
   bool mDebugVisualRedrawRegions;
@@ -200,8 +185,6 @@ class DCLayerTree {
   int mCurrentFrame = 0;
 
   bool mPendingCommit;
-
-  static UniquePtr<GpuOverlayInfo> sGpuOverlayInfo;
 };
 
 /**
@@ -276,7 +259,6 @@ class DCSurfaceVideo : public DCSurface {
   DCSurfaceVideo* AsDCSurfaceVideo() override { return this; }
 
  protected:
-  DXGI_FORMAT GetSwapChainFormat();
   bool CreateVideoSwapChain(RenderTextureHost* aTexture);
   bool CallVideoProcessorBlt(RenderTextureHost* aTexture);
   void ReleaseDecodeSwapChainResources();
@@ -287,8 +269,6 @@ class DCSurfaceVideo : public DCSurface {
   RefPtr<IDXGIDecodeSwapChain> mDecodeSwapChain;
   HANDLE mSwapChainSurfaceHandle;
   gfx::IntSize mSwapChainSize;
-  DXGI_FORMAT mSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-  bool mFailedToCreateYuvSwapChain = false;
   RefPtr<RenderTextureHost> mPrevTexture;
 };
 

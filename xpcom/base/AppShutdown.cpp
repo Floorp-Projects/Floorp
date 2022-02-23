@@ -73,6 +73,7 @@ static nsTerminator* sTerminator = nullptr;
 static ShutdownPhase sFastShutdownPhase = ShutdownPhase::NotInShutdown;
 static ShutdownPhase sLateWriteChecksPhase = ShutdownPhase::NotInShutdown;
 static AppShutdownMode sShutdownMode = AppShutdownMode::Normal;
+static Atomic<bool, MemoryOrdering::Relaxed> sIsShuttingDown;
 static Atomic<ShutdownPhase> sCurrentShutdownPhase(
     ShutdownPhase::NotInShutdown);
 static int sExitCode = 0;
@@ -102,6 +103,8 @@ ShutdownPhase GetShutdownPhaseFromPrefValue(int32_t aPrefValue) {
   }
   return ShutdownPhase::NotInShutdown;
 }
+
+bool AppShutdown::IsShuttingDown() { return sIsShuttingDown; }
 
 ShutdownPhase AppShutdown::GetCurrentShutdownPhase() {
   return sCurrentShutdownPhase;
@@ -262,6 +265,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
 }
 
 void AppShutdown::OnShutdownConfirmed() {
+  sIsShuttingDown = true;
   // If we're restarting, we need to save environment variables correctly
   // while everything is still alive to do so.
   if (sShutdownMode == AppShutdownMode::Restart) {

@@ -115,3 +115,4 @@ JavaScript Content
   }
 
   document.addEventListener("click", animateChannel);
+

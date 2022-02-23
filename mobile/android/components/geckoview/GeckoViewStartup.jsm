@@ -34,7 +34,6 @@ const JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
-    messageManagerGroups: ["browsers"],
   },
   GeckoViewPrompt: {
     child: {
@@ -42,13 +41,10 @@ const JSWINDOWACTORS = {
       events: {
         click: { capture: false, mozSystemGroup: true },
         contextmenu: { capture: false, mozSystemGroup: true },
-        mozshowdropdown: {},
-        "mozshowdropdown-sourcetouch": {},
         DOMPopupBlocked: { capture: false, mozSystemGroup: true },
       },
     },
     allFrames: true,
-    messageManagerGroups: ["browsers"],
   },
   GeckoViewFormValidation: {
     child: {
@@ -58,7 +54,6 @@ const JSWINDOWACTORS = {
       },
     },
     allFrames: true,
-    messageManagerGroups: ["browsers"],
   },
 };
 

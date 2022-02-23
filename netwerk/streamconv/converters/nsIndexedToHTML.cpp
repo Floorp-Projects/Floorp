@@ -617,21 +617,23 @@ nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInput,
   return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
 }
 
-static nsresult FormatTime(
-    const mozilla::intl::DateTimeFormat::StyleBag& aStyleBag,
-    const PRTime aPrTime, nsAString& aStringOut) {
+static nsresult FormatTime(const mozilla::intl::DateTimeFormat::Style& aStyle,
+                           const PRTime aPrTime, nsAString& aStringOut) {
+  mozilla::intl::DateTimeFormat::StyleBag styleBag;
+  styleBag.date = Some(aStyle);
+
   // FormatPRExplodedTime will use GMT based formatted string (e.g. GMT+1)
   // instead of local time zone name (e.g. CEST).
   // To avoid this case when ResistFingerprinting is disabled, use
   // |FormatPRTime| to show exact time zone name.
   if (!nsContentUtils::ShouldResistFingerprinting()) {
-    return mozilla::intl::AppDateTimeFormat::Format(aStyleBag, aPrTime,
+    return mozilla::intl::AppDateTimeFormat::Format(styleBag, aPrTime,
                                                     aStringOut);
   }
 
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(aPrTime, PR_GMTParameters, &prExplodedTime);
-  return mozilla::intl::AppDateTimeFormat::Format(aStyleBag, &prExplodedTime,
+  return mozilla::intl::AppDateTimeFormat::Format(styleBag, &prExplodedTime,
                                                   aStringOut);
 }
 
@@ -780,17 +782,11 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsIDirIndex* aIndex) {
     pushBuffer.AppendLiteral(" sortable-data=\"");
     pushBuffer.AppendInt(static_cast<int64_t>(t));
     pushBuffer.AppendLiteral("\">");
-    // Add date string
     nsAutoString formatted;
-    mozilla::intl::DateTimeFormat::StyleBag dateBag;
-    dateBag.date = Some(mozilla::intl::DateTimeFormat::Style::Short);
-    FormatTime(dateBag, t, formatted);
+    FormatTime(mozilla::intl::DateTimeFormat::Style::Short, t, formatted);
     AppendNonAsciiToNCR(formatted, pushBuffer);
     pushBuffer.AppendLiteral("</td>\n <td>");
-    // Add time string
-    mozilla::intl::DateTimeFormat::StyleBag timeBag;
-    timeBag.time = Some(mozilla::intl::DateTimeFormat::Style::Long);
-    FormatTime(timeBag, t, formatted);
+    FormatTime(mozilla::intl::DateTimeFormat::Style::Long, t, formatted);
     // use NCR to show date in any doc charset
     AppendNonAsciiToNCR(formatted, pushBuffer);
   }

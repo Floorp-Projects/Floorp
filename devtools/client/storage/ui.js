@@ -9,7 +9,7 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { parseItemValue } = require("devtools/shared/storage/utils");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { getUnicodeHostname } = require("devtools/client/shared/unicode-url");
-const getStorageTypeURL = require("devtools/client/storage/utils/doc-utils");
+const getStorageTypeURL = require("devtools/client/storage/utils/mdn-utils");
 
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/server/actors/storage.js,
@@ -1150,7 +1150,8 @@ class StorageUI {
       }
       this.table.setPlaceholder(
         storageTypeHintL10nId,
-        getStorageTypeURL(this.table.datatype)
+        getStorageTypeURL(this.table.datatype) +
+          "?utm_source=devtools&utm_medium=storage-inspector"
       );
 
       // If selected item has no host then reset table headers

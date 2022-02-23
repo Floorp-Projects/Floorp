@@ -1,0 +1,53 @@
+'use strict';
+browser.browserAction.onClicked.addListener(tab => {
+	browser.sessions.getRecentlyClosed(sessionInfos => {
+				for (let i = 0; i < sessionInfos.length; i++) {
+			let sessionInfo = sessionInfos[i];
+			if (sessionInfo.tab && sessionInfo.tab.windowId === tab.windowId) {
+				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
+
+const BROWSER_VERSION = "8.5.9"
+const APP_ID = "floorp"
+const API_END_POINT = "https://repo.ablaze.one/api/"
+
+const Notify = (url, now, latest) =>{
+    const msg = browser.i18n;
+    browser.notifications.create({
+        "type": "basic",
+        "iconUrl": browser.runtime.getURL("icons/link-48.png"),
+        "title": msg.getMessage("notificationTitle"),
+        "message": msg.getMessage("notificationContent", [now, latest])
+    });
+    browser.notifications.onClicked.addListener(() =>{
+        browser.tabs.create({
+            "url": url
+        });
+    });
+    return null;
+};
+
+(
+    async() => {
+    var pref = await browser.aboutConfigPrefs.getPref("enable.floorp.updater")
+    console.log("enable.floorp.updater =" + pref)
+
+    const i=pref
+})();
+
+if(i=true){
+    window.onload = () =>{
+        fetch(`${API_END_POINT}?name=${APP_ID}`)
+        .then(res =>{
+            if(res.ok){
+                return res.json()
+            }
+        }).then(data =>{
+            if(data.build != BROWSER_VERSION){
+                Notify(data.file, BROWSER_VERSION, data.build);
+                console.log("notificationTitle");
+            }
+        }).then(e =>{
+            return e;
+        });
+    };
+}

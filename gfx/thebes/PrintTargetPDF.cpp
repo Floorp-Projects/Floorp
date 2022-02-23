@@ -13,7 +13,7 @@ namespace mozilla::gfx {
 
 static cairo_status_t write_func(void* closure, const unsigned char* data,
                                  unsigned int length) {
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return CAIRO_STATUS_SUCCESS;
   }
   nsCOMPtr<nsIOutputStream> out = reinterpret_cast<nsIOutputStream*>(closure);
@@ -65,8 +65,7 @@ nsresult PrintTargetPDF::EndPage() {
 }
 
 void PrintTargetPDF::Finish() {
-  if (mIsFinished ||
-      AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (mIsFinished || AppShutdown::IsShuttingDown()) {
     // We don't want to call Close() on mStream more than once, and we don't
     // want to block shutdown if for some reason the user shuts down the
     // browser mid print.

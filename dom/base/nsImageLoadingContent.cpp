@@ -93,7 +93,9 @@ const nsAttrValue::EnumTable* nsImageLoadingContent::kDecodingTableDefault =
     &nsImageLoadingContent::kDecodingTable[0];
 
 nsImageLoadingContent::nsImageLoadingContent()
-    : mObserverList(nullptr),
+    : mCurrentRequestFlags(0),
+      mPendingRequestFlags(0),
+      mObserverList(nullptr),
       mOutstandingDecodePromises(0),
       mRequestGeneration(0),
       mLoadingEnabled(true),
@@ -149,7 +151,8 @@ void nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::UNLOCKED_DRAW) {
-    return OnUnlockedDraw();
+    OnUnlockedDraw();
+    return;
   }
 
   {
@@ -268,14 +271,32 @@ void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
   MaybeResolveDecodePromises();
 }
 
+static bool ImageIsAnimated(imgIRequest* aRequest) {
+  if (!aRequest) {
+    return false;
+  }
+
+  nsCOMPtr<imgIContainer> image;
+  if (NS_SUCCEEDED(aRequest->GetImage(getter_AddRefs(image)))) {
+    bool isAnimated = false;
+    nsresult rv = image->GetAnimated(&isAnimated);
+    if (NS_SUCCEEDED(rv) && isAnimated) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void nsImageLoadingContent::OnUnlockedDraw() {
-  // This notification is only sent for animated images. It's OK for
-  // non-animated images to wait until the next frame visibility update to
-  // become locked. (And that's preferable, since in the case of scrolling it
-  // keeps memory usage minimal.)
-  //
-  // For animated images, though, we want to mark them visible right away so we
-  // can call IncrementAnimationConsumers() on them and they'll start animating.
+  // It's OK for non-animated images to wait until the next frame visibility
+  // update to become locked. (And that's preferable, since in the case of
+  // scrolling it keeps memory usage minimal.) For animated images, though, we
+  // want to mark them visible right away so we can call
+  // IncrementAnimationConsumers() on them and they'll start animating.
+  if (!ImageIsAnimated(mCurrentRequest) && !ImageIsAnimated(mPendingRequest)) {
+    return;
+  }
 
   nsIFrame* frame = GetOurPrimaryFrame();
   if (!frame) {
@@ -301,17 +322,11 @@ void nsImageLoadingContent::OnUnlockedDraw() {
 }
 
 void nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
-  bool* requestFlag = nullptr;
-  if (aRequest == mCurrentRequest) {
-    requestFlag = &mCurrentRequestRegistered;
-  } else if (aRequest == mPendingRequest) {
-    requestFlag = &mPendingRequestRegistered;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Which image is this?");
-    return;
+  bool* requestFlag = GetRegisteredFlagForRequest(aRequest);
+  if (requestFlag) {
+    nsLayoutUtils::RegisterImageRequest(GetFramePresContext(), aRequest,
+                                        requestFlag);
   }
-  nsLayoutUtils::RegisterImageRequest(GetFramePresContext(), aRequest,
-                                      requestFlag);
 }
 
 /*
@@ -1509,6 +1524,17 @@ void nsImageLoadingContent::ClearPendingRequest(
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nullptr;
   mPendingRequestFlags = 0;
+}
+
+bool* nsImageLoadingContent::GetRegisteredFlagForRequest(
+    imgIRequest* aRequest) {
+  if (aRequest == mCurrentRequest) {
+    return &mCurrentRequestRegistered;
+  }
+  if (aRequest == mPendingRequest) {
+    return &mPendingRequestRegistered;
+  }
+  return nullptr;
 }
 
 void nsImageLoadingContent::ResetAnimationIfNeeded() {

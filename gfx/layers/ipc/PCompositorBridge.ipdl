@@ -17,10 +17,10 @@ include protocol PCompositorManager;
 include protocol PCompositorWidget;
 include protocol PTexture;
 include protocol PWebRenderBridge;
+include protocol PWebGPU;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
-include "mozilla/layers/CompositorBridgeParent.h";
 
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
@@ -88,8 +88,7 @@ struct FrameStats {
  * protocol, which is per-browser. A lot of the functions in the protocol are
  * basically multiplexing/demultiplexing stuff in PLayerTransaction.
  */
-[ParentImpl="CompositorBridgeParentBase"]
-sync protocol PCompositorBridge
+[RefCounted] sync protocol PCompositorBridge
 {
   manager PCompositorManager;
 
@@ -99,6 +98,7 @@ sync protocol PCompositorBridge
   manages PTexture;
   manages PCompositorWidget;
   manages PWebRenderBridge;
+  manages PWebGPU;
 
 child:
   // The child should invalidate retained layers. This is used for local
@@ -139,6 +139,10 @@ parent:
   async PAPZ(LayersId layersId);
   async PAPZCTreeManager(LayersId layersId);
 
+  // Constructor for WebGPU IPDL
+  // Must be called before Initialize().
+  async PWebGPU();
+
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillClose();
 
@@ -168,8 +172,6 @@ parent:
   // cross-process bridge.
   sync NotifyChildRecreated(LayersId id)
     returns (CompositorOptions compositorOptions);
-
-  async NotifyMemoryPressure();
 
   // Make sure any pending composites are started immediately and
   // block until they are completed.

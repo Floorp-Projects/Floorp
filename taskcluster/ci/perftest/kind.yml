@@ -21,8 +21,6 @@ jobs-from:
     - windows.yml
 
 job-defaults:
-    attributes:
-        retrigger: true
     run-on-projects: []
     treeherder:
         kind: other
@@ -32,7 +30,6 @@ job-defaults:
         max-run-time: 10800
         env:
             USE_ARTIFACT: '1'
-            HOSTUTILS_MANIFEST_PATH: "testing/config/tooltool-manifests/linux64/hostutils.manifest"
         artifacts:
             - type: directory
               name: public/build

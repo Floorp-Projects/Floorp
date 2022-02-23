@@ -15,7 +15,6 @@
 
 enum WidgetNodeType : int;
 struct _GtkStyle;
-typedef struct _GDBusProxy GDBusProxy;
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
@@ -35,6 +34,11 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   bool GetDefaultDrawInTitlebar() override;
 
+  template <typename Callback>
+  void WithAltThemeConfigured(const Callback&);
+
+  void InitializeAltTheme();
+
   void GetGtkContentTheme(LookAndFeelTheme&) override;
   void GetThemeInfo(nsACString&) override;
 
@@ -47,7 +51,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool WidgetUsesImage(WidgetNodeType aNodeType);
   void RecordLookAndFeelSpecificTelemetry() override;
   static bool ShouldHonorThemeScrollbarColors();
-  mozilla::Maybe<ColorScheme> ComputeColorSchemeSetting();
 
   // We use up to two themes (one light, one dark), which might have different
   // sets of fonts and colors.
@@ -106,6 +109,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mTextSelectedBackground = kWhite;
     nscolor mAccentColor = kWhite;
     nscolor mAccentColorForeground = kWhite;
+    nscolor mMozScrollbar = kWhite;
     nscolor mMozColHeaderText = kBlack;
     nscolor mMozColHeaderHoverText = kBlack;
     nscolor mTitlebarText = kBlack;
@@ -150,8 +154,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return mSystemThemeOverridden ? mAltTheme : mSystemTheme;
   }
 
-  GDBusProxy* mDBusSettingsProxy = nullptr;
-  mozilla::Maybe<ColorScheme> mColorSchemePreference;
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;
   bool mCSDMaximizeButton = false;
@@ -165,19 +167,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCSDMinimizeButtonPosition = 0;
   int32_t mCSDCloseButtonPosition = 0;
 
-  void EnsureInit() {
-    if (mInitialized) {
-      return;
-    }
-    Initialize();
-  }
-
-  void Initialize();
+  void EnsureInit();
 
   void RestoreSystemTheme();
-  void InitializeGlobalSettings();
-  void ConfigureAndInitializeAltTheme();
-  void ConfigureFinalEffectiveTheme();
+  bool MatchFirefoxThemeIfNeeded();
 };
 
 #endif

@@ -148,22 +148,22 @@ class FrameParser {
     uint8_t RawChannelMode() const;
 
     // Sampling rate frequency in Hz.
-    uint32_t SampleRate() const;
+    int32_t SampleRate() const;
 
     // Number of audio channels.
-    uint32_t Channels() const;
+    int32_t Channels() const;
 
     // Samples per frames, static depending on MPEG version and layer.
-    uint32_t SamplesPerFrame() const;
+    int32_t SamplesPerFrame() const;
 
     // Slot size used for padding, static depending on MPEG layer.
-    uint32_t SlotSize() const;
+    int32_t SlotSize() const;
 
     // Bitrate in kbps, can vary between frames.
-    uint32_t Bitrate() const;
+    int32_t Bitrate() const;
 
     // MPEG layer (0->invalid, 1->I, 2->II, 3->III).
-    uint32_t Layer() const;
+    int32_t Layer() const;
 
     // Returns whether the parsed data is a valid frame header up to the given
     // byte position.

@@ -586,12 +586,6 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
       return;
     }
 
-    if (StaticPrefs::layout_display_list_retain_sc()) {
-      // DisplayListBuildingDisplayPortRect property is not used when retain sc
-      // mode is enabled.
-      return;
-    }
-
     bool found;
     nsRect* rect = frame->GetProperty(
         nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), &found);
@@ -607,7 +601,7 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
 
       RetainedDisplayListData* data =
           GetOrSetRetainedDisplayListData(rootFrame);
-      data->Flags(frame) += RetainedDisplayListData::FrameFlag::HasProps;
+      data->Flags(frame) |= RetainedDisplayListData::FrameFlags::HasProps;
     } else {
       MOZ_ASSERT(rect, "this property should only store non-null values");
     }
@@ -773,6 +767,18 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
   }
 }
 
+bool DisplayPortUtils::GetCriticalDisplayPort(
+    nsIContent* aContent, nsRect* aResult, const DisplayPortOptions& aOptions) {
+  if (StaticPrefs::layers_low_precision_buffer()) {
+    return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
+  }
+  return false;
+}
+
+bool DisplayPortUtils::HasCriticalDisplayPort(nsIContent* aContent) {
+  return GetCriticalDisplayPort(aContent, nullptr);
+}
+
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {
   aContent->RemoveProperty(nsGkAtoms::DisplayPort);
   aContent->RemoveProperty(nsGkAtoms::DisplayPortMargins);
@@ -907,13 +913,6 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
 
 bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder) {
-  // Don't descend into the tab bar in chrome, it can be very large and does not
-  // contain any async scrollable elements.
-  if (XRE_IsParentProcess() && aFrame->GetContent() &&
-      aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
-    return false;
-  }
-
   nsIScrollableFrame* sf = do_QueryFrame(aFrame);
   if (sf) {
     if (MaybeCreateDisplayPort(aBuilder, aFrame, RepaintMode::Repaint)) {

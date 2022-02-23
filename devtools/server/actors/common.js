@@ -14,11 +14,12 @@
  * @param Number column
  *        A column within the given line.
  */
-function SourceLocation(actor, line, column) {
+function SourceLocation(actor, line, column, lastColumn) {
   this._connection = actor ? actor.conn : null;
   this._actorID = actor ? actor.actorID : undefined;
   this._line = line;
   this._column = column;
+  this._lastColumn = lastColumn !== undefined ? lastColumn : column + 1;
 }
 
 SourceLocation.prototype = {
@@ -36,6 +37,10 @@ SourceLocation.prototype = {
 
   get column() {
     return this._column;
+  },
+
+  get lastColumn() {
+    return this._lastColumn;
   },
 
   get sourceUrl() {
@@ -57,6 +62,7 @@ SourceLocation.prototype = {
       source: this.sourceActor.form(),
       line: this.line,
       column: this.column,
+      lastColumn: this.lastColumn,
     };
   },
 };

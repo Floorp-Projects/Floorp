@@ -19,7 +19,6 @@ union IPCBlobOrError
   nsresult;
 };
 
-[ManualDealloc]
 protocol PTemporaryIPCBlob
 {
   manager PBackground;

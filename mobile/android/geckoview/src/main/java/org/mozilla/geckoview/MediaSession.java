@@ -494,7 +494,7 @@ public class MediaSession {
         Feature.PREVIOUS_TRACK,
         // Feature.SET_VIDEO_SURFACE
       })
-  public @interface MSFeature {}
+  /* package */ @interface MSFeature {}
 
   /** Flags for supported media session features. */
   public static class Feature {

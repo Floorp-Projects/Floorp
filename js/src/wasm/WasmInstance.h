@@ -66,6 +66,7 @@ class Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
+  void* checkedCallEntry(const uint32_t functionIndex, const Tier tier) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -97,6 +98,9 @@ class Instance {
   uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
+
+  Instance* getOriginalInstanceAndFunction(Tier tier, uint32_t funcIdx,
+                                           JSFunction** fun);
 
   JS::Realm* realm() const { return realm_; }
   const Code& code() const { return *code_; }
@@ -169,9 +173,28 @@ class Instance {
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.
 
-  [[nodiscard]] bool initElems(uint32_t tableIndex, const ElemSegment& seg,
-                               uint32_t dstOffset, uint32_t srcOffset,
-                               uint32_t len);
+  [[nodiscard]] bool initElems(JSContext* cx, uint32_t tableIndex,
+                               const ElemSegment& seg, uint32_t dstOffset,
+                               uint32_t srcOffset, uint32_t len);
+
+  // This will return null if an indirect stub for (func,tls) is not found in
+  // the present instance.
+  [[nodiscard]] void* getIndirectStub(uint32_t funcIndex,
+                                      TlsData* targetTlsData,
+                                      const Tier tier) const;
+  // This combines ensureIndirectStub and getIndirectStub, but returns null only
+  // on OOM (because the get should not fail).
+  [[nodiscard]] void* ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex);
+  [[nodiscard]] bool createManyIndirectStubs(
+      const VectorOfIndirectStubTarget& targets, const Tier tier);
+  [[nodiscard]] bool ensureIndirectStubs(JSContext* cx,
+                                         const Uint32Vector& elemFuncIndices,
+                                         uint32_t srcOffset, uint32_t len,
+                                         const Tier tier,
+                                         const bool tableIsImportedOrExported);
+  [[nodiscard]] bool ensureIndirectStub(JSContext* cx, FuncRef* ref,
+                                        const Tier tier,
+                                        const bool tableIsImportedOrExported);
 
   // Debugger support:
 

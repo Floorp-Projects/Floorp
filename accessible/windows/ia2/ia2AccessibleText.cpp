@@ -111,7 +111,7 @@ ia2AccessibleText::get_characterExtents(long aOffset,
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   auto [textAcc, hr] = LocalTextAcc();
   if (!textAcc) {
     return hr;
@@ -219,9 +219,9 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
   *aStartOffset = *aEndOffset = 0;
   *aText = nullptr;
 
-  HyperTextAccessibleBase* textAcc = TextAcc();
+  auto [textAcc, hr] = LocalTextAcc();
   if (!textAcc) {
-    return CO_E_OBJNOTCONNECTED;
+    return hr;
   }
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;
@@ -261,9 +261,9 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
   *aEndOffset = 0;
   *aText = nullptr;
 
-  HyperTextAccessibleBase* textAcc = TextAcc();
+  auto [textAcc, hr] = LocalTextAcc();
   if (!textAcc) {
-    return CO_E_OBJNOTCONNECTED;
+    return hr;
   }
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;

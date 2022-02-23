@@ -1,25 +1,24 @@
 Monty <monty@xiph.org>
 	- Original VP3 port
 
-Timothy B. Terriberry
-Gregory Maxwell
 Ralph Giles
+Timothy B. Terriberry
 Monty
 	- Ongoing development
-
+	
 Dan B. Miller
 	- Pre alpha3 development
-
+	
 Rudolf Marek
 Wim Tayman
 Dan Lenski
 Nils Pipenbrinck
 Monty
 	- MMX optimized functions
-
+	
 David Schleef
 	- C64x port
-
+	
 Aaron Colwell
 Thomas Vander Stichele
 Jan Gerber
@@ -27,9 +26,8 @@ Conrad Parker
 Cristian Adam
 Sebastian Pippin
 Simon Hosie
-Brad Smith
 	- Bug fixes, enhancements, build systems.
-
+	
 Mauricio Piacentini
 	- Original win32 projects and example ports
 	- VP3->Theora transcoder

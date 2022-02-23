@@ -4958,15 +4958,11 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
 
 #ifdef ENABLE_WASM_SIMD
 MDefinition* MWasmTernarySimd128::foldsTo(TempAllocator& alloc) {
-  if (simdOp() == wasm::SimdOp::V128Bitselect) {
-    if (v2()->op() == MDefinition::Opcode::WasmFloatConstant) {
-      int8_t shuffle[16];
-      if (specializeBitselectConstantMaskAsShuffle(shuffle)) {
-        return BuildWasmShuffleSimd128(alloc, shuffle, v0(), v1());
-      }
-    } else if (canRelaxBitselect()) {
-      return MWasmTernarySimd128::New(alloc, v0(), v1(), v2(),
-                                      wasm::SimdOp::I8x16LaneSelect);
+  if (simdOp() == wasm::SimdOp::V128Bitselect &&
+      v2()->op() == MDefinition::Opcode::WasmFloatConstant) {
+    int8_t shuffle[16];
+    if (specializeBitselectConstantMaskAsShuffle(shuffle)) {
+      return BuildWasmShuffleSimd128(alloc, shuffle, v0(), v1());
     }
   }
   return this;
@@ -5241,14 +5237,13 @@ void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
 #endif
 
 MDefinition* MGuardFunctionScript::foldsTo(TempAllocator& alloc) {
-  MDefinition* in = input();
-  if (in->isLambda() &&
-      in->toLambda()->templateFunction()->baseScript() == expected()) {
-    return in;
+  if (input()->isLambda() &&
+      input()->toLambda()->info().baseScript == expected()) {
+    return input();
   }
-  if (in->isLambdaArrow() &&
-      in->toLambdaArrow()->templateFunction()->baseScript() == expected()) {
-    return in;
+  if (input()->isLambdaArrow() &&
+      input()->toLambdaArrow()->info().baseScript == expected()) {
+    return input();
   }
   return this;
 }

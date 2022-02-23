@@ -15,7 +15,8 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
     add_task(async function iterate_dir_failure() {
-      let notExists = PathUtils.join(PathUtils.tempDir, 'does_not_exist_dir.tmp.d');
+      const tmpDir = await PathUtils.getTempDir();
+      let notExists = PathUtils.join(tmpDir, 'does_not_exist_dir.tmp.d');
 
       await Assert.rejects(
         IOUtils.getChildren(notExists),
@@ -26,7 +27,7 @@
 
       info('Try to get the children of a regular file');
 
-      let tmpFileName = PathUtils.join(PathUtils.tempDir, 'iterator_file.tmp');
+      let tmpFileName = PathUtils.join(tmpDir, 'iterator_file.tmp');
       await createFile(tmpFileName)
       await Assert.rejects(IOUtils.getChildren(tmpFileName),
         /Could not get children of file\(.*\) because it is not a directory/,
@@ -39,7 +40,8 @@
     add_task(async function iterate_dir() {
       info('Try to get the children of a multi-level directory hierarchy');
 
-      let root = PathUtils.join(PathUtils.tempDir, 'iterator.tmp.d');
+      const tmpDir = await PathUtils.getTempDir();
+      let root = PathUtils.join(tmpDir, 'iterator.tmp.d');
       let child1 = PathUtils.join(root, 'child1.tmp');
       let child2 = PathUtils.join(root, 'child2.tmp');
       let grandchild = PathUtils.join(child1, 'grandchild.tmp');
@@ -58,7 +60,8 @@
     add_task(async function iterate_empty_dir() {
       info('Try to get the children of an empty directory');
 
-      let emptyDir = PathUtils.join(PathUtils.tempDir, 'iterator_empty_dir.tmp.d');
+      const tmpDir = await PathUtils.getTempDir();
+      let emptyDir = PathUtils.join(tmpDir, 'iterator_empty_dir.tmp.d');
       await createDir(emptyDir);
 
       is(
@@ -73,7 +76,8 @@
     add_task(async function iterate_ignore_missing_dir() {
       info("Try to get the children of a missing file with ignoreAbsent");
 
-      const notExists = PathUtils.join(PathUtils.tempDir, "does_not_exist_dir.tmp.d");
+      const tmpDir = await PathUtils.getTempDir();
+      const notExists = PathUtils.join(tmpDir, "does_not_exist_dir.tmp.d");
 
       is(
         (await IOUtils.getChildren(notExists, { ignoreAbsent: true })).length,

@@ -84,7 +84,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
-  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
@@ -270,7 +269,6 @@ let JSWINDOWACTORS = {
       "about:pocket-saved*",
       "about:pocket-signup*",
       "about:pocket-home*",
-      "about:pocket-style-guide*",
     ],
   },
 
@@ -394,30 +392,10 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/ClickHandlerChild.jsm",
       events: {
-        chromelinkclick: { capture: true, mozSystemGroup: true },
+        click: { capture: true, mozSystemGroup: true, wantUntrusted: true },
+        auxclick: { capture: true, mozSystemGroup: true, wantUntrusted: true },
       },
     },
-
-    allFrames: true,
-  },
-
-  /* Note: this uses the same JSMs as ClickHandler, but because it
-   * relies on "normal" click events anywhere on the page (not just
-   * links) and is expensive, and only does something for the
-   * small group of people who have the feature enabled, it is its
-   * own actor which is only registered if the pref is enabled.
-   */
-  MiddleMousePasteHandler: {
-    parent: {
-      moduleURI: "resource:///actors/ClickHandlerParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/ClickHandlerChild.jsm",
-      events: {
-        auxclick: { capture: true, mozSystemGroup: true },
-      },
-    },
-    enablePreference: "middlemouse.contentLoadURL",
 
     allFrames: true,
   },
@@ -667,9 +645,6 @@ let JSWINDOWACTORS = {
   },
 
   ScreenshotsComponent: {
-    parent: {
-      moduleURI: "resource:///modules/ScreenshotsUtils.jsm",
-    },
     child: {
       moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
     },
@@ -719,12 +694,7 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: [
-      "about:home*",
-      "about:newtab*",
-      "about:welcome*",
-      "about:privatebrowsing",
-    ],
+    matches: ["about:home*", "about:newtab*", "about:welcome*"],
     remoteTypes: ["privilegedabout"],
   },
 
@@ -1683,8 +1653,6 @@ BrowserGlue.prototype = {
 
     DoHController.init();
 
-    SnapshotMonitor.init();
-
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
 
@@ -2273,23 +2241,6 @@ BrowserGlue.prototype = {
     _checkGPCPref();
   },
 
-  _monitorPrivacySegmentationPref() {
-    const PREF_ENABLED = "browser.privacySegmentation.enabled";
-    const EVENT_CATEGORY = "privacy_segmentation";
-
-    let checkPrivacySegmentationPref = () => {
-      let isEnabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
-      Services.telemetry.recordEvent(
-        EVENT_CATEGORY,
-        isEnabled ? "enable" : "disable",
-        "pref"
-      );
-    };
-
-    Services.telemetry.setEventRecordingEnabled(EVENT_CATEGORY, true);
-    Services.prefs.addObserver(PREF_ENABLED, checkPrivacySegmentationPref);
-  },
-
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -2370,7 +2321,6 @@ BrowserGlue.prototype = {
       this._monitorTranslationsPref();
     }
     this._monitorGPCPref();
-    this._monitorPrivacySegmentationPref();
   },
 
   /**
@@ -2760,12 +2710,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      {
-        task: () => {
-          this._collectTelemetryPiPEnabled();
-        },
-      },
-
       // WebDriver components (Remote Agent and Marionette) need to be
       // initialized as very last step.
       {
@@ -2828,7 +2772,7 @@ BrowserGlue.prototype = {
   _scheduleBestEffortUserIdleTasks() {
     const idleTasks = [
       () => {
-        // Telemetry for primary-password - we do this after a delay as it
+        // Telemetry for master-password - we do this after a delay as it
         // can cause IO if NSS/PSM has not already initialized.
         let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
           Ci.nsIPK11TokenDB
@@ -3231,9 +3175,8 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         let bookmarksUrl = null;
         if (restoreDefaultBookmarks) {
-          // User wants to restore the default set of bookmarks shipped with the
-          // browser, those that new profiles start with.
-          bookmarksUrl = "chrome://browser/content/default-bookmarks.html";
+          // User wants to restore bookmarks.html file from default profile folder
+          bookmarksUrl = "chrome://browser/locale/bookmarks.html";
         } else if (await IOUtils.exists(BookmarkHTMLUtils.defaultPath)) {
           bookmarksUrl = PathUtils.toFileURI(BookmarkHTMLUtils.defaultPath);
         }
@@ -3404,7 +3347,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 124;
+    const UI_VERSION = 122;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4123,45 +4066,6 @@ BrowserGlue.prototype = {
       } catch (ex) {}
     }
 
-    // Bug 1745248: Due to multiple backouts, do not use UI Version 123
-    // as this version is most likely set for the Nightly channel
-
-    if (currentUIVersion < 124) {
-      // Migrate "extensions.formautofill.available" and
-      // "extensions.formautofill.creditCards.available" from old to new prefs
-      const oldFormAutofillModule = "extensions.formautofill.available";
-      const oldCreditCardsAvailable =
-        "extensions.formautofill.creditCards.available";
-      const newCreditCardsAvailable =
-        "extensions.formautofill.creditCards.supported";
-      const newAddressesAvailable =
-        "extensions.formautofill.addresses.supported";
-      if (Services.prefs.prefHasUserValue(oldFormAutofillModule)) {
-        let moduleAvailability = Services.prefs.getCharPref(
-          oldFormAutofillModule
-        );
-        if (moduleAvailability == "on") {
-          Services.prefs.setCharPref(newAddressesAvailable, moduleAvailability);
-          Services.prefs.setCharPref(
-            newCreditCardsAvailable,
-            Services.prefs.getBoolPref(oldCreditCardsAvailable) ? "on" : "off"
-          );
-        }
-
-        if (moduleAvailability == "off") {
-          Services.prefs.setCharPref(
-            newCreditCardsAvailable,
-            moduleAvailability
-          );
-          Services.prefs.setCharPref(newAddressesAvailable, moduleAvailability);
-        }
-      }
-
-      // after migrating, clear old prefs so we can remove them later.
-      Services.prefs.clearUserPref(oldFormAutofillModule);
-      Services.prefs.clearUserPref(oldCreditCardsAvailable);
-    }
-
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -4652,42 +4556,6 @@ BrowserGlue.prototype = {
       badge?.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
-  },
-
-  _collectTelemetryPiPEnabled() {
-    Services.telemetry.setEventRecordingEnabled(
-      "pictureinpicture.settings",
-      true
-    );
-    Services.telemetry.setEventRecordingEnabled("pictureinpicture", true);
-
-    const TOGGLE_ENABLED_PREF =
-      "media.videocontrols.picture-in-picture.video-toggle.enabled";
-
-    const observe = (subject, topic, data) => {
-      const enabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF, false);
-      Services.telemetry.scalarSet("pictureinpicture.toggle_enabled", enabled);
-
-      // Record events when preferences change
-      if (topic === "nsPref:changed") {
-        if (enabled) {
-          Services.telemetry.recordEvent(
-            "pictureinpicture.settings",
-            "enable",
-            "player"
-          );
-        } else {
-          Services.telemetry.recordEvent(
-            "pictureinpicture.settings",
-            "disable",
-            "player"
-          );
-        }
-      }
-    };
-
-    Services.prefs.addObserver(TOGGLE_ENABLED_PREF, observe);
-    observe();
   },
 
   QueryInterface: ChromeUtils.generateQI([

@@ -1,4 +1,5 @@
-// META: script=resources/support.sub.js
+// META: script=resources/support.js
+// META: script=resources/ports.sub.js
 //
 // Spec: https://wicg.github.io/private-network-access/#integration-fetch
 //
@@ -13,28 +14,50 @@ setup(() => {
 });
 
 promise_test(t => websocketTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
-  target: { server: Server.WSS_LOCAL },
-  expected: WebsocketTestResult.SUCCESS,
+  source: {
+    protocol: "https:",
+    port: kPorts.httpsLocal,
+  },
+  target: {
+    protocol: "wss:",
+    port: kPorts.wssLocal,
+  },
+  expected: kWebsocketTestResult.success,
 }), "local to local: websocket success.");
 
 promise_test(t => websocketTest(t, {
-  source: { server: Server.HTTPS_PRIVATE },
-  target: { server: Server.WSS_LOCAL },
-  expected: WebsocketTestResult.SUCCESS,
+  source: {
+    protocol: "https:",
+    port: kPorts.httpsPrivate,
+  },
+  target: {
+    protocol: "wss:",
+    port: kPorts.wssLocal,
+  },
+  expected: kWebsocketTestResult.success,
 }), "private to local: websocket success.");
 
 promise_test(t => websocketTest(t, {
-  source: { server: Server.HTTPS_PUBLIC },
-  target: { server: Server.WSS_LOCAL },
-  expected: WebsocketTestResult.SUCCESS,
+  source: {
+    protocol: "https:",
+    port: kPorts.httpsPublic,
+  },
+  target: {
+    protocol: "wss:",
+    port: kPorts.wssLocal,
+  },
+  expected: kWebsocketTestResult.success,
 }), "public to local: websocket success.");
 
 promise_test(t => websocketTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    protocol: "https:",
+    port: kPorts.httpsLocal,
+    treatAsPublicAddress: true,
   },
-  target: { server: Server.WSS_LOCAL },
-  expected: WebsocketTestResult.SUCCESS,
+  target: {
+    protocol: "wss:",
+    port: kPorts.wssLocal,
+  },
+  expected: kWebsocketTestResult.success,
 }), "treat-as-public to local: websocket success.");

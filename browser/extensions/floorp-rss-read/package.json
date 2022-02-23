@@ -1,0 +1,21 @@
+{
+  "name": "Livemarks",
+  "private": true,
+  "description": "This package file is for setup of ESLint only for editor integration.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XhmikosR/livemarks.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "7.20.0",
+    "eslint-plugin-html": "6.1.1",
+    "eslint-plugin-mozilla": "2.9.2",
+    "eslint-plugin-no-unsanitized": "3.1.4"
+  },
+  "scripts": {
+    "lint": "eslint \"**/*.js\"",
+    "lint-fix": "npm run lint -- --fix"
+  }
+}

@@ -125,11 +125,7 @@ async function testNavigation() {
 
   info("Navigate backward to test bfcache navigation");
   gBrowser.goBack();
-  await waitUntil(
-    () =>
-      isInTree(doc, ["cookies", "https://example.net"]) &&
-      isInTree(doc, ["cookies", "https://example.org"])
-  );
+  await waitUntil(() => isInTree(doc, ["cookies", "https://example.net"]));
 
   ok(
     !isInTree(doc, ["cookies", "https://example.com"]),

@@ -48,7 +48,8 @@ const ClearFlags = [
   [
     // DOM_STORAGES
     1 << 4,
-    Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
+    Ci.nsIClearDataService.CLEAR_APPCACHE |
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
       Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
       Ci.nsIClearDataService.CLEAR_REPORTS,
   ],
@@ -68,15 +69,12 @@ const ClearFlags = [
     1 << 7,
     Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
       Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-      // former a part of SECURITY_SETTINGS_CLEANER
-      Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE,
+      Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
   ],
   [
     // SITE_DATA
     1 << 8,
     Ci.nsIClearDataService.CLEAR_EME,
-    // former a part of SECURITY_SETTINGS_CLEANER
-    Ci.nsIClearDataService.CLEAR_HSTS,
   ],
   [
     // ALL

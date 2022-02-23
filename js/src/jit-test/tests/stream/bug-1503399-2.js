@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 // Don't assert if the wrapper that's the value of reader.[[stream]] gets nuked.
 
 load(libdir + "asserts.js");

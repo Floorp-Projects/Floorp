@@ -143,10 +143,6 @@ void LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot) {
   }
 }
 
-// All these methods assert `!mAllowedToClose` because they shoudn't be called
-// if the database is being closed. Callers should first check the state by
-// calling `IsAlloweToClose` and eventually obtain a new database.
-
 nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
@@ -290,7 +286,10 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
-  MOZ_ASSERT(!mSnapshot);
+
+  if (mSnapshot) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
 
   nsresult rv = EnsureSnapshot(aObject, VoidString(), /* aExplicit */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -300,11 +299,16 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   return NS_OK;
 }
 
-nsresult LSDatabase::EndExplicitSnapshot() {
+nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
-  MOZ_ASSERT(mSnapshot);
+
+  if (!mSnapshot) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   MOZ_ASSERT(mSnapshot->Explicit());
 
   nsresult rv = mSnapshot->End();
@@ -313,23 +317,6 @@ nsresult LSDatabase::EndExplicitSnapshot() {
   }
 
   return NS_OK;
-}
-
-bool LSDatabase::HasSnapshot() const {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-
-  return !!mSnapshot;
-}
-
-int64_t LSDatabase::GetSnapshotUsage() const {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(!mAllowedToClose);
-  MOZ_ASSERT(mSnapshot);
-
-  return mSnapshot->GetUsage();
 }
 
 nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
@@ -351,7 +338,8 @@ nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
   bool ok = mActor->SendPBackgroundLSSnapshotConstructor(
       actor, aObject->DocumentURI(), nsString(aKey),
       /* increasePeakUsage */ true,
-      /* minSize */ 0, &initInfo);
+      /* requestedSize */ 131072,
+      /* minSize */ 4096, &initInfo);
   if (NS_WARN_IF(!ok)) {
     return NS_ERROR_FAILURE;
   }

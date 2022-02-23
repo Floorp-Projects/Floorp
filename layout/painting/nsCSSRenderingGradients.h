@@ -7,14 +7,11 @@
 #ifndef nsCSSRenderingGradients_h__
 #define nsCSSRenderingGradients_h__
 
-#include "gfxRect.h"
 #include "nsStyleStruct.h"
 #include "Units.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/webrender/webrender_ffi.h"
-
-class gfxPattern;
 
 namespace mozilla {
 

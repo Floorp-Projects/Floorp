@@ -777,11 +777,6 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     nsCOMPtr<nsIWidget> viewWidget = aView->GetWidget();
     viewWidget->SetTransparencyMode(mode);
     windowWidget->SetWindowShadowStyle(shadow);
-
-    // For macOS, apply color scheme overrides to the top level window widget.
-    if (auto scheme = aPresContext->GetOverriddenColorScheme()) {
-      windowWidget->SetColorScheme(scheme);
-    }
   }
 
   if (!aRC) return;

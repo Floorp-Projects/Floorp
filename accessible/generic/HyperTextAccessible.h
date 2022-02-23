@@ -50,6 +50,7 @@ class HyperTextAccessible : public AccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HyperTextAccessible, AccessibleWrap)
 
   // LocalAccessible
+  virtual nsAtom* LandmarkRole() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -145,18 +146,20 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
 
-  virtual void TextBeforeOffset(int32_t aOffset,
-                                AccessibleTextBoundary aBoundaryType,
-                                int32_t* aStartOffset, int32_t* aEndOffset,
-                                nsAString& aText) override;
+  /**
+   * Return text before/at/after the given offset corresponding to
+   * the boundary type.
+   */
+  void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                        int32_t* aStartOffset, int32_t* aEndOffset,
+                        nsAString& aText);
   virtual void TextAtOffset(int32_t aOffset,
                             AccessibleTextBoundary aBoundaryType,
                             int32_t* aStartOffset, int32_t* aEndOffset,
                             nsAString& aText) override;
-  virtual void TextAfterOffset(int32_t aOffset,
-                               AccessibleTextBoundary aBoundaryType,
-                               int32_t* aStartOffset, int32_t* aEndOffset,
-                               nsAString& aText) override;
+  void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       int32_t* aStartOffset, int32_t* aEndOffset,
+                       nsAString& aText);
 
   virtual already_AddRefed<AccAttributes> TextAttributes(
       bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
@@ -181,19 +184,18 @@ class HyperTextAccessible : public AccessibleWrap,
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
   /**
-   * Return a rect (in dev pixels) of the given text range relative given
-   * coordinate system.
+   * Return a rect of the given text range relative given coordinate system.
    */
-  LayoutDeviceIntRect TextBounds(
+  nsIntRect TextBounds(
       int32_t aStartOffset, int32_t aEndOffset,
       uint32_t aCoordType =
           nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
   /**
-   * Return a rect (in dev pixels) for character at given offset relative given
-   * coordinate system.
+   * Return a rect for character at given offset relative given coordinate
+   * system.
    */
-  LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) {
+  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) {
     int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount())
                             ? aOffset
                             : aOffset + 1;
@@ -392,13 +394,11 @@ class HyperTextAccessible : public AccessibleWrap,
                       EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
-   * Return the boundaries (in dev pixels) of the substring in case of textual
-   * frame or frame boundaries in case of non textual frame, offsets are
-   * ignored.
+   * Return the boundaries of the substring in case of textual frame or
+   * frame boundaries in case of non textual frame, offsets are ignored.
    */
-  LayoutDeviceIntRect GetBoundsInFrame(nsIFrame* aFrame,
-                                       uint32_t aStartRenderedOffset,
-                                       uint32_t aEndRenderedOffset);
+  nsIntRect GetBoundsInFrame(nsIFrame* aFrame, uint32_t aStartRenderedOffset,
+                             uint32_t aEndRenderedOffset);
 
   // Selection helpers
 

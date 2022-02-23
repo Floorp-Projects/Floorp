@@ -10,16 +10,15 @@
 //! (Unicode Technical Standard #46)](http://www.unicode.org/reports/tr46/)
 
 use self::Mapping::*;
-use crate::punycode;
+use punycode;
 use std::cmp::Ordering::{Equal, Greater, Less};
-use std::{error::Error as StdError, fmt};
 use unicode_bidi::{bidi_class, BidiClass};
 use unicode_normalization::char::is_combining_mark;
-use unicode_normalization::{is_nfc, UnicodeNormalization};
+use unicode_normalization::UnicodeNormalization;
 
 include!("uts46_mapping_table.rs");
 
-const PUNYCODE_PREFIX: &str = "xn--";
+const PUNYCODE_PREFIX: &'static str = "xn--";
 
 #[derive(Debug)]
 struct StringTableSlice {
@@ -82,65 +81,33 @@ fn find_char(codepoint: char) -> &'static Mapping {
         .unwrap()
 }
 
-struct Mapper<'a> {
-    chars: std::str::Chars<'a>,
-    config: Config,
-    errors: &'a mut Errors,
-    slice: Option<std::str::Chars<'static>>,
-}
-
-impl<'a> Iterator for Mapper<'a> {
-    type Item = char;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(s) = &mut self.slice {
-                match s.next() {
-                    Some(c) => return Some(c),
-                    None => {
-                        self.slice = None;
-                    }
-                }
+fn map_char(codepoint: char, config: Config, output: &mut String, errors: &mut Vec<Error>) {
+    match *find_char(codepoint) {
+        Mapping::Valid => output.push(codepoint),
+        Mapping::Ignored => {}
+        Mapping::Mapped(ref slice) => output.push_str(decode_slice(slice)),
+        Mapping::Deviation(ref slice) => {
+            if config.transitional_processing {
+                output.push_str(decode_slice(slice))
+            } else {
+                output.push(codepoint)
             }
-
-            let codepoint = self.chars.next()?;
-            if let '.' | '-' | 'a'..='z' | '0'..='9' = codepoint {
-                return Some(codepoint);
+        }
+        Mapping::Disallowed => {
+            errors.push(Error::DissallowedCharacter);
+            output.push(codepoint);
+        }
+        Mapping::DisallowedStd3Valid => {
+            if config.use_std3_ascii_rules {
+                errors.push(Error::DissallowedByStd3AsciiRules);
             }
-
-            return Some(match *find_char(codepoint) {
-                Mapping::Valid => codepoint,
-                Mapping::Ignored => continue,
-                Mapping::Mapped(ref slice) => {
-                    self.slice = Some(decode_slice(slice).chars());
-                    continue;
-                }
-                Mapping::Deviation(ref slice) => {
-                    if self.config.transitional_processing {
-                        self.slice = Some(decode_slice(slice).chars());
-                        continue;
-                    } else {
-                        codepoint
-                    }
-                }
-                Mapping::Disallowed => {
-                    self.errors.disallowed_character = true;
-                    codepoint
-                }
-                Mapping::DisallowedStd3Valid => {
-                    if self.config.use_std3_ascii_rules {
-                        self.errors.disallowed_by_std3_ascii_rules = true;
-                    };
-                    codepoint
-                }
-                Mapping::DisallowedStd3Mapped(ref slice) => {
-                    if self.config.use_std3_ascii_rules {
-                        self.errors.disallowed_mapped_in_std3 = true;
-                    };
-                    self.slice = Some(decode_slice(slice).chars());
-                    continue;
-                }
-            });
+            output.push(codepoint)
+        }
+        Mapping::DisallowedStd3Mapped(ref slice) => {
+            if config.use_std3_ascii_rules {
+                errors.push(Error::DissallowedMappedInStd3);
+            }
+            output.push_str(decode_slice(slice))
         }
     }
 }
@@ -163,19 +130,26 @@ fn passes_bidi(label: &str, is_bidi_domain: bool) -> bool {
         // LTR label
         BidiClass::L => {
             // Rule 5
-            while let Some(c) = chars.next() {
-                if !matches!(
-                    bidi_class(c),
-                    BidiClass::L
-                        | BidiClass::EN
-                        | BidiClass::ES
-                        | BidiClass::CS
-                        | BidiClass::ET
-                        | BidiClass::ON
-                        | BidiClass::BN
-                        | BidiClass::NSM
-                ) {
-                    return false;
+            loop {
+                match chars.next() {
+                    Some(c) => {
+                        if !matches!(
+                            bidi_class(c),
+                            BidiClass::L
+                                | BidiClass::EN
+                                | BidiClass::ES
+                                | BidiClass::CS
+                                | BidiClass::ET
+                                | BidiClass::ON
+                                | BidiClass::BN
+                                | BidiClass::NSM
+                        ) {
+                            return false;
+                        }
+                    }
+                    None => {
+                        break;
+                    }
                 }
             }
 
@@ -209,28 +183,37 @@ fn passes_bidi(label: &str, is_bidi_domain: bool) -> bool {
             let mut found_an = false;
 
             // Rule 2
-            for c in chars {
-                let char_class = bidi_class(c);
-                if char_class == BidiClass::EN {
-                    found_en = true;
-                } else if char_class == BidiClass::AN {
-                    found_an = true;
-                }
+            loop {
+                match chars.next() {
+                    Some(c) => {
+                        let char_class = bidi_class(c);
 
-                if !matches!(
-                    char_class,
-                    BidiClass::R
-                        | BidiClass::AL
-                        | BidiClass::AN
-                        | BidiClass::EN
-                        | BidiClass::ES
-                        | BidiClass::CS
-                        | BidiClass::ET
-                        | BidiClass::ON
-                        | BidiClass::BN
-                        | BidiClass::NSM
-                ) {
-                    return false;
+                        if char_class == BidiClass::EN {
+                            found_en = true;
+                        }
+                        if char_class == BidiClass::AN {
+                            found_an = true;
+                        }
+
+                        if !matches!(
+                            char_class,
+                            BidiClass::R
+                                | BidiClass::AL
+                                | BidiClass::AN
+                                | BidiClass::EN
+                                | BidiClass::ES
+                                | BidiClass::CS
+                                | BidiClass::ET
+                                | BidiClass::ON
+                                | BidiClass::BN
+                                | BidiClass::NSM
+                        ) {
+                            return false;
+                        }
+                    }
+                    None => {
+                        break;
+                    }
                 }
             }
             // Rule 3
@@ -271,21 +254,24 @@ fn passes_bidi(label: &str, is_bidi_domain: bool) -> bool {
         }
     }
 
-    true
+    return true;
 }
 
-/// Check the validity criteria for the given label
-///
-/// V1 (NFC) and V8 (Bidi) are checked inside `processing()` to prevent doing duplicate work.
-///
 /// http://www.unicode.org/reports/tr46/#Validity_Criteria
-fn check_validity(label: &str, config: Config, errors: &mut Errors) {
+fn validate_full(label: &str, is_bidi_domain: bool, config: Config, errors: &mut Vec<Error>) {
+    // V1: Must be in NFC form.
+    if label.nfc().ne(label.chars()) {
+        errors.push(Error::ValidityCriteria);
+    } else {
+        validate(label, is_bidi_domain, config, errors);
+    }
+}
+
+fn validate(label: &str, is_bidi_domain: bool, config: Config, errors: &mut Vec<Error>) {
     let first_char = label.chars().next();
     if first_char == None {
         // Empty string, pass
-        return;
     }
-
     // V2: No U+002D HYPHEN-MINUS in both third and fourth positions.
     //
     // NOTE: Spec says that the label must not contain a HYPHEN-MINUS character in both the
@@ -293,215 +279,96 @@ fn check_validity(label: &str, config: Config, errors: &mut Errors) {
     // https://github.com/whatwg/url/issues/53
 
     // V3: neither begin nor end with a U+002D HYPHEN-MINUS
-    if config.check_hyphens && (label.starts_with('-') || label.ends_with('-')) {
-        errors.check_hyphens = true;
-        return;
+    else if config.check_hyphens && (label.starts_with("-") || label.ends_with("-")) {
+        errors.push(Error::ValidityCriteria);
     }
-
     // V4: not contain a U+002E FULL STOP
     //
     // Here, label can't contain '.' since the input is from .split('.')
 
     // V5: not begin with a GC=Mark
-    if is_combining_mark(first_char.unwrap()) {
-        errors.start_combining_mark = true;
-        return;
+    else if is_combining_mark(first_char.unwrap()) {
+        errors.push(Error::ValidityCriteria);
     }
-
     // V6: Check against Mapping Table
-    if label.chars().any(|c| match *find_char(c) {
+    else if label.chars().any(|c| match *find_char(c) {
         Mapping::Valid => false,
         Mapping::Deviation(_) => config.transitional_processing,
         Mapping::DisallowedStd3Valid => config.use_std3_ascii_rules,
         _ => true,
     }) {
-        errors.invalid_mapping = true;
-        return;
+        errors.push(Error::ValidityCriteria);
     }
-
     // V7: ContextJ rules
     //
     // TODO: Implement rules and add *CheckJoiners* flag.
 
-    // V8: Bidi rules are checked inside `processing()`
+    // V8: Bidi rules
+    //
+    // TODO: Add *CheckBidi* flag
+    else if !passes_bidi(label, is_bidi_domain) {
+        errors.push(Error::ValidityCriteria);
+    }
 }
 
 /// http://www.unicode.org/reports/tr46/#Processing
-#[allow(clippy::manual_strip)] // introduced in 1.45, MSRV is 1.36
-fn processing(
-    domain: &str,
-    config: Config,
-    normalized: &mut String,
-    output: &mut String,
-) -> Errors {
-    // Weed out the simple cases: only allow all lowercase ASCII characters and digits where none
-    // of the labels start with PUNYCODE_PREFIX and labels don't start or end with hyphen.
-    let (mut prev, mut simple, mut puny_prefix) = ('?', !domain.is_empty(), 0);
+fn processing(domain: &str, config: Config, errors: &mut Vec<Error>) -> String {
+    let mut mapped = String::with_capacity(domain.len());
     for c in domain.chars() {
-        if c == '.' {
-            if prev == '-' {
-                simple = false;
-                break;
-            }
-            puny_prefix = 0;
-            continue;
-        } else if puny_prefix == 0 && c == '-' {
-            simple = false;
-            break;
-        } else if puny_prefix < 5 {
-            if c == ['x', 'n', '-', '-'][puny_prefix] {
-                puny_prefix += 1;
-                if puny_prefix == 4 {
-                    simple = false;
-                    break;
+        map_char(c, config, &mut mapped, errors)
+    }
+    let mut normalized = String::with_capacity(mapped.len());
+    normalized.extend(mapped.nfc());
+
+    // Find out if it's a Bidi Domain Name
+    //
+    // First, check for literal bidi chars
+    let mut is_bidi_domain = domain
+        .chars()
+        .any(|c| matches!(bidi_class(c), BidiClass::R | BidiClass::AL | BidiClass::AN));
+    if !is_bidi_domain {
+        // Then check for punycode-encoded bidi chars
+        for label in normalized.split('.') {
+            if label.starts_with(PUNYCODE_PREFIX) {
+                match punycode::decode_to_string(&label[PUNYCODE_PREFIX.len()..]) {
+                    Some(decoded_label) => {
+                        if decoded_label.chars().any(|c| {
+                            matches!(bidi_class(c), BidiClass::R | BidiClass::AL | BidiClass::AN)
+                        }) {
+                            is_bidi_domain = true;
+                        }
+                    }
+                    None => {
+                        is_bidi_domain = true;
+                    }
                 }
-            } else {
-                puny_prefix = 5;
             }
         }
-        if !c.is_ascii_lowercase() && !c.is_ascii_digit() {
-            simple = false;
-            break;
-        }
-        prev = c;
     }
 
-    if simple {
-        output.push_str(domain);
-        return Errors::default();
-    }
-
-    normalized.clear();
-    let mut errors = Errors::default();
-    let offset = output.len();
-
-    let iter = Mapper {
-        chars: domain.chars(),
-        config,
-        errors: &mut errors,
-        slice: None,
-    };
-
-    normalized.extend(iter.nfc());
-
-    let mut decoder = punycode::Decoder::default();
-    let non_transitional = config.transitional_processing(false);
-    let (mut first, mut has_bidi_labels) = (true, false);
+    let mut validated = String::new();
+    let mut first = true;
     for label in normalized.split('.') {
         if !first {
-            output.push('.');
+            validated.push('.');
         }
         first = false;
         if label.starts_with(PUNYCODE_PREFIX) {
-            match decoder.decode(&label[PUNYCODE_PREFIX.len()..]) {
-                Ok(decode) => {
-                    let start = output.len();
-                    output.extend(decode);
-                    let decoded_label = &output[start..];
-
-                    if !has_bidi_labels {
-                        has_bidi_labels |= is_bidi_domain(decoded_label);
-                    }
-
-                    if !errors.is_err() {
-                        if !is_nfc(&decoded_label) {
-                            errors.nfc = true;
-                        } else {
-                            check_validity(decoded_label, non_transitional, &mut errors);
-                        }
-                    }
+            match punycode::decode_to_string(&label[PUNYCODE_PREFIX.len()..]) {
+                Some(decoded_label) => {
+                    let config = config.transitional_processing(false);
+                    validate_full(&decoded_label, is_bidi_domain, config, errors);
+                    validated.push_str(&decoded_label)
                 }
-                Err(()) => {
-                    has_bidi_labels = true;
-                    errors.punycode = true;
-                }
+                None => errors.push(Error::PunycodeError),
             }
         } else {
-            if !has_bidi_labels {
-                has_bidi_labels |= is_bidi_domain(label);
-            }
-
             // `normalized` is already `NFC` so we can skip that check
-            check_validity(label, config, &mut errors);
-            output.push_str(label)
+            validate(label, is_bidi_domain, config, errors);
+            validated.push_str(label)
         }
     }
-
-    for label in output[offset..].split('.') {
-        // V8: Bidi rules
-        //
-        // TODO: Add *CheckBidi* flag
-        if !passes_bidi(label, has_bidi_labels) {
-            errors.check_bidi = true;
-            break;
-        }
-    }
-
-    errors
-}
-
-#[derive(Default)]
-pub struct Idna {
-    config: Config,
-    normalized: String,
-    output: String,
-}
-
-impl Idna {
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            normalized: String::new(),
-            output: String::new(),
-        }
-    }
-
-    /// http://www.unicode.org/reports/tr46/#ToASCII
-    #[allow(clippy::wrong_self_convention)]
-    pub fn to_ascii<'a>(&'a mut self, domain: &str, out: &mut String) -> Result<(), Errors> {
-        let mut errors = processing(domain, self.config, &mut self.normalized, &mut self.output);
-
-        let mut first = true;
-        for label in self.output.split('.') {
-            if !first {
-                out.push('.');
-            }
-            first = false;
-
-            if label.is_ascii() {
-                out.push_str(label);
-            } else {
-                let offset = out.len();
-                out.push_str(PUNYCODE_PREFIX);
-                if let Err(()) = punycode::encode_into(label.chars(), out) {
-                    errors.punycode = true;
-                    out.truncate(offset);
-                }
-            }
-        }
-
-        if self.config.verify_dns_length {
-            let domain = if out.ends_with('.') {
-                &out[..out.len() - 1]
-            } else {
-                &*out
-            };
-            if domain.is_empty() || domain.split('.').any(|label| label.is_empty()) {
-                errors.too_short_for_dns = true;
-            }
-            if domain.len() > 253 || domain.split('.').any(|label| label.len() > 63) {
-                errors.too_long_for_dns = true;
-            }
-        }
-
-        errors.into()
-    }
-
-    /// http://www.unicode.org/reports/tr46/#ToUnicode
-    #[allow(clippy::wrong_self_convention)]
-    pub fn to_unicode<'a>(&'a mut self, domain: &str, out: &mut String) -> Result<(), Errors> {
-        processing(domain, self.config, &mut self.normalized, out).into()
-    }
+    validated
 }
 
 #[derive(Clone, Copy)]
@@ -555,168 +422,74 @@ impl Config {
 
     /// http://www.unicode.org/reports/tr46/#ToASCII
     pub fn to_ascii(self, domain: &str) -> Result<String, Errors> {
+        let mut errors = Vec::new();
         let mut result = String::new();
-        let mut codec = Idna::new(self);
-        codec.to_ascii(domain, &mut result).map(|()| result)
+        let mut first = true;
+        for label in processing(domain, self, &mut errors).split('.') {
+            if !first {
+                result.push('.');
+            }
+            first = false;
+            if label.is_ascii() {
+                result.push_str(label);
+            } else {
+                match punycode::encode_str(label) {
+                    Some(x) => {
+                        result.push_str(PUNYCODE_PREFIX);
+                        result.push_str(&x);
+                    }
+                    None => errors.push(Error::PunycodeError),
+                }
+            }
+        }
+
+        if self.verify_dns_length {
+            let domain = if result.ends_with(".") {
+                &result[..result.len() - 1]
+            } else {
+                &*result
+            };
+            if domain.len() < 1 || domain.split('.').any(|label| label.len() < 1) {
+                errors.push(Error::TooShortForDns)
+            }
+            if domain.len() > 253 || domain.split('.').any(|label| label.len() > 63) {
+                errors.push(Error::TooLongForDns)
+            }
+        }
+        if errors.is_empty() {
+            Ok(result)
+        } else {
+            Err(Errors(errors))
+        }
     }
 
     /// http://www.unicode.org/reports/tr46/#ToUnicode
     pub fn to_unicode(self, domain: &str) -> (String, Result<(), Errors>) {
-        let mut codec = Idna::new(self);
-        let mut out = String::with_capacity(domain.len());
-        let result = codec.to_unicode(domain, &mut out);
-        (out, result)
+        let mut errors = Vec::new();
+        let domain = processing(domain, self, &mut errors);
+        let errors = if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(Errors(errors))
+        };
+        (domain, errors)
     }
 }
 
-fn is_bidi_domain(s: &str) -> bool {
-    for c in s.chars() {
-        if c.is_ascii_graphic() {
-            continue;
-        }
-        match bidi_class(c) {
-            BidiClass::R | BidiClass::AL | BidiClass::AN => return true,
-            _ => {}
-        }
-    }
-    false
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+enum Error {
+    PunycodeError,
+    ValidityCriteria,
+    DissallowedByStd3AsciiRules,
+    DissallowedMappedInStd3,
+    DissallowedCharacter,
+    TooLongForDns,
+    TooShortForDns,
 }
 
 /// Errors recorded during UTS #46 processing.
 ///
-/// This is opaque for now, indicating what types of errors have been encountered at least once.
+/// This is opaque for now, only indicating the presence of at least one error.
 /// More details may be exposed in the future.
-#[derive(Default)]
-pub struct Errors {
-    punycode: bool,
-    check_hyphens: bool,
-    check_bidi: bool,
-    start_combining_mark: bool,
-    invalid_mapping: bool,
-    nfc: bool,
-    disallowed_by_std3_ascii_rules: bool,
-    disallowed_mapped_in_std3: bool,
-    disallowed_character: bool,
-    too_long_for_dns: bool,
-    too_short_for_dns: bool,
-}
-
-impl Errors {
-    fn is_err(&self) -> bool {
-        let Errors {
-            punycode,
-            check_hyphens,
-            check_bidi,
-            start_combining_mark,
-            invalid_mapping,
-            nfc,
-            disallowed_by_std3_ascii_rules,
-            disallowed_mapped_in_std3,
-            disallowed_character,
-            too_long_for_dns,
-            too_short_for_dns,
-        } = *self;
-        punycode
-            || check_hyphens
-            || check_bidi
-            || start_combining_mark
-            || invalid_mapping
-            || nfc
-            || disallowed_by_std3_ascii_rules
-            || disallowed_mapped_in_std3
-            || disallowed_character
-            || too_long_for_dns
-            || too_short_for_dns
-    }
-}
-
-impl fmt::Debug for Errors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Errors {
-            punycode,
-            check_hyphens,
-            check_bidi,
-            start_combining_mark,
-            invalid_mapping,
-            nfc,
-            disallowed_by_std3_ascii_rules,
-            disallowed_mapped_in_std3,
-            disallowed_character,
-            too_long_for_dns,
-            too_short_for_dns,
-        } = *self;
-
-        let fields = [
-            ("punycode", punycode),
-            ("check_hyphens", check_hyphens),
-            ("check_bidi", check_bidi),
-            ("start_combining_mark", start_combining_mark),
-            ("invalid_mapping", invalid_mapping),
-            ("nfc", nfc),
-            (
-                "disallowed_by_std3_ascii_rules",
-                disallowed_by_std3_ascii_rules,
-            ),
-            ("disallowed_mapped_in_std3", disallowed_mapped_in_std3),
-            ("disallowed_character", disallowed_character),
-            ("too_long_for_dns", too_long_for_dns),
-            ("too_short_for_dns", too_short_for_dns),
-        ];
-
-        let mut empty = true;
-        f.write_str("Errors { ")?;
-        for (name, val) in &fields {
-            if *val {
-                if !empty {
-                    f.write_str(", ")?;
-                }
-                f.write_str(*name)?;
-                empty = false;
-            }
-        }
-
-        if !empty {
-            f.write_str(" }")
-        } else {
-            f.write_str("}")
-        }
-    }
-}
-
-impl From<Errors> for Result<(), Errors> {
-    fn from(e: Errors) -> Result<(), Errors> {
-        if !e.is_err() {
-            Ok(())
-        } else {
-            Err(e)
-        }
-    }
-}
-
-impl StdError for Errors {}
-
-impl fmt::Display for Errors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{find_char, Mapping};
-
-    #[test]
-    fn mapping_fast_path() {
-        assert_matches!(find_char('-'), &Mapping::Valid);
-        assert_matches!(find_char('.'), &Mapping::Valid);
-        for c in &['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] {
-            assert_matches!(find_char(*c), &Mapping::Valid);
-        }
-        for c in &[
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        ] {
-            assert_matches!(find_char(*c), &Mapping::Valid);
-        }
-    }
-}
+#[derive(Debug)]
+pub struct Errors(Vec<Error>);

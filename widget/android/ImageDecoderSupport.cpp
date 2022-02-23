@@ -15,8 +15,6 @@
 #include "mozilla/java/ImageWrappers.h"
 #include "nsNetUtil.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace widget {
 

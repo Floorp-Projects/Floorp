@@ -9,7 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsLayoutUtils.h"
-#include "Theme.h"
+#include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
 
 using mozilla::gfx::sRGBColor;
@@ -59,13 +59,15 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarTrackColor(
     return ScrollbarDrawingWin::ComputeScrollbarTrackColor(
         aFrame, aStyle, aDocumentState, aColors);
   }
+  if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
+    return sRGBColor::FromU8(23, 23, 23, 255);
+  }
   const nsStyleUI* ui = aStyle.StyleUI();
   if (ui->mScrollbarColor.IsColors()) {
     return sRGBColor::FromABGR(
         ui->mScrollbarColor.AsColors().track.CalcColor(aStyle));
   }
-  return aColors.IsDark() ? sRGBColor::FromU8(23, 23, 23, 255)
-                          : sRGBColor::FromU8(240, 240, 240, 255);
+  return sRGBColor::FromU8(240, 240, 240, 255);
 }
 
 sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
@@ -77,12 +79,14 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
         aFrame, aStyle, aElementState, aDocumentState, aColors);
   }
   const nscolor baseColor = [&] {
+    if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
+      return NS_RGBA(149, 149, 149, 255);
+    }
     const nsStyleUI* ui = aStyle.StyleUI();
     if (ui->mScrollbarColor.IsColors()) {
       return ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle);
     }
-    return aColors.IsDark() ? NS_RGBA(149, 149, 149, 255)
-                            : NS_RGBA(133, 133, 133, 255);
+    return NS_RGBA(133, 133, 133, 255);
   }();
   EventStates state = aElementState;
   if (!IsScrollbarWidthThin(aStyle)) {

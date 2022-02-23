@@ -51,6 +51,13 @@ add_task(async function test_paramSubstitution() {
   check("{startPage}", "1");
   check("{startPage?}", "");
 
+  check("{moz:distributionID}", "");
+  Services.prefs.setCharPref("browser.search.distributionID", "xpcshell");
+  check("{moz:distributionID}", "xpcshell");
+  Services.prefs.setBoolPref("browser.search.official", true);
+  check("{moz:official}", "official");
+  Services.prefs.setBoolPref("browser.search.official", false);
+  check("{moz:official}", "unofficial");
   check("{moz:locale}", Services.locale.requestedLocale);
 
   url.template = prefix + "{moz:date}";
@@ -88,6 +95,8 @@ add_task(async function test_mozParamsFailForNonAppProvided() {
   let check = checkSubstitution.bind(this, url, prefix, engine);
 
   // Test moz: parameters (only supported for built-in engines, ie _isDefault == true).
+  check("{moz:distributionID}", "{moz:distributionID}");
+  check("{moz:official}", "{moz:official}");
   check("{moz:locale}", "{moz:locale}");
 
   await promiseAfterSettings();

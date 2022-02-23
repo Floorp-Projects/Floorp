@@ -244,11 +244,20 @@ int32_t XULMenuitemAccessible::GetLevel(bool aFast) const {
   return nsAccUtils::GetLevelForXULContainerItem(mContent);
 }
 
+bool XULMenuitemAccessible::DoAction(uint8_t index) const {
+  if (index == eAction_Click) {  // default action
+    DoCommand();
+    return true;
+  }
+
+  return false;
+}
+
 void XULMenuitemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) aName.AssignLiteral("click");
 }
 
-bool XULMenuitemAccessible::HasPrimaryAction() const { return true; }
+uint8_t XULMenuitemAccessible::ActionCount() const { return 1; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULMenuitemAccessible: Widgets
@@ -326,7 +335,14 @@ ENameValueFlag XULMenuSeparatorAccessible::NativeName(nsString& aName) const {
 
 role XULMenuSeparatorAccessible::NativeRole() const { return roles::SEPARATOR; }
 
-bool XULMenuSeparatorAccessible::HasPrimaryAction() const { return false; }
+bool XULMenuSeparatorAccessible::DoAction(uint8_t index) const { return false; }
+
+void XULMenuSeparatorAccessible::ActionNameAt(uint8_t aIndex,
+                                              nsAString& aName) {
+  aName.Truncate();
+}
+
+uint8_t XULMenuSeparatorAccessible::ActionCount() const { return 0; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULMenupopupAccessible

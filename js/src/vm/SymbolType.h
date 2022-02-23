@@ -59,8 +59,6 @@ class Symbol
  public:
   static Symbol* new_(JSContext* cx, SymbolCode code,
                       js::HandleString description);
-  static Symbol* newWellKnown(JSContext* cx, SymbolCode code,
-                              js::HandlePropertyName description);
   static Symbol* for_(JSContext* cx, js::HandleString description);
 
   SymbolCode code() const { return code_; }

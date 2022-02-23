@@ -944,7 +944,6 @@ class MochitestDesktop(object):
         self.tests_by_manifest = defaultdict(list)
         self.prefs_by_manifest = defaultdict(set)
         self.env_vars_by_manifest = defaultdict(set)
-        self.tests_dirs_by_manifest = defaultdict(set)
         self._active_tests = None
         self.currentTests = None
         self._locations = None
@@ -956,7 +955,6 @@ class MochitestDesktop(object):
         self.start_script_kwargs = {}
         self.extraPrefs = {}
         self.extraEnv = {}
-        self.extraTestsDirs = []
 
         if logger_options.get("log"):
             self.log = logger_options["log"]
@@ -1179,50 +1177,7 @@ class MochitestDesktop(object):
             testURL = "about:blank"
         return testURL
 
-    def parseAndCreateTestsDirs(self, m):
-        testsDirs = list(self.tests_dirs_by_manifest[m])[0]
-        self.extraTestsDirs = []
-        if testsDirs:
-            self.extraTestsDirs = testsDirs.strip().split()
-            self.log.info(
-                "The following extra test directories will be created:\n  {}".format(
-                    "\n  ".join(self.extraTestsDirs)
-                )
-            )
-            self.createExtraTestsDirs(self.extraTestsDirs, m)
-
-    def createExtraTestsDirs(self, extraTestsDirs=None, manifest=None):
-        """Take a list of directories that might be needed to exist by the test
-        prior to even the main process be executed, and:
-         - verify it does not already exists
-         - create it if it does
-        Removal of those directories is handled in cleanup()
-        """
-        if type(extraTestsDirs) != list:
-            return
-
-        for d in extraTestsDirs:
-            if os.path.exists(d):
-                raise FileExistsError(
-                    "Directory '{}' already exists. This is a member of "
-                    "test-directories in manifest {}.".format(d, manifest)
-                )
-
-        created = []
-        for d in extraTestsDirs:
-            os.makedirs(d)
-            created += [d]
-
-        if created != extraTestsDirs:
-            raise EnvironmentError(
-                "Not all directories were created: extraTestsDirs={} -- created={}".format(
-                    extraTestsDirs, created
-                )
-            )
-
-    def getTestsByScheme(
-        self, options, testsToFilter=None, disabled=True, manifestToFilter=None
-    ):
+    def getTestsByScheme(self, options, testsToFilter=None, disabled=True):
         """Build the url path to the specific test harness and test file or directory
         Build a manifest of tests to run and write out a json file for the harness to read
         testsToFilter option is used to filter/keep the tests provided in the list
@@ -1235,18 +1190,6 @@ class MochitestDesktop(object):
         paths = []
         for test in tests:
             if testsToFilter and (test["path"] not in testsToFilter):
-                continue
-            # If we are running a specific manifest, the previously computed set of active
-            # tests should be filtered out based on the manifest that contains that entry.
-            #
-            # This is especially important when a test file is listed in multiple
-            # manifests (e.g. because the same test runs under a different configuration,
-            # and so it is being included in multiple manifests), without filtering the
-            # active tests based on the current manifest (configuration) that we are
-            # running for each of the N manifests we would be executing the active tests
-            # exactly N times (and so NxN runs instead of the expected N runs, one for each
-            # manifest).
-            if manifestToFilter and (test["manifest"] not in manifestToFilter):
                 continue
             paths.append(test)
 
@@ -1671,9 +1614,8 @@ toolbar#nav-bar {
             self.tests_by_manifest[manifest_key.replace("\\", "/")].append(tp)
             self.prefs_by_manifest[manifest_key].add(test.get("prefs"))
             self.env_vars_by_manifest[manifest_key].add(test.get("environment"))
-            self.tests_dirs_by_manifest[manifest_key].add(test.get("test-directories"))
 
-            for key in ["prefs", "environment", "test-directories"]:
+            for key in ["prefs", "environment"]:
                 if key in test and not options.runByManifest and "disabled" not in test:
                     self.log.error(
                         "parsing {}: runByManifest mode must be enabled to "
@@ -2256,10 +2198,6 @@ toolbar#nav-bar {
                 os.remove(self.manifest)
         if hasattr(self, "profile"):
             del self.profile
-        if hasattr(self, "extraTestsDirs"):
-            for d in self.extraTestsDirs:
-                if os.path.exists(d):
-                    shutil.rmtree(d)
         if options.pidFile != "" and os.path.exists(options.pidFile):
             try:
                 os.remove(options.pidFile)
@@ -2709,7 +2647,7 @@ toolbar#nav-bar {
                 norm_paths.append(p)
         return norm_paths
 
-    def runMochitests(self, options, testsToRun, manifestToFilter=None):
+    def runMochitests(self, options, testsToRun):
         "This is a base method for calling other methods in this class for --bisect-chunk."
         # Making an instance of bisect class for --bisect-chunk option.
         bisect = bisection.Bisect(self)
@@ -2729,7 +2667,7 @@ toolbar#nav-bar {
                     )
                     bisection_log = 1
 
-            result = self.doTests(options, testsToRun, manifestToFilter)
+            result = self.doTests(options, testsToRun)
             if options.bisectChunk:
                 status = bisect.post_test(options, self.expectedError, self.result)
             else:
@@ -3012,13 +2950,11 @@ toolbar#nav-bar {
                     )
                 )
 
-            self.parseAndCreateTestsDirs(m)
-
             # If we are using --run-by-manifest, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face
             # problems if we use the directory provided by the user.
             tests_in_manifest = [t["path"] for t in tests if t["manifest"] == m]
-            res = self.runMochitests(options, tests_in_manifest, manifestToFilter=m)
+            res = self.runMochitests(options, tests_in_manifest)
             result = result or res
 
             # Dump the logging buffer
@@ -3097,7 +3033,7 @@ toolbar#nav-bar {
             if self.profiler_tempdir:
                 shutil.rmtree(self.profiler_tempdir)
 
-    def doTests(self, options, testsToFilter=None, manifestToFilter=None):
+    def doTests(self, options, testsToFilter=None):
         # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
         # since we need to initialize variables for each loop.
         if options.bisectChunk or options.runByManifest:
@@ -3227,9 +3163,7 @@ toolbar#nav-bar {
 
             # testsToFilter parameter is used to filter out the test list that
             # is sent to getTestsByScheme
-            for (scheme, tests) in self.getTestsByScheme(
-                options, testsToFilter, True, manifestToFilter
-            ):
+            for (scheme, tests) in self.getTestsByScheme(options, testsToFilter):
                 # read the number of tests here, if we are not going to run any,
                 # terminate early
                 if not tests:

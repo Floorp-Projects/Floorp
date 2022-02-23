@@ -9,7 +9,6 @@ include protocol PSpeechSynthesis;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PSpeechSynthesisRequest
 {
   manager PSpeechSynthesis;

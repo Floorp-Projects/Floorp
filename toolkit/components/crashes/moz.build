@@ -19,14 +19,21 @@ XPIDL_SOURCES += [
 
 if CONFIG["MOZ_CRASHREPORTER"]:
     GeneratedFile(
-        "CrashManager.jsm",
-        script="gen_CrashManager.py",
+        "GeckoProcessTypes_CrashManager_map.js",
+        script="gen_process_map.py",
         entry_point="main",
-        inputs=["CrashManager.jsm.in"],
+    )
+    GeneratedFile(
+        "GeckoProcessTypes_CrashManager_pings.js",
+        script="gen_process_pings.py",
+        entry_point="main",
     )
 
+    EXTRA_PP_JS_MODULES += [
+        "CrashManager.jsm",
+    ]
+
     EXTRA_JS_MODULES += [
-        "!CrashManager.jsm",
         "CrashService.jsm",
     ]
 

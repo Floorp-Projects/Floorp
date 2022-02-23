@@ -2781,10 +2781,8 @@ describe("DiscoveryStreamFeed", () => {
       const fakeDiscoveryStream = {
         Prefs: {
           values: {
-            pocketConfig: {
-              recsPersonalized: true,
-              spocsPersonalized: true,
-            },
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
             "discoverystream.personalization.enabled": true,
           },
         },
@@ -2793,7 +2791,6 @@ describe("DiscoveryStreamFeed", () => {
           spocs: { loaded: false },
         },
       };
-
       sandbox.stub(feed, "scoreFeeds").resolves();
       sandbox.stub(feed, "scoreSpocs").resolves();
       sandbox.stub(feed, "refreshContent").resolves();
@@ -2824,10 +2821,8 @@ describe("DiscoveryStreamFeed", () => {
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            pocketConfig: {
-              recsPersonalized: true,
-              spocsPersonalized: true,
-            },
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
             "discoverystream.personalization.enabled": true,
           },
         },
@@ -2856,10 +2851,8 @@ describe("DiscoveryStreamFeed", () => {
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            pocketConfig: {
-              recsPersonalized: true,
-              spocsPersonalized: true,
-            },
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
             "discoverystream.personalization.enabled": true,
           },
         },
@@ -2896,10 +2889,8 @@ describe("DiscoveryStreamFeed", () => {
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            pocketConfig: {
-              recsPersonalized: true,
-              spocsPersonalized: true,
-            },
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
             "discoverystream.personalization.enabled": true,
           },
         },

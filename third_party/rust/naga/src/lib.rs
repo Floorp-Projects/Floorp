@@ -885,8 +885,6 @@ pub enum MathFunction {
     Asinh,
     Acosh,
     Atanh,
-    Radians,
-    Degrees,
     // decomposition
     Ceil,
     Floor,
@@ -928,8 +926,6 @@ pub enum MathFunction {
     ReverseBits,
     ExtractBits,
     InsertBits,
-    FindLsb,
-    FindMsb,
     // data packing
     Pack4x8snorm,
     Pack4x8unorm,
@@ -979,7 +975,7 @@ pub enum ImageQuery {
 
 /// Component selection for a vector swizzle.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum SwizzleComponent {
@@ -1132,9 +1128,6 @@ pub enum Expression {
     ImageSample {
         image: Handle<Expression>,
         sampler: Handle<Expression>,
-        /// If Some(), this operation is a gather operation
-        /// on the selected component.
-        gather: Option<SwizzleComponent>,
         coordinate: Handle<Expression>,
         array_index: Option<Handle<Expression>>,
         offset: Option<Handle<Constant>>,

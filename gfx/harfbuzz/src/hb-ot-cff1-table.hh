@@ -1144,8 +1144,8 @@ struct cff1
     {
       sc.end_processing ();
       topDict.fini ();
-      fontDicts.fini ();
-      privateDicts.fini ();
+      fontDicts.fini_deep ();
+      privateDicts.fini_deep ();
       hb_blob_destroy (blob);
       blob = nullptr;
     }
@@ -1245,32 +1245,32 @@ struct cff1
     }
 
     protected:
-    hb_blob_t	           *blob = nullptr;
+    hb_blob_t	           *blob;
     hb_sanitize_context_t   sc;
 
     public:
-    const Encoding	    *encoding = nullptr;
-    const Charset	    *charset = nullptr;
-    const CFF1NameIndex     *nameIndex = nullptr;
-    const CFF1TopDictIndex  *topDictIndex = nullptr;
-    const CFF1StringIndex   *stringIndex = nullptr;
-    const CFF1Subrs	    *globalSubrs = nullptr;
-    const CFF1CharStrings   *charStrings = nullptr;
-    const CFF1FDArray       *fdArray = nullptr;
-    const CFF1FDSelect      *fdSelect = nullptr;
-    unsigned int	     fdCount = 0;
+    const Encoding	    *encoding;
+    const Charset	    *charset;
+    const CFF1NameIndex     *nameIndex;
+    const CFF1TopDictIndex  *topDictIndex;
+    const CFF1StringIndex   *stringIndex;
+    const CFF1Subrs	    *globalSubrs;
+    const CFF1CharStrings   *charStrings;
+    const CFF1FDArray       *fdArray;
+    const CFF1FDSelect      *fdSelect;
+    unsigned int	     fdCount;
 
     cff1_top_dict_values_t   topDict;
     hb_vector_t<cff1_font_dict_values_t>
 			     fontDicts;
     hb_vector_t<PRIVDICTVAL> privateDicts;
 
-    unsigned int	     num_glyphs = 0;
+    unsigned int	     num_glyphs;
   };
 
   struct accelerator_t : accelerator_templ_t<cff1_private_dict_opset_t, cff1_private_dict_values_t>
   {
-    accelerator_t (hb_face_t *face)
+    void init (hb_face_t *face)
     {
       SUPER::init (face);
 
@@ -1295,7 +1295,8 @@ struct cff1
       }
       glyph_names.qsort ();
     }
-    ~accelerator_t ()
+
+    void fini ()
     {
       glyph_names.fini ();
 
@@ -1397,10 +1398,7 @@ struct cff1
   DEFINE_SIZE_STATIC (4);
 };
 
-struct cff1_accelerator_t : cff1::accelerator_t {
-  cff1_accelerator_t (hb_face_t *face) : cff1::accelerator_t (face) {}
-};
-
+struct cff1_accelerator_t : cff1::accelerator_t {};
 } /* namespace OT */
 
 #endif /* HB_OT_CFF1_TABLE_HH */

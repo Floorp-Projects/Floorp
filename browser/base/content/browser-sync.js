@@ -419,7 +419,7 @@ var gSync = {
         targets.push(d);
       }
     }
-    return targets.sort((a, b) => b.lastAccessTime - a.lastAccessTime);
+    return targets.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   _definePrefGetters() {
@@ -1223,7 +1223,7 @@ var gSync = {
         this.log.error(`Target ${target.id} unsuitable for send tab.`);
       }
     }
-    // If a primary-password is enabled then it must be unlocked so FxA can get
+    // If a master-password is enabled then it must be unlocked so FxA can get
     // the encryption keys from the login manager. (If we end up using the "sync"
     // fallback that would end up prompting by itself, but the FxA command route
     // will not) - so force that here.

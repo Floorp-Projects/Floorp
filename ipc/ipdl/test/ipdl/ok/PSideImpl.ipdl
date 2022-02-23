@@ -1,5 +1,0 @@
-[ParentImpl=virtual, ChildImpl="mozilla::FooBarImpl"]
-async protocol PSideImpl {
- parent:
-  async __delete__();
-};

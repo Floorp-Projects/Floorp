@@ -618,9 +618,11 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     }
 
     AutoSetMarkColor setColorGray(*gcmarker, MarkColor::Gray);
+    gcmarker->setMainStackColor(MarkColor::Gray);
 
     gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
     gc->markAllWeakReferences();
+    gc->marker.setMainStackColor(MarkColor::Black);
 
     /* Restore zone state. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {

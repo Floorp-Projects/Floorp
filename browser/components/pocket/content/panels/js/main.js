@@ -5,7 +5,6 @@
 import HomeOverlay from "./home/overlay.js";
 import SignupOverlay from "./signup/overlay.js";
 import SavedOverlay from "./saved/overlay.js";
-import StyleGuideOverlay from "./style-guide/overlay.js";
 import pktPanelMessaging from "./messages.js";
 
 var PKT_PANEL = function() {};
@@ -23,11 +22,6 @@ PKT_PANEL.prototype = {
 
   initSaved() {
     this.overlay = new SavedOverlay();
-    this.init();
-  },
-
-  initStyleGuide() {
-    this.overlay = new StyleGuideOverlay();
     this.init();
   },
 

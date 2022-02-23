@@ -16,7 +16,7 @@
 namespace mozilla {
 
 class AudioInputProcessing;
-class AudioProcessingTrack;
+class AudioInputTrack;
 
 // This class is created and used exclusively on the Media Manager thread, with
 // exactly two exceptions:
@@ -89,13 +89,12 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
 
-  // The current preferences that will be forwarded to mAudioProcessingConfig
-  // below.
+  // The current preferences for the APM's various processing stages.
   MediaEnginePrefs mCurrentPrefs;
 
-  // The AudioProcessingTrack used to inteface with the MediaTrackGraph. Set in
+  // The AudioInputTrack used to inteface with the MediaTrackGraph. Set in
   // SetTrack as part of the initialization, and nulled in ::Deallocate.
-  RefPtr<AudioProcessingTrack> mTrack;
+  RefPtr<AudioInputTrack> mTrack;
 
   // See note at the top of this class.
   RefPtr<AudioInputProcessing> mInputProcessing;
@@ -114,8 +113,9 @@ class AudioInputProcessing : public AudioDataListener {
   void Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
-  void ProcessOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
-                         size_t aFrames, TrackRate aRate, uint32_t aChannels);
+  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                        size_t aFrames, TrackRate aRate,
+                        uint32_t aChannels) override;
   bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
@@ -180,7 +180,8 @@ class AudioInputProcessing : public AudioDataListener {
   // mAudioProcessing. Not used if the processing is bypassed.
   Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
   // The number of channels asked for by content, after clamping to the range of
-  // legal channel count for this particular device.
+  // legal channel count for this particular device. This is the number of
+  // channels of the input buffer passed as parameter in NotifyInputData.
   uint32_t mRequestedInputChannelCount;
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into
@@ -201,7 +202,7 @@ class AudioInputProcessing : public AudioDataListener {
   // operates in "pull" mode, and we append silence only, releasing the audio
   // input track.
   bool mEnabled;
-  // Whether or not we've ended and removed the AudioProcessingTrack.
+  // Whether or not we've ended and removed the AudioInputTrack.
   bool mEnded;
   // When processing is enabled, the number of packets received by this
   // instance, to implement periodic logging.
@@ -217,7 +218,7 @@ class AudioInputProcessing : public AudioDataListener {
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
-class AudioProcessingTrack : public ProcessedMediaTrack {
+class AudioInputTrack : public ProcessedMediaTrack {
   // Only accessed on the graph thread.
   RefPtr<AudioInputProcessing> mInputProcessing;
 
@@ -226,7 +227,7 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
   RefPtr<MediaInputPort> mPort;
 
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
-  // that DisconnectDeviceInput can be idempotent.
+  // that CloseAudioInput can be idempotent.
   // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
   // copyable (opaque pointers)
   RefPtr<AudioDataListener> mInputListener;
@@ -234,25 +235,25 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
   // Only accessed on the main thread.
   Maybe<CubebUtils::AudioDeviceID> mDeviceId;
 
-  explicit AudioProcessingTrack(TrackRate aSampleRate)
+  explicit AudioInputTrack(TrackRate aSampleRate)
       : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
                             new AudioSegment()) {}
 
-  ~AudioProcessingTrack() = default;
+  ~AudioInputTrack() = default;
 
  public:
   // Main Thread API
   // Users of audio inputs go through the track so it can track when the
   // last track referencing an input goes away, so it can close the cubeb
   // input. Main thread only.
-  nsresult ConnectDeviceInput(CubebUtils::AudioDeviceID aId,
-                              AudioDataListener* aListener,
-                              const PrincipalHandle& aPrincipal);
-  void DisconnectDeviceInput();
+  nsresult OpenAudioInput(CubebUtils::AudioDeviceID aId,
+                          AudioDataListener* aListener,
+                          const PrincipalHandle& aPrincipal);
+  void CloseAudioInput();
   Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
-  static AudioProcessingTrack* Create(MediaTrackGraph* aGraph);
+  static AudioInputTrack* Create(MediaTrackGraph* aGraph);
 
   // Graph Thread API
   void DestroyImpl() override;
@@ -265,15 +266,12 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
   }
   // Get the data in [aFrom, aTo) from aPort->GetSource() to aOutput. aOutput
   // needs to be empty.
-  void GetInputSourceData(AudioSegment& aOutput, const MediaInputPort* aPort,
-                          GraphTime aFrom, GraphTime aTo) const;
-  // Pass the graph's mixed audio output to mInputProcessing for processing as
-  // the reverse stream.
-  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
-                        size_t aFrames, TrackRate aRate, uint32_t aChannels);
+  void GetInputSourceData(AudioSegment& aOutput,
+                          const MediaInputPort* aPort, GraphTime aFrom,
+                          GraphTime aTo) const;
 
   // Any thread
-  AudioProcessingTrack* AsAudioProcessingTrack() override { return this; }
+  AudioInputTrack* AsAudioInputTrack() override { return this; }
 
  private:
   // Graph thread API

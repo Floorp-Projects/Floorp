@@ -33,8 +33,6 @@ class DateTimeInputTypeBase : public InputType {
 
   bool IsMutable() const override;
 
-  nsresult GetBadInputMessage(nsAString& aMessage) override = 0;
-
   /**
    * This method converts aValue (milliseconds within a day) to hours, minutes,
    * seconds and milliseconds.
@@ -108,7 +106,6 @@ class WeekInputType : public DateTimeInputTypeBase {
     return new (aMemory) WeekInputType(aInputElement);
   }
 
-  nsresult GetBadInputMessage(nsAString& aMessage) override;
   bool ConvertStringToNumber(nsAString& aValue,
                              Decimal& aResultValue) const override;
   bool ConvertNumberToString(Decimal aValue,
@@ -126,7 +123,6 @@ class MonthInputType : public DateTimeInputTypeBase {
     return new (aMemory) MonthInputType(aInputElement);
   }
 
-  nsresult GetBadInputMessage(nsAString& aMessage) override;
   bool ConvertStringToNumber(nsAString& aValue,
                              Decimal& aResultValue) const override;
   bool ConvertNumberToString(Decimal aValue,
@@ -144,7 +140,6 @@ class DateTimeLocalInputType : public DateTimeInputTypeBase {
     return new (aMemory) DateTimeLocalInputType(aInputElement);
   }
 
-  nsresult GetBadInputMessage(nsAString& aMessage) override;
   bool ConvertStringToNumber(nsAString& aValue,
                              Decimal& aResultValue) const override;
   bool ConvertNumberToString(Decimal aValue,

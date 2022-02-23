@@ -1,0 +1,130 @@
+{
+    "manifest_version": 2,
+    "default_locale": "en",
+    "browser_style":true,
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "1",
+    "applications": {
+        "gecko": {
+          "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"
+        }
+    },
+    "commands": {
+        "hotkey-toggle-translation": {
+            "suggested_key": {
+                "default": "Ctrl+Alt+T"
+            },
+            "description": "__MSG_lblSwitchTranslatedAndOriginal__"
+        },
+        "hotkey-translate-selected-text": {
+            "suggested_key": {
+                "default": "Ctrl+Alt+S"
+            },
+            "description": "__MSG_msgTranslateSelectedText__"
+        },
+        "hotkey-swap-page-translation-service": {
+            "suggested_key": {
+                "default": "Ctrl+Alt+Q"
+            },
+            "description": "__MSG_swapTranslationService__"
+        },
+        "hotkey-show-original": {
+            "suggested_key": {
+                "default": "Shift+Alt+0"
+            },
+            "description": "__MSG_lblRestorePageToOriginal__"
+        },
+        "hotkey-translate-page-1": {
+            "suggested_key": {
+                "default": "Shift+Alt+1"
+            },
+            "description": "__MSG_lblTranslatePageToTargetLanguage__ 1"
+        },
+        "hotkey-translate-page-2": {
+            "suggested_key": {
+                "default": "Shift+Alt+2"
+            },
+            "description": "__MSG_lblTranslatePageToTargetLanguage__ 2"
+        },
+        "hotkey-translate-page-3": {
+            "suggested_key": {
+                "default": "Shift+Alt+3"
+            },
+            "description": "__MSG_lblTranslatePageToTargetLanguage__ 3"
+        }
+    },
+
+    "permissions": [
+        "<all_urls>",
+        "storage",
+        "activeTab",
+        "contextMenus",
+        "webRequest",
+        "mozillaAddons",
+        "about:*",
+        "about:reader*"
+    ],
+
+    "optional_permissions": [
+        "webNavigation"
+    ],
+
+    "web_accessible_resources": [
+        "/icons/icon-32.png",
+        "/icons/google-translate-32.png",
+        "/icons/yandex-translate-32.png",
+        "/icons/swap-32.png",
+        "/contentScript/css/*"
+    ],
+
+    "browser_action": {
+        "default_area" : "menupanel",
+        "browser_style": false,
+        "default_icon": "/icons/icon-32.png",
+        "default_title": "__MSG_pageActionTitle__"
+    },
+
+    "page_action": {
+        "browser_style": false,
+        "default_icon": "/icons/icon-32.png",
+        "default_title": "__MSG_pageActionTitle__"
+    },
+
+    "content_scripts": [{
+            "matches": ["<all_urls>"],
+            "run_at": "document_start",
+            "all_frames": false,
+            "js": ["/contentScript/checkScriptIsInjected.js"]
+        },
+        {
+            "matches": ["<all_urls>"],
+            "run_at": "document_start",
+            "all_frames": true,
+            "js": ["/lib/languages.js", "/lib/config.js", "/lib/platformInfo.js"]
+        },
+        {
+            "matches": ["<all_urls>"],
+            "run_at": "document_end",
+            "all_frames": true,
+            "js": ["/lib/i18n.js", "/contentScript/showOriginal.js", "/contentScript/pageTranslator.js", "/contentScript/translateSelected.js", "/contentScript/showTranslated.js"]
+        },
+        {
+            "matches": ["<all_urls>"],
+            "run_at": "document_end",
+            "all_frames": false,
+            "js": ["/contentScript/popupMobile.js"]
+        },
+        {
+            "matches": ["https://www.deepl.com/translator*"],
+            "run_at": "document_end",
+            "all_frames": false,
+            "js": ["/contentScript/deepl.js"]
+        }
+    ],
+
+    "background": {
+        "persistent": true,
+        "scripts": ["/lib/languages.js", "/lib/config.js", "/lib/platformInfo.js", "/background/translationCache.js", "/background/translationService.js", "/background/textToSpeech.js", "/background/background.js"]
+    }
+}

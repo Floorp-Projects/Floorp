@@ -11,7 +11,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/ServoTypes.h"
 #include "nsDOMCSSDeclaration.h"
 
 struct RawServoUnlockedDeclarationBlock;

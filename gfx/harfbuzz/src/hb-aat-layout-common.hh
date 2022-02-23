@@ -839,7 +839,7 @@ struct StateTableDriver
     }
 
     if (!c->in_place)
-      buffer->sync ();
+      buffer->swap_buffers ();
   }
 
   public:

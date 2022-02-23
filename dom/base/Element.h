@@ -1344,11 +1344,6 @@ class Element : public FragmentOrElement {
   MOZ_CAN_RUN_SCRIPT int32_t ClientHeight() {
     return CSSPixel::FromAppUnits(GetClientAreaRect().Height()).Rounded();
   }
-
-  MOZ_CAN_RUN_SCRIPT int32_t ScreenX();
-  MOZ_CAN_RUN_SCRIPT int32_t ScreenY();
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIScreen> GetScreen();
-
   MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMin();
   MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMax();
   MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMin();
@@ -1954,8 +1949,6 @@ class Element : public FragmentOrElement {
    * Handle status bar updates before they can be cancelled.
    */
   void GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor);
-
-  void DispatchChromeOnlyLinkClickEvent(EventChainPostVisitor& aVisitor);
 
   /**
    * Handle default actions for link event if the event isn't consumed yet.

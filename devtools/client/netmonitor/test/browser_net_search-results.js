@@ -34,7 +34,7 @@ add_task(async function() {
   await wait;
 
   // Open the Search panel
-  await store.dispatch(Actions.openSearch());
+  store.dispatch(Actions.openSearch());
 
   // Helper for keyboard typing
   const type = string => {

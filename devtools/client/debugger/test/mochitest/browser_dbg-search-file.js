@@ -10,7 +10,9 @@ add_task(async function() {
     selectors: { getBreakpoints, getBreakpoint, getActiveSearch },
     getState,
   } = dbg;
-  await selectSource(dbg, "simple1.js");
+  const source = findSource(dbg, "simple1.js");
+
+  await selectSource(dbg, source.url);
 
   const cm = getCM(dbg);
   pressKey(dbg, "fileSearch");
@@ -43,8 +45,6 @@ add_task(async function() {
     42,
     // constructor (in Klass)
     55,
-    // console.log
-    62
   ];
 
   await waitFor(
@@ -120,7 +120,7 @@ add_task(async function() {
   );
 
   // selecting another source keeps search open
-  await selectSource(dbg, "simple2.js");
+  await selectSource(dbg, "simple2");
   ok(findElement(dbg, "searchField"), "Search field is still visible");
 
   // search is always focused regardless of when or how it was opened

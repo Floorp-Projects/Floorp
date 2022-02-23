@@ -1,6 +1,6 @@
 use syn::Generics;
 
-use crate::usage::{IdentSet, LifetimeSet};
+use usage::{IdentSet, LifetimeSet};
 
 /// Extension trait for pulling specific generics data from a generics AST representation.
 pub trait GenericsExt {

@@ -149,6 +149,12 @@ void WarpGetImport::dumpData(GenericPrinter& out) const {
   out.printf("    needsLexicalCheck: %u\n", needsLexicalCheck());
 }
 
+void WarpLambda::dumpData(GenericPrinter& out) const {
+  out.printf("    baseScript: 0x%p\n", baseScript());
+  out.printf("    flags: 0x%x\n", unsigned(flags().toRaw()));
+  out.printf("    nargs: %u\n", unsigned(nargs_));
+}
+
 void WarpRest::dumpData(GenericPrinter& out) const {
   out.printf("    shape: 0x%p\n", shape());
 }
@@ -275,6 +281,10 @@ void WarpGetImport::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, targetEnv_, "warp-import-env");
 }
 
+void WarpLambda::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, baseScript_, "warp-lambda-basescript");
+}
+
 void WarpRest::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, shape_, "warp-rest-shape");
 }
@@ -308,7 +318,6 @@ void WarpCacheIR::traceData(JSTracer* trc) {
         case StubField::Type::RawInt32:
         case StubField::Type::RawPointer:
         case StubField::Type::RawInt64:
-        case StubField::Type::Double:
           break;
         case StubField::Type::Shape: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);

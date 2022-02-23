@@ -310,7 +310,7 @@ async def run_command(cmd, cwd="/", env=None, label=None, silent=False):
     else:
         await asyncio.gather(
             read_output(process.stdout, label, log.info),
-            read_output(process.stderr, label, log.warning),
+            read_output(process.stderr, label, log.warn),
         )
         await process.wait()
 

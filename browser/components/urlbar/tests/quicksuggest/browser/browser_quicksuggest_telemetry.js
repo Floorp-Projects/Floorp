@@ -10,6 +10,8 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -411,7 +413,7 @@ add_task(async function help_keyboard() {
     index,
     url: TEST_URL,
   });
-  let helpButton = result.element.row._buttons.get("help");
+  let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
   await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -449,7 +451,7 @@ add_task(async function help_mouse() {
     index,
     url: TEST_URL,
   });
-  let helpButton = result.element.row._buttons.get("help");
+  let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
   await UrlbarTestUtils.promisePopupClose(window, () => {

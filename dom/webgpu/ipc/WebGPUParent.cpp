@@ -5,12 +5,8 @@
 
 #include "WebGPUParent.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
-#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/layers/WebRenderImageHost.h"
-#include "mozilla/layers/WebRenderTextureHost.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -54,25 +50,21 @@ class PresentationData {
  public:
   RawId mDeviceId = 0;
   RawId mQueueId = 0;
-  RefPtr<layers::WebRenderImageHost> mImageHost;
   RefPtr<layers::MemoryTextureHost> mTextureHost;
   uint32_t mSourcePitch = 0;
   uint32_t mTargetPitch = 0;
   uint32_t mRowCount = 0;
-  int32_t mNextFrameID = 1;
   std::vector<RawId> mUnassignedBufferIds;
   std::vector<RawId> mAvailableBufferIds;
   std::vector<RawId> mQueuedBufferIds;
   Mutex mBuffersLock;
 
   PresentationData(RawId aDeviceId, RawId aQueueId,
-                   already_AddRefed<layers::WebRenderImageHost> aImageHost,
                    already_AddRefed<layers::MemoryTextureHost> aTextureHost,
                    uint32_t aSourcePitch, uint32_t aTargetPitch, uint32_t aRows,
                    const nsTArray<RawId>& aBufferIds)
       : mDeviceId(aDeviceId),
         mQueueId(aQueueId),
-        mImageHost(aImageHost),
         mTextureHost(aTextureHost),
         mSourcePitch(aSourcePitch),
         mTargetPitch(aTargetPitch),
@@ -289,17 +281,12 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
-    AdapterRequestDeviceResolver&& resolver) {
+    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId) {
   ErrorBuffer error;
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, ToFFI(&aByteBuf),
                                           aNewId, error.ToFFI());
-  if (ForwardError(0, error)) {
-    resolver(false);
-  } else {
-    mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
-    resolver(true);
-  }
+  mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
+  ForwardError(0, error);
   return IPC_OK();
 }
 
@@ -528,7 +515,7 @@ static uint64_t Align(uint64_t value) {
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     RawId aSelfId, RawId aQueueId, const RGBDescriptor& aDesc,
-    const nsTArray<RawId>& aBufferIds, const CompositableHandle& aHandle) {
+    const nsTArray<RawId>& aBufferIds, ExternalImageId aExternalId) {
   const auto rows = aDesc.size().height;
   const auto bufferStride =
       Align(static_cast<uint64_t>(aDesc.size().width) * 4);
@@ -543,23 +530,14 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     NS_ERROR("Unable to allocate host data!");
     return IPC_OK();
   }
-  layers::TextureInfo texInfo(layers::CompositableType::IMAGE);
-  layers::TextureFlags texFlags = layers::TextureFlags::NO_FLAGS;
-  wr::ExternalImageId externalId =
-      layers::CompositableInProcessManager::GetNextExternalImageId();
-
-  RefPtr<layers::WebRenderImageHost> imageHost =
-      layers::CompositableInProcessManager::Add(aHandle, OtherPid(), texInfo);
-
-  auto textureHost =
-      MakeRefPtr<layers::MemoryTextureHost>(textureHostData, aDesc, texFlags);
+  RefPtr<layers::MemoryTextureHost> textureHost = new layers::MemoryTextureHost(
+      textureHostData, aDesc, layers::TextureFlags::NO_FLAGS);
   textureHost->DisableExternalTextures();
-  textureHost->EnsureRenderTexture(Some(externalId));
-
-  auto data = MakeRefPtr<PresentationData>(
-      aSelfId, aQueueId, imageHost.forget(), textureHost.forget(), bufferStride,
-      textureStride, rows, aBufferIds);
-  if (!mCanvasMap.insert({aHandle.Value(), data}).second) {
+  textureHost->CreateRenderTexture(aExternalId);
+  RefPtr<PresentationData> data =
+      new PresentationData(aSelfId, aQueueId, textureHost.forget(),
+                           bufferStride, textureStride, rows, aBufferIds);
+  if (!mCanvasMap.insert({AsUint64(aExternalId), data}).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
   return IPC_OK();
@@ -597,33 +575,6 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
         dst += data->mTargetPitch;
         ptr += data->mSourcePitch;
       }
-      layers::CompositorThread()->Dispatch(NS_NewRunnableFunction(
-          "webgpu::WebGPUParent::PresentCallback",
-          [imageHost = data->mImageHost, texture = data->mTextureHost,
-           frameID = data->mNextFrameID++]() {
-            layers::SurfaceDescriptor surfaceDesc;
-            AutoTArray<layers::CompositableHost::TimedTexture, 1> textures;
-
-            layers::CompositableHost::TimedTexture* timedTexture =
-                textures.AppendElement();
-
-            // TODO(aosmond): We recreate the WebRenderTextureHost object each
-            // time so that the pipeline actually updates, as it checks if the
-            // texture is the same as before issuing the transaction update to
-            // WR. We really ought to be cycling between a front and buffer back
-            // here to avoid a race uploading the texture and doing the copy in
-            // PresentCallback.
-            timedTexture->mTexture = new layers::WebRenderTextureHost(
-                surfaceDesc, layers::TextureFlags::BORROWED_EXTERNAL_ID,
-                texture, texture->GetMaybeExternalImageId().ref());
-            timedTexture->mTimeStamp = TimeStamp();
-            timedTexture->mPictureRect =
-                gfx::IntRect(gfx::IntPoint(0, 0), texture->GetSize());
-            timedTexture->mFrameID = frameID;
-            timedTexture->mProducerID = 0;
-
-            imageHost->UseTextureHost(textures);
-          }));
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }
@@ -637,10 +588,10 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
-    const CompositableHandle& aHandle, RawId aTextureId,
+    wr::ExternalImageId aExternalId, RawId aTextureId,
     RawId aCommandEncoderId) {
   // step 0: get the data associated with the swapchain
-  const auto& lookup = mCanvasMap.find(aHandle.Value());
+  const auto& lookup = mCanvasMap.find(AsUint64(aExternalId));
   if (lookup == mCanvasMap.end()) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
     return IPC_OK();
@@ -757,13 +708,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
-    const CompositableHandle& aHandle) {
-  const auto& lookup = mCanvasMap.find(aHandle.Value());
+    wr::ExternalImageId aExternalId) {
+  const auto& lookup = mCanvasMap.find(AsUint64(aExternalId));
   MOZ_ASSERT(lookup != mCanvasMap.end());
   RefPtr<PresentationData> data = lookup->second.get();
-  mCanvasMap.erase(lookup);
+  mCanvasMap.erase(AsUint64(aExternalId));
   data->mTextureHost = nullptr;
-  layers::CompositableInProcessManager::Release(aHandle, OtherPid());
+  layers::TextureHost::DestroyRenderTexture(aExternalId);
 
   MutexAutoLock lock(data->mBuffersLock);
   ipc::ByteBuf dropByteBuf;
@@ -782,15 +733,16 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   return IPC_OK();
 }
 
-void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
+ipc::IPCResult WebGPUParent::RecvShutdown() {
   mTimer.Stop();
   for (const auto& p : mCanvasMap) {
-    const CompositableHandle handle(p.first);
-    layers::CompositableInProcessManager::Release(handle, OtherPid());
+    const wr::ExternalImageId extId = {p.first};
+    layers::TextureHost::DestroyRenderTexture(extId);
   }
   mCanvasMap.clear();
   ffi::wgpu_server_poll_all_devices(mContext, true);
   ffi::wgpu_server_delete(const_cast<ffi::WGPUGlobal*>(mContext));
+  return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
@@ -800,18 +752,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
                                  error.ToFFI());
 
   ForwardError(aSelf, error);
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvDeviceActionWithAck(
-    RawId aSelf, const ipc::ByteBuf& aByteBuf,
-    DeviceActionWithAckResolver&& aResolver) {
-  ErrorBuffer error;
-  ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
-                                 error.ToFFI());
-
-  ForwardError(aSelf, error);
-  aResolver(true);
   return IPC_OK();
 }
 

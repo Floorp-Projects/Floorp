@@ -95,8 +95,10 @@ class imgRequest final : public nsIStreamListener,
   // Request that we start decoding the image as soon as data becomes available.
   void StartDecoding();
 
-  uint64_t InnerWindowID() const;
-  void SetInnerWindowID(uint64_t aInnerWindowId);
+  inline uint64_t InnerWindowID() const { return mInnerWindowId; }
+  void SetInnerWindowID(uint64_t aInnerWindowId) {
+    mInnerWindowId = aInnerWindowId;
+  }
 
   // Set the cache validation information (expiry time, whether we must
   // validate, etc) on the cache entry based on the request information.
@@ -261,6 +263,9 @@ class imgRequest final : public nsIStreamListener,
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
 
+  // The ID of the inner window origin, used for error reporting.
+  uint64_t mInnerWindowId;
+
   // The CORS mode (defined in imgIRequest) this image was loaded with. By
   // default, CORS_NONE.
   mozilla::CORSMode mCORSMode;
@@ -285,8 +290,6 @@ class imgRequest final : public nsIStreamListener,
   // must not be a part of this bitfield.
   RefPtr<ProgressTracker> mProgressTracker;
   RefPtr<Image> mImage;
-  // The ID of the inner window origin, used for error reporting, profiles.
-  uint64_t mInnerWindowId;
   bool mIsMultiPartChannel : 1;
   bool mIsInCache : 1;
   bool mDecodeRequested : 1;

@@ -563,7 +563,6 @@ impl crate::Device<super::Api> for super::Device {
                         //HACK: detect a cube map
                         let cube_count = if desc.size.width == desc.size.height
                             && desc.size.depth_or_array_layers % 6 == 0
-                            && desc.sample_count == 1
                         {
                             Some(desc.size.depth_or_array_layers / 6)
                         } else {
@@ -656,7 +655,6 @@ impl crate::Device<super::Api> for super::Device {
             super::TextureInner::Renderbuffer { raw, .. } => {
                 gl.delete_renderbuffer(raw);
             }
-            super::TextureInner::DefaultRenderbuffer => {}
             super::TextureInner::Texture { raw, .. } => {
                 gl.delete_texture(raw);
             }
@@ -890,8 +888,14 @@ impl crate::Device<super::Api> for super::Device {
                         log::error!("Unable to create a sampled texture binding for non-zero mipmap level or array layer.\n{}",
                             "This is an implementation problem of wgpu-hal/gles backend.")
                     }
-                    let (raw, target) = view.inner.as_native();
-                    super::RawBinding::Texture { raw, target }
+                    match view.inner {
+                        super::TextureInner::Renderbuffer { .. } => {
+                            panic!("Unable to use a renderbuffer in a group")
+                        }
+                        super::TextureInner::Texture { raw, target } => {
+                            super::RawBinding::Texture { raw, target }
+                        }
+                    }
                 }
                 wgt::BindingType::StorageTexture {
                     access,
@@ -900,18 +904,24 @@ impl crate::Device<super::Api> for super::Device {
                 } => {
                     let view = desc.textures[entry.resource_index as usize].view;
                     let format_desc = self.shared.describe_texture_format(format);
-                    let (raw, _target) = view.inner.as_native();
-                    super::RawBinding::Image(super::ImageBinding {
-                        raw,
-                        mip_level: view.mip_levels.start,
-                        array_layer: match view_dimension {
-                            wgt::TextureViewDimension::D2Array
-                            | wgt::TextureViewDimension::CubeArray => None,
-                            _ => Some(view.array_layers.start),
-                        },
-                        access: conv::map_storage_access(access),
-                        format: format_desc.internal,
-                    })
+                    match view.inner {
+                        super::TextureInner::Renderbuffer { .. } => {
+                            panic!("Unable to use a renderbuffer in a group")
+                        }
+                        super::TextureInner::Texture { raw, .. } => {
+                            super::RawBinding::Image(super::ImageBinding {
+                                raw,
+                                mip_level: view.mip_levels.start,
+                                array_layer: match view_dimension {
+                                    wgt::TextureViewDimension::D2Array
+                                    | wgt::TextureViewDimension::CubeArray => None,
+                                    _ => Some(view.array_layers.start),
+                                },
+                                access: conv::map_storage_access(access),
+                                format: format_desc.internal,
+                            })
+                        }
+                    }
                 }
             };
             contents.push(binding);
@@ -1122,10 +1132,11 @@ impl crate::Device<super::Api> for super::Device {
 
     unsafe fn start_capture(&self) -> bool {
         #[cfg(feature = "renderdoc")]
-        return self
-            .render_doc
-            .start_frame_capture(self.shared.context.raw_context(), ptr::null_mut());
-        #[allow(unreachable_code)]
+        {
+            self.render_doc
+                .start_frame_capture(self.shared.context.egl_context.as_ptr(), ptr::null_mut())
+        }
+        #[cfg(not(feature = "renderdoc"))]
         false
     }
     unsafe fn stop_capture(&self) {

@@ -204,6 +204,7 @@ fn handle_mdns_socket(
     hosts: &mut HashMap<String, Vec<u8>>,
     pending_queries: &mut HashMap<String, Query>,
 ) -> bool {
+
     // Record a simple marker to see how often this is called.
     gecko_profiler::add_untyped_marker(
         "handle_mdns_socket",

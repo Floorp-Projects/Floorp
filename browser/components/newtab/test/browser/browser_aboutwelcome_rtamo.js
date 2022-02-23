@@ -10,24 +10,19 @@ const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
 
-const TEST_ADDON_INFO = [
-  {
-    name: "Test Add-on",
-    sourceURI: { scheme: "https", spec: "https://test.xpi" },
-    icons: { 32: "test.png", 64: "test.png" },
-    type: "extension",
-  },
-];
+add_task(function setup() {
+  let sandbox = sinon.createSandbox();
 
-const TEST_ADDON_INFO_THEME = [
-  {
-    name: "Test Add-on",
-    sourceURI: { scheme: "https", spec: "https://test.xpi" },
-    icons: { 32: "test.png", 64: "test.png" },
-    screenshots: [{ url: "test.png" }],
-    type: "theme",
-  },
-];
+  sandbox
+    .stub(AddonRepository, "getAddonsByIDs")
+    .resolves([
+      { sourceURI: { scheme: "https", spec: "https://test.xpi" }, icons: {} },
+    ]);
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+});
 
 async function openRTAMOWelcomePage() {
   // Can't properly stub the child/parent actors so instead
@@ -125,9 +120,6 @@ async function onButtonClick(browser, elementId) {
  * Test the RTAMO welcome UI
  */
 add_task(async function test_rtamo_aboutwelcome() {
-  let sandbox = sinon.createSandbox();
-  sandbox.stub(AddonRepository, "getAddonsByIDs").resolves(TEST_ADDON_INFO);
-
   let browser = await openRTAMOWelcomePage();
 
   await test_screen_content(
@@ -135,11 +127,12 @@ add_task(async function test_rtamo_aboutwelcome() {
     "RTAMO UI",
     // Expected selectors:
     [
-      `div.onboardingContainer[style*='.avif']`,
+      "div.onboardingContainer",
+      "div.brand-logo",
       "h2[data-l10n-id='return-to-amo-addon-title']",
-      "div.rtamo-icon",
-      "button.primary[data-l10n-id='return-to-amo-add-extension-label']",
-      "button[data-l10n-id='onboarding-not-now-button-label']",
+      "img[data-l10n-name='icon']",
+      "button.primary",
+      "button.secondary",
     ],
     // Unexpected selectors:
     [
@@ -150,19 +143,16 @@ add_task(async function test_rtamo_aboutwelcome() {
     ]
   );
 
-  await onButtonClick(
-    browser,
-    "button[data-l10n-id='onboarding-not-now-button-label']"
-  );
+  await onButtonClick(browser, "button.secondary");
   Assert.ok(gURLBar.focused, "Focus should be on awesome bar");
 
   let windowGlobalParent = browser.browsingContext.currentWindowGlobal;
   let aboutWelcomeActor = windowGlobalParent.getActor("AboutWelcome");
-  const messageSandbox = sinon.createSandbox();
+  const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
-  messageSandbox.stub(aboutWelcomeActor, "onContentMessage");
+  sandbox.stub(aboutWelcomeActor, "onContentMessage");
   registerCleanupFunction(() => {
-    messageSandbox.restore();
+    sandbox.restore();
   });
 
   await onButtonClick(browser, "button.primary");
@@ -201,7 +191,7 @@ add_task(async function test_rtamo_aboutwelcome() {
   );
   Assert.equal(
     telemetryCall.args[1].event,
-    "CLICK_BUTTON",
+    "INSTALL",
     "Telemetry event sent as INSTALL"
   );
   Assert.equal(
@@ -211,17 +201,12 @@ add_task(async function test_rtamo_aboutwelcome() {
   );
   Assert.equal(
     telemetryCall.args[1].message_id,
-    "RTAMO_DEFAULT_WELCOME_EXTENSION",
+    "RTAMO_DEFAULT_WELCOME",
     "Message Id sent in telemetry for default RTAMO"
   );
-
-  sandbox.restore();
 });
 
 add_task(async function test_rtamo_over_experiments() {
-  let sandbox = sinon.createSandbox();
-  sandbox.stub(AddonRepository, "getAddonsByIDs").resolves(TEST_ADDON_INFO);
-
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "aboutwelcome",
     value: { screens: [], enabled: true },
@@ -250,8 +235,9 @@ add_task(async function test_rtamo_over_experiments() {
     // Expected selectors:
     [
       "div.onboardingContainer",
+      "div.brand-logo",
       "h2[data-l10n-id='return-to-amo-addon-title']",
-      "div.rtamo-icon",
+      "img[data-l10n-name='icon']",
       "button.primary",
       "button.secondary",
     ],
@@ -263,38 +249,4 @@ add_task(async function test_rtamo_over_experiments() {
       "div.tiles-container.info",
     ]
   );
-
-  sandbox.restore();
-});
-
-add_task(async function test_rtamo_primary_button_theme() {
-  let themeSandbox = sinon.createSandbox();
-  themeSandbox
-    .stub(AddonRepository, "getAddonsByIDs")
-    .resolves(TEST_ADDON_INFO_THEME);
-
-  let browser = await openRTAMOWelcomePage();
-
-  await test_screen_content(
-    browser,
-    "RTAMO UI",
-    // Expected selectors:
-    [
-      "div.onboardingContainer",
-      "h2[data-l10n-id='return-to-amo-addon-title']",
-      "div.rtamo-icon",
-      "button.primary[data-l10n-id='return-to-amo-add-theme-label']",
-      "button[data-l10n-id='onboarding-not-now-button-label']",
-      "img.rtamo-theme-icon",
-    ],
-    // Unexpected selectors:
-    [
-      "main.AW_STEP1",
-      "main.AW_STEP2",
-      "main.AW_STEP3",
-      "div.tiles-container.info",
-    ]
-  );
-
-  themeSandbox.restore();
 });

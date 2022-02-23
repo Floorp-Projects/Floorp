@@ -16,6 +16,7 @@
 #include "mozilla/PresShell.h"
 
 #include "nsControllerCommandTable.h"
+#include "nsCommandParams.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"

@@ -104,7 +104,6 @@ Preferences.addAll([
   },
 
   // Location Bar
-  { id: "browser.urlbar.suggest.bestmatch", type: "bool" },
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
@@ -200,14 +199,6 @@ if (AppConstants.MOZ_DATA_REPORTING) {
     { id: PREF_UPLOAD_ENABLED, type: "bool" },
   ]);
 }
-// Privacy segmentation section
-Preferences.addAll([
-  {
-    id: "browser.privacySegmentation.preferences.show",
-    type: "bool",
-  },
-  { id: "browser.privacySegmentation.enabled", type: "bool" },
-]);
 
 // Data Choices tab
 if (AppConstants.MOZ_CRASHREPORTER) {
@@ -769,9 +760,8 @@ var gPrivacyPane = {
         .setAttribute("href", windowsSSOURL);
     }
 
-    this.initDataCollection();
-
     if (AppConstants.MOZ_DATA_REPORTING) {
+      this.initDataCollection();
       if (AppConstants.MOZ_CRASHREPORTER) {
         this.initSubmitCrashes();
       }
@@ -1952,11 +1942,20 @@ var gPrivacyPane = {
    * Initializes the address bar section.
    */
   _initAddressBar() {
-    // Update the Firefox Suggest section when its Nimbus config changes.
-    let onNimbus = () => this._updateFirefoxSuggestSection();
-    NimbusFeatures.urlbar.onUpdate(onNimbus);
+    // Update the Firefox Suggest section when Firefox Suggest's enabled status
+    // or scenario changes.
+    this._urlbarPrefObserver = {
+      onPrefChanged: pref => {
+        if (pref == "quicksuggest.enabled") {
+          this._updateFirefoxSuggestSection();
+        }
+      },
+    };
+    UrlbarPrefs.addObserver(this._urlbarPrefObserver);
     window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.off(onNimbus);
+      // UrlbarPrefs holds a weak reference to our observer, which is why we
+      // don't remove it on unload.
+      this._urlbarPrefObserver = null;
     });
 
     // The Firefox Suggest info box potentially needs updating when any of the
@@ -1971,15 +1970,6 @@ var gPrivacyPane = {
         this._updateFirefoxSuggestInfoBox()
       );
     }
-
-    // Set the URL of the learn-more link for Firefox Suggest best match.
-    const bestMatchLearnMoreLink = document.getElementById(
-      "firefoxSuggestBestMatchLearnMore"
-    );
-    bestMatchLearnMoreLink.setAttribute(
-      "href",
-      UrlbarProviderQuickSuggest.bestMatchHelpUrl
-    );
 
     // Set the URL of the Firefox Suggest learn-more links.
     let links = document.querySelectorAll(".firefoxSuggestLearnMore");
@@ -2011,17 +2001,10 @@ var gPrivacyPane = {
         element.dataset.l10nIdOriginal ??= element.dataset.l10nId;
         element.dataset.l10nId = l10nId;
       }
-
       // Add the extraMargin class to the engine-prefs link.
       document
         .getElementById("openSearchEnginePreferences")
         .classList.add("extraMargin");
-
-      // Show the best match checkbox container as appropriate.
-      document.getElementById(
-        "firefoxSuggestBestMatchContainer"
-      ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
-
       // Show the container.
       this._updateFirefoxSuggestInfoBox();
       container.removeAttribute("hidden");
@@ -2262,7 +2245,7 @@ var gPrivacyPane = {
    * the UI for it can't be controlled by the normal preference bindings.
    */
   _initMasterPasswordUI() {
-    var noMP = !LoginHelper.isPrimaryPasswordSet();
+    var noMP = !LoginHelper.isMasterPasswordSet();
 
     var button = document.getElementById("changeMasterPassword");
     button.disabled = noMP;
@@ -2326,13 +2309,13 @@ var gPrivacyPane = {
   },
 
   /**
-   * Displays a dialog in which the primary password may be changed.
+   * Displays a dialog in which the master password may be changed.
    */
   async changeMasterPassword() {
-    // Require OS authentication before the user can set a Primary Password.
+    // Require OS authentication before the user can set a Master Password.
     // OS reauthenticate functionality is not available on Linux yet (bug 1527745)
     if (
-      !LoginHelper.isPrimaryPasswordSet() &&
+      !LoginHelper.isMasterPasswordSet() &&
       OS_AUTH_ENABLED &&
       OSKeyStore.canReauth()
     ) {
@@ -2641,24 +2624,10 @@ var gPrivacyPane = {
   },
 
   initDataCollection() {
-    if (
-      !AppConstants.MOZ_DATA_REPORTING &&
-      !Services.prefs.getBoolPref(
-        "browser.privacySegmentation.preferences.show",
-        false
-      )
-    ) {
-      // Nothing to control in the data collection section, remove it.
-      document.getElementById("dataCollectionCategory").remove();
-      document.getElementById("dataCollectionGroup").remove();
-      return;
-    }
-
     this._setupLearnMoreLink(
       "toolkit.datacollection.infoURL",
       "dataCollectionPrivacyNotice"
     );
-    this.initPrivacySegmentation();
   },
 
   initSubmitCrashes() {
@@ -2673,33 +2642,6 @@ var gPrivacyPane = {
       const checkboxId = event.target.getAttribute("for");
       document.getElementById(checkboxId).click();
     });
-  },
-
-  initPrivacySegmentation() {
-    // Learn more link
-    document
-      .getElementById("privacy-segmentation-learn-more-link")
-      .setAttribute(
-        "href",
-        Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          Services.prefs.getStringPref(
-            "browser.privacySegmentation.preferences.learnMoreURLSuffix"
-          )
-      );
-
-    // Section visibility
-    let visibilityPref = Preferences.get(
-      "browser.privacySegmentation.preferences.show"
-    );
-    let section = document.getElementById("privacySegmentationSection");
-    let updatePrivacySegmentationSectionVisibilityState = () => {
-      section.hidden = !visibilityPref.value;
-    };
-    visibilityPref.on(
-      "change",
-      updatePrivacySegmentationSectionVisibilityState
-    );
-    updatePrivacySegmentationSectionVisibilityState();
   },
 
   /**

@@ -49,10 +49,17 @@ XULButtonAccessible::~XULButtonAccessible() {}
 ////////////////////////////////////////////////////////////////////////////////
 // XULButtonAccessible: nsIAccessible
 
-bool XULButtonAccessible::HasPrimaryAction() const { return true; }
+uint8_t XULButtonAccessible::ActionCount() const { return 1; }
 
 void XULButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) aName.AssignLiteral("press");
+}
+
+bool XULButtonAccessible::DoAction(uint8_t aIndex) const {
+  if (aIndex != 0) return false;
+
+  DoCommand();
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +148,7 @@ XULDropmarkerAccessible::XULDropmarkerAccessible(nsIContent* aContent,
                                                  DocAccessible* aDoc)
     : LeafAccessible(aContent, aDoc) {}
 
-bool XULDropmarkerAccessible::HasPrimaryAction() const { return true; }
+uint8_t XULDropmarkerAccessible::ActionCount() const { return 1; }
 
 bool XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen) const {
   bool isOpen = false;

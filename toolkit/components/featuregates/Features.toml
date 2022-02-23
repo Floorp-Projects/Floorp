@@ -42,6 +42,17 @@ bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
 default-value = false
 
+[devtools-execution-context-selector]
+title = "experimental-features-devtools-execution-context-selector"
+description = "experimental-features-devtools-execution-context-selector-description"
+description-links = {bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605154", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605153"}
+restart-required = false
+preference = "devtools.webconsole.input.context"
+type = "boolean"
+bug-numbers = [1605154, 1605153]
+is-public = true
+default-value = true
+
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
 description = "experimental-features-devtools-compatibility-panel-description"
@@ -51,7 +62,7 @@ preference = "devtools.inspector.compatibility.enabled"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
 is-public = true
-default-value = true
+default-value = {default = false, nightly = true, dev-edition = true}
 
 [cookie-samesite-lax-by-default]
 title = "experimental-features-cookie-samesite-lax-by-default2"
@@ -130,15 +141,5 @@ restart-required = false
 preference = "browser.urlbar.keepPanelOpenDuringImeComposition"
 type = "boolean"
 bug-numbers = [1673971]
-is-public = true
-default-value = false
-
-[firefox-100]
-title = "experimental-features-firefox-100"
-description = "experimental-features-firefox-100-description"
-restart-required = false
-preference = "general.useragent.forceVersion100"
-type = "boolean"
-bug-numbers = [1748798]
 is-public = true
 default-value = false

@@ -32,14 +32,11 @@
 #include "hb-null.hh"
 
 
-template <typename Type,
-	  bool sorted=false>
-struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty_t>::type
+template <typename Type>
+struct hb_vector_t
 {
   typedef Type item_t;
   static constexpr unsigned item_size = hb_static_size (Type);
-  using array_t = typename std::conditional<sorted, hb_sorted_array_t<Type>, hb_array_t<Type>>::type;
-  using c_array_t = typename std::conditional<sorted, hb_sorted_array_t<const Type>, hb_array_t<const Type>>::type;
 
   hb_vector_t () = default;
   hb_vector_t (std::initializer_list<Type> lst) : hb_vector_t ()
@@ -85,9 +82,15 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
 
   void fini ()
   {
-    shrink_vector (0);
     hb_free (arrayZ);
     init ();
+  }
+  void fini_deep ()
+  {
+    unsigned int count = length;
+    for (unsigned int i = 0; i < count; i++)
+      arrayZ[i].fini ();
+    fini ();
   }
 
   void reset ()
@@ -149,24 +152,24 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
   template <typename T>
   hb_vector_t& operator << (T&& v) { push (std::forward<T> (v)); return *this; }
 
-  array_t   as_array ()       { return hb_array (arrayZ, length); }
-  c_array_t as_array () const { return hb_array (arrayZ, length); }
+  hb_array_t<      Type> as_array ()       { return hb_array (arrayZ, length); }
+  hb_array_t<const Type> as_array () const { return hb_array (arrayZ, length); }
 
   /* Iterator. */
-  typedef c_array_t   iter_t;
-  typedef array_t   writer_t;
+  typedef hb_array_t<const Type>   iter_t;
+  typedef hb_array_t<      Type> writer_t;
     iter_t   iter () const { return as_array (); }
   writer_t writer ()       { return as_array (); }
   operator   iter_t () const { return   iter (); }
   operator writer_t ()       { return writer (); }
 
-  c_array_t sub_array (unsigned int start_offset, unsigned int count) const
+  hb_array_t<const Type> sub_array (unsigned int start_offset, unsigned int count) const
   { return as_array ().sub_array (start_offset, count); }
-  c_array_t sub_array (unsigned int start_offset, unsigned int *count = nullptr /* IN/OUT */) const
+  hb_array_t<const Type> sub_array (unsigned int start_offset, unsigned int *count = nullptr /* IN/OUT */) const
   { return as_array ().sub_array (start_offset, count); }
-  array_t sub_array (unsigned int start_offset, unsigned int count)
+  hb_array_t<Type> sub_array (unsigned int start_offset, unsigned int count)
   { return as_array ().sub_array (start_offset, count); }
-  array_t sub_array (unsigned int start_offset, unsigned int *count = nullptr /* IN/OUT */)
+  hb_array_t<Type> sub_array (unsigned int start_offset, unsigned int *count = nullptr /* IN/OUT */)
   { return as_array ().sub_array (start_offset, count); }
 
   hb_sorted_array_t<Type> as_sorted_array ()
@@ -189,7 +192,6 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
   template <typename T>
   Type *push (T&& v)
   {
-    /* TODO Emplace? */
     Type *p = push ();
     if (p == &Crap (Type))
       // If push failed to allocate then don't copy v, since this may cause
@@ -201,92 +203,6 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
   }
 
   bool in_error () const { return allocated < 0; }
-
-  template <typename T = Type,
-	    hb_enable_if (std::is_trivially_copy_assignable<T>::value)>
-  Type *
-  realloc_vector (unsigned new_allocated)
-  {
-    return (Type *) hb_realloc (arrayZ, new_allocated * sizeof (Type));
-  }
-  template <typename T = Type,
-	    hb_enable_if (!std::is_trivially_copy_assignable<T>::value)>
-  Type *
-  realloc_vector (unsigned new_allocated)
-  {
-    Type *new_array = (Type *) hb_malloc (new_allocated * sizeof (Type));
-    if (likely (new_array))
-    {
-      for (unsigned i = 0; i < length; i++)
-	new (std::addressof (new_array[i])) Type ();
-      for (unsigned i = 0; i < (unsigned) length; i++)
-	new_array[i] = std::move (arrayZ[i]);
-      unsigned old_length = length;
-      shrink_vector (0);
-      length = old_length;
-      hb_free (arrayZ);
-    }
-    return new_array;
-  }
-
-  template <typename T = Type,
-	    hb_enable_if (std::is_trivially_constructible<T>::value ||
-			  !std::is_default_constructible<T>::value)>
-  void
-  grow_vector (unsigned size)
-  {
-    memset (arrayZ + length, 0, (size - length) * sizeof (*arrayZ));
-    length = size;
-  }
-  template <typename T = Type,
-	    hb_enable_if (!std::is_trivially_constructible<T>::value &&
-			   std::is_default_constructible<T>::value)>
-  void
-  grow_vector (unsigned size)
-  {
-    while (length < size)
-    {
-      length++;
-      new (std::addressof (arrayZ[length - 1])) Type ();
-    }
-  }
-
-  template <typename T = Type,
-	    hb_enable_if (std::is_trivially_destructible<T>::value)>
-  void
-  shrink_vector (unsigned size)
-  {
-    length = size;
-  }
-  template <typename T = Type,
-	    hb_enable_if (!std::is_trivially_destructible<T>::value)>
-  void
-  shrink_vector (unsigned size)
-  {
-    while ((unsigned) length > size)
-    {
-      arrayZ[(unsigned) length - 1].~Type ();
-      length--;
-    }
-  }
-
-  template <typename T = Type,
-	    hb_enable_if (std::is_trivially_copy_assignable<T>::value)>
-  void
-  shift_down_vector (unsigned i)
-  {
-    memmove (static_cast<void *> (&arrayZ[i - 1]),
-	     static_cast<void *> (&arrayZ[i]),
-	     (length - i) * sizeof (Type));
-  }
-  template <typename T = Type,
-	    hb_enable_if (!std::is_trivially_copy_assignable<T>::value)>
-  void
-  shift_down_vector (unsigned i)
-  {
-    for (; i < length; i++)
-      arrayZ[i - 1] = std::move (arrayZ[i]);
-  }
 
   /* Allocate for size but don't adjust length. */
   bool alloc (unsigned int size)
@@ -309,7 +225,7 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
       (new_allocated < (unsigned) allocated) ||
       hb_unsigned_mul_overflows (new_allocated, sizeof (Type));
     if (likely (!overflows))
-      new_array = realloc_vector (new_allocated);
+      new_array = (Type *) hb_realloc (arrayZ, new_allocated * sizeof (Type));
 
     if (unlikely (!new_array))
     {
@@ -330,9 +246,7 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
       return false;
 
     if (size > length)
-      grow_vector (size);
-    else if (size < length)
-      shrink_vector (size);
+      memset (arrayZ + length, 0, (size - length) * sizeof (*arrayZ));
 
     length = size;
     return true;
@@ -341,38 +255,48 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
   Type pop ()
   {
     if (!length) return Null (Type);
-    Type v = std::move (arrayZ[length - 1]);
-    arrayZ[length - 1].~Type ();
-    length--;
-    return v;
+    return std::move (arrayZ[--length]); /* Does this move actually work? */
   }
 
   void remove (unsigned int i)
   {
     if (unlikely (i >= length))
       return;
-    arrayZ[i].~Type ();
-    shift_down_vector (i + 1);
+    memmove (static_cast<void *> (&arrayZ[i]),
+	     static_cast<void *> (&arrayZ[i + 1]),
+	     (length - i - 1) * sizeof (Type));
     length--;
   }
 
   void shrink (int size_)
   {
     unsigned int size = size_ < 0 ? 0u : (unsigned int) size_;
-    if (size >= length)
-      return;
-
-    shrink_vector (size);
+     if (size < length)
+       length = size;
   }
 
+  template <typename T>
+  Type *find (T v)
+  {
+    for (unsigned int i = 0; i < length; i++)
+      if (arrayZ[i] == v)
+	return &arrayZ[i];
+    return nullptr;
+  }
+  template <typename T>
+  const Type *find (T v) const
+  {
+    for (unsigned int i = 0; i < length; i++)
+      if (arrayZ[i] == v)
+	return &arrayZ[i];
+    return nullptr;
+  }
 
-  /* Sorting API. */
   void qsort (int (*cmp)(const void*, const void*))
   { as_array ().qsort (cmp); }
   void qsort (unsigned int start = 0, unsigned int end = (unsigned int) -1)
   { as_array ().qsort (start, end); }
 
-  /* Unsorted search API. */
   template <typename T>
   Type *lsearch (const T &x, Type *not_found = nullptr)
   { return as_array ().lsearch (x, not_found); }
@@ -382,25 +306,47 @@ struct hb_vector_t : std::conditional<sorted, hb_vector_t<Type, false>, hb_empty
   template <typename T>
   bool lfind (const T &x, unsigned *pos = nullptr) const
   { return as_array ().lfind (x, pos); }
+};
 
-  /* Sorted search API. */
-  template <typename T,
-	    bool Sorted=sorted, hb_enable_if (Sorted)>
+template <typename Type>
+struct hb_sorted_vector_t : hb_vector_t<Type>
+{
+  hb_sorted_vector_t () = default;
+  ~hb_sorted_vector_t () = default;
+  hb_sorted_vector_t (hb_sorted_vector_t& o) = default;
+  hb_sorted_vector_t (hb_sorted_vector_t &&o) = default;
+  hb_sorted_vector_t (std::initializer_list<Type> lst) : hb_vector_t<Type> (lst) {}
+  template <typename Iterable,
+	    hb_requires (hb_is_iterable (Iterable))>
+  hb_sorted_vector_t (const Iterable &o) : hb_vector_t<Type> (o) {}
+  hb_sorted_vector_t& operator = (const hb_sorted_vector_t &o) = default;
+  hb_sorted_vector_t& operator = (hb_sorted_vector_t &&o) = default;
+  friend void swap (hb_sorted_vector_t& a, hb_sorted_vector_t& b)
+  { hb_swap ((hb_vector_t<Type>&) (a), (hb_vector_t<Type>&) (b)); }
+
+  hb_sorted_array_t<      Type> as_array ()       { return hb_sorted_array (this->arrayZ, this->length); }
+  hb_sorted_array_t<const Type> as_array () const { return hb_sorted_array (this->arrayZ, this->length); }
+
+  /* Iterator. */
+  typedef hb_sorted_array_t<const Type> const_iter_t;
+  typedef hb_sorted_array_t<      Type>       iter_t;
+  const_iter_t  iter () const { return as_array (); }
+  const_iter_t citer () const { return as_array (); }
+	iter_t  iter ()       { return as_array (); }
+  operator       iter_t ()       { return iter (); }
+  operator const_iter_t () const { return iter (); }
+
+  template <typename T>
   Type *bsearch (const T &x, Type *not_found = nullptr)
   { return as_array ().bsearch (x, not_found); }
-  template <typename T,
-	    bool Sorted=sorted, hb_enable_if (Sorted)>
+  template <typename T>
   const Type *bsearch (const T &x, const Type *not_found = nullptr) const
   { return as_array ().bsearch (x, not_found); }
-  template <typename T,
-	    bool Sorted=sorted, hb_enable_if (Sorted)>
+  template <typename T>
   bool bfind (const T &x, unsigned int *i = nullptr,
 	      hb_not_found_t not_found = HB_NOT_FOUND_DONT_STORE,
 	      unsigned int to_store = (unsigned int) -1) const
   { return as_array ().bfind (x, i, not_found, to_store); }
 };
-
-template <typename Type>
-using hb_sorted_vector_t = hb_vector_t<Type, true>;
 
 #endif /* HB_VECTOR_HH */

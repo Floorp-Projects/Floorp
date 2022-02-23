@@ -155,11 +155,9 @@ class Axis {
 
   /**
    * Sample the snap-back animation to relieve overscroll.
-   * |aDelta| is the time since the last sample, |aOverscrollSideBits| is
-   * the direction where the overscroll happens on this axis.
+   * |aDelta| is the time since the last sample.
    */
-  bool SampleOverscrollAnimation(const TimeDuration& aDelta,
-                                 SideBits aOverscrollSideBits);
+  bool SampleOverscrollAnimation(const TimeDuration& aDelta);
 
   /**
    * Stop an overscroll animation.

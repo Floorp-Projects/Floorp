@@ -676,47 +676,29 @@ class TabBase {
 
   /**
    * Query each content process hosting subframes of the tab, return results.
-   *
    * @param {string} message
    * @param {object} options
-   *        These options are also sent to the message handler in the
-   *        `ExtensionContentChild`.
-   * @param {number[]} options.frameIds
-   *        When omitted, all frames will be queried.
-   * @param {boolean} options.returnResultsWithFrameIds
+   * @param {number} options.frameID
+   * @param {boolean} options.allFrames
    * @returns {Promise[]}
    */
   async queryContent(message, options) {
-    let { frameIds } = options;
+    let { allFrames, frameID } = options;
 
     /** @type {Map<nsIDOMProcessParent, innerWindowId[]>} */
     let byProcess = new DefaultMap(() => []);
-    // We use this set to know which frame IDs are potentially invalid (as in
-    // not found when visiting the tab's BC tree below) when frameIds is a
-    // non-empty list of frame IDs.
-    let frameIdsSet = new Set(frameIds);
 
     // Recursively walk the tab's BC tree, find all frames, group by process.
     function visit(bc) {
       let win = bc.currentWindowGlobal;
-      let frameId = bc.parent ? bc.id : 0;
-
-      if (win?.domProcess && (!frameIds || frameIdsSet.has(frameId))) {
+      if (win?.domProcess && (!frameID || frameID === bc.id)) {
         byProcess.get(win.domProcess).push(win.innerWindowId);
-        frameIdsSet.delete(frameId);
       }
-
-      if (!frameIds || frameIdsSet.size > 0) {
+      if (allFrames || (frameID && !byProcess.size)) {
         bc.children.forEach(visit);
       }
     }
     visit(this.browsingContext);
-
-    if (frameIdsSet.size > 0) {
-      throw new ExtensionError(
-        `Invalid frame IDs: [${Array.from(frameIdsSet).join(", ")}].`
-      );
-    }
 
     let promises = Array.from(byProcess.entries(), ([proc, windows]) =>
       proc.getActor("ExtensionContent").sendQuery(message, { windows, options })
@@ -733,15 +715,15 @@ class TabBase {
     results = results.flat();
 
     if (!results.length) {
-      let errorMessage = "Missing host permission for the tab";
-      if (!frameIds || frameIds.length > 1 || frameIds[0] !== 0) {
-        errorMessage += " or frames";
+      if (frameID) {
+        throw new ExtensionError("Frame not found, or missing host permission");
       }
 
-      throw new ExtensionError(errorMessage);
+      let frames = allFrames ? ", and any iframes" : "";
+      throw new ExtensionError(`Missing host permission for the tab${frames}`);
     }
 
-    if (frameIds && frameIds.length === 1 && results.length > 1) {
+    if (!allFrames && results.length > 1) {
       throw new ExtensionError("Internal error: multiple windows matched");
     }
 
@@ -805,15 +787,12 @@ class TabBase {
       }
       options[`${kind}Paths`].push(url);
     }
-
     if (details.allFrames) {
-      options.allFrames = true;
-    } else if (details.frameId !== null) {
-      options.frameIds = [details.frameId];
-    } else if (!details.allFrames) {
-      options.frameIds = [0];
+      options.allFrames = details.allFrames;
     }
-
+    if (details.frameId !== null) {
+      options.frameID = details.frameId;
+    }
     if (details.matchAboutBlank) {
       options.matchAboutBlank = details.matchAboutBlank;
     }
@@ -829,10 +808,6 @@ class TabBase {
     }
 
     options.wantReturnValue = true;
-
-    // The scripting API (defined in `parent/ext-scripting.js`) has its own
-    // `execute()` function that calls `queryContent()` as well. Make sure to
-    // keep both in sync when relevant.
     return this.queryContent("Execute", options);
   }
 

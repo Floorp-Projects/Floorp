@@ -31,7 +31,7 @@ ENameValueFlag Name(nsString& aName) const override;
 /*
  * Set aValue to the value of the proxied accessible.
  */
-void Value(nsString& aValue) const override;
+void Value(nsString& aValue) const;
 
 /*
  * Set aHelp to the help string of the proxied accessible.
@@ -61,6 +61,8 @@ void Relations(nsTArray<RelationType>* aTypes,
 
 bool IsSearchbox() const;
 
+nsAtom* LandmarkRole() const;
+
 nsStaticAtom* ARIARoleAtom() const;
 
 virtual mozilla::a11y::GroupPos GroupPosition() override;
@@ -78,28 +80,26 @@ int32_t SelectionCount();
 virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                            nsAString& aText) const override;
 
-virtual void TextAfterOffset(int32_t aOffset,
-                             AccessibleTextBoundary aBoundaryType,
-                             int32_t* aStartOffset, int32_t* aEndOffset,
-                             nsAString& aText) override;
+void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                        nsString& aText, int32_t* aStartOffset,
+                        int32_t* aEndOffset);
 
 virtual void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                           int32_t* aStartOffset, int32_t* aEndOffset,
                           nsAString& aText) override;
 
-virtual void TextBeforeOffset(int32_t aOffset,
-                              AccessibleTextBoundary aBoundaryType,
-                              int32_t* aStartOffset, int32_t* aEndOffset,
-                              nsAString& aText) override;
+void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                         nsString& aText, int32_t* aStartOffset,
+                         int32_t* aEndOffset);
 
 char16_t CharAt(int32_t aOffset);
 
-LayoutDeviceIntRect TextBounds(
+nsIntRect TextBounds(
     int32_t aStartOffset, int32_t aEndOffset,
     uint32_t aCoordType =
         nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
-LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
+nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
 int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
@@ -133,9 +133,11 @@ bool DeleteText(int32_t aStartPos, int32_t aEndPos);
 
 bool PasteText(int32_t aPosition);
 
-LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
+nsIntPoint ImagePosition(uint32_t aCoordType);
 
-LayoutDeviceIntSize ImageSize();
+nsIntSize ImageSize();
+
+uint32_t EndOffset(bool* aOk);
 
 bool IsLinkValid();
 
@@ -202,6 +204,22 @@ bool TableIsProbablyForLayout();
 RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
 RemoteAccessible* AtkTableRowHeader(int32_t aRow);
 
+void SelectedItems(nsTArray<RemoteAccessible*>* aSelectedItems);
+uint32_t SelectedItemCount();
+RemoteAccessible* GetSelectedItem(uint32_t aIndex);
+bool IsItemSelected(uint32_t aIndex);
+bool AddItemToSelection(uint32_t aIndex);
+bool RemoveItemFromSelection(uint32_t aIndex);
+bool SelectAll();
+bool UnselectAll();
+
+void TakeSelection();
+void SetSelected(bool aSelect);
+
+bool DoAction(uint8_t aIndex);
+uint8_t ActionCount();
+void ActionDescriptionAt(uint8_t aIndex, nsString& aDescription);
+void ActionNameAt(uint8_t aIndex, nsString& aName);
 KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();
 void AtkKeyBinding(nsString& aBinding);
@@ -216,7 +234,7 @@ RemoteAccessible* FocusedChild();
 virtual Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,
     LocalAccessible::EWhichChildAtPoint aWhichChild) override;
-LayoutDeviceIntRect Bounds() const override;
+nsIntRect Bounds() const override;
 nsIntRect BoundsInCSSPixels();
 
 void Language(nsString& aLocale);

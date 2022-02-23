@@ -9,7 +9,6 @@ include protocol PSocketProcess;
 namespace mozilla {
 namespace ipc {
 
-[ManualDealloc]
 protocol PFileDescriptorSet
 {
   manager PBackground or PContent or PSocketProcess;

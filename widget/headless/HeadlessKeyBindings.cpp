@@ -6,7 +6,6 @@
 #include "HeadlessKeyBindings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/WritingModes.h"
 
 namespace mozilla {
@@ -28,7 +27,7 @@ nsresult HeadlessKeyBindings::AttachNativeKeyEvent(
 }
 
 void HeadlessKeyBindings::GetEditCommands(
-    NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
+    nsIWidget::NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
     const Maybe<WritingMode>& aWritingMode, nsTArray<CommandInt>& aCommands) {
   // Stub for non-mac platforms.
 }

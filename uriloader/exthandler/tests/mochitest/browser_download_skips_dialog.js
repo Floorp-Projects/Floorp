@@ -13,7 +13,6 @@ add_task(async function skipDialogAndDownloadFile() {
     set: [
       ["browser.download.improvements_to_download_panel", true],
       ["browser.download.useDownloadDir", true],
-      ["image.webp.enabled", true],
     ],
   });
 
@@ -27,7 +26,7 @@ add_task(async function skipDialogAndDownloadFile() {
 
   let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: TEST_PATH + "file_green.webp",
+    opening: TEST_PATH + "file_image_svgxml.svg",
     waitForLoad: false,
     waitForStateStop: true,
   });

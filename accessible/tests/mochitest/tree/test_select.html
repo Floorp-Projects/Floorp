@@ -64,18 +64,34 @@
                 role: ROLE_GROUPING,
                 children: [
                   {
-                    role: ROLE_COMBOBOX_OPTION,
+                    role: ROLE_STATICTEXT,
                     children: [ ],
                   },
                   {
                     role: ROLE_COMBOBOX_OPTION,
-                    children: [ ],
+                    children: [
+                      {
+                        role: ROLE_TEXT_LEAF,
+                      },
+                    ],
+                  },
+                  {
+                    role: ROLE_COMBOBOX_OPTION,
+                    children: [
+                      {
+                        role: ROLE_TEXT_LEAF,
+                      },
+                    ],
                   },
                 ],
               },
               {
                 role: ROLE_COMBOBOX_OPTION,
-                children: [ ],
+                children: [
+                  {
+                    role: ROLE_TEXT_LEAF,
+                  },
+                ],
               },
             ],
           },

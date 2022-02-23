@@ -162,8 +162,7 @@
     "settings": true,
     "paths": [
       ["proxy"]
-    ],
-    "startupBlocking": true
+    ]
   },
   "runtime": {
     "url": "chrome://extensions/content/parent/ext-runtime.js",
@@ -239,7 +238,6 @@
     "scopes": ["addon_parent"],
     "paths": [
       ["webRequest"]
-    ],
-    "startupBlocking": true
+    ]
   }
 }

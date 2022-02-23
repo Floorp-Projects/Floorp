@@ -124,8 +124,6 @@ UntrustedModulesProcessor::UntrustedModulesProcessor()
                                  LazyIdleThread::ManualShutdown)),
       mUnprocessedMutex(
           "mozilla::UntrustedModulesProcessor::mUnprocessedMutex"),
-      mModuleCacheMutex(
-          "mozilla::UntrustedModulesProcessor::mModuleCacheMutex"),
       mAllowProcessing(true) {
   AddObservers();
 }
@@ -456,11 +454,18 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueue() {
 }
 
 RefPtr<ModuleRecord> UntrustedModulesProcessor::GetOrAddModuleRecord(
-    const ModuleEvaluator& aModEval, const nsAString& aResolvedNtPath) {
+    ModulesMap& aModules, const ModuleEvaluator& aModEval,
+    const glue::EnhancedModuleLoadInfo& aModLoadInfo) {
+  return GetOrAddModuleRecord(aModules, aModEval,
+                              aModLoadInfo.mNtLoadInfo.mSectionName.AsString());
+}
+
+RefPtr<ModuleRecord> UntrustedModulesProcessor::GetOrAddModuleRecord(
+    ModulesMap& aModules, const ModuleEvaluator& aModEval,
+    const nsAString& aResolvedNtPath) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  MutexAutoLock lock(mModuleCacheMutex);
-  return mGlobalModuleCache.WithEntryHandle(
+  return aModules.WithEntryHandle(
       aResolvedNtPath, [&](auto&& addPtr) -> RefPtr<ModuleRecord> {
         if (addPtr) {
           return addPtr.Data();
@@ -588,6 +593,8 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   }
 
   Telemetry::BatchProcessedStackGenerator stackProcessor;
+  ModulesMap modules;
+
   Maybe<double> maybeXulLoadDuration;
   Vector<Telemetry::ProcessedStack> processedStacks;
   Vector<ProcessedModuleLoadEvent> processedEvents;
@@ -599,8 +606,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
       return;
     }
 
-    RefPtr<ModuleRecord> module(GetOrAddModuleRecord(
-        modEval, entry.mNtLoadInfo.mSectionName.AsString()));
+    RefPtr<ModuleRecord> module(GetOrAddModuleRecord(modules, modEval, entry));
     if (!module) {
       // We failed to obtain trust information about the module.
       // Don't include test failures in the ping to avoid flooding it.
@@ -636,9 +642,6 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
       continue;
     }
 
-    mProcessedModuleLoads.mModules.LookupOrInsert(
-        event.mModule->mResolvedNtName, event.mModule);
-
     if (!mAllowProcessing) {
       return;
     }
@@ -664,9 +667,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     return;
   }
 
-  // Modules have been added to mProcessedModuleLoads.mModules
-  // in the loop above.  Passing an empty ModulesMap to AddNewLoads.
-  mProcessedModuleLoads.AddNewLoads(ModulesMap{}, std::move(processedEvents),
+  mProcessedModuleLoads.AddNewLoads(modules, std::move(processedEvents),
                                     std::move(processedStacks));
   if (maybeXulLoadDuration) {
     MOZ_ASSERT(!mProcessedModuleLoads.mXULLoadDurationMS);
@@ -961,6 +962,10 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
     return ModulesTrustPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  // This map holds all modules regardless of trust status; we use this to
+  // filter any duplicates from the input.
+  ModulesMap modules;
+
   for (auto& resolvedNtPath :
        aModPaths.mModuleNtPaths.as<ModulePaths::VecType>()) {
     if (!mAllowProcessing) {
@@ -973,7 +978,8 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
       continue;
     }
 
-    RefPtr<ModuleRecord> module(GetOrAddModuleRecord(modEval, resolvedNtPath));
+    RefPtr<ModuleRecord> module(
+        GetOrAddModuleRecord(modules, modEval, resolvedNtPath));
     if (!module) {
       // We failed to obtain trust information.
       ++trustTestFailures;

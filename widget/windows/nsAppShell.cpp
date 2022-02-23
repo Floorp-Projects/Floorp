@@ -534,13 +534,11 @@ nsresult nsAppShell::Init() {
       wc.hbrBackground = (HBRUSH) nullptr;
       wc.lpszMenuName = (LPCWSTR) nullptr;
       wc.lpszClassName = kWindowClass;
-      [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
-      MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
+      RegisterClassW(&wc);
     }
 
     mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
                               10, 10, HWND_MESSAGE, nullptr, module, nullptr);
-    MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
     NS_ENSURE_STATE(mEventWnd);
   } else if (XRE_IsContentProcess() && !IsWin32kLockedDown()) {
     // We're not generally processing native events, but still using GDI and we

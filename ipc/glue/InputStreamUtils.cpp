@@ -12,7 +12,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
-#include "mozilla/ipc/DataPipe.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/InputStreamLengthHelper.h"
@@ -235,9 +234,6 @@ void InputStreamHelper::PostSerializationActivation(InputStreamParams& aParams,
       return;
     }
 
-    case InputStreamParams::TDataPipeReceiverStreamParams:
-      break;
-
     case InputStreamParams::TStringInputStreamParams:
       break;
 
@@ -320,12 +316,6 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
     destinationStream->SetDelayedStart(remoteStream.delayedStart());
     destinationStream->SetLength(remoteStream.length());
     return destinationStream->TakeReader();
-  }
-
-  if (aParams.type() == InputStreamParams::TDataPipeReceiverStreamParams) {
-    const DataPipeReceiverStreamParams& pipeParams =
-        aParams.get_DataPipeReceiverStreamParams();
-    return do_AddRef(pipeParams.pipe());
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable;

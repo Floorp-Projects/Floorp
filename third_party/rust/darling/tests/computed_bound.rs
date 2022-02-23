@@ -1,4 +1,8 @@
-use darling::{FromDeriveInput, FromMeta};
+#[macro_use]
+extern crate darling;
+extern crate syn;
+
+use darling::FromDeriveInput;
 
 fn parse<T: FromDeriveInput>(src: &str) -> T {
     let ast = syn::parse_str(src).unwrap();

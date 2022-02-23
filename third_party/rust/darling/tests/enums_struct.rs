@@ -1,8 +1,9 @@
-#![allow(dead_code)]
-
 //! Test expansion of enums which have struct variants.
 
-use darling::FromMeta;
+#[macro_use]
+extern crate darling;
+extern crate syn;
+
 #[derive(Debug, FromMeta)]
 #[darling(rename_all = "snake_case")]
 enum Message {

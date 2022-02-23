@@ -13,8 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
-#include "mozilla/dom/ReadableStreamController.h"
-#include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -23,7 +21,8 @@
 #  error "Shouldn't be compiling with this header without MOZ_DOM_STREAMS set"
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class Promise;
 class ReadableStreamGenericReader;
@@ -31,14 +30,11 @@ class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
 struct ReadIntoRequest;
-class WritableStream;
 
 using ReadableStreamReader =
     ReadableStreamDefaultReaderOrReadableStreamBYOBReader;
 using OwningReadableStreamReader =
     OwningReadableStreamDefaultReaderOrReadableStreamBYOBReader;
-class NativeUnderlyingSource;
-class BodyStreamHolder;
 
 class ReadableStream final : public nsISupports, public nsWrapperCache {
  public:
@@ -90,23 +86,11 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
     mErrorAlgorithm = aErrorAlgorithm;
   }
 
-  void SetNativeUnderlyingSource(BodyStreamHolder* aUnderlyingSource);
-  BodyStreamHolder* GetNativeUnderlyingSource() {
-    return mNativeUnderlyingSource;
-  }
-  bool HasNativeUnderlyingSource() { return mNativeUnderlyingSource; }
-
-  void ReleaseObjects();
-
  public:
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
-
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> Create(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv);
 
   // IDL Methods
   // TODO: Use MOZ_CAN_RUN_SCRIPT when IDL constructors can use it (bug 1749042)
@@ -123,10 +107,6 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   void GetReader(JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
                  OwningReadableStreamReader& resultReader, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PipeTo(
-      WritableStream& aDestinaton, const StreamPipeOptions& aOptions,
-      ErrorResult& aRv);
-
   MOZ_CAN_RUN_SCRIPT void Tee(JSContext* aCx,
                               nsTArray<RefPtr<ReadableStream>>& aResult,
                               ErrorResult& aRv);
@@ -141,21 +121,6 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Optional Callback for erroring a stream.
   RefPtr<UnderlyingSourceErrorCallbackHelper> mErrorAlgorithm;
-
-  // Optional strong reference to an Underlying Source; This
-  // exists because NativeUnderlyingSource callbacks don't hold
-  // a strong reference to the underlying source: So we need
-  // something else to hold onto that. As well, some of the integration
-  // desires the ability to extract the underlying source from the
-  // ReadableStream.
-  //
-  // While theoretically this ought to be some base class type to support
-  // multiple native underlying source types, I'm not sure what base class
-  // makes any sense for BodyStream, and given there's only body streams
-  // as the underlying source right now, I'm going to punt that problem to
-  // the future where we need to provide other native underlying sources
-  // (i.e. perhaps WebTransport.)
-  RefPtr<BodyStreamHolder> mNativeUnderlyingSource;
 };
 
 extern bool IsReadableStreamLocked(ReadableStream* aStream);
@@ -165,13 +130,13 @@ extern double ReadableStreamGetNumReadRequests(ReadableStream* aStream);
 extern void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
                                 JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableStreamClose(JSContext* aCx,
-                                                   ReadableStream* aStream,
-                                                   ErrorResult& aRv);
+extern void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
+                                ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableStreamFulfillReadRequest(
-    JSContext* aCx, ReadableStream* aStream, JS::Handle<JS::Value> aChunk,
-    bool done, ErrorResult& aRv);
+extern void ReadableStreamFulfillReadRequest(JSContext* aCx,
+                                             ReadableStream* aStream,
+                                             JS::Handle<JS::Value> aChunk,
+                                             bool done, ErrorResult& aRv);
 
 extern void ReadableStreamAddReadRequest(ReadableStream* aStream,
                                          ReadRequest* aReadRequest);
@@ -196,6 +161,7 @@ CreateReadableByteStream(JSContext* aCx, nsIGlobalObject* aGlobal,
                          UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
                          ErrorResult& aRv);
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_ReadableStream_h

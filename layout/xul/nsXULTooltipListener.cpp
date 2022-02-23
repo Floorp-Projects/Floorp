@@ -41,7 +41,9 @@ nsXULTooltipListener* nsXULTooltipListener::sInstance = nullptr;
 //// nsISupports
 
 nsXULTooltipListener::nsXULTooltipListener()
-    : mTooltipShownOnce(false),
+    : mMouseScreenX(0),
+      mMouseScreenY(0),
+      mTooltipShownOnce(false),
       mIsSourceTree(false),
       mNeedTitletip(false),
       mLastTreeRow(-1) {
@@ -134,12 +136,11 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   if (!mouseEvent) {
     return;
   }
-  CSSIntPoint newMouseScreenPoint = mouseEvent->ScreenPoint(CallerType::System);
+  int32_t newMouseX = mouseEvent->ScreenX(CallerType::System);
+  int32_t newMouseY = mouseEvent->ScreenY(CallerType::System);
 
   // filter out false win32 MouseMove event
-  if (mMouseScreenPoint == newMouseScreenPoint) {
-    return;
-  }
+  if (mMouseScreenX == newMouseX && mMouseScreenY == newMouseY) return;
 
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
@@ -155,12 +156,11 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   // to prevent tooltips from hiding prematurely. Do not filter out movements
   // if we are changing targets, as they may register new tooltips.
   if ((currentTooltip && isSameTarget) &&
-      (abs(mMouseScreenPoint.x - newMouseScreenPoint.x) <=
-       kTooltipMouseMoveTolerance) &&
-      (abs(mMouseScreenPoint.y - newMouseScreenPoint.y) <=
-       kTooltipMouseMoveTolerance))
+      (abs(mMouseScreenX - newMouseX) <= kTooltipMouseMoveTolerance) &&
+      (abs(mMouseScreenY - newMouseY) <= kTooltipMouseMoveTolerance))
     return;
-  mMouseScreenPoint = newMouseScreenPoint;
+  mMouseScreenX = newMouseX;
+  mMouseScreenY = newMouseY;
   mPreviousMouseMoveTarget = do_GetWeakReference(content);
 
   nsCOMPtr<nsIContent> sourceContent =
@@ -334,16 +334,17 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
   RefPtr<XULTreeElement> tree = GetSourceTree();
   Element* root = doc ? doc->GetRootElement() : nullptr;
   if (root && root->GetPrimaryFrame() && tree) {
-    CSSIntPoint pos = aMouseEvent->ScreenPoint(CallerType::System);
+    int32_t x = aMouseEvent->ScreenX(CallerType::System);
+    int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
     // subtract off the documentElement's position
-    // XXX Isn't this just converting to client points?
     CSSIntRect rect = root->GetPrimaryFrame()->GetScreenRect();
-    pos -= rect.TopLeft();
+    x -= rect.x;
+    y -= rect.y;
 
     ErrorResult rv;
     TreeCellInfo cellInfo;
-    tree->GetCellAt(pos.x, pos.y, cellInfo, rv);
+    tree->GetCellAt(x, y, cellInfo, rv);
 
     int32_t row = cellInfo.mRow;
     RefPtr<nsTreeColumn> col = cellInfo.mCol;
@@ -477,15 +478,14 @@ void nsXULTooltipListener::LaunchTooltip() {
     return;
   }
 
-  pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenPoint.x,
-                          mMouseScreenPoint.y);
+  pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenX, mMouseScreenY);
 }
 
 nsresult nsXULTooltipListener::HideTooltip() {
-  if (nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip)) {
-    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-      pm->HidePopup(currentTooltip, false, false, false, false);
-    }
+  nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
+  if (currentTooltip) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) pm->HidePopup(currentTooltip, false, false, false, false);
   }
 
   DestroyTooltip();

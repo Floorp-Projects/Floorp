@@ -151,7 +151,6 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
       nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
   if (sf) {
     sf->ResetScrollInfoIfNeeded(aRequest.GetScrollGeneration(),
-                                aRequest.GetScrollGenerationOnApz(),
                                 aRequest.GetScrollAnimationType());
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
@@ -675,9 +674,14 @@ static bool PrepareForSetTargetAPZCNotification(
 }
 
 static void SendLayersDependentApzcTargetConfirmation(
-    nsIWidget* aWidget, uint64_t aInputBlockId,
+    nsPresContext* aPresContext, uint64_t aInputBlockId,
     nsTArray<ScrollableLayerGuid>&& aTargets) {
-  WindowRenderer* renderer = aWidget->GetWindowRenderer();
+  PresShell* ps = aPresContext->GetPresShell();
+  if (!ps) {
+    return;
+  }
+
+  WindowRenderer* renderer = ps->GetWindowRenderer();
   if (!renderer) {
     return;
   }
@@ -716,7 +720,7 @@ void DisplayportSetListener::Register() {
 void DisplayportSetListener::OnPostRefresh() {
   APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n",
              mInputBlockId);
-  SendLayersDependentApzcTargetConfirmation(mWidget, mInputBlockId,
+  SendLayersDependentApzcTargetConfirmation(mPresContext, mInputBlockId,
                                             std::move(mTargets));
 }
 

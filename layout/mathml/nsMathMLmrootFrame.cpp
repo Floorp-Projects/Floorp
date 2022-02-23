@@ -7,7 +7,6 @@
 #include "nsMathMLmrootFrame.h"
 
 #include "mozilla/PresShell.h"
-#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include <algorithm>
 #include "gfxContext.h"

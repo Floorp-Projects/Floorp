@@ -83,7 +83,7 @@ XPCCallContext::XPCCallContext(
     mScriptable = mWrapper->GetScriptable();
   }
 
-  if (!name.isVoid()) {
+  if (!JSID_IS_VOID(name)) {
     SetName(name);
   }
 

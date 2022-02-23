@@ -13,10 +13,10 @@ function handleRequest(request, response) {
   // index == 0 First load, returns first meta refresh
   // index == 1 Second load, caused by first meta refresh, returns second meta refresh
   // index == 2 Third load, caused by second meta refresh, doesn't return a meta refresh
-  let query = new URLSearchParams(request.queryString);
   if (index < 2) {
+    let query = new URLSearchParams(request.queryString);
     refresh = query.get("seconds");
-    if (query.get("crossOrigin") == "true") {
+    if (query.get("crossorigin") == "true") {
       const hosts = ["example.org", "example.com"];
 
       let url = `${request.scheme}://${hosts[index]}${request.path}?${request.queryString}`;
@@ -24,10 +24,6 @@ function handleRequest(request, response) {
     }
     refresh = `<meta http-equiv="Refresh" content="${refresh}">`;
   }
-  // We want to scroll for the first load, and check that the meta refreshes keep the same
-  // scroll position.
-  let scroll = index == 0 ? `scrollTo(0, ${query.get("scrollTo")});` : "";
-
   setState("index", String(index + 1));
 
   response.write(
@@ -39,12 +35,10 @@ function handleRequest(request, response) {
   ${refresh}
   <script>
     window.addEventListener("pageshow", () => {
-      ${scroll}
       window.top.opener.postMessage({
         commandType: "pageShow",
         commandData: {
           inputValue: document.getElementById("input").value,
-          scrollPosition: window.scrollY,
         },
       }, "*");
     });
@@ -68,9 +62,6 @@ function handleRequest(request, response) {
 </head>
 <body>
 <input type="text" id="input" value="initial"></input>
-<div style='height: 9000px;'></div>
-<p>
-</p>
 </body>
 </html>`
   );

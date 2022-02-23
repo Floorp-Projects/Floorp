@@ -654,7 +654,7 @@ already_AddRefed<PaymentRequest> PaymentRequest::CreatePaymentRequest(
     nsPIDOMWindowInner* aWindow, ErrorResult& aRv) {
   // Generate a unique id for identification
   nsID uuid;
-  if (NS_WARN_IF(NS_FAILED(nsID::GenerateUUIDInPlace(uuid)))) {
+  if (NS_WARN_IF(NS_FAILED(nsContentUtils::GenerateUUIDInPlace(uuid)))) {
     aRv.ThrowAbortError(
         "Failed to create an internal UUID for the PaymentRequest");
     return nullptr;
@@ -1112,8 +1112,7 @@ void PaymentRequest::SetOptions(const PaymentOptions& aOptions) {
 }
 
 void PaymentRequest::ResolvedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue,
-                                      ErrorResult& aRv) {
+                                      JS::Handle<JS::Value> aValue) {
   if (!InFullyActiveDocument()) {
     return;
   }
@@ -1148,8 +1147,7 @@ void PaymentRequest::ResolvedCallback(JSContext* aCx,
 }
 
 void PaymentRequest::RejectedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue,
-                                      ErrorResult& aRv) {
+                                      JS::Handle<JS::Value> aValue) {
   if (!InFullyActiveDocument()) {
     return;
   }

@@ -1,7 +1,11 @@
-#![allow(dead_code)]
+#[macro_use]
+extern crate darling;
+#[macro_use]
+extern crate syn;
+#[macro_use]
+extern crate quote;
 
-use darling::{FromDeriveInput, FromMeta};
-use syn::parse_quote;
+use darling::FromDeriveInput;
 
 #[derive(Debug, Clone, FromMeta)]
 struct Wrapper<T>(pub T);

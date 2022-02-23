@@ -2054,12 +2054,11 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
     }
 
     // We don't yet support off-main-thread background-color animations on
-    // canvas frame or on <html> or <body> which genarate
-    // nsDisplayCanvasBackgroundColor or nsDisplaySolidColor display item.
+    // canvas frame or on <body> which genarate nsDisplayCanvasBackgroundColor
+    // or nsDisplaySolidColor display item.
     if (nsCSSRendering::IsCanvasFrame(aFrame) ||
         (aFrame->GetContent() &&
-         (aFrame->GetContent()->IsHTMLElement(nsGkAtoms::body) ||
-          aFrame->GetContent()->IsHTMLElement(nsGkAtoms::html)))) {
+         aFrame->GetContent()->IsHTMLElement(nsGkAtoms::body))) {
       return KeyframeEffect::MatchForCompositor::No;
     }
   }

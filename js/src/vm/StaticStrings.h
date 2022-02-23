@@ -7,18 +7,19 @@
 #ifndef vm_StaticStrings_h
 #define vm_StaticStrings_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
-#include "mozilla/TextUtils.h"  // mozilla::{IsAsciiDigit, IsAsciiLowercaseAlpha, IsAsciiUppercaseAlpha}
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/TextUtils.h"
 
-#include <stddef.h>     // size_t
-#include <stdint.h>     // int32_t, uint32_t
-#include <type_traits>  // std::is_same_v
+#include <stddef.h>
+#include <stdint.h>
+#include <type_traits>
 
-#include "jstypes.h"  // JS_PUBLIC_API, js::Bit, js::BitMask
+#include "jstypes.h"
 
-#include "js/TypeDecls.h"  // JS::Latin1Char
+#include "js/TypeDecls.h"
 
+class JS_PUBLIC_API JSTracer;
 struct JS_PUBLIC_API JSContext;
 
 class JSAtom;
@@ -68,6 +69,7 @@ class StaticStrings {
   StaticStrings() = default;
 
   bool init(JSContext* cx);
+  void trace(JSTracer* trc);
 
   static bool hasUint(uint32_t u) { return u < INT_STATIC_LIMIT; }
 
@@ -126,9 +128,17 @@ class StaticStrings {
          * priority to unit strings for "0" through "9" and length-2 strings for
          * "10" through "99".
          */
-        int i;
-        if (fitsInLength3Static(chars[0], chars[1], chars[2], &i)) {
-          return getInt(i);
+        static_assert(INT_STATIC_LIMIT <= 999,
+                      "static int strings assumed below to be at most "
+                      "three digits");
+        if ('1' <= chars[0] && chars[0] <= '9' && '0' <= chars[1] &&
+            chars[1] <= '9' && '0' <= chars[2] && chars[2] <= '9') {
+          int i =
+              (chars[0] - '0') * 100 + (chars[1] - '0') * 10 + (chars[2] - '0');
+
+          if (unsigned(i) < INT_STATIC_LIMIT) {
+            return getInt(i);
+          }
         }
         return nullptr;
     }
@@ -161,22 +171,6 @@ class StaticStrings {
            toSmallCharTable[c] != INVALID_SMALL_CHAR;
   }
 
-  template <typename CharT>
-  static bool fitsInLength3Static(CharT c1, CharT c2, CharT c3, int* i) {
-    static_assert(INT_STATIC_LIMIT <= 299,
-                  "static int strings assumed below to be at most "
-                  "three digits where the first digit is either 1 or 2");
-    if ('1' <= c1 && c1 < '3' && '0' <= c2 && c2 <= '9' && '0' <= c3 &&
-        c3 <= '9') {
-      *i = (c1 - '0') * 100 + (c2 - '0') * 10 + (c3 - '0');
-
-      if (unsigned(*i) < INT_STATIC_LIMIT) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   static constexpr JS::Latin1Char fromSmallChar(SmallChar c);
 
   static constexpr SmallChar toSmallChar(uint32_t c);
@@ -190,16 +184,6 @@ class StaticStrings {
   }
   static constexpr JS::Latin1Char secondCharOfLength2(size_t s) {
     return fromSmallChar(s & SMALL_CHAR_MASK);
-  }
-
-  static constexpr JS::Latin1Char firstCharOfLength3(uint32_t i) {
-    return '0' + (i / 100);
-  }
-  static constexpr JS::Latin1Char secondCharOfLength3(uint32_t i) {
-    return '0' + ((i / 10) % 10);
-  }
-  static constexpr JS::Latin1Char thirdCharOfLength3(uint32_t i) {
-    return '0' + (i % 10);
   }
 
   static MOZ_ALWAYS_INLINE size_t getLength2Index(char16_t c1, char16_t c2) {
@@ -267,4 +251,4 @@ constexpr StaticStrings::SmallChar StaticStrings::toSmallChar(uint32_t c) {
 
 }  // namespace js
 
-#endif /* vm_StaticStrings_h */
+#endif /* vm_StringType_h */

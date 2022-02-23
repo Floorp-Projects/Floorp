@@ -10,7 +10,6 @@ import platform
 import sys
 import subprocess
 
-from pathlib import Path
 from mozboot.base import BaseBootstrapper
 
 
@@ -69,14 +68,14 @@ def get_windefender_exclusion_paths():
             _, values_count, __ = winreg.QueryInfoKey(exclusions_key)
             for i in range(0, values_count):
                 path, _, __ = winreg.EnumValue(exclusions_key, i)
-                paths.append(Path(path))
+                paths.append(path)
     except FileNotFoundError:
         pass
 
     return paths
 
 
-def is_windefender_affecting_srcdir(src_dir: Path):
+def is_windefender_affecting_srcdir(srcdir):
     if get_is_windefender_disabled():
         return False
 
@@ -84,7 +83,7 @@ def is_windefender_affecting_srcdir(src_dir: Path):
     # commonpath will use the casing of the first path provided.
     # To avoid surprises here, we normcase(...) so we don't get unexpected breakage if we change
     # the path order.
-    src_dir = src_dir.resolve()
+    srcdir = os.path.normcase(os.path.abspath(srcdir))
 
     try:
         exclusion_paths = get_windefender_exclusion_paths()
@@ -97,9 +96,9 @@ def is_windefender_affecting_srcdir(src_dir: Path):
         raise
 
     for exclusion_path in exclusion_paths:
-        exclusion_path = exclusion_path.resolve()
+        exclusion_path = os.path.normcase(os.path.abspath(exclusion_path))
         try:
-            if Path(os.path.commonpath((exclusion_path, src_dir))) == exclusion_path:
+            if os.path.commonpath([exclusion_path, srcdir]) == exclusion_path:
                 # exclusion_path is an ancestor of srcdir
                 return False
         except ValueError:
@@ -248,8 +247,9 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         subprocess.check_call(command, stdin=sys.stdin)
 
     def pip_install(self, *packages):
-        pip_dir = Path(os.environ["MOZILLABUILD"]) / "python" / "Scripts" / "pip.exe"
-
-        command = [str(pip_dir), "install", "--upgrade"]
+        pip_dir = os.path.join(
+            os.environ["MOZILLABUILD"], "python", "Scripts", "pip.exe"
+        )
+        command = [pip_dir, "install", "--upgrade"]
         command.extend(packages)
         self.run(command)

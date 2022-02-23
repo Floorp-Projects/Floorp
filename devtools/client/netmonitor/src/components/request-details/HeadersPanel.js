@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   Component,
   createFactory,
@@ -24,7 +23,7 @@ const {
   getHeadersURL,
   getTrackingProtectionURL,
   getHTTPStatusCodeURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
+} = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const {
   fetchNetworkUpdatePacket,
   writeHeaderText,
@@ -74,12 +73,6 @@ loader.lazyRequireGetter(
   "devtools/client/shared/components/menu/utils",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "openContentLink",
-  "devtools/client/shared/link",
-  true
-);
 
 const { div, input, label, span, textarea, tr, td, button } = dom;
 
@@ -111,7 +104,7 @@ const HEADERS_ETP = L10N.getStr(
  * Lists basic information about the request
  *
  * In http/2 all response headers are in small case.
- * See: https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/request_details/index.html#response-headers
+ * See: https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_details#Headers
  * RFC: https://tools.ietf.org/html/rfc7540#section-8.1.2
  */
 class HeadersPanel extends Component {
@@ -125,7 +118,6 @@ class HeadersPanel extends Component {
       openLink: PropTypes.func,
       targetSearchResult: PropTypes.object,
       openRequestBlockingAndAddUrl: PropTypes.func.isRequired,
-      openHTTPCustomRequestTab: PropTypes.func.isRequired,
       cloneRequest: PropTypes.func,
       sendCustomRequest: PropTypes.func,
       shouldExpandPreview: PropTypes.bool,
@@ -463,7 +455,6 @@ class HeadersPanel extends Component {
           member: Object.assign({}, member, { open: false }),
           mode: MODE.TINY,
           noGrip: true,
-          openLink: openContentLink,
         })
       ),
       headerDocURL ? MDNLink({ url: headerDocURL }) : null
@@ -544,7 +535,6 @@ class HeadersPanel extends Component {
         transferredSize,
       },
       openRequestBlockingAndAddUrl,
-      openHTTPCustomRequestTab,
       shouldExpandPreview,
       setHeadersUrlPreviewExpanded,
     } = this.props;
@@ -746,10 +736,6 @@ class HeadersPanel extends Component {
       trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);
 
-    const newEditAndResendPref = Services.prefs.getBoolPref(
-      "devtools.netmonitor.features.newEditAndResend"
-    );
-
     return div(
       { className: "headers-panel-container" },
       div(
@@ -771,27 +757,15 @@ class HeadersPanel extends Component {
           L10N.getStr("netmonitor.headers.toolbar.block")
         ),
         span({ className: "devtools-separator" }),
-        newEditAndResendPref
-          ? button(
-              {
-                id: "edit-resend-button",
-                className: "devtools-button",
-                title: EDIT_AND_RESEND,
-                onClick: () => {
-                  openHTTPCustomRequestTab();
-                },
-              },
-              span({ className: "title" }, EDIT_AND_RESEND)
-            )
-          : button(
-              {
-                id: "edit-resend-button",
-                className: "devtools-button devtools-dropdown-button",
-                title: RESEND,
-                onClick: this.onShowResendMenu,
-              },
-              span({ className: "title" }, RESEND)
-            )
+        button(
+          {
+            id: "edit-resend-button",
+            className: "devtools-button devtools-dropdown-button",
+            title: RESEND,
+            onClick: this.onShowResendMenu,
+          },
+          span({ className: "title" }, RESEND)
+        )
       ),
       div(
         { className: "panel-container" },
@@ -829,8 +803,6 @@ module.exports = connect(
       dispatch(Actions.setHeadersUrlPreviewExpanded(expanded)),
     openRequestBlockingAndAddUrl: url =>
       dispatch(Actions.openRequestBlockingAndAddUrl(url)),
-    openHTTPCustomRequestTab: () =>
-      dispatch(Actions.openHTTPCustomRequest(true)),
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),

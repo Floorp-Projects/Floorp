@@ -3,72 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{get_current_thread, DispatchOptions, RunnableBuilder};
-use std::{
-    cell::Cell,
-    fmt::Debug,
-    future::Future,
-    pin::Pin,
-    ptr,
-    sync::Arc,
-    task::{Context, Poll},
-};
+use async_task::Task;
+use std::cell::Cell;
+use std::sync::Arc;
+use std::{fmt::Debug, future::Future, ptr};
 use xpcom::interfaces::{nsIEventTarget, nsIRunnablePriority};
 use xpcom::RefPtr;
-
-/// A spawned task.
-///
-/// A [`AsyncTask`] can be awaited to retrieve the output of its future.
-///
-/// Dropping an [`AsyncTask`] cancels it, which means its future won't be polled
-/// again. To drop the [`AsyncTask`] handle without canceling it, use
-/// [`detach()`][`AsyncTask::detach()`] instead. To cancel a task gracefully and
-/// wait until it is fully destroyed, use the [`cancel()`][AsyncTask::cancel()]
-/// method.
-///
-/// A task which is cancelled due to the nsIEventTarget it was dispatched to no
-/// longer accepting events will never be resolved.
-#[derive(Debug)]
-#[must_use = "tasks get canceled when dropped, use `.detach()` to run them in the background"]
-pub struct AsyncTask<T> {
-    task: async_task::FallibleTask<T>,
-}
-
-impl<T> AsyncTask<T> {
-    fn new(task: async_task::Task<T>) -> Self {
-        AsyncTask {
-            task: task.fallible(),
-        }
-    }
-
-    /// Detaches the task to let it keep running in the background.
-    pub fn detach(self) {
-        self.task.detach()
-    }
-
-    /// Cancels the task and waits for it to stop running.
-    ///
-    /// Returns the task's output if it was completed just before it got canceled, or [`None`] if
-    /// it didn't complete.
-    ///
-    /// While it's possible to simply drop the [`Task`] to cancel it, this is a cleaner way of
-    /// canceling because it also waits for the task to stop running.
-    pub async fn cancel(self) -> Option<T> {
-        self.task.cancel().await
-    }
-}
-
-impl<T> Future for AsyncTask<T> {
-    type Output = T;
-
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // Wrap the future produced by `AsyncTask` to never resolve if the
-        // Runnable was dropped, and the task was cancelled.
-        match Pin::new(&mut self.task).poll(cx) {
-            Poll::Ready(Some(t)) => Poll::Ready(t),
-            Poll::Ready(None) | Poll::Pending => Poll::Pending,
-        }
-    }
-}
 
 enum SpawnTarget {
     BackgroundTask,
@@ -179,7 +119,7 @@ where
     F::Output: Send + 'static,
 {
     /// Run the future on the background task pool.
-    pub fn spawn(self) -> AsyncTask<F::Output> {
+    pub fn spawn(self) -> Task<F::Output> {
         let config = Arc::new(TaskSpawnConfig {
             name: self.name,
             priority: self.priority,
@@ -190,11 +130,11 @@ where
             schedule(config.clone(), runnable)
         });
         runnable.schedule();
-        AsyncTask::new(task)
+        task
     }
 
     /// Run the future on the specified nsIEventTarget.
-    pub fn spawn_onto(self, target: &nsIEventTarget) -> AsyncTask<F::Output> {
+    pub fn spawn_onto(self, target: &nsIEventTarget) -> Task<F::Output> {
         let config = Arc::new(TaskSpawnConfig {
             name: self.name,
             priority: self.priority,
@@ -205,7 +145,7 @@ where
             schedule(config.clone(), runnable)
         });
         runnable.schedule();
-        AsyncTask::new(task)
+        task
     }
 }
 
@@ -223,7 +163,7 @@ where
     /// This method may panic if run on a thread which cannot run local futures
     /// (e.g. due to it is not being an XPCOM thread, or if we are very late
     /// during shutdown).
-    pub fn spawn_local(self) -> AsyncTask<F::Output> {
+    pub fn spawn_local(self) -> Task<F::Output> {
         let current_thread = get_current_thread().expect("cannot get current thread");
         let config = Arc::new(TaskSpawnConfig {
             name: self.name,
@@ -235,13 +175,13 @@ where
             schedule(config.clone(), runnable)
         });
         runnable.schedule();
-        AsyncTask::new(task)
+        task
     }
 }
 
 /// Spawn a future onto the background task pool. The future will not be run on
 /// the main thread.
-pub fn spawn<F>(name: &'static str, future: F) -> AsyncTask<F::Output>
+pub fn spawn<F>(name: &'static str, future: F) -> Task<F::Output>
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
@@ -251,7 +191,7 @@ where
 
 /// Spawn a potentially-blocking future onto the background task pool. The
 /// future will not be run on the main thread.
-pub fn spawn_blocking<F>(name: &'static str, future: F) -> AsyncTask<F::Output>
+pub fn spawn_blocking<F>(name: &'static str, future: F) -> Task<F::Output>
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
@@ -260,7 +200,7 @@ where
 }
 
 /// Spawn a local future onto the current thread.
-pub fn spawn_local<F>(name: &'static str, future: F) -> AsyncTask<F::Output>
+pub fn spawn_local<F>(name: &'static str, future: F) -> Task<F::Output>
 where
     F: Future + 'static,
     F::Output: 'static,
@@ -268,7 +208,7 @@ where
     TaskBuilder::new(name, future).spawn_local()
 }
 
-pub fn spawn_onto<F>(name: &'static str, target: &nsIEventTarget, future: F) -> AsyncTask<F::Output>
+pub fn spawn_onto<F>(name: &'static str, target: &nsIEventTarget, future: F) -> Task<F::Output>
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
@@ -280,7 +220,7 @@ pub fn spawn_onto_blocking<F>(
     name: &'static str,
     target: &nsIEventTarget,
     future: F,
-) -> AsyncTask<F::Output>
+) -> Task<F::Output>
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,

@@ -90,46 +90,57 @@ void LinkableAccessible::Value(nsString& aValue) const {
 }
 
 uint8_t LinkableAccessible::ActionCount() const {
-  bool isLink, isOnclick;
-  ActionWalk(&isLink, &isOnclick);
-  return (isLink || isOnclick) ? 1 : 0;
+  bool isLink, isOnclick, isLabelWithControl;
+  ActionWalk(&isLink, &isOnclick, &isLabelWithControl);
+  return (isLink || isOnclick || isLabelWithControl) ? 1 : 0;
 }
 
-const LocalAccessible* LinkableAccessible::ActionWalk(bool* aIsLink,
-                                                      bool* aIsOnclick) const {
+const LocalAccessible* LinkableAccessible::ActionWalk(
+    bool* aIsLink, bool* aIsOnclick, bool* aIsLabelWithControl) const {
   if (aIsOnclick) {
     *aIsOnclick = false;
   }
   if (aIsLink) {
     *aIsLink = false;
   }
+  if (aIsLabelWithControl) {
+    *aIsLabelWithControl = false;
+  }
 
-  if (HasPrimaryAction()) {
+  if (nsCoreUtils::HasClickListener(mContent)) {
     if (aIsOnclick) {
       *aIsOnclick = true;
     }
-
     return nullptr;
   }
 
-  const Accessible* actionAcc = ActionAncestor();
-
-  const LocalAccessible* localAction =
-      actionAcc ? const_cast<Accessible*>(actionAcc)->AsLocal() : nullptr;
-
-  if (!localAction) {
-    return nullptr;
-  }
-
-  if (localAction->LinkState() & states::LINKED) {
-    if (aIsLink) {
-      *aIsLink = true;
+  // XXX: The logic looks broken since the click listener may be registered
+  // on non accessible node in parent chain but this node is skipped when tree
+  // is traversed.
+  const LocalAccessible* walkUpAcc = this;
+  while ((walkUpAcc = walkUpAcc->LocalParent()) && !walkUpAcc->IsDoc()) {
+    if (walkUpAcc->LinkState() & states::LINKED) {
+      if (aIsLink) {
+        *aIsLink = true;
+      }
+      return walkUpAcc;
     }
-  } else if (aIsOnclick) {
-    *aIsOnclick = true;
-  }
 
-  return localAction;
+    if (nsCoreUtils::HasClickListener(walkUpAcc->GetContent())) {
+      if (aIsOnclick) {
+        *aIsOnclick = true;
+      }
+      return walkUpAcc;
+    }
+
+    if (nsCoreUtils::IsLabelWithControl(walkUpAcc->GetContent())) {
+      if (aIsLabelWithControl) {
+        *aIsLabelWithControl = true;
+      }
+      return walkUpAcc;
+    }
+  }
+  return nullptr;
 }
 
 void LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -137,11 +148,11 @@ void LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 
   // Action 0 (default action): Jump to link
   if (aIndex == eAction_Jump) {
-    bool isOnclick, isLink;
-    ActionWalk(&isLink, &isOnclick);
+    bool isOnclick, isLink, isLabelWithControl;
+    ActionWalk(&isLink, &isOnclick, &isLabelWithControl);
     if (isLink) {
       aName.AssignLiteral("jump");
-    } else if (isOnclick) {
+    } else if (isOnclick || isLabelWithControl) {
       aName.AssignLiteral("click");
     }
   }

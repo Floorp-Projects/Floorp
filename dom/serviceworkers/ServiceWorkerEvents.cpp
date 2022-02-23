@@ -432,11 +432,9 @@ class RespondWithHandler final : public PromiseNativeHandler {
         mRequestWasHandled(false) {
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   void CancelRequest(nsresult aStatus);
 
@@ -563,8 +561,7 @@ class MOZ_STACK_CLASS AutoCancel {
 NS_IMPL_ISUPPORTS0(RespondWithHandler)
 
 void RespondWithHandler::ResolvedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue,
-                                          ErrorResult& aRv) {
+                                          JS::Handle<JS::Value> aValue) {
   AutoCancel autoCancel(this, mRequestURL);
 
   if (!aValue.isObject()) {
@@ -738,8 +735,7 @@ void RespondWithHandler::ResolvedCallback(JSContext* aCx,
 }
 
 void RespondWithHandler::RejectedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue,
-                                          ErrorResult& aRv) {
+                                          JS::Handle<JS::Value> aValue) {
   nsCString sourceSpec = mRespondWithScriptSpec;
   uint32_t line = mRespondWithLineNumber;
   uint32_t column = mRespondWithColumnNumber;
@@ -883,13 +879,11 @@ class WaitUntilHandler final : public PromiseNativeHandler {
     nsJSUtils::GetCallingLocation(aCx, mSourceSpec, &mLine, &mColumn);
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu,
-                        ErrorResult& aRve) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // do nothing, we are only here to report errors
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     nsString spec;
@@ -969,8 +963,7 @@ NS_IMPL_RELEASE_INHERITED(FetchEvent, ExtendableEvent)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchEvent)
 NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent, mRequest,
-                                   mHandled, mPreloadResponse)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent, mRequest)
 
 ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
     : Event(aOwner, nullptr, nullptr) {}

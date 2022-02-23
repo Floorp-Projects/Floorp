@@ -98,9 +98,10 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
     return mActiveResourceTracker.get();
   }
 
+  void AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
+                                         const CompositableHandle& aHandlee);
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
-                                    const CompositableHandle& aHandle,
-                                    CompositableHandleOwner aOwner);
+                                    const CompositableHandle& aHandlee);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
 
   /// Release TextureClient that is bounded to ImageKey.

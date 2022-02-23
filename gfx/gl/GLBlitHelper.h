@@ -36,10 +36,6 @@ struct ID3D11Texture2D;
 class MacIOSurface;
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
-#endif
-
 namespace mozilla {
 
 namespace layers {
@@ -58,7 +54,7 @@ class SurfaceDescriptorDXGIYCbCr;
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-class SurfaceTextureDescriptor;
+class SurfaceTextureImage;
 #endif
 
 #ifdef XP_MACOSX
@@ -181,8 +177,9 @@ class GLBlitHelper final {
   bool BlitPlanarYCbCr(const layers::PlanarYCbCrData&,
                        const gfx::IntSize& destSize, OriginPos destOrigin);
 #ifdef MOZ_WIDGET_ANDROID
-  bool Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
-            const gfx::IntSize& destSize, const OriginPos destOrigin) const;
+  // Blit onto the current FB.
+  bool BlitImage(layers::SurfaceTextureImage* stImage,
+                 const gfx::IntSize& destSize, OriginPos destOrigin) const;
 #endif
 #ifdef XP_MACOSX
   bool BlitImage(layers::MacIOSurfaceImage* srcImage,
@@ -217,10 +214,9 @@ class GLBlitHelper final {
                             GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                             GLenum destTarget = LOCAL_GL_TEXTURE_2D) const;
 
-  void DrawBlitTextureToFramebuffer(GLuint srcTex, const gfx::IntSize& srcSize,
-                                    const gfx::IntSize& destSize,
-                                    GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
-                                    bool srcIsBGRA = false) const;
+  void DrawBlitTextureToFramebuffer(
+      GLuint srcTex, const gfx::IntSize& srcSize, const gfx::IntSize& destSize,
+      GLenum srcTarget = LOCAL_GL_TEXTURE_2D) const;
 
   bool BlitImageToFramebuffer(layers::Image* srcImage,
                               const gfx::IntSize& destSize,

@@ -62,7 +62,7 @@ add_task(async function test_go_to_download_page() {
     win.close();
   });
 
-  let listbox = win.document.getElementById("downloadsListBox");
+  let listbox = win.document.getElementById("downloadsRichListBox");
   ok(listbox, "download list box present");
 
   // Select one of the downloads.

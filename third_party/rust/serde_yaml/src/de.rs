@@ -987,10 +987,7 @@ where
             return visitor.visit_i64(n);
         }
     }
-    if {
-        let v = v.trim_start_matches(&['-', '+'][..]);
-        v.len() > 1 && v.starts_with('0') && v[1..].bytes().all(|b| b.is_ascii_digit())
-    } {
+    if v.len() > 1 && v.starts_with('0') && v.bytes().all(|b| b.is_ascii_digit()) {
         // After handling the different number encodings above if we are left
         // with leading zero(s) followed by numeric characters this is in fact a
         // string according to the YAML 1.2 spec.

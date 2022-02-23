@@ -13,7 +13,6 @@ const {
 const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
 const {
   RESOURCES,
-  BLACKBOXING,
   BREAKPOINTS,
   TARGET_CONFIGURATION,
   THREAD_CONFIGURATION,
@@ -51,10 +50,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
     async addSessionDataEntry(type, entries, isDocumentCreation = false) {
       if (type == RESOURCES) {
         await this._watchTargetResources(entries);
-      } else if (type == BLACKBOXING) {
-        for (const { url, range } of entries) {
-          this.sourcesManager.blackBox(url, range);
-        }
       } else if (type == BREAKPOINTS) {
         const isTargetCreation =
           this.threadActor.state == THREAD_STATES.DETACHED;
@@ -128,10 +123,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
     removeSessionDataEntry(type, entries) {
       if (type == RESOURCES) {
         return this._unwatchTargetResources(entries);
-      } else if (type == BLACKBOXING) {
-        for (const { url, range } of entries) {
-          this.sourcesManager.unblackBox(url, range);
-        }
       } else if (type == BREAKPOINTS) {
         for (const { location } of entries) {
           this.threadActor.removeBreakpoint(location);

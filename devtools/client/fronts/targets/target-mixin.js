@@ -503,7 +503,13 @@ function TargetMixin(parentClass) {
       // have the hybrid descriptor/target class which brings lots of complexity and confusion.
       // By doing so, the "attach" would be done on the server side and would simply be
       // part of the target actor instantiation.
-      if (this.attach) {
+      //
+      // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+      //                  Once Fx95 support is dropped, we can remove:
+      //                  - the trait
+      //                  - "attach" methods from fronts and specs for all but worker targets
+      //                  - here, we will still have to call attach for worker targets (`if (this.attach) await this.attach()`)
+      if (this.attach && !this.getTrait("isAutoAttached")) {
         await this.attach();
       }
 

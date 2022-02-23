@@ -68,7 +68,7 @@ class MessageContainer extends Component {
       messageId: PropTypes.string.isRequired,
       open: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.object.isRequired,
-      cssMatchingElements: PropTypes.object,
+      payload: PropTypes.object,
       timestampsVisible: PropTypes.bool.isRequired,
       repeat: PropTypes.number,
       badge: PropTypes.number,
@@ -79,11 +79,17 @@ class MessageContainer extends Component {
     };
   }
 
+  static get defaultProps() {
+    return {
+      open: false,
+    };
+  }
+
   shouldComponentUpdate(nextProps) {
     const triggeringUpdateProps = [
       "repeat",
       "open",
-      "cssMatchingElements",
+      "payload",
       "timestampsVisible",
       "networkMessageUpdate",
       "badge",

@@ -5,7 +5,6 @@
 
 #![cfg_attr(not(syn_only), feature(rustc_private))]
 #![recursion_limit = "1024"]
-#![allow(clippy::cast_lossless, clippy::unnecessary_wraps)]
 
 #[macro_use]
 #[path = "../tests/macros/mod.rs"]
@@ -117,7 +116,7 @@ fn main() {
 
     macro_rules! testcases {
         ($($(#[$cfg:meta])* $name:ident,)*) => {
-            [
+            vec![
                 $(
                     $(#[$cfg])*
                     (stringify!($name), $name::bench as fn(&str) -> Result<(), ()>),

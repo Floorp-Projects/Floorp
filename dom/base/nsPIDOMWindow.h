@@ -820,6 +820,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   void RefreshMediaElementsVolume();
 
+  float GetDevicePixelRatio(mozilla::dom::CallerType aCallerType);
+
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
 
   /**

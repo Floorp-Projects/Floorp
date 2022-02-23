@@ -68,7 +68,6 @@ UNIFIED_SOURCES += [
     "TestTimeStamp.cpp",
     "TestTokenizer.cpp",
     "TestUTF.cpp",
-    "TestVariant.cpp",
 ]
 
 if CONFIG["OS_TARGET"] != "Android":

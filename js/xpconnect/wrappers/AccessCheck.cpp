@@ -135,7 +135,7 @@ void AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
   }
 
   nsAutoCString message;
-  if (id.isVoid()) {
+  if (JSID_IS_VOID(id)) {
     message = "Permission denied to access object"_ns;
   } else {
     // We want to use JS_ValueToSource here, because that most closely

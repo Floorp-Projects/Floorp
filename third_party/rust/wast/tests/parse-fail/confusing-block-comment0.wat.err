@@ -1,5 +1,0 @@
-likely-confusing unicode character found '\u{202a}'
-     --> tests/parse-fail/confusing-block-comment0.wat:1:13
-      |
-    1 | (module) (;  ;)
-      |             ^

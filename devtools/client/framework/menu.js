@@ -6,6 +6,7 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
+const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
 /**
  * A partial implementation of the Menu API provided by electron:
@@ -61,15 +62,18 @@ Menu.prototype.insert = function(pos, menuItem) {
  *
  * @param {Element} target
  *        The element to use as anchor.
+ * @param {Document} doc
+ *        The document that should own the popup.
  */
-Menu.prototype.popupAtTarget = function(target) {
+Menu.prototype.popupAtTarget = function(target, doc) {
+  const zoom = getCurrentZoom(doc);
+
   const rect = target.getBoundingClientRect();
-  const doc = target.ownerDocument;
-  const defaultView = doc.defaultView;
+  const defaultView = target.ownerDocument.defaultView;
   const x = rect.left + defaultView.mozInnerScreenX;
   const y = rect.bottom + defaultView.mozInnerScreenY;
 
-  this.popup(x, y, doc);
+  this.popup(x * zoom, y * zoom, doc);
 };
 
 /**
@@ -111,14 +115,7 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   // navigation (see Bug 1543940).
   // Keep a reference on the window owning the menu to hide the popup on unload.
   const win = doc.defaultView;
-  const topWin = DevToolsUtils.getTopWindow(win);
-
-  // Convert coordinates from win's CSS coordinate space to topWin's
-  const winToTopWinCssScale = win.devicePixelRatio / topWin.devicePixelRatio;
-  screenX = screenX * winToTopWinCssScale;
-  screenY = screenY * winToTopWinCssScale;
-
-  doc = topWin.document;
+  doc = DevToolsUtils.getTopWindow(win).document;
 
   let popupset = doc.querySelector("popupset");
   if (!popupset) {

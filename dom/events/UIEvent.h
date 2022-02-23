@@ -102,7 +102,7 @@ class UIEvent : public Event {
 
   nsCOMPtr<nsPIDOMWindowOuter> mView;
   int32_t mDetail;
-  CSSIntPoint mDefaultClientPoint;
+  CSSIntPoint mClientPoint;
   // Screenpoint is mEvent->mRefPoint.
   nsIntPoint mLayerPoint;
   CSSIntPoint mPagePoint;

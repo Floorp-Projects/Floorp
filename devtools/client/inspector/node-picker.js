@@ -31,10 +31,27 @@ class NodePicker extends EventEmitter {
     this.isPicking = false;
     // Whether to focus the top-level frame before picking nodes.
     this.doFocus = false;
-  }
 
-  // The set of inspector fronts corresponding to the targets where picking happens.
-  #currentInspectorFronts = new Set();
+    // The set of inspector fronts corresponding to the targets where picking happens.
+    this._currentInspectorFronts = new Set();
+
+    this._onInspectorFrontAvailable = this._onInspectorFrontAvailable.bind(
+      this
+    );
+    this._onInspectorFrontDestroyed = this._onInspectorFrontDestroyed.bind(
+      this
+    );
+    this._onTargetAvailable = this._onTargetAvailable.bind(this);
+
+    this.start = this.start.bind(this);
+    this.stop = this.stop.bind(this);
+    this.togglePicker = this.togglePicker.bind(this);
+
+    this._onHovered = this._onHovered.bind(this);
+    this._onPicked = this._onPicked.bind(this);
+    this._onPreviewed = this._onPreviewed.bind(this);
+    this._onCanceled = this._onCanceled.bind(this);
+  }
 
   /**
    * Start/stop the element picker on the debuggee target.
@@ -43,12 +60,12 @@ class NodePicker extends EventEmitter {
    *        Optionally focus the content area once the picker is activated.
    * @return Promise that resolves when done
    */
-  togglePicker = doFocus => {
+  togglePicker(doFocus) {
     if (this.isPicking) {
       return this.stop({ canceled: true });
     }
     return this.start(doFocus);
-  };
+  }
 
   /**
    * Tell the walker front corresponding to the given inspector front to enter node
@@ -58,20 +75,20 @@ class NodePicker extends EventEmitter {
    * @param {InspectorFront} inspectorFront
    * @return {Promise}
    */
-  #onInspectorFrontAvailable = async inspectorFront => {
-    this.#currentInspectorFronts.add(inspectorFront);
+  async _onInspectorFrontAvailable(inspectorFront) {
+    this._currentInspectorFronts.add(inspectorFront);
     // watchFront may notify us about inspector fronts that aren't initialized yet,
     // so ensure waiting for initialization in order to have a defined `walker` attribute.
     await inspectorFront.initialize();
     const { walker } = inspectorFront;
-    walker.on("picker-node-hovered", this.#onHovered);
-    walker.on("picker-node-picked", this.#onPicked);
-    walker.on("picker-node-previewed", this.#onPreviewed);
-    walker.on("picker-node-canceled", this.#onCanceled);
+    walker.on("picker-node-hovered", this._onHovered);
+    walker.on("picker-node-picked", this._onPicked);
+    walker.on("picker-node-previewed", this._onPreviewed);
+    walker.on("picker-node-canceled", this._onCanceled);
     await walker.pick(this.doFocus);
 
     this.emitForTests("inspector-front-ready-for-picker", walker);
-  };
+  }
 
   /**
    * Tell the walker front corresponding to the given inspector front to exit the node
@@ -83,28 +100,25 @@ class NodePicker extends EventEmitter {
    *        and we should avoid doing any RDP request.
    * @return {Promise}
    */
-  #onInspectorFrontDestroyed = async (
-    inspectorFront,
-    { isDestroyCodepath } = {}
-  ) => {
-    this.#currentInspectorFronts.delete(inspectorFront);
+  async _onInspectorFrontDestroyed(inspectorFront, { isDestroyCodepath } = {}) {
+    this._currentInspectorFronts.delete(inspectorFront);
 
     const { walker } = inspectorFront;
     if (!walker) {
       return;
     }
 
-    walker.off("picker-node-hovered", this.#onHovered);
-    walker.off("picker-node-picked", this.#onPicked);
-    walker.off("picker-node-previewed", this.#onPreviewed);
-    walker.off("picker-node-canceled", this.#onCanceled);
+    walker.off("picker-node-hovered", this._onHovered);
+    walker.off("picker-node-picked", this._onPicked);
+    walker.off("picker-node-previewed", this._onPreviewed);
+    walker.off("picker-node-canceled", this._onCanceled);
     // Only do a RDP request if we stop the node picker from a user action.
     // Avoid doing one when we close the toolbox, in this scenario
     // the walker actor on the server side will automatically cancel the node picking.
     if (!isDestroyCodepath) {
       await walker.cancelPick();
     }
-  };
+  }
 
   /**
    * While node picking, we want each target's walker fronts to listen for mouse
@@ -115,13 +129,13 @@ class NodePicker extends EventEmitter {
    * @param {TargetFront} targetFront
    * @return {Promise}
    */
-  #onTargetAvailable = async ({ targetFront }) => {
+  async _onTargetAvailable({ targetFront }) {
     targetFront.watchFronts(
       "inspector",
-      this.#onInspectorFrontAvailable,
-      this.#onInspectorFrontDestroyed
+      this._onInspectorFrontAvailable,
+      this._onInspectorFrontDestroyed
     );
-  };
+  }
 
   /**
    * Start the element picker.
@@ -132,7 +146,7 @@ class NodePicker extends EventEmitter {
    * @param {Boolean} doFocus
    *        Optionally focus the content area once the picker is activated.
    */
-  start = async doFocus => {
+  async start(doFocus) {
     if (this.isPicking) {
       return;
     }
@@ -143,11 +157,11 @@ class NodePicker extends EventEmitter {
 
     this.targetCommand.watchTargets({
       types: this.targetCommand.ALL_TYPES,
-      onAvailable: this.#onTargetAvailable,
+      onAvailable: this._onTargetAvailable,
     });
 
     this.emit("picker-started");
-  };
+  }
 
   /**
    * Stop the element picker. Note that the picker is automatically stopped when
@@ -160,7 +174,7 @@ class NodePicker extends EventEmitter {
    *        Optional. If true, emit an additional event to notify that the
    *        picker was canceled, ie stopped without selecting a node.
    */
-  stop = async ({ isDestroyCodepath, canceled } = {}) => {
+  async stop({ isDestroyCodepath, canceled } = {}) {
     if (!this.isPicking) {
       return;
     }
@@ -169,23 +183,23 @@ class NodePicker extends EventEmitter {
 
     this.targetCommand.unwatchTargets({
       types: this.targetCommand.ALL_TYPES,
-      onAvailable: this.#onTargetAvailable,
+      onAvailable: this._onTargetAvailable,
     });
 
-    for (const inspectorFront of this.#currentInspectorFronts) {
-      await this.#onInspectorFrontDestroyed(inspectorFront, {
+    for (const inspectorFront of this._currentInspectorFronts) {
+      await this._onInspectorFrontDestroyed(inspectorFront, {
         isDestroyCodepath,
       });
     }
 
-    this.#currentInspectorFronts.clear();
+    this._currentInspectorFronts.clear();
 
     this.emit("picker-stopped");
 
     if (canceled) {
       this.emit("picker-node-canceled");
     }
-  };
+  }
 
   destroy() {
     // Do not await for stop as the isDestroy argument will make this method synchronous
@@ -200,17 +214,17 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the node being hovered
    */
-  #onHovered = data => {
+  _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
 
     // We're going to cleanup references for all the other walkers, so that if we hover
     // back the same node, we will receive a new `picker-node-hovered` event.
-    for (const inspectorFront of this.#currentInspectorFronts) {
+    for (const inspectorFront of this._currentInspectorFronts) {
       if (inspectorFront.walker !== data.node.walkerFront) {
         inspectorFront.walker.clearPicker();
       }
     }
-  };
+  }
 
   /**
    * When a node has been picked while the highlighter is in picker mode
@@ -218,10 +232,10 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the picked node
    */
-  #onPicked = data => {
+  _onPicked(data) {
     this.emit("picker-node-picked", data.node);
     return this.stop();
-  };
+  }
 
   /**
    * When a node has been shift-clicked (previewed) while the highlighter is in
@@ -230,17 +244,17 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the picked node
    */
-  #onPreviewed = data => {
+  _onPreviewed(data) {
     this.emit("picker-node-previewed", data.node);
-  };
+  }
 
   /**
    * When the picker is canceled, stop the picker, and make sure the toolbox
    * gets the focus.
    */
-  #onCanceled = data => {
+  _onCanceled() {
     return this.stop({ canceled: true });
-  };
+  }
 }
 
 module.exports = NodePicker;

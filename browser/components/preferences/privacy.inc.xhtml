@@ -650,16 +650,6 @@
             preference="browser.urlbar.suggest.topsites"/>
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
-  <hbox id="firefoxSuggestBestMatchContainer" align="center">
-    <checkbox id="firefoxSuggestBestMatch"
-              class="tail-with-learn-more"
-              data-l10n-id="addressbar-firefox-suggest-best-match-option"
-              preference="browser.urlbar.suggest.bestmatch"/>
-    <label id="firefoxSuggestBestMatchLearnMore"
-           class="learnMore"
-           is="text-link"
-           data-l10n-id="addressbar-best-match-learn-more"/>
-  </hbox>
   <vbox id="firefoxSuggestContainer" hidden="true">
     <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
          participating in session restore. autocomplete="off" is ignored on the
@@ -931,6 +921,7 @@
 </groupbox>
 
 <!-- Firefox Data Collection and Use -->
+#ifdef MOZ_DATA_REPORTING
 <hbox id="dataCollectionCategory"
       class="subcategory"
       hidden="true"
@@ -947,7 +938,6 @@
            class="learnMore" is="text-link"
            data-l10n-id="collection-privacy-notice"/>
   </description>
-#ifdef MOZ_DATA_REPORTING
   <description>
     <hbox id="telemetry-container" class="info-box-container smaller-font-size" hidden="true">
       <hbox class="info-icon-container">
@@ -1013,23 +1003,8 @@
     </hbox>
 #endif
   </vbox>
-#endif
-  <vbox id="privacySegmentationSection" data-subcategory="privacy-segmentation" hidden="true">
-    <hbox align="center">
-      <!-- TODO: Bug 1752172, provisional copy  -->
-      <checkbox id="privacySegmentationCheck"
-                preference="browser.privacySegmentation.enabled"
-                class="tail-with-learn-more"
-                label="Always ask before enabling new features that use my data"
-                accesskey="A">
-      </checkbox>
-      <!-- TODO: Bug 1752172, provisional copy  -->
-      <label id="privacy-segmentation-learn-more-link"
-             class="learnMore"
-             is="text-link">Learn more</label>
-    </hbox>
-  </vbox>
 </groupbox>
+#endif
 
 <hbox id="securityCategory"
       class="subcategory"

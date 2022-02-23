@@ -12,9 +12,8 @@ here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
 
 EXTRA_PATHS = (
-    "python/mach",
-    "python/mozbuild",
     "python/mozversioncontrol",
+    "python/mozbuild",
     "testing/mozbase/mozfile",
     "third_party/python/jsmin",
 )
@@ -42,7 +41,7 @@ def run_clang_format(hooktype, changedFiles):
     path_list = []
     for filename in sorted(changedFiles):
         # Ignore files unsupported in clang-format
-        if filename.endswith(extensions):
+        if filename.decode().endswith(extensions):
             path_list.append(filename)
 
     if not path_list:
@@ -83,8 +82,7 @@ def git():
 
     try:
         changedFiles = check_output(
-            ["git", "diff", "--staged", "--diff-filter=d", "--name-only", "HEAD"],
-            text=True,
+            ["git", "diff", "--staged", "--diff-filter=d", "--name-only", "HEAD"]
         ).split()
         # TODO we should detect if we are in a "add -p" mode and show a warning
         return run_clang_format(hooktype, changedFiles)

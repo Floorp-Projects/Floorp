@@ -180,12 +180,11 @@ class JsepSessionImpl : public JsepSession {
   nsresult ValidateOffer(const Sdp& offer);
   nsresult ValidateAnswer(const Sdp& offer, const Sdp& answer);
   nsresult UpdateTransceiversFromRemoteDescription(const Sdp& remote);
-  JsepTransceiver* GetTransceiverForLevel(size_t level) const;
-  JsepTransceiver* GetTransceiverForMid(const std::string& mid) const;
+  JsepTransceiver* GetTransceiverForLevel(size_t level);
+  JsepTransceiver* GetTransceiverForMid(const std::string& mid);
   JsepTransceiver* GetTransceiverForLocal(size_t level);
   JsepTransceiver* GetTransceiverForRemote(const SdpMediaSection& msection);
-  JsepTransceiver* GetTransceiverWithTransport(
-      const std::string& transportId) const;
+  JsepTransceiver* GetTransceiverWithTransport(const std::string& transportId);
   // The w3c and IETF specs have a lot of "magical" behavior that happens when
   // addTrack is used. This was a deliberate design choice. Sadface.
   JsepTransceiver* FindUnassociatedTransceiver(SdpMediaSection::MediaType type,

@@ -10,7 +10,6 @@ include PBackgroundIDBSharedTypes;
 include PBackgroundSharedTypes;
 
 include "mozilla/dom/quota/SerializationHelpers.h";
-include "mozilla/dom/indexedDB/ActorsChild.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
@@ -40,8 +39,7 @@ union FactoryRequestParams
   DeleteDatabaseRequestParams;
 };
 
-[ChildImpl="indexedDB::BackgroundFactoryChild", ParentImpl=virtual]
-sync protocol PBackgroundIDBFactory
+[RefCounted] sync protocol PBackgroundIDBFactory
 {
   manager PBackground;
 

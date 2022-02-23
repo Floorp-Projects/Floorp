@@ -6,14 +6,11 @@
 include protocol PGMP;
 include GMPTypes;
 
-include "GMPStorageChild.h";
-
 using GMPErr from "gmp-errors.h";
 
 namespace mozilla {
 namespace gmp {
 
-[ManualDealloc, ChildImpl="GMPStorageChild", ParentImpl=virtual]
 async protocol PGMPStorage
 {
   manager PGMP;

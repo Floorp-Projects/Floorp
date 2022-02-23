@@ -19,8 +19,8 @@ const { LongStringActor } = require("devtools/server/actors/string");
  * @param DevToolsServerConnection conn
  *        The connection into which this Actor will be added.
  * @param object sessionContext
- *        The Session Context to help know what is debugged.
- *        See devtools/server/actors/watcher/session-context.js
+ *        WatcherActor's session context. This helps know what is the overall debugged scope.
+ *        See watcher actor constructor for more info.
  * @param object options
  *        Dictionary object with the following attributes:
  *        - onNetworkEventUpdate: optional function

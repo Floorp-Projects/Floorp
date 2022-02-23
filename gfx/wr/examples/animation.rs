@@ -66,7 +66,6 @@ impl App {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: false,
                 should_snap: false,
-                paired_with_perspective: false,
             },
             SpatialTreeItemKey::new(0, 0),
         );

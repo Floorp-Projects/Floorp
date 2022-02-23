@@ -4,13 +4,10 @@
 include protocol PTestEndpointBridgeMainSub;
 include protocol PTestEndpointBridgeSub;
 
-include "mozilla/_ipdltest/TestEndpointBridgeMain.h";
-
 namespace mozilla {
 namespace _ipdltest {
 
 
-[ManualDealloc, ChildImpl="TestEndpointBridgeMainChild", ParentImpl="TestEndpointBridgeMainParent"]
 protocol PTestEndpointBridgeMain {
 
 child:

@@ -838,10 +838,10 @@ const StorageAccessCleaner = {
     for (let principal of aPrincipalsWithStorage) {
       baseDomainsWithStorage.add(principal.baseDomain);
     }
+
     for (let perm of Services.perms.getAllByTypeSince(
       "storageAccessAPI",
-      // The permission manager uses milliseconds instead of microseconds
-      aFrom / 1000
+      aFrom
     )) {
       if (!baseDomainsWithStorage.has(perm.principal.baseDomain)) {
         Services.perms.removePermission(perm);
@@ -1127,8 +1127,21 @@ const PreferencesCleaner = {
   },
 };
 
-const ClientAuthRememberCleaner = {
+const SecuritySettingsCleaner = {
   async deleteByHost(aHost, aOriginAttributes) {
+    let sss = Cc["@mozilla.org/ssservice;1"].getService(
+      Ci.nsISiteSecurityService
+    );
+    // Also remove HSTS information for subdomains by enumerating
+    // the information in the site security service.
+    for (let entry of sss.enumerate()) {
+      let hostname = entry.hostname;
+      if (Services.eTLD.hasRootDomain(hostname, aHost)) {
+        // This uri is used as a key to reset the state.
+        let uri = Services.io.newURI("https://" + hostname);
+        sss.resetState(uri, 0, entry.originAttributes);
+      }
+    }
     let cars = Cc[
       "@mozilla.org/security/clientAuthRememberService;1"
     ].getService(Ci.nsIClientAuthRememberService);
@@ -1141,6 +1154,22 @@ const ClientAuthRememberCleaner = {
   },
 
   async deleteByBaseDomain(aDomain) {
+    let sss = Cc["@mozilla.org/ssservice;1"].getService(
+      Ci.nsISiteSecurityService
+    );
+
+    // Remove HSTS information by enumerating entries of the site security
+    // service.
+    Array.from(sss.enumerate())
+      .filter(({ hostname, originAttributes }) =>
+        hasBaseDomain({ host: hostname, originAttributes }, aDomain)
+      )
+      .forEach(({ hostname, originAttributes }) => {
+        // This uri is used as a key to reset the state.
+        let uri = Services.io.newURI("https://" + hostname);
+        sss.resetState(uri, 0, originAttributes);
+      });
+
     let cars = Cc[
       "@mozilla.org/security/clientAuthRememberService;1"
     ].getService(Ci.nsIClientAuthRememberService);
@@ -1179,59 +1208,16 @@ const ClientAuthRememberCleaner = {
   },
 
   async deleteAll() {
-    let cars = Cc[
-      "@mozilla.org/security/clientAuthRememberService;1"
-    ].getService(Ci.nsIClientAuthRememberService);
-    cars.clearRememberedDecisions();
-  },
-};
-
-const HSTSCleaner = {
-  async deleteByHost(aHost, aOriginAttributes) {
-    let sss = Cc["@mozilla.org/ssservice;1"].getService(
-      Ci.nsISiteSecurityService
-    );
-    // Remove HSTS information for subdomains by enumerating
-    // the information in the site security service.
-    for (let entry of sss.enumerate()) {
-      let hostname = entry.hostname;
-      if (Services.eTLD.hasRootDomain(hostname, aHost)) {
-        // This uri is used as a key to reset the state.
-        let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, 0, entry.originAttributes);
-      }
-    }
-  },
-
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
-  },
-
-  async deleteByBaseDomain(aDomain) {
-    let sss = Cc["@mozilla.org/ssservice;1"].getService(
-      Ci.nsISiteSecurityService
-    );
-
-    // Remove HSTS information by enumerating entries of the site security
-    // service.
-    Array.from(sss.enumerate())
-      .filter(({ hostname, originAttributes }) =>
-        hasBaseDomain({ host: hostname, originAttributes }, aDomain)
-      )
-      .forEach(({ hostname, originAttributes }) => {
-        // This uri is used as a key to reset the state.
-        let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, 0, originAttributes);
-      });
-  },
-
-  async deleteAll() {
     // Clear site security settings - no support for ranges in this
     // interface either, so we clearAll().
     let sss = Cc["@mozilla.org/ssservice;1"].getService(
       Ci.nsISiteSecurityService
     );
     sss.clearAll();
+    let cars = Cc[
+      "@mozilla.org/security/clientAuthRememberService;1"
+    ].getService(Ci.nsIClientAuthRememberService);
+    cars.clearRememberedDecisions();
   },
 };
 
@@ -1413,11 +1399,6 @@ const FLAGS_MAP = [
   },
 
   {
-    flag: Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE,
-    cleaners: [ClientAuthRememberCleaner],
-  },
-
-  {
     flag: Ci.nsIClearDataService.CLEAR_DOWNLOADS,
     cleaners: [DownloadsCleaner, AboutHomeStartupCacheCleaner],
   },
@@ -1475,8 +1456,8 @@ const FLAGS_MAP = [
   },
 
   {
-    flag: Ci.nsIClearDataService.CLEAR_HSTS,
-    cleaners: [HSTSCleaner],
+    flag: Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS,
+    cleaners: [SecuritySettingsCleaner],
   },
 
   { flag: Ci.nsIClearDataService.CLEAR_EME, cleaners: [EMECleaner] },

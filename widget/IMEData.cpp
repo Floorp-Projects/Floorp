@@ -4,33 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMEData.h"
-
 #include <sstream>
 
-#include "ContentData.h"
 #include "gfxFontUtils.h"
-#include "TextEvents.h"
 
-#include "mozilla/Maybe.h"
-#include "mozilla/ToString.h"
 #include "mozilla/WritingModes.h"
 
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
 namespace mozilla {
-
-template PrintStringDetail::PrintStringDetail(
-    const Maybe<nsString>& aMaybeString, uint32_t aMaxLength);
-
-template <typename StringType>
-PrintStringDetail::PrintStringDetail(const Maybe<StringType>& aMaybeString,
-                                     uint32_t aMaxLength /* = UINT32_MAX */)
-    : PrintStringDetail(aMaybeString.refOr(EmptyString()), aMaxLength) {
-  if (aMaybeString.isNothing()) {
-    AssignASCII(ToString(aMaybeString).c_str());
-  }
-}
 
 PrintStringDetail::PrintStringDetail(const nsAString& aString,
                                      uint32_t aMaxLength /* = UINT32_MAX */) {
@@ -41,7 +24,7 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
       aString.Length() <= aMaxLength ? 0 : aMaxLength / 2;
   for (uint32_t i = 0; i < aString.Length(); i++) {
     if (i > 0) {
-      AppendLiteral(" ");
+      Append(" ");
     }
     char32_t ch = aString.CharAt(i);
     if (NS_IS_HIGH_SURROGATE(ch) && i + 1 < aString.Length() &&
@@ -50,7 +33,7 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
     }
     Append(PrintCharData(ch));
     if (i + 1 == kFirstHalf) {
-      AppendLiteral(" ...");
+      Append(" ...");
       i = aString.Length() - kSecondHalf - 1;
       if (NS_IS_LOW_SURROGATE(aString.CharAt(i)) &&
           NS_IS_HIGH_SURROGATE(aString.CharAt(i - 1))) {
@@ -64,9 +47,7 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
       i++;
     }
   }
-  AppendLiteral("\" (Length()=");
-  AppendInt(static_cast<uint32_t>(aString.Length()));
-  AppendLiteral(")");
+  Append("\"");
 }
 
 // static
@@ -316,12 +297,8 @@ std::ostream& operator<<(std::ostream& aStream,
 std::ostream& operator<<(
     std::ostream& aStream,
     const IMENotification::SelectionChangeDataBase& aData) {
-  if (!aData.IsInitialized()) {
-    aStream << "{ IsInitialized()=false }";
-    return aStream;
-  }
-  if (!aData.HasRange()) {
-    aStream << "{ HasRange()=false }";
+  if (!aData.IsValid()) {
+    aStream << "{ IsValid()=false }";
     return aStream;
   }
   aStream << "{ mOffset=" << aData.mOffset;
@@ -360,60 +337,6 @@ std::ostream& operator<<(std::ostream& aStream,
           << (aData.mIncludingChangesWithoutComposition ? "true" : "false")
           << " }";
   return aStream;
-}
-
-/******************************************************************************
- * IMENotification::SelectionChangeDataBase
- ******************************************************************************/
-
-void IMENotification::SelectionChangeDataBase::Assign(
-    const WidgetQueryContentEvent& aQuerySelectedTextEvent) {
-  MOZ_ASSERT(aQuerySelectedTextEvent.mMessage == eQuerySelectedText);
-  MOZ_ASSERT(aQuerySelectedTextEvent.Succeeded());
-
-  if (!(mIsInitialized = aQuerySelectedTextEvent.Succeeded())) {
-    ClearSelectionData();
-    return;
-  }
-  if ((mHasRange = aQuerySelectedTextEvent.FoundSelection())) {
-    mOffset = aQuerySelectedTextEvent.mReply->StartOffset();
-    *mString = aQuerySelectedTextEvent.mReply->DataRef();
-    mReversed = aQuerySelectedTextEvent.mReply->mReversed;
-    SetWritingMode(aQuerySelectedTextEvent.mReply->WritingModeRef());
-  } else {
-    mOffset = UINT32_MAX;
-    mString->Truncate();
-    mReversed = false;
-    // Let's keep the writing mode for avoiding temporarily changing the
-    // writing mode at no selection range.
-  }
-}
-
-void IMENotification::SelectionChangeDataBase::SetWritingMode(
-    const WritingMode& aWritingMode) {
-  mWritingModeBits = aWritingMode.GetBits();
-}
-
-WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
-  return WritingMode(mWritingModeBits);
-}
-
-bool IMENotification::SelectionChangeDataBase::EqualsRange(
-    const ContentSelection& aContentSelection) const {
-  if (aContentSelection.HasRange() != HasRange()) {
-    return false;
-  }
-  if (!HasRange()) {
-    return true;
-  }
-  return mOffset == aContentSelection.OffsetAndDataRef().StartOffset() &&
-         *mString == aContentSelection.OffsetAndDataRef().DataRef();
-}
-
-bool IMENotification::SelectionChangeDataBase::EqualsRangeAndWritingMode(
-    const ContentSelection& aContentSelection) const {
-  return EqualsRange(aContentSelection) &&
-         mWritingModeBits == aContentSelection.WritingModeRef().GetBits();
 }
 
 }  // namespace widget

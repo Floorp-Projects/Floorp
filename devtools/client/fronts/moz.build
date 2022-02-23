@@ -16,7 +16,6 @@ DevToolsModules(
     "accessibility.js",
     "animation.js",
     "array-buffer.js",
-    "blackboxing.js",
     "breakpoint-list.js",
     "changes.js",
     "compatibility.js",

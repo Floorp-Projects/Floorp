@@ -1,12 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::Ident;
+use syn::{self, Ident};
 
-use crate::{
-    codegen::{ExtractAttribute, OuterFromImpl, TraitImpl},
-    options::ForwardAttrs,
-    util::PathList,
-};
+use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
+use options::ForwardAttrs;
+use util::PathList;
 
 /// `impl FromField` generator. This is used for parsing an individual
 /// field and its attributes.
@@ -37,8 +35,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
             self.base.fallback_decl()
         };
 
-        let passed_ident = self
-            .ident
+        let passed_ident = self.ident
             .as_ref()
             .map(|i| quote!(#i: #input.ident.clone(),));
         let passed_vis = self.vis.as_ref().map(|i| quote!(#i: #input.vis.clone(),));
@@ -47,10 +44,10 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
 
         // Determine which attributes to forward (if any).
         let grab_attrs = self.extractor();
-        let post_transform = self.base.post_transform_call();
+        let map = self.base.map_fn();
 
         self.wrap(
-            quote! {
+            quote!{
                 fn from_field(#input: &::syn::Field) -> ::darling::Result<Self> {
                     #error_declaration
 
@@ -68,7 +65,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
                         #passed_vis
                         #passed_attrs
                         #initializers
-                    }) #post_transform
+                    }) #map
 
                 }
             },
@@ -79,7 +76,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
 
 impl<'a> ExtractAttribute for FromFieldImpl<'a> {
     fn attr_names(&self) -> &PathList {
-        self.attr_names
+        &self.attr_names
     }
 
     fn forwarded_attrs(&self) -> Option<&ForwardAttrs> {

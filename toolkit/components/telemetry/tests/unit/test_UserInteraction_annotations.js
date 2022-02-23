@@ -60,8 +60,13 @@ async function hangAndWaitForReport(expectTestAnnotation) {
  * of making sure that BHR is initialized as well.
  */
 function ensureProfilerInitialized() {
+  if (!Services.profiler.CanProfile()) {
+    return false;
+  }
+
   startProfiler();
   stopProfiler();
+  return true;
 }
 
 function stopProfiler() {
@@ -161,7 +166,9 @@ add_task(async function test_recording_annotations_and_markers() {
     return;
   }
 
-  ensureProfilerInitialized();
+  if (!ensureProfilerInitialized()) {
+    return;
+  }
 
   Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.OverridePreRelease,
@@ -263,7 +270,9 @@ add_task(async function test_updating_annotations_and_markers() {
     return;
   }
 
-  ensureProfilerInitialized();
+  if (!ensureProfilerInitialized()) {
+    return;
+  }
 
   // First, we'll check to see if we can get a single annotation and
   // profiler marker to be set.
@@ -362,7 +371,9 @@ add_task(async function test_cancelling_annotations_and_markers() {
     return;
   }
 
-  ensureProfilerInitialized();
+  if (!ensureProfilerInitialized()) {
+    return;
+  }
 
   // First, we'll check to see if we can get a single annotation and
   // profiler marker to be set.

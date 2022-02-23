@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CommonUtils: "resource://services-common/utils.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Services: "resource://gre/modules/Services.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];
@@ -147,9 +147,7 @@ var TelemetryEnvironmentTesting = {
 
     // Spoof the preferences.
     for (let pref in prefsToSpoof) {
-      Services.prefs
-        .getDefaultBranch(null)
-        .setStringPref(pref, prefsToSpoof[pref]);
+      Preferences.set(pref, prefsToSpoof[pref]);
     }
   },
 
@@ -319,7 +317,7 @@ var TelemetryEnvironmentTesting = {
 
       let win32kLockdownState =
         data.settings.sandbox.contentWin32kLockdownState;
-      Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 15);
+      Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 4);
     }
 
     // Check "defaultSearchEngine" separately, as it can either be undefined or string.

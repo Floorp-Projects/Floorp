@@ -28,9 +28,6 @@
 #include "SandboxPolicyUtility.h"
 #include "mozilla/Assertions.h"
 
-#include "mozilla/GeckoArgs.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
-
 // Undocumented sandbox setup routines.
 extern "C" int sandbox_init_with_parameters(const char* profile, uint64_t flags,
                                             const char* const parameters[], char** errorbuf);
@@ -284,15 +281,7 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   std::string userCacheDir;
 
   if (aInfo.type == MacSandboxType_Utility) {
-    switch (aInfo.utilityKind) {
-      case ipc::SandboxingKind::GENERIC_UTILITY:
-        profile = const_cast<char*>(SandboxPolicyUtility);
-        break;
-
-      default:
-        MOZ_ASSERT(false, "Invalid SandboxingKind");
-        break;
-    }
+    profile = const_cast<char*>(SandboxPolicyUtility);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("APP_PATH");
@@ -596,8 +585,7 @@ bool GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
   return true;
 }
 
-bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo,
-                                     bool aSandboxingKindRequired = true) {
+bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
   // Ensure we find these paramaters in the command
   // line arguments. Return false if any are missing.
   bool foundAppPath = false;
@@ -623,16 +611,6 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
     }
   }
 
-  if (aSandboxingKindRequired) {
-    Maybe<uint64_t> sandboxingKind =
-        geckoargs::sSandboxingKind.Get(aArgc, aArgv, CheckArgFlag::None);
-    if (sandboxingKind.isNothing()) {
-      fprintf(stderr, "Utility sandbox requires a sandboxingKind");
-      return false;
-    }
-    aInfo.utilityKind = (ipc::SandboxingKind)*sandboxingKind;
-  }
-
   if (!foundAppPath) {
     fprintf(stderr, "Utility sandbox disabled due to "
                     "missing sandbox CLI app path parameter.\n");
@@ -643,7 +621,7 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
 }
 
 bool GetSocketSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
-  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo, false);
+  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo);
 }
 
 bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
@@ -718,7 +696,7 @@ bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aIn
 }
 
 bool GetRDDSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
-  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo, false);
+  return GetUtilitySandboxParamsFromArgs(aArgc, aArgv, aInfo);
 }
 
 /*

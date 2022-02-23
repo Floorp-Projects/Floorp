@@ -19,7 +19,7 @@ struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   using paramType = mozilla::ipc::NodeChannel::Introduction;
   static void Write(Message* aMsg, paramType&& aParam) {
     WriteParam(aMsg, aParam.mName);
-    WriteParam(aMsg, std::move(aParam.mHandle));
+    WriteParam(aMsg, std::move(aParam.mTransport));
     WriteParam(aMsg, aParam.mMode);
     WriteParam(aMsg, aParam.mMyPid);
     WriteParam(aMsg, aParam.mOtherPid);
@@ -27,7 +27,7 @@ struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mName) &&
-           ReadParam(aMsg, aIter, &aResult->mHandle) &&
+           ReadParam(aMsg, aIter, &aResult->mTransport) &&
            ReadParam(aMsg, aIter, &aResult->mMode) &&
            ReadParam(aMsg, aIter, &aResult->mMyPid) &&
            ReadParam(aMsg, aIter, &aResult->mOtherPid);

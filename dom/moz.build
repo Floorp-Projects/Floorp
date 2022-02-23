@@ -52,7 +52,6 @@ DIRS += [
     "filehandle",
     "filesystem",
     "flex",
-    "fs",
     "gamepad",
     "geolocation",
     "grid",
@@ -109,7 +108,6 @@ DIRS += [
     "localstorage",
     "prio",
     "l10n",
-    "origin-trials",
 ]
 
 if CONFIG["MOZ_DOM_STREAMS"]:

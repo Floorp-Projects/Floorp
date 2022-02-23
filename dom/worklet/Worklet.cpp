@@ -24,6 +24,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsIInputStreamPump.h"
 #include "nsNetUtil.h"
 #include "xpcprivate.h"
 #include "mozilla/ScopeExit.h"
@@ -163,8 +164,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     return promise.forget();
   }
 
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!aValue.isObject()) {
@@ -255,8 +256,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     return NS_OK;
   }
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(NS_IsMainThread());
     RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
   }

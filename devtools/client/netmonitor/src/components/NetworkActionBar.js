@@ -95,7 +95,7 @@ class NetworkActionBar extends Component {
               title: L10N.getStr("netmonitor.actionbar.HTTPCustomRequest"),
               className: "network-action-bar-HTTP-custom-request",
             },
-            HTTPCustomRequestPanel({ connector })
+            HTTPCustomRequestPanel()
           ),
         showSearchPanel &&
           TabPanel(

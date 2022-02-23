@@ -99,15 +99,9 @@ void ImageBundle::SetAlpha(ImageF&& alpha, bool alpha_is_premultiplied) {
   JXL_CHECK(eci != nullptr);
   JXL_CHECK(alpha.xsize() != 0 && alpha.ysize() != 0);
   JXL_CHECK(eci->alpha_associated == alpha_is_premultiplied);
-  if (extra_channels_.size() < metadata_->extra_channel_info.size()) {
-    // TODO(jon): get rid of this case
-    extra_channels_.insert(
-        extra_channels_.begin() + (eci - metadata_->extra_channel_info.data()),
-        std::move(alpha));
-  } else {
-    extra_channels_[eci - metadata_->extra_channel_info.data()] =
-        std::move(alpha);
-  }
+  extra_channels_.insert(
+      extra_channels_.begin() + (eci - metadata_->extra_channel_info.data()),
+      std::move(alpha));
   // num_extra_channels is automatically set in visitor
   VerifySizes();
 }

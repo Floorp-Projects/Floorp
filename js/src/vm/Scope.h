@@ -1587,8 +1587,8 @@ class AbstractBindingIter<JSAtom> : public BaseAbstractBindingIter<JSAtom> {
   AbstractBindingIter(ScopeKind kind, BaseScopeData* data,
                       uint32_t firstFrameSlot);
 
-  explicit AbstractBindingIter(Scope* scope);
-  explicit AbstractBindingIter(JSScript* script);
+  explicit AbstractBindingIter<JSAtom>(Scope* scope);
+  explicit AbstractBindingIter<JSAtom>(JSScript* script);
 
   using Base::Base;
 

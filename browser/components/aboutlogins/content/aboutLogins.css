@@ -62,6 +62,7 @@ login-item[data-editing="true"] + login-intro,
   display: none;
 }
 
+
 .heading-wrapper {
   display: flex;
   justify-content: center;
@@ -73,27 +74,20 @@ login-item[data-editing="true"] + login-intro,
   visibility: hidden;
 }
 
-:root:not(.primary-password-auth-required) #primary-password-required-overlay {
+:root:not(.master-password-auth-required) #master-password-required-overlay {
   display: none;
 }
 
-.primary-password-auth-required > body > header,
-.primary-password-auth-required > body > login-list,
-.primary-password-auth-required > body > section {
+.master-password-auth-required > body > header,
+.master-password-auth-required > body > login-list,
+.master-password-auth-required > body > section {
   filter: blur(2px)
 }
 
-#primary-password-required-overlay {
+#master-password-required-overlay {
   z-index: 1;
   position: fixed;
   width: 100vw;
   height: 100vh;
   background-color: rgba(0,0,0,0.2);
-}
-
-body > section {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  overflow-y: hidden;
-  overflow-x: auto;
 }

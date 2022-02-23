@@ -1,10 +1,16 @@
-use darling::{ast, FromDeriveInput, FromVariant};
+#[macro_use]
+extern crate darling;
+#[macro_use]
+extern crate syn;
+#[macro_use]
+extern crate quote;
+
+use darling::ast;
+use darling::FromDeriveInput;
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(from_variants), supports(enum_any))]
 pub struct Container {
-    // The second type parameter can be anything that implements FromField, since
-    // FromDeriveInput will produce an error if given a struct.
     data: ast::Data<Variant, ()>,
 }
 
@@ -18,16 +24,14 @@ pub struct Variant {
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(from_struct), supports(struct_named))]
 pub struct StructContainer {
-    // The second type parameter can be anything that implements FromVariant, since
-    // FromDeriveInput will produce an error if given an enum.
     data: ast::Data<(), syn::Field>,
 }
 
 mod source {
-    use syn::{parse_quote, DeriveInput};
+    use syn::DeriveInput;
 
     pub fn newtype_enum() -> DeriveInput {
-        parse_quote! {
+        parse_quote!{
             enum Hello {
                 World(bool),
                 String(String),
@@ -62,8 +66,7 @@ mod source {
 #[test]
 fn enum_newtype_or_unit() {
     // Should pass
-    let container = Container::from_derive_input(&source::newtype_enum()).unwrap();
-    assert!(container.data.is_enum());
+    Container::from_derive_input(&source::newtype_enum()).unwrap();
 
     // Should error
     Container::from_derive_input(&source::named_field_enum()).unwrap_err();
@@ -73,8 +76,7 @@ fn enum_newtype_or_unit() {
 #[test]
 fn struct_named() {
     // Should pass
-    let container = StructContainer::from_derive_input(&source::named_struct()).unwrap();
-    assert!(container.data.is_struct());
+    StructContainer::from_derive_input(&source::named_struct()).unwrap();
 
     // Should fail
     StructContainer::from_derive_input(&source::tuple_struct()).unwrap_err();

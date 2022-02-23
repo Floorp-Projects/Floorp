@@ -17,7 +17,7 @@ from mozversioncontrol import (
 
 def test_push_to_try(repo, monkeypatch):
     commit_message = "commit message"
-    vcs = get_repository_object(repo.dir)
+    vcs = get_repository_object(repo.strpath)
 
     captured_commands = []
 
@@ -32,14 +32,14 @@ def test_push_to_try(repo, monkeypatch):
 
     if repo.vcs == "hg":
         expected = [
-            (str(tool), "push-to-try", "-m", commit_message),
-            (str(tool), "revert", "-a"),
+            (tool, "push-to-try", "-m", commit_message),
+            (tool, "revert", "-a"),
         ]
     else:
         expected = [
-            (str(tool), "cinnabar", "--version"),
+            (tool, "cinnabar", "--version"),
             (
-                str(tool),
+                tool,
                 "-c",
                 "commit.gpgSign=false",
                 "commit",
@@ -48,12 +48,12 @@ def test_push_to_try(repo, monkeypatch):
                 commit_message,
             ),
             (
-                str(tool),
+                tool,
                 "push",
                 "hg::ssh://hg.mozilla.org/try",
                 "+HEAD:refs/heads/branches/default/tip",
             ),
-            (str(tool), "reset", "HEAD~"),
+            (tool, "reset", "HEAD~"),
         ]
 
     for i, value in enumerate(captured_commands):
@@ -66,7 +66,7 @@ def test_push_to_try_missing_extensions(repo, monkeypatch):
     if repo.vcs != "git":
         return
 
-    vcs = get_repository_object(repo.dir)
+    vcs = get_repository_object(repo.strpath)
 
     orig = vcs._run
 

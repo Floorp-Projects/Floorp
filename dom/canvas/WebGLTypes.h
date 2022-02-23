@@ -7,7 +7,6 @@
 #define WEBGLTYPES_H_
 
 #include <limits>
-#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -19,8 +18,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
-#include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Point.h"
@@ -269,7 +266,9 @@ class UniqueBuffer final {
 
   UniqueBuffer() = default;
 
-  ~UniqueBuffer() { reset(); }
+  ~UniqueBuffer() {
+    reset();
+  }
 
   UniqueBuffer(UniqueBuffer&& rhs) { *this = std::move(rhs); }
 
@@ -517,6 +516,20 @@ struct DriverUnpackInfo final {
   PackingInfo ToPacking() const { return {unpackFormat, unpackType}; }
 };
 
+struct PixelPackState final {
+  uint32_t alignment = 4;
+  uint32_t rowLength = 0;
+  uint32_t skipRows = 0;
+  uint32_t skipPixels = 0;
+};
+
+struct ReadPixelsDesc final {
+  ivec2 srcOffset;
+  uvec2 size;
+  PackingInfo pi = {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE};
+  PixelPackState packState;
+};
+
 // -
 
 template <typename E>
@@ -653,12 +666,6 @@ struct OpaqueFramebufferOptions final {
   bool antialias = true;
   uint32_t width = 0;
   uint32_t height = 0;
-};
-
-// -
-
-struct SwapChainOptions final {
-  bool bgra = false;
 };
 
 // -
@@ -928,7 +935,6 @@ namespace dom {
 class Element;
 class ImageBitmap;
 class ImageData;
-class OffscreenCanvas;
 }  // namespace dom
 
 struct TexImageSource {
@@ -941,89 +947,94 @@ struct TexImageSource {
   const dom::ImageBitmap* mImageBitmap = nullptr;
   const dom::ImageData* mImageData = nullptr;
 
-  const dom::OffscreenCanvas* mOffscreenCanvas = nullptr;
-
   const dom::Element* mDomElem = nullptr;
   ErrorResult* mOut_error = nullptr;
 };
 
-namespace webgl {
-
-template <class DerivedT>
-struct DeriveNotEq {
-  bool operator!=(const DerivedT& rhs) const {
-    const auto self = reinterpret_cast<const DerivedT*>(this);
-    return !(*self == rhs);
-  }
-};
-
-struct PixelPackingState : public DeriveNotEq<PixelPackingState> {
-  uint32_t alignmentInTypeElems = 4;  // ALIGNMENT isn't naive byte alignment!
-  uint32_t rowLength = 0;
-  uint32_t imageHeight = 0;
-  uint32_t skipPixels = 0;
-  uint32_t skipRows = 0;
-  uint32_t skipImages = 0;
-
-  // C++20's default comparison operators can't come soon enough!
-  bool operator==(const PixelPackingState& rhs) const {
-    return alignmentInTypeElems == rhs.alignmentInTypeElems &&
-           rowLength == rhs.rowLength && imageHeight == rhs.imageHeight &&
-           skipPixels == rhs.skipPixels && skipRows == rhs.skipRows &&
-           skipImages == rhs.skipImages;
-  }
-
-  static void AssertDefaultUnpack(gl::GLContext& gl, const bool isWebgl2) {
-    PixelPackingState{}.AssertCurrentUnpack(gl, isWebgl2);
-  }
-
-  void ApplyUnpack(gl::GLContext&, bool isWebgl2,
-                   const uvec3& uploadSize) const;
-  bool AssertCurrentUnpack(gl::GLContext&, bool isWebgl2) const;
-};
-
-struct PixelUnpackStateWebgl final : public PixelPackingState {
-  GLenum colorspaceConversion =
+struct WebGLPixelStore final {
+  uint32_t mUnpackImageHeight = 0;
+  uint32_t mUnpackSkipImages = 0;
+  uint32_t mUnpackRowLength = 0;
+  uint32_t mUnpackSkipRows = 0;
+  uint32_t mUnpackSkipPixels = 0;
+  uint32_t mUnpackAlignment = 4;
+  GLenum mColorspaceConversion =
       dom::WebGLRenderingContext_Binding::BROWSER_DEFAULT_WEBGL;
-  bool flipY = false;
-  bool premultiplyAlpha = false;
-  bool requireFastPath = false;
+  bool mFlipY = false;
+  bool mPremultiplyAlpha = false;
+  bool mRequireFastPath = false;
+
+  static void AssertDefault(gl::GLContext& gl, const bool isWebgl2) {
+    WebGLPixelStore expected;
+    MOZ_ASSERT(expected.AssertCurrent(gl, isWebgl2));
+    Unused << expected;
+  }
+
+  void Apply(gl::GLContext&, bool isWebgl2, const uvec3& uploadSize) const;
+  bool AssertCurrent(gl::GLContext&, bool isWebgl2) const;
+
+  WebGLPixelStore ForUseWith(const GLenum target, const uvec3& uploadSize,
+                             const Maybe<uvec2>& structuredSrcSize) const {
+    auto ret = *this;
+
+    if (!IsTexTarget3D(target)) {
+      ret.mUnpackSkipImages = 0;
+      ret.mUnpackImageHeight = 0;
+    }
+
+    if (structuredSrcSize) {
+      ret.mUnpackRowLength = structuredSrcSize->x;
+    }
+
+    if (!ret.mUnpackRowLength) {
+      ret.mUnpackRowLength = uploadSize.x;
+    }
+    if (!ret.mUnpackImageHeight) {
+      ret.mUnpackImageHeight = uploadSize.y;
+
+      if (!IsTexTarget3D(target)) {
+        // 2D targets don't enforce skipRows+height<=imageHeight.
+        ret.mUnpackImageHeight += ret.mUnpackSkipRows;
+      }
+    }
+
+    return ret;
+  }
+
+  CheckedInt<size_t> UsedPixelsPerRow(const uvec3& size) const {
+    if (!size.x || !size.y || !size.z) return 0;
+    return CheckedInt<size_t>(mUnpackSkipPixels) + size.x;
+  }
+
+  CheckedInt<size_t> FullRowsNeeded(const uvec3& size) const {
+    if (!size.x || !size.y || !size.z) return 0;
+
+    // The spec guarantees:
+    // * SKIP_PIXELS + width <= ROW_LENGTH.
+    // * SKIP_ROWS + height <= IMAGE_HEIGHT.
+    MOZ_ASSERT(mUnpackImageHeight);
+    auto skipFullRows =
+        CheckedInt<size_t>(mUnpackSkipImages) * mUnpackImageHeight;
+    skipFullRows += mUnpackSkipRows;
+
+    // Full rows in the final image, excluding the tail.
+    auto usedFullRows = CheckedInt<size_t>(size.z - 1) * mUnpackImageHeight;
+    usedFullRows += size.y - 1;
+
+    return skipFullRows + usedFullRows;
+  }
 };
 
-struct ExplicitPixelPackingState final {
-  struct Metrics final {
-    uvec3 usedSize = {};
-    size_t bytesPerPixel = 0;
+struct TexImageData final {
+  WebGLPixelStore unpackState;
 
-    // (srcStrideAndRowOverride.x, otherwise ROW_LENGTH != 0, otherwise size.x)
-    // ...aligned to ALIGNMENT.
-    size_t bytesPerRowStride = 0;
+  Maybe<uint64_t> pboOffset;
 
-    // structuredSrcSize.y, otherwise IMAGE_HEIGHT*(SKIP_IMAGES+size.z)
-    size_t totalRows = 0;
+  RawBuffer<> data;
 
-    // This ensures that no one else needs to do CheckedInt math.
-    size_t totalBytesUsed = 0;
-    size_t totalBytesStrided = 0;
-  };
-
-  // It's so important that these aren't modified once evaluated.
-  const PixelPackingState state;
-  const Metrics metrics;
-
-  static Result<ExplicitPixelPackingState, std::string> ForUseWith(
-      const PixelPackingState&, GLenum target, const uvec3& subrectSize,
-      const webgl::PackingInfo&, const Maybe<size_t> bytesPerRowStrideOverride);
+  const dom::Element* domElem = nullptr;
+  ErrorResult* out_domElemError = nullptr;
 };
-
-struct ReadPixelsDesc final {
-  ivec2 srcOffset;
-  uvec2 size;
-  PackingInfo pi = {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE};
-  PixelPackingState packState;
-};
-
-}  // namespace webgl
 
 namespace webgl {
 
@@ -1035,22 +1046,13 @@ struct TexUnpackBlobDesc final {
   Maybe<RawBuffer<>> cpuData;
   Maybe<uint64_t> pboOffset;
 
-  Maybe<uvec2> structuredSrcSize;
+  uvec2 imageSize;
   RefPtr<layers::Image> image;
   Maybe<layers::SurfaceDescriptor> sd;
   RefPtr<gfx::DataSourceSurface> dataSurf;
 
-  webgl::PixelUnpackStateWebgl unpacking;
+  WebGLPixelStore unpacking;
   bool applyUnpackTransforms = true;
-
-  // -
-
-  auto ExplicitUnpacking(const webgl::PackingInfo& pi,
-                         const Maybe<size_t> bytesPerRowStrideOverride) const {
-    return ExplicitPixelPackingState::ForUseWith(this->unpacking,
-                                                 this->imageTarget, this->size,
-                                                 pi, bytesPerRowStrideOverride);
-  }
 
   void Shrink(const webgl::PackingInfo&);
 };

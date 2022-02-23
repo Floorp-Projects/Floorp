@@ -16,7 +16,6 @@ categories:
         - editor
         - layout
         - gfx
-        - ipc
         - devtools
         - toolkit
         - js
@@ -34,7 +33,6 @@ categories:
         - tools/profiler
         - performance
         - xpcom
-        - nspr
         - security/nss
     build_doc:
         - mach
@@ -47,7 +45,6 @@ categories:
         - testing/ci-configs
         - testing/marionette
         - testing/geckodriver
-        - testing/test-verification
         - testing/xpcshell
         - web-platform
         - gtest
@@ -79,7 +76,6 @@ redirects:
     layout/layout: layout
     gfx/gfx: gfx
     intl/l10n/l10n: l10n
-    ipc/ipc: ipc
     modules/libpref/libpref: modules/libpref
     python/mach: mach
     python/python: python
@@ -97,5 +93,3 @@ redirects:
     tools/static-analysis/index.html: code-quality/static-analysis.html
     xpcom/xpcom: xpcom
 
-fatal warnings:
-    - "WARNING: '([^']*)' reference target not found:"

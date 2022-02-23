@@ -11,11 +11,18 @@ import {
   getPrettySource,
   getPaneCollapse,
   getContext,
-  getGeneratedSource,
-  canPrettyPrintSource,
 } from "../../selectors";
 
-import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
+import {
+  isPretty,
+  getFilename,
+  isOriginal,
+  shouldBlackbox,
+} from "../../utils/source";
+import {
+  getGeneratedSource,
+  canPrettyPrintSource,
+} from "../../reducers/sources";
 
 import { PaneToggleButton } from "../shared/Button";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -165,7 +172,7 @@ class SourceFooter extends PureComponent {
       selectedSource,
     } = this.props;
 
-    if (!mappedSource || !selectedSource || !selectedSource.isOriginal) {
+    if (!mappedSource || !selectedSource || !isOriginal(selectedSource)) {
       return null;
     }
 

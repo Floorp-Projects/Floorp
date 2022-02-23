@@ -220,7 +220,7 @@ interface nsIHttpChannelInternal : nsISupports
 
     /**
      * Enable/Disable HTTP3 negotiation on per channel basis.
-     * The network.http.http3.enable preference is still a pre-requisite
+     * The network.http.http3.enabled preference is still a pre-requisite
      * for starting HTTP3.
      */
     [must_use] attribute boolean allowHttp3;

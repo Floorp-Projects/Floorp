@@ -22,6 +22,9 @@ var gExceptionPaths = [
   "resource://gre/modules/commonjs/",
   "resource://gre/defaults/pref/",
 
+  // These resources are referenced using relative paths from html files.
+  "resource://payments/",
+
   // These chrome resources are referenced using relative paths from JS files.
   "chrome://global/content/certviewer/components/",
 
@@ -131,10 +134,6 @@ var whitelist = [
   {
     file:
       "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
-  },
-  {
-    file:
-      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple-cn.svg",
   },
 
   { file: "resource://gre/greprefs.js" },
@@ -274,6 +273,10 @@ var whitelist = [
   // (The references to these files are dynamically generated, so the test can't
   // find the references)
   { file: "chrome://browser/content/screenshots/copied-notification.svg" },
+  {
+    file:
+      "chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg",
+  },
 
   { file: "resource://app/modules/SnapshotSelector.jsm" },
 

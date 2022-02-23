@@ -39,7 +39,6 @@ add_task(async function() {
     "resource://devtools/client/shared/components/menu/MenuButton.js",
     "resource://devtools/client/shared/components/menu/MenuItem.js",
     "resource://devtools/client/shared/components/menu/MenuList.js",
-    "resource://devtools/client/shared/vendor/fluent-react.js",
     "resource://devtools/client/shared/vendor/react.js",
     "resource://devtools/client/shared/vendor/react-dom.js",
     "resource://devtools/client/shared/vendor/react-prop-types.js",

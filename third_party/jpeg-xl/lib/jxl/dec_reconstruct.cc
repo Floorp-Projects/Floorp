@@ -59,35 +59,22 @@ void DoUndoXYBInPlace(Image3F* idct, const Rect& rect, Op op,
       const auto in_opsin_x = Load(d, row0 + x);
       const auto in_opsin_y = Load(d, row1 + x);
       const auto in_opsin_b = Load(d, row2 + x);
-      auto r = Undefined(d);
-      auto g = Undefined(d);
-      auto b = Undefined(d);
+      JXL_COMPILER_FENCE;
+      auto linear_r = Undefined(d);
+      auto linear_g = Undefined(d);
+      auto linear_b = Undefined(d);
       XybToRgb(d, in_opsin_x, in_opsin_y, in_opsin_b,
-               output_encoding_info.opsin_params, &r, &g, &b);
-      op.Transform(d, &r, &g, &b);
-      Store(r, d, row0 + x);
-      Store(g, d, row1 + x);
-      Store(b, d, row2 + x);
+               output_encoding_info.opsin_params, &linear_r, &linear_g,
+               &linear_b);
+      Store(op.Transform(d, linear_r), d, row0 + x);
+      Store(op.Transform(d, linear_g), d, row1 + x);
+      Store(op.Transform(d, linear_b), d, row2 + x);
     }
     msan::PoisonMemory(row0 + xsize, sizeof(float) * (xsize_v - xsize));
     msan::PoisonMemory(row1 + xsize, sizeof(float) * (xsize_v - xsize));
     msan::PoisonMemory(row2 + xsize, sizeof(float) * (xsize_v - xsize));
   }
 }
-
-template <typename Op>
-struct PerChannelOp {
-  template <typename... Args>
-  explicit PerChannelOp(Args&&... args) : op(std::forward<Args>(args)...) {}
-  template <typename D, typename T>
-  void Transform(D d, T* r, T* g, T* b) {
-    *r = op.Transform(d, *r);
-    *g = op.Transform(d, *g);
-    *b = op.Transform(d, *b);
-  }
-
-  Op op;
-};
 
 struct OpLinear {
   template <typename D, typename T>
@@ -115,34 +102,10 @@ struct OpPq {
 };
 
 struct OpHlg {
-  explicit OpHlg(const float luminances[3], const float intensity_target)
-      : luminances(luminances) {
-    if (295 <= intensity_target && intensity_target <= 305) {
-      apply_inverse_ootf = false;
-      return;
-    }
-    exponent =
-        (1 / 1.2f) * std::pow(1.111f, -std::log2(intensity_target * 1e-3f)) - 1;
-  }
   template <typename D, typename T>
-  void Transform(D d, T* r, T* g, T* b) {
-    if (apply_inverse_ootf) {
-      const T luminance = Set(d, luminances[0]) * *r +
-                          Set(d, luminances[1]) * *g +
-                          Set(d, luminances[2]) * *b;
-      const T ratio =
-          Min(FastPowf(d, luminance, Set(d, exponent)), Set(d, 1e9));
-      *r *= ratio;
-      *g *= ratio;
-      *b *= ratio;
-    }
-    *r = TF_HLG().EncodedFromDisplay(d, *r);
-    *g = TF_HLG().EncodedFromDisplay(d, *g);
-    *b = TF_HLG().EncodedFromDisplay(d, *b);
+  T Transform(D d, const T& linear) {
+    return TF_HLG().EncodedFromDisplay(d, linear);
   }
-  bool apply_inverse_ootf = true;
-  const float* luminances;
-  float exponent;
 };
 
 struct Op709 {
@@ -153,7 +116,6 @@ struct Op709 {
 };
 
 struct OpGamma {
-  explicit OpGamma(const float inverse_gamma) : inverse_gamma(inverse_gamma) {}
   const float inverse_gamma;
   template <typename D, typename T>
   T Transform(D d, const T& linear) {
@@ -167,24 +129,19 @@ Status UndoXYBInPlace(Image3F* idct, const Rect& rect,
   PROFILER_ZONE("UndoXYB");
 
   if (output_encoding_info.color_encoding.tf.IsLinear()) {
-    DoUndoXYBInPlace(idct, rect, PerChannelOp<OpLinear>(),
-                     output_encoding_info);
+    DoUndoXYBInPlace(idct, rect, OpLinear(), output_encoding_info);
   } else if (output_encoding_info.color_encoding.tf.IsSRGB()) {
-    DoUndoXYBInPlace(idct, rect, PerChannelOp<OpRgb>(), output_encoding_info);
+    DoUndoXYBInPlace(idct, rect, OpRgb(), output_encoding_info);
   } else if (output_encoding_info.color_encoding.tf.IsPQ()) {
-    DoUndoXYBInPlace(idct, rect, PerChannelOp<OpPq>(), output_encoding_info);
+    DoUndoXYBInPlace(idct, rect, OpPq(), output_encoding_info);
   } else if (output_encoding_info.color_encoding.tf.IsHLG()) {
-    DoUndoXYBInPlace(idct, rect,
-                     OpHlg(output_encoding_info.luminances,
-                           output_encoding_info.intensity_target),
-                     output_encoding_info);
+    DoUndoXYBInPlace(idct, rect, OpHlg(), output_encoding_info);
   } else if (output_encoding_info.color_encoding.tf.Is709()) {
-    DoUndoXYBInPlace(idct, rect, PerChannelOp<Op709>(), output_encoding_info);
+    DoUndoXYBInPlace(idct, rect, Op709(), output_encoding_info);
   } else if (output_encoding_info.color_encoding.tf.IsGamma() ||
              output_encoding_info.color_encoding.tf.IsDCI()) {
-    DoUndoXYBInPlace(idct, rect,
-                     PerChannelOp<OpGamma>(output_encoding_info.inverse_gamma),
-                     output_encoding_info);
+    OpGamma op{output_encoding_info.inverse_gamma};
+    DoUndoXYBInPlace(idct, rect, op, output_encoding_info);
   } else {
     // This is a programming error.
     JXL_ABORT("Invalid target encoding");
@@ -461,13 +418,13 @@ HWY_EXPORT(DoYCbCrUpsampling);
 void UndoXYB(const Image3F& src, Image3F* dst,
              const OutputEncodingInfo& output_info, ThreadPool* pool) {
   CopyImageTo(src, dst);
-  JXL_CHECK(RunOnPool(
-      pool, 0, src.ysize(), ThreadPool::NoInit,
-      [&](const uint32_t y, size_t /*thread*/) {
+  RunOnPool(
+      pool, 0, src.ysize(), ThreadPool::SkipInit(),
+      [&](int y, int /*thread*/) {
         JXL_CHECK(HWY_DYNAMIC_DISPATCH(UndoXYBInPlace)(dst, Rect(*dst).Line(y),
                                                        output_info));
       },
-      "UndoXYB"));
+      "UndoXYB");
 }
 
 namespace {
@@ -625,10 +582,6 @@ Status FinalizeImageRect(
     const std::vector<std::pair<ImageF*, Rect>>& extra_channels,
     PassesDecoderState* dec_state, size_t thread,
     ImageBundle* JXL_RESTRICT output_image, const Rect& frame_rect) {
-  // Do nothing if using the rendering pipeline.
-  if (dec_state->render_pipeline) {
-    return true;
-  }
   const ImageFeatures& image_features = dec_state->shared->image_features;
   const FrameHeader& frame_header = dec_state->shared->frame_header;
   const ImageMetadata& metadata = frame_header.nonserialized_metadata->m;
@@ -965,9 +918,9 @@ Status FinalizeImageRect(
             extra_channels_for_patches[i].first, available_y);
       }
     }
-    image_features.patches.AddTo(
+    JXL_RETURN_IF_ERROR(image_features.patches.AddTo(
         storage_for_if, rect_for_if_storage.Line(available_y),
-        ec_ptrs_for_patches.data(), rect_for_if.Line(available_y));
+        ec_ptrs_for_patches.data(), rect_for_if.Line(available_y)));
     image_features.splines.AddTo(storage_for_if,
                                  rect_for_if_storage.Line(available_y),
                                  rect_for_if.Line(available_y));
@@ -1075,28 +1028,15 @@ Status FinalizeImageRect(
     // the frame is not supposed to be displayed.
 
     if (dec_state->fast_xyb_srgb8_conversion) {
-      Rect output_rect = upsampled_frame_rect.Lines(available_y, num_ys)
-                             .Crop(Rect(0, 0, frame_dim.xsize_upsampled,
-                                        frame_dim.ysize_upsampled));
-      for (size_t iy = 0; iy < output_rect.ysize(); iy++) {
-        const float* xyba[4] = {
-            upsampled_frame_rect_for_storage.ConstPlaneRow(
-                *output_pixel_data_storage, 0, available_y + iy),
-            upsampled_frame_rect_for_storage.ConstPlaneRow(
-                *output_pixel_data_storage, 1, available_y + iy),
-            upsampled_frame_rect_for_storage.ConstPlaneRow(
-                *output_pixel_data_storage, 2, available_y + iy),
-            nullptr};
-        if (alpha) {
-          xyba[3] = alpha_rect.ConstRow(*alpha, available_y + iy);
-        }
-        uint8_t* out_buf =
-            dec_state->rgb_output +
-            (iy + output_rect.y0()) * dec_state->rgb_stride +
-            (dec_state->rgb_output_is_rgba ? 4 : 3) * output_rect.x0();
-        FastXYBTosRGB8(xyba, out_buf, dec_state->rgb_output_is_rgba,
-                       output_rect.xsize());
-      }
+      FastXYBTosRGB8(
+          *output_pixel_data_storage,
+          upsampled_frame_rect_for_storage.Lines(available_y, num_ys),
+          upsampled_frame_rect.Lines(available_y, num_ys)
+              .Crop(Rect(0, 0, frame_dim.xsize_upsampled,
+                         frame_dim.ysize_upsampled)),
+          alpha, alpha_rect.Lines(available_y, num_ys),
+          dec_state->rgb_output_is_rgba, dec_state->rgb_output, frame_dim.xsize,
+          dec_state->rgb_stride);
     } else {
       if (frame_header.needs_color_transform()) {
         if (frame_header.color_transform == ColorTransform::kXYB) {
@@ -1167,9 +1107,6 @@ Status FinalizeImageRect(
 Status FinalizeFrameDecoding(ImageBundle* decoded,
                              PassesDecoderState* dec_state, ThreadPool* pool,
                              bool force_fir, bool skip_blending, bool move_ec) {
-  if (dec_state->render_pipeline) {
-    return true;
-  }
   const FrameHeader& frame_header = dec_state->shared->frame_header;
   const FrameDimensions& frame_dim = dec_state->shared->frame_dim;
 
@@ -1184,7 +1121,7 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
         rects_to_process.push_back(rect);
       }
     }
-    const auto allocate_storage = [&](const size_t num_threads) {
+    const auto allocate_storage = [&](size_t num_threads) {
       dec_state->EnsureStorage(num_threads);
       return true;
     };
@@ -1208,7 +1145,7 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
     }
 
     std::atomic<bool> apply_features_ok{true};
-    auto run_apply_features = [&](const uint32_t rect_id, size_t thread) {
+    auto run_apply_features = [&](size_t rect_id, size_t thread) {
       size_t xstart = PassesDecoderState::kGroupDataXBorder;
       size_t ystart = PassesDecoderState::kGroupDataYBorder;
       for (size_t c = 0; c < 3; c++) {
@@ -1261,9 +1198,8 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
       }
     };
 
-    JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, rects_to_process.size(),
-                                  allocate_storage, run_apply_features,
-                                  "ApplyFeatures"));
+    RunOnPool(pool, 0, rects_to_process.size(), allocate_storage,
+              run_apply_features, "ApplyFeatures");
 
     if (!apply_features_ok) {
       return JXL_FAILURE("FinalizeImageRect failed");
@@ -1308,10 +1244,9 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
         &decoded->extra_channels(), std::move(extra_channels_rects)));
 
     std::vector<Rect> rects_to_process;
-    for (size_t y = 0; y < frame_dim.ysize_upsampled; y += kGroupDim) {
-      for (size_t x = 0; x < frame_dim.xsize_upsampled; x += kGroupDim) {
-        Rect rect(x, y, kGroupDim, kGroupDim, frame_dim.xsize_upsampled,
-                  frame_dim.ysize_upsampled);
+    for (size_t y = 0; y < frame_dim.ysize; y += kGroupDim) {
+      for (size_t x = 0; x < frame_dim.xsize; x += kGroupDim) {
+        Rect rect(x, y, kGroupDim, kGroupDim, frame_dim.xsize, frame_dim.ysize);
         if (rect.xsize() == 0 || rect.ysize() == 0) continue;
         rects_to_process.push_back(rect);
       }
@@ -1319,8 +1254,8 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
 
     std::atomic<bool> blending_ok{true};
     JXL_RETURN_IF_ERROR(RunOnPool(
-        pool, 0, rects_to_process.size(), ThreadPool::NoInit,
-        [&](const uint32_t i, size_t /*thread*/) {
+        pool, 0, rects_to_process.size(), ThreadPool::SkipInit(),
+        [&](size_t i, size_t /*thread*/) {
           const Rect& rect = rects_to_process[i];
           auto rect_blender = blender.PrepareRect(
               rect, *foreground.color(), foreground.extra_channels(), rect);

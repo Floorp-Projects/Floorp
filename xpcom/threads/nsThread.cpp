@@ -196,6 +196,12 @@ NS_IMPL_CI_INTERFACE_GETTER(nsThread, nsIThread, nsIThreadInternal,
 
 //-----------------------------------------------------------------------------
 
+bool nsThread::ShutdownContextsComp::Equals(
+    const ShutdownContexts::elem_type& a,
+    const ShutdownContexts::elem_type::Pointer b) const {
+  return a.get() == b;
+}
+
 // This event is responsible for notifying nsThread::Shutdown that it is time
 // to call PR_JoinThread. It implements nsICancelableRunnable so that it can
 // run on a DOM Worker thread (where all events must implement
@@ -214,7 +220,7 @@ class nsThreadShutdownAckEvent : public CancelableRunnable {
  private:
   virtual ~nsThreadShutdownAckEvent() = default;
 
-  NotNull<RefPtr<nsThreadShutdownContext>> mShutdownContext;
+  NotNull<nsThreadShutdownContext*> mShutdownContext;
 };
 
 // This event is responsible for setting mShutdownContext
@@ -226,8 +232,6 @@ class nsThreadShutdownEvent : public Runnable {
         mThread(aThr),
         mShutdownContext(aCtx) {}
   NS_IMETHOD Run() override {
-    // Creates a cycle between `mThread` and the shutdown context which will be
-    // broken when the thread exits.
     mThread->mShutdownContext = mShutdownContext;
     if (mThread->mEventTarget) {
       mThread->mEventTarget->NotifyShutdown();
@@ -238,7 +242,7 @@ class nsThreadShutdownEvent : public Runnable {
 
  private:
   NotNull<RefPtr<nsThread>> mThread;
-  NotNull<RefPtr<nsThreadShutdownContext>> mShutdownContext;
+  NotNull<nsThreadShutdownContext*> mShutdownContext;
 };
 
 //-----------------------------------------------------------------------------
@@ -259,10 +263,8 @@ static void SetThreadAffinity(unsigned int cpu) {
   // "no affinity" so let's pretend each CPU has its own tag `cpu+1`.
   thread_affinity_policy_data_t policy;
   policy.affinity_tag = cpu + 1;
-  kern_return_t kr = thread_policy_set(
-      mach_thread_self(), THREAD_AFFINITY_POLICY, &policy.affinity_tag, 1);
-  // Setting the thread affinity is not supported on ARM.
-  MOZ_ALWAYS_TRUE(kr == KERN_SUCCESS || kr == KERN_NOT_SUPPORTED);
+  MOZ_ALWAYS_TRUE(thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY,
+                                    &policy.affinity_tag, 1) == KERN_SUCCESS);
 #elif defined(XP_WIN)
   MOZ_ALWAYS_TRUE(SetThreadIdealProcessor(GetCurrentThread(), cpu) !=
                   (DWORD)-1);
@@ -420,34 +422,36 @@ void nsThread::ThreadFunc(void* aArg) {
     PROFILER_UNREGISTER_THREAD();
   }
 
-  NotNull<RefPtr<nsThreadShutdownContext>> context =
+  // Dispatch shutdown ACK
+  NotNull<nsThreadShutdownContext*> context =
       WrapNotNull(self->mShutdownContext);
-  self->mShutdownContext = nullptr;
   MOZ_ASSERT(context->mTerminatingThread == self);
-
-  // Take the joining thread from our shutdown context. This may have been
-  // cleared by the joining thread if it decided to cancel waiting on us, in
-  // which case we won't notify our caller, and leak.
-  RefPtr<nsThread> joiningThread;
-  {
-    auto lock = context->mJoiningThread.Lock();
-    joiningThread = lock->forget();
-  }
-  if (joiningThread) {
-    // Dispatch shutdown ACK
-    nsCOMPtr<nsIRunnable> event = new nsThreadShutdownAckEvent(context);
+  nsCOMPtr<nsIRunnable> event =
+      do_QueryObject(new nsThreadShutdownAckEvent(context));
+  if (context->mIsMainThreadJoining) {
+    DebugOnly<nsresult> dispatch_ack_rv =
+        SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+#ifdef DEBUG
+    // On the main thread, dispatch may fail if this thread is part of a
+    // `nsIThreadPool` which was shut down using `ShutdownWithTimeout`, and
+    // that shutdown attempt timed out. In that case, the main thread may have
+    // already completed thread shutdown before this dispatch attempt,
+    // allowing it to fail. At that point, it is impossible for us to join
+    // this thread anymore, so give up and warn instead.
+    if (NS_FAILED(dispatch_ack_rv)) {
+      NS_WARNING(
+          "Thread shudown ack dispatch failed, the main thread may no longer "
+          "be waiting.");
+    }
+#endif
+  } else {
     nsresult dispatch_ack_rv =
-        joiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
-
+        context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
     // We do not expect this to ever happen, but If we cannot dispatch
     // the ack event, someone probably blocks waiting on us and will
     // crash with a hang later anyways. The best we can do is to tell
     // the world what happened right here.
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
-  } else {
-    NS_WARNING(
-        "nsThread exiting after StopWaitingAndLeakThread was called, thread "
-        "resources will be leaked!");
   }
 
   // Release any observer of the thread here.
@@ -544,7 +548,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
     : mEvents(aQueue.get()),
       mEventTarget(
           new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
-      mOutstandingShutdownContexts(0),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
       mThreadName("<uninitialized>"),
@@ -569,7 +572,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
 nsThread::nsThread()
     : mEvents(nullptr),
       mEventTarget(nullptr),
-      mOutstandingShutdownContexts(0),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
       mThreadName("<uninitialized>"),
@@ -588,10 +590,22 @@ nsThread::nsThread()
 }
 
 nsThread::~nsThread() {
-  NS_ASSERTION(mOutstandingShutdownContexts == 0,
+  NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
                "shouldn't be waiting on other threads to shutdown");
 
   MaybeRemoveFromThreadList();
+
+#ifdef DEBUG
+  // We deliberately leak these so they can be tracked by the leak checker.
+  // If you're having nsThreadShutdownContext leaks, you can set:
+  //   XPCOM_MEM_LOG_CLASSES=nsThreadShutdownContext
+  // during a test run and that will at least tell you what thread is
+  // requesting shutdown on another, which can be helpful for diagnosing
+  // the leak.
+  for (size_t i = 0; i < mRequestedShutdownContexts.Length(); ++i) {
+    Unused << mRequestedShutdownContexts[i].release();
+  }
+#endif
 }
 
 nsresult nsThread::Init(const nsACString& aName) {
@@ -764,44 +778,36 @@ NS_IMETHODIMP
 nsThread::AsyncShutdown() {
   LOG(("THRD(%p) async shutdown\n", this));
 
-  nsCOMPtr<nsIThreadShutdown> shutdown;
-  BeginShutdown(getter_AddRefs(shutdown));
+  ShutdownInternal(/* aSync = */ false);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
-  LOG(("THRD(%p) begin shutdown\n", this));
-
+nsThreadShutdownContext* nsThread::ShutdownInternal(bool aSync) {
   MOZ_ASSERT(mEvents);
   MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mThread != PR_GetCurrentThread());
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
-    return NS_ERROR_UNEXPECTED;
+    return nullptr;
   }
 
   // Prevent multiple calls to this method.
   if (!mShutdownRequired.compareExchange(true, false)) {
-    return NS_ERROR_UNEXPECTED;
+    return nullptr;
   }
   MOZ_ASSERT(mThread);
 
   MaybeRemoveFromThreadList();
 
-  RefPtr<nsThread> currentThread = nsThreadManager::get().GetCurrentThread();
+  NotNull<nsThread*> currentThread =
+      WrapNotNull(nsThreadManager::get().GetCurrentThread());
 
   MOZ_DIAGNOSTIC_ASSERT(currentThread->EventQueue(),
                         "Shutdown() may only be called from an XPCOM thread");
 
-  // Allocate a shutdown context, and record that we're waiting for it.
-  RefPtr<nsThreadShutdownContext> context =
-      new nsThreadShutdownContext(WrapNotNull(this), currentThread);
-
-  ++currentThread->mOutstandingShutdownContexts;
-  nsCOMPtr<nsIRunnable> clearOutstanding = NS_NewRunnableFunction(
-      "nsThread::ClearOutstandingShutdownContext",
-      [currentThread] { --currentThread->mOutstandingShutdownContexts; });
-  context->OnCompletion(clearOutstanding);
+  // Allocate a shutdown context and store a strong ref.
+  auto context =
+      new nsThreadShutdownContext(WrapNotNull(this), currentThread, aSync);
+  Unused << *currentThread->mRequestedShutdownContexts.EmplaceBack(context);
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
@@ -810,7 +816,7 @@ nsThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
   if (!mEvents->PutEvent(event.forget(), EventQueuePriority::Normal)) {
     // We do not expect this to happen. Let's collect some diagnostics.
     nsAutoCString threadName;
-    GetThreadName(threadName);
+    currentThread->GetThreadName(threadName);
     MOZ_CRASH_UNSAFE_PRINTF("Attempt to shutdown an already dead thread: %s",
                             threadName.get());
   }
@@ -818,8 +824,7 @@ nsThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
   // We could still end up with other events being added after the shutdown
   // task, but that's okay because we process pending events in ThreadFunc
   // after setting mShutdownContext just before exiting.
-  context.forget(aShutdown);
-  return NS_OK;
+  return context;
 }
 
 void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
@@ -828,6 +833,13 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
   MOZ_ASSERT(aContext->mTerminatingThread == this);
 
   MaybeRemoveFromThreadList();
+
+  if (aContext->mAwaitingShutdownAck) {
+    // We're in a synchronous shutdown, so tell whatever is up the stack that
+    // we're done and unwind the stack so it can call us again.
+    aContext->mAwaitingShutdownAck = false;
+    return;
+  }
 
   // Now, it should be safe to join without fear of dead-locking.
   PR_JoinThread(aContext->mTerminatingPRThread);
@@ -838,7 +850,11 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
   MOZ_ASSERT(!obs, "Should have been cleared at shutdown!");
 #endif
 
-  aContext->MarkCompleted();
+  // Delete aContext.
+  // aContext might not be in mRequestedShutdownContexts if it belongs to a
+  // thread that was leaked by calling nsIThreadPool::ShutdownWithTimeout.
+  aContext->mJoiningThread->mRequestedShutdownContexts.RemoveElement(
+      aContext, ShutdownContextsComp{});
 }
 
 void nsThread::WaitForAllAsynchronousShutdowns() {
@@ -846,18 +862,19 @@ void nsThread::WaitForAllAsynchronousShutdowns() {
   // has the template parameter we are providing here.
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
       "nsThread::WaitForAllAsynchronousShutdowns"_ns,
-      [&]() { return mOutstandingShutdownContexts == 0; }, this);
+      [&]() { return mRequestedShutdownContexts.IsEmpty(); }, this);
 }
 
 NS_IMETHODIMP
 nsThread::Shutdown() {
   LOG(("THRD(%p) sync shutdown\n", this));
 
-  nsCOMPtr<nsIThreadShutdown> context;
-  nsresult rv = BeginShutdown(getter_AddRefs(context));
-  if (NS_FAILED(rv)) {
+  nsThreadShutdownContext* maybeContext = ShutdownInternal(/* aSync = */ true);
+  if (!maybeContext) {
     return NS_OK;  // The thread has already shut down.
   }
+
+  NotNull<nsThreadShutdownContext*> context = WrapNotNull(maybeContext);
 
   // If we are going to hang here we want to see the thread's name
   nsAutoCString threadName;
@@ -865,8 +882,12 @@ nsThread::Shutdown() {
 
   // Process events on the current thread until we receive a shutdown ACK.
   // Allows waiting; ensure no locks are held that would deadlock us!
-  SpinEventLoopUntil("nsThread::Shutdown: "_ns + threadName,
-                     [&]() { return context->GetCompleted(); });
+  SpinEventLoopUntil(
+      "nsThread::Shutdown: "_ns + threadName,
+      [&, context]() { return !context->mAwaitingShutdownAck; },
+      context->mJoiningThread);
+
+  ShutdownComplete(context);
 
   return NS_OK;
 }
@@ -1004,6 +1025,7 @@ size_t nsThread::ShallowSizeOfIncludingThis(
   if (mShutdownContext) {
     n += aMallocSizeOf(mShutdownContext);
   }
+  n += mRequestedShutdownContexts.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return aMallocSizeOf(this) + aMallocSizeOf(mThread) + n;
 }
 
@@ -1424,52 +1446,6 @@ nsLocalExecutionGuard::~nsLocalExecutionGuard() {
   MOZ_ASSERT(mLocalExecutionFlag);
   mLocalExecutionFlag = false;
   mEventQueueStack.PopEventQueue(mLocalEventTarget);
-}
-
-NS_IMPL_ISUPPORTS(nsThreadShutdownContext, nsIThreadShutdown)
-
-NS_IMETHODIMP
-nsThreadShutdownContext::OnCompletion(nsIRunnable* aEvent) {
-  if (mCompleted) {
-    aEvent->Run();
-  } else {
-    mCompletionCallbacks.AppendElement(aEvent);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThreadShutdownContext::GetCompleted(bool* aCompleted) {
-  *aCompleted = mCompleted;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThreadShutdownContext::StopWaitingAndLeakThread() {
-  // Take the joining thread from `mJoiningThread` so that the terminating
-  // thread won't try to dispatch nsThreadShutdownAckEvent to us anymore.
-  RefPtr<nsThread> joiningThread;
-  {
-    auto lock = mJoiningThread.Lock();
-    joiningThread = lock->forget();
-  }
-  if (!joiningThread) {
-    // Shutdown is already being resolved, so there's nothing for us to do.
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(joiningThread->IsOnCurrentThread());
-  MarkCompleted();
-  return NS_OK;
-}
-
-void nsThreadShutdownContext::MarkCompleted() {
-  MOZ_ASSERT(!mCompleted);
-  mCompleted = true;
-  nsTArray<nsCOMPtr<nsIRunnable>> callbacks(std::move(mCompletionCallbacks));
-  for (auto& callback : callbacks) {
-    callback->Run();
-  }
 }
 
 namespace mozilla {

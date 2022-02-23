@@ -3,12 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["ClickHandlerChild", "MiddleMousePasteHandlerChild"];
+var EXPORTED_SYMBOLS = ["ClickHandlerChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -32,42 +29,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
-class MiddleMousePasteHandlerChild extends JSWindowActorChild {
-  handleEvent(clickEvent) {
-    if (
-      clickEvent.defaultPrevented ||
-      clickEvent.button != 1 ||
-      MiddleMousePasteHandlerChild.autoscrollEnabled
-    ) {
-      return;
-    }
-    this.manager
-      .getActor("ClickHandler")
-      .handleClickEvent(
-        clickEvent,
-        /* is from middle mouse paste handler */ true
-      );
-  }
-
-  onProcessedClick(data) {
-    this.sendAsyncMessage("MiddleClickPaste", data);
-  }
-}
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  MiddleMousePasteHandlerChild,
-  "autoscrollEnabled",
-  "general.autoScroll",
-  true
-);
-
 class ClickHandlerChild extends JSWindowActorChild {
-  handleEvent(wrapperEvent) {
-    this.handleClickEvent(wrapperEvent.sourceEvent);
-  }
-
-  handleClickEvent(event, isFromMiddleMousePasteHandler = false) {
-    if (event.defaultPrevented || event.button == 2) {
+  handleEvent(event) {
+    if (
+      event.defaultPrevented ||
+      event.button == 2 ||
+      (event.type == "click" && event.button == 1)
+    ) {
       return;
     }
     // Don't do anything on editable things, we shouldn't open links in
@@ -139,7 +107,7 @@ class ClickHandlerChild extends JSWindowActorChild {
       ),
     };
 
-    if (href && !isFromMiddleMousePasteHandler) {
+    if (href) {
       try {
         Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
           principal,
@@ -189,11 +157,12 @@ class ClickHandlerChild extends JSWindowActorChild {
       }
 
       this.sendAsyncMessage("Content:Click", json);
+      return;
     }
 
-    // This might be middle mouse navigation, in which case pass this back:
-    if (!href && event.button == 1 && isFromMiddleMousePasteHandler) {
-      this.manager.getActor("MiddleMousePasteHandler").onProcessedClick(json);
+    // This might be middle mouse navigation.
+    if (event.button == 1) {
+      this.sendAsyncMessage("Content:Click", json);
     }
   }
 }

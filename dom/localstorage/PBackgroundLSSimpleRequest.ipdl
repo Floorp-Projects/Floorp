@@ -38,7 +38,6 @@ union LSSimpleRequestResponse
  * Request types are indicated by the Params variant used and those live in
  * `PBackgroundLSSharedTypes.ipdlh`.
  */
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundLSSimpleRequest
 {
   manager PBackground;

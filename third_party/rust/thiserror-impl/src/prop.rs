@@ -13,11 +13,6 @@ impl Struct<'_> {
     pub(crate) fn backtrace_field(&self) -> Option<&Field> {
         backtrace_field(&self.fields)
     }
-
-    pub(crate) fn distinct_backtrace_field(&self) -> Option<&Field> {
-        let backtrace_field = self.backtrace_field()?;
-        distinct_backtrace_field(backtrace_field, self.from_field())
-    }
 }
 
 impl Enum<'_> {
@@ -59,11 +54,6 @@ impl Variant<'_> {
     pub(crate) fn backtrace_field(&self) -> Option<&Field> {
         backtrace_field(&self.fields)
     }
-
-    pub(crate) fn distinct_backtrace_field(&self) -> Option<&Field> {
-        let backtrace_field = self.backtrace_field()?;
-        distinct_backtrace_field(backtrace_field, self.from_field())
-    }
 }
 
 impl Field<'_> {
@@ -75,7 +65,7 @@ impl Field<'_> {
 fn from_field<'a, 'b>(fields: &'a [Field<'b>]) -> Option<&'a Field<'b>> {
     for field in fields {
         if field.attrs.from.is_some() {
-            return Some(field);
+            return Some(&field);
         }
     }
     None
@@ -84,12 +74,12 @@ fn from_field<'a, 'b>(fields: &'a [Field<'b>]) -> Option<&'a Field<'b>> {
 fn source_field<'a, 'b>(fields: &'a [Field<'b>]) -> Option<&'a Field<'b>> {
     for field in fields {
         if field.attrs.from.is_some() || field.attrs.source.is_some() {
-            return Some(field);
+            return Some(&field);
         }
     }
     for field in fields {
         match &field.member {
-            Member::Named(ident) if ident == "source" => return Some(field),
+            Member::Named(ident) if ident == "source" => return Some(&field),
             _ => {}
         }
     }
@@ -99,29 +89,15 @@ fn source_field<'a, 'b>(fields: &'a [Field<'b>]) -> Option<&'a Field<'b>> {
 fn backtrace_field<'a, 'b>(fields: &'a [Field<'b>]) -> Option<&'a Field<'b>> {
     for field in fields {
         if field.attrs.backtrace.is_some() {
-            return Some(field);
+            return Some(&field);
         }
     }
     for field in fields {
         if field.is_backtrace() {
-            return Some(field);
+            return Some(&field);
         }
     }
     None
-}
-
-// The #[backtrace] field, if it is not the same as the #[from] field.
-fn distinct_backtrace_field<'a, 'b>(
-    backtrace_field: &'a Field<'b>,
-    from_field: Option<&Field>,
-) -> Option<&'a Field<'b>> {
-    if from_field.map_or(false, |from_field| {
-        from_field.member == backtrace_field.member
-    }) {
-        None
-    } else {
-        Some(backtrace_field)
-    }
 }
 
 fn type_is_backtrace(ty: &Type) -> bool {

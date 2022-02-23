@@ -354,9 +354,7 @@ TextureHost::~TextureHost() {
 }
 
 void TextureHost::Finalize() {
-  if (!(GetFlags() & TextureFlags::BORROWED_EXTERNAL_ID)) {
-    MaybeDestroyRenderTexture();
-  }
+  MaybeDestroyRenderTexture();
 
   if (!(GetFlags() & TextureFlags::DEALLOCATE_CLIENT)) {
     DeallocateSharedData();

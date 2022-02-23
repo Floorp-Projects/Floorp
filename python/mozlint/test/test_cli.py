@@ -34,7 +34,7 @@ def run(parser, lintdir, files):
 
 
 def test_cli_with_ascii_encoding(run, monkeypatch, capfd):
-    cmd = [sys.executable, "runcli.py", "-l=string", "-f=stylish", "files/foobar.js"]
+    cmd = [sys.executable, "runcli.py", "-l=string", "-f=stylish"]
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join(sys.path)
     env["PYTHONIOENCODING"] = "ascii"

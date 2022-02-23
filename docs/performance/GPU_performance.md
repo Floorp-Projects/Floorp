@@ -5,8 +5,9 @@ asynchronous and massively parallel architecture.
 
 ## Tools
 
-[PIX](https://devblogs.microsoft.com/pix/introduction/) - Can do
-timing of Direct3D calls. Works reasonably well with Firefox.
+PIX - Can do timing of Direct3D calls. Works reasonably well with
+Firefox. See also [Debugging With
+PIX](/en/Debugging_With_PIX "en/Debugging With PIX").
 
 NVIDIA PerfHUD - Last I checked required a special build to be used.
 

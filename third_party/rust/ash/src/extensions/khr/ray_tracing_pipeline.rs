@@ -8,16 +8,18 @@ use std::mem;
 #[derive(Clone)]
 pub struct RayTracingPipeline {
     handle: vk::Device,
-    fp: vk::KhrRayTracingPipelineFn,
+    ray_tracing_fn: vk::KhrRayTracingPipelineFn,
 }
 
 impl RayTracingPipeline {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let handle = device.handle();
-        let fp = vk::KhrRayTracingPipelineFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
+        let ray_tracing_fn = vk::KhrRayTracingPipelineFn::load(|name| unsafe {
+            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: device.handle(),
+            ray_tracing_fn,
+        }
     }
 
     pub unsafe fn get_properties(
@@ -44,7 +46,7 @@ impl RayTracingPipeline {
         height: u32,
         depth: u32,
     ) {
-        self.fp.cmd_trace_rays_khr(
+        self.ray_tracing_fn.cmd_trace_rays_khr(
             command_buffer,
             raygen_shader_binding_tables as *const _,
             miss_shader_binding_tables as *const _,
@@ -65,7 +67,7 @@ impl RayTracingPipeline {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<Vec<vk::Pipeline>> {
         let mut pipelines = vec![mem::zeroed(); create_info.len()];
-        self.fp
+        self.ray_tracing_fn
             .create_ray_tracing_pipelines_khr(
                 self.handle,
                 deferred_operation,
@@ -87,14 +89,16 @@ impl RayTracingPipeline {
         data_size: usize,
     ) -> VkResult<Vec<u8>> {
         let mut data = Vec::<u8>::with_capacity(data_size);
-        let err_code = self.fp.get_ray_tracing_shader_group_handles_khr(
-            self.handle,
-            pipeline,
-            first_group,
-            group_count,
-            data_size,
-            data.as_mut_ptr() as *mut std::ffi::c_void,
-        );
+        let err_code = self
+            .ray_tracing_fn
+            .get_ray_tracing_shader_group_handles_khr(
+                self.handle,
+                pipeline,
+                first_group,
+                group_count,
+                data_size,
+                data.as_mut_ptr() as *mut std::ffi::c_void,
+            );
         data.set_len(data_size);
         err_code.result_with_success(data)
     }
@@ -109,7 +113,7 @@ impl RayTracingPipeline {
     ) -> VkResult<Vec<u8>> {
         let mut data: Vec<u8> = Vec::with_capacity(data_size);
 
-        self.fp
+        self.ray_tracing_fn
             .get_ray_tracing_capture_replay_shader_group_handles_khr(
                 self.handle,
                 pipeline,
@@ -131,7 +135,7 @@ impl RayTracingPipeline {
         callable_shader_binding_table: &[vk::StridedDeviceAddressRegionKHR],
         indirect_device_address: vk::DeviceAddress,
     ) {
-        self.fp.cmd_trace_rays_indirect_khr(
+        self.ray_tracing_fn.cmd_trace_rays_indirect_khr(
             command_buffer,
             raygen_shader_binding_table.as_ptr(),
             miss_shader_binding_table.as_ptr(),
@@ -148,12 +152,8 @@ impl RayTracingPipeline {
         group: u32,
         group_shader: vk::ShaderGroupShaderKHR,
     ) -> vk::DeviceSize {
-        self.fp.get_ray_tracing_shader_group_stack_size_khr(
-            self.handle,
-            pipeline,
-            group,
-            group_shader,
-        )
+        self.ray_tracing_fn
+            .get_ray_tracing_shader_group_stack_size_khr(self.handle, pipeline, group, group_shader)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetRayTracingPipelineStackSizeKHR.html>"]
@@ -162,7 +162,7 @@ impl RayTracingPipeline {
         command_buffer: vk::CommandBuffer,
         pipeline_stack_size: u32,
     ) {
-        self.fp
+        self.ray_tracing_fn
             .cmd_set_ray_tracing_pipeline_stack_size_khr(command_buffer, pipeline_stack_size);
     }
 
@@ -171,7 +171,7 @@ impl RayTracingPipeline {
     }
 
     pub fn fp(&self) -> &vk::KhrRayTracingPipelineFn {
-        &self.fp
+        &self.ray_tracing_fn
     }
 
     pub fn device(&self) -> vk::Device {

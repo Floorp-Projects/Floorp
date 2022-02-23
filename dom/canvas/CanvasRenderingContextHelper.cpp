@@ -9,7 +9,6 @@
 #include "ImageEncoder.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
@@ -138,11 +137,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
       ret = new CanvasRenderingContext2D(aCompositorBackend);
       break;
 
-    case CanvasContextType::OffscreenCanvas2D:
-      Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-      ret = new OffscreenCanvasRenderingContext2D(aCompositorBackend);
-      break;
-
     case CanvasContextType::WebGL1:
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
@@ -172,7 +166,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
   }
   MOZ_ASSERT(ret);
 
-  ret->Initialize();
   return ret.forget();
 }
 
@@ -268,9 +261,8 @@ nsresult CanvasRenderingContextHelper::UpdateContext(
 nsresult CanvasRenderingContextHelper::ParseParams(
     JSContext* aCx, const nsAString& aType, const JS::Value& aEncoderOptions,
     nsAString& outParams, bool* const outUsingCustomParseOptions) {
-  // Quality parameter is only valid for the image/jpeg and image/webp MIME
-  // types.
-  if (aType.EqualsLiteral("image/jpeg") || aType.EqualsLiteral("image/webp")) {
+  // Quality parameter is only valid for the image/jpeg MIME type
+  if (aType.EqualsLiteral("image/jpeg")) {
     if (aEncoderOptions.isNumber()) {
       double quality = aEncoderOptions.toNumber();
       // Quality must be between 0.0 and 1.0, inclusive

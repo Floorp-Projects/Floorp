@@ -35,13 +35,7 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/httpd.js"
 );
 
-let gTestTargetFile = new FileUtils.File(
-  PathUtils.join(
-    Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-    "dm-ui-test.file"
-  )
-);
-
+var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
 gTestTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 Services.prefs.setIntPref("security.dialog_enable_delay", 0);
 

@@ -18,6 +18,7 @@ import {
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
 import { features } from "../utils/prefs";
+import { isOriginal } from "../utils/source";
 
 /**
  * Add expression for debugger to watch
@@ -138,7 +139,7 @@ function evaluateExpression(cx, expression) {
 
       const selectedSource = getSelectedSource(getState());
 
-      if (selectedSource && source.isOriginal && selectedSource.isOriginal) {
+      if (selectedSource && isOriginal(source) && isOriginal(selectedSource)) {
         const mapResult = await dispatch(getMappedExpression(input));
         if (mapResult) {
           input = mapResult.expression;

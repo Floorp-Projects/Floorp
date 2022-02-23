@@ -15,6 +15,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
+#include "nsContentUtils.h"
 #include "nsIDUtils.h"
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
@@ -244,14 +245,14 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
             mInputProcessing->ApplyConfig(mTrack->GraphImpl(),
                                           mAudioProcessingConfig);
             {
-              TRACE("SetRequestedInputChannelCount");
-              mInputProcessing->SetRequestedInputChannelCount(
-                  mTrack->GraphImpl(), mRequestedInputChannelCount);
-            }
-            {
               TRACE("SetPassThrough")
               mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
                                                mPassThrough);
+            }
+            {
+              TRACE("SetRequestedInputChannelCount");
+              mInputProcessing->SetRequestedInputChannelCount(
+                  mTrack->GraphImpl(), mRequestedInputChannelCount);
             }
           }
         };
@@ -349,11 +350,11 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
     const RefPtr<MediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTrack);
-  MOZ_ASSERT(aTrack->AsAudioProcessingTrack());
+  MOZ_ASSERT(aTrack->AsAudioInputTrack());
 
   MOZ_ASSERT(!mTrack);
   MOZ_ASSERT(mPrincipal == PRINCIPAL_HANDLE_NONE);
-  mTrack = aTrack->AsAudioProcessingTrack();
+  mTrack = aTrack->AsAudioInputTrack();
   mPrincipal = aPrincipal;
 
   mInputProcessing =
@@ -407,7 +408,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
   // This check is unreliable due to potential in-flight device updates.
-  // Multiple input devices are reliably excluded in ConnectDeviceInputImpl(),
+  // Multiple input devices are reliably excluded in OpenAudioInputImpl(),
   // but the check here provides some error reporting most of the
   // time.
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
@@ -418,8 +419,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  ApplySettings(mCurrentPrefs);
-
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack,
                  principal = mPrincipal] {
@@ -429,8 +428,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             track, inputProcessing, StartStopMessage::Start));
-        track->ConnectDeviceInput(deviceID, inputProcessing, principal);
+        track->OpenAudioInput(deviceID, inputProcessing, principal);
       }));
+
+  ApplySettings(mCurrentPrefs);
 
   MOZ_ASSERT(mState != kReleased);
   mState = kStarted;
@@ -456,10 +457,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
           return;
         }
 
-        MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
-        track->DisconnectDeviceInput();
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             track, inputProcessing, StartStopMessage::Stop));
+        MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
+        track->CloseAudioInput();
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
@@ -746,13 +747,14 @@ void AudioInputProcessing::Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
   MOZ_ASSERT(mSegment.GetDuration() <= mPacketizerInput->mPacketSize);
 }
 
-void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
-                                             AudioDataValue* aBuffer,
-                                             size_t aFrames, TrackRate aRate,
-                                             uint32_t aChannels) {
+void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
+                                            AudioDataValue* aBuffer,
+                                            size_t aFrames, TrackRate aRate,
+                                            uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
+  MOZ_ASSERT(mEnabled);
 
-  if (!mEnabled || PassThrough(aGraph)) {
+  if (PassThrough(aGraph)) {
     return;
   }
 
@@ -1167,27 +1169,27 @@ void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraphImpl* aGraph) {
   mChunksInPacketizer.clear();
 }
 
-void AudioProcessingTrack::Destroy() {
+void AudioInputTrack::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
-  DisconnectDeviceInput();
+  CloseAudioInput();
 
   MediaTrack::Destroy();
 }
 
-void AudioProcessingTrack::SetInputProcessing(
+void AudioInputTrack::SetInputProcessing(
     RefPtr<AudioInputProcessing> aInputProcessing) {
   class Message : public ControlMessage {
-    const RefPtr<AudioProcessingTrack> mTrack;
+    const RefPtr<AudioInputTrack> mTrack;
     const RefPtr<AudioInputProcessing> mProcessing;
 
    public:
-    Message(RefPtr<AudioProcessingTrack> aTrack,
+    Message(RefPtr<AudioInputTrack> aTrack,
             RefPtr<AudioInputProcessing> aProcessing)
         : ControlMessage(aTrack),
           mTrack(std::move(aTrack)),
           mProcessing(std::move(aProcessing)) {}
     void Run() override {
-      TRACE("AudioProcessingTrack::SetInputProcessingImpl");
+      TRACE("AudioInputTrack::SetInputProcessingImpl");
       mTrack->SetInputProcessingImpl(mProcessing);
     }
   };
@@ -1199,28 +1201,27 @@ void AudioProcessingTrack::SetInputProcessing(
       MakeUnique<Message>(std::move(this), std::move(aInputProcessing)));
 }
 
-AudioProcessingTrack* AudioProcessingTrack::Create(MediaTrackGraph* aGraph) {
+AudioInputTrack* AudioInputTrack::Create(MediaTrackGraph* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
-  AudioProcessingTrack* track = new AudioProcessingTrack(aGraph->GraphRate());
+  AudioInputTrack* track = new AudioInputTrack(aGraph->GraphRate());
   aGraph->AddTrack(track);
   return track;
 }
 
-void AudioProcessingTrack::DestroyImpl() {
+void AudioInputTrack::DestroyImpl() {
   ProcessedMediaTrack::DestroyImpl();
   if (mInputProcessing) {
     mInputProcessing->End();
   }
 }
 
-void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
-                                        uint32_t aFlags) {
-  TRACE_COMMENT("AudioProcessingTrack::ProcessInput", "AudioProcessingTrack %p",
-                this);
+void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
+                                   uint32_t aFlags) {
+  TRACE_COMMENT("AudioInputTrack::ProcessInput", "AudioInputTrack %p", this);
   MOZ_ASSERT(mInputProcessing);
 
   LOG_FRAME(
-      "(Graph %p, Driver %p) AudioProcessingTrack %p ProcessInput from %" PRId64
+      "(Graph %p, Driver %p) AudioInputTrack %p ProcessInput from %" PRId64
       " to %" PRId64 ", needs %" PRId64 " frames",
       mGraph, mGraph->CurrentDriver(), this, aFrom, aTo, aTo - aFrom);
 
@@ -1232,7 +1233,7 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     MOZ_ASSERT(TrackTimeToGraphTime(GetEnd()) == aFrom);
     if (mInputs.IsEmpty()) {
       GetData<AudioSegment>()->AppendNullData(aTo - aFrom);
-      LOG_FRAME("(Graph %p, Driver %p) AudioProcessingTrack %p Filling %" PRId64
+      LOG_FRAME("(Graph %p, Driver %p) AudioInputTrack %p Filling %" PRId64
                 " frames of null data (no input source)",
                 mGraph, mGraph->CurrentDriver(), this, aTo - aFrom);
     } else {
@@ -1250,10 +1251,9 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
-void AudioProcessingTrack::GetInputSourceData(AudioSegment& aOutput,
-                                              const MediaInputPort* aPort,
-                                              GraphTime aFrom,
-                                              GraphTime aTo) const {
+void AudioInputTrack::GetInputSourceData(AudioSegment& aOutput,
+                                         const MediaInputPort* aPort,
+                                         GraphTime aFrom, GraphTime aTo) const {
   MOZ_ASSERT(mGraph->OnGraphThread());
   MOZ_ASSERT(aOutput.IsEmpty());
 
@@ -1278,18 +1278,18 @@ void AudioProcessingTrack::GetInputSourceData(AudioSegment& aOutput,
 
     if (inputEnded) {
       aOutput.AppendNullData(ticks);
-      LOG_FRAME("(Graph %p, Driver %p) AudioProcessingTrack %p Getting %" PRId64
+      LOG_FRAME("(Graph %p, Driver %p) AudioInputTrack %p Getting %" PRId64
                 " ticks of null data from input port source (ended input)",
                 mGraph, mGraph->CurrentDriver(), this, ticks);
     } else if (interval.mInputIsBlocked) {
       aOutput.AppendNullData(ticks);
-      LOG_FRAME("(Graph %p, Driver %p) AudioProcessingTrack %p Getting %" PRId64
+      LOG_FRAME("(Graph %p, Driver %p) AudioInputTrack %p Getting %" PRId64
                 " ticks of null data from input port source (blocked input)",
                 mGraph, mGraph->CurrentDriver(), this, ticks);
     } else if (source->IsSuspended()) {
       aOutput.AppendNullData(ticks);
       LOG_FRAME(
-          "(Graph %p, Driver %p) AudioProcessingTrack %p Getting %" PRId64
+          "(Graph %p, Driver %p) AudioInputTrack %p Getting %" PRId64
           " ticks of null data from input port source (source is suspended)",
           mGraph, mGraph->CurrentDriver(), this, ticks);
     } else {
@@ -1305,49 +1305,30 @@ void AudioProcessingTrack::GetInputSourceData(AudioSegment& aOutput,
   }
 }
 
-void AudioProcessingTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                            AudioDataValue* aBuffer,
-                                            size_t aFrames, TrackRate aRate,
-                                            uint32_t aChannels) {
-  MOZ_ASSERT(mGraph == aGraph, "Cannot feed audio output to another graph");
-  MOZ_ASSERT(mGraph->OnGraphThread());
-  if (mInputProcessing) {
-    mInputProcessing->ProcessOutputData(aGraph, aBuffer, aFrames, aRate,
-                                        aChannels);
-  }
-}
-
-void AudioProcessingTrack::SetInputProcessingImpl(
+void AudioInputTrack::SetInputProcessingImpl(
     RefPtr<AudioInputProcessing> aInputProcessing) {
   MOZ_ASSERT(GraphImpl()->OnGraphThread());
   mInputProcessing = std::move(aInputProcessing);
 }
 
-nsresult AudioProcessingTrack::ConnectDeviceInput(
-    CubebUtils::AudioDeviceID aId, AudioDataListener* aListener,
-    const PrincipalHandle& aPrincipal) {
+nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
+                                         AudioDataListener* aListener,
+                                         const PrincipalHandle& aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   MOZ_ASSERT(!mInputListener);
   MOZ_ASSERT(mDeviceId.isNothing());
   mInputListener = aListener;
-  mDeviceId.emplace(aId);
-
-  auto r = NativeInputTrack::OpenAudio(GraphImpl(), aId, aPrincipal,
-                                       mInputListener.get());
-  if (r.isErr()) {
-    NS_WARNING("Failed to open audio device.");
-    return r.unwrapErr();
-  }
-  RefPtr<NativeInputTrack> input = r.unwrap();
+  NativeInputTrack* input =
+      GraphImpl()->GetOrCreateDeviceTrack(aId, aPrincipal);
   MOZ_ASSERT(input);
-  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input.get(),
-      this);
-  mPort = AllocateInputPort(input.get());
-  return NS_OK;
+  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input, this);
+  mPort = AllocateInputPort(input);
+  mDeviceId.emplace(aId);
+  return GraphImpl()->OpenAudioInput(aId, mInputListener.get());
 }
 
-void AudioProcessingTrack::DisconnectDeviceInput() {
+void AudioInputTrack::CloseAudioInput() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   if (!mInputListener) {
@@ -1355,16 +1336,14 @@ void AudioProcessingTrack::DisconnectDeviceInput() {
   }
   MOZ_ASSERT(mPort);
   MOZ_ASSERT(mDeviceId.isSome());
-  RefPtr<NativeInputTrack> input(mPort->GetSource()->AsNativeInputTrack());
-  LOG("Close device %p (InputTrack=%p) for Mic source %p ", *mDeviceId,
-      input.get(), this);
+  LOG("Close device %p (InputTrack=%p) for Mic source %p ", mDeviceId.value(),
+      mPort->GetSource(), this);
   mPort->Destroy();
-  NativeInputTrack::CloseAudio(std::move(input), mInputListener.get());
+  GraphImpl()->CloseAudioInput(mDeviceId.extract(), mInputListener);
   mInputListener = nullptr;
-  mDeviceId = Nothing();
 }
 
-Maybe<CubebUtils::AudioDeviceID> AudioProcessingTrack::DeviceId() const {
+Maybe<CubebUtils::AudioDeviceID> AudioInputTrack::DeviceId() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mDeviceId;
 }
@@ -1381,7 +1360,7 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetUUID() {
   nsCString asciiString;
   ErrorResult rv;
 
-  rv = nsID::GenerateUUIDInPlace(uuid);
+  rv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (rv.Failed()) {
     return u""_ns;
   }

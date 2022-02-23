@@ -728,10 +728,7 @@ enum WireframeRectType {
   "unknown",
 };
 dictionary WireframeTaggedRect {
-  unrestricted double x = 0;
-  unrestricted double y = 0;
-  unrestricted double width = 0;
-  unrestricted double height = 0;
+  DOMRectReadOnly rect;
   DOMString? color; /* Only relevant for "background" rects */
   WireframeRectType type;
   Node? node;

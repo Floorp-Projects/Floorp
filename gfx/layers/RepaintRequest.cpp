@@ -18,7 +18,6 @@ std::ostream& operator<<(std::ostream& aOut, const RepaintRequest& aRequest) {
        << ", viewport=" << aRequest.mLayoutViewport
        << ", scrollUpdateType=" << (int)aRequest.mScrollUpdateType
        << ", scrollGeneration=" << aRequest.mScrollGeneration
-       << ", scrollGenerationOnApz=" << aRequest.mScrollGenerationOnApz
        << ", dpMargins=" << aRequest.mDisplayPortMargins << "}";
   return aOut;
 }

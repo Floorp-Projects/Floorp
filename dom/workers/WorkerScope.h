@@ -20,12 +20,12 @@
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/SafeRefPtr.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
@@ -93,7 +93,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerGlobalScopeBase,
                                                          DOMEventTargetHelper)
 
-  WorkerGlobalScopeBase(WorkerPrivate* aWorkerPrivate,
+  WorkerGlobalScopeBase(NotNull<WorkerPrivate*> aWorkerPrivate,
                         UniquePtr<ClientSource> aClientSource);
 
   virtual bool WrapGlobalObject(JSContext* aCx,
@@ -162,7 +162,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
  protected:
   ~WorkerGlobalScopeBase();
 
-  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
+  const NotNull<WorkerPrivate*> mWorkerPrivate;
 
  private:
   RefPtr<Console> mConsole;
@@ -344,7 +344,7 @@ class DedicatedWorkerGlobalScope final
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
       DedicatedWorkerGlobalScope, WorkerGlobalScope)
 
-  DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+  DedicatedWorkerGlobalScope(NotNull<WorkerPrivate*> aWorkerPrivate,
                              UniquePtr<ClientSource> aClientSource,
                              const nsString& aName);
 
@@ -388,7 +388,7 @@ class SharedWorkerGlobalScope final
     : public WorkerGlobalScope,
       public workerinternals::NamedWorkerGlobalScopeMixin {
  public:
-  SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+  SharedWorkerGlobalScope(NotNull<WorkerPrivate*> aWorkerPrivate,
                           UniquePtr<ClientSource> aClientSource,
                           const nsString& aName);
 
@@ -410,7 +410,8 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
                                            WorkerGlobalScope)
 
   ServiceWorkerGlobalScope(
-      WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
+      NotNull<WorkerPrivate*> aWorkerPrivate,
+      UniquePtr<ClientSource> aClientSource,
       const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor);
 
   bool WrapGlobalObject(JSContext* aCx,
@@ -487,8 +488,6 @@ class WorkerDebuggerGlobalScope final : public WorkerGlobalScopeBase {
 
   void RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
                              ErrorResult& aRv);
-
-  void ClearConsoleEvents(JSContext* aCx, ErrorResult& aRv);
 
   void SetConsoleEventHandler(JSContext* aCx, AnyCallback* aHandler,
                               ErrorResult& aRv);

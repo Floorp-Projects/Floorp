@@ -43,10 +43,7 @@ class DrawTargetSkia : public DrawTarget {
   virtual BackendType GetBackendType() const override {
     return BackendType::SKIA;
   }
-  already_AddRefed<SourceSurface> Snapshot(SurfaceFormat aFormat);
-  virtual already_AddRefed<SourceSurface> Snapshot() override {
-    return Snapshot(mFormat);
-  }
+  virtual already_AddRefed<SourceSurface> Snapshot() override;
   already_AddRefed<SourceSurface> GetBackingSurface() override;
   virtual IntSize GetSize() const override { return mSize; };
   virtual bool LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,
@@ -66,14 +63,9 @@ class DrawTargetSkia : public DrawTarget {
                                      const DeviceColor& aColor,
                                      const Point& aOffset, Float aSigma,
                                      CompositionOp aOperator) override;
-  void Clear(const Rect* aRect = nullptr);
-  virtual void ClearRect(const Rect& aRect) override { Clear(&aRect); }
-  void BlendSurface(SourceSurface* aSurface, const IntRect& aSourceRect,
-                    const IntPoint& aDestination, CompositionOp aOperator);
+  virtual void ClearRect(const Rect& aRect) override;
   virtual void CopySurface(SourceSurface* aSurface, const IntRect& aSourceRect,
-                           const IntPoint& aDestination) override {
-    BlendSurface(aSurface, aSourceRect, aDestination, CompositionOp::OP_SOURCE);
-  }
+                           const IntPoint& aDestination) override;
   virtual void FillRect(const Rect& aRect, const Pattern& aPattern,
                         const DrawOptions& aOptions = DrawOptions()) override;
   virtual void StrokeRect(const Rect& aRect, const Pattern& aPattern,

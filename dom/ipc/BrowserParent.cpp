@@ -39,6 +39,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
@@ -47,7 +48,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Preferences.h"
@@ -216,6 +216,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mChildToParentConversionMatrix{},
       mRect(0, 0, 0, 0),
       mDimensions(0, 0),
+      mOrientation(0),
       mDPI(0),
       mRounding(0),
       mDefaultScale(0),
@@ -940,10 +941,8 @@ void BrowserParent::InitRendering() {
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(widget);
 
-  if (GetBrowsingContext()->IsTopContent()) {
-    Unused << SendDynamicToolbarMaxHeightChanged(
-        widget->GetDynamicToolbarMaxHeight());
-  }
+  Unused << SendDynamicToolbarMaxHeightChanged(
+      widget->GetDynamicToolbarMaxHeight());
 #endif
 }
 
@@ -1094,16 +1093,21 @@ void BrowserParent::UpdateDimensions(const nsIntRect& rect,
     return;
   }
 
+  hal::ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+  hal::ScreenOrientation orientation = config.orientation();
   LayoutDeviceIntPoint clientOffset = GetClientOffset();
   LayoutDeviceIntPoint chromeOffset = !GetBrowserBridgeParent()
                                           ? -GetChildProcessOffset()
                                           : LayoutDeviceIntPoint();
 
-  if (!mUpdatedDimensions || mDimensions != size || !mRect.IsEqualEdges(rect) ||
+  if (!mUpdatedDimensions || mOrientation != orientation ||
+      mDimensions != size || !mRect.IsEqualEdges(rect) ||
       clientOffset != mClientOffset || chromeOffset != mChromeOffset) {
     mUpdatedDimensions = true;
     mRect = rect;
     mDimensions = size;
+    mOrientation = orientation;
     mClientOffset = clientOffset;
     mChromeOffset = chromeOffset;
 
@@ -1124,7 +1128,8 @@ DimensionInfo BrowserParent::GetDimensionInfo() {
 
   CSSRect unscaledRect = devicePixelRect / widgetScale;
   CSSSize unscaledSize = devicePixelSize / widgetScale;
-  DimensionInfo di(unscaledRect, unscaledSize, mClientOffset, mChromeOffset);
+  DimensionInfo di(unscaledRect, unscaledSize, mOrientation, mClientOffset,
+                   mChromeOffset);
   return di;
 }
 
@@ -1744,12 +1749,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   MOZ_ASSERT(aCommands);
   MOZ_ASSERT(aCommands->IsEmpty());
 
-  NativeKeyBindingsType keyBindingsType =
-      static_cast<NativeKeyBindingsType>(aType);
+  nsIWidget::NativeKeyBindingsType keyBindingsType =
+      static_cast<nsIWidget::NativeKeyBindingsType>(aType);
   switch (keyBindingsType) {
-    case NativeKeyBindingsType::SingleLineEditor:
-    case NativeKeyBindingsType::MultiLineEditor:
-    case NativeKeyBindingsType::RichTextEditor:
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
       break;
     default:
       return IPC_FAIL(this, "Invalid aType value");
@@ -1770,7 +1775,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   Maybe<WritingMode> writingMode;
   if (RefPtr<widget::TextEventDispatcher> dispatcher =
           widget->GetTextEventDispatcher()) {
-    writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+    writingMode = dispatcher->MaybeWritingModeAtSelection();
   }
   if (localEvent.InitEditCommandsFor(keyBindingsType, writingMode)) {
     *aCommands = localEvent.EditCommandsConstRef(keyBindingsType).Clone();
@@ -2011,24 +2016,16 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   //       you also need to update
   //       TextEventDispatcher::DispatchKeyboardEventInternal().
   if (aEvent.mMessage == eKeyPress) {
-    // If current input context is editable, the edit commands are initialized
-    // by TextEventDispatcher::DispatchKeyboardEventInternal().  Otherwise,
-    // we need to do it here (they are not necessary for the parent process,
-    // therefore, we need to do it here for saving the runtime cost).
-    if (!aEvent.AreAllEditCommandsInitialized()) {
-      // XXX Is it good thing that the keypress event will be handled in an
-      //     editor even though the user pressed the key combination before the
-      //     focus change has not been completed in the parent process yet or
-      //     focus change will happen?  If no, we can stop doing this.
-      Maybe<WritingMode> writingMode;
-      if (aEvent.mWidget) {
-        if (RefPtr<widget::TextEventDispatcher> dispatcher =
-                aEvent.mWidget->GetTextEventDispatcher()) {
-          writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
-        }
+    // XXX Should we do this only when input context indicates an editor having
+    //     focus and the key event won't cause inputting text?
+    Maybe<WritingMode> writingMode;
+    if (aEvent.mWidget) {
+      if (RefPtr<widget::TextEventDispatcher> dispatcher =
+              aEvent.mWidget->GetTextEventDispatcher()) {
+        writingMode = dispatcher->MaybeWritingModeAtSelection();
       }
-      aEvent.InitAllEditCommands(writingMode);
     }
+    aEvent.InitAllEditCommands(writingMode);
   } else {
     aEvent.PreventNativeKeyBindings();
   }

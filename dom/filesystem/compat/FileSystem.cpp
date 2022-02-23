@@ -7,6 +7,7 @@
 #include "FileSystem.h"
 #include "FileSystemRootDirectoryEntry.h"
 #include "mozilla/dom/FileSystemBinding.h"
+#include "nsContentUtils.h"
 #include "nsIDUtils.h"
 
 namespace mozilla::dom {
@@ -28,7 +29,7 @@ already_AddRefed<FileSystem> FileSystem::Create(nsIGlobalObject* aGlobalObject)
   MOZ_ASSERT(aGlobalObject);
 
   nsID id;
-  nsresult rv = nsID::GenerateUUIDInPlace(id);
+  nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }

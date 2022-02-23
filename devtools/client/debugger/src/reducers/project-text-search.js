@@ -62,4 +62,20 @@ function update(state = initialProjectTextSearchState(), action) {
   return state;
 }
 
+export function getTextSearchOperation(state) {
+  return state.projectTextSearch.ongoingSearch;
+}
+
+export function getTextSearchResults(state) {
+  return state.projectTextSearch.results;
+}
+
+export function getTextSearchStatus(state) {
+  return state.projectTextSearch.status;
+}
+
+export function getTextSearchQuery(state) {
+  return state.projectTextSearch.query;
+}
+
 export default update;

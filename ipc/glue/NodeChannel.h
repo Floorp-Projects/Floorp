@@ -12,6 +12,8 @@
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/ipc_channel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/AutoTransportDescriptor.h"
+#include "mozilla/ipc/Transport.h"
 #include "nsISupports.h"
 #include "nsTHashMap.h"
 #include "mozilla/Queue.h"
@@ -35,8 +37,8 @@ class NodeChannel final : public IPC::Channel::Listener {
 
   struct Introduction {
     NodeName mName;
-    IPC::Channel::ChannelHandle mHandle;
-    IPC::Channel::Mode mMode;
+    AutoTransportDescriptor mTransport;
+    Transport::Mode mMode;
     int32_t mMyPid = -1;
     int32_t mOtherPid = -1;
   };

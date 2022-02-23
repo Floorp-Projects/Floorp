@@ -48,27 +48,23 @@ add_task(async function checkCtrlWorks() {
     ],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   for (let [inputValue, expectedURL, options] of testcases) {
     info(`Testing input string: "${inputValue}" - expected: "${expectedURL}"`);
     let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
       expectedURL,
-      win.gBrowser.selectedBrowser
+      gBrowser.selectedBrowser
     );
     let promiseStopped = BrowserTestUtils.browserStopped(
-      win.gBrowser.selectedBrowser,
+      gBrowser.selectedBrowser,
       undefined,
       true
     );
-    win.gURLBar.focus();
-    win.gURLBar.inputField.value = inputValue.slice(0, -1);
-    EventUtils.sendString(inputValue.slice(-1), win);
-    EventUtils.synthesizeKey("KEY_Enter", options, win);
+    gURLBar.focus();
+    gURLBar.inputField.value = inputValue.slice(0, -1);
+    EventUtils.sendString(inputValue.slice(-1));
+    EventUtils.synthesizeKey("KEY_Enter", options);
     await Promise.all([promiseLoad, promiseStopped]);
   }
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function checkPrefTurnsOffCanonize() {
@@ -82,11 +78,9 @@ add_task(async function checkPrefTurnsOffCanonize() {
     Services.search.setDefault(oldDefaultEngine)
   );
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   // Ensure we don't end up loading something in the current tab becuase it's empty:
   let initialTab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser: win.gBrowser,
+    gBrowser,
     opening: "about:mozilla",
   });
   await SpecialPowers.pushPrefEnv({
@@ -98,19 +92,15 @@ add_task(async function checkPrefTurnsOffCanonize() {
   // CMD+Enter for that.
   let promiseLoaded =
     AppConstants.platform == "macosx"
-      ? BrowserTestUtils.browserLoaded(
-          win.gBrowser.selectedBrowser,
-          false,
-          newURL
-        )
-      : BrowserTestUtils.waitForNewTab(win.gBrowser);
+      ? BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, newURL)
+      : BrowserTestUtils.waitForNewTab(gBrowser);
 
-  win.gURLBar.focus();
-  win.gURLBar.selectionStart = win.gURLBar.selectionEnd =
-    win.gURLBar.inputField.value.length;
-  win.gURLBar.inputField.value = "exampl";
-  EventUtils.sendString("e", win);
-  EventUtils.synthesizeKey("KEY_Enter", { ctrlKey: true }, win);
+  gURLBar.focus();
+  gURLBar.selectionStart = gURLBar.selectionEnd =
+    gURLBar.inputField.value.length;
+  gURLBar.inputField.value = "exampl";
+  EventUtils.sendString("e");
+  EventUtils.synthesizeKey("KEY_Enter", { ctrlKey: true });
 
   await promiseLoaded;
   if (AppConstants.platform == "macosx") {
@@ -126,16 +116,14 @@ add_task(async function checkPrefTurnsOffCanonize() {
       "Original tab shouldn't have navigated"
     );
     Assert.equal(
-      win.gBrowser.selectedBrowser.currentURI.spec,
+      gBrowser.selectedBrowser.currentURI.spec,
       newURL,
       "New tab should have navigated"
     );
   }
-  while (win.gBrowser.tabs.length > 1) {
-    win.gBrowser.removeTab(win.gBrowser.selectedTab, { animate: false });
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeTab(gBrowser.selectedTab, { animate: false });
   }
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function autofill() {
@@ -147,14 +135,12 @@ add_task(async function autofill() {
     ],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   // Quantumbar automatically disables autofill when the old search string
   // starts with the new search string, so to make sure that doesn't happen and
   // that earlier tests don't conflict with this one, start a new search for
   // some other string.
-  win.gURLBar.select();
-  EventUtils.sendString("blah", win);
+  gURLBar.select();
+  EventUtils.sendString("blah");
 
   // Add a visit that will be autofilled.
   await PlacesUtils.history.clear();
@@ -174,30 +160,28 @@ add_task(async function autofill() {
   ];
 
   function promiseAutofill() {
-    return BrowserTestUtils.waitForEvent(win.gURLBar.inputField, "select");
+    return BrowserTestUtils.waitForEvent(gURLBar.inputField, "select");
   }
 
   for (let [inputValue, expectedURL, options] of testcases) {
     let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
       expectedURL,
-      win.gBrowser.selectedBrowser
+      gBrowser.selectedBrowser
     );
-    win.gURLBar.select();
+    gURLBar.select();
     let autofillPromise = promiseAutofill();
-    EventUtils.sendString(inputValue, win);
+    EventUtils.sendString(inputValue);
     await autofillPromise;
-    EventUtils.synthesizeKey("KEY_Enter", options, win);
+    EventUtils.synthesizeKey("KEY_Enter", options);
     await promiseLoad;
 
     // Here again, make sure autofill isn't disabled for the next search.  See
     // the comment above.
-    win.gURLBar.select();
-    EventUtils.sendString("blah", win);
+    gURLBar.select();
+    EventUtils.sendString("blah");
   }
 
   await PlacesUtils.history.clear();
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function() {
@@ -209,24 +193,21 @@ add_task(async function() {
     set: [["browser.urlbar.ctrlCanonizesURLs", true]],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   info("Paste the word to the urlbar");
   const testWord = "example";
-  simulatePastingToUrlbar(testWord, win);
-  is(win.gURLBar.value, testWord, "Paste the test word correctly");
+  simulatePastingToUrlbar(testWord);
+  is(gURLBar.value, testWord, "Paste the test word correctly");
 
   info("Send enter key while pressing the ctrl key");
-  EventUtils.synthesizeKey("VK_RETURN", { ctrlKey: true }, win);
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(
-    win.gBrowser.selectedBrowser.documentURI.spec,
+    gBrowser.selectedBrowser.documentURI.spec,
     `http://mochi.test:8888/?terms=${testWord}`,
     "The loaded url is not canonized"
   );
-  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" }, win);
 
-  await BrowserTestUtils.closeWindow(win);
+  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
 });
 
 add_task(async function() {
@@ -236,46 +217,33 @@ add_task(async function() {
     set: [["browser.urlbar.ctrlCanonizesURLs", true]],
   });
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   info("Paste the word to the urlbar");
   const testWord = "example";
-  simulatePastingToUrlbar(testWord, win);
-  is(win.gURLBar.value, testWord, "Paste the test word correctly");
+  simulatePastingToUrlbar(testWord);
+  is(gURLBar.value, testWord, "Paste the test word correctly");
 
   info("Release the ctrl key befoer typing Enter key");
-  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" }, win);
+  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
 
   info("Send enter key with the ctrl");
   const onLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
     `https://www.${testWord}.com/`,
-    win.gBrowser.selectedBrowser
+    gBrowser.selectedBrowser
   );
-  const onStop = BrowserTestUtils.browserStopped(
-    win.gBrowser.selectedBrowser,
-    undefined,
-    true
-  );
-  EventUtils.synthesizeKey("VK_RETURN", { ctrlKey: true }, win);
-  await Promise.all([onLoad, onStop]);
+  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
+  await onLoad;
   info("The loaded url is canonized");
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
-function simulatePastingToUrlbar(text, win) {
-  win.gURLBar.focus();
+function simulatePastingToUrlbar(text) {
+  gURLBar.focus();
 
-  const keyForPaste = win.document
+  const keyForPaste = document
     .getElementById("key_paste")
     .getAttribute("key")
     .toLowerCase();
-  EventUtils.synthesizeKey(
-    keyForPaste,
-    { type: "keydown", ctrlKey: true },
-    win
-  );
+  EventUtils.synthesizeKey(keyForPaste, { type: "keydown", ctrlKey: true });
 
-  win.gURLBar.select();
-  EventUtils.sendString(text, win);
+  gURLBar.select();
+  EventUtils.sendString(text);
 }

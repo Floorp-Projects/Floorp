@@ -9,7 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsLayoutUtils.h"
-#include "Theme.h"
+#include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
 
 namespace mozilla::widget {

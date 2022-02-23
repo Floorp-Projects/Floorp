@@ -67,8 +67,7 @@ const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
                             IFNULL(btitle, h.title), tags,
                             h.visit_count, h.typed, bookmarked,
                             t.open_count,
-                            :matchBehavior, :searchBehavior,
-                            NULL)
+                            :matchBehavior, :searchBehavior)
    ORDER BY rank DESC, h.frecency DESC
    LIMIT :maxResults`;
 

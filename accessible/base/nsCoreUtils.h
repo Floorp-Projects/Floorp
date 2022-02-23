@@ -14,7 +14,6 @@
 
 #include "nsPoint.h"
 #include "nsTArray.h"
-#include "Units.h"
 
 class nsRange;
 class nsTreeColumn;
@@ -168,10 +167,10 @@ class nsCoreUtils {
    *
    * @param aScrollableFrame  the scrollable frame
    * @param aFrame            the frame to scroll
-   * @param aPoint            the point scroll to (in dev pixels)
+   * @param aPoint            the point scroll to
    */
   static void ScrollFrameToPoint(nsIFrame* aScrollableFrame, nsIFrame* aFrame,
-                                 const mozilla::LayoutDeviceIntPoint& aPoint);
+                                 const nsIntPoint& aPoint);
 
   /**
    * Converts scroll type constant defined in nsIAccessibleScrollType to
@@ -187,7 +186,7 @@ class nsCoreUtils {
    *
    * @param aNode  the DOM node hosted in the window.
    */
-  static mozilla::LayoutDeviceIntPoint GetScreenCoordsForWindow(nsINode* aNode);
+  static nsIntPoint GetScreenCoordsForWindow(nsINode* aNode);
 
   /**
    * Return document shell for the given DOM node.
@@ -319,7 +318,6 @@ class nsCoreUtils {
   static void DispatchAccEvent(RefPtr<nsIAccessibleEvent> aEvent);
 
   static bool IsDisplayContents(nsIContent* aContent);
-  static bool CanCreateAccessibleWithoutFrame(nsIContent* aContent);
 
   /**
    * Return whether the document and all its in-process ancestors are visible in

@@ -6,11 +6,10 @@ import {
   getSources,
   getSelectedSource,
   getSourceInSources,
-  getBlackBoxRanges,
-} from "../selectors/sources";
-import { getCurrentThreadFrames } from "./pause";
+} from "../reducers/sources";
+import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
-import { isFrameBlackBoxed } from "../utils/source";
+import { isOriginal } from "../utils/source";
 import { createSelector } from "reselect";
 
 function getLocation(frame, isGeneratedSource) {
@@ -25,7 +24,7 @@ function getSourceForFrame(sources, frame, isGeneratedSource) {
 }
 
 function appendSource(sources, frame, selectedSource) {
-  const isGeneratedSource = selectedSource && !selectedSource.isOriginal;
+  const isGeneratedSource = selectedSource && !isOriginal(selectedSource);
   return {
     ...frame,
     location: getLocation(frame, isGeneratedSource),
@@ -33,12 +32,7 @@ function appendSource(sources, frame, selectedSource) {
   };
 }
 
-export function formatCallStackFrames(
-  frames,
-  sources,
-  selectedSource,
-  blackboxedRanges
-) {
+export function formatCallStackFrames(frames, sources, selectedSource) {
   if (!frames) {
     return null;
   }
@@ -46,7 +40,7 @@ export function formatCallStackFrames(
   const formattedFrames = frames
     .filter(frame => getSourceForFrame(sources, frame))
     .map(frame => appendSource(sources, frame, selectedSource))
-    .filter(frame => !isFrameBlackBoxed(frame, frame.source, blackboxedRanges));
+    .filter(frame => !frame?.source?.isBlackBoxed);
 
   return annotateFrames(formattedFrames);
 }
@@ -56,6 +50,5 @@ export const getCallStackFrames = (createSelector)(
   getCurrentThreadFrames,
   getSources,
   getSelectedSource,
-  getBlackBoxRanges,
   formatCallStackFrames
 );

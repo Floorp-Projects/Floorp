@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('ReadableStream'))
 // A stream can become errored with an exception from another realm.
 
 let g = newGlobal();

@@ -107,8 +107,6 @@ class SharedSurface_SurfaceTexture final : public SharedSurface {
   virtual void WaitForBufferOwnership() override;
 
   virtual bool IsBufferAvailable() const override;
-
-  bool IsValid() const override;
 };
 
 class SurfaceFactory_SurfaceTexture final : public SurfaceFactory {

@@ -58,6 +58,7 @@
 #include "nsBidiPresUtils.h"
 #include "nsTextFrame.h"
 
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
 #include "nsPresContext.h"
@@ -1808,9 +1809,7 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   nsPresContext* presContext = aFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
-  if (!rootPC) {
-    return NS_OK;
-  }
+  if (!rootPC) return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->GetRootFrame();
   AutoWeakFrame weakRootFrame(rootmostFrame);
   AutoWeakFrame weakFrame(aFrame);
@@ -1828,18 +1827,22 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
       return NS_OK;
     }
     if (!didScroll && !done) {
-      // If aPoint is at the very edge of the root, then try to scroll anyway,
-      // once.
-      nsRect rootRect = rootmostFrame->GetRect();
+      // If aPoint is at the screen edge then try to scroll anyway, once.
+      RefPtr<nsDeviceContext> dx =
+          presShell->GetViewManager()->GetDeviceContext();
+      nsRect screen;
+      dx->GetRect(screen);
+      nsPoint screenPoint =
+          globalPoint + rootmostFrame->GetScreenRectInAppUnits().TopLeft();
       nscoord onePx = AppUnitsPerCSSPixel();
       nscoord scrollAmount = 10 * onePx;
-      if (std::abs(rootRect.x - globalPoint.x) <= onePx) {
+      if (std::abs(screen.x - screenPoint.x) <= onePx) {
         aPoint.x -= scrollAmount;
-      } else if (std::abs(rootRect.XMost() - globalPoint.x) <= onePx) {
+      } else if (std::abs(screen.XMost() - screenPoint.x) <= onePx) {
         aPoint.x += scrollAmount;
-      } else if (std::abs(rootRect.y - globalPoint.y) <= onePx) {
+      } else if (std::abs(screen.y - screenPoint.y) <= onePx) {
         aPoint.y -= scrollAmount;
-      } else if (std::abs(rootRect.YMost() - globalPoint.y) <= onePx) {
+      } else if (std::abs(screen.YMost() - screenPoint.y) <= onePx) {
         aPoint.y += scrollAmount;
       } else {
         break;
@@ -1853,7 +1856,8 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   // Start the AutoScroll timer if necessary.
   // `ScrollFrameRectIntoView` above may have run script and this may have
   // forbidden to continue scrolling.
-  if (didScroll && mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes) {
+  if (didScroll &&
+      (mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes)) {
     nsPoint presContextPoint =
         globalPoint -
         presShell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);

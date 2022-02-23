@@ -255,13 +255,7 @@ using ContextData = ProtectedDataContextArg<CheckContextLocal, T>;
 
 // Enum describing which helper threads (GC tasks or Ion compilations) may
 // access data even though they do not have exclusive access to any zone.
-enum class AllowedHelperThread {
-  None,
-  GCTask,
-  ParseTask,
-  IonCompile,
-  GCTaskOrIonCompile
-};
+enum class AllowedHelperThread { None, GCTask, IonCompile, GCTaskOrIonCompile };
 
 template <AllowedHelperThread Helper>
 class CheckMainThread {
@@ -282,10 +276,6 @@ using MainThreadOrGCTaskData =
 template <typename T>
 using MainThreadOrIonCompileData =
     ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::IonCompile>,
-                             T>;
-template <typename T>
-using MainThreadOrParseData =
-    ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::ParseTask>,
                              T>;
 
 template <AllowedHelperThread Helper>

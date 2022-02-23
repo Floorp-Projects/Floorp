@@ -41,7 +41,12 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
 
     prefs_safebrowsing = {
         "browser.safebrowsing.debug": True,
-        "browser.safebrowsing.update.enabled": True,
+        "browser.safebrowsing.blockedURIs.enabled": True,
+        "browser.safebrowsing.downloads.enabled": True,
+        "browser.safebrowsing.phishing.enabled": True,
+        "browser.safebrowsing.malware.enabled": True,
+        "privacy.trackingprotection.enabled": True,
+        "privacy.trackingprotection.pbmode.enabled": True,
     }
 
     def get_safebrowsing_files(self, is_v4):

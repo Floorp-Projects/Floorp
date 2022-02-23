@@ -511,8 +511,7 @@ struct MathGlyphInfo
     | hb_map_retains_sorting (glyph_map)
     ;
 
-    if (it) out->extendedShapeCoverage.serialize_serialize (c->serializer, it);
-    else out->extendedShapeCoverage = 0;
+    out->extendedShapeCoverage.serialize_serialize (c->serializer, it);
 
     out->mathKernInfo.serialize_subset (c, mathKernInfo, this);
     return_trace (true);
@@ -885,11 +884,8 @@ struct MathVariants
       if (!o) return_trace (false);
       o->serialize_subset (c, glyphConstruction[i], this);
     }
-    
-    if (new_vert_coverage)
-      out->vertGlyphCoverage.serialize_serialize (c->serializer, new_vert_coverage.iter ());
-    
-    if (new_hori_coverage)
+
+    out->vertGlyphCoverage.serialize_serialize (c->serializer, new_vert_coverage.iter ());
     out->horizGlyphCoverage.serialize_serialize (c->serializer, new_hori_coverage.iter ());
     return_trace (true);
   }

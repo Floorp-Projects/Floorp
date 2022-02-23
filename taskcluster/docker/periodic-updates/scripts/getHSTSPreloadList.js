@@ -443,9 +443,7 @@ function output(statuses) {
       "resource://gre/modules/FileUtils.jsm"
     );
 
-    let file = new FileUtils.File(
-      PathUtils.join(Services.dirsvc.get("CurWorkD", Ci.nsIFile).path, OUTPUT)
-    );
+    let file = FileUtils.getFile("CurWorkD", [OUTPUT]);
     let fos = FileUtils.openSafeFileOutputStream(file);
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
@@ -462,7 +460,6 @@ function output(statuses) {
     dump("finished writing output file\n");
   } catch (e) {
     dump("ERROR: problem writing output to '" + OUTPUT + "': " + e + "\n");
-    throw e;
   }
 }
 

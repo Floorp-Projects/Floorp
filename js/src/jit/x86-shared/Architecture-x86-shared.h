@@ -39,6 +39,8 @@ static const uint32_t ShadowStackSpace = 32;
 static const uint32_t ShadowStackSpace = 0;
 #endif
 
+static const uint32_t SizeOfReturnAddressAfterCall = sizeof(void*);
+
 static const uint32_t JumpImmediateRange = INT32_MAX;
 
 class Registers {

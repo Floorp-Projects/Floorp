@@ -386,7 +386,7 @@ void nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL) {
     mURIToSendToDevtools = aURL;
 
     nsID uuid;
-    nsresult rv = nsID::GenerateUUIDInPlace(uuid);
+    nsresult rv = nsContentUtils::GenerateUUIDInPlace(uuid);
     if (!NS_FAILED(rv)) {
       char buffer[NSID_LENGTH];
       uuid.ToProvidedString(buffer);
@@ -1120,7 +1120,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
    * WillBuildModel to be called before the document has had its
    * script global object set.
    */
-  rv = mExecutor->WillBuildModel();
+  rv = mExecutor->WillBuildModel(eDTDMode_unknown);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsHtml5OwningUTF16Buffer> newBuf =

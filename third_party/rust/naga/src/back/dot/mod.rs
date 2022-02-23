@@ -231,7 +231,6 @@ fn write_fun(
             E::ImageSample {
                 image,
                 sampler,
-                gather,
                 coordinate,
                 array_index,
                 offset: _,
@@ -261,11 +260,7 @@ fn write_fun(
                 if let Some(expr) = depth_ref {
                     edges.insert("depth_ref", expr);
                 }
-                let string = match gather {
-                    Some(component) => Cow::Owned(format!("ImageGather{:?}", component)),
-                    _ => Cow::Borrowed("ImageSample"),
-                };
-                (string, 5)
+                ("ImageSample".into(), 5)
             }
             E::ImageLoad {
                 image,

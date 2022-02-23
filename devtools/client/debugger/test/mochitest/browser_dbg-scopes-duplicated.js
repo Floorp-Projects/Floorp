@@ -47,7 +47,7 @@ add_task(async function() {
 
   const ready = Promise.all([
     waitForPaused(dbg),
-    waitForLoadedSource(dbg, "test.js"),
+    waitForLoadedSource(dbg, "test"),
   ]);
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

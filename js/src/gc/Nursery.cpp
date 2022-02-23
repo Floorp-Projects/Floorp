@@ -210,7 +210,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
-      smoothedTargetSize(0.0),
+      smoothedGrowthFactor(1.0),
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
@@ -913,49 +913,44 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
 
   TimeDuration ts = collectionStartTime() - stats().creationTime();
 
-  FILE* file = stats().profileFile();
   fprintf(
-      file, "MinorGC: %7zu %14p %10.6f %-20.20s %5.1f%% %6zu %6zu %6" PRIu32,
+      stderr, "MinorGC: %6zu %14p %10.6f %-20.20s %5.1f%% %6zu %6zu %6" PRIu32,
       size_t(getpid()), runtime(), ts.ToSeconds(), JS::ExplainGCReason(reason),
       promotionRate * 100, previousGC.nurseryCapacity / 1024, capacity() / 1024,
       stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
 
-  printProfileDurations(file, profileDurations_);
-}
-
-void js::Nursery::printProfileHeader() {
-  FILE* file = stats().profileFile();
-  fprintf(
-      file,
-      "MinorGC: PID     Runtime        Timestamp  Reason               PRate  "
-      "OldSz  NewSz  Dedup ");
-#define PRINT_HEADER(name, text) fprintf(file, " %-6.6s", text);
-  FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
-#undef PRINT_HEADER
-  fprintf(file, "\n");
+  printProfileDurations(profileDurations_);
 }
 
 // static
-void js::Nursery::printProfileDurations(FILE* file,
-                                        const ProfileDurations& times) {
+void js::Nursery::printProfileHeader() {
+  fprintf(
+      stderr,
+      "MinorGC: PID    Runtime        Timestamp  Reason               PRate  "
+      "OldSz  NewSz  Dedup ");
+#define PRINT_HEADER(name, text) fprintf(stderr, " %-6.6s", text);
+  FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
+#undef PRINT_HEADER
+  fprintf(stderr, "\n");
+}
+
+// static
+void js::Nursery::printProfileDurations(const ProfileDurations& times) {
   for (auto time : times) {
-    fprintf(file, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
+    fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
   }
-  fprintf(file, "\n");
+  fprintf(stderr, "\n");
 }
 
 void js::Nursery::printTotalProfileTimes() {
-  if (!enableProfiling_) {
-    return;
+  if (enableProfiling_) {
+    fprintf(stderr,
+            "MinorGC: %6zu %14p TOTALS: %7" PRIu64
+            " collections:               %16" PRIu64,
+            size_t(getpid()), runtime(), gc->stringStats.deduplicatedStrings,
+            gc->minorGCCount());
+    printProfileDurations(totalDurations_);
   }
-
-  FILE* file = stats().profileFile();
-  fprintf(file,
-          "MinorGC: %7zu %14p TOTALS: %7" PRIu64
-          " collections:               %16" PRIu64,
-          size_t(getpid()), runtime(), gc->stringStats.deduplicatedStrings,
-          gc->minorGCCount());
-  printProfileDurations(file, totalDurations_);
 }
 
 void js::Nursery::maybeClearProfileDurations() {
@@ -1631,21 +1626,19 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 }
 
-static inline bool ClampDouble(double* value, double min, double max) {
-  MOZ_ASSERT(!std::isnan(*value) && !std::isnan(min) && !std::isnan(max));
+static inline double ClampDouble(double value, double min, double max) {
+  MOZ_ASSERT(!std::isnan(value) && !std::isnan(min) && !std::isnan(max));
   MOZ_ASSERT(max >= min);
 
-  if (*value <= min) {
-    *value = min;
-    return true;
+  if (value <= min) {
+    return min;
   }
 
-  if (*value >= max) {
-    *value = max;
-    return true;
+  if (value >= max) {
+    return max;
   }
 
-  return false;
+  return value;
 }
 
 size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
@@ -1658,7 +1651,7 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   }
 
   // Don't resize the nursery during shutdown.
-  if (options == JS::GCOptions::Shutdown) {
+  if (gc::IsShutdownReason(reason)) {
     clearRecentGrowthData();
     return capacity();
   }
@@ -1681,61 +1674,49 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   double fractionPromoted =
       double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
 
-  // Calculate the duty factor, the fraction of time spent collecting the
-  // nursery.
-  double dutyFactor = 0.0;
-  TimeDuration collectorTime = now - collectionStartTime();
+  // Calculate the fraction of time spent collecting the nursery.
+  double timeFraction = 0.0;
   if (hasRecentGrowthData && !js::SupportDifferentialTesting()) {
+    TimeDuration collectorTime = now - collectionStartTime();
     TimeDuration totalTime = now - lastCollectionEndTime();
-    dutyFactor = collectorTime.ToSeconds() / totalTime.ToSeconds();
+    timeFraction = collectorTime.ToSeconds() / totalTime.ToSeconds();
   }
 
-  // Calculate a growth factor to try to achieve target promotion rate and duty
-  // factor goals.
+  // Adjust the nursery size to try to achieve a target promotion rate and
+  // collector time goals.
   static const double PromotionGoal = 0.02;
-  static const double DutyFactorGoal = 0.01;
-  double promotionGrowth = fractionPromoted / PromotionGoal;
-  double dutyGrowth = dutyFactor / DutyFactorGoal;
-  double growthFactor = std::max(promotionGrowth, dutyGrowth);
-
-  // Decrease the growth factor to try to keep collections shorter than a target
-  // maximum time. Don't do this during page load.
-  static const double MaxTimeGoalMs = 4.0;
-  if (!gc->isInPageLoad() && !js::SupportDifferentialTesting()) {
-    double timeGrowth = MaxTimeGoalMs / collectorTime.ToMilliseconds();
-    growthFactor = std::min(growthFactor, timeGrowth);
-  }
+  static const double TimeGoal = 0.01;
+  double growthFactor =
+      std::max(fractionPromoted / PromotionGoal, timeFraction / TimeGoal);
 
   // Limit the range of the growth factor to prevent transient high promotion
   // rates from affecting the nursery size too far into the future.
   static const double GrowthRange = 2.0;
-  bool wasClamped = ClampDouble(&growthFactor, 1.0 / GrowthRange, GrowthRange);
+  growthFactor = ClampDouble(growthFactor, 1.0 / GrowthRange, GrowthRange);
 
-  // Calculate the target size based on data from this collection.
-  double target = double(capacity()) * growthFactor;
-
-  // Use exponential smoothing on the target size to take into account data from
-  // recent previous collections.
+  // Use exponential smoothing on the desired growth rate to take into account
+  // the promotion rate from recent previous collections.
   if (hasRecentGrowthData &&
       now - lastCollectionEndTime() < TimeDuration::FromMilliseconds(200) &&
       !js::SupportDifferentialTesting()) {
-    // Pay more attention to large changes.
-    double fraction = wasClamped ? 0.5 : 0.25;
-    smoothedTargetSize =
-        (1 - fraction) * smoothedTargetSize + fraction * target;
-  } else {
-    smoothedTargetSize = target;
+    growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
   }
-  hasRecentGrowthData = true;
 
-  // Leave size untouched if we are close to the target.
+  hasRecentGrowthData = true;
+  smoothedGrowthFactor = growthFactor;
+
+  // Leave size untouched if we are close to the promotion goal.
   static const double GoalWidth = 1.5;
-  growthFactor = smoothedTargetSize / double(capacity());
   if (growthFactor > (1.0 / GoalWidth) && growthFactor < GoalWidth) {
     return capacity();
   }
 
-  return roundSize(size_t(smoothedTargetSize));
+  // The multiplication below cannot overflow because growthFactor is at
+  // most two.
+  MOZ_ASSERT(growthFactor <= 2.0);
+  MOZ_ASSERT(capacity() < SIZE_MAX / 2);
+
+  return roundSize(size_t(double(capacity()) * growthFactor));
 }
 
 void js::Nursery::clearRecentGrowthData() {
@@ -1744,7 +1725,7 @@ void js::Nursery::clearRecentGrowthData() {
   }
 
   hasRecentGrowthData = false;
-  smoothedTargetSize = 0.0;
+  smoothedGrowthFactor = 1.0;
 }
 
 /* static */

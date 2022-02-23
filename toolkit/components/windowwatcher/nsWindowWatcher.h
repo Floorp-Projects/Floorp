@@ -16,7 +16,6 @@
   }
 
 #include "nsCOMPtr.h"
-#include "Units.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Maybe.h"
 #include "nsIWindowCreator.h"  // for stupid compilers
@@ -35,6 +34,7 @@ class nsPIDOMWindowOuter;
 class nsWatcherWindowEnumerator;
 class nsPromptService;
 struct nsWatcherWindowEntry;
+struct SizeSpec;
 
 class nsWindowWatcher : public nsIWindowWatcher,
                         public nsPIWindowWatcher,
@@ -96,10 +96,21 @@ class nsWindowWatcher : public nsIWindowWatcher,
       const mozilla::dom::WindowFeatures& aFeatures, bool aDialog,
       bool aChromeURL);
 
+  /* Compute the right SizeSpec based on aFeatures */
+  static void CalcSizeSpec(const mozilla::dom::WindowFeatures& aFeatures,
+                           bool aHasChromeParent, SizeSpec& aResult);
+  static void SizeOpenedWindow(
+      nsIDocShellTreeOwner* aTreeOwner, mozIDOMWindowProxy* aParent,
+      bool aIsCallerChrome, const SizeSpec& aSizeSpec,
+      const mozilla::Maybe<float>& aOpenerFullZoom = mozilla::Nothing());
+
  private:
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CreateChromeWindow(
       nsIWebBrowserChrome* aParentChrome, uint32_t aChromeFlags,
       nsIOpenWindowInfo* aOpenWindowInfo, nsIWebBrowserChrome** aResult);
+
+  void MaybeDisablePersistence(const SizeSpec& sizeSpec,
+                               nsIDocShellTreeOwner* aTreeOwner);
 
   static uint32_t CalculateChromeFlagsHelper(
       uint32_t aInitialFlags, const mozilla::dom::WindowFeatures& aFeatures,

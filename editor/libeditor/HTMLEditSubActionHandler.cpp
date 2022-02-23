@@ -112,67 +112,49 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
 }
 
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
+    RangeBoundary& aStartRef, RangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorRawDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
+    RawRangeBoundary& aStartRef, RangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPoint& aStartPoint, EditorRawDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
+    RangeBoundary& aStartRef, RawRangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorRawDOMPoint& aStartPoint, EditorRawDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
+    RawRangeBoundary& aStartRef, RawRangeBoundary& aEndRef) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorDOMRange& aRange);
+    const RangeBoundary& aStartRef, const RangeBoundary& aEndRef);
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorRawDOMRange& aRange);
+    const RawRangeBoundary& aStartRef, const RangeBoundary& aEndRef);
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint);
+    const RangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorRawDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint);
-template already_AddRefed<nsRange>
-HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint);
-template already_AddRefed<nsRange>
-HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint);
+    const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorDOMRange& aRange, EditSubAction aEditSubAction) const;
-template already_AddRefed<nsRange>
-HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorRawDOMRange& aRange, EditSubAction aEditSubAction) const;
-template already_AddRefed<nsRange>
-HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+    const RangeBoundary& aStartRef, const RangeBoundary& aEndRef,
     EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorRawDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+    const RawRangeBoundary& aStartRef, const RangeBoundary& aEndRef,
     EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
+    const RangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
     EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
+    const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
     EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const;
+    const RangeBoundary& aPoint, EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorRawDOMPoint& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const;
+    const RawRangeBoundary& aPoint, EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorDOMPoint& aPoint, const Element& aEditingHost) const;
+    const RangeBoundary& aPoint) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorRawDOMPoint& aPoint, const Element& aEditingHost) const;
+    const RawRangeBoundary& aPoint) const;
 
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -387,43 +369,37 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // Note that this won't prevent explicit selection setting from working.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    {
-      EditorRawDOMRange changedRange(
-          *TopLevelEditSubActionDataRef().mChangedRange);
-      if (changedRange.IsPositioned() &&
-          changedRange.EnsureNotInNativeAnonymousSubtree()) {
-        switch (GetTopLevelEditSubAction()) {
-          case EditSubAction::eInsertText:
-          case EditSubAction::eInsertTextComingFromIME:
-          case EditSubAction::eInsertLineBreak:
-          case EditSubAction::eInsertParagraphSeparator:
-          case EditSubAction::eDeleteText: {
-            // XXX We should investigate whether this is really needed because
-            //     it seems that the following code does not handle the
-            //     white-spaces.
-            RefPtr<nsRange> extendedChangedRange =
-                CreateRangeIncludingAdjuscentWhiteSpaces(changedRange);
-            if (extendedChangedRange) {
-              MOZ_ASSERT(extendedChangedRange->IsPositioned());
-              // Use extended range temporarily.
-              TopLevelEditSubActionDataRef().mChangedRange =
-                  std::move(extendedChangedRange);
-            }
-            break;
-          }
-          default: {
-            RefPtr<nsRange> extendedChangedRange =
-                CreateRangeExtendedToHardLineStartAndEnd(
-                    changedRange, GetTopLevelEditSubAction());
-            if (extendedChangedRange) {
-              MOZ_ASSERT(extendedChangedRange->IsPositioned());
-              // Use extended range temporarily.
-              TopLevelEditSubActionDataRef().mChangedRange =
-                  std::move(extendedChangedRange);
-            }
-            break;
-          }
+    switch (GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eInsertLineBreak:
+      case EditSubAction::eInsertParagraphSeparator:
+      case EditSubAction::eDeleteText: {
+        // XXX We should investigate whether this is really needed because it
+        //     seems that the following code does not handle the white-spaces.
+        RefPtr<nsRange> extendedChangedRange =
+            CreateRangeIncludingAdjuscentWhiteSpaces(
+                *TopLevelEditSubActionDataRef().mChangedRange);
+        if (extendedChangedRange) {
+          MOZ_ASSERT(extendedChangedRange->IsPositioned());
+          // Use extended range temporarily.
+          TopLevelEditSubActionDataRef().mChangedRange =
+              std::move(extendedChangedRange);
         }
+        break;
+      }
+      default: {
+        RefPtr<nsRange> extendedChangedRange =
+            CreateRangeExtendedToHardLineStartAndEnd(
+                *TopLevelEditSubActionDataRef().mChangedRange,
+                GetTopLevelEditSubAction());
+        if (extendedChangedRange) {
+          MOZ_ASSERT(extendedChangedRange->IsPositioned());
+          // Use extended range temporarily.
+          TopLevelEditSubActionDataRef().mChangedRange =
+              std::move(extendedChangedRange);
+        }
+        break;
       }
     }
 
@@ -490,15 +466,12 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       }
     }
 
-    // Clean up any empty nodes in the changed range unless they are inserted
-    // intentionally.
-    if (TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements) {
-      nsresult rv = RemoveEmptyNodesIn(
-          MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::RemoveEmptyNodesIn() failed");
-        return rv;
-      }
+    // clean up any empty nodes in the selection
+    rv = RemoveEmptyNodesIn(
+        MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::RemoveEmptyNodesIn() failed");
+      return rv;
     }
 
     // attempt to transform any unneeded nbsp's into spaces after doing various
@@ -661,7 +634,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // If the selection is in empty inline HTML elements, we should delete
     // them unless it's inserted intentionally.
     if (mPlaceholderBatch &&
-        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements &&
+        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyInlineElements &&
         SelectionRef().IsCollapsed() && SelectionRef().GetFocusNode()) {
       RefPtr<Element> mostDistantEmptyInlineAncestor = nullptr;
       for (Element* ancestor :
@@ -2027,18 +2000,10 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
-
-  // The node may not be able to have a text node so that we need to check it
-  // here.
-  if (!pointToInsert.IsInTextNode() &&
-      !HTMLEditUtils::CanNodeContain(*pointToInsert.ContainerAsContent(),
-                                     *nsGkAtoms::textTagName)) {
-    NS_WARNING(
-        "HTMLEditor::HandleInsertLinefeed() couldn't insert a linefeed because "
-        "the insertion position couldn't have text nodes");
-    return NS_ERROR_EDITOR_NO_EDITABLE_RANGE;
-  }
-
+  MOZ_ASSERT_IF(
+      !pointToInsert.IsInTextNode(),
+      HTMLEditUtils::CanNodeContain(*pointToInsert.ContainerAsContent(),
+                                    *nsGkAtoms::textTagName));
   RefPtr<Document> document = GetDocument();
   MOZ_ASSERT(document);
   if (NS_WARN_IF(!document)) {
@@ -3054,19 +3019,19 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         CreateAndInsertElementWithTransaction(
             aListItemElementTagName,
             EditorDOMPoint(newListElementOrError.inspect(), 0));
-    if (newListItemElementOrError.isErr()) {
+    if (newListElementOrError.isErr()) {
       NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return EditActionResult(newListItemElementOrError.unwrapErr());
+      return EditActionResult(newListElementOrError.unwrapErr());
     }
-    MOZ_ASSERT(newListItemElementOrError.inspect());
+    MOZ_ASSERT(newListElementOrError.inspect());
 
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        newListItemElementOrError.inspect();
+        newListElementOrError.inspect();
     // Put selection in new list item and don't restore the Selection.
     restoreSelectionLater.Abort();
     nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*newListItemElementOrError.inspect()));
+        MOZ_KnownLive(*newListElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionToStartOf() failed");
     return EditActionResult(rv);
@@ -5898,12 +5863,20 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   return error.StealNSResult();
 }
 
-template <typename EditorDOMPointType>
+template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorDOMPointType& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const {
+    const RangeBoundaryBase<PT, RT>& aPoint,
+    EditSubAction aEditSubAction) const {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
+  }
+
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "No editing host, HTMLEditor::GetCurrentHardLineStartPoint() returned "
+        "given point");
+    return EditorDOMPoint(aPoint);
   }
 
   EditorDOMPoint point(aPoint);
@@ -5934,12 +5907,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
           WalkTreeOption::IgnoreNonEditableNode,
           WalkTreeOption::StopAtBlockBoundary};
   for (nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        previousEditableContent && previousEditableContent->GetParentNode() &&
        !HTMLEditUtils::IsVisibleBRElement(*previousEditableContent) &&
        !HTMLEditUtils::IsBlockElement(*previousEditableContent);
        previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     EditorDOMPoint atLastPreformattedNewLine =
         HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
             EditorRawDOMPoint::AtEndOf(*previousEditableContent));
@@ -5954,11 +5927,11 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
   // the container (typically, start of nearest block ancestor), and as long
   // as we haven't hit the body node.
   for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainer()->GetParentNode();
        nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     // Don't keep looking up if we have found a blockquote element to act on
     // when we handle outdent.
     // XXX Sounds like this is hacky.  If possible, it should be check in
@@ -5992,11 +5965,19 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
   return point;
 }
 
-template <typename EditorDOMPointType>
+template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorDOMPointType& aPoint, const Element& aEditingHost) const {
+    const RangeBoundaryBase<PT, RT>& aPoint) const {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
+  }
+
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "No editing host, HTMLEditor::GetCurrentHardLineEndPoint() returned "
+        "given point");
+    return EditorDOMPoint(aPoint);
   }
 
   EditorDOMPoint point(aPoint);
@@ -6021,9 +6002,9 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
           maybeNonEditableBlockElement) {
         // If the block is a parent of the editing host, let's return end
         // of editing host.
-        if (maybeNonEditableBlockElement == &aEditingHost ||
+        if (maybeNonEditableBlockElement == editingHost ||
             !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
-                &aEditingHost)) {
+                editingHost)) {
           return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
         }
         // If it's invisible because of parent block boundary, return end
@@ -6062,12 +6043,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
           WalkTreeOption::IgnoreNonEditableNode,
           WalkTreeOption::StopAtBlockBoundary};
   for (nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        nextEditableContent &&
        !HTMLEditUtils::IsBlockElement(*nextEditableContent) &&
        nextEditableContent->GetParent();
        nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     EditorDOMPoint atFirstPreformattedNewLine =
         HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
             EditorDOMPoint>(EditorRawDOMPoint(nextEditableContent, 0));
@@ -6081,9 +6062,9 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
           maybeNonEditableBlockElement) {
         // If the block is a parent of the editing host, let's return end
         // of editing host.
-        if (maybeNonEditableBlockElement == &aEditingHost ||
+        if (maybeNonEditableBlockElement == editingHost ||
             !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
-                &aEditingHost)) {
+                editingHost)) {
           return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
         }
         // If it's invisible because of parent block boundary, return end
@@ -6112,11 +6093,11 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   // container (typically, block node), and as long as we haven't hit the body
   // node.
   for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainer()->GetParentNode();
        nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     // Don't walk past the editable section. Note that we need to check before
     // walking up to a parent because we need to return the parent object, so
     // the parent itself might not be in the editable area, but it's OK.
@@ -6149,14 +6130,9 @@ void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
     MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     const nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
-    EditorRawDOMRange rawRange(*selectionRange);
-    if (!rawRange.IsPositioned() ||
-        !rawRange.EnsureNotInNativeAnonymousSubtree()) {
-      continue;  // ignore ranges which are in orphan fragment which were
-                 // disconnected from native anonymous subtrees
-    }
+
     RefPtr<nsRange> extendedRange =
-        CreateRangeIncludingAdjuscentWhiteSpaces(rawRange);
+        CreateRangeIncludingAdjuscentWhiteSpaces(*selectionRange);
     if (!extendedRange) {
       extendedRange = selectionRange->CloneRange();
     }
@@ -6179,35 +6155,31 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
     // blocks that we will affect.  This call alters opRange.
     nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
-    EditorRawDOMRange rawRange(*selectionRange);
-    if (!rawRange.IsPositioned() ||
-        !rawRange.EnsureNotInNativeAnonymousSubtree()) {
-      continue;  // ignore ranges which are in orphan fragment which were
-                 // disconnected from native anonymous subtrees
-    }
-    RefPtr<nsRange> extendedRange =
-        CreateRangeExtendedToHardLineStartAndEnd(rawRange, aEditSubAction);
+
+    RefPtr<nsRange> extendedRange = CreateRangeExtendedToHardLineStartAndEnd(
+        *selectionRange, aEditSubAction);
     if (!extendedRange) {
       extendedRange = selectionRange->CloneRange();
     }
+
     aOutArrayOfRanges.AppendElement(extendedRange);
   }
 }
 
-template <typename EditorDOMPointType1, typename EditorDOMPointType2>
+template <typename SPT, typename SRT, typename EPT, typename ERT>
 void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPointType1& aStartPoint, EditorDOMPointType2& aEndPoint,
-    const Element& aEditingHost) const {
+    RangeBoundaryBase<SPT, SRT>& aStartRef,
+    RangeBoundaryBase<EPT, ERT>& aEndRef) const {
   // MOOSE major hack:
   // The GetCurrentHardLineStartPoint() and GetCurrentHardLineEndPoint() don't
   // really do the right thing for collapsed ranges inside block elements that
   // contain nothing but a solo <br>.  It's easier/ to put a workaround here
   // than to revamp them.  :-(
-  if (aStartPoint != aEndPoint) {
+  if (aStartRef != aEndRef) {
     return;
   }
 
-  if (!aStartPoint.IsInContentNode()) {
+  if (!aStartRef.Container()->IsContent()) {
     return;
   }
 
@@ -6219,57 +6191,61 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
   //     other things.  So, cannot write test for this method behavior.
   //     So, perhaps, we should get rid of this method and each caller should
   //     handle its job better.
-  Element* const maybeNonEditableBlockElement =
+  const Element* const maybeNonEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *aStartPoint.ContainerAsContent(),
+          *aStartRef.Container()->AsContent(),
           HTMLEditUtils::ClosestBlockElement);
   if (!maybeNonEditableBlockElement) {
     return;
   }
 
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return;
+  }
+
   // Make sure we don't go higher than our root element in the content tree
-  if (aEditingHost.IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
+  if (editingHost->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
     return;
   }
 
   if (HTMLEditUtils::IsEmptyNode(*maybeNonEditableBlockElement)) {
-    aStartPoint.Set(maybeNonEditableBlockElement, 0u);
-    aEndPoint.SetToEndOf(maybeNonEditableBlockElement);
+    aStartRef = {const_cast<Element*>(maybeNonEditableBlockElement), 0u};
+    aEndRef = {const_cast<Element*>(maybeNonEditableBlockElement),
+               maybeNonEditableBlockElement->Length()};
   }
 }
 
-template <typename EditorDOMRangeType>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorDOMRangeType& aRange) {
-  MOZ_DIAGNOSTIC_ASSERT(aRange.IsPositioned());
-  return CreateRangeIncludingAdjuscentWhiteSpaces(aRange.StartRef(),
-                                                  aRange.EndRef());
+    const AbstractRange& aAbstractRange) {
+  if (!aAbstractRange.IsPositioned()) {
+    return nullptr;
+  }
+  return CreateRangeIncludingAdjuscentWhiteSpaces(aAbstractRange.StartRef(),
+                                                  aAbstractRange.EndRef());
 }
 
-template <typename EditorDOMPointType1, typename EditorDOMPointType2>
+template <typename SPT, typename SRT, typename EPT, typename ERT>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
-    const EditorDOMPointType1& aStartPoint,
-    const EditorDOMPointType2& aEndPoint) {
-  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
-  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
-
-  if (!aStartPoint.IsInContentNode() || !aEndPoint.IsInContentNode()) {
-    NS_WARNING_ASSERTION(aStartPoint.IsSet(), "aStartPoint was not set");
-    NS_WARNING_ASSERTION(aEndPoint.IsSet(), "aEndPoint was not set");
+    const RangeBoundaryBase<SPT, SRT>& aStartRef,
+    const RangeBoundaryBase<EPT, ERT>& aEndRef) {
+  if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
     return nullptr;
   }
 
-  const Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
+  if (!aStartRef.Container()->IsContent() ||
+      !aEndRef.Container()->IsContent()) {
     return nullptr;
   }
 
-  EditorRawDOMPoint startPoint(aStartPoint);
-  EditorRawDOMPoint endPoint(aEndPoint);
-  SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
+  RangeBoundaryBase<SPT, SRT> startRef(aStartRef);
+  RangeBoundaryBase<EPT, ERT> endRef(aEndRef);
+  SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
 
-  if (NS_WARN_IF(!startPoint.IsInContentNode()) ||
-      NS_WARN_IF(!endPoint.IsInContentNode())) {
+  if (NS_WARN_IF(!startRef.IsSet()) ||
+      NS_WARN_IF(!startRef.Container()->IsContent()) ||
+      NS_WARN_IF(!endRef.IsSet()) ||
+      NS_WARN_IF(!endRef.Container()->IsContent())) {
     NS_WARNING("HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock() failed");
     return nullptr;
   }
@@ -6281,6 +6257,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   // XXX Those scanners do not treat siblings of the text nodes.  Perhaps,
   //     we should use `WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo()`
   //     and `WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces()` instead.
+  EditorRawDOMPoint startPoint(startRef);
   if (startPoint.IsInTextNode()) {
     while (!startPoint.IsStartOfContainer()) {
       if (!startPoint.IsPreviousCharASCIISpaceOrNBSP()) {
@@ -6292,6 +6269,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
+  EditorRawDOMPoint endPoint(endRef);
   if (endPoint.IsInTextNode()) {
     while (!endPoint.IsEndOfContainer()) {
       if (!endPoint.IsCharASCIISpaceOrNBSP()) {
@@ -6315,35 +6293,27 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   return range.forget();
 }
 
-template <typename EditorDOMRangeType>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorDOMRangeType& aRange, EditSubAction aEditSubAction) const {
-  if (!aRange.IsPositioned()) {
+    const AbstractRange& aAbstractRange, EditSubAction aEditSubAction) const {
+  if (!aAbstractRange.IsPositioned()) {
     return nullptr;
   }
   return CreateRangeExtendedToHardLineStartAndEnd(
-      aRange.StartRef(), aRange.EndRef(), aEditSubAction);
+      aAbstractRange.StartRef(), aAbstractRange.EndRef(), aEditSubAction);
 }
 
-template <typename EditorDOMPointType1, typename EditorDOMPointType2>
+template <typename SPT, typename SRT, typename EPT, typename ERT>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const EditorDOMPointType1& aStartPoint,
-    const EditorDOMPointType2& aEndPoint, EditSubAction aEditSubAction) const {
-  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
-  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
-
-  if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
+    const RangeBoundaryBase<SPT, SRT>& aStartRef,
+    const RangeBoundaryBase<EPT, ERT>& aEndRef,
+    EditSubAction aEditSubAction) const {
+  if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
     return nullptr;
   }
 
-  const Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-
-  EditorRawDOMPoint startPoint(aStartPoint);
-  EditorRawDOMPoint endPoint(aEndPoint);
-  SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
+  RangeBoundaryBase<SPT, SRT> startRef(aStartRef);
+  RangeBoundaryBase<EPT, ERT> endRef(aEndRef);
+  SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
 
   // Make a new adjusted range to represent the appropriate block content.
   // This is tricky.  The basic idea is to push out the range endpoints to
@@ -6354,17 +6324,17 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   //     implement a method which checks both two DOM points in the editor
   //     root.
 
-  startPoint =
-      GetCurrentHardLineStartPoint(startPoint, aEditSubAction, *editingHost);
+  EditorDOMPoint startPoint =
+      GetCurrentHardLineStartPoint(startRef, aEditSubAction);
   // XXX GetCurrentHardLineStartPoint() may return point of editing
   //     host.  Perhaps, we should change it and stop checking it here
   //     since this check may be expensive.
   if (!IsDescendantOfEditorRoot(startPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
-  endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
-  EditorRawDOMPoint lastRawPoint(
-      endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint());
+  EditorDOMPoint endPoint = GetCurrentHardLineEndPoint(endRef);
+  EditorRawDOMPoint lastRawPoint(endPoint);
+  lastRawPoint.RewindOffset();
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.

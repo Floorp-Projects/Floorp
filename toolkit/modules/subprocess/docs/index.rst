@@ -224,3 +224,4 @@ addition:
     }
 
     assert(output.includes("FOO=BAR\n"));
+

@@ -6,7 +6,7 @@
 #include "nsStyleConsts.h"
 #include "nsXULAppAPI.h"
 #include "nsLookAndFeel.h"
-#include "Theme.h"
+#include "nsNativeBasicTheme.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -340,6 +340,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
 
     case IntID::UseOverlayScrollbars:
       aResult = 1;
+      break;
+
+    case IntID::WindowsDefaultTheme:
+    case IntID::OperatingSystemVersionIdentifier:
+      aResult = 0;
+      rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
 
     case IntID::SpellCheckerUnderlineStyle:

@@ -11,3 +11,8 @@ DIRS += [
     'libavutil',
     'libavcodec'
 ]
+
+if CONFIG['MOZ_WAYLAND']:
+    DIRS += [
+        'mozva',
+    ]

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
+use quote::{TokenStreamExt, ToTokens};
 
 /// Declares the local variable into which errors will be accumulated.
 #[derive(Default)]

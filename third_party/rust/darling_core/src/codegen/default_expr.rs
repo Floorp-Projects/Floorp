@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
+use quote::{TokenStreamExt, ToTokens};
 use syn::{Ident, Path};
 
 /// This will be in scope during struct initialization after option parsing.

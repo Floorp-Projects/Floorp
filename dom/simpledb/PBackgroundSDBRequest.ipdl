@@ -38,7 +38,6 @@ union SDBRequestResponse
   SDBRequestCloseResponse;
 };
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundSDBRequest
 {
   manager PBackgroundSDBConnection;

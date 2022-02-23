@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 
 namespace mozilla {
-enum class NativeKeyBindingsType : uint8_t;
 
 class WritingMode;
 template <typename T>
@@ -29,7 +28,7 @@ class HeadlessKeyBindings final {
 
   static HeadlessKeyBindings& GetInstance();
 
-  void GetEditCommands(NativeKeyBindingsType aType,
+  void GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                        const WidgetKeyboardEvent& aEvent,
                        const Maybe<WritingMode>& aWritingMode,
                        nsTArray<CommandInt>& aCommands);

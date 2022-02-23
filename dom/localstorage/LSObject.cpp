@@ -230,25 +230,6 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   void OnResponse(const LSRequestResponse& aResponse) override;
 };
 
-void AssertExplicitSnapshotInvariants(const LSObject& aObject) {
-  // Can be only called if the mInExplicitSnapshot flag is true.
-  // An explicit snapshot must have been created.
-  MOZ_ASSERT(aObject.InExplicitSnapshot());
-
-  // If an explicit snapshot has been created then mDatabase must be not null.
-  // DropDatabase could be called in the meatime, but that must be preceded by
-  // Disconnect which sets mInExplicitSnapshot to false. EnsureDatabase could
-  // be called in the meantime too, but that can't set mDatabase to null or to
-  // a new value. See the comment below.
-  MOZ_ASSERT(aObject.DatabaseStrongRef());
-
-  // Existence of a snapshot prevents the database from allowing to close. See
-  // LSDatabase::RequestAllowToClose and LSDatabase::NoteFinishedSnapshot.
-  // If the database is not allowed to close then mDatabase could not have been
-  // nulled out or set to a new value. See EnsureDatabase.
-  MOZ_ASSERT(!aObject.DatabaseStrongRef()->IsAllowedToClose());
-}
-
 }  // namespace
 
 LSObject::LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
@@ -536,7 +517,8 @@ LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
 
   mozilla::ipc::PBackgroundChild* backgroundActor =
       XRE_IsParentProcess()
-          ? mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread()
+          ? mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(
+                aMainEventTarget)
           : mozilla::ipc::BackgroundChild::GetForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;
@@ -592,12 +574,8 @@ void LSObject::Disconnect() {
   // IPC is still available. We can't do that in DropDatabase because actors
   // may have been destroyed already at that point.
   if (mInExplicitSnapshot) {
-    AssertExplicitSnapshotInvariants(*this);
-
-    nsresult rv = mDatabase->EndExplicitSnapshot();
+    nsresult rv = EndExplicitSnapshotInternal();
     Unused << NS_WARN_IF(NS_FAILED(rv));
-
-    mInExplicitSnapshot = false;
   }
 }
 
@@ -849,38 +827,15 @@ void LSObject::EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  AssertExplicitSnapshotInvariants(*this);
-
-  nsresult rv = mDatabase->EndExplicitSnapshot();
+  nsresult rv = EndExplicitSnapshotInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
   }
-
-  mInExplicitSnapshot = false;
 }
 
-bool LSObject::GetHasSnapshot(nsIPrincipal& aSubjectPrincipal,
-                              ErrorResult& aError) {
-  AssertIsOnOwningThread();
-
-  if (!CanUseStorage(aSubjectPrincipal)) {
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return false;
-  }
-
-  // We can't call `HasSnapshot` on the database if it's being closed, but we
-  // know that a database which is being closed can't have a snapshot, so we
-  // return false in that case directly here.
-  if (!mDatabase || mDatabase->IsAllowedToClose()) {
-    return false;
-  }
-
-  return mDatabase->HasSnapshot();
-}
-
-int64_t LSObject::GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
-                                   ErrorResult& aError) {
+bool LSObject::GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -888,17 +843,13 @@ int64_t LSObject::GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
     return 0;
   }
 
-  if (!mDatabase || mDatabase->IsAllowedToClose()) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return 0;
+  if (mDatabase && mDatabase->HasActiveSnapshot()) {
+    MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+
+    return true;
   }
 
-  if (!mDatabase->HasSnapshot()) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return 0;
-  }
-
-  return mDatabase->GetSnapshotUsage();
+  return false;
 }
 
 NS_IMPL_ADDREF_INHERITED(LSObject, Storage)
@@ -1103,6 +1054,36 @@ void LSObject::OnChange(const nsAString& aKey, const nsAString& aOldValue,
                aNewValue, /* aStorageType */ kLocalStorageType, mDocumentURI,
                /* aIsPrivate */ !!mPrivateBrowsingId,
                /* aImmediateDispatch */ false);
+}
+
+nsresult LSObject::EndExplicitSnapshotInternal() {
+  AssertIsOnOwningThread();
+
+  // Can be only called if the mInExplicitSnapshot flag is true.
+  // An explicit snapshot must have been created.
+  MOZ_ASSERT(mInExplicitSnapshot);
+
+  // If an explicit snapshot has been created then mDatabase must be not null.
+  // DropDatabase could be called in the meatime, but that must be preceded by
+  // Disconnect which sets mInExplicitSnapshot to false. EnsureDatabase could
+  // be called in the meantime too, but that can't set mDatabase to null or to
+  // a new value. See the comment below.
+  MOZ_ASSERT(mDatabase);
+
+  // Existence of a snapshot prevents the database from allowing to close. See
+  // LSDatabase::RequestAllowToClose and LSDatabase::NoteFinishedSnapshot.
+  // If the database is not allowed to close then mDatabase could not have been
+  // nulled out or set to a new value. See EnsureDatabase.
+  MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+
+  nsresult rv = mDatabase->EndExplicitSnapshot(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mInExplicitSnapshot = false;
+
+  return NS_OK;
 }
 
 void LSObject::LastRelease() {

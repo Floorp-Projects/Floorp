@@ -321,14 +321,15 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
   Pivot pivot(GetActiveRoot());
 
   int32_t newStart = mStartOffset, newEnd = mEndOffset;
-  Accessible* newPos = pivot.NextText(mPosition, &newStart, &newEnd, aBoundary);
-  if (LocalAccessible* localNewPos = newPos ? newPos->AsLocal() : nullptr) {
+  LocalAccessible* newPos =
+      pivot.NextText(mPosition, &newStart, &newEnd, aBoundary);
+  if (newPos) {
     *aResult = true;
     int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
     LocalAccessible* oldPos = mPosition;
     mStartOffset = newStart;
     mEndOffset = newEnd;
-    mPosition = localNewPos;
+    mPosition = newPos;
     NotifyOfPivotChange(oldPos, oldStart, oldEnd,
                         nsIAccessiblePivot::REASON_NEXT, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);
@@ -348,14 +349,15 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
   Pivot pivot(GetActiveRoot());
 
   int32_t newStart = mStartOffset, newEnd = mEndOffset;
-  Accessible* newPos = pivot.PrevText(mPosition, &newStart, &newEnd, aBoundary);
-  if (LocalAccessible* localNewPos = newPos ? newPos->AsLocal() : nullptr) {
+  LocalAccessible* newPos =
+      pivot.PrevText(mPosition, &newStart, &newEnd, aBoundary);
+  if (newPos) {
     *aResult = true;
     int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
     LocalAccessible* oldPos = mPosition;
     mStartOffset = newStart;
     mEndOffset = newEnd;
-    mPosition = localNewPos;
+    mPosition = newPos;
     NotifyOfPivotChange(oldPos, oldStart, oldEnd,
                         nsIAccessiblePivot::REASON_PREV, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);

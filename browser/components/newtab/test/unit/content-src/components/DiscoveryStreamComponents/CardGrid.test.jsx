@@ -42,22 +42,13 @@ describe("<CardGrid>", () => {
     assert.ok(wrapper.find(".ds-card-grid-hero").exists());
   });
 
-  it("should add 4 card classname to card grid", () => {
+  it("should add compact classname to card grid", () => {
     wrapper.setProps({
-      fourCardLayout: true,
+      compact: true,
       data: { recommendations: [{}, {}] },
     });
 
-    assert.ok(wrapper.find(".ds-card-grid-four-card-variant").exists());
-  });
-
-  it("should add no description classname to card grid", () => {
-    wrapper.setProps({
-      hideCardBackground: true,
-      data: { recommendations: [{}, {}] },
-    });
-
-    assert.ok(wrapper.find(".ds-card-grid-hide-background").exists());
+    assert.ok(wrapper.find(".ds-card-grid-compact-variant").exists());
   });
 
   it("should render sub header in the middle of the card grid for both regular and compact", () => {
@@ -96,7 +87,7 @@ describe("<CardGrid>", () => {
     wrapper.setProps({
       dispatch,
       compact: true,
-      loadMore: true,
+      loadMoreEnabled: true,
       lastCardMessageEnabled: true,
       loadMoreThreshold: 2,
       data: {
@@ -123,7 +114,7 @@ describe("<CardGrid>", () => {
 
   it("should only show load more with more than threshold number of stories", () => {
     wrapper.setProps({
-      loadMore: true,
+      loadMoreEnabled: true,
       loadMoreThreshold: 2,
       data: {
         recommendations: [{}, {}, {}],

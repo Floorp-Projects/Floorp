@@ -5,8 +5,6 @@
 
 #include "mozilla/TextUtils.h"
 #include "mozTXTToHTMLConv.h"
-#include "mozilla/intl/Segmenter.h"
-#include "mozilla/Maybe.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
@@ -24,11 +22,6 @@
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
-using mozilla::Maybe;
-using mozilla::Some;
-using mozilla::Span;
-using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
-using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
 
 const double growthRate = 1.2;
 
@@ -564,9 +557,9 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
   // find length of the char/cluster to be ignored
   int32_t ignoreLen = before == LT_IGNORE ? 0 : 1;
   if (ignoreLen) {
-    GraphemeClusterBreakIteratorUtf16 ci(
-        Span<const char16_t>(aInString, aInLength));
-    ignoreLen = *ci.Next();
+    mozilla::unicode::ClusterIterator ci(aInString, aInLength);
+    ci.Next();
+    ignoreLen = ci - aInString;
   }
 
   int32_t afterIndex = aRepLen + ignoreLen;
@@ -597,11 +590,10 @@ uint32_t mozTXTToHTMLConv::NumberOfMatches(const char16_t* aInString,
                                            LIMTYPE before, LIMTYPE after) {
   uint32_t result = 0;
 
-  const uint32_t len = mozilla::AssertedCast<uint32_t>(aInStringLength);
-  GraphemeClusterBreakIteratorUtf16 ci(Span<const char16_t>(aInString, len));
-  for (uint32_t pos = 0; pos < len; pos = *ci.Next()) {
-    if (ItMatchesDelimited(aInString + pos, aInStringLength - pos, rep, aRepLen,
-                           before, after)) {
+  const char16_t* end = aInString + aInStringLength;
+  for (mozilla::unicode::ClusterIterator ci(aInString, aInStringLength);
+       !ci.AtEnd(); ci.Next()) {
+    if (ItMatchesDelimited(ci, end - ci, rep, aRepLen, before, after)) {
       result++;
     }
   }
@@ -987,15 +979,17 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
   const char16_t* rawInputString = aInString.BeginReading();
   uint32_t inLength = aInString.Length();
 
-  const Span<const char16_t> inString(aInString);
-  GraphemeClusterBreakIteratorUtf16 ci(inString);
-  uint32_t i = 0;
-  while (i < inLength) {
+  for (mozilla::unicode::ClusterIterator ci(rawInputString, inLength);
+       !ci.AtEnd();) {
+    uint32_t i = ci - rawInputString;
     if (doGlyphSubstitution) {
       int32_t glyphTextLen;
       if (GlyphHit(&rawInputString[i], inLength - i, i == 0, aOutString,
                    glyphTextLen)) {
-        i = *ci.Seek(i + glyphTextLen - 1);
+        i += glyphTextLen;
+        while (ci < rawInputString + i) {
+          ci.Next();
+        }
         continue;
       }
     }
@@ -1005,11 +999,10 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
       int32_t newLength = aInString.Length();
       if (i > 0)  // skip the first element?
       {
-        GraphemeClusterBreakReverseIteratorUtf16 ri(
-            Span<const char16_t>(rawInputString, i));
-        Maybe<uint32_t> nextPos = ri.Next();
-        newOffset += *nextPos;
-        newLength -= *nextPos;
+        mozilla::unicode::ClusterReverseIterator ri(rawInputString, i);
+        ri.Next();
+        newOffset = ri;
+        newLength = aInString.Length() - (ri - rawInputString);
       }
 
       switch (aInString[i])  // Performance increase
@@ -1018,7 +1011,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"*", 1, "b",
                               "class=\"moz-txt-star\"", aOutString,
                               structPhrase_strong)) {
-            i = *ci.Next();
+            ci.Next();
             continue;
           }
           break;
@@ -1026,7 +1019,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"/", 1, "i",
                               "class=\"moz-txt-slash\"", aOutString,
                               structPhrase_italic)) {
-            i = *ci.Next();
+            ci.Next();
             continue;
           }
           break;
@@ -1035,7 +1028,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
                               "span" /* <u> is deprecated */,
                               "class=\"moz-txt-underscore\"", aOutString,
                               structPhrase_underline)) {
-            i = *ci.Next();
+            ci.Next();
             continue;
           }
           break;
@@ -1043,7 +1036,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
           if (StructPhraseHit(newOffset, newLength, i == 0, u"|", 1, "code",
                               "class=\"moz-txt-verticalline\"", aOutString,
                               structPhrase_code)) {
-            i = *ci.Next();
+            ci.Next();
             continue;
           }
           break;
@@ -1075,7 +1068,10 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
                              replaceBefore);
               aOutString += outputHTML;
               endOfLastURLOutput = aOutString.Length();
-              i = *ci.Seek(i + replaceAfter);
+              i += replaceAfter + 1;
+              while (ci < rawInputString + i) {
+                ci.Next();
+              }
               continue;
             }
           }
@@ -1089,13 +1085,13 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
       case '>':
       case '&':
         EscapeChar(aInString[i], aOutString, false);
-        i = *ci.Next();
+        ci.Next();
         break;
       // Normal characters
       default: {
-        const uint32_t oldIdx = i;
-        i = *ci.Next();
-        aOutString.Append(inString.FromTo(oldIdx, i));
+        const char16_t* start = ci;
+        ci.Next();
+        aOutString += Substring(start, (const char16_t*)ci);
         break;
       }
     }

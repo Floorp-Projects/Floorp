@@ -6,16 +6,18 @@ use std::mem;
 #[derive(Clone)]
 pub struct BufferDeviceAddress {
     handle: vk::Device,
-    fp: vk::KhrBufferDeviceAddressFn,
+    fns: vk::KhrBufferDeviceAddressFn,
 }
 
 impl BufferDeviceAddress {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let handle = device.handle();
-        let fp = vk::KhrBufferDeviceAddressFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
+        let fns = vk::KhrBufferDeviceAddressFn::load(|name| unsafe {
+            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: device.handle(),
+            fns,
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddressKHR.html>"]
@@ -23,7 +25,7 @@ impl BufferDeviceAddress {
         &self,
         info: &vk::BufferDeviceAddressInfoKHR,
     ) -> vk::DeviceAddress {
-        self.fp.get_buffer_device_address_khr(self.handle, info)
+        self.fns.get_buffer_device_address_khr(self.handle, info)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferOpaqueCaptureAddressKHR.html>"]
@@ -31,7 +33,7 @@ impl BufferDeviceAddress {
         &self,
         info: &vk::BufferDeviceAddressInfoKHR,
     ) -> u64 {
-        self.fp
+        self.fns
             .get_buffer_opaque_capture_address_khr(self.handle, info)
     }
 
@@ -40,7 +42,7 @@ impl BufferDeviceAddress {
         &self,
         info: &vk::DeviceMemoryOpaqueCaptureAddressInfoKHR,
     ) -> u64 {
-        self.fp
+        self.fns
             .get_device_memory_opaque_capture_address_khr(self.handle, info)
     }
 
@@ -49,7 +51,7 @@ impl BufferDeviceAddress {
     }
 
     pub fn fp(&self) -> &vk::KhrBufferDeviceAddressFn {
-        &self.fp
+        &self.fns
     }
 
     pub fn device(&self) -> vk::Device {

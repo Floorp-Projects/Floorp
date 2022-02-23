@@ -7,6 +7,7 @@ import {
   isGeneratedId,
   originalToGeneratedId,
 } from "devtools-source-map";
+import { uniqBy } from "lodash";
 
 import {
   getSource,
@@ -18,6 +19,7 @@ import {
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
+import { loadSourceActorBreakpointColumns } from "../source-actors";
 
 async function mapLocations(generatedLocations, { sourceMaps }) {
   if (generatedLocations.length == 0) {
@@ -42,24 +44,8 @@ function filterBySource(positions, sourceId) {
   return positions.filter(position => position.location.sourceId == sourceId);
 }
 
-/**
- * Merge positions that refer to duplicated positions.
- * Some sourcemaped positions might refer to the exact same source/line/column triple.
- *
- * @param {Array<{location, generatedLocation}>} positions: List of possible breakable positions
- * @returns {Array<{location, generatedLocation}>} A new, filtered array.
- */
 function filterByUniqLocation(positions) {
-  const handledBreakpointIds = new Set();
-  return positions.filter(({ location }) => {
-    const breakpointId = makeBreakpointId(location);
-    if (handledBreakpointIds.has(breakpointId)) {
-      return false;
-    }
-
-    handledBreakpointIds.add(breakpointId);
-    return true;
-  });
+  return uniqBy(positions, ({ location }) => makeBreakpointId(location));
 }
 
 function convertToList(results, source) {
@@ -111,6 +97,8 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
 
   const results = {};
   if (isOriginalId(sourceId)) {
+    // Explicitly typing ranges is required to work around the following issue
+    // https://github.com/facebook/flow/issues/5294
     const ranges = await sourceMaps.getGeneratedRangesForOriginal(
       sourceId,
       true
@@ -156,17 +144,8 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
     }
 
     const actorColumns = await Promise.all(
-      getSourceActorsForSource(getState(), generatedSource.id).map(
-        async actor => {
-          const positions = await client.getSourceActorBreakpointPositions(
-            actor,
-            {
-              start: { line, column: 0 },
-              end: { line: line + 1, column: 0 },
-            }
-          );
-          return positions[line] || [];
-        }
+      getSourceActorsForSource(getState(), generatedSource.id).map(actor =>
+        dispatch(loadSourceActorBreakpointColumns({ id: actor.id, line, cx }))
       )
     );
 
@@ -209,29 +188,6 @@ function generatedSourceActorKey(state, sourceId) {
   return [sourceId, ...actors].join(":");
 }
 
-/**
- * This method will force retrieving the breakable positions for a given source, on a given line.
- * If this data has already been computed, it will returned the cached data.
- *
- * For original sources, this will query the SourceMap worker.
- * For generated sources, this will query the DevTools server and the related source actors.
- *
- * @param Object options
- *        Dictionary object with many arguments:
- * @param String options.sourceId
- *        The source we want to fetch breakable positions
- * @param Number options.line
- *        The line we want to know which columns are breakable.
- *        (note that this seems to be optional for original sources)
- * @return Array<Object>
- *         The list of all breakable positions, each object of this array will be like this:
- *         {
- *           line: Number
- *           column: Number
- *           sourceId: String
- *           sourceUrl: String
- *         }
- */
 export const setBreakpointPositions = memoizeableAction(
   "setBreakpointPositions",
   {

@@ -83,6 +83,11 @@ function assertBreakpointExists(dbg, source, line) {
   );
 }
 
+async function clickGutter(dbg, line) {
+  const el = await codeMirrorGutterElement(dbg, line);
+  clickDOMElement(dbg, el);
+}
+
 async function waitForBreakpointCount(dbg, count) {
   const {
     selectors: { getBreakpointCount },

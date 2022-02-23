@@ -45,6 +45,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsSerializationHelper.h"
@@ -56,6 +57,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "nsIURIMutator.h"
+#include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -625,13 +627,13 @@ class ShareHandler final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
  public:
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     mResolver(NS_OK);
   }
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     if (NS_WARN_IF(!aValue.isObject())) {
       mResolver(NS_ERROR_FAILURE);
       return;
@@ -842,15 +844,13 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     mState = State::REPLIED;
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
     SendReply(JS::ToBoolean(aValue));
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
     SendReply(false);

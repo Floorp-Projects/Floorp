@@ -85,9 +85,6 @@ bool AccAttributes::Equal(const AccAttributes* aOther) const {
   }
   for (auto iter = mData.ConstIter(); !iter.Done(); iter.Next()) {
     const auto otherEntry = aOther->mData.Lookup(iter.Key());
-    if (!otherEntry) {
-      return false;
-    }
     if (iter.Data().is<UniquePtr<nsString>>()) {
       // Because we store nsString in a UniquePtr, we must handle it specially
       // so we compare the string and not the pointer.
@@ -99,7 +96,7 @@ bool AccAttributes::Equal(const AccAttributes* aOther) const {
       if (*thisStr != *otherStr) {
         return false;
       }
-    } else if (iter.Data() != otherEntry.Data()) {
+    } else if (!otherEntry || iter.Data() != otherEntry.Data()) {
       return false;
     }
   }

@@ -6,3 +6,5 @@ UITour
 
 .. js:autoclass:: Mozilla.UITour
    :members: none
+
+

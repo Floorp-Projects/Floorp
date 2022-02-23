@@ -323,7 +323,7 @@ async function coordinatesRelativeToScreen(aParams) {
     // document, not to mozInnerScreen{X,Y}.
     const utils = SpecialPowers.getDOMWindowUtils(window);
     const resolution = await getResolution();
-    const deviceScale = window.devicePixelRatio;
+    const deviceScale = utils.screenPixelsPerCSSPixel;
     const deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
     return {
       x:

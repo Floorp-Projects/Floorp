@@ -154,10 +154,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether functions may be entered at loop headers.
   SET_DEFAULT(osr, true);
 
-  // Whether the JIT backend (used by JITs, Wasm, Baseline Interpreter) has been
-  // disabled for this process. See JS::DisableJitBackend.
-  SET_DEFAULT(disableJitBackend, false);
-
   // Whether to enable extra code to perform dynamic validations.
   SET_DEFAULT(runExtraChecks, false);
 
@@ -267,7 +263,8 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(spectreJitToCxxCalls, true);
 #endif
 
-  // This is set to its actual value in InitializeJit.
+  // These are set to their actual values in InitializeJit.
+  SET_DEFAULT(supportsFloatingPoint, false);
   SET_DEFAULT(supportsUnalignedAccesses, false);
 
   // Toggles the optimization whereby offsets are folded into loads and not
@@ -309,9 +306,6 @@ DefaultJitOptions::DefaultJitOptions() {
 
   // Controls how much assertion checking code is emitted
   SET_DEFAULT(lessDebugCode, false);
-
-  // Whether the MegamorphicCache is enabled.
-  SET_DEFAULT(enableWatchtowerMegamorphic, true);
 
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);

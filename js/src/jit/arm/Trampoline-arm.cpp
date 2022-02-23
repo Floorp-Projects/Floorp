@@ -926,7 +926,12 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       break;
 
     case Type_Double:
-      masm.loadDouble(Address(sp, 0), ReturnDoubleReg);
+      if (JitOptions.supportsFloatingPoint) {
+        masm.loadDouble(Address(sp, 0), ReturnDoubleReg);
+      } else {
+        masm.assumeUnreachable(
+            "Unable to load into float reg, with no FP support.");
+      }
       masm.freeStack(sizeof(double));
       break;
 
@@ -975,9 +980,14 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   masm.pop(temp1);
 
   LiveRegisterSet save;
-  save.set() =
-      RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                  FloatRegisterSet(FloatRegisters::VolatileDoubleMask));
+  if (JitOptions.supportsFloatingPoint) {
+    save.set() =
+        RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                    FloatRegisterSet(FloatRegisters::VolatileDoubleMask));
+  } else {
+    save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                             FloatRegisterSet());
+  }
   masm.PushRegsInMask(save);
 
   masm.movePtr(ImmPtr(cx->runtime()), r0);

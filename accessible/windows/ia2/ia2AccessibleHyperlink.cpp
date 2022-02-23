@@ -137,7 +137,7 @@ ia2AccessibleHyperlink::get_endIndex(long* aIndex) {
 
   *aIndex = 0;
 
-  Accessible* thisObj = Acc();
+  LocalAccessible* thisObj = LocalAcc();
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }

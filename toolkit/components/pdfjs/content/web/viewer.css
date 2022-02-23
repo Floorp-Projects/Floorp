@@ -1260,7 +1260,7 @@ html[dir="rtl"] #outerContainer.sidebarOpen #loadingBar {
 .findbar.wrapContainers > div {
   clear: both;
 }
-.findbar.wrapContainers > div.findbarMessageContainer {
+.findbar.wrapContainers > div#findbarMessageContainer {
   height: auto;
 }
 html[dir="ltr"] .findbar {
@@ -1317,7 +1317,7 @@ html[dir="rtl"] .findbar .splitToolbarButton > .findNext {
 }
 
 .findbar label:hover,
-.findbar input:focus-visible + label {
+.findbar input:focus + label {
   color: var(--toggled-btn-color);
   background-color: var(--button-hover-color);
 }
@@ -1445,8 +1445,6 @@ html[dir="ltr"] .doorHangerRight:before {
 #findMsg {
   color: rgba(251, 0, 0, 1);
 }
-
-#findResultsCount:empty,
 #findMsg:empty {
   display: none;
 }
@@ -1509,12 +1507,12 @@ html[dir="rtl"] .splitToolbarButton > .toolbarButton {
 }
 
 .overlayButton:hover,
-.overlayButton:focus-visible {
+.overlayButton:focus {
   background-color: var(--overlay-button-hover-bg-color);
 }
 
 .overlayButton:hover > span,
-.overlayButton:focus-visible > span {
+.overlayButton:focus > span {
   color: var(--overlay-button-hover-color);
 }
 
@@ -1536,10 +1534,10 @@ html[dir="rtl"] .splitToolbarButton > .toolbarButton {
 }
 
 .splitToolbarButton > .toolbarButton:hover,
-.splitToolbarButton > .toolbarButton:focus-visible,
+.splitToolbarButton > .toolbarButton:focus,
 .dropdownToolbarButton:hover,
 .toolbarButton.textButton:hover,
-.toolbarButton.textButton:focus-visible {
+.toolbarButton.textButton:focus {
   background-color: var(--button-hover-color);
   z-index: 199;
 }
@@ -1603,11 +1601,11 @@ html[dir="rtl"] #toolbarViewerLeft > .toolbarButton:first-child {
   margin-right: 2px;
 }
 .toolbarButton:hover,
-.toolbarButton:focus-visible {
+.toolbarButton:focus {
   background-color: var(--button-hover-color);
 }
 .secondaryToolbarButton:hover,
-.secondaryToolbarButton:focus-visible {
+.secondaryToolbarButton:focus {
   background-color: var(--doorhanger-hover-bg-color);
   color: var(--doorhanger-hover-color);
 }
@@ -1672,7 +1670,7 @@ html[dir="rtl"] .dropdownToolbarButton > select {
   padding-right: 4px;
 }
 .dropdownToolbarButton > select:hover,
-.dropdownToolbarButton > select:focus-visible {
+.dropdownToolbarButton > select:focus {
   background-color: var(--button-hover-color);
   color: var(--toggled-btn-color);
 }
@@ -1713,7 +1711,7 @@ html[dir="rtl"] .dropdownToolbarButton > select {
 }
 
 .dropdownToolbarButton:hover::after,
-.dropdownToolbarButton:focus-visible::after,
+.dropdownToolbarButton:focus::after,
 .dropdownToolbarButton:active::after {
   background-color: var(--toolbar-icon-hover-bg-color);
 }
@@ -1725,9 +1723,9 @@ html[dir="rtl"] .dropdownToolbarButton > select {
 }
 
 .toolbarButton:hover::before,
-.toolbarButton:focus-visible::before,
+.toolbarButton:focus::before,
 .secondaryToolbarButton:hover::before,
-.secondaryToolbarButton:focus-visible::before {
+.secondaryToolbarButton:focus::before {
   background-color: var(--toolbar-icon-hover-bg-color);
 }
 

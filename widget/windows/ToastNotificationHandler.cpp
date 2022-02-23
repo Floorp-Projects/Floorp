@@ -17,6 +17,7 @@
 #include "nsIDUtils.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
+#include "nsIUUIDGenerator.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsNetUtil.h"
@@ -533,8 +534,14 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
     return rv;
   }
 
+  nsCOMPtr<nsIUUIDGenerator> idGen =
+      do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsID uuid;
-  rv = nsID::GenerateUUIDInPlace(uuid);
+  rv = idGen->GenerateUUIDInPlace(&uuid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

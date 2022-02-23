@@ -96,8 +96,6 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
   // SVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
 
-  bool IsInvisible() const;
-
  protected:
   // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
@@ -209,11 +207,6 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
                                                  this, /*aDryRun=*/false);
     MOZ_ASSERT(result, "ShouldBeActive inconsistent with CreateWRCommands?");
     return result;
-  }
-
-  bool IsInvisible() const override {
-    auto* frame = static_cast<SVGGeometryFrame*>(mFrame);
-    return frame->IsInvisible();
   }
 };
 

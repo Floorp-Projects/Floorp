@@ -11,15 +11,13 @@
 
 [package]
 edition = "2018"
-rust-version = "1.36"
+rust-version = "1.31"
 name = "ryu"
-version = "1.0.9"
+version = "1.0.6"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
-exclude = ["performance.png", "chart/**"]
 description = "Fast floating point to string conversion"
 documentation = "https://docs.rs/ryu"
 readme = "README.md"
-categories = ["value-formatting"]
 license = "Apache-2.0 OR BSL-1.0"
 repository = "https://github.com/dtolnay/ryu"
 [package.metadata.docs.rs]

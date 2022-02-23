@@ -1,7 +1,5 @@
 include protocol PTestHandle;
 
-include "mozilla/_ipdltest/TestJSON.h";
-
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 
@@ -31,7 +29,6 @@ union JSONVariant {
     JSONVariant[];
 };
 
-[ManualDealloc, ChildImpl="TestJSONChild", ParentImpl="TestJSONParent"]
 sync protocol PTestJSON {
     manages PTestHandle;
 

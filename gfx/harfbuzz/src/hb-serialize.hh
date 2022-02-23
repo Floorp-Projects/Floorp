@@ -65,26 +65,19 @@ struct hb_serialize_context_t
 
   struct object_t
   {
-    void fini () {
-      real_links.fini ();
-      virtual_links.fini ();
-    }
+    void fini () { links.fini (); }
 
     bool operator == (const object_t &o) const
     {
-      // Virtual links aren't considered for equality since they don't affect the functionality
-      // of the object.
       return (tail - head == o.tail - o.head)
-	  && (real_links.length == o.real_links.length)
+	  && (links.length == o.links.length)
 	  && 0 == hb_memcmp (head, o.head, tail - head)
-	  && real_links.as_bytes () == o.real_links.as_bytes ();
+	  && links.as_bytes () == o.links.as_bytes ();
     }
     uint32_t hash () const
     {
-      // Virtual links aren't considered for equality since they don't affect the functionality
-      // of the object.
       return hb_bytes_t (head, tail - head).hash () ^
-          real_links.as_bytes ().hash ();
+	     links.as_bytes ().hash ();
     }
 
     struct link_t
@@ -99,14 +92,8 @@ struct hb_serialize_context_t
 
     char *head;
     char *tail;
-    hb_vector_t<link_t> real_links;
-    hb_vector_t<link_t> virtual_links;
+    hb_vector_t<link_t> links;
     object_t *next;
-
-    auto all_links () const HB_AUTO_RETURN
-        (( hb_concat (this->real_links, this->virtual_links) ));
-    auto all_links_writer () HB_AUTO_RETURN
-        (( hb_concat (this->real_links.writer (), this->virtual_links.writer ()) ));
   };
 
   struct snapshot_t
@@ -114,14 +101,12 @@ struct hb_serialize_context_t
     char *head;
     char *tail;
     object_t *current; // Just for sanity check
-    unsigned num_real_links;
-    unsigned num_virtual_links;
+    unsigned num_links;
     hb_serialize_error_t errors;
   };
 
   snapshot_t snapshot ()
-  { return snapshot_t {
-      head, tail, current, current->real_links.length, current->virtual_links.length, errors }; }
+  { return snapshot_t { head, tail, current, current->links.length, errors }; }
 
   hb_serialize_context_t (void *start_, unsigned int size) :
     start ((char *) start_),
@@ -279,7 +264,7 @@ struct hb_serialize_context_t
     object_pool.release (obj);
   }
 
-  /* Set share to false when an object is unlikely shareable with others
+  /* Set share to false when an object is unlikely sharable with others
    * so not worth an attempt, or a contiguous table is serialized as
    * multiple consecutive objects in the reverse order so can't be shared.
    */
@@ -297,8 +282,7 @@ struct hb_serialize_context_t
 
     if (!len)
     {
-      assert (!obj->real_links.length);
-      assert (!obj->virtual_links.length);
+      assert (!obj->links.length);
       return 0;
     }
 
@@ -308,7 +292,6 @@ struct hb_serialize_context_t
       objidx = packed_map.get (obj);
       if (objidx)
       {
-        merge_virtual_links (obj, objidx);
 	obj->fini ();
 	return objidx;
       }
@@ -344,8 +327,7 @@ struct hb_serialize_context_t
     // Overflows that happened after the snapshot will be erased by the revert.
     if (unlikely (in_error () && !only_overflow ())) return;
     assert (snap.current == current);
-    current->real_links.shrink (snap.num_real_links);
-    current->virtual_links.shrink (snap.num_virtual_links);
+    current->links.shrink (snap.num_links);
     errors = snap.errors;
     revert (snap.head, snap.tail);
   }
@@ -381,7 +363,7 @@ struct hb_serialize_context_t
   // Adding a virtual link from object a to object b will ensure that object b is always packed after
   // object a in the final serialized order.
   //
-  // This is useful in certain situations where there needs to be a specific ordering in the
+  // This is useful in certain situtations where there needs to be a specific ordering in the
   // final serialization. Such as when platform bugs require certain orderings, or to provide
   //  guidance to the repacker for better offset overflow resolution.
   void add_virtual_link (objidx_t objidx)
@@ -393,8 +375,8 @@ struct hb_serialize_context_t
 
     assert (current);
 
-    auto& link = *current->virtual_links.push ();
-    if (current->virtual_links.in_error ())
+    auto& link = *current->links.push ();
+    if (current->links.in_error ())
       err (HB_SERIALIZE_ERROR_OTHER);
 
     link.width = 0;
@@ -418,8 +400,8 @@ struct hb_serialize_context_t
     assert (current);
     assert (current->head <= (const char *) &ofs);
 
-    auto& link = *current->real_links.push ();
-    if (current->real_links.in_error ())
+    auto& link = *current->links.push ();
+    if (current->links.in_error ())
       err (HB_SERIALIZE_ERROR_OTHER);
 
     link.width = sizeof (T);
@@ -458,8 +440,10 @@ struct hb_serialize_context_t
     assert (packed.length > 1);
 
     for (const object_t* parent : ++hb_iter (packed))
-      for (const object_t::link_t &link : parent->real_links)
+      for (const object_t::link_t &link : parent->links)
       {
+        if (unlikely (!link.width)) continue; // Don't need to resolve virtual offsets
+
 	const object_t* child = packed[link.objidx];
 	if (unlikely (!child)) { err (HB_SERIALIZE_ERROR_OTHER); return; }
 	unsigned offset = 0;
@@ -510,7 +494,7 @@ struct hb_serialize_context_t
   { return reinterpret_cast<Type *> (this->head); }
   template <typename Type>
   Type *start_embed (const Type &obj) const
-  { return start_embed (std::addressof (obj)); }
+  { return start_embed (hb_addressof (obj)); }
 
   bool err (hb_serialize_error_t err_type)
   {
@@ -548,7 +532,7 @@ struct hb_serialize_context_t
   }
   template <typename Type>
   Type *embed (const Type &obj)
-  { return embed (std::addressof (obj)); }
+  { return embed (hb_addressof (obj)); }
 
   template <typename Type, typename ...Ts> auto
   _copy (const Type &src, hb_priority<1>, Ts&&... ds) HB_RETURN
@@ -595,19 +579,19 @@ struct hb_serialize_context_t
   }
   template <typename Type>
   Type *extend_size (Type &obj, size_t size)
-  { return extend_size (std::addressof (obj), size); }
+  { return extend_size (hb_addressof (obj), size); }
 
   template <typename Type>
   Type *extend_min (Type *obj) { return extend_size (obj, obj->min_size); }
   template <typename Type>
-  Type *extend_min (Type &obj) { return extend_min (std::addressof (obj)); }
+  Type *extend_min (Type &obj) { return extend_min (hb_addressof (obj)); }
 
   template <typename Type, typename ...Ts>
   Type *extend (Type *obj, Ts&&... ds)
   { return extend_size (obj, obj->get_size (std::forward<Ts> (ds)...)); }
   template <typename Type, typename ...Ts>
   Type *extend (Type &obj, Ts&&... ds)
-  { return extend (std::addressof (obj), std::forward<Ts> (ds)...); }
+  { return extend (hb_addressof (obj), std::forward<Ts> (ds)...); }
 
   /* Output routines. */
   hb_bytes_t copy_bytes () const
@@ -657,13 +641,6 @@ struct hb_serialize_context_t
   hb_serialize_error_t errors;
 
   private:
-
-  void merge_virtual_links (const object_t* from, objidx_t to_idx) {
-    object_t* to = packed[to_idx];
-    for (const auto& l : from->virtual_links) {
-      to->virtual_links.push (l);
-    }
-  }
 
   /* Object memory pool. */
   hb_pool_t<object_t> object_pool;

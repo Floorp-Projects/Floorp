@@ -9,9 +9,9 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
     // gradle is called before parsing config.status, we cannot use PYTHON
     // value.
     if (System.env.MOZILLABUILD) {
-        def mozillabuild = System.env.MOZILLABUILD.toLowerCase()
+        def mozillabuild = System.env.MOZILLABUILD
         if (mozillabuild) {
-            commandLine.addAll(0, ["${mozillabuild}/python3/python3.exe"])
+            commandLine.addAll(0, ["${mozillabuild}/python3/python.exe"])
         }
     }
 }
@@ -54,14 +54,12 @@ include ':annotations', ':messaging_example', ':port_messaging_example'
 include ':geckoview'
 include ':geckoview_example'
 include ':test_runner'
-include ':exoplayer2'
 include ':omnijar'
 
 project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
 project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")
 project(':test_runner').projectDir = new File("${json.topsrcdir}/mobile/android/test_runner")
-project(':exoplayer2').projectDir = new File("${json.topsrcdir}/mobile/android/exoplayer2")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 
 // The Gradle instance is shared between settings.gradle and all the

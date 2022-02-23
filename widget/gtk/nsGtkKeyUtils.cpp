@@ -965,11 +965,8 @@ void KeymapWrapper::OnDirectionChanged(GdkKeymap* aGdkKeymap,
 /* static */
 guint KeymapWrapper::GetCurrentModifierState() {
   GdkModifierType modifiers;
-  GdkDisplay* display = gdk_display_get_default();
-  GdkScreen* screen = gdk_display_get_default_screen(display);
-  GdkWindow* window = gdk_screen_get_root_window(screen);
-  gdk_window_get_device_position(window, GdkGetPointer(), nullptr, nullptr,
-                                 &modifiers);
+  gdk_display_get_pointer(gdk_display_get_default(), nullptr, nullptr, nullptr,
+                          &modifiers);
   return static_cast<guint>(modifiers);
 }
 
@@ -1861,6 +1858,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   // so link to the GdkEvent (which will vanish soon after return from the
   // event callback) to give plugins access to hardware_keycode and state.
   // (An XEvent would be nice but the GdkEvent is good enough.)
+  aKeyEvent.mPluginEvent.Copy(*aGdkKeyEvent);
   aKeyEvent.mTime = aGdkKeyEvent->time;
   aKeyEvent.mNativeKeyEvent = static_cast<void*>(aGdkKeyEvent);
   aKeyEvent.mIsRepeat =

@@ -735,7 +735,7 @@ class TestXUnitFormatter(FormatterTest):
         self.logger.suite_end()
 
         root = self.log_as_xml()
-        self.assertEqual(
+        self.assertEquals(
             "Expected OK, got FAIL", root.find("testcase/failure").get("message")
         )
 

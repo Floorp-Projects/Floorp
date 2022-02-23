@@ -161,11 +161,6 @@ textarea > scrollbar {
   visibility: hidden;
 }
 
-::-moz-text-control-preview {
-  overflow: hidden;
-  font-family: system-ui;
-}
-
 :not(:-moz-autofill-preview)::-moz-text-control-editing-root,
 :placeholder-shown:not(:autofill)::placeholder,
 :autofill::-moz-text-control-preview {
@@ -966,7 +961,7 @@ input[type=number] > div > div > div:hover {
 }
 
 input::-moz-search-clear-button,
-input::-moz-reveal {
+input::-moz-text-control-show-password-button {
   display: block;
   cursor: default;
   width: 1em;
@@ -980,17 +975,17 @@ input::-moz-reveal {
   background-size: contain;
 }
 
-input::-moz-reveal {
+input::-moz-text-control-show-password-button {
   background-image: url("resource://gre-resources/password.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
-input:-moz-revealed::-moz-reveal {
+input:-moz-revealed::-moz-text-control-show-password-button {
   background-image: url("resource://gre-resources/password-hide.svg");
 }
 
-input:-moz-value-empty::-moz-reveal,
+input:-moz-value-empty::-moz-text-control-show-password-button,
 input:-moz-value-empty::-moz-search-clear-button {
   visibility: hidden;
 }

@@ -21,6 +21,7 @@ import {
 import actions from "../../actions";
 
 import {
+  isOriginal as isOriginalSource,
   isUrlExtension,
   isExtensionDirectoryPath,
   shouldBlackbox,
@@ -385,7 +386,7 @@ class SourceTreeItem extends Component {
 }
 
 function getHasMatchingGeneratedSource(state, source) {
-  if (!source || !source.isOriginal) {
+  if (!source || !isOriginalSource(source)) {
     return false;
   }
 

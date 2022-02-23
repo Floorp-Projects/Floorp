@@ -351,7 +351,8 @@ mozilla::ipc::IPCResult StorageDBChild::RecvObserve(
 
   StorageObserver* obs = StorageObserver::Self();
   if (obs) {
-    obs->Notify(aTopic.get(), aOriginAttributesPattern, aOriginScope);
+    obs->Notify(aTopic.get(), aOriginAttributesPattern,
+                aOriginScope);
   }
 
   return IPC_OK();
@@ -489,7 +490,8 @@ mozilla::ipc::IPCResult SessionStorageObserverChild::RecvObserve(
 
   StorageObserver* obs = StorageObserver::Self();
   if (obs) {
-    obs->Notify(aTopic.get(), aOriginAttributesPattern, aOriginScope);
+    obs->Notify(aTopic.get(), aOriginAttributesPattern,
+                aOriginScope);
   }
 
   return IPC_OK();

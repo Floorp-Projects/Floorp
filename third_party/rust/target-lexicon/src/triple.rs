@@ -195,8 +195,6 @@ impl fmt::Display for Triple {
 
         write!(f, "{}", self.architecture)?;
         if self.vendor == Vendor::Unknown
-            && (self.environment != Environment::HermitKernel
-                && self.environment != Environment::LinuxKernel)
             && ((self.operating_system == OperatingSystem::Linux
                 && (self.environment == Environment::Android
                     || self.environment == Environment::Androideabi

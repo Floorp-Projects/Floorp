@@ -111,6 +111,5 @@ ${helpers.single_keyword(
     vector=True,
     engines="gecko",
     animation_value_type="discrete",
-    gecko_inexhaustive=True,
     spec="https://drafts.fxtf.org/compositing/#background-blend-mode",
 )}

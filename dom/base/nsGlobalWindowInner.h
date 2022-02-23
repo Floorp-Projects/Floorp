@@ -54,6 +54,7 @@
 #include "mozilla/glean/bindings/GleanPings.h"
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
@@ -99,10 +100,6 @@ namespace mozilla {
 class AbstractThread;
 class ErrorResult;
 
-namespace hal {
-enum class ScreenOrientation : uint32_t;
-}
-
 namespace dom {
 class BarProp;
 class BrowsingContext;
@@ -138,6 +135,9 @@ class VRDisplay;
 enum class VRDisplayEventReason : uint8_t;
 class VREventObserver;
 class WakeLock;
+#if defined(MOZ_WIDGET_ANDROID)
+class WindowOrientationObserver;
+#endif
 struct WindowPostMessageOptions;
 class Worklet;
 namespace cache {
@@ -647,7 +647,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   nsDOMOfflineResourceList* GetApplicationCache() override;
 
-  int16_t Orientation(mozilla::dom::CallerType aCallerType);
+#if defined(MOZ_WIDGET_ANDROID)
+  int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
+#endif
 
   already_AddRefed<mozilla::dom::Console> GetConsole(JSContext* aCx,
                                                      mozilla::ErrorResult& aRv);
@@ -869,7 +871,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                            mozilla::ErrorResult& aError);
   double GetDevicePixelRatio(mozilla::dom::CallerType aCallerType,
                              mozilla::ErrorResult& aError);
-  double GetDesktopToDeviceScale(mozilla::ErrorResult& aError);
   int32_t GetScrollMinX(mozilla::ErrorResult& aError);
   int32_t GetScrollMinY(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxX(mozilla::ErrorResult& aError);
@@ -1180,10 +1181,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Get the toplevel principal, returns null if this is a toplevel window.
   nsIPrincipal* GetTopLevelAntiTrackingPrincipal();
 
-  // Get the client principal, returns null if the clientSource is not
-  // available.
-  nsIPrincipal* GetClientPrincipal();
-
   // This method is called if this window loads a 3rd party tracking resource
   // and the storage is just been granted. The window can reset the partitioned
   // storage objects and switch to the first party cookie jar.
@@ -1341,9 +1338,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
  protected:
-  // Whether we need to care about orientation changes.
-  bool mHasOrientationChangeListeners : 1;
-
   // Window offline status. Checked to see if we need to fire offline event
   bool mWasOffline : 1;
 
@@ -1475,9 +1469,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // the method that was used to focus mFocusedElement
   uint32_t mFocusMethod;
 
-  // Only relevant if we're listening for orientation changes.
-  int16_t mOrientationAngle = 0;
-
   // The current idle request callback handle
   uint32_t mIdleRequestCallbackCounter;
   IdleRequests mIdleRequestCallbacks;
@@ -1500,6 +1491,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool TryToObserveRefresh();
 
   nsTArray<uint32_t> mEnabledSensors;
+
+#if defined(MOZ_WIDGET_ANDROID)
+  mozilla::UniquePtr<mozilla::dom::WindowOrientationObserver>
+      mOrientationChangeObserver;
+#endif
 
 #ifdef MOZ_WEBSPEECH
   RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;

@@ -97,7 +97,7 @@ static srtp_err_status_t srtp_null_cipher_init(void *cv, const uint8_t *key)
 {
     /* srtp_null_cipher_ctx_t *c = (srtp_null_cipher_ctx_t *)cv; */
 
-    debug_print0(srtp_mod_cipher, "initializing null cipher");
+    debug_print(srtp_mod_cipher, "initializing null cipher", NULL);
 
     return srtp_err_status_ok;
 }

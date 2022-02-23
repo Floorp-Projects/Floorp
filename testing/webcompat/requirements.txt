@@ -1,3 +1,0 @@
-pytest==4.6.6
-selenium==3.141.0
-urllib3==1.26

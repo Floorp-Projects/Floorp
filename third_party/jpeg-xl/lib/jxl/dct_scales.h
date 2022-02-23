@@ -11,9 +11,20 @@
 #include <stddef.h>
 
 namespace jxl {
+template <size_t V>
+struct square_root {
+  static constexpr float value = square_root<V / 4>::value * 2;
+};
 
-static constexpr float kSqrt2 = 1.41421356237f;
-static constexpr float kSqrt0_5 = 0.70710678118f;
+template <>
+struct square_root<1> {
+  static constexpr float value = 1.0f;
+};
+
+template <>
+struct square_root<2> {
+  static constexpr float value = 1.4142135623730951f;
+};
 
 // For n != 0, the n-th basis function of a N-DCT, evaluated in pixel k, has a
 // value of cos((k+1/2) n/(2N) pi). When downsampling by 2x, we average

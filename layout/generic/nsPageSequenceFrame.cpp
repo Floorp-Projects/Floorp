@@ -190,21 +190,10 @@ void nsPageSequenceFrame::PopulateReflowOutput(
   nscoord iSize = wm.IsVertical() ? mSize.Height() : mSize.Width();
   nscoord bSize = wm.IsVertical() ? mSize.Width() : mSize.Height();
 
-  nscoord availableISize = aReflowInput.AvailableISize();
-  nscoord computedBSize = aReflowInput.ComputedBSize();
-  if (MOZ_UNLIKELY(computedBSize == NS_UNCONSTRAINEDSIZE)) {
-    // We have unconstrained BSize, which should only happen if someone calls
-    // SizeToContent() on our window (which we don't expect to happen for
-    // actual user flows, but is possible for fuzzers to trigger). We just nerf
-    // the ReflowInput's contributions to the std::max() expressions below,
-    // which does indeed make us "size to content", via letting std::max()
-    // choose the scaled iSize/bSize expressions.
-    availableISize = computedBSize = 0;
-  }
   aReflowOutput.ISize(wm) =
-      std::max(NSToCoordFloor(iSize * scale), availableISize);
+      std::max(NSToCoordFloor(iSize * scale), aReflowInput.AvailableISize());
   aReflowOutput.BSize(wm) =
-      std::max(NSToCoordFloor(bSize * scale), computedBSize);
+      std::max(NSToCoordFloor(bSize * scale), aReflowInput.ComputedBSize());
   aReflowOutput.SetOverflowAreasToDesiredBounds();
 }
 
@@ -286,9 +275,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     // When we're displayed on-screen, the computed size that we're given is
     // the size of our scrollport. We need to save this for use in
     // GetPrintPreviewScale.
-    // (NOTE: It's possible but unlikely that we have an unconstrained BSize
-    // here, if we're being sized to content. GetPrintPreviewScale() checks
-    // for and handles this, when making use of this member-var.)
     mScrollportSize = aReflowInput.ComputedSize();
   }
 

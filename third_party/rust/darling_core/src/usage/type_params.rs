@@ -1,7 +1,7 @@
 use syn::punctuated::Punctuated;
-use syn::{Ident, Type};
+use syn::{self, Ident, Type};
 
-use crate::usage::{IdentRefSet, IdentSet, Options};
+use usage::{IdentRefSet, IdentSet, Options};
 
 /// Searcher for finding type params in a syntax tree.
 /// This can be used to determine if a given type parameter needs to be bounded in a generated impl.
@@ -161,8 +161,8 @@ impl UsesTypeParams for Type {
             Type::ImplTrait(ref v) => v.uses_type_params(options, type_set),
             Type::Macro(_) | Type::Verbatim(_) | Type::Infer(_) | Type::Never(_) => {
                 Default::default()
-            }
-            _ => panic!("Unknown syn::Type: {:?}", self),
+            },
+            _ => panic!("Unknown syn::Type: {:?}", self)
         }
     }
 }
@@ -250,8 +250,8 @@ mod tests {
     use syn::{DeriveInput, Ident};
 
     use super::UsesTypeParams;
-    use crate::usage::IdentSet;
-    use crate::usage::Purpose::*;
+    use usage::IdentSet;
+    use usage::Purpose::*;
 
     fn ident_set(idents: Vec<&str>) -> IdentSet {
         idents

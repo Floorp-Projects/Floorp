@@ -8,7 +8,6 @@
 #define mozilla_SandboxTestingChild_h
 
 #include "mozilla/PSandboxTestingChild.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/UniquePtr.h"
 
@@ -46,12 +45,9 @@ class SandboxTestingChild : public PSandboxTestingChild {
   // absence of test report as a failure.
   inline void ReportNoTests();
 
-  // For test cases that return an error number or 0, like newer POSIX
-  // APIs.  If `aExpectSuccess` is true, the test passes if the status is
-  // 0; otherwise, the test requires a specific error if `aExpectedError`
-  // is `Some(n)` or any nonzero status if it's `Nothing()`.
-  void PosixTest(const nsCString& aName, bool aExpectSuccess, int aStatus,
-                 Maybe<int> aExpectedError = Nothing());
+#ifdef XP_UNIX
+  // For test cases that return an error number or 0, like newer POSIX APIs.
+  void PosixTest(const nsCString& aName, bool aExpectSuccess, int aStatus);
 
   // For test cases that return a negative number and set `errno` to
   // indicate error, like classical Unix APIs; takes a callable, which
@@ -60,10 +56,11 @@ class SandboxTestingChild : public PSandboxTestingChild {
   void ErrnoTest(const nsCString& aName, bool aExpectSuccess, F&& aFunction);
 
   // Similar to ErrnoTest, except that we want to compare a specific `errno`
-  // being returned.
+  // being returned (or not).
   template <typename F>
-  void ErrnoValueTest(const nsCString& aName, int aExpectedErrno,
-                      F&& aFunction);
+  void ErrnoValueTest(const nsCString& aName, bool aExpectEquals,
+                      int aExpectedErrno, F&& aFunction);
+#endif
 
  private:
   explicit SandboxTestingChild(SandboxTestingThread* aThread,

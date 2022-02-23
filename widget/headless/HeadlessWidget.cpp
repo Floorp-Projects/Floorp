@@ -11,7 +11,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WritingModes.h"
@@ -352,7 +351,8 @@ void HeadlessWidget::ApplySizeModeSideEffects() {
   }
 }
 
-nsresult HeadlessWidget::MakeFullScreen(bool aFullScreen) {
+nsresult HeadlessWidget::MakeFullScreen(bool aFullScreen,
+                                        nsIScreen* aTargetScreen) {
   // Directly update the size mode here so a later call SetSizeMode does
   // nothing.
   if (aFullScreen) {
@@ -377,9 +377,11 @@ nsresult HeadlessWidget::MakeFullScreen(bool aFullScreen) {
   // will be ignored if still transitioning to fullscreen, so it must be
   // triggered on the next tick.
   RefPtr<HeadlessWidget> self(this);
+  nsCOMPtr<nsIScreen> targetScreen(aTargetScreen);
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-      "HeadlessWidget::MakeFullScreen", [self, aFullScreen]() -> void {
-        self->InfallibleMakeFullScreen(aFullScreen);
+      "HeadlessWidget::MakeFullScreen",
+      [self, targetScreen, aFullScreen]() -> void {
+        self->InfallibleMakeFullScreen(aFullScreen, targetScreen);
       }));
 
   return NS_OK;
@@ -401,7 +403,7 @@ bool HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
   Maybe<WritingMode> writingMode;
   if (aEvent.NeedsToRemapNavigationKey()) {
     if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
-      writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+      writingMode = dispatcher->MaybeWritingModeAtSelection();
     }
   }
 

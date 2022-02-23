@@ -91,7 +91,6 @@ include = [
   "DisplayOutside",
   "DisplayInside",
   "DisplayMode",
-  "Platform",
   "PrefersColorScheme",
   "PrefersContrast",
   "FillRule",

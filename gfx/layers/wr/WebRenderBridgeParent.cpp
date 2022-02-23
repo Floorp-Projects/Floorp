@@ -25,7 +25,6 @@
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorAnimationStorage.h"
@@ -246,31 +245,19 @@ class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
   explicit ScheduleSharedSurfaceRelease(WebRenderBridgeParent* aWrBridge)
       : mWrBridge(aWrBridge), mSurfaces(20) {}
 
-  ~ScheduleSharedSurfaceRelease() override {
-    if (!mSurfaces.IsEmpty()) {
-      MOZ_ASSERT_UNREACHABLE("Unreleased surfaces!");
-      gfxCriticalNote << "ScheduleSharedSurfaceRelease destroyed non-empty";
-      NotifyInternal(/* aFromCheckpoint */ false);
-    }
-  }
-
   void Add(const wr::ImageKey& aKey, const wr::ExternalImageId& aId) {
     mSurfaces.AppendElement(wr::ExternalImageKeyPair{aKey, aId});
   }
 
   void Notify(wr::Checkpoint) override {
-    NotifyInternal(/* aFromCheckpoint */ true);
+    CompositorThread()->Dispatch(
+        NewRunnableMethod<nsTArray<wr::ExternalImageKeyPair>>(
+            "ObserveSharedSurfaceRelease", mWrBridge,
+            &WebRenderBridgeParent::ObserveSharedSurfaceRelease,
+            std::move(mSurfaces)));
   }
 
  private:
-  void NotifyInternal(bool aFromCheckpoint) {
-    CompositorThread()->Dispatch(
-        NewRunnableMethod<nsTArray<wr::ExternalImageKeyPair>, bool>(
-            "ObserveSharedSurfaceRelease", mWrBridge,
-            &WebRenderBridgeParent::ObserveSharedSurfaceRelease,
-            std::move(mSurfaces), aFromCheckpoint));
-  }
-
   RefPtr<WebRenderBridgeParent> mWrBridge;
   nsTArray<wr::ExternalImageKeyPair> mSurfaces;
 };
@@ -461,8 +448,6 @@ static bool ReadRawFont(const OpAddRawFont& aOp, wr::ShmSegmentsReader& aReader,
   Maybe<Range<uint8_t>> ptr =
       aReader.GetReadPointerOrCopy(aOp.bytes(), sourceBytes);
   if (ptr.isNothing()) {
-    gfxCriticalNote << "No read pointer from reader for sanitizing font "
-                    << aOp.key().mHandle;
     return false;
   }
   Range<uint8_t>& source = ptr.ref();
@@ -505,7 +490,6 @@ bool WebRenderBridgeParent::UpdateResources(
     }
   }
 
-  bool success = true;
   for (const auto& cmd : aResourceUpdates) {
     switch (cmd.type()) {
       case OpUpdateResource::TOpAddImage: {
@@ -516,12 +500,11 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> bytes;
-        if (reader.Read(op.bytes(), bytes)) {
-          aUpdates.AddImage(op.key(), op.descriptor(), bytes);
-        } else {
+        if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpAddImage failed";
-          success = false;
+          return false;
         }
+        aUpdates.AddImage(op.key(), op.descriptor(), bytes);
         break;
       }
       case OpUpdateResource::TOpUpdateImage: {
@@ -532,12 +515,11 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> bytes;
-        if (reader.Read(op.bytes(), bytes)) {
-          aUpdates.UpdateImageBuffer(op.key(), op.descriptor(), bytes);
-        } else {
+        if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpUpdateImage failed";
-          success = false;
+          return false;
         }
+        aUpdates.UpdateImageBuffer(op.key(), op.descriptor(), bytes);
         break;
       }
       case OpUpdateResource::TOpAddBlobImage: {
@@ -548,14 +530,13 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> bytes;
-        if (reader.Read(op.bytes(), bytes)) {
-          aUpdates.AddBlobImage(op.key(), op.descriptor(), mBlobTileSize, bytes,
-                                wr::ToDeviceIntRect(op.visibleRect()));
-        } else {
+        if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpAddBlobImage failed";
-          success = false;
+          return false;
         }
 
+        aUpdates.AddBlobImage(op.key(), op.descriptor(), mBlobTileSize, bytes,
+                              wr::ToDeviceIntRect(op.visibleRect()));
         break;
       }
       case OpUpdateResource::TOpUpdateBlobImage: {
@@ -566,14 +547,13 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> bytes;
-        if (reader.Read(op.bytes(), bytes)) {
-          aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes,
-                                   wr::ToDeviceIntRect(op.visibleRect()),
-                                   wr::ToLayoutIntRect(op.dirtyRect()));
-        } else {
+        if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpUpdateBlobImage failed";
-          success = false;
+          return false;
         }
+        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes,
+                                 wr::ToDeviceIntRect(op.visibleRect()),
+                                 wr::ToLayoutIntRect(op.dirtyRect()));
         break;
       }
       case OpUpdateResource::TOpSetBlobImageVisibleArea: {
@@ -596,7 +576,7 @@ bool WebRenderBridgeParent::UpdateResources(
         const auto& op = cmd.get_OpAddSharedExternalImage();
         // gfxCriticalNote is called on error
         if (!AddSharedExternalImage(op.externalImageId(), op.key(), aUpdates)) {
-          success = false;
+          return false;
         }
         break;
       }
@@ -607,7 +587,7 @@ bool WebRenderBridgeParent::UpdateResources(
         // gfxCriticalNote is called on error
         if (!PushExternalImageForTexture(op.externalImageId(), op.key(),
                                          texture, op.isUpdate(), aUpdates)) {
-          success = false;
+          return false;
         }
         break;
       }
@@ -623,13 +603,14 @@ bool WebRenderBridgeParent::UpdateResources(
         if (!UpdateSharedExternalImage(op.externalImageId(), op.key(),
                                        op.dirtyRect(), aUpdates,
                                        scheduleRelease)) {
-          success = false;
+          return false;
         }
         break;
       }
       case OpUpdateResource::TOpAddRawFont: {
         if (!ReadRawFont(cmd.get_OpAddRawFont(), reader, aUpdates)) {
-          success = false;
+          gfxCriticalNote << "TOpAddRawFont failed";
+          return false;
         }
         break;
       }
@@ -641,12 +622,11 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> bytes;
-        if (reader.Read(op.bytes(), bytes)) {
-          aUpdates.AddFontDescriptor(op.key(), bytes, op.fontIndex());
-        } else {
+        if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpAddFontDescriptor failed";
-          success = false;
+          return false;
         }
+        aUpdates.AddFontDescriptor(op.key(), bytes, op.fontIndex());
         break;
       }
       case OpUpdateResource::TOpAddFontInstance: {
@@ -658,15 +638,14 @@ bool WebRenderBridgeParent::UpdateResources(
         }
 
         wr::Vec<uint8_t> variations;
-        if (reader.Read(op.variations(), variations)) {
-          aUpdates.AddFontInstance(op.instanceKey(), op.fontKey(),
-                                   op.glyphSize(), op.options().ptrOr(nullptr),
-                                   op.platformOptions().ptrOr(nullptr),
-                                   variations);
-        } else {
+        if (!reader.Read(op.variations(), variations)) {
           gfxCriticalNote << "TOpAddFontInstance failed";
-          success = false;
+          return false;
         }
+        aUpdates.AddFontInstance(op.instanceKey(), op.fontKey(), op.glyphSize(),
+                                 op.options().ptrOr(nullptr),
+                                 op.platformOptions().ptrOr(nullptr),
+                                 variations);
         break;
       }
       case OpUpdateResource::TOpDeleteImage: {
@@ -724,9 +703,7 @@ bool WebRenderBridgeParent::UpdateResources(
                               : wr::Checkpoint::FrameTexturesUpdated;
     aUpdates.Notify(when, std::move(scheduleRelease));
   }
-
-  MOZ_ASSERT(success);
-  return success;
+  return true;
 }
 
 void WebRenderBridgeParent::AddPrivateExternalImage(
@@ -916,22 +893,10 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
 }
 
 void WebRenderBridgeParent::ObserveSharedSurfaceRelease(
-    const nsTArray<wr::ExternalImageKeyPair>& aPairs,
-    const bool& aFromCheckpoint) {
+    const nsTArray<wr::ExternalImageKeyPair>& aPairs) {
   if (!mDestroyed) {
     Unused << SendWrReleasedImages(aPairs);
   }
-
-  if (!aFromCheckpoint && mAsyncImageManager) {
-    // We failed to receive a checkpoint notification, so we are releasing these
-    // surfaces blind. Let's wait until the next epoch to complete releasing.
-    for (const auto& pair : aPairs) {
-      mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, pair.id);
-    }
-    return;
-  }
-
-  // We hit the checkpoint, so we know we can safely release the surfaces now.
   for (const auto& pair : aPairs) {
     SharedSurfacesParent::Release(pair.id);
   }
@@ -979,11 +944,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     RollbackWrEpoch();
   }
 
-  mApi->SendTransaction(txn);
-
   if (!success) {
     return IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
   }
+
+  mApi->SendTransaction(txn);
 
   return IPC_OK();
 }
@@ -1153,8 +1118,10 @@ bool WebRenderBridgeParent::SetDisplayList(
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
     wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch,
     bool aObserveLayersUpdate) {
-  bool success =
-      UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, aTxn);
+  if (NS_WARN_IF(!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems,
+                                  aTxn))) {
+    return false;
+  }
 
   wr::Vec<uint8_t> dlItems(std::move(aDLItems));
   wr::Vec<uint8_t> dlCache(std::move(aDLCache));
@@ -1192,7 +1159,7 @@ bool WebRenderBridgeParent::SetDisplayList(
 
   // We will schedule generating a frame after the scene
   // build is done, so we don't need to do it here.
-  return success;
+  return true;
 }
 
 bool WebRenderBridgeParent::ProcessDisplayListData(
@@ -1215,20 +1182,23 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
     sender.emplace(mApi, &txn);
   }
 
-  bool success = ProcessWebRenderParentCommands(aDisplayList.mCommands, txn);
+  if (NS_WARN_IF(
+          !ProcessWebRenderParentCommands(aDisplayList.mCommands, txn))) {
+    return false;
+  }
 
   if (aDisplayList.mDLItems && aDisplayList.mDLCache &&
-      aDisplayList.mDLSpatialTree && aValidTransaction) {
-    success = SetDisplayList(
-                  aDisplayList.mRect, std::move(aDisplayList.mDLItems.ref()),
-                  std::move(aDisplayList.mDLCache.ref()),
-                  std::move(aDisplayList.mDLSpatialTree.ref()),
-                  aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
-                  aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
-                  aTxnStartTime, txn, aWrEpoch, aObserveLayersUpdate) &&
-              success;
+      aDisplayList.mDLSpatialTree && aValidTransaction &&
+      !SetDisplayList(aDisplayList.mRect,
+                      std::move(aDisplayList.mDLItems.ref()),
+                      std::move(aDisplayList.mDLCache.ref()),
+                      std::move(aDisplayList.mDLSpatialTree.ref()),
+                      aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
+                      aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
+                      aTxnStartTime, txn, aWrEpoch, aObserveLayersUpdate)) {
+    return false;
   }
-  return success;
+  return true;
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
@@ -1275,8 +1245,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   bool validTransaction = aDisplayList.mIdNamespace == mIdNamespace;
   bool observeLayersUpdate = ShouldParentObserveEpoch();
 
-  bool success = ProcessDisplayListData(aDisplayList, wrEpoch, aTxnStartTime,
-                                        validTransaction, observeLayersUpdate);
+  if (!ProcessDisplayListData(aDisplayList, wrEpoch, aTxnStartTime,
+                              validTransaction, observeLayersUpdate)) {
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
+    return IPC_FAIL(this, "Failed to process DisplayListData.");
+  }
 
   if (!validTransaction && observeLayersUpdate) {
     mCompositorBridge->ObserveLayersUpdate(GetLayersId(),
@@ -1307,10 +1281,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
 
-  if (!success) {
-    return IPC_FAIL(this, "Failed to process DisplayListData.");
-  }
-
   return IPC_OK();
 }
 
@@ -1330,14 +1300,16 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   // AsyncImagePipelineManager.
   Unused << GetNextWrEpoch();
 
-  bool success = true;
-  if (aData.mIdNamespace == mIdNamespace) {
-    success = UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
-                              aData.mLargeShmems, txn);
+  if (aData.mIdNamespace == mIdNamespace &&
+      !UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
+                       aData.mLargeShmems, txn)) {
+    return false;
   }
 
   if (!aData.mCommands.IsEmpty()) {
-    success = ProcessWebRenderParentCommands(aData.mCommands, txn) && success;
+    if (!ProcessWebRenderParentCommands(aData.mCommands, txn)) {
+      return false;
+    }
   }
 
   if (ShouldParentObserveEpoch()) {
@@ -1370,7 +1342,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
     mAsyncImageManager->SetWillGenerateFrame();
   }
 
-  return success;
+  return true;
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
@@ -1415,11 +1387,16 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   bool scheduleAnyComposite = false;
   wr::RenderReasons renderReasons = wr::RenderReasons::NONE;
 
-  bool success = true;
   if (aTransactionData) {
     bool scheduleComposite = false;
-    success =
-        ProcessEmptyTransactionUpdates(*aTransactionData, &scheduleComposite);
+    if (!ProcessEmptyTransactionUpdates(*aTransactionData,
+                                        &scheduleComposite)) {
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mSmallShmems);
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mLargeShmems);
+      return IPC_FAIL(this, "Failed to process empty transaction update.");
+    }
     scheduleAnyComposite = scheduleAnyComposite || scheduleComposite;
     renderReasons |= wr::RenderReasons::RESOURCE_UPDATE;
   }
@@ -1461,11 +1438,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     wr::IpcResourceUpdateQueue::ReleaseShmems(this,
                                               aTransactionData->mLargeShmems);
   }
-
-  if (!success) {
-    return IPC_FAIL(this, "Failed to process empty transaction update.");
-  }
-
   return IPC_OK();
 }
 
@@ -1488,13 +1460,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
 
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  bool success = ProcessWebRenderParentCommands(aCommands, txn);
-  mApi->SendTransaction(txn);
-
-  if (!success) {
+  if (!ProcessWebRenderParentCommands(aCommands, txn)) {
     return IPC_FAIL(this, "Invalid parent command found");
   }
 
+  mApi->SendTransaction(txn);
   return IPC_OK();
 }
 
@@ -1506,7 +1476,6 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
   wr::TransactionBuilder txnForImageBridge(mApi);
   wr::AutoTransactionSender sender(mApi, &txnForImageBridge);
 
-  bool success = true;
   for (nsTArray<WebRenderParentCommand>::index_type i = 0;
        i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
@@ -1514,7 +1483,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
       case WebRenderParentCommand::TOpAddPipelineIdForCompositable: {
         const OpAddPipelineIdForCompositable& op =
             cmd.get_OpAddPipelineIdForCompositable();
-        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.owner(),
+        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.isAsync(),
                                      aTxn, txnForImageBridge);
         break;
       }
@@ -1561,9 +1530,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         // process PID in the upper 32 bits of the id, verify that this is as
         // expected.
         if ((data.id() >> 32) != (uint64_t)OtherPid()) {
-          gfxCriticalNote << "TOpAddCompositorAnimations bad id";
-          success = false;
-          continue;
+          return false;
         }
         if (data.animations().Length()) {
           if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
@@ -1585,9 +1552,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
       }
     }
   }
-
-  MOZ_ASSERT(success);
-  return success;
+  return true;
 }
 
 void WebRenderBridgeParent::FlushSceneBuilds() {
@@ -1802,7 +1767,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
 
 void WebRenderBridgeParent::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    const CompositableHandleOwner& aOwner, wr::TransactionBuilder& aTxn,
+    const bool& aAsync, wr::TransactionBuilder& aTxn,
     wr::TransactionBuilder& aTxnForImageBridge) {
   if (mDestroyed) {
     return;
@@ -1812,24 +1777,16 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
              mAsyncCompositables.end());
 
   RefPtr<CompositableHost> host;
-  switch (aOwner) {
-    case CompositableHandleOwner::WebRenderBridge:
-      host = FindCompositable(aHandle);
-      break;
-    case CompositableHandleOwner::ImageBridge: {
-      RefPtr<ImageBridgeParent> imageBridge =
-          ImageBridgeParent::GetInstance(OtherPid());
-      if (!imageBridge) {
-        return;
-      }
-      host = imageBridge->FindCompositable(aHandle);
-      break;
+  if (aAsync) {
+    RefPtr<ImageBridgeParent> imageBridge =
+        ImageBridgeParent::GetInstance(OtherPid());
+    if (!imageBridge) {
+      return;
     }
-    case CompositableHandleOwner::InProcessManager:
-      host = CompositableInProcessManager::Find(aHandle, OtherPid());
-      break;
+    host = imageBridge->FindCompositable(aHandle);
+  } else {
+    host = FindCompositable(aHandle);
   }
-
   if (!host) {
     return;
   }

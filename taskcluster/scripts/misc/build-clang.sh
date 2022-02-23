@@ -16,9 +16,6 @@ if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
   export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
-# Make the installed compiler-rt(s) available to clang.
-UPLOAD_DIR= taskcluster/scripts/misc/repack-clang.sh
-
 case "$CONFIGS" in
 *macosx64*)
   # these variables are used in build-clang.py
@@ -54,10 +51,8 @@ python3 $GECKO_PATH/build/build-clang/build-clang.py $CONFIGS
 
 set -x
 
-if [ -f clang*.tar.zst ]; then
-    # Put a tarball in the artifacts dir
-    mkdir -p $UPLOAD_DIR
-    cp clang*.tar.zst $UPLOAD_DIR
-fi
+# Put a tarball in the artifacts dir
+mkdir -p $UPLOAD_DIR
+cp clang*.tar.* $UPLOAD_DIR
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

@@ -16,6 +16,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/NodeController.h"
 #include "mozilla/ipc/ScopedPort.h"
 #include "nsXULAppAPI.h"

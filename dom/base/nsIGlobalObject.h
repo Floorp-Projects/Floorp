@@ -219,11 +219,6 @@ class nsIGlobalObject : public nsISupports,
   already_AddRefed<mozilla::dom::Function>
   GetCountQueuingStrategySizeFunction();
   void SetCountQueuingStrategySizeFunction(mozilla::dom::Function* aFunction);
-
-  already_AddRefed<mozilla::dom::Function>
-  GetByteLengthQueuingStrategySizeFunction();
-  void SetByteLengthQueuingStrategySizeFunction(
-      mozilla::dom::Function* aFunction);
 #endif
 
   /**
@@ -258,9 +253,6 @@ class nsIGlobalObject : public nsISupports,
 #ifdef MOZ_DOM_STREAMS
   // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
   RefPtr<mozilla::dom::Function> mCountQueuingStrategySizeFunction;
-
-  // https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
-  RefPtr<mozilla::dom::Function> mByteLengthQueuingStrategySizeFunction;
 #endif
 };
 

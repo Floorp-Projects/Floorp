@@ -178,18 +178,13 @@ mod tests {
 
     #[test]
     fn pin_holds_advance() {
-        #[cfg(miri)]
-        const N: usize = 500;
-        #[cfg(not(miri))]
-        const N: usize = 500_000;
-
         let collector = Collector::new();
 
         thread::scope(|scope| {
             for _ in 0..NUM_THREADS {
                 scope.spawn(|_| {
                     let handle = collector.register();
-                    for _ in 0..N {
+                    for _ in 0..500_000 {
                         let guard = &handle.pin();
 
                         let before = collector.global.epoch.load(Ordering::Relaxed);
@@ -207,9 +202,6 @@ mod tests {
     #[cfg(not(crossbeam_sanitize))] // TODO: assertions failed due to `cfg(crossbeam_sanitize)` reduce `internal::MAX_OBJECTS`
     #[test]
     fn incremental() {
-        #[cfg(miri)]
-        const COUNT: usize = 500;
-        #[cfg(not(miri))]
         const COUNT: usize = 100_000;
         static DESTROYS: AtomicUsize = AtomicUsize::new(0);
 
@@ -238,16 +230,12 @@ mod tests {
             let guard = &handle.pin();
             collector.global.collect(guard);
         }
-        assert!(DESTROYS.load(Ordering::Relaxed) == COUNT);
+        assert!(DESTROYS.load(Ordering::Relaxed) == 100_000);
     }
 
     #[test]
     fn buffering() {
         const COUNT: usize = 10;
-        #[cfg(miri)]
-        const N: usize = 500;
-        #[cfg(not(miri))]
-        const N: usize = 100_000;
         static DESTROYS: AtomicUsize = AtomicUsize::new(0);
 
         let collector = Collector::new();
@@ -264,7 +252,7 @@ mod tests {
             }
         }
 
-        for _ in 0..N {
+        for _ in 0..100_000 {
             collector.global.collect(&handle.pin());
         }
         assert!(DESTROYS.load(Ordering::Relaxed) < COUNT);
@@ -280,9 +268,6 @@ mod tests {
 
     #[test]
     fn count_drops() {
-        #[cfg(miri)]
-        const COUNT: usize = 500;
-        #[cfg(not(miri))]
         const COUNT: usize = 100_000;
         static DROPS: AtomicUsize = AtomicUsize::new(0);
 
@@ -316,9 +301,6 @@ mod tests {
 
     #[test]
     fn count_destroy() {
-        #[cfg(miri)]
-        const COUNT: usize = 500;
-        #[cfg(not(miri))]
         const COUNT: usize = 100_000;
         static DESTROYS: AtomicUsize = AtomicUsize::new(0);
 
@@ -385,9 +367,6 @@ mod tests {
 
     #[test]
     fn destroy_array() {
-        #[cfg(miri)]
-        const COUNT: usize = 500;
-        #[cfg(not(miri))]
         const COUNT: usize = 100_000;
         static DESTROYS: AtomicUsize = AtomicUsize::new(0);
 
@@ -423,9 +402,6 @@ mod tests {
     #[test]
     fn stress() {
         const THREADS: usize = 8;
-        #[cfg(miri)]
-        const COUNT: usize = 500;
-        #[cfg(not(miri))]
         const COUNT: usize = 100_000;
         static DROPS: AtomicUsize = AtomicUsize::new(0);
 

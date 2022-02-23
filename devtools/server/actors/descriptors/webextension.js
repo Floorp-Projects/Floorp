@@ -19,9 +19,6 @@ const {
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
-const {
-  createWebExtensionSessionContext,
-} = require("devtools/server/actors/watcher/session-context");
 
 loader.lazyImporter(
   this,
@@ -114,14 +111,13 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         await this._extensionFrameConnect();
         this.watcher = new WatcherActor(
           this.conn,
-          createWebExtensionSessionContext(
-            {
-              addonId: this.addonId,
-              browsingContextID: this._form.browsingContextID,
-              innerWindowId: this._form.innerWindowId,
-            },
-            config
-          )
+          {
+            type: "webextension",
+            addonId: this.addonId,
+            addonBrowsingContextID: this._form.browsingContextID,
+            addonInnerWindowId: this._form.innerWindowId,
+          },
+          config
         );
         this.manage(this.watcher);
       }
@@ -162,12 +158,6 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         {
           addonId: this.addonId,
           addonBrowsingContextGroupId: policy.browsingContextGroupId,
-          // Bug 1754452: This flag is passed by the client to getWatcher(), but the server
-          // doesn't support this anyway. So always pass false here and keep things simple.
-          // Once we enable this flag, we will stop using connectToFrame and instantiate
-          // the WebExtensionTargetActor from watcher code instead, so that shouldn't
-          // introduce an issue for the future.
-          isServerTargetSwitchingEnabled: false,
         }
       );
 

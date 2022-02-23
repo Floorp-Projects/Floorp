@@ -63,12 +63,7 @@ StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
       mIsDirectory(false),
       mFileId(-1) {}
 
-StreamBlobImpl::~StreamBlobImpl() {
-  if (mInputStream) {
-    mInputStream->Close();
-  }
-  UnregisterWeakMemoryReporter(this);
-}
+StreamBlobImpl::~StreamBlobImpl() { UnregisterWeakMemoryReporter(this); }
 
 void StreamBlobImpl::CreateInputStream(nsIInputStream** aStream,
                                        ErrorResult& aRv) {

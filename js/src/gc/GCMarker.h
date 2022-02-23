@@ -23,6 +23,7 @@ class WeakMapBase;
 
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
 static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
+static const size_t SMALL_MARK_STACK_BASE_CAPACITY = 256;
 
 enum class SlotsOrElementsKind { Elements, FixedSlots, DynamicSlots };
 
@@ -143,8 +144,11 @@ class MarkStack {
 
   size_t position() const { return topIndex_; }
 
-  [[nodiscard]] bool init(bool incrementalGCEnabled);
-  [[nodiscard]] bool setStackCapacity(bool incrementalGCEnabled);
+  enum StackType { MainStack, AuxiliaryStack };
+  [[nodiscard]] bool init(StackType which, bool incrementalGCEnabled);
+
+  [[nodiscard]] bool setStackCapacity(StackType which,
+                                      bool incrementalGCEnabled);
 
   size_t maxCapacity() const { return maxCapacity_; }
   void setMaxCapacity(size_t maxCapacity);
@@ -311,7 +315,12 @@ class GCMarker final : public JSTracer {
    * objects that are still reachable.
    */
   void setMarkColor(gc::MarkColor newColor);
+  void setMarkColorUnchecked(gc::MarkColor newColor);
   gc::MarkColor markColor() const { return color; }
+
+  // Declare which color the main mark stack will be used for. The whole stack
+  // must be empty when this is called.
+  void setMainStackColor(gc::MarkColor newColor);
 
   bool enterWeakMarkingMode();
   void leaveWeakMarkingMode();
@@ -355,7 +364,7 @@ class GCMarker final : public JSTracer {
 
   void setIncrementalGCEnabled(bool enabled) {
     // Ignore failure to resize the stack and keep using the existing stack.
-    (void)stack.setStackCapacity(enabled);
+    (void)stack.setStackCapacity(gc::MarkStack::MainStack, enabled);
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -367,8 +376,7 @@ class GCMarker final : public JSTracer {
   // Mark through edges whose target color depends on the colors of two source
   // entities (eg a WeakMap and one of its keys), and push the target onto the
   // mark stack.
-  void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
-                          gc::CellColor srcColor);
+  void markEphemeronEdges(gc::EphemeronEdgeVector& edges);
 
   size_t getMarkCount() const { return markCount; }
   void clearMarkCount() { markCount = 0; }
@@ -431,11 +439,27 @@ class GCMarker final : public JSTracer {
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
 
-  bool isMarkStackEmpty() { return stack.isEmpty(); }
+  gc::MarkStack& getStack(gc::MarkColor which) {
+    return which == mainStackColor ? stack : auxStack;
+  }
+  const gc::MarkStack& getStack(gc::MarkColor which) const {
+    return which == mainStackColor ? stack : auxStack;
+  }
 
-  bool hasBlackEntries() const { return stack.position() > grayPosition; }
+  gc::MarkStack& currentStack() {
+    MOZ_ASSERT(currentStackPtr);
+    return *currentStackPtr;
+  }
 
-  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
+  bool isMarkStackEmpty() { return stack.isEmpty() && auxStack.isEmpty(); }
+
+  bool hasBlackEntries() const {
+    return !getStack(gc::MarkColor::Black).isEmpty();
+  }
+
+  bool hasGrayEntries() const {
+    return !getStack(gc::MarkColor::Gray).isEmpty();
+  }
 
   inline void processMarkStackTop(SliceBudget& budget);
 
@@ -466,17 +490,24 @@ class GCMarker final : public JSTracer {
   friend class gc::BarrierTracer;
 
   /*
-   * The mark stack. Pointers in this stack are "gray" in the GC sense, but
-   * their references may be marked either black or gray (in the CC sense)
-   * depending on whether they are above or below grayPosition.
+   * The mark stack. Pointers in this stack are "gray" in the GC sense, but may
+   * mark the contained items either black or gray (in the CC sense) depending
+   * on mainStackColor.
    */
   gc::MarkStack stack;
 
-  /* Stack entries at positions below this are considered gray. */
-  MainThreadOrGCTaskData<size_t> grayPosition;
+  /*
+   * A smaller, auxiliary stack, currently only used to accumulate the rare
+   * objects that need to be marked black during gray marking.
+   */
+  gc::MarkStack auxStack;
 
   /* The color is only applied to objects and functions. */
   MainThreadOrGCTaskData<gc::MarkColor> color;
+
+  MainThreadOrGCTaskData<gc::MarkColor> mainStackColor;
+
+  MainThreadOrGCTaskData<gc::MarkStack*> currentStackPtr;
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
   MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;

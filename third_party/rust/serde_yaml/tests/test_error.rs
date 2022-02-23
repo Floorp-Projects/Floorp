@@ -24,7 +24,6 @@ fn test_incorrect_type() {
 fn test_incorrect_nested_type() {
     #[derive(Deserialize, Debug)]
     struct A {
-        #[allow(dead_code)]
         b: Vec<B>,
     }
     #[derive(Deserialize, Debug)]
@@ -33,7 +32,6 @@ fn test_incorrect_nested_type() {
     }
     #[derive(Deserialize, Debug)]
     struct C {
-        #[allow(dead_code)]
         d: bool,
     }
     let yaml = indoc! {"
@@ -57,9 +55,7 @@ fn test_empty() {
 fn test_missing_field() {
     #[derive(Deserialize, Debug)]
     struct Basic {
-        #[allow(dead_code)]
         v: bool,
-        #[allow(dead_code)]
         w: bool,
     }
     let yaml = indoc! {"
@@ -84,7 +80,6 @@ fn test_unknown_anchor() {
 fn test_ignored_unknown_anchor() {
     #[derive(Deserialize, Debug)]
     struct Wrapper {
-        #[allow(dead_code)]
         c: (),
     }
     let yaml = indoc! {"
@@ -225,7 +220,6 @@ fn test_no_location() {
 fn test_invalid_scalar_type() {
     #[derive(Deserialize, Debug)]
     struct S {
-        #[allow(dead_code)]
         x: [(); 1],
     }
 
@@ -238,7 +232,6 @@ fn test_invalid_scalar_type() {
 fn test_infinite_recursion_objects() {
     #[derive(Deserialize, Debug)]
     struct S {
-        #[allow(dead_code)]
         x: Option<Box<S>>,
     }
 
@@ -251,7 +244,6 @@ fn test_infinite_recursion_objects() {
 fn test_infinite_recursion_arrays() {
     #[derive(Deserialize, Debug)]
     struct S {
-        #[allow(dead_code)]
         x: Option<Box<S>>,
     }
 
@@ -264,7 +256,6 @@ fn test_infinite_recursion_arrays() {
 fn test_finite_recursion_objects() {
     #[derive(Deserialize, Debug)]
     struct S {
-        #[allow(dead_code)]
         x: Option<Box<S>>,
     }
 
@@ -277,7 +268,6 @@ fn test_finite_recursion_objects() {
 fn test_finite_recursion_arrays() {
     #[derive(Deserialize, Debug)]
     struct S {
-        #[allow(dead_code)]
         x: Option<Box<S>>,
     }
 

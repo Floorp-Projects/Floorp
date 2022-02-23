@@ -15,7 +15,6 @@ const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const FORCE_THEME_NOTIFICATION_PREF = "devtools.theme.force-auto-theme-info";
 const SHOW_THEME_NOTIFICATION_PREF = "devtools.theme.show-auto-theme-info";
-const PSEUDO_LOCALE_PREF = "intl.l10n.pseudo";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -34,10 +33,6 @@ var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 var { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
-const {
-  FluentL10n,
-} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
-
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
 ).wrappedJSObject;
@@ -287,9 +282,6 @@ function Toolbox(
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
-  this.disablePseudoLocale = () => this.changePseudoLocale("none");
-  this.enableAccentedPseudoLocale = () => this.changePseudoLocale("accented");
-  this.enableBidiPseudoLocale = () => this.changePseudoLocale("bidi");
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.closeToolbox = this.closeToolbox.bind(this);
@@ -744,18 +736,6 @@ Toolbox.prototype = {
         ],
       });
     }
-
-    // If a new popup is debugged, automagically switch the toolbox to become
-    // an independant window so that we can easily keep debugging the new tab.
-    // Only do that if that's not the current top level, otherwise it means
-    // we opened a toolbox dedicated to the popup.
-    if (
-      targetFront.targetForm.isPopup &&
-      !targetFront.isTopLevel &&
-      this.descriptorFront.isLocalTab
-    ) {
-      await this.switchHostToTab(targetFront.targetForm.browsingContextID);
-    }
   },
 
   async _onTargetSelected({ targetFront }) {
@@ -865,12 +845,6 @@ Toolbox.prototype = {
    */
   open: function() {
     return async function() {
-      // Kick off async loading the Fluent bundles.
-      const fluentL10n = new FluentL10n();
-      const fluentInitPromise = fluentL10n.init([
-        "devtools/client/toolbox.ftl",
-      ]);
-
       const isToolboxURL = this.win.location.href.startsWith(this._URL);
       if (isToolboxURL) {
         // Update the URL so that onceDOMReady watch for the right url.
@@ -970,9 +944,7 @@ Toolbox.prototype = {
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
-      await fluentInitPromise;
-
-      this._mountReactComponent(fluentL10n.getBundles());
+      this._mountReactComponent();
       this._buildDockOptions();
       this._buildTabs();
 
@@ -1763,11 +1735,8 @@ Toolbox.prototype = {
 
   // Called whenever the chrome send a message
   _onBrowserMessage: function(event) {
-    if (event.data?.name === "switched-host") {
+    if (event.data && event.data.name === "switched-host") {
       this._onSwitchedHost(event.data);
-    }
-    if (event.data?.name === "switched-host-to-tab") {
-      this._onSwitchedHostToTab(event.data.browsingContextID);
     }
   },
 
@@ -1913,32 +1882,22 @@ Toolbox.prototype = {
         definition.isTargetSupported(this.target) && definition.id !== "options"
     );
 
-    // Do async lookups for the target browser's state.
-    if (this.isBrowserChromeTarget) {
-      // Parallelize the asynchronous calls, so that the DOM is only updated once when
-      // updating the React components.
-      const [disableAutohide, pseudoLocale] = await Promise.all([
-        this._isDisableAutohideEnabled(),
-        this.getPseudoLocale(),
-      ]);
-      this.component.setDisableAutohide(disableAutohide);
-      this.component.setPseudoLocale(pseudoLocale);
+    // Do async lookup of disable pop-up auto-hide state.
+    if (this.disableAutohideAvailable) {
+      const disable = await this._isDisableAutohideEnabled();
+      this.component.setDisableAutohide(disable);
     }
   },
 
-  _mountReactComponent(fluentBundles) {
+  _mountReactComponent: function() {
     // Ensure the toolbar doesn't try to render until the tool is ready.
     const element = this.React.createElement(this.ToolboxController, {
       L10N,
-      fluentBundles,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
       toggleOptions: this.toggleOptions,
       toggleSplitConsole: this.toggleSplitConsole,
       toggleNoAutohide: this.toggleNoAutohide,
-      disablePseudoLocale: this.disablePseudoLocale,
-      enableAccentedPseudoLocale: this.enableAccentedPseudoLocale,
-      enableBidiPseudoLocale: this.enableBidiPseudoLocale,
       closeToolbox: this.closeToolbox,
       focusButton: this._onToolbarFocus,
       toolbox: this,
@@ -2339,10 +2298,6 @@ Toolbox.prototype = {
    * Update the visual state of the Frame picker button.
    */
   updateFrameButton() {
-    if (this.isDestroying()) {
-      return;
-    }
-
     if (this.currentToolId === "options" && this.frameMap.size <= 1) {
       // If the button is only visible because the user is on the Options panel, disable
       // the button and set an appropriate description.
@@ -3264,62 +3219,19 @@ Toolbox.prototype = {
    * client. See the definition of the preference actor for more information.
    */
   get preferenceFront() {
-    if (!this._preferenceFrontRequest) {
-      // Set the _preferenceFrontRequest property to allow the resetPreference toolbox
-      // method to cleanup the preference set when the toolbox is closed.
-      this._preferenceFrontRequest = this.commands.client.mainRoot.getFront(
-        "preference"
-      );
-    }
-    return this._preferenceFrontRequest;
+    const frontPromise = this.commands.client.mainRoot.getFront("preference");
+    frontPromise.then(front => {
+      // Set the _preferenceFront property to allow the resetPreferences toolbox method
+      // to cleanup the preference set when the toolbox is closed.
+      this._preferenceFront = front;
+    });
+
+    return frontPromise;
   },
 
-  // The auto-hide of pop-ups feature and pseudo-localization require targeting
-  // browser chrome.
-  get isBrowserChromeTarget() {
+  // Is the disable auto-hide of pop-ups feature available in this context?
+  get disableAutohideAvailable() {
     return this.target.chrome;
-  },
-
-  /**
-   * See: https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
-   *
-   * @param {"bidi" | "accented" | "none"} pseudoLocale
-   */
-  async changePseudoLocale(pseudoLocale) {
-    await this.isOpen;
-    const prefFront = await this.preferenceFront;
-    if (pseudoLocale === "none") {
-      await prefFront.clearUserPref(PSEUDO_LOCALE_PREF);
-    } else {
-      await prefFront.setCharPref(PSEUDO_LOCALE_PREF, pseudoLocale);
-    }
-    this.component.setPseudoLocale(pseudoLocale);
-    this._pseudoLocaleChanged = true;
-  },
-
-  /**
-   * Returns the pseudo-locale when the target is browser chrome, otherwise undefined.
-   *
-   * @returns {"bidi" | "accented" | "none" | undefined}
-   */
-  async getPseudoLocale() {
-    // Ensure that the tools are open and the feature is available in this
-    // context.
-    await this.isOpen;
-    if (!this.isBrowserChromeTarget) {
-      return undefined;
-    }
-
-    const prefFront = await this.preferenceFront;
-    const locale = await prefFront.getCharPref(PSEUDO_LOCALE_PREF);
-
-    switch (locale) {
-      case "bidi":
-      case "accented":
-        return locale;
-      default:
-        return "none";
-    }
   },
 
   async toggleNoAutohide() {
@@ -3329,7 +3241,7 @@ Toolbox.prototype = {
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
-    if (this.isBrowserChromeTarget) {
+    if (this.disableAutohideAvailable) {
       this.component.setDisableAutohide(toggledValue);
     }
     this._autohideHasBeenToggled = true;
@@ -3339,7 +3251,7 @@ Toolbox.prototype = {
     // Ensure that the tools are open and the feature is available in this
     // context.
     await this.isOpen;
-    if (!this.isBrowserChromeTarget) {
+    if (!this.disableAutohideAvailable) {
       return false;
     }
 
@@ -3359,6 +3271,11 @@ Toolbox.prototype = {
 
     try {
       const { frames } = await this.target.listFrames();
+
+      // @backward-compat { version 96 } frame.isTopLevel was added in 96.
+      for (const frame of frames) {
+        frame.isTopLevel = !frame.parentID;
+      }
       this._updateFrames({ frames });
     } catch (e) {
       console.error("Error while listing frames", e);
@@ -3587,25 +3504,6 @@ Toolbox.prototype = {
     return this.once("host-changed");
   },
 
-  /**
-   * Request to Firefox UI to move the toolbox to another tab.
-   * This is used when we move a toolbox to a new popup opened by the tab we were currently debugging.
-   * We also move the toolbox back to the original tab we were debugging if we select it via Firefox tabs.
-   *
-   * @param {String} tabBrowsingContextID
-   *        The BrowsingContext ID of the tab we want to move to.
-   * @returns {Promise<undefined>}
-   *        This will resolve only once we moved to the new tab.
-   */
-  switchHostToTab(tabBrowsingContextID) {
-    this.postMessage({
-      name: "switch-host-to-tab",
-      tabBrowsingContextID,
-    });
-
-    return this.once("switched-host-to-tab");
-  },
-
   _onSwitchedHost: function({ hostType }) {
     this._hostType = hostType;
 
@@ -3624,27 +3522,6 @@ Toolbox.prototype = {
       .add(this._getTelemetryHostId());
 
     this.component.setCurrentHostType(hostType);
-  },
-
-  /**
-   * Event handler fired when the toolbox was moved to another tab.
-   * This fires when the toolbox itself requests to be moved to another tab,
-   * but also when we select the original tab where the toolbox originally was.
-   *
-   * @param {String} browsingContextID
-   *        The BrowsingContext ID of the tab the toolbox has been moved to.
-   */
-  _onSwitchedHostToTab(browsingContextID) {
-    const targets = this.commands.targetCommand.getAllTargets([
-      this.commands.targetCommand.TYPES.FRAME,
-    ]);
-    const target = targets.find(
-      target => target.browsingContextID == browsingContextID
-    );
-
-    this.commands.targetCommand.selectTarget(target);
-
-    this.emit("switched-host-to-tab");
   },
 
   /**
@@ -4077,12 +3954,8 @@ Toolbox.prototype = {
     this.browserRequire = null;
     this._toolNames = null;
 
-    // Reset preferences set by the toolbox, then remove the preference front.
-    outstanding.push(
-      this.resetPreference().then(() => {
-        this._preferenceFrontRequest = null;
-      })
-    );
+    // Reset preferences set by the toolbox
+    outstanding.push(this.resetPreference());
 
     this.commands.targetCommand.unwatchTargets({
       types: this.commands.targetCommand.ALL_TYPES,
@@ -4295,25 +4168,17 @@ Toolbox.prototype = {
    * Reset preferences set by the toolbox.
    */
   async resetPreference() {
-    if (
-      // No preferences have been changed, so there is nothing to reset.
-      !this._preferenceFrontRequest ||
-      // Did any pertinent prefs actually change? For autohide and the pseudo-locale,
-      // only reset prefs in the Browser Toolbox if it's been toggled in the UI
-      // (don't reset the pref if it was already set before opening)
-      (!this._autohideHasBeenToggled && !this._pseudoLocaleChanged)
-    ) {
+    if (!this._preferenceFront) {
       return;
     }
 
-    const preferenceFront = await this.preferenceFront;
-
+    // Only reset the autohide pref in the Browser Toolbox if it's been toggled
+    // in the UI (don't reset the pref if it was already set before opening)
     if (this._autohideHasBeenToggled) {
-      await preferenceFront.clearUserPref(DISABLE_AUTOHIDE_PREF);
+      await this._preferenceFront.clearUserPref(DISABLE_AUTOHIDE_PREF);
     }
-    if (this._pseudoLocaleChanged) {
-      await preferenceFront.clearUserPref(PSEUDO_LOCALE_PREF);
-    }
+
+    this._preferenceFront = null;
   },
 
   // HAR Automation

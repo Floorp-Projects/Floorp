@@ -10,4 +10,4 @@ from marionette_harness import MarionetteTestCase
 class TestFail(MarionetteTestCase):
     def test_fails(self):
         # this test is supposed to fail!
-        self.assertEqual(True, False)
+        self.assertEquals(True, False)

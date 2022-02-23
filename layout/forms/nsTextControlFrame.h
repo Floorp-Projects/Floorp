@@ -223,7 +223,7 @@ class nsTextControlFrame : public nsContainerFrame,
 
   Element* GetPlaceholderNode() const { return mPlaceholderDiv; }
 
-  Element* GetRevealButton() const { return mRevealButton; }
+  Element* GetShowPasswordButton() const { return mShowPasswordButton; }
 
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
@@ -353,9 +353,8 @@ class nsTextControlFrame : public nsContainerFrame,
   RefPtr<Element> mRootNode;
   RefPtr<Element> mPlaceholderDiv;
   RefPtr<Element> mPreviewDiv;
-  // The Reveal Password button.  Only used for type=password, nullptr
-  // otherwise.
-  RefPtr<Element> mRevealButton;
+  // The Show Password button.  Only used for type=password, nullptr otherwise.
+  RefPtr<Element> mShowPasswordButton;
   RefPtr<nsAnonDivObserver> mMutationObserver;
   // Cache of the |.value| of <input> or <textarea> element without hard-wrap.
   // If its IsVoid() returns true, it doesn't cache |.value|.

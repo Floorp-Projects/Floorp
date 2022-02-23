@@ -7,8 +7,9 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-preview-getter.html", "preview-getter.js");
+  const source = findSource(dbg, "preview-getter.js");
 
-  await loadAndAddBreakpoint(dbg, "preview-getter.js", 5, 4);
+  await loadAndAddBreakpoint(dbg, source.url, 5, 4);
   invokeInTab("funcA");
   await waitForPaused(dbg);
 
@@ -32,3 +33,4 @@ add_task(async function() {
 
   await closePreviewAtPos(dbg, 5, 8);
 });
+

@@ -2349,7 +2349,7 @@ Maybe<Completion> DebuggerObject::call(JSContext* cx,
 /* static */
 bool DebuggerObject::forceLexicalInitializationByName(
     JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result) {
-  if (!id.isString()) {
+  if (!JSID_IS_STRING(id)) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
         "Debugger.Object.prototype.forceLexicalInitializationByName", "string",

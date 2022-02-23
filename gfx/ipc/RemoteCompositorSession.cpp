@@ -79,10 +79,8 @@ void RemoteCompositorSession::Shutdown() {
     mAPZ->SetCompositorSession(nullptr);
     mAPZ->Destroy();
   }
-  if (mCompositorBridgeChild) {
-    mCompositorBridgeChild->Destroy();
-    mCompositorBridgeChild = nullptr;
-  }
+  mCompositorBridgeChild->Destroy();
+  mCompositorBridgeChild = nullptr;
   mCompositorWidgetDelegate = nullptr;
   mWidget = nullptr;
 #if defined(MOZ_WIDGET_ANDROID)

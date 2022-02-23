@@ -30,7 +30,6 @@ const FRAME_ACTOR_CONFIG = {
     },
   },
   allFrames: true,
-  messageManagerGroups: ["browsers"],
 };
 
 /**

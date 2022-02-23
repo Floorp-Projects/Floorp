@@ -5,11 +5,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "backgroundTaskTimeoutSec",
-  "maybeSubmitBackgroundUpdatePing",
-  "runBackgroundTask",
-];
+var EXPORTED_SYMBOLS = ["backgroundTaskTimeoutSec", "runBackgroundTask"];
 
 const { EXIT_CODE } = ChromeUtils.import(
   "resource://gre/modules/BackgroundUpdate.jsm"

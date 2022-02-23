@@ -170,7 +170,7 @@ const SnapshotScorer = new (class SnapshotScorer {
   }
 
   /**
-   * Calculate points based on whether the snapshot has interactions which share a common referrer with the context url's interactions
+   * Calculate points based on whether the snapshot has interactions which share a common referrer with the context url
    *
    * @param {Snapshot} snapshot
    * @returns {number}

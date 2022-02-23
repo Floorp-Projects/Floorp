@@ -95,7 +95,7 @@ GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
           !aPcIdFilter.EqualsASCII(aPc->GetIdAsAscii().c_str())) {
         return;
       }
-      if (aPc->IsClosed()) {
+      if (!aPc->HasMedia()) {
         return;
       }
       promises.AppendElement(aPc->GetStats(nullptr, true));

@@ -80,13 +80,7 @@ bool YCbCrTextureClientAllocationHelper::IsCompatible(
 
   BufferTextureData* bufferData =
       aTextureClient->GetInternalData()->AsBufferTextureData();
-
-  bufferData->RestoreOriginalDescriptor();
-
-  if (!bufferData ||
-      !bufferData->GetPictureRect().IsEqualEdges(mData.GetPictureRect()) ||
-      bufferData->GetYSize().isNothing() ||
-      bufferData->GetYSize().ref() != mData.mYSize ||
+  if (!bufferData || aTextureClient->GetSize() != mData.mYSize ||
       bufferData->GetCbCrSize().isNothing() ||
       bufferData->GetCbCrSize().ref() != mData.mCbCrSize ||
       bufferData->GetYStride().isNothing() ||

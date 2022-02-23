@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, division, print_function
 
 import json
 import yaml
@@ -11,7 +12,7 @@ import tempfile
 import time
 import traceback
 
-from wptserve import server
+from mozhttpd import MozHttpd
 import mozinfo
 from mozprofile import Profile
 import mozversion
@@ -340,7 +341,7 @@ class TPSTestRunner(object):
         tmplogfile = None
         if logdata:
             tmplogfile = TempFile(prefix="tps_log_")
-            tmplogfile.write(logdata.encode("utf-8"))
+            tmplogfile.write(logdata)
             tmplogfile.close()
             self.errorlogs[testname] = tmplogfile
 
@@ -425,7 +426,11 @@ class TPSTestRunner(object):
         else:
             try:
 
-                self.writeToResultFile(self.postdata)
+                if self.numfailed > 0 or self.numpassed == 0:
+                    To = self.config["email"].get("notificationlist")
+                else:
+                    To = self.config["email"].get("passednotificationlist")
+                self.writeToResultFile(self.postdata, sendTo=To)
             except Exception:
                 traceback.print_exc()
                 try:
@@ -472,8 +477,8 @@ class TPSTestRunner(object):
             testlist = [os.path.basename(self.testfile)]
         testdir = os.path.dirname(self.testfile)
 
-        self.server = server.WebTestHttpd(port=4567, doc_root=testdir)
-        self.server.start()
+        self.mozhttpd = MozHttpd(port=4567, docroot=testdir)
+        self.mozhttpd.start()
 
         # run each test, and save the results
         for test in testlist:
@@ -503,7 +508,7 @@ class TPSTestRunner(object):
                     )
                     break
 
-        self.server.stop()
+        self.mozhttpd.stop()
 
         # generate the postdata we'll use to post the results to the db
         self.postdata = {

@@ -1,6 +1,7 @@
 // META: script=/common/subset-tests-by-key.js
 // META: script=/common/utils.js
-// META: script=resources/support.sub.js
+// META: script=resources/support.js
+// META: script=resources/ports.sub.js
 // META: variant=?include=baseline
 // META: variant=?include=from-local
 // META: variant=?include=from-private
@@ -26,28 +27,28 @@ setup(() => {
 // All fetches unaffected by Private Network Access.
 
 subsetTestByKey("from-local", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
-  target: { server: Server.HTTPS_LOCAL },
-  expected: FetchTestResult.SUCCESS,
+  source: { port: kPorts.httpsLocal },
+  target: { port: kPorts.httpsLocal },
+  expected: kFetchTestResult.success,
 }), "local to local: no preflight required.");
 
 subsetTestByKey("from-local", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
+  source: { port: kPorts.httpsLocal },
   target: {
-    server: Server.HTTPS_PRIVATE,
-    behavior: { response: ResponseBehavior.allowCrossOrigin() },
+    port: kPorts.httpsPrivate,
+    searchParams: { "final-headers": "cors" },
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "local to private: no preflight required.");
 
 
 subsetTestByKey("from-local", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
+  source: { port: kPorts.httpsLocal },
   target: {
-    server: Server.HTTPS_PUBLIC,
-    behavior: { response: ResponseBehavior.allowCrossOrigin() },
+    port: kPorts.httpsPublic,
+    searchParams: { "final-headers": "cors" },
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "local to public: no preflight required.");
 
 // Strictly speaking, the following two tests do not exercise PNA-specific
@@ -55,29 +56,31 @@ subsetTestByKey("from-local", promise_test, t => fetchTest(t, {
 // preflight requests are sent and handled as expected.
 
 subsetTestByKey("baseline", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
+  source: { port: kPorts.httpsLocal },
   target: {
-    server: Server.HTTPS_PUBLIC,
-    behavior: {
-      preflight: PreflightBehavior.failure(),
-      response: ResponseBehavior.allowCrossOrigin(),
+    port: kPorts.httpsPublic,
+    searchParams: {
+      // Missing "preflight-uuid" param: preflight will fail.
+      "preflight-headers": "cors",
+      "final-headers": "cors",
     },
   },
   fetchOptions: { method: "PUT" },
-  expected: FetchTestResult.FAILURE,
+  expected: kFetchTestResult.failure,
 }), "local to public: PUT preflight failure.");
 
 subsetTestByKey("baseline", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_LOCAL },
+  source: { port: kPorts.httpsLocal },
   target: {
-    server: Server.HTTPS_PUBLIC,
-    behavior: {
-      preflight: PreflightBehavior.success(token()),
-      response: ResponseBehavior.allowCrossOrigin(),
-    }
+    port: kPorts.httpsPublic,
+    searchParams: {
+      "preflight-uuid": token(),
+      "preflight-headers": "cors",
+      "final-headers": "cors",
+    },
   },
   fetchOptions: { method: "PUT" },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "local to public: PUT preflight success,");
 
 // Generates tests of preflight behavior for a single (source, target) pair.
@@ -101,7 +104,7 @@ function makePreflightTests({
   subsetKey,
   source,
   sourceDescription,
-  targetServer,
+  targetPort,
   targetDescription,
 }) {
   const prefix =
@@ -110,108 +113,119 @@ function makePreflightTests({
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: {
-        preflight: PreflightBehavior.failure(),
-        response: ResponseBehavior.allowCrossOrigin(),
+      port: targetPort,
+      searchParams: {
+        // Missing "preflight-uuid" param: preflight will fail.
+        "preflight-headers": "cors+pna",
+        "final-headers": "cors",
       },
     },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "failed preflight.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: {
-        preflight: PreflightBehavior.noCorsHeader(token()),
-        response: ResponseBehavior.allowCrossOrigin(),
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
       },
     },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "missing CORS headers on preflight response.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: {
-        preflight: PreflightBehavior.noPnaHeader(token()),
-        response: ResponseBehavior.allowCrossOrigin(),
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors",
       },
     },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "missing PNA header on preflight response.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: { preflight: PreflightBehavior.success(token()) },
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors+pna",
+      },
     },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "missing CORS headers on final response.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: {
-        preflight: PreflightBehavior.success(token()),
-        response: ResponseBehavior.allowCrossOrigin(),
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors+pna",
+        "final-headers": "cors",
       },
     },
-    expected: FetchTestResult.SUCCESS,
+    expected: kFetchTestResult.success,
   }), prefix + "success.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: {
-        preflight: PreflightBehavior.success(token()),
-        response: ResponseBehavior.allowCrossOrigin(),
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors+pna",
+        "final-headers": "cors",
       },
     },
     fetchOptions: { method: "PUT" },
-    expected: FetchTestResult.SUCCESS,
+    expected: kFetchTestResult.success,
   }), prefix + "PUT success.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
-    target: { server: targetServer },
+    target: { port: targetPort },
     fetchOptions: { mode: "no-cors" },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "no-CORS mode failed preflight.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: { preflight: PreflightBehavior.noCorsHeader(token()) },
+      port: targetPort,
+      searchParams: { "preflight-uuid": token() },
     },
     fetchOptions: { mode: "no-cors" },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "no-CORS mode missing CORS headers on preflight response.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: { preflight: PreflightBehavior.noPnaHeader(token()) },
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors",
+      },
     },
     fetchOptions: { mode: "no-cors" },
-    expected: FetchTestResult.FAILURE,
+    expected: kFetchTestResult.failure,
   }), prefix + "no-CORS mode missing PNA header on preflight response.");
 
   subsetTestByKey(subsetKey, promise_test, t => fetchTest(t, {
     source,
     target: {
-      server: targetServer,
-      behavior: { preflight: PreflightBehavior.success(token()) },
+      port: targetPort,
+      searchParams: {
+        "preflight-uuid": token(),
+        "preflight-headers": "cors+pna",
+      },
     },
     fetchOptions: { mode: "no-cors" },
-    expected: FetchTestResult.OPAQUE,
+    expected: kFetchTestResult.opaque,
   }), prefix + "no-CORS mode success.");
 }
 
@@ -222,25 +236,25 @@ function makePreflightTests({
 
 makePreflightTests({
   subsetKey: "from-private",
-  source: { server: Server.HTTPS_PRIVATE },
+  source: { port: kPorts.httpsPrivate },
   sourceDescription: "private",
-  targetServer: Server.HTTPS_LOCAL,
+  targetPort: kPorts.httpsLocal,
   targetDescription: "local",
 });
 
 subsetTestByKey("from-private", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_PRIVATE },
-  target: { server: Server.HTTPS_PRIVATE },
-  expected: FetchTestResult.SUCCESS,
+  source: { port: kPorts.httpsPrivate },
+  target: { port: kPorts.httpsPrivate },
+  expected: kFetchTestResult.success,
 }), "private to private: no preflight required.");
 
 subsetTestByKey("from-private", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_PRIVATE },
+  source: { port: kPorts.httpsPrivate },
   target: {
-    server: Server.HTTPS_PRIVATE,
-    behavior: { response: ResponseBehavior.allowCrossOrigin() },
+    port: kPorts.httpsPublic,
+    searchParams: { "final-headers": "cors" },
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "private to public: no preflight required.");
 
 // Source: public secure context.
@@ -250,24 +264,24 @@ subsetTestByKey("from-private", promise_test, t => fetchTest(t, {
 
 makePreflightTests({
   subsetKey: "from-public",
-  source: { server: Server.HTTPS_PUBLIC },
+  source: { port: kPorts.httpsPublic },
   sourceDescription: "public",
-  targetServer: Server.HTTPS_LOCAL,
+  targetPort: kPorts.httpsLocal,
   targetDescription: "local",
 });
 
 makePreflightTests({
   subsetKey: "from-public",
-  source: { server: Server.HTTPS_PUBLIC },
+  source: { port: kPorts.httpsPublic },
   sourceDescription: "public",
-  targetServer: Server.HTTPS_PRIVATE,
+  targetPort: kPorts.httpsPrivate,
   targetDescription: "private",
 });
 
 subsetTestByKey("from-public", promise_test, t => fetchTest(t, {
-  source: { server: Server.HTTPS_PUBLIC },
-  target: { server: Server.HTTPS_PUBLIC },
-  expected: FetchTestResult.SUCCESS,
+  source: { port: kPorts.httpsPublic },
+  target: { port: kPorts.httpsPublic },
+  expected: kFetchTestResult.success,
 }), "public to public: no preflight required.");
 
 // These tests verify that documents fetched from the `local` address space yet
@@ -276,60 +290,64 @@ subsetTestByKey("from-public", promise_test, t => fetchTest(t, {
 
 subsetTestByKey("from-treat-as-public", promise_test, t => fetchTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    port: kPorts.httpsLocal,
+    headers: { "Content-Security-Policy": "treat-as-public-address" },
   },
-  target: { server: Server.HTTPS_LOCAL },
-  expected: FetchTestResult.FAILURE,
+  target: { port: kPorts.httpsLocal },
+  expected: kFetchTestResult.failure,
 }), "treat-as-public-address to local: failed preflight.");
 
 subsetTestByKey("from-treat-as-public", promise_test, t => fetchTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    port: kPorts.httpsLocal,
+    headers: { "Content-Security-Policy": "treat-as-public-address" },
   },
   target: {
-    server: Server.HTTPS_LOCAL,
-    behavior: {
-      preflight: PreflightBehavior.success(token()),
+    port: kPorts.httpsLocal,
+    searchParams: {
+      "preflight-uuid": token(),
+      "preflight-headers": "cors+pna",
       // Interesting: no need for CORS headers on same-origin final response.
     },
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "treat-as-public-address to local: success.");
 
 subsetTestByKey("from-treat-as-public", promise_test, t => fetchTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    port: kPorts.httpsLocal,
+    headers: { "Content-Security-Policy": "treat-as-public-address" },
   },
-  target: { server: Server.HTTPS_PRIVATE },
-  expected: FetchTestResult.FAILURE,
+  target: { port: kPorts.httpsPrivate },
+  expected: kFetchTestResult.failure,
 }), "treat-as-public-address to private: failed preflight.");
 
 subsetTestByKey("from-treat-as-public", promise_test, t => fetchTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    port: kPorts.httpsLocal,
+    headers: { "Content-Security-Policy": "treat-as-public-address" },
   },
   target: {
-    server: Server.HTTPS_PRIVATE,
-    behavior: {
-      preflight: PreflightBehavior.success(token()),
-      response: ResponseBehavior.allowCrossOrigin(),
+    port: kPorts.httpsPrivate,
+    searchParams: {
+      "preflight-uuid": token(),
+      "preflight-headers": "cors+pna",
+      "final-headers": "cors",
     },
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "treat-as-public-address to private: success.");
 
 subsetTestByKey("from-treat-as-public", promise_test, t => fetchTest(t, {
   source: {
-    server: Server.HTTPS_LOCAL,
-    treatAsPublic: true,
+    port: kPorts.httpsLocal,
+    headers: { "Content-Security-Policy": "treat-as-public-address" },
   },
   target: {
-    server: Server.HTTPS_PUBLIC,
-    behavior: { response: ResponseBehavior.allowCrossOrigin() },
+    port: kPorts.httpsPublic,
+    searchParams: {
+      "final-headers": "cors",
+    }
   },
-  expected: FetchTestResult.SUCCESS,
+  expected: kFetchTestResult.success,
 }), "treat-as-public-address to public: no preflight required.");

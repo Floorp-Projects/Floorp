@@ -69,15 +69,6 @@ class AndroidEmulatorTest(
                 },
             ],
             [
-                ["--enable-xorigin-tests"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_xorigin_tests",
-                    "default": False,
-                    "help": "Run tests in a cross origin iframe.",
-                },
-            ],
-            [
                 ["--gpu-required"],
                 {
                     "action": "store_true",
@@ -314,8 +305,6 @@ class AndroidEmulatorTest(
 
         if self.enable_fission:
             cmd.extend(["--enable-fission"])
-        if c.get("enable_xorigin_tests"):
-            cmd.extend(["--enable-xorigin-tests"])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)

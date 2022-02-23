@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
+use quote::{TokenStreamExt, ToTokens};
 use syn::{GenericParam, Generics, Path, TraitBound, TraitBoundModifier, TypeParamBound};
 
-use crate::codegen::TraitImpl;
-use crate::usage::IdentSet;
+use codegen::TraitImpl;
+use usage::IdentSet;
 
 /// Wrapper for "outer From" traits, such as `FromDeriveInput`, `FromVariant`, and `FromField`.
 pub trait OuterFromImpl<'a> {

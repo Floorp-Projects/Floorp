@@ -38,7 +38,8 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
   header()->type = type;
   header()->flags = flags;
   header()->num_handles = 0;
-  header()->txid = -1;
+  header()->interrupt_remote_stack_depth_guess = static_cast<uint32_t>(-1);
+  header()->interrupt_local_stack_depth = static_cast<uint32_t>(-1);
   header()->seqno = 0;
 #if defined(OS_MACOSX)
   header()->cookie = 0;
@@ -75,6 +76,15 @@ Message::Message(Message&& other)
   auto* m = new Message(0, 0, 0, HeaderFlags(level));
   auto& flags = m->header()->flags;
   flags.SetSync();
+  flags.SetReply();
+  flags.SetReplyError();
+  return m;
+}
+
+/*static*/ Message* Message::ForInterruptDispatchError() {
+  auto* m = new Message();
+  auto& flags = m->header()->flags;
+  flags.SetInterrupt();
   flags.SetReply();
   flags.SetReplyError();
   return m;

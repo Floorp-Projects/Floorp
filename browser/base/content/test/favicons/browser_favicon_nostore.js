@@ -116,17 +116,9 @@ add_task(async function root_icon_stored() {
   });
   server.registerFile(
     "/favicon.ico",
-    new FileUtils.File(
-      PathUtils.join(
-        Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
-        "browser",
-        "browser",
-        "base",
-        "content",
-        "test",
-        "favicons",
-        "no-store.png"
-      )
+    FileUtils.getFile(
+      "CurWorkD",
+      `/browser/browser/base/content/test/favicons/no-store.png`.split("/")
     )
   );
   server.registerPathHandler("/page", (request, response) => {

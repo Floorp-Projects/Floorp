@@ -53,7 +53,7 @@ protected:
 
 private:
   bool isNameExcepted(StringRef Name) const {
-    return Name == "pair" || Name == "atomic" || Name == "tuple";
+    return Name == "pair" || Name == "atomic";
   }
 };
 

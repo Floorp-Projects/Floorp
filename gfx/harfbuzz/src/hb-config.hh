@@ -86,11 +86,8 @@
 #define HB_NO_LEGACY
 #endif
 
-#if defined(HAVE_CONFIG_OVERRIDE_H) || defined(HB_CONFIG_OVERRIDE_H)
-#ifndef HB_CONFIG_OVERRIDE_H
-#define HB_CONFIG_OVERRIDE_H "config-override.h"
-#endif
-#include HB_CONFIG_OVERRIDE_H
+#ifdef HAVE_CONFIG_OVERRIDE_H
+#include "config-override.h"
 #endif
 
 /* Closure of options. */

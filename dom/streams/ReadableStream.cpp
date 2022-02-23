@@ -10,17 +10,15 @@
 #include "js/PropertyAndElement.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "js/loader/ModuleMapKey.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
-#include "mozilla/dom/BodyStream.h"
+#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadIntoRequest.h"
@@ -31,16 +29,12 @@
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
-#include "mozilla/dom/ReadableStreamPipeTo.h"
 #include "mozilla/dom/ReadableStreamTee.h"
-#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
-#include "mozilla/dom/WritableStream.h"
-#include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/dom/Promise-inl.h"
@@ -68,19 +62,20 @@ inline void ImplCycleCollectionUnlink(
   aReader = AsVariant(mozilla::Nothing());
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader,
-                                  mErrorAlgorithm, mNativeUnderlyingSource)
+                                  mErrorAlgorithm)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mStoredError.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader,
-                                    mErrorAlgorithm, mNativeUnderlyingSource)
+                                    mErrorAlgorithm)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStream)
@@ -150,25 +145,6 @@ bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
   return reader->IsDefault();
 }
 
-void ReadableStream::SetNativeUnderlyingSource(
-    BodyStreamHolder* aUnderlyingSource) {
-  mNativeUnderlyingSource = aUnderlyingSource;
-}
-
-void ReadableStream::ReleaseObjects() {
-  SetNativeUnderlyingSource(nullptr);
-
-  SetErrorAlgorithm(nullptr);
-
-  if (mController->IsByte()) {
-    ReadableByteStreamControllerClearAlgorithms(mController->AsByte());
-    return;
-  }
-
-  MOZ_ASSERT(mController->IsDefault());
-  ReadableStreamDefaultControllerClearAlgorithms(mController->AsDefault());
-}
-
 // Streams Spec: 4.2.4: https://streams.spec.whatwg.org/#rs-prototype
 /* static */
 already_AddRefed<ReadableStream> ReadableStream::Constructor(
@@ -181,7 +157,7 @@ already_AddRefed<ReadableStream> ReadableStream::Constructor(
       aUnderlyingSource.WasPassed() ? aUnderlyingSource.Value() : nullptr);
 
   // Step 2.
-  RootedDictionary<UnderlyingSource> underlyingSourceDict(aGlobal.Context());
+  UnderlyingSource underlyingSourceDict;
   if (underlyingSourceObj) {
     JS::RootedValue objValue(aGlobal.Context(),
                              JS::ObjectValue(*underlyingSourceObj));
@@ -215,19 +191,10 @@ already_AddRefed<ReadableStream> ReadableStream::Constructor(
     }
 
     // Step 4.3
-    if (!StaticPrefs::dom_streams_byte_streams_enabled()) {
-      aRv.ThrowNotSupportedError("BYOB byte streams not yet supported.");
-      return nullptr;
-    }
+    (void)highWaterMark;
+    aRv.ThrowNotSupportedError("BYOB Byte Streams Not Yet Supported");
 
-    SetUpReadableByteStreamControllerFromUnderlyingSource(
-        aGlobal.Context(), readableStream, underlyingSourceObj,
-        underlyingSourceDict, highWaterMark, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-
-    return readableStream.forget();
+    return nullptr;
   }
 
   // Step 5.1 (implicit in above check)
@@ -337,28 +304,18 @@ void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
 
   // Step 6.
   if (reader->IsDefault()) {
-    // Step 6.1. Let readRequests be reader.[[readRequests]].
-    // Move LinkedList out of DefaultReader onto stack to avoid the potential
-    // for concurrent modification, which could invalidate the iterator.
-    //
-    // See https://bugs.chromium.org/p/chromium/issues/detail?id=1045874 as an
-    // example of the kind of issue that could occur.
-    LinkedList<RefPtr<ReadRequest>> readRequests =
-        std::move(reader->AsDefault()->ReadRequests());
-
-    // Step 6.2. Set reader.[[readRequests]] to an empty list.
-    // Note: The std::move already cleared this anyway.
-    reader->AsDefault()->ReadRequests().clear();
-
-    // Step 6.3. For each readRequest of readRequests,
-    // Drain the local list and destroy elements along the way.
-    while (RefPtr<ReadRequest> readRequest = readRequests.popFirst()) {
-      // Step 6.3.1. Perform readRequest’s close steps.
+    // Step 6.1
+    ReadableStreamDefaultReader* defaultReader = reader->AsDefault();
+    for (ReadRequest* readRequest : defaultReader->ReadRequests()) {
+      // Step 6.1.1.
       readRequest->CloseSteps(aCx, aRv);
       if (aRv.Failed()) {
         return;
       }
     }
+
+    // Step 6.2
+    defaultReader->ReadRequests().clear();
   }
 }
 
@@ -403,23 +360,17 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 
   // Step 6.
   if (reader && reader->IsBYOB()) {
-    // Step 6.1. Let readIntoRequests be reader.[[readIntoRequests]].
-    LinkedList<RefPtr<ReadIntoRequest>> readIntoRequests =
-        std::move(reader->AsBYOB()->ReadIntoRequests());
-
-    // Step 6.2. Set reader.[[readIntoRequests]] to an empty list.
-    // Note: The std::move already cleared this anyway.
-    reader->AsBYOB()->ReadIntoRequests().clear();
-
-    // Step 6.3. For each readIntoRequest of readIntoRequests,
-    while (RefPtr<ReadIntoRequest> readIntoRequest =
-               readIntoRequests.popFirst()) {
-      // Step 6.3.1.Perform readIntoRequest’s close steps, given undefined.
+    // Step 6.1.
+    for (RefPtr<ReadIntoRequest> readIntoRequest :
+         reader->AsBYOB()->ReadIntoRequests()) {
       readIntoRequest->CloseSteps(aCx, JS::UndefinedHandleValue, aRv);
       if (aRv.Failed()) {
         return nullptr;
       }
     }
+
+    // Step 6.2.
+    reader->AsBYOB()->ReadIntoRequests().clear();
   }
 
   // Step 7.
@@ -494,8 +445,7 @@ void ReadableStream::GetReader(JSContext* aCx,
                                const ReadableStreamGetReaderOptions& aOptions,
                                OwningReadableStreamReader& resultReader,
                                ErrorResult& aRv) {
-  // Step 1. If options["mode"] does not exist,
-  // return ? AcquireReadableStreamDefaultReader(this).
+  // Step 1.
   if (!aOptions.mMode.WasPassed()) {
     RefPtr<ReadableStream> thisRefPtr = this;
     RefPtr<ReadableStreamDefaultReader> defaultReader =
@@ -506,23 +456,8 @@ void ReadableStream::GetReader(JSContext* aCx,
     resultReader.SetAsReadableStreamDefaultReader() = defaultReader;
     return;
   }
-
-  // Step 2. Assert: options["mode"] is "byob".
-  MOZ_ASSERT(aOptions.mMode.Value() == ReadableStreamReaderMode::Byob);
-
-  // Step 3. Return ? AcquireReadableStreamBYOBReader(this).
-  if (!StaticPrefs::dom_streams_byte_streams_enabled()) {
-    aRv.ThrowTypeError("BYOB byte streams reader not yet supported.");
-    return;
-  }
-
-  RefPtr<ReadableStream> thisRefPtr = this;
-  RefPtr<ReadableStreamBYOBReader> byobReader =
-      AcquireReadableStreamBYOBReader(aCx, thisRefPtr, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  resultReader.SetAsReadableStreamBYOBReader() = byobReader;
+  // Step 2.
+  aRv.ThrowTypeError("BYOB STREAMS NOT IMPLEMENTED");
 }
 
 // https://streams.spec.whatwg.org/#is-readable-stream-locked
@@ -568,26 +503,30 @@ void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
 
   // Step 8.
   if (reader->IsDefault()) {
-    // Step 8.1. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader,
-    // e).
-    RefPtr<ReadableStreamDefaultReader> defaultReader = reader->AsDefault();
-    ReadableStreamDefaultReaderErrorReadRequests(aCx, defaultReader, aValue,
-                                                 aRv);
-    if (aRv.Failed()) {
-      return;
+    // Step 8.1:
+    ReadableStreamDefaultReader* defaultReader = reader->AsDefault();
+    for (ReadRequest* readRequest : defaultReader->ReadRequests()) {
+      readRequest->ErrorSteps(aCx, aValue, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
     }
+    // Step 8.2
+    defaultReader->ReadRequests().clear();
   } else {
-    // Step 9. Otherwise,
-    // Step 9.1. Assert: reader implements ReadableStreamBYOBReader.
+    // Step 9.
+    // Step 9.1.
     MOZ_ASSERT(reader->IsBYOB());
-
-    // Step 9.2. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader,
-    // e).
-    RefPtr<ReadableStreamBYOBReader> byobReader = reader->AsBYOB();
-    ReadableStreamBYOBReaderErrorReadIntoRequests(aCx, byobReader, aValue, aRv);
-    if (aRv.Failed()) {
-      return;
+    ReadableStreamBYOBReader* byobReader = reader->AsBYOB();
+    // Step 9.2.
+    for (auto* readIntoRequest : byobReader->ReadIntoRequests()) {
+      readIntoRequest->ErrorSteps(aCx, aValue, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
     }
+    // Step 9.3
+    byobReader->ReadIntoRequests().clear();
   }
 
   // Not in Specification: Allow notifying native underlying sources that a
@@ -655,7 +594,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
       : mTeeState(aTeeState), mIsCancel1(aIsCancel1) {}
 
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> CancelCallback(
+  virtual already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override {
     // Step 1.
@@ -715,7 +654,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
   }
 
  protected:
-  ~ReadableStreamDefaultTeeCancelAlgorithm() override = default;
+  ~ReadableStreamDefaultTeeCancelAlgorithm() = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeCancelAlgorithm)
@@ -743,7 +682,7 @@ NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
 // Step 19.
 class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
-  ~ReadableStreamTeeClosePromiseHandler() override = default;
+  ~ReadableStreamTeeClosePromiseHandler() = default;
   RefPtr<TeeState> mTeeState;
 
  public:
@@ -753,21 +692,24 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
   explicit ReadableStreamTeeClosePromiseHandler(TeeState* aTeeState)
       : mTeeState(aTeeState) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aReason,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  }
+  void RejectedCallback(JSContext* aCx,
+                        JS::Handle<JS::Value> aReason) override {
     // Step 19.1.
+    ErrorResult rv;
     ReadableStreamDefaultControllerError(
-        aCx, mTeeState->Branch1()->DefaultController(), aReason, aRv);
-    if (aRv.Failed()) {
+        aCx, mTeeState->Branch1()->DefaultController(), aReason, rv);
+    if (rv.MaybeSetPendingException(
+            aCx, "ReadableStreamDefaultTee Error During Promise Rejection")) {
       return;
     }
 
     // Step 19.2
     ReadableStreamDefaultControllerError(
-        aCx, mTeeState->Branch2()->DefaultController(), aReason, aRv);
-    if (aRv.Failed()) {
+        aCx, mTeeState->Branch2()->DefaultController(), aReason, rv);
+    if (rv.MaybeSetPendingException(
+            aCx, "ReadableStreamDefaultTee Error During Promise Rejection")) {
       return;
     }
 
@@ -848,37 +790,6 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   aResult.AppendElement(teeState->Branch2());
 }
 
-// https://streams.spec.whatwg.org/#rs-pipe-to
-already_AddRefed<Promise> ReadableStream::PipeTo(
-    WritableStream& aDestination, const StreamPipeOptions& aOptions,
-    ErrorResult& aRv) {
-  // Step 1. If !IsReadableStreamLocked(this) is true, return a promise rejected
-  // with a TypeError exception.
-  if (IsReadableStreamLocked(this)) {
-    aRv.ThrowTypeError("Cannot pipe from a locked stream.");
-    return nullptr;
-  }
-
-  // Step 2. If !IsWritableStreamLocked(destination) is true, return a promise
-  //         rejected with a TypeError exception.
-  if (IsWritableStreamLocked(&aDestination)) {
-    aRv.ThrowTypeError("Can not pipe to a locked stream.");
-    return nullptr;
-  }
-
-  // Step 3. Let signal be options["signal"] if it exists, or undefined
-  // otherwise.
-  RefPtr<AbortSignal> signal =
-      aOptions.mSignal.WasPassed() ? &aOptions.mSignal.Value() : nullptr;
-
-  // Step 4. Return ! ReadableStreamPipeTo(this, destination,
-  // options["preventClose"], options["preventAbort"], options["preventCancel"],
-  // signal).
-  return ReadableStreamPipeTo(this, &aDestination, aOptions.mPreventClose,
-                              aOptions.mPreventAbort, aOptions.mPreventCancel,
-                              signal, aRv);
-}
-
 // https://streams.spec.whatwg.org/#readable-stream-tee
 MOZ_CAN_RUN_SCRIPT
 static void ReadableStreamTee(JSContext* aCx, ReadableStream* aStream,
@@ -936,26 +847,8 @@ already_AddRefed<ReadableStream> CreateReadableByteStream(
   // Step 4. Perform ? SetUpReadableByteStreamController(stream, controller,
   // startAlgorithm, pullAlgorithm, cancelAlgorithm, 0, undefined).
   SetUpReadableByteStreamController(aCx, stream, controller, aStartAlgorithm,
-                                    aPullAlgorithm, aCancelAlgorithm, nullptr,
-                                    0, mozilla::Nothing(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Return stream.
-  return stream.forget();
-}
-
-already_AddRefed<ReadableStream> ReadableStream::Create(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
-  RefPtr<ReadableStream> stream = new ReadableStream(aGlobal);
-
-  stream->SetNativeUnderlyingSource(aUnderlyingSource);
-
-  SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
-      aCx, stream, aUnderlyingSource, aRv);
-
+                                    aPullAlgorithm, aCancelAlgorithm, 0,
+                                    mozilla::Nothing(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -964,4 +857,5 @@ already_AddRefed<ReadableStream> ReadableStream::Create(
   return stream.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

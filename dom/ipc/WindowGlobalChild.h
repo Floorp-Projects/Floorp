@@ -187,8 +187,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
       const dom::sessionstore::DocShellRestoreState& aState,
       RestoreDocShellStateResolver&& aResolve);
 
-  // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvRestoreTabContent(
+  mozilla::ipc::IPCResult RecvRestoreTabContent(
       dom::SessionStoreRestoreData* aData,
       RestoreTabContentResolver&& aResolve);
 

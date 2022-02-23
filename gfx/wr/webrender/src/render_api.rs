@@ -19,7 +19,7 @@ use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageK
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
 use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent};
 use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
-use crate::api::{SampledScrollOffset, TileSize, NotificationRequest, DebugFlags};
+use crate::api::{TileSize, NotificationRequest, DebugFlags};
 use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
 use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation, RenderReasons};
 use crate::api::DEFAULT_TILE_SIZE;
@@ -325,15 +325,19 @@ impl Transaction {
         );
     }
 
-    /// Set multiple scroll offsets with generations to the node identified by
-    /// the given external scroll id, the scroll offsets are relative to the
-    /// pre-scrolled offset for the scrolling layer.
-    pub fn set_scroll_offsets(
+    /// Scrolls the node identified by the given external scroll id to the
+    /// given scroll position, relative to the pre-scrolled offset for the
+    /// scrolling layer. That is, providing an origin of (0,0) will reset
+    /// any WR-side scrolling and just render the display items at the
+    /// pre-scrolled offsets as provided in the display list. Larger `origin`
+    /// values will cause the layer to be scrolled further towards the end of
+    /// the scroll range.
+    pub fn set_scroll_offset(
         &mut self,
         id: ExternalScrollId,
-        sampled_scroll_offsets: Vec<SampledScrollOffset>,
+        offset: LayoutVector2D,
     ) {
-        self.frame_ops.push(FrameMsg::SetScrollOffsets(id, sampled_scroll_offsets));
+        self.frame_ops.push(FrameMsg::SetScrollOffset(id, offset));
     }
 
     /// Set the current quality / performance settings for this document.
@@ -793,7 +797,7 @@ pub enum FrameMsg {
     ///
     RequestHitTester(Sender<Arc<dyn ApiHitTester>>),
     ///
-    SetScrollOffsets(ExternalScrollId, Vec<SampledScrollOffset>),
+    SetScrollOffset(ExternalScrollId, LayoutVector2D),
     ///
     ResetDynamicProperties,
     ///
@@ -823,7 +827,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::UpdateEpoch(..) => "FrameMsg::UpdateEpoch",
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
             FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
-            FrameMsg::SetScrollOffsets(..) => "FrameMsg::SetScrollOffsets",
+            FrameMsg::SetScrollOffset(..) => "FrameMsg::SetScrollOffset",
             FrameMsg::ResetDynamicProperties => "FrameMsg::ResetDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::AppendDynamicTransformProperties(..) => "FrameMsg::AppendDynamicTransformProperties",

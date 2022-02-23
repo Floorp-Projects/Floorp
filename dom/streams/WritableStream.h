@@ -29,13 +29,13 @@ class Promise;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
-class WritableStream : public nsISupports, public nsWrapperCache {
+class WritableStream final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WritableStream)
 
  protected:
-  virtual ~WritableStream();
+  ~WritableStream();
 
  public:
   explicit WritableStream(const GlobalObject& aGlobal);
@@ -193,9 +193,6 @@ MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> WritableStreamClose(
 
 extern already_AddRefed<Promise> WritableStreamAddWriteRequest(
     WritableStream* aStream, ErrorResult& aRv);
-
-extern already_AddRefed<WritableStreamDefaultWriter>
-AcquireWritableStreamDefaultWriter(WritableStream* aStream, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 

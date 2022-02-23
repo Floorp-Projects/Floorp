@@ -145,6 +145,4 @@ add_task(async function() {
   ok(verifyURL(dataurl), "data URL is valid");
   widget.setCssValue(dataurl);
   is(widget.getCssValue(), dataurl, "setCssValue should not mangle data urls");
-
-  widget.destroy();
 });

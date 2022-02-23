@@ -159,11 +159,12 @@ fn gen_insert<V: Vector<u64>>(n: u64, b: &mut Bencher) {
 
     b.iter(|| {
         let mut vec = V::new();
-        // Always insert at position 0 so that we are subject to shifts of
-        // many different lengths.
+        // Add one element, with each iteration we insert one before the end.
+        // This means that we benchmark the insertion operation and not the
+        // time it takes to `ptr::copy` the data.
         vec.push(0);
         for x in 0..n {
-            insert_noinline(&mut vec, 0, x);
+            insert_noinline(&mut vec, x as _, x);
         }
         vec
     });
@@ -178,8 +179,8 @@ fn gen_remove<V: Vector<u64>>(n: usize, b: &mut Bencher) {
     b.iter(|| {
         let mut vec = V::from_elem(0, n as _);
 
-        for _ in 0..n {
-            remove_noinline(&mut vec, 0);
+        for x in (0..n - 1).rev() {
+            remove_noinline(&mut vec, x);
         }
     });
 }

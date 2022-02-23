@@ -2161,16 +2161,14 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
   auto* fontGroup = fm->GetThebesFontGroup();
   auto appPerDev = aTextFrame->PresContext()->AppUnitsPerDevPixel();
   const auto& hyphenateChar = aTextFrame->StyleText()->mHyphenateCharacter;
-  gfx::ShapedTextFlags flags =
-      nsLayoutUtils::GetTextRunOrientFlagsForStyle(aTextFrame->Style());
   if (hyphenateChar.IsAuto()) {
-    return fontGroup->MakeHyphenTextRun(dt, flags, appPerDev);
+    return fontGroup->MakeHyphenTextRun(dt, appPerDev);
   }
   auto* missingFonts = aTextFrame->PresContext()->MissingFontRecorder();
   const NS_ConvertUTF8toUTF16 hyphenStr(hyphenateChar.AsString().AsString());
   return fontGroup->MakeTextRun(hyphenStr.BeginReading(), hyphenStr.Length(),
-                                dt, appPerDev, flags, nsTextFrameUtils::Flags(),
-                                missingFonts);
+                                dt, appPerDev, gfx::ShapedTextFlags(),
+                                nsTextFrameUtils::Flags(), missingFonts);
 }
 
 already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
@@ -3304,10 +3302,6 @@ nsTextFrame::PropertyProvider::PropertyProvider(
   NS_ASSERTION(mTextRun, "Textrun not initialized!");
 }
 
-gfx::ShapedTextFlags nsTextFrame::PropertyProvider::GetShapedTextFlags() const {
-  return nsLayoutUtils::GetTextRunOrientFlagsForStyle(mFrame->Style());
-}
-
 already_AddRefed<DrawTarget> nsTextFrame::PropertyProvider::GetDrawTarget()
     const {
   return CreateReferenceDrawTarget(GetFrame());
@@ -3569,8 +3563,7 @@ static gfxFloat AdvanceToNextTab(gfxFloat aX, gfxFloat aTabWidth,
                                  gfxFloat aMinAdvance) {
   // Advance aX to the next multiple of aTabWidth. We must advance
   // by at least aMinAdvance.
-  gfxFloat nextPos = aX + aMinAdvance;
-  return aTabWidth > 0.0 ? ceil(nextPos / aTabWidth) * aTabWidth : nextPos;
+  return ceil((aX + aMinAdvance) / aTabWidth) * aTabWidth;
 }
 
 void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
@@ -7054,25 +7047,20 @@ void nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
   if (aParams.drawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
-    DrawTextRunParams params = aParams;
-    params.provider = nullptr;
-    params.advanceWidth = nullptr;
     RefPtr<gfxTextRun> hyphenTextRun = GetHyphenTextRun(this, nullptr);
     if (hyphenTextRun) {
-      gfx::Point p(aTextBaselinePt);
-      bool vertical = GetWritingMode().IsVertical();
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
-      float shift =
+      float hyphenBaselineX =
+          aTextBaselinePt.x +
           mTextRun->GetDirection() * (*aParams.advanceWidth) -
           (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth() : 0);
-      if (vertical) {
-        p.y += shift;
-      } else {
-        p.x += shift;
-      }
-      ::DrawTextRun(hyphenTextRun.get(), p, Range(hyphenTextRun.get()), params,
-                    this);
+      DrawTextRunParams params = aParams;
+      params.provider = nullptr;
+      params.advanceWidth = nullptr;
+      ::DrawTextRun(hyphenTextRun.get(),
+                    gfx::Point(hyphenBaselineX, aTextBaselinePt.y),
+                    Range(hyphenTextRun.get()), params, this);
     }
   }
 }
@@ -10304,9 +10292,8 @@ void nsTextFrame::ToCString(nsCString& aBuf) const {
     return;
   }
 
-  const int32_t length = GetContentEnd() - mContentOffset;
-  if (length <= 0) {
-    // Negative lengths are possible during invalidation.
+  const uint32_t contentLength = AssertedCast<uint32_t>(GetContentLength());
+  if (0 == contentLength) {
     return;
   }
 
@@ -10494,7 +10481,7 @@ uint32_t nsTextFrame::CountGraphemeClusters() const {
   nsAutoString content;
   frag->AppendTo(content, AssertedCast<uint32_t>(GetContentOffset()),
                  AssertedCast<uint32_t>(GetContentLength()));
-  return unicode::CountGraphemeClusters(content);
+  return unicode::CountGraphemeClusters(content.Data(), content.Length());
 }
 
 bool nsTextFrame::HasNonSuppressedText() const {

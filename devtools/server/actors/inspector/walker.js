@@ -25,7 +25,6 @@ loader.lazyRequireGetter(
     "isDirectShadowHostChild",
     "isMarkerPseudoElement",
     "isNativeAnonymous",
-    "isFrameBlockedByCSP",
     "isFrameWithChildTarget",
     "isShadowHost",
     "isShadowRoot",
@@ -723,8 +722,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       isShadowHost(rawNode) ||
       rawNode.nodeType != Node.ELEMENT_NODE ||
       rawNode.children.length > 0 ||
-      isFrameWithChildTarget(this.targetActor, rawNode) ||
-      isFrameBlockedByCSP(rawNode)
+      isFrameWithChildTarget(this.targetActor, rawNode)
     ) {
       return undefined;
     }
@@ -914,10 +912,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   // eslint-disable-next-line complexity
   _getChildren: function(node, options = {}) {
     if (isNodeDead(node)) {
-      return { hasFirst: true, hasLast: true, nodes: [] };
-    }
-
-    if (isFrameBlockedByCSP(node.rawNode)) {
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
 

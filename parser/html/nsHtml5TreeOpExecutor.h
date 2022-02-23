@@ -111,10 +111,10 @@ class nsHtml5TreeOpExecutor final
    */
   NS_IMETHOD WillParse() override;
 
-  NS_IMETHOD WillBuildModel(nsDTDMode /* unused */) override {
-    return WillBuildModel();
-  }
-  nsresult WillBuildModel();
+  /**
+   *
+   */
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
 
   /**
    * Emits EOF.
@@ -129,7 +129,7 @@ class nsHtml5TreeOpExecutor final
   /**
    * Unimplemented. For interface compat only.
    */
-  void WillResume() override;
+  NS_IMETHOD WillResume() override;
 
   virtual void InitialTranslationCompleted() override;
 

@@ -62,7 +62,7 @@ function debugBtn(onClick, type, className, tooltip) {
 }
 
 const mdnLink =
-  "https://firefox-source-docs.mozilla.org/devtools-user/debugger/using_the_debugger_map_scopes_feature/";
+  "https://developer.mozilla.org/docs/Tools/Debugger/Using_the_Debugger_map_scopes_feature?utm_source=devtools&utm_medium=debugger-map-scopes";
 
 class SecondaryPanes extends Component {
   constructor(props) {

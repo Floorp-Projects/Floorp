@@ -55,14 +55,13 @@ async function breakpointScopes(
 ) {
   if (!ACTIVE_TARGETS.has(target)) return;
 
-  const extension = fixture == "typescript-classes" ? "ts" : "js";
-  const url = `${target}://./${fixture}/input.${extension}`;
+  const filename = `${target}://./${fixture}/input.`;
   const fnName = pairToFnName(target, fixture);
 
   await invokeWithBreakpoint(
     dbg,
     fnName,
-    url,
+    filename,
     { line, column },
     async () => {
       await assertScopes(dbg, scopes);

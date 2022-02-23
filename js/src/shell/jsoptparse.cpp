@@ -531,9 +531,6 @@ MultiStringRange OptionParser::getMultiStringArg(const char* name) const {
 
 /* Option builders */
 
-// Use vanilla malloc for allocations. See OptionAllocPolicy.
-JS_DECLARE_NEW_METHODS(opt_new, malloc, static MOZ_ALWAYS_INLINE)
-
 bool OptionParser::addIntOption(char shortflag, const char* longflag,
                                 const char* metavar, const char* help,
                                 int defaultValue) {
@@ -541,7 +538,7 @@ bool OptionParser::addIntOption(char shortflag, const char* longflag,
     return false;
   }
   IntOption* io =
-      opt_new<IntOption>(shortflag, longflag, help, metavar, defaultValue);
+      js_new<IntOption>(shortflag, longflag, help, metavar, defaultValue);
   if (!io) {
     return false;
   }
@@ -554,7 +551,7 @@ bool OptionParser::addBoolOption(char shortflag, const char* longflag,
   if (!options.reserve(options.length() + 1)) {
     return false;
   }
-  BoolOption* bo = opt_new<BoolOption>(shortflag, longflag, help);
+  BoolOption* bo = js_new<BoolOption>(shortflag, longflag, help);
   if (!bo) {
     return false;
   }
@@ -567,7 +564,7 @@ bool OptionParser::addStringOption(char shortflag, const char* longflag,
   if (!options.reserve(options.length() + 1)) {
     return false;
   }
-  StringOption* so = opt_new<StringOption>(shortflag, longflag, help, metavar);
+  StringOption* so = js_new<StringOption>(shortflag, longflag, help, metavar);
   if (!so) {
     return false;
   }
@@ -581,7 +578,7 @@ bool OptionParser::addMultiStringOption(char shortflag, const char* longflag,
     return false;
   }
   MultiStringOption* mso =
-      opt_new<MultiStringOption>(shortflag, longflag, help, metavar);
+      js_new<MultiStringOption>(shortflag, longflag, help, metavar);
   if (!mso) {
     return false;
   }
@@ -595,7 +592,7 @@ bool OptionParser::addOptionalStringArg(const char* name, const char* help) {
   if (!arguments.reserve(arguments.length() + 1)) {
     return false;
   }
-  StringOption* so = opt_new<StringOption>(1, name, help, (const char*)nullptr);
+  StringOption* so = js_new<StringOption>(1, name, help, (const char*)nullptr);
   if (!so) {
     return false;
   }
@@ -610,7 +607,7 @@ bool OptionParser::addOptionalMultiStringArg(const char* name,
     return false;
   }
   MultiStringOption* mso =
-      opt_new<MultiStringOption>(1, name, help, (const char*)nullptr);
+      js_new<MultiStringOption>(1, name, help, (const char*)nullptr);
   if (!mso) {
     return false;
   }

@@ -181,10 +181,13 @@ void RenderRootStateManager::UpdateResources(
     wr::IpcResourceUpdateQueue& aResources) {
   WrBridge()->UpdateResources(aResources);
 }
+void RenderRootStateManager::AddPipelineIdForAsyncCompositable(
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
+  WrBridge()->AddPipelineIdForAsyncCompositable(aPipelineId, aHandle);
+}
 void RenderRootStateManager::AddPipelineIdForCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    CompositableHandleOwner aOwner) {
-  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle, aOwner);
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
+  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle);
 }
 void RenderRootStateManager::RemovePipelineIdForCompositable(
     const wr::PipelineId& aPipelineId) {

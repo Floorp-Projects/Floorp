@@ -661,7 +661,7 @@ void IMEHandler::AppendInputScopeFromInputmode(const nsAString& aInputmode,
     return;
   }
   if (aInputmode.EqualsLiteral("search")) {
-    if (NeedsSearchInputScope() && !aScopes.Contains(IS_SEARCH)) {
+    if (!aScopes.Contains(IS_SEARCH)) {
       aScopes.AppendElement(IS_SEARCH);
     }
     return;
@@ -677,9 +677,7 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
     return;
   }
   if (aHTMLInputType.EqualsLiteral("search")) {
-    if (NeedsSearchInputScope()) {
-      aScopes.AppendElement(IS_SEARCH);
-    }
+    aScopes.AppendElement(IS_SEARCH);
     return;
   }
   if (aHTMLInputType.EqualsLiteral("email")) {
@@ -715,13 +713,6 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
     aScopes.AppendElement(IS_NUMBER);
     return;
   }
-}
-
-// static
-bool IMEHandler::NeedsSearchInputScope() {
-  return !(Preferences::GetBool(
-               "intl.tsf.hack.atok.search_input_scope_disabled", false) &&
-           TSFTextStore::IsATOKActive());
 }
 
 // static

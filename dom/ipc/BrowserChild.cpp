@@ -38,7 +38,6 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -313,6 +312,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mMaxTouchPoints(0),
       mLayersId{0},
       mEffectsInfo{EffectsInfo::FullyHidden()},
+      mOrientation(hal::eScreenOrientation_PortraitPrimary),
       mDynamicToolbarMaxHeight(0),
       mUniqueId(aTabId),
       mDidFakeShow(false),
@@ -954,6 +954,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
   aLoadState->URI()->GetSpec(spec);
 
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  MOZ_ASSERT(docShell);
   if (!docShell) {
     NS_WARNING("WebNavigation does not have a docshell");
     return IPC_OK();
@@ -1272,6 +1273,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
   mChromeOffset = aDimensionInfo.chromeOffset();
   MOZ_ASSERT_IF(!IsTopLevel(), mChromeOffset == LayoutDeviceIntPoint());
 
+  mOrientation = aDimensionInfo.orientation();
   SetUnscaledInnerSize(aDimensionInfo.size());
   if (!mHasValidInnerSize && aDimensionInfo.size().width != 0 &&
       aDimensionInfo.size().height != 0) {
@@ -2036,7 +2038,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   return IPC_OK();
 }
 
-void BrowserChild::RequestEditCommands(NativeKeyBindingsType aType,
+void BrowserChild::RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
                                        const WidgetKeyboardEvent& aEvent,
                                        nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aCommands.IsEmpty());
@@ -2047,9 +2049,9 @@ void BrowserChild::RequestEditCommands(NativeKeyBindingsType aType,
   }
 
   switch (aType) {
-    case NativeKeyBindingsType::SingleLineEditor:
-    case NativeKeyBindingsType::MultiLineEditor:
-    case NativeKeyBindingsType::RichTextEditor:
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid native key bindings type");
@@ -2058,8 +2060,7 @@ void BrowserChild::RequestEditCommands(NativeKeyBindingsType aType,
   // Don't send aEvent to the parent process directly because it'll be marked
   // as posted to remote process.
   WidgetKeyboardEvent localEvent(aEvent);
-  SendRequestNativeKeyBindings(static_cast<uint32_t>(aType), localEvent,
-                               &aCommands);
+  SendRequestNativeKeyBindings(aType, localEvent, &aCommands);
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(

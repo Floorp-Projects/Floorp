@@ -266,17 +266,12 @@ JS_PUBLIC_API void JS::SkipZoneForGC(JSContext* cx, Zone* zone) {
   zone->unscheduleGC();
 }
 
-static inline void CheckGCOptions(JS::GCOptions options) {
-  MOZ_ASSERT(options == JS::GCOptions::Normal ||
-             options == JS::GCOptions::Shrink ||
-             options == JS::GCOptions::Shutdown);
-}
-
 JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx, JS::GCOptions options,
                                         GCReason reason) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  CheckGCOptions(options);
+  MOZ_ASSERT(options == JS::GCOptions::Normal ||
+             options == JS::GCOptions::Shrink);
 
   cx->runtime()->gc.gc(options, reason);
 
@@ -284,21 +279,21 @@ JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx, JS::GCOptions options,
 }
 
 JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx, JS::GCOptions options,
-                                          GCReason reason,
-                                          const js::SliceBudget& budget) {
+                                          GCReason reason, int64_t millis) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  CheckGCOptions(options);
+  MOZ_ASSERT(options == JS::GCOptions::Normal ||
+             options == JS::GCOptions::Shrink);
 
-  cx->runtime()->gc.startGC(options, reason, budget);
+  cx->runtime()->gc.startGC(options, reason, millis);
 }
 
 JS_PUBLIC_API void JS::IncrementalGCSlice(JSContext* cx, GCReason reason,
-                                          const js::SliceBudget& budget) {
+                                          int64_t millis) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  cx->runtime()->gc.gcSlice(reason, budget);
+  cx->runtime()->gc.gcSlice(reason, millis);
 }
 
 JS_PUBLIC_API bool JS::IncrementalGCHasForegroundWork(JSContext* cx) {

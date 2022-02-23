@@ -20,7 +20,7 @@ add_task(async function() {
   );
   const {
     getHeadersURL,
-  } = require("devtools/client/netmonitor/src/utils/doc-utils");
+  } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 
   store.dispatch(Actions.batchEnable(false));
 

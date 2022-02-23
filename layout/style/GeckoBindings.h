@@ -602,7 +602,8 @@ mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
 float Gecko_MediaFeatures_GetDevicePixelRatio(const mozilla::dom::Document*);
 
 bool Gecko_MediaFeatures_IsResourceDocument(const mozilla::dom::Document*);
-bool Gecko_MediaFeatures_MatchesPlatform(mozilla::StylePlatform);
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
+    const mozilla::dom::Document*);
 
 void Gecko_GetSafeAreaInsets(const nsPresContext*, float*, float*, float*,
                              float*);

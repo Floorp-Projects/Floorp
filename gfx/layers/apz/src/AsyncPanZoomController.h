@@ -43,10 +43,6 @@ class SharedMemoryBasic;
 
 }  // namespace ipc
 
-namespace wr {
-struct SampledScrollOffset;
-}  // namespace wr
-
 namespace layers {
 
 class AsyncDragMetrics;
@@ -1095,10 +1091,6 @@ class AsyncPanZoomController {
   // Accessing mScrollPayload needs to be protected by mRecursiveMutex
   Maybe<CompositionPayload> mScrollPayload;
 
-  // Representing sampled scroll offset generation, this value is bumped up
-  // every time this APZC sampled new scroll offset.
-  APZScrollGeneration mScrollGeneration;
-
   friend class Axis;
 
  public:
@@ -1180,16 +1172,10 @@ class AsyncPanZoomController {
    * When only the eLayout component is requested, the returned translation
    * should really be a LayerPoint, rather than a ParentLayerPoint, as it will
    * not be scaled by the asynchronous zoom.
-   * |aMode| specifies whether the async transform is queried for the purpose of
-   * hit testing (eHitTesting) in which case the latest values from |Metrics()|
-   * are used, or for compositing (eCompositing) in which case a sampled value
-   * from |mSampledState| is used.
-   * |aSampleIndex| specifies which sample in |mSampledState| to use.
    */
   AsyncTransform GetCurrentAsyncTransform(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = LayoutAndVisual,
-      std::size_t aSampleIndex = 0) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the same transform as GetCurrentAsyncTransform(), but includes
@@ -1197,10 +1183,7 @@ class AsyncPanZoomController {
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = LayoutAndVisual,
-      std::size_t aSampleIndex = 0) const;
-
-  AutoTArray<wr::SampledScrollOffset, 2> GetSampledScrollOffsets() const;
+      AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized
@@ -1260,15 +1243,15 @@ class AsyncPanZoomController {
    * store the required value from the last time it was sampled by calling
    * SampleCompositedAsyncTransform(), depending on who is asking.
    */
-  CSSRect GetEffectiveLayoutViewport(AsyncTransformConsumer aMode,
-                                     const RecursiveMutexAutoLock& aProofOfLock,
-                                     std::size_t aSampleIndex = 0) const;
-  CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode,
-                                    const RecursiveMutexAutoLock& aProofOfLock,
-                                    std::size_t aSampleIndex = 0) const;
+  CSSRect GetEffectiveLayoutViewport(
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
+  CSSPoint GetEffectiveScrollOffset(
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
   CSSToParentLayerScale GetEffectiveZoom(
-      AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
-      std::size_t aSampleIndex = 0) const;
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
 
   /**
    * Returns the visible portion of the content scrolled by this APZC, in

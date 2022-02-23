@@ -13,8 +13,6 @@ Services.scriptloader.loadSubScript(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -28,8 +26,8 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
 });
 
 registerCleanupFunction(async () => {
-  // Ensure the popup is always closed at the end of each test to avoid
-  // interfering with the next test.
+  // Ensure the Urlbar popup is always closed at the end of a test, to save having
+  // to do it within each test.
   await UrlbarTestUtils.promisePopupClose(window);
 });
 

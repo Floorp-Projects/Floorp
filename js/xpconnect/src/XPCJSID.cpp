@@ -116,8 +116,8 @@ static JSObject* GetIDPrototype(JSContext* aCx, const JSClass* aClass) {
                           JS_NewObjectWithGivenProto(aCx, nullptr, idProto));
     RootedObject cidProto(aCx,
                           JS_NewObjectWithGivenProto(aCx, nullptr, idProto));
-    RootedId hasInstance(aCx,
-                         GetWellKnownSymbolKey(aCx, SymbolCode::hasInstance));
+    RootedId hasInstance(
+        aCx, SYMBOL_TO_JSID(GetWellKnownSymbol(aCx, SymbolCode::hasInstance)));
 
     const uint32_t kFlags =
         JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
@@ -516,11 +516,11 @@ static bool IID_NewEnumerate(JSContext* cx, HandleObject obj,
 static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
                         bool* resolvedp) {
   *resolvedp = false;
-  if (!id.isString()) {
+  if (!JSID_IS_STRING(id)) {
     return true;
   }
 
-  JSLinearString* name = id.toLinearString();
+  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
   const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
   for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
     if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {
@@ -537,7 +537,7 @@ static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 
 static bool IID_MayResolve(const JSAtomState& names, jsid id,
                            JSObject* maybeObj) {
-  if (!id.isString()) {
+  if (!JSID_IS_STRING(id)) {
     return false;
   }
 
@@ -547,7 +547,7 @@ static bool IID_MayResolve(const JSAtomState& names, jsid id,
     return true;
   }
 
-  JSLinearString* name = id.toLinearString();
+  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
   const nsXPTInterfaceInfo* info = GetInterfaceInfo(maybeObj);
   for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
     if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {

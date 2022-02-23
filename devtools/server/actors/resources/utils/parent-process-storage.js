@@ -7,10 +7,6 @@
 const { storageTypePool } = require("devtools/server/actors/storage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const {
-  getAllBrowsingContextsForContext,
-  isWindowGlobalPartOfContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 
 // ms of delay to throttle updates
 const BATCH_DELAY = 200;
@@ -205,25 +201,23 @@ class ParentProcessStorage {
    * @param {Boolean} isBfCacheNavigation
    */
   async _onNewWindowGlobal(windowGlobal, isBfCacheNavigation) {
-    // Only process WindowGlobals which are related to the debugged scope.
+    // If the watcher is bound to one browser element (i.e. a tab), ignore
+    // windowGlobals related to other browser elements
     if (
-      !isWindowGlobalPartOfContext(
-        windowGlobal,
-        this.watcherActor.sessionContext,
-        { acceptNoWindowGlobal: true, acceptSameProcessIframes: true }
-      )
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      windowGlobal.browsingContext.browserId !=
+        this.watcherActor.sessionContext.browserId
     ) {
       return;
     }
-
-    // Ignore about:blank
+    // ignore about:blank
     if (windowGlobal.documentURI.displaySpec === "about:blank") {
       return;
     }
 
-    // Only process top BrowsingContext (ignore same-process iframe ones)
     const isTopContext =
       windowGlobal.browsingContext.top == windowGlobal.browsingContext;
+
     if (!isTopContext) {
       return;
     }
@@ -234,7 +228,7 @@ class ParentProcessStorage {
     // - target switching is enabled OR bfCacheInParent is enabled, and a bfcache navigation
     //   is performed (See handling of "pageshow" event in DevToolsFrameChild)
     const isNewTargetBeingCreated =
-      this.watcherActor.sessionContext.isServerTargetSwitchingEnabled ||
+      this.watcherActor.isServerTargetSwitchingEnabled ||
       (isBfCacheNavigation && this.isBfcacheInParentEnabled);
 
     if (!isNewTargetBeingCreated) {
@@ -293,7 +287,7 @@ class StorageActorMock extends EventEmitter {
     // We only need to react to those events here if target switching is not enabled; when
     // it is enabled, ParentProcessStorage will spawn a whole new actor which will allow
     // the client to get the information it needs.
-    if (!this.watcherActor.sessionContext.isServerTargetSwitchingEnabled) {
+    if (!this.watcherActor.isServerTargetSwitchingEnabled) {
       this._offPageShow = watcherActor.on(
         "bf-cache-navigation-pageshow",
         ({ windowGlobal }) => {
@@ -341,18 +335,14 @@ class StorageActorMock extends EventEmitter {
   }
 
   get windows() {
-    return (
-      getAllBrowsingContextsForContext(this.watcherActor.sessionContext, {
-        acceptSameProcessIframes: true,
+    // NOTE: we are removing about:blank because we might get them for iframes
+    // whose src attribute has not been set yet.
+    return this.getAllBrowsingContexts()
+      .map(x => {
+        const uri = x.currentWindowGlobal.documentURI;
+        return { location: uri };
       })
-        .map(x => {
-          const uri = x.currentWindowGlobal.documentURI;
-          return { location: uri };
-        })
-        // NOTE: we are removing about:blank because we might get them for iframes
-        // whose src attribute has not been set yet.
-        .filter(x => x.location.displaySpec !== "about:blank")
-    );
+      .filter(x => x.location.displaySpec !== "about:blank");
   }
 
   // NOTE: this uri argument is not a real window.Location, but the
@@ -363,8 +353,8 @@ class StorageActorMock extends EventEmitter {
       case "file":
       case "javascript":
       case "resource":
-        return uri.displaySpec;
       case "moz-extension":
+        return uri.displaySpec;
       case "http":
       case "https":
         return uri.prePath;
@@ -374,11 +364,27 @@ class StorageActorMock extends EventEmitter {
     }
   }
 
+  getAllBrowsingContexts() {
+    if (this.watcherActor.sessionContext.type == "browser-element") {
+      const browsingContext = this.watcherActor.browserElement.browsingContext;
+      return browsingContext
+        .getAllBrowsingContextsInSubtree()
+        .filter(x => !!x.currentWindowGlobal);
+    } else if (this.watcherActor.sessionContext.type == "webextension") {
+      return [
+        BrowsingContext.get(
+          this.watcherActor.sessionContext.addonBrowsingContextID
+        ),
+      ];
+    }
+    throw new Error(
+      "Unsupported session context type=" +
+        this.watcherActor.sessionContext.type
+    );
+  }
+
   getWindowFromHost(host) {
-    const hostBrowsingContext = getAllBrowsingContextsForContext(
-      this.watcherActor.sessionContext,
-      { acceptSameProcessIframes: true }
-    ).find(x => {
+    const hostBrowsingContext = this.getAllBrowsingContexts().find(x => {
       const hostName = this.getHostName(x.currentWindowGlobal.documentURI);
       return hostName === host;
     });
@@ -404,37 +410,31 @@ class StorageActorMock extends EventEmitter {
    * Event handler for any docshell update. This lets us figure out whenever
    * any new window is added, or an existing window is removed.
    */
-  async observe(windowGlobal, topic) {
-    // Only process WindowGlobals which are related to the debugged scope.
+  async observe(subject, topic) {
+    // If the watcher is bound to one browser element (i.e. a tab), ignore
+    // updates related to other browser elements
     if (
-      !isWindowGlobalPartOfContext(
-        windowGlobal,
-        this.watcherActor.sessionContext,
-        { acceptNoWindowGlobal: true, acceptSameProcessIframes: true }
-      )
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      subject.browsingContext.browserId !=
+        this.watcherActor.sessionContext.browserId
     ) {
       return;
     }
-
-    // Ignore about:blank
-    if (windowGlobal.documentURI.displaySpec === "about:blank") {
+    // ignore about:blank
+    if (subject.documentURI.displaySpec === "about:blank") {
       return;
     }
 
     // Only notify about remote iframe windows when JSWindowActor based targets are enabled
     // We will create a new StorageActor for the top level tab documents when server side target
     // switching is enabled
-    const isTopContext =
-      windowGlobal.browsingContext.top == windowGlobal.browsingContext;
-    if (
-      isTopContext &&
-      this.watcherActor.sessionContext.isServerTargetSwitchingEnabled
-    ) {
+    const isTopContext = subject.browsingContext.top == subject.browsingContext;
+    if (isTopContext && this.watcherActor.isServerTargetSwitchingEnabled) {
       return;
     }
 
     // emit window-wready and window-destroyed events when needed
-    const windowMock = { location: windowGlobal.documentURI };
+    const windowMock = { location: subject.documentURI };
     if (topic === "window-global-created") {
       this.emit("window-ready", windowMock);
     } else if (topic === "window-global-destroyed") {

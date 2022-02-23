@@ -21,11 +21,4 @@ add_task(async function() {
     text: "size: 1",
     expression: "_this.fields;"
   });
-
-  info("Verify that the file is flagged as a React module");
-  const sourceTab = findElementWithSelector(dbg, ".source-tab.active");
-  ok(
-    sourceTab.querySelector(".source-icon.react"),
-    "Source tab has a React icon"
-  );
 });

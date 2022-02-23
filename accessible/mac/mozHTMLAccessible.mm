@@ -27,13 +27,16 @@ using namespace mozilla::a11y;
     proxy->Title(title);
   }
 
-  title.CompressWhitespace();
-
   return nsCocoaUtils::ToNSString(title);
 }
 
 - (id)moxValue {
-  GroupPos groupPos = mGeckoAccessible->GroupPosition();
+  GroupPos groupPos;
+  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
+    groupPos = acc->GroupPosition();
+  } else if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
+    groupPos = proxy->GroupPosition();
+  }
 
   return [NSNumber numberWithInt:groupPos.level];
 }
@@ -48,7 +51,11 @@ using namespace mozilla::a11y;
 
 - (NSURL*)moxURL {
   nsAutoString value;
-  mGeckoAccessible->Value(value);
+  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
+    acc->Value(value);
+  } else if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
+    proxy->Value(value);
+  }
 
   NSString* urlString = value.IsEmpty() ? nil : nsCocoaUtils::ToNSString(value);
   if (!urlString) return nil;

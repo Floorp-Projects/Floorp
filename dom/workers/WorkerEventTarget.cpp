@@ -8,6 +8,8 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 #include "mozilla/dom/ReferrerInfo.h"
 
 namespace mozilla {

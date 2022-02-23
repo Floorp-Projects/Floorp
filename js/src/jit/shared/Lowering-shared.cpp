@@ -306,7 +306,8 @@ void LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir,
   }
 }
 
-void LIRGeneratorShared::assignWasmSafepoint(LInstruction* ins) {
+void LIRGeneratorShared::assignWasmSafepoint(LInstruction* ins,
+                                             MInstruction* mir) {
   MOZ_ASSERT(!osiPoint_);
   MOZ_ASSERT(!ins->safepoint());
 

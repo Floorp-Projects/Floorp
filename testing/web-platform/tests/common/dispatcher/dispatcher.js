@@ -106,7 +106,7 @@ class RemoteContext {
   //   `execute_script()` returns a rejected Promise with the error's
   //   `message`.
   //   Note that currently the type of error (e.g. DOMException) is not
-  //   preserved, except for `TypeError`.
+  //   preserved.
   // The values should be able to be serialized by JSON.stringify().
   async execute_script(fn, args) {
     const receiver = token();
@@ -117,9 +117,6 @@ class RemoteContext {
     }
 
     // exception
-    if (response.name === 'TypeError') {
-      throw new TypeError(response.value);
-    }
     throw new Error(response.value);
   }
 
@@ -183,7 +180,6 @@ class Executor {
       } catch(e) {
         response = JSON.stringify({
           status: 'exception',
-          name: e.name,
           value: e.message
         });
       }

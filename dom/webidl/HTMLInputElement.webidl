@@ -184,8 +184,8 @@ partial interface HTMLInputElement {
   AutocompleteInfo? getAutocompleteInfo();
 
   [ChromeOnly]
-  // The reveal password state for a type=password control.
-  attribute boolean revealPassword;
+  // The show/hide password state for a type=password control.
+  attribute boolean showPassword;
 };
 
 interface mixin MozEditableElement {

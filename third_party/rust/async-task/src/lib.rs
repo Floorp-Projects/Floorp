@@ -82,7 +82,7 @@ mod task;
 mod utils;
 
 pub use crate::runnable::{spawn, spawn_unchecked, Runnable};
-pub use crate::task::{FallibleTask, Task};
+pub use crate::task::Task;
 
 #[cfg(feature = "std")]
 pub use crate::runnable::spawn_local;

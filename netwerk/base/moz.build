@@ -323,8 +323,4 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "/xpcom/base",
     ]
 
-GeneratedFile(
-    "ascii_pac_utils.inc", script="makecppstring.py", inputs=["ascii_pac_utils.js"]
-)
-
 REQUIRES_UNIFIED_BUILD = True

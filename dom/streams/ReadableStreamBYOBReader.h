@@ -18,14 +18,17 @@
 #include "nsWrapperCache.h"
 #include "mozilla/LinkedList.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class Promise;
 class ReadableStream;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
                                        public nsWrapperCache {
@@ -41,10 +44,12 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   bool IsDefault() override { return false; };
   bool IsBYOB() override { return true; }
   ReadableStreamDefaultReader* AsDefault() override {
-    MOZ_CRASH("Should have verified IsDefault first");
+    MOZ_CRASH("Should have verified IsDefaultFirst");
     return nullptr;
   }
   ReadableStreamBYOBReader* AsBYOB() override { return this; }
+
+  nsIGlobalObject* GetParentObject() const { return nullptr; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -62,7 +67,7 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   }
 
  private:
-  ~ReadableStreamBYOBReader() override = default;
+  virtual ~ReadableStreamBYOBReader() = default;
 
   LinkedList<RefPtr<ReadIntoRequest>> mReadIntoRequests = {};
 };
@@ -74,14 +79,7 @@ MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
     JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,
     ReadIntoRequest* aReadIntoRequest, ErrorResult& aRv);
 
-void ReadableStreamBYOBReaderErrorReadIntoRequests(
-    JSContext* aCx, ReadableStreamBYOBReader* aReader,
-    JS::Handle<JS::Value> aError, ErrorResult& aRv);
-
-void ReadableStreamBYOBReaderRelease(JSContext* aCx,
-                                     ReadableStreamBYOBReader* aReader,
-                                     ErrorResult& aRv);
-
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_ReadableStreamBYOBReader_h

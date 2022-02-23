@@ -88,10 +88,10 @@ impl QpackData {
     }
 
     pub fn read(&mut self, r: usize) {
-        assert!(
-            r <= self.buf.len(),
-            "want to set more bytes read than remain in the buffer."
-        );
+        if r > self.buf.len() {
+            panic!("want to set more byte read than remaing in the buffer.");
+        }
+
         self.buf = self.buf.split_off(r);
     }
 }

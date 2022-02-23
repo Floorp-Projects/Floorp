@@ -26,6 +26,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/webgpu/WebGPUChild.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "mozilla/Telemetry.h"
 #include "gfxConfig.h"
@@ -85,7 +86,12 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mFwdTransactionId(0),
       mThread(NS_GetCurrentThread()),
       mProcessToken(0),
-      mSectionAllocator(nullptr) {
+      mSectionAllocator(nullptr),
+      mPaintLock("CompositorBridgeChild.mPaintLock"),
+      mTotalAsyncPaints(0),
+      mIsDelayingForAsyncPaints(false),
+      mSlowFlushCount(0),
+      mTotalFlushCount(0) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -174,6 +180,12 @@ void CompositorBridgeChild::Destroy() {
   ManagedPAPZChild(apzChildren);
   for (PAPZChild* child : apzChildren) {
     Unused << child->SendDestroy();
+  }
+
+  AutoTArray<PWebGPUChild*, 16> webGPUChildren;
+  ManagedPWebGPUChild(webGPUChildren);
+  for (PWebGPUChild* child : webGPUChildren) {
+    Unused << child->SendShutdown();
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
@@ -329,8 +341,20 @@ void CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
     gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
   }
 
-  mCanSend = false;
-  mActorDestroyed = true;
+  {
+    // We take the lock to update these fields, since they are read from the
+    // paint thread. We don't need the lock to init them, since that happens
+    // on the main thread before the paint thread can ever grab a reference
+    // to the CompositorBridge object.
+    //
+    // Note that it is useful to take this lock for one other reason: It also
+    // tells us whether GetIPCChannel is safe to call. If we access the IPC
+    // channel within this lock, when mCanSend is true, then we know it has not
+    // been zapped by IPDL.
+    MonitorAutoLock lock(mPaintLock);
+    mCanSend = false;
+    mActorDestroyed = true;
+  }
 
   if (mProcessToken && XRE_IsParentProcess()) {
     GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
@@ -531,10 +555,15 @@ CompositorBridgeChild::GetTileLockAllocator() {
 PTextureChild* CompositorBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
-    wr::MaybeExternalImageId& aExternalImageId) {
+    wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
   PTextureChild* textureChild =
       AllocPTextureChild(aSharedData, aReadLock, aLayersBackend, aFlags,
                          LayersId{0} /* FIXME */, aSerial, aExternalImageId);
+
+  // Do the DOM labeling.
+  if (aTarget) {
+    SetEventTargetForActor(textureChild, aTarget);
+  }
 
   return SendPTextureConstructor(
       textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
@@ -571,6 +600,16 @@ void CompositorBridgeChild::EndCanvasTransaction() {
       mCanvasChild = nullptr;
     }
   }
+}
+
+RefPtr<webgpu::WebGPUChild> CompositorBridgeChild::GetWebGPUChild() {
+  MOZ_ASSERT(gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU));
+  if (!mWebGPUChild) {
+    webgpu::PWebGPUChild* bridge = SendPWebGPUConstructor();
+    mWebGPUChild = static_cast<webgpu::WebGPUChild*>(bridge);
+  }
+
+  return mWebGPUChild;
 }
 
 bool CompositorBridgeChild::AllocUnsafeShmem(
@@ -651,6 +690,18 @@ PWebRenderBridgeChild* CompositorBridgeChild::AllocPWebRenderBridgeChild(
 bool CompositorBridgeChild::DeallocPWebRenderBridgeChild(
     PWebRenderBridgeChild* aActor) {
   WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
+  child->ReleaseIPDLReference();
+  return true;
+}
+
+webgpu::PWebGPUChild* CompositorBridgeChild::AllocPWebGPUChild() {
+  webgpu::WebGPUChild* child = new webgpu::WebGPUChild();
+  child->AddIPDLReference();
+  return child;
+}
+
+bool CompositorBridgeChild::DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor) {
+  webgpu::WebGPUChild* child = static_cast<webgpu::WebGPUChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
 }

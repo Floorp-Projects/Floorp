@@ -45,7 +45,6 @@ def generate(
     # I tried [\W\Z] but it complained. So `|` it is.
     reobj = re.compile(f"\\W{bug}\\W|\\W{bug}$")
     durations = set()
-    responsible_emails = set()
     metrics_table = ""
     for category_name, metrics in all_objects.value.items():
         for metric in metrics.values():
@@ -57,13 +56,10 @@ def generate(
             one_line_desc = metric.description.replace("\n", " ")
             sensitivity = ", ".join([s.name for s in metric.data_sensitivity])
             last_bug = metric.bugs[-1]
-            metrics_table += f"`{category_name}.{metric_name}` | "
+            metrics_table += f"{category_name}.{metric_name} | "
             metrics_table += f"{one_line_desc} | {sensitivity} | {last_bug}\n"
 
             durations.add(metric.expires)
-
-            if metric.expires == "never":
-                responsible_emails.update(metric.notification_emails)
 
     if len(durations) == 1:
         duration = next(iter(durations))
@@ -76,12 +72,8 @@ def generate(
         collection_duration += f"{durations}"
 
     if "never" in durations:
-        collection_duration += "\n" + ", ".join(responsible_emails) + " "
+        collection_duration += "\n**TODO: identify at least one individual here** "
         collection_duration += "will be responsible for the permanent collections."
-
-    if len(durations) == 0:
-        print(f"I'm sorry, I couldn't find metrics matching the bug number {bug}.")
-        return 1
 
     # This template is pulled from
     # https://github.com/mozilla/data-review/blob/main/request.md

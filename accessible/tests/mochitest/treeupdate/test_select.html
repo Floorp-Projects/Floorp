@@ -39,8 +39,12 @@
         var tree =
           { COMBOBOX: [
             { COMBOBOX_LIST: [
-              { COMBOBOX_OPTION: [ ] },
-              { COMBOBOX_OPTION: [ ] },
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] },
+              ] },
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] },
+              ] },
             ] },
           ] };
         testAccessibleTree(this.select, tree);

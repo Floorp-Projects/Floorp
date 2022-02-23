@@ -34,7 +34,8 @@ class ContentComparer:
 
     def create_merge_dir(self, merge_file):
         outdir = mozpath.dirname(merge_file)
-        os.makedirs(outdir, exist_ok=True)
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
 
     def merge(self, ref_entities, ref_file, l10n_file, merge_file,
               missing, skips, ctx, capabilities, encoding):

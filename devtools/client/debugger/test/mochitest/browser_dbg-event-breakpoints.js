@@ -10,10 +10,10 @@ add_task(async function() {
 
   const dbg = await initDebugger(
     "doc-event-breakpoints.html",
-    "event-breakpoints.js"
+    "event-breakpoints"
   );
-  await selectSource(dbg, "event-breakpoints.js");
-  await waitForSelectedSource(dbg, "event-breakpoints.js");
+  await selectSource(dbg, "event-breakpoints");
+  await waitForSelectedSource(dbg, "event-breakpoints");
 
   // We want to set each breakpoint individually to test adding/removing breakpoints, see Bug 1748589.
   await toggleEventBreakpoint(dbg, "Mouse", "event.mouse.click");

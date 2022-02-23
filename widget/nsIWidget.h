@@ -56,7 +56,7 @@ class nsIScreen;
 class nsIRunnable;
 
 namespace mozilla {
-enum class NativeKeyBindingsType : uint8_t;
+class NativeEventData;
 class WidgetGUIEvent;
 class WidgetInputEvent;
 class WidgetKeyboardEvent;
@@ -955,11 +955,6 @@ class nsIWidget : public nsISupports {
   virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
   /**
-   * Sets the region around the edges of the window that can be dragged to
-   * resize the window. All four sides of the window will get the same margin.
-   */
-  virtual void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) = 0;
-  /**
    * Get the client offset from the window origin.
    *
    * @return the x and y of the offset.
@@ -1172,12 +1167,17 @@ class nsIWidget : public nsISupports {
 
   /**
    * Put the toplevel window into or out of fullscreen mode.
+   * If aTargetScreen is given, attempt to go fullscreen on that screen,
+   * if possible.  (If not, it behaves as if aTargetScreen is null.)
+   * If !aFullScreen, aTargetScreen is ignored.
+   * aTargetScreen support is currently only implemented on Windows.
    *
    * @return NS_OK if the widget is setup properly for fullscreen and
    * FullscreenChanged callback has been or will be called. If other
    * value is returned, the caller should continue the change itself.
    */
-  virtual nsresult MakeFullScreen(bool aFullScreen) = 0;
+  virtual nsresult MakeFullScreen(bool aFullScreen,
+                                  nsIScreen* aTargetScreen = nullptr) = 0;
 
   /**
    * Same as MakeFullScreen, except that, on systems which natively
@@ -1185,8 +1185,9 @@ class nsIWidget : public nsISupports {
    * requests that behavior.
    * It is currently only supported on macOS 10.7+.
    */
-  virtual nsresult MakeFullScreenWithNativeTransition(bool aFullScreen) {
-    return MakeFullScreen(aFullScreen);
+  virtual nsresult MakeFullScreenWithNativeTransition(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) {
+    return MakeFullScreen(aFullScreen, aTargetScreen);
   }
 
   /**
@@ -1862,9 +1863,13 @@ class nsIWidget : public nsISupports {
    * Retrieve edit commands when the key combination of aEvent is used
    * in platform native applications.
    */
+  enum NativeKeyBindingsType : uint8_t {
+    NativeKeyBindingsForSingleLineEditor,
+    NativeKeyBindingsForMultiLineEditor,
+    NativeKeyBindingsForRichTextEditor
+  };
   MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
-      mozilla::NativeKeyBindingsType aType,
-      const mozilla::WidgetKeyboardEvent& aEvent,
+      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands);
 
   /*

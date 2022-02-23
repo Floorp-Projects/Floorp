@@ -102,7 +102,7 @@ documentation to cover all the best known clients people use with
 geckodriver.  If you find your language missing, please consider
 [submitting a patch].
 
-[submitting a patch]: Patches.md
+[submitting a patch]: ../CONTRIBUTING.md
 
 
 C#

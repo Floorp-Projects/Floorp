@@ -36,8 +36,7 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/StringObject.h"
-#include "vm/ToSource.h"  // js::ValueToSource
-#include "vm/Watchtower.h"
+#include "vm/ToSource.h"       // js::ValueToSource
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #ifdef ENABLE_RECORD_TUPLE
@@ -301,17 +300,6 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
 
-#ifdef ENABLE_RECORD_TUPLE
-  if (IsExtendedPrimitiveWrapper(*obj)) {
-    if (obj->is<TupleObject>()) {
-      Rooted<TupleType*> tup(cx, &obj->as<TupleObject>().unbox());
-      return TupleToSource(cx, tup);
-    }
-    MOZ_ASSERT(obj->is<RecordObject>());
-    return RecordToSource(cx, obj->as<RecordObject>().unbox());
-  }
-#endif
-
   bool comma = false;
 
   auto AddProperty = [cx, &comma, &buf](HandleId id, HandleValue val,
@@ -335,7 +323,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
        * If id is a string that's not an identifier, or if it's a
        * negative integer, then it must be quoted.
        */
-      if (id.isAtom() ? !IsIdentifier(id.toAtom()) : id.toInt() < 0) {
+      if (id.isAtom() ? !IsIdentifier(id.toAtom()) : JSID_TO_INT(id) < 0) {
         UniqueChars quotedId = QuoteString(cx, idstr, '\'');
         if (!quotedId) {
           return false;
@@ -500,7 +488,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
 
     val.set(desc->value());
 
-    JSFunction* fun = nullptr;
+    JSFunction* fun;
     if (IsFunctionObject(val, &fun) && fun->isMethod()) {
       if (!AddProperty(id, val, PropertyKind::Method)) {
         return nullptr;
@@ -826,7 +814,9 @@ static bool PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id,
 // Returns true if properties not named "__proto__" can be added to |obj|
 // with a fast path that doesn't check any properties on the prototype chain.
 static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
-  if (!obj->isExtensible()) {
+  // The object must be an extensible, non-prototype object. Prototypes require
+  // extra shadowing checks for shape teleporting.
+  if (!obj->isExtensible() || obj->isUsedAsPrototype()) {
     return false;
   }
 
@@ -922,8 +912,6 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   // enumerable/writable/configurable data properties, try to use its shape.
   if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
       toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
-    MOZ_ASSERT(!Watchtower::watchesPropertyAdd(toPlain),
-               "watched objects require Watchtower calls");
     Shape* newShape = fromPlain->shape();
     if (!toPlain->setShapeAndUpdateSlots(cx, newShape)) {
       return false;
@@ -1449,7 +1437,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
 #ifdef ENABLE_RECORD_TUPLE
   if (obj->is<TupleObject>()) {
-    Rooted<TupleType*> tup(cx, &obj->as<TupleObject>().unbox());
+    Rooted<TupleType*> tup(cx, obj->as<TupleObject>().unbox());
     return TryEnumerableOwnPropertiesNative<kind>(cx, tup, rval, optimized);
   } else if (obj->is<RecordObject>()) {
     Rooted<RecordType*> tup(cx, obj->as<RecordObject>().unbox());
@@ -1489,9 +1477,8 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
     JSString* str;
     if (kind != EnumerableOwnPropertiesKind::Values) {
-      static_assert(
-          NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
-          "dense elements don't exceed PropertyKey::IntMax");
+      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
+                    "dense elements don't exceed JSID_INT_MAX");
       str = Int32ToString<CanGC>(cx, i);
       if (!str) {
         return false;
@@ -1534,9 +1521,8 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     for (uint32_t i = 0; i < len; i++) {
       JSString* str;
       if (kind != EnumerableOwnPropertiesKind::Values) {
-        static_assert(
-            NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
-            "dense elements don't exceed PropertyKey::IntMax");
+        static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
+                      "dense elements don't exceed JSID_INT_MAX");
         str = Int32ToString<CanGC>(cx, i);
         if (!str) {
           return false;
@@ -1646,18 +1632,18 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         if ((onlyEnumerable && !iter->enumerable()) || id.isSymbol()) {
           continue;
         }
-        MOZ_ASSERT(!id.isInt(), "Unexpected indexed property");
+        MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
         MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
                           kind == EnumerableOwnPropertiesKind::KeysAndValues,
                       iter->isDataProperty());
 
         if constexpr (kind == EnumerableOwnPropertiesKind::Keys ||
                       kind == EnumerableOwnPropertiesKind::Names) {
-          value.setString(id.toString());
+          value.setString(JSID_TO_STRING(id));
         } else if constexpr (kind == EnumerableOwnPropertiesKind::Values) {
           value.set(nobj->getSlot(iter->slot()));
         } else {
-          key.setString(id.toString());
+          key.setString(JSID_TO_STRING(id));
           value.set(nobj->getSlot(iter->slot()));
           if (!NewValuePair(cx, key, value, &value)) {
             return false;
@@ -1688,7 +1674,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       if (iter->key().isSymbol()) {
         continue;
       }
-      MOZ_ASSERT(!iter->key().isInt(), "Unexpected indexed property");
+      MOZ_ASSERT(!JSID_IS_INT(iter->key()), "Unexpected indexed property");
 
       if (!props.append(*iter)) {
         return false;
@@ -1724,7 +1710,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       }
 
       if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
-        key.setString(id.toString());
+        key.setString(JSID_TO_STRING(id));
         if (!NewValuePair(cx, key, value, &value)) {
           return false;
         }
@@ -1812,8 +1798,8 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
     // Step 4.a.i.
     if (obj->is<NativeObject>()) {
       HandleNativeObject nobj = obj.as<NativeObject>();
-      if (id.isInt() && nobj->containsDenseElement(id.toInt())) {
-        value.set(nobj->getDenseElement(id.toInt()));
+      if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
+        value.set(nobj->getDenseElement(JSID_TO_INT(id)));
       } else {
         Maybe<PropertyInfo> prop = nobj->lookup(cx, id);
         if (prop.isNothing() || !prop->enumerable()) {

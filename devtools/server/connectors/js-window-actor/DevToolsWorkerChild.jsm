@@ -29,8 +29,6 @@ XPCOMUtils.defineLazyGetter(this, "DevToolsUtils", () =>
   Loader.require("devtools/shared/DevToolsUtils")
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  isWindowGlobalPartOfContext:
-    "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
   SessionDataHelpers:
     "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
 });
@@ -124,11 +122,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       const { targets, connectionPrefix, sessionContext } = sessionData;
       if (
         targets.includes("worker") &&
-        isWindowGlobalPartOfContext(this.manager, sessionContext, {
-          acceptInitialDocument: true,
-          forceAcceptTopLevelTarget: true,
-          acceptSameProcessIframes: true,
-        })
+        shouldNotifyWindowGlobal(this.manager, sessionContext)
       ) {
         this._watchWorkerTargets({
           watcherActorID,
@@ -148,25 +142,19 @@ class DevToolsWorkerChild extends JSWindowActorChild {
    */
   receiveMessage(message) {
     // All messages pass `sessionContext` (except packet) and are expected
-    // to match isWindowGlobalPartOfContext result.
+    // to match shouldNotifyWindowGlobal result.
     if (message.name != "DevToolsWorkerParent:packet") {
       const { browserId } = message.data.sessionContext;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !isWindowGlobalPartOfContext(
-          this.manager,
-          message.data.sessionContext,
-          {
-            acceptInitialDocument: true,
-          }
-        )
+        !shouldNotifyWindowGlobal(this.manager, message.data.sessionContext)
       ) {
         throw new Error(
           "Mismatch between DevToolsWorkerParent and DevToolsWorkerChild  " +
             (this.manager.browsingContext.browserId == browserId
-              ? "window global shouldn't be notified (isWindowGlobalPartOfContext mismatch)"
+              ? "window global shouldn't be notified (shouldNotifyWindowGlobal mismatch)"
               : `expected browsing context with ID ${browserId}, but got ${this.manager.browsingContext.browserId}`)
         );
       }
@@ -534,6 +522,35 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 
     this._connections.clear();
   }
+}
+
+/**
+ * Helper function to know if we should watch for workers on a given windowGlobal
+ */
+function shouldNotifyWindowGlobal(windowGlobal, sessionContext) {
+  const browsingContext = windowGlobal.browsingContext;
+
+  // If we are focusing only on a sub-tree of Browsing Element, ignore elements that are
+  // not part of it.
+  if (
+    sessionContext.type == "browser-element" &&
+    browsingContext.browserId != sessionContext.browserId
+  ) {
+    return false;
+  }
+
+  // `isInProcess` is always false, even if the window runs in the same process.
+  // `osPid` attribute is not set on WindowGlobalChild
+  // so it is hard to guess if the given WindowGlobal runs in this process or not,
+  // which is what we want to know here. Here is a workaround way to know it :/
+  // ---
+  // Also. It might be a bit surprising to have a DevToolsWorkerChild/JSWindowActorChild
+  // to be instantiated for WindowGlobals that aren't from this process... Is that expected?
+  if (Cu.isRemoteProxy(windowGlobal.window)) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

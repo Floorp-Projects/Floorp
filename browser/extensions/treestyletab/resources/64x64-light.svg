@@ -1,0 +1,30 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<style>
+	g:target {
+		fill: #0C0C0D;
+		fill-rule: evenodd;
+	}
+	g:not(#default):not(:target),
+	g:target ~ #default {
+		display: none;
+	}
+</style>
+<symbol id="icon-64">
+	<path d="M52,4H12c-4.4,0-8,3.6-8,8v40c0,4.4,3.6,8,8,8h40c4.4,0,8-3.6,8-8V12C60,7.6,56.401,4,52,4z M24,40c-1.104,0-2-0.894-2-2
+		V26h32v14H24z M10,12c0-1.084,0.916-2,2-2h40c1.084,0,2,0.916,2,2v12.024H12V24c-1.104,0-2-0.896-2-2V12z M52,54H36
+		c-1.107,0-2-0.894-2-2V41.974h20V52C54,53.084,53.084,54,52,54z"/>
+	<path d="M20,17c0,1.65-1.35,3-3,3s-3-1.35-3-3s1.35-3,3-3S20,15.35,20,17z"/>
+	<path d="M32,33c0,1.65-1.35,3-3,3s-3-1.35-3-3s1.35-3,3-3S32,31.35,32,33z"/>
+	<path d="M44,47c0,1.65-1.35,3-3,3s-3-1.35-3-3s1.35-3,3-3S44,45.35,44,47z"/>
+</symbol>
+<g id="toolbar" fill-opacity="0.8">
+	<use href="#icon-64"/>
+</g>
+<g id="default" fill-opacity="1">
+	<use href="#icon-64"/>
+</g>
+</svg>

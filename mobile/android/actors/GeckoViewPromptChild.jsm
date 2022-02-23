@@ -20,8 +20,6 @@ class GeckoViewPromptChild extends GeckoViewActorChild {
     debug`handleEvent: ${type}`;
 
     switch (type) {
-      case "mozshowdropdown": // fall-through
-      case "mozshowdropdown-sourcetouch": // fall-through
       case "click": // fall-through
       case "contextmenu": // fall-through
       case "DOMPopupBlocked":

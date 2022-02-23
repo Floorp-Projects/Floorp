@@ -434,8 +434,6 @@ var gXPInstallObserver = {
     "addon-install-confirmation",
     "addon-install-failed",
     "addon-install-origin-blocked",
-    "addon-install-webapi-blocked",
-    "addon-install-webapi-blocked-policy",
     "addon-progress",
     "addon-webext-permissions",
     "xpinstall-disabled",
@@ -554,19 +552,11 @@ var gXPInstallObserver = {
         this.logWarningFullScreenInstallBlocked();
         break;
       }
-      case "addon-install-webapi-blocked":
-      case "addon-install-webapi-blocked-policy":
       case "addon-install-origin-blocked": {
-        if (aTopic == "addon-install-webapi-blocked-policy") {
-          messageString = gNavigatorBundle.getString(
-            "addonDomainBlockedByPolicy"
-          );
-        } else {
-          messageString = gNavigatorBundle.getFormattedString(
-            "xpinstallPromptMessage",
-            [brandShortName]
-          );
-        }
+        messageString = gNavigatorBundle.getFormattedString(
+          "xpinstallPromptMessage",
+          [brandShortName]
+        );
 
         if (Services.policies) {
           let extensionSettings = Services.policies.getExtensionSettings("*");

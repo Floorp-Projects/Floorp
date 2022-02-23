@@ -240,7 +240,6 @@ fn push_rotated_rect(
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: false,
             should_snap: false,
-            paired_with_perspective: false,
         },
         SpatialTreeItemKey::new(0, 0),
     );
@@ -281,8 +280,6 @@ fn build_display_list(
         LayoutRect::from_size(layout_size),
         LayoutRect::from_size(layout_size),
         LayoutVector2D::zero(),
-        APZScrollGeneration::default(),
-        HasScrollLinkedEffect::No,
         SpatialTreeItemKey::new(0, 1),
     );
 

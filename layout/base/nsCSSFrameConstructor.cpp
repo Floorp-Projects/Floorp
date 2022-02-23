@@ -42,7 +42,6 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCheckboxRadioFrame.h"
-#include "nsCRT.h"
 #include "nsAtom.h"
 #include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
@@ -1436,7 +1435,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
         FrameCtorDebugFlags* flag = gFlags;
         FrameCtorDebugFlags* limit = gFlags + NUM_DEBUG_FLAGS;
         while (flag < limit) {
-          if (nsCRT::strcasecmp(flag->name, flags) == 0) {
+          if (PL_strcasecmp(flag->name, flags) == 0) {
             *(flag->on) = true;
             printf("nsCSSFrameConstructor: setting %s debug flag on\n",
                    flag->name);
@@ -2912,8 +2911,33 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
         mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
             PseudoStyleType::dropDownList, computedStyle);
 
+    // Create a listbox
+    nsListControlFrame* listFrame =
+        NS_NewListControlFrame(mPresShell, listStyle);
+
+    // Notify the listbox that it is being used as a dropdown list.
+    listFrame->SetComboboxFrame(comboboxFrame);
+
+    // Notify combobox that it should use the listbox as it's popup
+    comboboxFrame->SetDropDown(listFrame);
+
+    NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
+                 "Ended up with positioned dropdown list somehow.");
+    NS_ASSERTION(!listFrame->IsFloating(),
+                 "Ended up with floating dropdown list somehow.");
+
     // child frames of combobox frame
     nsFrameList childList;
+
+    // Initialize the scroll frame positioned. Note that it is NOT
+    // initialized as absolutely positioned.
+    nsContainerFrame* scrolledFrame =
+        NS_NewSelectsAreaFrame(mPresShell, computedStyle, flags);
+
+    InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
+                          comboboxFrame, listStyle, true, childList);
+
+    NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nullptr");
 
     // Create display and button frames from the combobox's anonymous content.
     // The anonymous content is appended to existing anonymous content for this
@@ -2949,6 +2973,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childList);
 
+    // Initialize the additional popup child list which contains the
+    // dropdown list frame.
+    nsFrameList popupList;
+    popupList.AppendFrame(nullptr, listFrame);
+    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList, popupList);
+
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
       // Restore frame state for the entire subtree of |comboboxFrame|.
@@ -2967,17 +2997,22 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
   // ******* this code stolen from Initialze ScrollFrame ********
   // please adjust this code to use BuildScrollFrame.
 
-  InitializeListboxSelect(aState, listFrame, scrolledFrame, content,
-                          aParentFrame, computedStyle, aFrameList);
+  InitializeSelectFrame(aState, listFrame, scrolledFrame, content, aParentFrame,
+                        computedStyle, false, aFrameList);
 
   return listFrame;
 }
 
-void nsCSSFrameConstructor::InitializeListboxSelect(
+/**
+ * Used to be InitializeScrollFrame but now it's only used for the select tag
+ * But the select tag should really be fixed to use GFX scrollbars that can
+ * be create with BuildScrollFrame.
+ */
+void nsCSSFrameConstructor::InitializeSelectFrame(
     nsFrameConstructorState& aState, nsContainerFrame* scrollFrame,
     nsContainerFrame* scrolledFrame, nsIContent* aContent,
     nsContainerFrame* aParentFrame, ComputedStyle* aComputedStyle,
-    nsFrameList& aFrameList) {
+    bool aBuildCombobox, nsFrameList& aFrameList) {
   // Initialize it
   nsContainerFrame* geometricParent =
       aState.GetGeometricParent(*aComputedStyle->StyleDisplay(), aParentFrame);
@@ -2987,9 +3022,14 @@ void nsCSSFrameConstructor::InitializeListboxSelect(
   // the scrollable view). So we have to split Init and Restore.
 
   scrollFrame->Init(aContent, geometricParent, nullptr);
-  aState.AddChild(scrollFrame, aFrameList, aContent, aParentFrame);
+
+  if (!aBuildCombobox) {
+    aState.AddChild(scrollFrame, aFrameList, aContent, aParentFrame);
+  }
+
   BuildScrollFrame(aState, aContent, aComputedStyle, scrolledFrame,
                    geometricParent, scrollFrame);
+
   if (aState.mFrameState) {
     // Restore frame state for the scroll frame
     RestoreFrameStateFor(scrollFrame, aState.mFrameState);
@@ -5355,13 +5395,13 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   // to things that are not roots of native anonymous subtrees (except for
   // ::before and ::after); we always want to create "internal" anonymous
   // content.
-  auto* const details = HTMLDetailsElement::FromNodeOrNull(parent);
+  auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
   if (ShouldSuppressFrameInNonOpenDetails(details, aComputedStyle, *aContent)) {
     return;
   }
 
   if (aContent->IsHTMLElement(nsGkAtoms::legend) && aParentFrame) {
-    const nsFieldSetFrame* const fs = GetFieldSetFrameFor(aParentFrame);
+    const nsFieldSetFrame* fs = GetFieldSetFrameFor(aParentFrame);
     if (fs && !fs->GetLegend() && !aState.mHasRenderedLegend &&
         !aComputedStyle->StyleDisplay()->IsFloatingStyle() &&
         !aComputedStyle->StyleDisplay()->IsAbsolutelyPositionedStyle()) {
@@ -5370,22 +5410,24 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     }
   }
 
-  const FrameConstructionData* const data =
+  const FrameConstructionData* data =
       FindDataForContent(*aContent, *aComputedStyle, aParentFrame, aFlags);
   if (!data || data->mBits & FCDATA_SUPPRESS_FRAME) {
     return;
   }
 
-  const bool isPopup =
-      (data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
-                                          !aParentFrame->IsMenuFrame());
+  bool isPopup = false;
 
-  if (isPopup && !aState.mPopupList.containingBlock &&
-      !aState.mHavePendingPopupgroup) {
-    return;
+  if ((data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
+                                          !aParentFrame->IsMenuFrame())) {
+    if (!aState.mPopupList.containingBlock && !aState.mHavePendingPopupgroup) {
+      return;
+    }
+
+    isPopup = true;
   }
 
-  const uint32_t bits = data->mBits;
+  uint32_t bits = data->mBits;
 
   // Inside colgroups, suppress everything except columns.
   if (aParentFrame && aParentFrame->IsTableColGroupFrame() &&
@@ -5394,7 +5436,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     return;
   }
 
-  const bool canHavePageBreak =
+  bool canHavePageBreak =
       aFlags.contains(ItemFlag::AllowPageBreak) &&
       aState.mPresContext->IsPaginated() &&
       !display.IsAbsolutelyPositionedStyle() &&
@@ -5406,7 +5448,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   }
 
   if (details && details->Open()) {
-    const auto* const summary = HTMLSummaryElement::FromNode(aContent);
+    auto* summary = HTMLSummaryElement::FromNode(aContent);
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
@@ -5450,7 +5492,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   } else {
     // Compute a boolean isInline which is guaranteed to be false for blocks
     // (but may also be false for some inlines).
-    const bool isInline =
+    bool isInline =
         // Table-internal things are inline-outside if and only if they're kids
         // of inlines, since they'll trigger construction of inline-table
         // pseudos.
@@ -6396,10 +6438,7 @@ void nsCSSFrameConstructor::IssueSingleInsertNofications(
     InsertionKind aInsertionKind) {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    // XXX the GetContent() != child check is needed due to bug 135040.
-    // Remove it once that's fixed.
-    MOZ_ASSERT(!child->GetPrimaryFrame() ||
-               child->GetPrimaryFrame()->GetContent() != child);
+    MOZ_ASSERT(!child->GetPrimaryFrame());
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(child, child->GetNextSibling(), aInsertionKind);

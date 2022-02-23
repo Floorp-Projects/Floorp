@@ -1,10 +1,7 @@
-include "mozilla/_ipdltest/TestDemon.h";
-
 namespace mozilla {
 namespace _ipdltest {
 
-[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl="TestDemonChild", ParentImpl="TestDemonParent"]
-sync protocol PTestDemon
+[NestedUpTo=inside_cpow] sync protocol PTestDemon
 {
 child:
     async Start();

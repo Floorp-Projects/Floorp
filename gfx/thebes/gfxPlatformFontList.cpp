@@ -1383,7 +1383,7 @@ void gfxPlatformFontList::StartCmapLoading(uint32_t aGeneration,
   if (aGeneration != SharedFontList()->GetGeneration()) {
     return;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
   if (mLoadCmapsRunnable) {
@@ -1993,7 +1993,7 @@ eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(const char* aLang) {
     return eFontPrefLang_Others;
   }
   for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); ++i) {
-    if (!nsCRT::strcasecmp(gPrefLangNames[i], aLang)) {
+    if (!PL_strcasecmp(gPrefLangNames[i], aLang)) {
       return eFontPrefLang(i);
     }
   }
@@ -2831,7 +2831,7 @@ void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
   if (aFamilyIndex >= list->NumFamilies()) {
@@ -2855,7 +2855,7 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
   fontlist::Face* face = static_cast<fontlist::Face*>(aFacePtr.ToPtr(list));
@@ -2875,7 +2875,7 @@ void gfxPlatformFontList::SetupFamilyCharMap(
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return;
   }
 
@@ -2931,7 +2931,7 @@ bool gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return false;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  if (AppShutdown::IsShuttingDown()) {
     return false;
   }
   return InitOtherFamilyNames(aDefer);

@@ -354,9 +354,3 @@ void nsBrowserStatusFilter::TimeoutHandler(nsITimer* aTimer, void* aClosure) {
 
   self->CallDelayedProgressListeners();
 }
-
-NS_IMETHODIMP
-nsBrowserStatusFilter::GetDocumentRequest(nsIRequest** aRequest) {
-  *aRequest = nullptr;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

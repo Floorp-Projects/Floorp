@@ -465,8 +465,8 @@ fn path_and_query(route: &Route) -> PathAndQuery {
     route
         .uri()
         .path_and_query()
-        .cloned()
-        .unwrap_or_else(|| PathAndQuery::from_static(""))
+        .expect("server URIs should always have path_and_query")
+        .clone()
 }
 
 /// Convenient way to chain multiple path filters together.

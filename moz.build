@@ -201,6 +201,4 @@ SPHINX_TREES["metrics"] = "docs/metrics"
 
 SPHINX_TREES["gtest"] = "docs/gtest"
 
-SPHINX_TREES["nspr"] = "docs/nspr"
-
 include("build/templates.mozbuild")

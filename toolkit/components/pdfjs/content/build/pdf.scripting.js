@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2022 Mozilla Foundation
+ * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1785,7 +1785,12 @@ class AForm {
     }
 
     psf = this.AFMakeNumber(psf);
-    let formatStr;
+
+    if (psf === null) {
+      throw new Error("Invalid psf in AFSpecial_Format");
+    }
+
+    let formatStr = "";
 
     switch (psf) {
       case 0:
@@ -1823,15 +1828,10 @@ class AForm {
 
     const event = globalThis.event;
     const value = this.AFMergeChange(event);
-
-    if (!value) {
-      return;
-    }
-
     const checkers = new Map([["9", char => char >= "0" && char <= "9"], ["A", char => "a" <= char && char <= "z" || "A" <= char && char <= "Z"], ["O", char => "a" <= char && char <= "z" || "A" <= char && char <= "Z" || "0" <= char && char <= "9"], ["X", char => true]]);
 
     function _checkValidity(_value, _cMask) {
-      for (let i = 0, ii = _value.length; i < ii; i++) {
+      for (let i = 0, ii = value.length; i < ii; i++) {
         const mask = _cMask.charAt(i);
 
         const char = _value.charAt(i);
@@ -1848,6 +1848,10 @@ class AForm {
       }
 
       return true;
+    }
+
+    if (!value) {
+      return;
     }
 
     const err = `${_constants.GlobalConstants.IDS_INVALID_VALUE} = "${cMask}"`;
@@ -1891,7 +1895,17 @@ class AForm {
 
   AFSpecial_Keystroke(psf) {
     const event = globalThis.event;
+
+    if (!event.value) {
+      return;
+    }
+
     psf = this.AFMakeNumber(psf);
+
+    if (psf === null) {
+      throw new Error("Invalid psf in AFSpecial_Keystroke");
+    }
+
     let formatStr;
 
     switch (psf) {
@@ -1904,9 +1918,9 @@ class AForm {
         break;
 
       case 2:
-        const value = this.AFMergeChange(event);
+        const finalLen = event.value.length + event.change.length + event.selStart - event.selEnd;
 
-        if (value.length > 8 || value.startsWith("(")) {
+        if (finalLen >= 8) {
           formatStr = "(999) 999-9999";
         } else {
           formatStr = "999-9999";
@@ -2582,8 +2596,8 @@ class Event {
     this.richChange = data.richChange || [];
     this.richChangeEx = data.richChangeEx || [];
     this.richValue = data.richValue || [];
-    this.selEnd = data.selEnd ?? -1;
-    this.selStart = data.selStart ?? -1;
+    this.selEnd = data.selEnd || -1;
+    this.selStart = data.selStart || -1;
     this.shift = data.shift || false;
     this.source = data.source || null;
     this.target = data.target || null;
@@ -2708,12 +2722,6 @@ class EventDispatcher {
           id: source.obj._id,
           value: savedChange.value,
           selRange: [savedChange.selStart, savedChange.selEnd]
-        });
-      } else {
-        source.obj._send({
-          id: source.obj._id,
-          value: "",
-          selRange: [0, 0]
         });
       }
     }
@@ -4937,8 +4945,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.13.133';
-const pdfjsBuild = 'f8b2a99dd';
+const pdfjsVersion = '2.13.24';
+const pdfjsBuild = '290cbc523';
 })();
 
 /******/ 	return __webpack_exports__;

@@ -591,7 +591,7 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
   enum ScrollType : uint8_t {
     SCROLL_DEFAULT,
     SCROLL_SYNCHRONOUSLY,
-    SCROLL_ASYNCHRONOUSLY,
+    SCROLL_ASYNCHRONOUSELY,
     SCROLL_SMOOTHLY
   };
   ScrollType mScrollType;

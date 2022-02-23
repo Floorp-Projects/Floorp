@@ -103,8 +103,6 @@ class _ExperimentManager {
     for (const rollout of restoredRollouts) {
       this.setExperimentActive(rollout);
     }
-
-    this.observe();
   }
 
   /**
@@ -409,9 +407,6 @@ class _ExperimentManager {
       return;
     }
     for (const { slug } of this.store.getAllActive()) {
-      this.unenroll(slug, "studies-opt-out");
-    }
-    for (const { slug } of this.store.getAllRollouts()) {
       this.unenroll(slug, "studies-opt-out");
     }
   }

@@ -60,8 +60,12 @@ nsresult TCPServerSocket::Init() {
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mServerBridgeChild =
-        new TCPServerSocketChild(this, mPort, mBacklog, mUseArrayBuffers);
+    nsCOMPtr<nsISerialEventTarget> target;
+    if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+      target = global->EventTargetFor(TaskCategory::Other);
+    }
+    mServerBridgeChild = new TCPServerSocketChild(this, mPort, mBacklog,
+                                                  mUseArrayBuffers, target);
     return NS_OK;
   }
 

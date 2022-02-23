@@ -1,8 +1,15 @@
-use darling::FromTypeParam;
-use syn::{parse_quote, DeriveInput, GenericParam, Ident, TypeParam};
+#[macro_use]
+extern crate darling;
+#[macro_use]
+extern crate syn;
+#[macro_use]
+extern crate quote;
 
-#[derive(FromTypeParam)]
+use darling::FromTypeParam;
+use syn::{DeriveInput, GenericParam, Ident, TypeParam};
+
 #[darling(attributes(lorem), from_ident)]
+#[derive(FromTypeParam)]
 struct Lorem {
     ident: Ident,
     bounds: Vec<syn::TypeParamBound>,
@@ -29,7 +36,6 @@ fn extract_type(param: &GenericParam) -> &TypeParam {
 }
 
 #[test]
-#[allow(clippy::bool_assert_comparison)]
 fn expand_many() {
     let di: DeriveInput = parse_quote! {
         struct Baz<

@@ -15,7 +15,6 @@ namespace dom {
 struct GPURequestAdapterOptions;
 }  // namespace dom
 namespace layers {
-class CompositableHandle;
 class CompositorBridgeChild;
 }  // namespace layers
 namespace webgpu {
@@ -27,21 +26,6 @@ struct WGPUTextureViewDescriptor;
 
 using AdapterPromise =
     MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>;
-using PipelinePromise = MozPromise<RawId, ipc::ResponseRejectReason, true>;
-using DevicePromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
-
-struct PipelineCreationContext {
-  RawId mParentId = 0;
-  RawId mImplicitPipelineLayoutId = 0;
-  nsTArray<RawId> mImplicitBindGroupLayoutIds;
-};
-
-struct DeviceRequest {
-  RawId mId = 0;
-  RefPtr<DevicePromise> mPromise;
-  // Note: we could put `ffi::WGPULimits` in here as well,
-  //  but we don't want to #include ffi stuff in this header
-};
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
@@ -50,18 +34,18 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   friend class layers::CompositorBridgeChild;
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WebGPUChild)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING_INHERITED(WebGPUChild)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGPUChild)
 
  public:
   explicit WebGPUChild();
 
-  bool IsOpen() const { return CanSend(); }
+  bool IsOpen() const { return mIPCOpen; }
 
   RefPtr<AdapterPromise> InstanceRequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions);
-  Maybe<DeviceRequest> AdapterRequestDevice(
-      RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc,
-      ffi::WGPULimits* aLimits);
+  Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
+                                    const dom::GPUDeviceDescriptor& aDesc,
+                                    ffi::WGPULimits* aLimtis);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
   RawId DeviceCreateTexture(RawId aSelfId,
@@ -85,29 +69,22 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                               const dom::GPUBindGroupDescriptor& aDesc);
   RawId DeviceCreateShaderModule(RawId aSelfId,
                                  const dom::GPUShaderModuleDescriptor& aDesc);
-
   RawId DeviceCreateComputePipeline(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc);
-  RefPtr<PipelinePromise> DeviceCreateComputePipelineAsync(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc);
+      RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
+      RawId* const aImplicitPipelineLayoutId,
+      nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
   RawId DeviceCreateRenderPipeline(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc);
-  RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc);
+      RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
+      RawId* const aImplicitPipelineLayoutId,
+      nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
-                             const layers::CompositableHandle& aHandle);
-  void SwapChainPresent(const layers::CompositableHandle& aHandle,
-                        RawId aTextureId);
+                             wr::ExternalImageId aExternalImageId);
+  void SwapChainPresent(wr::ExternalImageId aExternalImageId, RawId aTextureId);
 
-  void RegisterDevice(Device* const aDevice);
+  void RegisterDevice(RawId aId, Device* aDevice);
   void UnregisterDevice(RawId aId);
-  void FreeUnregisteredInParentDevice(RawId aId);
 
   static void ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
                                       ffi::WGPUTextureFormat& aOutput);
@@ -117,17 +94,25 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
 
-  RawId DeviceCreateComputePipelineImpl(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc,
-      ipc::ByteBuf* const aByteBuf);
-  RawId DeviceCreateRenderPipelineImpl(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc,
-      ipc::ByteBuf* const aByteBuf);
+  // AddIPDLReference and ReleaseIPDLReference are only to be called by
+  // CompositorBridgeChild's AllocPWebGPUChild and DeallocPWebGPUChild methods
+  // respectively. We intentionally make them private to prevent misuse.
+  // The purpose of these methods is to be aware of when the IPC system around
+  // this actor goes down: mIPCOpen is then set to false.
+  void AddIPDLReference() {
+    MOZ_ASSERT(!mIPCOpen);
+    mIPCOpen = true;
+    AddRef();
+  }
+  void ReleaseIPDLReference() {
+    MOZ_ASSERT(mIPCOpen);
+    mIPCOpen = false;
+    Release();
+  }
 
   ffi::WGPUClient* const mClient;
-  std::unordered_map<RawId, WeakPtr<Device>> mDeviceMap;
+  bool mIPCOpen;
+  std::unordered_map<RawId, Device*> mDeviceMap;
 
  public:
   ipc::IPCResult RecvDeviceUncapturedError(RawId aDeviceId,

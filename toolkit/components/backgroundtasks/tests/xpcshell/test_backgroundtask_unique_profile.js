@@ -15,7 +15,7 @@ add_task(async function test_backgroundtask_unique_profile() {
   let stdoutLines = [];
   let exitCode = await do_backgroundtask("unique_profile", {
     extraArgs: [sentinel, count.toString()],
-    onStdoutLine: line => stdoutLines.push(line),
+    stdoutLines,
   });
   Assert.equal(0, exitCode);
 

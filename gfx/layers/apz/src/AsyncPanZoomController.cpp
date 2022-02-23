@@ -2128,13 +2128,12 @@ bool AsyncPanZoomController::CanScroll(const InputData& aEvent) const {
     //    to checking if it is scrollable without adjusting its delta.
     // 2. For a non-auto-dir scroll, simply check if it is scrollable without
     //    adjusting its delta.
-    if (scrollWheelInput.IsAutoDir(mScrollMetadata.ForceMousewheelAutodir())) {
+    if (scrollWheelInput.IsAutoDir()) {
       RecursiveMutexAutoLock lock(mRecursiveMutex);
       auto deltaX = scrollWheelInput.mDeltaX;
       auto deltaY = scrollWheelInput.mDeltaY;
       bool isRTL =
-          IsContentOfHonouredTargetRightToLeft(scrollWheelInput.HonoursRoot(
-              mScrollMetadata.ForceMousewheelAutodirHonourRoot()));
+          IsContentOfHonouredTargetRightToLeft(scrollWheelInput.HonoursRoot());
       APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
       if (adjuster.ShouldBeAdjusted()) {
         // If we detect that the delta values should be adjusted for an auto-dir
@@ -2289,12 +2288,11 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
   auto deltaX = aEvent.mDeltaX;
   auto deltaY = aEvent.mDeltaY;
   ParentLayerPoint delta;
-  if (aEvent.IsAutoDir(mScrollMetadata.ForceMousewheelAutodir())) {
+  if (aEvent.IsAutoDir()) {
     // It's an auto-dir scroll, so check if its delta should be adjusted, if so,
     // adjust it.
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    bool isRTL = IsContentOfHonouredTargetRightToLeft(
-        aEvent.HonoursRoot(mScrollMetadata.ForceMousewheelAutodirHonourRoot()));
+    bool isRTL = IsContentOfHonouredTargetRightToLeft(aEvent.HonoursRoot());
     APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
     if (adjuster.ShouldBeAdjusted()) {
       adjuster.Adjust();
@@ -2732,7 +2730,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   // gesture block.
   overscrollHandoffChain->SnapBackOverscrolledApzcForMomentum(
       this, GetVelocityVector());
-  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomentum
+  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomemtum
   // triggers an overscroll animation, do not reset the state in such case.
   if (mState != OVERSCROLL_ANIMATION) {
     SetState(NOTHING);
@@ -4309,7 +4307,7 @@ void AsyncPanZoomController::RequestContentRepaint(
                         : APZScrollAnimationType::TriggeredByUserInput;
   }
   RepaintRequest request(aFrameMetrics, aDisplayportMargins, aUpdateType,
-                         animationType, mScrollGeneration);
+                         animationType);
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
@@ -4387,15 +4385,6 @@ bool AsyncPanZoomController::UpdateAnimation(
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
-
-  if (needComposite || mAnimation) {
-    // Bump the scroll generation before we call RequestContentRepaint below
-    // so that the RequestContentRepaint call will surely use the new
-    // generation.
-    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-      mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
-    }
-  }
 
   if (mAnimation) {
     bool continueAnimation = mAnimation->Sample(Metrics(), sampleTimeDelta);
@@ -4497,14 +4486,13 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
-    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents,
-    std::size_t aSampleIndex) const {
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   CSSToParentLayerScale effectiveZoom;
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
-    effectiveZoom = GetEffectiveZoom(aMode, lock, aSampleIndex);
+    effectiveZoom = GetEffectiveZoom(aMode, lock);
   } else {
     effectiveZoom =
         Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
@@ -4519,8 +4507,8 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     // is entirely async.
 
     CSSPoint currentVisualOffset =
-        GetEffectiveScrollOffset(aMode, lock, aSampleIndex) -
-        GetEffectiveLayoutViewport(aMode, lock, aSampleIndex).TopLeft();
+        GetEffectiveScrollOffset(aMode, lock) -
+        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
 
     translation += currentVisualOffset * effectiveZoom;
   }
@@ -4531,7 +4519,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     }
 
     CSSPoint currentLayoutOffset =
-        GetEffectiveLayoutViewport(aMode, lock, aSampleIndex).TopLeft();
+        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
 
     translation +=
         (currentLayoutOffset - lastPaintLayoutOffset) * effectiveZoom;
@@ -4542,10 +4530,9 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
 
 AsyncTransformComponentMatrix
 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
-    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents,
-    std::size_t aSampleIndex) const {
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   AsyncTransformComponentMatrix asyncTransform =
-      GetCurrentAsyncTransform(aMode, aComponents, aSampleIndex);
+      GetCurrentAsyncTransform(aMode, aComponents);
   // The overscroll transform is considered part of the visual component of
   // the async transform, because it should apply to fixed content as well.
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
@@ -4562,49 +4549,6 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
   return scale / Metrics().GetDevPixelsPerCSSPixel();
 }
 
-AutoTArray<wr::SampledScrollOffset, 2>
-AsyncPanZoomController::GetSampledScrollOffsets() const {
-  AssertOnSamplerThread();
-
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
-  const AsyncTransformComponents asyncTransformComponents =
-      GetZoomAnimationId()
-          ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-          : LayoutAndVisual;
-
-  // If layerTranslation includes only the layout component of the async
-  // transform then it has not been scaled by the async zoom, so we want to
-  // divide it by the resolution. If layerTranslation includes the visual
-  // component, then we should use the pinch zoom scale, which includes the
-  // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
-  // so it makes no difference.
-  LayoutDeviceToParentLayerScale resolution =
-      GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
-
-  AutoTArray<wr::SampledScrollOffset, 2> sampledOffsets;
-
-  for (std::deque<SampledAPZCState>::size_type index = 0;
-       index < mSampledState.size(); index++) {
-    ParentLayerPoint layerTranslation =
-        GetCurrentAsyncTransformWithOverscroll(
-            AsyncPanZoomController::eForCompositing, asyncTransformComponents,
-            index)
-            .TransformPoint(ParentLayerPoint(0, 0));
-
-    // The positive translation means the painted content is supposed to
-    // move down (or to the right), and that corresponds to a reduction in
-    // the scroll offset. Since we are effectively giving WR the async
-    // scroll delta here, we want to negate the translation.
-    LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
-    sampledOffsets.AppendElement(wr::SampledScrollOffset{
-        wr::ToLayoutVector2D(asyncScrollDelta),
-        wr::ToWrAPZScrollGeneration(mSampledState[index].Generation())});
-  }
-
-  return sampledOffsets;
-}
-
 bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {
   return mScrollMetadata.IsApzForceDisabled() ||
          (Metrics().IsMinimalDisplayPort() &&
@@ -4612,37 +4556,37 @@ bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {
 }
 
 CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
-    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
-    std::size_t aSampleIndex) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetLayoutViewport();
   }
   if (aMode == eForCompositing) {
-    return mSampledState[aSampleIndex].GetLayoutViewport();
+    return mSampledState.front().GetLayoutViewport();
   }
   return Metrics().GetLayoutViewport();
 }
 
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
-    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
-    std::size_t aSampleIndex) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetVisualScrollOffset();
   }
   if (aMode == eForCompositing) {
-    return mSampledState[aSampleIndex].GetVisualScrollOffset();
+    return mSampledState.front().GetVisualScrollOffset();
   }
   return Metrics().GetVisualScrollOffset();
 }
 
 CSSToParentLayerScale AsyncPanZoomController::GetEffectiveZoom(
-    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
-    std::size_t aSampleIndex) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetZoom();
   }
   if (aMode == eForCompositing) {
-    return mSampledState[aSampleIndex].GetZoom();
+    return mSampledState.front().GetZoom();
   }
   return Metrics().GetZoom();
 }
@@ -4660,8 +4604,7 @@ bool AsyncPanZoomController::SampleCompositedAsyncTransform(
     const RecursiveMutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(mSampledState.size() <= 2);
   bool sampleChanged = (mSampledState.back() != SampledAPZCState(Metrics()));
-  mSampledState.emplace_back(Metrics(), std::move(mScrollPayload),
-                             mScrollGeneration);
+  mSampledState.emplace_back(Metrics(), std::move(mScrollPayload));
   return sampleChanged;
 }
 
@@ -4670,10 +4613,7 @@ void AsyncPanZoomController::ResampleCompositedAsyncTransform(
   // This only gets called during testing situations, so the fact that this
   // drops the scroll payload from mSampledState.front() is not really a
   // problem.
-  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
-  }
-  mSampledState.front() = SampledAPZCState(Metrics(), {}, mScrollGeneration);
+  mSampledState.front() = SampledAPZCState(Metrics());
 }
 
 void AsyncPanZoomController::ApplyAsyncTestAttributes(
@@ -4948,6 +4888,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       mCheckerboardEvent->UpdateRendertraceProperty(
           CheckerboardEvent::PaintedDisplayPort, GetPaintedRect(aLayerMetrics),
           str);
+      if (!aLayerMetrics.GetCriticalDisplayPort().IsEmpty()) {
+        mCheckerboardEvent->UpdateRendertraceProperty(
+            CheckerboardEvent::PaintedCriticalDisplayPort,
+            aLayerMetrics.GetCriticalDisplayPort() +
+                aLayerMetrics.GetLayoutScrollOffset());
+      }
     }
   }
 
@@ -5108,10 +5054,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         aScrollMetadata.GetIsRDMTouchSimulationActive());
     mScrollMetadata.SetPrefersReducedMotion(
         aScrollMetadata.PrefersReducedMotion());
-    mScrollMetadata.SetForceMousewheelAutodir(
-        aScrollMetadata.ForceMousewheelAutodir());
-    mScrollMetadata.SetForceMousewheelAutodirHonourRoot(
-        aScrollMetadata.ForceMousewheelAutodirHonourRoot());
     mScrollMetadata.SetDisregardedDirection(
         aScrollMetadata.GetDisregardedDirection());
     mScrollMetadata.SetOverscrollBehavior(

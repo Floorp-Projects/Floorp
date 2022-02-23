@@ -61,7 +61,6 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
 
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
-  Maybe<nsCOMPtr<nsIPrincipal>> mPrincipal;
 
   // Contained a de-duplicated list of ServiceWorker scope strings
   // for which this client has called navigator.serviceWorker.register().
@@ -165,8 +164,6 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   bool CalledRegisterForServiceWorkerScope(const nsACString& aScope);
-
-  nsIPrincipal* GetPrincipal();
 };
 
 inline void ImplCycleCollectionUnlink(UniquePtr<ClientSource>& aField) {

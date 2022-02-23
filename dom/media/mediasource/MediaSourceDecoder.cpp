@@ -64,8 +64,12 @@ nsresult MediaSourceDecoder::Load(nsIPrincipal* aPrincipal) {
     return NS_ERROR_FAILURE;
   }
 
+  rv = GetStateMachine()->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   GetStateMachine()->DispatchIsLiveStream(!mEnded);
-  return InitializeStateMachine();
+  SetStateMachineParameters();
+  return NS_OK;
 }
 
 media::TimeIntervals MediaSourceDecoder::GetSeekable() {

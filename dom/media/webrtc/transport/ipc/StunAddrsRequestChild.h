@@ -32,7 +32,8 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
   friend class PStunAddrsRequestChild;
 
  public:
-  explicit StunAddrsRequestChild(StunAddrsListener* listener);
+  explicit StunAddrsRequestChild(StunAddrsListener* listener,
+                                 nsISerialEventTarget* mainThreadEventTarget);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();

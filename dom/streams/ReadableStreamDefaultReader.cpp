@@ -17,7 +17,8 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamGenericReader, mClosedPromise, mStream,
                          mGlobal)
@@ -84,7 +85,7 @@ bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
 
       return true;
     // Step 5.
-    case ReadableStream::ReaderState::Errored: {
+    case ReadableStream::ReaderState::Errored:
       // Step 5.1 Implicit
       // Step 5.2
       JS::RootedValue rootedError(aCx, aStream->StoredError());
@@ -93,10 +94,6 @@ bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
       // Step 5.3
       aReader->ClosedPromise()->SetSettledPromiseIsHandled();
       return true;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown ReaderState");
-      return false;
   }
 }
 
@@ -113,9 +110,7 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
   // https://streams.spec.whatwg.org/#set-up-readable-stream-default-reader
   // Step 1.
   if (aStream.Locked()) {
-    aRv.ThrowTypeError(
-        "Cannot create a new reader for a readable stream already locked by "
-        "another reader.");
+    aRv.ThrowTypeError("Stream is Locked");
     return nullptr;
   }
 
@@ -132,24 +127,14 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-static bool CreateValueDonePair(JSContext* aCx, bool forAuthorCode,
-                                JS::HandleValue aValue, bool aDone,
+static bool CreateValueDonePair(JSContext* aCx, JS::HandleValue aValue,
+                                bool aDone,
                                 JS::MutableHandleValue aReturnValue) {
-  JS::RootedObject obj(
-      aCx, forAuthorCode ? JS_NewPlainObject(aCx)
-                         : JS_NewObjectWithGivenProto(aCx, nullptr, nullptr));
+  JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {
     return false;
   }
-
-  // Value may need to be wrapped if stream and reader are in different
-  // compartments.
-  JS::RootedValue value(aCx, aValue);
-  if (!JS_WrapValue(aCx, &value)) {
-    return false;
-  }
-
-  if (!JS_DefineProperty(aCx, obj, "value", value, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(aCx, obj, "value", aValue, JSPROP_ENUMERATE)) {
     return false;
   }
   JS::RootedValue done(aCx, JS::BooleanValue(aDone));
@@ -161,34 +146,46 @@ static bool CreateValueDonePair(JSContext* aCx, bool forAuthorCode,
   return true;
 }
 
-void Read_ReadRequest::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                                  ErrorResult& aRv) {
-  // Step 1.
-  JS::RootedValue resolvedValue(aCx);
-  if (!CreateValueDonePair(aCx, mForAuthorCode, aChunk, false,
-                           &resolvedValue)) {
-    aRv.StealExceptionFromJSContext(aCx);
-    return;
-  }
-  mPromise->MaybeResolve(resolvedValue);
-}
+// https://streams.spec.whatwg.org/#default-reader-read
+struct Read_ReadRequest : public ReadRequest {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Read_ReadRequest, ReadRequest)
 
-void Read_ReadRequest::CloseSteps(JSContext* aCx, ErrorResult& aRv) {
-  // Step 1.
-  JS::RootedValue undefined(aCx, JS::UndefinedValue());
-  JS::RootedValue resolvedValue(aCx);
-  if (!CreateValueDonePair(aCx, mForAuthorCode, undefined, true,
-                           &resolvedValue)) {
-    aRv.StealExceptionFromJSContext(aCx);
-    return;
-  }
-  mPromise->MaybeResolve(resolvedValue);
-}
+  RefPtr<Promise> mPromise;
 
-void Read_ReadRequest::ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                                  ErrorResult& aRv) {
-  mPromise->MaybeReject(e);
-}
+  explicit Read_ReadRequest(Promise* aPromise) : mPromise(aPromise) {}
+
+  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                  ErrorResult& aRv) override {
+    // Step 1.
+    JS::RootedValue resolvedValue(aCx);
+    if (!CreateValueDonePair(aCx, aChunk, false, &resolvedValue)) {
+      aRv.StealExceptionFromJSContext(aCx);
+      return;
+    }
+    mPromise->MaybeResolve(resolvedValue);
+  }
+
+  void CloseSteps(JSContext* aCx, ErrorResult& aRv) override {
+    // Step 1.
+    JS::RootedValue undefined(aCx, JS::UndefinedValue());
+    JS::RootedValue resolvedValue(aCx);
+    if (!CreateValueDonePair(aCx, undefined, true, &resolvedValue)) {
+      aRv.StealExceptionFromJSContext(aCx);
+      return;
+    }
+    mPromise->MaybeResolve(resolvedValue);
+  }
+
+  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
+                  ErrorResult& aRv) override {
+    mPromise->MaybeReject(e);
+  }
+
+ protected:
+  virtual ~Read_ReadRequest() = default;
+};
 
 NS_IMPL_CYCLE_COLLECTION(ReadRequest)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(Read_ReadRequest, ReadRequest, mPromise)
@@ -247,8 +244,9 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
                                                             ErrorResult& aRv) {
   // Step 1.
   if (!mStream) {
-    aRv.ThrowTypeError("Reading is not possible after calling releaseLock.");
-    return nullptr;
+    RefPtr<Promise> rejected = Promise::Create(GetParentObject(), aRv);
+    rejected->MaybeRejectWithTypeError("Stream is Undefined");
+    return rejected.forget();
   }
 
   // Step 2.
@@ -270,23 +268,16 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-release
 void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
                                         ErrorResult& aRv) {
-  // Step 1. Let stream be reader.[[stream]].
-  RefPtr<ReadableStream> stream = aReader->GetStream();
-
-  // Step 2. Assert: stream is not undefined.
-  MOZ_ASSERT(stream);
-
-  // Step 3. Assert: stream.[[reader]] is reader.
-  MOZ_ASSERT(stream->GetReader() == aReader);
-
-  // Step 4. If stream.[[state]] is "readable", reject reader.[[closedPromise]]
-  // with a TypeError exception.
+  // Step 1.
+  MOZ_ASSERT(aReader->GetStream());
+  // Step 2.
+  MOZ_ASSERT(aReader->GetStream()->GetReader() == aReader);
+  // Step 3.
   if (aReader->GetStream()->State() == ReadableStream::ReaderState::Readable) {
     aReader->ClosedPromise()->MaybeRejectWithTypeError(
         "Releasing lock on readable stream");
   } else {
-    // Step 5. Otherwise, set reader.[[closedPromise]] to a promise rejected
-    // with a TypeError exception.
+    // Step 4.
     RefPtr<Promise> promise = Promise::Create(aReader->GetParentObject(), aRv);
     if (aRv.Failed()) {
       return;
@@ -295,77 +286,31 @@ void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
     aReader->SetClosedPromise(promise.forget());
   }
 
-  // Step 6. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
+  // Step 5.
   aReader->ClosedPromise()->SetSettledPromiseIsHandled();
 
-  // Step 7. Perform ! stream.[[controller]].[[ReleaseSteps]]().
-  stream->Controller()->ReleaseSteps();
+  // Step 6.
+  aReader->GetStream()->SetReader(nullptr);
 
-  // Step 8. Set stream.[[reader]] to undefined.
-  stream->SetReader(nullptr);
-
-  // Step 9. Set reader.[[stream]] to undefined.
+  // Step 7.
   aReader->SetStream(nullptr);
-}
-
-// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreadererrorreadrequests
-void ReadableStreamDefaultReaderErrorReadRequests(
-    JSContext* aCx, ReadableStreamDefaultReader* aReader,
-    JS::Handle<JS::Value> aError, ErrorResult& aRv) {
-  // Step 1. Let readRequests be reader.[[readRequests]].
-  LinkedList<RefPtr<ReadRequest>> readRequests =
-      std::move(aReader->ReadRequests());
-
-  // Step 2. Set reader.[[readRequests]] to a new empty list.
-  // Note: The std::move already cleared this anyway.
-  aReader->ReadRequests().clear();
-
-  // Step 3. For each readRequest of readRequests,
-  while (RefPtr<ReadRequest> readRequest = readRequests.popFirst()) {
-    // Step 3.1. Perform readRequest’s error steps, given e.
-    readRequest->ErrorSteps(aCx, aError, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-  }
-}
-
-// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
-void ReadableStreamDefaultReaderRelease(JSContext* aCx,
-                                        ReadableStreamDefaultReader* aReader,
-                                        ErrorResult& aRv) {
-  // Step 1. Perform ! ReadableStreamReaderGenericRelease(reader).
-  ReadableStreamReaderGenericRelease(aReader, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  // Step 2. Let e be a new TypeError exception.
-  ErrorResult rv;
-  rv.ThrowTypeError("Releasing lock");
-  JS::Rooted<JS::Value> error(aCx);
-  MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &error));
-
-  // Step 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
-  ReadableStreamDefaultReaderErrorReadRequests(aCx, aReader, error, aRv);
 }
 
 // https://streams.spec.whatwg.org/#default-reader-release-lock
 void ReadableStreamDefaultReader::ReleaseLock(ErrorResult& aRv) {
-  // Step 1. If this.[[stream]] is undefined, return.
+  // Step 1.
   if (!mStream) {
     return;
   }
 
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobal)) {
-    return aRv.ThrowUnknownError("Internal error");
+  // Step 2.
+  if (!mReadRequests.isEmpty()) {
+    aRv.ThrowTypeError("Pending read requests");
+    return;
   }
-  JSContext* cx = jsapi.cx();
 
-  // Step 2. Perform ! ReadableStreamDefaultReaderRelease(this).
-  RefPtr<ReadableStreamDefaultReader> thisRefPtr = this;
-  ReadableStreamDefaultReaderRelease(cx, thisRefPtr, aRv);
+  // Step 3.
+  ReadableStreamReaderGenericRelease(this, aRv);
 }
 
 // https://streams.spec.whatwg.org/#generic-reader-closed
@@ -391,14 +336,16 @@ static already_AddRefed<Promise> ReadableStreamGenericReaderCancel(
 
 already_AddRefed<Promise> ReadableStreamGenericReader::Cancel(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
-  // Step 1. If this.[[stream]] is undefined,
-  // return a promise rejected with a TypeError exception.
+  // Step 1.
   if (!mStream) {
-    aRv.ThrowTypeError("Canceling is not possible after calling releaseLock.");
-    return nullptr;
+    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    promise->MaybeRejectWithTypeError("Cancel reader with undefined stream");
+    return promise.forget();
   }
 
-  // Step 2. Return ! ReadableStreamReaderGenericCancel(this, reason).
   return ReadableStreamGenericReaderCancel(aCx, this, aReason, aRv);
 }
 
@@ -409,9 +356,8 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
                                       ErrorResult& aRv) {
   // Step 1.
   if (IsReadableStreamLocked(aStream)) {
-    return aRv.ThrowTypeError(
-        "Cannot get a new reader for a readable stream already locked by "
-        "another reader.");
+    aRv.ThrowTypeError("Locked Stream");
+    return;
   }
 
   // Step 2.
@@ -423,4 +369,5 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
   aReader->ReadRequests().clear();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

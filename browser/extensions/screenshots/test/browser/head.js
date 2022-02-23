@@ -19,7 +19,6 @@ const gScreenshotUISelectors = {
   visiblePageButton: "button.visible",
   previewIframe: "#firefox-screenshots-preview-iframe",
   copyButton: "button.highlight-button-copy",
-  downloadButton: "button.highlight-button-download",
 };
 
 class ScreenshotsHelper {

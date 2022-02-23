@@ -829,7 +829,7 @@ class TypeIdDesc {
 
   bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
 
-  uint32_t immediate() const {
+  size_t immediate() const {
     MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
     return bits_;
   }

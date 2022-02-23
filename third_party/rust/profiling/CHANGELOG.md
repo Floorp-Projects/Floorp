@@ -1,8 +1,5 @@
 # Changelog
 
-## 1.0.5
- * Update puffin to 0.12.1
-
 ## 1.0.4
  * Update puffin to 0.10
 

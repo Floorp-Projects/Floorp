@@ -764,14 +764,6 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // We need to reject an attempt to call a non-reflectable method before
-  // we do anything like AutoEntryScript which might allocate in the JS engine,
-  // because the method isn't marked with JS_HAZ_CAN_RUN_SCRIPT, and we want
-  // to be able to take advantage of that in the GC hazard analysis.
-  if (!info->IsReflectable()) {
-    return NS_ERROR_FAILURE;
-  }
-
   Value* sp = nullptr;
   Value* argv = nullptr;
   uint8_t i;
@@ -798,7 +790,7 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
 
   JSContext* cx = ccx.GetJSContext();
 
-  if (!cx) {
+  if (!cx || !info->IsReflectable()) {
     return NS_ERROR_FAILURE;
   }
 

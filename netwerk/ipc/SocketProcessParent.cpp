@@ -31,6 +31,7 @@
 #include "nsIOService.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnectionInfo.h"
+#include "PSMIPCCommon.h"
 #include "secerr.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/ContentProcessManager.h"
@@ -295,9 +296,9 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
-    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
+    Endpoint<PBackgroundParent>&& aEndpoint) {
   LOG(("SocketProcessParent::RecvInitBackground\n"));
-  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
+  if (!ipc::BackgroundParent::Alloc(nullptr, std::move(aEndpoint))) {
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 
@@ -329,7 +330,12 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
 
   RefPtr<nsIX509Cert> clientCert;
   if (aClientCert) {
-    clientCert = new nsNSSCertificate(std::move(aClientCert->data()));
+    clientCert = nsNSSCertificate::ConstructFromDER(
+        BitwiseCast<char*, uint8_t*>(aClientCert->data().Elements()),
+        aClientCert->data().Length());
+    if (!clientCert) {
+      return IPC_OK();
+    }
   }
 
   ClientAuthInfo info(aHostName, aOriginAttributes, aPort, aProviderFlags,
@@ -412,11 +418,20 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
 already_AddRefed<PRemoteLazyInputStreamParent>
 SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                                        const uint64_t& aSize) {
-  // There is nothing to construct here, so we do not implement
-  // RecvPRemoteLazyInputStreamConstructor.
   RefPtr<RemoteLazyInputStreamParent> actor =
       RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
+}
+
+mozilla::ipc::IPCResult
+SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
+    PRemoteLazyInputStreamParent* aActor, const nsID& aID,
+    const uint64_t& aSize) {
+  if (!static_cast<RemoteLazyInputStreamParent*>(aActor)->HasValidStream()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(

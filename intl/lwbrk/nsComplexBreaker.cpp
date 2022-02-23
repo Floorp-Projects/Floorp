@@ -40,7 +40,7 @@ class CacheDeleter final : public Runnable {
       : Runnable("ComplexBreaker CacheDeleter"),
         mCacheToDelete(std::move(aCacheToDelete)) {}
 
-  NS_IMETHOD Run() override {
+  NS_IMETHOD Run() {
     MOZ_ASSERT(!NS_IsMainThread());
     mCacheToDelete = nullptr;
     return NS_OK;

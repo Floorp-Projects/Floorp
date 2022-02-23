@@ -4062,7 +4062,6 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         default:
           MOZ_CRASH("Unexpected instruction");
       }
-      replacement->setBailoutKind(BailoutKind::UnboxFolding);
 
       block->insertBefore(load, replacement);
       unbox->replaceAllUsesWith(replacement);

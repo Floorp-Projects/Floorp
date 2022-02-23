@@ -368,7 +368,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
                            nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
   }
 
-  fields.mHistoryID = nsID::GenerateUUID();
+  nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
   fields.mExplicitActive = [&] {
     if (parentBC) {
       // Non-root browsing-contexts inherit their status from its parent.
@@ -400,7 +400,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   fields.mDefaultLoadFlags =
       inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
 
-  fields.mOrientationLock = mozilla::hal::ScreenOrientation::None;
+  fields.mOrientationLock = mozilla::hal::eScreenOrientation_None;
 
   fields.mUseGlobalHistory = inherit ? inherit->GetUseGlobalHistory() : false;
 
@@ -3499,21 +3499,13 @@ bool BrowsingContext::IsPopupAllowed() {
 /* static */
 bool BrowsingContext::ShouldAddEntryForRefresh(
     nsIURI* aCurrentURI, const SessionHistoryInfo& aInfo) {
-  return ShouldAddEntryForRefresh(aCurrentURI, aInfo.GetURI(),
-                                  aInfo.GetPostData());
-}
-
-/* static */
-bool BrowsingContext::ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
-                                               nsIURI* aNewURI,
-                                               bool aHasPostData) {
-  if (aHasPostData) {
+  if (aInfo.GetPostData()) {
     return true;
   }
 
   bool equalsURI = false;
   if (aCurrentURI) {
-    aCurrentURI->Equals(aNewURI, &equalsURI);
+    aCurrentURI->Equals(aInfo.GetURI(), &equalsURI);
   }
   return !equalsURI;
 }
@@ -3521,7 +3513,7 @@ bool BrowsingContext::ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
 void BrowsingContext::SessionHistoryCommit(
     const LoadingSessionHistoryInfo& aInfo, uint32_t aLoadType,
     nsIURI* aCurrentURI, bool aHadActiveEntry, bool aPersist,
-    bool aCloneEntryChildren, bool aChannelExpired, uint32_t aCacheKey) {
+    bool aCloneEntryChildren, bool aChannelExpired) {
   nsID changeID = {};
   if (XRE_IsContentProcess()) {
     RefPtr<ChildSHistory> rootSH = Top()->GetChildSessionHistory();
@@ -3552,17 +3544,17 @@ void BrowsingContext::SessionHistoryCommit(
     ContentChild* cc = ContentChild::GetSingleton();
     mozilla::Unused << cc->SendHistoryCommit(
         this, aInfo.mLoadId, changeID, aLoadType, aPersist, aCloneEntryChildren,
-        aChannelExpired, aCacheKey);
+        aChannelExpired);
   } else {
     Canonical()->SessionHistoryCommit(aInfo.mLoadId, changeID, aLoadType,
                                       aPersist, aCloneEntryChildren,
-                                      aChannelExpired, aCacheKey);
+                                      aChannelExpired);
   }
 }
 
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, uint32_t aUpdatedCacheKey, bool aUpdateLength) {
+    uint32_t aLoadType, uint32_t aUpdatedCacheKey) {
   if (XRE_IsContentProcess()) {
     // XXX Why we update cache key only in content process case?
     if (aUpdatedCacheKey != 0) {
@@ -3570,11 +3562,9 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
     }
 
     nsID changeID = {};
-    if (aUpdateLength) {
-      RefPtr<ChildSHistory> shistory = Top()->GetChildSessionHistory();
-      if (shistory) {
-        changeID = shistory->AddPendingHistoryChange();
-      }
+    RefPtr<ChildSHistory> shistory = Top()->GetChildSessionHistory();
+    if (shistory) {
+      changeID = shistory->AddPendingHistoryChange();
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
         this, aPreviousScrollPos, *aInfo, aLoadType, aUpdatedCacheKey,

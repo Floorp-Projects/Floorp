@@ -81,7 +81,6 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/FlushType.h"
-#include "mozilla/FOGIPC.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/IMEStateManager.h"
@@ -269,6 +268,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentSink.h"
 #include "nsIContentViewer.h"
+#include "nsID.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -299,6 +299,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIParser.h"
 #include "nsIParserUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginTag.h"
@@ -325,6 +326,7 @@
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsIURIWithSpecialOrigin.h"
 #endif
+#include "nsIUUIDGenerator.h"
 #include "nsIUserIdleService.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWebNavigation.h"
@@ -345,7 +347,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIDOMWindowInlines.h"
-#include "nsParser.h"
+#include "nsParserCIID.h"
 #include "nsParserConstants.h"
 #include "nsPluginHost.h"
 #include "nsPoint.h"
@@ -413,6 +415,7 @@ nsIScriptSecurityManager* nsContentUtils::sSecurityManager;
 nsIPrincipal* nsContentUtils::sSystemPrincipal;
 nsIPrincipal* nsContentUtils::sNullSubjectPrincipal;
 nsIIOService* nsContentUtils::sIOService;
+nsIUUIDGenerator* nsContentUtils::sUUIDGenerator;
 nsIConsoleService* nsContentUtils::sConsoleService;
 nsTHashMap<nsRefPtrHashKey<nsAtom>, EventNameMapping>*
     nsContentUtils::sAtomEventTable = nullptr;
@@ -451,7 +454,7 @@ nsContentUtils::UserInteractionObserver*
     nsContentUtils::sUserInteractionObserver = nullptr;
 
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
-nsParser* nsContentUtils::sXMLFragmentParser = nullptr;
+nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
@@ -589,6 +592,8 @@ static const nsAttrValue::EnumTable kAutocompleteContactFieldHintTable[] = {
     {nullptr, 0}};
 
 namespace {
+
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable* sEventListenerManagersHash;
 
@@ -789,6 +794,13 @@ nsresult nsContentUtils::Init() {
   Element::InitCCCallbacks();
 
   Unused << nsRFPService::GetOrCreate();
+
+  nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
+      do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  uuidGenerator.forget(&sUUIDGenerator);
 
   if (XRE_IsParentProcess()) {
     AsyncPrecreateStringBundles();
@@ -1856,7 +1868,7 @@ void nsContentUtils::Shutdown() {
   NS_IF_RELEASE(sSystemPrincipal);
   NS_IF_RELEASE(sNullSubjectPrincipal);
   NS_IF_RELEASE(sIOService);
-
+  NS_IF_RELEASE(sUUIDGenerator);
   sBidiKeyboard = nullptr;
 
   delete sAtomEventTable;
@@ -5174,7 +5186,7 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
   nsContentUtils::sFragmentParsingActive = true;
   if (!sXMLFragmentParser) {
-    RefPtr<nsParser> parser = new nsParser();
+    nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID);
     parser.forget(&sXMLFragmentParser);
     // sXMLFragmentParser now owns the parser
   }
@@ -7335,6 +7347,27 @@ bool nsContentUtils::IsJavascriptMIMEType(const nsAString& aMIMEType) {
   }
 
   return false;
+}
+
+nsresult nsContentUtils::GenerateUUIDInPlace(nsID& aUUID) {
+  MOZ_ASSERT(sUUIDGenerator);
+
+  nsresult rv = sUUIDGenerator->GenerateUUIDInPlace(&aUUID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsID nsContentUtils::GenerateUUID() {
+  MOZ_DIAGNOSTIC_ASSERT(sUUIDGenerator);
+
+  nsID uuid;
+  nsresult rv = sUUIDGenerator->GenerateUUIDInPlace(&uuid);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  return uuid;
 }
 
 bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
@@ -10115,14 +10148,8 @@ nsContentUtils::UserInteractionObserver::Observe(nsISupports* aSubject,
                                                  const char* aTopic,
                                                  const char16_t* aData) {
   if (!strcmp(aTopic, kUserInteractionInactive)) {
-    if (sUserActive && XRE_IsParentProcess()) {
-      glean::RecordPowerMetrics();
-    }
     sUserActive = false;
   } else if (!strcmp(aTopic, kUserInteractionActive)) {
-    if (!sUserActive && XRE_IsParentProcess()) {
-      glean::RecordPowerMetrics();
-    }
     sUserActive = true;
   } else {
     NS_WARNING("Unexpected observer notification");
@@ -10486,34 +10513,30 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
     return windowSafeAreaInsets;
   }
 
-  const ScreenIntRect screenRect(screenLeft, screenTop, screenWidth,
-                                 screenHeight);
-
-  ScreenIntRect safeAreaRect = screenRect;
-  safeAreaRect.Deflate(aSafeAreaInsets);
-
-  ScreenIntRect windowRect = ViewAs<ScreenPixel>(
-      aWindowRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
-
-  // FIXME(bug 1754323): This can trigger because the screen rect is not
-  // orientation-aware.
-  // MOZ_ASSERT(screenRect.Contains(windowRect),
-  //            "Screen doesn't contain window rect? Something seems off");
-
+  // Screen's rect of safe area
+  LayoutDeviceIntRect safeAreaRect(
+      screenLeft + aSafeAreaInsets.left, screenTop + aSafeAreaInsets.top,
+      screenWidth - aSafeAreaInsets.right - aSafeAreaInsets.left,
+      screenHeight - aSafeAreaInsets.bottom - aSafeAreaInsets.top);
   // window's rect of safe area
-  safeAreaRect = safeAreaRect.Intersect(windowRect);
+  safeAreaRect = safeAreaRect.Intersect(aWindowRect);
 
-  windowSafeAreaInsets.top = safeAreaRect.y - aWindowRect.y;
-  windowSafeAreaInsets.left = safeAreaRect.x - aWindowRect.x;
+  windowSafeAreaInsets.top =
+      aSafeAreaInsets.top ? std::max(safeAreaRect.y - aWindowRect.y, 0) : 0;
+  windowSafeAreaInsets.left =
+      aSafeAreaInsets.left ? std::max(safeAreaRect.x - aWindowRect.x, 0) : 0;
   windowSafeAreaInsets.right =
-      aWindowRect.x + aWindowRect.width - (safeAreaRect.x + safeAreaRect.width);
-  windowSafeAreaInsets.bottom = aWindowRect.y + aWindowRect.height -
-                                (safeAreaRect.y + safeAreaRect.height);
-
-  windowSafeAreaInsets.EnsureAtLeast(ScreenIntMargin());
-  // This shouldn't be needed, but it wallpapers orientation issues, see bug
-  // 1754323.
-  windowSafeAreaInsets.EnsureAtMost(aSafeAreaInsets);
+      aSafeAreaInsets.right
+          ? std::max((aWindowRect.x + aWindowRect.width) -
+                         (safeAreaRect.x + safeAreaRect.width),
+                     0)
+          : 0;
+  windowSafeAreaInsets.bottom =
+      aSafeAreaInsets.bottom
+          ? std::max(aWindowRect.y + aWindowRect.height -
+                         (safeAreaRect.y + safeAreaRect.height),
+                     0)
+          : 0;
 
   return windowSafeAreaInsets;
 }
@@ -10521,7 +10544,8 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
 /* static */
 nsContentUtils::SubresourceCacheValidationInfo
 nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
-                                                  nsIURI* aURI) {
+                                                  nsIURI* aURI,
+                                                  SubresourceKind aKind) {
   SubresourceCacheValidationInfo info;
   if (nsCOMPtr<nsICacheInfoChannel> cache = do_QueryInterface(aRequest)) {
     uint32_t value = 0;
@@ -10550,9 +10574,13 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
     if (!aURI) {
       return false;
     }
-    if (aURI->SchemeIs("data") || aURI->SchemeIs("moz-page-thumb") ||
-        aURI->SchemeIs("moz-extension")) {
+    if (aURI->SchemeIs("data") || aURI->SchemeIs("moz-page-thumb")) {
       return true;
+    }
+    if (aURI->SchemeIs("moz-extension")) {
+      // TODO(bug 1746841): This should be true always, but we force style to be
+      // revalidated until bug 1746841 is fixed.
+      return aKind != SubresourceKind::Style;
     }
     if (dom::IsChromeURI(aURI)) {
       return !StaticPrefs::nglayout_debug_disable_xul_cache();

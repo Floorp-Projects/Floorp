@@ -34,7 +34,7 @@ function run_test() {
   do_get_profile();
   prefs = Services.prefs;
 
-  prefs.setBoolPref("network.http.http3.enable", true);
+  prefs.setBoolPref("network.http.http3.enabled", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   // We always resolve elements of localDomains as it's hardcoded without the
   // following pref:
@@ -133,7 +133,7 @@ function test_https_alt_svc() {
 }
 
 function testsDone() {
-  prefs.clearUserPref("network.http.http3.enable");
+  prefs.clearUserPref("network.http.http3.enabled");
   prefs.clearUserPref("network.dns.localDomains");
   prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
   dump("testDone\n");

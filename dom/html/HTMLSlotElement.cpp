@@ -228,12 +228,18 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
 
   // Clear out existing assigned nodes
   if (mInManualShadowRoot) {
-    if (!mAssignedNodes.IsEmpty()) {
-      changedSlots.EnsureInserted(this);
-      if (root) {
-        root->InvalidateStyleAndLayoutOnSubtree(this);
+    nsTArray<RefPtr<nsINode>> assignedNodes(std::move(mAssignedNodes));
+    for (RefPtr<nsINode>& node : assignedNodes) {
+      nsIContent* content = node->AsContent();
+      HTMLSlotElement* oldSlot = content->GetAssignedSlot();
+      MOZ_RELEASE_ASSERT(oldSlot == this);
+      if (changedSlots.EnsureInserted(oldSlot)) {
+        if (root) {
+          MOZ_ASSERT(oldSlot->GetContainingShadow() == root);
+          root->InvalidateStyleAndLayoutOnSubtree(oldSlot);
+        }
       }
-      ClearAssignedNodes();
+      oldSlot->RemoveAssignedNode(*content);
     }
 
     MOZ_ASSERT(mAssignedNodes.IsEmpty());

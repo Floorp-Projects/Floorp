@@ -43,17 +43,15 @@ void ChromeCompatCallbackHandler::Create(
   aPromise->AppendNativeHandler(handler);
 }
 
-void ChromeCompatCallbackHandler::ResolvedCallback(JSContext* aCx,
-                                                   JS::Handle<JS::Value> aValue,
-                                                   ErrorResult& aRv) {
+void ChromeCompatCallbackHandler::ResolvedCallback(
+    JSContext* aCx, JS::Handle<JS::Value> aValue) {
   JS::RootedValue retval(aCx);
   IgnoredErrorResult rv;
   MOZ_KnownLive(mCallback)->Call({aValue}, &retval, rv);
 }
 
-void ChromeCompatCallbackHandler::RejectedCallback(JSContext* aCx,
-                                                   JS::Handle<JS::Value> aValue,
-                                                   ErrorResult& aRv) {
+void ChromeCompatCallbackHandler::RejectedCallback(
+    JSContext* aCx, JS::Handle<JS::Value> aValue) {
   JS::RootedValue retval(aCx);
   IgnoredErrorResult rv;
   // Call the chrome-compatible callback without any parameter, the errors

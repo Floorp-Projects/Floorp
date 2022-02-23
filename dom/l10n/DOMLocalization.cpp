@@ -203,8 +203,8 @@ class ElementTranslationHandler : public PromiseNativeHandler {
     mReturnValuePromise = aReturnValuePromise;
   }
 
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     ErrorResult rv;
 
     nsTArray<Nullable<L10nMessage>> l10nData;
@@ -257,8 +257,8 @@ class ElementTranslationHandler : public PromiseNativeHandler {
     mReturnValuePromise->MaybeResolveWithUndefined();
   }
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     mReturnValuePromise->MaybeRejectWithClone(aCx, aValue);
   }
 
@@ -377,13 +377,12 @@ class L10nRootTranslationHandler final : public PromiseNativeHandler {
 
   explicit L10nRootTranslationHandler(Element* aRoot) : mRoot(aRoot) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     DOMLocalization::SetRootInfo(mRoot);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  }
 
  private:
   ~L10nRootTranslationHandler() = default;

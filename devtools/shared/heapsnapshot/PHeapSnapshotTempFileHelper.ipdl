@@ -22,7 +22,6 @@ union OpenHeapSnapshotTempFileResponse
     OpenedFile;
 };
 
-[ManualDealloc]
 sync protocol PHeapSnapshotTempFileHelper
 {
     manager PContent;

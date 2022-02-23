@@ -229,10 +229,11 @@ class WAVTrackDemuxer : public MediaTrackDemuxer,
 
   void UpdateState(const MediaByteRange& aRange);
 
-  uint64_t OffsetFromChunkIndex(uint32_t aChunkIndex) const;
-  uint64_t ChunkIndexFromTime(const media::TimeUnit& aTime) const;
+  int64_t OffsetFromChunkIndex(int64_t aChunkIndex) const;
+  int64_t ChunkIndexFromOffset(int64_t aOffet) const;
+  int64_t ChunkIndexFromTime(const media::TimeUnit& aTime) const;
 
-  uint32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
+  int32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
 
   MediaResourceIndex mSource;
 
@@ -243,20 +244,20 @@ class WAVTrackDemuxer : public MediaTrackDemuxer,
   FormatParser mFmtParser;
   // ListChunkParser mListChunkParser;
 
-  uint64_t mOffset;
-  uint64_t mFirstChunkOffset;
+  int64_t mOffset;
+  int64_t mFirstChunkOffset;
 
   uint32_t mNumParsedChunks;
-  uint32_t mChunkIndex;
+  int32_t mChunkIndex;
 
   uint32_t mDataLength;
   uint64_t mTotalChunkLen;
 
-  uint32_t mSamplesPerChunk;
-  uint32_t mSamplesPerSecond;
+  int32_t mSamplesPerChunk;
+  int32_t mSamplesPerSecond;
 
-  uint32_t mChannels;
-  uint32_t mSampleFormat;
+  int32_t mChannels;
+  int32_t mSampleFormat;
 
   UniquePtr<AudioInfo> mInfo;
 };

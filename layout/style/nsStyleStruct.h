@@ -1723,21 +1723,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
 
  private:
   mozilla::StyleUserSelect mUserSelect;  // Use ComputedStyle::UserSelect()
-  mozilla::StyleScrollbarWidth mScrollbarWidth;  // Use ScrollbarWidth()
 
  public:
   mozilla::StyleUserSelect ComputedUserSelect() const { return mUserSelect; }
 
-  mozilla::StyleScrollbarWidth ScrollbarWidth() const {
-    if (MOZ_UNLIKELY(
-            mozilla::StaticPrefs::layout_css_scrollbar_width_thin_disabled())) {
-      if (mScrollbarWidth == mozilla::StyleScrollbarWidth::Thin) {
-        return mozilla::StyleScrollbarWidth::Auto;
-      }
-    }
-    return mScrollbarWidth;
-  }
-
+  mozilla::StyleScrollbarWidth mScrollbarWidth;
   uint8_t mMozForceBrokenImageIcon;  // (0 if not forcing, otherwise forcing)
   mozilla::StyleImeMode mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;

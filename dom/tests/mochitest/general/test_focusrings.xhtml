@@ -105,9 +105,8 @@ function runTest()
   }
 }
 
-async function testMacFocusesFormControl()
+function testMacFocusesFormControl()
 {
-  await SimpleTest.promiseFocus(window);
   testHTMLElements(htmlElementsMacPrefSet, false);
   SimpleTest.finish();
 }

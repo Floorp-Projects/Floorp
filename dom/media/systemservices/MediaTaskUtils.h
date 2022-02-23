@@ -17,11 +17,7 @@ namespace media {
 
 /* media::NewTaskFrom() - Create a Task from a lambda.
  *
- * Similar to media::NewRunnableFrom() - Create an nsRunnable from a lambda,
- * but ignore the return value from the lambda.
- *
- * Prefer NS_NewRunnableFunction(), which provides a specific name, unless the
- * lambda really must have a non-void return value that is to be ignored.
+ * Similar to media::NewRunnableFrom() - Create an nsRunnable from a lambda.
  */
 
 template <typename OnRunType>

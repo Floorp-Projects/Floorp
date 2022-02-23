@@ -18,44 +18,52 @@ using namespace mozilla::a11y;
 extern "C" {
 
 static gboolean doActionCB(AtkAction* aAction, gint aActionIndex) {
-  AtkObject* atkObject = ATK_OBJECT(aAction);
-  if (Accessible* acc = GetInternalObj(atkObject)) {
-    return acc->DoAction(aActionIndex);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    return accWrap->DoAction(aActionIndex);
   }
 
-  return false;
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  return proxy && proxy->DoAction(aActionIndex);
 }
 
 static gint getActionCountCB(AtkAction* aAction) {
-  AtkObject* atkObject = ATK_OBJECT(aAction);
-  if (Accessible* acc = GetInternalObj(atkObject)) {
-    return acc->ActionCount();
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    return accWrap->ActionCount();
   }
 
-  return 0;
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  return proxy ? proxy->ActionCount() : 0;
 }
 
 static const gchar* getActionDescriptionCB(AtkAction* aAction,
                                            gint aActionIndex) {
-  AtkObject* atkObject = ATK_OBJECT(aAction);
   nsAutoString description;
-  if (Accessible* acc = GetInternalObj(atkObject)) {
-    acc->ActionDescriptionAt(aActionIndex, description);
-    return AccessibleWrap::ReturnString(description);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    accWrap->ActionDescriptionAt(aActionIndex, description);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->ActionDescriptionAt(aActionIndex, description);
+  } else {
+    return nullptr;
   }
 
-  return nullptr;
+  return AccessibleWrap::ReturnString(description);
 }
 
 static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
-  AtkObject* atkObject = ATK_OBJECT(aAction);
   nsAutoString autoStr;
-  if (Accessible* acc = GetInternalObj(atkObject)) {
-    acc->ActionDescriptionAt(aActionIndex, autoStr);
-    return AccessibleWrap::ReturnString(autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    accWrap->ActionNameAt(aActionIndex, autoStr);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->ActionNameAt(aActionIndex, autoStr);
+  } else {
+    return nullptr;
   }
 
-  return nullptr;
+  return AccessibleWrap::ReturnString(autoStr);
 }
 
 static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {

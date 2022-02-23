@@ -175,7 +175,6 @@ impl Parker {
     ///
     /// let p = Parker::new();
     /// let raw = Parker::into_raw(p);
-    /// # let _ = unsafe { Parker::from_raw(raw) };
     /// ```
     pub fn into_raw(this: Parker) -> *const () {
         Unparker::into_raw(this.unparker)
@@ -259,7 +258,6 @@ impl Unparker {
     /// let p = Parker::new();
     /// let u = p.unparker().clone();
     /// let raw = Unparker::into_raw(u);
-    /// # let _ = unsafe { Unparker::from_raw(raw) };
     /// ```
     pub fn into_raw(this: Unparker) -> *const () {
         Arc::into_raw(this.inner) as *const ()

@@ -52,6 +52,7 @@ bool SessionStoreRestoreData::CanRestoreInto(nsIURI* aDocumentURI) {
           equalsExceptRef);
 }
 
+MOZ_CAN_RUN_SCRIPT
 bool SessionStoreRestoreData::RestoreInto(RefPtr<BrowsingContext> aContext) {
   if (!aContext->IsInProcess()) {
     return false;

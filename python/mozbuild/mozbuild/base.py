@@ -25,7 +25,6 @@ from mozversioncontrol import (
     HgRepository,
     InvalidRepoPath,
     MissingConfigureInfo,
-    MissingVCSTool,
 )
 
 from .backend.configenvironment import (
@@ -38,6 +37,7 @@ from .mozconfig import (
     MozconfigLoadException,
     MozconfigLoader,
 )
+from .pythonutil import find_python3_executable
 from .util import (
     memoize,
     memoized_property,
@@ -456,11 +456,7 @@ class MozbuildObject(ProcessExecutionMixin):
         # If we don't have a configure context, fall back to auto-detection.
         try:
             return get_repository_from_build_config(self)
-        except (
-            BuildEnvironmentNotFoundException,
-            MissingConfigureInfo,
-            MissingVCSTool,
-        ):
+        except (BuildEnvironmentNotFoundException, MissingConfigureInfo):
             pass
 
         return get_repository_object(self.topsrcdir)
@@ -545,6 +541,25 @@ class MozbuildObject(ProcessExecutionMixin):
             )
 
         return BuildReader(config, finder=finder)
+
+    @memoized_property
+    def python3(self):
+        """Obtain info about a Python 3 executable.
+
+        Returns a tuple of an executable path and its version (as a tuple).
+        Either both entries will have a value or both will be None.
+        """
+        # Search configured build info first. Then fall back to system.
+        try:
+            subst = self.substs
+
+            if "PYTHON3" in subst:
+                version = tuple(map(int, subst["PYTHON3_VERSION"].split(".")))
+                return subst["PYTHON3"], version
+        except BuildEnvironmentNotFoundException:
+            pass
+
+        return find_python3_executable()
 
     def is_clobber_needed(self):
         if not os.path.exists(self.topobjdir):

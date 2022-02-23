@@ -20,19 +20,17 @@ namespace PathUtils {
   DOMString filename(DOMString path);
 
   /**
-   * Return an ancestor directory of the given path.
+   * Return the parent directory name of the given path.
    *
    * @param path An absolute path.
-   * @param depth The number of ancestors to remove, defaulting to 1 (i.e., the
-   *              parent).
    *
-   * @return The ancestor directory.
+   * @return The parent directory.
    *
    *         If the path provided is a root path (e.g., `C:` on Windows or `/`
    *         on *NIX), then null is returned.
    */
   [Throws]
-  DOMString? parent(DOMString path, optional long depth = 1);
+  DOMString? parent(DOMString path);
 
   /**
    * Join the given components into a full path.
@@ -51,6 +49,14 @@ namespace PathUtils {
    */
   [Throws]
   DOMString joinRelative(DOMString base, DOMString relativePath);
+
+  /**
+   * Creates a unique path from the provided path.
+   *
+   * @param path An absolute path.
+   */
+  [Throws]
+  DOMString createUniquePath(DOMString path);
 
   /**
    * Creates an adjusted path using a path whose length is already close
@@ -92,44 +98,20 @@ namespace PathUtils {
   UTF8String toFileURI(DOMString path);
 
   /**
-   * Determine if the given path is an absolute or relative path.
-   *
-   * @param path A file path that is either relative or absolute.
-   *
-   * @return Whether or not the path is absolute.
-   */
-  boolean isAbsolute(DOMString path);
-};
-
-[Exposed=Window]
-partial namespace PathUtils {
-  [Throws, BinaryName="ProfileDirSync"]
-  readonly attribute DOMString profileDir;
-
-  [Throws, BinaryName="LocalProfileDirSync"]
-  readonly attribute DOMString localProfileDir;
-
-  [Throws, BinaryName="TempDirSync"]
-  readonly attribute DOMString tempDir;
-};
-
-[Exposed=(Window, Worker)]
-partial namespace PathUtils {
-  /**
    * The profile directory.
    */
-  [Throws, BinaryName="GetProfileDirAsync"]
+  [Throws]
   Promise<DOMString> getProfileDir();
 
   /**
    * The local-specific profile directory.
    */
-  [Throws, BinaryName="GetProfileDirAsync"]
+  [Throws]
   Promise<DOMString> getLocalProfileDir();
 
   /**
    * The temporary directory for the process.
    */
-  [Throws, BinaryName="GetTempDirAsync"]
+  [Throws]
   Promise<DOMString> getTempDir();
 };

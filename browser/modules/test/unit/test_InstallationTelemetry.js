@@ -31,13 +31,13 @@ function encodeUtf16(str) {
 }
 
 // Returns Promise
-function writeJsonUtf16(fileName, obj) {
+function writeJsonUtf16(file, obj) {
   const str = JSON.stringify(obj);
-  return IOUtils.write(fileName, encodeUtf16(str));
+  return IOUtils.write(file.path, encodeUtf16(str));
 }
 
 async function runReport(
-  dataFile,
+  dataFilePath,
   installType,
   { clearTS, setTS, assertRejects, expectExtra, expectTS, msixPrefixes }
 ) {
@@ -55,14 +55,14 @@ async function runReport(
   // Exercise reportInstallationTelemetry
   if (typeof assertRejects != "undefined") {
     await Assert.rejects(
-      BrowserUsageTelemetry.reportInstallationTelemetry(dataFile),
+      BrowserUsageTelemetry.reportInstallationTelemetry(dataFilePath),
       assertRejects
     );
   } else if (!msixPrefixes) {
-    await BrowserUsageTelemetry.reportInstallationTelemetry(dataFile);
+    await BrowserUsageTelemetry.reportInstallationTelemetry(dataFilePath);
   } else {
     await BrowserUsageTelemetry.reportInstallationTelemetry(
-      dataFile,
+      dataFilePath,
       msixPrefixes
     );
   }
@@ -82,15 +82,14 @@ async function runReport(
 }
 
 add_task(async function testInstallationTelemetry() {
-  let dataFilePath = await IOUtils.createUniqueFile(
-    Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-    "installation-telemetry-test-data" + Math.random() + ".json"
-  );
-  let dataFile = new FileUtils.File(dataFilePath);
+  let dataFile = FileUtils.getFile("TmpD", [
+    "installation-telemetry-test-data" + Math.random() + ".json",
+  ]);
+  dataFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   registerCleanupFunction(async () => {
     try {
-      await IOUtils.remove(dataFilePath);
+      await IOUtils.remove(dataFile.path);
     } catch (ex) {
       // Ignore remove failure, file may not exist by now
     }
@@ -118,7 +117,7 @@ add_task(async function testInstallationTelemetry() {
     profdir_existed: "false",
   };
 
-  await writeJsonUtf16(dataFilePath, stubData);
+  await writeJsonUtf16(dataFile, stubData);
   await runReport(dataFile, "stub", {
     clearTS: true,
     expectExtra: stubExtra,
@@ -130,11 +129,8 @@ add_task(async function testInstallationTelemetry() {
 
   // New timestamp
   stubData.install_timestamp = "1";
-  await writeJsonUtf16(dataFilePath, stubData);
-  await runReport(dataFile, "stub", {
-    expectExtra: stubExtra,
-    expectTS: "1",
-  });
+  await writeJsonUtf16(dataFile, stubData);
+  await runReport(dataFile, "stub", { expectExtra: stubExtra, expectTS: "1" });
 
   // Test with normal full data
   let fullData = {
@@ -163,7 +159,7 @@ add_task(async function testInstallationTelemetry() {
     default_path: "true",
   };
 
-  await writeJsonUtf16(dataFilePath, fullData);
+  await writeJsonUtf16(dataFile, fullData);
   await runReport(dataFile, "full", {
     clearTS: true,
     expectExtra: fullExtra,
@@ -180,7 +176,7 @@ add_task(async function testInstallationTelemetry() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     fullExtra.other_msix_inst = "true";
   }
-  await writeJsonUtf16(dataFilePath, fullData);
+  await writeJsonUtf16(dataFile, fullData);
   await runReport(dataFile, "full", {
     expectExtra: fullExtra,
     expectTS: "2",
@@ -190,17 +186,15 @@ add_task(async function testInstallationTelemetry() {
   // Missing field
   delete fullData.install_existed;
   fullData.install_timestamp = "3";
-  await writeJsonUtf16(dataFilePath, fullData);
+  await writeJsonUtf16(dataFile, fullData);
   await runReport(dataFile, "full", { assertRejects: /install_existed/ });
 
   // Malformed JSON
-  await IOUtils.write(dataFilePath, encodeUtf16("hello"));
-  await runReport(dataFile, "stub", {
-    assertRejects: /unexpected character/,
-  });
+  await IOUtils.write(dataFile.path, encodeUtf16("hello"));
+  await runReport(dataFile, "stub", { assertRejects: /unexpected character/ });
 
   // Missing file, should return with no exception
-  await IOUtils.remove(dataFilePath);
+  await IOUtils.remove(dataFile.path);
   await runReport(dataFile, "stub", { setTS: "3", expectTS: "3" });
 
   // bug 1750581 tracks testing this when we're able to run tests in

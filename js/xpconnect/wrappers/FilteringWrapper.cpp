@@ -68,7 +68,7 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
   }
 
   for (auto code : sCrossOriginWhitelistedSymbolCodes) {
-    props.infallibleAppend(JS::GetWellKnownSymbolKey(cx, code));
+    props.infallibleAppend(SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
   }
 
   return true;

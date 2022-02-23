@@ -60,18 +60,6 @@ ReadOnlyEditor.prototype = {
   },
 
   /**
-   * Show overflow highlight if showOverflowHighlight is true, otherwise hide it.
-   *
-   * @param {Boolean} showOverflowHighlight
-   */
-  setOverflowHighlight: function(showOverflowHighlight) {
-    this.container.tagState.classList.toggle(
-      "overflow-causing-highlighted",
-      showOverflowHighlight
-    );
-  },
-
-  /**
    * Stub method for consistency with ElementEditor.
    */
   getInfoAtNode: function() {

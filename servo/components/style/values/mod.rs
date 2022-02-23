@@ -294,16 +294,6 @@ impl cssparser::ToCss for AtomIdent {
 }
 
 #[cfg(feature = "gecko")]
-impl style_traits::ToCss for AtomIdent {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        cssparser::ToCss::to_css(self, dest)
-    }
-}
-
-#[cfg(feature = "gecko")]
 impl PrecomputedHash for AtomIdent {
     #[inline]
     fn precomputed_hash(&self) -> u32 {

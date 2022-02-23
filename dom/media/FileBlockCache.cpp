@@ -31,7 +31,8 @@ static void CloseFD(PRFileDesc* aFD) {
 }
 
 void FileBlockCache::SetCacheFile(PRFileDesc* aFD) {
-  LOG("SetCacheFile aFD=%p", aFD);
+  LOG("SetFD(aFD=%p) mBackgroundET=%p", aFD, mBackgroundET.get());
+
   if (!aFD) {
     // Failed to get a temporary file. Shutdown.
     Close();
@@ -43,8 +44,6 @@ void FileBlockCache::SetCacheFile(PRFileDesc* aFD) {
   }
   {
     MutexAutoLock lock(mDataMutex);
-    LOG("SetFileCache mBackgroundET=%p, mIsWriteScheduled %d",
-        mBackgroundET.get(), mIsWriteScheduled);
     if (mBackgroundET) {
       // Still open, complete the initialization.
       mInitialized = true;
@@ -318,8 +317,8 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
 }
 
 void FileBlockCache::PerformBlockIOs() {
-  MutexAutoLock mon(mDataMutex);
   MOZ_ASSERT(mBackgroundET->IsOnCurrentThread());
+  MutexAutoLock mon(mDataMutex);
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
 
   LOG("Run() mFD=%p mBackgroundET=%p", mFD, mBackgroundET.get());

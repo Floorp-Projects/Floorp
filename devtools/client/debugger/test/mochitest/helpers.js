@@ -25,8 +25,6 @@ const {
   resetSchemaVersion,
 } = require("devtools/client/debugger/src/utils/prefs");
 
-const { isGeneratedId } = require("devtools/client/shared/source-map/index");
-
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
 }
@@ -262,13 +260,11 @@ function assertEmptyLines(dbg, lines) {
 }
 
 function getVisibleSelectedFrameLine(dbg) {
-  const frame = dbg.selectors.getVisibleSelectedFrame();
-  return frame?.location.line;
-}
-
-function getVisibleSelectedFrameColumn(dbg) {
-  const frame = dbg.selectors.getVisibleSelectedFrame();
-  return frame?.location.column;
+  const {
+    selectors: { getVisibleSelectedFrame },
+  } = dbg;
+  const frame = getVisibleSelectedFrame();
+  return frame && frame.location.line;
 }
 
 /**
@@ -283,8 +279,7 @@ function assertPausedLocation(dbg) {
 
   // Check the pause location
   const pauseLine = getVisibleSelectedFrameLine(dbg);
-  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
-  assertDebugLine(dbg, pauseLine, pauseColumn);
+  assertDebugLine(dbg, pauseLine);
 
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 }
@@ -301,11 +296,6 @@ function assertDebugLine(dbg, line, column) {
     );
     return;
   }
-
-  // Scroll the line into view to make sure the content
-  // on the line is rendered and in the dom.
-  getCM(dbg).scrollIntoView({ line, ch: 0 });
-
 
   if (!lineInfo.wrapClass) {
     const pauseLine = getVisibleSelectedFrameLine(dbg);
@@ -348,28 +338,6 @@ function assertDebugLine(dbg, line, column) {
   }
   info(`Paused on line ${line}`);
 }
-
-/**
- * Assert that a given line is breaklable or not.
- * Verify that CodeMirror gutter is grayed out via the empty line classname if not breakable.
- */
-function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  // When a line is not breakable, the "empty-line" class is added
-  // and the line is greyed out
-  if (shouldBeBreakable) {
-    ok(
-      !lineInfo.wrapClass?.includes("empty-line"),
-      `${file}:${line} should be breakable`
-    );
-  } else {
-    ok(
-      lineInfo?.wrapClass?.includes("empty-line"),
-      `${file}:${line} should NOT be breakable`
-    );
-  }
-}
-
 
 /**
  * Assert that the debugger is highlighting the correct location.
@@ -418,16 +386,8 @@ function isPaused(dbg) {
   return dbg.selectors.getIsCurrentThreadPaused();
 }
 
-/**
- * Make sure the debugger is paused at a certain source ID and line.
- *
- * @memberof mochitest/asserts
- * @param {Object} dbg
- * @param {String} expectedSourceId
- * @param {Number} expectedLine
- * @param {Number} [expectedColumn]
- */
-function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expectedColumn) {
+// Make sure the debugger is paused at a certain source ID and line.
+function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   // Check that the debugger is paused.
   assertPaused(dbg);
 
@@ -436,21 +396,12 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expect
 
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
-
-  // Lets make sure we can assert both original and generated file locations when needed
-  const { sourceId, line, column } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
+  const { sourceId, line } = frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
-    `Frame paused at line ${line}, but expected line ${expectedLine}`
+    `Frame paused at ${line}, but expected ${expectedLine}`
   );
-
-  if (expectedColumn) {
-    ok(
-      column == expectedColumn,
-      `Frame paused at column ${column}, but expected column ${expectedColumn}`
-    );
-  }
 }
 
 async function waitForThreadCount(dbg, count) {
@@ -505,17 +456,6 @@ async function waitForPaused(dbg, url) {
   await waitForState(dbg, getCurrentThreadFrames, "fetched frames");
   await waitForLoadedScopes(dbg);
   await waitForSelectedSource(dbg, url);
-}
-
-/**
- * Waits for the debugger to resume
- *
- * @memberof mochitest/waits
- * @param {Objeect} dbg
- * @static
- */
-function waitForResumed(dbg) {
-  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 function waitForInlinePreviews(dbg) {
@@ -645,42 +585,33 @@ function pauseTest() {
   return new Promise(resolve => (resumeTest = resolve));
 }
 
+// Actions
 /**
- * Returns a source that matches a given filename, or a URL.
- * This also accept a source as input argument, in such case it just returns it.
+ * Returns a source that matches the URL.
  *
+ * @memberof mochitest/actions
  * @param {Object} dbg
- * @param {String} filenameOrUrlOrSource
- *        The typical case will be to pass only a filename,
- *        but you may also pass a full URL to match sources without filesnames like data: URL
- *        or pass the source itself, which is just returned.
- * @param {Object} options
- * @param {Boolean} options.silent
- *        If true, won't throw if the source is missing.
+ * @param {String} url
  * @return {Object} source
+ * @static
  */
-function findSource(dbg, filenameOrUrlOrSource, { silent } = { silent: false }) {
-  if (typeof filenameOrUrlOrSource !== "string") {
-    // Support passing in a source object itself all APIs that use this
+function findSource(dbg, url, { silent } = { silent: false }) {
+  if (typeof url !== "string") {
+    // Support passing in a source object itelf all APIs that use this
     // function support both styles
-    return filenameOrUrlOrSource; 
+    const source = url;
+    return source;
   }
 
   const sources = dbg.selectors.getSourceList();
-  const source = sources.find(s => {
-    // Sources don't have a file name attribute, we need to compute it here:
-    const sourceFileName = s.url ? s.url.substring(s.url.lastIndexOf("/") + 1) : "";
-    // The input argument may either be only the filename, or the complete URL
-    // This helps match sources whose URL doesn't contain a filename, like data: URLs
-    return sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource;
-  });
+  const source = sources.find(s => (s.url || "").includes(url));
 
   if (!source) {
     if (silent) {
       return false;
     }
 
-    throw new Error(`Unable to find source: ${filenameOrUrlOrSource}`);
+    throw new Error(`Unable to find source: ${url}`);
   }
 
   return source;
@@ -826,9 +757,9 @@ async function stepOut(dbg) {
 async function resume(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Resuming from ${pauseLine}`);
-  const onResumed = waitForResumed(dbg);
-  await dbg.actions.resume();
-  return onResumed;
+  const onResumed = waitForActive(dbg);
+  await dbg.actions.resume(getThreadContext(dbg));
+  await onResumed;
 }
 
 function deleteExpression(dbg, input) {
@@ -862,25 +793,9 @@ async function reload(dbg, ...sources) {
  * @static
  */
 async function navigate(dbg, url, ...sources) {
-  return navigateToAbsoluteURL(dbg, EXAMPLE_URL + url, ...sources);
-}
-
-/**
- * Navigates the debuggee to another absolute url.
- *
- * @memberof mochitest/actions
- * @param {Object} dbg
- * @param {String} url
- * @param {Array} sources
- * @return {Promise}
- * @static
- */
-async function navigateToAbsoluteURL(dbg, url, ...sources) {
-  await navigateTo(url);
+  await navigateTo(EXAMPLE_URL + url);
   return waitForSources(dbg, ...sources);
 }
-
-
 
 function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const { getSource, getFirstBreakpointPosition } = dbg.selectors;
@@ -891,26 +806,6 @@ function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   });
 
   return getSelectedLocation(position, source).column;
-}
-
-function isMatchingLocation(location1, location2) {
-  return (
-    location1?.sourceId == location2?.sourceId &&
-    location1?.line == location2?.line &&
-    location1?.column == location2?.column
-  );
-}
-
-function getBreakpointForLocation(dbg, location) {
-  if (!location) {
-    return undefined;
-  }
-
-  const isGeneratedSource = isGeneratedId(location.sourceId);
-  return dbg.selectors.getBreakpointsList().find(bp => {
-    const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
-    return isMatchingLocation(loc, location);
-  });
 }
 
 /**
@@ -942,22 +837,11 @@ async function addBreakpoint(dbg, source, line, column, options) {
   );
 }
 
-/**
- * Similar to `addBreakpoint`, but uses the UI instead or calling
- * the actions directly. This only support breakpoint on lines,
- * not on a specific column.
- */
-async function addBreakpointViaGutter(dbg, line) {
-  info(`Add breakpoint via the editor on line ${line}`);
-  await clickGutter(dbg, line);
-  return waitForDispatch(dbg.store, "SET_BREAKPOINT");
-}
-
 function disableBreakpoint(dbg, source, line, column) {
   column =
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
-  const bp = getBreakpointForLocation(dbg, location);
+  const bp = dbg.selectors.getBreakpointForLocation(location);
   return dbg.actions.disableBreakpoint(getContext(dbg), bp);
 }
 
@@ -1121,7 +1005,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
   column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
   const location = { sourceId, sourceUrl: source.url, line, column };
-  const bp = getBreakpointForLocation(dbg, location);
+  const bp = dbg.selectors.getBreakpointForLocation(location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
 
@@ -1144,6 +1028,10 @@ async function togglePauseOnExceptions(
     pauseOnExceptions,
     pauseOnCaughtExceptions
   );
+}
+
+function waitForActive(dbg) {
+  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 // Helpers
@@ -1333,23 +1221,8 @@ async function getEditorLineEl(dbg, line) {
   return el;
 }
 
-/**
- * Assert the text content on the line matches what is
- * expected.
- *
- * @param {Object} dbg
- * @param {Number} line
- * @param {String} expectedTextContent
- */
-function assertTextContentOnLine(dbg, line, expectedTextContent) {
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const textContent = lineInfo.text.trim();
-  is(textContent, expectedTextContent, `Expected text content on line ${line}`);
-}
-
 /*
- * Assert that no breakpoint is set on a given line of
- * the currently selected source in the editor.
+ * Assert that no breakpoint is set on a given line.
  *
  * @memberof mochitest/helpers
  * @param {Object} dbg
@@ -1364,8 +1237,7 @@ async function assertNoBreakpoint(dbg, line) {
 }
 
 /*
- * Assert that a regular breakpoint is set in the currently
- * selected source in the editor. (no conditional, nor log breakpoint)
+ * Assert that a regular breakpoint is set. (no conditional, nor log breakpoint)
  *
  * @memberof mochitest/helpers
  * @param {Object} dbg
@@ -2287,59 +2159,6 @@ async function setLogPoint(dbg, index, value) {
   const onBreakpointSet = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await typeInPanel(dbg, value);
   await onBreakpointSet;
-}
-
-/**
- * Instantiate a HTTP Server that serves files from a given test folder.
- * The test folder should be made of multiple sub folder named: v1, v2, v3,...
- * We will serve the content from one of these sub folder
- * and switch to the next one, each time `httpServer.switchToNextVersion()`
- * is called.
- *
- * @return Object Test server with two functions:
- *   - urlFor(path)
- *     Returns the absolute url for a given file.
- *   - switchToNextVersion()
- *     Start serving files from the next available sub folder.
- *   - backToFirstVersion()
- *     When running more than one test, helps restart from the first folder.
- */
-function createVersionizedHttpTestServer(testFolderName) {
-  const httpServer = createTestHTTPServer();
-
-  let currentVersion = 1;
-
-  httpServer.registerPrefixHandler("/", async (request, response) => {
-    response.processAsync();
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    if (request.path.endsWith(".js")) {
-      response.setHeader("Content-Type", "application/javascript");
-    } else if (request.path.endsWith(".js.map")) {
-      response.setHeader("Content-Type", "application/json");
-    }
-    if (request.path == "/" || request.path == "/index.html") {
-      response.setHeader("Content-Type", "text/html");
-    }
-    const url = URL_ROOT + `examples/${testFolderName}/v${currentVersion}${request.path}`;
-    info("[test-http-server] serving: " + url);
-    const content = await fetch(url);
-    const text = await content.text();
-    response.write(text);
-    response.finish();
-  });
-
-  return {
-    switchToNextVersion() {
-      currentVersion++;
-    },
-    backToFirstVersion() {
-      currentVersion = 1;
-    },
-    urlFor(path) {
-      const port = httpServer.identity.primaryPort;
-      return `http://localhost:${port}/${path}`;
-    },
-  };
 }
 
 // This module is also loaded for Browser Toolbox tests, within the browser toolbox process

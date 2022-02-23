@@ -434,7 +434,7 @@ nsJARURI::SchemeIs(const char* i_Scheme, bool* o_Equals) {
     return NS_OK;
   }
 
-  *o_Equals = nsCRT::strcasecmp("jar", i_Scheme) == 0;
+  *o_Equals = PL_strcasecmp("jar", i_Scheme) ? false : true;
   return NS_OK;
 }
 

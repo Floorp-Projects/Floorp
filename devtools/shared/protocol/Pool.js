@@ -94,11 +94,10 @@ class Pool extends EventEmitter {
       // look at devtools/server/tests/xpcshell/test_addon_reload.js
 
       const parent = actor.getParent();
-      if (parent && parent !== this) {
+      if (parent) {
         parent.unmanage(actor);
       }
     }
-
     this._poolMap.set(actor.actorID, actor);
     actor.parentPool = this;
   }

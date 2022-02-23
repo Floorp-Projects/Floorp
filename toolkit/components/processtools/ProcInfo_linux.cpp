@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ProcInfo.h"
-#include "mozilla/ProcInfo_linux.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
@@ -19,6 +18,21 @@
 #include <dirent.h>
 
 #define NANOPERSEC 1000000000.
+
+#ifndef CPUCLOCK_SCHED
+#  define CPUCLOCK_SCHED 2
+#endif
+#ifndef CPUCLOCK_PERTHREAD_MASK
+#  define CPUCLOCK_PERTHREAD_MASK 4
+#endif
+#ifndef MAKE_PROCESS_CPUCLOCK
+#  define MAKE_PROCESS_CPUCLOCK(pid, clock) \
+    ((int)(~(unsigned)(pid) << 3) | (int)(clock))
+#endif
+#ifndef MAKE_THREAD_CPUCLOCK
+#  define MAKE_THREAD_CPUCLOCK(tid, clock) \
+    MAKE_PROCESS_CPUCLOCK(tid, (clock) | CPUCLOCK_PERTHREAD_MASK)
+#endif
 
 namespace mozilla {
 

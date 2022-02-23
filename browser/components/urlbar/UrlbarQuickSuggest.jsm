@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   Services: "resource://gre/modules/Services.jsm",
-  TaskQueue: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
@@ -74,7 +73,7 @@ class Suggestions {
     UrlbarPrefs.addObserver(this);
     NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
 
-    this._settingsTaskQueue.queue(() => {
+    this._queueSettingsTask(() => {
       return new Promise(resolve => {
         Services.tm.idleDispatchToMainThread(() => {
           this._queueSettingsSetup();
@@ -99,7 +98,12 @@ class Suggestions {
    *   Resolves when any ongoing updates to the suggestions data are done.
    */
   get readyPromise() {
-    return this._settingsTaskQueue.emptyPromise;
+    if (!this._settingsTaskQueue.length) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      this._emptySettingsTaskQueueCallbacks.push(resolve);
+    });
   }
 
   /**
@@ -120,12 +124,6 @@ class Suggestions {
       return null;
     }
     return {
-      // TODO (bug 1752604): Replace this simplistic hardcoded length comparison
-      // with the final best match logic.
-      is_best_match:
-        typeof result._test_is_best_match == "boolean"
-          ? result._test_is_best_match
-          : phrase.length >= 5,
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
       url: result.url,
@@ -313,13 +311,12 @@ class Suggestions {
   // The RemoteSettings client.
   _rs = null;
 
-  // Task queue for serializing access to remote settings and related data.
-  // Methods in this class should use this when they need to to modify or access
-  // the settings client. It ensures settings accesses are serialized, do not
-  // overlap, and happen only one at a time. It also lets clients, especially
-  // tests, use this class without having to worry about whether a settings sync
-  // or initialization is ongoing; see `readyPromise`.
-  _settingsTaskQueue = new TaskQueue();
+  // Queue of callback functions for serializing access to remote settings and
+  // related data. See _queueSettingsTask().
+  _settingsTaskQueue = [];
+
+  // Functions to call when the settings task queue becomes empty.
+  _emptySettingsTaskQueueCallbacks = [];
 
   // Maps from result IDs to the corresponding results.
   _results = new Map();
@@ -332,7 +329,7 @@ class Suggestions {
    * down as appropriate.
    */
   _queueSettingsSetup() {
-    this._settingsTaskQueue.queue(() => {
+    this._queueSettingsTask(() => {
       let enabled =
         UrlbarPrefs.get(FEATURE_AVAILABLE) &&
         (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
@@ -359,7 +356,7 @@ class Suggestions {
    *   this from the listener.
    */
   _queueSettingsSync(event = null) {
-    this._settingsTaskQueue.queue(async () => {
+    this._queueSettingsTask(async () => {
       // Remove local files of deleted records
       if (event?.data?.deleted) {
         await Promise.all(
@@ -400,6 +397,47 @@ class Suggestions {
         this._tree.set(keyword, result.id);
       }
     }
+  }
+
+  /**
+   * Adds a function to the remote settings task queue. Methods in this class
+   * should call this when they need to to modify or access the settings client.
+   * It ensures settings accesses are serialized, do not overlap, and happen
+   * only one at a time. It also lets clients, especially tests, use this class
+   * without having to worry about whether a settings sync or initialization is
+   * ongoing; see `readyPromise`.
+   *
+   * @param {function} callback
+   *   The function to queue.
+   */
+  _queueSettingsTask(callback) {
+    this._settingsTaskQueue.push(callback);
+    if (this._settingsTaskQueue.length == 1) {
+      this._doNextSettingsTask();
+    }
+  }
+
+  /**
+   * Calls the next function in the settings task queue and recurses until the
+   * queue is empty. Once empty, all empty-queue callback functions are called.
+   */
+  async _doNextSettingsTask() {
+    if (!this._settingsTaskQueue.length) {
+      while (this._emptySettingsTaskQueueCallbacks.length) {
+        let callback = this._emptySettingsTaskQueueCallbacks.shift();
+        callback();
+      }
+      return;
+    }
+
+    let task = this._settingsTaskQueue[0];
+    try {
+      await task();
+    } catch (error) {
+      log.error(error);
+    }
+    this._settingsTaskQueue.shift();
+    this._doNextSettingsTask();
   }
 
   /**

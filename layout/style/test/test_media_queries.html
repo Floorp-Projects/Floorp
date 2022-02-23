@@ -28,7 +28,7 @@ SimpleTest.requestLongerTimeout(2);
 var iframe;
 
 function getScreenPixelsPerCSSPixel() {
-  return window.devicePixelRatio;
+  return SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
 }
 
 function run() {

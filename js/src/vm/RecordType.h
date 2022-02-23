@@ -13,8 +13,6 @@
 #include "vm/ArrayObject.h"
 #include "vm/NativeObject.h"
 
-#include "vm/Shape.h"
-
 namespace JS {
 class RecordType;
 }
@@ -30,7 +28,6 @@ namespace JS {
 class RecordType final : public js::NativeObject {
   friend JSString* js::RecordToSource(JSContext* cx, RecordType* rec);
 
- public:
   enum {
     INITIALIZED_LENGTH_SLOT = 0,
     SORTED_KEYS_SLOT,
@@ -38,6 +35,7 @@ class RecordType final : public js::NativeObject {
     SLOT_COUNT
   };
 
+ public:
   static const js::ClassSpec classSpec_;
   static const JSClass class_;
 
@@ -45,7 +43,6 @@ class RecordType final : public js::NativeObject {
   bool initializeNextProperty(JSContext* cx, Handle<PropertyKey> key,
                               HandleValue value);
   bool finishInitialization(JSContext* cx);
-  static js::Shape* getInitialShape(JSContext* cx);
 
   bool getOwnProperty(JSContext* cx, HandleId id, MutableHandleValue vp) const;
 

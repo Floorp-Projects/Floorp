@@ -91,3 +91,4 @@ JavaScript Content
   }
 
   document.addEventListener("click", toggleSelection);
+

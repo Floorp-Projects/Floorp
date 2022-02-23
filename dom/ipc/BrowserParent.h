@@ -897,6 +897,7 @@ class BrowserParent final : public PBrowserParent,
 
   nsIntRect mRect;
   ScreenIntSize mDimensions;
+  hal::ScreenOrientation mOrientation;
   float mDPI;
   int32_t mRounding;
   CSSToLayoutDeviceScale mDefaultScale;

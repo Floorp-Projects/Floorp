@@ -106,8 +106,6 @@ int PrintBasicInfo(FILE* file) {
         printf("num_loops: %u\n", info.animation.num_loops);
         printf("have_timecodes: %d\n", info.animation.have_timecodes);
       }
-      printf("intrinsic xsize: %u\n", info.intrinsic_xsize);
-      printf("intrinsic ysize: %u\n", info.intrinsic_ysize);
       const char* const orientation_string[8] = {
           "Normal",          "Flipped horizontally",
           "Upside down",     "Flipped vertically",
@@ -155,8 +153,8 @@ int PrintBasicInfo(FILE* file) {
             free(name);
             break;
           }
-          printf("  name: %s\n", name);
           free(name);
+          printf("  name: %s\n", name);
         }
         if (extra.type == JXL_CHANNEL_ALPHA)
           printf("  alpha_premultiplied: %d (%s)\n", extra.alpha_premultiplied,
@@ -270,8 +268,8 @@ int PrintBasicInfo(FILE* file) {
           free(name);
           break;
         }
-        printf("  name: %s\n", name);
         free(name);
+        printf("  name: %s\n", name);
       }
       float ms = frame_header.duration * 1000.f *
                  info.animation.tps_denominator / info.animation.tps_numerator;

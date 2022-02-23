@@ -67,67 +67,63 @@ const features = [
       "chrome://devtools-startup/content/aboutdevtools/images/feature-inspector.svg",
     title: "features-inspector-title",
     desc: "features-inspector-desc",
-    link:
-      "https://firefox-source-docs.mozilla.org/devtools-user/page_inspector/",
+    link: "https://developer.mozilla.org/docs/Tools/Page_Inspector",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-console.svg",
     title: "features-console-title",
     desc: "features-console-desc",
-    link: "https://firefox-source-docs.mozilla.org/devtools-user/web_console/",
+    link: "https://developer.mozilla.org/docs/Tools/Web_Console",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-debugger.svg",
     title: "features-debugger-title",
     desc: "features-debugger-desc",
-    link: "https://firefox-source-docs.mozilla.org/devtools-user/debugger/",
+    link: "https://developer.mozilla.org/docs/Tools/Debugger",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-network.svg",
     title: "features-network-title",
     desc: "features-network-desc",
-    link:
-      "https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/",
+    link: "https://developer.mozilla.org/docs/Tools/Network_Monitor",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-storage.svg",
     title: "features-storage-title",
     desc: "features-storage-desc",
-    link:
-      "https://firefox-source-docs.mozilla.org/devtools-user/storage_inspector/",
+    link: "https://developer.mozilla.org/docs/Tools/Storage_Inspector",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-responsive.svg",
     title: "features-responsive-title",
     desc: "features-responsive-desc",
-    link:
-      "https://firefox-source-docs.mozilla.org/devtools-user/responsive_design_mode/",
+    link: "https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-visualediting.svg",
     title: "features-visual-editing-title",
     desc: "features-visual-editing-desc",
-    link: "https://firefox-source-docs.mozilla.org/devtools-user/style_editor/",
+    link: "https://developer.mozilla.org/docs/Tools/Style_Editor",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-performance.svg",
     title: "features-performance-title",
     desc: "features-performance-desc",
-    link: "https://firefox-source-docs.mozilla.org/devtools-user/performance/",
+    link: "https://developer.mozilla.org/docs/Tools/Performance",
   },
   {
     icon:
       "chrome://devtools-startup/content/aboutdevtools/images/feature-memory.svg",
     title: "features-memory-title",
     desc: "features-memory-desc",
-    link: "https://firefox-source-docs.mozilla.org/devtools-user/memory/",
+    link: "https://developer.mozilla.org/docs/Tools/Memory",
   },
 ];
 

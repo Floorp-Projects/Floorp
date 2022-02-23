@@ -1,5 +1,10 @@
 "use strict";
 
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
+
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -152,7 +157,7 @@ add_task(async function test_api_on_permissions_changed() {
 
   // Verify access on restart
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitBackgroundStarted();
+  await extension.awaitStartup();
   await verifyPermissions(true);
 
   await withHandlingUserInput(extension, async () => {
@@ -325,7 +330,7 @@ add_task(async function test_browserSetting_permissions() {
   await ExtensionPermissions._uninit();
   extensionHandlers.delete(extension);
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitBackgroundStarted();
+  await extension.awaitStartup();
 
   await withHandlingUserInput(extension, async () => {
     extension.sendMessage("remove");
@@ -383,7 +388,7 @@ add_task(async function test_privacy_permissions() {
   await ExtensionPermissions._uninit();
   extensionHandlers.delete(extension);
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitBackgroundStarted();
+  await extension.awaitStartup();
 
   await withHandlingUserInput(extension, async () => {
     extension.sendMessage("remove");

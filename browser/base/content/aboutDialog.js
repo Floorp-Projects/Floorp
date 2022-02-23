@@ -23,25 +23,27 @@ async function init(aEvent) {
     return;
   }
 
-  let defaults = Services.prefs.getDefaultBranch(null);
-  let distroId = defaults.getCharPref("distribution.id", "");
+  var distroId = Services.prefs.getCharPref("distribution.id", "");
   if (distroId) {
-    let distroAbout = defaults.getStringPref("distribution.about", "");
+    var distroAbout = Services.prefs.getStringPref("distribution.about", "");
     // If there is about text, we always show it.
     if (distroAbout) {
-      let distroField = document.getElementById("distribution");
+      var distroField = document.getElementById("distribution");
       distroField.value = distroAbout;
       distroField.style.display = "block";
     }
     // If it's not a mozilla distribution, show the rest,
     // unless about text exists, then we always show.
     if (!distroId.startsWith("mozilla-") || distroAbout) {
-      let distroVersion = defaults.getCharPref("distribution.version", "");
+      var distroVersion = Services.prefs.getCharPref(
+        "distribution.version",
+        ""
+      );
       if (distroVersion) {
         distroId += " - " + distroVersion;
       }
 
-      let distroIdField = document.getElementById("distributionId");
+      var distroIdField = document.getElementById("distributionId");
       distroIdField.value = distroId;
       distroIdField.style.display = "block";
     }

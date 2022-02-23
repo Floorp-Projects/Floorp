@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GfxInfo.h"
-#include "AndroidBuild.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "nsUnicharUtils.h"
@@ -12,11 +11,10 @@
 #include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 #include "nsVersionComparator.h"
+#include "AndroidBridge.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/java/GeckoAppShellWrappers.h"
-#include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 
 namespace mozilla {
 namespace widget {
@@ -178,38 +176,47 @@ GfxInfo::GetTestType(nsAString& aTestType) { return NS_ERROR_NOT_IMPLEMENTED; }
 void GfxInfo::EnsureInitialized() {
   if (mInitialized) return;
 
-  if (!jni::IsAvailable()) {
-    gfxWarning() << "JNI missing during initialization";
+  if (!mozilla::AndroidBridge::Bridge()) {
+    gfxWarning() << "AndroidBridge missing during initialization";
     return;
   }
 
-  jni::String::LocalRef model = java::sdk::Build::MODEL();
-  mModel = model->ToString();
-  mAdapterDescription.AppendPrintf("Model: %s",
-                                   NS_LossyConvertUTF16toASCII(mModel).get());
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build",
+                                                             "MODEL", mModel)) {
+    mAdapterDescription.AppendPrintf("Model: %s",
+                                     NS_LossyConvertUTF16toASCII(mModel).get());
+  }
 
-  jni::String::LocalRef product = java::sdk::Build::PRODUCT();
-  mProduct = product->ToString();
-  mAdapterDescription.AppendPrintf(", Product: %s",
-                                   NS_LossyConvertUTF16toASCII(mProduct).get());
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build", "PRODUCT", mProduct)) {
+    mAdapterDescription.AppendPrintf(
+        ", Product: %s", NS_LossyConvertUTF16toASCII(mProduct).get());
+  }
 
-  jni::String::LocalRef manufacturer =
-      mozilla::java::sdk::Build::MANUFACTURER();
-  mManufacturer = manufacturer->ToString();
-  mAdapterDescription.AppendPrintf(
-      ", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
+  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build", "MANUFACTURER", mManufacturer)) {
+    mAdapterDescription.AppendPrintf(
+        ", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
+  }
 
-  mSDKVersion = java::sdk::VERSION::SDK_INT();
-  // the HARDWARE field isn't available on Android SDK < 8, but we require 9+
-  // anyway.
-  MOZ_ASSERT(mSDKVersion >= 8);
-  jni::String::LocalRef hardware = java::sdk::Build::HARDWARE();
-  mHardware = hardware->ToString();
-  mAdapterDescription.AppendPrintf(
-      ", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
+  if (mozilla::AndroidBridge::Bridge()->GetStaticIntField(
+          "android/os/Build$VERSION", "SDK_INT", &mSDKVersion)) {
+    // the HARDWARE field isn't available on Android SDK < 8, but we require 9+
+    // anyway.
+    MOZ_ASSERT(mSDKVersion >= 8);
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+            "android/os/Build", "HARDWARE", mHardware)) {
+      mAdapterDescription.AppendPrintf(
+          ", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
+    }
+  } else {
+    mSDKVersion = 0;
+  }
 
-  jni::String::LocalRef release = java::sdk::VERSION::RELEASE();
-  mOSVersion = release->ToCString();
+  nsString release;
+  mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+      "android/os/Build$VERSION", "RELEASE", release);
+  mOSVersion = NS_LossyConvertUTF16toASCII(release);
 
   mOSVersionInteger = 0;
   char a[5], b[5], c[5], d[5];
@@ -228,10 +235,8 @@ void GfxInfo::EnsureInitialized() {
 
   AddCrashReportAnnotations();
 
-  java::sdk::Rect::LocalRef screenrect = java::GeckoAppShell::GetScreenSize();
   mScreenInfo.mScreenDimensions =
-      gfx::Rect(screenrect->Left(), screenrect->Top(), screenrect->Width(),
-                screenrect->Height());
+      mozilla::AndroidBridge::Bridge()->getScreenSize();
 
   mInitialized = true;
 }
@@ -551,21 +556,21 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
 
     if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_ENCODE) {
-      if (jni::IsAvailable()) {
+      if (mozilla::AndroidBridge::Bridge()) {
         *aStatus = WebRtcHwVp8EncodeSupported();
         aFailureId = "FEATURE_FAILURE_WEBRTC_ENCODE";
         return NS_OK;
       }
     }
     if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_DECODE) {
-      if (jni::IsAvailable()) {
+      if (mozilla::AndroidBridge::Bridge()) {
         *aStatus = WebRtcHwVp8DecodeSupported();
         aFailureId = "FEATURE_FAILURE_WEBRTC_DECODE";
         return NS_OK;
       }
     }
     if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_H264) {
-      if (jni::IsAvailable()) {
+      if (mozilla::AndroidBridge::Bridge()) {
         *aStatus = WebRtcHwH264Supported();
         aFailureId = "FEATURE_FAILURE_WEBRTC_H264";
         return NS_OK;
@@ -664,23 +669,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
-
-    if (aFeature == FEATURE_WEBRENDER_PARTIAL_PRESENT) {
-      // Block partial present on some devices due to rendering issues.
-      // On Mali-Txxx due to bug 1680087 and bug 1707815.
-      // On Adreno 3xx GPUs due to bug 1695771.
-      const bool isMaliT =
-          mGLStrings->Renderer().Find("Mali-T", /*ignoreCase*/ true) >= 0;
-      const bool isAdreno3xx = mGLStrings->Renderer().Find(
-                                   "Adreno (TM) 3", /*ignoreCase*/ true) >= 0;
-      if (isMaliT || isAdreno3xx) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-        aFailureId = "FEATURE_FAILURE_BUG_1680087_1695771_1707815";
-      } else {
-        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
-      }
-      return NS_OK;
-    }
   }
 
   if (aFeature == FEATURE_GL_SWIZZLE) {
@@ -742,7 +730,7 @@ static void SetCachedFeatureVal(int32_t aFeature, uint32_t aOsVer,
 }
 
 int32_t GfxInfo::WebRtcHwVp8EncodeSupported() {
-  MOZ_ASSERT(jni::IsAvailable());
+  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
 
   // The Android side of this calculation is very slow, so we cache the result
   // in preferences, invalidating if the OS version changes.
@@ -753,7 +741,7 @@ int32_t GfxInfo::WebRtcHwVp8EncodeSupported() {
     return status;
   }
 
-  status = java::GeckoAppShell::HasHWVP8Encoder()
+  status = mozilla::AndroidBridge::Bridge()->HasHWVP8Encoder()
                ? nsIGfxInfo::FEATURE_STATUS_OK
                : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
 
@@ -764,7 +752,7 @@ int32_t GfxInfo::WebRtcHwVp8EncodeSupported() {
 }
 
 int32_t GfxInfo::WebRtcHwVp8DecodeSupported() {
-  MOZ_ASSERT(jni::IsAvailable());
+  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
 
   // The Android side of this caclulation is very slow, so we cache the result
   // in preferences, invalidating if the OS version changes.
@@ -775,7 +763,7 @@ int32_t GfxInfo::WebRtcHwVp8DecodeSupported() {
     return status;
   }
 
-  status = java::GeckoAppShell::HasHWVP8Decoder()
+  status = mozilla::AndroidBridge::Bridge()->HasHWVP8Decoder()
                ? nsIGfxInfo::FEATURE_STATUS_OK
                : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
 
@@ -786,7 +774,7 @@ int32_t GfxInfo::WebRtcHwVp8DecodeSupported() {
 }
 
 int32_t GfxInfo::WebRtcHwH264Supported() {
-  MOZ_ASSERT(jni::IsAvailable());
+  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
 
   // The Android side of this calculation is very slow, so we cache the result
   // in preferences, invalidating if the OS version changes.
@@ -797,7 +785,7 @@ int32_t GfxInfo::WebRtcHwH264Supported() {
     return status;
   }
 
-  status = java::HardwareCodecCapabilityUtils::HasHWH264()
+  status = mozilla::AndroidBridge::Bridge()->HasHWH264()
                ? nsIGfxInfo::FEATURE_STATUS_OK
                : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
 

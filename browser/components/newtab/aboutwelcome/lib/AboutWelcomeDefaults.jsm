@@ -20,18 +20,17 @@ const DEFAULT_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
   transitions: true,
-  backdrop:
-    "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
+  background_url:
+    "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
       order: 0,
       content: {
-        position: "corner",
         title: {
           string_id: "mr1-onboarding-pin-header",
         },
-        hero_text: {
+        subtitle: {
           string_id: "mr1-welcome-screen-hero-text",
         },
         help_text: {
@@ -39,7 +38,6 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "mr1-onboarding-welcome-image-caption",
           },
         },
-        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-pin-primary-button-label",
@@ -81,7 +79,6 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-default-subtitle",
         },
-        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-default-primary-button-label",
@@ -111,7 +108,6 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-import-subtitle",
         },
-        has_noodles: true,
         primary_button: {
           label: {
             string_id:
@@ -143,7 +139,6 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-theme-subtitle",
         },
-        has_noodles: true,
         tiles: {
           type: "theme",
           action: {
@@ -227,13 +222,10 @@ async function getAddonFromRepository(data) {
   if (addonInfo.sourceURI.scheme !== "https") {
     return null;
   }
-
   return {
     name: addonInfo.name,
     url: addonInfo.sourceURI.spec,
     iconURL: addonInfo.icons["64"] || addonInfo.icons["32"],
-    type: addonInfo.type,
-    screenshots: addonInfo.screenshots,
   };
 }
 

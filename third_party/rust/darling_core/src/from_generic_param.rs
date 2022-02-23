@@ -1,4 +1,6 @@
-use crate::Result;
+use syn;
+
+use Result;
 
 /// Creates an instance by parsing a specific `syn::GenericParam`.
 /// This can be a type param, a lifetime, or a const param.

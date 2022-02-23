@@ -10,22 +10,22 @@
 #include "js/experimental/TypedData.h"
 #include "mozilla/ErrorResult.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // https://streams.spec.whatwg.org/#transfer-array-buffer
 // As some parts of the specifcation want to use the abrupt completion value,
 // this function may leave a pending exception if it returns nullptr.
 JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
-  MOZ_ASSERT(JS::IsArrayBufferObject(aObject));
-
   // Step 1.
   MOZ_ASSERT(!JS::IsDetachedArrayBufferObject(aObject));
 
-  // Step 3 (Reordered)
-  size_t bufferLength = JS::GetArrayBufferByteLength(aObject);
-
-  // Step 2 (Reordered)
-  void* bufferData = JS::StealArrayBufferContents(aCx, aObject);
+  // Step 2+3.
+  uint8_t* bufferData = nullptr;
+  size_t bufferLength = 0;
+  bool isSharedMemory = false;
+  JS::GetArrayBufferLengthAndData(aObject, &bufferLength, &isSharedMemory,
+                                  &bufferData);
 
   // Step 4.
   if (!JS::DetachArrayBuffer(aCx, aObject)) {
@@ -39,27 +39,29 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
 // https://streams.spec.whatwg.org/#can-transfer-array-buffer
 bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
                             ErrorResult& aRv) {
-  // Step 1. Assert: Type(O) is Object. (Implicit in types)
-  // Step 2. Assert: O has an [[ArrayBufferData]] internal slot.
+  // Step 1. Implicit in types.
+  // Step 2.
   MOZ_ASSERT(JS::IsArrayBufferObject(aObject));
 
-  // Step 3. If ! IsDetachedBuffer(O) is true, return false.
+  // Step 3.
   if (JS::IsDetachedArrayBufferObject(aObject)) {
     return false;
   }
 
-  // Step 4. If SameValue(O.[[ArrayBufferDetachKey]], undefined) is false,
-  // return false.
-  // Step 5. Return true.
-  // Note: WASM memories are the only buffers that would qualify
+  // Step 4. WASM memories are the only buffers that would qualify
   // as having an undefined [[ArrayBufferDetachKey]],
-  bool hasDefinedArrayBufferDetachKey = false;
+  bool hasDefinedArrayBufferDetachKey;
   if (!JS::HasDefinedArrayBufferDetachKey(aCx, aObject,
                                           &hasDefinedArrayBufferDetachKey)) {
     aRv.StealExceptionFromJSContext(aCx);
     return false;
   }
-  return !hasDefinedArrayBufferDetachKey;
+  if (hasDefinedArrayBufferDetachKey) {
+    return false;
+  }
+
+  // Step 5.
+  return true;
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-cloneasuint8array
@@ -70,7 +72,7 @@ JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject) {
 
   // Step 3. Assert: !IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false.
   bool isShared;
-  JS::Rooted<JSObject*> viewedArrayBuffer(
+  JS::RootedObject viewedArrayBuffer(
       aCx, JS_GetArrayBufferViewBuffer(aCx, aObject, &isShared));
   if (!viewedArrayBuffer) {
     return nullptr;
@@ -79,19 +81,16 @@ JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject) {
 
   // Step 4. Let buffer be ?CloneArrayBuffer(O.[[ViewedArrayBuffer]],
   //         O.[[ByteOffset]], O.[[ByteLength]], %ArrayBuffer%).
-  size_t byteOffset = JS_GetTypedArrayByteOffset(aObject);
-  size_t byteLength = JS_GetTypedArrayByteLength(aObject);
-  JS::Rooted<JSObject*> buffer(
-      aCx,
-      JS::ArrayBufferClone(aCx, viewedArrayBuffer, byteOffset, byteLength));
+  JS::RootedObject buffer(aCx, JS::CopyArrayBuffer(aCx, aObject));
   if (!buffer) {
     return nullptr;
   }
 
   // Step 5. Let array be ! Construct(%Uint8Array%, « buffer »).
-  JS::Rooted<JSObject*> array(
-      aCx, JS_NewUint8ArrayWithBuffer(aCx, buffer, 0,
-                                      static_cast<int64_t>(byteLength)));
+  size_t length = JS_GetTypedArrayLength(aObject);
+  size_t byteOffset = JS_GetTypedArrayByteOffset(aObject);
+  JS::RootedObject array(aCx, JS_NewUint8ArrayWithBuffer(
+                                  aCx, buffer, byteOffset, (int64_t)length));
   if (!array) {
     return nullptr;
   }
@@ -100,4 +99,5 @@ JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject) {
   return array;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -14,6 +14,7 @@
 #include "LiveResizeListener.h"
 #include "SwipeTracker.h"
 #include "TouchEvents.h"
+#include "WritingModes.h"
 #include "X11UndefineNone.h"
 #include "base/thread.h"
 #include "mozilla/ArrayUtils.h"
@@ -21,7 +22,6 @@
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
@@ -123,6 +123,19 @@ uint64_t AutoObserverNotifier::sObserverId = 0;
 // idle queue before timing out and moving it to the regular queue. Value is in
 // milliseconds.
 const uint32_t kAsyncDragDropTimeout = 1000;
+
+namespace mozilla::widget {
+
+void IMENotification::SelectionChangeDataBase::SetWritingMode(
+    const WritingMode& aWritingMode) {
+  mWritingMode = aWritingMode.mWritingMode.bits;
+}
+
+WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
+  return WritingMode(mWritingMode);
+}
+
+}  // namespace mozilla::widget
 
 NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 
@@ -349,8 +362,11 @@ void nsBaseWidget::DestroyCompositor() {
     mAPZC = nullptr;
     SetCompositorWidgetDelegate(nullptr);
     mCompositorBridgeChild = nullptr;
-    mCompositorSession->Shutdown();
-    mCompositorSession = nullptr;
+
+    // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created
+    // in ClientLayerManager destructor. See bug 1133426.
+    RefPtr<CompositorSession> session = std::move(mCompositorSession);
+    session->Shutdown();
   }
 }
 
@@ -738,7 +754,8 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 // Put the window into full-screen mode
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
+void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen,
+                                            nsIScreen* aScreen) {
   HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
@@ -748,7 +765,10 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     *mOriginalBounds = GetScreenBounds();
 
     // Move to top-left corner of screen and size to the screen dimensions
-    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    nsCOMPtr<nsIScreen> screen = aScreen;
+    if (!screen) {
+      screen = GetWidgetScreen();
+    }
     if (screen) {
       int32_t left, top, width, height;
       if (NS_SUCCEEDED(
@@ -768,8 +788,8 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
   }
 }
 
-nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {
-  InfallibleMakeFullScreen(aFullScreen);
+nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen) {
+  InfallibleMakeFullScreen(aFullScreen, aScreen);
   return NS_OK;
 }
 
@@ -1509,8 +1529,6 @@ nsresult nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsBaseWidget::SetResizeMargin(LayoutDeviceIntCoord aResizeMargin) {}
-
 uint32_t nsBaseWidget::GetMaxTouchPoints() const { return 0; }
 
 bool nsBaseWidget::HasPendingInputEvent() { return false; }
@@ -1653,7 +1671,12 @@ void nsBaseWidget::NotifySizeMoveDone() {
 }
 
 void nsBaseWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
-  LookAndFeel::NotifyChangedAllWindows(aKind);
+  if (!mWidgetListener) {
+    return;
+  }
+  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
+    presShell->ThemeChanged(aKind);
+  }
 }
 
 void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowFocusRings) {
@@ -2184,7 +2207,7 @@ const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
 
 void nsIWidget::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {}
 
-bool nsIWidget::GetEditCommands(NativeKeyBindingsType aType,
+bool nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                                 const WidgetKeyboardEvent& aEvent,
                                 nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aEvent.IsTrusted());

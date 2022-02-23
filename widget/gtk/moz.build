@@ -31,11 +31,7 @@ EXPORTS += [
     "nsImageToPixbuf.h",
 ]
 
-EXPORTS.mozilla += [
-    "GRefPtr.h",
-    "GUniquePtr.h",
-    "WidgetUtilsGtk.h",
-]
+EXPORTS.mozilla += ["WidgetUtilsGtk.h"]
 
 EXPORTS.mozilla.widget += [
     "WindowSurface.h",
@@ -43,7 +39,6 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
-    "AsyncGtkClipboardRequest.cpp",
     "GfxInfo.cpp",
     "gtk3drawing.cpp",
     "GtkCompositorWidget.cpp",
@@ -91,6 +86,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.cpp",
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
+        "nsClipboardWaylandAsync.cpp",
         "nsWaylandDisplay.cpp",
         "WaylandBuffer.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",

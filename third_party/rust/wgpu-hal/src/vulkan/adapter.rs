@@ -332,7 +332,7 @@ impl PhysicalDeviceFeatures {
             | F::TIMESTAMP_QUERY
             | F::PIPELINE_STATISTICS_QUERY
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-            | F::CLEAR_TEXTURE;
+            | F::CLEAR_COMMANDS;
         let mut dl_flags = Df::all();
 
         dl_flags.set(Df::CUBE_ARRAY_TEXTURES, self.core.image_cube_array != 0);
@@ -708,12 +708,8 @@ impl PhysicalDeviceCapabilities {
             max_storage_buffers_per_shader_stage: max_storage_buffers,
             max_storage_textures_per_shader_stage: max_storage_textures,
             max_uniform_buffers_per_shader_stage: max_uniform_buffers,
-            max_uniform_buffer_binding_size: limits
-                .max_uniform_buffer_range
-                .min(crate::auxil::MAX_I32_BINDING_SIZE),
-            max_storage_buffer_binding_size: limits
-                .max_storage_buffer_range
-                .min(crate::auxil::MAX_I32_BINDING_SIZE),
+            max_uniform_buffer_binding_size: limits.max_uniform_buffer_range,
+            max_storage_buffer_binding_size: limits.max_storage_buffer_range,
             max_vertex_buffers: limits
                 .max_vertex_input_bindings
                 .min(crate::MAX_VERTEX_BUFFERS as u32),
@@ -1120,8 +1116,8 @@ impl super::Adapter {
         let timeline_semaphore_fn = if enabled_extensions.contains(&khr::TimelineSemaphore::name())
         {
             Some(super::ExtensionFn::Extension(khr::TimelineSemaphore::new(
+                &self.instance.entry,
                 &self.instance.raw,
-                &raw_device,
             )))
         } else if self.phd_capabilities.properties.api_version >= vk::API_VERSION_1_2 {
             Some(super::ExtensionFn::Promoted)
@@ -1332,7 +1328,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
         format: wgt::TextureFormat,
     ) -> crate::TextureFormatCapabilities {
         use crate::TextureFormatCapabilities as Tfc;
-
         let vk_format = self.private_caps.map_texture_format(format);
         let properties = self
             .phd_capabilities
@@ -1385,11 +1380,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
             features.intersects(
                 vk::FormatFeatureFlags::TRANSFER_DST | vk::FormatFeatureFlags::BLIT_DST,
             ),
-        );
-        // Vulkan is very permissive about MSAA
-        flags.set(
-            Tfc::MULTISAMPLE | Tfc::MULTISAMPLE_RESOLVE,
-            !format.describe().is_compressed(),
         );
         flags
     }

@@ -10,14 +10,11 @@ include protocol PBackgroundMutableFile;
 
 include PBackgroundIDBSharedTypes;
 
-include "mozilla/dom/indexedDB/ActorsChild.h";
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-[ChildImpl="indexedDB::BackgroundTransactionChild", ParentImpl=virtual]
-protocol PBackgroundIDBTransaction {
+[RefCounted] protocol PBackgroundIDBTransaction {
   manager PBackgroundIDBDatabase;
 
   manages PBackgroundIDBCursor;

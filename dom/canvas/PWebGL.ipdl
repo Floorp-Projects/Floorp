@@ -35,7 +35,7 @@ namespace dom {
  * command from the content process, and a WebGLParent in the compositor
  * process that runs the commands.
  */
-sync protocol PWebGL
+[RefCounted] sync protocol PWebGL
 {
   manager PCanvasManager;
 

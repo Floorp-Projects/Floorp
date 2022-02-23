@@ -221,7 +221,6 @@ class IMEHandler final {
   static bool IsInTabletMode();
   static bool AutoInvokeOnScreenKeyboardInDesktopMode();
   static bool NeedsToAssociateIMC();
-  static bool NeedsSearchInputScope();
 
   /**
    * Show the Windows on-screen keyboard. Only allowed for

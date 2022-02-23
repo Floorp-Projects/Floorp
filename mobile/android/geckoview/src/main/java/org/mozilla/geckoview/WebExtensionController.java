@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.SuppressLint;
 import android.os.Build;
 import android.util.Log;
 import android.util.SparseArray;
@@ -546,7 +545,7 @@ public class WebExtensionController {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EnableSource.USER, EnableSource.APP})
-  public @interface EnableSources {}
+  @interface EnableSources {}
 
   /**
    * Contains the possible values for the <code>source</code> parameter in {@link #enable} and
@@ -871,7 +870,6 @@ public class WebExtensionController {
             }));
   }
 
-  @SuppressLint("WrongThread") // for .toGeckoBundle
   private void getSettings(final Message message, final WebExtension extension) {
     final WebExtension.BrowsingDataDelegate delegate = mListener.getBrowsingDataDelegate(extension);
     if (delegate == null) {

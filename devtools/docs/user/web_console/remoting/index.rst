@@ -107,11 +107,12 @@ The reply is:
       "NetworkActivity",
       "FileActivity"
     ],
+    "nativeConsoleAPI": true,
     "from": "conn0.console9"
   }
 
 
-The reply tells which listeners were started.
+The reply tells which listeners were started and it includes a flag ``nativeConsoleAPI`` which tells if the ``window.console`` object was overridden by the scripts in the page or not.
 
 
 Tab navigation
@@ -132,10 +133,11 @@ When page navigation starts the following packet is sent from the tab actor:
     "type": "tabNavigated",
     "state": "start",
     "url": newURL,
+    "nativeConsoleAPI": true
   }
 
 
-When navigation stops the following packet is sent:
+The ``nativeConsoleAPI`` property tells if the ``window.console`` object is native or not for the top level window object for the given tab - this is always ``true`` when navigation starts. When navigation stops the following packet is sent:
 
 .. code-block::
 
@@ -145,6 +147,7 @@ When navigation stops the following packet is sent:
     "state": "stop",
     "url": newURL,
     "title": newTitle,
+    "nativeConsoleAPI": true|false
   }
 
 

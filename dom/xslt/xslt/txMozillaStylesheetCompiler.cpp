@@ -8,7 +8,7 @@
 #include "nsIExpatSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
-#include "nsParser.h"
+#include "nsIParser.h"
 #include "nsCharsetSource.h"
 #include "nsIRequestObserver.h"
 #include "nsContentPolicyUtils.h"
@@ -21,6 +21,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsParserCIID.h"
 #include "nsGkAtoms.h"
 #include "txLog.h"
 #include "txMozillaXSLTProcessor.h"
@@ -40,6 +41,8 @@
 using namespace mozilla;
 using mozilla::dom::Document;
 using mozilla::dom::ReferrerPolicy;
+
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static void getSpec(nsIChannel* aChannel, nsAString& aSpec) {
   if (!aChannel) {
@@ -62,7 +65,7 @@ class txStylesheetSink final : public nsIXMLContentSink,
                                public nsIStreamListener,
                                public nsIInterfaceRequestor {
  public:
-  txStylesheetSink(txStylesheetCompiler* aCompiler, nsParser* aParser);
+  txStylesheetSink(txStylesheetCompiler* aCompiler, nsIParser* aParser);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXPATSINK
@@ -74,7 +77,7 @@ class txStylesheetSink final : public nsIXMLContentSink,
   NS_IMETHOD WillParse(void) override { return NS_OK; }
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
   NS_IMETHOD WillInterrupt(void) override { return NS_OK; }
-  void WillResume() override {}
+  NS_IMETHOD WillResume(void) override { return NS_OK; }
   NS_IMETHOD SetParser(nsParserBase* aParser) override { return NS_OK; }
   virtual void FlushPendingNotifications(mozilla::FlushType aType) override {}
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override {
@@ -84,7 +87,7 @@ class txStylesheetSink final : public nsIXMLContentSink,
  private:
   RefPtr<txStylesheetCompiler> mCompiler;
   nsCOMPtr<nsIStreamListener> mListener;
-  RefPtr<nsParser> mParser;
+  nsCOMPtr<nsIParser> mParser;
   bool mCheckedForXML;
 
  protected:
@@ -95,11 +98,10 @@ class txStylesheetSink final : public nsIXMLContentSink,
 };
 
 txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
-                                   nsParser* aParser)
-    : mCompiler(aCompiler),
-      mListener(aParser),
-      mParser(aParser),
-      mCheckedForXML(false) {}
+                                   nsIParser* aParser)
+    : mCompiler(aCompiler), mParser(aParser), mCheckedForXML(false) {
+  mListener = do_QueryInterface(aParser);
+}
 
 NS_IMPL_ISUPPORTS(txStylesheetSink, nsIXMLContentSink, nsIContentSink,
                   nsIExpatSink, nsIStreamListener, nsIRequestObserver,
@@ -199,15 +201,18 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   if (!mCheckedForXML) {
-    Maybe<bool> isForXML = mParser->IsForParsingXML();
-    mCheckedForXML = isForXML.isSome();
-    if (mCheckedForXML && !isForXML.value()) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-      nsAutoString spec;
-      getSpec(channel, spec);
-      mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nullptr, spec.get());
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    if (dtd) {
+      mCheckedForXML = true;
+      if (!(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+        nsAutoString spec;
+        getSpec(channel, spec);
+        mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nullptr, spec.get());
 
-      return NS_ERROR_XSLT_WRONG_MIME_TYPE;
+        return NS_ERROR_XSLT_WRONG_MIME_TYPE;
+      }
     }
   }
 
@@ -234,7 +239,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
     encoding = UTF_8_ENCODING;
   }
 
-  mParser->SetDocumentCharset(WrapNotNull(encoding), charsetSource, false);
+  mParser->SetDocumentCharset(WrapNotNull(encoding), charsetSource);
 
   nsAutoCString contentType;
   channel->GetContentType(contentType);
@@ -251,8 +256,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIStreamListener> converter;
       rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mListener,
-                                  NS_ISUPPORTS_CAST(nsIParser*, mParser),
-                                  getter_AddRefs(converter));
+                                  mParser, getter_AddRefs(converter));
       if (NS_SUCCEEDED(rv)) {
         mListener = converter;
       }
@@ -278,8 +282,9 @@ txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     //     nsIHTMLContentSink.
     result = NS_ERROR_XSLT_NETWORK_ERROR;
   } else if (!mCheckedForXML) {
-    Maybe<bool> isForXML = mParser->IsForParsingXML();
-    if (isForXML.isSome() && !isForXML.value()) {
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
       result = NS_ERROR_XSLT_WRONG_MIME_TYPE;
     }
   }
@@ -415,7 +420,9 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
     }
   }
 
-  RefPtr<nsParser> parser = new nsParser();
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   RefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
 
   channel->SetNotificationCallbacks(sink);

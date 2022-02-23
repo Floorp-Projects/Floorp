@@ -47,7 +47,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
@@ -1252,8 +1251,6 @@ void nsCocoaWindow::SetSizeMode(nsSizeMode aMode) {
       [mWindow deminiaturize:nil];
     else if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
       [mWindow zoom:nil];
-    else if (previousMode == nsSizeMode_Fullscreen)
-      MakeFullScreen(false);
   } else if (aMode == nsSizeMode_Minimized) {
     if (![mWindow isMiniaturized]) [mWindow miniaturize:nil];
   } else if (aMode == nsSizeMode_Maximized) {
@@ -1675,11 +1672,12 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
   return aFullScreen;
 }
 
-nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen) {
+nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
   return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
 
-nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen) {
+nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
+                                                           nsIScreen* aTargetScreen) {
   return DoMakeFullScreen(aFullScreen, true);
 }
 

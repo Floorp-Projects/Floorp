@@ -10,6 +10,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/dom/Animation.h"
 #include "nsDebug.h"
 #include "nsAtom.h"
 #include "nsIContent.h"

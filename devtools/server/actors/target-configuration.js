@@ -12,9 +12,6 @@ const {
 const {
   SessionDataHelpers,
 } = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
-const {
-  isBrowsingContextPartOfContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 const { SUPPORTED_DATA } = SessionDataHelpers;
 const { TARGET_CONFIGURATION } = SUPPORTED_DATA;
 const Services = require("Services");
@@ -103,9 +100,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
    */
   _shouldHandleConfigurationInParentProcess() {
     // Only handle parent process configuration if the watcherActor is tied to a
-    // browser element.
-    // For now, the Browser Toolbox and Web Extension are having a unique target
-    // which applies the configuration by itself on new documents.
+    // browser element (i.e. we're *not* in the Browser Toolbox)
     return this.watcherActor.sessionContext.type == "browser-element";
   },
 
@@ -125,16 +120,11 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       return;
     }
 
-    // Only process BrowsingContexts which are related to the debugged scope.
-    // As this callback fires very early, the BrowsingContext may not have
-    // any WindowGlobal yet and so we ignore all checks dones against the WindowGlobal
-    // if there is none. Meaning we might accept more BrowsingContext than expected.
+    // If the watcher is bound to one browser element (i.e. a tab), ignore
+    // updates related to other browser elements
     if (
-      !isBrowsingContextPartOfContext(
-        browsingContext,
-        this.watcherActor.sessionContext,
-        { acceptNoWindowGlobal: true, forceAcceptTopLevelTarget: true }
-      )
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      browsingContext.browserId != this.watcherActor.sessionContext.browserId
     ) {
       return;
     }

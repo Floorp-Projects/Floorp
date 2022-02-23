@@ -738,10 +738,6 @@ class alignas(8) Value {
 #endif
   }
 
-  bool isNurseryAllocatableGCThing() const {
-    return hasObjectPayload() || isString() || isBigInt();
-  }
-
   bool isBoolean() const { return toTag() == JSVAL_TAG_BOOLEAN; }
 
   bool isTrue() const {
@@ -775,11 +771,6 @@ class alignas(8) Value {
     if (MOZ_UNLIKELY(isPrivateGCThing())) {
       return JS::GCThingTraceKind(toGCThing());
     }
-#ifdef ENABLE_RECORD_TUPLE
-    if (isExtendedPrimitive()) {
-      return JS::TraceKind::Object;
-    }
-#endif
     return JS::TraceKind(toTag() & 0x03);
   }
 
@@ -893,6 +884,11 @@ class alignas(8) Value {
 #elif defined(JS_PUNBOX64)
     return bool(asBits_ & 0x1);
 #endif
+  }
+
+  uint32_t payloadAsRawUint32() const {
+    MOZ_ASSERT(!isDouble());
+    return uint32_t(asBits_);
   }
 
   constexpr uint64_t asRawBits() const { return asBits_; }

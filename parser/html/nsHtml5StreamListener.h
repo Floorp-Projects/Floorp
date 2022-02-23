@@ -53,10 +53,8 @@ class nsHtml5StreamListener : public nsIStreamListener,
   // are delivered on the main thread.
   mozilla::ReentrantMonitor mDelegateMonitor;
   // Owning pointer with manually-managed refcounting, protected by
-  // mDelegateMonitor.   Access to it is Atomic, which avoids getting a lock
-  // to check if it's set or to return the pointer.   Access to the data within
-  // it needs the monitor.   PT_GUARDED_BY() can't be used with Atomic<...*>
-  mozilla::Atomic<nsHtml5StreamParser*, mozilla::ReleaseAcquire> mDelegate;
+  // mDelegateMonitor.
+  nsHtml5StreamParser* mDelegate;
 };
 
 #endif  // nsHtml5StreamListener_h

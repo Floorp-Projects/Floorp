@@ -2,7 +2,7 @@ use glow::HasContext;
 use parking_lot::{Mutex, MutexGuard};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
-use std::{ffi, os::raw, ptr, sync::Arc, time::Duration};
+use std::{ffi::CStr, os::raw, ptr, sync::Arc, time::Duration};
 
 /// The amount of time to wait while trying to obtain a lock to the adapter context
 const CONTEXT_LOCK_TIMEOUT_SECS: u64 = 1;
@@ -88,11 +88,11 @@ unsafe extern "system" fn egl_debug_proc(
         EGL_DEBUG_MSG_INFO_KHR => log::Level::Info,
         _ => log::Level::Debug,
     };
-    let command = ffi::CStr::from_ptr(command_raw).to_string_lossy();
+    let command = CStr::from_ptr(command_raw).to_string_lossy();
     let message = if message_raw.is_null() {
         "".into()
     } else {
-        ffi::CStr::from_ptr(message_raw).to_string_lossy()
+        CStr::from_ptr(message_raw).to_string_lossy()
     };
 
     log::log!(
@@ -114,30 +114,20 @@ fn open_x_display() -> Option<(ptr::NonNull<raw::c_void>, libloading::Library)> 
     }
 }
 
-unsafe fn find_library(paths: &[&str]) -> Option<libloading::Library> {
-    for path in paths {
-        match libloading::Library::new(path) {
-            Ok(lib) => return Some(lib),
-            _ => continue,
-        };
-    }
-    None
-}
-
 fn test_wayland_display() -> Option<libloading::Library> {
     /* We try to connect and disconnect here to simply ensure there
      * is an active wayland display available.
      */
     log::info!("Loading Wayland library to get the current display");
     let library = unsafe {
-        let client_library = find_library(&["libwayland-client.so.0", "libwayland-client.so"])?;
+        let client_library = libloading::Library::new("libwayland-client.so").ok()?;
         let wl_display_connect: libloading::Symbol<WlDisplayConnectFun> =
             client_library.get(b"wl_display_connect").unwrap();
         let wl_display_disconnect: libloading::Symbol<WlDisplayDisconnectFun> =
             client_library.get(b"wl_display_disconnect").unwrap();
         let display = ptr::NonNull::new(wl_display_connect(ptr::null()))?;
         wl_display_disconnect(display.as_ptr());
-        find_library(&["libwayland-egl.so.1", "libwayland-egl.so"])?
+        libloading::Library::new("libwayland-egl.so").ok()?
     };
     Some(library)
 }
@@ -261,77 +251,40 @@ fn gl_debug_message_callback(source: u32, gltype: u32, id: u32, severity: u32, m
     }
 }
 
-#[derive(Clone, Debug)]
-struct EglContext {
-    instance: Arc<egl::DynamicInstance<egl::EGL1_4>>,
-    display: egl::Display,
-    raw: egl::Context,
-    pbuffer: Option<egl::Surface>,
-}
-
-impl EglContext {
-    fn make_current(&self) {
-        self.instance
-            .make_current(self.display, self.pbuffer, self.pbuffer, Some(self.raw))
-            .unwrap();
-    }
-    fn unmake_current(&self) {
-        self.instance
-            .make_current(self.display, None, None, None)
-            .unwrap();
-    }
-}
-
 /// A wrapper around a [`glow::Context`] and the required EGL context that uses locking to guarantee
 /// exclusive access when shared with multiple threads.
 pub struct AdapterContext {
-    glow: Mutex<glow::Context>,
-    egl: Option<EglContext>,
+    glow_context: Mutex<glow::Context>,
+    egl: Arc<egl::DynamicInstance<egl::EGL1_4>>,
+    egl_display: egl::Display,
+    pub(super) egl_context: egl::Context,
+    egl_pbuffer: Option<egl::Surface>,
 }
 
 unsafe impl Sync for AdapterContext {}
 unsafe impl Send for AdapterContext {}
 
-impl AdapterContext {
-    pub fn is_owned(&self) -> bool {
-        self.egl.is_some()
-    }
-
-    #[cfg(feature = "renderdoc")]
-    pub fn raw_context(&self) -> *mut raw::c_void {
-        match self.egl {
-            Some(ref egl) => egl.raw.as_ptr(),
-            None => ptr::null_mut(),
-        }
-    }
-}
-
-struct EglContextLock<'a> {
-    instance: &'a Arc<egl::DynamicInstance<egl::EGL1_4>>,
-    display: egl::Display,
-}
-
 /// A guard containing a lock to an [`AdapterContext`]
 pub struct AdapterContextLock<'a> {
-    glow: MutexGuard<'a, glow::Context>,
-    egl: Option<EglContextLock<'a>>,
+    glow_context: MutexGuard<'a, glow::Context>,
+    egl: &'a Arc<egl::DynamicInstance<egl::EGL1_4>>,
+    egl_display: egl::Display,
 }
 
 impl<'a> std::ops::Deref for AdapterContextLock<'a> {
     type Target = glow::Context;
 
     fn deref(&self) -> &Self::Target {
-        &self.glow
+        &self.glow_context
     }
 }
 
 impl<'a> Drop for AdapterContextLock<'a> {
     fn drop(&mut self) {
-        if let Some(egl) = self.egl.take() {
-            egl.instance
-                .make_current(egl.display, None, None, None)
-                .unwrap();
-        }
+        // Make the EGL context *not* current on this thread
+        self.egl
+            .make_current(self.egl_display, None, None, None)
+            .expect("Cannot make EGL context not current");
     }
 }
 
@@ -348,7 +301,7 @@ impl AdapterContext {
     /// > **Note:** Calling this function **will** still lock the [`glow::Context`] which adds an
     /// > extra safe-guard against accidental concurrent access to the context.
     pub unsafe fn get_without_egl_lock(&self) -> MutexGuard<glow::Context> {
-        self.glow
+        self.glow_context
             .try_lock_for(Duration::from_secs(CONTEXT_LOCK_TIMEOUT_SECS))
             .expect("Could not lock adapter context. This is most-likely a deadlcok.")
     }
@@ -357,34 +310,43 @@ impl AdapterContext {
     /// do rendering.
     #[track_caller]
     pub fn lock<'a>(&'a self) -> AdapterContextLock<'a> {
-        let glow = self
-            .glow
+        let glow_context = self
+            .glow_context
             // Don't lock forever. If it takes longer than 1 second to get the lock we've got a
             // deadlock and should panic to show where we got stuck
             .try_lock_for(Duration::from_secs(CONTEXT_LOCK_TIMEOUT_SECS))
             .expect("Could not lock adapter context. This is most-likely a deadlcok.");
 
-        let egl = self.egl.as_ref().map(|egl| {
-            egl.make_current();
-            EglContextLock {
-                instance: &egl.instance,
-                display: egl.display,
-            }
-        });
+        // Make the EGL context current on this thread
+        self.egl
+            .make_current(
+                self.egl_display,
+                self.egl_pbuffer,
+                self.egl_pbuffer,
+                Some(self.egl_context),
+            )
+            .expect("Cannot make EGL context current");
 
-        AdapterContextLock { glow, egl }
+        AdapterContextLock {
+            glow_context,
+            egl: &self.egl,
+            egl_display: self.egl_display,
+        }
     }
 }
 
 #[derive(Debug)]
 struct Inner {
-    /// Note: the context contains a dummy pbuffer (1x1).
-    /// Required for `eglMakeCurrent` on platforms that doesn't supports `EGL_KHR_surfaceless_context`.
-    egl: EglContext,
+    egl: Arc<egl::DynamicInstance<egl::EGL1_4>>,
     #[allow(unused)]
     version: (i32, i32),
     supports_native_window: bool,
+    display: egl::Display,
     config: egl::Config,
+    context: egl::Context,
+    /// Dummy pbuffer (1x1).
+    /// Required for `eglMakeCurrent` on platforms that doesn't supports `EGL_KHR_surfaceless_context`.
+    pbuffer: Option<egl::Surface>,
     wl_display: Option<*mut raw::c_void>,
     /// Method by which the framebuffer should support srgb
     srgb_kind: SrgbFrameBufferKind,
@@ -509,15 +471,13 @@ impl Inner {
             };
 
         Ok(Self {
-            egl: EglContext {
-                instance: egl,
-                display,
-                raw: context,
-                pbuffer,
-            },
+            egl,
+            display,
             version,
             supports_native_window,
             config,
+            context,
+            pbuffer,
             wl_display: None,
             srgb_kind,
         })
@@ -526,14 +486,10 @@ impl Inner {
 
 impl Drop for Inner {
     fn drop(&mut self) {
-        if let Err(e) = self
-            .egl
-            .instance
-            .destroy_context(self.egl.display, self.egl.raw)
-        {
+        if let Err(e) = self.egl.destroy_context(self.display, self.context) {
             log::warn!("Error in destroy_context: {:?}", e);
         }
-        if let Err(e) = self.egl.instance.terminate(self.egl.display) {
+        if let Err(e) = self.egl.terminate(self.display) {
             log::warn!("Error in terminate: {:?}", e);
         }
     }
@@ -710,8 +666,7 @@ impl crate::Instance<super::Api> for Instance {
             Rwh::AndroidNdk(handle) => {
                 let format = inner
                     .egl
-                    .instance
-                    .get_config_attrib(inner.egl.display, inner.config, egl::NATIVE_VISUAL_ID)
+                    .get_config_attrib(inner.display, inner.config, egl::NATIVE_VISUAL_ID)
                     .unwrap();
 
                 let ret = ANativeWindow_setBuffersGeometry(handle.a_native_window, 0, 0, format);
@@ -738,7 +693,6 @@ impl crate::Instance<super::Api> for Instance {
                     let display_attributes = [egl::ATTRIB_NONE];
                     let display = inner
                         .egl
-                        .instance
                         .upcast::<egl::EGL1_5>()
                         .unwrap()
                         .get_platform_display(
@@ -748,9 +702,8 @@ impl crate::Instance<super::Api> for Instance {
                         )
                         .unwrap();
 
-                    let new_inner =
-                        Inner::create(self.flags, Arc::clone(&inner.egl.instance), display)
-                            .map_err(|_| crate::InstanceError)?;
+                    let new_inner = Inner::create(self.flags, inner.egl.clone(), display)
+                        .map_err(|_| crate::InstanceError)?;
 
                     let old_inner = std::mem::replace(inner.deref_mut(), new_inner);
                     inner.wl_display = Some(handle.display);
@@ -763,13 +716,19 @@ impl crate::Instance<super::Api> for Instance {
             }
         };
 
-        inner.egl.unmake_current();
+        inner
+            .egl
+            .make_current(inner.display, None, None, None)
+            .unwrap();
 
         Ok(Surface {
-            egl: inner.egl.clone(),
+            egl: Arc::clone(&inner.egl),
             wsi: self.wsi.clone(),
             config: inner.config,
+            display: inner.display,
+            context: inner.context,
             presentable: inner.supports_native_window,
+            pbuffer: inner.pbuffer,
             raw_window_handle,
             swapchain: None,
             srgb_kind: inner.srgb_kind,
@@ -779,12 +738,19 @@ impl crate::Instance<super::Api> for Instance {
 
     unsafe fn enumerate_adapters(&self) -> Vec<crate::ExposedAdapter<super::Api>> {
         let inner = self.inner.lock();
-        inner.egl.make_current();
+        inner
+            .egl
+            .make_current(
+                inner.display,
+                inner.pbuffer,
+                inner.pbuffer,
+                Some(inner.context),
+            )
+            .unwrap();
 
         let gl = glow::Context::from_loader_function(|name| {
             inner
                 .egl
-                .instance
                 .get_proc_address(name)
                 .map_or(ptr::null(), |p| p as *const _)
         });
@@ -802,25 +768,20 @@ impl crate::Instance<super::Api> for Instance {
             gl.debug_message_callback(gl_debug_message_callback);
         }
 
-        inner.egl.unmake_current();
+        inner
+            .egl
+            .make_current(inner.display, None, None, None)
+            .unwrap();
 
         super::Adapter::expose(AdapterContext {
-            glow: Mutex::new(gl),
-            egl: Some(inner.egl.clone()),
+            glow_context: Mutex::new(gl),
+            egl: inner.egl.clone(),
+            egl_display: inner.display,
+            egl_context: inner.context,
+            egl_pbuffer: inner.pbuffer,
         })
         .into_iter()
         .collect()
-    }
-}
-
-impl super::Adapter {
-    pub unsafe fn new_external(
-        fun: impl FnMut(&str) -> *const ffi::c_void,
-    ) -> Option<crate::ExposedAdapter<super::Api>> {
-        Self::expose(AdapterContext {
-            glow: Mutex::new(glow::Context::from_loader_function(fun)),
-            egl: None,
-        })
     }
 }
 
@@ -840,9 +801,13 @@ pub struct Swapchain {
 
 #[derive(Debug)]
 pub struct Surface {
-    egl: EglContext,
+    egl: Arc<egl::DynamicInstance<egl::EGL1_4>>,
     wsi: WindowSystemInterface,
     config: egl::Config,
+    display: egl::Display,
+    context: egl::Context,
+    #[allow(unused)]
+    pbuffer: Option<egl::Surface>,
     pub(super) presentable: bool,
     raw_window_handle: RawWindowHandle,
     swapchain: Option<Swapchain>,
@@ -861,12 +826,11 @@ impl Surface {
         let sc = self.swapchain.as_ref().unwrap();
 
         self.egl
-            .instance
             .make_current(
-                self.egl.display,
+                self.display,
                 Some(sc.surface),
                 Some(sc.surface),
-                Some(self.egl.raw),
+                Some(self.context),
             )
             .map_err(|e| {
                 log::error!("make_current(surface) failed: {}", e);
@@ -896,15 +860,13 @@ impl Surface {
         gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
 
         self.egl
-            .instance
-            .swap_buffers(self.egl.display, sc.surface)
+            .swap_buffers(self.display, sc.surface)
             .map_err(|e| {
                 log::error!("swap_buffers failed: {}", e);
                 crate::SurfaceError::Lost
             })?;
         self.egl
-            .instance
-            .make_current(self.egl.display, None, None, None)
+            .make_current(self.display, None, None, None)
             .map_err(|e| {
                 log::error!("make_current(null) failed: {}", e);
                 crate::SurfaceError::Lost
@@ -1015,21 +977,21 @@ impl crate::Surface<super::Api> for Surface {
                 attributes.push(egl::ATTRIB_NONE as i32);
 
                 // Careful, we can still be in 1.4 version even if `upcast` succeeds
-                let raw_result = match self.egl.instance.upcast::<egl::EGL1_5>() {
+                let raw_result = match self.egl.upcast::<egl::EGL1_5>() {
                     Some(egl) if self.wsi.kind != WindowKind::Unknown => {
                         let attributes_usize = attributes
                             .into_iter()
                             .map(|v| v as usize)
                             .collect::<Vec<_>>();
                         egl.create_platform_window_surface(
-                            self.egl.display,
+                            self.display,
                             self.config,
                             native_window_ptr,
                             &attributes_usize,
                         )
                     }
-                    _ => self.egl.instance.create_window_surface(
-                        self.egl.display,
+                    _ => self.egl.create_window_surface(
+                        self.display,
                         self.config,
                         native_window_ptr,
                         Some(&attributes),
@@ -1096,10 +1058,7 @@ impl crate::Surface<super::Api> for Surface {
 
     unsafe fn unconfigure(&mut self, device: &super::Device) {
         if let Some((surface, wl_window)) = self.unconfigure_impl(device) {
-            self.egl
-                .instance
-                .destroy_surface(self.egl.display, surface)
-                .unwrap();
+            self.egl.destroy_surface(self.display, surface).unwrap();
             if let Some(window) = wl_window {
                 let wl_egl_window_destroy: libloading::Symbol<WlEglWindowDestroyFun> = self
                     .wsi

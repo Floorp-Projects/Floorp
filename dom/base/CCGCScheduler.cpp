@@ -113,7 +113,7 @@ void CCGCScheduler::NoteGCBegin() {
   // Treat all GC as incremental here; non-incremental GC will just appear to
   // be one slice.
   mInIncrementalGC = true;
-  mReadyForMajorGC = !mAskParentBeforeMajorGC;
+  mReadyForMajorGC = false;
 
   // Tell the parent process that we've started a GC (it might not know if
   // we hit a threshold in the JS engine).
@@ -129,7 +129,7 @@ void CCGCScheduler::NoteGCEnd() {
 
   mInIncrementalGC = false;
   mCCBlockStart = TimeStamp();
-  mReadyForMajorGC = !mAskParentBeforeMajorGC;
+  mReadyForMajorGC = false;
   mWantAtLeastRegularGC = false;
   mNeedsFullCC = CCReason::GC_FINISHED;
   mHasRunGC = true;
@@ -203,7 +203,7 @@ void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
 }
 
 void CCGCScheduler::NoteWontGC() {
-  mReadyForMajorGC = !mAskParentBeforeMajorGC;
+  mReadyForMajorGC = false;
   mMajorGCReason = JS::GCReason::NO_REASON;
   mWantAtLeastRegularGC = false;
   // Don't clear the WantFullGC state, we will do a full GC the next time a
@@ -301,9 +301,10 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
 
   MOZ_ASSERT(mActiveIntersliceGCBudget);
   TimeStamp startTimeStamp = TimeStamp::Now();
-  js::SliceBudget budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
+  TimeDuration budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = mGCUnnotifiedTotalTime;
-  nsJSContext::RunIncrementalGCSlice(aStep.mReason, is_shrinking, budget);
+  nsJSContext::GarbageCollectNow(aStep.mReason, nsJSContext::IncrementalGC,
+                                 is_shrinking, budget.ToMilliseconds());
 
   mGCUnnotifiedTotalTime = TimeDuration();
   TimeStamp now = TimeStamp::Now();
@@ -314,10 +315,7 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
     if (!aDeadline.IsNull()) {
       if (aDeadline < now) {
         // This slice overflowed the idle period.
-        if (aDeadline > startTimeStamp) {
-          idleDuration = aDeadline - startTimeStamp;
-        }
-        // Otherwise the whole slice was done outside the idle period.
+        idleDuration = aDeadline - startTimeStamp;
       } else {
         // Note, we don't want to use duration here, since it may contain
         // data also from JS engine triggered GC slices.
@@ -365,13 +363,7 @@ RefPtr<CCGCScheduler::MayGCPromise> CCGCScheduler::MayGCNow(
       break;
   }
 
-  // We use synchronous task dispatch here to avoid a trip through the event
-  // loop if we're on the parent process or it's a GC reason that does not
-  // require permission to GC.
-  RefPtr<MayGCPromise::Private> p = MakeRefPtr<MayGCPromise::Private>(__func__);
-  p->UseSynchronousTaskDispatch(__func__);
-  p->Resolve(true, __func__);
-  return p;
+  return MayGCPromise::CreateAndResolve(true, __func__);
 }
 
 void CCGCScheduler::RunNextCollectorTimer(JS::GCReason aReason,
@@ -495,10 +487,7 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
       TimeDuration::FromMilliseconds(
           StaticPrefs::javascript_options_gc_delay_interslice()),
       mActiveIntersliceGCBudget, true, [this] { return mDidShutdown; },
-      [this](uint32_t) {
-        PROFILER_MARKER_UNTYPED("GC Interrupt", GCCC);
-        mInterruptRequested = true;
-      });
+      [this](uint32_t) { mInterruptRequested = true; });
 }
 
 // nsJSEnvironmentObserver observes the user-interaction-inactive notifications
@@ -639,8 +628,8 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
       std::max({delaySliceBudget, laterSliceBudget, baseBudget})));
 }
 
-js::SliceBudget CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
-                                                         TimeStamp aNow) {
+TimeDuration CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
+                                                      TimeStamp aNow) const {
   // We use longer budgets when the CC has been locked out but the CC has
   // tried to run since that means we may have a significant amount of
   // garbage to collect and it's better to GC in several longer slices than
@@ -648,24 +637,14 @@ js::SliceBudget CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
   TimeDuration budget =
       aDeadline.IsNull() ? mActiveIntersliceGCBudget * 2 : aDeadline - aNow;
   if (!mCCBlockStart) {
-    return CreateGCSliceBudget(budget, !aDeadline.IsNull(), false);
+    return budget;
   }
 
   TimeDuration blockedTime = aNow - mCCBlockStart;
   TimeDuration maxSliceGCBudget = mActiveIntersliceGCBudget * 10;
   double percentOfBlockedTime =
       std::min(blockedTime / kMaxCCLockedoutTime, 1.0);
-  TimeDuration extendedBudget =
-      maxSliceGCBudget.MultDouble(percentOfBlockedTime);
-  if (budget >= extendedBudget) {
-    return CreateGCSliceBudget(budget, !aDeadline.IsNull(), false);
-  }
-
-  // If the budget is being extended, do not allow it to be interrupted.
-  auto result = js::SliceBudget(js::TimeBudget(extendedBudget), nullptr);
-  result.idle = !aDeadline.IsNull();
-  result.extended = true;
-  return result;
+  return std::max(budget, maxSliceGCBudget.MultDouble(percentOfBlockedTime));
 }
 
 CCReason CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,

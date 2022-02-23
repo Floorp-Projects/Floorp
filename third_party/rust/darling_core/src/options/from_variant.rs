@@ -2,16 +2,13 @@ use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::{DeriveInput, Field, Ident, Meta};
 
-use crate::codegen::FromVariantImpl;
-use crate::options::{DataShape, OuterFrom, ParseAttribute, ParseData};
-use crate::{FromMeta, Result};
+use codegen::FromVariantImpl;
+use options::{DataShape, OuterFrom, ParseAttribute, ParseData};
+use {FromMeta, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FromVariantOptions {
     pub base: OuterFrom,
-    /// The field on the deriving struct into which the discriminant expression
-    /// should be placed by the derived `FromVariant` impl.
-    pub discriminant: Option<Ident>,
     pub fields: Option<Ident>,
     pub supports: Option<DataShape>,
 }
@@ -19,8 +16,7 @@ pub struct FromVariantOptions {
 impl FromVariantOptions {
     pub fn new(di: &DeriveInput) -> Result<Self> {
         (FromVariantOptions {
-            base: OuterFrom::start(di)?,
-            discriminant: Default::default(),
+            base: OuterFrom::start(di),
             fields: Default::default(),
             supports: Default::default(),
         })
@@ -34,7 +30,6 @@ impl<'a> From<&'a FromVariantOptions> for FromVariantImpl<'a> {
         FromVariantImpl {
             base: (&v.base.container).into(),
             ident: v.base.ident.as_ref(),
-            discriminant: v.discriminant.as_ref(),
             fields: v.fields.as_ref(),
             attrs: v.base.attrs.as_ref(),
             attr_names: &v.base.attr_names,
@@ -65,10 +60,6 @@ impl ParseData for FromVariantOptions {
             .as_ref()
             .map(|v| v.as_str())
         {
-            Some("discriminant") => {
-                self.discriminant = field.ident.clone();
-                Ok(())
-            }
             Some("fields") => {
                 self.fields = field.ident.clone();
                 Ok(())

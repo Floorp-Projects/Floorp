@@ -21,7 +21,6 @@
 #include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/frame_header.h"
@@ -50,7 +49,7 @@ void RunRGBRoundTrip(float distance, bool fast) {
   io.ShrinkTo(std::min(io.xsize(), kGroupDim), std::min(io.ysize(), kGroupDim));
 
   Image3F opsin(io.xsize(), io.ysize());
-  (void)ToXYB(io.Main(), &pool, &opsin, GetJxlCms());
+  (void)ToXYB(io.Main(), &pool, &opsin);
   opsin = PadImageToMultiple(opsin, kBlockDim);
   GaborishInverse(&opsin, 1.0f, &pool);
 
@@ -83,10 +82,10 @@ void RunRGBRoundTrip(float distance, bool fast) {
   enc_state.cparams = cparams;
   ZeroFillImage(&enc_state.shared.epf_sharpness);
   CodecInOut io1;
-  io1.Main() = RoundtripImage(opsin, &enc_state, GetJxlCms(), &pool);
+  io1.Main() = RoundtripImage(opsin, &enc_state, &pool);
   io1.metadata.m.color_encoding = io1.Main().c_current();
 
-  EXPECT_LE(ButteraugliDistance(io, io1, cparams.ba_params, GetJxlCms(),
+  EXPECT_LE(ButteraugliDistance(io, io1, cparams.ba_params,
                                 /*distmap=*/nullptr, &pool),
             1.2);
 }

@@ -13,7 +13,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/intl/Segmenter.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFontMetrics.h"
@@ -36,6 +35,7 @@
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsUnicodeProperties.h"
 #include "TextDrawTarget.h"
 
 #ifdef ACCESSIBILITY
@@ -614,67 +614,78 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
     titleWidth = 0;
   }
 
-  using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
-  using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
+  using mozilla::unicode::ClusterIterator;
+  using mozilla::unicode::ClusterReverseIterator;
 
   // ok crop things
   switch (mCropType) {
     case CropAuto:
     case CropNone:
     case CropRight: {
-      const Span title(mTitle);
-      GraphemeClusterBreakIteratorUtf16 iter(title);
-      uint32_t pos = 0;
+      ClusterIterator iter(mTitle.Data(), mTitle.Length());
+      const char16_t* dataBegin = iter;
+      const char16_t* pos = dataBegin;
+      nscoord charWidth;
       nscoord totalWidth = 0;
 
-      while (Maybe<uint32_t> nextPos = iter.Next()) {
-        const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-            title.FromTo(pos, *nextPos), *fm, drawTarget);
+      while (!iter.AtEnd()) {
+        iter.Next();
+        const char16_t* nextPos = iter;
+        ptrdiff_t length = nextPos - pos;
+        charWidth =
+            nsLayoutUtils::AppUnitWidthOfString(pos, length, *fm, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[pos])) {
+        if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
           AddStateBits(NS_FRAME_IS_BIDI);
         }
-        pos = *nextPos;
+        pos = nextPos;
         totalWidth += charWidth;
       }
 
-      if (pos == 0) {
+      if (pos == dataBegin) {
         return titleWidth;
       }
 
       // insert what character we can in.
-      mCroppedTitle.Insert(title.To(pos), 0);
+      nsAutoString title(mTitle);
+      title.Truncate(pos - dataBegin);
+      mCroppedTitle.Insert(title, 0);
     } break;
 
     case CropLeft: {
-      const Span title(mTitle);
-      GraphemeClusterBreakReverseIteratorUtf16 iter(title);
-      uint32_t pos = title.Length();
+      ClusterReverseIterator iter(mTitle.Data(), mTitle.Length());
+      const char16_t* dataEnd = iter;
+      const char16_t* prevPos = dataEnd;
+      nscoord charWidth;
       nscoord totalWidth = 0;
 
-      // nextPos is decreasing since we use a reverse iterator.
-      while (Maybe<uint32_t> nextPos = iter.Next()) {
-        const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-            title.FromTo(*nextPos, pos), *fm, drawTarget);
+      while (!iter.AtEnd()) {
+        iter.Next();
+        const char16_t* pos = iter;
+        ptrdiff_t length = prevPos - pos;
+        charWidth =
+            nsLayoutUtils::AppUnitWidthOfString(pos, length, *fm, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[*nextPos])) {
+        if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
           AddStateBits(NS_FRAME_IS_BIDI);
         }
-        pos = *nextPos;
+        prevPos = pos;
         totalWidth += charWidth;
       }
 
-      if (pos == title.Length()) {
+      if (prevPos == dataEnd) {
         return titleWidth;
       }
 
-      mCroppedTitle.Append(title.From(pos));
+      nsAutoString copy;
+      mTitle.Right(copy, dataEnd - prevPos);
+      mCroppedTitle += copy;
     } break;
 
     case CropCenter: {
@@ -687,48 +698,55 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
       }
 
       // determine how much of the string will fit in the max width
-      const Span title(mTitle);
+      nscoord charWidth = 0;
       nscoord totalWidth = 0;
-      GraphemeClusterBreakIteratorUtf16 leftIter(title);
-      GraphemeClusterBreakReverseIteratorUtf16 rightIter(title);
-      uint32_t leftPos = 0;
-      uint32_t rightPos = title.Length();
+      ClusterIterator leftIter(mTitle.Data(), mTitle.Length());
+      ClusterReverseIterator rightIter(mTitle.Data(), mTitle.Length());
+      const char16_t* dataBegin = leftIter;
+      const char16_t* dataEnd = rightIter;
+      const char16_t* leftPos = dataBegin;
+      const char16_t* rightPos = dataEnd;
+      const char16_t* pos;
+      ptrdiff_t length;
       nsAutoString leftString, rightString;
 
       while (leftPos < rightPos) {
-        Maybe<uint32_t> nextPos = leftIter.Next();
-        Span chars = title.FromTo(leftPos, *nextPos);
-        nscoord charWidth =
-            nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+        leftIter.Next();
+        pos = leftIter;
+        length = pos - leftPos;
+        charWidth = nsLayoutUtils::AppUnitWidthOfString(leftPos, length, *fm,
+                                                        drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[leftPos])) {
+        if (UTF16_CODE_UNIT_IS_BIDI(*leftPos)) {
           AddStateBits(NS_FRAME_IS_BIDI);
         }
 
-        leftString.Append(chars);
-        leftPos = *nextPos;
+        leftString.Append(leftPos, length);
+        leftPos = pos;
         totalWidth += charWidth;
 
         if (leftPos >= rightPos) {
           break;
         }
 
-        nextPos = rightIter.Next();
-        chars = title.FromTo(*nextPos, rightPos);
-        charWidth = nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+        rightIter.Next();
+        pos = rightIter;
+        length = rightPos - pos;
+        charWidth =
+            nsLayoutUtils::AppUnitWidthOfString(pos, length, *fm, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[*nextPos])) {
+        if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
           AddStateBits(NS_FRAME_IS_BIDI);
         }
 
-        rightString.Insert(chars, 0);
-        rightPos = *nextPos;
+        rightString.Insert(pos, 0, length);
+        rightPos = pos;
         totalWidth += charWidth;
       }
 

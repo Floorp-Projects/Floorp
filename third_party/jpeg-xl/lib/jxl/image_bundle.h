@@ -13,7 +13,6 @@
 
 #include <vector>
 
-#include "jxl/cms_interface.h"
 #include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
@@ -149,11 +148,10 @@ class ImageBundle {
 
   // Transforms color to c_desired and sets c_current to c_desired. Alpha and
   // metadata remains unchanged.
-  Status TransformTo(const ColorEncoding& c_desired, const JxlCmsInterface& cms,
+  Status TransformTo(const ColorEncoding& c_desired,
                      ThreadPool* pool = nullptr);
   // Copies this:rect, converts to c_desired, and allocates+fills out.
-  Status CopyTo(const Rect& rect, const ColorEncoding& c_desired,
-                const JxlCmsInterface& cms, Image3F* out,
+  Status CopyTo(const Rect& rect, const ColorEncoding& c_desired, Image3F* out,
                 ThreadPool* pool = nullptr) const;
 
   // Detect 'real' bit depth, which can be lower than nominal bit depth
@@ -213,22 +211,11 @@ class ImageBundle {
   YCbCrChromaSubsampling chroma_subsampling;
 
   FrameOrigin origin{0, 0};
-
-  // Animation-related information, corresponding to the timecode and duration
-  // fields of the jxl::AnimationFrame of the jxl::FrameHeader.
-  // TODO(lode): ImageBundle is used here to carry the information from
-  // jxl::FrameHeader, consider instead passing a jxl::FrameHeader directly to
-  // EncodeFrame or having a field of that type here.
+  // Animation-related information. This assumes GIF- and APNG- like animation.
   uint32_t duration = 0;
-  uint32_t timecode = 0;
-
-  // TODO(lode): these fields do not match the JXL frame header, it should be
-  // possible to specify up to 4 (3 if nonzero duration) slots to save this
-  // frame as reference (see save_as_reference).
   bool use_for_next_frame = false;
   bool blend = false;
   BlendMode blendmode = BlendMode::kBlend;
-
   std::string name;
 
  private:

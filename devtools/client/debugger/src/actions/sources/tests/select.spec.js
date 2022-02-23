@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { getSymbols } from "../../../reducers/ast";
 import {
   actions,
   selectors,
@@ -12,14 +13,13 @@ import {
   waitForState,
   makeOriginalSource,
 } from "../../../utils/test-head";
-import {
+const {
   getSource,
   getSourceCount,
   getSelectedSource,
   getSourceTabs,
   getSelectedLocation,
-  getSymbols,
-} from "../../../selectors/";
+} = selectors;
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 

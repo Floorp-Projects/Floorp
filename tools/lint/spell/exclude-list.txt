@@ -14,5 +14,4 @@ referer
 dur
 ue
 tring
-delink
 

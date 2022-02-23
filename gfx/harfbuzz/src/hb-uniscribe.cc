@@ -878,8 +878,7 @@ retry:
   if (backward)
     hb_buffer_reverse (buffer);
 
-  buffer->clear_glyph_flags ();
-  buffer->unsafe_to_break ();
+  buffer->unsafe_to_break_all ();
 
   /* Wow, done! */
   return true;

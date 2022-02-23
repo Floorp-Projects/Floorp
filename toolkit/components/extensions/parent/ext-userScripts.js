@@ -48,17 +48,7 @@ class UserScriptParent {
       userScriptOptions: {
         scriptMetadata: details.scriptMetadata,
       },
-      originAttributesPatterns: null,
     };
-
-    if (details.cookieStoreId != null) {
-      const cookieStoreIds = Array.isArray(details.cookieStoreId)
-        ? details.cookieStoreId
-        : [details.cookieStoreId];
-      options.originAttributesPatterns = cookieStoreIds.map(cookieStoreId =>
-        getOriginAttributesPatternForCookieStoreId(cookieStoreId)
-      );
-    }
 
     return options;
   }

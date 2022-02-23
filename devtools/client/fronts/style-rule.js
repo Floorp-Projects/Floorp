@@ -30,9 +30,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     this.actorID = form.actor;
     this._form = form;
     this.traits = form.traits || {};
-    // @backward-compat { version 98 }
-    // This property isn't used anymore except when debugging older servers.
-    // This can be removed when 98 is in release
     if (this._mediaText) {
       this._mediaText = null;
     }
@@ -42,6 +39,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
    * Ensure _form is updated when location-changed is emitted.
    */
   _locationChangedPre(line, column) {
+    this._clearOriginalLocation();
     this._form.line = line;
     this._form.column = column;
   }
@@ -92,15 +90,9 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   get selectors() {
     return this._form.selectors;
   }
-  // @backward-compat { version 98 }
-  // This getter isn't used anymore except when debugging older servers. This can be
-  // removed when 98 is in release.
   get media() {
     return this._form.media;
   }
-  // @backward-compat { version 98 }
-  // This getter isn't used anymore except when debugging older servers. This can be
-  // removed when 98 is in release.
   get mediaText() {
     if (!this._form.media) {
       return null;
@@ -110,6 +102,10 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     }
     this._mediaText = this.media.join(", ");
     return this._mediaText;
+  }
+
+  get parentRule() {
+    return this.conn.getFrontByID(this._form.parentRule);
   }
 
   get parentStyleSheet() {
@@ -158,16 +154,38 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     };
   }
 
-  get ancestorData() {
-    // @backward-compat { version 98 }
-    // ancestorData was added to the actor form in 98, so for older servers, we need to
-    // return a similar structure, with `mediaText` info in it. (@layer information was
-    // also added in 98, so older server won't have this data)
-    if (typeof this._form.ancestorData === "undefined") {
-      return this.mediaText ? [{ type: "media", value: this.mediaText }] : [];
-    }
+  _clearOriginalLocation() {
+    this._originalLocation = null;
+  }
 
-    return this._form.ancestorData;
+  getOriginalLocation() {
+    if (this._originalLocation) {
+      return Promise.resolve(this._originalLocation);
+    }
+    const parentSheet = this.parentStyleSheet;
+    if (!parentSheet) {
+      // This rule doesn't belong to a stylesheet so it is an inline style.
+      // Inline styles do not have any mediaText so we can return early.
+      return Promise.resolve(this.location);
+    }
+    return parentSheet
+      .getOriginalLocation(this.line, this.column)
+      .then(({ fromSourceMap, source, line, column }) => {
+        const location = {
+          href: source,
+          line: line,
+          column: column,
+          mediaText: this.mediaText,
+        };
+        if (fromSourceMap === false) {
+          location.source = this.parentStyleSheet;
+        }
+        if (!source) {
+          location.href = this.href;
+        }
+        this._originalLocation = location;
+        return location;
+      });
   }
 
   async modifySelector(node, value) {

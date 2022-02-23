@@ -10,7 +10,6 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/intl/Segmenter.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGContextPaint.h"
@@ -578,51 +577,39 @@ void gfxFontShaper::MergeFontFeatures(
 void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
                                            const char16_t* aString,
                                            uint32_t aLength) {
-  if (aLength == 0) {
-    return;
-  }
+  CompressedGlyph* glyphs = GetCharacterGlyphs() + aOffset;
 
-  CompressedGlyph* const glyphs = GetCharacterGlyphs() + aOffset;
   CompressedGlyph extendCluster = CompressedGlyph::MakeComplex(false, true);
 
-  // GraphemeClusterBreakIteratorUtf16 won't be able to tell us if the string
-  // _begins_ with a cluster-extender, so we handle that here
-  uint32_t ch = aString[0];
-  if (aLength > 1 && NS_IS_SURROGATE_PAIR(ch, aString[1])) {
-    ch = SURROGATE_TO_UCS4(ch, aString[1]);
-  }
-  if (IsClusterExtender(ch)) {
-    glyphs[0] = extendCluster;
-  }
+  ClusterIterator iter(aString, aLength);
 
-  intl::GraphemeClusterBreakIteratorUtf16 iter(
-      Span<const char16_t>(aString, aLength));
-  uint32_t pos = 0;
+  // the ClusterIterator won't be able to tell us if the string
+  // _begins_ with a cluster-extender, so we handle that here
+  if (aLength) {
+    uint32_t ch = *aString;
+    if (aLength > 1 && NS_IS_SURROGATE_PAIR(ch, aString[1])) {
+      ch = SURROGATE_TO_UCS4(ch, aString[1]);
+    }
+    if (IsClusterExtender(ch)) {
+      *glyphs = extendCluster;
+    }
+  }
 
   const char16_t kIdeographicSpace = 0x3000;
-  // Special case for Bengali: although Virama normally clusters with the
-  // preceding letter, we *also* want to cluster it with a following Ya
-  // so that when the Virama+Ya form ya-phala, this is not separated from the
-  // preceding letter by any letter-spacing or justification.
-  const char16_t kBengaliVirama = 0x09CD;
-  const char16_t kBengaliYa = 0x09AF;
-  while (pos < aLength) {
-    const char16_t ch = aString[pos];
-    if (ch == char16_t(' ') || ch == kIdeographicSpace) {
-      glyphs[pos].SetIsSpace();
-    } else if (ch == kBengaliYa) {
-      // Unless we're at the start, check for a preceding virama.
-      if (pos > 0 && aString[pos - 1] == kBengaliVirama) {
-        glyphs[pos] = extendCluster;
-      }
+  while (!iter.AtEnd()) {
+    if (*iter == char16_t(' ') || *iter == kIdeographicSpace) {
+      glyphs->SetIsSpace();
     }
     // advance iter to the next cluster-start (or end of text)
-    const uint32_t nextPos = *iter.Next();
+    iter.Next();
     // step past the first char of the cluster
-    ++pos;
+    aString++;
+    glyphs++;
     // mark all the rest as cluster-continuations
-    for (; pos < nextPos; ++pos) {
-      glyphs[pos] = extendCluster;
+    while (aString < iter) {
+      *glyphs = extendCluster;
+      glyphs++;
+      aString++;
     }
   }
 }
@@ -2259,12 +2246,11 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.contextPaint = contextPaint.get();
   }
 
-  // Synthetic-bold strikes are each offset one device pixel in run direction
-  // (these values are only needed if ApplySyntheticBold() is true).
-  // If drawing via webrender, it will do multistrike internally so we don't
-  // need to handle it here.
-  bool doMultistrikeBold = ApplySyntheticBold() && !textDrawer;
-  if (doMultistrikeBold) {
+  // Synthetic-bold strikes are each offset one device pixel in run direction.
+  // (these values are only needed if IsSyntheticBold() is true)
+  // WebRender handles synthetic bold independently via FontInstanceFlags,
+  // so just ignore requests in that case.
+  if (IsSyntheticBold() && !textDrawer) {
     gfx::Float xscale = CalcXScale(aRunParams.context->GetDrawTarget());
     fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
     if (xscale != 0.0) {
@@ -2947,7 +2933,7 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
 void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
                                uint32_t aOffset, uint32_t aLength,
                                bool aVertical, gfxShapedText* aShapedText) {
-  if (ApplySyntheticBold()) {
+  if (IsSyntheticBold()) {
     const Metrics& metrics = GetMetrics(aVertical ? nsFontMetrics::eVertical
                                                   : nsFontMetrics::eHorizontal);
     if (metrics.maxAdvance > metrics.aveCharWidth) {

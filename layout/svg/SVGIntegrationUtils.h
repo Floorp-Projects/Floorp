@@ -152,7 +152,7 @@ class SVGIntegrationUtils final {
     nsDisplayListBuilder* builder;
     bool handleOpacity;  // If true, PaintMaskAndClipPath/ PaintFilter should
                          // apply css opacity.
-    Maybe<LayoutDeviceRect> maskRect;
+    Maybe<gfx::Rect> maskRect;
     imgDrawingParams& imgParams;
 
     explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,

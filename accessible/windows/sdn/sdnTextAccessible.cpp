@@ -61,10 +61,10 @@ sdnTextAccessible::get_clippedSubstringBounds(
       document,
       "There must always be a doc accessible, but there isn't. Crash!");
 
-  LayoutDeviceIntRect docRect = document->Bounds();
-  LayoutDeviceIntRect unclippedRect(x, y, width, height);
+  nsIntRect docRect = document->Bounds();
+  nsIntRect unclippedRect(x, y, width, height);
 
-  LayoutDeviceIntRect clippedRect;
+  nsIntRect clippedRect;
   clippedRect.IntersectRect(unclippedRect, docRect);
 
   *aX = clippedRect.X();

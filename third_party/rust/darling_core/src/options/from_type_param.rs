@@ -1,10 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::Ident;
+use syn::{self, Ident};
 
-use crate::codegen::FromTypeParamImpl;
-use crate::options::{OuterFrom, ParseAttribute, ParseData};
-use crate::Result;
+use codegen::FromTypeParamImpl;
+use options::{OuterFrom, ParseAttribute, ParseData};
+use Result;
 
 #[derive(Debug)]
 pub struct FromTypeParamOptions {
@@ -16,7 +16,7 @@ pub struct FromTypeParamOptions {
 impl FromTypeParamOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
         (FromTypeParamOptions {
-            base: OuterFrom::start(di)?,
+            base: OuterFrom::start(di),
             bounds: None,
             default: None,
         })

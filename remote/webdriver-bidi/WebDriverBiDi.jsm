@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.WEBDRIVER_BIDI)
 );
-XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
 
 /**
  * Entry class for the WebDriver BiDi support.
@@ -161,7 +160,7 @@ class WebDriverBiDi {
   /**
    * Starts the WebDriver BiDi support.
    */
-  async start() {
+  start() {
     if (this._running) {
       return;
     }
@@ -175,37 +174,17 @@ class WebDriverBiDi {
     );
 
     Cu.printStderr(`WebDriver BiDi listening on ${this.address}\n`);
-
-    // Write WebSocket port to WebDriverBiDiActivePort file within the profile.
-    const profileDir = await PathUtils.getProfileDir();
-    this._activePortPath = PathUtils.join(
-      profileDir,
-      "WebDriverBiDiActivePort"
-    );
-
-    const data = `${this.agent.port}`;
-    try {
-      await IOUtils.write(this._activePortPath, textEncoder.encode(data));
-    } catch (e) {
-      logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
-    }
   }
 
   /**
    * Stops the WebDriver BiDi support.
    */
-  async stop() {
+  stop() {
     if (!this._running) {
       return;
     }
 
     try {
-      try {
-        await IOUtils.remove(this._activePortPath);
-      } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
-      }
-
       this.deleteSession();
 
       this.agent.server.registerPathHandler("/session", null);

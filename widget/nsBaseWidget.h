@@ -208,8 +208,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                                    nsIRunnable* aCallback) override;
   void CleanupFullscreenTransition() override {}
   already_AddRefed<nsIScreen> GetWidgetScreen() override;
-  nsresult MakeFullScreen(bool aFullScreen) override;
-  void InfallibleMakeFullScreen(bool aFullScreen);
+  nsresult MakeFullScreen(bool aFullScreen,
+                          nsIScreen* aScreen = nullptr) override;
+  void InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr);
 
   WindowRenderer* GetWindowRenderer() override;
 
@@ -264,7 +265,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   LayoutDeviceIntPoint GetClientOffset() override;
   void EnableDragDrop(bool aEnable) override{};
   nsresult AsyncEnableDragDrop(bool aEnable) override;
-  void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override {
     return NS_OK;
   }

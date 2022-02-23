@@ -15,7 +15,7 @@ add_task(async function test_policy_masterpassword_set() {
     },
   });
 
-  LoginTestUtils.primaryPassword.enable();
+  LoginTestUtils.masterPassword.enable();
 
   await BrowserTestUtils.withNewTab(
     "about:preferences#privacy",
@@ -28,7 +28,7 @@ add_task(async function test_policy_masterpassword_set() {
     }
   );
 
-  LoginTestUtils.primaryPassword.disable();
+  LoginTestUtils.masterPassword.disable();
 });
 
 // Test that password can't be removed in changemp.xhtml
@@ -39,7 +39,7 @@ add_task(async function test_policy_nochangemp() {
     },
   });
 
-  LoginTestUtils.primaryPassword.enable();
+  LoginTestUtils.masterPassword.enable();
 
   let changeMPWindow = window.openDialog(
     "chrome://mozapps/content/preferences/changemp.xhtml",
@@ -55,7 +55,7 @@ add_task(async function test_policy_nochangemp() {
   );
 
   changeMPWindow.document.getElementById("oldpw").value =
-    LoginTestUtils.primaryPassword.masterPassword;
+    LoginTestUtils.masterPassword.masterPassword;
 
   is(
     changeMPWindow.document.getElementById("changemp").getButton("accept")
@@ -66,7 +66,7 @@ add_task(async function test_policy_nochangemp() {
 
   await BrowserTestUtils.closeWindow(changeMPWindow);
 
-  LoginTestUtils.primaryPassword.disable();
+  LoginTestUtils.masterPassword.disable();
 });
 
 // Test that admin message shows

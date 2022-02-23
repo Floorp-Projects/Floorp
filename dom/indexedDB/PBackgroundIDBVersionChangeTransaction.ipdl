@@ -14,14 +14,11 @@ include protocol PRemoteLazyInputStream;   // FIXME: bug 792908
 
 include PBackgroundIDBSharedTypes;
 
-include "mozilla/dom/indexedDB/ActorsChild.h";
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-[ChildImpl="indexedDB::BackgroundVersionChangeTransactionChild", ParentImpl=virtual]
-protocol PBackgroundIDBVersionChangeTransaction {
+[RefCounted] protocol PBackgroundIDBVersionChangeTransaction {
   manager PBackgroundIDBDatabase;
 
   manages PBackgroundIDBCursor;

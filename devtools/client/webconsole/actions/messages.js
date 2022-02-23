@@ -24,7 +24,7 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_REMOVE,
-  CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+  MESSAGE_UPDATE_PAYLOAD,
   PRIVATE_MESSAGES_CLEAR,
 } = require("devtools/client/webconsole/constants");
 
@@ -85,33 +85,49 @@ function messageClose(id) {
 
 /**
  * Make a query on the server to get a list of DOM elements matching the given
- * CSS selectors and store the information in the state.
+ * CSS selectors and set the result as a message's additional data payload.
  *
- * @param {Message} message
- *        The CSSWarning message
+ * @param {String} id
+ *        Message ID
+ * @param {String} cssSelectors
+ *        CSS selectors string to use in the querySelectorAll() call
+ * @return {[type]} [description]
  */
-function messageGetMatchingElements(message) {
-  return async ({ dispatch, commands }) => {
+function messageGetMatchingElements(id, cssSelectors) {
+  return async ({ dispatch, commands, getState }) => {
     try {
       // We need to do the querySelectorAll using the target the message is coming from,
       // as well as with the window the warning message was emitted from.
+      const message = getState().messages.messagesById.get(id);
       const selectedTargetFront = message?.targetFront;
 
       const response = await commands.scriptCommand.execute(
-        `document.querySelectorAll('${message.cssSelectors}')`,
+        `document.querySelectorAll('${cssSelectors}')`,
         {
           selectedTargetFront,
           innerWindowID: message.innerWindowID,
         }
       );
-      dispatch({
-        type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
-        id: message.id,
-        elements: response.result,
-      });
+      dispatch(messageUpdatePayload(id, response.result));
     } catch (err) {
       console.error(err);
     }
+  };
+}
+
+/**
+ * Associate additional data with a message without mutating the original message object.
+ *
+ * @param {String} id
+ *        Message ID
+ * @param {Object} data
+ *        Object with arbitrary data.
+ */
+function messageUpdatePayload(id, data) {
+  return {
+    type: MESSAGE_UPDATE_PAYLOAD,
+    id,
+    data,
   };
 }
 
@@ -149,6 +165,7 @@ module.exports = {
   messageClose,
   messageRemove,
   messageGetMatchingElements,
+  messageUpdatePayload,
   networkMessageUpdates,
   networkUpdateRequests,
   privateMessagesClear,

@@ -8,6 +8,7 @@
 #define mozilla_ipc_backgroundchild_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ipc/Transport.h"
 
 class nsIEventTarget;
 
@@ -15,7 +16,6 @@ namespace mozilla {
 namespace dom {
 
 class BlobImpl;
-class ContentChild;
 class ContentParent;
 class ContentProcess;
 
@@ -24,14 +24,12 @@ class ContentProcess;
 namespace net {
 
 class SocketProcessChild;
-class SocketProcessBridgeChild;
 
 }  // namespace net
 
 namespace ipc {
 
 class PBackgroundChild;
-class PBackgroundStarterChild;
 
 // This class allows access to the PBackground protocol. PBackground allows
 // communication between any thread (in the parent or a child process) and a
@@ -55,40 +53,31 @@ class PBackgroundStarterChild;
 //
 // The PBackgroundChild actor and all its sub-protocol actors will be
 // automatically destroyed when its designated thread completes.
-//
-// Init{Content,Socket,SocketBridge}Starter must be called on the main thread
-// with an actor bridging to the relevant target process type before these
-// methods can be used.
 class BackgroundChild final {
   friend class mozilla::dom::ContentParent;
   friend class mozilla::dom::ContentProcess;
   friend class mozilla::net::SocketProcessChild;
+
+  typedef mozilla::ipc::Transport Transport;
 
  public:
   // See above.
   static PBackgroundChild* GetForCurrentThread();
 
   // See above.
-  static PBackgroundChild* GetOrCreateForCurrentThread();
-
-  // See above.
-  static PBackgroundChild* GetOrCreateSocketActorForCurrentThread();
-
-  // See above.
-  static PBackgroundChild* GetOrCreateForSocketParentBridgeForCurrentThread();
+  static PBackgroundChild* GetOrCreateForCurrentThread(
+      nsIEventTarget* aMainEventTarget = nullptr);
 
   // See above.
   static void CloseForCurrentThread();
 
   // See above.
-  static void InitContentStarter(mozilla::dom::ContentChild* aContent);
+  static PBackgroundChild* GetOrCreateSocketActorForCurrentThread(
+      nsIEventTarget* aMainEventTarget = nullptr);
 
   // See above.
-  static void InitSocketStarter(mozilla::net::SocketProcessChild* aSocket);
-
-  // See above.
-  static void InitSocketBridgeStarter(
-      mozilla::net::SocketProcessBridgeChild* aSocketBridge);
+  static PBackgroundChild* GetOrCreateForSocketParentBridgeForCurrentThread(
+      nsIEventTarget* aMainEventTarget = nullptr);
 
  private:
   // Only called by this class's friends.

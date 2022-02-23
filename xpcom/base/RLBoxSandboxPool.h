@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
-#include "nsINamed.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/rlbox/rlbox_types.hpp"

@@ -160,20 +160,6 @@ TEST_SUITES = {
             "test-verify($|.*(-1|[^0-9])$)",
         ],
     },
-    "mochitest-browser-a11y": {
-        "aliases": ("ba", "browser-a11y"),
-        "build_flavor": "browser-chrome",
-        "mach_command": "mochitest",
-        "kwargs": {
-            "flavor": "browser-chrome",
-            "subsuite": "a11y",
-            "test_paths": None,
-        },
-        "task_regex": [
-            "mochitest-browser-a11y($|.*(-1|[^0-9])$)",
-            "test-verify($|.*(-1|[^0-9])$)",
-        ],
-    },
     "mochitest-media": {
         "aliases": ("mpm", "plain-media"),
         "build_flavor": "mochitest",
@@ -377,7 +363,6 @@ _test_flavors = {
 }
 
 _test_subsuites = {
-    ("browser-chrome", "a11y"): "mochitest-browser-a11y",
     ("browser-chrome", "devtools"): "mochitest-devtools-chrome",
     ("browser-chrome", "remote"): "mochitest-remote",
     ("browser-chrome", "screenshots"): "mochitest-browser-chrome-screenshots",

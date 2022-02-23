@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
+import { isEmpty } from "lodash";
 import { connect } from "../../utils/connect";
 import { getHighlightedLineRange } from "../../selectors";
 
@@ -28,7 +29,7 @@ class HighlightLines extends Component {
 
     const { codeMirror } = editor;
 
-    if (!highlightedLineRange || !codeMirror) {
+    if (isEmpty(highlightedLineRange) || !codeMirror) {
       return;
     }
 
@@ -45,7 +46,7 @@ class HighlightLines extends Component {
 
     const { codeMirror } = editor;
 
-    if (!highlightedLineRange || !codeMirror) {
+    if (isEmpty(highlightedLineRange) || !codeMirror) {
       return;
     }
 

@@ -30,9 +30,8 @@ class NeckoParent : public PNeckoParent {
   friend class PNeckoParent;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NeckoParent, override)
-
   NeckoParent();
+  virtual ~NeckoParent() = default;
 
   [[nodiscard]] static const char* GetValidatedOriginAttributes(
       const SerializedLoadContext& aSerialized, PContentParent* aBrowser,
@@ -58,8 +57,6 @@ class NeckoParent : public PNeckoParent {
   }
 
  protected:
-  virtual ~NeckoParent() = default;
-
   bool mSocketProcessBridgeInited;
 
   already_AddRefed<PHttpChannelParent> AllocPHttpChannelParent(

@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* global XPCNativeWrapper */
+
 // protocol.js uses objects as exceptions in order to define
 // error packets.
 /* eslint-disable no-throw-literal */
@@ -157,6 +159,9 @@ const windowGlobalTargetPrototype = {
    *    This event contains the following attributes:
    *     * url (string)
    *       The new URI being loaded.
+   *     * nativeConsoleAPI (boolean)
+   *       `false` if the console API of the page has been overridden (e.g. by Firebug)
+   *       `true`  if the Gecko implementation is used
    *     * state (string)
    *       `start` if we just start requesting the new URL
    *       `stop`  if the new URL is done loading
@@ -256,8 +261,8 @@ const windowGlobalTargetPrototype = {
    *          If true, the actor will only focus on the passed docShell and not on the whole
    *          docShell tree. This should be enabled when we have targets for all documents.
    *        - sessionContext Object
-   *          The Session Context to help know what is debugged.
-   *          See devtools/server/actors/watcher/session-context.js
+   *          WatcherActor's session context. This helps know what is the overall debugged scope.
+   *          See watcher actor constructor for more info.
    */
   initialize: function(
     connection,
@@ -350,6 +355,12 @@ const windowGlobalTargetPrototype = {
   // filter console messages by addonID), set to an empty (no options) object by default.
   consoleAPIListenerOptions: {},
 
+  // Optional SourcesManager filter function (e.g. used by the WebExtensionActor to filter
+  // sources by addonID), allow all sources by default.
+  _allowSource() {
+    return true;
+  },
+
   /*
    * Return a Debugger instance or create one if there is none yet
    */
@@ -437,10 +448,6 @@ const windowGlobalTargetPrototype = {
 
   get browserId() {
     return this.browsingContext?.browserId;
-  },
-
-  get openerBrowserId() {
-    return this.browsingContext?.opener?.browserId;
   },
 
   /**
@@ -538,7 +545,10 @@ const windowGlobalTargetPrototype = {
 
   get sourcesManager() {
     if (!this._sourcesManager) {
-      this._sourcesManager = new SourcesManager(this.threadActor);
+      this._sourcesManager = new SourcesManager(
+        this.threadActor,
+        this._allowSource
+      );
     }
     return this._sourcesManager;
   },
@@ -576,22 +586,25 @@ const windowGlobalTargetPrototype = {
     // created by DevTools, which always exists and help better connect resources to the target
     // in the frontend. Otherwise all other <browser> element of webext may be reloaded or go away
     // and then we would have troubles matching targets for resources.
-    const originalBrowsingContext = this
+    const browsingContextID = this.devtoolsSpawnedBrowsingContextForWebExtension
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.id
+      : this.originalDocShell.browsingContext.id;
+    const originalInnerWindowId = this._originalWindow
+      ? getInnerId(this._originalWindow)
+      : null;
+    const innerWindowId = this.devtoolsSpawnedBrowsingContextForWebExtension
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.currentWindowGlobal
+          .innerWindowId
+      : originalInnerWindowId;
+    const originalParentInnerWindowId = this._originalWindow
+      ? this._originalWindow.docShell.browsingContext.parent
+          ?.currentWindowContext.innerWindowId
+      : null;
+    const parentInnerWindowId = this
       .devtoolsSpawnedBrowsingContextForWebExtension
-      ? this.devtoolsSpawnedBrowsingContextForWebExtension
-      : this.originalDocShell.browsingContext;
-    const browsingContextID = originalBrowsingContext.id;
-    const innerWindowId =
-      originalBrowsingContext.currentWindowContext.innerWindowId;
-    const parentInnerWindowId =
-      originalBrowsingContext.parent?.currentWindowContext.innerWindowId;
-    // Doesn't only check `!!opener` as some iframe might have an opener
-    // if their location was loaded via `window.open(url, "iframe-name")`.
-    // So also ensure that the document is opened in a distinct tab.
-    const isPopup =
-      !!originalBrowsingContext.opener &&
-      originalBrowsingContext.browserId !=
-        originalBrowsingContext.opener.browserId;
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.parent
+          .currentWindowGlobal.innerWindowId
+      : originalParentInnerWindowId;
 
     const response = {
       actor: this.actorID,
@@ -603,7 +616,6 @@ const windowGlobalTargetPrototype = {
       topInnerWindowId: this.browsingContext.topWindowContext.innerWindowId,
       isTopLevelTarget: this.isTopLevelTarget,
       ignoreSubFrames: this.ignoreSubFrames,
-      isPopup,
       traits: {
         // @backward-compat { version 64 } Exposes a new trait to help identify
         // BrowsingContextActor's inherited actors from the client side.
@@ -622,6 +634,11 @@ const windowGlobalTargetPrototype = {
         watchpoints: true,
         // Supports back and forward navigation
         navigation: true,
+        // The target actor no longer expose attach/detach methods and is now running
+        // the code which used to be run while calling attach from its constructor.
+        // The target actor is now immediately fully usable and starts inspecting the
+        // WindowGlobal immediately
+        isAutoAttached: true,
       },
     };
 
@@ -1518,6 +1535,7 @@ const windowGlobalTargetPrototype = {
     if (!this.followWindowGlobalLifeCycle) {
       this.emit("tabNavigated", {
         url: newURI,
+        nativeConsoleAPI: true,
         state: "start",
         isFrameSwitching,
       });
@@ -1568,9 +1586,32 @@ const windowGlobalTargetPrototype = {
     this.emit("tabNavigated", {
       url: this.url,
       title: this.title,
+      nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
       state: "stop",
       isFrameSwitching: isFrameSwitching,
     });
+  },
+
+  /**
+   * Tells if the window.console object is native or overwritten by script in
+   * the page.
+   *
+   * @param nsIDOMWindow window
+   *        The window object you want to check.
+   * @return boolean
+   *         True if the window.console object is native, or false otherwise.
+   */
+  hasNativeConsoleAPI(window) {
+    let isNative = false;
+    try {
+      // We are very explicitly examining the "console" property of
+      // the non-Xrayed object here.
+      const console = window.wrappedJSObject.console;
+      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
+    } catch (ex) {
+      // ignore
+    }
+    return isNative;
   },
 
   /**

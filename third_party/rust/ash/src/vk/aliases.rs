@@ -164,4 +164,3 @@ pub type DeviceMemoryOpaqueCaptureAddressInfoKHR = DeviceMemoryOpaqueCaptureAddr
 pub type AabbPositionsNV = AabbPositionsKHR;
 pub type TransformMatrixNV = TransformMatrixKHR;
 pub type AccelerationStructureInstanceNV = AccelerationStructureInstanceKHR;
-pub type AttachmentSampleCountInfoNV = AttachmentSampleCountInfoAMD;

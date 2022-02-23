@@ -42,6 +42,6 @@ fn rustc_version() -> Option<Compiler> {
         return None;
     }
     let minor = pieces.next()?.parse().ok()?;
-    let nightly = version.contains("nightly") || version.ends_with("-dev");
+    let nightly = version.contains("nightly");
     Some(Compiler { minor, nightly })
 }

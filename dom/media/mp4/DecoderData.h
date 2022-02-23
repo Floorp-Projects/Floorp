@@ -13,6 +13,7 @@
 #include "mozilla/Vector.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsString.h"
 #include "mp4parse.h"
 
 namespace mozilla {

@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_ProcessUtils_h
 #define mozilla_ipc_ProcessUtils_h
 
-#include <functional>
 #include <vector>
 
 #include "mozilla/ipc/FileDescriptor.h"
@@ -25,8 +24,7 @@ void SetThisProcessName(const char* aName);
 
 class SharedPreferenceSerializer final {
  public:
-  explicit SharedPreferenceSerializer(
-      std::function<bool(const char*)>&& aShouldSerializeFn);
+  SharedPreferenceSerializer();
   SharedPreferenceSerializer(SharedPreferenceSerializer&& aOther);
   ~SharedPreferenceSerializer();
 
@@ -48,7 +46,6 @@ class SharedPreferenceSerializer final {
   size_t mPrefsLength;
   UniqueFileHandle mPrefMapHandle;
   UniqueFileHandle mPrefsHandle;
-  std::function<bool(const char*)> mShouldSerializeFn;
 };
 
 class SharedPreferenceDeserializer final {

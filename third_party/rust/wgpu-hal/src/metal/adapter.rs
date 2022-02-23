@@ -55,26 +55,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 (Tfc::STORAGE_READ_WRITE, Tfc::STORAGE_READ_WRITE)
             }
         };
-        let msaa_desktop_if = if pc.msaa_desktop {
-            Tfc::MULTISAMPLE
-        } else {
-            Tfc::empty()
-        };
-        let msaa_apple7x_if = if pc.msaa_desktop | pc.msaa_apple7 {
-            Tfc::MULTISAMPLE
-        } else {
-            Tfc::empty()
-        };
-        let msaa_resolve_desktop_if = if pc.msaa_desktop {
-            Tfc::MULTISAMPLE_RESOLVE
-        } else {
-            Tfc::empty()
-        };
-        let msaa_resolve_apple3x_if = if pc.msaa_desktop | pc.msaa_apple3 {
-            Tfc::MULTISAMPLE_RESOLVE
-        } else {
-            Tfc::empty()
-        };
 
         let extra = match format {
             Tf::R8Unorm => {
@@ -83,77 +63,59 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::R8Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::R8Uint | Tf::R8Sint | Tf::R16Uint | Tf::R16Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
+                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT
             }
             Tf::R16Float => {
                 read_write_tier2_if
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::R16Unorm | Tf::R16Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if
             }
             Tf::Rg8Unorm | Tf::Rg8Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
-            Tf::Rg8Uint | Tf::Rg8Sint => Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE,
+            Tf::Rg8Uint | Tf::Rg8Sint => Tfc::COLOR_ATTACHMENT,
             Tf::R32Uint | Tf::R32Sint => {
-                let storage = if pc.format_r32_all {
-                    read_write_tier1_if | Tfc::STORAGE
+                if pc.format_r32_all {
+                    read_write_tier1_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT
                 } else {
-                    Tfc::empty()
-                };
-                Tfc::COLOR_ATTACHMENT | storage | msaa_desktop_if
+                    Tfc::COLOR_ATTACHMENT
+                }
             }
             Tf::R32Float => {
-                let flags = Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if;
-                let extra = if pc.format_r32float_all {
-                    read_write_tier1_if | Tfc::STORAGE | Tfc::SAMPLED_LINEAR
+                let mut flags = Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND;
+                if pc.format_r32float_all {
+                    flags |= read_write_tier1_if | Tfc::STORAGE | Tfc::SAMPLED_LINEAR;
                 } else if pc.format_r32float_no_filter {
-                    Tfc::SAMPLED_LINEAR
-                } else {
-                    Tfc::empty()
-                };
-                flags | extra
+                    flags |= Tfc::SAMPLED_LINEAR;
+                }
+                flags
             }
             Tf::Rg16Uint | Tf::Rg16Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
+                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT
             }
             Tf::Rg16Unorm | Tf::Rg16Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if
             }
             Tf::Rg16Float => {
                 read_write_tier2_if
@@ -161,8 +123,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::Rgba8Unorm => {
                 read_write_tier2_if
@@ -170,15 +130,10 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::Rgba8UnormSrgb | Tf::Bgra8UnormSrgb => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags =
+                    Tfc::SAMPLED_LINEAR | Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND;
                 flags.set(Tfc::STORAGE, pc.format_rgba8_srgb_all);
                 flags
             }
@@ -187,34 +142,25 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::Rgba8Uint | Tf::Rgba8Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
+                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT
             }
             Tf::Rgb10a2Unorm => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags =
+                    Tfc::SAMPLED_LINEAR | Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND;
                 flags.set(Tfc::STORAGE, pc.format_rgb10a2_unorm_all);
                 flags
             }
             Tf::Rg11b10Float => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags =
+                    Tfc::SAMPLED_LINEAR | Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND;
                 flags.set(Tfc::STORAGE, pc.format_rg11b10_all);
                 flags
             }
-            Tf::Rg32Uint | Tf::Rg32Sint => Tfc::COLOR_ATTACHMENT | Tfc::STORAGE | msaa_apple7x_if,
+            Tf::Rg32Uint | Tf::Rg32Sint => Tfc::COLOR_ATTACHMENT | Tfc::STORAGE,
             Tf::Rg32Float => {
-                let mut flags =
-                    Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND | msaa_apple7x_if;
+                let mut flags = Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND;
                 if pc.format_rg32float_all {
                     flags |= Tfc::STORAGE | Tfc::SAMPLED_LINEAR;
                 } else if pc.format_rg32float_color_blend {
@@ -223,15 +169,13 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 flags
             }
             Tf::Rgba16Uint | Tf::Rgba16Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
+                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT
             }
             Tf::Rgba16Unorm | Tf::Rgba16Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if
             }
             Tf::Rgba16Float => {
                 read_write_tier2_if
@@ -239,52 +183,38 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
                     | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::Rgba32Uint | Tf::Rgba32Sint => {
-                let storage = if pc.format_rgba32int_color_write {
-                    read_write_tier2_if | Tfc::STORAGE
+                if pc.format_rgba32int_color_write {
+                    read_write_tier2_if | Tfc::COLOR_ATTACHMENT | Tfc::STORAGE
                 } else {
-                    Tfc::empty()
-                };
-                storage | Tfc::COLOR_ATTACHMENT | msaa_desktop_if
+                    Tfc::COLOR_ATTACHMENT
+                }
             }
             Tf::Rgba32Float => {
-                let extra = if pc.format_rgba32float_all {
+                if pc.format_rgba32float_all {
                     read_write_tier2_if
                         | Tfc::SAMPLED_LINEAR
                         | Tfc::STORAGE
+                        | Tfc::COLOR_ATTACHMENT
                         | Tfc::COLOR_ATTACHMENT_BLEND
                 } else if pc.format_rgba32float_color_write {
-                    read_write_tier2_if | Tfc::STORAGE
+                    read_write_tier2_if | Tfc::COLOR_ATTACHMENT | Tfc::STORAGE
                 } else {
-                    Tfc::empty()
-                };
-                extra | Tfc::COLOR_ATTACHMENT | msaa_apple7x_if | msaa_resolve_desktop_if
+                    Tfc::COLOR_ATTACHMENT
+                }
             }
             Tf::Depth32Float => {
-                let linear = if pc.format_depth32float_filter {
-                    Tfc::SAMPLED_LINEAR
+                if pc.format_depth32float_filter {
+                    Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::SAMPLED_LINEAR
                 } else {
-                    Tfc::empty()
-                };
-                linear | Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::MULTISAMPLE | msaa_resolve_apple3x_if
+                    Tfc::DEPTH_STENCIL_ATTACHMENT
+                }
             }
             Tf::Depth24Plus | Tf::Depth24PlusStencil8 => {
-                Tfc::DEPTH_STENCIL_ATTACHMENT
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_apple3x_if
+                Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::SAMPLED_LINEAR
             }
-            Tf::Rgb9e5Ufloat => {
-                let msaa = if msaa_desktop_if.is_empty() {
-                    Tfc::MULTISAMPLE | Tfc::MULTISAMPLE_RESOLVE
-                } else {
-                    Tfc::empty()
-                };
-                Tfc::SAMPLED_LINEAR | msaa
-            }
+            Tf::Rgb9e5Ufloat => Tfc::SAMPLED_LINEAR,
             Tf::Bc1RgbaUnorm
             | Tf::Bc1RgbaUnormSrgb
             | Tf::Bc2RgbaUnorm
@@ -683,9 +613,6 @@ impl super::PrivateCapabilities {
             } else {
                 mtl::MTLReadWriteTextureTier::TierNone
             },
-            msaa_desktop: os_is_mac,
-            msaa_apple3: family_check && device.supports_family(MTLGPUFamily::Apple3),
-            msaa_apple7: family_check && device.supports_family(MTLGPUFamily::Apple7),
             resource_heaps: Self::supports_any(device, RESOURCE_HEAP_SUPPORT),
             argument_buffers: Self::supports_any(device, ARGUMENT_BUFFER_SUPPORT),
             shared_textures: !os_is_mac,
@@ -991,9 +918,8 @@ impl super::PrivateCapabilities {
             | F::MAPPABLE_PRIMARY_BUFFERS
             | F::VERTEX_WRITABLE_STORAGE
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-            | F::PUSH_CONSTANTS
             | F::POLYGON_MODE_LINE
-            | F::CLEAR_TEXTURE
+            | F::CLEAR_COMMANDS
             | F::TEXTURE_FORMAT_16BIT_NORM;
 
         features.set(F::DEPTH_CLIP_CONTROL, self.supports_depth_clip_control);

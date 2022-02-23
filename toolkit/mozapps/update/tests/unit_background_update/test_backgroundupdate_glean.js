@@ -10,10 +10,6 @@ const { BackgroundUpdate } = ChromeUtils.import(
   "resource://gre/modules/BackgroundUpdate.jsm"
 );
 
-const { maybeSubmitBackgroundUpdatePing } = ChromeUtils.import(
-  "resource://gre/modules/backgroundtasks/BackgroundTask_backgroundupdate.jsm"
-);
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "UpdateService",
@@ -32,57 +28,41 @@ add_task(function test_setup() {
 add_task(async function test_record_update_environment() {
   await BackgroundUpdate.recordUpdateEnvironment();
 
-  let pingSubmitted = false;
-  let appUpdateAutoEnabled = await UpdateUtils.getAppUpdateAutoEnabled();
-  let backgroundUpdateEnabled = await UpdateUtils.readUpdateConfigSetting(
-    "app.update.background.enabled"
+  Assert.equal(
+    Services.prefs.getBoolPref("app.update.service.enabled", false),
+    Glean.update.serviceEnabled.testGetValue()
   );
-  GleanPings.backgroundUpdate.testBeforeNextSubmit(reason => {
-    pingSubmitted = true;
-    Assert.equal(
-      Services.prefs.getBoolPref("app.update.service.enabled", false),
-      Glean.update.serviceEnabled.testGetValue()
-    );
 
-    Assert.equal(
-      appUpdateAutoEnabled,
-      Glean.update.autoDownload.testGetValue()
-    );
+  Assert.equal(
+    await UpdateUtils.getAppUpdateAutoEnabled(),
+    Glean.update.autoDownload.testGetValue()
+  );
 
-    Assert.equal(
-      backgroundUpdateEnabled,
-      Glean.update.backgroundUpdate.testGetValue()
-    );
+  Assert.equal(
+    await UpdateUtils.readUpdateConfigSetting("app.update.background.enabled"),
+    Glean.update.backgroundUpdate.testGetValue()
+  );
 
-    Assert.equal(
-      UpdateUtils.UpdateChannel,
-      Glean.update.channel.testGetValue()
-    );
-    Assert.equal(
-      !Services.policies || Services.policies.isAllowed("appUpdate"),
-      Glean.update.enabled.testGetValue()
-    );
+  Assert.equal(UpdateUtils.UpdateChannel, Glean.update.channel.testGetValue());
+  Assert.equal(
+    !Services.policies || Services.policies.isAllowed("appUpdate"),
+    Glean.update.enabled.testGetValue()
+  );
 
-    Assert.equal(
-      UpdateService.canUsuallyApplyUpdates,
-      Glean.update.canUsuallyApplyUpdates.testGetValue()
-    );
-    Assert.equal(
-      UpdateService.canUsuallyCheckForUpdates,
-      Glean.update.canUsuallyCheckForUpdates.testGetValue()
-    );
-    Assert.equal(
-      UpdateService.canUsuallyStageUpdates,
-      Glean.update.canUsuallyStageUpdates.testGetValue()
-    );
-    Assert.equal(
-      UpdateService.canUsuallyUseBits,
-      Glean.update.canUsuallyUseBits.testGetValue()
-    );
-  });
-
-  // There's nothing async in this function atm, but it's annotated async, so..
-  await maybeSubmitBackgroundUpdatePing();
-
-  ok(pingSubmitted, "'background-update' ping was submitted");
+  Assert.equal(
+    UpdateService.canUsuallyApplyUpdates,
+    Glean.update.canUsuallyApplyUpdates.testGetValue()
+  );
+  Assert.equal(
+    UpdateService.canUsuallyCheckForUpdates,
+    Glean.update.canUsuallyCheckForUpdates.testGetValue()
+  );
+  Assert.equal(
+    UpdateService.canUsuallyStageUpdates,
+    Glean.update.canUsuallyStageUpdates.testGetValue()
+  );
+  Assert.equal(
+    UpdateService.canUsuallyUseBits,
+    Glean.update.canUsuallyUseBits.testGetValue()
+  );
 });

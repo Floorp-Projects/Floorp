@@ -18,7 +18,6 @@
 #define js_ErrorReport_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <iterator>  // std::input_iterator_tag, std::iterator
 #include <stdarg.h>
@@ -32,7 +31,6 @@
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/RootingAPI.h"         // JS::HandleObject, JS::RootedObject
 #include "js/UniquePtr.h"          // js::UniquePtr
-#include "js/Value.h"              // JS::Value
 #include "js/Vector.h"             // js::Vector
 
 struct JS_PUBLIC_API JSContext;
@@ -480,8 +478,7 @@ namespace JS {
 extern JS_PUBLIC_API bool CreateError(
     JSContext* cx, JSExnType type, HandleObject stack, HandleString fileName,
     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport* report,
-    HandleString message, Handle<mozilla::Maybe<Value>> cause,
-    MutableHandleValue rval);
+    HandleString message, MutableHandleValue rval);
 
 } /* namespace JS */
 

@@ -12,8 +12,8 @@ pub trait Trait {
 #[async_trait]
 pub trait TraitFoo {
     async fn f() {
-        let _y = unimplemented!();
-        let _z = _y;
+        let y = unimplemented!();
+        let z = y;
     }
 }
 

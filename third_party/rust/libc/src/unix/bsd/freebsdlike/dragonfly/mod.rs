@@ -106,6 +106,11 @@ s! {
         pub f_uid_uuid: ::uuid_t,
     }
 
+    #[deprecated(
+        since = "0.2.107",
+        note = "stat.st_blksize is an i64 and stat.st_qspare1 is replaced with \
+                stat.st_blksize in DragonFly 5.8"
+    )]
     pub struct stat {
         pub st_ino: ::ino_t,
         pub st_nlink: ::nlink_t,
@@ -123,11 +128,11 @@ s! {
         pub st_ctime_nsec: ::c_long,
         pub st_size: ::off_t,
         pub st_blocks: i64,
-        pub __old_st_blksize: u32,
+        pub st_blksize: u32,
         pub st_flags: u32,
         pub st_gen: u32,
         pub st_lspare: i32,
-        pub st_blksize: i64,
+        pub st_qspare1: i64,
         pub st_qspare2: i64,
     }
 
@@ -767,6 +772,9 @@ pub const RLIMIT_POSIXLOCKS: ::c_int = 11;
 #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
 pub const RLIM_NLIMITS: ::rlim_t = 12;
 
+#[deprecated(since = "0.2.105", note = "Only exists on FreeBSD, not DragonFly BSD")]
+pub const XU_NGROUPS: ::c_int = 16;
+
 pub const Q_GETQUOTA: ::c_int = 0x300;
 pub const Q_SETQUOTA: ::c_int = 0x400;
 
@@ -936,6 +944,11 @@ pub const EV_EOF: u16 = 0x8000;
 pub const EV_SYSFLAGS: u16 = 0xf000;
 
 pub const FIODNAME: ::c_ulong = 0x80106678;
+#[deprecated(
+    since = "0.2.106",
+    note = "FIODGNAME is not defined on DragonFly BSD. See FIODNAME."
+)]
+pub const FIODGNAME: ::c_ulong = 0x80106678;
 
 pub const NOTE_TRIGGER: u32 = 0x01000000;
 pub const NOTE_FFNOP: u32 = 0x00000000;
@@ -1420,11 +1433,12 @@ extern "C" {
 
     pub fn aio_waitcomplete(iocbp: *mut *mut aiocb, timeout: *mut ::timespec) -> ::c_int;
 
+    #[deprecated(since = "0.2.107", note = "len should be of type size_t")]
     pub fn devname_r(
         dev: ::dev_t,
         mode: ::mode_t,
         buf: *mut ::c_char,
-        len: ::size_t,
+        len: ::c_int,
     ) -> *mut ::c_char;
 
     pub fn waitid(

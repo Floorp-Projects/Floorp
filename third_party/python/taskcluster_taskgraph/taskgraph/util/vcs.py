@@ -11,8 +11,6 @@ from shutil import which
 import requests
 from redo import retry
 
-from taskgraph.util.path import ancestors
-
 PUSHLOG_TMPL = "{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1"
 
 
@@ -23,13 +21,9 @@ class Repository(ABC):
         if self.binary is None:
             raise OSError(f"{self.tool} not found!")
 
-        self._env = os.environ.copy()
-
-    def run(self, *args: str, **kwargs):
+    def run(self, *args: str):
         cmd = (self.binary,) + args
-        return subprocess.check_output(
-            cmd, cwd=self.path, env=self._env, encoding="utf-8", **kwargs
-        )
+        return subprocess.check_output(cmd, cwd=self.path, universal_newlines=True)
 
     @abstractproperty
     def tool(self) -> str:
@@ -74,10 +68,6 @@ class Repository(ABC):
 
 class HgRepository(Repository):
     tool = "hg"
-
-    def __init__(self, *args, **kwargs):
-        super(HgRepository, self).__init__(*args, **kwargs)
-        self._env["HGPLAIN"] = "1"
 
     @property
     def head_ref(self):
@@ -172,11 +162,10 @@ def get_repository(path):
     """Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     """
-    for path in ancestors(path):
-        if os.path.isdir(os.path.join(path, ".hg")):
-            return HgRepository(path)
-        elif os.path.exists(os.path.join(path, ".git")):
-            return GitRepository(path)
+    if os.path.isdir(os.path.join(path, ".hg")):
+        return HgRepository(path)
+    elif os.path.exists(os.path.join(path, ".git")):
+        return GitRepository(path)
 
     raise RuntimeError("Current directory is neither a git or hg repository")
 

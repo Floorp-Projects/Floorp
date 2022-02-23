@@ -12,7 +12,7 @@ of this document easier to understand.
 
 ## Invocation
 
-First, do a [standard build of Firefox](/setup/index.rst).
+First, do a [standard build of Firefox](../setup/index.html).
 
 ### Mac
 

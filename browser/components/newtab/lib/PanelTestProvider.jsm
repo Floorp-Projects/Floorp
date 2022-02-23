@@ -163,22 +163,16 @@ const MESSAGES = () => [
       layout: "icon_and_message",
       category: "cfrFeatures",
       notification_text: "Personalized CFR Recommendation",
-      heading_text: { string_id: "cfr-doorhanger-bookmark-fxa-header" },
+      heading_text: { string_id: "cfr-doorhanger-firefox-send-header" },
       info_icon: {
-        label: {
-          attributes: {
-            tooltiptext: { string_id: "cfr-doorhanger-fxa-close-btn-tooltip" },
-          },
-        },
+        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
         sumo_path: "https://example.com",
       },
-      text: { string_id: "cfr-doorhanger-bookmark-fxa-body" },
+      text: { string_id: "cfr-doorhanger-firefox-send-body" },
       icon: "chrome://branding/content/icon64.png",
-      icon_class: "cfr-doorhanger-large-icon",
-      persistent_doorhanger: true,
       buttons: {
         primary: {
-          label: { string_id: "cfr-doorhanger-milestone-ok-button" },
+          label: { string_id: "cfr-doorhanger-firefox-send-ok-button" },
           action: {
             type: "OPEN_URL",
             data: {
@@ -222,9 +216,7 @@ const MESSAGES = () => [
     groups: ["panel-test-provider"],
     content: {
       template: "logo-and-content",
-      logo: {
-        imageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
-      },
+      logoImageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
       body: {
         title: {
           label: {
@@ -312,104 +304,6 @@ const MESSAGES = () => [
     },
     frequency: { lifetime: 3 },
     trigger: { id: "defaultBrowserCheck" },
-  },
-  {
-    id: "MULTISTAGE_SPOTLIGHT_MESSAGE",
-    groups: ["panel-test-provider"],
-    template: "spotlight",
-    content: {
-      template: "multistage",
-      backdrop: "transparent",
-      screens: [
-        {
-          id: "AW_PIN_FIREFOX",
-          order: 0,
-          content: {
-            title: {
-              string_id: "mr1-onboarding-pin-header",
-            },
-            hero_text: {
-              string_id: "mr1-welcome-screen-hero-text",
-            },
-            help_text: {
-              text: {
-                string_id: "mr1-onboarding-welcome-image-caption",
-              },
-            },
-            primary_button: {
-              label: {
-                string_id: "mr1-onboarding-pin-primary-button-label",
-              },
-              action: {
-                navigate: true,
-                type: "PIN_FIREFOX_TO_TASKBAR",
-              },
-            },
-            secondary_button: {
-              label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
-              },
-              action: {
-                navigate: true,
-              },
-            },
-          },
-        },
-        {
-          id: "AW_SET_DEFAULT",
-          order: 1,
-          content: {
-            title: {
-              string_id: "mr1-onboarding-default-header",
-            },
-            subtitle: {
-              string_id: "mr1-onboarding-default-subtitle",
-            },
-            primary_button: {
-              label: {
-                string_id: "mr1-onboarding-default-primary-button-label",
-              },
-              action: {
-                navigate: true,
-                type: "SET_DEFAULT_BROWSER",
-              },
-            },
-            secondary_button: {
-              label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
-              },
-              action: {
-                navigate: true,
-              },
-            },
-          },
-        },
-      ],
-    },
-    frequency: { lifetime: 3 },
-    trigger: { id: "defaultBrowserCheck" },
-  },
-  {
-    id: "PB_NEWTAB_VPN_PROMO",
-    template: "pb_newtab",
-    content: {
-      promoEnabled: true,
-      infoEnabled: true,
-      infoIcon: "",
-      infoTitle: "",
-      infoBody: "fluent:about-private-browsing-info-description-private-window",
-      infoLinkText: "fluent:about-private-browsing-learn-more-link",
-      infoTitleEnabled: false,
-      promoLinkType: "button",
-      promoLinkText: "fluent:about-private-browsing-prominent-cta",
-      promoSectionStyle: "below-search",
-      promoHeader: "fluent:about-private-browsing-get-privacy",
-      promoTitle: "fluent:about-private-browsing-hide-activity-1",
-      promoTitleEnabled: true,
-      promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
-    },
-    targeting: "region != 'CN' && !hasActiveEnterprisePolicies",
-    frequency: { lifetime: 3 },
   },
 ];
 

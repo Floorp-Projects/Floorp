@@ -11,9 +11,8 @@
 
 [package]
 edition = "2018"
-rust-version = "1.39"
 name = "async-trait"
-version = "0.1.52"
+version = "0.1.51"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Type erasure for async trait methods"
 documentation = "https://docs.rs/async-trait"
@@ -48,5 +47,5 @@ version = "0.1.14"
 version = "0.1.14"
 
 [dev-dependencies.trybuild]
-version = "1.0.49"
+version = "1.0.19"
 features = ["diff"]

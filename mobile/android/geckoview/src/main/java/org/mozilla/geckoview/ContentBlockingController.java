@@ -131,7 +131,7 @@ public class ContentBlockingController {
         Event.COOKIES_BLOCKED_FOREIGN, Event.BLOCKED_SOCIALTRACKING_CONTENT,
         Event.LOADED_SOCIALTRACKING_CONTENT, Event.REPLACED_TRACKING_CONTENT
       })
-      public @interface LogEvent {}
+      /* package */ @interface LogEvent {}
 
       /** A category the entry falls under. */
       public final @LogEvent int category;
@@ -149,7 +149,7 @@ public class ContentBlockingController {
       }
 
       protected BlockingData() {
-        category = Event.BLOCKED_TRACKING_CONTENT;
+        category = 0;
         blocked = false;
         count = 0;
       }

@@ -131,6 +131,3 @@ pub const TIOCM_DSR: ::c_int = 0x400;
 
 pub const BOTHER: ::speed_t = 0o010000;
 pub const IBSHIFT: ::tcflag_t = 16;
-
-pub const BLKSSZGET: ::c_int = 0x20001268;
-pub const BLKPBSZGET: ::c_int = 0x2000127B;

@@ -175,10 +175,6 @@ void MIDIPort::Notify(const void_t& aVoid) {
 }
 
 void MIDIPort::FireStateChangeEvent() {
-  if (!GetOwner()) {
-    return;  // Ignore changes once we've been disconnected from the owner
-  }
-
   StateChange();
 
   MOZ_ASSERT(mPort);

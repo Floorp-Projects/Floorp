@@ -9,9 +9,9 @@ add_task(async function() {
     true
   );
 
-  const dbg = await initDebugger("doc-script-switching.html", "script-switching-01.js");
+  const dbg = await initDebugger("doc-script-switching.html", "switching-01");
 
-  await selectSource(dbg, "script-switching-01.js");
+  await selectSource(dbg, "switching-01");
 
   // open the console
   await getDebuggerSplitConsole(dbg);

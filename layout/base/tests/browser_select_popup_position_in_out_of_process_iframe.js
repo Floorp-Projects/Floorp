@@ -129,7 +129,7 @@ add_task(async function() {
   isfuzzy(
     popupRect.y,
     expectedYPosition,
-    window.devicePixelRatio,
+    window.windowUtils.screenPixelsPerCSSPixel,
     "y position of the popup"
   );
 

@@ -117,8 +117,7 @@ def run_tests(config, browser_config):
     paths = ["profile_path", "tpmanifest", "extensions", "setup", "cleanup"]
 
     for test_index, test in enumerate(tests):
-        if config.get("suite", False):
-            test["suite"] = config["suite"]
+        test["suite"] = config["suite"]
         if test_index == 0:
             test["is_first_test"] = True
         # Check for profile_path, tpmanifest and interpolate based on Talos

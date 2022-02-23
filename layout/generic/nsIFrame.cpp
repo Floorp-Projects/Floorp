@@ -927,11 +927,9 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
       const RetainedDisplayListData* data =
           GetRetainedDisplayListData(rootFrame);
 
-      const bool inModifiedList = data && data->IsModified(this);
-
-      if (inModifiedList) {
-        DL_LOG(LogLevel::Warning, "Frame %p found in modified list", this);
-      }
+      const bool inModifiedList =
+          data && (data->GetFlags(this) &
+                   RetainedDisplayListData::FrameFlags::Modified);
 
       MOZ_ASSERT(!inModifiedList,
                  "A dtor added this frame to modified frames list!");
@@ -1043,7 +1041,7 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
     GetFrameName(name);
   }
 #endif
-  DL_LOGV("Removing display item data for frame %p (%s)", this,
+  DL_LOGD("Removing display item data for frame %p (%s)", this,
           NS_ConvertUTF16toUTF8(name).get());
 
   // Destroying a WebRenderUserDataTable can cause destruction of other objects
@@ -1062,6 +1060,18 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
     delete userDataTable;
   }
 
+  if (IsSubDocumentFrame()) {
+    const nsSubDocumentFrame* subdoc =
+        static_cast<const nsSubDocumentFrame*>(this);
+    nsFrameLoader* frameLoader = subdoc->FrameLoader();
+    if (frameLoader && frameLoader->GetRemoteBrowser()) {
+      // This is a remote browser that is going away, notify it that it is now
+      // hidden
+      frameLoader->GetRemoteBrowser()->UpdateEffects(
+          mozilla::dom::EffectsInfo::FullyHidden());
+    }
+  }
+
   for (nsDisplayItem* i : DisplayItems()) {
     if (i->GetDependentFrame() == this && !i->HasDeletedFrame()) {
       i->Frame()->MarkNeedsDisplayItemRebuild();
@@ -1077,24 +1087,22 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
     return;
   }
 
-  nsIFrame* rootFrame = PresShell()->GetRootFrame();
-  MOZ_ASSERT(rootFrame);
-
-  RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
-
   const bool updateData = IsFrameModified() || HasOverrideDirtyRegion() ||
                           MayHaveWillChangeBudget();
 
   if (!updateData) {
     // No RetainedDisplayListData to update.
-    MOZ_DIAGNOSTIC_ASSERT(!data->IsModified(this),
-                          "Deleted frame is in modified frame list");
     return;
   }
 
+  nsIFrame* rootFrame = PresShell()->GetRootFrame();
+  MOZ_ASSERT(rootFrame);
+
+  RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
+
   if (MayHaveWillChangeBudget()) {
     // Keep the frame in list, so it can be removed from the will-change budget.
-    data->Flags(this) = RetainedDisplayListData::FrameFlag::HadWillChange;
+    data->Flags(this) = RetainedDisplayListData::FrameFlags::HadWillChange;
     return;
   }
 
@@ -1126,6 +1134,15 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     return;
   }
 
+  nsAutoString name;
+#ifdef DEBUG_FRAME_DUMP
+  if (DL_LOG_TEST(LogLevel::Debug)) {
+    GetFrameName(name);
+  }
+#endif
+  DL_LOGD("RDL - Rebuilding display items for frame %p (%s)", this,
+          NS_ConvertUTF16toUTF8(name).get());
+
   nsIFrame* rootFrame = PresShell()->GetRootFrame();
   MOZ_ASSERT(rootFrame);
 
@@ -1133,17 +1150,8 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     return;
   }
 
-  nsAutoString name;
-#ifdef DEBUG_FRAME_DUMP
-  if (DL_LOG_TEST(LogLevel::Debug)) {
-    GetFrameName(name);
-  }
-#endif
-
-  DL_LOGV("RDL - Rebuilding display items for frame %p (%s)", this,
-          NS_ConvertUTF16toUTF8(name).get());
-
   RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
+
   if (data->ModifiedFramesCount() >
       StaticPrefs::layout_display_list_rebuild_frame_limit()) {
     // If the modified frames count is above the rebuild limit, mark the root
@@ -1179,18 +1187,6 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 // Subclass hook for style post processing
 /* virtual */
 void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
-#ifdef ACCESSIBILITY
-  // Don't notify for reconstructed frames here, since the frame is still being
-  // constructed at this point and so LocalAccessible::GetFrame() will return
-  // null. Style changes for reconstructed frames are handled in
-  // DocAccessible::PruneOrInsertSubtree.
-  if (aOldComputedStyle) {
-    if (nsAccessibilityService* accService = GetAccService()) {
-      accService->NotifyOfComputedStyleChange(PresShell(), mContent);
-    }
-  }
-#endif
-
   MaybeScheduleReflowSVGNonDisplayText(this);
 
   Document* doc = PresContext()->Document();
@@ -2975,8 +2971,7 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
   int32_t devPixelRatio = aMaskedFrame->PresContext()->AppUnitsPerDevPixel();
   gfxPoint devPixelOffsetToUserSpace =
       nsLayoutUtils::PointToGfxPoint(offsetToUserSpace, devPixelRatio);
-  CSSToLayoutDeviceScale cssToDevScale =
-      aMaskedFrame->PresContext()->CSSToDevPixelScale();
+  gfxMatrix cssToDevMatrix = SVGUtils::GetCSSPxToDevPxMatrix(aMaskedFrame);
 
   nsPoint toReferenceFrame;
   aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
@@ -2995,9 +2990,7 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
         SVGUtils::eBBoxIncludeClipped | SVGUtils::eBBoxIncludeFill |
             SVGUtils::eBBoxIncludeMarkers | SVGUtils::eBBoxIncludeStroke |
             SVGUtils::eDoNotClipToBBoxOfContentInsideClipPath);
-    combinedClip = Some(
-        ThebesRect((CSSRect::FromUnknownRect(ToRect(result)) * cssToDevScale)
-                       .ToUnknownRect()));
+    combinedClip = Some(cssToDevMatrix.TransformBounds(result));
   } else {
     // The code for this case is adapted from ComputeMaskGeometry().
 
@@ -3022,9 +3015,7 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
       gfxRect clipArea;
       if (maskFrames[i]) {
         clipArea = maskFrames[i]->GetMaskArea(aMaskedFrame);
-        clipArea = ThebesRect(
-            (CSSRect::FromUnknownRect(ToRect(clipArea)) * cssToDevScale)
-                .ToUnknownRect());
+        clipArea = cssToDevMatrix.TransformBounds(clipArea);
       } else {
         const auto& layer = svgReset->mMask.mLayers[i];
         if (layer.mClip == StyleGeometryBox::NoClip) {
@@ -3106,41 +3097,6 @@ struct ContainerTracker {
   bool mCreatedContainer = false;
 };
 
-/**
- * Tries to reuse a top-level stacking context item from the previous paint.
- * Returns true if an item was reused, otherwise false.
- */
-bool TryToReuseStackingContextItem(nsDisplayListBuilder* aBuilder,
-                                   nsDisplayList* aList, nsIFrame* aFrame) {
-  if (!aBuilder->IsForPainting() || !aBuilder->IsPartialUpdate() ||
-      aBuilder->InInvalidSubtree()) {
-    return false;
-  }
-
-  if (aFrame->IsFrameModified() || aFrame->HasModifiedDescendants()) {
-    return false;
-  }
-
-  auto& items = aFrame->DisplayItems();
-  auto* res = std::find_if(
-      items.begin(), items.end(),
-      [](nsDisplayItem* aItem) { return aItem->IsPreProcessed(); });
-
-  if (res == items.end()) {
-    return false;
-  }
-
-  nsDisplayItem* container = *res;
-  MOZ_ASSERT(!container->GetAbove());
-  MOZ_ASSERT(container->Frame() == aFrame);
-  DL_LOGD("RDL - Found SC item %p (%s) (frame: %p)", container,
-          container->Name(), container->Frame());
-
-  aList->AppendToTop(container);
-  aBuilder->ReuseDisplayItem(container);
-  return true;
-}
-
 void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     bool* aCreatedContainerItem) {
@@ -3155,18 +3111,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   });
 
   AutoCheckBuilder check(aBuilder);
-
-  if (aBuilder->IsReusingStackingContextItems() &&
-      TryToReuseStackingContextItem(aBuilder, aList, this)) {
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
-    return;
-  }
-
-  if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE)) {
-    return;
-  }
+  if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE)) return;
 
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleEffects* effects = StyleEffects();
@@ -3321,8 +3266,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   //
   // These conditions should match |CanStoreDisplayListBuildingRect()| in
   // RetainedDisplayListBuilder.cpp
-  if (!aBuilder->IsReusingStackingContextItems() &&
-      aBuilder->IsPartialUpdate() && !aBuilder->InInvalidSubtree() &&
+  if (aBuilder->IsPartialUpdate() && !aBuilder->InInvalidSubtree() &&
       !IsFrameModified() && IsFixedPosContainingBlock() &&
       !GetPrevContinuation() && !GetNextContinuation()) {
     dirtyRect = nsRect();
@@ -3503,7 +3447,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     MarkAbsoluteFramesForDisplayList(aBuilder);
     aBuilder->Check();
     BuildDisplayList(aBuilder, set);
-    SetBuiltDisplayList(true);
     aBuilder->Check();
     aBuilder->DisplayCaret(this, set.Outlines());
 
@@ -3779,8 +3722,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     if (hasPerspective) {
-      transformItem->MarkWithAssociatedPerspective();
-
       if (clipCapturedBy == ContainerItemType::Perspective) {
         clipState.Restore();
       }
@@ -3869,39 +3810,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
   CreateOwnLayerIfNeeded(aBuilder, &resultList,
                          nsDisplayOwnLayer::OwnLayerForStackingContext,
                          &createdOwnLayer);
-
   if (createdOwnLayer) {
     ct.TrackContainer(resultList.GetTop());
-  }
-
-  if (aBuilder->IsReusingStackingContextItems()) {
-    if (resultList.IsEmpty()) {
-      return;
-    }
-
-    nsDisplayItem* container = resultList.GetBottom();
-    if (resultList.Count() > 1 || container->Frame() != this) {
-      container = MakeDisplayItem<nsDisplayContainer>(
-          aBuilder, this, containerItemASR, &resultList);
-    } else {
-      container = resultList.RemoveBottom();
-    }
-
-    // Mark the outermost display item as reusable. These display items and
-    // their chidren can be reused during the next paint if no ancestor or
-    // descendant frames have been modified.
-    if (!container->IsReusedItem()) {
-      container->SetReusable();
-    }
-    aList->AppendToTop(container);
-    ct.TrackContainer(container);
-  } else {
-    aList->AppendToTop(&resultList);
   }
 
   if (aCreatedContainerItem) {
     *aCreatedContainerItem = ct.mCreatedContainer;
   }
+
+  aList->AppendToTop(&resultList);
 }
 
 static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
@@ -4062,7 +3979,6 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
   aBuilder->AdjustWindowDraggingRegion(aChild);
   aBuilder->Check();
   aChild->BuildDisplayList(aBuilder, aLists);
-  aChild->SetBuiltDisplayList(true);
   aBuilder->Check();
   aBuilder->DisplayCaret(aChild, aLists.Outlines());
 #ifdef DEBUG
@@ -4271,6 +4187,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     awayFromCommonPath = true;
   }
 
+  child->SetBuiltDisplayList(true);
+
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
   const nsStyleDisplay* disp = child->StyleDisplay();
@@ -4352,8 +4270,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     child->BuildDisplayListForStackingContext(aBuilder, &list,
                                               &builtContainerItem);
     wrapListASR = contASRTracker.GetContainerASR();
-    if (!aBuilder->IsReusingStackingContextItems() &&
-        aBuilder->GetCaretFrame() == child) {
+    if (aBuilder->GetCaretFrame() == child) {
       builtContainerItem = false;
     }
   } else {
@@ -4368,7 +4285,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     }
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
-    child->SetBuiltDisplayList(true);
 
     if (!awayFromCommonPath &&
         // Some SVG frames might change opacity without invalidating the frame,
@@ -4422,10 +4338,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   buildingForChild.RestoreBuildingInvisibleItemsValue();
 
-  if (!list.IsEmpty()) {
-    if (isPositioned || isStackingContext) {
-      // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
-      // go in this level.
+  if (isPositioned || isStackingContext) {
+    // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
+    // go in this level.
+    if (!list.IsEmpty()) {
       nsDisplayItem* item = WrapInWrapList(aBuilder, child, &list, wrapListASR,
                                            builtContainerItem);
       if (isSVG) {
@@ -4433,12 +4349,14 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       } else {
         aLists.PositionedDescendants()->AppendToTop(item);
       }
-    } else if (!isSVG && disp->IsFloating(child)) {
+    }
+  } else if (!isSVG && disp->IsFloating(child)) {
+    if (!list.IsEmpty()) {
       aLists.Floats()->AppendToTop(
           WrapInWrapList(aBuilder, child, &list, wrapListASR));
-    } else {
-      aLists.Content()->AppendToTop(&list);
     }
+  } else {
+    aLists.Content()->AppendToTop(&list);
   }
   // We delay placing the positioned descendants of positioned frames to here,
   // because in the absence of z-index this is the correct order for them.
@@ -8073,14 +7991,6 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     aTo += ToString(pseudoType).c_str();
   }
   aTo += "]";
-
-  if (IsFrameModified()) {
-    aTo += nsPrintfCString(" modified");
-  }
-
-  if (HasModifiedDescendants()) {
-    aTo += nsPrintfCString(" has-modified-descendants");
-  }
 }
 
 void nsIFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {

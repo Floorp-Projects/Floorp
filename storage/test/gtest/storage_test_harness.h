@@ -55,16 +55,14 @@ already_AddRefed<mozIStorageService> getService() {
 already_AddRefed<mozIStorageConnection> getMemoryDatabase() {
   nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
-  nsresult rv = ss->OpenSpecialDatabase(
-      kMozStorageMemoryStorageKey, VoidCString(),
-      mozIStorageService::CONNECTION_DEFAULT, getter_AddRefs(conn));
+  nsresult rv = ss->OpenSpecialDatabase(kMozStorageMemoryStorageKey,
+                                        VoidCString(), getter_AddRefs(conn));
   do_check_success(rv);
   return conn.forget();
 }
 
 already_AddRefed<mozIStorageConnection> getDatabase(
-    nsIFile* aDBFile = nullptr,
-    uint32_t aConnectionFlags = mozIStorageService::CONNECTION_DEFAULT) {
+    nsIFile* aDBFile = nullptr) {
   nsCOMPtr<nsIFile> dbFile;
   nsresult rv;
   if (!aDBFile) {
@@ -81,7 +79,7 @@ already_AddRefed<mozIStorageConnection> getDatabase(
 
   nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
-  rv = ss->OpenDatabase(dbFile, aConnectionFlags, getter_AddRefs(conn));
+  rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
   do_check_success(rv);
   return conn.forget();
 }

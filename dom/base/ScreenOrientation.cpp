@@ -36,13 +36,13 @@ NS_IMPL_RELEASE_INHERITED(ScreenOrientation, DOMEventTargetHelper)
 static OrientationType InternalOrientationToType(
     hal::ScreenOrientation aOrientation) {
   switch (aOrientation) {
-    case hal::ScreenOrientation::PortraitPrimary:
+    case hal::eScreenOrientation_PortraitPrimary:
       return OrientationType::Portrait_primary;
-    case hal::ScreenOrientation::PortraitSecondary:
+    case hal::eScreenOrientation_PortraitSecondary:
       return OrientationType::Portrait_secondary;
-    case hal::ScreenOrientation::LandscapePrimary:
+    case hal::eScreenOrientation_LandscapePrimary:
       return OrientationType::Landscape_primary;
-    case hal::ScreenOrientation::LandscapeSecondary:
+    case hal::eScreenOrientation_LandscapeSecondary:
       return OrientationType::Landscape_secondary;
     default:
       MOZ_CRASH("Bad aOrientation value");
@@ -53,13 +53,13 @@ static hal::ScreenOrientation OrientationTypeToInternal(
     OrientationType aOrientation) {
   switch (aOrientation) {
     case OrientationType::Portrait_primary:
-      return hal::ScreenOrientation::PortraitPrimary;
+      return hal::eScreenOrientation_PortraitPrimary;
     case OrientationType::Portrait_secondary:
-      return hal::ScreenOrientation::PortraitSecondary;
+      return hal::eScreenOrientation_PortraitSecondary;
     case OrientationType::Landscape_primary:
-      return hal::ScreenOrientation::LandscapePrimary;
+      return hal::eScreenOrientation_LandscapePrimary;
     case OrientationType::Landscape_secondary:
-      return hal::ScreenOrientation::LandscapeSecondary;
+      return hal::eScreenOrientation_LandscapeSecondary;
     default:
       MOZ_CRASH("Bad aOrientation value");
   }
@@ -71,8 +71,12 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aScreen);
 
-  mAngle = aScreen->GetOrientationAngle();
-  mType = InternalOrientationToType(aScreen->GetOrientationType());
+  hal::RegisterScreenConfigurationObserver(this);
+
+  hal::ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+  mType = InternalOrientationToType(config.orientation());
+  mAngle = config.angle();
 
   Document* doc = GetResponsibleDocument();
   BrowsingContext* bc = doc ? doc->GetBrowsingContext() : nullptr;
@@ -82,12 +86,8 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
 }
 
 ScreenOrientation::~ScreenOrientation() {
-  if (mTriedToLockDeviceOrientation) {
-    UnlockDeviceOrientation();
-  } else {
-    CleanupFullscreenListener();
-  }
-
+  UnlockDeviceOrientation();
+  hal::UnregisterScreenConfigurationObserver(this);
   MOZ_ASSERT(!mFullscreenListener);
 }
 
@@ -152,11 +152,9 @@ ScreenOrientation::LockOrientationTask::LockOrientationTask(
 
 ScreenOrientation::LockOrientationTask::~LockOrientationTask() = default;
 
-using LockOrientationPromise = MozPromise<bool, bool, false>;
-
 bool ScreenOrientation::LockOrientationTask::OrientationLockContains(
     OrientationType aOrientationType) {
-  return bool(mOrientationLock & OrientationTypeToInternal(aOrientationType));
+  return mOrientationLock & OrientationTypeToInternal(aOrientationType);
 }
 
 NS_IMETHODIMP
@@ -181,14 +179,14 @@ ScreenOrientation::LockOrientationTask::Run() {
     return NS_OK;
   }
 
-  if (mOrientationLock == hal::ScreenOrientation::None) {
+  if (mOrientationLock == hal::eScreenOrientation_None) {
     mScreenOrientation->UnlockDeviceOrientation();
     mPromise->MaybeResolveWithUndefined();
     mDocument->ClearOrientationPendingPromise();
     return NS_OK;
   }
 
-  RefPtr<LockOrientationPromise> lockOrientationPromise =
+  RefPtr<MozPromise<bool, bool, false>> lockOrientationPromise =
       mScreenOrientation->LockDeviceOrientation(mOrientationLock,
                                                 mIsFullscreen);
 
@@ -201,7 +199,8 @@ ScreenOrientation::LockOrientationTask::Run() {
   lockOrientationPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}](
-          const LockOrientationPromise::ResolveOrRejectValue& aValue) {
+          const mozilla::MozPromise<bool, bool, false>::ResolveOrRejectValue&
+              aValue) {
         if (aValue.IsResolve()) {
           return NS_OK;
         }
@@ -212,7 +211,7 @@ ScreenOrientation::LockOrientationTask::Run() {
 
   BrowsingContext* bc = mDocument->GetBrowsingContext();
   if (OrientationLockContains(bc->GetCurrentOrientationType()) ||
-      (mOrientationLock == hal::ScreenOrientation::Default &&
+      (mOrientationLock == hal::eScreenOrientation_Default &&
        bc->GetCurrentOrientationAngle() == 0)) {
     // Orientation lock will not cause an orientation change.
     mPromise->MaybeResolveWithUndefined();
@@ -224,37 +223,37 @@ ScreenOrientation::LockOrientationTask::Run() {
 
 already_AddRefed<Promise> ScreenOrientation::Lock(
     OrientationLockType aOrientation, ErrorResult& aRv) {
-  hal::ScreenOrientation orientation = hal::ScreenOrientation::None;
+  hal::ScreenOrientation orientation = hal::eScreenOrientation_None;
 
   switch (aOrientation) {
     case OrientationLockType::Any:
-      orientation = hal::ScreenOrientation::PortraitPrimary |
-                    hal::ScreenOrientation::PortraitSecondary |
-                    hal::ScreenOrientation::LandscapePrimary |
-                    hal::ScreenOrientation::LandscapeSecondary;
+      orientation = hal::eScreenOrientation_PortraitPrimary |
+                    hal::eScreenOrientation_PortraitSecondary |
+                    hal::eScreenOrientation_LandscapePrimary |
+                    hal::eScreenOrientation_LandscapeSecondary;
       break;
     case OrientationLockType::Natural:
-      orientation |= hal::ScreenOrientation::Default;
+      orientation |= hal::eScreenOrientation_Default;
       break;
     case OrientationLockType::Landscape:
-      orientation = hal::ScreenOrientation::LandscapePrimary |
-                    hal::ScreenOrientation::LandscapeSecondary;
+      orientation = hal::eScreenOrientation_LandscapePrimary |
+                    hal::eScreenOrientation_LandscapeSecondary;
       break;
     case OrientationLockType::Portrait:
-      orientation = hal::ScreenOrientation::PortraitPrimary |
-                    hal::ScreenOrientation::PortraitSecondary;
+      orientation = hal::eScreenOrientation_PortraitPrimary |
+                    hal::eScreenOrientation_PortraitSecondary;
       break;
     case OrientationLockType::Portrait_primary:
-      orientation = hal::ScreenOrientation::PortraitPrimary;
+      orientation = hal::eScreenOrientation_PortraitPrimary;
       break;
     case OrientationLockType::Portrait_secondary:
-      orientation = hal::ScreenOrientation::PortraitSecondary;
+      orientation = hal::eScreenOrientation_PortraitSecondary;
       break;
     case OrientationLockType::Landscape_primary:
-      orientation = hal::ScreenOrientation::LandscapePrimary;
+      orientation = hal::eScreenOrientation_LandscapePrimary;
       break;
     case OrientationLockType::Landscape_secondary:
-      orientation = hal::ScreenOrientation::LandscapeSecondary;
+      orientation = hal::eScreenOrientation_LandscapeSecondary;
       break;
     default:
       NS_WARNING("Unexpected orientation type");
@@ -363,10 +362,10 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
 #endif
 }
 
-RefPtr<LockOrientationPromise> ScreenOrientation::LockDeviceOrientation(
+RefPtr<MozPromise<bool, bool, false>> ScreenOrientation::LockDeviceOrientation(
     hal::ScreenOrientation aOrientation, bool aIsFullscreen) {
   if (!GetOwner()) {
-    return LockOrientationPromise::CreateAndReject(false, __func__);
+    return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
   }
 
   nsCOMPtr<EventTarget> target = GetOwner()->GetDoc();
@@ -375,7 +374,7 @@ RefPtr<LockOrientationPromise> ScreenOrientation::LockDeviceOrientation(
   // This needs to be done before LockScreenOrientation call to make sure
   // the locking can be unlocked.
   if (aIsFullscreen && !target) {
-    return LockOrientationPromise::CreateAndReject(false, __func__);
+    return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
   }
 
   // We are fullscreen and lock has been accepted.
@@ -388,37 +387,34 @@ RefPtr<LockOrientationPromise> ScreenOrientation::LockDeviceOrientation(
                                                  mFullscreenListener,
                                                  /* aUseCapture = */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return LockOrientationPromise::CreateAndReject(false, __func__);
+      return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
     }
   }
 
-  RefPtr<LockOrientationPromise> halPromise =
+  RefPtr<MozPromise<bool, bool, false>> halPromise =
       hal::LockScreenOrientation(aOrientation);
-  if (!halPromise) {
-    return LockOrientationPromise::CreateAndReject(false, __func__);
+  if (halPromise == nullptr) {
+    return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
   }
 
-  mTriedToLockDeviceOrientation = true;
   return halPromise;
 }
 
 void ScreenOrientation::Unlock(ErrorResult& aRv) {
-  RefPtr<Promise> p = LockInternal(hal::ScreenOrientation::None, aRv);
+  RefPtr<Promise> p = LockInternal(hal::eScreenOrientation_None, aRv);
 }
 
 void ScreenOrientation::UnlockDeviceOrientation() {
   hal::UnlockScreenOrientation();
-  CleanupFullscreenListener();
-}
 
-void ScreenOrientation::CleanupFullscreenListener() {
   if (!mFullscreenListener || !GetOwner()) {
     mFullscreenListener = nullptr;
     return;
   }
 
   // Remove event listener in case of fullscreen lock.
-  if (nsCOMPtr<EventTarget> target = GetOwner()->GetDoc()) {
+  nsCOMPtr<EventTarget> target = GetOwner()->GetDoc();
+  if (target) {
     target->RemoveSystemEventListener(u"fullscreenchange"_ns,
                                       mFullscreenListener,
                                       /* useCapture */ true);
@@ -509,7 +505,7 @@ Document* ScreenOrientation::GetResponsibleDocument() const {
   return owner->GetDoc();
 }
 
-void ScreenOrientation::MaybeChanged() {
+void ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration) {
   if (ShouldResistFingerprinting()) {
     return;
   }
@@ -520,11 +516,11 @@ void ScreenOrientation::MaybeChanged() {
     return;
   }
 
-  hal::ScreenOrientation orientation = mScreen->GetOrientationType();
-  if (orientation != hal::ScreenOrientation::PortraitPrimary &&
-      orientation != hal::ScreenOrientation::PortraitSecondary &&
-      orientation != hal::ScreenOrientation::LandscapePrimary &&
-      orientation != hal::ScreenOrientation::LandscapeSecondary) {
+  hal::ScreenOrientation orientation = aConfiguration.orientation();
+  if (orientation != hal::eScreenOrientation_PortraitPrimary &&
+      orientation != hal::eScreenOrientation_PortraitSecondary &&
+      orientation != hal::eScreenOrientation_LandscapePrimary &&
+      orientation != hal::eScreenOrientation_LandscapeSecondary) {
     // The platform may notify of some other values from
     // an orientation lock, but we only care about real
     // changes to screen orientation which result in one of
@@ -533,7 +529,7 @@ void ScreenOrientation::MaybeChanged() {
   }
 
   OrientationType previousOrientation = mType;
-  mAngle = mScreen->GetOrientationAngle();
+  mAngle = aConfiguration.angle();
   mType = InternalOrientationToType(orientation);
 
   DebugOnly<nsresult> rv;
@@ -563,7 +559,7 @@ void ScreenOrientation::MaybeChanged() {
 
 void ScreenOrientation::UpdateActiveOrientationLock(
     hal::ScreenOrientation aOrientation) {
-  if (aOrientation == hal::ScreenOrientation::None) {
+  if (aOrientation == hal::eScreenOrientation_None) {
     hal::UnlockScreenOrientation();
   } else {
     hal::LockScreenOrientation(aOrientation)

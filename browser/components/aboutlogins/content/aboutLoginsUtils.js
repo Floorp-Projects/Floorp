@@ -49,9 +49,9 @@ export function setKeyboardAccessForNonDialogElements(enableKeyboardAccess) {
   });
 }
 
-export function promptForPrimaryPassword(messageId) {
+export function promptForMasterPassword(messageId) {
   return new Promise(resolve => {
-    window.AboutLoginsUtils.promptForPrimaryPassword(resolve, messageId);
+    window.AboutLoginsUtils.promptForMasterPassword(resolve, messageId);
   });
 }
 

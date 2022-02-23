@@ -4,7 +4,9 @@
 
 "use strict";
 
-const LegacyProcessesWatcher = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
+const {
+  LegacyProcessesWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
 
 class LegacyWorkersWatcher {
   constructor(targetCommand, onTargetAvailable, onTargetDestroyed) {
@@ -235,4 +237,4 @@ class LegacyWorkersWatcher {
   }
 }
 
-module.exports = LegacyWorkersWatcher;
+module.exports = { LegacyWorkersWatcher };

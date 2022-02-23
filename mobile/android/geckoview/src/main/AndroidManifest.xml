@@ -72,11 +72,10 @@
                 android:process=":gpu">
         </service>
         <service
-                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$utility"
+                android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
                 android:enabled="true"
                 android:exported="false"
-                android:isolatedProcess="false"
-                android:process=":utility">
+                android:isolatedProcess="false">
         </service>
     </application>
 

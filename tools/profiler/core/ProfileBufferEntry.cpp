@@ -28,7 +28,6 @@
 #include <type_traits>
 
 using namespace mozilla;
-using namespace mozilla::literals::ProportionValue_literals;
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBufferEntry
@@ -264,17 +263,10 @@ JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
                                     std::move(jitFrameToFrameJSONMap)};
 }
 
-JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther,
-                           mozilla::ProgressLogger aProgressLogger)
-    : mUniqueStrings(MakeUnique<UniqueJSONStrings>(
-          *aOther.mUniqueStrings,
-          aProgressLogger.CreateSubLoggerFromTo(
-              0_pc, "Creating JIT frame info unique strings...", 49_pc,
-              "Created JIT frame info unique strings"))) {
-  MOZ_ALWAYS_TRUE(mRanges.reserve(aOther.mRanges.length()));
-  for (auto&& [i, progressLogger] : aProgressLogger.CreateLoopSubLoggersFromTo(
-           50_pc, 100_pc, aOther.mRanges.length(), "Copying JIT frame info")) {
-    mRanges.infallibleAppend(aOther.mRanges[i].Clone());
+JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
+    : mUniqueStrings(MakeUnique<UniqueJSONStrings>(*aOther.mUniqueStrings)) {
+  for (const JITFrameInfoForBufferRange& range : aOther.mRanges) {
+    MOZ_RELEASE_ASSERT(mRanges.append(range.Clone()));
   }
 }
 
@@ -644,21 +636,13 @@ static void StreamMarkerAfterKind(
 class EntryGetter {
  public:
   explicit EntryGetter(
-      ProfileChunkedBuffer::Reader& aReader,
-      mozilla::ProgressLogger aProgressLogger = {},
-      uint64_t aInitialReadPos = 0,
+      ProfileChunkedBuffer::Reader& aReader, uint64_t aInitialReadPos = 0,
       ProcessStreamingContext* aStreamingContextForMarkers = nullptr)
       : mStreamingContextForMarkers(aStreamingContextForMarkers),
         mBlockIt(
             aReader.At(ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
                 aInitialReadPos))),
-        mBlockItEnd(aReader.end()),
-        mRangeStart(mBlockIt.BufferRangeStart().ConvertToProfileBufferIndex()),
-        mRangeSize(
-            double(mBlockIt.BufferRangeEnd().ConvertToProfileBufferIndex() -
-                   mRangeStart)),
-        mProgressLogger(std::move(aProgressLogger)) {
-    SetLocalProgress(ProgressLogger::NO_LOCATION_UPDATE);
+        mBlockItEnd(aReader.end()) {
     if (!ReadLegacyOrEnd()) {
       // Find and read the next non-legacy entry.
       Next();
@@ -700,14 +684,6 @@ class EntryGetter {
     return CurBlockIndex().ConvertToProfileBufferIndex();
   }
 
-  void SetLocalProgress(const char* aLocation) {
-    mProgressLogger.SetLocalProgress(
-        ProportionValue{double(CurBlockIndex().ConvertToProfileBufferIndex() -
-                               mRangeStart) /
-                        mRangeSize},
-        aLocation);
-  }
-
  private:
   // Try to read the entry at the current `mBlockIt` position.
   // * If we're at the end of the buffer, just return `true`.
@@ -730,7 +706,6 @@ class EntryGetter {
       if (type == ProfileBufferEntry::Kind::Marker &&
           mStreamingContextForMarkers) {
         StreamMarkerAfterKind(er, *mStreamingContextForMarkers);
-        SetLocalProgress("Processed marker");
       }
       er.SetRemainingBytes(0);
       return false;
@@ -752,7 +727,6 @@ class EntryGetter {
       // Otherwise loop around until we hit a legacy entry or the end.
       ++mBlockIt;
     }
-    SetLocalProgress(ProgressLogger::NO_LOCATION_UPDATE);
   }
 
   ProcessStreamingContext* const mStreamingContextForMarkers;
@@ -760,12 +734,6 @@ class EntryGetter {
   ProfileBufferEntry mEntry;
   ProfileChunkedBuffer::BlockIterator mBlockIt;
   const ProfileChunkedBuffer::BlockIterator mBlockItEnd;
-
-  // Progress logger, and the data needed to compute the current relative
-  // position in the buffer.
-  const mozilla::ProfileBufferIndex mRangeStart;
-  const double mRangeSize;
-  mozilla::ProgressLogger mProgressLogger;
 };
 
 // The following grammar shows legal sequences of profile buffer entries.
@@ -931,8 +899,8 @@ template <typename GetStreamingParametersForThreadCallback>
 ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
     GetStreamingParametersForThreadCallback&&
         aGetStreamingParametersForThreadCallback,
-    double aSinceTime, ProcessStreamingContext* aStreamingContextForMarkers,
-    mozilla::ProgressLogger aProgressLogger) const {
+    double aSinceTime,
+    ProcessStreamingContext* aStreamingContextForMarkers) const {
   UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
   return mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
@@ -942,7 +910,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
 
     ProfilerThreadId processedThreadId;
 
-    EntryGetter e(*aReader, std::move(aProgressLogger), /* aInitialReadPos */ 0,
+    EntryGetter e(*aReader, /* aInitialReadPos */ 0,
                   aStreamingContextForMarkers);
 
     for (;;) {
@@ -1181,8 +1149,6 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
         // would need these frames to be present.
 
         ReadStack(e, time, 0, Nothing{}, RunningTimes{});
-
-        e.SetLocalProgress("Processed sample");
       } else if (e.Has() && e.Get().IsTimeBeforeCompactStack()) {
         double time = e.Get().GetDouble();
         // Note: Even if this sample is too old (before aSinceTime), we still
@@ -1246,8 +1212,6 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
         }
 
         e.RestartAfter(it);
-
-        e.SetLocalProgress("Processed compact sample");
       } else if (e.Has() && e.Get().IsTimeBeforeSameSample()) {
         if (previousStackState == ThreadStreamingContext::eNoStackYet) {
           // We don't have any full sample yet, we cannot duplicate a "previous"
@@ -1314,8 +1278,6 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
         }
 
         e.RestartAfter(it);
-
-        e.SetLocalProgress("Processed repeated sample");
       } else {
         ERROR_AND_CONTINUE("expected a Time entry");
       }
@@ -1327,8 +1289,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
 
 ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
     SpliceableJSONWriter& aWriter, ProfilerThreadId aThreadId,
-    double aSinceTime, UniqueStacks& aUniqueStacks,
-    mozilla::ProgressLogger aProgressLogger) const {
+    double aSinceTime, UniqueStacks& aUniqueStacks) const {
   ThreadStreamingContext::PreviousStackState previousStackState =
       ThreadStreamingContext::eNoStackYet;
   uint32_t stack = 0u;
@@ -1351,13 +1312,11 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
         }
         return streamingParameters;
       },
-      aSinceTime, /* aStreamingContextForMarkers */ nullptr,
-      std::move(aProgressLogger));
+      aSinceTime, /* aStreamingContextForMarkers */ nullptr);
 }
 
 void ProfileBuffer::StreamSamplesAndMarkersToJSON(
-    ProcessStreamingContext& aProcessStreamingContext,
-    mozilla::ProgressLogger aProgressLogger) const {
+    ProcessStreamingContext& aProcessStreamingContext) const {
   (void)DoStreamSamplesAndMarkersToJSON(
       [&](ProfilerThreadId aReadThreadId) {
         Maybe<StreamingParametersForThread> streamingParameters;
@@ -1370,14 +1329,13 @@ void ProfileBuffer::StreamSamplesAndMarkersToJSON(
         }
         return streamingParameters;
       },
-      aProcessStreamingContext.GetSinceTime(), &aProcessStreamingContext,
-      std::move(aProgressLogger));
+      aProcessStreamingContext.GetSinceTime(), &aProcessStreamingContext);
 }
 
-void ProfileBuffer::AddJITInfoForRange(
-    uint64_t aRangeStart, ProfilerThreadId aThreadId, JSContext* aContext,
-    JITFrameInfo& aJITFrameInfo,
-    mozilla::ProgressLogger aProgressLogger) const {
+void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
+                                       ProfilerThreadId aThreadId,
+                                       JSContext* aContext,
+                                       JITFrameInfo& aJITFrameInfo) const {
   // We can only process JitReturnAddr entries if we have a JSContext.
   MOZ_RELEASE_ASSERT(aContext);
 
@@ -1393,7 +1351,7 @@ void ProfileBuffer::AddJITInfoForRange(
                      "ProfileChunkedBuffer cannot be out-of-session when "
                      "sampler is running");
 
-          EntryGetter e(*aReader, std::move(aProgressLogger), aRangeStart);
+          EntryGetter e(*aReader, aRangeStart);
 
           while (true) {
             // Advance to the next ThreadId entry.
@@ -1472,11 +1430,11 @@ void ProfileBuffer::AddJITInfoForRange(
       });
 }
 
-void ProfileBuffer::StreamMarkersToJSON(
-    SpliceableJSONWriter& aWriter, ProfilerThreadId aThreadId,
-    const TimeStamp& aProcessStartTime, double aSinceTime,
-    UniqueStacks& aUniqueStacks,
-    mozilla::ProgressLogger aProgressLogger) const {
+void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
+                                        ProfilerThreadId aThreadId,
+                                        const TimeStamp& aProcessStartTime,
+                                        double aSinceTime,
+                                        UniqueStacks& aUniqueStacks) const {
   mEntries.ReadEach([&](ProfileBufferEntryReader& aER) {
     auto type = static_cast<ProfileBufferEntry::Kind>(
         aER.ReadObject<ProfileBufferEntry::KindUnderlyingType>());
@@ -1524,13 +1482,13 @@ void ProfileBuffer::StreamMarkersToJSON(
 
 void ProfileBuffer::StreamProfilerOverheadToJSON(
     SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
-    double aSinceTime, mozilla::ProgressLogger aProgressLogger) const {
+    double aSinceTime) const {
   mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader, std::move(aProgressLogger));
+    EntryGetter e(*aReader);
 
     enum Schema : uint32_t {
       TIME = 0,
@@ -1671,9 +1629,9 @@ static auto& LookupOrAdd(HashM& aMap, Key&& aKey) {
   return addPtr->value();
 }
 
-void ProfileBuffer::StreamCountersToJSON(
-    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
-    double aSinceTime, mozilla::ProgressLogger aProgressLogger) const {
+void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         double aSinceTime) const {
   // Because this is a format entirely internal to the Profiler, any parsing
   // error indicates a bug in the ProfileBuffer writing or the parser itself,
   // or possibly flaky hardware.
@@ -1683,7 +1641,7 @@ void ProfileBuffer::StreamCountersToJSON(
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader, std::move(aProgressLogger));
+    EntryGetter e(*aReader);
 
     enum Schema : uint32_t { TIME = 0, NUMBER = 1, COUNT = 2 };
 
@@ -1884,17 +1842,14 @@ static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
   aWriter.End();
 }
 
-void ProfileBuffer::StreamPausedRangesToJSON(
-    SpliceableJSONWriter& aWriter, double aSinceTime,
-    mozilla::ProgressLogger aProgressLogger) const {
+void ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
+                                             double aSinceTime) const {
   mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader,
-                  aProgressLogger.CreateSubLoggerFromTo(
-                      1_pc, "Streaming pauses...", 99_pc, "Streamed pauses"));
+    EntryGetter e(*aReader);
 
     Maybe<double> currentPauseStartTime;
     Maybe<double> currentCollectionStartTime;
@@ -1994,9 +1949,7 @@ bool ProfileBuffer::DuplicateLastSample(ProfilerThreadId aThreadId,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    // DuplicateLsatSample is only called during profiling, so we don't need a
-    // progress logger (only useful when capturing the final profile).
-    EntryGetter e(*aReader, ProgressLogger{}, *aLastSample);
+    EntryGetter e(*aReader, *aLastSample);
 
     if (e.CurPos() != *aLastSample) {
       // The last sample is no longer within the buffer range, so we cannot

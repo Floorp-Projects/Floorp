@@ -7,9 +7,8 @@
 // if perform_gc is true.
 async function read_and_gc(reader, perform_gc) {
   const read_promise = reader.read();
-  if (perform_gc) {
-    await garbageCollect();
-  }
+  if (perform_gc)
+    garbageCollect();
   return read_promise;
 }
 
@@ -66,7 +65,7 @@ promise_test(async() => {
   let blob = new Blob([typed_arr]);
   const stream = blob.stream();
   blob = null;
-  await garbageCollect();
+  garbageCollect();
   const chunks = await read_all_chunks(stream, /*perform_gc=*/true);
   assert_array_equals(chunks, input_arr);
 }, "Blob.stream() garbage collection of blob shouldn't break stream" +

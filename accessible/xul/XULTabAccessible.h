@@ -31,7 +31,7 @@ class XULTabAccessible : public HyperTextAccessibleWrap {
   virtual void ApplyARIAState(uint64_t* aState) const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
   virtual bool DoAction(uint8_t aIndex) const override;
 };
@@ -49,12 +49,12 @@ class XULTabsAccessible : public XULSelectControlAccessible {
   virtual void ApplyARIAState(uint64_t* aState) const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
+  virtual uint8_t ActionCount() const override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
+  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems) override;
   virtual uint32_t SelectedItemCount() override;
-  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
 
  protected:

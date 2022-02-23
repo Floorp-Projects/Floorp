@@ -8,7 +8,6 @@
 
 #include "nsMimeTypes.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/gfx/2D.h"
 
 using namespace mozilla;

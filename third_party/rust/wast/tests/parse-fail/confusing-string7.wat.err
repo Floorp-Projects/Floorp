@@ -1,5 +1,0 @@
-likely-confusing unicode character found '\u{206c}'
-     --> tests/parse-fail/confusing-string7.wat:1:18
-      |
-    1 | (module (export "" (func 0)))
-      |                  ^

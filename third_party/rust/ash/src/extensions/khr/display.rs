@@ -1,23 +1,29 @@
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Entry, Instance};
+use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
 
 #[derive(Clone)]
 pub struct Display {
     handle: vk::Instance,
-    fp: vk::KhrDisplayFn,
+    display_fn: vk::KhrDisplayFn,
 }
 
 impl Display {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
-        let handle = instance.handle();
-        let fp = vk::KhrDisplayFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
+    pub fn new<L>(entry: &EntryCustom<L>, instance: &Instance) -> Self {
+        let display_fn = vk::KhrDisplayFn::load(|name| unsafe {
+            mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: instance.handle(),
+            display_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrDisplayFn::name()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayPropertiesKHR.html>"]
@@ -26,7 +32,7 @@ impl Display {
         physical_device: vk::PhysicalDevice,
     ) -> VkResult<Vec<vk::DisplayPropertiesKHR>> {
         read_into_uninitialized_vector(|count, data| {
-            self.fp
+            self.display_fn
                 .get_physical_device_display_properties_khr(physical_device, count, data)
         })
     }
@@ -37,7 +43,7 @@ impl Display {
         physical_device: vk::PhysicalDevice,
     ) -> VkResult<Vec<vk::DisplayPlanePropertiesKHR>> {
         read_into_uninitialized_vector(|count, data| {
-            self.fp
+            self.display_fn
                 .get_physical_device_display_plane_properties_khr(physical_device, count, data)
         })
     }
@@ -49,7 +55,7 @@ impl Display {
         plane_index: u32,
     ) -> VkResult<Vec<vk::DisplayKHR>> {
         read_into_uninitialized_vector(|count, data| {
-            self.fp.get_display_plane_supported_displays_khr(
+            self.display_fn.get_display_plane_supported_displays_khr(
                 physical_device,
                 plane_index,
                 count,
@@ -65,7 +71,7 @@ impl Display {
         display: vk::DisplayKHR,
     ) -> VkResult<Vec<vk::DisplayModePropertiesKHR>> {
         read_into_uninitialized_vector(|count, data| {
-            self.fp
+            self.display_fn
                 .get_display_mode_properties_khr(physical_device, display, count, data)
         })
     }
@@ -79,7 +85,7 @@ impl Display {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DisplayModeKHR> {
         let mut display_mode = mem::MaybeUninit::zeroed();
-        self.fp
+        self.display_fn
             .create_display_mode_khr(
                 physical_device,
                 display,
@@ -98,7 +104,7 @@ impl Display {
         plane_index: u32,
     ) -> VkResult<vk::DisplayPlaneCapabilitiesKHR> {
         let mut display_plane_capabilities = mem::MaybeUninit::zeroed();
-        self.fp
+        self.display_fn
             .get_display_plane_capabilities_khr(
                 physical_device,
                 mode,
@@ -115,7 +121,7 @@ impl Display {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::MaybeUninit::zeroed();
-        self.fp
+        self.display_fn
             .create_display_plane_surface_khr(
                 self.handle,
                 create_info,
@@ -125,12 +131,8 @@ impl Display {
             .result_with_success(surface.assume_init())
     }
 
-    pub fn name() -> &'static CStr {
-        vk::KhrDisplayFn::name()
-    }
-
     pub fn fp(&self) -> &vk::KhrDisplayFn {
-        &self.fp
+        &self.display_fn
     }
 
     pub fn instance(&self) -> vk::Instance {

@@ -4,9 +4,29 @@
 
 %filter substitution
 
+%define menuPanelWidth 22.35em
+%define wideMenuPanelWidth 29em
+%define standaloneSubviewWidth 30em
+%define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus-visible)
+%define buttonStateHover :not([disabled],[open],:active):is(:hover)
+%define buttonStateFocus :not([disabled],[open],:active):focus-visible
+%define menuStateHover :not([disabled],:active)[_moz-menuactive]
+%define buttonStateActive :not([disabled]):is([open],:hover:active)
+%define menuStateActive :not([disabled])[_moz-menuactive]:active
+%define menuStateMenuActive :not([disabled])[_moz-menuactive]
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
+%define panelPaletteIconSize 16px
+
+%define appmenuWarningBackgroundColor #FFEFBF
+%define appmenuWarningBackgroundColorHover #FFE8A2
+%define appmenuWarningBackgroundColorActive #FFE38F
+%define appmenuWarningColor black
+%define appmenuWarningBorderColor hsl(45,100%,77%)
+
 
 :root {
+  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
+
   --panel-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-item-active-bgcolor: var(--button-active-bgcolor);
   --panel-banner-item-color: var(--button-color);
@@ -15,9 +35,6 @@
   --panel-banner-item-active-bgcolor: var(--button-active-bgcolor);
   --panel-banner-item-update-supported-bgcolor: #2AC3A2;
   --panel-banner-item-info-icon-bgcolor: #0090ED;
-
-  --menu-panel-width: 22.35em;
-  --menu-panel-width-wide: 29em;
 
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding-block: 8px;
@@ -28,8 +45,6 @@
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
   --panel-subview-body-padding: 8px 0;
-
-  --panel-and-palette-icon-size: 16px;
 }
 
 :root:not(:-moz-lwtheme) {
@@ -183,7 +198,6 @@ toolbarseparator + .panel-subview-body,
 
 .panel-info-button {
   appearance: none;
-  color: inherit;
   padding: 0;
   margin-inline-end: 4px;
   border-radius: var(--toolbarbutton-border-radius);
@@ -193,17 +207,13 @@ toolbarseparator + .panel-subview-body,
   visibility: hidden;
 }
 
-.panel-info-button:hover {
+.panel-info-button@buttonStateHoverOrFocus@ {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
 .panel-info-button:not(:hover)[checked],
-.panel-info-button:hover:active {
+.panel-info-button@buttonStateActive@ {
   background-color: var(--panel-item-active-bgcolor);
-}
-
-.panel-info-button:focus-visible {
-  outline: var(--focus-outline);
 }
 
 .panel-info-button > image {
@@ -221,7 +231,7 @@ panelview .toolbaritem-combined-buttons,
 }
 
 #BMB_bookmarksPopup {
-  max-width: 30em;
+  max-width: @standaloneSubviewWidth@;
 }
 
 #BMB_bookmarksPopup menupopup {
@@ -374,20 +384,20 @@ panelview[id^=PanelUI-webext-] {
 }
 
 #customizationui-widget-multiview panelview:not([extension]) {
-  min-width: var(--menu-panel-width);
+  min-width: @menuPanelWidth@;
   max-width: 35em;
 }
 
 #customizationui-widget-multiview #appMenu-libraryView,
 #pageActionPanel panelview,
 #widget-overflow panelview {
-  min-width: var(--menu-panel-width-wide);
-  max-width: var(--menu-panel-width-wide);
+  min-width: @wideMenuPanelWidth@;
+  max-width: @wideMenuPanelWidth@;
 }
 
 /* Add 2 * 16px extra width for touch mode button padding. */
 #appMenu-popup[touchmode] panelview {
-  min-width: calc(var(--menu-panel-width) + 32px);
+  min-width: calc(@menuPanelWidth@ + 32px);
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
@@ -423,8 +433,8 @@ toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .to
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  height: var(--panel-and-palette-icon-size);
-  width: var(--panel-and-palette-icon-size);
+  height: @panelPaletteIconSize@;
+  width: @panelPaletteIconSize@;
 }
 
 #customization-palette .toolbarbutton-1 {
@@ -438,10 +448,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 /* badge itself is positioned correctly. Here we make sure that the icon itself
 /* has the minimum size we want, but no padding/margin. */
 .customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: var(--panel-and-palette-icon-size);
-  height: var(--panel-and-palette-icon-size);
-  min-width: var(--panel-and-palette-icon-size);
-  min-height: var(--panel-and-palette-icon-size);
+  width: @panelPaletteIconSize@;
+  height: @panelPaletteIconSize@;
+  min-width: @panelPaletteIconSize@;
+  min-height: @panelPaletteIconSize@;
   margin: 0;
   padding: 0;
 }
@@ -464,7 +474,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item {
+  background-color: @appmenuWarningBackgroundColor@;
+  color: @appmenuWarningColor@;
   display: flex;
+  flex: 1 1 0%;
+  width: calc(@menuPanelWidth@ + 30px);
+  padding-inline-start: 15px;
+  border-inline-start-style: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
@@ -537,6 +553,23 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 /* Error states */
+
+:root[fxastatus="login-failed"] .fxa-menu-header,
+:root[fxastatus="unverified"] .fxa-menu-header {
+  background-color: @appmenuWarningBackgroundColor@;
+  color: @appmenuWarningColor@;
+  border-block: 1px solid @appmenuWarningBorderColor@;
+}
+
+:root[fxastatus="login-failed"] .fxa-menu-header:hover,
+:root[fxastatus="unverified"] .fxa-menu-header:hover {
+  background-color: @appmenuWarningBackgroundColorHover@;
+}
+
+:root[fxastatus="login-failed"] .fxa-menu-header:hover:active,
+:root[fxastatus="unverified"] .fxa-menu-header:hover:active {
+  background-color: @appmenuWarningBackgroundColorActive@;
+}
 
 #appMenu-fxa-status2 {
   display: flex;
@@ -632,6 +665,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .addon-banner-item {
   flex: 1;
+  padding-inline-start: 15px;
+  border-inline-start-style: none;
   padding-inline: 0;
   width: auto;
 }
@@ -652,17 +687,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 :root[fxastatus="not_configured"] {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-empty.svg);
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-color.svg);
 }
 
 :root:not([fxatoolbarmenu]) #fxa-toolbar-menu-button {
-  display: none;
+  display: block;
 }
 
 /* Hide the FxA toolbar button when its in the nav-bar, until in use */
 :root[fxastatus="not_configured"] #widget-overflow-list > #fxa-toolbar-menu-button,
 :root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
-  display: none;
+  display: block;
 }
 
 #fxa-avatar-image,
@@ -685,6 +720,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 %else
   font-weight: 300;
 %endif
+}
+
+.fxa-menu-header {
+  padding-block: 8px 4px;
 }
 
 #fxa-menu-header-title {
@@ -953,6 +992,10 @@ panelview .toolbarbutton-1,
   -moz-box-pack: start;
 }
 
+.subviewbutton:focus {
+  outline: 0;
+}
+
 .subviewbutton[disabled="true"] {
   color: var(--panel-disabled-color);
 }
@@ -1012,32 +1055,25 @@ panelview .toolbarbutton-1,
   fill: currentColor;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton {
-  margin-inline-start: 2px;
-  padding: 4px;
-}
-
-/* hover and active color changes are applied to child elements not the button itself */
-#appMenu-zoom-controls2 > .subviewbutton:not([disabled]):is(:hover, :hover:active) {
+#appMenu-zoomReduce-button2@buttonStateHoverOrFocus@,
+#appMenu-zoomReduce-button2@buttonStateActive@,
+#appMenu-zoomReset-button2@buttonStateHoverOrFocus@,
+#appMenu-zoomReset-button2@buttonStateActive@,
+#appMenu-zoomEnlarge-button2@buttonStateHoverOrFocus@,
+#appMenu-zoomEnlarge-button2@buttonStateActive@,
+#appMenu-fullscreen-button2@buttonStateHoverOrFocus@,
+#appMenu-fullscreen-button2@buttonStateActive@ {
   color: unset;
   background-color: unset;
-}
-
-#appMenu-zoom-controls2 > .subviewbutton:focus-visible {
-  outline: none;
-}
-
-#appMenu-zoom-controls2 > .subviewbutton-iconic:focus-visible > .toolbarbutton-icon,
-#appMenu-zoomReset-button2:focus-visible > .toolbarbutton-text {
-  outline: var(--focus-outline);
-}
+  box-shadow: unset;
+ }
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
   -moz-context-properties: fill, stroke;
   fill: var(--button-color);
   /* the stroke color is used to fill the circle in the icon */
-  stroke: var(--button-bgcolor);
+  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
   border-radius: 50%;
   padding: 0;
 }
@@ -1049,25 +1085,39 @@ panelview .toolbarbutton-1,
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   padding: 1px;
-  background-color: var(--button-bgcolor);
+  background-color: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
 }
 
-#appMenu-zoomReset-button2:not([disabled]):hover > .toolbarbutton-text,
-#appMenu-fullscreen-button2:not([disabled]):hover > .toolbarbutton-icon {
+#appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
+#appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
   background-color: var(--panel-item-hover-bgcolor);
 }
-#appMenu-zoomReduce-button2:not([disabled]):hover > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2:not([disabled]):hover > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon {
   stroke: var(--panel-item-hover-bgcolor);
 }
 
-#appMenu-zoomReset-button2:not([disabled]):active:hover > .toolbarbutton-text,
-#appMenu-fullscreen-button2:not([disabled]):active:hover > .toolbarbutton-icon {
+#appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
+#appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
   background-color: var(--panel-item-active-bgcolor);
 }
-#appMenu-zoomReduce-button2:not([disabled]):active:hover > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2:not([disabled]):active:hover > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
   stroke: var(--panel-item-active-bgcolor);
+}
+
+#appMenu-zoomReset-button2@buttonStateFocus@ > .toolbarbutton-text,
+#appMenu-fullscreen-button2@buttonStateFocus@ > .toolbarbutton-icon {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+}
+#appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateFocus@ > .toolbarbutton-icon {
+  outline: var(--focus-outline);
+}
+
+#appMenu-zoom-controls2 > .subviewbutton {
+  margin-inline-start: 2px;
+  padding: 4px 4px;
 }
 
 /* We don't always display: none this item, and if it has forced width (like above)
@@ -1223,61 +1273,49 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-panelview .toolbarbutton-1:focus-visible,
-toolbarbutton.subviewbutton:focus-visible,
-.widget-overflow-list .toolbarbutton-1:focus-visible,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+/**
+ * Focus uses a box-shadow because we want the stroke to be
+ * internal to the rect without affecting the surrounding layout. This
+ * seemed to be the simplest way to do that.
+ */
+panelview .toolbarbutton-1@buttonStateFocus@,
+toolbarbutton.subviewbutton@buttonStateFocus@,
+.navigable.subviewbutton@buttonStateFocus@,
+.widget-overflow-list .toolbarbutton-1@buttonStateFocus@,
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateFocus@ {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
 }
 
-/* hover styles for not-disabled, not-active buttons */
-:is(
-  panelview .toolbarbutton-1,
-  toolbarbutton.subviewbutton,
-  .widget-overflow-list .toolbarbutton-1,
-  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
-):not([disabled]):hover {
+panelview .toolbarbutton-1@buttonStateHover@,
+toolbarbutton.subviewbutton@buttonStateHover@,
+.navigable.subviewbutton@buttonStateHover@,
+menu.subviewbutton@menuStateHover@,
+#PlacesToolbar menuitem@menuStateHover@,
+#PlacesToolbar menu@menuStateHover@,
+menuitem.subviewbutton@menuStateHover@,
+.widget-overflow-list .toolbarbutton-1@buttonStateHover@,
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
-}
-
-/* hovered-and-active styles for not-disabled buttons */
-:is(
-  panelview .toolbarbutton-1,
-  toolbarbutton.subviewbutton,
-  .widget-overflow-list .toolbarbutton-1,
-  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
-):not([disabled]):hover:active {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
-}
-
-:is(
-  menu.subviewbutton,
-  #PlacesToolbar menuitem,
-  #PlacesToolbar menu,
-  menuitem.subviewbutton
-):not([disabled])[_moz-menuactive] {
-  color: inherit;
-  background-color: var(--panel-item-hover-bgcolor);
-}
-
-:is(
-  menu.subviewbutton,
-  #PlacesToolbar menuitem,
-  #PlacesToolbar menu,
-  menuitem.subviewbutton
-):not([disabled])[_moz-menuactive]:active {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 .subview-subheader {
   font-size: 11px;
   padding-block: 4px;
+}
+
+panelview .toolbarbutton-1@buttonStateActive@,
+toolbarbutton.subviewbutton@buttonStateActive@,
+.navigable.subviewbutton@buttonStateActive@,
+menu.subviewbutton@menuStateActive@,
+#PlacesToolbar menuitem@menuStateActive@,
+#PlacesToolbar menu@menuStateActive@,
+menuitem.subviewbutton@menuStateActive@,
+.widget-overflow-list .toolbarbutton-1@buttonStateActive@,
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 #PlacesToolbar menuitem,
@@ -1437,7 +1475,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
 }
 
 .widget-overflow-list {
-  width: var(--menu-panel-width-wide);
+  width: @wideMenuPanelWidth@;
 }
 
 /* In customize mode, the overflow list is constrained by its container,
@@ -1450,7 +1488,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
-  max-width: var(--menu-panel-width-wide);
+  max-width: @wideMenuPanelWidth@;
   background-repeat: no-repeat;
   background-position: 0 center;
 }
@@ -1522,20 +1560,14 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border: 1px solid transparent;
 }
 
-.subviewradio:hover {
+.subviewradio@buttonStateHoverOrFocus@ {
   background-color: var(--button-hover-bgcolor);
 }
 
-.subviewradio:is([selected], [selected]:hover, :hover:active) {
+.subviewradio[selected],
+.subviewradio[selected]:hover,
+.subviewradio@buttonStateActive@ {
   background-color: var(--button-active-bgcolor);
-}
-
-radiogroup:focus-visible > .subviewradio[focused="true"] {
-  outline: var(--focus-outline);
-}
-
-radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
-  outline: none;
 }
 
 .subviewradio > .radio-check {
@@ -1620,11 +1652,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 
 #PanelUI-panic-view-button:hover:active {
   background-color: var(--buttons-destructive-active-bgcolor);
-}
-
-#PanelUI-panic-view-button:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
 }
 
 #PanelUI-panic-view-button > .toolbarbutton-text {
@@ -1724,7 +1751,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 
 /* What's New panel */
 #customizationui-widget-multiview #PanelUI-whatsNew {
-  max-width: var(--menu-panel-width);
+  max-width: @menuPanelWidth@;
 }
 
 #protections-popup-main-header-label {
@@ -1921,7 +1948,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   text-decoration: underline;
 }
 
-#PanelUI-whatsNew .text-link:hover:active {
+#PanelUI-whatsNew .text-link:focus {
+  color: #0a84ff;
+  text-decoration: underline;
+}
+
+#PanelUI-whatsNew .text-link:active {
   color: #0060df;
 }
 
@@ -1935,7 +1967,9 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 .PanelUI-profiler-button-link {
   appearance: none;
   font-size: inherit;
+  cursor: pointer;
   min-width: 0;
+  text-decoration: underline;
 }
 
 .PanelUI-profiler-button-link .button-text {
@@ -1960,7 +1994,8 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #fff;
   /* Set custom hover/focus/active states on the info button,
      to make them more visible on the header background */
-  --panel-item-hover-bgcolor: #0005;
+  --arrowpanel-dimmed: #0003;
+  --arrowpanel-dimmed-further: #0005;
   --panel-item-active-bgcolor: #0007;
 }
 
@@ -2021,7 +2056,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-description-title {
-  font-size: 1.3em;
+  font-size: 16px;
   font-weight: bold;
   margin: 6px 15px;
 }
@@ -2035,8 +2070,14 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #fff;
 }
 
-#PanelUI-profiler-learn-more:hover:active {
+#PanelUI-profiler-learn-more:active {
   color: #fffc;
+}
+
+#PanelUI-profiler-learn-more:focus {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 6px rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  text-decoration: none;
 }
 
 #PanelUI-profiler-presets {
@@ -2045,24 +2086,38 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-profiler-content-edit-settings {
   margin: 0 15px;
-  font-size: .9em;
+  color: #0046A4;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+:root[lwt-popup-brighttext] #PanelUI-profiler-content-edit-settings {
+  color: #76B1FF;
+}
+
+#PanelUI-profiler-content-edit-settings:hover,
+#PanelUI-profiler-content-edit-settings:active,
+#PanelUI-profiler-content-edit-settings:focus {
+  text-decoration: underline;
 }
 
 .PanelUI-profiler-content-label {
   font-weight: bold;
+  font-size: 13px;
   margin-inline: 15px;
   margin-block-start: 10px;
 }
 
 #PanelUI-profiler-content-description {
   margin: 4px 15px;
-  font-size: .9em;
+  font-size: 12px;
   color: var(--panel-description-color);
 }
 
 #PanelUI-profiler-content-recording {
-  padding: 28px 16px;
-  font-size: 1.3em;
+  padding-block: 28px;
+  padding-inline: 16px;
+  font-size: 16px;
 }
 
 .PanelUI-profiler-recording-icon {
@@ -2074,42 +2129,46 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-recording-label {
-  margin: 9px 13px;
+  margin-block: 9px;
+  margin-inline: 13px;
 }
 
 .PanelUI-profiler-button {
   appearance: none;
-  background-color: var(--button-bgcolor);
-  border-radius: 4px;
-  color: var(--button-color);
+  background-color: #e0e0e1;
+  border-radius: 2px;
+  color: #000;
   padding: 8px;
   margin: 0 5px;
+  font-size: 13px;
 }
 
 .PanelUI-profiler-button:hover {
-  background-color: var(--button-hover-bgcolor);
+  background-color: #c9c9ca;
 }
 
-.PanelUI-profiler-button:hover:active {
-  background-color: var(--button-active-bgcolor);
+.PanelUI-profiler-button:active {
+  background-color: #b1b1b1;
 }
 
-.PanelUI-profiler-button:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
+.PanelUI-profiler-button:focus {
+  box-shadow:
+    0 0 0 1px #0a84ff inset,
+    0 0 0 1px #0a84ff,
+    0 0 0 4px rgba(10, 132, 255, 0.3);
 }
 
 .PanelUI-profiler-button-primary {
-  background-color: var(--button-primary-bgcolor);
-  color: var(--button-primary-color);
+  background-color: #0060DF;
+  color: #fff;
 }
 
 .PanelUI-profiler-button-primary:hover {
-  background-color: var(--button-primary-hover-bgcolor);
+  background-color: #003eaa;
 }
 
-.PanelUI-profiler-button-primary:hover:active {
-  background-color: var(--button-primary-active-bgcolor);
+.PanelUI-profiler-button-primary:active:hover {
+  background-color: #002275;
 }
 
 .PanelUI-profiler-shortcut {

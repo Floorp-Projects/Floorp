@@ -1,4 +1,9 @@
-use darling::{FromDeriveInput, FromMeta};
+#[macro_use]
+extern crate darling;
+
+extern crate syn;
+
+use darling::FromDeriveInput;
 
 #[derive(FromMeta, PartialEq, Eq, Debug)]
 enum Volume {

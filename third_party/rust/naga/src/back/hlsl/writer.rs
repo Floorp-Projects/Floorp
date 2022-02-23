@@ -715,11 +715,22 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     stride: _,
                 } => {
                     // HLSL arrays are written as `type name[size]`
-                    if let TypeInner::Matrix { .. } = module.types[base].inner {
-                        write!(self.out, "row_major ")?;
+                    let (ty_name, vec_size) = match module.types[base].inner {
+                        // Write scalar type by backend so as not to depend on the front-end implementation
+                        // Name returned from frontend can be generated (type1, float1, etc.)
+                        TypeInner::Scalar { kind, width } => (kind.to_hlsl_str(width)?, None),
+                        // Similarly, write vector types directly.
+                        TypeInner::Vector { size, kind, width } => {
+                            (kind.to_hlsl_str(width)?, Some(size))
+                        }
+                        _ => (self.names[&NameKey::Type(base)].as_str(), None),
+                    };
+
+                    // Write `type` and `name`
+                    write!(self.out, "{}", ty_name)?;
+                    if let Some(s) = vec_size {
+                        write!(self.out, "{}", s as usize)?;
                     }
-                    self.write_type(module, base)?;
-                    // Write `name`
                     write!(
                         self.out,
                         " {}",
@@ -1583,7 +1594,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             Expression::ImageSample {
                 image,
                 sampler,
-                gather,
                 coordinate,
                 array_index,
                 offset,
@@ -1591,30 +1601,23 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 depth_ref,
             } => {
                 use crate::SampleLevel as Sl;
-                const COMPONENTS: [&str; 4] = ["", "Green", "Blue", "Alpha"];
 
-                let (base_str, component_str) = match gather {
-                    Some(component) => ("Gather", COMPONENTS[component as usize]),
-                    None => ("Sample", ""),
-                };
-                let cmp_str = match depth_ref {
-                    Some(_) => "Cmp",
-                    None => "",
-                };
-                let level_str = match level {
-                    Sl::Zero if gather.is_none() => "LevelZero",
-                    Sl::Auto | Sl::Zero => "",
-                    Sl::Exact(_) => "Level",
-                    Sl::Bias(_) => "Bias",
-                    Sl::Gradient { .. } => "Grad",
+                let texture_func = match level {
+                    Sl::Auto => {
+                        if depth_ref.is_some() {
+                            "SampleCmp"
+                        } else {
+                            "Sample"
+                        }
+                    }
+                    Sl::Zero => "SampleCmpLevelZero",
+                    Sl::Exact(_) => "SampleLevel",
+                    Sl::Bias(_) => "SampleBias",
+                    Sl::Gradient { .. } => "SampleGrad",
                 };
 
                 self.write_expr(module, image, func_ctx)?;
-                write!(
-                    self.out,
-                    ".{}{}{}{}(",
-                    base_str, cmp_str, component_str, level_str
-                )?;
+                write!(self.out, ".{}(", texture_func)?;
                 self.write_expr(module, sampler, func_ctx)?;
                 write!(self.out, ", ")?;
                 self.write_texture_coordinates(
@@ -1824,8 +1827,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     Mf::Asinh => Function::Asincosh { is_sin: true },
                     Mf::Acosh => Function::Asincosh { is_sin: false },
                     Mf::Atanh => Function::Atanh,
-                    Mf::Radians => Function::Regular("radians"),
-                    Mf::Degrees => Function::Regular("degrees"),
                     // decomposition
                     Mf::Ceil => Function::Regular("ceil"),
                     Mf::Floor => Function::Regular("floor"),
@@ -1853,7 +1854,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     Mf::Refract => Function::Regular("refract"),
                     // computational
                     Mf::Sign => Function::Regular("sign"),
-                    Mf::Fma => Function::Regular("mad"),
+                    Mf::Fma => Function::Regular("fma"),
                     Mf::Mix => Function::Regular("lerp"),
                     Mf::Step => Function::Regular("step"),
                     Mf::SmoothStep => Function::Regular("smoothstep"),
@@ -1865,8 +1866,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     // bits
                     Mf::CountOneBits => Function::Regular("countbits"),
                     Mf::ReverseBits => Function::Regular("reversebits"),
-                    Mf::FindLsb => Function::Regular("firstbitlow"),
-                    Mf::FindMsb => Function::Regular("firstbithigh"),
                     _ => return Err(Error::Unimplemented(format!("write_expr_math {:?}", fun))),
                 };
 

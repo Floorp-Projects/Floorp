@@ -15,6 +15,9 @@ const HOME_PAGE = "resource://mozscreenshots/lib/mozscreenshots.html";
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -91,10 +94,7 @@ var TestRunner = {
       "mozscreenshots",
       new Date().toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS,
     ];
-    let screenshotPath = PathUtils.join(
-      await PathUtils.getTempDir(),
-      ...subDirs
-    );
+    let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
 
     const MOZ_UPLOAD_DIR = env.get("MOZ_UPLOAD_DIR");
     const GECKO_HEAD_REPOSITORY = env.get("GECKO_HEAD_REPOSITORY");

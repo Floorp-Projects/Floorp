@@ -184,12 +184,8 @@ class CheckScriptEvaluationWithCallback final : public WorkerDebuggeeRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is permitted
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     ReportScriptEvaluationResult(false);
-    return NS_OK;
+    return WorkerRunnable::Cancel();
   }
 
  private:
@@ -301,13 +297,11 @@ class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler,
     return true;
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     RemovePromise(Resolved);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     RemovePromise(Rejected);
   }
 
@@ -608,14 +602,10 @@ class LifecycleEventWorkerRunnable : public ExtendableEventWorkerRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is permitted
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mCallback->SetResult(false);
     MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(mCallback));
 
-    return NS_OK;
+    return WorkerRunnable::Cancel();
   }
 
  private:
@@ -1354,14 +1344,11 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is permitted
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIRunnable> runnable = new ResumeRequest(mInterceptedChannel);
     if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable))) {
       NS_WARNING("Failed to resume channel on FetchEventRunnable::Cancel()!\n");
     }
+    WorkerRunnable::Cancel();
     return NS_OK;
   }
 

@@ -50,7 +50,7 @@ ast_struct! {
 pub mod parsing {
     use super::*;
     use crate::parse::discouraged::Speculative;
-    use crate::parse::{Parse, ParseBuffer, ParseStream, Result};
+    use crate::parse::{Parse, ParseStream, Result};
     use proc_macro2::TokenStream;
 
     impl Block {
@@ -152,7 +152,6 @@ pub mod parsing {
     }
 
     fn parse_stmt(input: ParseStream, allow_nosemi: bool) -> Result<Stmt> {
-        let begin = input.fork();
         let mut attrs = input.call(Attribute::parse_outer)?;
 
         // brace-style macros; paren and bracket macros get parsed as
@@ -170,7 +169,7 @@ pub mod parsing {
         }
 
         if input.peek(Token![let]) {
-            stmt_local(input, attrs, begin)
+            stmt_local(input, attrs)
         } else if input.peek(Token![pub])
             || input.peek(Token![crate]) && !input.peek2(Token![::])
             || input.peek(Token![extern])
@@ -223,7 +222,9 @@ pub mod parsing {
         })))
     }
 
-    fn stmt_local(input: ParseStream, attrs: Vec<Attribute>, begin: ParseBuffer) -> Result<Stmt> {
+    fn stmt_local(input: ParseStream, attrs: Vec<Attribute>) -> Result<Stmt> {
+        let begin = input.fork();
+
         let let_token: Token![let] = input.parse()?;
 
         let mut pat: Pat = pat::parsing::multi_pat_with_leading_vert(input)?;

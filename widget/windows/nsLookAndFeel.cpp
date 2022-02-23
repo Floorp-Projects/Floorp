@@ -21,6 +21,25 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+// static
+LookAndFeel::OperatingSystemVersion nsLookAndFeel::GetOperatingSystemVersion() {
+  static OperatingSystemVersion version = OperatingSystemVersion::Unknown;
+
+  if (version != OperatingSystemVersion::Unknown) {
+    return version;
+  }
+
+  if (IsWin10OrLater()) {
+    version = OperatingSystemVersion::Windows10;
+  } else if (IsWin8OrLater()) {
+    version = OperatingSystemVersion::Windows8;
+  } else {
+    version = OperatingSystemVersion::Windows7;
+  }
+
+  return version;
+}
+
 static nsresult GetColorFromTheme(nsUXThemeClass cls, int32_t aPart,
                                   int32_t aState, int32_t aPropId,
                                   nscolor& aColor) {
@@ -407,6 +426,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::WindowsDefaultTheme:
       aResult = nsUXThemeData::IsDefaultWindowTheme();
       break;
+    case IntID::OperatingSystemVersionIdentifier: {
+      aResult = int32_t(GetOperatingSystemVersion());
+      break;
+    }
     case IntID::DWMCompositor:
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;

@@ -12,7 +12,8 @@
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
@@ -70,6 +71,7 @@ bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
 void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
                                         ErrorResult& aRv);
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

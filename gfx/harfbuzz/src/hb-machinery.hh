@@ -244,19 +244,19 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
   {
     Stored *p = (Stored *) hb_calloc (1, sizeof (Stored));
     if (likely (p))
-      p = new (p) Stored (data);
+      p->init (data);
     return p;
   }
   static Stored *create ()
   {
     Stored *p = (Stored *) hb_calloc (1, sizeof (Stored));
     if (likely (p))
-      p = new (p) Stored ();
+      p->init ();
     return p;
   }
   static void destroy (Stored *p)
   {
-    p->~Stored ();
+    p->fini ();
     hb_free (p);
   }
 

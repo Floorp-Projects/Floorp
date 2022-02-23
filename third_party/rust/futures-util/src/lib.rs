@@ -1,6 +1,7 @@
 //! Combinators and utilities for working with `Future`s, `Stream`s, `Sink`s,
 //! and the `AsyncRead` and `AsyncWrite` traits.
 
+#![cfg_attr(feature = "read-initializer", feature(read_initializer))]
 #![cfg_attr(feature = "write-all-vectored", feature(io_slice_advance))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
@@ -21,6 +22,9 @@
 
 #[cfg(all(feature = "bilock", not(feature = "unstable")))]
 compile_error!("The `bilock` feature requires the `unstable` feature as an explicit opt-in to unstable features");
+
+#[cfg(all(feature = "read-initializer", not(feature = "unstable")))]
+compile_error!("The `read-initializer` feature requires the `unstable` feature as an explicit opt-in to unstable features");
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -144,6 +148,11 @@ macro_rules! delegate_async_write {
 #[cfg(feature = "std")]
 macro_rules! delegate_async_read {
     ($field:ident) => {
+        #[cfg(feature = "read-initializer")]
+        unsafe fn initializer(&self) -> $crate::io::Initializer {
+            self.$field.initializer()
+        }
+
         fn poll_read(
             self: core::pin::Pin<&mut Self>,
             cx: &mut core::task::Context<'_>,

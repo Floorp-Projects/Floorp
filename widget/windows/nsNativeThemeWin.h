@@ -9,19 +9,33 @@
 
 #include <windows.h>
 
+#include "gfxTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
-#include "Theme.h"
+#include "nsAtom.h"
+#include "nsCOMPtr.h"
+#include "nsITheme.h"
+#include "nsNativeBasicTheme.h"
+#include "nsNativeTheme.h"
+#include "nsSize.h"
+#include "nsStyleConsts.h"
 #include "nsUXThemeConstants.h"
 #include "nsUXThemeData.h"
+#include "ScrollbarDrawingWin.h"
 
 namespace mozilla::widget {
 
-class nsNativeThemeWin : public Theme {
+class nsNativeThemeWin : public nsNativeBasicTheme {
  protected:
+  using ScrollbarDrawingWin = mozilla::widget::ScrollbarDrawingWin;
   virtual ~nsNativeThemeWin();
 
  public:
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
+  NS_DECL_ISUPPORTS_INHERITED
+
   // Whether we draw a non-native widget.
   //
   // We always draw scrollbars as non-native so that all of Firefox has
@@ -42,12 +56,11 @@ class nsNativeThemeWin : public Theme {
                                   const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
-  bool CreateWebRenderCommandsForWidget(wr::DisplayListBuilder&,
-                                        wr::IpcResourceUpdateQueue&,
-                                        const layers::StackingContextHelper&,
-                                        layers::RenderRootStateManager*,
-                                        nsIFrame*, StyleAppearance,
-                                        const nsRect&) override;
+  bool CreateWebRenderCommandsForWidget(
+      mozilla::wr::DisplayListBuilder&, mozilla::wr::IpcResourceUpdateQueue&,
+      const mozilla::layers::StackingContextHelper&,
+      mozilla::layers::RenderRootStateManager*, nsIFrame*, StyleAppearance,
+      const nsRect&) override;
 
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
@@ -63,7 +76,7 @@ class nsNativeThemeWin : public Theme {
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  LayoutDeviceIntSize* aResult,
+                                  mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
   virtual Transparency GetWidgetTransparency(
@@ -94,10 +107,13 @@ class nsNativeThemeWin : public Theme {
   ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
                                                StyleAppearance) override;
 
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
+
   nsNativeThemeWin();
 
  protected:
-  Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
+  mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
   HANDLE GetTheme(StyleAppearance aAppearance);
   nsresult GetThemePartAndState(nsIFrame* aFrame, StyleAppearance aAppearance,
                                 int32_t& aPart, int32_t& aState);
@@ -116,12 +132,15 @@ class nsNativeThemeWin : public Theme {
                                LayoutDeviceIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
-                                       LayoutDeviceIntSize* aResult,
+                                       mozilla::LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
   bool ClassicThemeSupportsWidget(nsIFrame* aFrame,
                                   StyleAppearance aAppearance);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
+  bool MayDrawCustomScrollbarPart(gfxContext* aContext, nsIFrame* aFrame,
+                                  StyleAppearance aAppearance,
+                                  const nsRect& aRect, const nsRect& aClipRect);
   uint32_t GetWidgetNativeDrawingFlags(StyleAppearance aAppearance);
   int32_t StandardGetState(nsIFrame* aFrame, StyleAppearance aAppearance,
                            bool wantFocused);
@@ -142,7 +161,7 @@ class nsNativeThemeWin : public Theme {
                                       StyleAppearance aAppearance,
                                       int32_t aPart, int32_t aState,
                                       THEMESIZE aSizeReq,
-                                      LayoutDeviceIntSize* aResult);
+                                      mozilla::LayoutDeviceIntSize* aResult);
 
   SIZE GetCachedGutterSize(HANDLE theme);
 
@@ -162,11 +181,11 @@ class nsNativeThemeWin : public Theme {
       mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   // See the above not for mBorderCache and friends. However
-  // LayoutDeviceIntSize is half the size of nsIntMargin, making the
+  // mozilla::LayoutDeviceIntSize is half the size of nsIntMargin, making the
   // cache roughly half as large. In total the caches should come to about 18KB.
   uint8_t mMinimumWidgetSizeCacheValid
       [(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
-  LayoutDeviceIntSize
+  mozilla::LayoutDeviceIntSize
       mMinimumWidgetSizeCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   bool mGutterSizeCacheValid;

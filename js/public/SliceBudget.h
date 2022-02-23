@@ -19,14 +19,12 @@
 namespace js {
 
 struct JS_PUBLIC_API TimeBudget {
-  const mozilla::TimeDuration budget;
+  const int64_t budget;
   mozilla::TimeStamp deadline;  // Calculated when SliceBudget is constructed.
 
-  explicit TimeBudget(mozilla::TimeDuration duration) : budget(duration) {}
-  explicit TimeBudget(int64_t milliseconds)
-      : budget(mozilla::TimeDuration::FromMilliseconds(milliseconds)) {}
-
-  void setDeadlineFromNow();
+  explicit TimeBudget(int64_t milliseconds) : budget(milliseconds) {}
+  explicit TimeBudget(mozilla::TimeDuration duration)
+      : TimeBudget(duration.ToMilliseconds()) {}
 };
 
 struct JS_PUBLIC_API WorkBudget {
@@ -50,14 +48,6 @@ class JS_PUBLIC_API SliceBudget {
  public:
   using InterruptRequestFlag = mozilla::Atomic<bool>;
 
-  // Whether this slice is running in (predicted to be) idle time.
-  // Only used for recording in the profile.
-  bool idle = false;
-
-  // Whether this slice was given an extended budget, larger than
-  // the predicted idle time.
-  bool extended = false;
-
  private:
   static const intptr_t UnlimitedCounter = INTPTR_MAX;
 
@@ -79,7 +69,8 @@ class JS_PUBLIC_API SliceBudget {
   int64_t counter = StepsPerExpensiveCheck;
 
   // This SliceBudget is considered interrupted from the time isOverBudget()
-  // finds the interrupt flag set.
+  // finds the interrupt flag set, to the next time resetOverBudget() (or
+  // checkAndResetOverBudget()) is called.
   bool interrupted = false;
 
   explicit SliceBudget(InterruptRequestFlag* irqPtr)
@@ -122,13 +113,25 @@ class JS_PUBLIC_API SliceBudget {
 
   bool isOverBudget() { return counter <= 0 && checkOverBudget(); }
 
+  // Normally not used. Reset the SliceBudget to its initial state.
+  // Note that resetting the interrupt request flag could race with
+  // anything that is setting it, causing the interrupt to be missed.
+  void reset() {
+    if (isTimeBudget()) {
+      counter = timeBudget();
+    } else if (isWorkBudget()) {
+      counter = workBudget();
+    }
+    if (interruptRequested) {
+      *interruptRequested = false;
+    }
+  }
+
   bool isWorkBudget() const { return budget.is<WorkBudget>(); }
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
   bool isUnlimited() const { return budget.is<UnlimitedBudget>(); }
 
-  int64_t timeBudget() const {
-    return budget.as<TimeBudget>().budget.ToMilliseconds();
-  }
+  int64_t timeBudget() const { return budget.as<TimeBudget>().budget; }
   int64_t workBudget() const { return budget.as<WorkBudget>().budget; }
 
   mozilla::TimeStamp deadline() const {

@@ -47,7 +47,8 @@ class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild,
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   TCPServerSocketChild(TCPServerSocket* aServerSocket, uint16_t aLocalPort,
-                       uint16_t aBacklog, bool aUseArrayBuffers);
+                       uint16_t aBacklog, bool aUseArrayBuffers,
+                       nsISerialEventTarget* aIPCEventTarget);
   ~TCPServerSocketChild();
 
   void Close();

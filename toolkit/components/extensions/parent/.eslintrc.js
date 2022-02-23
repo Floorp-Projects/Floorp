@@ -23,7 +23,6 @@ module.exports = {
     getCookieStoreIdForContainer: true,
     getCookieStoreIdForOriginAttributes: true,
     getCookieStoreIdForTab: true,
-    getOriginAttributesPatternForCookieStoreId: true,
     isContainerCookieStoreId: true,
     isDefaultCookieStoreId: true,
     isPrivateCookieStoreId: true,

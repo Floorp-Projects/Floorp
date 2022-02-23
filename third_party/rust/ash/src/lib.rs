@@ -1,10 +1,8 @@
-#![deny(clippy::use_self)]
 #![allow(
     clippy::too_many_arguments,
     clippy::missing_safety_doc,
     clippy::upper_case_acronyms
 )]
-#![cfg_attr(docsrs, feature(doc_cfg))]
 //! # Vulkan API
 //!
 //! <https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html>
@@ -14,7 +12,7 @@
 //! ```no_run
 //! use ash::{vk, Entry};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let entry = Entry::linked();
+//! let entry = unsafe { Entry::new() }?;
 //! let app_info = vk::ApplicationInfo {
 //!     api_version: vk::make_api_version(0, 1, 0, 0),
 //!     ..Default::default()
@@ -28,19 +26,22 @@
 //! ```
 //!
 //! ## Getting started
-//!
-//! Load the Vulkan library linked at compile time using [`Entry::linked()`], or load it at runtime
-//! using [`Entry::load()`], which uses `libloading`. If you want to perform entry point loading
-//! yourself, call [`Entry::from_static_fn()`].
+//! Load the Vulkan library at the default location using [`Entry::new()`][EntryCustom<_>::new()],
+//! or at a custom location using [`Entry::with_library("path/to/vulkan")`][EntryCustom<_>::with_library()].
+//! These loaders use [`libloading`]. If you wish to perform function loading yourself
+//! call [`EntryCustom::new_custom()`] with a closure turning function names
+//! into function pointers.
 
 pub use crate::device::Device;
-pub use crate::entry::Entry;
-#[cfg(feature = "loaded")]
-pub use crate::entry::LoadingError;
+pub use crate::entry::{EntryCustom, InstanceError};
+#[cfg(feature = "libloading")]
+pub use crate::entry_libloading::{Entry, LoadingError};
 pub use crate::instance::Instance;
 
 mod device;
 mod entry;
+#[cfg(feature = "libloading")]
+mod entry_libloading;
 mod instance;
 pub mod prelude;
 pub mod util;

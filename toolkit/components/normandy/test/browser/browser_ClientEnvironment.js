@@ -72,17 +72,12 @@ add_task(async function testDistribution() {
   );
 
   // distribution id is read from a preference
-  Services.prefs
-    .getDefaultBranch(null)
-    .setStringPref("distribution.id", "funnelcake");
+  await SpecialPowers.pushPrefEnv({ set: [["distribution.id", "funnelcake"]] });
   is(
     ClientEnvironment.distribution,
     "funnelcake",
     "distribution is read from preferences"
   );
-  Services.prefs
-    .getDefaultBranch(null)
-    .setStringPref("distribution.id", "default");
 });
 
 const mockClassify = { country: "FR", request_time: new Date(2017, 1, 1) };

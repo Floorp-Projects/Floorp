@@ -21,14 +21,14 @@
 namespace js {
 
 MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
-  static_assert(JS::PropertyKey::IntMin == 0);
+  static_assert(JSID_INT_MIN == 0);
 
   uint32_t index;
-  if (atom->isIndex(&index) && index <= JS::PropertyKey::IntMax) {
-    return JS::PropertyKey::Int(int32_t(index));
+  if (atom->isIndex(&index) && index <= JSID_INT_MAX) {
+    return INT_TO_JSID(int32_t(index));
   }
 
-  return JS::PropertyKey::NonIntAtom(atom);
+  return JS::PropertyKey::fromNonIntAtom(atom);
 }
 
 // Use the NameToId method instead!
@@ -42,11 +42,11 @@ MOZ_ALWAYS_INLINE bool ValueToIntId(const Value& v, jsid* id) {
     return false;
   }
 
-  if (!PropertyKey::fitsInInt(i)) {
+  if (!INT_FITS_IN_JSID(i)) {
     return false;
   }
 
-  *id = PropertyKey::Int(i);
+  *id = INT_TO_JSID(i);
   return true;
 }
 
@@ -64,7 +64,7 @@ inline bool ValueToIdPure(const Value& v, jsid* id) {
   }
 
   if (v.isSymbol()) {
-    *id = PropertyKey::Symbol(v.toSymbol());
+    *id = SYMBOL_TO_JSID(v.toSymbol());
     return true;
   }
 
@@ -89,7 +89,7 @@ inline bool PrimitiveValueToId(
     }
 
     if (v.isSymbol()) {
-      idp.set(PropertyKey::Symbol(v.toSymbol()));
+      idp.set(SYMBOL_TO_JSID(v.toSymbol()));
       return true;
     }
   }
@@ -134,8 +134,8 @@ inline mozilla::RangedPtr<T> BackfillIndexInCharBuffer(
 bool IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp);
 
 inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
-  if (index <= PropertyKey::IntMax) {
-    idp.set(PropertyKey::Int(index));
+  if (index <= JSID_INT_MAX) {
+    idp.set(INT_TO_JSID(index));
     return true;
   }
 
@@ -143,12 +143,12 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
 }
 
 static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
-  if (id.isString()) {
+  if (JSID_IS_STRING(id)) {
     return id.toAtom();
   }
 
-  if (MOZ_LIKELY(id.isInt())) {
-    return Int32ToString<CanGC>(cx, id.toInt());
+  if (MOZ_LIKELY(JSID_IS_INT(id))) {
+    return Int32ToString<CanGC>(cx, JSID_TO_INT(id));
   }
 
   RootedValue idv(cx, IdToValue(id));

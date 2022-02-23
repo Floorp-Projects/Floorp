@@ -8712,7 +8712,6 @@ exports.CSS_PROPERTIES = {
       "multiply",
       "normal",
       "overlay",
-      "plus-lighter",
       "revert",
       "revert-layer",
       "saturation",

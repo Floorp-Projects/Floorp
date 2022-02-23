@@ -94,6 +94,12 @@ struct biased_subrs_t
 
 struct point_t
 {
+  void init ()
+  {
+    x.init ();
+    y.init ();
+  }
+
   void set_int (int _x, int _y)
   {
     x.set_int (_x);
@@ -122,7 +128,7 @@ struct cs_interp_env_t : interp_env_t<ARG>
     hstem_count = 0;
     vstem_count = 0;
     hintmask_size = 0;
-    pt.set_int (0, 0);
+    pt.init ();
     callStack.init ();
     globalSubrs.init (globalSubrs_);
     localSubrs.init (localSubrs_);
@@ -835,6 +841,7 @@ struct path_procs_t
     if (likely (env.argStack.get_count () == 11))
     {
       point_t d;
+      d.init ();
       for (unsigned int i = 0; i < 10; i += 2)
 	d.move (env.eval_arg (i), env.eval_arg (i+1));
 

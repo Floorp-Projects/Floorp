@@ -244,6 +244,8 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
         trc, Compartment::NonGrayEdges);
   }
 
+  markFinalizationRegistryRoots(trc);
+
   traceRuntimeCommon(trc, MarkRuntime);
 }
 

@@ -18,36 +18,11 @@
 #include "nsWrapperCache.h"
 #include "mozilla/LinkedList.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class Promise;
 class ReadableStream;
-
-// https://streams.spec.whatwg.org/#default-reader-read
-struct Read_ReadRequest : public ReadRequest {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Read_ReadRequest, ReadRequest)
-
-  RefPtr<Promise> mPromise;
-  /* This allows Gecko Internals to create objects with null prototypes, to hide
-   * promise resolution from Object.prototype.then */
-  bool mForAuthorCode = true;
-
-  explicit Read_ReadRequest(Promise* aPromise, bool aForAuthorCode = true)
-      : mPromise(aPromise), mForAuthorCode(aForAuthorCode) {}
-
-  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& aRv) override;
-
-  void CloseSteps(JSContext* aCx, ErrorResult& aRv) override;
-
-  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                  ErrorResult& aRv) override;
-
- protected:
-  ~Read_ReadRequest() override = default;
-};
 
 class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
                                           public nsWrapperCache
@@ -62,7 +37,7 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   explicit ReadableStreamDefaultReader(nsISupports* aGlobal);
 
  protected:
-  ~ReadableStreamDefaultReader() override;
+  ~ReadableStreamDefaultReader();
 
  public:
   bool IsDefault() override { return true; }
@@ -94,14 +69,7 @@ extern void SetUpReadableStreamDefaultReader(
     JSContext* aCx, ReadableStreamDefaultReader* aReader,
     ReadableStream* aStream, ErrorResult& aRv);
 
-void ReadableStreamDefaultReaderErrorReadRequests(
-    JSContext* aCx, ReadableStreamDefaultReader* aReader,
-    JS::Handle<JS::Value> aError, ErrorResult& aRv);
-
-void ReadableStreamDefaultReaderRelease(JSContext* aCx,
-                                        ReadableStreamDefaultReader* aReader,
-                                        ErrorResult& aRv);
-
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_ReadableStreamDefaultReader_h

@@ -34,7 +34,7 @@ class GeckoResultCallback final
     OuterCallback outerCallback =
         [inner{std::move(aInnerCallback)}](mozilla::jni::Object::Param aParam) {
           ArgType converted = Java2Native<ArgType>(aParam);
-          inner(std::move(converted));
+          inner(converted);
         };
     auto native = MakeUnique<GeckoResultCallback>(std::move(outerCallback));
     Base::AttachNative(java, std::move(native));

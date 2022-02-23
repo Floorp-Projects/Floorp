@@ -7,7 +7,6 @@
 #include "AudioGenerator.h"
 #include "AudioVerifier.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "nsContentUtils.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest-printers.h"
@@ -230,10 +229,7 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   const uint32_t sampleRateReceiver = aTargetRate;
   const uint32_t frequency = 100;
   const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
-                          testPrincipal);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerifier(sampleRateTransmitter,
@@ -267,10 +263,6 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
       // Get the output of the correction
       AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
       EXPECT_EQ(outSegment.GetDuration(), targetFrames);
-      for (AudioSegment::ConstChunkIterator ci(outSegment); !ci.IsEnded();
-           ci.Next()) {
-        EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
-      }
       // Print the output for debugging
       // printAudioSegment(outSegment);
       outToneVerifier.AppendData(outSegment);
@@ -308,10 +300,7 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
   const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
-                          testPrincipal);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerify(sampleRateTransmitter, frequency);
@@ -343,10 +332,6 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
       // Get the output of the correction
       AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
       EXPECT_EQ(outSegment.GetDuration(), targetFrames);
-      for (AudioSegment::ConstChunkIterator ci(outSegment); !ci.IsEnded();
-           ci.Next()) {
-        EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
-      }
       // Print the output for debugging
       // printAudioSegment(outSegment);
       outToneVerify.AppendData(outSegment);
@@ -378,10 +363,7 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
   const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
-                          testPrincipal);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   for (uint32_t i = 0; i < 7; ++i) {
@@ -395,10 +377,6 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
     EXPECT_EQ(outSegment.GetDuration(), targetFrames);
     if (i < 5) {
       EXPECT_FALSE(outSegment.IsNull());
-      for (AudioSegment::ConstChunkIterator ci(outSegment); !ci.IsEnded();
-           ci.Next()) {
-        EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
-      }
     } else {
       // Last 2 iterations, the 5th and 6th, will be null. It has used all
       // buffered data so the output is silence.
@@ -412,10 +390,7 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
   const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
-                          testPrincipal);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   for (uint32_t i = 0; i < 100; ++i) {
@@ -426,11 +401,5 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
 
     AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
     EXPECT_EQ(outSegment.GetDuration(), targetFrames);
-    if (!outSegment.IsNull()) {  // Don't check the data if ad is dried out.
-      for (AudioSegment::ConstChunkIterator ci(outSegment); !ci.IsEnded();
-           ci.Next()) {
-        EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
-      }
-    }
   }
 }

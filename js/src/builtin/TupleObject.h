@@ -12,23 +12,19 @@
 
 namespace js {
 
-[[nodiscard]] mozilla::Maybe<TupleType&> ThisTupleValue(JSContext* cx,
-                                                        HandleValue val);
-
 class TupleObject : public NativeObject {
   enum { PrimitiveValueSlot, SlotCount };
 
  public:
   static const JSClass class_;
 
-  static TupleObject* create(JSContext* cx, Handle<TupleType*> tuple);
+  static TupleObject* create(JSContext* cx, Handle<TupleType*> record);
 
-  JS::TupleType& unbox() const;
+  JS::TupleType* unbox() const;
 
-  static mozilla::Maybe<TupleType&> maybeUnbox(JSObject* obj);
+  static bool maybeUnbox(JSObject* obj, MutableHandle<TupleType*> tupp);
 };
 
-bool IsTuple(JSObject& obj);
 }  // namespace js
 
 #endif

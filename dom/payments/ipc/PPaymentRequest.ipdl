@@ -227,7 +227,6 @@ union IPCMethodChangeDetails
   IPCBasicCardChangeDetails;
 };
 
-[ManualDealloc]
 sync protocol PPaymentRequest
 {
   manager PBrowser;

@@ -10,7 +10,6 @@
 #include "mozilla/a11y/AccTypes.h"
 #include "nsString.h"
 #include "nsRect.h"
-#include "Units.h"
 
 class nsAtom;
 
@@ -102,21 +101,6 @@ class Accessible {
   }
 
   /**
-   * Return true if this Accessible is before another Accessible in the tree.
-   */
-  bool IsBefore(const Accessible* aAcc) const;
-
-  bool IsAncestorOf(const Accessible* aAcc) const {
-    for (const Accessible* parent = aAcc->Parent(); parent;
-         parent = parent->Parent()) {
-      if (parent == this) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
   enum class EWhichChildAtPoint { DirectChild, DeepestChild };
@@ -168,20 +152,12 @@ class Accessible {
    */
   virtual void Description(nsString& aDescription) const = 0;
 
-  /**
-   * Get the value of this accessible.
-   */
-  virtual void Value(nsString& aValue) const = 0;
-
   virtual double CurValue() const = 0;
   virtual double MinValue() const = 0;
   virtual double MaxValue() const = 0;
   virtual double Step() const = 0;
 
-  /**
-   * Return boundaries in screen coordinates in device pixels.
-   */
-  virtual LayoutDeviceIntRect Bounds() const = 0;
+  virtual nsIntRect Bounds() const = 0;
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty
@@ -208,17 +184,9 @@ class Accessible {
   virtual uint32_t StartOffset();
 
   /**
-   * Return the end offset of the link within the parent
-   * HyperTextAccessibleBase.
-   */
-  virtual uint32_t EndOffset();
-
-  /**
    * Return object attributes for the accessible.
    */
   virtual already_AddRefed<AccAttributes> Attributes() = 0;
-
-  virtual already_AddRefed<nsAtom> DisplayStyle() const = 0;
 
   // Methods that interact with content.
 
@@ -228,85 +196,6 @@ class Accessible {
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;
-
-  /**
-   * Return a landmark role if applied.
-   */
-  virtual nsAtom* LandmarkRole() const;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // ActionAccessible
-
-  /**
-   * Return the number of actions that can be performed on this accessible.
-   */
-  virtual uint8_t ActionCount() const = 0;
-
-  /**
-   * Return action name at given index.
-   */
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) = 0;
-
-  /**
-   * Default to localized action name.
-   */
-  void ActionDescriptionAt(uint8_t aIndex, nsAString& aDescription) {
-    nsAutoString name;
-    ActionNameAt(aIndex, name);
-    TranslateString(name, aDescription);
-  }
-
-  /**
-   * Invoke the accessible action.
-   */
-  virtual bool DoAction(uint8_t aIndex) const = 0;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // SelectAccessible
-
-  /**
-   * Return an array of selected items.
-   */
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems) = 0;
-
-  /**
-   * Return the number of selected items.
-   */
-  virtual uint32_t SelectedItemCount() = 0;
-
-  /**
-   * Return selected item at the given index.
-   */
-  virtual Accessible* GetSelectedItem(uint32_t aIndex) = 0;
-
-  /**
-   * Determine if item at the given index is selected.
-   */
-  virtual bool IsItemSelected(uint32_t aIndex) = 0;
-
-  /**
-   * Add item at the given index the selection. Return true if success.
-   */
-  virtual bool AddItemToSelection(uint32_t aIndex) = 0;
-
-  /**
-   * Remove item at the given index from the selection. Return if success.
-   */
-  virtual bool RemoveItemFromSelection(uint32_t aIndex) = 0;
-
-  /**
-   * Select all items. Return true if success.
-   */
-  virtual bool SelectAll() = 0;
-
-  /**
-   * Unselect all items. Return true if success.
-   */
-  virtual bool UnselectAll() = 0;
-
-  virtual void TakeSelection() = 0;
-
-  virtual void SetSelected(bool aSelect) = 0;
 
   // Type "is" methods
 
@@ -418,15 +307,10 @@ class Accessible {
   virtual bool IsRemote() const = 0;
   RemoteAccessible* AsRemote();
 
-  bool IsLocal() const { return !IsRemote(); }
+  bool IsLocal() { return !IsRemote(); }
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
-
-  /**
-   * Return the localized string for the given key.
-   */
-  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
 
  protected:
   // Some abstracted group utility methods.
@@ -463,20 +347,6 @@ class Accessible {
    * @param  aSetSize   [out] the group size
    */
   virtual void GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize);
-
-  /**
-   * Return the nearest ancestor that has a primary action, or null.
-   */
-  const Accessible* ActionAncestor() const;
-
-  /**
-   * Return true if accessible has a primary action directly related to it, like
-   * "click", "activate", "press", "jump", "open", "close", etc. A non-primary
-   * action would be a complementary one like "showlongdesc".
-   * If an accessible has an action that is associated with an ancestor, it is
-   * not a primary action either.
-   */
-  virtual bool HasPrimaryAction() const = 0;
 
  private:
   static const uint8_t kTypeBits = 6;

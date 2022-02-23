@@ -70,7 +70,7 @@ const isRemote =
 class MarionetteParentProcess {
   constructor() {
     this.server = null;
-    this._activePortPath;
+    this._marionetteActivePortPath;
 
     this.classID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
     this.helpInfo = "  --marionette       Enable remote control server.\n";
@@ -298,13 +298,21 @@ class MarionetteParentProcess {
 
       // Write Marionette port to MarionetteActivePort file within the profile.
       const profileDir = await PathUtils.getProfileDir();
-      this._activePortPath = PathUtils.join(profileDir, "MarionetteActivePort");
+      this._marionetteActivePortPath = PathUtils.join(
+        profileDir,
+        "MarionetteActivePort"
+      );
 
       const data = `${this.server.port}`;
       try {
-        await IOUtils.write(this._activePortPath, textEncoder.encode(data));
+        await IOUtils.write(
+          this._marionetteActivePortPath,
+          textEncoder.encode(data)
+        );
       } catch (e) {
-        logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
+        logger.warn(
+          `Failed to create ${this._marionetteActivePortPath} (${e.message})`
+        );
       }
     });
   }
@@ -316,9 +324,11 @@ class MarionetteParentProcess {
       logger.debug("Marionette stopped listening");
 
       try {
-        await IOUtils.remove(this._activePortPath);
+        await IOUtils.remove(this._marionetteActivePortPath);
       } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
+        logger.warn(
+          `Failed to remove ${this._marionetteActivePortPath} (${e.message})`
+        );
       }
     }
   }

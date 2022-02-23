@@ -10,6 +10,7 @@
 #include "mozilla/Logging.h"
 
 #include "nsDOMDataChannelDeclarations.h"
+#include "nsDOMDataChannel.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/File.h"

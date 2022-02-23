@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { sortBy } from "lodash";
 import {
   getOriginalFrameScope,
   getGeneratedFrameScope,
@@ -117,26 +118,17 @@ export function generateInlinePreview(cx, frame) {
       scopes = scopes.parent;
     }
 
-    // Sort previews by line and column so they're displayed in the right order in the editor
-    allPreviews.sort((previewA, previewB) => {
-      if (previewA.line < previewB.line) {
-        return -1;
-      }
-      if (previewA.line > previewB.line) {
-        return 1;
-      }
-      // If we have the same line number
-      return previewA.column < previewB.column ? -1 : 1;
-    });
-
     const previews = {};
-    for (const preview of allPreviews) {
+    const sortedPreviews = sortBy(allPreviews, ["line", "column"]);
+
+    sortedPreviews.forEach(preview => {
       const { line } = preview;
       if (!previews[line]) {
-        previews[line] = [];
+        previews[line] = [preview];
+      } else {
+        previews[line].push(preview);
       }
-      previews[line].push(preview);
-    }
+    });
 
     return dispatch({
       type: "ADD_INLINE_PREVIEW",

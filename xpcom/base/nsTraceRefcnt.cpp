@@ -10,7 +10,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Path.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "nsXPCOMPrivate.h"
 #include "nscore.h"
@@ -194,26 +193,25 @@ struct nsTraceRefcntStats {
 };
 
 #ifdef DEBUG
-static void AssertActivityIsLegal(const char* aType, const char* aAction) {
-  if (gActivityTLS == BAD_TLS_INDEX || PR_GetThreadPrivate(gActivityTLS)) {
-    char buf[1024];
-    SprintfLiteral(buf, "XPCOM object %s %s from static ctor/dtor", aType,
-                   aAction);
+static const char kStaticCtorDtorWarning[] =
+    "XPCOM objects created/destroyed from static ctor/dtor";
 
+static void AssertActivityIsLegal() {
+  if (gActivityTLS == BAD_TLS_INDEX || PR_GetThreadPrivate(gActivityTLS)) {
     if (PR_GetEnv("MOZ_FATAL_STATIC_XPCOM_CTORS_DTORS")) {
-      MOZ_CRASH_UNSAFE_PRINTF("%s", buf);
+      MOZ_CRASH_UNSAFE(kStaticCtorDtorWarning);
     } else {
-      NS_WARNING(buf);
+      NS_WARNING(kStaticCtorDtorWarning);
     }
   }
 }
-#  define ASSERT_ACTIVITY_IS_LEGAL(type_, action_) \
-    do {                                           \
-      AssertActivityIsLegal(type_, action_);       \
+#  define ASSERT_ACTIVITY_IS_LEGAL \
+    do {                           \
+      AssertActivityIsLegal();     \
     } while (0)
 #else
-#  define ASSERT_ACTIVITY_IS_LEGAL(type_, action_) \
-    do {                                           \
+#  define ASSERT_ACTIVITY_IS_LEGAL \
+    do {                           \
     } while (0)
 #endif  // DEBUG
 
@@ -880,7 +878,7 @@ void LogTerm() {
 EXPORT_XPCOM_API(MOZ_NEVER_INLINE void)
 NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt, const char* aClass,
              uint32_t aClassSize) {
-  ASSERT_ACTIVITY_IS_LEGAL(aClass, "addrefed");
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
   }
@@ -933,7 +931,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt, const char* aClass,
 
 EXPORT_XPCOM_API(MOZ_NEVER_INLINE void)
 NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass) {
-  ASSERT_ACTIVITY_IS_LEGAL(aClass, "released");
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
   }
@@ -990,7 +988,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass) {
 
 EXPORT_XPCOM_API(MOZ_NEVER_INLINE void)
 NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize) {
-  ASSERT_ACTIVITY_IS_LEGAL(aType, "constructed");
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
   }
@@ -1026,7 +1024,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize) {
 
 EXPORT_XPCOM_API(MOZ_NEVER_INLINE void)
 NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize) {
-  ASSERT_ACTIVITY_IS_LEGAL(aType, "destroyed");
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
   }

@@ -660,7 +660,13 @@ function addCertOverrides() {
 function MockProvider() {
   this.addons = [];
   this.installs = [];
-  this.addonTypes = ["extension"];
+  this.types = [
+    {
+      id: "extension",
+      name: "Extensions",
+      uiPriority: 4000,
+    },
+  ];
 
   var self = this;
   registerCleanupFunction(function() {
@@ -675,8 +681,8 @@ function MockProvider() {
 MockProvider.prototype = {
   addons: null,
   installs: null,
-  addonTypes: null,
   started: null,
+  types: null,
   queryDelayPromise: Promise.resolve(),
 
   blockQueryResponses() {
@@ -701,12 +707,7 @@ MockProvider.prototype = {
    */
   register: function MP_register() {
     info("Registering mock add-on provider");
-    // addonTypes is supposedly the full set of types supported by the provider.
-    // The current list is not complete (there are tests that mock add-on types
-    // other than "extension"), but it doesn't affect tests since addonTypes is
-    // mainly used to determine whether any of the AddonManager's providers
-    // support a type, and XPIProvider already defines the types of interest.
-    AddonManagerPrivate.registerProvider(this, this.addonTypes);
+    AddonManagerPrivate.registerProvider(this, this.types);
   },
 
   /**

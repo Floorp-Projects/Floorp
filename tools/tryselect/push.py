@@ -154,12 +154,9 @@ def display_push_estimates(try_task_config):
             durations["dependency_duration"] + durations["selected_duration"]
         )
     )
-    if "percentile" in durations:
-        print(
-            "estimates: In the top {}% of durations".format(
-                100 - durations["percentile"]
-            )
-        )
+    print(
+        "estimates: In the top {}% of durations".format(100 - durations["percentile"])
+    )
     print(
         "estimates: Should take about {} (Finished around {})".format(
             durations["wall_duration_seconds"],
@@ -172,12 +169,10 @@ def push_to_try(
     method,
     msg,
     try_task_config=None,
-    stage_changes=False,
-    dry_run=False,
+    push=True,
     closed_tree=False,
     files_to_change=None,
 ):
-    push = not stage_changes and not dry_run
     check_working_directory(push)
 
     if try_task_config and method not in ("auto", "empty"):
@@ -203,7 +198,7 @@ def push_to_try(
         config_path = write_task_config(try_task_config)
         changed_files.append(config_path)
 
-    if (push or stage_changes) and files_to_change:
+    if files_to_change:
         for path, content in files_to_change.items():
             path = os.path.join(vcs.path, path)
             with open(path, "wb") as fh:

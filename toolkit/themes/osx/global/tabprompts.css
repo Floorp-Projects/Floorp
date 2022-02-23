@@ -13,6 +13,7 @@ tabmodalprompt {
   font-size: 110%;
 }
 
+.paymentDialogContainerFrame,
 .tabmodalprompt-mainContainer {
   color: black;
   background-color: hsla(0,0%,100%,.95);
@@ -57,6 +58,6 @@ tabmodalprompt {
               0 1px 3px hsla(0,0%,0%,.2);
 }
 
-.tabmodalprompt-buttonContainer > button:focus-visible {
-  outline: var(--focus-outline);
+.tabmodalprompt-buttonContainer > button:focus {
+  box-shadow: var(--focus-ring-box-shadow)
 }

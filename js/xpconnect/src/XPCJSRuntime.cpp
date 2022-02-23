@@ -2977,7 +2977,7 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
   mLoaderGlobal.init(cx, nullptr);
 
   // these jsids filled in later when we have a JSContext to work with.
-  mStrIDs[0] = JS::PropertyKey::Void();
+  mStrIDs[0] = JSID_VOID;
 
   nsScriptSecurityManager::GetScriptSecurityManager()->InitJSCallbacks(cx);
 
@@ -3013,7 +3013,6 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
   js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
 
-#ifndef MOZ_DOM_STREAMS
   {
     JS::AbortSignalIsAborted isAborted = [](JSObject* obj) {
       dom::AbortSignal* domObj = dom::UnwrapDOMObject<dom::AbortSignal>(obj);
@@ -3024,7 +3023,6 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
     JS::InitPipeToHandling(dom::AbortSignal_Binding::GetJSClass(), isAborted,
                            cx);
   }
-#endif
 
   JS::SetXrayJitInfo(&gXrayJitInfo);
   JS::SetProcessLargeAllocationFailureCallback(
@@ -3078,12 +3076,12 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
 bool XPCJSRuntime::InitializeStrings(JSContext* cx) {
   // if it is our first context then we need to generate our string ids
-  if (mStrIDs[0].isVoid()) {
+  if (JSID_IS_VOID(mStrIDs[0])) {
     RootedString str(cx);
     for (unsigned i = 0; i < XPCJSContext::IDX_TOTAL_COUNT; i++) {
       str = JS_AtomizeAndPinString(cx, mStrings[i]);
       if (!str) {
-        mStrIDs[0] = JS::PropertyKey::Void();
+        mStrIDs[0] = JSID_VOID;
         return false;
       }
       mStrIDs[i] = PropertyKey::fromPinnedString(str);

@@ -49,10 +49,6 @@ body {
   /* light colours */
 }
 
-pre {
-  font-family: inherit;
-}
-
 body.sepia {
   --main-background: #f4ecd8;
   --main-foreground: #5b4636;
@@ -812,14 +808,4 @@ table {
 
 .reader-show-element {
   display: initial;
-}
-
-/* Provide extra spacing for images that may be aided with accompanying element such as <figcaption> */
-.moz-reader-block-img:not(:last-child) {
-  margin-block-end: 12px;
-}
-
-.moz-reader-wide-table {
-  overflow-x: auto;
-  display: block;
 }

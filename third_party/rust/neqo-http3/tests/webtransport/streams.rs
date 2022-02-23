@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use crate::webtransport::WtTest;
-use neqo_http3::{features::extended_connect::SessionCloseReason, Error};
+use neqo_http3::Error;
 use neqo_transport::StreamType;
 use std::mem;
 
@@ -274,10 +274,7 @@ fn wt_client_session_close_1() {
         Some(Error::HttpRequestCancelled.code()),
         &[bidi_from_client],
         Some(Error::HttpRequestCancelled.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -309,10 +306,7 @@ fn wt_client_session_close_2() {
         Some(Error::HttpRequestCancelled.code()),
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -345,10 +339,7 @@ fn wt_client_session_close_3() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(&[], None, &[], None, false, None);
@@ -374,10 +365,7 @@ fn wt_client_session_close_4() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -410,10 +398,7 @@ fn wt_client_session_close_5() {
         Some(Error::HttpNoError.code()),
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(&[], None, &[], None, false, None);
@@ -437,10 +422,7 @@ fn wt_client_session_close_6() {
         Some(Error::HttpRequestCancelled.code()),
         &[bidi_from_server.stream_id()],
         Some(Error::HttpRequestCancelled.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -471,10 +453,7 @@ fn wt_client_session_close_7() {
         None,
         &[unidi_from_server.stream_id()],
         Some(Error::HttpRequestCancelled.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -506,10 +485,7 @@ fn wt_client_session_close_8() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(&[], None, &[], None, false, None);
@@ -533,10 +509,7 @@ fn wt_client_session_close_9() {
         None,
         &[unidi_server.stream_id()],
         Some(Error::HttpNoError.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(&[], None, &[], None, false, None);
@@ -560,10 +533,7 @@ fn wt_client_session_close_10() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -597,10 +567,7 @@ fn wt_client_session_close_11() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(&[], None, &[], None, false, None);
@@ -625,10 +592,7 @@ fn wt_client_session_close_12() {
         None,
         &[],
         None,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -662,10 +626,7 @@ fn wt_client_session_close_13() {
         Some(Error::HttpRequestCancelled.code()),
         &[bidi_client_1, bidi_client_2],
         Some(Error::HttpRequestCancelled.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_client(
@@ -710,10 +671,7 @@ fn wt_client_session_server_close_1() {
         &[bidi_client],
         Some(Error::HttpRequestCancelled.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(
@@ -744,10 +702,7 @@ fn wt_client_session_server_close_2() {
         &[unidi_client],
         Some(Error::HttpRequestCancelled.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(
@@ -780,10 +735,7 @@ fn wt_client_session_server_close_3() {
         &[],
         None,
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -809,10 +761,7 @@ fn wt_client_session_server_close_4() {
         &[unidi_client],
         Some(Error::HttpNoError.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -837,10 +786,7 @@ fn wt_client_session_server_close_5() {
         &[bidi_server.stream_id()],
         Some(Error::HttpRequestCancelled.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(
@@ -871,10 +817,7 @@ fn wt_client_session_server_close_6() {
         &[],
         None,
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
     wt.check_events_after_closing_session_server(
         &[],
@@ -906,10 +849,7 @@ fn wt_client_session_server_close_7() {
         &[],
         None,
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -935,10 +875,7 @@ fn wt_client_session_server_close_8() {
         &[],
         None,
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -967,10 +904,7 @@ fn wt_client_session_server_close_9() {
         &[],
         None,
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -996,10 +930,7 @@ fn wt_client_session_server_close_10() {
         &[bidi_server.stream_id()],
         Some(Error::HttpNoError.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(&[], None, &[], None, None);
@@ -1027,10 +958,7 @@ fn wt_client_session_server_close_11() {
         &[bidi_client_1, bidi_client_2],
         Some(Error::HttpRequestCancelled.code()),
         false,
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Error(Error::HttpNoError.code()),
-        )),
+        Some((wt_session.stream_id(), Some(Error::HttpNoError.code()))),
     );
 
     wt.check_events_after_closing_session_server(
@@ -1039,43 +967,5 @@ fn wt_client_session_server_close_11() {
         &[bidi_client_1, bidi_client_2],
         Some(Error::HttpRequestCancelled.code()),
         None,
-    );
-}
-
-#[test]
-fn wt_session_close_frame_and_streams_client() {
-    const BUF: &[u8] = &[0; 10];
-    const ERROR_NUM: u32 = 23;
-    const ERROR_MESSAGE: &str = "Something went wrong";
-    let mut wt = WtTest::new();
-    let mut wt_session = wt.create_wt_session();
-
-    let mut unidi_server = wt.create_wt_stream_server(&mut wt_session, StreamType::UniDi);
-    wt.send_data_server(&mut unidi_server, BUF);
-    wt.exchange_packets();
-
-    wt.session_close_frame_client(wt_session.stream_id(), ERROR_NUM, ERROR_MESSAGE);
-    wt.check_events_after_closing_session_client(
-        &[unidi_server.stream_id()],
-        Some(Error::HttpRequestCancelled.code()),
-        &[],
-        None,
-        false,
-        None,
-    );
-    wt.exchange_packets();
-
-    wt.check_events_after_closing_session_server(
-        &[],
-        None,
-        &[unidi_server.stream_id()],
-        Some(Error::HttpRequestCancelled.code()),
-        Some((
-            wt_session.stream_id(),
-            SessionCloseReason::Clean {
-                error: ERROR_NUM,
-                message: ERROR_MESSAGE.to_string(),
-            },
-        )),
     );
 }

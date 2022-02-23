@@ -85,29 +85,6 @@ this.alarms = class extends ExtensionAPI {
     }
   }
 
-  registerOnAlarm(fire) {
-    let callback = alarm => {
-      fire.sync(alarm.data);
-    };
-
-    this.callbacks.add(callback);
-
-    return {
-      unregister: () => {
-        this.callbacks.delete(callback);
-      },
-      convert(_fire, context) {
-        fire = _fire;
-      },
-    };
-  }
-
-  primeListener(extension, event, fire) {
-    if (event == "onAlarm") {
-      return this.registerOnAlarm(fire);
-    }
-  }
-
   getAPI(context) {
     const self = this;
 
@@ -155,10 +132,16 @@ this.alarms = class extends ExtensionAPI {
 
         onAlarm: new EventManager({
           context,
-          module: "alarms",
-          event: "onAlarm",
+          name: "alarms.onAlarm",
           register: fire => {
-            return self.registerOnAlarm(fire).unregister;
+            let callback = alarm => {
+              fire.sync(alarm.data);
+            };
+
+            self.callbacks.add(callback);
+            return () => {
+              self.callbacks.delete(callback);
+            };
           },
         }).api(),
       },

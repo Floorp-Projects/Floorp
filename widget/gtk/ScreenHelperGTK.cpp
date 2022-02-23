@@ -191,8 +191,9 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
        "DPI %f ]",
        aMonitorNum, rect.x, rect.y, rect.width, rect.height, pixelDepth,
        contentsScale.scale, defaultCssScale.scale, dpi));
-  return MakeAndAddRef<Screen>(rect, availRect, pixelDepth, pixelDepth,
-                               contentsScale, defaultCssScale, dpi);
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth,
+                                     contentsScale, defaultCssScale, dpi);
+  return screen.forget();
 }
 
 void ScreenGetterGtk::RefreshScreens() {
@@ -352,8 +353,9 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
        "DPI %f]",
        aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
        contentsScale.scale, defaultCssScale.scale, dpi));
-  return MakeAndAddRef<Screen>(rect, rect, pixelDepth, pixelDepth,
-                               contentsScale, defaultCssScale, dpi);
+  RefPtr<Screen> screen = new Screen(rect, rect, pixelDepth, pixelDepth,
+                                     contentsScale, defaultCssScale, dpi);
+  return screen.forget();
 }
 
 void ScreenGetterWayland::RefreshScreens() {

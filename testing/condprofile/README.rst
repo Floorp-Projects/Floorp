@@ -112,3 +112,4 @@ In the example below, we install uBlock, set a pref, and pass the
          "heavy": {"max_urls": 10}
       }
    }
+

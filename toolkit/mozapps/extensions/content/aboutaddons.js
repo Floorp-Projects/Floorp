@@ -1811,6 +1811,12 @@ class CategoriesBox extends customElements.get("button-group") {
   }
 
   async initialize() {
+    let addonTypesObjects = AddonManager.addonTypes;
+    let addonTypes = new Set();
+    for (let type in addonTypesObjects) {
+      addonTypes.add(type);
+    }
+
     let hiddenTypes = new Set([]);
 
     for (let button of this.children) {
@@ -1818,7 +1824,7 @@ class CategoriesBox extends customElements.get("button-group") {
       button.hidden =
         !button.isVisible || (defaultHidden && this.shouldHideCategory(name));
 
-      if (defaultHidden && AddonManager.hasAddonType(name)) {
+      if (defaultHidden && addonTypes.has(name)) {
         hiddenTypes.add(name);
       }
     }
@@ -3452,11 +3458,11 @@ class AddonCard extends HTMLElement {
       throw new Error("addon-card must be initialized with setAddon()");
     }
 
+    let headingId = ExtensionCommon.makeWidgetId(`${addon.name}-heading`);
+    this.setAttribute("aria-labelledby", headingId);
     this.setAttribute("addon-id", addon.id);
 
     this.card = importTemplate("card").firstElementChild;
-    let headingId = ExtensionCommon.makeWidgetId(`${addon.id}-heading`);
-    this.card.setAttribute("aria-labelledby", headingId);
 
     // Remove the toggle-disabled button(s) based on type.
     if (addon.type != "theme") {
@@ -3470,7 +3476,6 @@ class AddonCard extends HTMLElement {
     let headingLevel = this.expanded ? "h1" : "h3";
     let nameHeading = document.createElement(headingLevel);
     nameHeading.classList.add("addon-name");
-    nameHeading.id = headingId;
     if (!this.expanded) {
       let name = document.createElement("a");
       name.classList.add("addon-name-link");
@@ -4631,7 +4636,7 @@ customElements.define("discovery-pane", DiscoveryPane);
 
 // Define views
 gViewController.defineView("list", async type => {
-  if (!AddonManager.hasAddonType(type)) {
+  if (!(type in AddonManager.addonTypes)) {
     return null;
   }
 

@@ -17,16 +17,6 @@ typedef void* EGLSyncKHR;
 
 #define DMABUF_BUFFER_PLANES 4
 
-#ifndef VA_FOURCC_NV12
-#  define VA_FOURCC_NV12 0x3231564E
-#endif
-#ifndef VA_FOURCC_YV12
-#  define VA_FOURCC_YV12 0x32315659
-#endif
-#ifndef VA_FOURCC_P010
-#  define VA_FOURCC_P010 0x30313050
-#endif
-
 namespace mozilla {
 namespace gfx {
 class SourceSurface;
@@ -171,7 +161,7 @@ class DMABufSurface {
   virtual ~DMABufSurface();
 
   SurfaceType mSurfaceType;
-  uint64_t mBufferModifiers[DMABUF_BUFFER_PLANES];
+  uint64_t mBufferModifier;
 
   int mBufferPlaneCount;
   int mDmabufFds[DMABUF_BUFFER_PLANES];
@@ -308,8 +298,6 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool UpdateYUVData(void** aPixelData, int* aLineSizes);
   bool UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc);
 
-  bool VerifyTextureCreation();
-
  private:
   ~DMABufSurfaceYUV();
 
@@ -325,9 +313,6 @@ class DMABufSurfaceYUV : public DMABufSurface {
                                   int aPlane);
   void CloseFileDescriptorForPlane(const mozilla::MutexAutoLock& aProofOfLock,
                                    int aPlane, bool aForceClose);
-
-  bool CreateEGLImage(mozilla::gl::GLContext* aGLContext, int aPlane);
-  void ReleaseEGLImages(mozilla::gl::GLContext* aGLContext);
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];

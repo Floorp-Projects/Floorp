@@ -68,7 +68,6 @@ pub enum Token<'a> {
     Operation(char),
     LogicalOperation(char),
     ShiftOperation(char),
-    AssignmentOperation(char),
     Arrow,
     Unknown(char),
     UnterminatedString,
@@ -149,7 +148,6 @@ pub enum Error<'a> {
     },
     InvalidResolve(ResolveError),
     InvalidForInitializer(Span),
-    InvalidGatherComponent(Span, i32),
     ReservedIdentifierPrefix(Span),
     UnknownStorageClass(Span),
     UnknownAttribute(Span),
@@ -165,7 +163,7 @@ pub enum Error<'a> {
     ZeroSizeOrAlign(Span),
     InconsistentBinding(Span),
     UnknownLocalFunction(Span),
-    InitializationTypeMismatch(Span, String),
+    InitializationTypeMismatch(Span, Handle<crate::Type>),
     MissingType(Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
@@ -199,8 +197,6 @@ impl<'a> Error<'a> {
                                 Token::Operation(c) => format!("operation ('{}')", c),
                                 Token::LogicalOperation(c) => format!("logical operation ('{}')", c),
                                 Token::ShiftOperation(c) => format!("bitshift ('{}{}')", c, c),
-                                Token::AssignmentOperation(c) if c=='<' || c=='>' => format!("bitshift ('{}{}=')", c, c),
-                                Token::AssignmentOperation(c) => format!("operation ('{}=')", c),
                                 Token::Arrow => "->".to_string(),
                                 Token::Unknown(c) => format!("unknown ('{}')", c),
                                 Token::UnterminatedString => "unterminated string".to_string(),
@@ -346,11 +342,6 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "not an assignment or function call".into())],
                 notes: vec![],
             },
-            Error::InvalidGatherComponent(ref bad_span, component) => ParseError {
-                message: format!("textureGather component {} doesn't exist, must be 0, 1, 2, or 3", component),
-                labels: vec![(bad_span.clone(), "invalid component".into())],
-                notes: vec![],
-            },
             Error::ReservedIdentifierPrefix(ref bad_span) => ParseError {
                 message: format!("Identifier starts with a reserved prefix: '{}'", &source[bad_span.clone()]),
                 labels: vec![(bad_span.clone(), "invalid identifier".into())],
@@ -417,7 +408,7 @@ impl<'a> Error<'a> {
                 notes: vec![],
             },
             Error::InitializationTypeMismatch(ref name_span, ref expected_ty) => ParseError {
-                message: format!("the type of `{}` is expected to be `{}`", &source[name_span.clone()], expected_ty),
+                message: format!("the type of `{}` is expected to be {:?}", &source[name_span.clone()], expected_ty),
                 labels: vec![(name_span.clone(), format!("definition of `{}`", &source[name_span.clone()]).into())],
                 notes: vec![],
             },
@@ -1176,12 +1167,7 @@ impl ParseError {
 
     /// Emits a summary of the error to standard error stream.
     pub fn emit_to_stderr(&self, source: &str) {
-        self.emit_to_stderr_with_path(source, "wgsl")
-    }
-
-    /// Emits a summary of the error to standard error stream.
-    pub fn emit_to_stderr_with_path(&self, source: &str, path: &str) {
-        let files = SimpleFile::new(path, source);
+        let files = SimpleFile::new("wgsl", source);
         let config = codespan_reporting::term::Config::default();
         let writer = StandardStream::stderr(ColorChoice::Always);
         term::emit(&mut writer.lock(), &config, &files, &self.diagnostic())
@@ -1662,7 +1648,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
                         coordinate,
                         array_index,
                         offset,
@@ -1696,7 +1681,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
                         coordinate,
                         array_index,
                         offset,
@@ -1730,7 +1714,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
                         coordinate,
                         array_index,
                         offset,
@@ -1766,7 +1749,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
                         coordinate,
                         array_index,
                         offset,
@@ -1800,7 +1782,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
                         coordinate,
                         array_index,
                         offset,
@@ -1834,91 +1815,6 @@ impl Parser {
                     crate::Expression::ImageSample {
                         image: sc.image,
                         sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: None,
-                        coordinate,
-                        array_index,
-                        offset,
-                        level: crate::SampleLevel::Zero,
-                        depth_ref: Some(reference),
-                    }
-                }
-                "textureGather" => {
-                    let _ = lexer.next();
-                    lexer.open_arguments()?;
-                    let component = if let (
-                        Token::Number {
-                            value,
-                            ty: NumberType::Sint,
-                            width: None,
-                        },
-                        span,
-                    ) = lexer.peek()
-                    {
-                        let _ = lexer.next();
-                        lexer.expect(Token::Separator(','))?;
-                        let index = get_i32_literal(value, span.clone())?;
-                        *crate::SwizzleComponent::XYZW
-                            .get(index as usize)
-                            .ok_or(Error::InvalidGatherComponent(span, index))?
-                    } else {
-                        crate::SwizzleComponent::X
-                    };
-                    let (image_name, image_span) = lexer.next_ident_with_span()?;
-                    lexer.expect(Token::Separator(','))?;
-                    let (sampler_name, sampler_span) = lexer.next_ident_with_span()?;
-                    lexer.expect(Token::Separator(','))?;
-                    let coordinate = self.parse_general_expression(lexer, ctx.reborrow())?;
-                    let sc = ctx.prepare_sampling(image_name, image_span)?;
-                    let array_index = if sc.arrayed {
-                        lexer.expect(Token::Separator(','))?;
-                        Some(self.parse_general_expression(lexer, ctx.reborrow())?)
-                    } else {
-                        None
-                    };
-                    let offset = if lexer.skip(Token::Separator(',')) {
-                        Some(self.parse_const_expression(lexer, ctx.types, ctx.constants)?)
-                    } else {
-                        None
-                    };
-                    lexer.close_arguments()?;
-                    crate::Expression::ImageSample {
-                        image: sc.image,
-                        sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: Some(component),
-                        coordinate,
-                        array_index,
-                        offset,
-                        level: crate::SampleLevel::Zero,
-                        depth_ref: None,
-                    }
-                }
-                "textureGatherCompare" => {
-                    let _ = lexer.next();
-                    lexer.open_arguments()?;
-                    let (image_name, image_span) = lexer.next_ident_with_span()?;
-                    lexer.expect(Token::Separator(','))?;
-                    let (sampler_name, sampler_span) = lexer.next_ident_with_span()?;
-                    lexer.expect(Token::Separator(','))?;
-                    let coordinate = self.parse_general_expression(lexer, ctx.reborrow())?;
-                    let sc = ctx.prepare_sampling(image_name, image_span)?;
-                    let array_index = if sc.arrayed {
-                        lexer.expect(Token::Separator(','))?;
-                        Some(self.parse_general_expression(lexer, ctx.reborrow())?)
-                    } else {
-                        None
-                    };
-                    lexer.expect(Token::Separator(','))?;
-                    let reference = self.parse_general_expression(lexer, ctx.reborrow())?;
-                    let offset = if lexer.skip(Token::Separator(',')) {
-                        Some(self.parse_const_expression(lexer, ctx.types, ctx.constants)?)
-                    } else {
-                        None
-                    };
-                    lexer.close_arguments()?;
-                    crate::Expression::ImageSample {
-                        image: sc.image,
-                        sampler: ctx.lookup_ident.lookup(sampler_name, sampler_span)?.handle,
-                        gather: Some(crate::SwizzleComponent::X),
                         coordinate,
                         array_index,
                         offset,
@@ -2085,15 +1981,15 @@ impl Parser {
             Ok(last_component)
         })?;
 
-        // We can't use the `TypeInner` returned by this because
-        // `resolve_type` borrows context mutably.
-        // Use it to insert into the right maps,
-        // and then grab it again immutably.
-        ctx.resolve_type(last_component)?;
-
         let expr = if components.is_empty()
             && ty_resolution.inner_with(ctx.types).scalar_kind().is_some()
         {
+            // We can't use the `TypeInner` returned by this because
+            // `resolve_type` borrows context mutably.
+            // Use it to insert into the right maps,
+            // and then grab it again immutably.
+            ctx.resolve_type(last_component)?;
+
             match (
                 ty_resolution.inner_with(ctx.types),
                 ctx.typifier.get(last_component, ctx.types),
@@ -2139,60 +2035,14 @@ impl Parser {
                 }
             }
         } else {
-            components.push(last_component);
-            let mut compose_components = Vec::new();
-
-            if let (
-                &crate::TypeInner::Matrix {
-                    rows,
-                    width,
-                    columns,
-                },
-                &crate::TypeInner::Scalar {
-                    kind: crate::ScalarKind::Float,
-                    ..
-                },
-            ) = (
-                ty_resolution.inner_with(ctx.types),
-                ctx.typifier.get(last_component, ctx.types),
-            ) {
-                let vec_ty = ctx.types.insert(
-                    crate::Type {
-                        name: None,
-                        inner: crate::TypeInner::Vector {
-                            width,
-                            kind: crate::ScalarKind::Float,
-                            size: rows,
-                        },
-                    },
-                    Default::default(),
-                );
-
-                compose_components.reserve(columns as usize);
-                for vec_components in components.chunks(rows as usize) {
-                    let handle = ctx.expressions.append(
-                        crate::Expression::Compose {
-                            ty: vec_ty,
-                            components: Vec::from(vec_components),
-                        },
-                        crate::Span::default(),
-                    );
-                    compose_components.push(handle);
-                }
-            } else {
-                compose_components = components;
-            }
-
             let ty = match ty_resolution {
                 TypeResolution::Handle(handle) => handle,
                 TypeResolution::Value(inner) => ctx
                     .types
                     .insert(crate::Type { name: None, inner }, Default::default()),
             };
-            crate::Expression::Compose {
-                ty,
-                components: compose_components,
-            }
+            components.push(last_component);
+            crate::Expression::Compose { ty, components }
         };
 
         let span = NagaSpan::from(self.pop_scope(lexer));
@@ -3311,8 +3161,6 @@ impl Parser {
         lexer: &mut Lexer<'a>,
         mut context: ExpressionContext<'a, '_, 'out>,
     ) -> Result<(), Error<'a>> {
-        use crate::BinaryOperator as Bo;
-
         let span_start = lexer.current_byte_offset();
         context.emitter.start(context.expressions);
         let reference = self.parse_unary_expression(lexer, context.reborrow())?;
@@ -3324,40 +3172,8 @@ impl Parser {
                 span,
             ));
         }
-
-        let value = match lexer.next() {
-            (Token::Operation('='), _) => {
-                self.parse_general_expression(lexer, context.reborrow())?
-            }
-            (Token::AssignmentOperation(c), span) => {
-                let op = match c {
-                    '<' => Bo::ShiftLeft,
-                    '>' => Bo::ShiftRight,
-                    '+' => Bo::Add,
-                    '-' => Bo::Subtract,
-                    '*' => Bo::Multiply,
-                    '/' => Bo::Divide,
-                    '%' => Bo::Modulo,
-                    '&' => Bo::And,
-                    '|' => Bo::InclusiveOr,
-                    '^' => Bo::ExclusiveOr,
-                    //Note: `consume_token` shouldn't produce any other assignment ops
-                    _ => unreachable!(),
-                };
-                let left = context.expressions.append(
-                    crate::Expression::Load {
-                        pointer: reference.handle,
-                    },
-                    NagaSpan::from(span_start..lexer.current_byte_offset()),
-                );
-                let right = self.parse_general_expression(lexer, context.reborrow())?;
-                context
-                    .expressions
-                    .append(crate::Expression::Binary { op, left, right }, span.into())
-            }
-            other => return Err(Error::Unexpected(other, ExpectedToken::SwitchItem)),
-        };
-
+        lexer.expect(Token::Operation('='))?;
+        let value = self.parse_general_expression(lexer, context.reborrow())?;
         let span_end = lexer.current_byte_offset();
         context
             .block
@@ -3490,10 +3306,7 @@ impl Parser {
                                     given_inner,
                                     expr_inner
                                 );
-                                return Err(Error::InitializationTypeMismatch(
-                                    name_span,
-                                    expr_inner.to_wgsl(context.types, context.constants),
-                                ));
+                                return Err(Error::InitializationTypeMismatch(name_span, ty));
                             }
                         }
                         block.extend(emitter.finish(context.expressions));
@@ -3558,8 +3371,7 @@ impl Parser {
                                             expr_inner
                                         );
                                         return Err(Error::InitializationTypeMismatch(
-                                            name_span,
-                                            expr_inner.to_wgsl(context.types, context.constants),
+                                            name_span, ty,
                                         ));
                                     }
                                     ty
@@ -3658,20 +3470,9 @@ impl Parser {
                         lexer.expect(Token::Paren(')'))?;
 
                         let accept = self.parse_block(lexer, context.reborrow(), false)?;
-
                         let mut elsif_stack = Vec::new();
                         let mut elseif_span_start = lexer.current_byte_offset();
-                        let mut reject = loop {
-                            if !lexer.skip(Token::Word("else")) {
-                                break crate::Block::new();
-                            }
-
-                            if !lexer.skip(Token::Word("if")) {
-                                // ... else { ... }
-                                break self.parse_block(lexer, context.reborrow(), false)?;
-                            }
-
-                            // ... else if (...) { ... }
+                        while lexer.skip(Token::Word("elseif")) {
                             let mut sub_emitter = super::Emitter::default();
 
                             lexer.expect(Token::Paren('('))?;
@@ -3690,8 +3491,12 @@ impl Parser {
                                 other_block,
                             ));
                             elseif_span_start = lexer.current_byte_offset();
+                        }
+                        let mut reject = if lexer.skip(Token::Word("else")) {
+                            self.parse_block(lexer, context.reborrow(), false)?
+                        } else {
+                            crate::Block::new()
                         };
-
                         let span_end = lexer.current_byte_offset();
                         // reverse-fold the else-if blocks
                         //Note: we may consider uplifting this to the IR
@@ -4334,22 +4139,7 @@ impl Parser {
                         crate::ConstantInner::Composite { ty, components: _ } => ty == explicit_ty,
                     };
                     if !type_match {
-                        let exptected_inner_str = match con.inner {
-                            crate::ConstantInner::Scalar { width, value } => {
-                                crate::TypeInner::Scalar {
-                                    kind: value.scalar_kind(),
-                                    width,
-                                }
-                                .to_wgsl(&module.types, &module.constants)
-                            }
-                            crate::ConstantInner::Composite { .. } => module.types[explicit_ty]
-                                .inner
-                                .to_wgsl(&module.types, &module.constants),
-                        };
-                        return Err(Error::InitializationTypeMismatch(
-                            name_span,
-                            exptected_inner_str,
-                        ));
+                        return Err(Error::InitializationTypeMismatch(name_span, explicit_ty));
                     }
                 }
 

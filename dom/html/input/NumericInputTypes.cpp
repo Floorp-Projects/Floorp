@@ -95,7 +95,12 @@ nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
 
 bool NumericInputTypeBase::ConvertStringToNumber(nsAString& aValue,
                                                  Decimal& aResultValue) const {
-  aResultValue = HTMLInputElement::StringToDecimal(aValue);
+  ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
+  aResultValue =
+      Decimal::fromDouble(ICUUtils::ParseNumber(aValue, langTagIter));
+  if (!aResultValue.isFinite()) {
+    aResultValue = HTMLInputElement::StringToDecimal(aValue);
+  }
   return aResultValue.isFinite();
 }
 
@@ -131,17 +136,6 @@ bool NumberInputType::HasBadInput() const {
   nsAutoString value;
   GetNonFileValueInternal(value);
   return !value.IsEmpty() && mInputElement->GetValueAsDecimal().isNaN();
-}
-
-bool NumberInputType::ConvertStringToNumber(nsAString& aValue,
-                                            Decimal& aResultValue) const {
-  ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
-  aResultValue =
-      Decimal::fromDouble(ICUUtils::ParseNumber(aValue, langTagIter));
-  if (aResultValue.isFinite()) {
-    return true;
-  }
-  return NumericInputTypeBase::ConvertStringToNumber(aValue, aResultValue);
 }
 
 bool NumberInputType::ConvertNumberToString(Decimal aValue,

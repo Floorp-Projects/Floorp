@@ -14,7 +14,6 @@ namespace media {
 /*
  * The PMediaSystemResourceManager is a sub-protocol in PImageBridge
  */
-[ManualDealloc]
 sync protocol PMediaSystemResourceManager
 {
   manager PImageBridge;

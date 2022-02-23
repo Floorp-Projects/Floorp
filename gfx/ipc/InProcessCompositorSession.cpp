@@ -50,10 +50,6 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
       CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(
           aLayerManager, aNamespace);
   MOZ_ASSERT(child);
-  if (!child) {
-    gfxCriticalNote << "Failed to create CompositorBridgeChild";
-    return nullptr;
-  }
 
   return new InProcessCompositorSession(aWidget, widget, child, parent);
 }
@@ -90,10 +86,8 @@ void InProcessCompositorSession::Shutdown() {
     mUiCompositorControllerChild = nullptr;
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
-  if (mCompositorBridgeChild) {
-    mCompositorBridgeChild->Destroy();
-    mCompositorBridgeChild = nullptr;
-  }
+  mCompositorBridgeChild->Destroy();
+  mCompositorBridgeChild = nullptr;
   mCompositorBridgeParent = nullptr;
   mCompositorWidget = nullptr;
   gfx::GPUProcessManager::Get()->UnregisterInProcessSession(this);

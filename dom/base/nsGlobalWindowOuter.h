@@ -45,6 +45,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
@@ -116,6 +117,9 @@ class VRDisplay;
 enum class VRDisplayEventReason : uint8_t;
 class VREventObserver;
 class WakeLock;
+#if defined(MOZ_WIDGET_ANDROID)
+class WindowOrientationObserver;
+#endif
 class Worklet;
 namespace cache {
 class CacheStorage;
@@ -359,7 +363,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void MacFullscreenMenubarOverlapChanged(
       mozilla::DesktopCoord aOverlapAmount) final;
   bool SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
-                           nsIWidget* aWidget);
+                           nsIWidget* aWidget, nsIScreen* aScreen);
   bool Fullscreen() const;
 
   // nsIInterfaceRequestor
@@ -568,6 +572,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                 mozilla::dom::BrowsingContext** _retval) override;
   mozilla::dom::Navigator* GetNavigator() override;
 
+#if defined(MOZ_WIDGET_ANDROID)
+  int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
+#endif
+
  protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
                       nsIPrincipal& aSubjectPrincipal,
@@ -615,6 +623,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsresult GetControllers(nsIControllers** aControllers) override;
   float GetMozInnerScreenXOuter(mozilla::dom::CallerType aCallerType);
   float GetMozInnerScreenYOuter(mozilla::dom::CallerType aCallerType);
+  double GetDevicePixelRatioOuter(mozilla::dom::CallerType aCallerType);
   bool GetFullscreenOuter();
   bool GetFullScreen() override;
   void SetFullscreenOuter(bool aFullscreen, mozilla::ErrorResult& aError);

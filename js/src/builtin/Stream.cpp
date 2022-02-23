@@ -436,7 +436,12 @@ JS_STREAMS_CLASS_SPEC(ReadableByteStreamController, 0, SlotCount,
       size_t bytesWritten;
       {
         AutoRealm ar(cx, unwrappedStream);
-        source->writeIntoReadRequestBuffer(cx, unwrappedStream, view,
+        JS::AutoSuppressGCAnalysis suppressGC(cx);
+        JS::AutoCheckCannotGC noGC;
+        bool dummy;
+        void* buffer = JS_GetArrayBufferViewData(view, &dummy, noGC);
+
+        source->writeIntoReadRequestBuffer(cx, unwrappedStream, buffer,
                                            queueTotalSize, &bytesWritten);
       }
 

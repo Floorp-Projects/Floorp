@@ -29,13 +29,6 @@ let AVAILABLE_PIP_OVERRIDES;
     //   keyboardControls: KEYBOARD_CONTROLS.NONE,
     // },
 
-    tests: {
-      // FOR TESTS ONLY!
-      "https://mochitest.youtube.com/*browser/browser/extensions/pictureinpicture/tests/browser/test-mock-wrapper.html": {
-        videoWrapperScriptPath: "video-wrappers/mock-wrapper.js",
-      },
-    },
-
     instagram: {
       "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
@@ -61,10 +54,7 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     youtube: {
-      "https://*.youtube.com/*": {
-        visibilityThreshold: 0.9,
-        videoWrapperScriptPath: "video-wrappers/youtube.js",
-      },
+      "https://*.youtube.com/*": { visibilityThreshold: 0.9 },
     },
   };
 }

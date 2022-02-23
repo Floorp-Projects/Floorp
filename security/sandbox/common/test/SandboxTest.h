@@ -36,9 +36,6 @@ class SandboxTest : public mozISandboxTest {
       static_cast<size_t>(GeckoProcessType_End);
   SandboxTestingParent* mSandboxTestingParents[NumProcessTypes];
   RefPtr<gmp::GMPContentParent::CloseBlocker> mGMPContentParentWrapper;
-#if defined(XP_WIN)
-  bool mChromeDirExisted = false;
-#endif
 };
 
 }  // namespace mozilla

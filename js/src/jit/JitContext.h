@@ -146,9 +146,12 @@ class JitContext {
 #endif
 };
 
-// Process-wide initialization and shutdown of JIT data structures.
+// Process-wide initialization of JIT data structures.
 [[nodiscard]] bool InitializeJit();
-void ShutdownJit();
+
+// Call this after changing hardware parameters via command line flags (on
+// platforms that support that).
+void ComputeJitSupportFlags();
 
 // Get and set the current JIT context.
 JitContext* GetJitContext();

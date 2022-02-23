@@ -1480,7 +1480,7 @@ struct ClearJSHolder : public TraceCallbacks {
   }
 
   virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const override {
-    *aPtr = JS::PropertyKey::Void();
+    *aPtr = JSID_VOID;
   }
 
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*,
@@ -1584,11 +1584,10 @@ bool CycleCollectedJSRuntime::AreGCGrayBitsValid() const {
   return js::AreGCGrayBitsValid(mJSRuntime);
 }
 
-void CycleCollectedJSRuntime::GarbageCollect(JS::GCOptions aOptions,
-                                             JS::GCReason aReason) const {
+void CycleCollectedJSRuntime::GarbageCollect(JS::GCReason aReason) const {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, aOptions, aReason);
+  JS::NonIncrementalGC(cx, JS::GCOptions::Normal, aReason);
 }
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {

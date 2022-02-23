@@ -225,11 +225,11 @@ addMessageListener("isLoggedIn", () => {
   return Services.logins.isLoggedIn;
 });
 
-addMessageListener("setPrimaryPassword", ({ enable }) => {
+addMessageListener("setMasterPassword", ({ enable }) => {
   if (enable) {
-    LoginTestUtils.primaryPassword.enable();
+    LoginTestUtils.masterPassword.enable();
   } else {
-    LoginTestUtils.primaryPassword.disable();
+    LoginTestUtils.masterPassword.disable();
   }
 });
 

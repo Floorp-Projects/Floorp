@@ -12,8 +12,6 @@ const TEST_URI =
 
 const expectedMessages = ["main file", "blah", "iframe 2", "iframe 3"];
 
-// This log comes from test-iframe1.html, which is included from test-console-iframes.html
-// __and__ from test-iframe3.html as well, so we should see it twice.
 const expectedDupedMessage = "iframe 1";
 
 add_task(async function() {
@@ -29,13 +27,8 @@ add_task(async function() {
   await closeConsole();
   info("web console closed");
 
-  // Show the content messages
-  await pushPref("devtools.browserconsole.contentMessages", true);
-  // Enable Fission browser console to see the logged content object
-  await pushPref("devtools.browsertoolbox.fission", true);
   hud = await BrowserConsoleManager.toggleBrowserConsole();
-  ok(hud, "browser console opened");
-  await testMessages(hud);
+  await testBrowserConsole(hud);
 
   // clear the browser console.
   await clearOutput(hud);
@@ -49,8 +42,21 @@ async function testMessages(hud) {
     await waitFor(() => findMessage(hud, message));
   }
 
-  ok(true, "Found expected unique messages");
+  info("first messages matched");
 
-  await waitFor(() => findMessages(hud, expectedDupedMessage).length == 2);
-  ok(true, `${expectedDupedMessage} is present twice`);
+  const messages = await findMessages(hud, expectedDupedMessage);
+  is(messages.length, 2, `${expectedDupedMessage} is present twice`);
+}
+
+async function testBrowserConsole(hud) {
+  ok(hud, "browser console opened");
+
+  // TODO: The browser console doesn't show page's console.log statements
+  // in e10s windows. See Bug 1241289.
+  if (Services.appinfo.browserTabsRemoteAutostart) {
+    todo(false, "Bug 1241289");
+    return;
+  }
+
+  await testMessages(hud);
 }

@@ -325,8 +325,7 @@ impl<'source> ParsingContext<'source> {
 
                 let mut loop_body = Block::new();
 
-                let mut terminator = None;
-                self.parse_statement(parser, ctx, &mut loop_body, &mut terminator)?;
+                self.parse_statement(parser, ctx, &mut loop_body, &mut None)?;
 
                 let mut stmt = ctx.stmt_ctx();
 
@@ -359,10 +358,6 @@ impl<'source> ParsingContext<'source> {
                     },
                     crate::Span::default(),
                 );
-
-                if let Some(idx) = terminator {
-                    loop_body.cull(idx..)
-                }
 
                 body.push(
                     Statement::Loop {
@@ -486,8 +481,7 @@ impl<'source> ParsingContext<'source> {
                 let mut block = Block::new();
                 ctx.push_scope();
 
-                let meta =
-                    self.parse_compound_statement(meta, parser, ctx, &mut block, terminator)?;
+                let meta = self.parse_compound_statement(meta, parser, ctx, &mut block)?;
 
                 ctx.remove_current_scope();
 
@@ -517,8 +511,8 @@ impl<'source> ParsingContext<'source> {
         parser: &mut Parser,
         ctx: &mut Context,
         body: &mut Block,
-        terminator: &mut Option<usize>,
     ) -> Result<Span> {
+        let mut terminator = None;
         loop {
             if let Some(Token {
                 meta: brace_meta, ..
@@ -528,14 +522,14 @@ impl<'source> ParsingContext<'source> {
                 break;
             }
 
-            let stmt = self.parse_statement(parser, ctx, body, terminator)?;
+            let stmt = self.parse_statement(parser, ctx, body, &mut terminator)?;
 
             if let Some(stmt_meta) = stmt {
                 meta.subsume(stmt_meta);
             }
         }
 
-        if let Some(idx) = *terminator {
+        if let Some(idx) = terminator {
             body.cull(idx..)
         }
 

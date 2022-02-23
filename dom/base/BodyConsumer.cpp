@@ -400,8 +400,7 @@ class FileCreationHandler final : public PromiseNativeHandler {
     aPromise->AppendNativeHandler(handler);
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     AssertIsOnMainThread();
 
     if (NS_WARN_IF(!aValue.isObject())) {
@@ -418,8 +417,7 @@ class FileCreationHandler final : public PromiseNativeHandler {
     mConsumer->OnBlobResult(blob->Impl(), mWorkerRef);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     AssertIsOnMainThread();
 
     mConsumer->OnBlobResult(nullptr, mWorkerRef);

@@ -9,6 +9,8 @@ const IGNORE = [
   "escapeAddonURI",
   "shouldAutoUpdate",
   "getStartupChanges",
+  "addTypeListener",
+  "removeTypeListener",
   "addAddonListener",
   "removeAddonListener",
   "addInstallListener",
@@ -24,12 +26,14 @@ const IGNORE = [
   "addUpgradeListener",
   "removeUpgradeListener",
   "getInstallSourceFromHost",
+  "getInstallSourceFromPrincipal",
   "stageLangpacksForAppUpdate",
 ];
 
 const IGNORE_PRIVATE = [
   "AddonAuthor",
   "AddonScreenshot",
+  "AddonType",
   "startup",
   "shutdown",
   "addonIsActive",

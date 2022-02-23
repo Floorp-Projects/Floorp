@@ -514,7 +514,9 @@ impl Fence {
         match *self {
             Self::TimelineSemaphore(raw) => unsafe {
                 Ok(match *extension.unwrap() {
-                    ExtensionFn::Extension(ref ext) => ext.get_semaphore_counter_value(raw)?,
+                    ExtensionFn::Extension(ref ext) => {
+                        ext.get_semaphore_counter_value(device.handle(), raw)?
+                    }
                     ExtensionFn::Promoted => device.get_semaphore_counter_value(raw)?,
                 })
             },

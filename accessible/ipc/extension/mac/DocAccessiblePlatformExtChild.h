@@ -41,7 +41,7 @@ class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
                                              const int32_t& aStartOffset,
                                              const uint64_t& aEndContainer,
                                              const int32_t& aEndOffset,
-                                             LayoutDeviceIntRect* aBounds);
+                                             nsIntRect* aBounds);
 
   mozilla::ipc::IPCResult RecvLengthForRange(const uint64_t& aID,
                                              const int32_t& aStartOffset,

@@ -10,7 +10,6 @@ include FetchTypes;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc]
 protocol PFetchEventOp {
   manager PRemoteWorkerController;
 

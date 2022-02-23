@@ -8,7 +8,6 @@
 
 #include "nsROCSSPrimitiveValue.h"
 
-#include "mozilla/ErrorResult.h"
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
 #include "nsIURI.h"

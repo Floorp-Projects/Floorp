@@ -357,7 +357,7 @@ for (let testData of testCases) {
       });
       if (!testData.isLoggedIn) {
         // Enable Primary Password
-        LoginTestUtils.primaryPassword.enable();
+        LoginTestUtils.masterPassword.enable();
       }
       for (let passwordFieldType of ["password", "text"]) {
         info(
@@ -369,7 +369,7 @@ for (let testData of testCases) {
         await testPasswordChange(testData, { passwordFieldType });
       }
       if (!testData.isLoggedIn) {
-        LoginTestUtils.primaryPassword.disable();
+        LoginTestUtils.masterPassword.disable();
       }
       await SpecialPowers.popPrefEnv();
     },

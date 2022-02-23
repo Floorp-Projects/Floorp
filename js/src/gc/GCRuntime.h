@@ -31,7 +31,6 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class FinalizationRegistryObject;
-class FinalizationRecordObject;
 class FinalizationQueueObject;
 class VerifyPreTracer;
 class WeakRefObject;
@@ -316,7 +315,6 @@ class GCRuntime {
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   void setPerformanceHint(PerformanceHint hint);
-  bool isInPageLoad() const { return inPageLoadCount != 0; }
 
   [[nodiscard]] bool triggerGC(JS::GCReason reason);
   // Check whether to trigger a zone GC after allocating GC cells.
@@ -335,13 +333,12 @@ class GCRuntime {
   // The return value indicates whether a major GC was performed.
   bool gcIfRequested();
   void gc(JS::GCOptions options, JS::GCReason reason);
-  void startGC(JS::GCOptions options, JS::GCReason reason,
-               const SliceBudget& budget);
-  void gcSlice(JS::GCReason reason, const SliceBudget& budget);
+  void startGC(JS::GCOptions options, JS::GCReason reason, int64_t millis = 0);
+  void gcSlice(JS::GCReason reason, int64_t millis = 0);
   void finishGC(JS::GCReason reason);
   void abortGC();
-  void startDebugGC(JS::GCOptions options, const SliceBudget& budget);
-  void debugGCSlice(const SliceBudget& budget);
+  void startDebugGC(JS::GCOptions options, SliceBudget& budget);
+  void debugGCSlice(SliceBudget& budget);
 
   void runDebugGC();
   void notifyRootsRemoved();
@@ -447,9 +444,7 @@ class GCRuntime {
 
   bool isCompactingGCEnabled() const;
 
-  bool isShrinkingGC() const { return gcOptions() == JS::GCOptions::Shrink; }
-
-  bool isShutdownGC() const { return gcOptions() == JS::GCOptions::Shutdown; }
+  bool isShrinkingGC() const { return gcOptions == JS::GCOptions::Shrink; }
 
   bool initSweepActions();
 
@@ -485,12 +480,9 @@ class GCRuntime {
       JS::DoCycleCollectionCallback callback);
 
   bool addFinalizationRegistry(JSContext* cx,
-                               Handle<FinalizationRegistryObject*> registry);
+                               FinalizationRegistryObject* registry);
   bool registerWithFinalizationRegistry(JSContext* cx, HandleObject target,
                                         HandleObject record);
-  void queueFinalizationRegistryForCleanup(FinalizationQueueObject* queue);
-  void nukeFinalizationRecordWrapper(JSObject* wrapper,
-                                     FinalizationRecordObject* record);
 
   void setFullCompartmentChecks(bool enable);
 
@@ -628,8 +620,6 @@ class GCRuntime {
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
-  JS::GCOptions gcOptions() const { return maybeGcOptions.ref().ref(); }
-
   TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
                                    const HeapThreshold& heapThreshold);
 
@@ -686,9 +676,10 @@ class GCRuntime {
 
   gcstats::ZoneGCStats scanZonesBeforeGC();
 
-  void setGCOptions(JS::GCOptions options);
+  using MaybeGCOptions = mozilla::Maybe<JS::GCOptions>;
 
   void collect(bool nonincrementalByAPI, const SliceBudget& budget,
+               const MaybeGCOptions& options,
                JS::GCReason reason) JS_HAZ_GC_CALL;
 
   /*
@@ -702,14 +693,16 @@ class GCRuntime {
    */
   [[nodiscard]] IncrementalResult gcCycle(bool nonincrementalByAPI,
                                           const SliceBudget& budgetArg,
+                                          const MaybeGCOptions& options,
                                           JS::GCReason reason);
   bool shouldRepeatForDeadZone(JS::GCReason reason);
 
-  void incrementalSlice(SliceBudget& budget, JS::GCReason reason,
-                        bool budgetWasIncreased);
+  void incrementalSlice(SliceBudget& budget, const MaybeGCOptions& options,
+                        JS::GCReason reason, bool budgetWasIncreased);
 
   bool mightSweepInThisSlice(bool nonIncremental);
-  void collectNurseryFromMajorGC(JS::GCReason reason);
+  void collectNurseryFromMajorGC(const MaybeGCOptions& options,
+                                 JS::GCReason reason);
   void collectNursery(JS::GCOptions options, JS::GCReason reason,
                       gcstats::PhaseKind phase);
 
@@ -739,6 +732,7 @@ class GCRuntime {
   void traceEmbeddingGrayRoots(JSTracer* trc);
   IncrementalProgress traceEmbeddingGrayRoots(JSTracer* trc,
                                               SliceBudget& budget);
+  void markFinalizationRegistryRoots(JSTracer* trc);
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
   void findDeadCompartments();
@@ -789,6 +783,7 @@ class GCRuntime {
   void sweepJitDataOnMainThread(JSFreeOp* fop);
   void sweepFinalizationRegistriesOnMainThread();
   void traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone);
+  void queueFinalizationRegistryForCleanup(FinalizationQueueObject* queue);
   void sweepWeakRefs();
   IncrementalProgress endSweepingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
@@ -1016,8 +1011,8 @@ class GCRuntime {
   /* Whether the heap will be compacted at the end of GC. */
   MainThreadData<bool> isCompacting;
 
-  /* The invocation kind of the current GC, set at the start of collection. */
-  MainThreadOrGCTaskData<mozilla::Maybe<JS::GCOptions>> maybeGcOptions;
+  /* The invocation kind of the current GC, taken from the first slice. */
+  MainThreadOrGCTaskData<JS::GCOptions> gcOptions;
 
   /* The initial GC reason, taken from the first slice. */
   MainThreadData<JS::GCReason> initialReason;

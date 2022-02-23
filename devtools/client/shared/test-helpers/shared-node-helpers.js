@@ -23,15 +23,10 @@ function setMocksInGlobal() {
       }
 
       for (const name of names) {
-        Object.defineProperty(global, name, {
-          get() {
-            const value = destructure
-              ? require(module)[name]
-              : require(module || name);
-            return value;
-          },
-          configurable: true,
-        });
+        const value = destructure
+          ? require(module)[name]
+          : require(module || name);
+        global[name] = value;
       }
     },
     lazyImporter: () => {},

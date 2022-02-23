@@ -693,16 +693,11 @@ InplaceEditor.prototype = {
     // A DOM element is used to test the validity of various units. This is to
     // avoid having to do an async call to the server to get this information.
     const el = this.doc.createElement("div");
-
-    // Cycle through unitless (""), pixels, degrees and seconds.
-    const units = ["", "px", "deg", "s"];
+    const units = ["px", "deg", "s"];
     for (const unit of units) {
       const value = beforeValue + "1" + unit + afterValue;
       el.style.setProperty(this.property.name, "");
       el.style.setProperty(this.property.name, value);
-      // The property was set to `""` first, so if the value is no longer `""`,
-      // it means that the second `setProperty` call set a valid property and we
-      // can use this unit.
       if (el.style.getPropertyValue(this.property.name) !== "") {
         return unit;
       }

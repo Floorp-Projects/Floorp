@@ -699,6 +699,7 @@ extern "C" {
         all(target_os = "freebsd", any(freebsd11, freebsd10)),
         link_name = "fstat@FBSD_1.0"
     )]
+    #[cfg_attr(target_os = "dragonfly", allow(deprecated))]
     pub fn fstat(fildes: ::c_int, buf: *mut stat) -> ::c_int;
 
     pub fn mkdir(path: *const c_char, mode: mode_t) -> ::c_int;
@@ -712,6 +713,7 @@ extern "C" {
         all(target_os = "freebsd", any(freebsd11, freebsd10)),
         link_name = "stat@FBSD_1.0"
     )]
+    #[cfg_attr(target_os = "dragonfly", allow(deprecated))]
     pub fn stat(path: *const c_char, buf: *mut stat) -> ::c_int;
 
     pub fn pclose(stream: *mut ::FILE) -> ::c_int;
@@ -796,6 +798,7 @@ extern "C" {
         all(target_os = "freebsd", any(freebsd11, freebsd10)),
         link_name = "fstatat@FBSD_1.1"
     )]
+    #[cfg_attr(target_os = "dragonfly", allow(deprecated))]
     pub fn fstatat(
         dirfd: ::c_int,
         pathname: *const ::c_char,
@@ -987,6 +990,7 @@ extern "C" {
         all(target_os = "freebsd", any(freebsd11, freebsd10)),
         link_name = "lstat@FBSD_1.0"
     )]
+    #[cfg_attr(target_os = "dragonfly", allow(deprecated))]
     pub fn lstat(path: *const c_char, buf: *mut stat) -> ::c_int;
 
     #[cfg_attr(

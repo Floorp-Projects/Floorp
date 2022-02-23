@@ -807,13 +807,6 @@
         this.handleSearchCommand(event, engine);
       };
 
-      this.textbox.onbeforeinput = event => {
-        if (event.data && this._needBrowserFocusAtEnterKeyUp) {
-          // Ignore char key input while processing enter key.
-          event.preventDefault();
-        }
-      };
-
       this.textbox.onkeyup = event => {
         if (
           event.keyCode === KeyEvent.DOM_VK_RETURN &&

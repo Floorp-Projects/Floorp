@@ -270,8 +270,6 @@ pub enum ColorStateError {
     FormatNotBlendable(wgt::TextureFormat),
     #[error("format {0:?} does not have a color aspect")]
     FormatNotColor(wgt::TextureFormat),
-    #[error("format {0:?} can't be multisampled")]
-    FormatNotMultisampled(wgt::TextureFormat),
     #[error("output format {pipeline} is incompatible with the shader {shader}")]
     IncompatibleFormat {
         pipeline: validation::NumericType,
@@ -289,8 +287,6 @@ pub enum DepthStencilStateError {
     FormatNotDepth(wgt::TextureFormat),
     #[error("format {0:?} does not have a stencil aspect, but stencil test/write is enabled")]
     FormatNotStencil(wgt::TextureFormat),
-    #[error("format {0:?} can't be multisampled")]
-    FormatNotMultisampled(wgt::TextureFormat),
 }
 
 #[derive(Clone, Debug, Error)]

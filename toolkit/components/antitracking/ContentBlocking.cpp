@@ -540,9 +540,9 @@ ContentBlocking::CompleteAllowAccessFor(
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
-      return SaveAccessForOriginOnParentProcess(aTopLevelWindowId,
-                                                aParentContext,
-                                                trackingPrincipal, aAllowMode)
+      return SaveAccessForOriginOnParentProcess(
+                 aTopLevelWindowId, aParentContext, trackingPrincipal,
+                 trackingOrigin, aAllowMode)
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [aReason, trackingPrincipal](
@@ -679,23 +679,9 @@ ContentBlocking::CompleteAllowAccessFor(
 RefPtr<mozilla::ContentBlocking::ParentAccessGrantPromise>
 ContentBlocking::SaveAccessForOriginOnParentProcess(
     uint64_t aTopLevelWindowId, BrowsingContext* aParentContext,
-    nsIPrincipal* aTrackingPrincipal, int aAllowMode,
-    uint64_t aExpirationTime) {
+    nsIPrincipal* aTrackingPrincipal, const nsCString& aTrackingOrigin,
+    int aAllowMode, uint64_t aExpirationTime) {
   MOZ_ASSERT(aTopLevelWindowId != 0);
-  MOZ_ASSERT(aTrackingPrincipal);
-
-  if (!aTrackingPrincipal || aTrackingPrincipal->IsSystemPrincipal() ||
-      aTrackingPrincipal->GetIsNullPrincipal() ||
-      aTrackingPrincipal->GetIsExpandedPrincipal()) {
-    LOG(("aTrackingPrincipal is of invalid principal type"));
-    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
-  nsAutoCString trackingOrigin;
-  nsresult rv = aTrackingPrincipal->GetOriginNoSuffix(trackingOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
-  }
 
   RefPtr<WindowGlobalParent> wgp =
       WindowGlobalParent::GetByInnerWindowId(aTopLevelWindowId);
@@ -708,10 +694,10 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   // the permission to all the other windows with the same tracking origin (in
   // the same tab), if any.
   ContentBlocking::UpdateAllowAccessOnParentProcess(aParentContext,
-                                                    trackingOrigin);
+                                                    aTrackingOrigin);
 
   return ContentBlocking::SaveAccessForOriginOnParentProcess(
-      wgp->DocumentPrincipal(), aTrackingPrincipal, aAllowMode,
+      wgp->DocumentPrincipal(), aTrackingPrincipal, aTrackingOrigin, aAllowMode,
       aExpirationTime);
 }
 
@@ -719,7 +705,8 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
 RefPtr<mozilla::ContentBlocking::ParentAccessGrantPromise>
 ContentBlocking::SaveAccessForOriginOnParentProcess(
     nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
-    int aAllowMode, uint64_t aExpirationTime) {
+    const nsCString& aTrackingOrigin, int aAllowMode,
+    uint64_t aExpirationTime) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant);
 
@@ -728,22 +715,9 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
     return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   };
 
-  if (aTrackingPrincipal->IsSystemPrincipal() ||
-      aTrackingPrincipal->GetIsNullPrincipal() ||
-      aTrackingPrincipal->GetIsExpandedPrincipal()) {
-    LOG(("aTrackingPrincipal is of invalid principal type"));
-    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
-  nsAutoCString trackingOrigin;
-  nsresult rv = aTrackingPrincipal->GetOriginNoSuffix(trackingOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
   LOG_PRIN(("Saving a first-party storage permission on %s for "
             "trackingOrigin=%s",
-            _spec, trackingOrigin.get()),
+            _spec, aTrackingOrigin.get()),
            aParentPrincipal);
 
   if (NS_WARN_IF(!aParentPrincipal)) {
@@ -764,7 +738,7 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
 
   uint32_t privateBrowsingId = 0;
-  rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+  nsresult rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
   if ((!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) ||
       (aAllowMode == eAllowAutoGrant)) {
     // If we are coming from a private window or are automatically granting a
@@ -775,7 +749,7 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   }
 
   nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, type);
 
   LOG(
       ("Computed permission key: %s, expiry: %u, proceeding to save in the "

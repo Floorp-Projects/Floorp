@@ -6,6 +6,7 @@ import { isConsole } from "../utils/preview";
 import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
 import { getExpressionFromCoords } from "../utils/editor/get-expression";
+import { isOriginal } from "../utils/source";
 import { isNodeTest } from "../utils/environment";
 
 import {
@@ -88,7 +89,7 @@ export function setPreview(
     const thread = getCurrentThread(getState());
     const selectedFrame = getSelectedFrame(getState(), thread);
 
-    if (location && source.isOriginal) {
+    if (location && isOriginal(source)) {
       const mapResult = await dispatch(getMappedExpression(expression));
       if (mapResult) {
         expression = mapResult.expression;

@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import importlib
+import os
 
 from docutils.parsers.rst import Directive
 from sphinx.util.docstrings import prepare_docstring
@@ -196,6 +197,8 @@ class MozbuildSymbols(Directive):
 
 
 def setup(app):
+    from mach.site import CommandSiteManager
+    from mozboot.util import get_state_dir
     from moztreedocs import manager
 
     app.add_directive("mozbuildsymbols", MozbuildSymbols)
@@ -208,3 +211,14 @@ def setup(app):
     # documentation.
     manager.generate_docs(app)
     app.srcdir = manager.staging_dir
+
+    # We need to adjust sys.path in order for Python API docs to get generated
+    # properly. We leverage the in-tree virtualenv for this.
+    topsrcdir = manager.topsrcdir
+    site = CommandSiteManager.from_environment(
+        topsrcdir,
+        lambda: get_state_dir(specific_to_topsrcdir=True, topsrcdir=topsrcdir),
+        "common",
+        os.path.join(app.outdir, "_venv"),
+    )
+    site.activate()

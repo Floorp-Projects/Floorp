@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html class="left initializing sidebar">
+  <head>
+    <meta charset="UTF-8">
+    <script type="module" src="./index.js"></script>
+    <script type="module" src="/common/handle-accel-key.js"></script>
+    <link rel="stylesheet" type="text/css" href="./sidebar.css"/>
+    <style id="size-definition" type="text/css"></style>
+    <style id="contextual-identity-styling" type="text/css"></style>
+    <link id="style-loader" rel="stylesheet" type="text/css" href=""/>
+    <style id="browser-theme-definition" type="text/css"></style>
+    <style id="addons-style-rules" type="text/css"></style><!-- this is just a dummy to determine insertion position of actual style definitions -->
+    <style id="active-tree-rules" type="text/css"></style>
+    <style id="user-style-rules" type="text/css"></style>
+  </head>
+  <body>
+    <div id="tabbar-container">
+    <div id="tabbar" class="vbox">
+      <div id="all-tabs">
+      </div>
+      <div class="after-tabs vbox">
+        <div class="newtab-button-box vbox">
+          <button class="newtab-action-selector-anchor"
+                  title="__MSG_tabbar_newTabAction_tooltip__"
+                  data-menu-ui="newtab-action-selector"
+                  tabindex="-1"></button>
+          <button class="contextual-identities-selector-anchor"
+                  title="__MSG_tabbar_newTabWithContexualIdentity_tooltip__"
+                  data-menu-ui="contextual-identities-selector"
+                  tabindex="-1"></button>
+          <div class="newtab-button"
+               role="button"
+               title="__MSG_tabbar_newTabButton_tooltip__"
+               tabindex="-1"
+               draggable="true"><div class="extra-items-container"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="after-tabs vbox">
+      <div id="out-of-view-tab-notifier"></div>
+      <div class="newtab-button-box vbox">
+        <button class="newtab-action-selector-anchor"
+                title="__MSG_tabbar_newTabAction_tooltip__"
+                data-menu-ui="newtab-action-selector"
+                tabindex="-1"></button>
+        <button class="contextual-identities-selector-anchor"
+                title="__MSG_tabbar_newTabWithContexualIdentity_tooltip__"
+                data-menu-ui="contextual-identities-selector"
+                tabindex="-1"></button>
+        <div class="newtab-button"
+             role="button"
+             title="__MSG_tabbar_newTabButton_tooltip__"
+             tabindex="-1"
+             draggable="true"><div class="extra-items-container"></div></div>
+      </div>
+    </div>
+    </div>
+    <div id="subpanel-container">
+      <div id="subpanel-header">
+        <span id="subpanel-header-main">
+          <span id="subpanel-selector-anchor"
+                data-menu-ui="subpanel-selector"
+                class="clickable"
+                role="button">
+            <span class="icon"><img></span>
+            <span class="label"></span>
+          </span>
+        </span>
+        <span id="subpanel-toggler"
+              class="clickable"
+              role="button"
+              title="__MSG_command_toggleSubPanel__"
+              aria-label="__MSG_command_toggleSubPanel__"></span>
+      </div>
+    </div>
+    <ul id="subpanel-selector"></ul>
+    <ul id="newtab-action-selector">
+      <li data-value="independent"
+          data-icon="/sidebar/styles/icons/newtab-independent.svg"
+          data-icon-color="currentColor"
+         >__MSG_tabbar_newTabAction_independent_label__</li>
+      <li data-value="child"
+          data-icon="/sidebar/styles/icons/newtab-child.svg"
+          data-icon-color="currentColor"
+         >__MSG_tabbar_newTabAction_child_label__</li>
+      <li data-value="sibling"
+          data-icon="/sidebar/styles/icons/newtab-sibling.svg"
+          data-icon-color="currentColor"
+         >__MSG_tabbar_newTabAction_sibling_label__</li>
+      <li data-value="next-sibling"
+          data-icon="/sidebar/styles/icons/newtab-next-sibling.svg"
+          data-icon-color="currentColor"
+         >__MSG_tabbar_newTabAction_nextSibling_label__</li>
+    </ul>
+    <ul id="contextual-identities-selector"></ul>
+    <div class="tab-drop-blocker" id="tab-drop-blocker-top"></div>
+    <div class="tab-drop-blocker" id="tab-drop-blocker-right"></div>
+    <div class="tab-drop-blocker" id="tab-drop-blocker-bottom"></div>
+    <div class="tab-drop-blocker" id="tab-drop-blocker-left"></div>
+    <div id="tab-drag-notification"><span></span></div>
+    <div id="background"></div><!-- This is required to hide dummy elements without offscreen rendering outside of the viewport. See also: https://github.com/piroor/treestyletab/issues/1703#issuecomment-354646405 -->
+    <ul id="dummy-tabs">
+      <span id="dummy-favicon-size-box"></span>
+      <span id="dummy-tab-color-box"></span>
+      <span id="dummy-highlight-color-box"></span>
+      <span class="throbber"><span id="sync-throbber"></span></span>
+      <tab-item id="dummy-tab" class="tab">
+        <span class="extra-items-container indent"></span>
+        <tab-item-substance>
+          <tab-twisty class="twisty"></tab-twisty>
+          <tab-favicon class="favicon"><span class="throbber" id="conductor-throbber-container"><span id="conductor-throbber"></span></span></tab-favicon>
+          <tab-label class="label" value="-"></tab-label>
+          <tab-counter class="counter">0</tab-counter>
+          <tab-closebox class="close-box"></tab-closebox>
+          <span class="extra-items-container behind"></span>
+          <span class="extra-items-container front"></span>
+        </tab-item-substance>
+      </tab-item>
+    </ul>
+    <div id="blocking-screen">
+      <span class="throbber"></span>
+      <progress max="100" value="0"></progress>
+    </div>
+
+    <ul id="tabContextMenu">
+    </ul>
+  </body>
+</html>

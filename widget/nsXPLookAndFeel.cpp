@@ -16,9 +16,7 @@
 #include "nsFont.h"
 #include "nsIFrame.h"
 #include "nsIXULRuntime.h"
-#include "Theme.h"
-#include "SurfaceCacheUtils.h"
-#include "mozilla/dom/ContentParent.h"
+#include "nsNativeBasicTheme.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -151,6 +149,7 @@ static const char sIntPrefs[][43] = {
     "ui.IMESelectedConvertedTextUnderlineStyle",
     "ui.SpellCheckerUnderlineStyle",
     "ui.menuBarDrag",
+    "ui.operatingSystemVersionIdentifier",
     "ui.scrollbarButtonAutoRepeatBehavior",
     "ui.tooltipDelay",
     "ui.swipeAnimationEnabled",
@@ -355,7 +354,7 @@ nsXPLookAndFeel* nsXPLookAndFeel::GetInstance() {
     *lnf = {};
   }
 
-  widget::Theme::Init();
+  nsNativeBasicTheme::Init();
   return sInstance;
 }
 
@@ -372,17 +371,13 @@ void nsXPLookAndFeel::Shutdown() {
   // This keeps strings alive, so need to clear to make leak checking happy.
   sFontCache.Clear();
 
-  widget::Theme::Shutdown();
+  nsNativeBasicTheme::Shutdown();
 }
 
-static void IntPrefChanged(const nsACString& aPref) {
-  // Most Int prefs can't change our system colors or fonts, but
-  // ui.systemUsesDarkTheme can, since it affects the effective color-scheme
-  // (affecting system colors).
-  auto changeKind = aPref.EqualsLiteral("ui.systemUsesDarkTheme")
-                        ? widget::ThemeChangeKind::Style
-                        : widget::ThemeChangeKind::MediaQueriesOnly;
-  LookAndFeel::NotifyChangedAllWindows(changeKind);
+static void IntPrefChanged() {
+  // Int prefs can't change our system colors or fonts.
+  LookAndFeel::NotifyChangedAllWindows(
+      widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
 static void FloatPrefChanged() {
@@ -401,7 +396,7 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   nsDependentCString prefName(aPref);
   for (const char* pref : sIntPrefs) {
     if (prefName.Equals(pref)) {
-      IntPrefChanged(prefName);
+      IntPrefChanged();
       return;
     }
   }
@@ -430,13 +425,11 @@ static constexpr struct {
     {"browser.display.windows.native_menus"_ns},
     {"browser.proton.places-tooltip.enabled"_ns},
     {"layout.css.prefers-color-scheme.content-override"_ns},
-    // Affects media queries and scrollbar sizes, so gotta relayout.
-    {"widget.gtk.overlay-scrollbars.enabled"_ns,
-     widget::ThemeChangeKind::StyleAndLayout},
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
+    {"layout.css.color-scheme.content-override"_ns},
 };
 
 // Read values from the user's preferences.
@@ -683,7 +676,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       break;
     case ColorID::Field:
     case ColorID::Buttonface:  // --in-content-button-background
-    case ColorID::Threedface:
     case ColorID::MozCombobox:
     case ColorID::MozCellhighlighttext:
     case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
@@ -1045,60 +1037,12 @@ void nsXPLookAndFeel::RecordTelemetry() {
 
 namespace mozilla {
 
-static widget::ThemeChangeKind sGlobalThemeChangeKind{0};
-
+// static
 void LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind aKind) {
-  sGlobalThemeChanged = true;
-  sGlobalThemeChangeKind |= aKind;
-
   if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
     const char16_t kind[] = {char16_t(aKind), 0};
     obs->NotifyObservers(nullptr, "internal-look-and-feel-changed", kind);
   }
-}
-
-void LookAndFeel::DoHandleGlobalThemeChange() {
-  MOZ_ASSERT(sGlobalThemeChanged);
-  sGlobalThemeChanged = false;
-  auto kind = std::exchange(sGlobalThemeChangeKind, widget::ThemeChangeKind(0));
-
-  // Tell the theme that it changed, so it can flush any handles to stale theme
-  // data.
-  //
-  // We can use the *DoNotUseDirectly functions directly here, because we want
-  // to notify all possible themes in a given process (but just once).
-  if (XRE_IsParentProcess() ||
-      !StaticPrefs::widget_non_native_theme_enabled()) {
-    if (nsCOMPtr<nsITheme> theme = do_GetNativeThemeDoNotUseDirectly()) {
-      theme->ThemeChanged();
-    }
-  }
-  if (nsCOMPtr<nsITheme> theme = do_GetBasicNativeThemeDoNotUseDirectly()) {
-    theme->ThemeChanged();
-  }
-
-  // Clear all cached LookAndFeel colors.
-  LookAndFeel::Refresh();
-
-  // Reset default background and foreground colors for the document since they
-  // may be using system colors.
-  PreferenceSheet::Refresh();
-
-  // Vector images (SVG) may be using theme colors so we discard all cached
-  // surfaces. (We could add a vector image only version of DiscardAll, but
-  // in bug 940625 we decided theme changes are rare enough not to bother.)
-  image::SurfaceCacheUtils::DiscardAll();
-
-  if (XRE_IsParentProcess()) {
-    dom::ContentParent::BroadcastThemeUpdate(kind);
-  }
-
-  nsContentUtils::AddScriptRunner(
-      NS_NewRunnableFunction("HandleGlobalThemeChange", [] {
-        if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-          obs->NotifyObservers(nullptr, "look-and-feel-changed", nullptr);
-        }
-      }));
 }
 
 static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
@@ -1146,7 +1090,6 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
 ColorScheme LookAndFeel::sChromeColorScheme;
 ColorScheme LookAndFeel::sContentColorScheme;
 bool LookAndFeel::sColorSchemeInitialized;
-bool LookAndFeel::sGlobalThemeChanged;
 
 auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
   switch (StaticPrefs::browser_theme_toolbar_theme()) {
@@ -1377,7 +1320,7 @@ void LookAndFeel::GetThemeInfo(nsACString& aOut) {
 // static
 void LookAndFeel::Refresh() {
   nsLookAndFeel::GetInstance()->RefreshImpl();
-  widget::Theme::LookAndFeelChanged();
+  nsNativeBasicTheme::LookAndFeelChanged();
 }
 
 // static

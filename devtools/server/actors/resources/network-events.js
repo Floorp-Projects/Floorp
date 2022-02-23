@@ -6,9 +6,6 @@
 
 const Services = require("Services");
 const { Pool } = require("devtools/shared/protocol/Pool");
-const {
-  isWindowGlobalPartOfContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 
 loader.lazyRequireGetter(
   this,
@@ -157,13 +154,19 @@ class NetworkEventWatcher {
     if (this.persist || this.watcherActor.sessionContext.type == "all") {
       return;
     }
-    // Only process WindowGlobals which are related to the debugged scope.
+    // If the watcher is bound to one browser element (i.e. a tab), ignore
+    // windowGlobals related to other browser elements
     if (
-      !isWindowGlobalPartOfContext(
-        windowGlobal,
-        this.watcherActor.sessionContext
-      )
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      windowGlobal.browsingContext.browserId !=
+        this.watcherActor.sessionContext.browserId
     ) {
+      return;
+    }
+    // Also ignore the initial document as:
+    // - it shouldn't spawn/store any request?
+    // - it would clear the navigation request too early
+    if (windowGlobal.isInitialDocument) {
       return;
     }
     const { innerWindowId } = windowGlobal;

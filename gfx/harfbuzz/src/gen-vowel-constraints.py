@@ -220,7 +220,7 @@ for script, constraints in sorted (constraints.items (), key=lambda s_c: script_
 print ('    default:')
 print ('      break;')
 print ('  }')
-print ('  buffer->sync ();')
+print ('  buffer->swap_buffers ();')
 print ('}')
 
 print ()

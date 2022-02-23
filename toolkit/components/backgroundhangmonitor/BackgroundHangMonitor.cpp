@@ -350,6 +350,7 @@ void BackgroundHangManager::RunMonitorThread() {
   while (!mShutdown) {
     autoLock.Wait(waitTime);
 
+    PROFILER_MARKER_UNTYPED("Wakeup", OTHER);
     TimeStamp newTime = TimeStamp::Now();
     TimeDuration systemInterval = newTime - systemTime;
     systemTime = newTime;

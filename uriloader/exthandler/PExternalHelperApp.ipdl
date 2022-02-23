@@ -9,8 +9,7 @@ include protocol PContent;
 namespace mozilla {
 namespace dom {
 
-[ParentImpl=virtual]
-protocol PExternalHelperApp
+[RefCounted] protocol PExternalHelperApp
 {
   manager PContent;
 

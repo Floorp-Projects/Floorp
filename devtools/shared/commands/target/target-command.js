@@ -9,6 +9,19 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 
+const {
+  LegacyProcessesWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
+const {
+  LegacyServiceWorkersWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher");
+const {
+  LegacySharedWorkersWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher");
+const {
+  LegacyWorkersWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
+
 class TargetCommand extends EventEmitter {
   #selectedTargetFront;
   /**
@@ -75,7 +88,29 @@ class TargetCommand extends EventEmitter {
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onTargetSelected = this._onTargetSelected.bind(this);
 
-    this.legacyImplementation = {};
+    this.legacyImplementation = {
+      process: new LegacyProcessesWatcher(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      ),
+      worker: new LegacyWorkersWatcher(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      ),
+      shared_worker: new LegacySharedWorkersWatcher(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      ),
+      service_worker: new LegacyServiceWorkersWatcher(
+        this,
+        this._onTargetAvailable,
+        this._onTargetDestroyed,
+        this.commands
+      ),
+    };
 
     // Public flag to allow listening for workers even if the fission pref is off
     // This allows listening for workers in the content toolbox outside of fission contexts
@@ -203,16 +238,10 @@ class TargetCommand extends EventEmitter {
       // We only consider the top level target to be switched
       const isDestroyedTargetSwitching = target == this.targetFront;
       const isServiceWorker = target.targetType === this.TYPES.SERVICE_WORKER;
-      const isPopup = target.targetForm.isPopup;
 
-      // Never destroy the popup targets when the top level target is destroyed
-      // as the popup follow a different lifecycle.
-      // Also avoid destroying service worker targets for similar reason,
-      // unless this.destroyServiceWorkersOnNavigation is true.
-      if (
-        !isPopup &&
-        (!isServiceWorker || this.destroyServiceWorkersOnNavigation)
-      ) {
+      // Only notify about service worker targets if this.destroyServiceWorkersOnNavigation
+      // is true
+      if (!isServiceWorker || this.destroyServiceWorkersOnNavigation) {
         this._onTargetDestroyed(target, {
           isTargetSwitching: isDestroyedTargetSwitching,
           // Do not destroy service worker front as we may want to keep using it.
@@ -431,16 +460,7 @@ class TargetCommand extends EventEmitter {
         if (!isTargetSwitching) {
           await this.watcherFront.watchTargets(type);
         }
-      } else if (LegacyTargetWatchers[type]) {
-        // Instantiate the legacy listener only once for each TargetCommand, and reuse it if we stop and restart listening
-        if (!this.legacyImplementation[type]) {
-          this.legacyImplementation[type] = new LegacyTargetWatchers[type](
-            this,
-            this._onTargetAvailable,
-            this._onTargetDestroyed,
-            this.commands
-          );
-        }
+      } else if (this.legacyImplementation[type]) {
         await this.legacyImplementation[type].listen();
       } else {
         throw new Error(`Unsupported target type '${type}'`);
@@ -976,7 +996,7 @@ class TargetCommand extends EventEmitter {
   }
 
   getParentTarget(targetFront) {
-    // Note that there are edgecases:
+    // Note that there is three temporary edgecases:
     // * Until bug 1741927 is fixed and we remove non-EFT codepath entirely,
     //   we may receive a `parentInnerWindowId` that doesn't relate to any target.
     //   This happens when the parent document of the targetFront is a document loaded in the
@@ -987,6 +1007,9 @@ class TargetCommand extends EventEmitter {
     //   Once we can stop using getParentWindowGlobalTarget for the other edgecase we will be able to
     //   replace it with such fallback: `return this.targetFront;`.
     //   browser_target_command_frames.js will help you get things right.
+    // @backward-compat { version 96 } Fx 96 started exposing `parentInnerWindowId`
+    // * And backward compat. This targetForm attribute is new. Once we drop 95 support,
+    //   we can simply remove this last bullet point as the other two edgecase may still be valid.
     const { parentInnerWindowId } = targetFront.targetForm;
     if (parentInnerWindowId) {
       const targets = this.getAllTargets([TargetCommand.TYPES.FRAME]);
@@ -1005,6 +1028,13 @@ class TargetCommand extends EventEmitter {
     // It should be: MBT, regular tab toolbox and web extension.
     // The others which still don't support watcher don't spawn FRAME targets:
     // browser content toolbox and service workers.
+
+    // @backward-compat { version 96 } WebExtension targets only support the
+    // watcher starting with version 96. This if block can be fully removed when
+    // version 96 hits the release channel (cf. comment above).
+    if (!this.watcherFront) {
+      return null;
+    }
 
     return this.watcherFront.getParentWindowGlobalTarget(
       targetFront.browsingContextID
@@ -1049,28 +1079,6 @@ TargetCommand.TYPES = TargetCommand.prototype.TYPES = {
 };
 TargetCommand.ALL_TYPES = TargetCommand.prototype.ALL_TYPES = Object.values(
   TargetCommand.TYPES
-);
-
-const LegacyTargetWatchers = {};
-loader.lazyRequireGetter(
-  LegacyTargetWatchers,
-  TargetCommand.TYPES.PROCESS,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher"
-);
-loader.lazyRequireGetter(
-  LegacyTargetWatchers,
-  TargetCommand.TYPES.WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher"
-);
-loader.lazyRequireGetter(
-  LegacyTargetWatchers,
-  TargetCommand.TYPES.SHARED_WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher"
-);
-loader.lazyRequireGetter(
-  LegacyTargetWatchers,
-  TargetCommand.TYPES.SERVICE_WORKER,
-  "devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher"
 );
 
 module.exports = TargetCommand;

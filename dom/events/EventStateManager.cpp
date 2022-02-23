@@ -602,9 +602,6 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       ((mouseEvent && mouseEvent->IsReal()) ||
        aEvent->mClass == eWheelEventClass) &&
       !PointerLockManager::IsLocked()) {
-    // XXX Probably doesn't matter much, but storing these in CSS pixels instead
-    // of device pixels means behavior can be a bit odd if you zoom while
-    // pointer-locked.
     sLastScreenPoint =
         Event::GetScreenCoords(aPresContext, aEvent, aEvent->mRefPoint);
     sLastClientPoint = Event::GetClientCoords(
@@ -2818,6 +2815,17 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
       canScroll = true;
     }
 
+    // Comboboxes need special care.
+    nsComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
+    if (comboBox) {
+      if (comboBox->IsDroppedDown()) {
+        // Don't propagate to parent when drop down menu is active.
+        return canScroll ? frameToScroll : nullptr;
+      }
+      // Always propagate when not dropped down (even if focused).
+      continue;
+    }
+
     if (canScroll) {
       return frameToScroll;
     }
@@ -2964,7 +2972,7 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     case WidgetWheelEvent::SCROLL_SYNCHRONOUSLY:
       mode = ScrollMode::Instant;
       break;
-    case WidgetWheelEvent::SCROLL_ASYNCHRONOUSLY:
+    case WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY:
       mode = ScrollMode::Normal;
       break;
     case WidgetWheelEvent::SCROLL_SMOOTHLY:
@@ -4394,6 +4402,7 @@ static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
   newEvent->mButton = aMouseEvent->mButton;
   newEvent->mButtons = aMouseEvent->mButtons;
   newEvent->mPressure = aMouseEvent->mPressure;
+  newEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   newEvent->mInputSource = aMouseEvent->mInputSource;
   newEvent->pointerId = aMouseEvent->pointerId;
 

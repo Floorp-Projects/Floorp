@@ -24,7 +24,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/StaticPrefs_canvas.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -169,6 +168,8 @@ static bool gEverInitialized = false;
 static int32_t gLastUsedFrameRate = -1;
 
 const ContentDeviceData* gContentDeviceInitData = nullptr;
+
+static Mutex* gGfxPlatformPrefsLock = nullptr;
 
 Atomic<bool, MemoryOrdering::ReleaseAcquire> gfxPlatform::gCMSInitialized;
 CMSMode gfxPlatform::gCMSMode = CMSMode::Off;
@@ -876,6 +877,8 @@ void gfxPlatform::Init() {
 
   InitMoz2DLogging();
 
+  gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
+
   /* Initialize the GfxInfo service.
    * Note: we can't call functions on GfxInfo that depend
    * on gPlatform until after it has been initialized
@@ -932,12 +935,6 @@ void gfxPlatform::Init() {
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     GPUProcessManager* gpu = GPUProcessManager::Get();
     gpu->LaunchGPUProcess();
-  }
-
-  if (XRE_IsParentProcess()) {
-    nsAutoCString allowlist;
-    Preferences::GetCString("gfx.offscreencanvas.domain-allowlist", allowlist);
-    gfxVars::SetOffscreenCanvasDomainAllowlist(allowlist);
   }
 
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
@@ -1262,6 +1259,9 @@ void gfxPlatform::Shutdown() {
   }
 
   gfx::Factory::ShutDown();
+
+  delete gGfxPlatformPrefsLock;
+
   gfxVars::Shutdown();
   gfxFont::DestroySingletons();
 
@@ -1287,7 +1287,7 @@ void gfxPlatform::InitLayersIPC() {
     }
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
-      wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
+      wr::RenderThread::Start();
       image::ImageMemoryReporter::InitForWebRender();
     }
 
@@ -2445,15 +2445,6 @@ void gfxPlatform::InitGPUProcessPrefs() {
 
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
-  nsCString message;
-  nsCString failureId;
-  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
-                                        &message, failureId)) {
-    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-    // Don't return early here. We must continue the checks below in case
-    // the user has force-enabled the GPU process.
-  }
-
   // We require E10S - otherwise, there is very little benefit to the GPU
   // process, since the UI process must still use acceleration for
   // performance.
@@ -3313,7 +3304,7 @@ void gfxPlatform::DisableGPUProcess() {
   if (gfxVars::UseWebRender()) {
     // We need to initialize the parent process to prepare for WebRender if we
     // did not end up disabling it, despite losing the GPU process.
-    wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
+    wr::RenderThread::Start();
     image::ImageMemoryReporter::InitForWebRender();
   }
 }

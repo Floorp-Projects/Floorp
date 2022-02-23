@@ -169,6 +169,7 @@ class InactivePropertyHelper {
           "row-gap",
           // grid-*-gap are supported legacy shorthands for the corresponding *-gap properties.
           // See https://drafts.csswg.org/css-align-3/#gap-legacy for more information.
+          "grid-gap",
           "grid-row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
@@ -194,7 +195,6 @@ class InactivePropertyHelper {
         invalidProperties: [
           "column-gap",
           "gap",
-          "grid-gap",
           // grid-*-gap are supported legacy shorthands for the corresponding *-gap properties.
           // See https://drafts.csswg.org/css-align-3/#gap-legacy for more information.
           "grid-column-gap",

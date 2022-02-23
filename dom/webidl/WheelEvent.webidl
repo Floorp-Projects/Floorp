@@ -20,11 +20,11 @@ interface WheelEvent : MouseEvent
   const unsigned long DOM_DELTA_PAGE  = 0x02;
 
   // Legacy MouseWheelEvent API replaced by standard WheelEvent API.
-  [NeedsCallerType]
+  [Pref="dom.event.wheelDelta.enabled", NeedsCallerType]
   readonly attribute long wheelDeltaX;
-  [NeedsCallerType]
+  [Pref="dom.event.wheelDelta.enabled", NeedsCallerType]
   readonly attribute long wheelDeltaY;
-  [NeedsCallerType]
+  [Pref="dom.event.wheelDelta.enabled", NeedsCallerType]
   readonly attribute long wheelDelta;
 
   [NeedsCallerType] readonly attribute double        deltaX;

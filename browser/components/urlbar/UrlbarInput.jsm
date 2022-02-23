@@ -227,7 +227,6 @@ class UrlbarInput {
       "focus",
       "blur",
       "input",
-      "beforeinput",
       "keydown",
       "keyup",
       "mouseover",
@@ -740,13 +739,8 @@ class UrlbarInput {
       return;
     }
 
-    if (element?.classList.contains("urlbarView-button-block")) {
-      this.controller.handleDeleteEntry(result);
-      return;
-    }
-
     let urlOverride;
-    if (element?.classList.contains("urlbarView-button-help")) {
+    if (element?.classList.contains("urlbarView-help")) {
       urlOverride = result.payload.helpUrl;
     }
 
@@ -929,7 +923,7 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
         let scalarName;
-        if (element.classList.contains("urlbarView-button-help")) {
+        if (element.classList.contains("urlbarView-help")) {
           url = result.payload.helpUrl;
           if (!url) {
             Cu.reportError("helpUrl not specified");
@@ -1999,11 +1993,6 @@ class UrlbarInput {
         return result.payload.input || "";
     }
 
-    if (urlOverride === "") {
-      // Allow callers to clear the input.
-      return "";
-    }
-
     try {
       let uri = Services.io.newURI(urlOverride || result.payload.url);
       if (uri) {
@@ -2474,21 +2463,11 @@ class UrlbarInput {
       params.initiatingDoc = this.window.document;
     }
 
-    if (
-      this._keyDownEnterDeferred &&
-      event?.keyCode === KeyEvent.DOM_VK_RETURN &&
-      openUILinkWhere === "current"
-    ) {
-      // In this case, we move the focus to the browser that loads the content
-      // upon key up the enter key.
-      // To do it, send avoidBrowserFocus flag to openTrustedLinkIn() to avoid
-      // focusing on the browser in the function. And also, set loadedContent
-      // flag that whether the content is loaded in the current tab by this enter
-      // key. _keyDownEnterDeferred promise is processed at key up the enter,
-      // focus on the browser passed by _keyDownEnterDeferred.resolve().
-      params.avoidBrowserFocus = true;
-      this._keyDownEnterDeferred.loadedContent = true;
-      this._keyDownEnterDeferred.resolve(browser);
+    if (event?.keyCode === KeyEvent.DOM_VK_RETURN) {
+      if (openUILinkWhere === "current") {
+        params.avoidBrowserFocus = true;
+        this._keyDownEnterDeferred?.resolve(browser);
+      }
     }
 
     // Focus the content area before triggering loads, since if the load
@@ -3225,13 +3204,6 @@ class UrlbarInput {
     this._afterTabSelectAndFocusChange();
   }
 
-  _on_beforeinput(event) {
-    if (event.data && this._keyDownEnterDeferred) {
-      // Ignore char key input while processing enter key.
-      event.preventDefault();
-    }
-  }
-
   _on_keydown(event) {
     if (event.keyCode === KeyEvent.DOM_VK_RETURN) {
       if (this._keyDownEnterDeferred) {
@@ -3264,28 +3236,22 @@ class UrlbarInput {
       event.keyCode === KeyEvent.DOM_VK_RETURN &&
       this._keyDownEnterDeferred
     ) {
-      if (this._keyDownEnterDeferred.loadedContent) {
-        try {
-          const loadingBrowser = await this._keyDownEnterDeferred.promise;
-          // Ensure the selected browser didn't change in the meanwhile.
-          if (this.window.gBrowser.selectedBrowser === loadingBrowser) {
-            loadingBrowser.focus();
-            // Make sure the domain name stays visible for spoof protection and usability.
-            this.selectionStart = this.selectionEnd = 0;
-          }
-          this._keyDownEnterDeferred = null;
-        } catch (ex) {
-          // Not all the Enter actions in the urlbar will cause a navigation, then it
-          // is normal for this to be rejected.
-          // If _keyDownEnterDeferred was rejected on keydown, we don't nullify it here
-          // to ensure not overwriting the new value created by keydown.
+      try {
+        const loadingBrowser = await this._keyDownEnterDeferred.promise;
+        // Ensure the selected browser didn't change in the meanwhile.
+        if (this.window.gBrowser.selectedBrowser === loadingBrowser) {
+          loadingBrowser.focus();
+          // Make sure the domain name stays visible for spoof protection and usability.
+          this.selectionStart = this.selectionEnd = 0;
         }
-        return;
+        this._keyDownEnterDeferred = null;
+      } catch (ex) {
+        // Not all the Enter actions in the urlbar will cause a navigation, then it
+        // is normal for this to be rejected.
+        // If _keyDownEnterDeferred was rejected on keydown, we don't nullify it here
+        // to ensure not overwriting the new value created by keydown.
       }
-
-      // Discard the _keyDownEnterDeferred promise to receive any key inputs immediately.
-      this._keyDownEnterDeferred.resolve();
-      this._keyDownEnterDeferred = null;
+      return;
     } else if (event.keyCode === KeyEvent.DOM_VK_CONTROL) {
       this._isKeyDownWithCtrl = false;
     }

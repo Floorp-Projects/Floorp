@@ -9,6 +9,7 @@
 #include "hb-fallback-shape.cc"
 #include "hb-font.cc"
 #include "hb-map.cc"
+#include "hb-ms-feature-ranges.cc"
 #include "hb-number.cc"
 #include "hb-ot-cff1-table.cc"
 #include "hb-ot-cff2-table.cc"

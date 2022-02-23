@@ -701,10 +701,10 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
         return;
       }
 
-      selStart =
-          static_cast<int32_t>(querySelectedTextEvent.mReply->AnchorOffset());
-      selEnd =
-          static_cast<int32_t>(querySelectedTextEvent.mReply->FocusOffset());
+      selStart = static_cast<int32_t>(
+          querySelectedTextEvent.mReply->SelectionStartOffset());
+      selEnd = static_cast<int32_t>(
+          querySelectedTextEvent.mReply->SelectionEndOffset());
     }
 
     if (aFlags == FLUSH_FLAG_RECOVER && textTransaction.IsValid()) {
@@ -1341,14 +1341,10 @@ nsresult GeckoEditableSupport::NotifyIME(
       ALOGIME("IME: NOTIFY_IME_OF_SELECTION_CHANGE: SelectionChangeData=%s",
               ToString(aNotification.mSelectionChangeData).c_str());
 
-      if (aNotification.mSelectionChangeData.HasRange()) {
-        mCachedSelection.mStartOffset = static_cast<int32_t>(
-            aNotification.mSelectionChangeData.AnchorOffset());
-        mCachedSelection.mEndOffset = static_cast<int32_t>(
-            aNotification.mSelectionChangeData.FocusOffset());
-      } else {
-        mCachedSelection.Reset();
-      }
+      mCachedSelection.mStartOffset =
+          aNotification.mSelectionChangeData.StartOffset();
+      mCachedSelection.mEndOffset =
+          aNotification.mSelectionChangeData.EndOffset();
 
       PostFlushIMEChanges();
       mIMESelectionChanged = true;

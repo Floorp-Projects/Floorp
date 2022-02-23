@@ -7,6 +7,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   ctypes: "resource://gre/modules/ctypes.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -15,9 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/security/pkcs11moduledb;1",
   "nsIPKCS11ModuleDB"
 );
-
-// eslint-disable-next-line mozilla/reject-importGlobalProperties
-Cu.importGlobalProperties(["PathUtils"]);
 
 var { DefaultMap } = ExtensionUtils;
 
@@ -40,18 +38,12 @@ this.pkcs11 = class extends ExtensionAPI {
       );
       if (hostInfo) {
         if (AppConstants.platform === "win") {
-          // If the path specified in the manifest is not an abslute path,
-          // translate it relative to manifest's directory.
-          if (!PathUtils.isAbsolute(hostInfo.manifest.path)) {
-            hostInfo.manifest.path = PathUtils.normalize(
-              PathUtils.joinRelative(
-                PathUtils.parent(hostInfo.path),
-                hostInfo.manifest.path
-              )
-            );
-          }
+          hostInfo.manifest.path = OS.Path.join(
+            OS.Path.dirname(hostInfo.path),
+            hostInfo.manifest.path
+          );
         }
-        let manifestLib = PathUtils.filename(hostInfo.manifest.path);
+        let manifestLib = OS.Path.basename(hostInfo.manifest.path);
         if (AppConstants.platform !== "linux") {
           manifestLib = manifestLib.toLowerCase(manifestLib);
         }

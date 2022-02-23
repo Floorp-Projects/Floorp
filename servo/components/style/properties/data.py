@@ -889,7 +889,6 @@ class PropertyRestrictions:
                 "unicode-bidi",
                 "direction",
                 "content",
-                "line-height",
                 "-moz-osx-font-smoothing",
             ]
             + PropertyRestrictions.spec(data, "css-fonts")

@@ -291,6 +291,9 @@ nsresult nsContentPermissionUtils::AskPermission(
         &isRequestDelegatedToUnsafeThirdParty);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    ContentChild::GetSingleton()->SetEventTargetForActor(
+        req, aWindow->EventTargetFor(TaskCategory::Other));
+
     req->IPDLAddRef();
     ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
         req, permArray, IPC::Principal(principal),

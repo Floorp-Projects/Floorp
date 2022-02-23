@@ -9,6 +9,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIParser.h"
 #include "nsDeque.h"
+#include "nsParserCIID.h"
+#include "nsITokenizer.h"
 #include "nsIContentSink.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
@@ -73,7 +75,12 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * @param aChannel out param that will contain the result
    * @return NS_OK if successful or NS_NOT_AVAILABLE if not
    */
-  nsresult GetChannel(nsIChannel** aChannel);
+  NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
+
+  /**
+   * Return |this| for backwards compat.
+   */
+  NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
 
   /**
    * Get the stream parser for this parser
@@ -114,8 +121,9 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * Set up request observer.
    *
    * @param   aURL used for View Source title
+   * @param   aKey the root context key (used for document.write)
    */
-  NS_IMETHOD Parse(nsIURI* aURL) override;
+  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
 
   /**
    * document.write and document.close
@@ -130,6 +138,27 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * Stops the parser prematurely
    */
   NS_IMETHOD Terminate() override;
+
+  /**
+   * Don't call. For interface backwards compat only.
+   */
+  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
+                           nsTArray<nsString>& aTagStack) override;
+
+  /**
+   * Don't call. For interface compat only.
+   */
+  NS_IMETHOD BuildModel() override;
+
+  /**
+   * Don't call. For interface compat only.
+   */
+  NS_IMETHOD CancelParsingEvents() override;
+
+  /**
+   * Don't call. For interface compat only.
+   */
+  virtual void Reset() override;
 
   /**
    * True if the insertion point (per HTML5) is defined.
@@ -164,7 +193,7 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * @param aCommand the parser command (Yeah, this is bad API design. Let's
    * make this better when retiring nsIParser)
    */
-  void MarkAsNotScriptCreated(const char* aCommand);
+  virtual void MarkAsNotScriptCreated(const char* aCommand) override;
 
   /**
    * True if this is a script-created HTML5 parser.

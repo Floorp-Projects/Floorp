@@ -7,7 +7,9 @@
 // eslint-disable-next-line mozilla/reject-some-requires
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
-const LegacyWorkersWatcher = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
+const {
+  LegacyWorkersWatcher,
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   // Holds the current target URL object
@@ -315,4 +317,4 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   }
 }
 
-module.exports = LegacyServiceWorkersWatcher;
+module.exports = { LegacyServiceWorkersWatcher };

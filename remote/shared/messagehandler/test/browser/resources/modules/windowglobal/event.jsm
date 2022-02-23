@@ -17,18 +17,11 @@ class Event extends Module {
    * Commands
    */
 
-  testEmitInternalEvent() {
+  testEmitEvent() {
     // Emit a payload including the contextId to check which context emitted
     // a specific event.
-    const text = `internal event from ${this.messageHandler.contextId}`;
-    this.emitEvent("internal-event-from-window-global", { text });
-  }
-
-  testEmitProtocolEvent() {
-    // Emit a payload including the contextId to check which context emitted
-    // a specific protocol event.
-    const text = `protocol event from ${this.messageHandler.contextId}`;
-    this.emitProtocolEvent("event.testEvent", { text });
+    const text = `event from ${this.messageHandler.contextId}`;
+    this.messageHandler.emitMessageHandlerEvent("event.testEvent", { text });
   }
 }
 

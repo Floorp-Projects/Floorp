@@ -54,12 +54,11 @@ impl Channel {
     /// assert!(stable.is_stable());
     /// ```
     pub fn parse(version: &str) -> Option<Channel> {
-        let version = version.trim();
-        if version.contains("-dev") || version == "dev" {
+        if version.contains("-dev") {
             Some(Channel(Kind::Dev))
-        } else if version.contains("-nightly") || version == "nightly" {
+        } else if version.contains("-nightly") {
             Some(Channel(Kind::Nightly))
-        } else if version.contains("-beta") || version == "beta" {
+        } else if version.contains("-beta") {
             Some(Channel(Kind::Beta))
         } else if !version.contains("-") {
             Some(Channel(Kind::Stable))

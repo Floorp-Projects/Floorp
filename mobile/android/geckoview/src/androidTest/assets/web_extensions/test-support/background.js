@@ -62,9 +62,6 @@ const APIS = {
   UsingGpuProcess() {
     return browser.test.usingGpuProcess();
   },
-  KillGpuProcess() {
-    return browser.test.killGpuProcess();
-  },
   CrashGpuProcess() {
     return browser.test.crashGpuProcess();
   },

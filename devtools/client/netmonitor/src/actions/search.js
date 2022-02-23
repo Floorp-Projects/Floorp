@@ -209,11 +209,6 @@ function closeSearch() {
 function openSearch() {
   return ({ dispatch, getState }) => {
     dispatch({ type: OPEN_ACTION_BAR, open: true });
-
-    dispatch({
-      type: SELECT_ACTION_BAR_TAB,
-      id: PANELS.SEARCH,
-    });
   };
 }
 

@@ -22,10 +22,6 @@ class nsChildView;
 class nsMenuBarX;
 @class ChildView;
 
-namespace mozilla {
-enum class NativeKeyBindingsType : uint8_t;
-}  // namespace mozilla
-
 typedef struct _nsCocoaWindowList {
   _nsCocoaWindowList() : prev(nullptr), window(nullptr) {}
   struct _nsCocoaWindowList* prev;
@@ -268,8 +264,9 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage, uint16_t aDuration,
                                            nsISupports* aData, nsIRunnable* aCallback) override;
   virtual void CleanupFullscreenTransition() override;
-  nsresult MakeFullScreen(bool aFullScreen) final;
-  nsresult MakeFullScreenWithNativeTransition(bool aFullScreen) final;
+  nsresult MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
+  nsresult MakeFullScreenWithNativeTransition(bool aFullScreen,
+                                              nsIScreen* aTargetScreen = nullptr) final;
   NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
   void ReleaseFullscreenTransitionAnimation() {
     MOZ_ASSERT(mFullscreenTransitionAnimation, "Should only be called when there is animation");
@@ -347,7 +344,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override { return mInputContext; }
   MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
-      mozilla::NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 
   void SetPopupWindowLevel();

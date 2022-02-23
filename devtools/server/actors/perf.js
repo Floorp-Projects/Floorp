@@ -32,7 +32,12 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     // for historical reasons, and could be merged into this class.
     this.bridge = new ActorReadyGeckoProfilerInterface();
 
-    _bridgeEvents(this, ["profiler-started", "profiler-stopped"]);
+    _bridgeEvents(this, [
+      "profile-locked-by-private-browsing",
+      "profile-unlocked-from-private-browsing",
+      "profiler-started",
+      "profiler-stopped",
+    ]);
   },
 
   destroy: function(conn) {
@@ -49,5 +54,6 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
   getProfileAndStopProfiler: actorBridgeWithSpec("getProfileAndStopProfiler"),
   isActive: actorBridgeWithSpec("isActive"),
   isSupportedPlatform: actorBridgeWithSpec("isSupportedPlatform"),
+  isLockedForPrivateBrowsing: actorBridgeWithSpec("isLockedForPrivateBrowsing"),
   getSupportedFeatures: actorBridgeWithSpec("getSupportedFeatures"),
 });

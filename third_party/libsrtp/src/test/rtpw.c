@@ -96,7 +96,7 @@
 
 #ifndef HAVE_USLEEP
 #ifdef HAVE_WINDOWS_H
-#define usleep(us) Sleep(((DWORD)us) / 1000)
+#define usleep(us) Sleep((us) / 1000)
 #else
 #define usleep(us) sleep((us) / 1000000)
 #endif
@@ -444,6 +444,7 @@ int main(int argc, char *argv[])
         policy.ssrc.type = ssrc_specific;
         policy.ssrc.value = ssrc;
         policy.key = (uint8_t *)key;
+        policy.ekt = NULL;
         policy.next = NULL;
         policy.window_size = 128;
         policy.allow_repeat_tx = 0;
@@ -505,6 +506,7 @@ int main(int argc, char *argv[])
         policy.ssrc.value = ssrc;
         policy.window_size = 0;
         policy.allow_repeat_tx = 0;
+        policy.ekt = NULL;
         policy.next = NULL;
     }
 
@@ -669,7 +671,7 @@ void handle_signal(int signum)
 
 int setup_signal_handler(char *name)
 {
-#ifdef HAVE_SIGACTION
+#if HAVE_SIGACTION
     struct sigaction act;
     memset(&act, 0, sizeof(act));
 

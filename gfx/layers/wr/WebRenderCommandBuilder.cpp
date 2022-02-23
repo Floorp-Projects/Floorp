@@ -86,7 +86,6 @@ struct BlobItemData {
   // invalidation region
   UniquePtr<nsDisplayItemGeometry> mGeometry;
   DisplayItemClip mClip;
-  bool mInvisible;
   bool mUsed;  // initialized near construction
   // XXX: only used for debugging
   bool mInvalid;
@@ -101,7 +100,7 @@ struct BlobItemData {
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
-      : mInvisible(false), mUsed(false), mGroup(aGroup) {
+      : mUsed(false), mGroup(aGroup) {
     mInvalid = false;
     mDisplayItemKey = aItem->GetPerFrameKey();
     AddFrame(aItem->Frame());
@@ -298,10 +297,6 @@ struct DIGroup {
   // This is the intersection of mVisibleRect and mLastVisibleRect
   // we ensure that mInvalidRect is contained in mPreservedRect
   LayerIntRect mPreservedRect;
-  // mHitTestBounds is the same as mActualBounds except for the bounds
-  // of invisible items which are accounted for in the former but not
-  // in the latter.
-  LayerIntRect mHitTestBounds;
   LayerIntRect mActualBounds;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
@@ -543,11 +538,7 @@ struct DIGroup {
         }
       }
     }
-
-    mHitTestBounds.OrWith(aData->mRect);
-    if (!aData->mInvisible) {
-      mActualBounds.OrWith(aData->mRect);
-    }
+    mActualBounds.OrWith(aData->mRect);
     aData->mClip = clip;
     GP("post mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
@@ -561,16 +552,6 @@ struct DIGroup {
                 nsDisplayItem* aStartItem, nsDisplayItem* aEndItem) {
     GP("\n\n");
     GP("Begin EndGroup\n");
-
-    LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
-
-    auto hitTestRect = mVisibleRect.Intersect(ViewAs<LayerPixel>(
-        mHitTestBounds, PixelCastJustification::LayerIsImage));
-    if (!hitTestRect.IsEmpty()) {
-      auto deviceHitTestRect =
-          (LayerRect(hitTestRect) - mResidualOffset) / scale;
-      PushHitTest(aBuilder, deviceHitTestRect);
-    }
 
     mVisibleRect = mVisibleRect.Intersect(ViewAs<LayerPixel>(
         mActualBounds, PixelCastJustification::LayerIsImage));
@@ -597,6 +578,7 @@ struct DIGroup {
     IntSize dtSize = mVisibleRect.Size().ToUnknownSize();
     // The actual display item's size shouldn't have the scale factored in
     // Round the bounds out to leave space for unsnapped content
+    LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
     LayoutDeviceRect itemBounds =
         (LayerRect(mVisibleRect) - mResidualOffset) / scale;
 
@@ -683,7 +665,6 @@ struct DIGroup {
       // we don't want to send a new image that doesn't have any
       // items in it
       if (!hasItems || mVisibleRect.IsEmpty()) {
-        GP("Skipped group with no items\n");
         return;
       }
 
@@ -742,20 +723,6 @@ struct DIGroup {
     auto rendering = wr::ImageRendering::Auto;
     bool backfaceHidden = false;
 
-    // XXX - clipping the item against the paint rect breaks some content.
-    // cf. Bug 1455422.
-    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
-
-    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
-                       wr::AsImageKey(*mKey));
-  }
-
-  void PushHitTest(wr::DisplayListBuilder& aBuilder,
-                   const LayoutDeviceRect& bounds) {
-    wr::LayoutRect dest = wr::ToLayoutRect(bounds);
-    GP("PushHitTest: %f %f %f %f\n", dest.min.x, dest.min.y, dest.max.x,
-       dest.max.y);
-
     // We don't really know the exact shape of this blob because it may contain
     // SVG shapes. Also mHitInfo may be a combination of hit info flags from
     // different shapes so generate an irregular-area hit-test region for it.
@@ -764,9 +731,15 @@ struct DIGroup {
       hitInfo += CompositorHitTestFlags::eIrregularArea;
     }
 
-    bool backfaceHidden = false;
+    // XXX - clipping the item against the paint rect breaks some content.
+    // cf. Bug 1455422.
+    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
+
     aBuilder.PushHitTest(dest, dest, !backfaceHidden, mScrollId, hitInfo,
                          SideBits::eNone);
+
+    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
+                       wr::AsImageKey(*mKey));
   }
 
   void PaintItemRange(Grouper* aGrouper, nsDisplayList::Iterator aIter,
@@ -780,10 +753,6 @@ struct DIGroup {
       MOZ_ASSERT(item);
 
       BlobItemData* data = GetBlobItemData(item);
-      if (data->mInvisible) {
-        continue;
-      }
-
       LayerIntRect bounds = data->mRect;
       auto bottomRight = bounds.BottomRight();
 
@@ -1246,7 +1215,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
           groupData->mFollowingGroup.mVisibleRect.Intersect(
               groupData->mFollowingGroup.mLastVisibleRect);
       groupData->mFollowingGroup.mActualBounds = LayerIntRect();
-      groupData->mFollowingGroup.mHitTestBounds = LayerIntRect();
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
@@ -1308,7 +1276,6 @@ bool Grouper::ConstructItemInsideInactive(
    * set it to 'true' we ensure that we're not using the value from the last
    * time that we painted */
   data->mInvalid = false;
-  data->mInvisible = aItem->IsInvisible();
 
   // we compute the geometry change here because we have the transform around
   // still
@@ -1526,7 +1493,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mLayerBounds = layerBounds;
   group.mVisibleRect = visibleRect;
   group.mActualBounds = LayerIntRect();
-  group.mHitTestBounds = LayerIntRect();
   group.mPreservedRect = group.mVisibleRect.Intersect(group.mLastVisibleRect);
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mClippedImageBounds = layerBounds;
@@ -1551,6 +1517,7 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
 
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
+  mLastLocalCanvasDatas.Clear();
   ClearCachedResources();
 }
 
@@ -1562,10 +1529,14 @@ void WebRenderCommandBuilder::EmptyTransaction() {
       canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
+  for (RefPtr<WebRenderLocalCanvasData> canvasData : mLastLocalCanvasDatas) {
+    canvasData->RefreshExternalImage();
+    canvasData->RequestFrameReadback();
+  }
 }
 
 bool WebRenderCommandBuilder::NeedsEmptyTransaction() {
-  return !mLastCanvasDatas.IsEmpty();
+  return !mLastCanvasDatas.IsEmpty() || !mLastLocalCanvasDatas.IsEmpty();
 }
 
 void WebRenderCommandBuilder::BuildWebRenderCommands(
@@ -1583,6 +1554,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   mBuilderDumpIndex = 0;
   mLastCanvasDatas.Clear();
+  mLastLocalCanvasDatas.Clear();
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
@@ -1688,67 +1660,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
   }
 }
 
-// A helper struct to store information needed when creating a new
-// WebRenderLayerScrollData in CreateWebRenderCommandsFromDisplayList().
-// This information is gathered before the recursion, and then used to
-// emit the new layer after the recursion.
-struct NewLayerData {
-  size_t mLayerCountBeforeRecursing = 0;
-  const ActiveScrolledRoot* mStopAtAsr = nullptr;
-
-  // Information pertaining to the deferred transform.
-  nsDisplayTransform* mDeferredItem = nullptr;
-  ScrollableLayerGuid::ViewID mDeferredId = ScrollableLayerGuid::NULL_SCROLL_ID;
-  bool mTransformShouldGetOwnLayer = false;
-
-  void ComputeDeferredTransformInfo(const StackingContextHelper& aSc,
-                                    nsDisplayItem* aItem) {
-    // See the comments on StackingContextHelper::mDeferredTransformItem
-    // for an overview of what deferred transforms are.
-    // In the case where we deferred a transform, but have a child display
-    // item with a different ASR than the deferred transform item, we cannot
-    // put the transform on the WebRenderLayerScrollData item for the child.
-    // We cannot do this because it will not conform to APZ's expectations
-    // with respect to how the APZ tree ends up structured. In particular,
-    // the GetTransformToThis() for the child APZ (which is created for the
-    // child item's ASR) will not include the transform when we actually do
-    // want it to.
-    // When we run into this scenario, we solve it by creating two
-    // WebRenderLayerScrollData items; one that just holds the transform,
-    // that we deferred, and a child WebRenderLayerScrollData item that
-    // holds the scroll metadata for the child's ASR.
-    mDeferredItem = aSc.GetDeferredTransformItem();
-    if (mDeferredItem) {
-      // It's possible the transform's ASR is not only an ancestor of
-      // the item's ASR, but an ancestor of stopAtAsr. In such cases,
-      // don't use the transform at all at this level (it would be
-      // scrolled by stopAtAsr which is incorrect). The transform will
-      // instead be emitted as part of the ancestor WebRenderLayerScrollData
-      // node (the one with stopAtAsr as its item ASR), or one of its
-      // ancetors in turn.
-      if (ActiveScrolledRoot::IsProperAncestor(
-              mDeferredItem->GetActiveScrolledRoot(), mStopAtAsr)) {
-        mDeferredItem = nullptr;
-      }
-    }
-    if (mDeferredItem) {
-      if (const auto* asr = mDeferredItem->GetActiveScrolledRoot()) {
-        mDeferredId = asr->GetViewId();
-      }
-      if (mDeferredItem->GetActiveScrolledRoot() !=
-          aItem->GetActiveScrolledRoot()) {
-        mTransformShouldGetOwnLayer = true;
-      } else if (aItem->GetType() == DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
-        // A scroll info layer has its own scroll id that's not reflected
-        // in item->GetActiveScrolledRoot(), but will be added to the
-        // WebRenderLayerScrollData node, so it needs to be treated as
-        // having a distinct ASR from the deferred transform item.
-        mTransformShouldGetOwnLayer = true;
-      }
-    }
-  }
-};
-
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
@@ -1839,14 +1750,13 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       }
     }
 
-    Maybe<NewLayerData> newLayerData;
+    bool forceNewLayerData = false;
+    size_t layerCountBeforeRecursing = mLayerScrollData.size();
     if (apzEnabled) {
       // For some types of display items we want to force a new
       // WebRenderLayerScrollData object, to ensure we preserve the APZ-relevant
       // data that is in the display item.
-      if (item->UpdateScrollData(nullptr, nullptr)) {
-        newLayerData = Some(NewLayerData());
-      }
+      forceNewLayerData = item->UpdateScrollData(nullptr, nullptr);
 
       // Anytime the ASR changes we also want to force a new layer data because
       // the stack of scroll metadata is going to be different for this
@@ -1855,7 +1765,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       const ActiveScrolledRoot* asr = item->GetActiveScrolledRoot();
       if (asr != mLastAsr) {
         mLastAsr = asr;
-        newLayerData = Some(NewLayerData());
+        forceNewLayerData = true;
       }
 
       // Refer to the comment on StackingContextHelper::mDeferredTransformItem
@@ -1865,34 +1775,17 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       // merge the deferred transforms, but need to force a new
       // WebRenderLayerScrollData item to flush the old deferred transform, so
       // that we can then start deferring the new one.
-      if (!newLayerData && item->CreatesStackingContextHelper() &&
+      if (!forceNewLayerData && item->CreatesStackingContextHelper() &&
           aSc.GetDeferredTransformItem() &&
           aSc.GetDeferredTransformItem()->GetActiveScrolledRoot() != asr) {
-        newLayerData = Some(NewLayerData());
+        forceNewLayerData = true;
       }
 
       // If we're going to create a new layer data for this item, stash the
       // ASR so that if we recurse into a sublist they will know where to stop
       // walking up their ASR chain when building scroll metadata.
-      if (newLayerData) {
-        newLayerData->mLayerCountBeforeRecursing = mLayerScrollData.size();
-        newLayerData->mStopAtAsr =
-            mAsrStack.empty() ? nullptr : mAsrStack.back();
-        newLayerData->ComputeDeferredTransformInfo(aSc, item);
-
-        const ActiveScrolledRoot* stopAtAsrForDescendants = asr;
-        // While unusual and probably indicative of a poorly behaved display
-        // list, it's possible to have a deferred transform item which we
-        // will emit as its own layer on the way out of the recursion, whose
-        // ASR (let's call it T) is a *descendant* of the current item's ASR.
-        // In such cases, make sure our descendants have stopAtAsr=T, otherwise
-        // ASRs in the range [T, asr) may be emitted in duplicate, leading to
-        // cylic scroll metadata annotations.
-        if (newLayerData->mTransformShouldGetOwnLayer) {
-          stopAtAsrForDescendants = ActiveScrolledRoot::PickDescendant(
-              asr, newLayerData->mDeferredItem->GetActiveScrolledRoot());
-        }
-        mAsrStack.push_back(stopAtAsrForDescendants);
+      if (forceNewLayerData) {
+        mAsrStack.push_back(asr);
       }
     }
 
@@ -1929,20 +1822,64 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     }
 
     if (apzEnabled) {
-      if (newLayerData) {
+      if (forceNewLayerData) {
         // Pop the thing we pushed before the recursion, so the topmost item on
         // the stack is enclosing display item's ASR (or the stack is empty)
         mAsrStack.pop_back();
-
-        const ActiveScrolledRoot* stopAtAsr = newLayerData->mStopAtAsr;
+        const ActiveScrolledRoot* stopAtAsr =
+            mAsrStack.empty() ? nullptr : mAsrStack.back();
 
         int32_t descendants =
-            mLayerScrollData.size() - newLayerData->mLayerCountBeforeRecursing;
+            mLayerScrollData.size() - layerCountBeforeRecursing;
 
-        nsDisplayTransform* deferred = newLayerData->mDeferredItem;
-        ScrollableLayerGuid::ViewID deferredId = newLayerData->mDeferredId;
-
-        if (newLayerData->mTransformShouldGetOwnLayer) {
+        // See the comments on StackingContextHelper::mDeferredTransformItem
+        // for an overview of what deferred transforms are.
+        // In the case where we deferred a transform, but have a child display
+        // item with a different ASR than the deferred transform item, we cannot
+        // put the transform on the WebRenderLayerScrollData item for the child.
+        // We cannot do this because it will not conform to APZ's expectations
+        // with respect to how the APZ tree ends up structured. In particular,
+        // the GetTransformToThis() for the child APZ (which is created for the
+        // child item's ASR) will not include the transform when we actually do
+        // want it to.
+        // When we run into this scenario, we solve it by creating two
+        // WebRenderLayerScrollData items; one that just holds the transform,
+        // that we deferred, and a child WebRenderLayerScrollData item that
+        // holds the scroll metadata for the child's ASR.
+        nsDisplayTransform* deferred = aSc.GetDeferredTransformItem();
+        ScrollableLayerGuid::ViewID deferredId =
+            ScrollableLayerGuid::NULL_SCROLL_ID;
+        bool transformShouldGetOwnLayer = false;
+        if (deferred) {
+          // It's possible the transform's ASR is not only an ancestor of
+          // the item's ASR, but an ancestor of stopAtAsr. In such cases,
+          // don't use the transform at all at this level (it would be
+          // scrolled by stopAtAsr which is incorrect). The transform will
+          // instead be emitted as part of the ancestor WebRenderLayerScrollData
+          // node (the one with stopAtAsr as its item ASR), or one of its
+          // ancetors in turn.
+          if (ActiveScrolledRoot::IsProperAncestor(
+                  deferred->GetActiveScrolledRoot(), stopAtAsr)) {
+            deferred = nullptr;
+          }
+        }
+        if (deferred) {
+          if (const auto* asr = deferred->GetActiveScrolledRoot()) {
+            deferredId = asr->GetViewId();
+          }
+          if (deferred->GetActiveScrolledRoot() !=
+              item->GetActiveScrolledRoot()) {
+            transformShouldGetOwnLayer = true;
+          } else if (item->GetType() ==
+                     DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
+            // A scroll info layer has its own scroll id that's not reflected
+            // in item->GetActiveScrolledRoot(), but will be added to the
+            // WebRenderLayerScrollData node, so it needs to be treated as
+            // having a distinct ASR from the deferred transform item.
+            transformShouldGetOwnLayer = true;
+          }
+        }
+        if (transformShouldGetOwnLayer) {
           // This creates the child WebRenderLayerScrollData for |item|, but
           // omits the transform (hence the Nothing() as the last argument to
           // Initialize(...)). We also need to make sure that the ASR from
@@ -2085,24 +2022,6 @@ bool WebRenderCommandBuilder::PushImageProvider(
   aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
 
   return true;
-}
-
-void WebRenderCommandBuilder::PushInProcessImage(
-    nsDisplayItem* aItem, const CompositableHandle& aHandle,
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc,
-    const LayoutDeviceRect& aAsyncImageBounds) {
-  RefPtr<WebRenderInProcessImageData> imageData =
-      CreateOrRecycleWebRenderUserData<WebRenderInProcessImageData>(aItem);
-  MOZ_ASSERT(imageData);
-
-  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-  LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), aAsyncImageBounds.Size());
-  imageData->CreateWebRenderCommands(aBuilder, aHandle, aSc, aAsyncImageBounds,
-                                     scBounds, VideoInfo::Rotation::kDegree_0,
-                                     rendering, wr::MixBlendMode::Normal,
-                                     !aItem->BackfaceIsHidden());
 }
 
 static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
@@ -2722,6 +2641,9 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
       switch (data->GetType()) {
         case WebRenderUserData::UserDataType::eCanvas:
           mLastCanvasDatas.Remove(data->AsCanvasData());
+          break;
+        case WebRenderUserData::UserDataType::eLocalCanvas:
+          mLastLocalCanvasDatas.Remove(data->AsLocalCanvasData());
           break;
         case WebRenderUserData::UserDataType::eAnimation:
           EffectCompositor::ClearIsRunningOnCompositor(

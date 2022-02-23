@@ -22,3 +22,4 @@ You will also see an ``overflow`` badge next to the node causing the overflow.
 .. image:: overflow_badge.png
   :alt: HTML Pane: Overflow badge
   :class: center
+

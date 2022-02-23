@@ -123,7 +123,9 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
                        nsACString& aContentType, nsACString& aCharset) const;
 
 #ifdef MOZ_DOM_STREAMS
-  already_AddRefed<ReadableStream> Stream(JSContext* aCx, ErrorResult& aRv);
+  already_AddRefed<ReadableStream> Stream(ErrorResult& aRv) {
+    MOZ_CRASH("MOZ_DOM_STREAMS: NYI");
+  }
 #else
   void Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
               ErrorResult& aRv);

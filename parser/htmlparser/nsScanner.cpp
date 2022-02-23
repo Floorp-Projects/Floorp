@@ -47,12 +47,21 @@ nsReadEndCondition::nsReadEndCondition(const char16_t* aTerminateChars)
  *  @param   aMode represents the parser mode (nav, other)
  *  @return
  */
-nsScanner::nsScanner(const nsAString& anHTMLString, bool aIncremental)
-    : mIncremental(aIncremental) {
+nsScanner::nsScanner(const nsAString& anHTMLString) {
   MOZ_COUNT_CTOR(nsScanner);
 
-  AppendToBuffer(anHTMLString);
-  MOZ_ASSERT(mMarkPosition == mCurrentPosition);
+  mSlidingBuffer = nullptr;
+  if (AppendToBuffer(anHTMLString)) {
+    mSlidingBuffer->BeginReading(mCurrentPosition);
+  } else {
+    /* XXX see hack below, re: bug 182067 */
+    memset(&mCurrentPosition, 0, sizeof(mCurrentPosition));
+    mEndPosition = mCurrentPosition;
+  }
+  mMarkPosition = mCurrentPosition;
+  mIncremental = false;
+  mUnicodeDecoder = nullptr;
+  mCharsetSource = kCharsetUninitialized;
 }
 
 /**
@@ -60,8 +69,12 @@ nsScanner::nsScanner(const nsAString& anHTMLString, bool aIncremental)
  *  the scanner receives. If you pass a null filename, you
  *  can still provide data to the scanner via append.
  */
-nsScanner::nsScanner(nsIURI* aURI) : mURI(aURI), mIncremental(true) {
+nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
+    : mFilename(aFilename) {
   MOZ_COUNT_CTOR(nsScanner);
+  NS_ASSERTION(!aCreateStream, "This is always true.");
+
+  mSlidingBuffer = nullptr;
 
   // XXX This is a big hack.  We need to initialize the iterators to something.
   // What matters is that mCurrentPosition == mEndPosition, so that our methods
@@ -72,6 +85,10 @@ nsScanner::nsScanner(nsIURI* aURI) : mURI(aURI), mIncremental(true) {
   mMarkPosition = mCurrentPosition;
   mEndPosition = mCurrentPosition;
 
+  mIncremental = true;
+
+  mUnicodeDecoder = nullptr;
+  mCharsetSource = kCharsetUninitialized;
   // XML defaults to UTF-8 and about:blank is UTF-8, too.
   SetDocumentCharset(UTF_8_ENCODING, kCharsetFromDocTypeDefault);
 }
@@ -104,7 +121,11 @@ nsresult nsScanner::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
  *  @param
  *  @return
  */
-nsScanner::~nsScanner() { MOZ_COUNT_DTOR(nsScanner); }
+nsScanner::~nsScanner() {
+  delete mSlidingBuffer;
+
+  MOZ_COUNT_DTOR(nsScanner);
+}
 
 /**
  *  Resets current offset position of input stream to marked position.
@@ -226,7 +247,7 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen) {
     // since it doesn't reflect on our success or failure
     // - Ref. bug 87110
     res = NS_OK;
-    AppendToBuffer(buffer);
+    if (!AppendToBuffer(buffer)) res = NS_ERROR_OUT_OF_MEMORY;
   } else {
     NS_WARNING("No decoder found.");
     res = NS_ERROR_FAILURE;
@@ -277,18 +298,22 @@ void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate) {
   }
 }
 
-void nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf) {
+bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf) {
   if (!mSlidingBuffer) {
-    mSlidingBuffer = MakeUnique<nsScannerString>(aBuf);
+    mSlidingBuffer = new nsScannerString(aBuf);
+    if (!mSlidingBuffer) return false;
     mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
+    mSlidingBuffer->EndReading(mEndPosition);
   } else {
     mSlidingBuffer->AppendBuffer(aBuf);
     if (mCurrentPosition == mEndPosition) {
       mSlidingBuffer->BeginReading(mCurrentPosition);
     }
+    mSlidingBuffer->EndReading(mEndPosition);
   }
-  mSlidingBuffer->EndReading(mEndPosition);
+
+  return true;
 }
 
 /**
@@ -311,6 +336,16 @@ bool nsScanner::CopyUnusedData(nsString& aCopyBuffer) {
 
   return CopyUnicodeTo(start, end, aCopyBuffer);
 }
+
+/**
+ *  Retrieve the name of the file that the scanner is reading from.
+ *  In some cases, it's just a given name, because the scanner isn't
+ *  really reading from a file.
+ *
+ *  @update  gess 5/12/98
+ *  @return
+ */
+nsString& nsScanner::GetFilename(void) { return mFilename; }
 
 /**
  *  Conduct self test. Actually, selftesting for this class

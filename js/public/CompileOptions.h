@@ -72,43 +72,6 @@ enum class AsmJSOption : uint8_t {
   DisabledByDebugger,
 };
 
-#define FOREACH_DELAZIFICATION_STRATEGY(_)                                     \
-  /* Do not delazify anything eagerly. */                                      \
-  _(OnDemandOnly)                                                              \
-                                                                               \
-  /*                                                                           \
-   * Delazifiy functions in a depth first traversal of the functions. (not     \
-   * implemented yet)                                                          \
-   */                                                                          \
-  _(ConcurrentDepthFirst)                                                      \
-                                                                               \
-  /*                                                                           \
-   * Delazify functions in a breath first traversal of the code. (not          \
-   * implemented yet)                                                          \
-   */                                                                          \
-  _(ConcurrentBreathFirst)                                                     \
-                                                                               \
-  /*                                                                           \
-   * Delazify functions based on the frequency of names across all scripts     \
-   * pending for delazifications. (not implemented yet)                        \
-   */                                                                          \
-  _(ConcurrentMostFrequentNameFirst)                                           \
-                                                                               \
-  /*                                                                           \
-   * Parse everything eagerly, from the first parse.                           \
-   *                                                                           \
-   * NOTE: Either the Realm configuration or specialized VM operating modes    \
-   * may disallow syntax-parse altogether. These conditions are checked in the \
-   * CompileOptions constructor.                                               \
-   */                                                                          \
-  _(ParseEverythingEagerly)
-
-enum class DelazificationOption : uint8_t {
-#define _ENUM_ENTRY(Name) Name,
-  FOREACH_DELAZIFICATION_STRATEGY(_ENUM_ENTRY)
-#undef _ENUM_ENTRY
-};
-
 class JS_PUBLIC_API InstantiateOptions;
 class JS_PUBLIC_API DecodeOptions;
 
@@ -147,6 +110,11 @@ class JS_PUBLIC_API TransitiveCompileOptions {
    */
   bool mutedErrors_ = false;
 
+  // Either the Realm configuration or specialized VM operating modes may
+  // disallow syntax-parse altogether. These conditions are checked in the
+  // CompileOptions constructor.
+  bool forceFullParse_ = false;
+
   // Either the Realm configuration or the compile request may force
   // strict-mode.
   bool forceStrictMode_ = false;
@@ -166,12 +134,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // and expose the script to the debugger (if hideScriptFromDebugger_ isn't
   // set)
   bool deferDebugMetadata_ = false;
-
-  // Off-thread delazification strategy is used to tell off-thread tasks how the
-  // delazification should be performed. Multiple strategies are available in
-  // order to test different approaches to the concurrent delazification.
-  DelazificationOption eagerDelazificationStrategy_ =
-      DelazificationOption::OnDemandOnly;
 
   friend class JS_PUBLIC_API InstantiateOptions;
 
@@ -246,14 +208,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
-  bool forceFullParse() const {
-    return eagerDelazificationStrategy_ ==
-           DelazificationOption::ParseEverythingEagerly;
-  }
+  bool forceFullParse() const { return forceFullParse_; }
   bool forceStrictMode() const { return forceStrictMode_; }
-  DelazificationOption eagerDelazificationStrategy() const {
-    return eagerDelazificationStrategy_;
-  }
   bool sourcePragmas() const { return sourcePragmas_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
@@ -480,18 +436,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setForceFullParse() {
-    eagerDelazificationStrategy_ = DelazificationOption::ParseEverythingEagerly;
-    return *this;
-  }
-
-  CompileOptions& setEagerDelazificationStrategy(
-      DelazificationOption strategy) {
-    // forceFullParse is at the moment considered as a non-overridable strategy.
-    MOZ_RELEASE_ASSERT(eagerDelazificationStrategy_ !=
-                           DelazificationOption::ParseEverythingEagerly ||
-                       strategy ==
-                           DelazificationOption::ParseEverythingEagerly);
-    eagerDelazificationStrategy_ = strategy;
+    forceFullParse_ = true;
     return *this;
   }
 

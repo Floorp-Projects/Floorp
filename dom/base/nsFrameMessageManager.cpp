@@ -80,6 +80,7 @@
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
 #include "nsIChannel.h"
 #include "nsIConsoleService.h"
@@ -455,7 +456,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
   }
 
   // Not clonable, try JSON
-  // Bug 1749037 - This is ugly but currently structured cloning doesn't handle
+  // XXX This is ugly but currently structured cloning doesn't handle
   //    properly cases when interface is implemented in JS and used
   //    as a dictionary.
   nsAutoString json;

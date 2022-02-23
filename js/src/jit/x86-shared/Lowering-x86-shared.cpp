@@ -846,17 +846,10 @@ void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
     case wasm::SimdOp::I16x8LaneSelect:
     case wasm::SimdOp::I32x4LaneSelect:
     case wasm::SimdOp::I64x2LaneSelect: {
-      if (Assembler::HasAVX()) {
-        auto* lir = new (alloc()) LWasmTernarySimd128(
-            ins->simdOp(), useRegisterAtStart(ins->v0()),
-            useRegisterAtStart(ins->v1()), useRegisterAtStart(ins->v2()));
-        define(lir, ins);
-      } else {
-        auto* lir = new (alloc()) LWasmTernarySimd128(
-            ins->simdOp(), useRegister(ins->v0()),
-            useRegisterAtStart(ins->v1()), useFixed(ins->v2(), vmm0));
-        defineReuseInput(lir, ins, LWasmTernarySimd128::V1);
-      }
+      auto* lir = new (alloc()) LWasmTernarySimd128(
+          ins->simdOp(), useRegister(ins->v0()), useRegisterAtStart(ins->v1()),
+          useFixed(ins->v2(), vmm0));
+      defineReuseInput(lir, ins, LWasmTernarySimd128::V1);
       break;
     }
     default:
@@ -1065,70 +1058,6 @@ bool MWasmTernarySimd128::specializeBitselectConstantMaskAsShuffle(
   }
   return true;
 }
-bool MWasmTernarySimd128::canRelaxBitselect() {
-  wasm::SimdOp simdOp;
-  if (v2()->isWasmBinarySimd128()) {
-    simdOp = v2()->toWasmBinarySimd128()->simdOp();
-  } else if (v2()->isWasmBinarySimd128WithConstant()) {
-    simdOp = v2()->toWasmBinarySimd128WithConstant()->simdOp();
-  } else {
-    return false;
-  }
-  switch (simdOp) {
-    case wasm::SimdOp::I8x16Eq:
-    case wasm::SimdOp::I8x16Ne:
-    case wasm::SimdOp::I8x16GtS:
-    case wasm::SimdOp::I8x16GeS:
-    case wasm::SimdOp::I8x16LtS:
-    case wasm::SimdOp::I8x16LeS:
-    case wasm::SimdOp::I8x16GtU:
-    case wasm::SimdOp::I8x16GeU:
-    case wasm::SimdOp::I8x16LtU:
-    case wasm::SimdOp::I8x16LeU:
-    case wasm::SimdOp::I16x8Eq:
-    case wasm::SimdOp::I16x8Ne:
-    case wasm::SimdOp::I16x8GtS:
-    case wasm::SimdOp::I16x8GeS:
-    case wasm::SimdOp::I16x8LtS:
-    case wasm::SimdOp::I16x8LeS:
-    case wasm::SimdOp::I16x8GtU:
-    case wasm::SimdOp::I16x8GeU:
-    case wasm::SimdOp::I16x8LtU:
-    case wasm::SimdOp::I16x8LeU:
-    case wasm::SimdOp::I32x4Eq:
-    case wasm::SimdOp::I32x4Ne:
-    case wasm::SimdOp::I32x4GtS:
-    case wasm::SimdOp::I32x4GeS:
-    case wasm::SimdOp::I32x4LtS:
-    case wasm::SimdOp::I32x4LeS:
-    case wasm::SimdOp::I32x4GtU:
-    case wasm::SimdOp::I32x4GeU:
-    case wasm::SimdOp::I32x4LtU:
-    case wasm::SimdOp::I32x4LeU:
-    case wasm::SimdOp::I64x2Eq:
-    case wasm::SimdOp::I64x2Ne:
-    case wasm::SimdOp::I64x2GtS:
-    case wasm::SimdOp::I64x2GeS:
-    case wasm::SimdOp::I64x2LtS:
-    case wasm::SimdOp::I64x2LeS:
-    case wasm::SimdOp::F32x4Eq:
-    case wasm::SimdOp::F32x4Ne:
-    case wasm::SimdOp::F32x4Gt:
-    case wasm::SimdOp::F32x4Ge:
-    case wasm::SimdOp::F32x4Lt:
-    case wasm::SimdOp::F32x4Le:
-    case wasm::SimdOp::F64x2Eq:
-    case wasm::SimdOp::F64x2Ne:
-    case wasm::SimdOp::F64x2Gt:
-    case wasm::SimdOp::F64x2Ge:
-    case wasm::SimdOp::F64x2Lt:
-    case wasm::SimdOp::F64x2Le:
-      return true;
-    default:
-      break;
-  }
-  return false;
-}
 #endif
 
 bool MWasmBinarySimd128::specializeForConstantRhs() {
@@ -1228,21 +1157,13 @@ void LIRGenerator::visitWasmBinarySimd128WithConstant(
   MOZ_ASSERT(lhs->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
-  if (isThreeOpAllowed()) {
-    // The non-destructive versions of instructions will be available
-    // when AVX is enabled.
-    LAllocation lhsAlloc = useRegisterAtStart(lhs);
-    auto* lir =
-        new (alloc()) LWasmBinarySimd128WithConstant(lhsAlloc, ins->rhs());
-    define(lir, ins);
-  } else {
-    // Always beneficial to reuse the lhs register here, see discussion in
-    // visitWasmBinarySimd128() and also code in specializeForConstantRhs().
-    LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-    auto* lir =
-        new (alloc()) LWasmBinarySimd128WithConstant(lhsDestAlloc, ins->rhs());
-    defineReuseInput(lir, ins, LWasmBinarySimd128WithConstant::LhsDest);
-  }
+  // Always beneficial to reuse the lhs register here, see discussion in
+  // visitWasmBinarySimd128() and also code in specializeForConstantRhs().
+
+  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+  auto* lir =
+      new (alloc()) LWasmBinarySimd128WithConstant(lhsDestAlloc, ins->rhs());
+  defineReuseInput(lir, ins, LWasmBinarySimd128WithConstant::LhsDest);
 #else
   MOZ_CRASH("No SIMD");
 #endif
@@ -1300,12 +1221,7 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
         case wasm::SimdOp::I64x2ShrS: {
           auto* lir = new (alloc())
               LWasmSignReplicationSimd128(useRegisterAtStart(lhs));
-          if (isThreeOpAllowed()) {
-            define(lir, ins);
-          } else {
-            // For non-AVX, it is always beneficial to reuse the input.
-            defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
-          }
+          defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
           return;
         }
         default:
@@ -1316,14 +1232,11 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
 #  ifdef DEBUG
     js::wasm::ReportSimdAnalysis("shift -> constant shift");
 #  endif
+    // Almost always beneficial, and never detrimental, to reuse the input if
+    // possible.
     auto* lir = new (alloc())
         LWasmConstantShiftSimd128(useRegisterAtStart(lhs), shiftCount);
-    if (isThreeOpAllowed()) {
-      define(lir, ins);
-    } else {
-      // For non-AVX, it is always beneficial to reuse the input.
-      defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
-    }
+    defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
     return;
   }
 
@@ -1365,11 +1278,13 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
     case SimdShuffle::Operand::LEFT:
     case SimdShuffle::Operand::RIGHT: {
       LAllocation src;
-      bool reuse = false;
+      // All permute operators currently favor reusing the input register so
+      // we're not currently exercising code paths below that do not reuse.
+      // Those paths have been exercised in the past however and are believed
+      // to be correct.
+      bool useAtStartAndReuse = false;
       switch (*s.permuteOp) {
         case SimdPermuteOp::MOVE:
-          reuse = true;
-          break;
         case SimdPermuteOp::BROADCAST_8x16:
         case SimdPermuteOp::BROADCAST_16x8:
         case SimdPermuteOp::PERMUTE_8x16:
@@ -1381,20 +1296,27 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
         case SimdPermuteOp::REVERSE_16x8:
         case SimdPermuteOp::REVERSE_32x4:
         case SimdPermuteOp::REVERSE_64x2:
-          // No need to reuse registers when VEX instructions are enabled.
-          reuse = !Assembler::HasAVX();
+          useAtStartAndReuse = true;
           break;
         default:
           MOZ_CRASH("Unexpected operator");
       }
       if (s.opd == SimdShuffle::Operand::LEFT) {
-        src = useRegisterAtStart(ins->lhs());
+        if (useAtStartAndReuse) {
+          src = useRegisterAtStart(ins->lhs());
+        } else {
+          src = useRegister(ins->lhs());
+        }
       } else {
-        src = useRegisterAtStart(ins->rhs());
+        if (useAtStartAndReuse) {
+          src = useRegisterAtStart(ins->rhs());
+        } else {
+          src = useRegister(ins->rhs());
+        }
       }
       auto* lir =
           new (alloc()) LWasmPermuteSimd128(src, *s.permuteOp, s.control);
-      if (reuse) {
+      if (useAtStartAndReuse) {
         defineReuseInput(lir, ins, LWasmPermuteSimd128::Src);
       } else {
         define(lir, ins);
@@ -1406,38 +1328,23 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       LDefinition temp = LDefinition::BogusTemp();
       switch (*s.shuffleOp) {
         case SimdShuffleOp::BLEND_8x16:
-          temp = Assembler::HasAVX() ? tempSimd128() : tempFixed(xmm0);
+          temp = tempFixed(xmm0);
           break;
         default:
           break;
       }
-      if (isThreeOpAllowed()) {
-        LAllocation lhs;
-        LAllocation rhs;
-        if (s.opd == SimdShuffle::Operand::BOTH) {
-          lhs = useRegisterAtStart(ins->lhs());
-          rhs = useRegisterAtStart(ins->rhs());
-        } else {
-          lhs = useRegisterAtStart(ins->rhs());
-          rhs = useRegisterAtStart(ins->lhs());
-        }
-        auto* lir = new (alloc())
-            LWasmShuffleSimd128(lhs, rhs, temp, *s.shuffleOp, s.control);
-        define(lir, ins);
+      LAllocation lhs;
+      LAllocation rhs;
+      if (s.opd == SimdShuffle::Operand::BOTH) {
+        lhs = useRegisterAtStart(ins->lhs());
+        rhs = useRegister(ins->rhs());
       } else {
-        LAllocation lhs;
-        LAllocation rhs;
-        if (s.opd == SimdShuffle::Operand::BOTH) {
-          lhs = useRegisterAtStart(ins->lhs());
-          rhs = useRegister(ins->rhs());
-        } else {
-          lhs = useRegisterAtStart(ins->rhs());
-          rhs = useRegister(ins->lhs());
-        }
-        auto* lir = new (alloc())
-            LWasmShuffleSimd128(lhs, rhs, temp, *s.shuffleOp, s.control);
-        defineReuseInput(lir, ins, LWasmShuffleSimd128::LhsDest);
+        lhs = useRegisterAtStart(ins->rhs());
+        rhs = useRegister(ins->lhs());
       }
+      auto* lir = new (alloc())
+          LWasmShuffleSimd128(lhs, rhs, temp, *s.shuffleOp, s.control);
+      defineReuseInput(lir, ins, LWasmShuffleSimd128::LhsDest);
       break;
     }
   }
@@ -1526,11 +1433,8 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I16x8Neg:
     case wasm::SimdOp::I32x4Neg:
     case wasm::SimdOp::I64x2Neg:
-    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16S:
       // Prefer src != dest to avoid an unconditional src->temp move.
-      MOZ_ASSERT(!reuseInput);
-      // If AVX is enabled, we prefer useRegisterAtStart.
-      useAtStart = isThreeOpAllowed();
+      MOZ_ASSERT(!useAtStart && !reuseInput);
       break;
     case wasm::SimdOp::F32x4Neg:
     case wasm::SimdOp::F64x2Neg:
@@ -1545,6 +1449,7 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I64x2Abs:
     case wasm::SimdOp::I32x4TruncSatF32x4S:
     case wasm::SimdOp::F32x4ConvertI32x4U:
+    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16S:
     case wasm::SimdOp::I16x8ExtaddPairwiseI8x16U:
     case wasm::SimdOp::I32x4ExtaddPairwiseI16x8S:
     case wasm::SimdOp::I32x4ExtaddPairwiseI16x8U:
@@ -1555,19 +1460,18 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I64x2ExtendHighI32x4S:
     case wasm::SimdOp::I64x2ExtendHighI32x4U:
       // Prefer src == dest to avoid an unconditional src->dest move
-      // for better performance in non-AVX mode (e.g. non-PSHUFD use).
+      // for better performance (e.g. non-PSHUFD use).
       useAtStart = true;
-      reuseInput = !isThreeOpAllowed();
+      reuseInput = true;
       break;
     case wasm::SimdOp::I32x4TruncSatF32x4U:
     case wasm::SimdOp::I32x4TruncSatF64x2SZero:
     case wasm::SimdOp::I32x4TruncSatF64x2UZero:
     case wasm::SimdOp::I8x16Popcnt:
       tempReg = tempSimd128();
-      // Prefer src == dest to avoid an unconditional src->dest move
-      // in non-AVX mode.
+      // Prefer src == dest to avoid an unconditional src->dest move.
       useAtStart = true;
-      reuseInput = !isThreeOpAllowed();
+      reuseInput = true;
       break;
     case wasm::SimdOp::I16x8ExtendLowI8x16S:
     case wasm::SimdOp::I16x8ExtendHighI8x16S:

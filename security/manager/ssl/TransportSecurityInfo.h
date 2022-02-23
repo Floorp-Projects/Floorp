@@ -78,13 +78,11 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   void SetCanceled(PRErrorCode errorCode);
   bool IsCanceled();
 
-  void SetStatusErrorBits(const nsCOMPtr<nsIX509Cert>& cert,
-                          uint32_t collected_errors);
+  void SetStatusErrorBits(nsNSSCertificate* cert, uint32_t collected_errors);
 
   nsresult SetFailedCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 
-  void SetServerCert(const nsCOMPtr<nsIX509Cert>& aServerCert,
-                     EVStatus aEVStatus);
+  void SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus);
 
   nsresult SetSucceededCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 

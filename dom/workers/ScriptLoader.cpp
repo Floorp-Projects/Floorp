@@ -77,6 +77,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/SRILogHelper.h"
+#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/Result.h"
@@ -86,6 +87,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
+#include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
@@ -424,11 +426,11 @@ class CacheCreator final : public PromiseNativeHandler {
     mLoaders.AppendElement(std::move(aLoader));
   }
 
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
   // Try to load from cache with aPrincipal used for cache access.
   nsresult Load(nsIPrincipal* aPrincipal);
@@ -490,11 +492,11 @@ class CacheScriptLoader final : public PromiseNativeHandler,
 
   void Load(Cache* aCache);
 
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
  private:
   ~CacheScriptLoader() { AssertIsOnMainThread(); }
@@ -527,11 +529,11 @@ class CachePromiseHandler final : public PromiseNativeHandler {
     MOZ_ASSERT(mRunnable);
   }
 
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override;
 
  private:
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
@@ -1295,7 +1297,11 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     rv = NS_GetFinalChannelURI(channel, getter_AddRefs(finalURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (principal->IsSameOrigin(finalURI)) {
+    bool isSameOrigin = false;
+    rv = principal->IsSameOrigin(finalURI, false, &isSameOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (isSameOrigin) {
       nsCString filename;
       rv = finalURI->GetSpec(filename);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1334,12 +1340,14 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
-      if (!csp) {
-        rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
-                                                    tCspROHeaderValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
+      if (StaticPrefs::security_csp_enable()) {
+        if (!csp) {
+          rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
+                                                      tCspROHeaderValue);
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
+        }
       }
 
       mWorkerPrivate->UpdateReferrerInfoFromHeader(tRPHeaderCValue);
@@ -1557,8 +1565,7 @@ LoaderListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) {
+                                           JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
   // May already have been canceled by CacheScriptLoader::Fail from
   // CancelMainThread.
@@ -1575,8 +1582,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
 }
 
 void CachePromiseHandler::RejectedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) {
+                                           JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
   // May already have been canceled by CacheScriptLoader::Fail from
   // CancelMainThread.
@@ -1673,15 +1679,13 @@ void CacheCreator::FailLoaders(nsresult aRv) {
 }
 
 void CacheCreator::RejectedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue,
-                                    ErrorResult& aRv) {
+                                    JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
   FailLoaders(NS_ERROR_FAILURE);
 }
 
 void CacheCreator::ResolvedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue,
-                                    ErrorResult& aRv) {
+                                    JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
 
   if (!aValue.isObject()) {
@@ -1798,16 +1802,14 @@ void CacheScriptLoader::Load(Cache* aCache) {
 }
 
 void CacheScriptLoader::RejectedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         ErrorResult& aRv) {
+                                         JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::Uncached);
   Fail(NS_ERROR_FAILURE);
 }
 
 void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         ErrorResult& aRv) {
+                                         JS::Handle<JS::Value> aValue) {
   AssertIsOnMainThread();
   // If we have already called 'Fail', we should not proceed.
   if (mFailed) {
@@ -2221,15 +2223,11 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
 }
 
 nsresult ScriptExecutorRunnable::Cancel() {
-  // We need to check first if cancel is called twice
-  nsresult rv = MainThreadWorkerSyncRunnable::Cancel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (AllScriptsExecutable()) {
     ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false,
                          false);
   }
-  return NS_OK;
+  return MainThreadWorkerSyncRunnable::Cancel();
 }
 
 void ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,

@@ -11,10 +11,16 @@
 ;********************************************************************
 ; Original implementation:
 ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
-; last mod: $Id$
+; last mod: $Id: armfrag.s 17481 2010-10-03 22:49:42Z tterribe $
 ;********************************************************************
 
 	AREA	|.text|, CODE, READONLY
+
+	; Explicitly specifying alignment here because some versions of
+	; gas don't align code correctly. See
+	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
+	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
+	ALIGN
 
 	GET	armopts.s
 
@@ -510,7 +516,8 @@ oc_frag_recon_intra_neon PROC
 	; r0 =       unsigned char *_dst
 	; r1 =       int            _ystride
 	; r2 = const ogg_int16_t    _residue[64]
-	VMOV.I16	Q0, #128
+	MOV	r3, #128
+	VDUP.S16	Q0, r3
 	VLDMIA	r2,  {D16-D31}	; D16= 3333222211110000 etc	; 9(8) cycles
 	VQADD.S16	Q8, Q8, Q0
 	VQADD.S16	Q9, Q9, Q0

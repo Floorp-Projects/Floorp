@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 // Creating a reader from an errored stream should not result in a promise
 // being tracked as unhandled.
 

@@ -278,20 +278,6 @@ void JitScript::Destroy(Zone* zone, JitScript* script) {
   js_delete(script);
 }
 
-void JitScript::prepareForDestruction(Zone* zone) {
-  // When the script contains pointers to nursery things, the store buffer can
-  // contain entries that point into the fallback stub space. Since we can
-  // destroy scripts outside the context of a GC, this situation could result
-  // in us trying to mark invalid store buffer entries.
-  //
-  // Defer freeing any allocated blocks until after the next minor GC.
-  jitScriptStubSpace_.freeAllAfterMinorGC(zone);
-
-  // Trigger write barriers.
-  baselineScript_.set(zone, nullptr);
-  ionScript_.set(zone, nullptr);
-}
-
 struct FallbackStubs {
   ICScript* const icScript_;
 
@@ -470,14 +456,15 @@ void JitScript::setBaselineScriptImpl(JSScript* script,
 void JitScript::setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
                                       BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
+    BaselineScript::preWriteBarrier(script->zone(), baselineScript_);
     fop->removeCellMemory(script, baselineScript_->allocBytes(),
                           MemoryUse::BaselineScript);
-    baselineScript_.set(script->zone(), nullptr);
+    baselineScript_ = nullptr;
   }
 
   MOZ_ASSERT(ionScript_ == nullptr || ionScript_ == IonDisabledScriptPtr);
 
-  baselineScript_.set(script->zone(), baselineScript);
+  baselineScript_ = baselineScript;
   if (hasBaselineScript()) {
     AddCellMemory(script, baselineScript_->allocBytes(),
                   MemoryUse::BaselineScript);
@@ -497,14 +484,14 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
   MOZ_ASSERT_IF(ionScript != IonDisabledScriptPtr,
                 !baselineScript()->hasPendingIonCompileTask());
 
-  JS::Zone* zone = script->zone();
   if (hasIonScript()) {
+    IonScript::preWriteBarrier(script->zone(), ionScript_);
     fop->removeCellMemory(script, ionScript_->allocBytes(),
                           MemoryUse::IonScript);
-    ionScript_.set(zone, nullptr);
+    ionScript_ = nullptr;
   }
 
-  ionScript_.set(zone, ionScript);
+  ionScript_ = ionScript;
   MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
   if (hasIonScript()) {
     AddCellMemory(script, ionScript_->allocBytes(), MemoryUse::IonScript);

@@ -16,16 +16,11 @@ BROWSER_CHROME_MANIFESTS += [
 
 JAR_MANIFESTS += ["jar.mn"]
 
-SPHINX_TREES["/browser/places"] = "docs"
-
 EXTRA_JS_MODULES += [
     "CommonNames.jsm",
-    "DomainGroupBuilder.jsm",
     "Interactions.jsm",
     "InteractionsBlocklist.jsm",
     "PlacesUIUtils.jsm",
-    "SnapshotGroups.jsm",
-    "SnapshotMonitor.jsm",
     "Snapshots.jsm",
     "SnapshotScorer.jsm",
     "SnapshotSelector.jsm",

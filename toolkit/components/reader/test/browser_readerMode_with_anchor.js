@@ -24,10 +24,6 @@ add_task(async function test_loading_withHash() {
         let foo = content.document.getElementById("foo");
         ok(foo, "foo element should be in document");
         let { scrollTop } = content.document.documentElement;
-        if (scrollTop == 0) {
-          await ContentTaskUtils.waitForEvent(content.document, "scroll");
-          ({ scrollTop } = content.document.documentElement);
-        }
         let { offsetTop } = foo;
         Assert.lessOrEqual(
           Math.abs(scrollTop - offsetTop),
@@ -47,14 +43,9 @@ add_task(async function test_loading_withoutHash() {
         browser,
         "AboutReaderContentReady"
       );
-      let pageLoadedPromise = BrowserTestUtils.waitForContentEvent(
-        browser,
-        "load",
-        true
-      );
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
-      await Promise.all([pageShownPromise, pageLoadedPromise]);
+      await pageShownPromise;
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.documentElement.scrollTop,
@@ -62,17 +53,11 @@ add_task(async function test_loading_withoutHash() {
           "scrollTop should be 0"
         );
       });
-      let scrollEventPromise = BrowserTestUtils.waitForContentEvent(
-        browser,
-        "scroll",
-        true
-      );
       await BrowserTestUtils.synthesizeMouseAtCenter(
         "#foo-anchor",
         {},
         browser
       );
-      await scrollEventPromise;
       await SpecialPowers.spawn(browser, [], async function() {
         let foo = content.document.getElementById("foo");
         ok(foo, "foo element should be in document");

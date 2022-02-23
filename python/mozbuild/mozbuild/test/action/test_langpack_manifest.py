@@ -44,11 +44,11 @@ class TestGenerateManifest(unittest.TestCase):
         )
 
         data = json.loads(manifest)
-        self.assertEqual(data["name"], "Finnish Language Pack")
-        self.assertEqual(
+        self.assertEquals(data["name"], "Finnish Language Pack")
+        self.assertEquals(
             data["author"], "Suomennosprojekti (contributors: Joe Smith, Mary White)"
         )
-        self.assertEqual(data["version"], "57.0.1buildid20210928.100000")
+        self.assertEquals(data["version"], "57.0.1buildid20210928.100000")
 
     def test_manifest_without_contributors(self):
         ctx = Context()
@@ -67,8 +67,8 @@ class TestGenerateManifest(unittest.TestCase):
         )
 
         data = json.loads(manifest)
-        self.assertEqual(data["name"], "Finnish Language Pack")
-        self.assertEqual(data["author"], "Suomennosprojekti")
+        self.assertEquals(data["name"], "Finnish Language Pack")
+        self.assertEquals(data["author"], "Suomennosprojekti")
 
 
 if __name__ == "__main__":

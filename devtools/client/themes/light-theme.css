@@ -225,10 +225,13 @@ div.CodeMirror span.marked-text {
 }
 
 /* Blackboxing lines */
-.CodeMirror-lines .blackboxed-line,
-.CodeMirror-lines .blackboxed-line .CodeMirror-gutter-elt {
-  /* Same color hue than the one used for the icon, but with different saturation/light */
-  background-color: hsl(347.8, 15%, 90%);
+
+.cm-s-mozilla .CodeMirror-lines .blackboxed-line {
+  background-color: hsl(211, 89%, 95%);
+}
+
+.theme-light .cm-s-mozilla .blackboxed-line .CodeMirror-linenumber {
+  color: var(--theme-icon-checked-color);
 }
 
 /* Highlight for evaluating current statement. */

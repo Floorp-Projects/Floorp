@@ -43,22 +43,15 @@ case $(uname -s) in
         ;;
     *Linux*)
         EXE=""
-        if [ -n "$CRYPTO_LIBDIR" ]
-        then
-            export LD_LIBRARY_PATH="$CRYPTO_LIBDIR"
-        fi
+        export LD_LIBRARY_PATH=$CRYPTO_LIBDIR
         ;;
     *Darwin*)
         EXE=""
-        if [ -n "$CRYPTO_LIBDIR" ]
-        then
-            export DYLD_LIBRARY_PATH="$CRYPTO_LIBDIR"
-        fi
+        export DYLD_LIBRARY_PATH=$CRYPTO_LIBDIR
         ;;
 esac
 
 RTPW=./rtpw$EXE
-[ -n "$MESON_EXE_WRAPPER" ] && RTPW="$MESON_EXE_WRAPPER $RTPW"
 DEST_PORT=9999
 DURATION=3
 
@@ -70,7 +63,7 @@ DURATION=3
 
 killall rtpw 2>/dev/null
 
-if test -n $MESON_EXE_WRAPPER || test -x $RTPW; then
+if test -x $RTPW; then
 
 GCMARGS128="-k 01234567890123456789012345678901234567890123456789012345 -g -e 128"
 echo  $0 ": starting GCM mode 128-bit rtpw receiver process... "

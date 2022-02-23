@@ -118,7 +118,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
 // a URI in the sec-fetch context.
 void IsExpandedPrincipalSameOrigin(
     nsCOMPtr<nsIExpandedPrincipal> aExpandedPrincipal, nsIURI* aURI,
-    bool* aRes) {
+    bool aIsPrivateWin, bool* aRes) {
   *aRes = false;
   for (const auto& principal : aExpandedPrincipal->AllowList()) {
     // Ignore extension principals to continue treating
@@ -126,7 +126,8 @@ void IsExpandedPrincipalSameOrigin(
     if (!mozilla::BasePrincipal::Cast(principal)->AddonPolicy()) {
       // A ExpandedPrincipal usually has at most one ContentPrincipal, so we can
       // check IsSameOrigin on it here and return early.
-      mozilla::BasePrincipal::Cast(principal)->IsSameOrigin(aURI, aRes);
+      mozilla::BasePrincipal::Cast(principal)->IsSameOrigin(aURI, aIsPrivateWin,
+                                                            aRes);
       return;
     }
   }
@@ -148,13 +149,16 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
         ->AddonAllowsLoad(channelURI);
   }
 
+  bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
   bool isSameOrigin = false;
   if (nsContentUtils::IsExpandedPrincipal(loadInfo->TriggeringPrincipal())) {
     nsCOMPtr<nsIExpandedPrincipal> ep =
         do_QueryInterface(loadInfo->TriggeringPrincipal());
-    IsExpandedPrincipalSameOrigin(ep, channelURI, &isSameOrigin);
+    IsExpandedPrincipalSameOrigin(ep, channelURI, isPrivateWin, &isSameOrigin);
   } else {
-    isSameOrigin = loadInfo->TriggeringPrincipal()->IsSameOrigin(channelURI);
+    nsresult rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(
+        channelURI, isPrivateWin, &isSameOrigin);
+    mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   // if the initial request is not same-origin, we can return here
@@ -168,8 +172,13 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
   nsCOMPtr<nsIPrincipal> redirectPrincipal;
   for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
     entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
-    if (redirectPrincipal && !redirectPrincipal->IsSameOrigin(channelURI)) {
-      return false;
+    if (redirectPrincipal) {
+      nsresult rv = redirectPrincipal->IsSameOrigin(channelURI, isPrivateWin,
+                                                    &isSameOrigin);
+      mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
+      if (!isSameOrigin) {
+        return false;
+      }
     }
   }
 

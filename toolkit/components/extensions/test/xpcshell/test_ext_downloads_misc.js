@@ -254,16 +254,11 @@ async function waitForCreatedPartFile(baseFilename = "interruptible.html") {
   });
 }
 
-async function clearDownloads() {
+async function clearDownloads(callback) {
   let list = await Downloads.getList(Downloads.ALL);
   let downloads = await list.getAll();
 
-  await Promise.all(
-    downloads.map(async download => {
-      await download.finalize(true);
-      list.remove(download);
-    })
-  );
+  await Promise.all(downloads.map(download => list.remove(download)));
 
   return downloads;
 }
@@ -302,11 +297,12 @@ add_task(async function setup() {
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
 
-  registerCleanupFunction(async () => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
-    await clearDownloads();
     downloadDir.remove(true);
+
+    return clearDownloads();
   });
 
   await clearDownloads().then(downloads => {

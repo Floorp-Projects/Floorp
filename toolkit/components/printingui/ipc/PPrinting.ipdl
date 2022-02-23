@@ -12,7 +12,6 @@ include protocol PRemotePrintJob;
 namespace mozilla {
 namespace embedding {
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PPrinting
 {
   manager PContent;

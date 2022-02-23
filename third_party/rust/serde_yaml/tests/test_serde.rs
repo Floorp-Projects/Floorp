@@ -164,6 +164,7 @@ fn test_float32() {
     "})
     .unwrap();
     assert!(single_float.is_nan());
+
 }
 
 #[test]
@@ -268,18 +269,6 @@ fn test_unit() {
         ---
         - ~
         - ~
-    "};
-    test_serde(&thing, yaml);
-}
-
-#[test]
-fn test_unit_struct() {
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Foo;
-    let thing = Foo;
-    let yaml = indoc! {"
-        ---
-        ~
     "};
     test_serde(&thing, yaml);
 }

@@ -19,6 +19,34 @@ class GeckoViewActorChild extends JSWindowActorChild {
       this.docShell.domWindow
     );
   }
+
+  /** Returns true if this docShell is of type Content, false otherwise. */
+  get isContentWindow() {
+    if (!this.docShell) {
+      return false;
+    }
+
+    // Some WebExtension windows are tagged as content but really they are not
+    // for us (e.g. the remote debugging window or the background extension
+    // page).
+    const browser = this.browsingContext.top.embedderElement;
+    if (browser) {
+      const viewType = browser.getAttribute("webextension-view-type");
+      if (viewType) {
+        debug`webextension-view-type: ${viewType}`;
+        return false;
+      }
+      const debugTarget = browser.getAttribute(
+        "webextension-addon-debug-target"
+      );
+      if (debugTarget) {
+        debug`webextension-addon-debug-target: ${debugTarget}`;
+        return false;
+      }
+    }
+
+    return this.docShell.itemType == this.docShell.typeContent;
+  }
 }
 
 const { debug, warn } = GeckoViewUtils.initLogging("Actor[C]");

@@ -117,7 +117,6 @@ interface RTCPeerConnection : EventTarget  {
   attribute DOMString id;
 
   RTCConfiguration      getConfiguration ();
-  void setConfiguration(optional RTCConfiguration configuration = {});
   [Deprecated="RTCPeerConnectionGetStreams"]
   sequence<MediaStream> getLocalStreams ();
   [Deprecated="RTCPeerConnectionGetStreams"]

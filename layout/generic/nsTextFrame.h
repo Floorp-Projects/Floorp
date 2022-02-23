@@ -110,7 +110,6 @@ class nsTextFrame : public nsIFrame {
     mozilla::StyleHyphens GetHyphensOption() const final {
       return mTextStyle->mHyphens;
     }
-    mozilla::gfx::ShapedTextFlags GetShapedTextFlags() const final;
 
     already_AddRefed<DrawTarget> GetDrawTarget() const final;
 

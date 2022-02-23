@@ -94,3 +94,5 @@ LOCAL_INCLUDES += [
 RESOURCE_FILES += [
     "svg.css",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

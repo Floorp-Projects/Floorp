@@ -35,7 +35,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
@@ -564,10 +563,6 @@ class WinUtils {
   static bool GetClassName(HWND aHwnd, nsAString& aName);
 
   static void EnableWindowOcclusion(const bool aEnable);
-
-  static void GetDisplayOrientation(const char16ptr_t aName,
-                                    hal::ScreenOrientation& aOrientation,
-                                    uint16_t& aAngle);
 
  private:
   static WhitelistVec BuildWhitelist();

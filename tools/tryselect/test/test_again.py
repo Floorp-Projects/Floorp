@@ -67,7 +67,7 @@ def test_no_push_does_not_generate_history(tmpdir):
             ["foo", "bar"],
             {"use-artifact-builds": True},
         ),
-        dry_run=True,
+        push=False,
     )
     assert not os.path.isfile(push.history_path)
     assert again.run() == 1

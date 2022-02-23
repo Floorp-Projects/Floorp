@@ -18,8 +18,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
 XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
 
 // Map of CDP-specific preferences that should be set via
 // RecommendedPreferences.
@@ -54,7 +55,7 @@ class CDP {
     this.targetList = null;
 
     this._running = false;
-    this._activePortPath;
+    this._devToolsActivePortPath;
   }
 
   get address() {
@@ -96,15 +97,23 @@ class CDP {
 
     Cu.printStderr(`DevTools listening on ${this.address}\n`);
 
-    // Write connection details to DevToolsActivePort file within the profile.
+    // Write connection details to DevToolsActivePort file within the profile
     const profileDir = await PathUtils.getProfileDir();
-    this._activePortPath = PathUtils.join(profileDir, "DevToolsActivePort");
+    this._devToolsActivePortPath = PathUtils.join(
+      profileDir,
+      "DevToolsActivePort"
+    );
 
     const data = `${this.agent.port}\n${this.mainTargetPath}`;
     try {
-      await IOUtils.write(this._activePortPath, textEncoder.encode(data));
+      await IOUtils.write(
+        this._devToolsActivePortPath,
+        textEncoder.encode(data)
+      );
     } catch (e) {
-      logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
+      logger.warn(
+        `Failed to create ${this._devToolsActivePortPath} (${e.message})`
+      );
     }
   }
 
@@ -118,9 +127,11 @@ class CDP {
 
     try {
       try {
-        await IOUtils.remove(this._activePortPath);
+        await IOUtils.remove(this._devToolsActivePortPath);
       } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
+        logger.warn(
+          `Failed to remove ${this._devToolsActivePortPath} (${e.message})`
+        );
       }
 
       this.targetList?.destructor();

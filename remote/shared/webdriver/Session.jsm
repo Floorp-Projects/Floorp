@@ -336,14 +336,10 @@ class WebDriverSession {
   }
 
   _onMessageHandlerEvent(eventName, messageHandlerEvent) {
-    const { name, data, isProtocolEvent } = messageHandlerEvent;
-
-    // Do not send any internal event to the clients.
-    if (!isProtocolEvent) {
-      return;
-    }
-
-    this._connections.forEach(connection => connection.sendEvent(name, data));
+    const { method, params } = messageHandlerEvent;
+    this._connections.forEach(connection =>
+      connection.sendEvent(method, params)
+    );
   }
 
   // XPCOM

@@ -74,7 +74,7 @@ class nsTestComFactory final : public nsIFactory {
   nsTestComFactory() {}
 
   NS_IMETHOD CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                            void** aResult) override;
+                            void** aResult);
 
   NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
 

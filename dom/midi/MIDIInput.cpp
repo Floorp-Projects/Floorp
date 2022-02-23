@@ -39,11 +39,7 @@ JSObject* MIDIInput::WrapObject(JSContext* aCx,
 }
 
 void MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs) {
-  if (!GetOwner()) {
-    return;  // Ignore messages once we've been disconnected from the owner
-  }
-
-  nsCOMPtr<Document> doc = GetOwner()->GetDoc();
+  nsCOMPtr<Document> doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
   if (!doc) {
     NS_WARNING("No document available to send MIDIMessageEvent to!");
     return;

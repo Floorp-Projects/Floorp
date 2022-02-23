@@ -34,7 +34,6 @@
 #include "nsIScrollableFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/InputEventOptions.h"
-#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
@@ -1005,10 +1004,10 @@ TextInputListener::HandleEvent(Event* aEvent) {
       return false;
     }
 
-    NativeKeyBindingsType nativeKeyBindingsType =
+    nsIWidget::NativeKeyBindingsType nativeKeyBindingsType =
         aTextControlElement.IsTextArea()
-            ? NativeKeyBindingsType::MultiLineEditor
-            : NativeKeyBindingsType::SingleLineEditor;
+            ? nsIWidget::NativeKeyBindingsForMultiLineEditor
+            : nsIWidget::NativeKeyBindingsForSingleLineEditor;
 
     nsIWidget* widget = widgetKeyEvent->mWidget;
     // If the event is created by chrome script, the widget is nullptr.

@@ -204,8 +204,8 @@ class AutoScrollChild extends JSWindowActorChild {
       "Autoscroll:Start",
       {
         scrolldir: this._scrolldir,
-        screenXDevPx: event.screenX * content.devicePixelRatio,
-        screenYDevPx: event.screenY * content.devicePixelRatio,
+        screenX: event.screenX,
+        screenY: event.screenY,
         scrollId: this._scrollId,
         presShellId,
         browsingContext: this.browsingContext,

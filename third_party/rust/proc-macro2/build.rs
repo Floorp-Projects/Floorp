@@ -58,8 +58,7 @@ fn main() {
         process::exit(1);
     }
 
-    let docs_rs = env::var_os("DOCS_RS").is_some();
-    let semver_exempt = cfg!(procmacro2_semver_exempt) || docs_rs;
+    let semver_exempt = cfg!(procmacro2_semver_exempt);
     if semver_exempt {
         // https://github.com/dtolnay/proc-macro2/issues/147
         println!("cargo:rustc-cfg=procmacro2_semver_exempt");

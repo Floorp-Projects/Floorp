@@ -42,14 +42,13 @@
  *
  */
 
-#include "config.h"
 #include "util.h"
 
 #include <string.h>
 #include <stdint.h>
 
 /* include space for null terminator */
-static char bit_string[MAX_PRINT_STRING_LEN + 1];
+char bit_string[MAX_PRINT_STRING_LEN + 1];
 
 static inline int hex_char_to_nibble(uint8_t c)
 {

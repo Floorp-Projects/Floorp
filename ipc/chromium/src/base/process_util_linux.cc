@@ -244,7 +244,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   EnvironmentArray envp = BuildEnvironmentArray(options.env_map);
   mozilla::ipc::FileDescriptorShuffle shuffle;
   if (!shuffle.Init(options.fds_to_remap)) {
-    CHROMIUM_LOG(WARNING) << "FileDescriptorShuffle::Init failed";
+    DLOG(WARNING) << "FileDescriptorShuffle::Init failed";
     return false;
   }
 
@@ -271,7 +271,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
 #endif
 
   if (pid < 0) {
-    CHROMIUM_LOG(WARNING) << "fork() failed: " << strerror(errno);
+    DLOG(WARNING) << "fork() failed: " << strerror(errno);
     return false;
   }
 

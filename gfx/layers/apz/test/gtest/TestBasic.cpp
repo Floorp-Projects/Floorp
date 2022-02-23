@@ -9,8 +9,6 @@
 
 #include "InputUtils.h"
 
-static ScrollGenerationCounter sGenerationCounter;
-
 TEST_F(APZCBasicTester, Overzoom) {
   // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
   FrameMetrics fm;
@@ -230,8 +228,7 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   mainThreadOffset.y -= 5;
   metadata = apzc->GetScrollMetadata();
   metadata.GetMetrics().SetVisualDestination(mainThreadOffset);
-  metadata.GetMetrics().SetScrollGeneration(
-      sGenerationCounter.NewMainThreadGeneration());
+  metadata.GetMetrics().SetScrollGeneration(ScrollGeneration::New());
   metadata.GetMetrics().SetVisualScrollUpdateType(FrameMetrics::eMainThread);
   scrollUpdates.Clear();
   metadata.SetScrollUpdates(scrollUpdates);

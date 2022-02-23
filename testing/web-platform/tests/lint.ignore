@@ -143,7 +143,6 @@ SET TIMEOUT: common/reftest-wait.js
 SET TIMEOUT: conformance-checkers/*
 SET TIMEOUT: content-security-policy/*
 SET TIMEOUT: css/css-display/display-contents-shadow-dom-1.html
-SET TIMEOUT: css/CSS2/normal-flow/crashtests/block-in-inline-ax-crash.html
 SET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-001.html
 SET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-002.html
 SET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-003.html
@@ -153,7 +152,6 @@ SET TIMEOUT: encrypted-media/polyfill/chrome-polyfill.js
 SET TIMEOUT: encrypted-media/polyfill/clearkey-polyfill.js
 SET TIMEOUT: encrypted-media/scripts/playback-temporary-events.js
 SET TIMEOUT: generic-sensor/resources/iframe_sensor_handler.html
-SET TIMEOUT: html/browsers/browsing-the-web/back-forward-cache/resources/inflight-fetch-helper.js
 SET TIMEOUT: html/browsers/browsing-the-web/history-traversal/*
 SET TIMEOUT: html/browsers/browsing-the-web/navigating-across-documents/*
 SET TIMEOUT: html/browsers/browsing-the-web/scroll-to-fragid/*
@@ -722,10 +720,8 @@ MISSING DEPENDENCY: resources/chromium/contacts_manager_mock.js
 MISSING DEPENDENCY: resources/chromium/web-bluetooth-test.js
 MISSING DEPENDENCY: resources/chromium/webusb-test.js
 MISSING DEPENDENCY: resources/chromium/fake-serial.js
-MISSING DEPENDENCY: resources/chromium/fake-hid.js
 MISSING DEPENDENCY: resources/chromium/generic_sensor_mocks.js
 MISSING DEPENDENCY: resources/chromium/mock-barcodedetection.js
-MISSING DEPENDENCY: resources/chromium/mock-direct-sockets.js
 MISSING DEPENDENCY: resources/chromium/mock-facedetection.js
 MISSING DEPENDENCY: resources/chromium/mock-idle-detection.js
 MISSING DEPENDENCY: resources/chromium/mock-imagecapture.js
@@ -813,11 +809,8 @@ CSS-COLLIDING-REF-NAME: css/css-break/background-image-001-ref.html
 
 # Ported crashtests from Mozilla
 SET TIMEOUT: editing/crashtests/backcolor-in-nested-editing-host-td-from-DOMAttrModified.html
-SET TIMEOUT: editing/crashtests/contenteditable-will-be-blurred-by-focus-event-listener.html
-SET TIMEOUT: editing/crashtests/designMode-document-will-be-blurred-by-focus-event-listener.html
 SET TIMEOUT: editing/crashtests/inserthtml-after-temporarily-removing-document-element.html
 SET TIMEOUT: editing/crashtests/inserthtml-in-text-adopted-to-other-document.html
 SET TIMEOUT: editing/crashtests/insertorderedlist-in-text-adopted-to-other-document.html
 SET TIMEOUT: editing/crashtests/make-editable-div-inline-and-set-contenteditable-of-input-to-false.html
 SET TIMEOUT: editing/crashtests/outdent-across-svg-boundary.html
-SET TIMEOUT: editing/crashtests/textarea-will-be-blurred-by-focus-event-listener.html

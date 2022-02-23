@@ -39,9 +39,9 @@ Now let's specify task group ``G1`` and ``G2`` as previous task group IDs. If ta
                 \______ |
                        \|
                         t2
-
+    
     or
-
+    
     G1        G2        G
     |         |         |
     t1        t0        |

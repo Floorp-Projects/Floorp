@@ -104,7 +104,7 @@ TEST_P(SpeedTierTest, Roundtrip) {
   test::Roundtrip(&io, cparams, dparams, nullptr, &io2);
 
   // Can be 2.2 in non-hare mode.
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
+  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, /*pool=*/nullptr),
             2.8);
 }

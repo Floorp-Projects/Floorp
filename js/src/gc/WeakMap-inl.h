@@ -151,7 +151,6 @@ template <class K, class V>
 bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
   bool marked = false;
   JSRuntime* rt = zone()->runtimeFromAnyThread();
-  CellColor markColor = CellColor(marker->markColor());
   CellColor keyColor = gc::detail::GetEffectiveColor(rt, key);
   JSObject* delegate = gc::detail::GetDelegate(key);
 
@@ -161,29 +160,24 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
     // The key needs to stay alive while both the delegate and map are live.
     CellColor proxyPreserveColor = std::min(delegateColor, mapColor);
     if (keyColor < proxyPreserveColor) {
-      MOZ_ASSERT(markColor >= proxyPreserveColor);
-      if (markColor == proxyPreserveColor) {
-        TraceWeakMapKeyEdge(marker, zone(), &key,
-                            "proxy-preserved WeakMap entry key");
-        MOZ_ASSERT(key->color() >= proxyPreserveColor);
-        marked = true;
-        keyColor = proxyPreserveColor;
-      }
+      gc::AutoSetMarkColor autoColor(*marker, proxyPreserveColor);
+      TraceWeakMapKeyEdge(marker, zone(), &key,
+                          "proxy-preserved WeakMap entry key");
+      MOZ_ASSERT(key->color() >= proxyPreserveColor);
+      marked = true;
+      keyColor = proxyPreserveColor;
     }
   }
 
   if (keyColor) {
     gc::Cell* cellValue = gc::ToMarkable(value);
     if (cellValue) {
-      CellColor targetColor = std::min(mapColor, keyColor);
+      gc::AutoSetMarkColor autoColor(*marker, std::min(mapColor, keyColor));
       CellColor valueColor = gc::detail::GetEffectiveColor(rt, cellValue);
-      if (valueColor < targetColor) {
-        MOZ_ASSERT(markColor >= targetColor);
-        if (markColor == targetColor) {
-          TraceEdge(marker, &value, "WeakMap entry value");
-          MOZ_ASSERT(cellValue->color() >= targetColor);
-          marked = true;
-        }
+      if (valueColor < marker->markColor()) {
+        TraceEdge(marker, &value, "WeakMap entry value");
+        MOZ_ASSERT(cellValue->color() >= std::min(mapColor, keyColor));
+        marked = true;
       }
     }
   }

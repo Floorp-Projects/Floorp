@@ -145,14 +145,8 @@ class nsTimerImpl {
                                    const mozilla::TimeDuration& aDelay,
                                    uint32_t aType, const char* aNameString);
 
-  // This weak reference must be cleared by the nsTimerImplHolder by
-  // calling SetHolder(nullptr) before the holder is destroyed.  Take()
-  // also sets this to null, to indicate it's no longer in the
-  // TimerThread's list.  This Take() call is NOT made under the
-  // nsTimerImpl's mutex (all other SetHolder calls are under the mutex,
-  // and all references other than in the constructor or destructor of
-  // nsTimerImpl).  However, ALL uses and references to the holder are
-  // under the TimerThread's Monitor lock, so consistency is guaranteed by that.
+  // This weak reference must be cleared by the nsTimerImplHolder by calling
+  // SetHolder(nullptr) before the holder is destroyed.
   nsTimerImplHolder* mHolder;
 
   // These members are set by the initiating thread, when the timer's type is
@@ -166,10 +160,7 @@ class nsTimerImpl {
   int32_t mGeneration;
 
   mozilla::TimeDuration mDelay;
-  // Never updated while in the TimerThread's timer list.  Only updated
-  // before adding to that list or during nsTimerImpl::Fire(), when it has
-  // been removed from the TimerThread's list.  TimerThread can access
-  // mTimeout of any timer in the list safely
+  // Updated only after this timer has been removed from the timer thread.
   mozilla::TimeStamp mTimeout;
 
   RefPtr<nsITimer> mITimer;
@@ -229,14 +220,12 @@ class nsTimerImplHolder {
  public:
   explicit nsTimerImplHolder(nsTimerImpl* aTimerImpl) : mTimerImpl(aTimerImpl) {
     if (mTimerImpl) {
-      mTimerImpl->mMutex.AssertCurrentThreadOwns();
       mTimerImpl->SetHolder(this);
     }
   }
 
   ~nsTimerImplHolder() {
     if (mTimerImpl) {
-      mTimerImpl->mMutex.AssertCurrentThreadOwns();
       mTimerImpl->SetHolder(nullptr);
     }
   }
@@ -246,7 +235,6 @@ class nsTimerImplHolder {
       return;
     }
     MOZ_ASSERT(aTimerImpl == mTimerImpl);
-    mTimerImpl->mMutex.AssertCurrentThreadOwns();
     mTimerImpl->SetHolder(nullptr);
     mTimerImpl = nullptr;
   }

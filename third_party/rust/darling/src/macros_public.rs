@@ -12,7 +12,9 @@
 ///
 /// ```rust
 /// # extern crate syn;
-/// # use darling_core::uses_type_params;
+/// #
+/// # #[macro_use]
+/// # extern crate darling_core;
 /// #
 /// struct MyField {
 ///     ty: syn::Type,

@@ -8,16 +8,22 @@ use std::mem;
 #[derive(Clone)]
 pub struct Swapchain {
     handle: vk::Device,
-    fp: vk::KhrSwapchainFn,
+    swapchain_fn: vk::KhrSwapchainFn,
 }
 
 impl Swapchain {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let handle = device.handle();
-        let fp = vk::KhrSwapchainFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
+        let swapchain_fn = vk::KhrSwapchainFn::load(|name| unsafe {
+            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { handle, fp }
+        Self {
+            handle: device.handle(),
+            swapchain_fn,
+        }
+    }
+
+    pub fn name() -> &'static CStr {
+        vk::KhrSwapchainFn::name()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySwapchainKHR.html>"]
@@ -26,8 +32,11 @@ impl Swapchain {
         swapchain: vk::SwapchainKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) {
-        self.fp
-            .destroy_swapchain_khr(self.handle, swapchain, allocation_callbacks.as_raw_ptr());
+        self.swapchain_fn.destroy_swapchain_khr(
+            self.handle,
+            swapchain,
+            allocation_callbacks.as_raw_ptr(),
+        );
     }
 
     /// On success, returns the next image's index and whether the swapchain is suboptimal for the surface.
@@ -40,7 +49,7 @@ impl Swapchain {
         fence: vk::Fence,
     ) -> VkResult<(u32, bool)> {
         let mut index = 0;
-        let err_code = self.fp.acquire_next_image_khr(
+        let err_code = self.swapchain_fn.acquire_next_image_khr(
             self.handle,
             swapchain,
             timeout,
@@ -62,7 +71,7 @@ impl Swapchain {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SwapchainKHR> {
         let mut swapchain = mem::zeroed();
-        self.fp
+        self.swapchain_fn
             .create_swapchain_khr(
                 self.handle,
                 create_info,
@@ -77,9 +86,9 @@ impl Swapchain {
     pub unsafe fn queue_present(
         &self,
         queue: vk::Queue,
-        present_info: &vk::PresentInfoKHR,
+        create_info: &vk::PresentInfoKHR,
     ) -> VkResult<bool> {
-        let err_code = self.fp.queue_present_khr(queue, present_info);
+        let err_code = self.swapchain_fn.queue_present_khr(queue, create_info);
         match err_code {
             vk::Result::SUCCESS => Ok(false),
             vk::Result::SUBOPTIMAL_KHR => Ok(true),
@@ -93,17 +102,13 @@ impl Swapchain {
         swapchain: vk::SwapchainKHR,
     ) -> VkResult<Vec<vk::Image>> {
         read_into_uninitialized_vector(|count, data| {
-            self.fp
+            self.swapchain_fn
                 .get_swapchain_images_khr(self.handle, swapchain, count, data)
         })
     }
 
-    pub fn name() -> &'static CStr {
-        vk::KhrSwapchainFn::name()
-    }
-
     pub fn fp(&self) -> &vk::KhrSwapchainFn {
-        &self.fp
+        &self.swapchain_fn
     }
 
     pub fn device(&self) -> vk::Device {

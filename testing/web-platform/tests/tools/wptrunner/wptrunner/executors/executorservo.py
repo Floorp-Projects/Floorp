@@ -11,14 +11,17 @@ from mozprocess import ProcessHandler
 
 from tools.serve.serve import make_hosts_file
 
-from .base import (RefTestImplementation,
+from .base import (ConnectionlessProtocol,
+                   RefTestImplementation,
                    crashtest_result_converter,
                    testharness_result_converter,
                    reftest_result_converter,
-                   TimedRunner)
+                   TimedRunner,
+                   WdspecExecutor,
+                   WdspecProtocol)
 from .process import ProcessTestExecutor
-from .protocol import ConnectionlessProtocol
 from ..browsers.base import browser_command
+from ..webdriver_server import ServoDriverServer
 
 
 pytestrunner = None
@@ -275,6 +278,14 @@ class ServoRefTestExecutor(ProcessTestExecutor):
             self.logger.process_output(self.proc.pid,
                                        line,
                                        " ".join(self.command))
+
+
+class ServoDriverProtocol(WdspecProtocol):
+    server_cls = ServoDriverServer
+
+
+class ServoWdspecExecutor(WdspecExecutor):
+    protocol_cls = ServoDriverProtocol
 
 
 class ServoTimedRunner(TimedRunner):

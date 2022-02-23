@@ -139,6 +139,7 @@
 }
 
 .controlBar {
+  position: relative;
   display: flex;
   box-sizing: border-box;
   justify-content: center;
@@ -154,8 +155,6 @@
 }
 
 .controlBar > .button {
-  /* Prevent #textTrackListContainer from blocking clicks on controls */
-  z-index: 1;
   height: 100%;
   min-width: var(--button-size);
   min-height: var(--button-size);
@@ -408,7 +407,7 @@
   background-color: #444;
 }
 
-.textTrackList > .textTrackItem[aria-checked="true"] {
+.textTrackList > .textTrackItem[on] {
   color: #48a0f7;
 }
 

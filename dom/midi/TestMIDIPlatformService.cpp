@@ -26,7 +26,7 @@ class ProcessMessagesRunnable : public mozilla::Runnable {
   explicit ProcessMessagesRunnable(const nsAString& aPortID)
       : Runnable("ProcessMessagesRunnable"), mPortID(aPortID) {}
   ~ProcessMessagesRunnable() = default;
-  NS_IMETHOD Run() override {
+  NS_IMETHOD Run() {
     // If service is no longer running, just exist without processing.
     if (!MIDIPlatformService::IsRunning()) {
       return NS_OK;

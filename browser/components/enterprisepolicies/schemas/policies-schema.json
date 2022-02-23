@@ -499,7 +499,7 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["extension", "dictionary", "locale", "theme", "sitepermission"]
+                "enum": ["extension", "dictionary", "locale", "theme"]
               }
             },
             "blocked_install_message": {
@@ -1256,9 +1256,6 @@
           "type": "boolean"
         },
         "SkipOnboarding": {
-          "type": "boolean"
-        },
-        "MoreFromMozilla": {
           "type": "boolean"
         },
         "Locked": {

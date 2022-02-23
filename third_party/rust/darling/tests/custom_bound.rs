@@ -1,8 +1,8 @@
-#![allow(dead_code)]
+#[macro_use]
+extern crate darling;
+extern crate syn;
 
 use std::ops::Add;
-
-use darling::{FromDeriveInput, FromMeta};
 
 #[derive(Debug, Clone, FromMeta)]
 #[darling(bound = "T: FromMeta + Add")]

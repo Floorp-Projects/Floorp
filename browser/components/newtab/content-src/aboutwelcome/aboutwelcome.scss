@@ -17,6 +17,7 @@ html {
 body {
   // sass-lint:disable no-color-literals
   --grey-subtitle-1: #696977;
+  --welcome-header-text-color-1: #20133A;
   --newtab-button-secondary-color: #0060DF;
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
@@ -26,26 +27,8 @@ body {
 
   &[lwt-newtab-brighttext] {
     --grey-subtitle-1: #FFF;
+    --welcome-header-text-color-1: #7542E5;
     --newtab-button-secondary-color: #FFF;
-  }
-}
-
-// Styling for content rendered in a Spotlight messaging surface.
-:root {
-  &[dialogroot] {
-    background-color: transparent;
-
-    body {
-      padding: 0;
-    }
-
-    .onboardingContainer {
-      overflow: visible;
-
-      .screen {
-        background-color: transparent;
-      }
-    }
   }
 }
 
@@ -53,6 +36,8 @@ body {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
+  background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
+  background-color: #212121;
 
   @media (prefers-contrast: more) {
     background-color: var(--in-content-page-background);
@@ -94,17 +79,11 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-
-    &.with-noodles {
-      height: 503px;
-      width: 504px;
-    }
   }
 
   .main-content {
     background-color: var(--in-content-page-background);
     border-radius: 20px;
-    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -125,7 +104,6 @@ body {
   }
 
   .screen {
-    background-color: rgba(21, 20, 26, 0.5);
     display: flex;
     position: relative;
     flex-flow: row nowrap;
@@ -153,17 +131,6 @@ body {
       padding: unset;
       margin-top: 50px;
     }
-  }
-
-  .rtamo-theme-icon {
-    max-height: 30px;
-    border-radius: 2px;
-    margin-bottom: 10px;
-    margin-top: 24px;
-  }
-
-  .hide-rtamo-icon {
-    display: none;
   }
 
   .welcome-text {
@@ -742,10 +709,6 @@ body {
     line-height: 16px;
     padding: 11px 15px;
     transition: var(--transition);
-
-    &.rtamo {
-      margin-top: 24px;
-    }
   }
 
   // Styles specific to background noodles, with screen-by-screen positions
@@ -807,8 +770,7 @@ body {
     fill: #FFA437;
   }
 
-  [pos='corner'] {
-    background-color: transparent;
+  .screen-0 {
     min-width: 700px;
 
     .section-left {
@@ -861,7 +823,6 @@ body {
 
       .main-content {
         background: transparent;
-        box-shadow: none;
         display: block;
         position: absolute;
         height: 350px;
@@ -918,8 +879,12 @@ body {
   }
 
   .screen-1 {
+    background-color: rgba(21, 20, 26, 0.5);
+
     .section-main {
       z-index: 1;
+      width: 504px;
+      height: 503px;
       margin: auto;
 
       .main-content-inner {
@@ -1013,7 +978,7 @@ body {
   }
 
   // Delays for transitioning-in of intermediate screens
-  .screen:not(.dialog-initial):not([pos='corner']) {
+  .screen:not(.dialog-initial):not(.screen-0) {
     .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.2s;
@@ -1026,8 +991,12 @@ body {
   }
 
   .screen-2 {
+    background-color: rgba(21, 20, 26, 0.5);
+
     .section-main {
       z-index: 1;
+      width: 504px;
+      height: 503px;
       margin: auto;
 
       .main-content-inner {
@@ -1125,7 +1094,7 @@ body {
       scale: var(--scale);
     }
 
-    [pos='corner'] {
+    .screen-0 {
       .brand-logo,
       .welcome-text,
       .primary,
@@ -1153,13 +1122,13 @@ body {
       }
     }
 
-    .screen:not(.dialog-initial):not([pos='corner']) {
+    .screen:not(.dialog-initial):not(.screen-0) {
       .steps {
         opacity: 0.2;
       }
     }
 
-    .screen:not([pos='corner']) {
+    .screen:not(.screen-0) {
       .welcome-text,
       .colorway-variations,
       .tiles-theme-section,
@@ -1179,7 +1148,7 @@ body {
       transition-delay: 0.2s;
     }
 
-    [pos='corner'] {
+    .screen-0 {
       .message-text {
         opacity: 0;
         translate: 0 var(--translate);
@@ -1202,7 +1171,7 @@ body {
       }
     }
 
-    .screen:not(.dialog-last):not([pos='corner']) {
+    .screen:not(.dialog-last):not(.screen-0) {
       .main-content {
         overflow: hidden;
       }
@@ -1243,6 +1212,86 @@ body {
         opacity: 0;
         translate: 0 calc(2 * var(--translate));
         transition-delay: 0.4s;
+      }
+    }
+  }
+
+  // Styles particular to the RTAMO flow
+  &.rtamo {
+    background-color: var(--newtab-background-color-1);
+    background: none;
+
+    .screen {
+      flex-flow: column nowrap;
+      align-items: center;
+    }
+
+    .brand-logo {
+      background: url('chrome://branding/content/about-logo.svg') top center / 112px no-repeat;
+      width: 112px;
+      padding: 112px 0 20px;
+    }
+
+    .welcome-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+
+      h1,
+      h2 {
+        width: 860px;
+        @media (max-width: $break-point-large) {
+          width: 530px;
+        }
+
+        @media (max-width: $break-point-medium) {
+          width: 430px;
+        }
+      }
+
+      h1 {
+        font-size: 48px;
+        line-height: 56px;
+        font-weight: bold;
+        margin: 0 6px;
+        color: var(--welcome-header-text-color-1);
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: normal;
+        margin: 10px 6px 0;
+        color: var(--grey-subtitle-1);
+        line-height: 28px;
+        max-width: 750px;
+        letter-spacing: -0.01em;
+      }
+
+      img {
+        margin-inline: 2px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .primary {
+        font-size: 16px;
+        padding: 12px 20px;
+        margin: 20px 0 0;
+        font-weight: inherit;
+      }
+
+      .secondary {
+        background-color: initial;
+        padding: 0;
+        color: var(--newtab-button-secondary-color);
+        margin-top: 14px;
+        font-weight: inherit;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
   }

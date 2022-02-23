@@ -17,7 +17,6 @@ import shutil
 import subprocess
 import sys
 from collections import OrderedDict
-import sysconfig
 from pathlib import Path
 import tempfile
 from contextlib import contextmanager
@@ -41,10 +40,6 @@ class VirtualenvOutOfDateException(Exception):
 
 
 class MozSiteMetadataOutOfDateError(Exception):
-    pass
-
-
-class InstallPipRequirementsException(Exception):
     pass
 
 
@@ -319,14 +314,6 @@ class MachSiteManager:
             self._build()
         return up_to_date
 
-    def attempt_populate_optional_packages(self):
-        if self._site_packages_source != SitePackagesSource.VENV:
-            pass
-
-        self._virtualenv().install_optional_packages(
-            self._requirements.pypi_optional_requirements
-        )
-
     def activate(self):
         assert not MozSiteMetadata.current
 
@@ -388,7 +375,7 @@ class MachSiteManager:
             # Prioritize vendored and first-party modules first.
             *self._requirements.pths_as_absolute(self._topsrcdir),
             # Then, include the virtualenv's site-packages.
-            *_deprioritize_venv_packages(environment),
+            *_deprioritize_venv_packages(environment.site_packages_dir()),
         ]
 
     def _virtualenv(self):
@@ -586,39 +573,11 @@ class CommandSiteManager:
         if require_hashes:
             args.append("--require-hashes")
 
-        install_result = self._virtualenv.pip_install(
-            args,
-            check=not quiet,
-            stdout=subprocess.PIPE if quiet else None,
-        )
-        if install_result.returncode:
-            print(install_result.stdout)
-            raise InstallPipRequirementsException(
-                f'Failed to install "{path}" into the "{self._site_name}" site.'
-            )
+        if quiet:
+            args.append("--quiet")
 
-        check_result = subprocess.run(
-            [self.python_path, "-m", "pip", "check"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-        )
-        if check_result.returncode:
-            if quiet:
-                # If "quiet" was specified, then the "pip install" output wasn't printed
-                # earlier, and was buffered instead. Print that buffer so that debugging
-                # the "pip check" failure is easier.
-                print(install_result.stdout)
-
-            subprocess.check_call(
-                [self.python_path, "-m", "pip", "list", "-v"], stdout=sys.stderr
-            )
-            print(check_result.stdout, file=sys.stderr)
-            raise InstallPipRequirementsException(
-                f'As part of validation after installing "{path}" into the '
-                f'"{self._site_name}" site, the site appears to contain installed '
-                "packages that are incompatible with each other."
-            )
+        self._virtualenv.pip_install(args)
+        self._virtualenv.pip_check()
 
     def _pthfile_lines(self):
         """Generate the prioritized import scope to encode in the venv's pthfile
@@ -677,22 +636,16 @@ class CommandSiteManager:
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
             lines.extend(system_sys_path)
         elif self._site_packages_source == SitePackagesSource.VENV:
-            # The virtualenv will implicitly include itself to the sys.path, so we
-            # should avoid having our sys.path-retention add it a second time.
-            # Note that some platforms include just a site's $site-packages-dir to the
-            # sys.path, while other platforms (such as Windows) add the $prefix as well.
-            # We can catch these cases by pruning all paths that start with $prefix.
-            prefix_normalized = os.path.normcase(
-                os.path.normpath(self._virtualenv.prefix)
-            )
-            lines = [
-                line
-                for line in lines
-                if not os.path.normcase(os.path.normpath(line)).startswith(
-                    prefix_normalized
-                )
-            ]
-            lines.extend(_deprioritize_venv_packages(self._virtualenv))
+            # When allowed to pip install to the on-disk virtualenv, ensure that its
+            # site-packages is in-scope at the end of the list.
+            site_packages_dir = self._virtualenv.site_packages_dir()
+            while site_packages_dir in lines:
+                # The virtualenv will implicitly include its own site-packages directory:
+                # we shouldn't attempt to add it twice.
+                # This branch should only be triggered when running nested Mach processes
+                # that use the same command site.
+                lines.remove(site_packages_dir)
+            lines.extend(_deprioritize_venv_packages(site_packages_dir))
 
         # De-duplicate
         lines = list(OrderedDict.fromkeys(lines))
@@ -743,24 +696,22 @@ class PythonVirtualenv:
 
     @functools.lru_cache(maxsize=None)
     def site_packages_dir(self):
-        # macOS uses a different default sysconfig scheme based on whether it's using the
-        # system Python or running in a virtualenv.
-        # Manually define the scheme (following the implementation in
-        # "sysconfig._get_default_scheme()") so that we're always following the
-        # code path for a virtualenv directory structure.
-        if os.name == "posix":
-            scheme = "posix_prefix"
-        else:
-            scheme = os.name
-
-        sysconfig_paths = sysconfig.get_paths(scheme)
-        data_path = Path(sysconfig_paths["data"])
-        purelib_path = Path(sysconfig_paths["purelib"])
-        relative_purelib_path = purelib_path.relative_to(data_path)
+        # Defer "distutils" import until this function is called so that
+        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
+        # package not being installed.
+        # By the time this function is called, "distutils" must be installed
+        # because it's needed by the "virtualenv" package.
+        from distutils import dist
 
         normalized_venv_root = os.path.normpath(self.prefix)
+
+        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
+        installer = distribution.get_command_obj("install")
+        installer.prefix = normalized_venv_root
+        installer.finalize_options()
+
         # Path to virtualenv's "site-packages" directory
-        path = os.path.join(normalized_venv_root, relative_purelib_path)
+        path = installer.install_purelib
         local_folder = os.path.join(normalized_venv_root, "local")
         # Hack around https://github.com/pypa/virtualenv/issues/2208
         if path.startswith(local_folder):
@@ -797,18 +748,14 @@ class PythonVirtualenv:
 
             return self.pip_install(["--constraint", constraints_path] + pip_args)
 
-    def pip_install(self, pip_install_args, **kwargs):
-        # setuptools will use the architecture of the running Python instance when
-        # building packages. However, it's possible for the Xcode Python to be a universal
-        # binary (x86_64 and arm64) without the associated macOS SDK supporting arm64,
-        # thereby causing a build failure. To avoid this, we explicitly influence the
-        # build to only target a single architecture - our current architecture.
-        kwargs.setdefault("env", os.environ.copy()).setdefault(
-            "ARCHFLAGS", "-arch {}".format(platform.machine())
-        )
-        kwargs.setdefault("check", True)
-        kwargs.setdefault("stderr", subprocess.STDOUT)
-        kwargs.setdefault("universal_newlines", True)
+    def pip_install(self, pip_install_args):
+        # distutils will use the architecture of the running Python instance when building
+        # packages. However, it's possible for the Xcode Python to be a universal binary
+        # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
+        # causing a build failure. To avoid this, we explicitly influence the build to
+        # only target a single architecture - our current architecture.
+        env = os.environ.copy()
+        env.setdefault("ARCHFLAGS", "-arch {}".format(platform.machine()))
 
         # It's tempting to call pip natively via pip.main(). However,
         # the current Python interpreter may not be the virtualenv python.
@@ -817,20 +764,19 @@ class PythonVirtualenv:
         # force the virtualenv's interpreter to be used and all is well.
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
-        return subprocess.run(
+        subprocess.run(
             [self.python_path, "-m", "pip", "install"] + pip_install_args,
-            **kwargs,
+            env=env,
+            universal_newlines=True,
+            stderr=subprocess.STDOUT,
+            check=True,
         )
 
-    def install_optional_packages(self, optional_requirements):
-        for requirement in optional_requirements:
-            try:
-                self.pip_install_with_constraints([str(requirement.requirement)])
-            except subprocess.CalledProcessError:
-                print(
-                    f"Could not install {requirement.requirement.name}, so "
-                    f"{requirement.repercussion}. Continuing."
-                )
+    def pip_check(self):
+        subprocess.check_call(
+            [self.python_path, "-m", "pip", "check"],
+            stderr=subprocess.STDOUT,
+        )
 
     def _resolve_installed_packages(self):
         return _resolve_installed_packages(self.python_path)
@@ -1055,8 +1001,8 @@ def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name):
             universal_newlines=True,
         )
         if check_result.returncode:
-            subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
             print(check_result.stdout, file=sys.stderr)
+            subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
             raise Exception(
                 'According to "pip check", the current Python '
                 "environment has package-compatibility issues."
@@ -1067,36 +1013,21 @@ def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name):
         ] = "1"
 
 
-def _deprioritize_venv_packages(virtualenv):
-    # Virtualenvs implicitly add some "site packages" to the sys.path upon being
-    # activated. However, Mach generally wants to prioritize the existing sys.path
-    # (such as vendored packages) over packages installed to virtualenvs.
-    # So, this function moves the virtualenv's site-packages to the bottom of the sys.path
-    # at activation-time.
-
-    # Unixes only add "<venv>/lib/<site-packages-dir>", while Windows also
-    # includes "<venv>" itself.
-    implicitly_added_dirs = [
-        virtualenv.prefix,
-        virtualenv.site_packages_dir(),
-    ]
-
-    return [
-        line
-        for site_packages_dir in implicitly_added_dirs
-        # repr(...) is needed to ensure Windows path backslashes aren't mistaken for
-        # escape sequences.
-        # Additionally, when removing the existing "site-packages" folder's entry, we have
-        # to do it in a case-insensitive way because, on Windows:
-        # * Python adds it as <venv>/lib/site-packages
-        # * While sysconfig tells us it's <venv>/Lib/site-packages
-        # * (note: on-disk, it's capitalized, so sysconfig is slightly more accurate).
-        for line in (
-            "import sys; sys.path = [p for p in sys.path if "
-            f"p.lower() != {repr(site_packages_dir)}.lower()]",
-            f"import sys; sys.path.append({repr(site_packages_dir)})",
-        )
-    ]
+def _deprioritize_venv_packages(site_packages_dir):
+    # Move the virtualenv's site-packages to the bottom so that vendored packages
+    # are prioritized.
+    # repr(...) is needed to ensure Windows path backslashes aren't mistaken for
+    # escape sequences.
+    # Additionally, when removing the existing "site-packages" entry, we have to
+    # do it in a case-insensitive way because, on Windows:
+    # * Python adds it as <venv>/lib/site-packages
+    # * While distutils tells us it's <venv>/Lib/site-packages
+    # * (note: on-disk, it's capitalized, so distutils is slightly more accurate).
+    return (
+        "import sys; sys.path = [p for p in sys.path if "
+        f"p.lower() != {repr(site_packages_dir)}.lower()]",
+        f"import sys; sys.path.append({repr(site_packages_dir)})",
+    )
 
 
 def _create_venv_with_pthfile(
@@ -1135,7 +1066,15 @@ def _create_venv_with_pthfile(
     if site_packages_source == SitePackagesSource.VENV:
         for requirement in requirements.pypi_requirements:
             target_venv.pip_install([str(requirement.requirement)])
-        target_venv.install_optional_packages(requirements.pypi_optional_requirements)
+
+        for requirement in requirements.pypi_optional_requirements:
+            try:
+                target_venv.pip_install_with_constraints([str(requirement.requirement)])
+            except subprocess.CalledProcessError:
+                print(
+                    f"Could not install {requirement.requirement.name}, so "
+                    f"{requirement.repercussion}. Continuing."
+                )
 
     os.utime(target_venv.activate_path, None)
     metadata.write(is_finalized=True)

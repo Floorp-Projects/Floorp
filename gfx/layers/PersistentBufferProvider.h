@@ -10,7 +10,6 @@
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed, etc
 #include "mozilla/layers/KnowsCompositor.h"
-#include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/gfx/Types.h"
@@ -24,7 +23,6 @@ class ClientWebGLContext;
 namespace gfx {
 class SourceSurface;
 class DrawTarget;
-class DrawTargetWebgl;
 }  // namespace gfx
 
 namespace layers {
@@ -67,16 +65,12 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() = 0;
 
-  /**
-   * Override this if it's possible to read data directly into the DT without
-   * copying to an intermediate snapshot.
-   */
-  virtual bool CopySnapshotTo(gfx::DrawTarget* aDT) { return false; }
-
   virtual void ReturnSnapshot(
       already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
 
   virtual TextureClient* GetTextureClient() { return nullptr; }
+
+  virtual ClientWebGLContext* AsWebgl() { return nullptr; }
 
   virtual void OnShutdown() {}
 
@@ -94,13 +88,6 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
    * costly (cf. bug 1294351).
    */
   virtual bool PreservesDrawingState() const = 0;
-
-  /**
-   * Provide a WebGL front buffer for compositing, if available.
-   */
-  virtual Maybe<layers::SurfaceDescriptor> GetFrontBuffer() {
-    return Nothing();
-  }
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider {
@@ -146,19 +133,10 @@ class PersistentBufferProviderAccelerated
 
   bool IsAccelerated() const override { return true; }
 
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer() override;
-
-  bool CopySnapshotTo(gfx::DrawTarget* aDT) override;
-
-  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
-      const gfx::IntRect& aPersistedRect) override;
-
-  bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+  ClientWebGLContext* AsWebgl() override;
 
  protected:
   ~PersistentBufferProviderAccelerated() override;
-
-  gfx::DrawTargetWebgl* GetDrawTargetWebgl() const;
 };
 
 /**

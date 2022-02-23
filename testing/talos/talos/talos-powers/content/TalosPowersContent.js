@@ -96,10 +96,10 @@ var TalosPowersParent;
       document.dispatchEvent(event);
     },
 
-    goQuitApplication(waitForStartupFinished) {
+    goQuitApplication(waitForSafeBrowsing) {
       var event = new CustomEvent("TalosPowersGoQuitApplication", {
         bubbles: true,
-        detail: { waitForStartupFinished },
+        detail: waitForSafeBrowsing,
       });
       document.dispatchEvent(event);
     },

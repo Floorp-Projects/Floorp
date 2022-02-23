@@ -120,3 +120,4 @@ Who do I contact for help or to report issues?
 
 You can ask questions in
 `#build <https://chat.mozilla.org/#/room/#build:mozilla.org>`__.
+

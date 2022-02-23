@@ -658,23 +658,19 @@ BasePrincipal::IsThirdPartyChannel(nsIChannel* aChan, bool* aRes) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::IsSameOrigin(nsIURI* aURI, bool* aRes) {
+BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
   *aRes = false;
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
   if (NS_FAILED(rv) || !prinURI) {
-    // Note that expanded and system principals return here, because they have
-    // no URI.
     return NS_OK;
   }
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
-    return NS_OK;
+    return NS_ERROR_UNEXPECTED;
   }
-  bool reportError = false;
-  bool isPrivateWindow = false;  // Only used for error reporting.
   *aRes = NS_SUCCEEDED(
-      ssm->CheckSameOriginURI(prinURI, aURI, reportError, isPrivateWindow));
+      ssm->CheckSameOriginURI(prinURI, aURI, false, aIsPrivateWin));
   return NS_OK;
 }
 

@@ -317,7 +317,8 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   }
 
   id nativeParent = GetNativeFromGeckoAccessible(parent);
-  if ([nativeParent respondsToSelector:@selector(rootGroup)]) {
+  if (parent->Role() == roles::DOCUMENT &&
+      [nativeParent respondsToSelector:@selector(rootGroup)]) {
     // Before returning a WebArea as parent, check to see if
     // there is a generated root group that is an intermediate container.
     if (id<mozAccessible> rootGroup = [nativeParent rootGroup]) {
@@ -612,7 +613,11 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsAutoString value;
-  mGeckoAccessible->Value(value);
+  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
+    acc->Value(value);
+  } else {
+    mGeckoAccessible->AsRemote()->Value(value);
+  }
 
   return nsCocoaUtils::ToNSString(value);
 
@@ -684,9 +689,9 @@ struct RoleDescrComparator {
 - (NSValue*)moxFrame {
   MOZ_ASSERT(mGeckoAccessible);
 
-  LayoutDeviceIntRect rect = mGeckoAccessible->IsLocal()
-                                 ? mGeckoAccessible->AsLocal()->Bounds()
-                                 : mGeckoAccessible->AsRemote()->Bounds();
+  nsIntRect rect = mGeckoAccessible->IsLocal()
+                       ? mGeckoAccessible->AsLocal()->Bounds()
+                       : mGeckoAccessible->AsRemote()->Bounds();
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
 
@@ -901,11 +906,12 @@ struct RoleDescrComparator {
 - (void)moxPerformShowMenu {
   MOZ_ASSERT(mGeckoAccessible);
 
+  nsIntRect bounds = mGeckoAccessible->IsLocal()
+                         ? mGeckoAccessible->AsLocal()->Bounds()
+                         : mGeckoAccessible->AsRemote()->Bounds();
   // We don't need to convert this rect into mac coordinates because the
   // mouse event synthesizer expects layout (gecko) coordinates.
-  LayoutDeviceIntRect bounds = mGeckoAccessible->IsLocal()
-                                   ? mGeckoAccessible->AsLocal()->Bounds()
-                                   : mGeckoAccessible->AsRemote()->Bounds();
+  LayoutDeviceIntRect geckoRect = LayoutDeviceIntRect::FromUnknownRect(bounds);
 
   LocalAccessible* rootAcc = mGeckoAccessible->IsLocal()
                                  ? mGeckoAccessible->AsLocal()->RootAccessible()
@@ -915,8 +921,9 @@ struct RoleDescrComparator {
   id objOrView =
       GetObjectOrRepresentedView(GetNativeFromGeckoAccessible(rootAcc));
 
-  LayoutDeviceIntPoint p = LayoutDeviceIntPoint(
-      bounds.X() + (bounds.Width() / 2), bounds.Y() + (bounds.Height() / 2));
+  LayoutDeviceIntPoint p =
+      LayoutDeviceIntPoint(geckoRect.X() + (geckoRect.Width() / 2),
+                           geckoRect.Y() + (geckoRect.Height() / 2));
   nsIWidget* widget = [objOrView widget];
   widget->SynthesizeNativeMouseEvent(
       p, nsIWidget::NativeMouseMessage::ButtonDown, MouseButton::eSecondary,

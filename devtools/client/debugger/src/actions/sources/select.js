@@ -9,6 +9,8 @@
 
 import { isOriginalId } from "devtools-source-map";
 
+import { getSourceFromId, getSourceWithContent } from "../../reducers/sources";
+import { tabExists } from "../../reducers/tabs";
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
@@ -32,9 +34,6 @@ import {
   getSelectedSource,
   canPrettyPrintSource,
   getIsCurrentThreadPaused,
-  getSourceFromId,
-  getSourceWithContent,
-  tabExists,
 } from "../../selectors";
 
 export const setSelectedLocation = (cx, source, location) => ({

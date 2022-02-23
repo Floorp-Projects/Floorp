@@ -598,12 +598,13 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   }
   RootedId id(cx);
   for (size_t index = 0; index < indexCount; index++) {
-    id = PropertyKey::Int(index);
+    id = INT_TO_JSID(index);
     properties.infallibleAppend(id);
   }
 
   if (typeDef.kind() == wasm::TypeDefKind::Array) {
-    properties.infallibleAppend(NameToId(cx->runtime()->commonNames->length));
+    properties.infallibleAppend(
+        JS::PropertyKey::fromNonIntAtom(cx->runtime()->commonNames->length));
   }
 
   return true;

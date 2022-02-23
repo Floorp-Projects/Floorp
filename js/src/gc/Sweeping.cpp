@@ -23,7 +23,6 @@
 #include "builtin/WeakRefObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/AllocKind.h"
-#include "gc/FinalizationRegistry.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
@@ -472,20 +471,14 @@ void GCRuntime::waitBackgroundFreeEnd() { freeTask.join(); }
 template <class ZoneIterT>
 IncrementalProgress GCRuntime::markWeakReferences(
     SliceBudget& incrementalBudget) {
-  MOZ_ASSERT(!marker.isWeakMarking());
-
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_MARK_WEAK);
 
   auto unlimited = SliceBudget::unlimited();
   SliceBudget& budget =
       marker.incrementalWeakMapMarkingEnabled ? incrementalBudget : unlimited;
 
-  // Ensure we don't return to the mutator while we're still in weak marking
-  // mode.
-  auto leaveOnExit =
-      mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
-
-  if (marker.enterWeakMarkingMode()) {
+  // We may have already entered weak marking mode.
+  if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
     // Do not rely on the information about not-yet-marked weak keys that have
     // been collected by barriers. Clear out the gcEphemeronEdges entries and
     // rebuild the full table. Note that this a cross-zone operation; delegate
@@ -502,10 +495,19 @@ IncrementalProgress GCRuntime::markWeakReferences(
 
     for (ZoneIterT zone(this); !zone.done(); zone.next()) {
       if (zone->enterWeakMarkingMode(&marker, budget) == NotFinished) {
+        MOZ_ASSERT(marker.incrementalWeakMapMarkingEnabled);
+        marker.leaveWeakMarkingMode();
         return NotFinished;
       }
     }
   }
+
+  // This is not strictly necessary; if we yield here, we could run the mutator
+  // in weak marking mode and unmark gray would end up doing the key lookups.
+  // But it seems better to not slow down barriers. Re-entering weak marking
+  // mode will be fast since already-processed markables have been removed.
+  auto leaveOnExit =
+      mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
 
   bool markedAny = true;
   while (markedAny) {
@@ -638,11 +640,6 @@ bool Zone::findSweepGroupEdges(Zone* atomsZone) {
     if (!comp->findSweepGroupEdges()) {
       return false;
     }
-  }
-
-  FinalizationRegistryZone* frzone = finalizationRegistryZone();
-  if (frzone && !frzone->findSweepGroupEdges()) {
-    return false;
   }
 
   return WeakMapBase::findSweepGroupEdgesForZone(this);
@@ -972,7 +969,7 @@ static bool HasIncomingCrossCompartmentPointers(JSRuntime* rt) {
 }
 #endif
 
-void js::NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper) {
+void js::NotifyGCNukeWrapper(JSObject* wrapper) {
   MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
 
   /*
@@ -987,7 +984,7 @@ void js::NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper) {
   JSObject* target = UncheckedUnwrapWithoutExpose(wrapper);
   if (target->is<WeakRefObject>()) {
     WeakRefObject* weakRef = &target->as<WeakRefObject>();
-    GCRuntime* gc = &cx->runtime()->gc;
+    GCRuntime* gc = &weakRef->runtimeFromMainThread()->gc;
     if (weakRef->target() && gc->unregisterWeakRefWrapper(wrapper)) {
       weakRef->clearTarget();
     }
@@ -999,7 +996,7 @@ void js::NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper) {
    */
   if (target->is<FinalizationRecordObject>()) {
     auto* record = &target->as<FinalizationRecordObject>();
-    cx->runtime()->gc.nukeFinalizationRecordWrapper(wrapper, record);
+    FinalizationRegistryObject::unregisterRecord(record);
   }
 }
 
@@ -1068,6 +1065,7 @@ IncrementalProgress GCRuntime::beginMarkingSweepGroup(JSFreeOp* fop,
   }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
+  marker.setMainStackColor(MarkColor::Gray);
 
   // Mark incoming gray pointers from previously swept compartments.
   markIncomingGrayCrossCompartmentPointers();
@@ -1092,6 +1090,7 @@ IncrementalProgress GCRuntime::markGray(JSFreeOp* fop, SliceBudget& budget) {
     return NotFinished;
   }
 
+  marker.setMainStackColor(MarkColor::Black);
   return Finished;
 }
 
@@ -1110,6 +1109,7 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
   }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
+  marker.setMainStackColor(MarkColor::Gray);
 
   // Mark transitively inside the current compartment group.
   if (markWeakReferencesInCurrentGroup(budget) == NotFinished) {
@@ -1117,6 +1117,7 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
   }
 
   MOZ_ASSERT(marker.isDrained());
+  marker.setMainStackColor(MarkColor::Black);
 
   // We must not yield after this point before we start sweeping the group.
   safeToYield = false;
@@ -1486,12 +1487,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   // This must happen before sweeping realm globals.
   sweepDebuggerOnMainThread(fop);
 
-  // FinalizationRegistry sweeping touches weak maps and so must not run in
-  // parallel with that. This triggers a read barrier and can add marking work
-  // for zones that are still marking. Must happen before sweeping realm
-  // globals.
-  sweepFinalizationRegistriesOnMainThread();
-
   // This must happen before updating embedding weak pointers.
   sweepRealmGlobals();
 
@@ -1543,6 +1538,11 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   if (sweepingAtoms) {
     startSweepingAtomsTable();
   }
+
+  // FinalizationRegistry sweeping touches weak maps and so must not run in
+  // parallel with that. This triggers a read barrier and can add marking work
+  // for zones that are still marking.
+  sweepFinalizationRegistriesOnMainThread();
 
   // Queue all GC things in all zones for sweeping, either on the foreground
   // or on the background thread.

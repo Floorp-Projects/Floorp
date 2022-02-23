@@ -114,26 +114,6 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeFocus(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeSelection(
-    const uint64_t& aID) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->TakeSelection();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetSelected(
-    const uint64_t& aID, const bool& aSelect) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->SetSelected(aSelect);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChildBase::RecvVerifyCache(
     const uint64_t& aID, const uint64_t& aCacheDomain, AccAttributes* aFields) {
 #ifdef A11Y_LOG
@@ -186,15 +166,6 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvVerifyCache(
     logging::MsgEnd();
   }
 #endif  // A11Y_LOG
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessibleChildBase::RecvDoActionAsync(
-    const uint64_t& aID, const uint8_t& aIndex) {
-  if (LocalAccessible* acc = IdToAccessible(aID)) {
-    Unused << acc->DoAction(aIndex);
-  }
 
   return IPC_OK();
 }

@@ -741,12 +741,12 @@ enum ABIArgType {
 
 namespace detail {
 
-static constexpr uint64_t MakeABIFunctionType(
+static constexpr int MakeABIFunctionType(
     ABIArgType ret, std::initializer_list<ABIArgType> args) {
-  uint64_t abiType = (uint64_t)ret << RetType_Shift;
+  int abiType = ret << RetType_Shift;
   int i = 1;
   for (auto arg : args) {
-    abiType |= ((uint64_t)arg << (ArgType_Shift * i));
+    abiType |= (arg << (ArgType_Shift * i));
     i++;
   }
   return abiType;
@@ -754,7 +754,7 @@ static constexpr uint64_t MakeABIFunctionType(
 
 }  // namespace detail
 
-enum ABIFunctionType : uint64_t {
+enum ABIFunctionType : uint32_t {
   // The enum must be explicitly typed to avoid UB: some validly constructed
   // members are larger than any explicitly declared members.
 
@@ -879,29 +879,6 @@ enum ABIFunctionType : uint64_t {
   Args_Int32_GeneralInt32Int32Int32Int32General = detail::MakeABIFunctionType(
       ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                       ArgType_Int32, ArgType_Int32, ArgType_General}),
-  Args_Int32_GeneralInt32Int32Int32Int32Int32Int32General =
-      detail::MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_Int32,
-           ArgType_Int32, ArgType_Int32, ArgType_Int32, ArgType_General}),
-  Args_Int32_GeneralInt32Float32Float32Int32Int32Int32General =
-      detail::MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Float32, ArgType_Float32,
-           ArgType_Int32, ArgType_Int32, ArgType_Int32, ArgType_General}),
-  Args_Int32_GeneralInt32Float32Float32Float32Float32Int32Int32Int32Int32General =
-      detail::MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Float32, ArgType_Float32,
-           ArgType_Float32, ArgType_Float32, ArgType_Int32, ArgType_Int32,
-           ArgType_Int32, ArgType_Int32, ArgType_General}),
-  Args_Int32_GeneralInt32Float32Float32Int32Float32Float32Int32Float32Int32Int32Int32Int32General =
-      detail::MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Float32, ArgType_Float32,
-           ArgType_Int32, ArgType_Float32, ArgType_Float32, ArgType_Int32,
-           ArgType_Float32, ArgType_Int32, ArgType_Int32, ArgType_Int32,
-           ArgType_Int32, ArgType_General}),
   Args_Int32_GeneralInt32Int32Int32General = detail::MakeABIFunctionType(
       ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                       ArgType_Int32, ArgType_General}),

@@ -14,22 +14,15 @@
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsISupports.h"
+#include "nsITimer.h"
 #include "nsTHashSet.h"
 
 class AudioDeviceInfo;
 
 namespace mozilla {
 
-class LocalMediaDevice;
-class MediaDevice;
-class MediaMgrError;
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
-
-namespace media {
-template <typename T>
-class Refcountable;
-}  // namespace media
 
 namespace dom {
 
@@ -92,33 +85,22 @@ class MediaDevices final : public DOMEventTargetHelper {
   void BrowserWindowBecameActive() { MaybeResumeDeviceExposure(); }
 
  private:
-  using MediaDeviceSet = nsTArray<RefPtr<MediaDevice>>;
-  using MediaDeviceSetRefCnt = media::Refcountable<MediaDeviceSet>;
-  using LocalMediaDeviceSet = nsTArray<RefPtr<LocalMediaDevice>>;
+  class GumResolver;
+  class EnumDevResolver;
+  class GumRejecter;
 
   virtual ~MediaDevices();
   void MaybeResumeDeviceExposure();
-  void ResumeEnumerateDevices(
-      nsTArray<RefPtr<Promise>>&& aPromises,
-      RefPtr<const MediaDeviceSetRefCnt> aExposedDevices) const;
-  RefPtr<MediaDeviceSetRefCnt> FilterExposedDevices(
-      const MediaDeviceSet& aDevices) const;
-  bool ShouldQueueDeviceChange(const MediaDeviceSet& aExposedDevices) const;
-  void ResolveEnumerateDevicesPromise(
-      Promise* aPromise, const LocalMediaDeviceSet& aDevices) const;
+  void ResumeEnumerateDevices(RefPtr<Promise> aPromise);
 
-  nsTHashSet<nsString> mExplicitlyGrantedAudioOutputRawIds;
+  nsTHashSet<nsString> mExplicitlyGrantedAudioOutputIds;
   nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
+  nsCOMPtr<nsITimer> mFuzzTimer;
 
   // Connect/Disconnect on main thread only
   MediaEventListener mDeviceChangeListener;
-  // Ordered set of the system physical devices when devicechange event
-  // decisions were last performed.
-  RefPtr<const MediaDeviceSetRefCnt> mLastPhysicalDevices;
   bool mIsDeviceChangeListenerSetUp = false;
-  bool mHaveUnprocessedDeviceListChange = false;
   bool mCanExposeMicrophoneInfo = false;
-  bool mCanExposeCameraInfo = false;
 
   void RecordAccessTelemetry(const UseCounter counter) const;
 };

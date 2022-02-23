@@ -11,8 +11,13 @@ using namespace mozilla::ipc;
 
 namespace mozilla::net {
 
-StunAddrsRequestChild::StunAddrsRequestChild(StunAddrsListener* listener)
+StunAddrsRequestChild::StunAddrsRequestChild(
+    StunAddrsListener* listener, nsISerialEventTarget* mainThreadEventTarget)
     : mListener(listener) {
+  if (mainThreadEventTarget) {
+    gNeckoChild->SetEventTargetForActor(this, mainThreadEventTarget);
+  }
+
   gNeckoChild->SendPStunAddrsRequestConstructor(this);
   // IPDL holds a reference until IPDL channel gets destroyed
   AddIPDLReference();

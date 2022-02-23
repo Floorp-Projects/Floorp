@@ -549,10 +549,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void RegisterManagedPostRefreshObserver(mozilla::ManagedPostRefreshObserver*);
   void UnregisterManagedPostRefreshObserver(
       mozilla::ManagedPostRefreshObserver*);
-
- protected:
   void CancelManagedPostRefreshObservers();
 
+ protected:
   void UpdateEffectiveTextZoom();
 
 #ifdef DEBUG

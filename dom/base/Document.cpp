@@ -439,25 +439,6 @@ mozilla::LazyLogModule gUseCountersLog("UseCounters");
 namespace mozilla {
 namespace dom {
 
-class Document::HeaderData {
- public:
-  HeaderData(nsAtom* aField, const nsAString& aData)
-      : mField(aField), mData(aData) {}
-
-  ~HeaderData() {
-    // Delete iteratively to avoid blowing up the stack, though it shouldn't
-    // happen in practice.
-    UniquePtr<HeaderData> next = std::move(mNext);
-    while (next) {
-      next = std::move(next->mNext);
-    }
-  }
-
-  RefPtr<nsAtom> mField;
-  nsString mData;
-  UniquePtr<HeaderData> mNext;
-};
-
 using LinkArray = nsTArray<Link*>;
 
 AutoTArray<Document*, 8>* Document::sLoadingForegroundTopLevelContentDocument =
@@ -1399,6 +1380,7 @@ Document::Document(const char* aContentType)
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
+      mAsyncOnloadBlockCount(0),
       mWriteLevel(0),
       mLazyLoadImageCount(0),
       mLazyLoadImageStarted(0),
@@ -2294,7 +2276,7 @@ Document::~Document() {
     mPermissionDelegateHandler->DropDocumentReference();
   }
 
-  mHeaderData = nullptr;
+  delete mHeaderData;
 
   mPendingTitleChangeEvent.Revoke();
 
@@ -3609,6 +3591,11 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
 nsresult Document::InitCSP(nsIChannel* aChannel) {
   MOZ_ASSERT(!mScriptGlobalObject,
              "CSP must be initialized before mScriptGlobalObject is set!");
+  if (!StaticPrefs::security_csp_enable()) {
+    MOZ_LOG(gCspPRLog, LogLevel::Debug,
+            ("CSP is disabled, skipping CSP init for document %p", this));
+    return NS_OK;
+  }
 
   // If this is a data document - no need to set CSP.
   if (mLoadedAsData) {
@@ -6704,13 +6691,14 @@ void Document::GetSandboxFlagsAsString(nsAString& aFlags) {
 
 void Document::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const {
   aData.Truncate();
-  const HeaderData* data = mHeaderData.get();
+  const DocHeaderData* data = mHeaderData;
   while (data) {
     if (data->mField == aHeaderField) {
       aData = data->mData;
+
       break;
     }
-    data = data->mNext.get();
+    data = data->mNext;
   }
 }
 
@@ -6722,32 +6710,32 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
 
   if (!mHeaderData) {
     if (!aData.IsEmpty()) {  // don't bother storing empty string
-      mHeaderData = MakeUnique<HeaderData>(aHeaderField, aData);
+      mHeaderData = new DocHeaderData(aHeaderField, aData);
     }
   } else {
-    HeaderData* data = mHeaderData.get();
-    UniquePtr<HeaderData>* lastPtr = &mHeaderData;
+    DocHeaderData* data = mHeaderData;
+    DocHeaderData** lastPtr = &mHeaderData;
     bool found = false;
     do {  // look for existing and replace
       if (data->mField == aHeaderField) {
         if (!aData.IsEmpty()) {
           data->mData.Assign(aData);
         } else {  // don't store empty string
-          // Note that data->mNext is moved to a temporary before the old value
-          // of *lastPtr is deleted.
-          *lastPtr = std::move(data->mNext);
+          *lastPtr = data->mNext;
+          data->mNext = nullptr;
+          delete data;
         }
         found = true;
 
         break;
       }
-      lastPtr = &data->mNext;
-      data = lastPtr->get();
+      lastPtr = &(data->mNext);
+      data = *lastPtr;
     } while (data);
 
     if (!aData.IsEmpty() && !found) {
       // didn't find, append
-      *lastPtr = MakeUnique<HeaderData>(aHeaderField, aData);
+      *lastPtr = new DocHeaderData(aHeaderField, aData);
     }
   }
 
@@ -6757,10 +6745,6 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     if (auto* presContext = GetPresContext()) {
       presContext->ContentLanguageChanged();
     }
-  }
-
-  if (aHeaderField == nsGkAtoms::origin_trial) {
-    mTrials.UpdateFromToken(aData, NodePrincipal());
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
@@ -10910,7 +10894,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
     static const char* const headers[] = {
         "default-style", "content-style-type", "content-language",
         "content-disposition", "refresh", "x-dns-prefetch-control",
-        "x-frame-options", "origin-trial",
+        "x-frame-options",
         // add more http headers if you need
         // XXXbz don't add content-location support without reading bug
         // 238654 and its dependencies/dups first.
@@ -10958,7 +10942,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
 void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  aMetaElement->GetAttr(nsGkAtoms::httpEquiv, header);
+  aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     // Ignore META REFRESH when document is sandboxed from automatic features.
     nsContentUtils::ASCIIToLower(header);
@@ -10968,7 +10952,7 @@ void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
     }
 
     nsAutoString result;
-    aMetaElement->GetAttr(nsGkAtoms::content, result);
+    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
       SetHeaderData(fieldAtom, result);
@@ -11441,6 +11425,13 @@ void Document::EnsureOnloadBlocker() {
   }
 }
 
+void Document::AsyncBlockOnload() {
+  while (mAsyncOnloadBlockCount) {
+    --mAsyncOnloadBlockCount;
+    BlockOnload();
+  }
+}
+
 void Document::BlockOnload() {
   if (mDisplayDocument) {
     mDisplayDocument->BlockOnload();
@@ -11450,7 +11441,18 @@ void Document::BlockOnload() {
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
-    if (nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup()) {
+    if (!nsContentUtils::IsSafeToRunScript()) {
+      // Because AddRequest may lead to OnStateChange calls in chrome,
+      // block onload only when there are no script blockers.
+      ++mAsyncOnloadBlockCount;
+      if (mAsyncOnloadBlockCount == 1) {
+        nsContentUtils::AddScriptRunner(NewRunnableMethod(
+            "Document::AsyncBlockOnload", this, &Document::AsyncBlockOnload));
+      }
+      return;
+    }
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (loadGroup) {
       loadGroup->AddRequest(mOnloadBlocker, nullptr);
     }
   }
@@ -11463,13 +11465,20 @@ void Document::UnblockOnload(bool aFireSync) {
     return;
   }
 
+  if (mOnloadBlockCount == 0 && mAsyncOnloadBlockCount == 0) {
+    MOZ_ASSERT_UNREACHABLE(
+        "More UnblockOnload() calls than BlockOnload() "
+        "calls; dropping call");
+    return;
+  }
+
   --mOnloadBlockCount;
 
   if (mOnloadBlockCount == 0) {
     if (mScriptGlobalObject) {
       // Only manipulate the loadgroup in this case, because if
       // mScriptGlobalObject is null, it's not ours.
-      if (aFireSync) {
+      if (aFireSync && mAsyncOnloadBlockCount == 0) {
         // Increment mOnloadBlockCount, since DoUnblockOnload will decrement it
         ++mOnloadBlockCount;
         DoUnblockOnload();
@@ -11530,10 +11539,18 @@ void Document::DoUnblockOnload() {
     return;
   }
 
+  if (mAsyncOnloadBlockCount != 0) {
+    // We need to wait until the async onload block has been handled.
+    //
+    // FIXME(emilio): Shouldn't we return here??
+    PostUnblockOnloadEvent();
+  }
+
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mScriptGlobalObject) {
-    if (nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup()) {
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (loadGroup) {
       loadGroup->RemoveRequest(mOnloadBlocker, nullptr, NS_OK);
     }
   }
@@ -11907,6 +11924,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     }
 
     clone->mIsSrcdocDocument = mIsSrcdocDocument;
+
     clone->SetContainer(mDocumentContainer);
 
     // Setup the navigation time. This will be needed by any animations in the
@@ -11931,11 +11949,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
   clone->SetPrincipals(NodePrincipal(), mPartitionedPrincipal);
   clone->mActiveStoragePrincipal = mActiveStoragePrincipal;
-  // NOTE(emilio): Intentionally setting this to the GetDocBaseURI rather than
-  // just mDocumentBaseURI, so that srcdoc iframes get the right base URI even
-  // when printed standalone via window.print() (where there won't be a parent
-  // document to grab the URI from).
-  clone->mDocumentBaseURI = GetDocBaseURI();
+  clone->mDocumentBaseURI = mDocumentBaseURI;
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
   clone->mReferrerInfo =
       static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
@@ -13550,15 +13564,13 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
     }
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MaybeUnblockParser();
 
     mPromise->MaybeResolve(aValue);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MaybeUnblockParser();
 
     mPromise->MaybeReject(aValue);
@@ -14552,14 +14564,9 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
 
 void Document::GetWireframe(bool aIncludeNodes,
                             Nullable<Wireframe>& aWireframe) {
-  FlushPendingNotifications(FlushType::Layout);
-  GetWireframeWithoutFlushing(aIncludeNodes, aWireframe);
-}
-
-void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
-                                           Nullable<Wireframe>& aWireframe) {
   using FrameForPointOptions = nsLayoutUtils::FrameForPointOptions;
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+  FlushPendingNotifications(FlushType::Layout);
 
   PresShell* shell = GetPresShell();
   if (!shell) {
@@ -14568,11 +14575,6 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
 
   nsPresContext* pc = shell->GetPresContext();
   if (!pc) {
-    return;
-  }
-
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (!rootFrame) {
     return;
   }
 
@@ -14586,7 +14588,8 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   options.mBits += FrameForPointOption::OnlyVisible;
 
   AutoTArray<nsIFrame*, 32> frames;
-  const RelativeTo relativeTo{rootFrame, mozilla::ViewportType::Layout};
+  const RelativeTo relativeTo{shell->GetRootFrame(),
+                              mozilla::ViewportType::Layout};
   nsLayoutUtils::GetFramesForArea(relativeTo, pc->GetVisibleArea(), frames,
                                   options);
 
@@ -14597,7 +14600,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   if (!rects.SetCapacity(frames.Length(), fallible)) {
     return;
   }
-  for (nsIFrame* frame : Reversed(frames)) {
+  for (nsIFrame* frame : frames) {
     // Can't really fail because SetCapacity succeeded.
     auto& taggedRect = *rects.AppendElement(fallible);
     const auto r =
@@ -14608,10 +14611,8 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
         taggedRect.mNode.Construct(c);
       }
     }
-    taggedRect.mX = r.x;
-    taggedRect.mY = r.y;
-    taggedRect.mWidth = r.width;
-    taggedRect.mHeight = r.height;
+    taggedRect.mRect.Construct(MakeRefPtr<DOMRectReadOnly>(
+        ToSupports(this), r.x, r.y, r.width, r.height));
     taggedRect.mType.Construct() = [&] {
       if (frame->IsTextFrame()) {
         nsStyleUtil::GetSerializedColorValue(
@@ -17077,7 +17078,11 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
   // Only enforce third-party checks when there is a reason to enforce them.
   if (!CookieJarSettings()->GetRejectThirdPartyContexts()) {
     // If the the thrid party origin is equal to the window's, resolve.
-    if (NodePrincipal()->IsSameOrigin(thirdPartyURI)) {
+    bool isSameOrigin = false;
+    NodePrincipal()->IsSameOrigin(thirdPartyURI,
+                                  nsContentUtils::IsInPrivateBrowsing(this),
+                                  &isSameOrigin);
+    if (isSameOrigin) {
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     }

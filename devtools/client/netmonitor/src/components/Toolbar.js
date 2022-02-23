@@ -43,7 +43,7 @@ loader.lazyRequireGetter(
 // MDN
 const {
   getFilterBoxURL,
-} = require("devtools/client/netmonitor/src/utils/doc-utils");
+} = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const LEARN_MORE_URL = getFilterBoxURL();
 
 // Components

@@ -9,7 +9,6 @@ include PBackgroundSharedTypes;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PBackgroundLocalStorageCache
 {
   manager PBackground;

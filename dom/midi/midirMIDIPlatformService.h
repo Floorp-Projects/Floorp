@@ -31,7 +31,7 @@ class midirMIDIPlatformService : public MIDIPlatformService {
   virtual void ScheduleSend(const nsAString& aPort) override;
   virtual void ScheduleClose(MIDIPortParent* aPort) override;
 
-  void SendMessage(const nsAString& aPort, const MIDIMessage& aMessage);
+  void SendMessages(const nsAString& aPort);
 
  private:
   virtual ~midirMIDIPlatformService();

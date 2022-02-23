@@ -38,14 +38,20 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
+  if (Intl()->IsLocal()) {
+    *aEndIndex = Intl()->AsLocal()->EndOffset();
+  } else {
 #if defined(XP_WIN)
-  if (Intl()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
+#else
+    bool isIndexValid = false;
+    uint32_t endOffset = Intl()->AsRemote()->EndOffset(&isIndexValid);
+    if (!isIndexValid) return NS_ERROR_FAILURE;
 
-  *aEndIndex = static_cast<int32_t>(Intl()->EndOffset());
+    *aEndIndex = endOffset;
+#endif
+  }
+
   return NS_OK;
 }
 

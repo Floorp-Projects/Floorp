@@ -31,7 +31,7 @@ pub fn unforce() {
 
 #[derive(Clone)]
 pub(crate) struct TokenStream {
-    inner: Vec<TokenTree>,
+    pub(crate) inner: Vec<TokenTree>,
 }
 
 #[derive(Debug)]
@@ -52,7 +52,7 @@ impl LexError {
 }
 
 impl TokenStream {
-    pub fn new() -> Self {
+    pub fn new() -> TokenStream {
         TokenStream { inner: Vec::new() }
     }
 
@@ -74,7 +74,7 @@ impl TokenStream {
                 #[cfg(not(wrap_proc_macro))]
                     inner: literal,
                 ..
-            }) if literal.repr.starts_with('-') => {
+            }) if literal.text.starts_with('-') => {
                 push_negative_literal(self, literal);
             }
             #[cfg(no_bind_by_move_pattern_guard)]
@@ -85,7 +85,7 @@ impl TokenStream {
                     inner: literal,
                 ..
             }) => {
-                if literal.repr.starts_with('-') {
+                if literal.text.starts_with('-') {
                     push_negative_literal(self, literal);
                 } else {
                     self.inner
@@ -97,7 +97,7 @@ impl TokenStream {
 
         #[cold]
         fn push_negative_literal(stream: &mut TokenStream, mut literal: Literal) {
-            literal.repr.remove(0);
+            literal.text.remove(0);
             let mut punct = crate::Punct::new('-', Spacing::Alone);
             punct.set_span(crate::Span::_new_stable(literal.span));
             stream.inner.push(TokenTree::Punct(punct));
@@ -105,12 +105,6 @@ impl TokenStream {
                 .inner
                 .push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
         }
-    }
-}
-
-impl From<Vec<TokenTree>> for TokenStream {
-    fn from(inner: Vec<TokenTree>) -> Self {
-        TokenStream { inner }
     }
 }
 
@@ -423,22 +417,22 @@ pub(crate) struct Span {
 
 impl Span {
     #[cfg(not(span_locations))]
-    pub fn call_site() -> Self {
+    pub fn call_site() -> Span {
         Span {}
     }
 
     #[cfg(span_locations)]
-    pub fn call_site() -> Self {
+    pub fn call_site() -> Span {
         Span { lo: 0, hi: 0 }
     }
 
     #[cfg(not(no_hygiene))]
-    pub fn mixed_site() -> Self {
+    pub fn mixed_site() -> Span {
         Span::call_site()
     }
 
     #[cfg(procmacro2_semver_exempt)]
-    pub fn def_site() -> Self {
+    pub fn def_site() -> Span {
         Span::call_site()
     }
 
@@ -560,7 +554,7 @@ pub(crate) struct Group {
 }
 
 impl Group {
-    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Self {
+    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Group {
         Group {
             delimiter,
             stream,
@@ -638,7 +632,7 @@ pub(crate) struct Ident {
 }
 
 impl Ident {
-    fn _new(string: &str, raw: bool, span: Span) -> Self {
+    fn _new(string: &str, raw: bool, span: Span) -> Ident {
         validate_ident(string);
 
         Ident {
@@ -648,11 +642,11 @@ impl Ident {
         }
     }
 
-    pub fn new(string: &str, span: Span) -> Self {
+    pub fn new(string: &str, span: Span) -> Ident {
         Ident::_new(string, false, span)
     }
 
-    pub fn new_raw(string: &str, span: Span) -> Self {
+    pub fn new_raw(string: &str, span: Span) -> Ident {
         Ident::_new(string, true, span)
     }
 
@@ -762,7 +756,7 @@ impl Debug for Ident {
 
 #[derive(Clone)]
 pub(crate) struct Literal {
-    repr: String,
+    text: String,
     span: Span,
 }
 
@@ -783,15 +777,11 @@ macro_rules! unsuffixed_numbers {
 }
 
 impl Literal {
-    pub(crate) fn _new(repr: String) -> Self {
+    pub(crate) fn _new(text: String) -> Literal {
         Literal {
-            repr,
+            text,
             span: Span::call_site(),
         }
-    }
-
-    pub(crate) unsafe fn from_str_unchecked(repr: &str) -> Self {
-        Literal::_new(repr.to_owned())
     }
 
     suffixed_numbers! {
@@ -844,31 +834,31 @@ impl Literal {
     }
 
     pub fn string(t: &str) -> Literal {
-        let mut repr = String::with_capacity(t.len() + 2);
-        repr.push('"');
+        let mut text = String::with_capacity(t.len() + 2);
+        text.push('"');
         for c in t.chars() {
             if c == '\'' {
                 // escape_debug turns this into "\'" which is unnecessary.
-                repr.push(c);
+                text.push(c);
             } else {
-                repr.extend(c.escape_debug());
+                text.extend(c.escape_debug());
             }
         }
-        repr.push('"');
-        Literal::_new(repr)
+        text.push('"');
+        Literal::_new(text)
     }
 
     pub fn character(t: char) -> Literal {
-        let mut repr = String::new();
-        repr.push('\'');
+        let mut text = String::new();
+        text.push('\'');
         if t == '"' {
             // escape_debug turns this into '\"' which is unnecessary.
-            repr.push(t);
+            text.push(t);
         } else {
-            repr.extend(t.escape_debug());
+            text.extend(t.escape_debug());
         }
-        repr.push('\'');
-        Literal::_new(repr)
+        text.push('\'');
+        Literal::_new(text)
     }
 
     pub fn byte_string(bytes: &[u8]) -> Literal {
@@ -916,9 +906,9 @@ impl FromStr for Literal {
         }
         let cursor = get_cursor(repr);
         if let Ok((_rest, mut literal)) = parse::literal(cursor) {
-            if literal.repr.len() == repr.len() {
+            if literal.text.len() == repr.len() {
                 if negative {
-                    literal.repr.insert(0, '-');
+                    literal.text.insert(0, '-');
                 }
                 return Ok(literal);
             }
@@ -929,14 +919,14 @@ impl FromStr for Literal {
 
 impl Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.repr, f)
+        Display::fmt(&self.text, f)
     }
 }
 
 impl Debug for Literal {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let mut debug = fmt.debug_struct("Literal");
-        debug.field("lit", &format_args!("{}", self.repr));
+        debug.field("lit", &format_args!("{}", self.text));
         debug_span_field_if_nontrivial(&mut debug, self.span);
         debug.finish()
     }

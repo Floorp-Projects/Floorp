@@ -439,8 +439,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
   if (feats) gr_featureval_destroy (feats);
   gr_seg_destroy (seg);
 
-  buffer->clear_glyph_flags ();
-  buffer->unsafe_to_break ();
+  buffer->unsafe_to_break_all ();
 
   return true;
 }

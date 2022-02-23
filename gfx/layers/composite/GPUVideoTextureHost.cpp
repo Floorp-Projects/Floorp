@@ -55,6 +55,14 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
     return nullptr;
   }
 
+  if (mWrappedTextureHost->AsBufferTextureHost()) {
+    // TODO(miko): This code path is taken when WebRenderTextureHost wraps
+    // GPUVideoTextureHost, which wraps BufferTextureHost.
+    // Because this creates additional copies of the texture data, we should not
+    // do this.
+    mWrappedTextureHost->AsBufferTextureHost()->DisableExternalTextures();
+  }
+
   if (mExternalImageId.isSome()) {
     // External image id is allocated by mWrappedTextureHost.
     mWrappedTextureHost->EnsureRenderTexture(Nothing());
@@ -197,13 +205,6 @@ void GPUVideoTextureHost::NotifyNotUsed() {
     EnsureWrappedTextureHost()->NotifyNotUsed();
   }
   TextureHost::NotifyNotUsed();
-}
-
-bool GPUVideoTextureHost::IsWrappingBufferTextureHost() {
-  if (EnsureWrappedTextureHost()) {
-    return EnsureWrappedTextureHost()->IsWrappingBufferTextureHost();
-  }
-  return false;
 }
 
 }  // namespace layers

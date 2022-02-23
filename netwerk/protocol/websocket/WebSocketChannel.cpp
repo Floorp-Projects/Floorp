@@ -240,7 +240,6 @@ class FailDelayManager {
         if (remainingDelay) {
           // reconnecting within delay interval: delay by remaining time
           nsresult rv;
-          MutexAutoLock lock(ws->mMutex);
           rv = NS_NewTimerWithCallback(getter_AddRefs(ws->mReconnectDelayTimer),
                                        ws, remainingDelay,
                                        nsITimer::TYPE_ONE_SHOT);
@@ -400,51 +399,23 @@ class nsWSAdmissionManager {
       }
     }
 
-    if (NS_IsMainThread()) {
-      ContinueOnStopSession(aChannel, aReason);
-    } else {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "nsWSAdmissionManager::ContinueOnStopSession",
-          [channel = RefPtr{aChannel}, reason = aReason]() {
-            StaticMutexAutoLock lock(sLock);
-            if (!sManager) {
-              return;
-            }
+    if (aChannel->mConnecting) {
+      MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-            nsWSAdmissionManager::ContinueOnStopSession(channel, reason);
-          }));
-    }
-  }
-
-  static void ContinueOnStopSession(WebSocketChannel* aChannel,
-                                    nsresult aReason) {
-    sLock.AssertCurrentThreadOwns();
-    MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-
-    if (!aChannel->mConnecting) {
-      return;
-    }
-
-    // Only way a connecting channel may get here w/o failing is if it
-    // was closed with GOING_AWAY (1001) because of navigation, tab
-    // close, etc.
-#ifdef DEBUG
-    {
-      MutexAutoLock lock(aChannel->mMutex);
+      // Only way a connecting channel may get here w/o failing is if it was
+      // closed with GOING_AWAY (1001) because of navigation, tab close, etc.
       MOZ_ASSERT(
           NS_FAILED(aReason) || aChannel->mScriptCloseCode == CLOSE_GOING_AWAY,
           "websocket closed while connecting w/o failing?");
-    }
-#endif
-    Unused << aReason;
 
-    sManager->RemoveFromQueue(aChannel);
+      sManager->RemoveFromQueue(aChannel);
 
-    bool wasNotQueued = (aChannel->mConnecting != CONNECTING_QUEUED);
-    LOG(("Websocket: changing state to NOT_CONNECTING"));
-    aChannel->mConnecting = NOT_CONNECTING;
-    if (wasNotQueued) {
-      sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
+      bool wasNotQueued = (aChannel->mConnecting != CONNECTING_QUEUED);
+      LOG(("Websocket: changing state to NOT_CONNECTING"));
+      aChannel->mConnecting = NOT_CONNECTING;
+      if (wasNotQueued) {
+        sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
+      }
     }
   }
 
@@ -1226,13 +1197,9 @@ WebSocketChannel::~WebSocketChannel() {
   mListenerMT = nullptr;
 
   NS_ReleaseOnMainThread("WebSocketChannel::mLoadGroup", mLoadGroup.forget());
+  NS_ReleaseOnMainThread("WebSocketChannel::mTargetThread",
+                         mTargetThread.forget());
   NS_ReleaseOnMainThread("WebSocketChannel::mService", mService.forget());
-  nsCOMPtr<nsIEventTarget> target;
-  {
-    auto lock = mTargetThread.Lock();
-    target.swap(*lock);
-  }
-  NS_ReleaseOnMainThread("WebSocketChannel::mTargetThread", target.forget());
 }
 
 NS_IMETHODIMP
@@ -1252,10 +1219,19 @@ WebSocketChannel::Observe(nsISupports* subject, const char* topic,
         // no ping.
         LOG(("WebSocket: early object, no ping needed"));
       } else {
-        mIOThread->Dispatch(
-            NewRunnableMethod("net::WebSocketChannel::OnNetworkChanged", this,
-                              &WebSocketChannel::OnNetworkChanged),
-            NS_DISPATCH_NORMAL);
+        // Next we check mDataStarted, which we need to do on mTargetThread.
+        if (!IsOnTargetThread()) {
+          mTargetThread->Dispatch(
+              NewRunnableMethod("net::WebSocketChannel::OnNetworkChanged", this,
+                                &WebSocketChannel::OnNetworkChanged),
+              NS_DISPATCH_NORMAL);
+        } else {
+          nsresult rv = OnNetworkChanged();
+          if (NS_FAILED(rv)) {
+            LOG(("WebSocket: OnNetworkChanged failed (%08" PRIx32 ")",
+                 static_cast<uint32_t>(rv)));
+          }
+        }
       }
     }
   }
@@ -1264,9 +1240,18 @@ WebSocketChannel::Observe(nsISupports* subject, const char* topic,
 }
 
 nsresult WebSocketChannel::OnNetworkChanged() {
-  if (!mDataStarted) {
-    LOG(("WebSocket: data not started yet, no ping needed"));
-    return NS_OK;
+  if (IsOnTargetThread()) {
+    LOG(("WebSocketChannel::OnNetworkChanged() - on target thread %p", this));
+
+    if (!mDataStarted) {
+      LOG(("WebSocket: data not started yet, no ping needed"));
+      return NS_OK;
+    }
+
+    return mIOThread->Dispatch(
+        NewRunnableMethod("net::WebSocketChannel::OnNetworkChanged", this,
+                          &WebSocketChannel::OnNetworkChanged),
+        NS_DISPATCH_NORMAL);
   }
 
   MOZ_ASSERT(mIOThread->IsOnCurrentThread(), "not on right thread");
@@ -1308,6 +1293,14 @@ nsresult WebSocketChannel::OnNetworkChanged() {
 
 void WebSocketChannel::Shutdown() { nsWSAdmissionManager::Shutdown(); }
 
+bool WebSocketChannel::IsOnTargetThread() {
+  MOZ_ASSERT(mTargetThread);
+  bool isOnTargetThread = false;
+  nsresult rv = mTargetThread->IsOnCurrentThread(&isOnTargetThread);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_FAILED(rv) ? false : isOnTargetThread;
+}
+
 void WebSocketChannel::GetEffectiveURL(nsAString& aEffectiveURL) const {
   aEffectiveURL = mEffectiveURL;
 }
@@ -1337,10 +1330,8 @@ void WebSocketChannel::BeginOpen(bool aCalledFromAdmissionManager) {
   }
 }
 
-// MainThread
 void WebSocketChannel::BeginOpenInternal() {
   LOG(("WebSocketChannel::BeginOpenInternal() %p\n", this));
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
   nsresult rv;
 
@@ -1362,7 +1353,7 @@ void WebSocketChannel::BeginOpenInternal() {
 
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpenInternal: cannot async open\n"));
-    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
+    AbortSession(NS_ERROR_CONNECTION_REFUSED);
     return;
   }
   mOpenedHttpChannel = true;
@@ -1678,12 +1669,8 @@ nsresult WebSocketChannel::ProcessInput(uint8_t* buffer, uint32_t count) {
           mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
         }
 
-        if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-          target->Dispatch(new CallOnMessageAvailable(this, utf8Data, -1),
-                           NS_DISPATCH_NORMAL);
-        } else {
-          return NS_ERROR_UNEXPECTED;
-        }
+        mTargetThread->Dispatch(new CallOnMessageAvailable(this, utf8Data, -1),
+                                NS_DISPATCH_NORMAL);
         if (mConnectionLogService && !mPrivateBrowsing) {
           mConnectionLogService->NewMsgReceived(mHost, mSerial, count);
           LOG(("Added new msg received for %s", mHost.get()));
@@ -1742,13 +1729,9 @@ nsresult WebSocketChannel::ProcessInput(uint8_t* buffer, uint32_t count) {
         }
 
         if (mListenerMT) {
-          if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-            target->Dispatch(new CallOnServerClose(this, mServerCloseCode,
-                                                   mServerCloseReason),
-                             NS_DISPATCH_NORMAL);
-          } else {
-            return NS_ERROR_UNEXPECTED;
-          }
+          mTargetThread->Dispatch(
+              new CallOnServerClose(this, mServerCloseCode, mServerCloseReason),
+              NS_DISPATCH_NORMAL);
         }
 
         if (mClientClosed) ReleaseSession();
@@ -1812,13 +1795,9 @@ nsresult WebSocketChannel::ProcessInput(uint8_t* buffer, uint32_t count) {
           mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
         }
 
-        if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-          target->Dispatch(
-              new CallOnMessageAvailable(this, binaryData, binaryData.Length()),
-              NS_DISPATCH_NORMAL);
-        } else {
-          return NS_ERROR_UNEXPECTED;
-        }
+        mTargetThread->Dispatch(
+            new CallOnMessageAvailable(this, binaryData, binaryData.Length()),
+            NS_DISPATCH_NORMAL);
         // To add the header to 'Networking Dashboard' log
         if (mConnectionLogService && !mPrivateBrowsing) {
           mConnectionLogService->NewMsgReceived(mHost, mSerial, count);
@@ -2025,7 +2004,6 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
     // If the channel user provided a code and reason during Close()
     // and there isn't an internal error, use that.
     if (NS_SUCCEEDED(mStopOnClose)) {
-      MutexAutoLock lock(mMutex);
       if (mScriptCloseCode) {
         NetworkEndian::writeUint16(payload, mScriptCloseCode);
         mOutHeader[1] += 2;
@@ -2245,17 +2223,7 @@ class RemoveObserverRunnable : public Runnable {
 }  // namespace
 
 void WebSocketChannel::CleanupConnection() {
-  // normally this should be called on socket thread, but it may be called
-  // on MainThread
-
   LOG(("WebSocketChannel::CleanupConnection() %p", this));
-  // This needs to run on the IOThread so we don't need to lock a bunch of these
-  if (!mIOThread->IsOnCurrentThread()) {
-    mIOThread->Dispatch(
-        NewRunnableMethod("net::WebSocketChannel::CleanupConnection", this,
-                          &WebSocketChannel::CleanupConnection),
-        NS_DISPATCH_NORMAL);
-  }
 
   if (mLingeringCloseTimer) {
     mLingeringCloseTimer->Cancel();
@@ -2290,7 +2258,8 @@ void WebSocketChannel::CleanupConnection() {
     mConnectionLogService->RemoveHost(mHost, mSerial);
   }
 
-  // The observer has to be removed on the main-thread.
+  // This method can run in any thread, but the observer has to be removed on
+  // the main-thread.
   NS_DispatchToMainThread(new RemoveObserverRunnable(this));
 
   DecrementSessionCount();
@@ -2316,9 +2285,7 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
        static_cast<uint32_t>(reason)));
 
   // normally this should be called on socket thread, but it is ok to call it
-  // from OnStartRequest before the socket thread machine has gotten underway.
-  // If mDataStarted is false, this is called on MainThread for Close().
-  // Otherwise it should be called on the IO thread
+  // from OnStartRequest before the socket thread machine has gotten underway
 
   MOZ_ASSERT(mStopped);
   MOZ_ASSERT(mIOThread->IsOnCurrentThread() || mTCPClosed || !mDataStarted);
@@ -2337,20 +2304,14 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     mCloseTimer = nullptr;
   }
 
-  // mOpenTimer must be null if mDataStarted is true and we're not on MainThread
   if (mOpenTimer) {
-    MOZ_ASSERT(NS_IsMainThread(), "not main thread");
     mOpenTimer->Cancel();
     mOpenTimer = nullptr;
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    if (mReconnectDelayTimer) {
-      mReconnectDelayTimer->Cancel();
-      NS_ReleaseOnMainThread("WebSocketChannel::mMutex",
-                             mReconnectDelayTimer.forget());
-    }
+  if (mReconnectDelayTimer) {
+    mReconnectDelayTimer->Cancel();
+    mReconnectDelayTimer = nullptr;
   }
 
   if (mPingTimer) {
@@ -2426,14 +2387,10 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     nsWSAdmissionManager::OnStopSession(this, reason);
 
     RefPtr<CallOnStop> runnable = new CallOnStop(this, reason);
-    if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-      target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    }
+    mTargetThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 }
 
-// Called from MainThread, and called from IOThread in
-// PrimeNewOutgoingMessage
 void WebSocketChannel::AbortSession(nsresult reason) {
   LOG(("WebSocketChannel::AbortSession() %p [reason %" PRIx32
        "] stopped = %d\n",
@@ -2443,7 +2400,6 @@ void WebSocketChannel::AbortSession(nsresult reason) {
 
   // normally this should be called on socket thread, but it is ok to call it
   // from the main thread before StartWebsocketData() has completed
-  MOZ_ASSERT(mIOThread->IsOnCurrentThread() || !mDataStarted);
 
   // When we are failing we need to close the TCP connection immediately
   // as per 7.1.1
@@ -2920,9 +2876,8 @@ nsresult WebSocketChannel::CallStartWebsocketData() {
     mOpenTimer = nullptr;
   }
 
-  nsCOMPtr<nsIEventTarget> target = GetTargetThread();
-  if (target && !target->IsOnCurrentThread()) {
-    return target->Dispatch(
+  if (!IsOnTargetThread()) {
+    return mTargetThread->Dispatch(
         NewRunnableMethod("net::WebSocketChannel::StartWebsocketData", this,
                           &WebSocketChannel::StartWebsocketData),
         NS_DISPATCH_NORMAL);
@@ -3252,7 +3207,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
     }
 
     LOG(("WebSocketChannel:: Expecting Server Close - Timed Out\n"));
-    AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
+    AbortSession(NS_ERROR_NET_TIMEOUT);
   } else if (timer == mOpenTimer) {
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
@@ -3262,17 +3217,13 @@ WebSocketChannel::Notify(nsITimer* timer) {
       return NS_OK;
     }
 
-    AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
-    // mReconnectDelayTimer is only modified on MainThread
+    AbortSession(NS_ERROR_NET_TIMEOUT);
   } else if (timer == mReconnectDelayTimer) {
-    MOZ_RELEASE_ASSERT(mConnecting == CONNECTING_DELAYED,
-                       "woke up from delay w/o being delayed?");
+    MOZ_ASSERT(mConnecting == CONNECTING_DELAYED,
+               "woke up from delay w/o being delayed?");
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-    {
-      MutexAutoLock lock(mMutex);
-      mReconnectDelayTimer = nullptr;
-    }
+    mReconnectDelayTimer = nullptr;
     LOG(("WebSocketChannel: connecting [this=%p] after reconnect delay", this));
     BeginOpen(false);
   } else if (timer == mPingTimer) {
@@ -3296,7 +3247,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
     } else {
       LOG(("nsWebSocketChannel:: Timed out Ping\n"));
       mPingTimer = nullptr;
-      AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
+      AbortSession(NS_ERROR_NET_TIMEOUT);
     }
   } else if (timer == mLingeringCloseTimer) {
     LOG(("WebSocketChannel:: Lingering Close Timer"));
@@ -3377,12 +3328,9 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
 
   nsresult rv;
 
-  // Ensure target thread is set if RetargetDeliveryTo isn't called
-  {
-    auto lock = mTargetThread.Lock();
-    if (!lock.ref()) {
-      lock.ref() = GetMainThreadEventTarget();
-    }
+  // Ensure target thread is set.
+  if (!mTargetThread) {
+    mTargetThread = GetMainThreadEventTarget();
   }
 
   mIOThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
@@ -3845,8 +3793,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
 
   if (mStopped) {
     LOG(("WebSocketChannel::OnStartRequest: Channel Already Done\n"));
-    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
-    return NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
+    AbortSession(NS_ERROR_CONNECTION_REFUSED);
+    return NS_ERROR_CONNECTION_REFUSED;
   }
 
   nsresult rv;
@@ -3856,12 +3804,11 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
   rv = mHttpChannel->GetResponseStatus(&status);
   if (NS_FAILED(rv)) {
     nsresult httpStatus;
-    rv = NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
+    rv = NS_ERROR_CONNECTION_REFUSED;
 
     // If we failed to connect due to unsuccessful TLS handshake, we must
     // propagate a specific error to mozilla::dom::WebSocketImpl so it can set
-    // status code to 1015. Otherwise return
-    // NS_ERROR_WEBSOCKET_CONNECTION_REFUSED.
+    // status code to 1015. Otherwise return NS_ERROR_CONNECTION_REFUSED.
     if (NS_SUCCEEDED(mHttpChannel->GetStatus(&httpStatus))) {
       uint32_t errorClass;
       nsCOMPtr<nsINSSErrorsService> errSvc =
@@ -3887,8 +3834,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
       !((versionMajor == 1 && versionMinor != 0) || versionMajor == 2) ||
       (versionMajor == 1 && status != 101) ||
       (versionMajor == 2 && status != 200)) {
-    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
-    return NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
+    AbortSession(NS_ERROR_CONNECTION_REFUSED);
+    return NS_ERROR_CONNECTION_REFUSED;
   }
 
   if (versionMajor == 1) {
@@ -4068,7 +4015,7 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   nsresult rv;
 
   do {
-    rv = mSocketIn->Read((char*)buffer, sizeof(buffer), &count);
+    rv = mSocketIn->Read((char*)buffer, 2048, &count);
     LOG(("WebSocketChannel::OnInputStreamReady: read %u rv %" PRIx32 "\n",
          count, static_cast<uint32_t>(rv)));
 
@@ -4164,13 +4111,9 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
     } else {
       if (amtSent == toSend) {
         if (!mStopped) {
-          if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-            target->Dispatch(
-                new CallAcknowledge(this, mCurrentOut->OrigLength()),
-                NS_DISPATCH_NORMAL);
-          } else {
-            return NS_ERROR_UNEXPECTED;
-          }
+          mTargetThread->Dispatch(
+              new CallAcknowledge(this, mCurrentOut->OrigLength()),
+              NS_DISPATCH_NORMAL);
         }
         DeleteCurrentOutGoingMessage();
         PrimeNewOutgoingMessage();
@@ -4243,13 +4186,9 @@ void WebSocketChannel::DoEnqueueOutgoingMessage() {
       // socket after sending it to socket process, but it's not true. The data
       // could be queued in socket process and waiting for the socket to be able
       // to write. We should implement flow control for this in bug 1726552.
-      if (nsCOMPtr<nsIEventTarget> target = GetTargetThread()) {
-        target->Dispatch(new CallAcknowledge(this, mCurrentOut->OrigLength()),
-                         NS_DISPATCH_NORMAL);
-      } else {
-        AbortSession(NS_ERROR_UNEXPECTED);
-        return;
-      }
+      mTargetThread->Dispatch(
+          new CallAcknowledge(this, mCurrentOut->OrigLength()),
+          NS_DISPATCH_NORMAL);
     }
     DeleteCurrentOutGoingMessage();
     PrimeNewOutgoingMessage();

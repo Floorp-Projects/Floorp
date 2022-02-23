@@ -3,9 +3,12 @@ use crate::lookahead;
 #[cfg(feature = "parsing")]
 use crate::parse::{Parse, Parser};
 use crate::{Error, Result};
-use proc_macro2::{Ident, Literal, Span};
+#[cfg(feature = "printing")]
+use proc_macro2::Ident;
 #[cfg(feature = "parsing")]
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::TokenStream;
+use proc_macro2::TokenTree;
+use proc_macro2::{Literal, Span};
 use std::fmt::{self, Display};
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
@@ -241,10 +244,6 @@ impl LitStr {
     pub fn suffix(&self) -> &str {
         &self.repr.suffix
     }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
-    }
 }
 
 impl LitByteStr {
@@ -275,10 +274,6 @@ impl LitByteStr {
 
     pub fn suffix(&self) -> &str {
         &self.repr.suffix
-    }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
     }
 }
 
@@ -311,10 +306,6 @@ impl LitByte {
     pub fn suffix(&self) -> &str {
         &self.repr.suffix
     }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
-    }
 }
 
 impl LitChar {
@@ -345,10 +336,6 @@ impl LitChar {
 
     pub fn suffix(&self) -> &str {
         &self.repr.suffix
-    }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
     }
 }
 
@@ -420,10 +407,6 @@ impl LitInt {
 
     pub fn set_span(&mut self, span: Span) {
         self.repr.token.set_span(span);
-    }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
     }
 }
 
@@ -497,10 +480,6 @@ impl LitFloat {
     pub fn set_span(&mut self, span: Span) {
         self.repr.token.set_span(span);
     }
-
-    pub fn token(&self) -> Literal {
-        self.repr.token.clone()
-    }
 }
 
 impl From<Literal> for LitFloat {
@@ -541,11 +520,6 @@ impl LitBool {
 
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
-    }
-
-    pub fn token(&self) -> Ident {
-        let s = if self.value { "true" } else { "false" };
-        Ident::new(s, self.span)
     }
 }
 
@@ -942,7 +916,8 @@ mod printing {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitBool {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            tokens.append(self.token());
+            let s = if self.value { "true" } else { "false" };
+            tokens.append(Ident::new(s, self.span));
         }
     }
 }

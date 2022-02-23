@@ -368,7 +368,13 @@ void ClientWebGLContext::Run(Args&&... args) const {
 
 // ------------------------- Composition, etc -------------------------
 
-void ClientWebGLContext::OnBeforePaintTransaction() { Present(nullptr); }
+void ClientWebGLContext::OnBeforePaintTransaction() {
+  const RefPtr<layers::ImageBridgeChild> imageBridge =
+      layers::ImageBridgeChild::GetSingleton();
+
+  const auto texType = layers::TexTypeForWebgl(imageBridge);
+  Present(nullptr, texType);
+}
 
 void ClientWebGLContext::EndComposition() {
   // Mark ourselves as no longer invalidated.
@@ -376,18 +382,6 @@ void ClientWebGLContext::EndComposition() {
 }
 
 // -
-
-layers::TextureType ClientWebGLContext::GetTexTypeForSwapChain() const {
-  const RefPtr<layers::ImageBridgeChild> imageBridge =
-      layers::ImageBridgeChild::GetSingleton();
-  return layers::TexTypeForWebgl(imageBridge);
-}
-
-void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
-                                 const bool webvr) {
-  const auto texType = GetTexTypeForSwapChain();
-  Present(xrFb, texType, webvr);
-}
 
 void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
                                  const layers::TextureType type,
@@ -398,18 +392,6 @@ void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
   }
   CancelAutoFlush();
   Run<RPROC(Present)>(xrFb ? xrFb->mId : 0, type, webvr);
-}
-
-void ClientWebGLContext::CopyToSwapChain(
-    WebGLFramebufferJS* const fb, const webgl::SwapChainOptions& options) {
-  CancelAutoFlush();
-  const auto texType = GetTexTypeForSwapChain();
-  Run<RPROC(CopyToSwapChain)>(fb ? fb->mId : 0, texType, options);
-}
-
-void ClientWebGLContext::EndOfFrame() {
-  CancelAutoFlush();
-  Run<RPROC(EndOfFrame)>();
 }
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
@@ -1418,13 +1400,11 @@ void ClientWebGLContext::DeleteQuery(WebGLQueryJS* const obj) {
   // Unbind if current
 
   if (obj->mTarget) {
-    // Despite mTarget being set, we may not have called BeginQuery on this
-    // object. QueryCounter may also set mTarget.
     const auto slotTarget = QuerySlotTarget(obj->mTarget);
-    const auto curForTarget =
-        MaybeFind(state.mCurrentQueryByTarget, slotTarget);
+    const auto& curForTarget =
+        *MaybeFind(state.mCurrentQueryByTarget, slotTarget);
 
-    if (curForTarget && *curForTarget == obj) {
+    if (curForTarget == obj) {
       EndQuery(obj->mTarget);
     }
   }
@@ -1899,20 +1879,21 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
       break;
 
     case LOCAL_GL_PACK_ALIGNMENT:
-      retval.set(JS::NumberValue(state.mPixelPackState.alignmentInTypeElems));
+      retval.set(JS::NumberValue(state.mPixelPackState.alignment));
       return;
     case LOCAL_GL_UNPACK_ALIGNMENT:
-      retval.set(JS::NumberValue(state.mPixelUnpackState.alignmentInTypeElems));
+      retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackAlignment));
       return;
 
     case dom::WebGLRenderingContext_Binding::UNPACK_FLIP_Y_WEBGL:
-      retval.set(JS::BooleanValue(state.mPixelUnpackState.flipY));
+      retval.set(JS::BooleanValue(state.mPixelUnpackState.mFlipY));
       return;
     case dom::WebGLRenderingContext_Binding::UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      retval.set(JS::BooleanValue(state.mPixelUnpackState.premultiplyAlpha));
+      retval.set(JS::BooleanValue(state.mPixelUnpackState.mPremultiplyAlpha));
       return;
     case dom::WebGLRenderingContext_Binding::UNPACK_COLORSPACE_CONVERSION_WEBGL:
-      retval.set(JS::NumberValue(state.mPixelUnpackState.colorspaceConversion));
+      retval.set(
+          JS::NumberValue(state.mPixelUnpackState.mColorspaceConversion));
       return;
 
     // -
@@ -2051,19 +2032,19 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
         return;
 
       case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
-        retval.set(JS::NumberValue(state.mPixelUnpackState.imageHeight));
+        retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackImageHeight));
         return;
       case LOCAL_GL_UNPACK_ROW_LENGTH:
-        retval.set(JS::NumberValue(state.mPixelUnpackState.rowLength));
+        retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackRowLength));
         return;
       case LOCAL_GL_UNPACK_SKIP_IMAGES:
-        retval.set(JS::NumberValue(state.mPixelUnpackState.skipImages));
+        retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackSkipImages));
         return;
       case LOCAL_GL_UNPACK_SKIP_PIXELS:
-        retval.set(JS::NumberValue(state.mPixelUnpackState.skipPixels));
+        retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackSkipPixels));
         return;
       case LOCAL_GL_UNPACK_SKIP_ROWS:
-        retval.set(JS::NumberValue(state.mPixelUnpackState.skipRows));
+        retval.set(JS::NumberValue(state.mPixelUnpackState.mUnpackSkipRows));
         return;
     }  // switch pname
   }    // if webgl2
@@ -2845,9 +2826,9 @@ void ClientWebGLContext::LineWidth(GLfloat width) {
   Run<RPROC(LineWidth)>(width);
 }
 
-Maybe<webgl::ErrorInfo> SetPixelUnpack(
-    const bool isWebgl2, webgl::PixelUnpackStateWebgl* const unpacking,
-    const GLenum pname, const GLint param);
+Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
+                                       WebGLPixelStore* const unpacking,
+                                       const GLenum pname, const GLint param);
 
 void ClientWebGLContext::PixelStorei(const GLenum pname, const GLint iparam) {
   const FuncScope funcScope(*this, "pixelStorei");
@@ -2871,7 +2852,7 @@ void ClientWebGLContext::PixelStorei(const GLenum pname, const GLint iparam) {
                        iparam);
           return;
       }
-      packState.alignmentInTypeElems = param;
+      packState.alignment = param;
       return;
 
     case LOCAL_GL_PACK_ROW_LENGTH:
@@ -3868,6 +3849,27 @@ static GLenum JSTypeMatchUnpackTypeError(GLenum unpackType,
   return 0;
 }
 
+static std::string ToString(const js::Scalar::Type type) {
+  switch (type) {
+#define _(X)                \
+  case js::Scalar::Type::X: \
+    return #X;
+    _(Int8)
+    _(Uint8)
+    _(Uint8Clamped)
+    _(Int16)
+    _(Uint16)
+    _(Int32)
+    _(Uint32)
+    _(Float32)
+#undef _
+    default:
+      break;
+  }
+  MOZ_ASSERT(false);
+  return std::string("#") + std::to_string(UnderlyingValue(type));
+}
+
 /////////////////////////////////////////////////
 
 static inline uvec2 CastUvec2(const ivec2& val) {
@@ -3944,41 +3946,45 @@ void ClientWebGLContext::TexStorage(uint8_t funcDims, GLenum texTarget,
 namespace webgl {
 // TODO: Move these definitions into statics here.
 Maybe<webgl::TexUnpackBlobDesc> FromImageBitmap(
-    GLenum target, Maybe<uvec3> size, const dom::ImageBitmap& imageBitmap,
+    GLenum target, uvec3 size, const dom::ImageBitmap& imageBitmap,
     ErrorResult* const out_rv);
 
-webgl::TexUnpackBlobDesc FromImageData(GLenum target, Maybe<uvec3> size,
+webgl::TexUnpackBlobDesc FromImageData(GLenum target, uvec3 size,
                                        const dom::ImageData& imageData,
                                        dom::Uint8ClampedArray* const scopedArr);
 
-Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
-    const ClientWebGLContext&, GLenum target, Maybe<uvec3> size,
-    const dom::OffscreenCanvas& src, ErrorResult* const out_error);
-
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
-                                            GLenum target, Maybe<uvec3> size,
+                                            GLenum target, uvec3 size,
                                             const dom::Element& src,
                                             ErrorResult* const out_error);
 }  // namespace webgl
 
-// -
-
 void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
   if (cpuData) {
     if (!size.x || !size.y || !size.z) return;
+    MOZ_ASSERT(unpacking.mUnpackRowLength);
+    MOZ_ASSERT(unpacking.mUnpackImageHeight);
 
-    const auto unpackRes = ExplicitUnpacking(pi, {});
-    if (!unpackRes.isOk()) {
-      return;
-    }
-    const auto& unpack = unpackRes.inspect();
+    uint8_t bpp = 0;
+    if (!GetBytesPerPixel(pi, &bpp)) return;
 
-    const auto bytesUpperBound =
-        CheckedInt<size_t>(unpack.metrics.bytesPerRowStride) *
-        unpack.metrics.totalRows;
+    const auto bytesPerRowUnaligned =
+        CheckedInt<size_t>(unpacking.mUnpackRowLength) * bpp;
+    const auto bytesPerRowStride =
+        RoundUpToMultipleOf(bytesPerRowUnaligned, unpacking.mUnpackAlignment);
+
+    const auto bytesPerImageStride =
+        bytesPerRowStride * unpacking.mUnpackImageHeight;
+    // SKIP_IMAGES is ignored for 2D targets, but at worst this just makes our
+    // shrinking less accurate.
+    const auto images =
+        CheckedInt<size_t>(unpacking.mUnpackSkipImages) + size.z;
+    const auto bytesUpperBound = bytesPerImageStride * images;
+
     if (bytesUpperBound.isValid()) {
       cpuData->Shrink(bytesUpperBound.value());
     }
+    return;
   }
 }
 
@@ -3986,9 +3992,8 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
 
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
-                                  const ivec3& offset,
-                                  const Maybe<ivec3>& isize, GLint border,
-                                  const webgl::PackingInfo& pi,
+                                  const ivec3& offset, const ivec3& isize,
+                                  GLint border, const webgl::PackingInfo& pi,
                                   const TexImageSource& src) const {
   const FuncScope funcScope(*this, "tex(Sub)Image[23]D");
   if (IsContextLost()) return;
@@ -4000,11 +4005,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     EnqueueError(LOCAL_GL_INVALID_VALUE, "`border` must be 0.");
     return;
   }
-
-  Maybe<uvec3> size;
-  if (isize) {
-    size = Some(CastUvec3(isize.value()));
-  }
+  const auto explicitSize = CastUvec3(isize);
 
   // -
 
@@ -4024,7 +4025,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       isDataUpload = true;
       const auto offset = static_cast<uint64_t>(*src.mPboOffset);
       return Some(webgl::TexUnpackBlobDesc{imageTarget,
-                                           size.value(),
+                                           explicitSize,
                                            gfxAlphaType::NonPremult,
                                            {},
                                            Some(offset)});
@@ -4042,7 +4043,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         case LOCAL_GL_INVALID_OPERATION:
           EnqueueError(LOCAL_GL_INVALID_OPERATION,
                        "ArrayBufferView type %s not compatible with `type` %s.",
-                       name(jsType), EnumString(pi.type).c_str());
+                       ToString(jsType).c_str(), EnumString(pi.type).c_str());
           return {};
         default:
           break;
@@ -4055,72 +4056,68 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         return {};
       }
       return Some(webgl::TexUnpackBlobDesc{imageTarget,
-                                           size.value(),
+                                           explicitSize,
                                            gfxAlphaType::NonPremult,
                                            Some(RawBuffer<>{*range}),
                                            {}});
     }
 
     if (src.mImageBitmap) {
-      return webgl::FromImageBitmap(imageTarget, size, *(src.mImageBitmap),
-                                    src.mOut_error);
+      return webgl::FromImageBitmap(imageTarget, explicitSize,
+                                    *(src.mImageBitmap), src.mOut_error);
     }
 
     if (src.mImageData) {
-      return Some(webgl::FromImageData(imageTarget, size, *(src.mImageData),
-                                       &scopedArr));
-    }
-
-    if (src.mOffscreenCanvas) {
-      return webgl::FromOffscreenCanvas(
-          *this, imageTarget, size, *(src.mOffscreenCanvas), src.mOut_error);
+      return Some(webgl::FromImageData(imageTarget, explicitSize,
+                                       *(src.mImageData), &scopedArr));
     }
 
     if (src.mDomElem) {
-      return webgl::FromDomElem(*this, imageTarget, size, *(src.mDomElem),
-                                src.mOut_error);
+      return webgl::FromDomElem(*this, imageTarget, explicitSize,
+                                *(src.mDomElem), src.mOut_error);
     }
 
     return Some(webgl::TexUnpackBlobDesc{
-        imageTarget, size.value(), gfxAlphaType::NonPremult, {}, {}});
+        imageTarget, explicitSize, gfxAlphaType::NonPremult, {}, {}});
   }();
   if (!desc) {
     return;
   }
 
   // -
+  // Further, for uploads from TexImageSource, implied UNPACK_ROW_LENGTH and
+  // UNPACK_ALIGNMENT are not strictly defined. These restrictions ensure
+  // consistent and efficient behavior regardless of implied UNPACK_ params.
 
-  const auto& rawUnpacking = State().mPixelUnpackState;
-  {
-    auto defaultSubrectState = webgl::PixelPackingState{};
-    defaultSubrectState.alignmentInTypeElems =
-        rawUnpacking.alignmentInTypeElems;
-    const bool isSubrect = (rawUnpacking != defaultSubrectState);
-    if (isDataUpload && isSubrect) {
-      if (rawUnpacking.flipY || rawUnpacking.premultiplyAlpha) {
-        EnqueueError(LOCAL_GL_INVALID_OPERATION,
-                     "Non-DOM-Element uploads with alpha-premult"
-                     " or y-flip do not support subrect selection.");
-        return;
-      }
+  Maybe<uvec2> structuredSrcSize;
+  if (desc->dataSurf || desc->sd) {
+    structuredSrcSize = Some(desc->imageSize);
+  }
+  if (structuredSrcSize) {
+    auto& size = desc->size;
+    if (!size.x) {
+      size.x = structuredSrcSize->x;
+    }
+    if (!size.y) {
+      size.y = structuredSrcSize->x;
     }
   }
-  desc->unpacking = rawUnpacking;
 
-  if (desc->structuredSrcSize) {
-    // WebGL 2 spec:
-    //   ### 5.35 Pixel store parameters for uploads from TexImageSource
-    //   UNPACK_ALIGNMENT and UNPACK_ROW_LENGTH are ignored.
-    const auto& elemSize = *desc->structuredSrcSize;
-    desc->unpacking.alignmentInTypeElems = 1;
-    desc->unpacking.rowLength = elemSize.x;
+  const auto& rawUnpacking = State().mPixelUnpackState;
+  const bool isSubrect =
+      (rawUnpacking.mUnpackImageHeight || rawUnpacking.mUnpackSkipImages ||
+       rawUnpacking.mUnpackRowLength || rawUnpacking.mUnpackSkipRows ||
+       rawUnpacking.mUnpackSkipPixels);
+  if (isDataUpload && isSubrect) {
+    if (rawUnpacking.mFlipY || rawUnpacking.mPremultiplyAlpha) {
+      EnqueueError(LOCAL_GL_INVALID_OPERATION,
+                   "Non-DOM-Element uploads with alpha-premult"
+                   " or y-flip do not support subrect selection.");
+      return;
+    }
   }
-  if (!desc->unpacking.rowLength) {
-    desc->unpacking.rowLength = desc->size.x;
-  }
-  if (!desc->unpacking.imageHeight) {
-    desc->unpacking.imageHeight = desc->size.y;
-  }
+  desc->unpacking =
+      rawUnpacking.ForUseWith(desc->imageTarget, desc->size, structuredSrcSize);
 
   // -
 

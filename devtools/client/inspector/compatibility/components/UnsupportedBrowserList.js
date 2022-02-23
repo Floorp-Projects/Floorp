@@ -16,8 +16,6 @@ const UnsupportedBrowserItem = createFactory(
 );
 
 const Types = require("devtools/client/inspector/compatibility/types");
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const Localized = createFactory(FluentReact.Localized);
 
 class UnsupportedBrowserList extends PureComponent {
   static get propTypes() {
@@ -29,31 +27,35 @@ class UnsupportedBrowserList extends PureComponent {
   render() {
     const { browsers } = this.props;
 
-    const unsupportedBrowserItems = {};
-    const browsersList = [];
+    // Aggregate the browser version and the aliase by the browser id.
+    // Convert from
+    // [{id, name, status, version}, ...]
+    // to
+    // {
+    //   id: {
+    //         name,
+    //         versions: [{alias <- status, version}, ...],
+    //       },
+    //   ...
+    // }
+    const browsersMap = browsers.reduce(
+      (map, { id, name, status: alias, version }) => {
+        if (!map.has(id)) {
+          map.set(id, { name, versions: [] });
+        }
+        map.get(id).versions.push({ alias, version });
 
-    for (const { id, name, version, status } of browsers) {
-      // Only display one icon per browser
-      if (!unsupportedBrowserItems[id]) {
-        unsupportedBrowserItems[id] = UnsupportedBrowserItem({
-          key: id,
-          id,
-          name,
-        });
-      }
-      browsersList.push(`${name} ${version}${status ? ` (${status})` : ""}`);
-    }
-    return Localized(
-      {
-        id: "compatibility-issue-browsers-list",
-        $browsers: browsersList.join("\n"),
-        attrs: { title: true },
+        return map;
       },
-      dom.ul(
-        {
-          className: "compatibility-unsupported-browser-list",
-        },
-        Object.values(unsupportedBrowserItems)
+      new Map()
+    );
+
+    return dom.ul(
+      {
+        className: "compatibility-unsupported-browser-list",
+      },
+      [...browsersMap.entries()].map(([id, { name, versions }]) =>
+        UnsupportedBrowserItem({ key: id, id, name, versions })
       )
     );
   }

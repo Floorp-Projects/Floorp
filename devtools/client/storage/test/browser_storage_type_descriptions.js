@@ -8,7 +8,7 @@
 
 "use strict";
 
-const getStorageTypeURL = require("devtools/client/storage/utils/doc-utils");
+const getStorageTypeURL = require("devtools/client/storage/utils/mdn-utils");
 
 const storeItems = [
   "Cache",
@@ -62,7 +62,9 @@ const testDescriptions = async function() {
     // Check learn more link
     const learnMoreLink = doc.querySelector(".table-widget-empty-text > a");
     ok(learnMoreLink, "There is a [Learn more] link");
-    const expectedURL = getStorageTypeURL(type);
+    const expectedURL =
+      getStorageTypeURL(type) +
+      "?utm_source=devtools&utm_medium=storage-inspector";
     is(
       learnMoreLink.href,
       expectedURL,

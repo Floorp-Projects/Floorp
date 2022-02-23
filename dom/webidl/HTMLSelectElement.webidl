@@ -28,9 +28,6 @@ interface HTMLSelectElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
   attribute unsigned long size;
 
-  [ChromeOnly, Pure]
-  readonly attribute boolean isCombobox;
-
   [Pure]
   readonly attribute DOMString type;
 

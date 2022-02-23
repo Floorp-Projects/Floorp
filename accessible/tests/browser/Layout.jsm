@@ -121,7 +121,8 @@ const Layout = {
   },
 
   CSSToDevicePixels(win, x, y, width, height) {
-    const ratio = win.devicePixelRatio;
+    const winUtil = win.windowUtils;
+    const ratio = winUtil.screenPixelsPerCSSPixel;
 
     // CSS pixels and ratio can be not integer. Device pixels are always integer.
     // Do our best and hope it works.

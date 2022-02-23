@@ -37,7 +37,6 @@ class JitZone;
 
 namespace gc {
 
-class FinalizationRegistryZone;
 class ZoneList;
 
 using ZoneComponentFinder = ComponentFinder<JS::Zone>;
@@ -57,6 +56,9 @@ class ZoneAllCellIter;
 
 template <typename T>
 class ZoneCellIter;
+
+// A vector of FinalizationRecord objects, or CCWs to them.
+using FinalizationRecordVector = GCVector<HeapPtrObject, 1, ZoneAllocPolicy>;
 
 }  // namespace gc
 
@@ -286,9 +288,19 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Information about Shapes and BaseShapes.
   js::ZoneData<js::ShapeZone> shapeZone_;
 
-  // Information about finalization registries, created on demand.
-  js::ZoneOrGCTaskData<js::UniquePtr<js::gc::FinalizationRegistryZone>>
-      finalizationRegistryZone_;
+  // The set of all finalization registries in this zone.
+  using FinalizationRegistrySet =
+      GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
+                js::ZoneAllocPolicy>;
+  js::ZoneOrGCTaskData<FinalizationRegistrySet> finalizationRegistries_;
+
+  // A map from finalization registry targets to a list of finalization records
+  // representing registries that the target is registered with and their
+  // associated held values.
+  using FinalizationRecordMap =
+      GCHashMap<js::HeapPtrObject, js::gc::FinalizationRecordVector,
+                js::MovableCellHasher<js::HeapPtrObject>, js::ZoneAllocPolicy>;
+  js::ZoneOrGCTaskData<FinalizationRecordMap> finalizationRecordMap_;
 
   js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
 
@@ -624,10 +636,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void sweepEphemeronTablesAfterMinorGC();
 
-  js::gc::FinalizationRegistryZone* finalizationRegistryZone() {
-    return finalizationRegistryZone_.ref().get();
+  FinalizationRegistrySet& finalizationRegistries() {
+    return finalizationRegistries_.ref();
   }
-  bool ensureFinalizationRegistryZone();
+
+  FinalizationRecordMap& finalizationRecordMap() {
+    return finalizationRecordMap_.ref();
+  }
 
   bool isOnList() const;
   Zone* nextZone() const;

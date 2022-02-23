@@ -7,7 +7,6 @@
 Library("ipctest")
 
 SOURCES += [
-    "TestDataPipe.cpp",
     "TestLogging.cpp",
     "TestSharedMemory.cpp",
 ]

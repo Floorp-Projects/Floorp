@@ -41,21 +41,17 @@ add_task(async function() {
   await selectNode("#testid", inspector);
 
   let linkText = getRuleViewLinkTextByIndex(view, 1);
-  is(linkText, "inline:3", "link text at index 1 has expected content.");
-
-  const mediaText = getRuleViewAncestorRulesDataTextByIndex(view, 1);
   is(
-    mediaText,
-    "@media screen and (min-width: 10px)",
-    "media text at index 1 has expected content"
+    linkText,
+    "inline:3 @screen and (min-width: 10px)",
+    "link text at index 1 contains media query text."
   );
 
   linkText = getRuleViewLinkTextByIndex(view, 2);
-  is(linkText, "inline:7", "link text at index 2 has expected content.");
   is(
-    getRuleViewAncestorRulesDataElementByIndex(view, 2),
-    null,
-    "There is no media text element for rule at index 2"
+    linkText,
+    "inline:7",
+    "link text at index 2 contains no media query text."
   );
 
   const selector = getRuleViewRuleEditor(view, 2).selectorText;

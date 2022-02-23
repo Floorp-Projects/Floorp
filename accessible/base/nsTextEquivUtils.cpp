@@ -7,7 +7,6 @@
 
 #include "nsTextEquivUtils.h"
 
-#include "LocalAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
@@ -22,7 +21,7 @@ using namespace mozilla::a11y;
  * for bailing out during recursive text computation, or for special cases
  * like step f. of the ARIA implementation guide.
  */
-static const Accessible* sInitiatorAcc = nullptr;
+static const LocalAccessible* sInitiatorAcc = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
@@ -89,7 +88,7 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
 
   if (isVisible) {
     LocalAccessible* accessible =
-        aInitiatorAcc->Document()->GetAccessible(aContent);
+        sInitiatorAcc->Document()->GetAccessible(aContent);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = false;
@@ -168,12 +167,12 @@ nsresult nsTextEquivUtils::AppendFromDOMChildren(nsIContent* aContent,
 // nsTextEquivUtils. Private.
 
 nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
-    const Accessible* aAccessible, nsAString* aString) {
+    const LocalAccessible* aAccessible, nsAString* aString) {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
 
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = aAccessible->ChildAt(childIdx);
+    LocalAccessible* child = aAccessible->LocalChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -181,12 +180,12 @@ nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
   return rv;
 }
 
-nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
+nsresult nsTextEquivUtils::AppendFromAccessible(LocalAccessible* aAccessible,
                                                 nsAString* aString) {
   // XXX: is it necessary to care the accessible is not a document?
-  if (aAccessible->IsLocal() && aAccessible->AsLocal()->IsContent()) {
-    nsresult rv = AppendTextEquivFromTextContent(
-        aAccessible->AsLocal()->GetContent(), aString);
+  if (aAccessible->IsContent()) {
+    nsresult rv =
+        AppendTextEquivFromTextContent(aAccessible->GetContent(), aString);
     if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED) return rv;
   }
 
@@ -226,7 +225,7 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   return rv;
 }
 
-nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
+nsresult nsTextEquivUtils::AppendFromValue(LocalAccessible* aAccessible,
                                            nsAString* aString) {
   if (GetRoleRule(aAccessible->Role()) != eNameFromValueRule) {
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
@@ -247,18 +246,24 @@ nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
   // XXX: is it necessary to care the accessible is not a document?
   if (aAccessible->IsDoc()) return NS_ERROR_UNEXPECTED;
 
-  for (Accessible* next = aAccessible->NextSibling(); next;
-       next = next->NextSibling()) {
-    if (!IsWhitespaceLeaf(next)) {
-      for (Accessible* prev = aAccessible->PrevSibling(); prev;
-           prev = prev->PrevSibling()) {
-        if (!IsWhitespaceLeaf(prev)) {
+  nsIContent* content = aAccessible->GetContent();
+
+  for (nsIContent* childContent = content->GetPreviousSibling(); childContent;
+       childContent = childContent->GetPreviousSibling()) {
+    // check for preceding text...
+    if (!childContent->TextIsOnlyWhitespace()) {
+      for (nsIContent* siblingContent = content->GetNextSibling();
+           siblingContent; siblingContent = siblingContent->GetNextSibling()) {
+        // .. and subsequent text
+        if (!siblingContent->TextIsOnlyWhitespace()) {
           aAccessible->Value(text);
 
           return AppendString(aString, text) ? NS_OK
                                              : NS_OK_NO_NAME_CLAUSE_HANDLED;
+          break;
         }
       }
+      break;
     }
   }
 
@@ -327,7 +332,7 @@ uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
 }
 
 bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
-    Accessible* aAccessible) {
+    LocalAccessible* aAccessible) {
   uint32_t nameRule = GetRoleRule(aAccessible->Role());
   if (nameRule == eNameFromSubtreeRule) {
     return true;
@@ -354,14 +359,4 @@ bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
   }
 
   return true;
-}
-
-bool nsTextEquivUtils::IsWhitespaceLeaf(Accessible* aAccessible) {
-  if (!aAccessible || !aAccessible->IsTextLeaf()) {
-    return false;
-  }
-
-  nsAutoString name;
-  aAccessible->Name(name);
-  return nsCoreUtils::IsWhitespaceString(name);
 }

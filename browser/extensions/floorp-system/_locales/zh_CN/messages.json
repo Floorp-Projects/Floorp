@@ -1,0 +1,43 @@
+{
+  "extensionName": {
+    "message": "Floorp 更新通知",
+    "description": "Name of the extension."
+  },
+
+  "SetExN": {
+      "message": "color"
+  },
+  "scan-code": {
+    "message": "扫描QR码"
+  },
+  "save-code": {
+    "message": "保存 QR code"
+  },
+  "SetSavN": {
+    "message": "Save"
+  },
+
+  "extensionDescription": {
+    "message": "这是Floorp的一个更新程序。",
+    "description": "This is an updater for Floorp."
+  },
+
+  "notificationTitle": {
+    "message": "更新通知",
+    "description": "Title"
+  },
+  "notificationContent": {
+    "message": "最新版本的 Floorp 已经发布!\n点击下载安装程序。\n当前版本:$OLD$\n最新版本:$NEW$",
+    "description": "Tells the user which link they clicked.",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

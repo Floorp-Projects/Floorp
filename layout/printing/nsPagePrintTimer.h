@@ -10,16 +10,12 @@
 #include "nsITimer.h"
 
 #include "nsIDocumentViewerPrint.h"
+#include "nsPrintObject.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/OwningNonNull.h"
 #include "nsThreadUtils.h"
 
 class nsPrintJob;
-class nsPrintObject;
-
-namespace mozilla::dom {
-class Document;
-}
 
 //---------------------------------------------------
 //-- Page Timer Class
@@ -35,7 +31,19 @@ class nsPagePrintTimer final : public mozilla::Runnable,
 
   nsPagePrintTimer(nsPrintJob* aPrintJob,
                    nsIDocumentViewerPrint* aDocViewerPrint,
-                   mozilla::dom::Document* aDocument, uint32_t aDelay);
+                   mozilla::dom::Document* aDocument, uint32_t aDelay)
+      : Runnable("nsPagePrintTimer"),
+        mPrintJob(aPrintJob),
+        mDocViewerPrint(aDocViewerPrint),
+        mDocument(aDocument),
+        mDelay(aDelay),
+        mFiringCount(0),
+        mPrintObj(nullptr),
+        mWatchDogCount(0),
+        mDone(false) {
+    MOZ_ASSERT(aDocViewerPrint && aDocument);
+    mDocViewerPrint->IncrementDestroyBlockedCount();
+  }
 
   NS_DECL_NSITIMERCALLBACK
 

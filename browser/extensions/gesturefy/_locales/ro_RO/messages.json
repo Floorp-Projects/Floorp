@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands.",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "Plugin-ul $NAME$ a fost actualizat!",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "Numărul noii versiuni este $VERSION$. Clic aici pentru a vedea istoricul modificărilor.",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "Setări",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "Gesturi",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "Extra",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "Exclusions",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "Despre",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "Activation button",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "stânga",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "dreapta",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "mijloc",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "Matching algorithm",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "Combined",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "Strict",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "Shape-Independent",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "Activează modul de pauza de inactivitate",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "Durată",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "Deactivation key",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "Nimic",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Shift",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "Setări avansate",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "Pragul de distanță",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "Toleranța deviației",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "Afișează urma gestului",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "Culoarea liniei",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "Lăţimea liniei",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "Grosimea liniei",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "Afişează comanda",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "Culoare font",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "Culoare de fundal",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "Dimensiunea fontului",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "Poziție orizontală",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "Poziție verticală",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "Afișarea notificării de actualizare",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "Captures a new mouse gesture while the button is held down.",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "Determines how the gestures are compared to find the best matching gesture.",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "Learn about the differences here",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "Anulează gestul după ce mouse-ul nu a fost mișcat un timp specificat.",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "Durata în secunde, până când este anulat gestul.",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "Prevents a gesture from being triggered while the modifier key is pressed.",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "The minimum distance the mouse must be moved until the start of a gesture is recognized.",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "Abaterea admisibilă a gesturilor care ar trebui încă să fie recunoscută ca o potrivire.",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "Afişează o urmă de-a lungul traiectoriei mouse-ului.",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "Determină dacă grosimea liniei ar trebui să crească.",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "Afişează comanda asociată gestului curent, dacă este disponibilă.",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "Acceptă fiecare unitate de CSS, cum ar fi: em, px, pt, %, vh etc.",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "Poziția orizontală a ecranului de la 0 (stânga) la 100 (dreapta).",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "Poziția verticală a ecranului de la 0 (sus) la 100 (jos).",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "Prezintă o notificare atunci când Gesturefy este actualizat.",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "New Gesture",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "Search gestures",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "Nu am găsit nici un rezultat",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "Gest de rocker",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "Click dreapta",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "Click stânga",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "Acest gest se realizează fie ținând apăsat butonul din dreapta al mouse-ului şi făcând click stânga sau invers.",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "Gest de roata",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "Buton pentru un gest al roții",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "Sensibilitatea rotiței mouse-ului",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "Rotița în sus",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "Rotița în jos",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "Derulați în sus sau în jos în timp ce ţineţi apăsat butonul de declanşare al gesturilor de rotiță.",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "Butonul mouse-ului care va declanşa gestul rotiței.",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "Minimul cât trebuie rotită rotița de scrol pentru a declanșa gestul.",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "Information:",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>.",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "Enter URL match pattern",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "Add",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "URL pattern already exists.",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "No entries available",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "Copie de rezervă",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "Restaurează",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "Reset",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "Licenţă:",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "Contribuitori:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "Raportează un bug",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "Cod sursă",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "Pagina de suplimente",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "Fișierul selectat nu este un fişier de configurare Gesturefy valid.",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "Fișierul selectat nu corespunde cu tipul de fişier necesar.",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "Toate setările, inclusiv gesturile, vor fi înlocuite de fișierul de configurare selectat.",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "Configurația selectată a fost restaurată cu succes.",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "Toate setările inclusiv gesturile vor fi resetate. Acestă modificare nu poate fi anulată!",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "Comutare marcaj",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "Duplicare filă",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "Filă nouă",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "Reîncarcă fila",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "Reîncarcă frame",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "Oprește încărcarea",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "Închide fila",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "Restaurează filă",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "Mărire",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "Micșorare",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "Resetează nivel de mărire",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "Pagina anterioară",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "Pagina următoare",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "Comutare fila fixată",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "Comutare mut",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "Comutare mod de citire",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "Derulează până sus",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "Derulează până jos",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "Derulează o pagină în jos",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "Derulează o pagină în sus",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "Focalizează pe fila din dreapta",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "Focalizează pe fila din stânga",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "Focalizează pe prima filă",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "Focalizează pe ultima filă",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "Focalizează pe fila selectată anterior",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "Maximizează fereastra",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "Minimizează fereastra",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "Comutare mărime fereastră",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "Comutare ecran complet",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "Fereastră nouă",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "Fereastră nouă privată",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "Mută fila la început",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "Mută fila la sfârșit",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "Mută fila într-o fereastră nouă",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "Mută filele din stânga într-o fereastră nouă",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "Mută filele din dreapta într-o fereastră nouă",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "Închideţi fereastra",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "Reîncărcaţi tot",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "To root URL",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "URL level up",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "Creşte numărul adresei",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "Descreşte numărul adresei",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "Deschide imaginea în filă nouă",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "Deschide legătura în filă nouă",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "Deschide legătura într-o fereastră nouă",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "Deschide legătura într-o fereastră nouă privată",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "Search text selection",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "Căutare în memoria temporară",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "Search text selection in new tab",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "Search clipboard in new tab",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "Închidere filele din dreapta",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "Închidere filele din stânga",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "Închide celelalte file",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "Salvează ca PDF",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "Salvează imaginea",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "Salvează legătură",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "Imprimă",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "Vizualizare înaintea imprimării",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "Deschide pagina de start",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "Deschide adresa personalizată într-o filă nouă",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "Deschide o adresă personalizată",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "Inserați din clipboard",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "Deschide adresa din clipboard",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "Deschide adresa din clipboard într-o filă nouă",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "Open URL from clipboard in new window",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "Open URL from clipboard in new private window",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "Deschide setările Gesturefy",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "Deschide legătura",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "Vizualizează imaginea",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "Legătură la semnul de carte",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "Salvează captura de ecran",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "Copiază adresa filei",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "Copiază adresa legăturii",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "Copy image URL",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "Copiază textul selectat",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "Copiază imaginea",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "Vizualizare sursă pagină",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[Popup] Toate filele",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[Popup] File închise recent",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[Popup] Motoare de căutare",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[Popup] Custom command list",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "Trimite mesaj unui alt supliment",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "Execute user script",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "Șterge istoricul navigării",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "Run multi purpose command",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "Adaugă sau elimină un semn de carte.",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "Duplică fila curentă.",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "Deschide o filă nouă.",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "Reîncarcă pagina curentă.",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "Reloads the frame on which the gesture started.",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "Opreşte pagina curentă să se încarce.",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "Închide fila curentă.",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "Redeschide ultima filă închisă.",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "Zoom în fila curentă.",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "Zoom afară din fila curentă.",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "Resetează zoom-ul curent.",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "Revine la pagina anterioară din istorie.",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "Merge la pagina următoare din istorie.",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "Reține sau eliberează fila curentă.",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "Dezactivează sau activează sunetul filei curente.",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "Activează sau dezactivează vizualizarea pentru lectură, dacă este disponibilă.",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "Derulează la începutul paginii.",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "Derulează la sfârșitul pagini.",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "Derulează în jos cu lungimea vizibilă curent.",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "Derulează în sus cu lungimea vizibilă curent.",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "Comută la fila din dreapta filei curente.",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "Comută la fila din stânga filei curente.",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "Comută la fila cea mai din stânga.",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "Comută la fila cea mai din dreapta.",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "Comută la ultima fila activă.",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "Maximizează fereastra curentă.",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "Minimizează fereastra curentă.",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "Comută între dimensiunea maximizată şi normală a ferestrei.",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "Activează sau dezactivează modul de ecran complet.",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "Se deschide o fereastră nouă, goală.",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "Se deschide o fereastră nouă, goală în mod privat.",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "Mută fila curentă la începutul șirului de file.",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "Mută fila curentă la sfârșitul șirului de file.",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "Mută fila curentă într-o fereastră nouă.",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "Se mută toate filele din stânga filei curente într-o fereastră nouă.",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "Se mută toate filele din dreapta filei curente într-o fereastră nouă.",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "Închide fereastra curentă.",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "Reîncarcă toate filele.",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "Goes to the main page of the website.",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "Urcă cu un nivel în ierarhia URL-ului.",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "Crește un număr în URL.",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "Descrește un număr în URL.",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "Opens the image on which the gesture started in a new tab.",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "Opens either a selected url or the link on which the gesture started in a new tab.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "Opens either a selected url or the link on which the gesture started in a new window.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "Opens either a selected url or the link on which the gesture started in a new private window.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "Starts a web search of the selected text in the current tab.",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "Starts a web search of the clipboard text in the current tab.",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "Starts a web search of the selected text in a new tab.",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "Starts a web search of the clipboard text in a new tab.",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "Closes all tabs on the right side of the current tab.",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "Closes all tabs on the left side of the current tab except the pinned tabs.",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "Închide toate filele cu excepţia filei curente şi filelor fixate.",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "Salvează pagina curentă ca un fişier pdf.",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "Downloads the image on which the gesture started.",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "Downloads either a selected url or the link on which the gesture started.",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "Imprimă pagina curentă afișând fereastra de dialog pentru imprimare.",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "Deschide vizualizarea înainte de imprimare a paginii curente.",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "Funcţionează ca butonul de pagină de start.",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "Deschide URL-ul specificat într-o filă nouă.",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "Deschide URL-ul specificat în fila curentă.",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "Inserts the current clipboard text at the caret position of the input element on which the gesture started.",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "If the clipboard contains a URL, it will be opened in the current tab.",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "If the clipboard contains a URL, it will be opened in a new tab.",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "If the clipboard contains a URL, it will be opened in a new window.",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "If the clipboard contains a URL, it will be opened in a new private window.",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "Deschide pagina de setări Gesturefy.",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "Opens either a selected url or the link on which the gesture started.",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "Opens the image on which the gesture started.",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "Saves either a selected url or the link on which the gesture started as a bookmark.",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "Salvează zona vizibilă a site-ului afișat ca o imagine.",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "Copiază adresa filei curente în clipboard.",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "Copies either a selected url or the link on which the gesture started to clipboard.",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "Copies the URL of the image on which the gesture started to clipboard.",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "Copiază selecția curentă de text în clipboard.",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "Copies the image on which the gesture started to clipboard.",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "Se deschide o nouă filă care conţine codul sursa al paginii.",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "Se deschide un pop-up care conţine o listă a tuturor filelor deschise şi oferă posibilitatea de a comuta la una dintre ele.",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "Se deschide un pop-up care conţine o listă a tuturor filelor închise recent şi oferă posibilitatea de a restaura una dintre ele.",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "Va deschide o fereastră care conţine o listă a tuturor motoarelor de căutare şi oferă posibilitatea de a căuta textul selectat cu unul dintre acestea.",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them.",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "Trimite un mesaj personalizat către un alt supliment. Acest lucru permite utilizarea funcţionalităţi altor de suplimente.",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "Executes custom JavaScript code in the current webpage.",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "Elimină datele de navigare specificate.",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions.",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "Poziția filei noi",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "implicit",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "înainte",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "după",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "start",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "șfârșit",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "Focalizează pe fila nouă",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "Fila următoare",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "implicit",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "anterior",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "următorul",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "ultimul focalizat",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "Închide filele fixate",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "Doar în fereastra curentă",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "Reîncarcă cache-ul",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "Pas de mărire",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "Durata de derulare",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "Scroll proportion",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "Include și filele fixate",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "Tab cycling",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "Exclude discarded tabs",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "Deschide o filă goală",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "Open empty search",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "Deschide o fereastră goală",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "Adresa motorului de căutare",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "Deschide caseta de dialog",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "Adresă personalizată",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "ID supliment",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "Mesaj",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "Analiza mesaj",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "Ordinea casetelor",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "Prestabilit",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "Ultima accesare, crescător",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "Ultima accesare, descrescător",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "alfabetic ascendent",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "alfabetic descendent",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "Include fila curentă",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "Focusul pe fereastra nouă",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "Cu grijă!",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "Codul script al utilizatorului",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "Cadrul țintă",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "Source frame",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "All frames",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "Top-level frame",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "Custom match pattern",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "Command selection",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "Cache",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "Cookie-uri",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "Descărcări",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "Date din formular",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "Istoric",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "DBindexată",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "Stocare locală",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "Parole",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "Date plugin",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Lucrători serviciilor",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "Determină poziţia unei noi file în raport cu fila curentă.",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "Determină dacă fila deschisă ar trebui să primească focusul sau nu.",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "Determină care fila care ar trebui să fie focalizată următoarea.",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "Determină dacă filele fixate pot fi închise sau nu.",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "Determină dacă doar filele care fac parte din fereastra curentă ar trebui restaurate.",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "Determină dacă cache-ul ar trebui reîncărcat sau nu.",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used.",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "Durata în milisecunde a animaţiei de derulare.",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "The percentage of the viewport height by which the page should be scrolled.",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "Determină dacă filele fixate sunt tratate ca filele cele mai din stânga.",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "Determines if the tabs should be cycled through in a loop.",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "Determines if tabs that are not loaded should be skipped.",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "Determină dacă o filă goală trebuie deschisă în cazul în care nici o adresă sau legătură nu a fost selectată.",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "Determines whether a search should be performed even if no text is present",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "Determină dacă o fereastră goală ar trebui să fie deschisă dacă nici un URL sau link n-a fost selectat.",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used.",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "Determină dacă ar trebui să apară caseta de dialog \"Salvează ca\" sau fişierul ar trebui să fie descărcat direct în folderul implicit de descărcări al utilizatorului.",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "Adresa care ar trebui deschisă.",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "ID-ul de extensie al suplimentului la care mesajul trebuie trimis.",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "Șirul de caractere al mesajului care trebuie trimis suplimentului.",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "Determină dacă mesajul trebuie serializat ca un obiect JavaScript.",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "Ordonează casetele afişate în funcţie de o caracteristică specifică.",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "Determină dacă fila activă curentă ar trebuii inclusă.",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "Determină dacă ferestra deschisă ar trebuii să obțină focusul sau nu.",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "Scripturile de utilizator pot duce la pierderea de date private.",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "Codul care ar trebui să fie injectat în scopul paginii web.",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "The frame in which the user script should be injected.",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used.",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "A custom selection of multiple commands.",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "Comanda \"$COMMAND$\" nu a reuşit.",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "URL-ul ţintă nu poate fi deschis. Click aici pentru mai multe informaţii.",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "Șirul de caractere al mesajului specificat nu a putut fi prelucrat la un obiect JavaScript. Click aici pentru mai multe informaţii.",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "Extensia ID specificată fie nu aparține unui supliment existent fie suplimentul nu primește mesaje. Click aici pentru mai multe informaţii.",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefy does not have permission for incognito mode. Click here for more information.",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "Bara de comandă",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "Caută",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "This command requires additional permissions: ",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "This command has additional settings.",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "Open command selection.",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "Open command settings.",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "Add",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "No results",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "Gest nou",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "Editare gest",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "Utilizaţi butonul mouse-ului $MOUSEBUTTON$ pentru a înregistra un nou gest.",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "stânga",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "dreapta",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "mijloc",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "Comandă",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "Direcțiile gestului",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "Etichetă (opţional)",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "Alege o comandă care trebuie să fie atribuită acestui gest.",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "Fie utilizaţi tastele săgeată pentru a introduce direcţii, fie le înregistrați în zona de lângă.",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "Asociaţi un nume personalizat care va fi afişat, în loc de numele de comanda.",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "Acest gest este similar cu gestul \"$GESTURE_NAME$\".",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "File",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "Sesiuni",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "Semne de carte",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "Scrie în clipboard",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "Citește din clipboard",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "Descărcări",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "Căutare",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "Datele de navigare",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "Pornit",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "Oprit",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "Informații suplimentare",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "Salvează",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "OK",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "Anulează",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "Light theme",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "Tema întunecată",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "High contrast theme",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gesturefy a fost instalat cu succes.",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "N-ai făcut niciodată un gest cu mouse-ul?\nÎncearcă acum!",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "Apasă şi reține butonul din dreapta al mouse-ului",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "Trage în jos mouse-ul",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "Eliberează butonul din dreapta al mouse-ului",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "Ai derulat până la finalul paginii.",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "Felicitări, ai realizat primul tău gest cu mouse-ul!",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "Creează cât de multe gesturi ai nevoie pentru stilul tău personal de navigare și fă-ți navigarea zilnică mai ușoară, mai rapidă și mult mai plăcută. Începe acum și personalizează Gesturefy!",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "Creează Gesturile tale",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "Încă sunt neclarități? Accesează legătura de mai jos pentru o listă rapidă și dacă nu poți face Gesturefy să funcționezede asemenea poți găsi acolo un ghid de depanare.",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "Află mai multe",
+    "description": "Learn More"
+  }
+}

@@ -6,8 +6,6 @@
 
 include protocol PContent;
 
-include "mozilla/loader/ScriptCacheActors.h";
-
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
@@ -23,7 +21,6 @@ struct ScriptData {
     uint8_t[] xdrData;
 };
 
-[ManualDealloc, ChildImpl="ScriptCacheChild", ParentImpl="ScriptCacheParent"]
 protocol PScriptCache
 {
     manager PContent;

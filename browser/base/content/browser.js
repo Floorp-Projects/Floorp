@@ -226,7 +226,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "gEditItemOverlay",
-  "chrome://browser/content/places/instantEditBookmark.js"
+  "chrome://browser/content/places/editBookmark.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
@@ -1640,7 +1640,7 @@ var gBrowserInit = {
 
     if (AppConstants.platform == "win") {
       if (
-        window.matchMedia("(-moz-platform: windows-win8)").matches &&
+        window.matchMedia("(-moz-os-version: windows-win8)").matches &&
         window.matchMedia("(-moz-windows-default-theme)").matches
       ) {
         let windowFrameColor = new Color(
@@ -1806,24 +1806,14 @@ var gBrowserInit = {
       // Remove the speculative focus from the urlbar to let the url be formatted.
       gURLBar.removeAttribute("focused");
 
-      let swapBrowsers = () => {
-        try {
-          gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToAdopt);
-        } catch (e) {
-          Cu.reportError(e);
-        }
-
-        // Clear the reference to the tab once its adoption has been completed.
-        this._clearTabToAdopt();
-      };
-      if (tabToAdopt.linkedBrowser.isRemoteBrowser) {
-        // For remote browsers, wait for the paint event, otherwise the tabs
-        //  are not yet ready and focus gets confused because the browser swaps
-        // out while tabs are switching.
-        addEventListener("MozAfterPaint", swapBrowsers, { once: true });
-      } else {
-        swapBrowsers();
+      try {
+        gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToAdopt);
+      } catch (e) {
+        Cu.reportError(e);
       }
+
+      // Clear the reference to the tab once its adoption has been completed.
+      this._clearTabToAdopt();
     }
 
     // Wait until chrome is painted before executing code not critical to making the window visible
@@ -1900,14 +1890,6 @@ var gBrowserInit = {
     Services.obs.addObserver(
       gXPInstallObserver,
       "addon-install-origin-blocked"
-    );
-    Services.obs.addObserver(
-      gXPInstallObserver,
-      "addon-install-webapi-blocked-policy"
-    );
-    Services.obs.addObserver(
-      gXPInstallObserver,
-      "addon-install-webapi-blocked"
     );
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed");
     Services.obs.addObserver(gXPInstallObserver, "addon-install-confirmation");
@@ -2363,6 +2345,8 @@ var gBrowserInit = {
       NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
     });
 
+    scheduleIdleTask(reportRemoteSubframesEnabledTelemetry);
+
     scheduleIdleTask(() => {
       gGfxUtils.init();
     });
@@ -2530,14 +2514,6 @@ var gBrowserInit = {
       Services.obs.removeObserver(
         gXPInstallObserver,
         "addon-install-origin-blocked"
-      );
-      Services.obs.removeObserver(
-        gXPInstallObserver,
-        "addon-install-webapi-blocked-policy"
-      );
-      Services.obs.removeObserver(
-        gXPInstallObserver,
-        "addon-install-webapi-blocked"
       );
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
       Services.obs.removeObserver(
@@ -4030,7 +4006,7 @@ const BrowserSearch = {
       window.location.href != AppConstants.BROWSER_CHROME_URL ||
       gURLBar.readOnly
     ) {
-      let win = getTopWin({ skipPopups: true });
+      let win = getTopWin(true);
       if (win) {
         // If there's an open browser window, it should handle this command
         win.focus();
@@ -4287,57 +4263,6 @@ const BrowserSearch = {
     );
     var where = newWindowPref == 3 ? "tab" : "window";
     openTrustedLinkIn(this.searchEnginesURL, where);
-  },
-
-  /**
-   * Infobar to notify the user's search engine has been removed
-   * and replaced with an application default search engine.
-   *
-   * @param {string} oldEngine
-   *   name of the engine to be moved and replaced.
-   * @param {string} newEngine
-   *   name of the application default engine to replaced the removed engine.
-   */
-  removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
-    let messageFragment = document.createDocumentFragment();
-    let message = document.createElement("span");
-    let link = document.createXULElement("label", {
-      is: "text-link",
-    });
-
-    link.href = Services.urlFormatter.formatURLPref(
-      "browser.search.searchEngineRemoval"
-    );
-    link.setAttribute("data-l10n-name", "remove-search-engine-article");
-    document.l10n.setAttributes(message, "remove-search-engine-message", {
-      oldEngine,
-      newEngine,
-    });
-
-    message.appendChild(link);
-    messageFragment.appendChild(message);
-
-    let button = [
-      {
-        "l10n-id": "remove-search-engine-button",
-        primary: true,
-        callback() {
-          const notificationBox = gNotificationBox.getNotificationWithValue(
-            "search-engine-removal"
-          );
-          gNotificationBox.removeNotification(notificationBox);
-        },
-      },
-    ];
-
-    gNotificationBox.appendNotification(
-      "search-engine-removal",
-      {
-        label: messageFragment,
-        priority: gNotificationBox.PRIORITY_SYSTEM,
-      },
-      button
-    );
   },
 };
 
@@ -5137,7 +5062,7 @@ var XULBrowserWindow = {
     LinkTargetDisplay.update();
   },
 
-  showTooltip(xDevPix, yDevPix, tooltip, direction, browser) {
+  showTooltip(x, y, tooltip, direction, browser) {
     if (
       Cc["@mozilla.org/widget/dragservice;1"]
         .getService(Ci.nsIDragService)
@@ -5149,12 +5074,7 @@ var XULBrowserWindow = {
     let elt = document.getElementById("remoteBrowserTooltip");
     elt.label = tooltip;
     elt.style.direction = direction;
-    elt.openPopupAtScreen(
-      xDevPix / window.devicePixelRatio,
-      yDevPix / window.devicePixelRatio,
-      false,
-      null
-    );
+    elt.openPopupAtScreen(x, y, false, null);
   },
 
   hideTooltip() {
@@ -6433,16 +6353,6 @@ nsBrowserAccess.prototype = {
   },
 };
 
-function showFullScreenViewContextMenuItems(popup) {
-  for (let node of popup.querySelectorAll('[contexttype="fullscreen"]')) {
-    node.hidden = !window.fullScreen;
-  }
-  let autoHide = popup.querySelector(".fullscreen-context-autohide");
-  if (autoHide) {
-    FullScreen.getAutohide(autoHide);
-  }
-}
-
 function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   var popup = aEvent.target;
   if (popup != aEvent.currentTarget) {
@@ -6494,9 +6404,6 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   let removeFromToolbar = popup.querySelector(
     ".customize-context-removeFromToolbar"
   );
-  // Show/hide fullscreen context menu items and set the
-  // autohide item's checked state to mirror the autohide pref.
-  showFullScreenViewContextMenuItems(popup);
   // View -> Toolbars menu doesn't have the moveToPanel or removeFromToolbar items.
   if (!moveToPanel || !removeFromToolbar) {
     return;
@@ -9934,3 +9841,16 @@ var ConfirmationHint = {
     }
   },
 };
+
+function reportRemoteSubframesEnabledTelemetry() {
+  let categoryLabel = gFissionBrowser ? "Enabled" : "Disabled";
+  if (gFissionBrowser == Services.appinfo.fissionAutostart) {
+    categoryLabel += "ByAutostart";
+  } else {
+    categoryLabel += "ByUser";
+  }
+
+  Services.telemetry
+    .getHistogramById("WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS")
+    .add(categoryLabel);
+}

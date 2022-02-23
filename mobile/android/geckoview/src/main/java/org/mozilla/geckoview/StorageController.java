@@ -79,7 +79,7 @@ public final class StorageController {
         ClearFlags.SITE_DATA,
         ClearFlags.ALL
       })
-  public @interface StorageControllerClearFlags {}
+  /* package */ @interface StorageControllerClearFlags {}
 
   /**
    * Clear data for all hosts.

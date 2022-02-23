@@ -21,7 +21,7 @@ namespace mozilla {
  * via a module loader.
  */
 struct Module {
-  static const unsigned int kVersion = 99;
+  static const unsigned int kVersion = 97;
 
   struct CIDEntry;
 
@@ -54,7 +54,6 @@ struct Module {
     ALLOW_IN_VR_PROCESS = 0x8,
     ALLOW_IN_SOCKET_PROCESS = 0x10,
     ALLOW_IN_RDD_PROCESS = 0x20,
-    ALLOW_IN_UTILITY_PROCESS = 0x30,
     ALLOW_IN_GPU_AND_MAIN_PROCESS = ALLOW_IN_GPU_PROCESS | MAIN_PROCESS_ONLY,
     ALLOW_IN_GPU_AND_VR_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS,
     ALLOW_IN_GPU_AND_SOCKET_PROCESS =
@@ -65,18 +64,13 @@ struct Module {
         ALLOW_IN_RDD_PROCESS | ALLOW_IN_SOCKET_PROCESS,
     ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS =
         ALLOW_IN_GPU_PROCESS | ALLOW_IN_RDD_PROCESS | ALLOW_IN_SOCKET_PROCESS,
-    ALLOW_IN_GPU_RDD_SOCKET_AND_UTILITY_PROCESS =
-        ALLOW_IN_GPU_PROCESS | ALLOW_IN_RDD_PROCESS | ALLOW_IN_SOCKET_PROCESS,
     ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS =
         ALLOW_IN_GPU_PROCESS | ALLOW_IN_RDD_PROCESS | ALLOW_IN_VR_PROCESS |
-        ALLOW_IN_SOCKET_PROCESS,
-    ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS =
-        ALLOW_IN_GPU_PROCESS | ALLOW_IN_RDD_PROCESS | ALLOW_IN_VR_PROCESS |
-        ALLOW_IN_SOCKET_PROCESS | ALLOW_IN_UTILITY_PROCESS
+        ALLOW_IN_SOCKET_PROCESS
   };
 
   static constexpr size_t kMaxProcessSelector =
-      size_t(ProcessSelector::ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS);
+      size_t(ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS);
 
   /**
    * This allows category entries to be marked so that they are or are

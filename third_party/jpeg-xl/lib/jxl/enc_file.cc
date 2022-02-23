@@ -138,8 +138,8 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
 }  // namespace
 
 Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
-                     const CodecMetadata* metadata, const JxlCmsInterface& cms,
-                     ThreadPool* pool, BitWriter* JXL_RESTRICT writer) {
+                     const CodecMetadata* metadata, ThreadPool* pool,
+                     BitWriter* JXL_RESTRICT writer) {
   BitWriter preview_writer;
   // TODO(janwas): also support generating preview by downsampling
   if (ib.HasColor()) {
@@ -151,8 +151,8 @@ Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
     FrameInfo frame_info;
     frame_info.is_preview = true;
     JXL_RETURN_IF_ERROR(EncodeFrame(cparams, frame_info, metadata, ib,
-                                    &passes_enc_state, cms, pool,
-                                    &preview_writer, &aux_out));
+                                    &passes_enc_state, pool, &preview_writer,
+                                    &aux_out));
     preview_writer.ZeroPadToByte();
   }
 
@@ -187,8 +187,7 @@ Status WriteHeaders(CodecMetadata* metadata, BitWriter* writer,
 
 Status EncodeFile(const CompressParams& cparams_orig, const CodecInOut* io,
                   PassesEncoderState* passes_enc_state, PaddedBytes* compressed,
-                  const JxlCmsInterface& cms, AuxOut* aux_out,
-                  ThreadPool* pool) {
+                  AuxOut* aux_out, ThreadPool* pool) {
   io->CheckMetadata();
   BitWriter writer;
 
@@ -225,7 +224,7 @@ Status EncodeFile(const CompressParams& cparams_orig, const CodecInOut* io,
 
   if (metadata->m.have_preview) {
     JXL_RETURN_IF_ERROR(EncodePreview(cparams, io->preview_frame,
-                                      metadata.get(), cms, pool, &writer));
+                                      metadata.get(), pool, &writer));
   }
 
   // Each frame should start on byte boundaries.
@@ -279,7 +278,7 @@ Status EncodeFile(const CompressParams& cparams_orig, const CodecInOut* io,
       info.save_as_reference = 1;
     }
     JXL_RETURN_IF_ERROR(EncodeFrame(cparams, info, metadata.get(),
-                                    io->frames[i], passes_enc_state, cms, pool,
+                                    io->frames[i], passes_enc_state, pool,
                                     &writer, aux_out));
   }
 

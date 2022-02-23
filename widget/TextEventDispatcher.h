@@ -82,12 +82,6 @@ class TextEventDispatcher final {
 
   nsIWidget* GetWidget() const { return mWidget; }
 
-  /**
-   * Return true starting from ending handling focus notification and until
-   * receiving blur notification.
-   */
-  bool HasFocus() const { return mHasFocus; }
-
   const IMENotificationRequests& IMENotificationRequestsRef() const {
     return mIMENotificationRequests;
   }
@@ -157,22 +151,11 @@ class TextEventDispatcher final {
   }
 
   /**
-   * Return writing mode at selection while this has focus.  Otherwise, or
-   * never exists selection ranges, this returns Nothing.
+   * MaybeWritingModeAtSelection() returns writing mode at current selection. If
+   * it's not stored, this tries to retrieve it.  Then, chrome script can run
+   * due to flushing the layout if an element in chrome has focus.
    */
-  const Maybe<WritingMode>& MaybeWritingModeRefAtSelection() const {
-    return mWritingMode;
-  }
-
-  /**
-   * MaybeQueryWritingModeAtSelection() returns writing mode at current
-   * selection even if this does not have focus.  If this is not focused, this
-   * queries selection.  Then, chrome script can run due to flushing the layout
-   * if an element in chrome has focus (but it should not cause any problem
-   * hopefully).
-   */
-  MOZ_CAN_RUN_SCRIPT Maybe<WritingMode> MaybeQueryWritingModeAtSelection()
-      const;
+  MOZ_CAN_RUN_SCRIPT Maybe<WritingMode> MaybeWritingModeAtSelection() const;
 
   /**
    * StartComposition() starts composition explicitly.
@@ -288,10 +271,7 @@ class TextEventDispatcher final {
   /**
    * @see nsIWidget::NotifyIME()
    */
-  // Calling NotifyIME may call OS's API so that everything could happen.
-  // We should mark it MOZ_CAN_RUN_SCRIPT later.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  NotifyIME(const IMENotification& aIMENotification);
+  nsresult NotifyIME(const IMENotification& aIMENotification);
 
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
@@ -355,11 +335,9 @@ class TextEventDispatcher final {
   // mIMENotificationRequests should store current IME's notification requests.
   // So, this may be invalid when IME doesn't have focus.
   IMENotificationRequests mIMENotificationRequests;
-  // mWritingMode stores writing mode at current selection starting from
-  // receiving focus notification and until receiving blur notification.  When
-  // selection is changed, this is updated by every selection change
-  // notification.
-  Maybe<WritingMode> mWritingMode;
+  // mWritingMode may store writing mode at current selection while this has
+  // focus (i.e., while this can receive selection change notifications).
+  mutable Maybe<WritingMode> mWritingMode;
 
   // mPendingComposition stores new composition string temporarily.
   // These values will be used for dispatching eCompositionChange event
@@ -542,11 +520,11 @@ class TextEventDispatcher final {
    *                        Then, WillDispatchKeyboardEvent() is always called.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
-  // TODO: Mark this as MOZ_CAN_RUN_SCRIPT instead.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchKeyboardEventInternal(
-      EventMessage aMessage, const WidgetKeyboardEvent& aKeyboardEvent,
-      nsEventStatus& aStatus, void* aData, uint32_t aIndexOfKeypress = 0,
-      bool aNeedsCallback = false);
+  bool DispatchKeyboardEventInternal(EventMessage aMessage,
+                                     const WidgetKeyboardEvent& aKeyboardEvent,
+                                     nsEventStatus& aStatus, void* aData,
+                                     uint32_t aIndexOfKeypress = 0,
+                                     bool aNeedsCallback = false);
 
   /**
    * ClearNotificationRequests() clears mIMENotificationRequests.

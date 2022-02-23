@@ -62,13 +62,9 @@ def set_fetches_and_locations(config, jobs):
 
 
 def _get_aar_location(config, job, platform):
-    artifacts_locations = []
-
-    for package in job["attributes"]["maven_packages"]:
-        artifacts_locations += get_geckoview_upstream_artifacts(
-            config, job, package, platform=platform
-        )
-
+    artifacts_locations = get_geckoview_upstream_artifacts(
+        config, job, platform=platform
+    )
     aar_locations = [
         path for path in artifacts_locations[0]["paths"] if path.endswith(".aar")
     ]

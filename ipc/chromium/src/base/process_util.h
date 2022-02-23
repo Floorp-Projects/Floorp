@@ -246,9 +246,10 @@ bool LaunchApp(const CommandLine& cl, const LaunchOptions&,
                ProcessHandle* process_handle);
 
 // Attempts to kill the process identified by the given process
-// entry structure, giving it the specified exit code.
+// entry structure, giving it the specified exit code. If |wait| is true, wait
+// for the process to be actually terminated before returning.
 // Returns true if this is successful, false otherwise.
-bool KillProcess(ProcessHandle process, int exit_code);
+bool KillProcess(ProcessHandle process, int exit_code, bool wait);
 
 // Get the termination status (exit code) of the process and return true if the
 // status indicates the process crashed. |child_exited| is set to true iff the

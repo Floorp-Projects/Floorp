@@ -43,6 +43,7 @@
 
 #include "nsContentUtils.h"
 
+#include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
@@ -423,16 +424,6 @@ nsDOMWindowUtils::GetViewportFitInfo(nsAString& aViewportFit) {
   } else {
     aViewportFit.AssignLiteral("auto");
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SetMousewheelAutodir(Element* aElement, bool aEnabled,
-                                       bool aHonourRoot) {
-  aElement->SetProperty(nsGkAtoms::forceMousewheelAutodir,
-                        reinterpret_cast<void*>(aEnabled));
-  aElement->SetProperty(nsGkAtoms::forceMousewheelAutodirHonourRoot,
-                        reinterpret_cast<void*>(aHonourRoot));
   return NS_OK;
 }
 
@@ -2189,6 +2180,14 @@ nsDOMWindowUtils::GetViewId(Element* aElement, nsViewID* aResult) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  *aScreenPixels = window->GetDevicePixelRatio(CallerType::System);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetScreenPixelsPerCSSPixelNoOverride(float* aScreenPixels) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
@@ -2378,8 +2377,11 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType, int64_t aOffset,
 
   if (message == eQueryCharacterAtPoint) {
     // Looking for the widget at the point.
-    nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForPoint(
-        presContext->GetRootPresContext(), widget, pt);
+    WidgetQueryContentEvent dummyEvent(true, eQueryContentState, widget);
+    dummyEvent.Init(options);
+    InitEvent(dummyEvent, &pt);
+    nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForEventCoordinates(
+        presContext->GetRootPresContext(), &dummyEvent);
 
     LayoutDeviceIntRect widgetBounds = widget->GetClientBounds();
     widgetBounds.MoveTo(0, 0);
@@ -4132,26 +4134,6 @@ nsDOMWindowUtils::SetChromeMargin(int32_t aTop, int32_t aRight, int32_t aBottom,
       if (widget) {
         LayoutDeviceIntMargin margins(aTop, aRight, aBottom, aLeft);
         return widget->SetNonClientMargins(margins);
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SetResizeMargin(int32_t aResizeMargin) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  if (window) {
-    nsCOMPtr<nsIBaseWindow> baseWindow =
-        do_QueryInterface(window->GetDocShell());
-    if (baseWindow) {
-      nsCOMPtr<nsIWidget> widget;
-      baseWindow->GetMainWidget(getter_AddRefs(widget));
-      if (widget) {
-        CSSToLayoutDeviceScale scaleFactor = widget->GetDefaultScale();
-        widget->SetResizeMargin(
-            (CSSCoord(float(aResizeMargin)) * scaleFactor).Rounded());
       }
     }
   }

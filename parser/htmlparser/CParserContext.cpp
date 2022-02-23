@@ -8,31 +8,25 @@
 #include "CParserContext.h"
 #include "prenv.h"
 #include "nsIHTMLContentSink.h"
+#include "nsHTMLTokenizer.h"
 #include "nsMimeTypes.h"
+#include "nsHTMLTokenizer.h"
 
-CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)
-    : mScanner(aURI),
-      mDTDMode(eDTDMode_autodetect),
-      mDocType(eUnknown),
+CParserContext::CParserContext(CParserContext* aPrevContext,
+                               nsScanner* aScanner, void* aKey,
+                               eParserCommands aCommand,
+                               eAutoDetectResult aStatus, bool aCopyUnused)
+    : mKey(aKey),
+      mPrevContext(aPrevContext),
+      mScanner(mozilla::WrapUnique(aScanner)),
+      mDTDMode(eDTDMode_unknown),
+      mDocType(static_cast<eParserDocType>(0)),
       mStreamListenerState(eNone),
-      mContextType(eCTURL),
+      mContextType(eCTNone),
+      mAutoDetectStatus(aStatus),
       mParserCommand(aCommand),
       mMultipart(true),
-      mCopyUnused(false) {
-  MOZ_COUNT_CTOR(CParserContext);
-}
-
-CParserContext::CParserContext(const nsAString& aBuffer,
-                               eParserCommands aCommand, bool aLastBuffer)
-    : mScanner(aBuffer, !aLastBuffer),
-      mMimeType("application/xml"_ns),
-      mDTDMode(eDTDMode_full_standards),
-      mDocType(eXML),
-      mStreamListenerState(aLastBuffer ? eOnStop : eOnDataAvail),
-      mContextType(eCTString),
-      mParserCommand(aCommand),
-      mMultipart(!aLastBuffer),
-      mCopyUnused(aLastBuffer) {
+      mCopyUnused(aCopyUnused) {
   MOZ_COUNT_CTOR(CParserContext);
 }
 
@@ -44,7 +38,7 @@ CParserContext::~CParserContext() {
 void CParserContext::SetMimeType(const nsACString& aMimeType) {
   mMimeType.Assign(aMimeType);
 
-  mDocType = eUnknown;
+  mDocType = ePlainText;
 
   if (mMimeType.EqualsLiteral(TEXT_HTML))
     mDocType = eHTML_Strict;
@@ -57,4 +51,22 @@ void CParserContext::SetMimeType(const nsACString& aMimeType) {
            mMimeType.EqualsLiteral(APPLICATION_WAPXHTML_XML) ||
            mMimeType.EqualsLiteral(TEXT_RDF))
     mDocType = eXML;
+}
+
+nsresult CParserContext::GetTokenizer(nsIDTD* aDTD, nsIContentSink* aSink,
+                                      nsITokenizer*& aTokenizer) {
+  nsresult result = NS_OK;
+  int32_t type = aDTD ? aDTD->GetType() : NS_IPARSER_FLAG_HTML;
+
+  if (!mTokenizer) {
+    if (type == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
+      mTokenizer = new nsHTMLTokenizer;
+    } else if (type == NS_IPARSER_FLAG_XML) {
+      mTokenizer = do_QueryInterface(aDTD, &result);
+    }
+  }
+
+  aTokenizer = mTokenizer;
+
+  return result;
 }

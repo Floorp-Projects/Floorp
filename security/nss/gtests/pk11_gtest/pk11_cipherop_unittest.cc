@@ -3,7 +3,6 @@
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "gtest/gtest.h"
-#include "nss_scoped_ptrs.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -22,29 +21,30 @@ namespace nss_test {
 // cipher context with data that is not cipher block aligned.
 //
 
-static SECStatus GetBytes(const ScopedPK11Context& ctx, size_t len) {
+static SECStatus GetBytes(PK11Context* ctx, uint8_t* bytes, size_t len) {
   std::vector<uint8_t> in(len, 0);
 
-  uint8_t outbuf[128];
-  PORT_Assert(len <= sizeof(outbuf));
   int outlen;
-  SECStatus rv = PK11_CipherOp(ctx.get(), outbuf, &outlen, len, in.data(), len);
+  SECStatus rv = PK11_CipherOp(ctx, bytes, &outlen, len, &in[0], len);
   if (static_cast<size_t>(outlen) != len) {
-    EXPECT_EQ(rv, SECFailure);
+    return SECFailure;
   }
   return rv;
 }
 
 TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
-  ScopedNSSInitContext globalctx(NSS_InitContext(
-      "", "", "", "", NULL, NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
-                                NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                                NSS_INIT_NOROOTINIT));
-  ASSERT_TRUE(globalctx);
+  PK11SlotInfo* slot;
+  PK11SymKey* key;
+  PK11Context* ctx;
+
+  NSSInitContext* globalctx =
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT);
 
   const CK_MECHANISM_TYPE cipher = CKM_AES_CTR;
 
-  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  slot = PK11_GetInternalSlot();
   ASSERT_TRUE(slot);
 
   // Use arbitrary bytes for the AES key
@@ -61,28 +61,35 @@ TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
   SECItem paramItem = {siBuffer, reinterpret_cast<unsigned char*>(&param),
                        sizeof(CK_AES_CTR_PARAMS)};
 
-  ScopedPK11SymKey key(PK11_ImportSymKey(slot.get(), cipher, PK11_OriginUnwrap,
-                                         CKA_ENCRYPT, &keyItem, NULL));
+  key = PK11_ImportSymKey(slot, cipher, PK11_OriginUnwrap, CKA_ENCRYPT,
+                          &keyItem, NULL);
+  ctx = PK11_CreateContextBySymKey(cipher, CKA_ENCRYPT, key, &paramItem);
   ASSERT_TRUE(key);
-  ScopedPK11Context ctx(
-      PK11_CreateContextBySymKey(cipher, CKA_ENCRYPT, key.get(), &paramItem));
   ASSERT_TRUE(ctx);
 
-  ASSERT_EQ(GetBytes(ctx, 7), SECSuccess);
-  ASSERT_EQ(GetBytes(ctx, 17), SECSuccess);
+  uint8_t outbuf[128];
+  ASSERT_EQ(GetBytes(ctx, outbuf, 7), SECSuccess);
+  ASSERT_EQ(GetBytes(ctx, outbuf, 17), SECSuccess);
+
+  PK11_FreeSymKey(key);
+  PK11_FreeSlot(slot);
+  PK11_DestroyContext(ctx, PR_TRUE);
+  NSS_ShutdownContext(globalctx);
 }
 
-// A context can't be used for Chacha20 as the underlying
-// PK11_CipherOp operation is calling the C_EncryptUpdate function for
-// which multi-part is disabled for ChaCha20 in counter mode.
-void ChachaMulti(CK_MECHANISM_TYPE cipher, SECItem* param) {
-  ScopedNSSInitContext globalctx(NSS_InitContext(
-      "", "", "", "", NULL, NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
-                                NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                                NSS_INIT_NOROOTINIT));
-  ASSERT_TRUE(globalctx);
+TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOpsChaCha20) {
+  PK11SlotInfo* slot;
+  PK11SymKey* key;
+  PK11Context* ctx;
 
-  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  NSSInitContext* globalctx =
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT);
+
+  const CK_MECHANISM_TYPE cipher = CKM_NSS_CHACHA20_CTR;
+
+  slot = PK11_GetInternalSlot();
   ASSERT_TRUE(slot);
 
   // Use arbitrary bytes for the ChaCha20 key and IV
@@ -90,42 +97,33 @@ void ChachaMulti(CK_MECHANISM_TYPE cipher, SECItem* param) {
   for (size_t i = 0; i < 32; i++) {
     key_bytes[i] = i;
   }
-  SECItem keyItem = {siBuffer, key_bytes, sizeof(key_bytes)};
+  SECItem keyItem = {siBuffer, key_bytes, 32};
 
-  ScopedPK11SymKey key(PK11_ImportSymKey(slot.get(), cipher, PK11_OriginUnwrap,
-                                         CKA_ENCRYPT, &keyItem, NULL));
+  uint8_t iv_bytes[16];
+  for (size_t i = 0; i < 16; i++) {
+    key_bytes[i] = i;
+  }
+  SECItem ivItem = {siBuffer, iv_bytes, 16};
+
+  SECItem* param = PK11_ParamFromIV(cipher, &ivItem);
+
+  key = PK11_ImportSymKey(slot, cipher, PK11_OriginUnwrap, CKA_ENCRYPT,
+                          &keyItem, NULL);
+  ctx = PK11_CreateContextBySymKey(cipher, CKA_ENCRYPT, key, param);
   ASSERT_TRUE(key);
-  ScopedSECItem param_item(PK11_ParamFromIV(cipher, param));
-  ASSERT_TRUE(param_item);
-  ScopedPK11Context ctx(PK11_CreateContextBySymKey(
-      cipher, CKA_ENCRYPT, key.get(), param_item.get()));
   ASSERT_TRUE(ctx);
 
-  ASSERT_EQ(GetBytes(ctx, 7), SECFailure);
-}
+  uint8_t outbuf[128];
+  // This is supposed to fail for Chacha20. This is because the underlying
+  // PK11_CipherOp operation is calling the C_EncryptUpdate function for
+  // which multi-part is disabled for ChaCha20 in counter mode.
+  ASSERT_EQ(GetBytes(ctx, outbuf, 7), SECFailure);
 
-TEST(Pkcs11CipherOp, ChachaMultiLegacy) {
-  uint8_t iv_bytes[16];
-  for (size_t i = 0; i < 16; i++) {
-    iv_bytes[i] = i;
-  }
-  SECItem param_item = {siBuffer, iv_bytes, sizeof(iv_bytes)};
-
-  ChachaMulti(CKM_NSS_CHACHA20_CTR, &param_item);
-}
-
-TEST(Pkcs11CipherOp, ChachaMulti) {
-  uint8_t iv_bytes[16];
-  for (size_t i = 0; i < 16; i++) {
-    iv_bytes[i] = i;
-  }
-  CK_CHACHA20_PARAMS chacha_params = {
-      iv_bytes, 32, iv_bytes + 4, 96,
-  };
-  SECItem param_item = {siBuffer, reinterpret_cast<uint8_t*>(&chacha_params),
-                        sizeof(chacha_params)};
-
-  ChachaMulti(CKM_CHACHA20, &param_item);
+  PK11_FreeSymKey(key);
+  PK11_FreeSlot(slot);
+  SECITEM_FreeItem(param, PR_TRUE);
+  PK11_DestroyContext(ctx, PR_TRUE);
+  NSS_ShutdownContext(globalctx);
 }
 
 }  // namespace nss_test

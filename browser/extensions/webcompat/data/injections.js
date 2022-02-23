@@ -137,6 +137,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1570119",
+    platform: "desktop",
+    domain: "teamcoco.com",
+    bug: "1570119",
+    contentScripts: {
+      matches: ["*://teamcoco.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1570119-teamcoco.com-scrollbar-width.css",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1570328",
     platform: "android",
     domain: "developer.apple.com",
@@ -357,7 +371,6 @@ const AVAILABLE_INJECTIONS = [
         "*://*.live.com/*",
         "*://*.office.com/*",
         "*://*.sharepoint.com/*",
-        "*://*.office365.com/*",
       ],
       js: [
         {
@@ -418,8 +431,23 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1719870",
+    id: "bug1714612",
     platform: "all",
+    domain: "www.rfi.it",
+    bug: "1714612",
+    contentScripts: {
+      matches: ["*://www.rfi.it/*"],
+      js: [
+        {
+          file: "injections/js/bug1714612-www.rfi.it-outertext.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1719870",
+    platform: "desktop",
     domain: "lcbo.com",
     bug: "1719870",
     contentScripts: {
@@ -493,6 +521,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1728140",
+    platform: "android",
+    domain: "air-quality.com",
+    bug: "1728140",
+    contentScripts: {
+      matches: ["*://air-quality.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1728140-map-size-fix.css",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1738313",
     platform: "desktop",
     domain: "curriculum.gov.bc.ca",
@@ -536,6 +578,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1743041",
+    platform: "all",
+    domain: "lu.ma",
+    bug: "1743041",
+    contentScripts: {
+      matches: ["*://lu.ma/*"],
+      css: [
+        {
+          file: "injections/css/bug1743041-lu.ma-display-fix.css",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1740542",
     platform: "desktop",
     domain: "tesla.com",
@@ -564,60 +620,18 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1749565",
-    platform: "android",
-    domain: "bonappetit.com",
-    bug: "1749565",
+    id: "bug1746883",
+    platform: "all",
+    domain: "zoom.us",
+    bug: "1746883",
     contentScripts: {
-      matches: ["*://*.bonappetit.com/recipe/*"],
-      css: [
-        {
-          file: "injections/css/bug1749565-bonappetit.com-grid-width-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1751022",
-    platform: "android",
-    domain: "chotot.com",
-    bug: "1751022",
-    contentScripts: {
-      matches: ["*://*.chotot.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1751022-chotot.com-image-width-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1751065",
-    platform: "android",
-    domain: "chanel.com",
-    bug: "1751065",
-    contentScripts: {
-      matches: ["*://*.chanel.com/*"],
+      matches: ["*://*.zoom.us/*"],
       js: [
         {
-          file: "injections/js/bug1751065-chanel.com-effectiveType-shim.js",
+          file: "injections/js/bug1746883-zoom.us-OffscreenCanvas.js",
         },
       ],
-    },
-  },
-  {
-    id: "bug1748455",
-    platform: "android",
-    domain: "reddit.com",
-    bug: "1748455",
-    contentScripts: {
-      matches: ["*://*.reddit.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1748455-reddit.com-gallery-image-width-fix.css",
-        },
-      ],
+      allFrames: true,
     },
   },
 ];

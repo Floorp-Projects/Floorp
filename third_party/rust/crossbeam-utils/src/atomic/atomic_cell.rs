@@ -295,7 +295,7 @@ impl<T: Copy + Eq> AtomicCell<T> {
 }
 
 macro_rules! impl_arithmetic {
-    ($t:ty, fallback, $example:tt) => {
+    ($t:ty, $example:tt) => {
         impl AtomicCell<$t> {
             /// Increments the current value by `val` and returns the previous value.
             ///
@@ -313,13 +313,10 @@ macro_rules! impl_arithmetic {
             /// ```
             #[inline]
             pub fn fetch_add(&self, val: $t) -> $t {
-                #[cfg(crossbeam_loom)]
-                {
-                    let _ = val;
-                    unimplemented!("loom does not support non-atomic atomic ops");
-                }
-                #[cfg(not(crossbeam_loom))]
-                {
+                if can_transmute::<$t, atomic::AtomicUsize>() {
+                    let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
+                    a.fetch_add(val as usize, Ordering::AcqRel) as $t
+                } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
                     let old = *value;
@@ -344,13 +341,10 @@ macro_rules! impl_arithmetic {
             /// ```
             #[inline]
             pub fn fetch_sub(&self, val: $t) -> $t {
-                #[cfg(crossbeam_loom)]
-                {
-                    let _ = val;
-                    unimplemented!("loom does not support non-atomic atomic ops");
-                }
-                #[cfg(not(crossbeam_loom))]
-                {
+                if can_transmute::<$t, atomic::AtomicUsize>() {
+                    let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
+                    a.fetch_sub(val as usize, Ordering::AcqRel) as $t
+                } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
                     let old = *value;
@@ -373,13 +367,10 @@ macro_rules! impl_arithmetic {
             /// ```
             #[inline]
             pub fn fetch_and(&self, val: $t) -> $t {
-                #[cfg(crossbeam_loom)]
-                {
-                    let _ = val;
-                    unimplemented!("loom does not support non-atomic atomic ops");
-                }
-                #[cfg(not(crossbeam_loom))]
-                {
+                if can_transmute::<$t, atomic::AtomicUsize>() {
+                    let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
+                    a.fetch_and(val as usize, Ordering::AcqRel) as $t
+                } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
                     let old = *value;
@@ -402,13 +393,10 @@ macro_rules! impl_arithmetic {
             /// ```
             #[inline]
             pub fn fetch_or(&self, val: $t) -> $t {
-                #[cfg(crossbeam_loom)]
-                {
-                    let _ = val;
-                    unimplemented!("loom does not support non-atomic atomic ops");
-                }
-                #[cfg(not(crossbeam_loom))]
-                {
+                if can_transmute::<$t, atomic::AtomicUsize>() {
+                    let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
+                    a.fetch_or(val as usize, Ordering::AcqRel) as $t
+                } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
                     let old = *value;
@@ -431,13 +419,10 @@ macro_rules! impl_arithmetic {
             /// ```
             #[inline]
             pub fn fetch_xor(&self, val: $t) -> $t {
-                #[cfg(crossbeam_loom)]
-                {
-                    let _ = val;
-                    unimplemented!("loom does not support non-atomic atomic ops");
-                }
-                #[cfg(not(crossbeam_loom))]
-                {
+                if can_transmute::<$t, atomic::AtomicUsize>() {
+                    let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
+                    a.fetch_xor(val as usize, Ordering::AcqRel) as $t
+                } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
                     let old = *value;
@@ -556,15 +541,9 @@ impl_arithmetic!(i32, atomic::AtomicI32, "let a = AtomicCell::new(7i32);");
 impl_arithmetic!(u64, atomic::AtomicU64, "let a = AtomicCell::new(7u64);");
 #[cfg(not(crossbeam_no_atomic_64))]
 impl_arithmetic!(i64, atomic::AtomicI64, "let a = AtomicCell::new(7i64);");
-#[cfg(crossbeam_no_atomic_64)]
-impl_arithmetic!(u64, fallback, "let a = AtomicCell::new(7u64);");
-#[cfg(crossbeam_no_atomic_64)]
-impl_arithmetic!(i64, fallback, "let a = AtomicCell::new(7i64);");
 // TODO: AtomicU128 is unstable
 // impl_arithmetic!(u128, atomic::AtomicU128, "let a = AtomicCell::new(7u128);");
 // impl_arithmetic!(i128, atomic::AtomicI128, "let a = AtomicCell::new(7i128);");
-impl_arithmetic!(u128, fallback, "let a = AtomicCell::new(7u128);");
-impl_arithmetic!(i128, fallback, "let a = AtomicCell::new(7i128);");
 
 impl_arithmetic!(
     usize,
@@ -704,13 +683,105 @@ fn lock(addr: usize) -> &'static SeqLock {
     // stored at addresses that are multiples of 3. It'd be too bad if `LEN` was divisible by 3.
     // In order to protect from such cases, we simply choose a large prime number for `LEN`.
     const LEN: usize = 97;
-    #[allow(clippy::declare_interior_mutable_const)]
-    const L: SeqLock = SeqLock::new();
+
     static LOCKS: [SeqLock; LEN] = [
-        L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-        L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-        L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-        L, L, L, L, L, L, L,
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
+        SeqLock::new(),
     ];
 
     // If the modulus is a constant number, the compiler will use crazy math to transform this into
@@ -762,6 +833,7 @@ macro_rules! atomic {
     ($t:ty, $a:ident, $atomic_op:expr, $fallback_op:expr) => {
         loop {
             atomic!(@check, $t, AtomicUnit, $a, $atomic_op);
+            atomic!(@check, $t, atomic::AtomicUsize, $a, $atomic_op);
 
             atomic!(@check, $t, atomic::AtomicU8, $a, $atomic_op);
             atomic!(@check, $t, atomic::AtomicU16, $a, $atomic_op);
@@ -783,6 +855,7 @@ macro_rules! atomic {
 const fn atomic_is_lock_free<T>() -> bool {
     // HACK(taiki-e): This is equivalent to `atomic! { T, _a, true, false }`, but can be used in const fn even in Rust 1.36.
     let is_lock_free = can_transmute::<T, AtomicUnit>()
+        | can_transmute::<T, atomic::AtomicUsize>()
         | can_transmute::<T, atomic::AtomicU8>()
         | can_transmute::<T, atomic::AtomicU16>()
         | can_transmute::<T, atomic::AtomicU32>();

@@ -84,7 +84,7 @@ export const MultiStageAboutWelcome = props => {
         if (index < props.screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
-        } else if (window.location.href === "about:welcome") {
+        } else {
           AboutWelcomeUtils.handleUserAction({
             type: "OPEN_ABOUT_PAGE",
             data: { args: "home", where: "current" },
@@ -139,30 +139,20 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable, region]);
 
-  const centeredScreens = props.screens.filter(
-    s => s.content.position !== "corner"
-  );
-
   return (
     <React.Fragment>
       <div
         className={`outer-wrapper onboardingContainer proton transition-${transition}`}
-        style={props.backdrop ? { background: props.backdrop } : {}}
+        style={{
+          backgroundImage: `url(${props.background_url})`,
+        }}
       >
         {props.screens.map((screen, order) => {
-          const isFirstCenteredScreen =
-            screen.content.position !== "corner" &&
-            screen.order === centeredScreens[0].order;
-          const isLastCenteredScreen =
-            screen.content.position !== "corner" &&
-            screen.order === centeredScreens[centeredScreens.length - 1].order;
           return index === order ? (
             <WelcomeScreen
               key={screen.id + order}
               id={screen.id}
               totalNumberOfScreens={props.screens.length}
-              isFirstCenteredScreen={isFirstCenteredScreen}
-              isLastCenteredScreen={isLastCenteredScreen}
               order={order}
               autoClose={screen.autoClose}
               content={screen.content}
@@ -302,8 +292,6 @@ export class WelcomeScreen extends React.PureComponent {
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
         handleAction={this.handleAction}
-        isFirstCenteredScreen={this.props.isFirstCenteredScreen}
-        isLastCenteredScreen={this.props.isLastCenteredScreen}
       />
     );
   }

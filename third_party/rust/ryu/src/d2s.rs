@@ -24,6 +24,9 @@ pub use crate::d2s_full_table::*;
 use crate::d2s_intrinsics::*;
 #[cfg(feature = "small")]
 pub use crate::d2s_small_table::*;
+#[cfg(not(maybe_uninit))]
+use core::mem;
+#[cfg(maybe_uninit)]
 use core::mem::MaybeUninit;
 
 pub const DOUBLE_MANTISSA_BITS: u32 = 52;
@@ -114,7 +117,14 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
     let mut vr: u64;
     let mut vp: u64;
     let mut vm: u64;
+    #[cfg(not(maybe_uninit))]
+    {
+        vp = unsafe { mem::uninitialized() };
+        vm = unsafe { mem::uninitialized() };
+    }
+    #[cfg(maybe_uninit)]
     let mut vp_uninit: MaybeUninit<u64> = MaybeUninit::uninit();
+    #[cfg(maybe_uninit)]
     let mut vm_uninit: MaybeUninit<u64> = MaybeUninit::uninit();
     let e10: i32;
     let mut vm_is_trailing_zeros = false;
@@ -137,13 +147,30 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
                     DOUBLE_POW5_INV_SPLIT.get_unchecked(q as usize)
                 },
                 i as u32,
-                vp_uninit.as_mut_ptr(),
-                vm_uninit.as_mut_ptr(),
+                #[cfg(maybe_uninit)]
+                {
+                    vp_uninit.as_mut_ptr()
+                },
+                #[cfg(not(maybe_uninit))]
+                {
+                    &mut vp
+                },
+                #[cfg(maybe_uninit)]
+                {
+                    vm_uninit.as_mut_ptr()
+                },
+                #[cfg(not(maybe_uninit))]
+                {
+                    &mut vm
+                },
                 mm_shift,
             )
         };
-        vp = unsafe { vp_uninit.assume_init() };
-        vm = unsafe { vm_uninit.assume_init() };
+        #[cfg(maybe_uninit)]
+        {
+            vp = unsafe { vp_uninit.assume_init() };
+            vm = unsafe { vm_uninit.assume_init() };
+        }
         if q <= 21 {
             // This should use q <= 22, but I think 21 is also safe. Smaller values
             // may still be safe, but it's more difficult to reason about them.
@@ -179,13 +206,30 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
                     DOUBLE_POW5_SPLIT.get_unchecked(i as usize)
                 },
                 j as u32,
-                vp_uninit.as_mut_ptr(),
-                vm_uninit.as_mut_ptr(),
+                #[cfg(maybe_uninit)]
+                {
+                    vp_uninit.as_mut_ptr()
+                },
+                #[cfg(not(maybe_uninit))]
+                {
+                    &mut vp
+                },
+                #[cfg(maybe_uninit)]
+                {
+                    vm_uninit.as_mut_ptr()
+                },
+                #[cfg(not(maybe_uninit))]
+                {
+                    &mut vm
+                },
                 mm_shift,
             )
         };
-        vp = unsafe { vp_uninit.assume_init() };
-        vm = unsafe { vm_uninit.assume_init() };
+        #[cfg(maybe_uninit)]
+        {
+            vp = unsafe { vp_uninit.assume_init() };
+            vm = unsafe { vm_uninit.assume_init() };
+        }
         if q <= 1 {
             // {vr,vp,vm} is trailing zeros if {mv,mp,mm} has at least q trailing 0 bits.
             // mv = 4 * m2, so it always has at least two trailing 0 bits.

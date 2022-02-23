@@ -125,7 +125,7 @@ function run_test() {
 
   let certFromDbKey = certDB.findCertByDBKey(expectedDbKey);
   ok(
-    areCertsEqual(certFromDbKey, cert),
+    certFromDbKey.equals(cert),
     "nsIX509CertDB.findCertByDBKey should find the right certificate"
   );
 
@@ -140,7 +140,7 @@ function run_test() {
   );
   certFromDbKey = certDB.findCertByDBKey(expectedDbKeyWithCRLF);
   ok(
-    areCertsEqual(certFromDbKey, cert),
+    certFromDbKey.equals(cert),
     "nsIX509CertDB.findCertByDBKey should work with dbKey with CRLF"
   );
 
@@ -151,7 +151,7 @@ function run_test() {
   );
   certFromDbKey = certDB.findCertByDBKey(expectedDbKeyWithSpaces);
   ok(
-    areCertsEqual(certFromDbKey, cert),
+    certFromDbKey.equals(cert),
     "nsIX509CertDB.findCertByDBKey should work with dbKey with spaces"
   );
 

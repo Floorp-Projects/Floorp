@@ -60,8 +60,7 @@ mozilla::ipc::IPCResult GMPStorageParent::RecvOpen(
       ("GMPStorageParent[%p]::RecvOpen(record='%s')", this, aRecordName.get()));
 
   if (mShutdown) {
-    // Shutdown is an expected state, so we do not IPC_FAIL.
-    return IPC_OK();
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (mNodeId.EqualsLiteral("null")) {
@@ -103,8 +102,7 @@ mozilla::ipc::IPCResult GMPStorageParent::RecvRead(
       ("GMPStorageParent[%p]::RecvRead(record='%s')", this, aRecordName.get()));
 
   if (mShutdown) {
-    // Shutdown is an expected state, so we do not IPC_FAIL.
-    return IPC_OK();
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsTArray<uint8_t> data;
@@ -130,8 +128,7 @@ mozilla::ipc::IPCResult GMPStorageParent::RecvWrite(
         aRecordName.get(), aBytes.Length()));
 
   if (mShutdown) {
-    // Shutdown is an expected state, so we do not IPC_FAIL.
-    return IPC_OK();
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (!mStorage->IsOpen(aRecordName)) {

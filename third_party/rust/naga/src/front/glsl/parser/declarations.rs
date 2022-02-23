@@ -292,7 +292,6 @@ impl<'source> ParsingContext<'source> {
                                         parser,
                                         &mut context,
                                         &mut body,
-                                        &mut None,
                                     )?;
 
                                     parser.add_function(context, name, result, body, meta);

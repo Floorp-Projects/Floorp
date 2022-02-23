@@ -1631,7 +1631,7 @@ class gfxFont {
 
     gfxFloat aveCharWidth;
     gfxFloat spaceWidth;
-    gfxFloat zeroWidth;         // -1 if there was no zero glyph
+    gfxFloat zeroWidth;  // -1 if there was no zero glyph
     gfxFloat ideographicWidth;  // -1 if kWaterIdeograph is not supported
 
     gfxFloat ZeroOrAveCharWidth() const {
@@ -1783,7 +1783,7 @@ class gfxFont {
 
   virtual bool AllowSubpixelAA() { return true; }
 
-  bool ApplySyntheticBold() const { return mApplySyntheticBold; }
+  bool IsSyntheticBold() const { return mApplySyntheticBold; }
 
   float AngleForSyntheticOblique() const;
   float SkewForSyntheticOblique() const;

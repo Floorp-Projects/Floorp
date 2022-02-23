@@ -18,8 +18,6 @@
       this.addEventListener("TabAttrModified", this);
       this.addEventListener("TabHide", this);
       this.addEventListener("TabShow", this);
-      this.addEventListener("TabPinned", this);
-      this.addEventListener("TabUnpinned", this);
       this.addEventListener("transitionend", this);
       this.addEventListener("dblclick", this);
       this.addEventListener("click", this);
@@ -144,14 +142,6 @@
 
     on_TabAttrModified(event) {
       if (
-        ["soundplaying", "muted", "activemedia-blocked", "sharing"].some(attr =>
-          event.detail.changed.includes(attr)
-        )
-      ) {
-        this.updateTabIndicatorAttr(event.target);
-      }
-
-      if (
         event.detail.changed.includes("soundplaying") &&
         event.target.hidden
       ) {
@@ -169,14 +159,6 @@
       if (event.target.soundPlaying) {
         this._hiddenSoundPlayingStatusChanged(event.target);
       }
-    }
-
-    on_TabPinned(event) {
-      this.updateTabIndicatorAttr(event.target);
-    }
-
-    on_TabUnpinned(event) {
-      this.updateTabIndicatorAttr(event.target);
     }
 
     on_transitionend(event) {
@@ -450,7 +432,8 @@
       // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
       // canvas size (in CSS pixels) to the window's backing resolution in order
       // to get a full-resolution drag image for use on HiDPI displays.
-      let scale = window.devicePixelRatio;
+      let windowUtils = window.windowUtils;
+      let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
       let canvas = this._dndCanvas;
       if (!canvas) {
         this._dndCanvas = canvas = document.createElementNS(
@@ -870,7 +853,9 @@
 
       // screen.availLeft et. al. only check the screen that this window is on,
       // but we want to look at the screen the tab is being dropped onto.
-      var screen = event.screen;
+      var screen = Cc["@mozilla.org/gfx/screenmanager;1"]
+        .getService(Ci.nsIScreenManager)
+        .screenForRect(eX, eY, 1, 1);
       var fullX = {},
         fullY = {},
         fullWidth = {},
@@ -1094,24 +1079,21 @@
               popup.setAttribute("position", "after_end");
               parent.prepend(popup);
               parent.setAttribute("type", "menu");
-              // Update tooltip text
-              nodeToTooltipMap[parent.id] = newTabLeftClickOpensContainersMenu
-                ? "newTabAlwaysContainer.tooltip"
-                : "newTabContainer.tooltip";
+              if (newTabLeftClickOpensContainersMenu) {
+                gClickAndHoldListenersOnElement.remove(parent);
+                // Update tooltip text
+                nodeToTooltipMap[parent.id] = "newTabAlwaysContainer.tooltip";
+              } else {
+                gClickAndHoldListenersOnElement.add(parent);
+                nodeToTooltipMap[parent.id] = "newTabContainer.tooltip";
+              }
             } else {
               nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
               parent.removeAttribute("context", "new-tab-button-popup");
             }
+
             // evict from tooltip cache
             gDynamicTooltipCache.delete(parent.id);
-
-            // If containers and press-hold container menu are both used,
-            // add to gClickAndHoldListenersOnElement; otherwise, remove.
-            if (containersEnabled && !newTabLeftClickOpensContainersMenu) {
-              gClickAndHoldListenersOnElement.add(parent);
-            } else {
-              gClickAndHoldListenersOnElement.remove(parent);
-            }
           }
 
           break;
@@ -2091,22 +2073,6 @@
       }
 
       CustomizableUI.removeListener(this);
-    }
-
-    updateTabIndicatorAttr(tab) {
-      const theseAttributes = ["soundplaying", "muted", "activemedia-blocked"];
-      const notTheseAttributes = ["pinned", "sharing", "crashed"];
-
-      if (notTheseAttributes.some(attr => tab.getAttribute(attr))) {
-        tab.removeAttribute("indicator-replaces-favicon");
-        return;
-      }
-
-      if (theseAttributes.some(attr => tab.getAttribute(attr))) {
-        tab.setAttribute("indicator-replaces-favicon", true);
-      } else {
-        tab.removeAttribute("indicator-replaces-favicon");
-      }
     }
   }
 

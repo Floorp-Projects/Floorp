@@ -176,8 +176,6 @@ module.exports = {
           " " +
           this.getASTSource(node.right)
         );
-      case "UnaryExpression":
-        return node.operator + " " + this.getASTSource(node.argument);
       default:
         throw new Error("getASTSource unsupported node type: " + node.type);
     }

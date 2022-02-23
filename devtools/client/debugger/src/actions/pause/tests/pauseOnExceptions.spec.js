@@ -11,7 +11,7 @@ import {
 import {
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-} from "../../../selectors/pause";
+} from "../../../reducers/pause";
 
 describe("pauseOnExceptions", () => {
   it("should track telemetry for pauseOnException changes", async () => {

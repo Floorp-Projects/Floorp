@@ -19,7 +19,7 @@ namespace impl {
 
 void DenominatorMetric::Add(int32_t aAmount) const {
   auto scalarId = ScalarIdForMetric(mId);
-  if (scalarId && aAmount >= 0) {
+  if (scalarId) {
     Telemetry::ScalarAdd(scalarId.extract(), aAmount);
   }
   fog_denominator_add(mId, aAmount);

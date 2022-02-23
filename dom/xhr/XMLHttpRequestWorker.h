@@ -77,7 +77,6 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
-  bool mFlagSendActive;
 
   bool mMozAnon;
   bool mMozSystem;

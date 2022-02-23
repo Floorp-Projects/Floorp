@@ -78,6 +78,10 @@ endif
 
 ifdef LLVM_SYMBOLIZER
   JSSHELL_BINS += $(notdir $(LLVM_SYMBOLIZER))
+  # On Windows, llvm-symbolizer depends on the MS DIA library.
+  ifdef WIN_DIA_SDK_BIN_DIR
+    JSSHELL_BINS += msdia140.dll
+  endif
 endif
 ifdef MOZ_CLANG_RT_ASAN_LIB_PATH
   JSSHELL_BINS += $(notdir $(MOZ_CLANG_RT_ASAN_LIB_PATH))
@@ -130,7 +134,7 @@ endif
 
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
   PKG_SUFFIX	= .zip
-  INNER_MAKE_PACKAGE = $(call py_action,zip,'$(PACKAGE)' '$(MOZ_PKG_DIR)' -x '**/.mkdir.done')
+  INNER_MAKE_PACKAGE = $(call py_action,make_zip,'$(MOZ_PKG_DIR)' '$(PACKAGE)')
   INNER_UNMAKE_PACKAGE = $(call py_action,make_unzip,$(UNPACKAGE))
 endif
 

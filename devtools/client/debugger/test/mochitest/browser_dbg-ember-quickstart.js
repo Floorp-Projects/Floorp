@@ -9,7 +9,7 @@ add_task(async function() {
   await invokeWithBreakpoint(
     dbg,
     "mapTestFunction",
-    "router.js",
+    "quickstart/router.js",
     { line: 13, column: 2 },
     async () => {
       await assertScopes(dbg, [

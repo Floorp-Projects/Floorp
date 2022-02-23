@@ -7,7 +7,6 @@
 #include "nsMathMLTokenFrame.h"
 
 #include "mozilla/PresShell.h"
-#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
@@ -130,12 +129,9 @@ void nsMathMLTokenFrame::Reflow(nsPresContext* aPresContext,
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput childReflowInput(aPresContext, aReflowInput, childFrame,
                                  availSize);
-    nsReflowStatus childStatus;
     ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowInput,
-                childStatus);
-    NS_ASSERTION(childStatus.IsComplete(),
-                 "We gave the child unconstrained available block-size, so its "
-                 "status should be complete!");
+                aStatus);
+    // NS_ASSERTION(aStatus.IsComplete(), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
   }

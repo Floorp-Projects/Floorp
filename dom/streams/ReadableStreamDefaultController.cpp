@@ -9,7 +9,6 @@
 #include "js/Value.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -18,11 +17,11 @@
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
-#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
@@ -40,7 +39,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelAlgorithm, mStrategySizeAlgorithm,
                                   mPullAlgorithm, mStream)
-  tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -71,7 +69,8 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 ReadableStreamDefaultController::ReadableStreamDefaultController(
     nsIGlobalObject* aGlobal)
     : ReadableStreamController(aGlobal) {
-  mozilla::HoldJSObjects(this);
+  // Add |MOZ_COUNT_CTOR(ReadableStreamDefaultController);| for a non-refcounted
+  // object.
 }
 
 ReadableStreamDefaultController::~ReadableStreamDefaultController() {
@@ -80,7 +79,6 @@ ReadableStreamDefaultController::~ReadableStreamDefaultController() {
   //         having entries in its queue.
   //
   //         This needs to be verified as not indicating some other issue.
-  mozilla::DropJSObjects(this);
   mQueue.clear();
 }
 
@@ -96,62 +94,17 @@ void ReadableStreamDefaultController::SetStream(ReadableStream* aStream) {
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
 static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
     ReadableStreamDefaultController* aController) {
-  // Step 1. Let state be controller.[[stream]].[[state]].
+  // Step 1.
   ReadableStream::ReaderState state = aController->GetStream()->State();
 
-  // Step 2. If controller.[[closeRequested]] is false and state is "readable",
-  // return true.
-  // Step 3. Return false.
-  return !aController->CloseRequested() &&
-         state == ReadableStream::ReaderState::Readable;
-}
-
-enum class CloseOrEnqueue { Close, Enqueue };
-
-// https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
-// This is a variant of ReadableStreamDefaultControllerCanCloseOrEnqueue
-// that also throws when the function would return false to improve error
-// messages.
-static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
-    ReadableStreamDefaultController* aController,
-    CloseOrEnqueue aCloseOrEnqueue, ErrorResult& aRv) {
-  // Step 1. Let state be controller.[[stream]].[[state]].
-  ReadableStream::ReaderState state = aController->GetStream()->State();
-
-  nsCString prefix;
-  if (aCloseOrEnqueue == CloseOrEnqueue::Close) {
-    prefix = "Cannot close a readable stream that "_ns;
-  } else {
-    prefix = "Cannot enqueue into a readable stream that "_ns;
+  // Step 2.
+  if (!aController->CloseRequested() &&
+      state == ReadableStream::ReaderState::Readable) {
+    return true;
   }
 
-  switch (state) {
-    case ReadableStream::ReaderState::Readable:
-      // Step 2. If controller.[[closeRequested]] is false and
-      // state is "readable", return true.
-      // Note: We don't error/check for [[closeRequest]] first, because
-      // [[closedRequest]] is still true even after the state is "closed".
-      // This doesn't cause any spec observable difference.
-      if (!aController->CloseRequested()) {
-        return true;
-      }
-
-      // Step 3. Return false.
-      aRv.ThrowTypeError(prefix + "has already been requested to close."_ns);
-      return false;
-
-    case ReadableStream::ReaderState::Closed:
-      aRv.ThrowTypeError(prefix + "is already closed."_ns);
-      return false;
-
-    case ReadableStream::ReaderState::Errored:
-      aRv.ThrowTypeError(prefix + "has errored."_ns);
-      return false;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown ReaderState");
-      return false;
-  }
+  // Step 3.
+  return false;
 }
 
 static Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
@@ -185,7 +138,7 @@ Nullable<double> ReadableStreamDefaultController::GetDesiredSize() {
 //       As far as I know, this isn't currently visible, but we need to keep
 //       this in mind. This is a weakness of this current implementation, and
 //       I'd prefer to have a better answer here eventually.
-void ReadableStreamDefaultControllerClearAlgorithms(
+static void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController) {
   // Step 1.
   aController->SetPullAlgorithm(nullptr);
@@ -205,9 +158,8 @@ void ReadableStreamDefaultControllerClose(
   if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(aController)) {
     return;
   }
-
   // Step 2.
-  RefPtr<ReadableStream> stream = aController->GetStream();
+  ReadableStream* stream = aController->GetStream();
 
   // Step 3.
   aController->SetCloseRequested(true);
@@ -225,11 +177,10 @@ void ReadableStreamDefaultControllerClose(
 // https://streams.spec.whatwg.org/#rs-default-controller-close
 void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 1.
-  if (!ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
-          this, CloseOrEnqueue::Close, aRv)) {
+  if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(this)) {
+    aRv.ThrowTypeError("Cannot Close");
     return;
   }
-
   // Step 2.
   ReadableStreamDefaultControllerClose(aCx, this, aRv);
 }
@@ -248,7 +199,7 @@ void ReadableStreamDefaultControllerEnqueue(
   }
 
   // Step 2.
-  RefPtr<ReadableStream> stream = aController->GetStream();
+  ReadableStream* stream = aController->GetStream();
 
   // Step 3.
   if (IsReadableStreamLocked(stream) &&
@@ -272,12 +223,7 @@ void ReadableStreamDefaultControllerEnqueue(
                   CallbackObject::eRethrowExceptions)
             : 1.0;
 
-    // If this is an uncatchable exception we can't continue.
-    if (aRv.IsUncatchableException()) {
-      return;
-    }
-
-    // Step 4.2:
+    // Step 4.2
     if (aRv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultController.enqueue")) {
       JS::RootedValue errorValue(aCx);
@@ -334,8 +280,8 @@ void ReadableStreamDefaultController::Enqueue(JSContext* aCx,
                                               JS::Handle<JS::Value> aChunk,
                                               ErrorResult& aRv) {
   // Step 1.
-  if (!ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
-          this, CloseOrEnqueue::Enqueue, aRv)) {
+  if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(this)) {
+    aRv.ThrowTypeError("Cannot Enqueue");
     return;
   }
 
@@ -407,7 +353,7 @@ void ReadableStreamDefaultControllerError(
 // MG:XXX: Probably can find base class between this and
 // StartPromiseNativeHandler
 class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
-  ~PullIfNeededNativePromiseHandler() override = default;
+  ~PullIfNeededNativePromiseHandler() = default;
 
   // Virtually const, but cycle collected
   RefPtr<ReadableStreamDefaultController> mController;
@@ -420,9 +366,8 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       ReadableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 7.1
     mController->SetPulling(false);
@@ -432,17 +377,20 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       mController->SetPullAgain(false);
 
       // Step 7.2.2
-      ErrorResult rv;
+      IgnoredErrorResult rv;
       ReadableStreamDefaultControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), aRv);
+          aCx, MOZ_KnownLive(mController), rv);
+      // Not Sure How To Handle Errors Inside Native Callbacks,
+      (void)NS_WARN_IF(rv.Failed());
     }
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 8.1
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
+    IgnoredErrorResult rv;
+    ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
+    (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Rejected Error");
   }
 };
 
@@ -484,12 +432,40 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
   RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm(
       aController->GetPullAlgorithm());
 
+  // Pre-allocate a promise which we may end up discarding or rejecting.
+  // We do this here in order to avoid having to try allocating on a
+  // failure path after the callback is called.
+  RefPtr<Promise> maybeRejectPromise =
+      Promise::Create(aController->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
   RefPtr<Promise> pullPromise =
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *aController, aRv)
                     : Promise::CreateResolvedWithUndefined(
                           aController->GetParentObject(), aRv);
+
+  // The below failure handling code is all about implmenting WebIDL promise
+  // rejection semantics until
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1726595 is fixed.
+  //
+  // Since this function can be called as part of a native promise handler,
+  // which has no way right now to signal error, and to ape what we do in the SM
+  // Streams implementation,
+  //  https://searchfox.org/mozilla-central/source/js/src/builtin/streams/MiscellaneousOperations-inl.h#37
+  //
+
+  // Inform the ErrorResult that we're handling a JS exception if it happened.
+  aRv.WouldReportJSException();
+
+  // We want to convert callback throw to a rejected promise.
   if (aRv.Failed()) {
-    return;
+    MOZ_ASSERT(!pullPromise);
+
+    // Use the previously allocated promise now.
+    pullPromise = maybeRejectPromise;
+    pullPromise->MaybeReject(std::move(aRv));
   }
 
   // Step 7 + 8:
@@ -498,7 +474,7 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
 }
 
 class StartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~StartPromiseNativeHandler() override = default;
+  ~StartPromiseNativeHandler() = default;
 
   RefPtr<ReadableStreamDefaultController> mController;
 
@@ -511,8 +487,7 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
       : PromiseNativeHandler(), mController(aController) {}
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MOZ_ASSERT(mController);
 
     // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
@@ -527,16 +502,20 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
     mController->SetPullAgain(false);
 
     // Step 11.4:
-
+    ErrorResult rv;
     RefPtr<ReadableStreamDefaultController> stackController = mController;
-    ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, aRv);
+    ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, rv);
+    if (rv.Failed()) {
+      MOZ_CRASH("Error Handling Not Clear Inside Promise Callback");
+    }
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
     // Step 12.1
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
+    ErrorResult rv;
+    ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
+    (void)rv.MaybeSetPendingException(aCx, "StartPromise Rejected Error");
   }
 };
 
@@ -663,9 +642,6 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
   RefPtr<Promise> result =
       callback ? callback->CancelCallback(aCx, errorOption, aRv)
                : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
 
   // Step 3.
   ReadableStreamDefaultControllerClearAlgorithms(this);
@@ -679,7 +655,7 @@ void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
                                                 ReadRequest* aReadRequest,
                                                 ErrorResult& aRv) {
   // Step 1.
-  RefPtr<ReadableStream> stream = mStream;
+  ReadableStream* stream = mStream;
 
   // Step 2.
   if (!mQueue.isEmpty()) {
@@ -715,9 +691,5 @@ void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
   }
 }
 
-// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultcontroller-releasesteps
-void ReadableStreamDefaultController::ReleaseSteps() {
-  // Step 1. Return.
-}
-
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

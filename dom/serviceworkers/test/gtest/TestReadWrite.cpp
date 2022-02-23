@@ -41,7 +41,6 @@ class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar {
   void TestDeleteData() { DeleteData(); }
 
   void TestRegisterServiceWorker(const ServiceWorkerRegistrationData& aData) {
-    mozilla::MonitorAutoLock lock(mMonitor);
     RegisterServiceWorkerInternal(aData);
   }
 

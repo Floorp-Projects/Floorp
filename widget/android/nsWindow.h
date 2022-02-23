@@ -63,6 +63,7 @@ class nsWindow final : public nsBaseWidget {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
 
   static void InitNatives();
+  void SetScreenId(uint32_t aScreenId) { mScreenId = aScreenId; }
   void OnGeckoViewReady();
   RefPtr<mozilla::MozPromise<bool, bool, false>> OnLoadRequest(
       nsIURI* aUri, int32_t aWindowType, int32_t aFlags,
@@ -73,6 +74,7 @@ class nsWindow final : public nsBaseWidget {
   // Unique ID given to each widget, used to map Surfaces to widgets
   // in the CompositorSurfaceManager.
   int32_t mWidgetId;
+  uint32_t mScreenId;
 
  private:
   RefPtr<mozilla::widget::AndroidView> mAndroidView;
@@ -162,7 +164,9 @@ class nsWindow final : public nsBaseWidget {
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
   nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
-  virtual nsresult MakeFullScreen(bool aFullScreen) override;
+  virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
+  virtual nsresult MakeFullScreen(bool aFullScreen,
+                                  nsIScreen* aTargetScreen = nullptr) override;
   void SetCursor(const Cursor& aDefaultCursor) override;
   void* GetNativeData(uint32_t aDataType) override;
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;

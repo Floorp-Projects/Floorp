@@ -76,7 +76,6 @@
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/TimeoutHandler.h"
-#include "mozilla/dom/TestUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
@@ -189,39 +188,25 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerGlobalScopeBase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                   DOMEventTargetHelper)
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSerialEventTarget)
   tmp->TraverseObjectsInGlobal(cb);
-  // If we already exited DoRunLoop of WorkerPrivate, we will find it
-  // nullptr and there is nothing left to do here on the WorkerPrivate,
-  // in particular the timeouts have already been canceled and unlinked.
-  if (tmp->mWorkerPrivate) {
-    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
-    tmp->mWorkerPrivate->TraverseTimeouts(cb);
-  }
+  tmp->mWorkerPrivate->TraverseTimeouts(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                 DOMEventTargetHelper)
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSerialEventTarget)
   tmp->UnlinkObjectsInGlobal();
-  // If we already exited DoRunLoop of WorkerPrivate, we will find it
-  // nullptr and there is nothing left to do here on the WorkerPrivate,
-  // in particular the timeouts have already been canceled and unlinked.
-  if (tmp->mWorkerPrivate) {
-    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
-    tmp->mWorkerPrivate->UnlinkTimeouts();
-  }
+  tmp->mWorkerPrivate->UnlinkTimeouts();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                DOMEventTargetHelper)
-  // If we already exited DoRunLoop of WorkerPrivate, we will find it
-  // nullptr and there is nothing left to check here on the WorkerPrivate.
-  if (tmp->mWorkerPrivate) {
-    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
-  }
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(WorkerGlobalScopeBase, DOMEventTargetHelper)
@@ -232,7 +217,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerGlobalScopeBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 WorkerGlobalScopeBase::WorkerGlobalScopeBase(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource)
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource)
     : mWorkerPrivate(aWorkerPrivate),
       mClientSource(std::move(aClientSource)),
       mSerialEventTarget(aWorkerPrivate->HybridEventTarget()) {
@@ -794,9 +780,9 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(DedicatedWorkerGlobalScope,
                                                WorkerGlobalScope)
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource, const nsString& aName)
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool DedicatedWorkerGlobalScope::WrapGlobalObject(
@@ -968,9 +954,9 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
 }
 
 SharedWorkerGlobalScope::SharedWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource, const nsString& aName)
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool SharedWorkerGlobalScope::WrapGlobalObject(
@@ -1002,9 +988,10 @@ NS_IMPL_ADDREF_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource,
     const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       mScope(NS_ConvertUTF8toUTF16(aRegistrationDescriptor.Scope()))
 
       // Eagerly create the registration because we will need to receive
@@ -1265,20 +1252,6 @@ void WorkerDebuggerGlobalScope::RetrieveConsoleEvents(
   }
 
   console->RetrieveConsoleEvents(aCx, aEvents, aRv);
-}
-
-void WorkerDebuggerGlobalScope::ClearConsoleEvents(JSContext* aCx,
-                                                   ErrorResult& aRv) {
-  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
-  if (!scope) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<Console> console = scope->GetConsoleIfExists();
-  if (console) {
-    console->ClearStorage();
-  }
 }
 
 void WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,

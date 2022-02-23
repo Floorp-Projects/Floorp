@@ -501,8 +501,7 @@ class nsDocShell final : public nsDocLoader,
       mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
 
   void SetLoadingSessionHistoryInfo(
-      const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo,
-      bool aNeedToReportActiveAfterLoadingBecomesActive = false);
+      const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
   const mozilla::dom::LoadingSessionHistoryInfo*
   GetLoadingSessionHistoryInfo() {
     return mLoadingEntry.get();
@@ -676,12 +675,6 @@ class nsDocShell final : public nsDocLoader,
       nsIURI* aCurrentURI, nsIReferrerInfo* aReferrerInfo,
       bool aNotifiedBeforeUnloadListeners = false);
 
- public:
-  bool IsAboutBlankLoadOntoInitialAboutBlank(nsIURI* aURI,
-                                             bool aInheritPrincipal,
-                                             nsIPrincipal* aPrincipalToInherit);
-
- private:
   //
   // URI Load
   //
@@ -738,11 +731,6 @@ class nsDocShell final : public nsDocLoader,
                 nsIPrincipal* aPartitionedPrincipalToInehrit,
                 nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
                 bool aAddToGlobalHistory, bool aCloneSHChildren);
-
-  // If wireframe collection is enabled, will attempt to gather the
-  // wireframe for the document and stash it inside of the active history
-  // entry.
-  void CollectWireframe();
 
  public:
   // Helper method that is called when a new document (including any
@@ -1100,9 +1088,7 @@ class nsDocShell final : public nsDocLoader,
   // Sets the active entry to the current loading entry. aPersist is used in the
   // case a new session history entry is added to the session history.
   // aExpired is true if the relevant nsIChannel has its cache token expired.
-  // aCacheKey is the channel's cache key.
-  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
-                                uint32_t aCacheKey);
+  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired);
 
   void ActivenessMaybeChanged();
 
@@ -1220,9 +1206,7 @@ class nsDocShell final : public nsDocLoader,
   // These are only set when fission.sessionHistoryInParent is set.
   mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mActiveEntry;
   bool mActiveEntryIsLoadingFromSessionHistory = false;
-  // mLoadingEntry is set when we're about to start loading. Whenever
-  // setting mLoadingEntry, be sure to also set
-  // mNeedToReportActiveAfterLoadingBecomesActive.
+  // mLoadingEntry is set when we're about to start loading.
   mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> mLoadingEntry;
 
   // Holds a weak pointer to a RestorePresentationEvent object if any that
@@ -1365,18 +1349,6 @@ class nsDocShell final : public nsDocLoader,
   // Whether we have a pending encoding autodetection request from the
   // menu for all encodings.
   bool mForcedAutodetection : 1;
-
-  /*
-   * Set to true if we're checking session history (in the parent process) for
-   * a possible history load. Used only with iframes.
-   */
-  bool mCheckingSessionHistory : 1;
-
-  // Whether mBrowsingContext->SetActiveSessionHistoryEntry() needs to be called
-  // when the loading entry becomes the active entry. This is used for the
-  // initial about:blank-replacing about:blank in order to make the history
-  // length WPTs pass.
-  bool mNeedToReportActiveAfterLoadingBecomesActive : 1;
 };
 
 inline nsISupports* ToSupports(nsDocShell* aDocShell) {

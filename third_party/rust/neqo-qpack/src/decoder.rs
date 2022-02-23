@@ -236,10 +236,9 @@ impl QPackDecoder {
     /// # Panics
     /// When a stream has already been added.
     pub fn add_send_stream(&mut self, stream_id: StreamId) {
-        assert!(
-            self.local_stream_id.is_none(),
-            "Adding multiple local streams"
-        );
+        if self.local_stream_id.is_some() {
+            panic!("Adding multiple local streams");
+        }
         self.local_stream_id = Some(stream_id);
     }
 

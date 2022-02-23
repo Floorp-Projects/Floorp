@@ -54,10 +54,6 @@ class BufferTextureData : public TextureData {
 
   BufferTextureData* AsBufferTextureData() override { return this; }
 
-  virtual void RestoreOriginalDescriptor() {}
-
-  Maybe<gfx::IntSize> GetYSize() const;
-
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
   Maybe<int32_t> GetYStride() const;
@@ -70,10 +66,9 @@ class BufferTextureData : public TextureData {
 
   Maybe<StereoMode> GetStereoMode() const;
 
-  gfx::IntRect GetPictureRect() const;
-
  protected:
   gfx::IntSize GetSize() const;
+  gfx::IntRect GetPictureRect() const;
 
   gfx::SurfaceFormat GetFormat() const;
 

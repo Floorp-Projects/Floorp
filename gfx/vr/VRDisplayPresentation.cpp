@@ -40,12 +40,14 @@ void VRDisplayPresentation::UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer) {
   }
 
   dom::HTMLCanvasElement* canvasElement = aLayer->GetCanvas();
+  nsCOMPtr<nsISerialEventTarget> target =
+      canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
 
   if (mLayers.Length() == 0) {
     // WebXR uses a single layer for now.
     RefPtr<VRLayerChild> vrLayer =
         static_cast<VRLayerChild*>(manager->CreateVRLayer(
-            mDisplayClient->GetDisplayInfo().GetDisplayID(), mGroup));
+            mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
     mLayers.AppendElement(vrLayer);
   }
   RefPtr<VRLayerChild> vrLayer = mLayers[0];
@@ -102,11 +104,14 @@ void VRDisplayPresentation::CreateLayers() {
       continue;
     }
 
+    nsCOMPtr<nsISerialEventTarget> target =
+        canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+
     if (mLayers.Length() <= iLayer) {
       // Not enough layers, let's add one
       RefPtr<VRLayerChild> vrLayer =
           static_cast<VRLayerChild*>(manager->CreateVRLayer(
-              mDisplayClient->GetDisplayInfo().GetDisplayID(), mGroup));
+              mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
       if (!vrLayer) {
         NS_WARNING("CreateVRLayer returned null!");
         continue;

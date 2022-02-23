@@ -1,19 +1,23 @@
 #[macro_export]
 macro_rules! vk_bitflags_wrapped {
-    ($ name : ident , $ flag_type : ty) => {
+    ($ name : ident , $ all : expr , $ flag_type : ty) => {
         impl Default for $name {
-            fn default() -> Self {
-                Self(0)
+            fn default() -> $name {
+                $name(0)
             }
         }
         impl $name {
             #[inline]
-            pub const fn empty() -> Self {
-                Self(0)
+            pub const fn empty() -> $name {
+                $name(0)
+            }
+            #[inline]
+            pub const fn all() -> $name {
+                $name($all)
             }
             #[inline]
             pub const fn from_raw(x: $flag_type) -> Self {
-                Self(x)
+                $name(x)
             }
             #[inline]
             pub const fn as_raw(self) -> $flag_type {
@@ -21,62 +25,79 @@ macro_rules! vk_bitflags_wrapped {
             }
             #[inline]
             pub fn is_empty(self) -> bool {
-                self == Self::empty()
+                self == $name::empty()
             }
             #[inline]
-            pub fn intersects(self, other: Self) -> bool {
-                self & other != Self::empty()
+            pub fn is_all(self) -> bool {
+                self & $name::all() == $name::all()
+            }
+            #[inline]
+            pub fn intersects(self, other: $name) -> bool {
+                self & other != $name::empty()
             }
             #[doc = r" Returns whether `other` is a subset of `self`"]
             #[inline]
-            pub fn contains(self, other: Self) -> bool {
+            pub fn contains(self, other: $name) -> bool {
                 self & other == other
             }
         }
         impl ::std::ops::BitOr for $name {
-            type Output = Self;
+            type Output = $name;
             #[inline]
-            fn bitor(self, rhs: Self) -> Self {
-                Self(self.0 | rhs.0)
+            fn bitor(self, rhs: $name) -> $name {
+                $name(self.0 | rhs.0)
             }
         }
         impl ::std::ops::BitOrAssign for $name {
             #[inline]
-            fn bitor_assign(&mut self, rhs: Self) {
+            fn bitor_assign(&mut self, rhs: $name) {
                 *self = *self | rhs
             }
         }
         impl ::std::ops::BitAnd for $name {
-            type Output = Self;
+            type Output = $name;
             #[inline]
-            fn bitand(self, rhs: Self) -> Self {
-                Self(self.0 & rhs.0)
+            fn bitand(self, rhs: $name) -> $name {
+                $name(self.0 & rhs.0)
             }
         }
         impl ::std::ops::BitAndAssign for $name {
             #[inline]
-            fn bitand_assign(&mut self, rhs: Self) {
+            fn bitand_assign(&mut self, rhs: $name) {
                 *self = *self & rhs
             }
         }
         impl ::std::ops::BitXor for $name {
-            type Output = Self;
+            type Output = $name;
             #[inline]
-            fn bitxor(self, rhs: Self) -> Self {
-                Self(self.0 ^ rhs.0)
+            fn bitxor(self, rhs: $name) -> $name {
+                $name(self.0 ^ rhs.0)
             }
         }
         impl ::std::ops::BitXorAssign for $name {
             #[inline]
-            fn bitxor_assign(&mut self, rhs: Self) {
+            fn bitxor_assign(&mut self, rhs: $name) {
                 *self = *self ^ rhs
             }
         }
-        impl ::std::ops::Not for $name {
-            type Output = Self;
+        impl ::std::ops::Sub for $name {
+            type Output = $name;
             #[inline]
-            fn not(self) -> Self {
-                Self(!self.0)
+            fn sub(self, rhs: $name) -> $name {
+                self & !rhs
+            }
+        }
+        impl ::std::ops::SubAssign for $name {
+            #[inline]
+            fn sub_assign(&mut self, rhs: $name) {
+                *self = *self - rhs
+            }
+        }
+        impl ::std::ops::Not for $name {
+            type Output = $name;
+            #[inline]
+            fn not(self) -> $name {
+                self ^ $name::all()
             }
         }
     };
@@ -97,12 +118,12 @@ macro_rules! handle_nondispatchable {
                 self.0 as u64
             }
             fn from_raw(x: u64) -> Self {
-                Self(x as _)
+                $name(x as _)
             }
         }
         impl $name {
-            pub const fn null() -> Self {
-                Self(0)
+            pub const fn null() -> $name {
+                $name(0)
             }
         }
         impl fmt::Pointer for $name {
@@ -128,8 +149,8 @@ macro_rules! define_handle {
         #[$doc_link]
         pub struct $name(*mut u8);
         impl Default for $name {
-            fn default() -> Self {
-                Self::null()
+            fn default() -> $name {
+                $name::null()
             }
         }
         impl Handle for $name {
@@ -138,14 +159,14 @@ macro_rules! define_handle {
                 self.0 as u64
             }
             fn from_raw(x: u64) -> Self {
-                Self(x as _)
+                $name(x as _)
             }
         }
         unsafe impl Send for $name {}
         unsafe impl Sync for $name {}
         impl $name {
             pub const fn null() -> Self {
-                Self(::std::ptr::null_mut())
+                $name(::std::ptr::null_mut())
             }
         }
         impl fmt::Pointer for $name {

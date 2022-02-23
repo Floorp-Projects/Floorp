@@ -54,6 +54,8 @@ var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY
   ? PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly"
   : undefined;
 
+const VALID_TYPES_REGEXP = /^[\w\-]+$/;
+
 const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org"];
 const WEBAPI_TEST_INSTALL_HOSTS = [
   "addons.allizom.org",
@@ -465,6 +467,59 @@ AddonScreenshot.prototype = {
   },
 };
 
+/**
+ * A type of add-on, used by the UI to determine how to display different types
+ * of add-ons.
+ *
+ * @param  aID
+ *         The add-on type ID
+ * @param  aLocaleURI
+ *         The URI of a localized properties file to get the displayable name
+ *         for the type from
+ * @param  aLocaleKey
+ *         The key for the string in the properties file.
+ * @param  aViewType
+ *         The optional type of view to use in the UI
+ * @param  aUIPriority
+ *         The priority is used by the UI to list the types in order. Lower
+ *         values push the type higher in the list.
+ */
+function AddonType(aID, aLocaleURI, aLocaleKey, aViewType, aUIPriority) {
+  if (!aID) {
+    throw Components.Exception(
+      "An AddonType must have an ID",
+      Cr.NS_ERROR_INVALID_ARG
+    );
+  }
+
+  if (aViewType && aUIPriority === undefined) {
+    throw Components.Exception(
+      "An AddonType with a defined view must have a set UI priority",
+      Cr.NS_ERROR_INVALID_ARG
+    );
+  }
+
+  if (!aLocaleKey) {
+    throw Components.Exception(
+      "An AddonType must have a displayable name",
+      Cr.NS_ERROR_INVALID_ARG
+    );
+  }
+
+  this.id = aID;
+  this.uiPriority = aUIPriority;
+  this.viewType = aViewType;
+
+  if (aLocaleURI) {
+    XPCOMUtils.defineLazyGetter(this, "name", () => {
+      let bundle = Services.strings.createBundle(aLocaleURI);
+      return bundle.GetStringFromName(aLocaleKey);
+    });
+  } else {
+    this.name = aLocaleKey;
+  }
+}
+
 var gStarted = false;
 var gStartupComplete = false;
 var gCheckCompatibility = true;
@@ -492,10 +547,11 @@ var AddonManagerInternal = {
   managerListeners: new Set(),
   installListeners: new Set(),
   addonListeners: new Set(),
+  typeListeners: new Set(),
   pendingProviders: new Set(),
   providers: new Set(),
   providerShutdowns: new Map(),
-  typesByProvider: new Map(),
+  types: {},
   startupChanges: {},
   // Store telemetry details per addon provider
   telemetryDetails: {},
@@ -802,7 +858,26 @@ var AddonManagerInternal = {
     this.pendingProviders.add(aProvider);
 
     if (aTypes) {
-      this.typesByProvider.set(aProvider, new Set(aTypes));
+      for (let type of aTypes) {
+        if (!(type.id in this.types)) {
+          if (!VALID_TYPES_REGEXP.test(type.id)) {
+            logger.warn("Ignoring invalid type " + type.id);
+            return;
+          }
+
+          this.types[type.id] = {
+            type,
+            providers: [aProvider],
+          };
+
+          let typeListeners = new Set(this.typeListeners);
+          for (let listener of typeListeners) {
+            safeCall(() => listener.onTypeAdded(type));
+          }
+        } else {
+          this.types[type.id].providers.push(aProvider);
+        }
+      }
     }
 
     // If we're registering after startup call this provider's startup.
@@ -834,7 +909,20 @@ var AddonManagerInternal = {
     // pendingProviders.
     this.pendingProviders.delete(aProvider);
 
-    this.typesByProvider.delete(aProvider);
+    for (let type in this.types) {
+      this.types[type].providers = this.types[type].providers.filter(
+        p => p != aProvider
+      );
+      if (!this.types[type].providers.length) {
+        let oldType = this.types[type].type;
+        delete this.types[type];
+
+        let typeListeners = new Set(this.typeListeners);
+        for (let listener of typeListeners) {
+          safeCall(() => listener.onTypeRemoved(oldType));
+        }
+      }
+    }
 
     // If we're unregistering after startup but before shutting down,
     // remove the blocker for this provider's shutdown and call it.
@@ -900,6 +988,7 @@ var AddonManagerInternal = {
    *
    * @param  aMethod
    *         The method name to call
+   * @see    callProvider
    */
   callProviders(aMethod, ...aArgs) {
     if (!aMethod || typeof aMethod != "string") {
@@ -1001,6 +1090,7 @@ var AddonManagerInternal = {
     this.managerListeners.clear();
     this.installListeners.clear();
     this.addonListeners.clear();
+    this.typeListeners.clear();
     this.providerShutdowns.clear();
     for (let type in this.startupChanges) {
       delete this.startupChanges[type];
@@ -1017,6 +1107,8 @@ var AddonManagerInternal = {
 
   /**
    * Notified when a preference we're interested in has changed.
+   *
+   * @see nsIObserver
    */
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -2858,24 +2950,89 @@ var AddonManagerInternal = {
   },
 
   /**
-   * @param {string} addonType
-   * @returns {boolean}
-   *          Whether there is a provider that provides the given addon type.
+   * Adds a new TypeListener if the listener is not already registered.
+   *
+   * @param {TypeListener} aListener
+   *         The TypeListener to add
    */
-  hasAddonType(addonType) {
-    if (!gStarted) {
+  addTypeListener(aListener) {
+    if (!aListener || typeof aListener != "object") {
       throw Components.Exception(
-        "AddonManager is not initialized",
-        Cr.NS_ERROR_NOT_INITIALIZED
+        "aListener must be a TypeListener object",
+        Cr.NS_ERROR_INVALID_ARG
       );
     }
 
-    for (let addonTypes of this.typesByProvider.values()) {
-      if (addonTypes.has(addonType)) {
-        return true;
-      }
+    this.typeListeners.add(aListener);
+  },
+
+  /**
+   * Removes an TypeListener if the listener is registered.
+   *
+   * @param  aListener
+   *         The TypeListener to remove
+   */
+  removeTypeListener(aListener) {
+    if (!aListener || typeof aListener != "object") {
+      throw Components.Exception(
+        "aListener must be a TypeListener object",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
-    return false;
+
+    this.typeListeners.delete(aListener);
+  },
+
+  get addonTypes() {
+    // A read-only wrapper around the types dictionary
+    return new Proxy(this.types, {
+      defineProperty(target, property, descriptor) {
+        // Not allowed to define properties
+        return false;
+      },
+
+      deleteProperty(target, property) {
+        // Not allowed to delete properties
+        return false;
+      },
+
+      get(target, property, receiver) {
+        if (!target.hasOwnProperty(property)) {
+          return undefined;
+        }
+
+        return target[property].type;
+      },
+
+      getOwnPropertyDescriptor(target, property) {
+        if (!target.hasOwnProperty(property)) {
+          return undefined;
+        }
+
+        return {
+          value: target[property].type,
+          writable: false,
+          // Claim configurability to maintain the proxy invariants.
+          configurable: true,
+          enumerable: true,
+        };
+      },
+
+      preventExtensions(target) {
+        // Not allowed to prevent adding new properties
+        return false;
+      },
+
+      set(target, property, value, receiver) {
+        // Not allowed to set properties
+        return false;
+      },
+
+      setPrototypeOf(target, prototype) {
+        // Not allowed to change prototype
+        return false;
+      },
+    });
   },
 
   get autoUpdateDefault() {
@@ -3137,32 +3294,19 @@ var AddonManagerInternal = {
     createInstall(target, options) {
       // Throw an appropriate error if the given URL is not valid
       // as an installation source.  Return silently if it is okay.
-      function checkInstallUri(uri) {
-        if (!Services.policies.allowedInstallSource(uri)) {
-          // eslint-disable-next-line no-throw-literal
-          return {
-            success: false,
-            code: "addon-install-webapi-blocked-policy",
-            message: `Install from ${uri.spec} not permitted by policy`,
-          };
-        }
-
-        if (WEBAPI_INSTALL_HOSTS.includes(uri.host)) {
-          return { success: true };
+      function checkInstallUrl(url) {
+        let host = Services.io.newURI(options.url).host;
+        if (WEBAPI_INSTALL_HOSTS.includes(host)) {
+          return;
         }
         if (
-          Services.prefs.getBoolPref(PREF_WEBAPI_TESTING, false) &&
-          WEBAPI_TEST_INSTALL_HOSTS.includes(uri.host)
+          Services.prefs.getBoolPref(PREF_WEBAPI_TESTING) &&
+          WEBAPI_TEST_INSTALL_HOSTS.includes(host)
         ) {
-          return { success: true };
+          return;
         }
 
-        // eslint-disable-next-line no-throw-literal
-        return {
-          success: false,
-          code: "addon-install-webapi-blocked",
-          message: `Install from ${uri.host} not permitted`,
-        };
+        throw new Error(`Install from ${host} not permitted`);
       }
 
       const makeListener = (id, mm) => {
@@ -3221,30 +3365,10 @@ var AddonManagerInternal = {
         return { listener, installPromise };
       };
 
-      let uri;
       try {
-        uri = Services.io.newURI(options.url);
-        const { success, code, message } = checkInstallUri(uri);
-        if (!success) {
-          let info = {
-            wrappedJSObject: {
-              browser: target,
-              originatingURI: uri,
-              installs: [],
-            },
-          };
-          Cu.reportError(`${code}: ${message}`);
-          Services.obs.notifyObservers(info, code);
-          return Promise.reject({ code, message });
-        }
+        checkInstallUrl(options.url);
       } catch (err) {
-        // Reject Components.Exception errors (e.g. NS_ERROR_MALFORMED_URI) as is.
-        if (err instanceof Components.Exception) {
-          return Promise.reject({ message: err.message });
-        }
-        return Promise.reject({
-          message: "Install Failed on unexpected error",
-        });
+        return Promise.reject({ message: err.message });
       }
 
       return AddonManagerInternal.getInstallForURL(options.url, {
@@ -3456,34 +3580,6 @@ var AddonManagerPrivate = {
     AddonManagerInternal.unregisterProvider(aProvider);
   },
 
-  /**
-   * Get a list of addon types that was passed to registerProvider for the
-   * provider with the given name.
-   *
-   * @param {string} aProviderName
-   * @returns {Array<string>}
-   */
-  getAddonTypesByProvider(aProviderName) {
-    if (!gStarted) {
-      throw Components.Exception(
-        "AddonManager is not initialized",
-        Cr.NS_ERROR_NOT_INITIALIZED
-      );
-    }
-
-    for (let [provider, addonTypes] of AddonManagerInternal.typesByProvider) {
-      if (providerName(provider) === aProviderName) {
-        // Return an array because methods such as getAddonsByTypes expect
-        // aTypes to be an array.
-        return Array.from(addonTypes);
-      }
-    }
-    throw Components.Exception(
-      `No addonTypes found for provider: ${aProviderName}`,
-      Cr.NS_ERROR_INVALID_ARG
-    );
-  },
-
   markProviderSafe(aProvider) {
     AddonManagerInternal.markProviderSafe(aProvider);
   },
@@ -3531,6 +3627,8 @@ var AddonManagerPrivate = {
   AddonAuthor,
 
   AddonScreenshot,
+
+  AddonType,
 
   get BOOTSTRAP_REASONS() {
     return AddonManagerInternal._getProviderByName("XPIProvider")
@@ -3839,6 +3937,9 @@ var AddonManager = {
   // The combination of all scopes.
   SCOPE_ALL: 31,
 
+  // Add-on type is expected to be displayed in the UI in a list.
+  VIEW_TYPE_LIST: "list",
+
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.
   AUTOUPDATE_DISABLE: 0,
@@ -4080,8 +4181,8 @@ var AddonManager = {
     return AddonManagerInternal.removeUpgradeListener(aInstanceID);
   },
 
-  addExternalExtensionLoader(loader) {
-    return AddonManagerInternal.addExternalExtensionLoader(loader);
+  addExternalExtensionLoader(types, loader) {
+    return AddonManagerInternal.addExternalExtensionLoader(types, loader);
   },
 
   addAddonListener(aListener) {
@@ -4092,8 +4193,16 @@ var AddonManager = {
     AddonManagerInternal.removeAddonListener(aListener);
   },
 
-  hasAddonType(addonType) {
-    return AddonManagerInternal.hasAddonType(addonType);
+  addTypeListener(aListener) {
+    AddonManagerInternal.addTypeListener(aListener);
+  },
+
+  removeTypeListener(aListener) {
+    AddonManagerInternal.removeTypeListener(aListener);
+  },
+
+  get addonTypes() {
+    return AddonManagerInternal.addonTypes;
   },
 
   /**
@@ -4436,7 +4545,7 @@ AMTelemetry = {
       case "sitepermission":
         return addonType;
       default:
-        // Currently this should only include gmp-plugins ("plugin").
+        // Currently this should only include plugins and gmp-plugins
         return "other";
     }
   },

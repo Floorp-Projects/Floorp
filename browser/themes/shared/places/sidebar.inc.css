@@ -65,17 +65,11 @@
 }
 
 #viewButton:hover {
-  /* Matches --toolbarbutton-hover-background: */
-  background-color: color-mix(in srgb, currentColor 17%, transparent);
+  background-color: hsla(240, 5%, 5%, .1);
 }
 
 #viewButton[open] {
-  /* Matches --toolbarbutton-active-background: */
-  background-color: color-mix(in srgb, currentColor 30%, transparent);
-}
-
-#viewButton:focus-visible {
-  outline: var(--focus-outline);
+  background-color: hsla(240, 5%, 5%, .15);
 }
 
 #viewButton > .button-box > .button-menu-dropmarker {

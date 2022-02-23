@@ -55,7 +55,6 @@ let gFindTypes = [
   "findhighlightallchange",
   "findcasesensitivitychange",
   "findbarclose",
-  "finddiacriticmatchingchange",
 ];
 
 class PdfjsParent extends JSWindowActorParent {
@@ -212,7 +211,6 @@ class PdfjsParent extends JSWindowActorParent {
         entireWord: aEvent.detail.entireWord,
         highlightAll: aEvent.detail.highlightAll,
         findPrevious: aEvent.detail.findPrevious,
-        matchDiacritics: aEvent.detail.matchDiacritics,
       };
     }
 

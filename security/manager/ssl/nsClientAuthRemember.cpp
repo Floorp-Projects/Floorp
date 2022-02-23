@@ -237,9 +237,15 @@ nsresult CheckForPreferredCertificate(const nsACString& aHostName,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsTArray<uint8_t> derArray(::CFDataGetBytePtr(der.get()),
-                             ::CFDataGetLength(der.get()));
-  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(derArray)));
+  nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::ConstructFromDER(
+      // ConstructFromDER is not const-correct so we have to cast away the
+      // const.
+      const_cast<char*>(
+          reinterpret_cast<const char*>(::CFDataGetBytePtr(der.get()))),
+      ::CFDataGetLength(der.get())));
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
   return cert->GetDbKey(aCertDBKey);
 }
 #endif

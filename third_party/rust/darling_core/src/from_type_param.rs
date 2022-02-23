@@ -1,6 +1,6 @@
-use syn::TypeParam;
+use syn::{self, TypeParam};
 
-use crate::Result;
+use Result;
 
 /// Creates an instance by parsing an individual type_param and its attributes.
 pub trait FromTypeParam: Sized {

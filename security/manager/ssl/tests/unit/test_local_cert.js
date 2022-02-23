@@ -61,19 +61,19 @@ add_task(async function() {
   equal(certB.displayName, gNickname);
 
   // Should be matching instances
-  ok(areCertsEqual(certA, certB));
+  ok(certA.equals(certB));
 
   // Check an expected attribute
   equal(certA.certType, Ci.nsIX509Cert.USER_CERT);
 
   // New nickname should give a different cert
   let diffNameCert = await getOrCreateCert("cool-stuff");
-  ok(!areCertsEqual(diffNameCert, certA));
+  ok(!diffNameCert.equals(certA));
 
   // Remove the cert, and get a new one again
   await removeCert(gNickname);
   let newCert = await getOrCreateCert(gNickname);
-  ok(!areCertsEqual(newCert, certA));
+  ok(!newCert.equals(certA));
 
   // Drop all cert references and GC
   let serial = newCert.serialNumber;

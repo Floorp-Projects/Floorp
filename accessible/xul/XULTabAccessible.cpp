@@ -31,7 +31,7 @@ XULTabAccessible::XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc)
 ////////////////////////////////////////////////////////////////////////////////
 // XULTabAccessible: LocalAccessible
 
-bool XULTabAccessible::HasPrimaryAction() const { return true; }
+uint8_t XULTabAccessible::ActionCount() const { return 1; }
 
 void XULTabAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Switch) aName.AssignLiteral("switch");
@@ -123,7 +123,7 @@ XULTabsAccessible::XULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc)
 
 role XULTabsAccessible::NativeRole() const { return roles::PAGETABLIST; }
 
-bool XULTabsAccessible::HasPrimaryAction() const { return false; }
+uint8_t XULTabsAccessible::ActionCount() const { return 0; }
 
 void XULTabsAccessible::Value(nsString& aValue) const { aValue.Truncate(); }
 
@@ -150,7 +150,7 @@ void XULTabsAccessible::ApplyARIAState(uint64_t* aState) const {
 //  aria-selected by the a11y engine and we still want to be able to set the
 // primary selected item according to XUL.
 
-void XULTabsAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
+void XULTabsAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
   if (nsAccUtils::IsARIAMultiSelectable(this)) {
     AccessibleWrap::SelectedItems(aItems);
   } else {
@@ -158,7 +158,7 @@ void XULTabsAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   }
 }
 
-Accessible* XULTabsAccessible::GetSelectedItem(uint32_t aIndex) {
+LocalAccessible* XULTabsAccessible::GetSelectedItem(uint32_t aIndex) {
   if (nsAccUtils::IsARIAMultiSelectable(this)) {
     return AccessibleWrap::GetSelectedItem(aIndex);
   }

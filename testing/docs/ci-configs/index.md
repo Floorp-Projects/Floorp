@@ -1,6 +1,6 @@
 # Configuration Changes
 
-This process outlines how Mozilla will handle configuration changes.  For a list of configuration changes, please see the [schedule](schedule.md)
+This process outlines how Mozilla will handle configuration changes.  For a list of configuration changes, please see the [schedule](schedule.html)
 
 ## Infrastructure setup (2-4 weeks)
 

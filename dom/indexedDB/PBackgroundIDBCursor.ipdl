@@ -13,7 +13,6 @@ include protocol PRemoteLazyInputStream; // FIXME: bug 792908
 include PBackgroundIDBSharedTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
-include "mozilla/dom/indexedDB/ActorsChild.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
@@ -84,8 +83,7 @@ union CursorResponse
   IndexKeyCursorResponse[];
 };
 
-[ChildImpl="indexedDB::BackgroundCursorChildBase", ParentImpl=virtual]
-protocol PBackgroundIDBCursor
+[RefCounted] protocol PBackgroundIDBCursor
 {
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
 

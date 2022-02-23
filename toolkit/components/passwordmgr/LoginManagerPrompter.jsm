@@ -498,13 +498,13 @@ class LoginManagerPrompter {
           type == "password-save" &&
           !Services.policies.isAllowed("removeMasterPassword")
         ) {
-          if (!LoginHelper.isPrimaryPasswordSet()) {
+          if (!LoginHelper.isMasterPasswordSet()) {
             browser.ownerGlobal.openDialog(
               "chrome://mozapps/content/preferences/changemp.xhtml",
               "",
               "centerscreen,chrome,modal,titlebar"
             );
-            if (!LoginHelper.isPrimaryPasswordSet()) {
+            if (!LoginHelper.isMasterPasswordSet()) {
               return;
             }
           }
@@ -708,7 +708,7 @@ class LoginManagerPrompter {
                 toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
 
                 let hideToggle =
-                  LoginHelper.isPrimaryPasswordSet() ||
+                  LoginHelper.isMasterPasswordSet() ||
                   // Don't show the toggle when the login was autofilled
                   !!autoFilledLoginGuid ||
                   // Dismissed-by-default prompts should still show the toggle.

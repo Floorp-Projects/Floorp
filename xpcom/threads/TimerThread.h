@@ -56,7 +56,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     return mThread->SerialEventTarget()->IsOnCurrentThread();
   }
 
-  uint32_t AllowedEarlyFiringMicroseconds();
+  uint32_t AllowedEarlyFiringMicroseconds() const;
 
  private:
   ~TimerThread();
@@ -74,10 +74,6 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   void PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef);
 
   nsCOMPtr<nsIThread> mThread;
-  // Lock ordering requirements:
-  // (optional) ThreadWrapper::sMutex ->
-  // (optional) nsTimerImpl::mMutex   ->
-  // TimerThread::mMonitor
   Monitor mMonitor;
 
   bool mShutdown;
@@ -89,8 +85,6 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     const TimeStamp mTimeout;
 
    public:
-    // Entries are created with the TimerImpl's mutex held.
-    // nsTimerImplHolder() will call SetHolder()
     Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
           nsTimerImpl* aTimerImpl)
         : nsTimerImplHolder(aTimerImpl),
@@ -98,10 +92,8 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
     nsTimerImpl* Value() const { return mTimerImpl; }
 
-    // Called with the Monitor held, but not the TimerImpl's mutex
     already_AddRefed<nsTimerImpl> Take() {
       if (mTimerImpl) {
-        MOZ_ASSERT(mTimerImpl->mHolder == this);
         mTimerImpl->SetHolder(nullptr);
       }
       return mTimerImpl.forget();
@@ -118,7 +110,6 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   };
 
   nsTArray<mozilla::UniquePtr<Entry>> mTimers;
-  // Set only at the start of the thread's Run():
   uint32_t mAllowedEarlyFiringMicroseconds;
   ProfilerThreadId mProfilerThreadId;
 };

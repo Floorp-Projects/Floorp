@@ -1,3 +1,4 @@
+#![deny(clippy::use_self)]
 pub mod experimental;
 pub mod ext;
 pub mod khr;

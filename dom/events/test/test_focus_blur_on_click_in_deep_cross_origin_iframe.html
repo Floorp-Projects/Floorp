@@ -10,7 +10,8 @@
 <script>
 let state = "start";
 
-const scale = window.devicePixelRatio;
+const utils = SpecialPowers.DOMWindowUtils;
+const scale = utils.screenPixelsPerCSSPixel;
 
 function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   const rect = aElement.getBoundingClientRect();

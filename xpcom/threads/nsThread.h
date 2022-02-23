@@ -47,7 +47,6 @@ using mozilla::NotNull;
 class nsIRunnable;
 class nsLocalExecutionRecord;
 class nsThreadEnumerator;
-class nsThreadShutdownContext;
 
 // See https://www.w3.org/TR/longtasks
 #define LONGTASK_BUSY_WINDOW_MS 50
@@ -220,7 +219,7 @@ class nsThread : public nsIThreadInternal,
 
   uint32_t RecursionDepth() const;
 
-  void ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext);
+  void ShutdownComplete(NotNull<struct nsThreadShutdownContext*> aContext);
 
   void WaitForAllAsynchronousShutdowns();
 
@@ -293,7 +292,7 @@ class nsThread : public nsIThreadInternal,
     return already_AddRefed<nsIThreadObserver>(obs);
   }
 
-  already_AddRefed<nsThreadShutdownContext> ShutdownInternal(bool aSync);
+  struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
   friend class nsThreadManager;
   friend class nsThreadPool;
@@ -314,11 +313,19 @@ class nsThread : public nsIThreadInternal,
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
 
-  // The number of outstanding nsThreadShutdownContext started by this thread.
-  // The thread will not be allowed to exit until this number reaches 0.
-  uint32_t mOutstandingShutdownContexts;
+  // The shutdown contexts for any other threads we've asked to shut down.
+  using ShutdownContexts =
+      nsTArray<mozilla::UniquePtr<struct nsThreadShutdownContext>>;
+
+  // Helper for finding a ShutdownContext in the contexts array.
+  struct ShutdownContextsComp {
+    bool Equals(const ShutdownContexts::elem_type& a,
+                const ShutdownContexts::elem_type::Pointer b) const;
+  };
+
+  ShutdownContexts mRequestedShutdownContexts;
   // The shutdown context for ourselves.
-  RefPtr<nsThreadShutdownContext> mShutdownContext;
+  struct nsThreadShutdownContext* mShutdownContext;
 
   mozilla::CycleCollectedJSContext* mScriptObserver;
 
@@ -363,40 +370,26 @@ class nsThread : public nsIThreadInternal,
   mozilla::SimpleTaskQueue mDirectTasks;
 };
 
-class nsThreadShutdownContext final : public nsIThreadShutdown {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITHREADSHUTDOWN
-
- private:
-  friend class nsThread;
-  friend class nsThreadShutdownEvent;
-  friend class nsThreadShutdownAckEvent;
-
+struct nsThreadShutdownContext {
   nsThreadShutdownContext(NotNull<nsThread*> aTerminatingThread,
-                          nsThread* aJoiningThread)
+                          NotNull<nsThread*> aJoiningThread,
+                          bool aAwaitingShutdownAck)
       : mTerminatingThread(aTerminatingThread),
         mTerminatingPRThread(aTerminatingThread->GetPRThread()),
-        mJoiningThread(aJoiningThread,
-                       "nsThreadShutdownContext::mJoiningThread") {}
+        mJoiningThread(aJoiningThread),
+        mAwaitingShutdownAck(aAwaitingShutdownAck),
+        mIsMainThreadJoining(NS_IsMainThread()) {
+    MOZ_COUNT_CTOR(nsThreadShutdownContext);
+  }
+  MOZ_COUNTED_DTOR(nsThreadShutdownContext)
 
-  ~nsThreadShutdownContext() = default;
-
-  // Must be called on the joining thread.
-  void MarkCompleted();
-
-  // NB: This may be the last reference.
-  NotNull<RefPtr<nsThread>> const mTerminatingThread;
+  // NB: This will be the last reference.
+  NotNull<RefPtr<nsThread>> mTerminatingThread;
   PRThread* const mTerminatingPRThread;
-
-  // May only be accessed on the joining thread.
-  bool mCompleted = false;
-  nsTArray<nsCOMPtr<nsIRunnable>> mCompletionCallbacks;
-
-  // The thread waiting for this thread to shut down. Will either be cleared by
-  // the joining thread if `StopWaitingAndLeakThread` is called or by the
-  // terminating thread upon exiting and notifying the joining thread.
-  mozilla::DataMutex<RefPtr<nsThread>> mJoiningThread;
+  NotNull<nsThread*> MOZ_UNSAFE_REF(
+      "Thread manager is holding reference to joining thread") mJoiningThread;
+  bool mAwaitingShutdownAck;
+  bool mIsMainThreadJoining;
 };
 
 // This RAII class controls the duration of the associated nsThread's local

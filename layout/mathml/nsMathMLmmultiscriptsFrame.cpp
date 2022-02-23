@@ -6,11 +6,8 @@
 
 #include "nsMathMLmmultiscriptsFrame.h"
 
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_mathml.h"
-#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include <algorithm>
 #include "gfxContext.h"

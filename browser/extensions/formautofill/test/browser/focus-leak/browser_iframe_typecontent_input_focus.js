@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -41,7 +40,6 @@ add_task(async function() {
   const focusMeInput = panelFrame.contentDocument.querySelector(".focusme");
   const onFocus = BrowserTestUtils.waitForEvent(focusMeInput, "focus");
   focusMeInput.focus();
-  await new Promise(resolve => setTimeout(resolve, 1000));
   await onFocus;
 
   // This assert is not really meaningful, the main purpose of the test is

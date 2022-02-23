@@ -4,132 +4,6 @@ use core::{fmt, str::FromStr};
 use num_traits::FromPrimitive;
 use serde::{self, de::Unexpected};
 
-/// Serialize Decimals as arbitrary precision numbers in JSON.
-///
-/// ```
-/// # use serde::{Serialize, Deserialize};
-/// # use rust_decimal::Decimal;
-/// # use std::str::FromStr;
-///
-/// #[derive(Serialize, Deserialize)]
-/// pub struct ArbitraryExample {
-///     #[serde(with = "rust_decimal::serde::arbitrary_precision")]
-///     value: Decimal,
-/// }
-///
-/// let value = ArbitraryExample { value: Decimal::from_str("123.400").unwrap() };
-/// assert_eq!(
-///     &serde_json::to_string(&value).unwrap(),
-///     r#"{"value":123.400}"#
-/// );
-/// ```
-#[cfg(feature = "serde-with-arbitrary-precision")]
-pub mod arbitrary_precision {
-    use super::*;
-    use serde::Serialize;
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
-    where
-        D: serde::de::Deserializer<'de>,
-    {
-        deserializer.deserialize_any(DecimalVisitor)
-    }
-
-    pub fn serialize<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serde_json::Number::from_str(&value.to_string())
-            .map_err(serde::ser::Error::custom)?
-            .serialize(serializer)
-    }
-}
-
-/// Serialize Decimals as floats in JSON.
-///
-/// ```
-/// # use serde::{Serialize, Deserialize};
-/// # use rust_decimal::Decimal;
-/// # use std::str::FromStr;
-///
-/// #[derive(Serialize, Deserialize)]
-/// pub struct FloatExample {
-///     #[serde(with = "rust_decimal::serde::float")]
-///     value: Decimal,
-/// }
-///
-/// let value = FloatExample { value: Decimal::from_str("123.400").unwrap() };
-/// assert_eq!(
-///     &serde_json::to_string(&value).unwrap(),
-///     r#"{"value":123.4}"#
-/// );
-/// ```
-#[cfg(feature = "serde-with-float")]
-pub mod float {
-    use super::*;
-    use serde::Serialize;
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
-    where
-        D: serde::de::Deserializer<'de>,
-    {
-        deserializer.deserialize_any(DecimalVisitor)
-    }
-
-    pub fn serialize<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use num_traits::ToPrimitive;
-        value.to_f64().unwrap().serialize(serializer)
-    }
-}
-
-/// Serialize Decimals as floats in JSON.
-///
-/// ```
-/// # use serde::{Serialize, Deserialize};
-/// # use rust_decimal::Decimal;
-/// # use std::str::FromStr;
-///
-/// #[derive(Serialize, Deserialize)]
-/// pub struct StringExample {
-///     #[serde(with = "rust_decimal::serde::str")]
-///     value: Decimal,
-/// }
-///
-/// let value = StringExample { value: Decimal::from_str("123.400").unwrap() };
-/// assert_eq!(
-///     &serde_json::to_string(&value).unwrap(),
-///     r#"{"value":"123.400"}"#
-/// );
-/// ```
-#[cfg(feature = "serde-with-str")]
-pub mod str {
-    use crate::constants::MAX_STR_BUFFER_SIZE;
-
-    use super::*;
-    use arrayvec::ArrayString;
-    use core::convert::TryFrom;
-    use serde::{ser::Error, Serialize};
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
-    where
-        D: serde::de::Deserializer<'de>,
-    {
-        deserializer.deserialize_any(DecimalVisitor)
-    }
-
-    pub fn serialize<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        ArrayString::<MAX_STR_BUFFER_SIZE>::try_from(format_args!("{}", value))
-            .map_err(S::Error::custom)?
-            .serialize(serializer)
-    }
-}
-
 #[cfg(not(feature = "serde-str"))]
 impl<'de> serde::Deserialize<'de> for Decimal {
     fn deserialize<D>(deserializer: D) -> Result<Decimal, D::Error>
@@ -161,7 +35,7 @@ impl<'de> serde::Deserialize<'de> for Decimal {
 }
 
 // It's a shame this needs to be redefined for this feature and not able to be referenced directly
-#[cfg(feature = "serde-with-arbitrary-precision")]
+#[cfg(feature = "serde-arbitrary-precision")]
 const DECIMAL_KEY_TOKEN: &str = "$serde_json::private::Number";
 
 struct DecimalVisitor;
@@ -209,7 +83,7 @@ impl<'de> serde::de::Visitor<'de> for DecimalVisitor {
             .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))
     }
 
-    #[cfg(feature = "serde-with-arbitrary-precision")]
+    #[cfg(feature = "serde-arbitrary-precision")]
     fn visit_map<A>(self, map: A) -> Result<Decimal, A::Error>
     where
         A: serde::de::MapAccess<'de>,
@@ -224,10 +98,10 @@ impl<'de> serde::de::Visitor<'de> for DecimalVisitor {
     }
 }
 
-#[cfg(feature = "serde-with-arbitrary-precision")]
+#[cfg(feature = "serde-arbitrary-precision")]
 struct DecimalKey;
 
-#[cfg(feature = "serde-with-arbitrary-precision")]
+#[cfg(feature = "serde-arbitrary-precision")]
 impl<'de> serde::de::Deserialize<'de> for DecimalKey {
     fn deserialize<D>(deserializer: D) -> Result<DecimalKey, D::Error>
     where
@@ -259,12 +133,12 @@ impl<'de> serde::de::Deserialize<'de> for DecimalKey {
     }
 }
 
-#[cfg(feature = "serde-with-arbitrary-precision")]
+#[cfg(feature = "serde-arbitrary-precision")]
 pub struct DecimalFromString {
     pub value: Decimal,
 }
 
-#[cfg(feature = "serde-with-arbitrary-precision")]
+#[cfg(feature = "serde-arbitrary-precision")]
 impl<'de> serde::de::Deserialize<'de> for DecimalFromString {
     fn deserialize<D>(deserializer: D) -> Result<DecimalFromString, D::Error>
     where
@@ -498,50 +372,5 @@ mod test {
         let ser = bincode::serialize(&s).unwrap();
         let des: Foo = bincode::deserialize(&ser).unwrap();
         assert_eq!(des.value, s.value);
-    }
-
-    #[test]
-    #[cfg(feature = "serde-with-arbitrary-precision")]
-    fn with_arbitrary_precision() {
-        #[derive(Serialize, Deserialize)]
-        pub struct ArbitraryExample {
-            #[serde(with = "crate::serde::arbitrary_precision")]
-            value: Decimal,
-        }
-
-        let value = ArbitraryExample {
-            value: Decimal::from_str("123.400").unwrap(),
-        };
-        assert_eq!(&serde_json::to_string(&value).unwrap(), r#"{"value":123.400}"#);
-    }
-
-    #[test]
-    #[cfg(feature = "serde-with-float")]
-    fn with_float() {
-        #[derive(Serialize, Deserialize)]
-        pub struct FloatExample {
-            #[serde(with = "crate::serde::float")]
-            value: Decimal,
-        }
-
-        let value = FloatExample {
-            value: Decimal::from_str("123.400").unwrap(),
-        };
-        assert_eq!(&serde_json::to_string(&value).unwrap(), r#"{"value":123.4}"#);
-    }
-
-    #[test]
-    #[cfg(feature = "serde-with-str")]
-    fn with_str() {
-        #[derive(Serialize, Deserialize)]
-        pub struct StringExample {
-            #[serde(with = "crate::serde::str")]
-            value: Decimal,
-        }
-
-        let value = StringExample {
-            value: Decimal::from_str("123.400").unwrap(),
-        };
-        assert_eq!(&serde_json::to_string(&value).unwrap(), r#"{"value":"123.400"}"#);
     }
 }

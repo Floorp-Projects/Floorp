@@ -5,7 +5,7 @@ use std::fmt;
 pub struct ImageLayout(pub(crate) i32);
 impl ImageLayout {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ImageLayout(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -37,7 +37,7 @@ impl ImageLayout {
 pub struct AttachmentLoadOp(pub(crate) i32);
 impl AttachmentLoadOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AttachmentLoadOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -54,7 +54,7 @@ impl AttachmentLoadOp {
 pub struct AttachmentStoreOp(pub(crate) i32);
 impl AttachmentStoreOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AttachmentStoreOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -70,7 +70,7 @@ impl AttachmentStoreOp {
 pub struct ImageType(pub(crate) i32);
 impl ImageType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ImageType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -87,7 +87,7 @@ impl ImageType {
 pub struct ImageTiling(pub(crate) i32);
 impl ImageTiling {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ImageTiling(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -103,7 +103,7 @@ impl ImageTiling {
 pub struct ImageViewType(pub(crate) i32);
 impl ImageViewType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ImageViewType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -124,7 +124,7 @@ impl ImageViewType {
 pub struct CommandBufferLevel(pub(crate) i32);
 impl CommandBufferLevel {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CommandBufferLevel(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -140,7 +140,7 @@ impl CommandBufferLevel {
 pub struct ComponentSwizzle(pub(crate) i32);
 impl ComponentSwizzle {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ComponentSwizzle(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -161,7 +161,7 @@ impl ComponentSwizzle {
 pub struct DescriptorType(pub(crate) i32);
 impl DescriptorType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DescriptorType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -186,7 +186,7 @@ impl DescriptorType {
 pub struct QueryType(pub(crate) i32);
 impl QueryType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        QueryType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -204,7 +204,7 @@ impl QueryType {
 pub struct BorderColor(pub(crate) i32);
 impl BorderColor {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        BorderColor(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -224,7 +224,7 @@ impl BorderColor {
 pub struct PipelineBindPoint(pub(crate) i32);
 impl PipelineBindPoint {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PipelineBindPoint(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -240,7 +240,7 @@ impl PipelineBindPoint {
 pub struct PipelineCacheHeaderVersion(pub(crate) i32);
 impl PipelineCacheHeaderVersion {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PipelineCacheHeaderVersion(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -255,7 +255,7 @@ impl PipelineCacheHeaderVersion {
 pub struct PrimitiveTopology(pub(crate) i32);
 impl PrimitiveTopology {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PrimitiveTopology(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -280,7 +280,7 @@ impl PrimitiveTopology {
 pub struct SharingMode(pub(crate) i32);
 impl SharingMode {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SharingMode(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -296,7 +296,7 @@ impl SharingMode {
 pub struct IndexType(pub(crate) i32);
 impl IndexType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        IndexType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -312,7 +312,7 @@ impl IndexType {
 pub struct Filter(pub(crate) i32);
 impl Filter {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        Filter(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -328,7 +328,7 @@ impl Filter {
 pub struct SamplerMipmapMode(pub(crate) i32);
 impl SamplerMipmapMode {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SamplerMipmapMode(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -346,7 +346,7 @@ impl SamplerMipmapMode {
 pub struct SamplerAddressMode(pub(crate) i32);
 impl SamplerAddressMode {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SamplerAddressMode(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -364,7 +364,7 @@ impl SamplerAddressMode {
 pub struct CompareOp(pub(crate) i32);
 impl CompareOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CompareOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -386,7 +386,7 @@ impl CompareOp {
 pub struct PolygonMode(pub(crate) i32);
 impl PolygonMode {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PolygonMode(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -403,7 +403,7 @@ impl PolygonMode {
 pub struct FrontFace(pub(crate) i32);
 impl FrontFace {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        FrontFace(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -419,7 +419,7 @@ impl FrontFace {
 pub struct BlendFactor(pub(crate) i32);
 impl BlendFactor {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        BlendFactor(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -452,7 +452,7 @@ impl BlendFactor {
 pub struct BlendOp(pub(crate) i32);
 impl BlendOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        BlendOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -471,7 +471,7 @@ impl BlendOp {
 pub struct StencilOp(pub(crate) i32);
 impl StencilOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        StencilOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -493,7 +493,7 @@ impl StencilOp {
 pub struct LogicOp(pub(crate) i32);
 impl LogicOp {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        LogicOp(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -523,7 +523,7 @@ impl LogicOp {
 pub struct InternalAllocationType(pub(crate) i32);
 impl InternalAllocationType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        InternalAllocationType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -538,7 +538,7 @@ impl InternalAllocationType {
 pub struct SystemAllocationScope(pub(crate) i32);
 impl SystemAllocationScope {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SystemAllocationScope(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -557,7 +557,7 @@ impl SystemAllocationScope {
 pub struct PhysicalDeviceType(pub(crate) i32);
 impl PhysicalDeviceType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PhysicalDeviceType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -576,7 +576,7 @@ impl PhysicalDeviceType {
 pub struct VertexInputRate(pub(crate) i32);
 impl VertexInputRate {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        VertexInputRate(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -592,7 +592,7 @@ impl VertexInputRate {
 pub struct Format(pub(crate) i32);
 impl Format {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        Format(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -791,7 +791,7 @@ impl Format {
 pub struct StructureType(pub(crate) i32);
 impl StructureType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        StructureType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -856,7 +856,7 @@ impl StructureType {
 pub struct SubpassContents(pub(crate) i32);
 impl SubpassContents {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SubpassContents(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -873,7 +873,7 @@ impl SubpassContents {
 pub struct Result(pub(crate) i32);
 impl Result {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        Result(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -923,35 +923,35 @@ impl ::std::error::Error for Result {}
 impl fmt::Display for Result {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let name = match *self {
-            Self::SUCCESS => Some("Command completed successfully"),
-            Self::NOT_READY => Some("A fence or query has not yet completed"),
-            Self::TIMEOUT => Some("A wait operation has not completed in the specified time"),
-            Self::EVENT_SET => Some("An event is signaled"),
-            Self::EVENT_RESET => Some("An event is unsignaled"),
-            Self::INCOMPLETE => Some("A return array was too small for the result"),
-            Self::ERROR_OUT_OF_HOST_MEMORY => Some("A host memory allocation has failed"),
-            Self::ERROR_OUT_OF_DEVICE_MEMORY => Some("A device memory allocation has failed"),
-            Self::ERROR_INITIALIZATION_FAILED => Some("Initialization of a object has failed"),
-            Self::ERROR_DEVICE_LOST => {
+            Result::SUCCESS => Some("Command completed successfully"),
+            Result::NOT_READY => Some("A fence or query has not yet completed"),
+            Result::TIMEOUT => Some("A wait operation has not completed in the specified time"),
+            Result::EVENT_SET => Some("An event is signaled"),
+            Result::EVENT_RESET => Some("An event is unsignaled"),
+            Result::INCOMPLETE => Some("A return array was too small for the result"),
+            Result::ERROR_OUT_OF_HOST_MEMORY => Some("A host memory allocation has failed"),
+            Result::ERROR_OUT_OF_DEVICE_MEMORY => Some("A device memory allocation has failed"),
+            Result::ERROR_INITIALIZATION_FAILED => Some("Initialization of a object has failed"),
+            Result::ERROR_DEVICE_LOST => {
                 Some("The logical device has been lost. See <<devsandqueues-lost-device>>")
             }
-            Self::ERROR_MEMORY_MAP_FAILED => Some("Mapping of a memory object has failed"),
-            Self::ERROR_LAYER_NOT_PRESENT => Some("Layer specified does not exist"),
-            Self::ERROR_EXTENSION_NOT_PRESENT => Some("Extension specified does not exist"),
-            Self::ERROR_FEATURE_NOT_PRESENT => {
+            Result::ERROR_MEMORY_MAP_FAILED => Some("Mapping of a memory object has failed"),
+            Result::ERROR_LAYER_NOT_PRESENT => Some("Layer specified does not exist"),
+            Result::ERROR_EXTENSION_NOT_PRESENT => Some("Extension specified does not exist"),
+            Result::ERROR_FEATURE_NOT_PRESENT => {
                 Some("Requested feature is not available on this device")
             }
-            Self::ERROR_INCOMPATIBLE_DRIVER => Some("Unable to find a Vulkan driver"),
-            Self::ERROR_TOO_MANY_OBJECTS => {
+            Result::ERROR_INCOMPATIBLE_DRIVER => Some("Unable to find a Vulkan driver"),
+            Result::ERROR_TOO_MANY_OBJECTS => {
                 Some("Too many objects of the type have already been created")
             }
-            Self::ERROR_FORMAT_NOT_SUPPORTED => {
+            Result::ERROR_FORMAT_NOT_SUPPORTED => {
                 Some("Requested format is not supported on this device")
             }
-            Self::ERROR_FRAGMENTED_POOL => Some(
+            Result::ERROR_FRAGMENTED_POOL => Some(
                 "A requested pool allocation has failed due to fragmentation of the pool's memory",
             ),
-            Self::ERROR_UNKNOWN => {
+            Result::ERROR_UNKNOWN => {
                 Some("An unknown error has occurred, due to an implementation or application bug")
             }
             _ => None,
@@ -969,7 +969,7 @@ impl fmt::Display for Result {
 pub struct DynamicState(pub(crate) i32);
 impl DynamicState {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DynamicState(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -992,7 +992,7 @@ impl DynamicState {
 pub struct DescriptorUpdateTemplateType(pub(crate) i32);
 impl DescriptorUpdateTemplateType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DescriptorUpdateTemplateType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1008,7 +1008,7 @@ impl DescriptorUpdateTemplateType {
 pub struct ObjectType(pub(crate) i32);
 impl ObjectType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ObjectType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1048,7 +1048,7 @@ impl ObjectType {
 pub struct SemaphoreType(pub(crate) i32);
 impl SemaphoreType {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SemaphoreType(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1064,7 +1064,7 @@ impl SemaphoreType {
 pub struct PresentModeKHR(pub(crate) i32);
 impl PresentModeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PresentModeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1082,7 +1082,7 @@ impl PresentModeKHR {
 pub struct ColorSpaceKHR(pub(crate) i32);
 impl ColorSpaceKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ColorSpaceKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1090,6 +1090,8 @@ impl ColorSpaceKHR {
 }
 impl ColorSpaceKHR {
     pub const SRGB_NONLINEAR: Self = Self(0);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const COLORSPACE_SRGB_NONLINEAR: Self = Self::SRGB_NONLINEAR;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1097,7 +1099,7 @@ impl ColorSpaceKHR {
 pub struct TimeDomainEXT(pub(crate) i32);
 impl TimeDomainEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        TimeDomainEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1115,7 +1117,7 @@ impl TimeDomainEXT {
 pub struct DebugReportObjectTypeEXT(pub(crate) i32);
 impl DebugReportObjectTypeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DebugReportObjectTypeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1151,9 +1153,13 @@ impl DebugReportObjectTypeEXT {
     pub const SURFACE_KHR: Self = Self(26);
     pub const SWAPCHAIN_KHR: Self = Self(27);
     pub const DEBUG_REPORT_CALLBACK_EXT: Self = Self(28);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const DEBUG_REPORT: Self = Self::DEBUG_REPORT_CALLBACK_EXT;
     pub const DISPLAY_KHR: Self = Self(29);
     pub const DISPLAY_MODE_KHR: Self = Self(30);
     pub const VALIDATION_CACHE_EXT: Self = Self(33);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const VALIDATION_CACHE: Self = Self::VALIDATION_CACHE_EXT;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1161,7 +1167,7 @@ impl DebugReportObjectTypeEXT {
 pub struct DeviceMemoryReportEventTypeEXT(pub(crate) i32);
 impl DeviceMemoryReportEventTypeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DeviceMemoryReportEventTypeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1180,7 +1186,7 @@ impl DeviceMemoryReportEventTypeEXT {
 pub struct RasterizationOrderAMD(pub(crate) i32);
 impl RasterizationOrderAMD {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        RasterizationOrderAMD(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1196,7 +1202,7 @@ impl RasterizationOrderAMD {
 pub struct ValidationCheckEXT(pub(crate) i32);
 impl ValidationCheckEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ValidationCheckEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1212,7 +1218,7 @@ impl ValidationCheckEXT {
 pub struct ValidationFeatureEnableEXT(pub(crate) i32);
 impl ValidationFeatureEnableEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ValidationFeatureEnableEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1231,7 +1237,7 @@ impl ValidationFeatureEnableEXT {
 pub struct ValidationFeatureDisableEXT(pub(crate) i32);
 impl ValidationFeatureDisableEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ValidationFeatureDisableEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1253,7 +1259,7 @@ impl ValidationFeatureDisableEXT {
 pub struct IndirectCommandsTokenTypeNV(pub(crate) i32);
 impl IndirectCommandsTokenTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        IndirectCommandsTokenTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1275,7 +1281,7 @@ impl IndirectCommandsTokenTypeNV {
 pub struct DisplayPowerStateEXT(pub(crate) i32);
 impl DisplayPowerStateEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DisplayPowerStateEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1292,7 +1298,7 @@ impl DisplayPowerStateEXT {
 pub struct DeviceEventTypeEXT(pub(crate) i32);
 impl DeviceEventTypeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DeviceEventTypeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1307,7 +1313,7 @@ impl DeviceEventTypeEXT {
 pub struct DisplayEventTypeEXT(pub(crate) i32);
 impl DisplayEventTypeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DisplayEventTypeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1322,7 +1328,7 @@ impl DisplayEventTypeEXT {
 pub struct ViewportCoordinateSwizzleNV(pub(crate) i32);
 impl ViewportCoordinateSwizzleNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ViewportCoordinateSwizzleNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1344,7 +1350,7 @@ impl ViewportCoordinateSwizzleNV {
 pub struct DiscardRectangleModeEXT(pub(crate) i32);
 impl DiscardRectangleModeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DiscardRectangleModeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1360,7 +1366,7 @@ impl DiscardRectangleModeEXT {
 pub struct PointClippingBehavior(pub(crate) i32);
 impl PointClippingBehavior {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PointClippingBehavior(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1376,7 +1382,7 @@ impl PointClippingBehavior {
 pub struct SamplerReductionMode(pub(crate) i32);
 impl SamplerReductionMode {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SamplerReductionMode(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1393,7 +1399,7 @@ impl SamplerReductionMode {
 pub struct TessellationDomainOrigin(pub(crate) i32);
 impl TessellationDomainOrigin {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        TessellationDomainOrigin(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1409,7 +1415,7 @@ impl TessellationDomainOrigin {
 pub struct SamplerYcbcrModelConversion(pub(crate) i32);
 impl SamplerYcbcrModelConversion {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SamplerYcbcrModelConversion(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1432,7 +1438,7 @@ impl SamplerYcbcrModelConversion {
 pub struct SamplerYcbcrRange(pub(crate) i32);
 impl SamplerYcbcrRange {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        SamplerYcbcrRange(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1450,7 +1456,7 @@ impl SamplerYcbcrRange {
 pub struct ChromaLocation(pub(crate) i32);
 impl ChromaLocation {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ChromaLocation(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1466,7 +1472,7 @@ impl ChromaLocation {
 pub struct BlendOverlapEXT(pub(crate) i32);
 impl BlendOverlapEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        BlendOverlapEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1483,7 +1489,7 @@ impl BlendOverlapEXT {
 pub struct CoverageModulationModeNV(pub(crate) i32);
 impl CoverageModulationModeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CoverageModulationModeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1501,7 +1507,7 @@ impl CoverageModulationModeNV {
 pub struct CoverageReductionModeNV(pub(crate) i32);
 impl CoverageReductionModeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CoverageReductionModeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1517,7 +1523,7 @@ impl CoverageReductionModeNV {
 pub struct ValidationCacheHeaderVersionEXT(pub(crate) i32);
 impl ValidationCacheHeaderVersionEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ValidationCacheHeaderVersionEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1532,7 +1538,7 @@ impl ValidationCacheHeaderVersionEXT {
 pub struct ShaderInfoTypeAMD(pub(crate) i32);
 impl ShaderInfoTypeAMD {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ShaderInfoTypeAMD(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1549,7 +1555,7 @@ impl ShaderInfoTypeAMD {
 pub struct QueueGlobalPriorityEXT(pub(crate) i32);
 impl QueueGlobalPriorityEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        QueueGlobalPriorityEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1567,7 +1573,7 @@ impl QueueGlobalPriorityEXT {
 pub struct ConservativeRasterizationModeEXT(pub(crate) i32);
 impl ConservativeRasterizationModeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ConservativeRasterizationModeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1584,7 +1590,7 @@ impl ConservativeRasterizationModeEXT {
 pub struct VendorId(pub(crate) i32);
 impl VendorId {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        VendorId(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1610,7 +1616,7 @@ impl VendorId {
 pub struct DriverId(pub(crate) i32);
 impl DriverId {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        DriverId(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1651,14 +1657,6 @@ impl DriverId {
     pub const JUICE_PROPRIETARY: Self = Self(16);
     #[doc = "Verisilicon, Inc."]
     pub const VERISILICON_PROPRIETARY: Self = Self(17);
-    #[doc = "Mesa open source project"]
-    pub const MESA_TURNIP: Self = Self(18);
-    #[doc = "Mesa open source project"]
-    pub const MESA_V3DV: Self = Self(19);
-    #[doc = "Mesa open source project"]
-    pub const MESA_PANVK: Self = Self(20);
-    #[doc = "Samsung Electronics Co., Ltd."]
-    pub const SAMSUNG_PROPRIETARY: Self = Self(21);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1666,7 +1664,7 @@ impl DriverId {
 pub struct ShadingRatePaletteEntryNV(pub(crate) i32);
 impl ShadingRatePaletteEntryNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ShadingRatePaletteEntryNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1692,7 +1690,7 @@ impl ShadingRatePaletteEntryNV {
 pub struct CoarseSampleOrderTypeNV(pub(crate) i32);
 impl CoarseSampleOrderTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CoarseSampleOrderTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1710,7 +1708,7 @@ impl CoarseSampleOrderTypeNV {
 pub struct CopyAccelerationStructureModeKHR(pub(crate) i32);
 impl CopyAccelerationStructureModeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        CopyAccelerationStructureModeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1728,7 +1726,7 @@ impl CopyAccelerationStructureModeKHR {
 pub struct BuildAccelerationStructureModeKHR(pub(crate) i32);
 impl BuildAccelerationStructureModeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        BuildAccelerationStructureModeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1744,7 +1742,7 @@ impl BuildAccelerationStructureModeKHR {
 pub struct AccelerationStructureTypeKHR(pub(crate) i32);
 impl AccelerationStructureTypeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AccelerationStructureTypeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1761,7 +1759,7 @@ impl AccelerationStructureTypeKHR {
 pub struct GeometryTypeKHR(pub(crate) i32);
 impl GeometryTypeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        GeometryTypeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1778,7 +1776,7 @@ impl GeometryTypeKHR {
 pub struct AccelerationStructureMemoryRequirementsTypeNV(pub(crate) i32);
 impl AccelerationStructureMemoryRequirementsTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AccelerationStructureMemoryRequirementsTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1795,7 +1793,7 @@ impl AccelerationStructureMemoryRequirementsTypeNV {
 pub struct AccelerationStructureBuildTypeKHR(pub(crate) i32);
 impl AccelerationStructureBuildTypeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AccelerationStructureBuildTypeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1812,7 +1810,7 @@ impl AccelerationStructureBuildTypeKHR {
 pub struct RayTracingShaderGroupTypeKHR(pub(crate) i32);
 impl RayTracingShaderGroupTypeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        RayTracingShaderGroupTypeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1829,7 +1827,7 @@ impl RayTracingShaderGroupTypeKHR {
 pub struct AccelerationStructureCompatibilityKHR(pub(crate) i32);
 impl AccelerationStructureCompatibilityKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AccelerationStructureCompatibilityKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1845,7 +1843,7 @@ impl AccelerationStructureCompatibilityKHR {
 pub struct ShaderGroupShaderKHR(pub(crate) i32);
 impl ShaderGroupShaderKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ShaderGroupShaderKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1863,7 +1861,7 @@ impl ShaderGroupShaderKHR {
 pub struct MemoryOverallocationBehaviorAMD(pub(crate) i32);
 impl MemoryOverallocationBehaviorAMD {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        MemoryOverallocationBehaviorAMD(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1880,7 +1878,7 @@ impl MemoryOverallocationBehaviorAMD {
 pub struct ScopeNV(pub(crate) i32);
 impl ScopeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ScopeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1898,7 +1896,7 @@ impl ScopeNV {
 pub struct ComponentTypeNV(pub(crate) i32);
 impl ComponentTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ComponentTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1923,7 +1921,7 @@ impl ComponentTypeNV {
 pub struct FullScreenExclusiveEXT(pub(crate) i32);
 impl FullScreenExclusiveEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        FullScreenExclusiveEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1941,7 +1939,7 @@ impl FullScreenExclusiveEXT {
 pub struct PerformanceCounterScopeKHR(pub(crate) i32);
 impl PerformanceCounterScopeKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceCounterScopeKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1951,6 +1949,9 @@ impl PerformanceCounterScopeKHR {
     pub const COMMAND_BUFFER: Self = Self(0);
     pub const RENDER_PASS: Self = Self(1);
     pub const COMMAND: Self = Self(2);
+    pub const QUERY_SCOPE_COMMAND_BUFFER: Self = Self::COMMAND_BUFFER;
+    pub const QUERY_SCOPE_RENDER_PASS: Self = Self::RENDER_PASS;
+    pub const QUERY_SCOPE_COMMAND: Self = Self::COMMAND;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1958,7 +1959,7 @@ impl PerformanceCounterScopeKHR {
 pub struct PerformanceCounterUnitKHR(pub(crate) i32);
 impl PerformanceCounterUnitKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceCounterUnitKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -1983,7 +1984,7 @@ impl PerformanceCounterUnitKHR {
 pub struct PerformanceCounterStorageKHR(pub(crate) i32);
 impl PerformanceCounterStorageKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceCounterStorageKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2003,7 +2004,7 @@ impl PerformanceCounterStorageKHR {
 pub struct PerformanceConfigurationTypeINTEL(pub(crate) i32);
 impl PerformanceConfigurationTypeINTEL {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceConfigurationTypeINTEL(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2018,7 +2019,7 @@ impl PerformanceConfigurationTypeINTEL {
 pub struct QueryPoolSamplingModeINTEL(pub(crate) i32);
 impl QueryPoolSamplingModeINTEL {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        QueryPoolSamplingModeINTEL(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2033,7 +2034,7 @@ impl QueryPoolSamplingModeINTEL {
 pub struct PerformanceOverrideTypeINTEL(pub(crate) i32);
 impl PerformanceOverrideTypeINTEL {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceOverrideTypeINTEL(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2049,7 +2050,7 @@ impl PerformanceOverrideTypeINTEL {
 pub struct PerformanceParameterTypeINTEL(pub(crate) i32);
 impl PerformanceParameterTypeINTEL {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceParameterTypeINTEL(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2065,7 +2066,7 @@ impl PerformanceParameterTypeINTEL {
 pub struct PerformanceValueTypeINTEL(pub(crate) i32);
 impl PerformanceValueTypeINTEL {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PerformanceValueTypeINTEL(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2084,7 +2085,7 @@ impl PerformanceValueTypeINTEL {
 pub struct ShaderFloatControlsIndependence(pub(crate) i32);
 impl ShaderFloatControlsIndependence {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ShaderFloatControlsIndependence(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2101,7 +2102,7 @@ impl ShaderFloatControlsIndependence {
 pub struct PipelineExecutableStatisticFormatKHR(pub(crate) i32);
 impl PipelineExecutableStatisticFormatKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        PipelineExecutableStatisticFormatKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2119,7 +2120,7 @@ impl PipelineExecutableStatisticFormatKHR {
 pub struct LineRasterizationModeEXT(pub(crate) i32);
 impl LineRasterizationModeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        LineRasterizationModeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2137,7 +2138,7 @@ impl LineRasterizationModeEXT {
 pub struct FragmentShadingRateCombinerOpKHR(pub(crate) i32);
 impl FragmentShadingRateCombinerOpKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        FragmentShadingRateCombinerOpKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2156,7 +2157,7 @@ impl FragmentShadingRateCombinerOpKHR {
 pub struct FragmentShadingRateNV(pub(crate) i32);
 impl FragmentShadingRateNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        FragmentShadingRateNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2182,7 +2183,7 @@ impl FragmentShadingRateNV {
 pub struct FragmentShadingRateTypeNV(pub(crate) i32);
 impl FragmentShadingRateTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        FragmentShadingRateTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2198,7 +2199,7 @@ impl FragmentShadingRateTypeNV {
 pub struct ProvokingVertexModeEXT(pub(crate) i32);
 impl ProvokingVertexModeEXT {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        ProvokingVertexModeEXT(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2214,7 +2215,7 @@ impl ProvokingVertexModeEXT {
 pub struct AccelerationStructureMotionInstanceTypeNV(pub(crate) i32);
 impl AccelerationStructureMotionInstanceTypeNV {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        AccelerationStructureMotionInstanceTypeNV(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2231,7 +2232,7 @@ impl AccelerationStructureMotionInstanceTypeNV {
 pub struct QueryResultStatusKHR(pub(crate) i32);
 impl QueryResultStatusKHR {
     pub const fn from_raw(x: i32) -> Self {
-        Self(x)
+        QueryResultStatusKHR(x)
     }
     pub const fn as_raw(self) -> i32 {
         self.0
@@ -2241,118 +2242,4 @@ impl QueryResultStatusKHR {
     pub const ERROR: Self = Self(-1);
     pub const NOT_READY: Self = Self(0);
     pub const COMPLETE: Self = Self(1);
-}
-impl fmt::Debug for ObjectType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match *self {
-            Self::UNKNOWN => Some("UNKNOWN"),
-            Self::INSTANCE => Some("INSTANCE"),
-            Self::PHYSICAL_DEVICE => Some("PHYSICAL_DEVICE"),
-            Self::DEVICE => Some("DEVICE"),
-            Self::QUEUE => Some("QUEUE"),
-            Self::SEMAPHORE => Some("SEMAPHORE"),
-            Self::COMMAND_BUFFER => Some("COMMAND_BUFFER"),
-            Self::FENCE => Some("FENCE"),
-            Self::DEVICE_MEMORY => Some("DEVICE_MEMORY"),
-            Self::BUFFER => Some("BUFFER"),
-            Self::IMAGE => Some("IMAGE"),
-            Self::EVENT => Some("EVENT"),
-            Self::QUERY_POOL => Some("QUERY_POOL"),
-            Self::BUFFER_VIEW => Some("BUFFER_VIEW"),
-            Self::IMAGE_VIEW => Some("IMAGE_VIEW"),
-            Self::SHADER_MODULE => Some("SHADER_MODULE"),
-            Self::PIPELINE_CACHE => Some("PIPELINE_CACHE"),
-            Self::PIPELINE_LAYOUT => Some("PIPELINE_LAYOUT"),
-            Self::RENDER_PASS => Some("RENDER_PASS"),
-            Self::PIPELINE => Some("PIPELINE"),
-            Self::DESCRIPTOR_SET_LAYOUT => Some("DESCRIPTOR_SET_LAYOUT"),
-            Self::SAMPLER => Some("SAMPLER"),
-            Self::DESCRIPTOR_POOL => Some("DESCRIPTOR_POOL"),
-            Self::DESCRIPTOR_SET => Some("DESCRIPTOR_SET"),
-            Self::FRAMEBUFFER => Some("FRAMEBUFFER"),
-            Self::COMMAND_POOL => Some("COMMAND_POOL"),
-            Self::SURFACE_KHR => Some("SURFACE_KHR"),
-            Self::SWAPCHAIN_KHR => Some("SWAPCHAIN_KHR"),
-            Self::DISPLAY_KHR => Some("DISPLAY_KHR"),
-            Self::DISPLAY_MODE_KHR => Some("DISPLAY_MODE_KHR"),
-            Self::DEBUG_REPORT_CALLBACK_EXT => Some("DEBUG_REPORT_CALLBACK_EXT"),
-            Self::VIDEO_SESSION_KHR => Some("VIDEO_SESSION_KHR"),
-            Self::VIDEO_SESSION_PARAMETERS_KHR => Some("VIDEO_SESSION_PARAMETERS_KHR"),
-            Self::CU_MODULE_NVX => Some("CU_MODULE_NVX"),
-            Self::CU_FUNCTION_NVX => Some("CU_FUNCTION_NVX"),
-            Self::DEBUG_UTILS_MESSENGER_EXT => Some("DEBUG_UTILS_MESSENGER_EXT"),
-            Self::ACCELERATION_STRUCTURE_KHR => Some("ACCELERATION_STRUCTURE_KHR"),
-            Self::VALIDATION_CACHE_EXT => Some("VALIDATION_CACHE_EXT"),
-            Self::ACCELERATION_STRUCTURE_NV => Some("ACCELERATION_STRUCTURE_NV"),
-            Self::PERFORMANCE_CONFIGURATION_INTEL => Some("PERFORMANCE_CONFIGURATION_INTEL"),
-            Self::DEFERRED_OPERATION_KHR => Some("DEFERRED_OPERATION_KHR"),
-            Self::INDIRECT_COMMANDS_LAYOUT_NV => Some("INDIRECT_COMMANDS_LAYOUT_NV"),
-            Self::PRIVATE_DATA_SLOT_EXT => Some("PRIVATE_DATA_SLOT_EXT"),
-            Self::BUFFER_COLLECTION_FUCHSIA => Some("BUFFER_COLLECTION_FUCHSIA"),
-            Self::SAMPLER_YCBCR_CONVERSION => Some("SAMPLER_YCBCR_CONVERSION"),
-            Self::DESCRIPTOR_UPDATE_TEMPLATE => Some("DESCRIPTOR_UPDATE_TEMPLATE"),
-            _ => None,
-        };
-        if let Some(x) = name {
-            f.write_str(x)
-        } else {
-            self.0.fmt(f)
-        }
-    }
-}
-impl fmt::Debug for Result {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match *self {
-            Self::SUCCESS => Some("SUCCESS"),
-            Self::NOT_READY => Some("NOT_READY"),
-            Self::TIMEOUT => Some("TIMEOUT"),
-            Self::EVENT_SET => Some("EVENT_SET"),
-            Self::EVENT_RESET => Some("EVENT_RESET"),
-            Self::INCOMPLETE => Some("INCOMPLETE"),
-            Self::ERROR_OUT_OF_HOST_MEMORY => Some("ERROR_OUT_OF_HOST_MEMORY"),
-            Self::ERROR_OUT_OF_DEVICE_MEMORY => Some("ERROR_OUT_OF_DEVICE_MEMORY"),
-            Self::ERROR_INITIALIZATION_FAILED => Some("ERROR_INITIALIZATION_FAILED"),
-            Self::ERROR_DEVICE_LOST => Some("ERROR_DEVICE_LOST"),
-            Self::ERROR_MEMORY_MAP_FAILED => Some("ERROR_MEMORY_MAP_FAILED"),
-            Self::ERROR_LAYER_NOT_PRESENT => Some("ERROR_LAYER_NOT_PRESENT"),
-            Self::ERROR_EXTENSION_NOT_PRESENT => Some("ERROR_EXTENSION_NOT_PRESENT"),
-            Self::ERROR_FEATURE_NOT_PRESENT => Some("ERROR_FEATURE_NOT_PRESENT"),
-            Self::ERROR_INCOMPATIBLE_DRIVER => Some("ERROR_INCOMPATIBLE_DRIVER"),
-            Self::ERROR_TOO_MANY_OBJECTS => Some("ERROR_TOO_MANY_OBJECTS"),
-            Self::ERROR_FORMAT_NOT_SUPPORTED => Some("ERROR_FORMAT_NOT_SUPPORTED"),
-            Self::ERROR_FRAGMENTED_POOL => Some("ERROR_FRAGMENTED_POOL"),
-            Self::ERROR_UNKNOWN => Some("ERROR_UNKNOWN"),
-            Self::ERROR_SURFACE_LOST_KHR => Some("ERROR_SURFACE_LOST_KHR"),
-            Self::ERROR_NATIVE_WINDOW_IN_USE_KHR => Some("ERROR_NATIVE_WINDOW_IN_USE_KHR"),
-            Self::SUBOPTIMAL_KHR => Some("SUBOPTIMAL_KHR"),
-            Self::ERROR_OUT_OF_DATE_KHR => Some("ERROR_OUT_OF_DATE_KHR"),
-            Self::ERROR_INCOMPATIBLE_DISPLAY_KHR => Some("ERROR_INCOMPATIBLE_DISPLAY_KHR"),
-            Self::ERROR_VALIDATION_FAILED_EXT => Some("ERROR_VALIDATION_FAILED_EXT"),
-            Self::ERROR_INVALID_SHADER_NV => Some("ERROR_INVALID_SHADER_NV"),
-            Self::ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT => {
-                Some("ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT")
-            }
-            Self::ERROR_NOT_PERMITTED_EXT => Some("ERROR_NOT_PERMITTED_EXT"),
-            Self::ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT => {
-                Some("ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT")
-            }
-            Self::THREAD_IDLE_KHR => Some("THREAD_IDLE_KHR"),
-            Self::THREAD_DONE_KHR => Some("THREAD_DONE_KHR"),
-            Self::OPERATION_DEFERRED_KHR => Some("OPERATION_DEFERRED_KHR"),
-            Self::OPERATION_NOT_DEFERRED_KHR => Some("OPERATION_NOT_DEFERRED_KHR"),
-            Self::PIPELINE_COMPILE_REQUIRED_EXT => Some("PIPELINE_COMPILE_REQUIRED_EXT"),
-            Self::ERROR_OUT_OF_POOL_MEMORY => Some("ERROR_OUT_OF_POOL_MEMORY"),
-            Self::ERROR_INVALID_EXTERNAL_HANDLE => Some("ERROR_INVALID_EXTERNAL_HANDLE"),
-            Self::ERROR_FRAGMENTATION => Some("ERROR_FRAGMENTATION"),
-            Self::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS => {
-                Some("ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS")
-            }
-            _ => None,
-        };
-        if let Some(x) = name {
-            f.write_str(x)
-        } else {
-            self.0.fmt(f)
-        }
-    }
 }

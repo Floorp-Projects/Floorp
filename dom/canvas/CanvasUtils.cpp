@@ -12,12 +12,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/UserActivation.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsIPrincipal.h"
@@ -51,26 +47,24 @@ using namespace mozilla::gfx;
 namespace mozilla::CanvasUtils {
 
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
-                              Maybe<nsIPrincipal*> aPrincipal) {
+                              nsIPrincipal& aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
   if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return true;
   }
 
   // Don't proceed if we don't have a document or JavaScript context.
-  if (!aDocument || !aCx || !aPrincipal) {
+  if (!aDocument || !aCx) {
     return false;
   }
 
-  nsIPrincipal& subjectPrincipal = *aPrincipal.ref();
-
   // The system principal can always extract canvas data.
-  if (subjectPrincipal.IsSystemPrincipal()) {
+  if (aPrincipal.IsSystemPrincipal()) {
     return true;
   }
 
   // Allow extension principals.
-  auto* principal = BasePrincipal::Cast(&subjectPrincipal);
+  auto principal = BasePrincipal::Cast(&aPrincipal);
   if (principal->AddonPolicy() || principal->ContentScriptAddonPolicy()) {
     return true;
   }
@@ -92,12 +86,25 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return true;
   }
 
+  dom::Document* topLevelDocument =
+      aDocument->GetTopLevelContentDocumentIfSameProcess();
+  nsIURI* topLevelDocURI =
+      topLevelDocument ? topLevelDocument->GetDocumentURI() : nullptr;
+  nsCString topLevelDocURISpec;
+  if (topLevelDocURI) {
+    topLevelDocURI->GetSpec(topLevelDocURISpec);
+  }
+
+  // Load Third Party Util service.
+  nsresult rv;
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
   // Block all third-party attempts to extract canvas.
-  MOZ_ASSERT(aDocument->GetWindowContext());
-  bool isThirdParty =
-      aDocument->GetWindowContext()
-          ? aDocument->GetWindowContext()->GetIsThirdPartyWindow()
-          : false;
+  bool isThirdParty = true;
+  rv = thirdPartyUtil->IsThirdPartyURI(topLevelDocURI, docURI, &isThirdParty);
+  NS_ENSURE_SUCCESS(rv, false);
   if (isThirdParty) {
     nsAutoString message;
     message.AppendPrintf("Blocked third party %s from extracting canvas data.",
@@ -108,7 +115,6 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   }
 
   // Load Permission Manager service.
-  nsresult rv;
   nsCOMPtr<nsIPermissionManager> permissionManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, false);
@@ -289,35 +295,6 @@ bool CoerceDouble(const JS::Value& v, double* d) {
 bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* /* unused */) {
   return nsContentUtils::CallerHasPermission(aCx,
                                              nsGkAtoms::all_urlsPermission);
-}
-
-bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* /* unused */) {
-  if (StaticPrefs::gfx_offscreencanvas_enabled()) {
-    return true;
-  }
-
-  if (!StaticPrefs::gfx_offscreencanvas_domain_enabled()) {
-    return false;
-  }
-
-  const auto& allowlist = gfxVars::GetOffscreenCanvasDomainAllowlistOrDefault();
-
-  if (!NS_IsMainThread()) {
-    dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
-    if (workerPrivate->UsesSystemPrincipal()) {
-      return true;
-    }
-
-    return nsContentUtils::IsURIInList(workerPrivate->GetBaseURI(), allowlist);
-  }
-
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  if (principal->IsSystemPrincipal()) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> uri = principal->GetURI();
-  return nsContentUtils::IsURIInList(uri, allowlist);
 }
 
 bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
