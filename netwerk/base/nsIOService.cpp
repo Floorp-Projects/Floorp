@@ -524,6 +524,12 @@ bool nsIOService::TooManySocketProcessCrash() {
          StaticPrefs::network_max_socket_process_failed_count();
 }
 
+// static
+void nsIOService::IncreaseSocketProcessCrashCount() {
+  MOZ_ASSERT(IsNeckoChild());
+  sSocketProcessCrashedCount++;
+}
+
 nsresult nsIOService::LaunchSocketProcess() {
   MOZ_ASSERT(NS_IsMainThread());
 

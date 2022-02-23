@@ -554,6 +554,7 @@ child:
       uint32_t[] namespaces);
 
     async NetworkLinkTypeChange(uint32_t type);
+    async SocketProcessCrashed();
 
     // Re-create the rendering stack for a device reset.
     async ReinitRenderingForDeviceReset();
