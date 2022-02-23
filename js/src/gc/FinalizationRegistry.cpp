@@ -136,11 +136,6 @@ void FinalizationRegistryZone::removeCrossZoneWrapper(JSObject* wrapper) {
   crossZoneWrappers.remove(ptr);
 }
 
-void FinalizationRegistryZone::clearRecords() {
-  recordMap.clear();
-  crossZoneWrappers.clear();
-}
-
 static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
   obj = UncheckedUnwrapWithoutExpose(obj);
   if (!obj->is<FinalizationRecordObject>()) {
@@ -150,6 +145,24 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
     return nullptr;
   }
   return &obj->as<FinalizationRecordObject>();
+}
+
+void FinalizationRegistryZone::clearRecords() {
+#ifdef DEBUG
+  // Check crossZoneWrappers was correct before clearing.
+  for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
+    for (JSObject* object : e.front().value()) {
+      FinalizationRecordObject* record = UnwrapFinalizationRecord(object);
+      if (record && record->zone() != zone) {
+        removeCrossZoneWrapper(object);
+      }
+    }
+  }
+  MOZ_ASSERT(crossZoneWrappers.empty());
+#endif
+
+  recordMap.clear();
+  crossZoneWrappers.clear();
 }
 
 void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
