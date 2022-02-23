@@ -186,6 +186,7 @@
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
+#include "nsIOService.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSEnvironment.h"
@@ -2001,6 +2002,11 @@ mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
     obs->NotifyObservers(nullptr, "contentchild:network-link-type-changed",
                          nullptr);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvSocketProcessCrashed() {
+  nsIOService::IncreaseSocketProcessCrashCount();
   return IPC_OK();
 }
 
