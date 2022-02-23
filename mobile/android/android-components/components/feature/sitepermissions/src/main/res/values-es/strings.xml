@@ -44,4 +44,7 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">¿Desea permitir que %1$s guarde datos en el almacenamiento persistente?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">¿Permitir que %1$s reproduzca contenido controlado por DRM?</string>
-</resources>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">¿Permitir que %1$s use sus cookies en %2$s?</string>
+    </resources>
