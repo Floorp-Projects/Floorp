@@ -220,24 +220,6 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
   );
 }
 
-/**
- * Assert that the debugger is not currently paused.
- * @memberof mochitest/asserts
- * @static
- */
-function assertNotPaused(dbg) {
-  ok(!isPaused(dbg), "client is not paused");
-}
-
-/**
- * Assert that the debugger is currently paused.
- * @memberof mochitest/asserts
- * @static
- */
-function assertPaused(dbg) {
-  ok(isPaused(dbg), "client is paused");
-}
-
 function assertEmptyLines(dbg, lines) {
   const sourceId = dbg.selectors.getSelectedSourceId();
   const breakableLines = dbg.selectors.getBreakableLines(sourceId);
@@ -392,17 +374,6 @@ function assertHighlightLocation(dbg, source, line) {
 }
 
 /**
- * Returns boolean for whether the debugger is paused.
- *
- * @memberof mochitest/asserts
- * @param {Object} dbg
- * @static
- */
-function isPaused(dbg) {
-  return dbg.selectors.getIsCurrentThreadPaused();
-}
-
-/**
  * Make sure the debugger is paused at a certain source ID and line.
  *
  * @memberof mochitest/asserts
@@ -474,13 +445,43 @@ function waitForBreakpointRemoved(dbg, url, line) {
 }
 
 /**
+ * Returns boolean for whether the debugger is paused.
+ *
+ * @param {Object} dbg
+ */
+function isPaused(dbg) {
+  return dbg.selectors.getIsCurrentThreadPaused();
+}
+
+/**
+ * Assert that the debugger is not currently paused.
+ *
+ * @param {Object} dbg
+ * @param {String} msg
+ *        Optional assertion message
+ */
+function assertNotPaused(dbg, msg = "client is not paused") {
+  ok(!isPaused(dbg), msg);
+}
+
+/**
+ * Assert that the debugger is currently paused.
+ *
+ * @param {Object} dbg
+ */
+function assertPaused(dbg, msg = "client is paused") {
+  ok(isPaused(dbg), msg);
+}
+
+/**
  * Waits for the debugger to be fully paused.
  *
- * @memberof mochitest/waits
  * @param {Object} dbg
- * @static
+ * @param {String} url
+ *        Optional URL of the script we should be pausing on.
  */
 async function waitForPaused(dbg, url) {
+  info("Waiting for the debugger to pause");
   const {
     getSelectedScope,
     getCurrentThread,
@@ -499,13 +500,12 @@ async function waitForPaused(dbg, url) {
 }
 
 /**
- * Waits for the debugger to resume
+ * Waits for the debugger to resume.
  *
- * @memberof mochitest/waits
  * @param {Objeect} dbg
- * @static
  */
 function waitForResumed(dbg) {
+  info("Waiting for the debugger to resume");
   return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 

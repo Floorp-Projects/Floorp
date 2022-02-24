@@ -31,8 +31,12 @@ add_task(async function() {
   await highlighterTestFront.clickPausedDebuggerOverlayButton(
     "paused-dbg-step-button"
   );
-  await waitFor(() => isPaused(dbg) && getVisibleSelectedFrameLine(dbg) === 4);
-  ok(true, "We're paused at the expected location after stepping");
+  await waitForPaused(dbg);
+  is(
+    getVisibleSelectedFrameLine(dbg),
+    4,
+    "We're paused at the expected location after stepping"
+  );
 
   isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(isPausedOverlayVisible, true, "The pause overlay is still visible");
@@ -42,7 +46,7 @@ add_task(async function() {
     "paused-dbg-resume-button"
   );
 
-  await waitFor(() => !isPaused(dbg), "Wait for the debugger to resume");
+  await waitForResumed(dbg);
   ok("The debugger isn't paused after clicking on the resume button");
 
   await waitFor(async () => {

@@ -15,7 +15,7 @@ add_task(async function() {
 
   info("1. test skipping an uncaught exception");
   await uncaughtException();
-  ok(!isPaused(dbg));
+  assertNotPaused(dbg);
 
   info("2. Test pausing on an uncaught exception");
   await togglePauseOnExceptions(dbg, true, true);
