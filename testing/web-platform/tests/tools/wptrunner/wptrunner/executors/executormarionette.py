@@ -918,7 +918,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         self.protocol.base.set_window(test_window)
         protocol.testharness.test_window_loaded()
 
-        if self.debug_test:
+        if self.debug_test and self.browser.supports_devtools:
             self.protocol.debug.load_devtools()
 
         handler = CallbackHandler(self.logger, protocol, test_window)
