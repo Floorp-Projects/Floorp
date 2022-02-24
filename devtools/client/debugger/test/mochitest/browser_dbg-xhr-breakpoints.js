@@ -43,7 +43,7 @@ add_task(async function() {
 
   // Wait for some time, in order to wait for it to be paused
   // in case we regress
-  await waitForTime(1000);
+  await wait(1000);
 
   assertNotPaused(dbg);
 });
