@@ -33,6 +33,19 @@ void UntrustedModulesBackupData::Add(UntrustedModulesData&& aData) {
       });
 }
 
+void UntrustedModulesBackupData::AddWithoutStacks(
+    UntrustedModulesData&& aData) {
+  WithEntryHandle(
+      ProcessHashKey(aData.mProcessType, aData.mPid), [&](auto&& p) {
+        if (p) {
+          p.Data()->mData.MergeWithoutStacks(std::move(aData));
+        } else {
+          aData.Truncate();
+          p.Insert(MakeRefPtr<UntrustedModulesDataContainer>(std::move(aData)));
+        }
+      });
+}
+
 /* static */
 UntrustedModulesBackupService* UntrustedModulesBackupService::Get() {
   if (!XRE_IsParentProcess()) {
@@ -77,7 +90,7 @@ void UntrustedModulesBackupService::SettleAllStagingData() {
     if (!iter.Data()) {
       continue;
     }
-    mSettled.Add(std::move(iter.Data()->mData));
+    mSettled.AddWithoutStacks(std::move(iter.Data()->mData));
   }
 }
 

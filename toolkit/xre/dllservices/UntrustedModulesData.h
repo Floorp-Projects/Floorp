@@ -190,6 +190,10 @@ using UntrustedModuleLoadingEvents =
     AutoCleanLinkedList<ProcessedModuleLoadEventContainer>;
 
 class UntrustedModulesData final {
+  // Merge aNewData.mEvents into this->mModules and also
+  // make module entries in aNewData point to items in this->mModules.
+  void MergeModules(UntrustedModulesData& aNewData);
+
  public:
   // Ensure mEvents will never retain more than kMaxEvents events.
   // This constant matches the maximum in Telemetry::CombinedStacks.
@@ -217,8 +221,11 @@ class UntrustedModulesData final {
                    UntrustedModuleLoadingEvents&& aEvents,
                    Vector<Telemetry::ProcessedStack>&& aStacks);
   void Merge(UntrustedModulesData&& aNewData);
-
+  void MergeWithoutStacks(UntrustedModulesData&& aNewData);
   void Swap(UntrustedModulesData& aOther);
+
+  // Drop callstack data and old loading events.
+  void Truncate();
 
   GeckoProcessType mProcessType;
   DWORD mPid;

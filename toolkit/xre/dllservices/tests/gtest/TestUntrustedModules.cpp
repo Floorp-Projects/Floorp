@@ -177,7 +177,8 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
       kLoadCountBeforeDllServices + kLoadCountAfterDllServices;
   static const nsString kTestModules[];
 
-  static void ValidateUntrustedModules(const UntrustedModulesData& aData);
+  static void ValidateUntrustedModules(const UntrustedModulesData& aData,
+                                       bool aIsTruncatedData = false);
 
   static void LoadAndFree(const nsAString& aLeaf) {
     nsModuleHandle dll(::LoadLibraryW(PrependWorkingDir(aLeaf).get()));
@@ -260,7 +261,7 @@ INIT_ONCE UntrustedModulesFixture::sInitLoadOnce = INIT_ONCE_STATIC_INIT;
 UntrustedModulesCollector UntrustedModulesFixture::sInitLoadDataCollector;
 
 void UntrustedModulesFixture::ValidateUntrustedModules(
-    const UntrustedModulesData& aData) {
+    const UntrustedModulesData& aData, bool aIsTruncatedData) {
   // This defines a list of modules which are listed on our blocklist and
   // thus its loading status is not expected to be Status::Loaded.
   // Although the UntrustedModulesFixture test does not touch any of them,
@@ -329,8 +330,12 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
   // in CCov build GTest, but it is empty in non-CCov build (bug 1681936).
   EXPECT_EQ(aData.mNumEvents, aData.mEvents.length());
   EXPECT_GT(aData.mNumEvents, 0);
-  if (numBlockedEvents == aData.mNumEvents) {
-    // If all loading events were blocked, the stacks are empty.
+  if (aIsTruncatedData) {
+    EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
+    EXPECT_LE(aData.mNumEvents, UntrustedModulesData::kMaxEvents);
+  } else if (numBlockedEvents == aData.mNumEvents) {
+    // If all loading events were blocked or aData is truncated,
+    // the stacks are empty.
     EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
   } else {
     EXPECT_GT(aData.mStacks.GetModuleCount(), 0);
@@ -429,7 +434,7 @@ TEST_F(UntrustedModulesFixture, Serialize) {
 TEST_F(UntrustedModulesFixture, Backup) {
   RefPtr<UntrustedModulesBackupService> backupSvc(
       UntrustedModulesBackupService::Get());
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 100; ++i) {
     backupSvc->Backup(CollectSingleData());
   }
 
@@ -441,6 +446,6 @@ TEST_F(UntrustedModulesFixture, Backup) {
     EXPECT_TRUE(!!container);
     const UntrustedModulesData& data = container->mData;
     EXPECT_EQ(entry.GetKey(), ProcessHashKey(data.mProcessType, data.mPid));
-    ValidateUntrustedModules(data);
+    ValidateUntrustedModules(data, /*aIsTruncatedData*/ true);
   }
 }

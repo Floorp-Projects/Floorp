@@ -341,6 +341,23 @@ void UntrustedModulesData::AddNewLoads(
   }
 }
 
+void UntrustedModulesData::MergeModules(UntrustedModulesData& aNewData) {
+  for (auto item : aNewData.mEvents) {
+    mModules.WithEntryHandle(item->mEvent.mModule->mResolvedNtName,
+                             [&](auto&& addPtr) {
+                               if (addPtr) {
+                                 // Even though the path of a ModuleRecord
+                                 // matches, the object of ModuleRecord can be
+                                 // different. Make sure the event's mModule
+                                 // points to an object in mModules.
+                                 item->mEvent.mModule = addPtr.Data();
+                               } else {
+                                 addPtr.Insert(item->mEvent.mModule);
+                               }
+                             });
+  }
+}
+
 void UntrustedModulesData::Merge(UntrustedModulesData&& aNewData) {
   // Don't merge loading events of a different process
   MOZ_ASSERT((mProcessType == aNewData.mProcessType) &&
@@ -356,24 +373,43 @@ void UntrustedModulesData::Merge(UntrustedModulesData&& aNewData) {
     return;
   }
 
-  for (auto item : newData.mEvents) {
-    mModules.WithEntryHandle(item->mEvent.mModule->mResolvedNtName,
-                             [&](auto&& addPtr) {
-                               if (addPtr) {
-                                 // Even though the path of a ModuleRecord
-                                 // matches, the object of ModuleRecord can be
-                                 // different. Make sure the event's mModule
-                                 // points to an object in mModules.
-                                 item->mEvent.mModule = addPtr.Data();
-                               } else {
-                                 addPtr.Insert(item->mEvent.mModule);
-                               }
-                             });
+  MergeModules(newData);
+  mNumEvents += newData.mNumEvents;
+  mEvents.extendBack(std::move(newData.mEvents));
+  mStacks.AddStacks(newData.mStacks);
+}
+
+void UntrustedModulesData::Truncate() {
+  mStacks.Clear();
+
+  if (mNumEvents <= kMaxEvents) {
+    return;
+  }
+
+  UntrustedModuleLoadingEvents events;
+  events.splice(0, mEvents, mNumEvents - kMaxEvents, kMaxEvents);
+  std::swap(events, mEvents);
+  mNumEvents = kMaxEvents;
+}
+
+void UntrustedModulesData::MergeWithoutStacks(UntrustedModulesData&& aNewData) {
+  // Don't merge loading events of a different process
+  MOZ_ASSERT((mProcessType == aNewData.mProcessType) &&
+             (mPid == aNewData.mPid));
+  MOZ_ASSERT(!mStacks.GetStackCount());
+
+  UntrustedModulesData newData(std::move(aNewData));
+
+  if (mNumEvents > 0) {
+    MergeModules(newData);
+  } else {
+    mModules = std::move(newData.mModules);
   }
 
   mNumEvents += newData.mNumEvents;
   mEvents.extendBack(std::move(newData.mEvents));
-  mStacks.AddStacks(newData.mStacks);
+
+  Truncate();
 }
 
 void UntrustedModulesData::Swap(UntrustedModulesData& aOther) {
