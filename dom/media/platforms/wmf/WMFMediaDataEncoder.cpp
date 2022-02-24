@@ -91,7 +91,6 @@ RefPtr<MediaDataEncoder::InitPromise> WMFMediaDataEncoder<T>::ProcessInit() {
   }
 
   mEncoder = std::move(encoder);
-  FillConfigData();
   return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
                                        __func__);
 }
@@ -122,6 +121,13 @@ static already_AddRefed<MediaByteBuffer> ParseH264Parameters(
   return avcc.forget();
 }
 
+static already_AddRefed<MediaByteBuffer> ExtractCodecConfigIfPresent(
+    RefPtr<MFTEncoder>& aEncoder, const bool aAsAnnexB) {
+  nsTArray<UINT8> header;
+  NS_ENSURE_TRUE(SUCCEEDED(aEncoder->GetMPEGSequenceHeader(header)), nullptr);
+  return header.Length() > 0 ? ParseH264Parameters(header, aAsAnnexB) : nullptr;
+}
+
 template <typename T>
 HRESULT WMFMediaDataEncoder<T>::InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
   HRESULT hr = aEncoder->Create(CodecToSubtype(mConfig.mCodecType));
@@ -133,18 +139,10 @@ HRESULT WMFMediaDataEncoder<T>::InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
   hr = aEncoder->SetModes(mConfig.mBitsPerSec);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  return S_OK;
-}
-
-template <>
-void WMFMediaDataEncoder<MediaDataEncoder::H264Config>::FillConfigData() {
-  nsTArray<UINT8> header;
-  NS_ENSURE_TRUE_VOID(SUCCEEDED(mEncoder->GetMPEGSequenceHeader(header)));
-
   mConfigData =
-      header.Length() > 0
-          ? ParseH264Parameters(header, mConfig.mUsage == Usage::Realtime)
-          : nullptr;
+      ExtractCodecConfigIfPresent(aEncoder, mConfig.mUsage == Usage::Realtime);
+
+  return S_OK;
 }
 
 static uint32_t GetProfile(
@@ -259,7 +257,8 @@ RefPtr<MediaDataEncoder::EncodePromise> WMFMediaDataEncoder<T>::ProcessEncode(
   nsTArray<RefPtr<IMFSample>> outputs;
   HRESULT hr = mEncoder->TakeOutput(outputs);
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    FillConfigData();
+    mConfigData = ExtractCodecConfigIfPresent(
+        mEncoder, mConfig.mUsage == Usage::Realtime);
   } else if (FAILED(hr)) {
     WMF_ENC_LOGE("failed to process output");
     return EncodePromise::CreateAndReject(
