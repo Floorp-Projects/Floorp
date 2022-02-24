@@ -34,7 +34,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include "mozilla/WidgetUtilsGtk.h"
+#  include "mozilla/WidgetUtilsGtk.h"
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
