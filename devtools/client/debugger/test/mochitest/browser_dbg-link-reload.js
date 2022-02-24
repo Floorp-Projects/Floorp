@@ -7,20 +7,21 @@
  * It seems to cause different codepath compared to F5.
  */
 add_task(async function() {
-  const dbg = await initDebugger("doc-reload-link.html", "doc-reload-link.html");
-  const {
-    selectors: { getSelectedSource, getIsPaused, getCurrentThread },
-    getState
-  } = dbg;
- 
+  const dbg = await initDebugger(
+    "doc-reload-link.html",
+    "doc-reload-link.html"
+  );
+
   info("Add a breakpoint that will be hit on reload");
   await addBreakpoint(dbg, "doc-reload-link.html", 3);
 
-  for(let i = 0; i < 5; i++) {
-    let onReloaded = waitForReload(dbg.commands);
+  for (let i = 0; i < 5; i++) {
+    const onReloaded = waitForReload(dbg.commands);
 
-    info("Reload via a link, this causes special race condition different from F5");
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
+    info(
+      "Reload via a link, this causes special race condition different from F5"
+    );
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
       const reloadLink = content.document.querySelector("a");
       reloadLink.click();
     });
@@ -29,7 +30,7 @@ add_task(async function() {
     await waitForPaused(dbg);
 
     info("Check paused location\n");
-    let source = findSource(dbg, "doc-reload-link.html");
+    const source = findSource(dbg, "doc-reload-link.html");
     assertPausedAtSourceAndLine(dbg, source.id, 3);
 
     await resume(dbg);

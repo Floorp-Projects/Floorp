@@ -34,10 +34,7 @@ function waitForSelectedFrame(dbg, displayName) {
   return waitForState(dbg, state => {
     const frame = getVisibleSelectedFrame();
 
-    return (
-      frame?.displayName == displayName &&
-      getInScopeLines(frame.location)
-    );
+    return frame?.displayName == displayName && getInScopeLines(frame.location);
   });
 }
 

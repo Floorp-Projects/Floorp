@@ -24,7 +24,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
+NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIObserver, nsIMutationObserver)
 
 nsMenuGroupOwnerX::nsMenuGroupOwnerX(mozilla::dom::Element* aElement, nsMenuBarX* aMenuBarIfMenuBar)
     : mContent(aElement), mMenuBar(aMenuBarIfMenuBar) {
@@ -137,6 +137,29 @@ void nsMenuGroupOwnerX::UnregisterForContentChanges(nsIContent* aContent) {
     aContent->RemoveMutationObserver(this);
   }
   mContentToObserverTable.Remove(aContent);
+}
+
+void nsMenuGroupOwnerX::RegisterForLocaleChanges() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "intl:app-locales-changed", false);
+  }
+}
+
+void nsMenuGroupOwnerX::UnregisterForLocaleChanges() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "intl:app-locales-changed");
+  }
+}
+
+NS_IMETHODIMP
+nsMenuGroupOwnerX::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
+  if (mMenuBar && !strcmp(aTopic, "intl:app-locales-changed")) {
+    // Rebuild the menu with the new locale strings.
+    mMenuBar->SetNeedsRebuild();
+  }
+  return NS_OK;
 }
 
 nsChangeObserver* nsMenuGroupOwnerX::LookupContentChangeObserver(nsIContent* aContent) {

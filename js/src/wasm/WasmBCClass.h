@@ -1579,7 +1579,7 @@ struct BaseCompiler final {
 #  endif
 #endif
 
-  [[nodiscard]] bool emitIntrinsic(IntrinsicOp op);
+  [[nodiscard]] bool emitIntrinsic();
 };
 
 }  // namespace wasm

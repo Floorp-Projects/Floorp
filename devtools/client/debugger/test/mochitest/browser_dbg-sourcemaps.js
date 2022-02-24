@@ -17,7 +17,6 @@ add_task(async function() {
   );
   const {
     selectors: { getBreakpointCount },
-    getState,
   } = dbg;
 
   ok(true, "Original sources exist");
@@ -74,7 +73,6 @@ add_task(async function() {
 function assertBreakpointExists(dbg, source, line) {
   const {
     selectors: { getBreakpoint },
-    getState,
   } = dbg;
 
   ok(
@@ -86,7 +84,6 @@ function assertBreakpointExists(dbg, source, line) {
 async function waitForBreakpointCount(dbg, count) {
   const {
     selectors: { getBreakpointCount },
-    getState,
   } = dbg;
   await waitForState(dbg, state => getBreakpointCount() == count);
 }

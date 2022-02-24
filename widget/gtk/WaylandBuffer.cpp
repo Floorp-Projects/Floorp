@@ -12,7 +12,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
-#include "mozilla/WidgetUtils.h"  // For WidgetUtils
+#include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsPrintfCString.h"
 #include "prenv.h"  // For PR_GetEnv
@@ -44,9 +44,8 @@ char* WaylandBufferSHM::mDumpDir = PR_GetEnv("MOZ_WAYLAND_DUMP_DIR");
 static int WaylandAllocateShmMemory(int aSize) {
   int fd = -1;
 
-  nsCString shmPrefix("/");
-  const char* snapName = mozilla::widget::WidgetUtils::GetSnapInstanceName();
-  if (snapName != nullptr) {
+  nsAutoCString shmPrefix("/");
+  if (const char* snapName = GetSnapInstanceName()) {
     shmPrefix.AppendPrintf("snap.%s.", snapName);
   }
   shmPrefix.Append("wayland.mozilla.ipc");
@@ -209,7 +208,7 @@ RefPtr<WaylandBufferSHM> WaylandBufferSHM::Create(
                          buffer.get());
 
   LOGWAYLAND("WaylandBufferSHM Created [%p] WaylandDisplay [%p]\n",
-              buffer.get(), waylandDisplay.get());
+             buffer.get(), waylandDisplay.get());
 
   return buffer;
 }

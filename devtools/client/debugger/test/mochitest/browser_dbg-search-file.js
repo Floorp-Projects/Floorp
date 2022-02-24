@@ -6,13 +6,8 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const {
-    selectors: { getBreakpoints, getBreakpoint, getActiveSearch },
-    getState,
-  } = dbg;
   await selectSource(dbg, "simple1.js");
 
-  const cm = getCM(dbg);
   pressKey(dbg, "fileSearch");
   is(dbg.selectors.getActiveSearch(), "file", "The search UI was opened");
 
@@ -32,7 +27,6 @@ add_task(async function() {
   await waitForSearchState(dbg);
   await waitForDispatch(dbg.store, "UPDATE_SEARCH_RESULTS");
 
-  const state = cm.state.search;
   // All the lines in the script that include `con`
   const linesWithResults = [
     // const func
@@ -44,7 +38,7 @@ add_task(async function() {
     // constructor (in Klass)
     55,
     // console.log
-    62
+    62,
   ];
 
   await waitFor(
@@ -147,14 +141,9 @@ function getCursorPositionLine(dbg) {
   // Cursor position text has the following shape: (L, C)
   // where N is the line number, and C the column number
   const line = innerText.substring(1, innerText.indexOf(","));
-  return parseInt(line);
+  return parseInt(line, 10);
 }
 
 function waitForSearchState(dbg) {
   return waitForState(dbg, () => getCM(dbg).state.search);
-}
-
-function getFocusedEl(dbg) {
-  const doc = dbg.win.document;
-  return doc.activeElement;
 }

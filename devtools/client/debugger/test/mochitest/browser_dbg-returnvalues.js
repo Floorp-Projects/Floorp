@@ -30,7 +30,7 @@ async function testReturnValue(dbg, val) {
   is(getLabel(dbg, 1), "return_something", "check for return_something");
 
   // We don't show "undefined" but we do show other falsy values.
-  let label = getLabel(dbg, 2);
+  const label = getLabel(dbg, 2);
   if (val === "undefined") {
     ok(label !== "<return>", "do not show <return> for undefined");
   } else {

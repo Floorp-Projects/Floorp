@@ -33,6 +33,10 @@
 #  include "nsILocalFileMac.h"
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetCID.h"
@@ -1906,16 +1910,11 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
  * get essentially the same benefits as dedicated profiles provides.
  */
 bool nsToolkitProfileService::IsSnapEnvironment() {
-  const char* snapName = mozilla::widget::WidgetUtils::GetSnapInstanceName();
-
-  // return early if not set.
-  if (snapName == nullptr) {
-    return false;
-  }
-
-  // snapName as defined on e.g.
-  // https://snapcraft.io/firefox or https://snapcraft.io/thunderbird
-  return (strcmp(snapName, MOZ_APP_NAME) == 0);
+#ifdef MOZ_WIDGET_GTK
+  return widget::IsRunningUnderSnap();
+#else
+  return false;
+#endif
 }
 
 /**

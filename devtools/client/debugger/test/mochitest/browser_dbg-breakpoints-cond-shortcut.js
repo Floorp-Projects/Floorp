@@ -8,12 +8,12 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
 
-  let cursorPosition = { line: undefined, column: undefined };
-
   await selectSource(dbg, "long.js");
   await waitForSelectedSource(dbg, "long.js");
 
-  info("toggle conditional panel with shortcut: no breakpoints, default cursorPosition");
+  info(
+    "toggle conditional panel with shortcut: no breakpoints, default cursorPosition"
+  );
   pressKey(dbg, "toggleCondPanel");
   await waitForConditionalPanelFocus(dbg);
   ok(
@@ -28,7 +28,9 @@ add_task(async function() {
   info("close conditional panel");
   pressKey(dbg, "Escape");
 
-  info("toggle conditional panel with shortcut: cursor on line 32, no breakpoints");
+  info(
+    "toggle conditional panel with shortcut: cursor on line 32, no breakpoints"
+  );
   // codemirror editor offset: cursorPosition will be line + 1, column + 1
   getCM(dbg).setCursor({ line: 31, ch: 1 });
   pressKey(dbg, "toggleCondPanel");
@@ -46,43 +48,59 @@ add_task(async function() {
   info("close conditional panel");
   pressKey(dbg, "Escape");
 
-  info("add active column breakpoint on line 32 and set cursorPosition")
+  info("add active column breakpoint on line 32 and set cursorPosition");
   await enableFirstBreakpoint(dbg);
   getCM(dbg).setCursor({ line: 31, ch: 1 });
-  info("toggle conditional panel with shortcut and add condition to first breakpoint");
+  info(
+    "toggle conditional panel with shortcut and add condition to first breakpoint"
+  );
   setConditionalBreakpoint(dbg, "1");
   await waitForCondition(dbg, 1);
   const firstBreakpoint = findColumnBreakpoint(dbg, "long.js", 32, 2);
-  is(firstBreakpoint.options.condition, "1", "first breakpoint created with condition using shortcut");
+  is(
+    firstBreakpoint.options.condition,
+    "1",
+    "first breakpoint created with condition using shortcut"
+  );
 
   info("set cursor at second breakpoint position and activate breakpoint");
   getCM(dbg).setCursor({ line: 31, ch: 25 });
 
   await enableSecondBreakpoint(dbg);
-  info("toggle conditional panel with shortcut and add condition to second breakpoint");
+  info(
+    "toggle conditional panel with shortcut and add condition to second breakpoint"
+  );
   setConditionalBreakpoint(dbg, "2");
   await waitForCondition(dbg, 2);
   const secondBreakpoint = findColumnBreakpoint(dbg, "long.js", 32, 26);
-  is(secondBreakpoint.options.condition, "2", "second breakpoint created with condition using shortcut");
+  is(
+    secondBreakpoint.options.condition,
+    "2",
+    "second breakpoint created with condition using shortcut"
+  );
 
-  info("set cursor position near first breakpoint, toggle conditional panel and edit breakpoint");
+  info(
+    "set cursor position near first breakpoint, toggle conditional panel and edit breakpoint"
+  );
   getCM(dbg).setCursor({ line: 31, ch: 7 });
   info("toggle conditional panel and edit condition using shortcut");
   setConditionalBreakpoint(dbg, "2");
   ok(
-    !! waitForCondition(dbg, "12"),
+    !!waitForCondition(dbg, "12"),
     "breakpoint closest to cursor position has been edited"
   );
 
   info("close conditional panel");
   pressKey(dbg, "Escape");
 
-  info("set cursor position near second breakpoint, toggle conditional panel and edit breakpoint");
+  info(
+    "set cursor position near second breakpoint, toggle conditional panel and edit breakpoint"
+  );
   getCM(dbg).setCursor({ line: 31, ch: 21 });
   info("toggle conditional panel and edit condition using shortcut");
   setConditionalBreakpoint(dbg, "3");
   ok(
-    !! waitForCondition(dbg, "13"),
+    !!waitForCondition(dbg, "13"),
     "breakpoint closest to cursor position has been edited"
   );
 });

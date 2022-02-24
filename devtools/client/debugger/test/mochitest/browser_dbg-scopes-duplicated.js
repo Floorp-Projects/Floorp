@@ -188,7 +188,3 @@ function checkScopesLabels(dbg, expected, { startIndex = 0 } = {}) {
   const format = arr => `\n${arr.join("\n")}\n`;
   is(format(labels), format(lines), "got expected scope labels");
 }
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
-}

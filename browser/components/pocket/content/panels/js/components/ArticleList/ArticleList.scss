@@ -13,11 +13,13 @@
     }
   }
 
-  .stp_article_list_thumb {
+  .stp_article_list_thumb,
+  .stp_article_list_thumb_placeholder {
     width: 40px;
     height: 40px;
     border-radius: 4px;
     margin-inline-end: 8px;
+    background-color: #ECECEE;
   }
 
   .stp_article_list_header {
@@ -26,7 +28,7 @@
     font-size: 0.85em;
     line-height: 1.27em;
     color: #15141A;
-    margin: 4px 0px;
+    margin: 0 0 4px;
   }
 
   .stp_article_list_publisher {
@@ -35,6 +37,6 @@
     font-size: 0.85em;
     line-height: 1.27em;
     color: #52525E;
-    margin: 4px 0px;
+    margin: 4px 0 0;
   }
 }

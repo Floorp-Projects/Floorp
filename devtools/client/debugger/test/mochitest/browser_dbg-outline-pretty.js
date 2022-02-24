@@ -3,12 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests that the length of outline functions for original and pretty printed source matches
-add_task(async function () {
+add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
 
   await selectSource(dbg, "simple1.js");
   findElementWithSelector(dbg, ".outline-tab").click();
@@ -19,13 +15,13 @@ add_task(async function () {
   await waitForElementWithSelector(dbg, ".outline-list");
   const prettySource = getItems(dbg);
 
-  is(originalSource.length, prettySource.length, "Length of outline functions for both prettyPrint and originalSource same");
+  is(
+    originalSource.length,
+    prettySource.length,
+    "Length of outline functions for both prettyPrint and originalSource same"
+  );
 });
 
 function getItems(dbg) {
   return findAllElements(dbg, "outlineItems");
-}
-
-function getNthItem(dbg, index) {
-  return findElement(dbg, "outlineItem", index);
 }

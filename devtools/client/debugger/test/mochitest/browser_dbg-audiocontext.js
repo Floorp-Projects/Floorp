@@ -14,5 +14,5 @@ add_task(async function() {
   await waitForPaused(dbg);
   await resume(dbg);
   await invokeInTab("checkACState");
-  ok(true, "No AudioContext state transition are caused by the debugger")
+  ok(true, "No AudioContext state transition are caused by the debugger");
 });

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-"use strict";
-
 // Tests opening the console first, clicking a link
 // opens the editor at the correct location.
 
@@ -19,12 +17,10 @@ add_task(async function() {
 });
 
 async function waitForLink(toolbox, messageText) {
-  const { hud } = toolbox.getPanel("webconsole");
-
   return waitFor(async () => {
     const [message] = await findConsoleMessages(toolbox, messageText);
     if (!message) {
-      return false
+      return false;
     }
     return message.querySelector(".frame-link-source");
   });

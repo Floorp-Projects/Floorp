@@ -59,6 +59,7 @@ fuzzy(0-1,0-1600) random-if(Android) == blend-multiply.svg blend-multiply-ref.sv
 #skip-if(Android) == blend-soft-light.svg blend-soft-light-ref.svg
 skip == blend-difference-stacking.html blend-difference-stacking-ref.html # bug 1458353
 == active-transform-blend-mode.html active-transform-blend-mode-ref.html
+== active-clip-and-mask.html active-clip-and-mask-ref.html
 
 fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 

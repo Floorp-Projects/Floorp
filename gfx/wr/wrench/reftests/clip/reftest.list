@@ -10,7 +10,7 @@ platform(linux,mac) == segmentation-with-other-coordinate-system-clip.yaml segme
 == segmentation-across-rotation.yaml segmentation-across-rotation-ref.yaml
 skip_on(android,device) == color_targets(3) alpha_targets(1) stacking-context-clip.yaml stacking-context-clip-ref.yaml
 == snapping.yaml snapping-ref.yaml
-fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
+fuzzy(160,1055) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
 == clipped-occlusion.yaml clipped-occlusion-ref.yaml
 == clip-empty-inner-rect.yaml clip-empty-inner-rect-ref.yaml
 == iframe-nested-in-stacking-context.yaml iframe-nested-in-stacking-context-ref.yaml

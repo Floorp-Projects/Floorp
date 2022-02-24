@@ -146,6 +146,9 @@ class nsIOService final : public nsIIOService,
 
   nsresult LaunchSocketProcess();
 
+  static bool TooManySocketProcessCrash();
+  static void IncreaseSocketProcessCrashCount();
+
  private:
   // These shouldn't be called directly:
   // - construct using GetInstance
@@ -235,6 +238,7 @@ class nsIOService final : public nsIIOService,
   uint32_t mTotalRequests{0};
   uint32_t mCacheWon{0};
   uint32_t mNetWon{0};
+  static uint32_t sSocketProcessCrashedCount;
 
   // These timestamps are needed for collecting telemetry on PR_Connect,
   // PR_ConnectContinue and PR_Close blocking time.  If we spend very long
@@ -258,7 +262,9 @@ class nsIOService final : public nsIIOService,
   nsTHashSet<nsCString> mObserverTopicForSocketProcess;
   // Some noticications (e.g., NS_XPCOM_SHUTDOWN_OBSERVER_ID) are triggered in
   // socket process, so we should not send the notifications again.
-  nsTHashSet<nsCString> mSocketProcessTopicBlackList;
+  nsTHashSet<nsCString> mSocketProcessTopicBlockedList;
+  // Used to store the topics that are already observed by IOService.
+  nsTHashSet<nsCString> mIOServiceTopicList;
 
   nsCOMPtr<nsIObserverService> mObserverService;
 

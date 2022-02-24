@@ -6,8 +6,8 @@
 
 /* state used in reflow of block frames */
 
-#ifndef BlockReflowInput_h
-#define BlockReflowInput_h
+#ifndef BlockReflowState_h
+#define BlockReflowState_h
 
 #include <tuple>
 
@@ -21,10 +21,10 @@ class nsOverflowContinuationTracker;
 
 namespace mozilla {
 
-// BlockReflowInput contains additional reflow input information that the
+// BlockReflowState contains additional reflow input information that the
 // block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
-class BlockReflowInput {
+class BlockReflowState {
   using BandInfoType = nsFloatManager::BandInfoType;
   using ShapeType = nsFloatManager::ShapeType;
 
@@ -40,7 +40,7 @@ class BlockReflowInput {
           mIsFloatListInBlockPropertyTable(false),
           mCanHaveOverflowMarkers(false) {}
 
-    // Set in the BlockReflowInput constructor when reflowing a "block margin
+    // Set in the BlockReflowState constructor when reflowing a "block margin
     // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
     // which margins apply by default).
     //
@@ -48,7 +48,7 @@ class BlockReflowInput {
     // padding is non-zero.
     bool mIsBStartMarginRoot : 1;
 
-    // Set in the BlockReflowInput constructor when reflowing a "block margin
+    // Set in the BlockReflowState constructor when reflowing a "block margin
     // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
     // which margins apply by default).
     //
@@ -62,7 +62,7 @@ class BlockReflowInput {
     // ShouldApplyBStartMargin() uses it as a fast-path way to return whether
     // the BStart margin should apply.
     //
-    // If the flag hasn't been set in the block reflow input, then
+    // If the flag hasn't been set in the block reflow state, then
     // ShouldApplyBStartMargin() will crawl the line list to see if a block
     // frame precedes the specified frame. If so, the BStart margin should be
     // applied, and the flag is set to cache the result. (If not, the BStart
@@ -71,7 +71,7 @@ class BlockReflowInput {
     // case, the flag won't be set, so subsequent calls to
     // ShouldApplyBStartMargin() will continue crawl the line list.)
     //
-    // This flag is also set in the BlockReflowInput constructor if
+    // This flag is also set in the BlockReflowState constructor if
     // mIsBStartMarginRoot is set; that is, the frame being reflowed is a margin
     // root by default.
     bool mShouldApplyBStartMargin : 1;
@@ -94,7 +94,7 @@ class BlockReflowInput {
   };
 
  public:
-  BlockReflowInput(const ReflowInput& aReflowInput, nsPresContext* aPresContext,
+  BlockReflowState(const ReflowInput& aReflowInput, nsPresContext* aPresContext,
                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
                    bool aBEndMarginRoot, bool aBlockNeedsFloatManager,
                    const nscoord aConsumedBSize,
@@ -156,7 +156,7 @@ class BlockReflowInput {
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
                "Float manager should be valid during the lifetime of "
-               "BlockReflowInput!");
+               "BlockReflowState!");
     return mReflowInput.mFloatManager;
   }
 
@@ -398,4 +398,4 @@ class BlockReflowInput {
 
 };  // namespace mozilla
 
-#endif  // BlockReflowInput_h
+#endif  // BlockReflowState_h

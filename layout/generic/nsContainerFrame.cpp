@@ -471,7 +471,7 @@ bool nsDisplaySelectionOverlay::CreateWebRenderCommands(
   wr::LayoutRect bounds = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
       nsRect(ToReferenceFrame(), Frame()->GetSize()),
       mFrame->PresContext()->AppUnitsPerDevPixel()));
-  aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(),
+  aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(), false,
                     wr::ToColorF(ComputeColor()));
   return true;
 }

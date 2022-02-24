@@ -11,4 +11,7 @@ add_task(async function() {
 
   // This will throw if things fail to pretty-print and render properly.
   await prettyPrint(dbg);
+
+  await resume(dbg);
+  await debuggerDone;
 });

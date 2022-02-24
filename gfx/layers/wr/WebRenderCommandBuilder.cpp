@@ -216,7 +216,8 @@ struct Grouper {
                        WebRenderCommandBuilder* aCommandBuilder,
                        wr::DisplayListBuilder& aBuilder,
                        wr::IpcResourceUpdateQueue& aResources, DIGroup* aGroup,
-                       nsDisplayList* aList, const StackingContextHelper& aSc);
+                       nsDisplayList* aList, nsDisplayItem* aWrappingItem,
+                       const StackingContextHelper& aSc);
   // Builds a group of display items without promoting anything to active.
   bool ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
                                     wr::DisplayListBuilder& aBuilder,
@@ -748,7 +749,7 @@ struct DIGroup {
     // cf. Bug 1455422.
     // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
 
-    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
+    aBuilder.PushImage(dest, dest, !backfaceHidden, false, rendering,
                        wr::AsImageKey(*mKey));
   }
 
@@ -1184,6 +1185,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                               wr::DisplayListBuilder& aBuilder,
                               wr::IpcResourceUpdateQueue& aResources,
                               DIGroup* aGroup, nsDisplayList* aList,
+                              nsDisplayItem* aWrappingItem,
                               const StackingContextHelper& aSc) {
   RenderRootStateManager* manager =
       aCommandBuilder->mManager->GetRenderRootStateManager();
@@ -1193,6 +1195,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
   // We need to track whether we have active siblings for mixed blend mode.
   bool encounteredActiveItem = false;
+  bool isFirstGroup = true;
 
   for (auto it = aList->begin(); it != aList->end(); ++it) {
     nsDisplayItem* item = *it;
@@ -1200,6 +1203,9 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
     if (startOfCurrentGroup == aList->end()) {
       startOfCurrentGroup = it;
+      if (!isFirstGroup) {
+        mClipManager.SwitchItem(aDisplayListBuilder, aWrappingItem);
+      }
     }
 
     if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
@@ -1275,6 +1281,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent--;
       }
 
+      isFirstGroup = false;
       startOfCurrentGroup = aList->end();
       currentGroup = &groupData->mFollowingGroup;
     } else {  // inactive item
@@ -1541,7 +1548,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mScale = scale;
   group.mScrollId = scrollId;
   g.ConstructGroups(aDisplayListBuilder, this, aBuilder, aResources, &group,
-                    aList, aSc);
+                    aList, aWrappingItem, aSc);
   mClipManager.EndList(aSc);
 }
 
@@ -2058,7 +2065,8 @@ bool WebRenderCommandBuilder::PushImage(
 
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), false, rendering,
+                     key.value());
 
   return true;
 }
@@ -2084,10 +2092,13 @@ bool WebRenderCommandBuilder::PushImageProvider(
     return false;
   }
 
+  bool antialiased = aItem->GetType() == DisplayItemType::TYPE_SVG_GEOMETRY;
+
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), antialiased, rendering,
+                     key.value());
 
   return true;
 }
@@ -2699,7 +2710,7 @@ bool WebRenderCommandBuilder::PushItemAsImage(
 
   wr::LayoutRect dest = wr::ToLayoutRect(imageRect);
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), rendering,
+  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), false, rendering,
                      fallbackData->GetImageKey().value());
   return true;
 }

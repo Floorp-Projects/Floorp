@@ -42,9 +42,7 @@ VRProcessParent::VRProcessParent(Listener* aListener)
   MOZ_COUNT_CTOR(VRProcessParent);
 }
 
-VRProcessParent::~VRProcessParent() {
-  MOZ_COUNT_DTOR(VRProcessParent);
-}
+VRProcessParent::~VRProcessParent() { MOZ_COUNT_DTOR(VRProcessParent); }
 
 bool VRProcessParent::Launch() {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);

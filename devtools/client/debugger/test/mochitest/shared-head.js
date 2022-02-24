@@ -2,12 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/* eslint-disable no-unused-vars */
-
 /**
  * Helper methods to drive with the debugger during mochitests. This file can be safely
  * required from other panel test files.
  */
+
+/* eslint-disable no-unused-vars */
+
+// We can't use "import globals from head.js" because of bug 1395426.
+// So workaround by manually importing the few symbols we are using from it.
+// (Note that only ./mach eslint devtools/client fails while devtools/client/debugger passes)
+/* global EXAMPLE_URL, ContentTask */
+
+// Assume that shared-head is always imported before this file
+/* import-globals-from ../../../shared/test/shared-head.js */
 
 /**
  * Helper method to create a "dbg" context for other tools to use
@@ -21,7 +29,7 @@ function createDebuggerContext(toolbox) {
     commands: toolbox.commands,
     toolbox: toolbox,
     win: win,
-    panel: panel
+    panel: panel,
   };
 }
 
@@ -232,10 +240,8 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
           if (!source.url.includes(sourceOrUrl)) {
             return false;
           }
-        } else {
-          if (source.id != sourceOrUrl.id) {
-            return false;
-          }
+        } else if (source.id != sourceOrUrl.id) {
+          return false;
         }
       }
 
@@ -317,7 +323,6 @@ function assertDebugLine(dbg, line, column) {
   // on the line is rendered and in the dom.
   getCM(dbg).scrollIntoView({ line, ch: 0 });
 
-
   if (!lineInfo.wrapClass) {
     const pauseLine = getVisibleSelectedFrameLine(dbg);
     ok(false, `Expected pause line on line ${line}, it is on ${pauseLine}`);
@@ -381,7 +386,6 @@ function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
   }
 }
 
-
 /**
  * Assert that the debugger is highlighting the correct location.
  *
@@ -438,7 +442,12 @@ function isPaused(dbg) {
  * @param {Number} expectedLine
  * @param {Number} [expectedColumn]
  */
-function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expectedColumn) {
+function assertPausedAtSourceAndLine(
+  dbg,
+  expectedSourceId,
+  expectedLine,
+  expectedColumn
+) {
   // Check that the debugger is paused.
   assertPaused(dbg);
 
@@ -449,7 +458,9 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expect
   ok(frames.length >= 1, "Got at least one frame");
 
   // Lets make sure we can assert both original and generated file locations when needed
-  const { sourceId, line, column } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
+  const { sourceId, line, column } = isGeneratedId(expectedSourceId)
+    ? frames[0].generatedLocation
+    : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
@@ -653,7 +664,7 @@ registerCleanupFunction(() => {
  */
 function pauseTest() {
   info("Test paused. Invoke resumeTest to continue.");
-  return new Promise(resolve => (resumeTest = resolve));
+  return new Promise(resolve => (window.resumeTest = resolve));
 }
 
 /**
@@ -670,20 +681,28 @@ function pauseTest() {
  *        If true, won't throw if the source is missing.
  * @return {Object} source
  */
-function findSource(dbg, filenameOrUrlOrSource, { silent } = { silent: false }) {
+function findSource(
+  dbg,
+  filenameOrUrlOrSource,
+  { silent } = { silent: false }
+) {
   if (typeof filenameOrUrlOrSource !== "string") {
     // Support passing in a source object itself all APIs that use this
     // function support both styles
-    return filenameOrUrlOrSource; 
+    return filenameOrUrlOrSource;
   }
 
   const sources = dbg.selectors.getSourceList();
   const source = sources.find(s => {
     // Sources don't have a file name attribute, we need to compute it here:
-    const sourceFileName = s.url ? s.url.substring(s.url.lastIndexOf("/") + 1) : "";
+    const sourceFileName = s.url
+      ? s.url.substring(s.url.lastIndexOf("/") + 1)
+      : "";
     // The input argument may either be only the filename, or the complete URL
     // This helps match sources whose URL doesn't contain a filename, like data: URLs
-    return sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource;
+    return (
+      sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource
+    );
   });
 
   if (!source) {
@@ -711,7 +730,7 @@ function findSourceContent(dbg, url, opts) {
   }
 
   if (content.state !== "fulfilled") {
-    throw new Error("Expected loaded source, got" + content.value);
+    throw new Error(`Expected loaded source, got${content.value}`);
   }
 
   return content.value;
@@ -890,8 +909,6 @@ async function navigateToAbsoluteURL(dbg, url, ...sources) {
   await navigateTo(url);
   return waitForSources(dbg, ...sources);
 }
-
-
 
 function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const { getSource, getFirstBreakpointPosition } = dbg.selectors;
@@ -1172,29 +1189,25 @@ async function togglePauseOnExceptions(
  */
 function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
-  return ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { fnc, args },
-    ({ fnc, args }) => content.wrappedJSObject[fnc](...args)
+  return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, options =>
+    content.wrappedJSObject[options.fnc](...options.args)
   );
 }
 
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [{ selector }],
-    function({ selector }) {
-      const element = content.document.querySelector(selector);
-      // Run the click in another event loop in order to immediately resolve spawn's promise.
-      // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
-      // be destroyed while its query is still pending. And this would reject the promise.
-      content.setTimeout(() => {
-        element.click();
-      });
-    }
-  );
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+    _selector
+  ) {
+    const element = content.document.querySelector(_selector);
+    // Run the click in another event loop in order to immediately resolve spawn's promise.
+    // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
+    // be destroyed while its query is still pending. And this would reject the promise.
+    content.setTimeout(() => {
+      element.click();
+    });
+  });
 }
 
 const isLinux = Services.appinfo.OS === "Linux";
@@ -1476,6 +1489,7 @@ const selectors = {
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
+  breakpointHeadings: ".breakpoints-list .breakpoint-heading",
   breakpointItems: ".breakpoints-list .breakpoint",
   breakpointContextMenu: {
     disableSelf: "#node-menu-disable-self",
@@ -2217,7 +2231,7 @@ async function hasConsoleMessage({ toolbox }, msg) {
 function evaluateExpressionInConsole(hud, expression) {
   const onResult = new Promise(res => {
     const onNewMessage = messages => {
-      for (let message of messages) {
+      for (const message of messages) {
         if (message.node.classList.contains("result")) {
           hud.ui.off("new-messages", onNewMessage);
           res(message.node);
@@ -2331,8 +2345,8 @@ function createVersionizedHttpTestServer(testFolderName) {
     if (request.path == "/" || request.path == "/index.html") {
       response.setHeader("Content-Type", "text/html");
     }
-    const url = URL_ROOT + `examples/${testFolderName}/v${currentVersion}${request.path}`;
-    info("[test-http-server] serving: " + url);
+    const url = `${URL_ROOT}examples/${testFolderName}/v${currentVersion}${request.path}`;
+    info(`[test-http-server] serving: ${url}`);
     const content = await fetch(url);
     const text = await content.text();
     response.write(text);

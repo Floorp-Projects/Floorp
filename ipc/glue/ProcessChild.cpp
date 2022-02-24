@@ -70,7 +70,7 @@ bool ProcessChild::InitPrefs(int aArgc, char* aArgv[]) {
 ProcessChild::~ProcessChild() { gProcessChild = nullptr; }
 
 /* static */
-void ProcessChild::NotifyImpendingShutdown() {
+void ProcessChild::NotifiedImpendingShutdown() {
   sExpectingShutdown = true;
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::IPCShutdownState,
