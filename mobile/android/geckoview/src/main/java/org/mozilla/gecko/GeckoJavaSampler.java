@@ -21,13 +21,26 @@ import java.util.concurrent.TimeUnit;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
-// Bug 1618560: Currently we only profile the Android UI thread. Ideally we should
-// be able to profile multiple threads.
+/**
+ * Takes samples and adds markers for Java threads for the Gecko profiler.
+ *
+ * <p>This class is thread safe because it synchronizes access to its mutable state.
+ *
+ * <p>Bug 1618560: Currently we only profile the Android UI thread. Ideally we should be able to
+ * profile multiple threads.
+ */
 public class GeckoJavaSampler {
   private static final String LOGTAG = "GeckoJavaSampler";
+
+  @GuardedBy("GeckoJavaSampler.class")
   private static SamplingRunnable sSamplingRunnable;
+
+  @GuardedBy("GeckoJavaSampler.class")
   private static ScheduledExecutorService sSamplingScheduler;
+
+  @GuardedBy("GeckoJavaSampler.class")
   private static ScheduledFuture<?> sSamplingFuture;
+
   private static final MarkerStorage sMarkerStorage = new MarkerStorage();
 
   /**
@@ -311,11 +324,11 @@ public class GeckoJavaSampler {
   /**
    * Returns the sample with the given sample ID.
    *
-   * Thread safety code smell: this method call is synchronized but this class returns a reference
-   * to an effectively immutable object so that the reference is accessible after synchronization
-   * ends. It's unclear if this is thread safe. However, this is safe with the current callers
-   * (because they are all synchronized and don't leak the Sample) so we don't investigate it
-   * further.
+   * <p>Thread safety code smell: this method call is synchronized but this class returns a
+   * reference to an effectively immutable object so that the reference is accessible after
+   * synchronization ends. It's unclear if this is thread safe. However, this is safe with the
+   * current callers (because they are all synchronized and don't leak the Sample) so we don't
+   * investigate it further.
    */
   private static synchronized Sample getSample(final int aSampleId) {
     return sSamplingRunnable.getSample(aSampleId);
