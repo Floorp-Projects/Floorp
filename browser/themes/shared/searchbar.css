@@ -78,6 +78,12 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
+@media (-moz-platform: windows) {
+  .searchbar-engine-one-off-item:focus-visible {
+    outline: none;
+  }
+}
+
 /* We don't handle `:active` because it doesn't work on the search or settings
    buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
 .searchbar-engine-one-off-item:not([selected]):hover {
@@ -155,4 +161,19 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
+@media (-moz-platform: windows-win10) {
+  #PopupSearchAutoComplete {
+    /* A border is necessary because the shadow is bottom-right */
+    border-color: var(--menu-border-color);
+    border-radius: var(--arrowpanel-border-radius);
+    -moz-window-shadow: cliprounded;
+  }
+}
+
+@media (-moz-platform: macos) {
+  #PopupSearchAutoComplete {
+    border-radius: 4px;
+  }
 }
