@@ -313,6 +313,12 @@ Shippable/nightly builds are normally required to set enable-full-crashsymbols,
 but in some limited corner cases (universal builds), that is not wanted, because
 the symbols are uploaded independently already.
 
+upload-generated-sources
+========================
+generated-sources are normally only uploaded to S3 for shippable/nightly
+builds.  This attributes turns that on for other builds such as macosx
+before unification.
+
 cron
 ====
 Indicates that a task is meant to be run via cron tasks, and should not be run

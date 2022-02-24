@@ -123,6 +123,11 @@ upload-generated-sources
 
 Upload-generated-sources tasks run after builds and upload source files that were generated as part of the build process to an s3 bucket for later use in links from crash reports or when debugging shipped builds.
 
+upload-generated-sources-dummy
+------------------------------
+
+Upload-generated-sources-dummy ensures both x64 and macosx64 tasks run for nightlies and releases.
+
 valgrind
 --------
 
