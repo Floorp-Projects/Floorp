@@ -62,6 +62,7 @@ class DataTransferItemList final : public nsISupports, public nsWrapperCache {
 
   void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
+  // @param aHidden true, iff the item should be hidden from non-chrome code.
   already_AddRefed<DataTransferItem> SetDataWithPrincipal(
       const nsAString& aType, nsIVariant* aData, uint32_t aIndex,
       nsIPrincipal* aPrincipal, bool aInsertOnly, bool aHidden,
@@ -91,6 +92,8 @@ class DataTransferItemList final : public nsISupports, public nsWrapperCache {
   void ClearDataHelper(DataTransferItem* aItem, uint32_t aIndexHint,
                        uint32_t aMozOffsetHint, nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aRv);
+
+  // @param aHidden true, iff the item should be hidden from non-chrome code.
   DataTransferItem* AppendNewItem(uint32_t aIndex, const nsAString& aType,
                                   nsIVariant* aData, nsIPrincipal* aPrincipal,
                                   bool aHidden);
