@@ -313,7 +313,21 @@ public class GeckoJavaSampler {
     return null;
   }
 
+  /**
+   * A start/stop-aware container for storing profiler markers.
+   *
+   * <p>This class is thread safe: see {@link #mMarkers} for the threading policy. Start/stop are
+   * guaranteed to execute in the order they are called but other methods do not have such ordering
+   * guarantees.
+   */
   private static class MarkerStorage {
+    /**
+     * The underlying storage for the markers. This field maintains thread safety without using
+     * synchronized everywhere by:
+     * <li>- using volatile to allow non-blocking reads
+     * <li>- leveraging a thread safe collection when accessing the underlying data
+     * <li>- looping until success for compound read-write operations
+     */
     private volatile Queue<Marker> mMarkers;
 
     MarkerStorage() {}
