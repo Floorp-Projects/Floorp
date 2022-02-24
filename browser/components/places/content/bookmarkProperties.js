@@ -418,7 +418,7 @@ var BookmarkPropertiesPanel = {
 
   onDialogAccept() {
     // We must blur current focused element to save its changes correctly
-    document.commandDispatcher.focusedElement.blur();
+    document.commandDispatcher.focusedElement?.blur();
     // We have to uninit the panel first, otherwise late changes could force it
     // to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
