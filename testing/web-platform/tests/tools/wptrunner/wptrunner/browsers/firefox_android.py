@@ -296,7 +296,8 @@ class FirefoxAndroidBrowser(Browser):
         return ExecutorBrowser, {"marionette_port": self.marionette_port,
                                  # We never want marionette to install extensions because
                                  # that doesn't work on Android; instead they are in the profile
-                                 "extensions": []}
+                                 "extensions": [],
+                                 "supports_devtools": False}
 
     def check_crash(self, process, test):
         if not os.environ.get("MINIDUMP_STACKWALK", "") and self.stackwalk_binary:
@@ -356,4 +357,5 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
         args["androidPackage"] = self.package_name
         args["androidDeviceSerial"] = self.device_serial
         args["env"] = self.env
+        args["supports_devtools"] = False
         return cls, args
