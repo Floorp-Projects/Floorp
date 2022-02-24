@@ -75,16 +75,24 @@ public class GeckoJavaSampler {
         mJavaTime = SystemClock.elapsedRealtime();
       }
       for (int i = 0; i < aStack.length; i++) {
-        mFrames[aStack.length - 1 - i] = new Frame();
-        mFrames[aStack.length - 1 - i].methodName = aStack[i].getMethodName();
-        mFrames[aStack.length - 1 - i].className = aStack[i].getClassName();
+        mFrames[aStack.length - 1 - i] =
+            new Frame(aStack[i].getMethodName(), aStack[i].getClassName());
       }
     }
   }
 
+  /**
+   * A container for the metadata around a call in a stack. This class is thread safe by being
+   * immutable.
+   */
   private static class Frame {
-    public String methodName;
-    public String className;
+    public final String methodName;
+    public final String className;
+
+    private Frame(final String methodName, final String className) {
+      this.methodName = methodName;
+      this.className = className;
+    }
   }
 
   private static class Marker extends JNIObject {
