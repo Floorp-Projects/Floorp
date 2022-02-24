@@ -186,6 +186,7 @@ macosx64-x64-devedition/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: devedition
     index:
@@ -222,6 +223,7 @@ macosx64-aarch64-devedition/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: devedition
     index:
@@ -483,6 +485,7 @@ macosx64-x64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: firefox
     index:
@@ -515,6 +518,7 @@ macosx64-aarch64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: firefox
     index:
