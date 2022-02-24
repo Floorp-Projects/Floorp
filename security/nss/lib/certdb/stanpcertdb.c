@@ -299,9 +299,15 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     /* Import the perm instance onto the internal token */
     slot = PK11_GetInternalKeySlot();
     internal = PK11Slot_GetNSSToken(slot);
+    if (!internal) {
+        PK11_FreeSlot(slot);
+        PORT_SetError(SEC_ERROR_NO_TOKEN);
+        return SECFailure;
+    }
     permInstance = nssToken_ImportCertificate(
         internal, NULL, NSSCertificateType_PKIX, &c->id, stanNick, &c->encoding,
         &c->issuer, &c->subject, &c->serial, cert->emailAddr, PR_TRUE);
+    (void)nssToken_Destroy(internal);
     nss_ZFreeIf(stanNick);
     stanNick = NULL;
     PK11_FreeSlot(slot);

@@ -56,7 +56,7 @@ nssCryptokiObject_Destroy(
     nssCryptokiObject *object)
 {
     if (object) {
-        nssToken_Destroy(object->token);
+        (void)nssToken_Destroy(object->token);
         nss_ZFreeIf(object->label);
         nss_ZFreeIf(object);
     }
@@ -150,17 +150,10 @@ nssTokenArray_Destroy(
     if (tokens) {
         NSSToken **tokenp;
         for (tokenp = tokens; *tokenp; tokenp++) {
-            nssToken_Destroy(*tokenp);
+            (void)nssToken_Destroy(*tokenp);
         }
         nss_ZFreeIf(tokens);
     }
-}
-
-NSS_IMPLEMENT void
-NSSTokenArray_Destroy(
-    NSSToken **tokens)
-{
-    nssTokenArray_Destroy(tokens);
 }
 
 NSS_IMPLEMENT void
@@ -365,7 +358,7 @@ create_object(
     /* The cache is tied to the token, and therefore the objects
      * in it should not hold references to the token.
      */
-    nssToken_Destroy(object->token);
+    (void)nssToken_Destroy(object->token);
     rvCachedObject->object = object;
     rvCachedObject->attributes = nss_ZNEWARRAY(arena, CK_ATTRIBUTE, numTypes);
     if (!rvCachedObject->attributes) {
@@ -568,7 +561,7 @@ get_token_objects_for_cache(
                                                      &numObjects,
                                                      &status);
     if (status != PR_SUCCESS) {
-        nss_ZFreeIf(objects);
+        nssCryptokiObjectArray_Destroy(objects);
         return status;
     }
     for (i = 0; i < numObjects; i++) {
@@ -584,7 +577,8 @@ get_token_objects_for_cache(
     } else {
         PRUint32 j;
         for (j = 0; j < i; j++) {
-            /* sigh */
+            /* Any token references that were removed in successful loop iterations
+             * need to be restored before we call nssCryptokiObjectArray_Destroy */
             nssToken_AddRef(cache->objects[objectType][j]->object->token);
             nssArena_Destroy(cache->objects[objectType][j]->arena);
         }
