@@ -1508,6 +1508,8 @@ this.LoginHelper = {
       return await processor.processLoginsAndBuildSummary();
     } finally {
       this.importing = false;
+
+      Services.obs.notifyObservers(null, "passwordmgr-reload-all");
     }
   },
 
