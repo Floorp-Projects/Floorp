@@ -121,7 +121,7 @@ add_task(async function testReloadingStableOriginalSource() {
 
   // There will initially be zero breakpoints, but wait to make sure none are
   // installed while syncing.
-  await waitForTime(1000);
+  await wait(1000);
 
   assertNotPaused(dbg);
   is(dbg.selectors.getBreakpointCount(dbg), 0, "No breakpoints");

@@ -524,16 +524,6 @@ async function waitForPausedThread(dbg, thread) {
   return waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
 }
 
-/*
- * useful for waiting for a short amount of time as
- * a placeholder for a better waitForX handler.
- *
- * e.g await waitForTime(500)
- */
-function waitForTime(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 function isSelectedFrameSelected(dbg, state) {
   const frame = dbg.selectors.getVisibleSelectedFrame();
 
