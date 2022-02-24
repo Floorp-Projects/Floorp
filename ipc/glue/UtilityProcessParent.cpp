@@ -82,25 +82,29 @@ mozilla::ipc::IPCResult UtilityProcessParent::RecvFOGData(ByteBuf&& aBuf) {
 }
 
 void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
+  RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+
   if (aWhy == AbnormalShutdown) {
     nsAutoString dumpID;
     GenerateCrashReport(OtherPid(), &dumpID);
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-      // It's okay for dumpID to be empty if there was no minidump generated
-      // tests like ipc/glue/test/browser/browser_utility_crashReporter.js are
-      // there to verify this
-      if (!dumpID.IsEmpty()) {
-        props->SetPropertyAsAString(u"dumpID"_ns, dumpID);
-      }
-
-      nsAutoString pid;
-      pid.AppendInt(static_cast<uint64_t>(OtherPid()));
-      obs->NotifyObservers((nsIPropertyBag2*)props, "ipc:utility-shutdown",
-                           pid.get());
+    // It's okay for dumpID to be empty if there was no minidump generated
+    // tests like ipc/glue/test/browser/browser_utility_crashReporter.js are
+    // there to verify this
+    if (!dumpID.IsEmpty()) {
+      props->SetPropertyAsAString(u"dumpID"_ns, dumpID);
     }
+  }
+
+  nsAutoString pid;
+  pid.AppendInt(static_cast<uint64_t>(OtherPid()));
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers((nsIPropertyBag2*)props, "ipc:utility-shutdown",
+                         pid.get());
+  } else {
+    NS_WARNING("Could not get a nsIObserverService, ipc:utility-shutdown skip");
   }
 
   mHost->OnChannelClosed();
