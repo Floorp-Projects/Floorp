@@ -60,8 +60,7 @@ def set_e10s(enable):
             """
         app_version = self.execute_script("return Services.appinfo.version")
         self.restart(env={ENV_DISABLE_E10S: app_version})
-        self.set_env(ENV_DISABLE_E10S, "null")
-            """
+        self.set_env(ENV_DISABLE_E10S, "null")\n"""
         )
     else:
         raise Exception("Not implemented")
@@ -71,22 +70,19 @@ def set_header(enable):
     if enable:
         output.write(
             """
-        self.restart(env={ENV_DISABLE_WIN32K: "1"})
-            """
+        self.restart(env={ENV_DISABLE_WIN32K: "1"})\n"""
         )
     else:
         output.write(
             """
-        self.set_env(ENV_DISABLE_WIN32K, "")
-            """
+        self.set_env(ENV_DISABLE_WIN32K, "")\n"""
         )
 
 
 def set_bad_requirements(enabled):
     output.write(
         """
-        self.marionette.set_pref(Prefs.WEBGL, {0})
-            """.format(
+        self.marionette.set_pref(Prefs.WEBGL, {0})\n""".format(
             "False" if enabled else "True"
         )
     )
@@ -106,7 +102,7 @@ def print_assertion(assertion):
             sessionStatus=ContentWin32kLockdownState.{1},
             experimentStatus=ExperimentStatus.{2},
             pref={3},
-            enrollmentStatusPref=ExperimentStatus.{4}
+            enrollmentStatusPref=ExperimentStatus.{4},
         )\n""".format(
             *assertion
         )
@@ -118,7 +114,7 @@ def print_assertion(assertion):
 
 TESTS = open("win32k_tests.txt", "r").readlines()
 
-output = open("test_win32k_enrollment.py", "w")
+output = open("test_win32k_enrollment.py", "w", newline="\n")
 header = open("test_win32k_enrollment.template.py", "r")
 for l in header:
     output.write(l)

@@ -4338,6 +4338,12 @@ const BrowserSearch = {
       },
       button
     );
+
+    // Update engine name in the placeholder to the new default engine name.
+    this._updateURLBarPlaceholderFromDefaultEngine(
+      PrivateBrowsingUtils.isWindowPrivate(window),
+      false
+    ).catch(Cu.reportError);
   },
 };
 

@@ -69,6 +69,7 @@ class MOZ_STACK_CLASS DragDataProducer {
                    nsICookieJarSettings** aCookieJarSettings);
 
  private:
+  // @param aHidden true, iff the data should be hidden from non-chrome code.
   void AddString(DataTransfer* aDataTransfer, const nsAString& aFlavor,
                  const nsAString& aData, nsIPrincipal* aPrincipal,
                  bool aHidden = false);

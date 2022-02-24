@@ -29,11 +29,6 @@ class UtilityProcessImpl final : public ipc::ProcessChild {
  private:
   RefPtr<UtilityProcessChild> mUtility;
   DISALLOW_COPY_AND_ASSIGN(UtilityProcessImpl);
-
-#if defined(XP_WIN)
-  // This object initializes and configures COM.
-  mozilla::mscom::ProcessRuntime mCOMRuntime;
-#endif
 };
 
 }  // namespace mozilla::ipc

@@ -23,8 +23,7 @@ class RemoteDecoderManagerParent final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerParent, override)
 
   static bool CreateForContent(
-      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
-      const bool aAllowHardwareDecoding);
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
 
   static bool CreateVideoBridgeToOtherProcess(
       Endpoint<layers::PVideoBridgeChild>&& aEndpoint);
@@ -51,8 +50,6 @@ class RemoteDecoderManagerParent final
 
   bool OnManagerThread();
 
-  bool AllowHardwareDecoding() const { return mAllowHardwareDecoding; };
-
   // Can be called from manager thread only
   PDMFactory& EnsurePDMFactory();
 
@@ -72,8 +69,7 @@ class RemoteDecoderManagerParent final
   void ActorDealloc() override;
 
  private:
-  RemoteDecoderManagerParent(nsISerialEventTarget* aThread,
-                             const bool aAllowHardwareDecoding);
+  explicit RemoteDecoderManagerParent(nsISerialEventTarget* aThread);
   ~RemoteDecoderManagerParent();
 
   void Open(Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
@@ -83,8 +79,6 @@ class RemoteDecoderManagerParent final
 
   nsCOMPtr<nsISerialEventTarget> mThread;
   RefPtr<PDMFactory> mPDMFactory;
-
-  const bool mAllowHardwareDecoding;
 };
 
 }  // namespace mozilla

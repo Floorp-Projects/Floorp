@@ -193,6 +193,9 @@ add_task(async function test_validate_registerContentScripts_params() {
         );
       }
 
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
+
       browser.test.notifyPass("test-finished");
     },
     files: {
@@ -216,11 +219,79 @@ add_task(async function test_registerContentScripts_with_already_registered_id()
 
       await browser.scripting.registerContentScripts([script]);
 
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
       await browser.test.assertRejects(
         browser.scripting.registerContentScripts([script]),
         `Content script with id "${script.id}" is already registered.`,
         "got expected error"
       );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_validate_getRegisteredContentScripts_params() {
+  let extension = makeExtension({
+    async background() {
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      scripts = await browser.scripting.getRegisteredContentScripts({
+        ids: ["non-existent-id"]
+      });
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      browser.test.notifyPass("test-finished");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_getRegisteredContentScripts() {
+  let extension = makeExtension({
+    async background() {
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      const aScript = {
+        id: "a-script",
+        js: ["script.js"],
+        matches: ["<all_urls>"],
+      };
+
+      await browser.scripting.registerContentScripts([aScript]);
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+      browser.test.assertEq(aScript.id, scripts[0].id, "expected correct id");
+
+      // This should return no registered scripts.
+      scripts = await browser.scripting.getRegisteredContentScripts({ ids: [] });
+      browser.test.assertEq(0, scripts.length, "expected 0 registered script");
+
+      // Verify that invalid IDs are omitted but valid IDs are used to return
+      // registered scripts.
+      scripts = await browser.scripting.getRegisteredContentScripts({
+        ids: ["non-existent-id", aScript.id]
+      });
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+      browser.test.assertEq(aScript.id, scripts[0].id, "expected correct id");
 
       browser.test.notifyPass("test-finished");
     },
@@ -292,7 +363,22 @@ add_task(async function test_registerContentScripts_js() {
             }
           ],
         },
+        {
+          title: "empty excludeMatches",
+          params: [
+            {
+              id: "script-5",
+              // This path should be normalized.
+              js: ["/script-5.js"],
+              matches: ["*://test1.example.com/*"],
+              excludeMatches: [],
+            }
+          ],
+        },
       ];
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
 
       for (const { title, params } of TEST_CASES) {
         const res = await browser.scripting.registerContentScripts(params);
@@ -301,7 +387,68 @@ add_task(async function test_registerContentScripts_js() {
           res,
           `${title} - expected no result`
         );
+
+        const script = await browser.scripting.getRegisteredContentScripts({
+          ids: params.map(param => param.id)
+        });
+        browser.test.assertEq(
+          params.length,
+          script.length,
+          `${title} - got the expected number of registered scripts`
+        );
       }
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(
+        // A test case declared above does not contain any script to register.
+        TEST_CASES.length - 1,
+        scripts.length,
+        "got the expected number of registered scripts"
+      );
+      browser.test.assertEq(
+        JSON.stringify([
+          {
+            id: "script-1",
+            allFrames: false,
+            js: ["script-1.js"],
+            matches: ["*://test1.example.com/*"],
+          },
+          {
+            id: "script-2",
+            allFrames: true,
+            js: ["script-2.js"],
+            matches: [
+              "*://test1.example.com/*",
+              "*://example.org/*",
+            ],
+          },
+          {
+            id: "script-3",
+            allFrames: true,
+            excludeMatches: ["*://test1.example.com/*"],
+            js: ["script-3.js"],
+            matches: [
+              "*://test1.example.com/*",
+              "*://example.org/*",
+            ],
+          },
+          {
+            id: "script-4",
+            allFrames: false,
+            js: ["script-4-1.js", "script-4-2.js"],
+            matches: ["*://test1.example.com/*"],
+          },
+          {
+            id: "script-5",
+            allFrames: false,
+            excludeMatches: [],
+            js: ["script-5.js"],
+            matches: ["*://test1.example.com/*"],
+          },
+        ]),
+        JSON.stringify(scripts),
+        "got expected scripts"
+      );
 
       browser.test.sendMessage("background-ready");
     },
@@ -337,6 +484,12 @@ add_task(async function test_registerContentScripts_js() {
         );
         delete window.SCRIPT_4_INJECTED;
       },
+      "script-5.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-5.js", value: document.title }
+        );
+      },
     },
   });
 
@@ -348,7 +501,7 @@ add_task(async function test_registerContentScripts_js() {
       scriptsRan++;
 
       // The value below should be updated when TEST_CASES above is changed.
-      if (scriptsRan === 5) {
+      if (scriptsRan === 6) {
         resolve();
       }
     });
@@ -382,6 +535,7 @@ add_task(async function test_registerContentScripts_js() {
       // script-4-1.js will add a prop to the `window` object, which should be
       // read by `script-4-2.js`.
       { file: "script-4-2.js", value: "SCRIPT_4_INJECTED" },
+      { file: "script-5.js", value: "file contains iframe" },
     ]) === JSON.stringify(results),
     "got expected script results" + JSON.stringify(results)
   );
@@ -594,6 +748,42 @@ add_task(async function test_registerContentScripts_twice_with_same_id() {
         `Content script with id "script-that-should-not-run" is already registered.`,
         results[1].reason.message,
         "expected reason"
+      );
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_getRegisteredContentScripts_during_a_registration() {
+  let extension = makeExtension({
+    async background() {
+      browser.scripting.registerContentScripts([
+        {
+          id: "a-script",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      const scripts = await browser.scripting.getRegisteredContentScripts();
+      // This test covers the case where `options` is `undefined` in the
+      // `getRegisteredContentScripts()` implementation because we call this
+      // method during a registration that is not yet complete.
+      browser.test.assertEq(
+        "[]",
+        JSON.stringify(scripts),
+        "expected empty result array"
       );
 
       browser.test.sendMessage("background-done");

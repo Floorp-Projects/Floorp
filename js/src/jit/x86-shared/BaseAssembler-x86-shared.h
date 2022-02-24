@@ -1831,7 +1831,7 @@ class BaseAssembler : public GenericAssembler {
     }
 
     spew("cmpb       $0x%x, %s", uint32_t(rhs), GPReg8Name(lhs));
-    m_formatter.oneByteOp(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
+    m_formatter.oneByteOp(OP_GROUP1_EbIb, lhs, GROUP1_OP_CMP);
     m_formatter.immediate8(rhs);
   }
 
