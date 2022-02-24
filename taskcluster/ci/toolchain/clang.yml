@@ -75,32 +75,6 @@ linux64-clang-13-mingw-x64:
         toolchain:
             - linux64-clang-13
 
-linux64-clang-trunk:
-    description: "Clang trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TL(clang-trunk)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/2stages.json'
-        resources:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/2stages.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    run-on-projects: []
-    fetches:
-        fetch:
-            - clang-trunk
-        toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt
-
 linux64-clang-13-stage1:
     description: "Clang 13 toolchain build"
     treeherder:
@@ -420,3 +394,46 @@ win64-clang-13-stage1:
             - clang-13
             - cmake
             - ninja
+
+linux64-clang-trunk-raw:
+    description: "Clang trunk toolchain build"
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TL(clang-trunk-raw)
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/2stages.json'
+        resources:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/2stages.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    run-on-projects: []
+    fetches:
+        fetch:
+            - clang-trunk
+        toolchain:
+            - linux64-toolchain-sysroot
+
+linux64-clang-trunk:
+    description: "Clang trunk toolchain build"
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TL(clang-trunk)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang.sh
+        toolchain-artifact: public/build/clang.tar.zst
+    run-on-projects: []
+    fetches:
+        toolchain:
+            - linux64-clang-trunk-raw
+            - wasm32-wasi-compiler-rt

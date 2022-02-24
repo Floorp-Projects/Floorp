@@ -64,6 +64,10 @@ public class GeckoView extends FrameLayout {
 
   private Integer mLastCoverColor;
   protected @Nullable GeckoSession mSession;
+  // Whether this GeckoView instance has a session that is no longer valid, e.g. because the session
+  // associated to this GeckoView was attached to a different GeckoView instance.
+  private boolean mIsSessionPoisoned = false;
+
   private boolean mStateSaved;
 
   private @Nullable SurfaceViewWrapper mSurfaceWrapper;
@@ -428,8 +432,24 @@ public class GeckoView extends FrameLayout {
       mSession.setFocused(false);
     }
     mSession = null;
+    mIsSessionPoisoned = false;
+    session.releaseOwner();
     return session;
   }
+
+  private final GeckoSession.Owner mSessionOwner =
+      new GeckoSession.Owner() {
+        @Override
+        public void onRelease() {
+          // The session that we own is being owned by some other object so we need to release it
+          // here.
+          releaseSession();
+          // The session associated to this GeckoView is now invalid, but the app is not aware of
+          // it. We cannot display this GeckoView until the app sets a session again (or releases
+          // the poisoned session).
+          mIsSessionPoisoned = true;
+        }
+      };
 
   /**
    * Attach a session to this view. If this instance already has an open session, you must use
@@ -443,13 +463,16 @@ public class GeckoView extends FrameLayout {
   public void setSession(@NonNull final GeckoSession session) {
     ThreadUtils.assertOnUiThread();
 
-    if (mSession != null && mSession.isOpen()) {
-      throw new IllegalStateException("Current session is open");
+    if (session == mSession) {
+      // Nothing to do
+      return;
     }
 
     releaseSession();
 
+    session.setOwner(mSessionOwner);
     mSession = session;
+    mIsSessionPoisoned = false;
 
     // Make sure the clear color is set to the default
     mSession.getCompositorController().setClearColor(defaultColor());
@@ -527,6 +550,9 @@ public class GeckoView extends FrameLayout {
 
   @Override
   public void onAttachedToWindow() {
+    if (mIsSessionPoisoned) {
+      throw new IllegalStateException("Trying to display a view with invalid session.");
+    }
     if (mSession != null) {
       final GeckoRuntime runtime = mSession.getRuntime();
       if (runtime != null) {

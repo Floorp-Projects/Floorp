@@ -1129,10 +1129,15 @@ set_define(
 # ==================================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_exceptions(is_nightly):
-    if is_nightly:
-        return True
+@depends(milestone.is_nightly, "--enable-cranelift")
+def default_wasm_exceptions(is_nightly, cranelift_enabled):
+    if cranelift_enabled:
+        return
+
+    if not is_nightly:
+        return
+
+    return True
 
 
 option(
@@ -1141,12 +1146,24 @@ option(
     help="{Enable|Disable} WebAssembly exceptions",
 )
 
-set_config(
-    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
-)
-set_define(
-    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
-)
+
+@depends("--enable-wasm-exceptions", "--enable-cranelift")
+def wasm_exceptions(value, cranelift_enabled):
+    if not value:
+        return
+
+    if cranelift_enabled:
+        die("--enable-wasm-exceptions is not supported for --enable-cranelift")
+
+    return True
+
+
+set_config("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
+set_define("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
+
+# Wasi configuration
+# ===================================================
+
 
 set_define(
     "_WASI_EMULATED_PROCESS_CLOCKS",

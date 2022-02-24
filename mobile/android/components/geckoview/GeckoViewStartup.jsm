@@ -67,6 +67,7 @@ class GeckoViewStartup {
   observe(aSubject, aTopic, aData) {
     debug`observe: ${aTopic}`;
     switch (aTopic) {
+      case "content-process-ready-for-script":
       case "app-startup": {
         // Parent and content process.
         GeckoViewUtils.addLazyGetter(this, "GeckoViewPermission", {
