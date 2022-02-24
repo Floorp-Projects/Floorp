@@ -40,6 +40,7 @@ class UntrustedModulesBackupData
                                UntrustedModulesDataContainer> {
  public:
   void Add(UntrustedModulesData&& aData);
+  void AddWithoutStacks(UntrustedModulesData&& aData);
 };
 
 class MOZ_HEAP_CLASS UntrustedModulesBackupService final {
@@ -61,6 +62,7 @@ class MOZ_HEAP_CLASS UntrustedModulesBackupService final {
   UntrustedModulesBackupData mStaging;
 
   // Data already submitted as telemetry
+  // (This does not have stack information)
   UntrustedModulesBackupData mSettled;
 
   ~UntrustedModulesBackupService() = default;
