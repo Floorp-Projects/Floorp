@@ -59,21 +59,24 @@ public class GeckoJavaSampler {
     return getProfilerTime();
   }
 
+  /**
+   * A data container for a profiler sample. This class is effectively immutable (i.e. technically
+   * mutable but never mutated after construction) so is thread safe *if it is safely published*
+   * (see Java Concurrency in Practice, 2nd Ed., Section 3.5.3 for safe publication idioms).
+   */
   private static class Sample {
-    public Frame[] mFrames;
-    public double mTime;
-    public long mJavaTime; // non-zero if Android system time is used
+    public final Frame[] mFrames;
+    public final double mTime;
+    public final long mJavaTime; // non-zero if Android system time is used
 
     public Sample(final StackTraceElement[] aStack) {
       mFrames = new Frame[aStack.length];
-      if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-        mTime = getProfilerTime();
-      }
-      if (mTime == 0.0d) {
-        // getProfilerTime is not available yet; either libs are not loaded,
-        // or profiling hasn't started on the Gecko side yet
-        mJavaTime = SystemClock.elapsedRealtime();
-      }
+      mTime = GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+      // if mTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+      // or profiling hasn't started on the Gecko side yet
+      mJavaTime = mTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
+
       for (int i = 0; i < aStack.length; i++) {
         mFrames[aStack.length - 1 - i] =
             new Frame(aStack[i].getMethodName(), aStack[i].getClassName());
