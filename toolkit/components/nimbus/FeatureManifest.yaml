@@ -318,6 +318,10 @@ saveToPocket:
       type: boolean
       fallbackPref: extensions.pocket.refresh.emailButton.enabled
       description: Just for the new Pocket panels, enables the email signup button.
+    hideRecentSaves:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.hideRecentSaves.enabled
+      description: Hides the recently saved section in the home panel.
 password-autocomplete:
   description: A special autocomplete UI for password fields.
   hasExposure: false

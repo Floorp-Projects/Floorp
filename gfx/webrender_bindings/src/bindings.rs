@@ -2895,12 +2895,16 @@ pub extern "C" fn wr_dp_push_rect(
     rect: LayoutRect,
     clip: LayoutRect,
     is_backface_visible: bool,
+    force_antialiasing: bool,
     parent: &WrSpaceAndClipChain,
     color: ColorF,
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = common_item_properties_for_rect(state, clip, is_backface_visible, parent);
+    let mut prim_info = common_item_properties_for_rect(state, clip, is_backface_visible, parent);
+    if force_antialiasing {
+        prim_info.flags |= PrimitiveFlags::ANTIALISED;
+    }
 
     state.frame_builder.dl_builder.push_rect(&prim_info, rect, color);
 }
@@ -3042,6 +3046,7 @@ pub extern "C" fn wr_dp_push_image(
     bounds: LayoutRect,
     clip: LayoutRect,
     is_backface_visible: bool,
+    force_antialiasing: bool,
     parent: &WrSpaceAndClipChain,
     image_rendering: ImageRendering,
     key: WrImageKey,
@@ -3054,15 +3059,21 @@ pub extern "C" fn wr_dp_push_image(
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
 
+    let mut flags = prim_flags2(
+        is_backface_visible,
+        prefer_compositor_surface,
+        supports_external_compositing,
+    );
+
+    if force_antialiasing {
+        flags |= PrimitiveFlags::ANTIALISED;
+    }
+
     let prim_info = CommonItemProperties {
         clip_rect: clip,
         clip_id: space_and_clip.clip_id,
         spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags2(
-            is_backface_visible,
-            prefer_compositor_surface,
-            supports_external_compositing,
-        ),
+        flags,
     };
 
     let alpha_type = if premultiplied_alpha {

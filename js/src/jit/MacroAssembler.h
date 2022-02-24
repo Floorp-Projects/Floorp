@@ -3178,9 +3178,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // NaN-propagating minimum
 
-  inline void minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+  inline void minFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                           FloatRegister dest, FloatRegister temp1,
+                           FloatRegister temp2) DEFINED_ON(x86_shared);
 
   inline void minFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(arm64);
@@ -3188,9 +3188,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void minFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(arm64);
 
-  inline void minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+  inline void minFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                           FloatRegister dest, FloatRegister temp1,
+                           FloatRegister temp2) DEFINED_ON(x86_shared);
 
   inline void minFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(arm64);
@@ -3200,9 +3200,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // NaN-propagating maximum
 
-  inline void maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+  inline void maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                           FloatRegister dest, FloatRegister temp1,
+                           FloatRegister temp2) DEFINED_ON(x86_shared);
 
   inline void maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(arm64);
@@ -3210,9 +3210,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(arm64);
 
-  inline void maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+  inline void maxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                           FloatRegister dest, FloatRegister temp1,
+                           FloatRegister temp2) DEFINED_ON(x86_shared);
 
   inline void maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(arm64);

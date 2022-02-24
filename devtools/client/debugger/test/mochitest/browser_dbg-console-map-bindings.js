@@ -22,11 +22,7 @@ add_task(async function() {
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
 function getSplitConsole(dbg) {
-  const { toolbox, win } = dbg;
-
-  if (!win) {
-    win = toolbox.win;
-  }
+  const { toolbox } = dbg;
 
   if (!toolbox.splitConsole) {
     pressKey(dbg, "Escape");
@@ -35,7 +31,7 @@ function getSplitConsole(dbg) {
   return new Promise(resolve => {
     toolbox.getPanelWhenReady("webconsole").then(() => {
       ok(toolbox.splitConsole, "Split console is shown.");
-      let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
+      const jsterm = toolbox.getPanel("webconsole").hud.jsterm;
       resolve(jsterm);
     });
   });

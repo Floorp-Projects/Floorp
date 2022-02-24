@@ -8,11 +8,6 @@ add_task(async function() {
   const dbg = await initDebugger("doc-sourcemaps3.html");
   dbg.actions.toggleMapScopes();
 
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState,
-  } = dbg;
-
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
   const sortedSrc = findSource(dbg, "sorted.js");

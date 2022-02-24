@@ -50,12 +50,19 @@ const ignorePatterns = [
     .split("\n"),
   ...fs
     .readFileSync(
-      path.join(__dirname, "devtools", "client", "debugger", ".eslintignore")
+      path.join(
+        __dirname,
+        "devtools",
+        "client",
+        "debugger",
+        "src",
+        ".eslintignore"
+      )
     )
     .toString("utf-8")
     .split("\n")
     .filter(p => p && !p.startsWith("#"))
-    .map(p => `devtools/client/debugger/${p}`),
+    .map(p => `devtools/client/debugger/src/${p}`),
 ];
 
 module.exports = {

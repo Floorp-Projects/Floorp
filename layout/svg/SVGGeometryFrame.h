@@ -129,10 +129,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
-      bool aDryRun) {
-    MOZ_RELEASE_ASSERT(aDryRun, "You shouldn't be calling this directly");
-    return false;
-  }
+      bool aDryRun);
   /**
    * @param aMatrix The transform that must be multiplied onto aContext to
    *   establish this frame's SVG user space.

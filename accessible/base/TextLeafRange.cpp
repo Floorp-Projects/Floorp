@@ -1072,7 +1072,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
                  : point.GetTextAttributesLocalAcc(aIncludeDefaults);
-    if (!attrs->Equal(lastAttrs)) {
+    if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       return *this;
     }
   }
@@ -1087,7 +1087,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
                  : point.GetTextAttributesLocalAcc(aIncludeDefaults);
-    if (!attrs->Equal(lastAttrs)) {
+    if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       // The attributes change here. If we're moving forward, we want to
       // return this point. If we're moving backward, we've now moved before
       // the start of the attrs run containing the origin, so return the last

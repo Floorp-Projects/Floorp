@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -192,7 +192,7 @@ static void moz_container_wayland_destroy(GtkWidget* widget) {
 void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
-  if (wl_container->ready_to_draw) {
+  if (wl_container->ready_to_draw && wl_container->surface) {
     initial_draw_cb();
   } else {
     wl_container->initial_draw_cbs.push_back(initial_draw_cb);
@@ -221,10 +221,10 @@ static void moz_container_wayland_frame_callback_handler(
 
   if (!wl_container->ready_to_draw) {
     wl_container->ready_to_draw = true;
-    for (auto const& cb : wl_container->initial_draw_cbs) {
+    auto cbs = std::move(wl_container->initial_draw_cbs);
+    for (auto const& cb : cbs) {
       cb();
     }
-    wl_container->initial_draw_cbs.clear();
   }
 }
 
@@ -654,7 +654,7 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
 }
 
 gboolean moz_container_wayland_can_draw(MozContainer* container) {
-  return container ? container->wl_container.ready_to_draw : false;
+  return container && container->wl_container.ready_to_draw;
 }
 
 double moz_container_wayland_get_scale(MozContainer* container) {

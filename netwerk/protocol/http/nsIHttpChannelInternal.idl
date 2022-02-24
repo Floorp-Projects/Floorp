@@ -278,6 +278,11 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] readonly attribute boolean isResolvedByTRR;
 
     /**
+     * True if channel is loaded by socket process.
+     */
+    [must_use] readonly attribute boolean isLoadedBySocketProcess;
+
+    /**
      * Set to true if the channel is an OCSP check.
      * Channels with this flag set will skip TRR in mode3 (because the circular
      * dependency with checking OCSP for the TRR server will cause a failure)

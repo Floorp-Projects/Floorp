@@ -97,16 +97,7 @@ function assertColumn(dbg, columnNumber) {
   if (value === undefined) {
     value = null;
   }
-  is(
-    value,
-    columnNumber,
-    `goto column is ${columnNumber}`
-  );
-}
-
-function waitForSymbols(dbg, url) {
-  const source = findSource(dbg, url);
-  return waitForState(dbg, state => dbg.selectors.getSymbols(state, source.id));
+  is(value, columnNumber, `goto column is ${columnNumber}`);
 }
 
 function resultCount(dbg) {

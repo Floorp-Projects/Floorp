@@ -7,11 +7,11 @@
 // debugger.
 
 add_task(async function() {
-  const url = EXAMPLE_URL + "doc-script-switching.html";
+  const url = `${EXAMPLE_URL}doc-script-switching.html`;
   const toolbox = await openNewTabAndToolbox(url, "webconsole");
 
   // Type "debugger" into console
-  let wrapper = toolbox.getPanel("webconsole").hud.ui.wrapper;
+  const wrapper = toolbox.getPanel("webconsole").hud.ui.wrapper;
   const onSelected = toolbox.once("jsdebugger-selected");
   wrapper.dispatchEvaluateExpression("debugger");
 

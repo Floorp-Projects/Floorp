@@ -29,7 +29,6 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/Unused.h"
 #include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
@@ -1880,13 +1879,9 @@ void SurfaceCache::ReleaseImageOnMainThread(
     return;
   }
 
-  // Don't try to dispatch the release after shutdown.
+  // Don't try to dispatch the release after shutdown, we'll just leak the
+  // runnable.
   if (gXPCOMThreadsShutDown) {
-    // Note, this intentionally leaks! If we can't dispatch to the main thread
-    // because we are late in shutdown then it's better to leak then to release
-    // on this thread.
-    image::Image* intentionalLeak = aImage.take();
-    Unused << intentionalLeak;
     return;
   }
 

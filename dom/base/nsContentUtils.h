@@ -361,7 +361,7 @@ class nsContentUtils {
    *the explanation o why the developer is using the legacy function as opposed
    *to nuanced preference.
    */
-  static bool ShouldResistFingerprinting(char* aChar);
+  static bool ShouldResistFingerprinting(const char* aChar);
 
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();

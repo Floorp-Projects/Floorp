@@ -60,19 +60,13 @@ async function evalInConsoleAtPoint(
   statements
 ) {
   const url = `${target}://./${fixture}/input.js`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+  const fnName = `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) =>
     c.toUpperCase()
   );
 
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    url,
-    { line, column },
-    async () => {
-      await assertConsoleEval(dbg, statements);
-    }
-  );
+  await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
+    await assertConsoleEval(dbg, statements);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
@@ -80,7 +74,7 @@ async function evalInConsoleAtPoint(
 async function assertConsoleEval(dbg, statements) {
   const { hud } = await dbg.toolbox.selectTool("webconsole");
 
-  for (const [index, statement] of statements.entries()) {
+  for (const statement of statements.values()) {
     await dbg.client.evaluate(`window.TEST_RESULT = false;`);
     await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
 

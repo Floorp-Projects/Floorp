@@ -262,7 +262,6 @@ void FFmpegLibWrapper::Unlink() {
 #ifdef MOZ_WAYLAND
 void FFmpegLibWrapper::LinkVAAPILibs() {
   if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
-    FFMPEG_LOG("VA-API FFmpeg is disabled by platform");
     return;
   }
 

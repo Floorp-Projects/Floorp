@@ -68,7 +68,7 @@ async function checkInlinePreview(dbg, fnName, inlinePreviews) {
   const values = findAllElements(dbg, "inlinePreviewValues");
 
   inlinePreviews.forEach((inlinePreview, index) => {
-    const { identifier, value, expandedValue } = inlinePreview;
+    const { identifier, value } = inlinePreview;
     is(
       labels[index].innerText,
       identifier,

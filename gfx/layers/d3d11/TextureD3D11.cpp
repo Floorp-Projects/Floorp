@@ -1025,7 +1025,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(
-          aBounds, aClip, true, aFilter, aImageKeys[0],
+          aBounds, aClip, true, false, aFilter, aImageKeys[0],
           !(mFlags & TextureFlags::NON_PREMULTIPLIED),
           wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f}, preferCompositorSurface,
           SupportsExternalCompositing(aBuilder.GetBackendType()));
@@ -1034,11 +1034,6 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
-      // DXGI_FORMAT_P010 stores its 10 bit value in the most significant bits
-      // of each 16 bit word with the unused lower bits cleared to zero so that
-      // it may be handled as if it was DXGI_FORMAT_P016. This is approximately
-      // perceptually correct. However, due to rounding error, the precise
-      // quantized value after sampling may be off by 1.
       MOZ_ASSERT(aImageKeys.length() == 2);
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],

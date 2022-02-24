@@ -4,7 +4,13 @@
 
 // Test keyboard arrow behaviour
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1.js", "simple2.js", "nested-source.js", "long.js");
+  const dbg = await initDebugger(
+    "doc-sources.html",
+    "simple1.js",
+    "simple2.js",
+    "nested-source.js",
+    "long.js"
+  );
 
   await clickElement(dbg, "sourceDirectoryLabel", 3);
   await assertSourceCount(dbg, 8);

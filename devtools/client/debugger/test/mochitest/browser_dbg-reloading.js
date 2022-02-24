@@ -35,13 +35,3 @@ add_task(async function() {
   const source = findSource(dbg, "ember-application/index.js");
   assertPausedAtSourceAndLine(dbg, source.id, 4);
 });
-
-async function waitForBreakpoint(dbg, location) {
-  return waitForState(
-    dbg,
-    state => {
-      return dbg.selectors.getBreakpoint(location);
-    },
-    "Waiting for breakpoint"
-  );
-}

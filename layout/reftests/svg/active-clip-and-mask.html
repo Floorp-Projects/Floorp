@@ -1,0 +1,41 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="grey"/>
+  <g transform="translate(80 30)">
+
+    <!-- active blob group with clip path and mask -->
+    <clipPath id="c4" clipPathUnits="userSpaceOnUse">
+      <rect x="-80" y="100" width="100" height="100"/>
+    </clipPath>
+    <mask id="m4">
+      <rect x="-80" y="100" width="100" height="100" fill="white"/>
+      <rect x="-60" y="120" width="40" height="40" fill="black"/>
+    </mask>
+    <g mask="url(#m4)" clip-path="url(#c4)">
+      <g style = "will-change: opacity;">
+        <rect x="-80" y="100" width="100" height="100" fill="blue"/>
+      </g>
+    </g>
+
+    <!-- active blob group with mask only -->
+    <mask id="m5">
+      <rect x="60" y="100" width="100" height="100" fill="white"/>
+      <rect x="80" y="120" width="40" height="40" fill="black"/>
+    </mask>
+    <g mask="url(#m5)">
+      <g style = "will-change: opacity;">
+        <rect x="60" y="100" width="100" height="100" fill="blue"/>
+      </g>
+    </g>
+
+    <!-- active item with clip path only -->
+    <clipPath id="c6" clipPathUnits="userSpaceOnUse">
+      <rect x="180" y="100" width="100" height="100"/>
+    </clipPath>
+    <g clip-path="url(#c6)">
+      <g style = "will-change: opacity;">
+        <rect x="180" y="100" width="100" height="100" fill="blue"/>
+      </g>
+    </g>
+
+  </g>
+</svg>

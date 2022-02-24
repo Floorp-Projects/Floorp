@@ -802,8 +802,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   RefPtr<gfxContext> rc =
       aFrame->PresShell()->CreateReferenceRenderingContext();
 
-  // Construct a bogus parent reflow input so that there's a usable
-  // containing block reflow input.
+  // Construct a bogus parent reflow input so that there's a usable reflow input
+  // for the containing block.
   nsIFrame* parentFrame = aFrame->GetParent();
   WritingMode parentWM = parentFrame->GetWritingMode();
   WritingMode frameWM = aFrame->GetWritingMode();
