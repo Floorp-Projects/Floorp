@@ -91,38 +91,38 @@ static JSString* ModuleVersionToJSString(JSContext* aCx,
 }
 
 /**
- * Convert the given mozilla::Vector to a JavaScript array.
+ * Convert the given container object to a JavaScript array.
  *
  * @param  cx                [in] The JS context.
  * @param  aRet              [out] This gets assigned to the newly created
  *                           array object.
- * @param  aContainer        [in] The source array to convert.
- * @param  aElementConverter [in] A callable used to convert each array element
+ * @param  aContainer        [in] The source container to convert.
+ * @param  aElementConverter [in] A callable used to convert each element
  *                           to a JS element. The form of this function is:
  *                           bool(JSContext *cx,
  *                                JS::MutableHandleValue aRet,
- *                                const ArrayElementT& aElement)
+ *                                const ElementT& aElement)
  * @return true if aRet was successfully assigned to the new array object.
  */
-template <typename T, size_t N, typename AllocPolicy, typename Converter,
-          typename... Args>
-static bool VectorToJSArray(JSContext* cx, JS::MutableHandleObject aRet,
-                            const Vector<T, N, AllocPolicy>& aContainer,
-                            Converter&& aElementConverter, Args&&... aArgs) {
+template <typename T, typename Converter, typename... Args>
+static bool ContainerToJSArray(JSContext* cx, JS::MutableHandleObject aRet,
+                               const T& aContainer,
+                               Converter&& aElementConverter, Args&&... aArgs) {
   JS::RootedObject arr(cx, JS::NewArrayObject(cx, 0));
   if (!arr) {
     return false;
   }
 
-  for (size_t i = 0, l = aContainer.length(); i < l; ++i) {
+  size_t i = 0;
+  for (auto&& item : aContainer) {
     JS::RootedValue jsel(cx);
-    if (!aElementConverter(cx, &jsel, aContainer[i],
-                           std::forward<Args>(aArgs)...)) {
+    if (!aElementConverter(cx, &jsel, *item, std::forward<Args>(aArgs)...)) {
       return false;
     }
     if (!JS_DefineElement(cx, arr, i, jsel, JSPROP_ENUMERATE)) {
       return false;
     }
+    ++i;
   }
 
   aRet.set(arr);
@@ -204,10 +204,12 @@ static bool SerializeModule(JSContext* aCx, JS::MutableHandleValue aElement,
 /* static */
 bool UntrustedModulesDataSerializer::SerializeEvent(
     JSContext* aCx, JS::MutableHandleValue aElement,
-    const ProcessedModuleLoadEvent& aEvent, const IndexMap& aModuleIndices) {
+    const ProcessedModuleLoadEventContainer& aEventContainer,
+    const IndexMap& aModuleIndices) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!aEvent) {
+  const ProcessedModuleLoadEvent& event = aEventContainer.mEvent;
+  if (!event) {
     return false;
   }
 
@@ -218,15 +220,15 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
 
   JS::RootedValue jsProcessUptimeMS(aCx);
   // Javascript doesn't like 64-bit integers; convert to double.
-  jsProcessUptimeMS.setNumber(static_cast<double>(aEvent.mProcessUptimeMS));
+  jsProcessUptimeMS.setNumber(static_cast<double>(event.mProcessUptimeMS));
   if (!JS_DefineProperty(aCx, obj, "processUptimeMS", jsProcessUptimeMS,
                          JSPROP_ENUMERATE)) {
     return false;
   }
 
-  if (aEvent.mLoadDurationMS) {
+  if (event.mLoadDurationMS) {
     JS::RootedValue jsLoadDurationMS(aCx);
-    jsLoadDurationMS.setNumber(aEvent.mLoadDurationMS.value());
+    jsLoadDurationMS.setNumber(event.mLoadDurationMS.value());
     if (!JS_DefineProperty(aCx, obj, "loadDurationMS", jsLoadDurationMS,
                            JSPROP_ENUMERATE)) {
       return false;
@@ -234,16 +236,16 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
   }
 
   JS::RootedValue jsThreadId(aCx);
-  jsThreadId.setNumber(static_cast<uint32_t>(aEvent.mThreadId));
+  jsThreadId.setNumber(static_cast<uint32_t>(event.mThreadId));
   if (!JS_DefineProperty(aCx, obj, "threadID", jsThreadId, JSPROP_ENUMERATE)) {
     return false;
   }
 
   nsDependentCString effectiveThreadName;
-  if (aEvent.mThreadId == ::GetCurrentThreadId()) {
+  if (event.mThreadId == ::GetCurrentThreadId()) {
     effectiveThreadName.Rebind("Main Thread"_ns, 0);
   } else {
-    effectiveThreadName.Rebind(aEvent.mThreadName, 0);
+    effectiveThreadName.Rebind(event.mThreadName, 0);
   }
 
   if (!effectiveThreadName.IsEmpty()) {
@@ -257,18 +259,18 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
 
   // Don't add this property unless mRequestedDllName differs from
   // the associated module's mSanitizedDllName
-  if (!aEvent.mRequestedDllName.IsEmpty() &&
-      !aEvent.mRequestedDllName.Equals(aEvent.mModule->mSanitizedDllName,
-                                       nsCaseInsensitiveStringComparator)) {
+  if (!event.mRequestedDllName.IsEmpty() &&
+      !event.mRequestedDllName.Equals(event.mModule->mSanitizedDllName,
+                                      nsCaseInsensitiveStringComparator)) {
     if (!AddLengthLimitedStringProp(aCx, obj, "requestedDllName",
-                                    aEvent.mRequestedDllName)) {
+                                    event.mRequestedDllName)) {
       return false;
     }
   }
 
   nsAutoString strBaseAddress;
   strBaseAddress.AppendLiteral(u"0x");
-  strBaseAddress.AppendInt(aEvent.mBaseAddress, 16);
+  strBaseAddress.AppendInt(event.mBaseAddress, 16);
 
   JS::RootedValue jsBaseAddress(aCx);
   jsBaseAddress.setString(Common::ToJSString(aCx, strBaseAddress));
@@ -278,7 +280,7 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
   }
 
   uint32_t index;
-  if (!aModuleIndices.Get(aEvent.mModule->mResolvedNtName, &index)) {
+  if (!aModuleIndices.Get(event.mModule->mResolvedNtName, &index)) {
     return false;
   }
 
@@ -290,14 +292,14 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
   }
 
   JS::RootedValue jsIsDependent(aCx);
-  jsIsDependent.setBoolean(aEvent.mIsDependent);
+  jsIsDependent.setBoolean(event.mIsDependent);
   if (!JS_DefineProperty(aCx, obj, "isDependent", jsIsDependent,
                          JSPROP_ENUMERATE)) {
     return false;
   }
 
   JS::RootedValue jsLoadStatus(aCx);
-  jsLoadStatus.setNumber(aEvent.mLoadStatus);
+  jsLoadStatus.setNumber(event.mLoadStatus);
   if (!JS_DefineProperty(aCx, obj, "loadStatus", jsLoadStatus,
                          JSPROP_ENUMERATE)) {
     return false;
@@ -358,8 +360,8 @@ nsresult UntrustedModulesDataSerializer::GetPerProcObject(
   }
 
   JS::RootedObject eventsArray(mCx);
-  if (!VectorToJSArray(mCx, &eventsArray, aData.mEvents, &SerializeEvent,
-                       mIndexMap)) {
+  if (!ContainerToJSArray(mCx, &eventsArray, aData.mEvents, &SerializeEvent,
+                          mIndexMap)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -384,7 +386,7 @@ nsresult UntrustedModulesDataSerializer::GetPerProcObject(
 }
 
 nsresult UntrustedModulesDataSerializer::AddLoadEvents(
-    const Vector<ProcessedModuleLoadEvent>& aEvents,
+    const UntrustedModuleLoadingEvents& aEvents,
     JS::MutableHandleObject aPerProcObj) {
   JS::RootedValue eventsArrayVal(mCx);
   if (!JS_GetProperty(mCx, aPerProcObj, "events", &eventsArrayVal) ||
@@ -403,10 +405,10 @@ nsresult UntrustedModulesDataSerializer::AddLoadEvents(
     return NS_ERROR_FAILURE;
   }
 
-  for (size_t i = 0, l = aEvents.length(); i < l; ++i) {
+  for (auto item : aEvents) {
     JS::RootedValue jsel(mCx);
-    if (!SerializeEvent(mCx, &jsel, aEvents[i], mIndexMap) ||
-        !JS_DefineElement(mCx, eventsArray, currentPos + i, jsel,
+    if (!SerializeEvent(mCx, &jsel, *item, mIndexMap) ||
+        !JS_DefineElement(mCx, eventsArray, currentPos++, jsel,
                           JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }

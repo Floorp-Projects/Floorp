@@ -545,7 +545,7 @@ UntrustedModulesProcessor::ExtractLoadingEventsToProcess(size_t aMaxLength) {
   // The potential size of mProcessedModuleLoads if all of the unprocessed
   // events are from third-party modules.
   const size_t newDataLength =
-      mProcessedModuleLoads.mEvents.length() + mUnprocessedModuleLoads.length();
+      mProcessedModuleLoads.mNumEvents + mUnprocessedModuleLoads.length();
   if (newDataLength <= aMaxLength) {
     loadsToProcess.swap(mUnprocessedModuleLoads);
   } else {
@@ -553,8 +553,8 @@ UntrustedModulesProcessor::ExtractLoadingEventsToProcess(size_t aMaxLength) {
     // we process the first items in the mUnprocessedModuleLoads,
     // leaving the the remaining events for the next time.
     const size_t capacity =
-        aMaxLength > mProcessedModuleLoads.mEvents.length()
-            ? (aMaxLength - mProcessedModuleLoads.mEvents.length())
+        aMaxLength > mProcessedModuleLoads.mNumEvents
+            ? (aMaxLength - mProcessedModuleLoads.mNumEvents)
             : 0;
     auto moveRangeBegin = mUnprocessedModuleLoads.begin();
     auto moveRangeEnd = moveRangeBegin + capacity;
@@ -590,7 +590,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   Telemetry::BatchProcessedStackGenerator stackProcessor;
   Maybe<double> maybeXulLoadDuration;
   Vector<Telemetry::ProcessedStack> processedStacks;
-  Vector<ProcessedModuleLoadEvent> processedEvents;
+  UntrustedModuleLoadingEvents processedEvents;
   uint32_t sanitizationFailures = 0;
   uint32_t trustTestFailures = 0;
 
@@ -651,10 +651,11 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     }
 
     Unused << processedStacks.emplaceBack(std::move(processedStack));
-    Unused << processedEvents.emplaceBack(std::move(event));
+    processedEvents.insertBack(
+        new ProcessedModuleLoadEventContainer(std::move(event)));
   }
 
-  if (processedStacks.empty() && processedEvents.empty() &&
+  if (processedStacks.empty() && processedEvents.isEmpty() &&
       !sanitizationFailures && !trustTestFailures) {
     // Nothing to save
     return;
@@ -844,7 +845,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
 
   Maybe<double> maybeXulLoadDuration;
   Vector<Telemetry::ProcessedStack> processedStacks;
-  Vector<ProcessedModuleLoadEvent> processedEvents;
+  UntrustedModuleLoadingEvents processedEvents;
   uint32_t sanitizationFailures = 0;
 
   if (!modules.IsEmpty()) {
@@ -897,11 +898,12 @@ void UntrustedModulesProcessor::CompleteProcessing(
           stackProcessor.GetStackAndModules(backtrace);
 
       Unused << processedStacks.emplaceBack(std::move(processedStack));
-      Unused << processedEvents.emplaceBack(std::move(event));
+      processedEvents.insertBack(
+          new ProcessedModuleLoadEventContainer(std::move(event)));
     }
   }
 
-  if (processedStacks.empty() && processedEvents.empty() &&
+  if (processedStacks.empty() && processedEvents.isEmpty() &&
       !sanitizationFailures && !trustTestFailures) {
     // Nothing to save
     return;
