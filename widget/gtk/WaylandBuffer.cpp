@@ -208,7 +208,7 @@ RefPtr<WaylandBufferSHM> WaylandBufferSHM::Create(
                          buffer.get());
 
   LOGWAYLAND("WaylandBufferSHM Created [%p] WaylandDisplay [%p]\n",
-              buffer.get(), waylandDisplay.get());
+             buffer.get(), waylandDisplay.get());
 
   return buffer;
 }

@@ -50,7 +50,14 @@ const ignorePatterns = [
     .split("\n"),
   ...fs
     .readFileSync(
-      path.join(__dirname, "devtools", "client", "debugger", "src", ".eslintignore")
+      path.join(
+        __dirname,
+        "devtools",
+        "client",
+        "debugger",
+        "src",
+        ".eslintignore"
+      )
     )
     .toString("utf-8")
     .split("\n")
