@@ -96,7 +96,7 @@
 
 #################
  - [D=T] Nothing [A#1T] -> Enrolled Control [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
- - [D=T] Nothing [A#1T] -> Enrolled Treatment [A S=EnabledByTreatmentGroup SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] Nothing [A#1T] -> Enrolled Treatment [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
  - [D=T] Nothing [A#1T] -> On [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
  - [D=T] Nothing [A#1T] -> Off [A S=DisabledByUserPref SS=EnabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=UNENROLLED P=False ESP=UNENROLLED]
  - [D=T] Nothing [A#1T] -> On -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
@@ -115,7 +115,7 @@
 
 #################
  - [D=T] On [A#3T] -> Restart [A#4T] -> Enrolled Control [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
- - [D=T] On [A#3T] -> Restart [A#4T] -> Enrolled Treatment [A S=EnabledByTreatmentGroup SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Enrolled Treatment [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
  - [D=T] On [A#3T] -> Restart [A#4T] -> Off [A S=DisabledByUserPref SS=EnabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=UNENROLLED P=False ESP=UNENROLLED]
  - [D=T] On [A#3T] -> Restart [A#4T] -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
  - [D=T] On [A#3T] -> Restart [A#4T] -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A#4T]
@@ -132,8 +132,8 @@
 
 #################
  - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> On [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
- - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Off [A S=DisabledByUserPref SS=DisabledByControlGroup ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
- - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> Bad Requirements [A S=MissingRemoteWebGL SS=DisabledByControlGroup ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Off [A S=DisabledByUserPref SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=False ESP=DISQUALIFIED]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> Bad Requirements [A S=MissingRemoteWebGL SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
  - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Enrolled Control-C -> Restart [A#6T]
  - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Header-Off -> Enrolled Control-C -> Restart [A#6T]
  - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Safe Mode -> 
@@ -147,8 +147,8 @@
  - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Safe Mode ->
 
 #################
- - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> On [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
- - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Off [A S=DisabledByUserPref SS=EnabledByTreatmentGroup ES=DISQUALIFIED P=False ESP=DISQUALIFIED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> On [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Off [A S=DisabledByUserPref SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=False ESP=DISQUALIFIED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
  - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
  - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Enrolled Treatment-C -> Restart [A#8T]
  - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Header-Off -> Enrolled Treatment-C -> Restart [A#8T]

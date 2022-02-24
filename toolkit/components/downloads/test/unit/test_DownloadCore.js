@@ -229,3 +229,63 @@ add_task(function test_DownloadError() {
   Assert.ok(error.becauseBlocked);
   Assert.ok(error.becauseBlockedByParentalControls);
 });
+
+add_task(async function test_cancel_interrupted_download() {
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+
+  let download = await Downloads.createDownload({
+    source: httpUrl("interruptible_resumable.txt"),
+    target: targetFile,
+  });
+
+  async function createAndCancelDownload() {
+    info("Create an interruptible download and cancel it midway");
+    mustInterruptResponses();
+    const promiseDownloaded = download.start();
+    await promiseDownloadMidway(download);
+    await download.cancel();
+
+    info("Unblock the interruptible download and wait for its annotation");
+    continueResponses();
+    await waitForAnnotation(
+      httpUrl("interruptible_resumable.txt"),
+      "downloads/destinationFileURI"
+    );
+
+    await Assert.rejects(
+      promiseDownloaded,
+      /DownloadError: Download canceled/,
+      "Got a download error as expected"
+    );
+  }
+
+  await new Promise(resolve => {
+    const DONE = "=== download xpcshell test console listener done ===";
+    const logDone = () => Services.console.logStringMessage(DONE);
+    const consoleListener = msg => {
+      if (msg == DONE) {
+        Services.console.unregisterListener(consoleListener);
+        resolve();
+      }
+    };
+    Services.console.reset();
+    Services.console.registerListener(consoleListener);
+
+    createAndCancelDownload().then(logDone);
+  });
+
+  info(
+    "Assert that nsIStreamListener.onDataAvailable has not been called after download.cancel"
+  );
+  let found = Services.console
+    .getMessageArray()
+    .map(m => m.message)
+    .filter(message => {
+      return message.includes("nsIStreamListener.onDataAvailable");
+    });
+  Assert.deepEqual(
+    found,
+    [],
+    "Expect no nsIStreamListener.onDataAvaialable error"
+  );
+});

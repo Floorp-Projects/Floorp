@@ -85,8 +85,7 @@ class ScriptLoadContext : public PreloaderBase {
   virtual ~ScriptLoadContext();
 
  public:
-  explicit ScriptLoadContext(Element* aElement,
-                             nsIGlobalObject* aWebExtGlobal = nullptr);
+  explicit ScriptLoadContext(Element* aElement);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadContext)
@@ -195,12 +194,6 @@ class ScriptLoadContext : public PreloaderBase {
   // Set on scripts and top level modules.
   bool mIsPreload;
   nsCOMPtr<Element> mElement;
-
-  /* The Web Extension global -- Only used on DOM Modules.
-   *     Specifies a SandBox global with which to associate and run this script.
-   *     Propagated throughout the module tree if present.
-   */
-  nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 

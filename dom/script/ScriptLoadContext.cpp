@@ -38,8 +38,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDocument, mRequest, mElement,
-                                  mWebExtGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDocument, mRequest, mElement)
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
     runnable->Release();
   }
@@ -47,15 +46,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement,
-                                    mWebExtGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-ScriptLoadContext::ScriptLoadContext(Element* aElement,
-                                     nsIGlobalObject* aWebExtGlobal)
+ScriptLoadContext::ScriptLoadContext(Element* aElement)
     : mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
       mIsInline(true),
@@ -71,7 +68,6 @@ ScriptLoadContext::ScriptLoadContext(Element* aElement,
       mLineNo(1),
       mIsPreload(false),
       mElement(aElement),
-      mWebExtGlobal(aWebExtGlobal),
       mRequest(nullptr),
       mUnreportedPreloadError(NS_OK) {}
 
@@ -179,13 +175,7 @@ bool ScriptLoadContext::IsPreload() const {
 }
 
 nsIGlobalObject* ScriptLoadContext::GetWebExtGlobal() const {
-  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    JS::loader::ModuleLoadRequest* root =
-        mRequest->AsModuleRequest()->GetRootModule();
-    return root->GetLoadContext()->GetWebExtGlobal();
-  }
-
-  return mWebExtGlobal;
+  return mRequest->mFetchOptions->mWebExtGlobal;
 }
 
 bool ScriptLoadContext::CompileStarted() const {
