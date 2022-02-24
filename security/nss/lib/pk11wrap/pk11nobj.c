@@ -413,12 +413,17 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
         nssPKIObjectCollection *collection;
         nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
         NSSToken *token = PK11Slot_GetNSSToken(*slot);
+        if (!token) {
+            goto loser;
+        }
         collection = nssCRLCollection_Create(td, NULL);
         if (!collection) {
+            (void)nssToken_Destroy(token);
             goto loser;
         }
         instances = nssToken_FindCRLsBySubject(token, NULL, &subject,
                                                tokenOnly, 0, NULL);
+        (void)nssToken_Destroy(token);
         nssPKIObjectCollection_AddInstances(collection, instances, 0);
         nss_ZFreeIf(instances);
         crls = nssPKIObjectCollection_GetCRLs(collection, NULL, 0, NULL);
@@ -482,16 +487,21 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
             char *url, int type)
 {
     NSSItem derCRL, derSubject;
-    NSSToken *token = PK11Slot_GetNSSToken(slot);
+    NSSToken *token;
     nssCryptokiObject *object;
     PRBool isKRL = (type == SEC_CRL_TYPE) ? PR_FALSE : PR_TRUE;
     CK_OBJECT_HANDLE rvH;
 
     NSSITEM_FROM_SECITEM(&derSubject, name);
     NSSITEM_FROM_SECITEM(&derCRL, crl);
-
+    token = PK11Slot_GetNSSToken(slot);
+    if (!token) {
+        PORT_SetError(SEC_ERROR_NO_TOKEN);
+        return CK_INVALID_HANDLE;
+    }
     object = nssToken_ImportCRL(token, NULL,
                                 &derSubject, &derCRL, isKRL, url, PR_TRUE);
+    (void)nssToken_Destroy(token);
 
     if (object) {
         rvH = object->handle;
@@ -510,8 +520,8 @@ SECStatus
 SEC_DeletePermCRL(CERTSignedCrl *crl)
 {
     PRStatus status;
-    NSSToken *token;
     nssCryptokiObject *object;
+    NSSToken *token;
     PK11SlotInfo *slot = crl->slot;
 
     if (slot == NULL) {
@@ -520,13 +530,17 @@ SEC_DeletePermCRL(CERTSignedCrl *crl)
         PORT_SetError(SEC_ERROR_CRL_INVALID);
         return SECFailure;
     }
-    token = PK11Slot_GetNSSToken(slot);
 
-    object = nss_ZNEW(NULL, nssCryptokiObject);
-    if (!object) {
+    token = PK11Slot_GetNSSToken(slot);
+    if (!token) {
         return SECFailure;
     }
-    object->token = nssToken_AddRef(token);
+    object = nss_ZNEW(NULL, nssCryptokiObject);
+    if (!object) {
+        (void)nssToken_Destroy(token);
+        return SECFailure;
+    }
+    object->token = token; /* object takes ownership */
     object->handle = crl->pkcs11ID;
     object->isTokenObject = PR_TRUE;
 
