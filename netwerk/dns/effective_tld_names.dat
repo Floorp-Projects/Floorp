@@ -9,7 +9,7 @@
 
 // ===BEGIN ICANN DOMAINS===
 
-// ac : https://en.wikipedia.org/wiki/.ac
+// ac : http://nic.ac/rules.htm
 ac
 com.ac
 edu.ac
@@ -1366,7 +1366,7 @@ info
 int
 eu.int
 
-// io : http://www.nic.io/rules.html
+// io : http://www.nic.io/rules.htm
 // list of other 2nd level tlds ?
 io
 com.io
@@ -6036,7 +6036,7 @@ gov.sg
 edu.sg
 per.sg
 
-// sh : http://www.nic.sh/registrar.html
+// sh : http://nic.sh/rules.htm
 sh
 com.sh
 net.sh
@@ -12455,6 +12455,10 @@ js.org
 kaas.gg
 khplay.nl
 
+// Kapsi : https://kapsi.fi
+// Submitted by Tomi Juntunen <erani@kapsi.fi>
+kapsi.fi
+
 // Keyweb AG : https://www.keyweb.de
 // Submitted by Martin Dannehl <postmaster@keymachine.de>
 keymachine.de
@@ -13229,6 +13233,10 @@ itcouldbewor.se
 // Submitted by Jennifer Herting <jchits@rit.edu>
 git-pages.rit.edu
 
+// Rocky Enterprise Software Foundation : https://resf.org
+// Submitted by Neil Hanlon <neil@resf.org>
+rocky.page
+
 // Rusnames Limited: http://rusnames.ru/
 // Submitted by Sergey Zotov <admin@rusnames.ru>
 биз.рус
@@ -13764,6 +13772,10 @@ wmcloud.org
 // Submitted by Stepan Fedotov <stepan@wisp.gg>
 panel.gg
 daemon.panel.gg
+
+// Wizard Zines : https://wizardzines.com
+// Submitted by Julia Evans <julia@wizardzines.com>
+messwithdns.com
 
 // WoltLab GmbH : https://www.woltlab.com
 // Submitted by Tim Düsterhus <security@woltlab.cloud>
