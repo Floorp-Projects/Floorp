@@ -184,6 +184,10 @@ void moz_container_wayland_init(MozContainerWayland* container) {
 
 static void moz_container_wayland_destroy(GtkWidget* widget) {
   MozContainerWayland* container = &MOZ_CONTAINER(widget)->wl_container;
+  if (!container->container_lock) {
+    // moz_container_wayland_init was not called - it's a hidden container.
+    return;
+  }
   moz_container_wayland_clear_initial_draw_callback(MOZ_CONTAINER(widget));
   delete container->container_lock;
   container->container_lock = nullptr;
@@ -192,18 +196,36 @@ static void moz_container_wayland_destroy(GtkWidget* widget) {
 void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
-  if (wl_container->ready_to_draw && wl_container->surface) {
-    initial_draw_cb();
-  } else {
-    wl_container->initial_draw_cbs.push_back(initial_draw_cb);
+  {
+    MutexAutoLock lock(*container->wl_container.container_lock);
+    if (wl_container->ready_to_draw && !wl_container->surface) {
+      NS_WARNING(
+          "moz_container_wayland_add_initial_draw_callback: ready to draw "
+          "without wayland surface!")
+    }
+    if (!wl_container->ready_to_draw || !wl_container->surface) {
+      wl_container->initial_draw_cbs.push_back(initial_draw_cb);
+      return;
+    }
   }
+
+  // We're ready to draw as
+  // wl_container->ready_to_draw && wl_container->surface
+  // call the callback directly instead of store them.
+  initial_draw_cb();
 }
 
-void moz_container_wayland_clear_initial_draw_callback(
+static void moz_container_wayland_clear_initial_draw_callback_locked(
     MozContainer* container) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
   g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
   wl_container->initial_draw_cbs.clear();
+}
+
+void moz_container_wayland_clear_initial_draw_callback(
+    MozContainer* container) {
+  MutexAutoLock lock(*container->wl_container.container_lock);
+  moz_container_wayland_clear_initial_draw_callback_locked(container);
 }
 
 static void moz_container_wayland_frame_callback_handler(
@@ -217,14 +239,25 @@ static void moz_container_wayland_frame_callback_handler(
       (void*)wl_container->frame_callback_handler, wl_container->ready_to_draw,
       wl_container->initial_draw_cbs.size());
 
-  g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
-
-  if (!wl_container->ready_to_draw) {
-    wl_container->ready_to_draw = true;
-    auto cbs = std::move(wl_container->initial_draw_cbs);
-    for (auto const& cb : cbs) {
-      cb();
+  std::vector<std::function<void(void)>> cbs;
+  {
+    // Protect mozcontainer internals changes by container_lock.
+    MutexAutoLock lock(*wl_container->container_lock);
+    g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
+    if (wl_container->ready_to_draw) {
+      return;
     }
+    wl_container->ready_to_draw = true;
+    MOZ_DIAGNOSTIC_ASSERT(wl_container->surface,
+                          "Should have surface if we're ready to draw");
+    cbs = std::move(wl_container->initial_draw_cbs);
+  }
+
+  // Call the callbacks registered by
+  // moz_container_wayland_add_initial_draw_callback().
+  // and we can't do that under mozcontainer lock.
+  for (auto const& cb : cbs) {
+    cb();
   }
 }
 
@@ -291,7 +324,7 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   LOGWAYLAND("%s [%p]\n", __FUNCTION__,
              (void*)moz_container_get_nsWindow(container));
 
-  moz_container_wayland_clear_initial_draw_callback(container);
+  moz_container_wayland_clear_initial_draw_callback_locked(container);
 
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
@@ -312,6 +345,8 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
                                                 GdkEventAny* event) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(widget)->wl_container;
+  MutexAutoLock lock(*wl_container->container_lock);
+
   LOGWAYLAND("%s [%p]\n", __FUNCTION__,
              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
@@ -321,7 +356,6 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
     return FALSE;
   }
 
-  MutexAutoLock lock(*wl_container->container_lock);
   if (!wl_container->surface) {
     if (!moz_container_wayland_surface_create_locked(MOZ_CONTAINER(widget))) {
       return FALSE;
@@ -654,7 +688,9 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
 }
 
 gboolean moz_container_wayland_can_draw(MozContainer* container) {
-  return container && container->wl_container.ready_to_draw;
+  MozContainerWayland* wl_container = &container->wl_container;
+  MutexAutoLock lock(*wl_container->container_lock);
+  return wl_container->ready_to_draw;
 }
 
 double moz_container_wayland_get_scale(MozContainer* container) {
@@ -664,6 +700,7 @@ double moz_container_wayland_get_scale(MozContainer* container) {
 
 void moz_container_wayland_set_commit_to_parent(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
+  MOZ_DIAGNOSTIC_ASSERT(!wl_container->surface);
   wl_container->commit_to_parent = true;
 }
 
