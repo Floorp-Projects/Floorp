@@ -344,6 +344,7 @@ class Manager::Factory {
     return !sFactory;
   }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   static void RecordMayNotDeleteCSCP(int32_t aCacheStreamControlParentId) {
     if (sFactory) {
       sFactory->mPotentiallyUnreleasedCSCP.AppendElement(
@@ -351,6 +352,13 @@ class Manager::Factory {
     }
   }
 
+  static void RecordHaveDeletedCSCP(int32_t aCacheStreamControlParentId) {
+    if (sFactory) {
+      sFactory->mPotentiallyUnreleasedCSCP.RemoveElement(
+          aCacheStreamControlParentId);
+    }
+  }
+#endif
   static nsCString GetShutdownStatus() {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -1583,9 +1591,15 @@ bool Manager::IsShutdownAllComplete() {
   return Factory::IsShutdownAllComplete();
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void Manager::RecordMayNotDeleteCSCP(int32_t aCacheStreamControlParentId) {
   Factory::RecordMayNotDeleteCSCP(aCacheStreamControlParentId);
 }
+
+void Manager::RecordHaveDeletedCSCP(int32_t aCacheStreamControlParentId) {
+  Factory::RecordHaveDeletedCSCP(aCacheStreamControlParentId);
+}
+#endif
 
 // static
 nsCString Manager::GetShutdownStatus() {
