@@ -26,7 +26,7 @@ async function breakpointPreviews(
     c.toUpperCase()
   );
 
-  info(`Starting ${fixture} tests`);
+  log(`Starting ${fixture} tests`);
 
   await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
     await assertPreviews(dbg, previews);

@@ -19,12 +19,11 @@ add_task(async function() {
 
   info("Cmd+click on a line and check the debugger continues to that line");
   const lineToContinueTo = 31;
-  const onResumed = waitForResumed(dbg);
   await cmdClickLine(dbg, lineToContinueTo);
 
   // continuing will resume and pause again. Let's wait until we resume so we can properly
   // wait for the next pause.
-  await onResumed;
+  await waitForState(dbg, () => !isPaused(dbg), "resumed");
   // waitForPaused properly waits for the scopes to be available
   await waitForPaused(dbg);
 

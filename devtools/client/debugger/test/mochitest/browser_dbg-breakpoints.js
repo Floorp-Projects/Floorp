@@ -32,6 +32,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple2.js", 3);
   await addBreakpoint(dbg, "simple2.js", 5);
 
+  assertEmptyLines(dbg, [1, 2]);
   assertBreakpointSnippet(dbg, 3, "return x + y;");
 
   rightClickElement(dbg, "breakpointItem", 2);

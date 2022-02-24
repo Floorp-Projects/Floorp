@@ -30,7 +30,7 @@ add_task(async function() {
       return content.wrappedJSObject.foo();
     });
   });
-  await waitForPaused(dbg);
+  await waitFor(() => isPaused(dbg), "Wait for the debugger to pause");
   ok(true, "debugger is paused");
 
   let highlighterTestFront;
@@ -63,7 +63,7 @@ add_task(async function() {
     "paused-dbg-resume-button"
   );
 
-  await waitForResumed(dbg);
+  await waitFor(() => !isPaused(dbg), "Wait for the debugger to resume");
   ok("The debugger isn't paused after clicking on the resume button");
 
   await waitFor(async () => {
