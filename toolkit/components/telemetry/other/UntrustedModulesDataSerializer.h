@@ -36,12 +36,13 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
   // (See "Flags for getUntrustedModuleLoadEvents" in nsITelemetry.idl)
   const uint32_t mFlags;
 
-  static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
-                             const ProcessedModuleLoadEvent& aEvent,
-                             const IndexMap& aModuleIndices);
+  static bool SerializeEvent(
+      JSContext* aCx, JS::MutableHandleValue aElement,
+      const ProcessedModuleLoadEventContainer& aEventContainer,
+      const IndexMap& aModuleIndices);
   nsresult GetPerProcObject(const UntrustedModulesData& aData,
                             JS::MutableHandleObject aObj);
-  nsresult AddLoadEvents(const Vector<ProcessedModuleLoadEvent>& aEvents,
+  nsresult AddLoadEvents(const UntrustedModuleLoadingEvents& aEvents,
                          JS::MutableHandleObject aPerProcObj);
   nsresult AddSingleData(const UntrustedModulesData& aData);
 
