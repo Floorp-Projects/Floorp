@@ -152,7 +152,8 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = topSite.url.getRepresentativeCharacter(),
+                        text = if (topSite.title.isNullOrEmpty()) topSite.url.getRepresentativeCharacter()
+                        else topSite.title?.get(0).toString(),
                         color = focusColors.topSiteFaviconText,
                         fontSize = 20.sp
                     )
