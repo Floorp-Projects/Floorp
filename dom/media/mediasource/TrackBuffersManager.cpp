@@ -3028,6 +3028,25 @@ void TrackBuffersManager::GetDebugInfo(
 void TrackBuffersManager::AddSizeOfResources(
     MediaSourceDecoder::ResourceSizes* aSizes) const {
   MOZ_ASSERT(OnTaskQueue());
+
+  if (mInputBuffer.isSome() && mInputBuffer->Buffer()) {
+    // mInputBuffer should be the sole owner of the underlying buffer, so this
+    // won't double count.
+    aSizes->mByteSize += mInputBuffer->Buffer()->ShallowSizeOfIncludingThis(
+        aSizes->mMallocSizeOf);
+  }
+  if (mInitData) {
+    aSizes->mByteSize +=
+        mInitData->ShallowSizeOfIncludingThis(aSizes->mMallocSizeOf);
+  }
+  if (mPendingInputBuffer.isSome() && mPendingInputBuffer->Buffer()) {
+    // mPendingInputBuffer should be the sole owner of the underlying buffer, so
+    // this won't double count.
+    aSizes->mByteSize +=
+        mPendingInputBuffer->Buffer()->ShallowSizeOfIncludingThis(
+            aSizes->mMallocSizeOf);
+  }
+
   mVideoTracks.AddSizeOfResources(aSizes);
   mAudioTracks.AddSizeOfResources(aSizes);
 }
