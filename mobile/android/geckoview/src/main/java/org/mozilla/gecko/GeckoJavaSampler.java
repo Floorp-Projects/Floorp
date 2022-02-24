@@ -18,13 +18,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
 /**
  * Takes samples and adds markers for Java threads for the Gecko profiler.
  *
- * <p>This class is thread safe because it synchronizes access to its mutable state.
+ * <p>This class is thread safe because it uses synchronized on accesses to its mutable state. One
+ * exception is {@link #isProfilerActive()}: see the javadoc for details.
  *
  * <p>Bug 1618560: Currently we only profile the Android UI thread. Ideally we should be able to
  * profile multiple threads.
@@ -38,19 +40,24 @@ public class GeckoJavaSampler {
   @GuardedBy("GeckoJavaSampler.class")
   private static ScheduledExecutorService sSamplingScheduler;
 
+  // See isProfilerActive for details on the AtomicReference.
   @GuardedBy("GeckoJavaSampler.class")
-  private static ScheduledFuture<?> sSamplingFuture;
+  private static AtomicReference<ScheduledFuture<?>> sSamplingFuture = new AtomicReference<>();
 
   private static final MarkerStorage sMarkerStorage = new MarkerStorage();
 
   /**
    * Returns true if profiler is running and unpaused at the moment which means it's allowed to add
    * a marker.
+   *
+   * <p>Thread policy: we want this method to be inexpensive (i.e. non-blocking) because we want to
+   * be able to use it in performance-sensitive code. That's why we rely on an AtomicReference. If
+   * this requirement didn't exist, the AtomicReference could be removed because the class thread
+   * policy is to call synchronized on mutable state access.
    */
   public static boolean isProfilerActive() {
-    // sSamplingRunnable is present if profiler is running and sSamplingFuture
-    // present if profiler is not paused.
-    return sSamplingRunnable != null && sSamplingFuture != null;
+    // This value will only be present if the profiler is started and not paused.
+    return sSamplingFuture.get() != null;
   }
 
   // Use the same timer primitive as the profiler
@@ -445,7 +452,8 @@ public class GeckoJavaSampler {
         return;
       }
 
-      if (sSamplingFuture != null && !sSamplingFuture.isDone()) {
+      final ScheduledFuture<?> future = sSamplingFuture.get();
+      if (future != null && !future.isDone()) {
         return;
       }
 
@@ -455,29 +463,29 @@ public class GeckoJavaSampler {
       sSamplingRunnable = new SamplingRunnable(aInterval, limitedEntryCount);
       sMarkerStorage.start(limitedEntryCount);
       sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
-      sSamplingFuture =
+      sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
-              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
+              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS));
     }
   }
 
   @WrapForJNI
   public static void pauseSampling() {
     synchronized (GeckoJavaSampler.class) {
-      sSamplingFuture.cancel(false /* mayInterruptIfRunning */);
-      sSamplingFuture = null;
+      final ScheduledFuture<?> future = sSamplingFuture.getAndSet(null);
+      future.cancel(false /* mayInterruptIfRunning */);
     }
   }
 
   @WrapForJNI
   public static void unpauseSampling() {
     synchronized (GeckoJavaSampler.class) {
-      if (sSamplingFuture != null) {
+      if (sSamplingFuture.get() != null) {
         return;
       }
-      sSamplingFuture =
+      sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
-              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
+              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS));
     }
   }
 
@@ -498,7 +506,7 @@ public class GeckoJavaSampler {
       }
       sSamplingScheduler = null;
       sSamplingRunnable = null;
-      sSamplingFuture = null;
+      sSamplingFuture.set(null);
       sMarkerStorage.stop();
     }
   }
