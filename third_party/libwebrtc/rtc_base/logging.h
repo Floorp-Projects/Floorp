@@ -660,11 +660,12 @@ inline bool LogCheckLevel(LoggingSeverity sev) {
   return (LogMessage::GetMinLogSeverity() <= sev);
 }
 
-#define RTC_LOG_E(sev, ctx, err)                                               \
-  RTC_LOG_ENABLED() && ::rtc::webrtc_logging_impl::LogCall() &                 \
-                           ::rtc::webrtc_logging_impl::LogStreamer<>()         \
-                               << ::rtc::webrtc_logging_impl::LogMetadataErr { \
-    {__FILE__, __LINE__, ::rtc::sev}, ::rtc::ERRCTX_##ctx, (err)               \
+#define RTC_LOG_E(sev, ctx, err)                                 \
+  !rtc::LogMessage::IsNoop<::rtc::sev>() &&                      \
+      ::rtc::webrtc_logging_impl::LogCall() &                    \
+          ::rtc::webrtc_logging_impl::LogStreamer<>()            \
+              << ::rtc::webrtc_logging_impl::LogMetadataErr {    \
+    {__FILE__, __LINE__, ::rtc::sev}, ::rtc::ERRCTX_##ctx, (err) \
   }
 
 #define RTC_LOG_T(sev) RTC_LOG(sev) << this << ": "
@@ -697,11 +698,12 @@ inline const char* AdaptString(const std::string& str) {
 }
 }  // namespace webrtc_logging_impl
 
-#define RTC_LOG_TAG(sev, tag)                                                  \
-  RTC_LOG_ENABLED() && ::rtc::webrtc_logging_impl::LogCall() &                 \
-                           ::rtc::webrtc_logging_impl::LogStreamer<>()         \
-                               << ::rtc::webrtc_logging_impl::LogMetadataTag { \
-    sev, ::rtc::webrtc_logging_impl::AdaptString(tag)                          \
+#define RTC_LOG_TAG(sev, tag)                                 \
+  !rtc::LogMessage::IsNoop(sev) &&                            \
+      ::rtc::webrtc_logging_impl::LogCall() &                 \
+          ::rtc::webrtc_logging_impl::LogStreamer<>()         \
+              << ::rtc::webrtc_logging_impl::LogMetadataTag { \
+    sev, ::rtc::webrtc_logging_impl::AdaptString(tag)         \
   }
 
 #else
