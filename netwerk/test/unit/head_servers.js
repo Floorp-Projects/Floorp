@@ -29,6 +29,12 @@ class BaseNodeHTTPServerCode {
 }
 
 class BaseNodeServer {
+  protocol() {
+    return this._protocol;
+  }
+  origin() {
+    return `${this.protocol()}://localhost:${this.port()}`;
+  }
   port() {
     return this._port;
   }
@@ -69,6 +75,7 @@ class NodeHTTPServerCode extends BaseNodeHTTPServerCode {
 }
 
 class NodeHTTPServer extends BaseNodeServer {
+  _protocol = "http";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
@@ -103,6 +110,7 @@ class NodeHTTPSServerCode extends BaseNodeHTTPServerCode {
 }
 
 class NodeHTTPSServer extends BaseNodeServer {
+  _protocol = "https";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
@@ -137,6 +145,7 @@ class NodeHTTP2ServerCode extends BaseNodeHTTPServerCode {
 }
 
 class NodeHTTP2Server extends BaseNodeServer {
+  _protocol = "https";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
@@ -147,5 +156,230 @@ class NodeHTTP2Server extends BaseNodeServer {
     await this.execute(NodeHTTP2ServerCode);
     this._port = await this.execute(`NodeHTTP2ServerCode.startServer(${port})`);
     await this.execute(`global.path_handlers = {};`);
+  }
+}
+
+// Base HTTP proxy
+
+class BaseProxyCode {
+  static proxyHandler(req, res) {
+    if (req.url.startsWith("/")) {
+      res.writeHead(405);
+      res.end();
+      return;
+    }
+
+    const http = require("http");
+    http.get(req.url, { method: req.method }, proxyresp => {
+      res.writeHead(
+        proxyresp.statusCode,
+        proxyresp.statusMessage,
+        proxyresp.headers
+      );
+      let rawData = "";
+      proxyresp.on("data", chunk => {
+        rawData += chunk;
+      });
+      proxyresp.on("end", () => {
+        res.end(rawData);
+      });
+    });
+  }
+
+  static onConnect(req, clientSocket, head) {
+    const net = require("net");
+    // Connect to an origin server
+    const { port, hostname } = new URL(`https://${req.url}`);
+    const serverSocket = net.connect(port || 443, hostname, () => {
+      clientSocket.write(
+        "HTTP/1.1 200 Connection Established\r\n" +
+          "Proxy-agent: Node.js-Proxy\r\n" +
+          "\r\n"
+      );
+      serverSocket.write(head);
+      serverSocket.pipe(clientSocket);
+      clientSocket.pipe(serverSocket);
+    });
+  }
+}
+
+class BaseHTTPProxy extends BaseNodeServer {
+  registerFilter() {
+    const pps = Cc[
+      "@mozilla.org/network/protocol-proxy-service;1"
+    ].getService();
+    this.filter = new NodeProxyFilter(
+      this.protocol(),
+      "localhost",
+      this.port(),
+      0
+    );
+    pps.registerFilter(this.filter, 10);
+    registerCleanupFunction(() => {
+      this.unregisterFilter();
+    });
+  }
+
+  unregisterFilter() {
+    const pps = Cc[
+      "@mozilla.org/network/protocol-proxy-service;1"
+    ].getService();
+    if (this.filter) {
+      pps.unregisterFilter(this.filter);
+      this.filter = undefined;
+    }
+  }
+
+  /// Stops the server
+  async stop() {
+    this.unregisterFilter();
+    await super.stop();
+  }
+}
+
+// HTTP1 Proxy
+
+class NodeProxyFilter {
+  constructor(type, host, port, flags) {
+    this._type = type;
+    this._host = host;
+    this._port = port;
+    this._flags = flags;
+    this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
+  }
+  applyFilter(uri, pi, cb) {
+    if (
+      uri.pathQueryRef.startsWith("/execute") ||
+      uri.pathQueryRef.startsWith("/fork") ||
+      uri.pathQueryRef.startsWith("/kill")
+    ) {
+      // So we allow NodeServer.execute to work
+      cb.onProxyFilterResult(pi);
+      return;
+    }
+    const pps = Cc[
+      "@mozilla.org/network/protocol-proxy-service;1"
+    ].getService();
+    cb.onProxyFilterResult(
+      pps.newProxyInfo(
+        this._type,
+        this._host,
+        this._port,
+        "",
+        "",
+        this._flags,
+        1000,
+        null
+      )
+    );
+  }
+}
+
+class HTTPProxyCode {
+  static async startServer(port) {
+    const http = require("http");
+    global.proxy = http.createServer(BaseProxyCode.proxyHandler);
+    global.proxy.on("connect", BaseProxyCode.onConnect);
+
+    await global.proxy.listen(port);
+    return global.proxy.address().port;
+  }
+}
+
+class NodeHTTPProxyServer extends BaseHTTPProxy {
+  _protocol = "http";
+  /// Starts the server
+  /// @port - default 0
+  ///    when provided, will attempt to listen on that port.
+  async start(port = 0) {
+    this.processId = await NodeServer.fork();
+
+    await this.execute(BaseProxyCode);
+    await this.execute(HTTPProxyCode);
+    this._port = await this.execute(`HTTPProxyCode.startServer(${port})`);
+
+    this.registerFilter();
+  }
+}
+
+// HTTPS proxy
+
+class HTTPSProxyCode {
+  static async startServer(port) {
+    const fs = require("fs");
+    const options = {
+      key: fs.readFileSync(__dirname + "/http2-cert.key"),
+      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+    };
+    const https = require("https");
+    global.proxy = https.createServer(options, BaseProxyCode.proxyHandler);
+    global.proxy.on("connect", BaseProxyCode.onConnect);
+
+    await global.proxy.listen(port);
+    return global.proxy.address().port;
+  }
+}
+
+class NodeHTTPSProxyServer extends BaseHTTPProxy {
+  _protocol = "https";
+  /// Starts the server
+  /// @port - default 0
+  ///    when provided, will attempt to listen on that port.
+  async start(port = 0) {
+    this.processId = await NodeServer.fork();
+
+    await this.execute(BaseProxyCode);
+    await this.execute(HTTPSProxyCode);
+    this._port = await this.execute(`HTTPSProxyCode.startServer(${port})`);
+
+    this.registerFilter();
+  }
+}
+
+// HTTP2 proxy
+
+class HTTP2ProxyCode {
+  static async startServer(port) {
+    const fs = require("fs");
+    const options = {
+      key: fs.readFileSync(__dirname + "/http2-cert.key"),
+      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+    };
+    const https = require("https");
+    global.proxy = https.createServer(options, BaseProxyCode.proxyHandler);
+    global.proxy.on("connect", BaseProxyCode.onConnect);
+
+    await global.proxy.listen(port);
+    return global.proxy.address().port;
+  }
+}
+
+class NodeHTTP2ProxyServer extends BaseHTTPProxy {
+  _protocol = "https";
+  /// Starts the server
+  /// @port - default 0
+  ///    when provided, will attempt to listen on that port.
+  async start(port = 0) {
+    this.processId = await NodeServer.fork();
+
+    await this.execute(BaseProxyCode);
+    await this.execute(HTTP2ProxyCode);
+    this._port = await this.execute(`HTTP2ProxyCode.startServer(${port})`);
+
+    this.registerFilter();
+  }
+}
+
+// Helper functions
+
+async function with_node_servers(arrayOfClasses, asyncClosure) {
+  for (let s of arrayOfClasses) {
+    let server = new s();
+    await server.start();
+    registerCleanupFunction(async () => {
+      await server.stop();
+    });
+    await asyncClosure(server);
+    await server.stop();
   }
 }
