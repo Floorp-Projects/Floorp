@@ -57,7 +57,6 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   RefPtr<InitPromise> ProcessInit();
   HRESULT InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder);
-  void FillConfigData() {}
 
   RefPtr<EncodePromise> ProcessEncode(RefPtr<const VideoData>&& aSample);
   already_AddRefed<IMFSample> ConvertToNV12InputSample(

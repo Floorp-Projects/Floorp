@@ -86,43 +86,30 @@ static const char* CodecStr(const GUID& aGUID) {
   }
 }
 
-static UINT32 EnumEncoders(const GUID& aSubtype, IMFActivate**& aActivates) {
+static UINT32 EnumHW(const GUID& aSubtype, IMFActivate**& aActivates) {
+  if (IsWin32kLockedDown()) {
+    // Some HW encoders use system calls and crash when locked down.
+    // TODO: move HW encoding to RDD.
+    MFT_ENC_SLOGD("Don't use HW encoder when win32k locked down.");
+    return 0;
+  }
+
   UINT32 num = 0;
   MFT_REGISTER_TYPE_INFO inType = {.guidMajorType = MFMediaType_Video,
                                    .guidSubtype = MFVideoFormat_NV12};
   MFT_REGISTER_TYPE_INFO outType = {.guidMajorType = MFMediaType_Video,
                                     .guidSubtype = aSubtype};
-  HRESULT hr = S_OK;
-  if (IsWin32kLockedDown()) {
-    // Some HW encoders use DXGI API and crash when locked down.
-    // TODO: move HW encoding out of content process (bug 1754531).
-    MFT_ENC_SLOGD("Don't use HW encoder when win32k locked down.");
-  } else {
-    hr = wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
-                        MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_SORTANDFILTER,
-                        &inType, &outType, &aActivates, &num);
-  }
+  HRESULT hr =
+      wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
+                     MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_SORTANDFILTER,
+                     &inType, &outType, &aActivates, &num);
   if (FAILED(hr)) {
     MFT_ENC_SLOGE("enumerate HW encoder for %s: error=%s", CodecStr(aSubtype),
                   ErrorStr(hr));
     return 0;
   }
-
-  if (num == 0 && StaticPrefs::media_webrtc_platformencoder_sw_mft()) {
-    // Try software MFTs.
-    hr = wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
-                        MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT |
-                            MFT_ENUM_FLAG_SORTANDFILTER,
-                        &inType, &outType, &aActivates, &num);
-    if (FAILED(hr)) {
-      MFT_ENC_SLOGE("enumerate SW encoder for %s: error=%s", CodecStr(aSubtype),
-                    ErrorStr(hr));
-      return 0;
-    }
-  }
-
   if (num == 0) {
-    MFT_ENC_SLOGD("cannot find encoder for %s", CodecStr(aSubtype));
+    MFT_ENC_SLOGD("cannot find HW encoder for %s", CodecStr(aSubtype));
   }
   return num;
 }
@@ -147,10 +134,10 @@ static HRESULT GetFriendlyName(IMFActivate* aAttributes, nsCString& aName) {
   return S_OK;
 }
 
-static void PopulateEncoderInfo(const GUID& aSubtype,
-                                nsTArray<MFTEncoder::Info>& aInfos) {
+static void PopulateHWEncoderInfo(const GUID& aSubtype,
+                                  nsTArray<MFTEncoder::Info>& aInfos) {
   IMFActivate** activates = nullptr;
-  UINT32 num = EnumEncoders(aSubtype, activates);
+  UINT32 num = EnumHW(aSubtype, activates);
   for (UINT32 i = 0; i < num; ++i) {
     MFTEncoder::Info info = {.mSubtype = aSubtype};
     GetFriendlyName(activates[i], info.mName);
@@ -188,9 +175,9 @@ nsTArray<MFTEncoder::Info> MFTEncoder::Enumerate() {
     return infos;
   }
 
-  PopulateEncoderInfo(MFVideoFormat_H264, infos);
-  PopulateEncoderInfo(MFVideoFormat_VP90, infos);
-  PopulateEncoderInfo(MFVideoFormat_VP80, infos);
+  PopulateHWEncoderInfo(MFVideoFormat_H264, infos);
+  PopulateHWEncoderInfo(MFVideoFormat_VP90, infos);
+  PopulateHWEncoderInfo(MFVideoFormat_VP80, infos);
 
   wmf::MFShutdown();
   return infos;
@@ -208,7 +195,7 @@ already_AddRefed<IMFActivate> MFTEncoder::CreateFactory(const GUID& aSubtype) {
   }
 
   IMFActivate** activates = nullptr;
-  UINT32 num = EnumEncoders(aSubtype, activates);
+  UINT32 num = EnumHW(aSubtype, activates);
   if (num == 0) {
     return nullptr;
   }
@@ -261,6 +248,7 @@ MFTEncoder::Destroy() {
     return S_OK;
   }
 
+  mEventSource = nullptr;
   mEncoder = nullptr;
   mConfig = nullptr;
   // Release MFT resources via activation object.
@@ -275,10 +263,10 @@ MFTEncoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(aInputType && aOutputType);
 
-  AsyncMFTResult asyncMFT = AttemptEnableAsync();
-  NS_ENSURE_TRUE(asyncMFT.isOk(), asyncMFT.unwrapErr());
+  HRESULT hr = EnableAsync();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  HRESULT hr = GetStreamIDs();
+  hr = GetStreamIDs();
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // Always set encoder output type before input.
@@ -299,45 +287,40 @@ MFTEncoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType) {
   mOutputStreamProvidesSample =
       IsFlagSet(mOutputStreamInfo.dwFlags, MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
 
+  hr = SendMFTMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
   hr = SendMFTMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = SendMFTMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  if (asyncMFT.unwrap()) {
-    RefPtr<IMFMediaEventGenerator> source;
-    hr = mEncoder->QueryInterface(IID_PPV_ARGS(
-        static_cast<IMFMediaEventGenerator**>(getter_AddRefs(source))));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-    mEventSource.SetAsyncEventGenerator(source.forget());
-  } else {
-    mEventSource.InitSyncMFTEventQueue();
-  }
-
+  RefPtr<IMFMediaEventGenerator> source;
+  hr = mEncoder->QueryInterface(IID_PPV_ARGS(
+      static_cast<IMFMediaEventGenerator**>(getter_AddRefs(source))));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  mEventSource = std::move(source);
   mNumNeedInput = 0;
   return S_OK;
 }
 
 // Async MFT won't work without unlocking. See
 // https://docs.microsoft.com/en-us/windows/win32/medfound/asynchronous-mfts#unlocking-asynchronous-mfts
-MFTEncoder::AsyncMFTResult MFTEncoder::AttemptEnableAsync() {
+HRESULT MFTEncoder::EnableAsync() {
   IMFAttributes* pAttributes = nullptr;
   HRESULT hr = mEncoder->GetAttributes(&pAttributes);
-  if (FAILED(hr)) {
-    return AsyncMFTResult(hr);
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  bool async =
-      MFGetAttributeUINT32(pAttributes, MF_TRANSFORM_ASYNC, FALSE) == TRUE;
-  if (async) {
+  UINT32 async = MFGetAttributeUINT32(pAttributes, MF_TRANSFORM_ASYNC, FALSE);
+  if (async == TRUE) {
     hr = pAttributes->SetUINT32(MF_TRANSFORM_ASYNC_UNLOCK, TRUE);
   } else {
-    hr = S_OK;
+    hr = E_NOTIMPL;
   }
   pAttributes->Release();
 
-  return SUCCEEDED(hr) ? AsyncMFTResult(async) : AsyncMFTResult(hr);
+  return hr;
 }
 
 HRESULT MFTEncoder::GetStreamIDs() {
@@ -484,12 +467,6 @@ MFTEncoder::PushInput(RefPtr<IMFSample>&& aInput) {
   MOZ_ASSERT(aInput);
 
   mPendingInputs.Push(aInput.forget());
-  if (mEventSource.IsSync() && mNumNeedInput == 0) {
-    // To step 2 in
-    // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-    mNumNeedInput++;
-  }
-
   HRESULT hr = ProcessInput();
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -509,44 +486,33 @@ HRESULT MFTEncoder::ProcessInput() {
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   --mNumNeedInput;
 
-  if (!mEventSource.IsSync()) {
-    return S_OK;
-  }
-  // For sync MFT: Step 3 in
-  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-  DWORD flags = 0;
-  hr = mEncoder->GetOutputStatus(&flags);
-  MediaEventType evType = MEUnknown;
-  switch (hr) {
-    case S_OK:
-      evType = flags == MFT_OUTPUT_STATUS_SAMPLE_READY
-                   ? METransformHaveOutput  // To step 4: ProcessOutput().
-                   : METransformNeedInput;  // To step 2: ProcessInput().
-      break;
-    case E_NOTIMPL:
-      evType = METransformHaveOutput;  // To step 4: ProcessOutput().
-      break;
-    default:
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("undefined output status");
-      return hr;
-  }
-  return mEventSource.QueueSyncMFTEvent(evType);
+  return S_OK;
 }
 
 HRESULT MFTEncoder::ProcessEvents() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
+  MOZ_ASSERT(mEventSource, "no event generator");
 
   HRESULT hr = E_FAIL;
   while (true) {
-    Event event = mEventSource.GetEvent();
-    if (event.isErr()) {
-      hr = event.unwrapErr();
-      break;
+    RefPtr<IMFMediaEvent> event;
+    hr = mEventSource->GetEvent(MF_EVENT_FLAG_NO_WAIT, getter_AddRefs(event));
+    switch (hr) {
+      case S_OK:
+        break;
+      case MF_E_NO_EVENTS_AVAILABLE:
+        return S_OK;
+      case MF_E_MULTIPLE_SUBSCRIBERS:
+      default:
+        MFT_ENC_LOGE("failed to get event: %s", ErrorStr(hr));
+        return hr;
     }
 
-    MediaEventType evType = event.unwrap();
-    switch (evType) {
+    MediaEventType type = MEUnknown;
+    HRESULT hr = event->GetType(&type);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    switch (type) {
       case METransformNeedInput:
         ++mNumNeedInput;
         hr = ProcessInput();
@@ -554,24 +520,16 @@ HRESULT MFTEncoder::ProcessEvents() {
         break;
       case METransformHaveOutput:
         hr = ProcessOutput();
-        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
         break;
       case METransformDrainComplete:
         mDrainState = DrainState::DRAINED;
         break;
       default:
-        MFT_ENC_LOGE("unsupported event: %x", evType);
+        MFT_ENC_LOGE("event: error=%s", ErrorStr(hr));
     }
   }
 
-  switch (hr) {
-    case MF_E_NO_EVENTS_AVAILABLE:
-      return S_OK;
-    case MF_E_MULTIPLE_SUBSCRIBERS:
-    default:
-      MFT_ENC_LOGE("failed to get event: %s", ErrorStr(hr));
-      return hr;
-  }
+  return hr;
 }
 
 HRESULT MFTEncoder::ProcessOutput() {
@@ -608,17 +566,6 @@ HRESULT MFTEncoder::ProcessOutput() {
     }
     return MF_E_TRANSFORM_STREAM_CHANGE;
   }
-
-  // Step 8 in
-  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-  if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    MOZ_ASSERT(mEventSource.IsSync());
-    MOZ_ASSERT(mDrainState == DrainState::DRAINING);
-
-    mEventSource.QueueSyncMFTEvent(METransformDrainComplete);
-    return S_OK;
-  }
-
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   mOutputs.AppendElement(output.pSample);
@@ -646,11 +593,6 @@ HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {
     case DrainState::DRAINABLE:
       // Exhaust pending inputs.
       while (mPendingInputs.GetSize() > 0) {
-        if (mEventSource.IsSync()) {
-          // Step 5 in
-          // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-          mEventSource.QueueSyncMFTEvent(METransformNeedInput);
-        }
         HRESULT hr = ProcessEvents();
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       }
@@ -660,11 +602,6 @@ HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {
     case DrainState::DRAINING:
       // Collect remaining outputs.
       while (mOutputs.Length() == 0 && mDrainState != DrainState::DRAINED) {
-        if (mEventSource.IsSync()) {
-          // Step 8 in
-          // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
-          mEventSource.QueueSyncMFTEvent(METransformHaveOutput);
-        }
         HRESULT hr = ProcessEvents();
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       }
@@ -687,9 +624,6 @@ HRESULT MFTEncoder::GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader) {
 
   UINT32 length = 0;
   hr = outputType->GetBlobSize(MF_MT_MPEG_SEQUENCE_HEADER, &length);
-  if (hr == MF_E_ATTRIBUTENOTFOUND || length == 0) {
-    return S_OK;
-  }
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   aHeader.SetCapacity(length);
@@ -699,52 +633,6 @@ HRESULT MFTEncoder::GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader) {
 
   return hr;
 }
-
-MFTEncoder::Event MFTEncoder::EventSource::GetEvent() {
-  if (IsSync()) {
-    return GetSyncMFTEvent();
-  }
-
-  RefPtr<IMFMediaEvent> event;
-  HRESULT hr = mImpl.as<RefPtr<IMFMediaEventGenerator>>()->GetEvent(
-      MF_EVENT_FLAG_NO_WAIT, getter_AddRefs(event));
-  MediaEventType type = MEUnknown;
-  if (SUCCEEDED(hr)) {
-    hr = event->GetType(&type);
-  }
-  return SUCCEEDED(hr) ? Event{type} : Event{hr};
-}
-
-HRESULT MFTEncoder::EventSource::QueueSyncMFTEvent(MediaEventType aEventType) {
-  MOZ_ASSERT(IsSync());
-  MOZ_ASSERT(IsOnCurrentThread());
-
-  auto q = mImpl.as<UniquePtr<EventQueue>>().get();
-  q->push(aEventType);
-  return S_OK;
-}
-
-MFTEncoder::Event MFTEncoder::EventSource::GetSyncMFTEvent() {
-  MOZ_ASSERT(IsOnCurrentThread());
-
-  auto q = mImpl.as<UniquePtr<EventQueue>>().get();
-  if (q->empty()) {
-    return Event{MF_E_NO_EVENTS_AVAILABLE};
-  }
-
-  MediaEventType type = q->front();
-  q->pop();
-  return Event{type};
-}
-
-#ifdef DEBUG
-bool MFTEncoder::EventSource::IsOnCurrentThread() {
-  if (!mThread) {
-    mThread = GetCurrentSerialEventTarget();
-  }
-  return mThread->IsOnCurrentThread();
-}
-#endif
 
 }  // namespace mozilla
 
