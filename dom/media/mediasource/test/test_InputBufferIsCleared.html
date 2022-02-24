@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: input buffer is cleared as expected (bug 1697476)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Test bug 1697476 is fixed. We do this by appending a number of segments with
+// trailing `skip` boxes. If the bug is fixed, then the data from these appends
+// will eventually be cleared from memory. If not fixed, we leak that memory.
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop_video", ["init"], ".mp4");
+  // Load ~1mb of media.
+  await fetchAndLoad(sb, "bipbop/bipbop_trailing_skip_box_video", ["1"], ".m4s");
+  // Load ~1mb more media several more times.
+  const numberOfAppends = 5;
+  for (let i = 1; i < numberOfAppends; ++i) {
+    sb.timestampOffset = v.buffered.end(0);
+    await fetchAndLoad(sb, "bipbop/bipbop_trailing_skip_box_video", ["1"], ".m4s");
+  }
+
+  // Grab a memory report. We'll use this to make sure we're not accumulating
+  // too much data in our buffers.
+  const mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+      .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+
+  let amount = 0;
+  const handleReport = (aProcess, aPath, aKind, aUnits, aAmount) => {
+    if (aPath == "explicit/media/resources") {
+      amount += aAmount;
+    }
+  };
+
+  await new Promise(r => mgr.getReports(handleReport, null, r, null, /* anonymized = */ false));
+  ok(true, "Yay didn't crash!");
+  ok(amount !== undefined, "Got media resources amount");
+  const sgementSize = 1023860;
+  // Set the limit to be equal to the total data we appended. If we're not
+  // clearing buffers, we'll have all the data from the appends + some other
+  // data, so will fail.
+  const limit = sgementSize * numberOfAppends - 1;
+  ok(amount < limit, `Should have less than ${limit} bytes of media usage. Got ${amount} bytes.`);
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
