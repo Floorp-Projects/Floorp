@@ -303,6 +303,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-login");
       Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-loginCanceled");
       Services.obs.addObserver(AboutLogins, "passwordmgr-storage-changed");
+      Services.obs.addObserver(AboutLogins, "passwordmgr-reload-all");
       Services.obs.addObserver(AboutLogins, UIState.ON_UPDATE);
       AboutLogins._observersAdded = true;
     }
@@ -490,7 +491,6 @@ class AboutLoginsParent extends JSWindowActorParent {
       let summary;
       try {
         summary = await LoginCSVImport.importFromCSV(path);
-        await AboutLogins._reloadAllLogins();
       } catch (e) {
         Cu.reportError(e);
         this.sendAsyncMessage(
@@ -554,8 +554,14 @@ var AboutLogins = {
       Services.obs.removeObserver(this, "passwordmgr-crypto-login");
       Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
       Services.obs.removeObserver(this, "passwordmgr-storage-changed");
+      Services.obs.removeObserver(this, "passwordmgr-reload-all");
       Services.obs.removeObserver(this, UIState.ON_UPDATE);
       this._observersAdded = false;
+      return;
+    }
+
+    if (topic == "passwordmgr-reload-all") {
+      await this._reloadAllLogins();
       return;
     }
 
