@@ -114,8 +114,8 @@ class UntrustedModulesCollector {
                 if (aResult.isSome()) {
                   wprintf(L"Received data. (pendingQueries=%d)\n",
                           pendingQueries);
-                  for (const auto& evt : aResult.ref().mEvents) {
-                    aChecker.Decrement(evt.mRequestedDllName);
+                  for (auto item : aResult.ref().mEvents) {
+                    aChecker.Decrement(item->mEvent.mRequestedDllName);
                   }
                   EXPECT_TRUE(mData.emplaceBack(std::move(aResult.ref())));
                 }
@@ -286,7 +286,8 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
   }
 
   size_t numBlockedEvents = 0;
-  for (const auto& evt : aData.mEvents) {
+  for (auto item : aData.mEvents) {
+    const auto& evt = item->mEvent;
     const nsDependentSubstring leafName =
         nt::GetLeafName(evt.mModule->mResolvedNtName);
     const nsAutoString leafNameStr(leafName.Data(), leafName.Length());
@@ -326,8 +327,9 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
 
   // No check for the mXULLoadDurationMS field because the field has a value
   // in CCov build GTest, but it is empty in non-CCov build (bug 1681936).
-  EXPECT_GT(aData.mEvents.length(), 0);
-  if (numBlockedEvents == aData.mEvents.length()) {
+  EXPECT_EQ(aData.mNumEvents, aData.mEvents.length());
+  EXPECT_GT(aData.mNumEvents, 0);
+  if (numBlockedEvents == aData.mNumEvents) {
     // If all loading events were blocked, the stacks are empty.
     EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
   } else {
