@@ -37,7 +37,7 @@ add_task(async function() {
 });
 
 function findNode(dbg, text) {
-  for (let index = 0;; index++) {
+  for (let index = 0; ; index++) {
     const elem = findElement(dbg, "scopeNode", index);
     if (elem?.innerText == text) {
       return elem;
@@ -50,7 +50,7 @@ function toggleNode(dbg, text) {
 }
 
 function findNodeValue(dbg, text) {
-  for (let index = 0;; index++) {
+  for (let index = 0; ; index++) {
     const elem = findElement(dbg, "scopeNode", index);
     if (elem?.innerText == text) {
       return findElement(dbg, "scopeValue", index).innerText;

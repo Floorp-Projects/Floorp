@@ -1018,6 +1018,10 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::V128Or:
     case wasm::SimdOp::V128Xor:
     case wasm::SimdOp::V128AndNot:
+    case wasm::SimdOp::F32x4Min:
+    case wasm::SimdOp::F32x4Max:
+    case wasm::SimdOp::F64x2Min:
+    case wasm::SimdOp::F64x2Max:
       if (isThreeOpAllowed()) {
         auto* lir = new (alloc())
             LWasmBinarySimd128(op, useRegisterAtStart(lhs),

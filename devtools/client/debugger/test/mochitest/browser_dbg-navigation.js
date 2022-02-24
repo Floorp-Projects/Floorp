@@ -7,7 +7,7 @@ const SOURCES = [
   "simple2.js",
   "simple3.js",
   "long.js",
-  "doc-scripts.html"
+  "doc-scripts.html",
 ];
 
 /**
@@ -18,9 +18,8 @@ add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
   const {
     selectors: { getSelectedSource, getIsPaused, getCurrentThread },
-    getState
   } = dbg;
- 
+
   info("Pause in the first document");
   invokeInTab("firstCall");
   await waitForPaused(dbg);
@@ -33,21 +32,21 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple1.js", 4);
   invokeInTab("main");
   await waitForPaused(dbg);
-  let source = findSource(dbg, "simple1.js");
+  const source = findSource(dbg, "simple1.js");
   assertPausedAtSourceAndLine(dbg, source.id, 4);
   is(countSources(dbg), 5, "5 sources are loaded.");
 
   await waitForRequestsToSettle(dbg);
   let onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
-  await onBreakpoint
+  await onBreakpoint;
   is(countSources(dbg), 5, "5 sources are loaded.");
   ok(!getIsPaused(getCurrentThread()), "Is not paused");
 
   await waitForRequestsToSettle(dbg);
   onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
-  await onBreakpoint
+  await onBreakpoint;
   is(countSources(dbg), 5, "5 sources are loaded.");
 
   info("Test that the current selected source persists across reloads");
@@ -56,7 +55,7 @@ add_task(async function() {
   await waitForRequestsToSettle(dbg);
   onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await reload(dbg, "long.js");
-  await onBreakpoint
+  await onBreakpoint;
   await waitForSelectedSource(dbg, "long.js");
 
   ok(getSelectedSource().url.includes("long.js"), "Selected source is long.js");

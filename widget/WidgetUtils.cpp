@@ -130,14 +130,5 @@ void WidgetUtils::GetBrandShortName(nsAString& aBrandName) {
   }
 }
 
-const char* WidgetUtils::GetSnapInstanceName() {
-  char* instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
-  if (instanceName != nullptr) {
-    return instanceName;
-  }
-  // Compatibility for snapd <= 2.35:
-  return PR_GetEnv("SNAP_NAME");
-}
-
 }  // namespace widget
 }  // namespace mozilla

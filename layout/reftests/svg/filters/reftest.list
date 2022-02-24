@@ -86,7 +86,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-marked-line-08.svg pass.svg
 == filter-marked-line-09.svg pass.svg
 == filter-nested-filtering-01.svg pass.svg
-== filter-nested-filtering-02.svg pass.svg
+fuzzy(0-10,0-1200) == filter-nested-filtering-02.svg pass.svg
 == filter-patterned-rect-01.svg pass.svg
 == filter-patterned-rect-02.svg pass.svg
 == filter-region-01a.html pass.svg
@@ -107,7 +107,7 @@ fuzzy(0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(0-2,0-500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(!useDrawSnapshot,55-98,14033-16345) == feDropShadow-01.svg feDropShadow-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(!useDrawSnapshot,55-98,14033-16360) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
 == feFlood-color-01.svg pass.svg
 

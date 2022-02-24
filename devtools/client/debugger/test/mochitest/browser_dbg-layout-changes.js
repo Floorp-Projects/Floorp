@@ -18,7 +18,7 @@ add_task(async function() {
     ["vertical", "window:small"],
     ["horizontal", "bottom"],
     ["vertical", "right"],
-    ["horizontal", "window:big"]
+    ["horizontal", "window:big"],
   ];
 
   for (const layout of layouts) {
@@ -53,7 +53,7 @@ async function switchHost(dbg, hostType) {
 }
 
 function resizeToolboxWindow(dbg, host) {
-  const { panel, toolbox } = dbg;
+  const { toolbox } = dbg;
   const sizeOption = host.split(":")[1];
   const win = toolbox.win.parent;
 
@@ -66,9 +66,8 @@ function resizeToolboxWindow(dbg, host) {
 }
 
 function resizeWindow(dbg, width) {
-  const { panel, toolbox } = dbg;
+  const { toolbox } = dbg;
   const win = toolbox.win.parent;
-  const currentWidth = win.screen.width;
   win.resizeTo(width, window.screen.availHeight);
 }
 

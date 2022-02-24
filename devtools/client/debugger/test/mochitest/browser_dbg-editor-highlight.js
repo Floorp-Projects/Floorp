@@ -9,7 +9,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   const {
-    selectors: { getSource, getSourceContent }
+    selectors: { getSourceContent },
   } = dbg;
 
   // The source itself doesn't even exist yet, and using

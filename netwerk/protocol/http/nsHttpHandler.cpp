@@ -534,6 +534,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "browser-delayed-startup-finished", true);
     obsService->AddObserver(this, "network:captive-portal-connectivity", true);
     obsService->AddObserver(this, "network:reset-http3-excluded-list", true);
+    obsService->AddObserver(this, "network:socket-process-crashed", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(this, "net:current-top-browsing-context-id",
@@ -2342,6 +2343,10 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
   } else if (!strcmp(topic, "network:reset-http3-excluded-list")) {
     MutexAutoLock lock(mHttpExclusionLock);
     mExcludedHttp3Origins.Clear();
+  } else if (!strcmp(topic, "network:socket-process-crashed")) {
+    ShutdownConnectionManager();
+    mConnMgr = nullptr;
+    Unused << InitConnectionMgr();
   }
 
   return NS_OK;

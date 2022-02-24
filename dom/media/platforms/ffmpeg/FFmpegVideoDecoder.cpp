@@ -345,20 +345,23 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
 void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
+  if (!mEnableHardwareDecoding) {
+    FFMPEG_LOG("VAAPI is disabled by parent decoder module.");
+    return;
+  }
   bool isHardwareWebRenderUsed = mImageAllocator &&
                                  (mImageAllocator->GetCompositorBackendType() ==
                                   layers::LayersBackend::LAYERS_WR) &&
                                  !mImageAllocator->UsingSoftwareWebRender();
   if (!isHardwareWebRenderUsed) {
     mEnableHardwareDecoding = false;
-    FFMPEG_LOG("Hardware WebRender is off, disabled DMABuf & VAAPI.");
+    FFMPEG_LOG("Hardware WebRender is off, VAAPI is disabled");
     return;
   }
 
-  if (mEnableHardwareDecoding &&
-      !widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
+  if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
     mEnableHardwareDecoding = false;
-    FFMPEG_LOG("VA-API is disabled by pref.");
+    FFMPEG_LOG("VA-API is disabled by preference.");
   }
 }
 #endif
@@ -377,6 +380,8 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
       mImageContainer(aImageContainer),
       mInfo(aConfig),
       mLowLatency(aLowLatency) {
+  FFMPEG_LOG("FFmpegVideoDecoder::FFmpegVideoDecoder MIME %s Codec ID %d",
+             aConfig.mMimeType.get(), mCodecID);
   // Use a new MediaByteBuffer as the object will be modified during
   // initialization.
   mExtraData = new MediaByteBuffer;

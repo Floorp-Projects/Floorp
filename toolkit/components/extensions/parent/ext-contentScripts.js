@@ -195,10 +195,9 @@ this.contentScripts = class extends ExtensionAPI {
 
           const scriptOptions = contentScript.serialize();
 
-          await extension.broadcast("Extension:RegisterContentScript", {
+          await extension.broadcast("Extension:RegisterContentScripts", {
             id: extension.id,
-            options: scriptOptions,
-            scriptId,
+            scripts: [{ scriptId, options: scriptOptions }],
           });
 
           extension.registeredContentScripts.set(scriptId, scriptOptions);

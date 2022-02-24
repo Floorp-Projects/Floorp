@@ -11,7 +11,6 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const { getState } = dbg;
   const source = findSource(dbg, "simple1.js");
 
   await selectSource(dbg, source);
@@ -33,10 +32,6 @@ add_task(async function() {
   info("Ensure clicking on gutter to add breakpoint will un-blackbox source");
   const dbg = await initDebugger("doc-sourcemaps3.html");
   dbg.actions.toggleMapScopes();
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState
-  } = dbg;
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
   info("blackbox the source");

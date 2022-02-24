@@ -17,7 +17,7 @@ add_task(async function() {
   await testSimpleAndLog(dbg);
 
   await testLogUpdates(dbg);
-})
+});
 
 async function testSimpleAndLog(dbg) {
   info("Add a simple breakpoint");
@@ -29,14 +29,22 @@ async function testSimpleAndLog(dbg) {
   await assertLogBreakpoint(dbg, BREAKPOINT_LINE);
 
   const bp = findBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
-  is(bp.options.logValue, "`log point ${x}`", "log breakpoint value is correct");
+  is(
+    bp.options.logValue,
+    "`log point ${x}`",
+    "log breakpoint value is correct"
+  );
 
-  info("Eval foo() and trigger the breakpoints. If this freeze here, it means that the log point has been ignored.");
+  info(
+    "Eval foo() and trigger the breakpoints. If this freeze here, it means that the log point has been ignored."
+  );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.foo(42);
   });
 
-  info("Wait for the log-point message. Only log-point breakpoint should work.");
+  info(
+    "Wait for the log-point message. Only log-point breakpoint should work."
+  );
   await waitForMessage(dbg, "log point 42");
 
   const source = findSource(dbg, "simple2.js");
@@ -58,7 +66,11 @@ async function testLogUpdates(dbg) {
   await assertLogBreakpoint(dbg, BREAKPOINT_LINE);
 
   const bp2 = findBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
-  is(bp2.options.logValue, "`log point` + ` edited`", "log breakpoint value is correct");
+  is(
+    bp2.options.logValue,
+    "`log point` + ` edited`",
+    "log breakpoint value is correct"
+  );
 
   info("Eval foo() and trigger the breakpoints");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

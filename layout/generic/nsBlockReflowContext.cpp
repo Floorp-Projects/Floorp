@@ -7,7 +7,7 @@
 /* class that a parent frame uses to reflow a block frame */
 
 #include "nsBlockReflowContext.h"
-#include "BlockReflowInput.h"
+#include "BlockReflowState.h"
 #include "nsFloatManager.h"
 #include "nsColumnSetFrame.h"
 #include "nsContainerFrame.h"
@@ -213,7 +213,7 @@ void nsBlockReflowContext::ReflowBlock(
     const LogicalRect& aSpace, bool aApplyBStartMargin,
     nsCollapsingMargin& aPrevMargin, nscoord aClearance,
     bool aIsAdjacentWithBStart, nsLineBox* aLine, ReflowInput& aFrameRI,
-    nsReflowStatus& aFrameReflowStatus, BlockReflowInput& aState) {
+    nsReflowStatus& aFrameReflowStatus, BlockReflowState& aState) {
   mFrame = aFrameRI.mFrame;
   mWritingMode = aState.mReflowInput.GetWritingMode();
   mContainerSize = aState.ContainerSize();

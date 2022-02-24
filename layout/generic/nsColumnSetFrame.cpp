@@ -889,7 +889,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
     // If a) our parent ColumnSetWrapper has constrained block-size
     // (nsBlockFrame::ReflowBlockFrame() applies the block-size constraint
-    // when creating BlockReflowInput for ColumnSetFrame); and b) we are the
+    // when creating a ReflowInput for ColumnSetFrame child); and b) we are the
     // sole ColumnSet or the last ColumnSet continuation split by column-spans
     // in a ColumnSetWrapper, extend our block-size to consume the available
     // block-size so that the column-rules are drawn to the content block-end

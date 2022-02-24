@@ -29,5 +29,5 @@ add_task(async function() {
 });
 
 function getPaneElements(dbg) {
-  return findElementWithSelector(dbg, '.breakpoints-pane').childNodes;
+  return findElementWithSelector(dbg, ".breakpoints-pane").childNodes;
 }

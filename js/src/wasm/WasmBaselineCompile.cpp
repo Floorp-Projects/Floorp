@@ -6690,22 +6690,22 @@ static void DivF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static void MinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.minFloat32x4(rs, rsd, temp1, temp2);
+  masm.minFloat32x4(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MinF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.minFloat64x2(rs, rsd, temp1, temp2);
+  masm.minFloat64x2(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.maxFloat32x4(rs, rsd, temp1, temp2);
+  masm.maxFloat32x4(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.maxFloat64x2(rs, rsd, temp1, temp2);
+  masm.maxFloat64x2(rsd, rs, rsd, temp1, temp2);
 }
 
 static void PMinF32x4(MacroAssembler& masm, RegV128 rsd, RegV128 rs,
@@ -7789,12 +7789,12 @@ bool BaseCompiler::emitVectorLaneSelect() {
 //
 // "Intrinsics" - magically imported functions for internal use.
 
-bool BaseCompiler::emitIntrinsic(IntrinsicOp op) {
+bool BaseCompiler::emitIntrinsic() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  const Intrinsic& intrinsic = Intrinsic::getFromOp(op);
+  const Intrinsic* intrinsic;
 
   BaseNothingVector params;
-  if (!iter_.readIntrinsic(intrinsic, &params)) {
+  if (!iter_.readIntrinsic(&intrinsic, &params)) {
     return false;
   }
 
@@ -7806,7 +7806,7 @@ bool BaseCompiler::emitIntrinsic(IntrinsicOp op) {
   pushHeapBase();
 
   // Call the intrinsic
-  return emitInstanceCall(lineOrBytecode, intrinsic.signature);
+  return emitInstanceCall(lineOrBytecode, intrinsic->signature);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -9554,16 +9554,13 @@ bool BaseCompiler::emitBody() {
       }
 
       // asm.js and other private operations
-      case uint16_t(Op::MozPrefix):
-        return iter_.unrecognizedOpcode(&op);
-
-      // private intrinsic operations
-      case uint16_t(Op::IntrinsicPrefix): {
-        if (!moduleEnv_.intrinsicsEnabled() ||
-            op.b1 >= uint32_t(IntrinsicOp::Limit)) {
+      case uint16_t(Op::MozPrefix): {
+        if (op.b1 != uint32_t(MozOp::Intrinsic) ||
+            !moduleEnv_.intrinsicsEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
-        CHECK_NEXT(emitIntrinsic(IntrinsicOp(op.b1)));
+        // private intrinsic operations
+        CHECK_NEXT(emitIntrinsic());
       }
 
       default:

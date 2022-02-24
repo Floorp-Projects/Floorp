@@ -18,6 +18,7 @@
 #    include "prlink.h"
 #    include <gdk/gdk.h>
 #    include <gdk/gdkx.h>
+#    include "X11UndefineNone.h"
 #  endif
 
 #  if defined(MOZ_WAYLAND)

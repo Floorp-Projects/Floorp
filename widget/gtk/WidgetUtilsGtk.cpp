@@ -98,23 +98,41 @@ bool IsRunningUnderFlatpak() {
   return sRunning;
 }
 
+bool IsRunningUnderSnap() {
+  static bool sRunning = [] {
+    const char* instanceName = [] {
+      if (const char* instanceName = g_getenv("SNAP_INSTANCE_NAME")) {
+        return instanceName;
+      }
+      // Compatibility for snapd <= 2.35:
+      return g_getenv("SNAP_NAME");
+    }();
+    return instanceName && !strcmp(instanceName, SNAP_INSTANCE_NAME);
+  }();
+  return sRunning;
+}
+
+const char* GetSnapInstanceName() {
+  return IsRunningUnderSnap() ? SNAP_INSTANCE_NAME : nullptr;
+}
+
 bool ShouldUsePortal(PortalKind aPortalKind) {
-  static bool sFlatpakPortalEnv = [] {
-    if (IsRunningUnderFlatpak()) {
+  static bool sPortalEnv = [] {
+    if (IsRunningUnderFlatpakOrSnap()) {
       return true;
     }
     const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
     return portalEnvString && atoi(portalEnvString) != 0;
   }();
 
-  bool autoBehavior = sFlatpakPortalEnv;
+  bool autoBehavior = sPortalEnv;
   const int32_t pref = [&] {
     switch (aPortalKind) {
       case PortalKind::FilePicker:
         return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();
       case PortalKind::MimeHandler:
         // Mime portal breaks default browser handling, see bug 1516290.
-        autoBehavior = IsRunningUnderFlatpak();
+        autoBehavior = IsRunningUnderFlatpakOrSnap();
         return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();
       case PortalKind::Print:
         // Print portal still needs more work, so auto behavior is just when

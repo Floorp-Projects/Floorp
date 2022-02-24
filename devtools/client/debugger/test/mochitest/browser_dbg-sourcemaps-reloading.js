@@ -7,7 +7,7 @@ add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps.html");
   const {
-    selectors: { getBreakpoint, getBreakpointCount }
+    selectors: { getBreakpoint, getBreakpointCount },
   } = dbg;
 
   await waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
@@ -47,7 +47,7 @@ add_task(async function() {
       sourceId: entrySrc.id,
       line: 15,
       column: 0,
-      disabled: true
+      disabled: true,
     }),
     "Breakpoint has correct line"
   );

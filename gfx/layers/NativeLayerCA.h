@@ -355,6 +355,8 @@ class NativeLayerCA : public NativeLayer {
     // changed.
     UpdateType HasUpdate(bool aIsVideo);
 
+    bool CanSpecializeSurface(IOSurfaceRef surface);
+
     // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
     // layer that applies the intersection of mDisplayRect and mClipRect (if
     // set), and mContentCALayer is the layer that hosts the IOSurface. We do

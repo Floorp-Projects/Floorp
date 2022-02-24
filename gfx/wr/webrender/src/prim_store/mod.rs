@@ -1083,6 +1083,7 @@ pub struct PrimitiveInstance {
     // TODO(gw): Currently built each frame, but can be retained.
     // TODO(gw): Remove clipped_world_rect (use tile bounds to determine vis flags)
     pub vis: PrimitiveVisibility,
+    pub anti_aliased: bool,
 }
 
 impl PrimitiveInstance {
@@ -1102,6 +1103,7 @@ impl PrimitiveInstance {
                 local_clip_rect,
                 clip_chain_id,
             },
+            anti_aliased: false,
         }
     }
 
@@ -1459,7 +1461,7 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 152, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 160, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 24, "PrimitiveInstanceKind size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplate>(), 56, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 28, "PrimitiveTemplateKind size changed");

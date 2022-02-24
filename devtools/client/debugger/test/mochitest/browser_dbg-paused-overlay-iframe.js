@@ -4,8 +4,7 @@
 
 // Tests the paused overlay in a remote frame
 
-const TEST_COM_URI =
-  URL_ROOT_COM_SSL + "examples/doc_dbg-fission-frame-sources.html";
+const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.html`;
 
 add_task(async function() {
   info("Load a test page with a remote frame");
@@ -17,7 +16,6 @@ add_task(async function() {
   );
   const {
     selectors: { getSelectedSource },
-    getState,
     commands,
   } = dbg;
 
@@ -50,9 +48,7 @@ add_task(async function() {
   }
 
   info("Check that the paused overlay is displayed");
-  await waitFor(
-    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
-  );
+  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
   ok(true, "Paused debugger overlay is visible");
 
   ok(

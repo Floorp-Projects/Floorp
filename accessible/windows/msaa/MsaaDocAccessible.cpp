@@ -153,9 +153,14 @@ MsaaDocAccessible::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue) {
   HRESULT hr = MsaaAccessible::get_accValue(aVarChild, aValue);
   if (FAILED(hr) || *aValue || aVarChild.lVal != CHILDID_SELF) return hr;
 
-  DocAccessible* docAcc = DocAcc();
   // MsaaAccessible::get_accValue should have failed (and thus we should have
   // returned early) if the Accessible is dead.
+  MOZ_ASSERT(mAcc);
+  if (mAcc->IsRemote()) {
+    return E_NOTIMPL;
+  }
+  DocAccessible* docAcc = DocAcc();
+  // This is not remote, so it must be a local DocAccessible.
   MOZ_ASSERT(docAcc);
   // If document is being used to create a widget, don't use the URL hack
   roles::Role role = docAcc->Role();

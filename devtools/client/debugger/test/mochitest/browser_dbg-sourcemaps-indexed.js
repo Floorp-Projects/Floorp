@@ -16,7 +16,6 @@ add_task(async function() {
   );
   const {
     selectors: { getBreakpoint, getBreakpointCount },
-    getState
   } = dbg;
 
   ok(true, "Original sources exist");

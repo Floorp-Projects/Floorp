@@ -258,6 +258,11 @@ interface nsIIOService : nsISupports
      * Return true if socket process is launched.
      */
     readonly attribute boolean socketProcessLaunched;
+
+    /**
+     * The pid for socket process.
+     */
+    readonly attribute unsigned long long socketProcessId;
 };
 
 %{C++

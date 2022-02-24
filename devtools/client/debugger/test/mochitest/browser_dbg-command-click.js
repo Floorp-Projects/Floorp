@@ -6,14 +6,15 @@
 // will jump the debugger to that call.
 add_task(async function() {
   await pushPref("devtools.debugger.features.command-click", true);
-  info("Checking to see if command click will jump the debugger to another highlighted call.");
+  info(
+    "Checking to see if command click will jump the debugger to another highlighted call."
+  );
   const dbg = await initDebugger("doc-command-click.html", "simple4.js");
 
   const source = findSource(dbg, "simple4.js");
 
   await selectSource(dbg, source);
   await waitForSelectedSource(dbg, source);
-
 
   invokeInTab("funcA");
   await waitForPaused(dbg);
@@ -29,6 +30,8 @@ add_task(async function() {
   await waitForDispatch(dbg.store, "RESUME");
   await waitForPaused(dbg);
   assertDebugLine(dbg, 3, 2);
-  const nocalls = dbg.win.document.querySelectorAll(".highlight-function-calls");
+  const nocalls = dbg.win.document.querySelectorAll(
+    ".highlight-function-calls"
+  );
   is(nocalls.length, 0);
 });

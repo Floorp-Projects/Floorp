@@ -1998,6 +1998,11 @@ var gPrivacyPane = {
    *   Pass true when calling this when initializing the pane.
    */
   _updateFirefoxSuggestSection(onInit = false) {
+    // Show the best match checkbox container as appropriate.
+    document.getElementById(
+      "firefoxSuggestBestMatchContainer"
+    ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
+
     let container = document.getElementById("firefoxSuggestContainer");
 
     if (UrlbarPrefs.get("quickSuggestEnabled")) {
@@ -2016,11 +2021,6 @@ var gPrivacyPane = {
       document
         .getElementById("openSearchEnginePreferences")
         .classList.add("extraMargin");
-
-      // Show the best match checkbox container as appropriate.
-      document.getElementById(
-        "firefoxSuggestBestMatchContainer"
-      ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
 
       // Show the container.
       this._updateFirefoxSuggestInfoBox();
