@@ -7,16 +7,15 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
-  skin/classic/browser/aboutFrameCrashed.css                   (../shared/aboutFrameCrashed.css)
   skin/classic/browser/aboutNetError.css                       (../shared/aboutNetError.css)
-  skin/classic/browser/aboutRestartRequired.css                (../shared/aboutRestartRequired.css)
-  skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
-  skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
-  skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
+  skin/classic/browser/offlineSupportPages.css                 (../shared/offlineSupportPages.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/error-pages.css                         (../shared/error-pages.css)
-  skin/classic/browser/offlineSupportPages.css                 (../shared/offlineSupportPages.css)
-  skin/classic/browser/searchbar.css                           (../shared/searchbar.css)
+  skin/classic/browser/aboutRestartRequired.css                (../shared/aboutRestartRequired.css)
+  skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
+  skin/classic/browser/aboutFrameCrashed.css                   (../shared/aboutFrameCrashed.css)
+  skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
+  skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
   skin/classic/browser/setDesktopBackground.css                (../shared/setDesktopBackground.css)
   skin/classic/browser/addons/addon-install-blocked.svg        (../shared/addons/addon-install-blocked.svg)
   skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
