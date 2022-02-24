@@ -2047,16 +2047,6 @@ function getWatchExpressionValue(dbg, index) {
   return findElement(dbg, "expressionValue", index).innerText;
 }
 
-async function waitUntilPredicate(predicate) {
-  let result;
-  await waitUntil(() => {
-    result = predicate();
-    return result;
-  });
-
-  return result;
-}
-
 // Return a promise with a reference to jsterm, opening the split
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
