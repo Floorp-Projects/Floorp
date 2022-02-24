@@ -742,6 +742,8 @@
     <!-- History -->
     <!-- Text for the button to search all history -->
     <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Saisissez le terme à rechercher</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Termes à rechercher</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Effacer l’historique</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
