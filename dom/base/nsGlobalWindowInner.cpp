@@ -81,7 +81,6 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
@@ -6590,22 +6589,13 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
     mHasVRDisplayActivateEvents = true;
   }
 
-  if (aType == nsGkAtoms::onunload && mWindowGlobalChild) {
+  if ((aType == nsGkAtoms::onunload || aType == nsGkAtoms::onbeforeunload) &&
+      mWindowGlobalChild) {
     if (++mUnloadOrBeforeUnloadListenerCount == 1) {
       mWindowGlobalChild->BlockBFCacheFor(BFCacheStatus::UNLOAD_LISTENER);
     }
-  }
-
-  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild) {
-    if (!mozilla::SessionHistoryInParent() ||
-        !StaticPrefs::
-            docshell_shistory_bfcache_ship_allow_beforeunload_listeners()) {
-      if (++mUnloadOrBeforeUnloadListenerCount == 1) {
-        mWindowGlobalChild->BlockBFCacheFor(
-            BFCacheStatus::BEFOREUNLOAD_LISTENER);
-      }
-    }
-    if (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS)) {
+    if (aType == nsGkAtoms::onbeforeunload &&
+        (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
       mWindowGlobalChild->BeforeUnloadAdded();
       MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() > 0);
     }
@@ -6627,23 +6617,14 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 }
 
 void nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType) {
-  if (aType == nsGkAtoms::onunload && mWindowGlobalChild) {
+  if ((aType == nsGkAtoms::onunload || aType == nsGkAtoms::onbeforeunload) &&
+      mWindowGlobalChild) {
     MOZ_ASSERT(mUnloadOrBeforeUnloadListenerCount > 0);
     if (--mUnloadOrBeforeUnloadListenerCount == 0) {
       mWindowGlobalChild->UnblockBFCacheFor(BFCacheStatus::UNLOAD_LISTENER);
     }
-  }
-
-  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild) {
-    if (!mozilla::SessionHistoryInParent() ||
-        !StaticPrefs::
-            docshell_shistory_bfcache_ship_allow_beforeunload_listeners()) {
-      if (--mUnloadOrBeforeUnloadListenerCount == 0) {
-        mWindowGlobalChild->UnblockBFCacheFor(
-            BFCacheStatus::BEFOREUNLOAD_LISTENER);
-      }
-    }
-    if (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS)) {
+    if (aType == nsGkAtoms::onbeforeunload &&
+        (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
       mWindowGlobalChild->BeforeUnloadRemoved();
       MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() >= 0);
     }
