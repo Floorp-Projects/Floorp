@@ -48,10 +48,10 @@ bool UtilityProcessParent::SendRequestMemoryReport(
       [&](const uint32_t& aGeneration2) {
         if (RefPtr<UtilityProcessManager> utilitypm =
                 UtilityProcessManager::GetSingleton()) {
-          if (UtilityProcessParent* child = utilitypm->GetProcessParent()) {
-            if (child->mMemoryReportRequest) {
-              child->mMemoryReportRequest->Finish(aGeneration2);
-              child->mMemoryReportRequest = nullptr;
+          if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+            if (parent->mMemoryReportRequest) {
+              parent->mMemoryReportRequest->Finish(aGeneration2);
+              parent->mMemoryReportRequest = nullptr;
             }
           }
         }
@@ -59,8 +59,8 @@ bool UtilityProcessParent::SendRequestMemoryReport(
       [&](mozilla::ipc::ResponseRejectReason) {
         if (RefPtr<UtilityProcessManager> utilitypm =
                 UtilityProcessManager::GetSingleton()) {
-          if (UtilityProcessParent* child = utilitypm->GetProcessParent()) {
-            child->mMemoryReportRequest = nullptr;
+          if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+            parent->mMemoryReportRequest = nullptr;
           }
         }
       });
