@@ -11170,15 +11170,10 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
         ret = false;
       }
       if (manager->HasBeforeUnloadListeners()) {
-        if (!mozilla::SessionHistoryInParent() ||
-            !StaticPrefs::
-                docshell_shistory_bfcache_ship_allow_beforeunload_listeners()) {
-          MOZ_LOG(
-              gPageCacheLog, mozilla::LogLevel::Verbose,
-              ("Save of %s blocked due to beforeUnload handlers", uri.get()));
-          aBFCacheCombo |= BFCacheStatus::BEFOREUNLOAD_LISTENER;
-          ret = false;
-        }
+        MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+                ("Save of %s blocked due to beforeUnload handlers", uri.get()));
+        aBFCacheCombo |= BFCacheStatus::BEFOREUNLOAD_LISTENER;
+        ret = false;
       }
     }
   }
