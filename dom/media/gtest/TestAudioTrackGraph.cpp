@@ -780,7 +780,7 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
     });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelChanged)"_ns,
+        "TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)"_ns,
         [&] { return destroyed && newStream; });
 
     destroyListener.Disconnect();
@@ -885,7 +885,7 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     DispatchFunction([&] { set1.Uninit(); });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelChanged)"_ns,
+        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged) #1"_ns,
         [&] { return destroyed && newStream; });
 
     destroyListener.Disconnect();
@@ -916,7 +916,7 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     DispatchFunction([&] { set1.Init(graph, 2); });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelChanged)"_ns,
+        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged) #2"_ns,
         [&] { return destroyed && newStream; });
 
     destroyListener.Disconnect();
@@ -999,7 +999,7 @@ TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
   // AudioCallbackDriver is created.
   RefPtr<SmartMockCubebStream> stream;
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "TEST(TestAudioTrackGraph, SetInputChannelCountDuringSystemDriver)"_ns,
+      "TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)"_ns,
       [&] {
         stream = WaitFor(cubeb->StreamInitEvent());
         EXPECT_TRUE(stream->mHasOutput);
