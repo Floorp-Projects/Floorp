@@ -61,91 +61,92 @@
   padding: 10px;
 }
 
-%if defined(XP_MACOSX) || defined(XP_WIN)
-@media not (prefers-contrast) {
-.customizationmode-button {
-  border: 1px solid #b1b1b1;
-  border-radius: 2px;
-  background-color: #fcfcfd;
-  appearance: none;
-}
+@media (-moz-platform: macos),
+  (-moz-platform: windows) {
+  @media not (prefers-contrast) {
+    .customizationmode-button {
+      border: 1px solid #b1b1b1;
+      border-radius: 2px;
+      background-color: #fcfcfd;
+      appearance: none;
+    }
 
-.customizationmode-checkbox,
-.customizationmode-button {
-  margin: 6px 10px;
-  padding: 2px 5px;
-}
+    .customizationmode-checkbox,
+    .customizationmode-button {
+      margin: 6px 10px;
+      padding: 2px 5px;
+    }
 
-.customizationmode-checkbox:not(:-moz-lwtheme, [disabled]),
-.customizationmode-button {
-  color: rgb(71, 71, 71);
-}
+    .customizationmode-checkbox:not(:-moz-lwtheme, [disabled]),
+    .customizationmode-button {
+      color: rgb(71, 71, 71);
+    }
 
-.customizationmode-checkbox[disabled]:-moz-lwtheme {
-  color: inherit;
-  opacity: 0.4;
-}
+    .customizationmode-checkbox[disabled]:-moz-lwtheme {
+      color: inherit;
+      opacity: 0.4;
+    }
 
-#customization-reset-button,
-#customization-undo-reset-button,
-#customization-done-button {
-  min-width: 10em;
-}
+    #customization-reset-button,
+    #customization-undo-reset-button,
+    #customization-done-button {
+      min-width: 10em;
+    }
 
-#customization-done-button {
-  color: #fff !important;
-  font-weight: 700;
-  border-color: #0060df;
-  background-color: #0a84ff;
-}
+    #customization-done-button {
+      color: #fff !important;
+      font-weight: 700;
+      border-color: #0060df;
+      background-color: #0a84ff;
+    }
 
-.customizationmode-button > .box-inherit {
-  border-width: 0;
-  padding: 3px 0;
-}
+    .customizationmode-button > .box-inherit {
+      border-width: 0;
+      padding: 3px 0;
+    }
 
-/* We use a smaller padding to ensure images don't have padding.
- * We can't detect whether a button has an image. This button doesn't
- * so it needs more padding, so we unfortunately hardcode the extra
- * padding in here:
- */
-#customization-toolbar-visibility-button {
-  padding-inline-start: 8px;
-}
+    /* We use a smaller padding to ensure images don't have padding.
+     * We can't detect whether a button has an image. This button doesn't
+     * so it needs more padding, so we unfortunately hardcode the extra
+     * padding in here:
+     */
+    #customization-toolbar-visibility-button {
+      padding-inline-start: 8px;
+    }
 
-.customizationmode-button[type=menu] > .box-inherit > .box-inherit > .button-text {
-  padding-inline-end: 10px;
-}
+    .customizationmode-button[type=menu] > .box-inherit > .box-inherit > .button-text {
+      padding-inline-end: 10px;
+    }
 
-.customizationmode-button > .button-icon {
-  margin-inline-start: 0;
-}
+    .customizationmode-button > .button-icon {
+      margin-inline-start: 0;
+    }
 
-.customizationmode-button:not([type=menu]) > .button-text {
-  margin-inline-end: 0;
-}
+    .customizationmode-button:not([type=menu]) > .button-text {
+      margin-inline-end: 0;
+    }
 
-.customizationmode-button > .box-inherit > .button-menu-dropmarker {
-  margin-inline-end: 0;
-  padding-inline-end: 0;
-  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
-}
+    .customizationmode-button > .box-inherit > .button-menu-dropmarker {
+      margin-inline-end: 0;
+      padding-inline-end: 0;
+      list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
+    }
 
-.customizationmode-button:is(:active,:hover):not([disabled]),
-.customizationmode-button[open],
-.customizationmode-button[checked] {
-  background-color: #e1e1e5;
-}
+    .customizationmode-button:is(:active,:hover):not([disabled]),
+    .customizationmode-button[open],
+    .customizationmode-button[checked] {
+      background-color: #e1e1e5;
+    }
 
-#customization-done-button:is(:active,:hover):not([disabled]) {
-  background-color: #0060df;
-}
+    #customization-done-button:is(:active,:hover):not([disabled]) {
+      background-color: #0060df;
+    }
 
-.customizationmode-button[disabled="true"] {
-  opacity: .5;
+    .customizationmode-button[disabled="true"] {
+      opacity: .5;
+    }
+  }
 }
-}
-%endif /* defined(XP_MACOSX) || defined(XP_WIN) */
 
 #customization-lwtheme-link {
   display: flex;
@@ -356,18 +357,25 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   color: var(--arrowpanel-color);
   background: var(--arrowpanel-background);
   background-clip: padding-box;
-%ifdef XP_MACOSX
-  /* Native styling adds more 'oompf' to the popup box-shadow, so simulate that
-   * as best as we can here: */
-  box-shadow: 0 0 1px hsla(0,0%,0%,.3), 0 4px 10px hsla(0,0%,0%,.3);
-  appearance: none;
-  border-radius: var(--arrowpanel-border-radius);
-%else
-  border: 1px solid var(--arrowpanel-border-color);
-  margin: 0;
-  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
-%endif
   max-width: 29em;
+}
+
+@media (-moz-platform: macos) {
+  #customization-panelWrapper > .panel-arrowcontent {
+    /* Native styling adds more 'oompf' to the popup box-shadow, so simulate that
+     * as best as we can here: */
+    box-shadow: 0 0 1px hsla(0,0%,0%,.3), 0 4px 10px hsla(0,0%,0%,.3);
+    appearance: none;
+    border-radius: var(--arrowpanel-border-radius);
+  }
+}
+
+@media not (-moz-platform: macos) {
+  #customization-panelWrapper > .panel-arrowcontent {
+    border: 1px solid var(--arrowpanel-border-color);
+    margin: 0;
+    box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+  }
 }
 
 #customization-panelWrapper > .panel-arrowbox {
@@ -386,13 +394,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
-%ifdef XP_MACOSX
-  /* The OS X image is 2px narrower than the windows/linux one.
-   * Add padding to compensate: */
-  padding: 0 1px;
-  /* specify width for hidpi image to fit correctly */
-  width: 20px;
-%endif
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);
@@ -403,6 +404,16 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
    */
   margin-inline-end: calc(var(--panel-arrow-offset) - var(--customization-panel-padding) - 10px);
   vertical-align: top;
+}
+
+@media (-moz-platform: macos) {
+  #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
+    /* The OS X image is 2px narrower than the windows/linux one.
+     * Add padding to compensate: */
+    padding: 0 1px;
+    /* specify width for hidpi image to fit correctly */
+    width: 20px;
+  }
 }
 
 #customization-panelDescription {
@@ -490,13 +501,11 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   margin: 0 -7px;
 }
 
-%ifdef XP_UNIX
-%ifndef XP_MACOSX
-#customization-palette[whimsypong] > toolbarpaletteitem[id^="wrapper-customizableui-special-spring"] {
-  font-size: 12px;
+@media (-moz-platform: linux) {
+  #customization-palette[whimsypong] > toolbarpaletteitem[id^="wrapper-customizableui-special-spring"] {
+    font-size: 12px;
+  }
 }
-%endif
-%endif
 
 #wp-lives,
 #wp-ball {
