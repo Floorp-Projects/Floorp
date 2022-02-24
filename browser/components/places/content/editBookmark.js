@@ -22,70 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
 });
 
-/**
- * Collects all information for a bookmark and performs editmethods
- *
- * @param {object} info
- *    Either a result node or a node-like object representing the item to be edited.
- * @param {string} [tags]
- *    Tags (if any) for the bookmark in a comma separated string. Empty tags are
- *    skipped
- * @param {string} [keyword]
- *    Existing (if there are any) keyword for bookmark
- * @returns {string} Guid
- *    BookamrkGuid
- */
-class BookmarkState {
-  constructor(info, tags = "", keyword = "") {
-    // Original Bookmark
-    this._originalState = {
-      title: info.title,
-      uri: info.uri?.spec,
-      tags: tags
-        .trim()
-        .split(/\s*,\s*/)
-        .filter(tag => !!tag.length),
-      keyword,
-    };
-
-    // Edited bookmark
-    this._newState = {};
-  }
-
-  /**
-   * Save edited title for the bookmark
-   * @param {string} title
-   */
-  _titleChanged(title) {
-    this._newState.title = title;
-  }
-
-  /**
-   * Save edited location for the bookmark
-   * @param {string} location
-   */
-  _locationChanged(location) {
-    this._newState.uri = location;
-  }
-
-  /**
-   * Save edited tags for the bookmark
-   * @param {string} tags
-   *    Comma separated list of tags
-   */
-  _tagsChanged(tags) {
-    this._newState.tags = tags;
-  }
-
-  /**
-   * Save edited keyword for the bookmark
-   * @param {string} keyword
-   */
-  _keywordChanged(keyword) {
-    this._newState.keyword = keyword;
-  }
-}
-
 var gEditItemOverlay = {
   // Array of PlacesTransactions accumulated by internal changes. It can be used
   // to wait for completion.
@@ -314,7 +250,7 @@ var gEditItemOverlay = {
    *   List of rows to be hidden regardless of the item edited. Possible values:
    *   "title", "location", "keyword", "folderPicker".
    */
-  initPanel(aInfo) {
+  async initPanel(aInfo) {
     if (typeof aInfo != "object" || aInfo === null) {
       throw new Error("aInfo must be an object.");
     }
@@ -389,7 +325,7 @@ var gEditItemOverlay = {
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
-      this._initKeywordField().catch(Cu.reportError);
+      await this._initKeywordField().catch(Cu.reportError);
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -405,7 +341,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentGuid).catch(Cu.reportError);
+      await this._initFolderMenuList(parentGuid).catch(Cu.reportError);
     }
 
     // Selection count.
@@ -654,15 +590,15 @@ var gEditItemOverlay = {
   },
 
   makeNewStateObject() {
-    if (this._paneInfo.isItem) {
-      let tags = "",
-        keyword = "";
+    if (this._paneInfo.isItem || this._paneInfo.isTag) {
+      let tags = "";
+      let keyword = "";
 
       if (this._paneInfo.isBookmark) {
         tags = this._element("tagsField").value;
         keyword = this._element("keywordField").value;
       }
-      return new BookmarkState(this._paneInfo, tags, keyword);
+      return new PlacesUIUtils.BookmarkState(this._paneInfo, tags, keyword);
     }
     return null;
   },
@@ -785,6 +721,15 @@ var gEditItemOverlay = {
         this._initNamePicker();
         return;
       }
+      // Get all the bookmarks for the old tag, tag them with the new tag, and
+      // untag them from the old tag.
+      let oldTag = this._paneInfo.tag;
+      this._bookmarkState.tag = tag;
+      let title = this._paneInfo.title;
+      if (title == oldTag) {
+        this._bookmarkState.title = tag;
+      }
+      this._bookmarkState._tagChanged(tag);
       return;
     }
     this._mayUpdateFirstEditField("namePicker");
@@ -905,8 +850,8 @@ var gEditItemOverlay = {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible
       let item = this._getFolderMenuItem(
-        this._paneInfo.parentGuid,
-        this._paneInfo.title
+        this._bookmarkState._originalState.parentGuid,
+        this._bookmarkState._originalState.title
       );
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
@@ -918,15 +863,10 @@ var gEditItemOverlay = {
     // Move the item
     let containerGuid = this._folderMenuList.selectedItem.folderGuid;
     if (
-      this._paneInfo.parentGuid != containerGuid &&
-      this._paneInfo.itemGuid != containerGuid
+      this._bookmarkState._originalState.parentGuid != containerGuid &&
+      this._bookmarkState._originalState.title != containerGuid
     ) {
-      let promise = PlacesTransactions.Move({
-        guid: this._paneInfo.itemGuid,
-        newParentGuid: containerGuid,
-      }).transact();
-      this.transactionPromises.push(promise.catch(Cu.reportError));
-      await promise;
+      this._bookmarkState._parentGuidChanged(containerGuid);
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
       if (containerGuid == PlacesUtils.bookmarks.toolbarGuid) {
