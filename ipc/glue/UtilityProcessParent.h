@@ -40,6 +40,8 @@ class UtilityProcessParent final
 
   mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
 
+  mozilla::ipc::IPCResult RecvInitCompleted();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

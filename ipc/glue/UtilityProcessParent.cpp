@@ -81,6 +81,12 @@ mozilla::ipc::IPCResult UtilityProcessParent::RecvFOGData(ByteBuf&& aBuf) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult UtilityProcessParent::RecvInitCompleted() {
+  MOZ_ASSERT(mHost);
+  mHost->ResolvePromise();
+  return IPC_OK();
+}
+
 void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
   RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
 
