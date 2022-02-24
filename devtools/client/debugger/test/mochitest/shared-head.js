@@ -46,6 +46,37 @@ const {
 
 const { isGeneratedId } = require("devtools/client/shared/source-map/index");
 
+function log(msg, data) {
+  info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
+}
+
+function logThreadEvents(dbg, event) {
+  const thread = dbg.toolbox.threadFront;
+
+  thread.on(event, function onEvent(...args) {
+    info(`Thread event '${event}' fired.`);
+  });
+}
+
+// Wait until an action of `type` is dispatched. This is different
+// then `waitForDispatch` because it doesn't wait for async actions
+// to be done/errored. Use this if you want to listen for the "start"
+// action of an async operation (somewhat rare).
+function waitForNextDispatch(store, actionType) {
+  return new Promise(resolve => {
+    store.dispatch({
+      // Normally we would use `services.WAIT_UNTIL`, but use the
+      // internal name here so tests aren't forced to always pass it
+      // in
+      type: "@@service/waitUntil",
+      predicate: action => action.type === actionType,
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      },
+    });
+  });
+}
+
 /**
  * Waits for `predicate()` to be true. `state` is the redux app state.
  *
@@ -220,6 +251,33 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
   );
 }
 
+/**
+ * Assert that the debugger is not currently paused.
+ * @memberof mochitest/asserts
+ * @static
+ */
+function assertNotPaused(dbg) {
+  ok(!isPaused(dbg), "client is not paused");
+}
+
+/**
+ * Assert that the debugger is currently paused.
+ * @memberof mochitest/asserts
+ * @static
+ */
+function assertPaused(dbg) {
+  ok(isPaused(dbg), "client is paused");
+}
+
+function assertEmptyLines(dbg, lines) {
+  const sourceId = dbg.selectors.getSelectedSourceId();
+  const breakableLines = dbg.selectors.getBreakableLines(sourceId);
+  ok(
+    lines.every(line => !breakableLines.includes(line)),
+    "empty lines should match"
+  );
+}
+
 function getVisibleSelectedFrameLine(dbg) {
   const frame = dbg.selectors.getVisibleSelectedFrame();
   return frame?.location.line;
@@ -365,6 +423,17 @@ function assertHighlightLocation(dbg, source, line) {
 }
 
 /**
+ * Returns boolean for whether the debugger is paused.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @static
+ */
+function isPaused(dbg) {
+  return dbg.selectors.getIsCurrentThreadPaused();
+}
+
+/**
  * Make sure the debugger is paused at a certain source ID and line.
  *
  * @memberof mochitest/asserts
@@ -436,43 +505,13 @@ function waitForBreakpointRemoved(dbg, url, line) {
 }
 
 /**
- * Returns boolean for whether the debugger is paused.
- *
- * @param {Object} dbg
- */
-function isPaused(dbg) {
-  return dbg.selectors.getIsCurrentThreadPaused();
-}
-
-/**
- * Assert that the debugger is not currently paused.
- *
- * @param {Object} dbg
- * @param {String} msg
- *        Optional assertion message
- */
-function assertNotPaused(dbg, msg = "client is not paused") {
-  ok(!isPaused(dbg), msg);
-}
-
-/**
- * Assert that the debugger is currently paused.
- *
- * @param {Object} dbg
- */
-function assertPaused(dbg, msg = "client is paused") {
-  ok(isPaused(dbg), msg);
-}
-
-/**
  * Waits for the debugger to be fully paused.
  *
+ * @memberof mochitest/waits
  * @param {Object} dbg
- * @param {String} url
- *        Optional URL of the script we should be pausing on.
+ * @static
  */
 async function waitForPaused(dbg, url) {
-  info("Waiting for the debugger to pause");
   const {
     getSelectedScope,
     getCurrentThread,
@@ -491,12 +530,13 @@ async function waitForPaused(dbg, url) {
 }
 
 /**
- * Waits for the debugger to resume.
+ * Waits for the debugger to resume
  *
+ * @memberof mochitest/waits
  * @param {Objeect} dbg
+ * @static
  */
 function waitForResumed(dbg) {
-  info("Waiting for the debugger to resume");
   return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
@@ -522,6 +562,24 @@ function waitForLog(dbg, logValue) {
 
 async function waitForPausedThread(dbg, thread) {
   return waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
+}
+
+/*
+ * useful for when you want to see what is happening
+ * e.g await waitForever()
+ */
+function waitForever() {
+  return new Promise(r => {});
+}
+
+/*
+ * useful for waiting for a short amount of time as
+ * a placeholder for a better waitForX handler.
+ *
+ * e.g await waitForTime(500)
+ */
+function waitForTime(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
 function isSelectedFrameSelected(dbg, state) {
@@ -590,6 +648,23 @@ async function initDebuggerWithAbsoluteURL(url, ...sources) {
 async function initPane(url, pane, prefs) {
   await clearDebuggerPreferences(prefs);
   return openNewTabAndToolbox(EXAMPLE_URL + url, pane);
+}
+
+window.resumeTest = undefined;
+registerCleanupFunction(() => {
+  delete window.resumeTest;
+});
+
+/**
+ * Pause the test and let you interact with the debugger.
+ * The test can be resumed by invoking `resumeTest` in the console.
+ *
+ * @memberof mochitest
+ * @static
+ */
+function pauseTest() {
+  info("Test paused. Invoke resumeTest to continue.");
+  return new Promise(resolve => (window.resumeTest = resolve));
 }
 
 /**
@@ -671,6 +746,19 @@ function waitForLoadedSource(dbg, url) {
     state => {
       const source = findSource(dbg, url, { silent: true });
       return source && dbg.selectors.getSourceContent(source.id);
+    },
+    "loaded source"
+  );
+}
+
+function waitForLoadedSources(dbg) {
+  return waitForState(
+    dbg,
+    state => {
+      const sources = dbg.selectors.getSourceList();
+      return sources.every(
+        source => !!dbg.selectors.getSourceContent(source.id)
+      );
     },
     "loaded source"
   );
@@ -899,6 +987,17 @@ function disableBreakpoint(dbg, source, line, column) {
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
   const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.disableBreakpoint(getContext(dbg), bp);
+}
+
+function setBreakpointOptions(dbg, source, line, column, options) {
+  source = findSource(dbg, source);
+  const sourceId = source.id;
+  column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
+  return dbg.actions.setBreakpointOptions(
+    getContext(dbg),
+    { sourceId, line, column },
+    options
+  );
 }
 
 function findBreakpoint(dbg, url, line) {
@@ -1669,6 +1768,18 @@ async function typeInPanel(dbg, text) {
   pressKey(dbg, "Enter");
 }
 
+/**
+ * Toggles the debugger call stack accordian.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
+function toggleCallStack(dbg) {
+  return findElement(dbg, "callStackHeader").click();
+}
+
 function toggleScopes(dbg) {
   return findElement(dbg, "scopesHeader").click();
 }
@@ -1697,7 +1808,7 @@ function toggleObjectInspectorNode(node) {
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
 
-  info(`Toggling node ${node.innerText}`);
+  log(`Toggling node ${node.innerText}`);
   node.click();
   return waitUntil(
     () => objectInspector.querySelectorAll(".node").length !== properties
@@ -1708,7 +1819,7 @@ function rightClickObjectInspectorNode(dbg, node) {
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
 
-  info(`Right clicking node ${node.innerText}`);
+  log(`Right clicking node ${node.innerText}`);
   rightClickEl(dbg, node);
 
   return waitUntil(
@@ -2045,6 +2156,16 @@ function getWatchExpressionLabel(dbg, index) {
  */
 function getWatchExpressionValue(dbg, index) {
   return findElement(dbg, "expressionValue", index).innerText;
+}
+
+async function waitUntilPredicate(predicate) {
+  let result;
+  await waitUntil(() => {
+    result = predicate();
+    return result;
+  });
+
+  return result;
 }
 
 // Return a promise with a reference to jsterm, opening the split
