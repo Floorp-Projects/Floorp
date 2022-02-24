@@ -1281,7 +1281,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent--;
       }
 
-	  isFirstGroup = false;
+      isFirstGroup = false;
       startOfCurrentGroup = aList->end();
       currentGroup = &groupData->mFollowingGroup;
     } else {  // inactive item

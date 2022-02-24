@@ -12,7 +12,6 @@
 #include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/Promise.h"
 
-
 namespace mozilla::dom {
 
 using ::ImplCycleCollectionUnlink;
