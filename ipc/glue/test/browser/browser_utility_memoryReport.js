@@ -3,24 +3,9 @@
 
 "use strict";
 
-var utilityPid = undefined;
 var utilityReports = [];
 
-const utilityProcessTest = Cc[
-  "@mozilla.org/utility-process-test;1"
-].createInstance(Ci.nsIUtilityProcessTest);
-
-add_task(async () => {
-  await utilityProcessTest
-    .startProcess()
-    .then(async pid => {
-      utilityPid = pid;
-      ok(true, "Could start Utility process: " + pid);
-    })
-    .catch(async () => {
-      ok(false, "Cannot start Utility process?");
-    });
-});
+startUtilityProcess();
 
 add_task(async () => {
   const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
@@ -78,6 +63,6 @@ add_task(async () => {
     ).length,
     "Collected some explicit/ report"
   );
-
-  await utilityProcessTest.stopProcess();
 });
+
+cleanUtilityProcessShutdown();
