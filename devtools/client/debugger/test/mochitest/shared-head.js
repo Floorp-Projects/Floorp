@@ -220,15 +220,6 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
   );
 }
 
-function assertEmptyLines(dbg, lines) {
-  const sourceId = dbg.selectors.getSelectedSourceId();
-  const breakableLines = dbg.selectors.getBreakableLines(sourceId);
-  ok(
-    lines.every(line => !breakableLines.includes(line)),
-    "empty lines should match"
-  );
-}
-
 function getVisibleSelectedFrameLine(dbg) {
   const frame = dbg.selectors.getVisibleSelectedFrame();
   return frame?.location.line;
