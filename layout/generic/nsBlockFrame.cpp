@@ -1051,62 +1051,62 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
   cbSize.ISize(aWM) -= border.IStartEnd(aWM);
   cbSize.BSize(aWM) -= border.BStartEnd(aWM);
 
-  if (frame->GetParent()->GetContent() == frame->GetContent() &&
-      !frame->GetParent()->IsCanvasFrame()) {
-    // We are a wrapped frame for the content (and the wrapper is not the
-    // canvas frame, whose size is not meaningful here).
-    // Use the container's dimensions, if they have been precomputed.
-    // XXX This is a hack! We really should be waiting until the outermost
-    // frame is fully reflowed and using the resulting dimensions, even
-    // if they're intrinsic.
-    // In fact we should be attaching absolute children to the outermost
-    // frame and not always sticking them in block frames.
+  if (frame->GetParent()->GetContent() != frame->GetContent() ||
+      frame->GetParent()->IsCanvasFrame()) {
+    return cbSize;
+  }
 
-    // First, find the reflow input for the outermost frame for this
-    // content, except for fieldsets where the inner anonymous frame has
-    // the correct padding area with the legend taken into account.
-    const ReflowInput* aLastRI = &aReflowInput;
-    const ReflowInput* lastButOneRI = &aReflowInput;
-    while (aLastRI->mParentReflowInput &&
-           aLastRI->mParentReflowInput->mFrame->GetContent() ==
-               frame->GetContent() &&
-           !aLastRI->mParentReflowInput->mFrame->IsFieldSetFrame()) {
-      lastButOneRI = aLastRI;
-      aLastRI = aLastRI->mParentReflowInput;
-    }
-    if (aLastRI != &aReflowInput) {
-      // Scrollbars need to be specifically excluded, if present, because they
-      // are outside the padding-edge. We need better APIs for getting the
-      // various boxes from a frame.
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRI->mFrame);
-      nsMargin scrollbars(0, 0, 0, 0);
-      if (scrollFrame) {
-        scrollbars = scrollFrame->GetDesiredScrollbarSizes(
-            aLastRI->mFrame->PresContext(), aLastRI->mRenderingContext);
-        if (!lastButOneRI->mFlags.mAssumingHScrollbar) {
-          scrollbars.top = scrollbars.bottom = 0;
-        }
-        if (!lastButOneRI->mFlags.mAssumingVScrollbar) {
-          scrollbars.left = scrollbars.right = 0;
-        }
-      }
-      // We found a reflow input for the outermost wrapping frame, so use
-      // its computed metrics if available, converted to our writing mode
-      WritingMode lastWM = aLastRI->GetWritingMode();
-      LogicalSize lastRISize = aLastRI->ComputedSize().ConvertTo(aWM, lastWM);
-      LogicalMargin lastRIPadding = aLastRI->ComputedLogicalPadding(aWM);
-      LogicalMargin logicalScrollbars(aWM, scrollbars);
-      if (lastRISize.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
-        cbSize.ISize(aWM) =
-            std::max(0, lastRISize.ISize(aWM) + lastRIPadding.IStartEnd(aWM) -
-                            logicalScrollbars.IStartEnd(aWM));
-      }
-      if (lastRISize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
-        cbSize.BSize(aWM) =
-            std::max(0, lastRISize.BSize(aWM) + lastRIPadding.BStartEnd(aWM) -
-                            logicalScrollbars.BStartEnd(aWM));
-      }
-    }
+  // We are a wrapped frame for the content (and the wrapper is not the
+  // canvas frame, whose size is not meaningful here).
+  // Use the container's dimensions, if they have been precomputed.
+  // XXX This is a hack! We really should be waiting until the outermost
+  // frame is fully reflowed and using the resulting dimensions, even
+  // if they're intrinsic.
+  // In fact we should be attaching absolute children to the outermost
+  // frame and not always sticking them in block frames.
+
+  // First, find the reflow input for the outermost frame for this content.
+  const ReflowInput* lastRI = &aReflowInput;
+  DebugOnly<const ReflowInput*> lastButOneRI = &aReflowInput;
+  while (lastRI->mParentReflowInput &&
+         lastRI->mParentReflowInput->mFrame->GetContent() ==
+             frame->GetContent()) {
+    lastButOneRI = lastRI;
+    lastRI = lastRI->mParentReflowInput;
+  }
+
+  if (lastRI == &aReflowInput) {
+    return cbSize;
+  }
+
+  // For scroll containers, we can just use cbSize (which is the padding-box
+  // size of the scrolled-content frame).
+  if (nsIScrollableFrame* scrollFrame = do_QueryFrame(lastRI->mFrame)) {
+    // Assert that we're not missing any frames between the abspos containing
+    // block and the scroll container.
+    // the parent.
+    Unused << scrollFrame;
+    MOZ_ASSERT(lastButOneRI == &aReflowInput);
+    return cbSize;
+  }
+
+  // Same for fieldsets, where the inner anonymous frame has the correct padding
+  // area with the legend taken into account.
+  if (lastRI->mFrame->IsFieldSetFrame()) {
+    return cbSize;
+  }
+
+  // We found a reflow input for the outermost wrapping frame, so use
+  // its computed metrics if available, converted to our writing mode
+  const LogicalSize lastRISize = lastRI->ComputedSize(aWM);
+  const LogicalMargin lastRIPadding = lastRI->ComputedLogicalPadding(aWM);
+  if (lastRISize.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
+    cbSize.ISize(aWM) =
+        std::max(0, lastRISize.ISize(aWM) + lastRIPadding.IStartEnd(aWM));
+  }
+  if (lastRISize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+    cbSize.BSize(aWM) =
+        std::max(0, lastRISize.BSize(aWM) + lastRIPadding.BStartEnd(aWM));
   }
 
   return cbSize;

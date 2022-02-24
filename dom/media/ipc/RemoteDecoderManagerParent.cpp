@@ -115,8 +115,7 @@ PDMFactory& RemoteDecoderManagerParent::EnsurePDMFactory() {
 }
 
 bool RemoteDecoderManagerParent::CreateForContent(
-    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
-    const bool aAllowHardwareDecoding) {
+    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD ||
              XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(NS_IsMainThread());
@@ -126,8 +125,8 @@ bool RemoteDecoderManagerParent::CreateForContent(
   }
 
   RefPtr<RemoteDecoderManagerParent> parent =
-      new RemoteDecoderManagerParent(sRemoteDecoderManagerParentThread,
-                                     aAllowHardwareDecoding);
+      new RemoteDecoderManagerParent(sRemoteDecoderManagerParentThread);
+
   RefPtr<Runnable> task =
       NewRunnableMethod<Endpoint<PRemoteDecoderManagerParent>&&>(
           "dom::RemoteDecoderManagerParent::Open", parent,
@@ -157,8 +156,8 @@ bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
 }
 
 RemoteDecoderManagerParent::RemoteDecoderManagerParent(
-    nsISerialEventTarget* aThread, const bool aAllowHardwareDecoding)
-    : mThread(aThread), mAllowHardwareDecoding(aAllowHardwareDecoding) {
+    nsISerialEventTarget* aThread)
+    : mThread(aThread) {
   MOZ_COUNT_CTOR(RemoteDecoderManagerParent);
   auto& registrar = XRE_IsGPUProcess()
                         ? GPUParent::GetSingleton()->AsyncShutdownService()

@@ -247,11 +247,199 @@ let InternalFaviconLoader = {
   },
 };
 
+/**
+ * Collects all information for a bookmark and performs editmethods
+ *
+ * @param {object} info
+ *    Either a result node or a node-like object representing the item to be edited.
+ * @param {string} [tags]
+ *     Tags (if any) for the bookmark in a comma separated string. Empty tags are
+ * skipped
+ * @param {string} [keyword]
+ *    Existing (if there are any) keyword for bookmark
+ * @returns {string} Guid
+ *    BookamrkGuid
+ */
+class BookmarkState {
+  constructor(info, tags = "", keyword = "") {
+    this._guid = info.itemGuid;
+    this._postData = info.postData;
+
+    // Original Bookmark
+    this._originalState = {
+      title: info.title,
+      uri: info.uri?.spec,
+      tags: tags
+        .trim()
+        .split(/\s*,\s*/)
+        .filter(tag => !!tag.length),
+      keyword,
+      parentGuid: info.parentGuid,
+      tag: info.tag,
+    };
+
+    // Edited bookmark
+    this._newState = {};
+  }
+
+  /**
+   * Save edited title for the bookmark
+   * @param {string} title
+   */
+  _titleChanged(title) {
+    this._newState.title = title;
+  }
+
+  /**
+   * Save edited location for the bookmark
+   * @param {string} location
+   */
+  _locationChanged(location) {
+    this._newState.uri = location;
+  }
+
+  /**
+   * Save edited tags for the bookmark
+   * @param {string} tags
+   *    Comma separated list of tags
+   */
+  _tagsChanged(tags) {
+    this._newState.tags = tags;
+  }
+
+  /**
+   * Save edited keyword for the bookmark
+   * @param {string} keyword
+   */
+  _keywordChanged(keyword) {
+    this._newState.keyword = keyword;
+  }
+
+  /**
+   * Save edited parentGuid for the bookmark
+   * @param {string} parentGuid
+   */
+  _parentGuidChanged(parentGuid) {
+    this._newState.parentGuid = parentGuid;
+  }
+
+  /**
+   * Save edited tag for the tagContainer
+   * @param {string} tag
+   */
+  _tagChanged(tag) {
+    this._newState.tag = tag;
+  }
+
+  /**
+   * Save() API function for bookmark.
+   *
+   * @returns {string} bookmark.guid
+   */
+  async save() {
+    if (!Object.keys(this._newState).length) {
+      return this._guid;
+    }
+
+    let url = this._newState.uri || this._originalState.uri;
+    let transactions = [];
+
+    if (this._newState.uri) {
+      transactions.push(
+        PlacesTransactions.EditUrl({
+          guid: this._guid,
+          url,
+        })
+      );
+    }
+
+    for (const [key, value] of Object.entries(this._newState)) {
+      switch (key) {
+        case "title":
+          transactions.push(
+            PlacesTransactions.EditTitle({
+              guid: this._guid,
+              title: value,
+            })
+          );
+          break;
+        case "tags":
+          let newTags = [];
+          let removedTags = [];
+          value.filter(element => {
+            if (!this._originalState.tags.includes(element)) {
+              newTags.push(element);
+            }
+          });
+          this._originalState.tags.filter(el => {
+            if (!value.includes(el)) {
+              removedTags.push(el);
+            }
+          });
+          if (newTags.length) {
+            transactions.push(
+              PlacesTransactions.Tag({
+                urls: [url],
+                tags: newTags,
+              })
+            );
+          }
+          if (removedTags.length) {
+            transactions.push(
+              PlacesTransactions.Untag({
+                urls: [url],
+                tags: removedTags,
+              })
+            );
+          }
+          break;
+        case "keyword":
+          transactions.push(
+            PlacesTransactions.EditKeyword({
+              guid: this._guid,
+              keyword: value,
+              postData: this._postData,
+              oldKeyword: this._originalState.keyword,
+            })
+          );
+          break;
+        case "parentGuid":
+          transactions.push(
+            PlacesTransactions.Move({
+              guid: this._guid,
+              newParentGuid: this._newState.parentGuid,
+            })
+          );
+          break;
+        case "tag":
+          transactions.push(
+            PlacesTransactions.RenameTag({
+              oldTag: this._originalState.tag,
+              tag: this._newState.tag,
+            })
+          );
+          break;
+      }
+    }
+    if (transactions.length) {
+      await PlacesTransactions.batch(transactions);
+    }
+
+    return this._guid;
+  }
+}
+
 var PlacesUIUtils = {
+  BookmarkState,
   _bookmarkToolbarTelemetryListening: false,
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
 
   lastContextMenuTriggerNode: null,
+
+  // This allows to await for all the relevant bookmark changes to be applied
+  // when a bookmark dialog is closed. It is resolved to the bookmark guid,
+  // if a bookmark was created or modified.
+  lastBookmarkDialogDeferred: null,
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
     return bundle.formatStringFromName(key, params);
@@ -319,6 +507,8 @@ var PlacesUIUtils = {
    *                   undefined otherwise.
    */
   async showBookmarkDialog(aInfo, aParentWindow = null) {
+    this.lastBookmarkDialogDeferred = PromiseUtils.defer();
+
     // Preserve size attributes differently based on the fact the dialog has
     // a folder picker or not, since it needs more horizontal space than the
     // other controls.
@@ -330,16 +520,45 @@ var PlacesUIUtils = {
       : "chrome://browser/content/places/bookmarkProperties.xhtml";
 
     let features = "centerscreen,chrome,modal,resizable=yes";
+    let bookmarkGuid;
 
-    let topUndoEntry;
-    let batchBlockingDeferred;
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.bookmarks.editDialog.delayedApply.enabled",
+        false
+      )
+    ) {
+      let topUndoEntry;
+      let batchBlockingDeferred;
 
-    // Set the transaction manager into batching mode.
-    topUndoEntry = PlacesTransactions.topUndoEntry;
-    batchBlockingDeferred = PromiseUtils.defer();
-    PlacesTransactions.batch(async () => {
-      await batchBlockingDeferred.promise;
-    });
+      // Set the transaction manager into batching mode.
+      topUndoEntry = PlacesTransactions.topUndoEntry;
+      batchBlockingDeferred = PromiseUtils.defer();
+      PlacesTransactions.batch(async () => {
+        await batchBlockingDeferred.promise;
+      });
+
+      if (!aParentWindow) {
+        aParentWindow = Services.wm.getMostRecentWindow(null);
+      }
+
+      if (aParentWindow.gDialogBox) {
+        await aParentWindow.gDialogBox.open(dialogURL, aInfo);
+      } else {
+        aParentWindow.openDialog(dialogURL, "", features, aInfo);
+      }
+
+      bookmarkGuid =
+        ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
+
+      batchBlockingDeferred.resolve();
+
+      if (!bookmarkGuid && topUndoEntry != PlacesTransactions.topUndoEntry) {
+        PlacesTransactions.undo().catch(Cu.reportError);
+      }
+      this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
+      return bookmarkGuid;
+    }
 
     if (!aParentWindow) {
       aParentWindow = Services.wm.getMostRecentWindow(null);
@@ -351,15 +570,13 @@ var PlacesUIUtils = {
       aParentWindow.openDialog(dialogURL, "", features, aInfo);
     }
 
-    let bookmarkGuid =
-      ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
-
-    batchBlockingDeferred.resolve();
-
-    if (!bookmarkGuid && topUndoEntry != PlacesTransactions.topUndoEntry) {
-      PlacesTransactions.undo().catch(Cu.reportError);
+    if (aInfo.bookmarkState) {
+      bookmarkGuid = await aInfo.bookmarkState.save();
+      this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
+      return bookmarkGuid;
     }
-
+    bookmarkGuid = undefined;
+    this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
     return bookmarkGuid;
   },
 

@@ -233,6 +233,38 @@ this.scripting = class extends ExtensionAPI {
           // process spawns during the registration.
           extension.updateContentScripts();
         },
+
+        getRegisteredContentScripts: async details => {
+          // Map<string, number>
+          const scriptIdsMap = gScriptIdsMap.get(extension);
+
+          return Array.from(scriptIdsMap.entries())
+            .filter(
+              ([id, scriptId]) => !details?.ids || details.ids.includes(id)
+            )
+            .map(([id, scriptId]) => {
+              const options = extension.registeredContentScripts.get(scriptId);
+
+              if (!options) {
+                // When we call `getRegisteredContentScripts()` during a registration,
+                // `options` might be `undefined`. This happens when `scriptIdsMap`
+                // is already updated but `extension.registeredContentScripts` is not
+                // yet due to the broadcast.
+                return;
+              }
+
+              return {
+                id,
+                allFrames: options.allFrames,
+                excludeMatches: options.excludeMatches || undefined,
+                js: options.jsPaths.map(jsPath =>
+                  jsPath.replace(extension.baseURL, "")
+                ),
+                matches: options.matches,
+              };
+            })
+            .filter(script => script);
+        },
       },
     };
   }
