@@ -831,7 +831,7 @@ static NewPartResult PrepareForNewPart(nsIRequest* aRequest,
                                        nsIURI* aURI, bool aIsMultipart,
                                        image::Image* aExistingImage,
                                        ProgressTracker* aProgressTracker,
-                                       uint32_t aInnerWindowId) {
+                                       uint64_t aInnerWindowId) {
   NewPartResult result(aExistingImage);
 
   if (aInStr) {
