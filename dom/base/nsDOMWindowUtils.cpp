@@ -4225,6 +4225,17 @@ nsDOMWindowUtils::GetFramesReflowed(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetRefreshDriverHasPendingTick(bool* aResult) {
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = presContext->RefreshDriver()->HasPendingTick();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::EnterChaosMode() {
   ChaosMode::enterChaosMode();
   return NS_OK;
