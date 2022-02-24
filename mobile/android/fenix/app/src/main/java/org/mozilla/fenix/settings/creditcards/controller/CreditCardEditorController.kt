@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards.controller
 
+import android.content.DialogInterface
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -52,13 +53,16 @@ interface CreditCardEditorController {
  * @param lifecycleScope [CoroutineScope] scope to launch coroutines.
  * @param navController [NavController] used for navigation.
  * @param ioDispatcher [CoroutineDispatcher] used for executing async tasks. Defaults to [Dispatchers.IO].
+ * @param showDeleteDialog [DialogInterface.OnClickListener] used to display a confirmation dialog
+ * before removing credit card.
  */
 class DefaultCreditCardEditorController(
     private val storage: AutofillCreditCardsAddressesStorage,
     private val lifecycleScope: CoroutineScope,
     private val navController: NavController,
     private val metrics: MetricController,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val showDeleteDialog: (DialogInterface.OnClickListener) -> Unit
 ) : CreditCardEditorController {
 
     override fun handleCancelButtonClicked() {
@@ -66,13 +70,16 @@ class DefaultCreditCardEditorController(
     }
 
     override fun handleDeleteCreditCard(guid: String) {
-        lifecycleScope.launch(ioDispatcher) {
-            storage.deleteCreditCard(guid)
+        showDeleteDialog { dialog, _ ->
+            lifecycleScope.launch(ioDispatcher) {
+                storage.deleteCreditCard(guid)
 
-            lifecycleScope.launch(Dispatchers.Main) {
-                navController.popBackStack()
+                lifecycleScope.launch(Dispatchers.Main) {
+                    navController.popBackStack()
+                }
+                metrics.track(Event.CreditCardDeleted)
             }
-            metrics.track(Event.CreditCardDeleted)
+            dialog.dismiss()
         }
     }
 

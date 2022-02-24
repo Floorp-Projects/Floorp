@@ -4,11 +4,13 @@
 
 package org.mozilla.fenix.settings.creditcards
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -38,6 +40,8 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
     private lateinit var creditCardEditorView: CreditCardEditorView
     private lateinit var menu: Menu
 
+    private var deleteDialog: AlertDialog? = null
+
     private val args by navArgs<CreditCardEditorFragmentArgs>()
 
     /**
@@ -59,7 +63,8 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
                 storage = storage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
-                requireContext().components.analytics.metrics
+                requireContext().components.analytics.metrics,
+                showDeleteDialog = ::showDeleteDialog
             )
         )
 
@@ -97,6 +102,7 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
     override fun onPause() {
         view?.hideKeyboard()
         menu.close()
+        deleteDialog?.dismiss()
 
         redirectToReAuth(
             listOf(R.id.creditCardsManagementFragment),
@@ -125,6 +131,17 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             true
         }
         else -> false
+    }
+
+    private fun showDeleteDialog(onPositiveClickListener: DialogInterface.OnClickListener) {
+        deleteDialog = AlertDialog.Builder(requireContext()).apply {
+            setMessage(R.string.credit_cards_delete_dialog_confirmation)
+            setNegativeButton(R.string.credit_cards_cancel_button) { dialog: DialogInterface, _ ->
+                dialog.cancel()
+            }
+            setPositiveButton(R.string.credit_cards_delete_dialog_button, onPositiveClickListener)
+            create()
+        }.show()
     }
 
     companion object {

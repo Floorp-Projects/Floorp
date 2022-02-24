@@ -1476,11 +1476,15 @@
     <string name="credit_cards_menu_delete_card">Delete card</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Delete card</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Are you sure you want to delete this credit card?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Delete</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Save</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Save</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Cancel</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Saved cards</string>
