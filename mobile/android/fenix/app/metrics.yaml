@@ -3821,6 +3821,106 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: 107
+  enter_multiselect_mode:
+    type: event
+    description: |
+      User has entered multiselect mode.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23399
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23964#issuecomment-1051128057
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Tabs
+    extra_keys:
+      tab_selected:
+        description: If a tab was selected when entering multi select.
+        type: boolean
+  share_selected_tabs:
+    type: event
+    description: |
+      User has chosen to share selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23399
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23964#issuecomment-1051128057
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Tabs
+    extra_keys:
+      tab_count:
+        description: The number of selected tabs shared.
+        type: quantity
+  bookmark_selected_tabs:
+    type: event
+    description: |
+      User has chosen to bookmark selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23399
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23964#issuecomment-1051128057
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Tabs
+    extra_keys:
+      tab_count:
+        description: The number of selected tabs bookmarked.
+        type: quantity
+  close_selected_tabs:
+    type: event
+    description: |
+      User has chosen to close selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23399
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23964#issuecomment-1051128057
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Tabs
+    extra_keys:
+      tab_count:
+        description: The number of selected tabs closed.
+        type: quantity
+  selected_tabs_to_collection:
+    type: event
+    description: |
+      User has chosen to save selected tabs to a collection.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23399
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23964#issuecomment-1051128057
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Tabs
+    extra_keys:
+      tab_count:
+        description: The number of selected tabs added to colelction.
+        type: quantity
 
 collections:
   renamed:

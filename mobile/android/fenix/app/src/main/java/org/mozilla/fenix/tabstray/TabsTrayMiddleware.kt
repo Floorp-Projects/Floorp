@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 
@@ -53,6 +54,15 @@ class TabsTrayMiddleware(
                         metrics.track(Event.SearchTermGroupSizeDistribution(tabGroupSizeMapping))
                     }
                 }
+            }
+            is TabsTrayAction.EnterSelectMode -> {
+                TabsTray.enterMultiselectMode.record(TabsTray.EnterMultiselectModeExtra(false))
+            }
+            is TabsTrayAction.AddSelectTab -> {
+                TabsTray.enterMultiselectMode.record(TabsTray.EnterMultiselectModeExtra(true))
+            }
+            else -> {
+                // no-op
             }
         }
     }

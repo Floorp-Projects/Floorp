@@ -16,6 +16,7 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
@@ -146,6 +147,8 @@ class DefaultNavigationInteractor(
     }
 
     override fun onShareTabs(tabs: Collection<TabSessionState>) {
+        TabsTray.shareSelectedTabs.record(TabsTray.ShareSelectedTabsExtra(tabCount = tabs.size))
+
         val data = tabs.map {
             ShareData(url = it.content.url, title = it.content.title)
         }
@@ -194,6 +197,8 @@ class DefaultNavigationInteractor(
     }
 
     override fun onSaveToCollections(tabs: Collection<TabSessionState>) {
+        TabsTray.selectedTabsToCollection.record(TabsTray.SelectedTabsToCollectionExtra(tabCount = tabs.size))
+
         metrics.track(Event.TabsTraySaveToCollectionPressed)
         tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
@@ -219,6 +224,8 @@ class DefaultNavigationInteractor(
     }
 
     override fun onSaveToBookmarks(tabs: Collection<TabSessionState>) {
+        TabsTray.bookmarkSelectedTabs.record(TabsTray.BookmarkSelectedTabsExtra(tabCount = tabs.size))
+
         tabs.forEach { tab ->
             // We don't combine the context with lifecycleScope so that our jobs are not cancelled
             // if we leave the fragment, i.e. we still want the bookmarks to be added if the

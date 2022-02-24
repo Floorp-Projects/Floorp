@@ -15,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -200,6 +201,8 @@ class DefaultTabsTrayController(
      * This method has no effect for tabs that do not exist.
      */
     override fun handleMultipleTabsDeletion(tabs: Collection<TabSessionState>) {
+        TabsTray.closeSelectedTabs.record(TabsTray.CloseSelectedTabsExtra(tabCount = tabs.size))
+
         val isPrivate = tabs.any { it.content.private }
 
         // If user closes all the tabs from selected tabs page dismiss tray and navigate home.

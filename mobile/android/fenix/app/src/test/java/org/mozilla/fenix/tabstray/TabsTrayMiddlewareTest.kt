@@ -9,18 +9,29 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabPartition
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class TabsTrayMiddlewareTest {
 
     private lateinit var store: TabsTrayStore
     private lateinit var tabsTrayMiddleware: TabsTrayMiddleware
     private lateinit var metrics: MetricController
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setUp() {
@@ -78,6 +89,28 @@ class TabsTrayMiddlewareTest {
         assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(12))
         assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(20))
         assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(50))
+    }
+
+    @Test
+    fun `WHEN multi select mode from menu is entered THEN relevant metrics are collected`() {
+        store.dispatch(TabsTrayAction.EnterSelectMode)
+        store.waitUntilIdle()
+
+        assertTrue(TabsTray.enterMultiselectMode.testHasValue())
+        val snapshot = TabsTray.enterMultiselectMode.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("false", snapshot.single().extra?.getValue("tab_selected"))
+    }
+
+    @Test
+    fun `WHEN multi select mode by long press is entered THEN relevant metrics are collected`() {
+        store.dispatch(TabsTrayAction.AddSelectTab(mockk()))
+        store.waitUntilIdle()
+
+        assertTrue(TabsTray.enterMultiselectMode.testHasValue())
+        val snapshot = TabsTray.enterMultiselectMode.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("true", snapshot.single().extra?.getValue("tab_selected"))
     }
 
     private fun generateSearchTermTabGroupsForAverage(): TabPartition {

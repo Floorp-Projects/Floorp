@@ -24,12 +24,18 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
@@ -37,9 +43,11 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
+@RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsTrayStore: TabsTrayStore
@@ -52,8 +60,12 @@ class NavigationInteractorTest {
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
 
+    val coroutinesTestRule: MainCoroutineRule = MainCoroutineRule()
+    val gleanTestRule = GleanTestRule(testContext)
+
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
+    val chain: RuleChain = RuleChain.outerRule(coroutinesTestRule).around(gleanTestRule)
+
     private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
@@ -162,8 +174,15 @@ class NavigationInteractorTest {
 
     @Test
     fun `onShareTabs calls navigation on DefaultNavigationInteractor`() {
-        createInteractor().onShareTabs(emptyList())
+
+        createInteractor().onShareTabs(listOf(testTab))
+
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
+
+        assertTrue(TabsTray.shareSelectedTabs.testHasValue())
+        val snapshot = TabsTray.shareSelectedTabs.testGetValue()
+        Assert.assertEquals(1, snapshot.size)
+        Assert.assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test
@@ -171,7 +190,7 @@ class NavigationInteractorTest {
         mockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
 
         every { any<CollectionsDialog>().show(any()) } answers { }
-        createInteractor().onSaveToCollections(emptyList())
+        createInteractor().onSaveToCollections(listOf(testTab))
         verify(exactly = 1) { metrics.track(Event.TabsTraySaveToCollectionPressed) }
 
         unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
@@ -188,6 +207,11 @@ class NavigationInteractorTest {
 
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
+
+        assertTrue(TabsTray.bookmarkSelectedTabs.testHasValue())
+        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()
+        Assert.assertEquals(1, snapshot.size)
+        Assert.assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
 
     @Test
