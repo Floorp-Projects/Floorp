@@ -793,7 +793,8 @@ class FirefoxBrowser(Browser):
         if self._settings.get("special_powers", False):
             extensions.append(self.specialpowers_path)
         return ExecutorBrowser, {"marionette_port": self.instance.marionette_port,
-                                 "extensions": extensions}
+                                 "extensions": extensions,
+                                 "supports_devtools": True}
 
     def check_crash(self, process, test):
         dump_dir = os.path.join(self.instance.runner.profile.profile, "minidumps")
@@ -932,5 +933,6 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
 
     def executor_browser(self):
         cls, args = super().executor_browser()
+        args["supports_devtools"] = False
         args["profile"] = self.profile.profile
         return cls, args
