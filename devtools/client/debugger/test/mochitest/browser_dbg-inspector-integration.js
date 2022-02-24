@@ -34,7 +34,9 @@ add_task(async function() {
   let onNodeHighlight = highlighter.waitForHighlighterShown();
 
   info("Mouseover the open in inspector button");
-  const inspectorNode = await waitFor(() => findElement(dbg, "openInspector"));
+  const inspectorNode = await waitUntilPredicate(() =>
+    findElement(dbg, "openInspector")
+  );
   const view = inspectorNode.ownerDocument.defaultView;
   EventUtils.synthesizeMouseAtCenter(
     inspectorNode,

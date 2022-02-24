@@ -43,7 +43,7 @@ add_task(async function() {
   // invoke test
   invokeInTab("test");
   // should not pause
-  assertNotPaused(dbg);
+  is(isPaused(dbg), false);
 
   info("ensure gutter breakpoint gets set with click");
   await clickGutter(dbg, 4);

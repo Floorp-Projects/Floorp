@@ -21,19 +21,19 @@ add_task(async function() {
   // TODO: revisit highlighting lines when the debugger opens
   // assertHighlightLocation(dbg, "long.js", 66);
 
-  info("Select line 16 and make sure the editor scrolled.");
+  log("Select line 16 and make sure the editor scrolled.");
   await selectSource(dbg, "long.js", 16);
   await waitForElementWithSelector(dbg, ".CodeMirror-code > .highlight-line");
   assertHighlightLocation(dbg, "long.js", 16);
 
-  info("Select several locations and check that we have one highlight");
+  log("Select several locations and check that we have one highlight");
   await selectSource(dbg, "long.js", 17);
   await selectSource(dbg, "long.js", 18);
   assertHighlightLocation(dbg, "long.js", 18);
 
   // Test jumping to a line in a source that exists but hasn't been
   // loaded yet.
-  info("Select an unloaded source");
+  log("Select an unloaded source");
   selectSource(dbg, "simple1.js", 6);
 
   // Make sure the source is in the loading state, wait for it to be

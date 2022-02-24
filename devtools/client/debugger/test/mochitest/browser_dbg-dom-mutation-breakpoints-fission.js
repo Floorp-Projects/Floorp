@@ -84,7 +84,7 @@ add_task(async function() {
       () => !content.document.querySelector("input").disabled
     )
   );
-  assertNotPaused(dbg, "DOM breakpoint should not have been hit");
+  is(isPaused(dbg), false, "DOM breakpoint should not have been hit");
 
   info("Restore the disabled attribute");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

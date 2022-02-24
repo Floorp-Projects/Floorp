@@ -50,8 +50,10 @@ add_task(async function() {
 
   // Pending breakpoints are installed asynchronously, keep invoking the entry
   // function until the debugger pauses.
-  invokeInTab("main");
-  await waitForPaused(dbg);
+  await waitUntil(() => {
+    invokeInTab("main");
+    return isPaused(dbg);
+  });
   await onBreakpoint;
 
   ok(true, "paused at unmapped breakpoint");
