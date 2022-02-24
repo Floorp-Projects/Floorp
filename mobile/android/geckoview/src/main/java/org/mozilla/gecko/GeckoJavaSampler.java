@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.util.Queue;
@@ -233,15 +234,24 @@ public class GeckoJavaSampler {
     sMarkerStorage.addMarker(aMarkerName, aStartTime, aEndTime, aText);
   }
 
+  /**
+   * A routine to store profiler samples. This class is thread safe because it synchronizes access
+   * to its mutable state.
+   */
   private static class SamplingRunnable implements Runnable {
     // Sampling interval that is used by start and unpause
     public final int mInterval;
     private final int mSampleCount;
 
+    @GuardedBy("GeckoJavaSampler.class")
     private boolean mBufferOverflowed = false;
 
-    private Thread mMainThread;
-    private Sample[] mSamples;
+    private final Thread mMainThread;
+
+    @GuardedBy("GeckoJavaSampler.class")
+    private final Sample[] mSamples;
+
+    @GuardedBy("GeckoJavaSampler.class")
     private int mSamplePos;
 
     public SamplingRunnable(final int aInterval, final int aSampleCount) {
@@ -277,25 +287,36 @@ public class GeckoJavaSampler {
     }
 
     private Sample getSample(final int aSampleId) {
-      if (aSampleId >= mSampleCount) {
-        // Return early because there is no more sample left.
-        return null;
-      }
+      synchronized (GeckoJavaSampler.class) {
+        if (aSampleId >= mSampleCount) {
+          // Return early because there is no more sample left.
+          return null;
+        }
 
-      int samplePos = aSampleId;
-      if (mBufferOverflowed) {
-        // This is a circular buffer and the buffer is overflowed. Start
-        // of the buffer is mSamplePos now. Calculate the real index.
-        samplePos = (samplePos + mSamplePos) % mSampleCount;
-      }
+        int samplePos = aSampleId;
+        if (mBufferOverflowed) {
+          // This is a circular buffer and the buffer is overflowed. Start
+          // of the buffer is mSamplePos now. Calculate the real index.
+          samplePos = (samplePos + mSamplePos) % mSampleCount;
+        }
 
-      // Since the array elements are initialized to null, it will return
-      // null whenever we access to an element that's not been written yet.
-      // We want it to return null in that case, so it's okay.
-      return mSamples[samplePos];
+        // Since the array elements are initialized to null, it will return
+        // null whenever we access to an element that's not been written yet.
+        // We want it to return null in that case, so it's okay.
+        return mSamples[samplePos];
+      }
     }
   }
 
+  /**
+   * Returns the sample with the given sample ID.
+   *
+   * Thread safety code smell: this method call is synchronized but this class returns a reference
+   * to an effectively immutable object so that the reference is accessible after synchronization
+   * ends. It's unclear if this is thread safe. However, this is safe with the current callers
+   * (because they are all synchronized and don't leak the Sample) so we don't investigate it
+   * further.
+   */
   private static synchronized Sample getSample(final int aSampleId) {
     return sSamplingRunnable.getSample(aSampleId);
   }
