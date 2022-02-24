@@ -257,6 +257,32 @@
             "parameters": []
           }
         ]
+      },
+      {
+        "name": "getRegisteredContentScripts",
+        "type": "function",
+        "description": "Returns all dynamically registered content scripts for this extension that match the given filter.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "filter",
+            "$ref": "ContentScriptFilter",
+            "optional": true,
+            "description": "An object to filter the extension's dynamically registered scripts."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "The resulting array contains the registered content scripts.",
+            "parameters": [
+              {
+                "name": "scripts",
+                "type": "array",
+                "items": { "$ref": "RegisteredContentScript" }
+              }
+            ]
+          }
+        ]
       }
     ]
   }
