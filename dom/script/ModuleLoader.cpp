@@ -259,7 +259,6 @@ bool HostImportModuleDynamically(JSContext* aCx,
   nsIURI* baseURL = nullptr;
   nsCOMPtr<Element> element;
   RefPtr<ScriptLoadContext> context;
-  // This will be null in all cases except WebExtensions.
   if (script) {
     options = script->GetFetchOptions();
     baseURL = script->BaseURL();
@@ -286,10 +285,10 @@ bool HostImportModuleDynamically(JSContext* aCx,
           xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
     }
 
-    options = new ScriptFetchOptions(mozilla::CORS_NONE,
-                                     document->GetReferrerPolicy(), principal);
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
     baseURL = document->GetDocBaseURI();
-    context = new ScriptLoadContext(nullptr, global);
+    context = new ScriptLoadContext(nullptr);
   }
 
   RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
@@ -488,8 +487,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
   RefPtr<ScriptLoadContext> newContext =
-      new ScriptLoadContext(aParent->GetLoadContext()->mElement,
-                            aParent->GetLoadContext()->mWebExtGlobal);
+      new ScriptLoadContext(aParent->GetLoadContext()->mElement);
   newContext->mIsInline = false;
   // Propagated Parent values. TODO: allow child modules to use root module's
   // script mode.
