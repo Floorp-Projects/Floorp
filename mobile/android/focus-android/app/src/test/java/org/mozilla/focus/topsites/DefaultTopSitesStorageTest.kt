@@ -5,7 +5,8 @@
 package org.mozilla.focus.topsites
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.mock
@@ -24,7 +25,7 @@ class DefaultTopSitesStorageTest {
     private val pinnedSitesStorage: PinnedSiteStorage = mock()
 
     @Test
-    fun `WHEN a top site is added THEN the pinned sites storage is called`() = runBlockingTest {
+    fun `WHEN a top site is added THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
             coroutineContext
@@ -40,7 +41,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `WHEN a top site is removed THEN the pinned sites storage is called`() = runBlockingTest {
+    fun `WHEN a top site is removed THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
             coroutineContext
@@ -59,7 +60,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `WHEN a top site is updated THEN the pinned sites storage is called`() = runBlockingTest {
+    fun `WHEN a top site is updated THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
             coroutineContext
@@ -85,7 +86,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `WHEN getTopSites is called THEN the appropriate top sites are returned`() = runBlockingTest {
+    fun `WHEN getTopSites is called THEN the appropriate top sites are returned`() = runTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
             coroutineContext
