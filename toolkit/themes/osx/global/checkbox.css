@@ -6,17 +6,6 @@
 
 %include ../../shared/checkbox.inc.css
 
-checkbox:where([native]) {
-  appearance: auto;
-  -moz-default-appearance: checkbox-container;
-  -moz-box-align: center;
-  margin: 4px 2px;
-}
-
-.checkbox-label[native] {
-  margin: 1px 0;
-}
-
 /* ..... disabled state ..... */
 
 checkbox[native][disabled="true"] {
