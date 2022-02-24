@@ -399,6 +399,9 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       safeToYield(true),
       markOnBackgroundThreadDuringSweeping(false),
       sweepOnBackgroundThread(false),
+#ifdef DEBUG
+      hadShutdownGC(false),
+#endif
       requestSliceAfterBackgroundTask(false),
       lifoBlocksToFree((size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       lifoBlocksToFreeAfterMinorGC(
@@ -2194,6 +2197,42 @@ void GCRuntime::checkForCompartmentMismatches() {
 }
 #endif
 
+static bool ShouldCleanUpEverything(JS::GCOptions options) {
+  // During shutdown, we must clean everything up, for the sake of leak
+  // detection. When a runtime has no contexts, or we're doing a GC before a
+  // shutdown CC, those are strong indications that we're shutting down.
+  return options == JS::GCOptions::Shutdown || options == JS::GCOptions::Shrink;
+}
+
+static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
+  return reason != JS::GCReason::DESTROY_RUNTIME && CanUseExtraThreads();
+}
+
+void GCRuntime::startCollection(JS::GCReason reason) {
+  checkGCStateNotInUse();
+  MOZ_ASSERT_IF(
+      isShuttingDown(),
+      isShutdownGC() ||
+          reason == JS::GCReason::XPCONNECT_SHUTDOWN /* Bug 1650075 */);
+
+  initialReason = reason;
+  cleanUpEverything = ShouldCleanUpEverything(gcOptions());
+  sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
+  isCompacting = shouldCompact();
+  rootsRemoved = false;
+  lastGCStartTime_ = ReallyNow();
+
+#ifdef DEBUG
+  if (isShutdownGC()) {
+    hadShutdownGC = true;
+  }
+
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    zone->gcSweepGroupIndex = 0;
+  }
+#endif
+}
+
 static void RelazifyFunctions(Zone* zone, AllocKind kind) {
   MOZ_ASSERT(kind == AllocKind::FUNCTION ||
              kind == AllocKind::FUNCTION_EXTENDED);
@@ -2759,6 +2798,8 @@ void GCRuntime::finishCollection() {
 void GCRuntime::checkGCStateNotInUse() {
 #ifdef DEBUG
   MOZ_ASSERT(!marker.isActive());
+  MOZ_ASSERT(marker.isDrained());
+  MOZ_ASSERT(!lastMarkSlice);
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (zone->wasCollected()) {
@@ -2774,6 +2815,10 @@ void GCRuntime::checkGCStateNotInUse() {
 
   AutoLockHelperThreadState lock;
   MOZ_ASSERT(!requestSliceAfterBackgroundTask);
+  MOZ_ASSERT(unmarkTask.isIdle(lock));
+  MOZ_ASSERT(markTask.isIdle(lock));
+  MOZ_ASSERT(sweepTask.isIdle(lock));
+  MOZ_ASSERT(decommitTask.isIdle(lock));
 #endif
 }
 
@@ -3018,17 +3063,6 @@ AutoDisableBarriers::~AutoDisableBarriers() {
   }
 }
 
-static bool ShouldCleanUpEverything(JS::GCOptions options) {
-  // During shutdown, we must clean everything up, for the sake of leak
-  // detection. When a runtime has no contexts, or we're doing a GC before a
-  // shutdown CC, those are strong indications that we're shutting down.
-  return options == JS::GCOptions::Shutdown || options == JS::GCOptions::Shrink;
-}
-
-static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
-  return reason != JS::GCReason::DESTROY_RUNTIME && CanUseExtraThreads();
-}
-
 static bool NeedToCollectNursery(GCRuntime* gc) {
   return !gc->nursery().isEmpty() || !gc->storeBuffer().isEmpty();
 }
@@ -3094,20 +3128,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
   switch (incrementalState) {
     case State::NotActive:
-      MOZ_ASSERT(marker.isDrained());
-      initialReason = reason;
-      cleanUpEverything = ShouldCleanUpEverything(gcOptions());
-      sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
-      isCompacting = shouldCompact();
-      MOZ_ASSERT(!lastMarkSlice);
-      rootsRemoved = false;
-      lastGCStartTime_ = ReallyNow();
-
-#ifdef DEBUG
-      for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-        zone->gcSweepGroupIndex = 0;
-      }
-#endif
+      startCollection(reason);
 
       incrementalState = State::Prepare;
       if (!beginPreparePhase(reason, session)) {
