@@ -2455,6 +2455,30 @@ public class GeckoSession {
 
   // This is the GeckoDisplay acquired via acquireDisplay(), if any.
   private GeckoDisplay mDisplay;
+
+  /* package */ interface Owner {
+    void onRelease();
+  }
+
+  private static final WeakReference<Owner> NO_OWNER = new WeakReference<>(null);
+  private WeakReference<Owner> mOwner = NO_OWNER;
+
+  @UiThread
+  /* package */ void releaseOwner() {
+    ThreadUtils.assertOnUiThread();
+    mOwner = NO_OWNER;
+  }
+
+  @UiThread
+  /* package */ void setOwner(final Owner owner) {
+    ThreadUtils.assertOnUiThread();
+    final Owner oldOwner = mOwner.get();
+    if (oldOwner != null && owner != oldOwner) {
+      oldOwner.onRelease();
+    }
+    mOwner = new WeakReference<>(owner);
+  }
+
   /* package */ GeckoDisplay getDisplay() {
     return mDisplay;
   }
