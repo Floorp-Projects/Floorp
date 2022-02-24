@@ -11,12 +11,50 @@ checkbox {
   margin: 4px 2px;
 }
 
+checkbox:where([native]) {
+  appearance: auto;
+  -moz-default-appearance: checkbox-container;
+  margin: 2px 4px;
+}
+
+@media (-moz-platform: windows) {
+  checkbox:where([native]) {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-inline-start: 4px;
+    padding-inline-end: 2px;
+  }
+}
+
+@media (-moz-platform: macos) {
+  checkbox:where([native]) {
+    margin: 4px 2px;
+  }
+}
+
 .checkbox-icon[src] {
   margin-inline-end: 2px;
 }
 
 .checkbox-label {
   margin: 1px 0;
+}
+
+.checkbox-label[native] {
+  margin: 0;
+}
+
+@media (-moz-platform: macos) {
+  .checkbox-label[native] {
+    margin: 1px 0;
+  }
+}
+
+@media (-moz-platform: linux) {
+  .checkbox-label-box[native] {
+    appearance: auto;
+    -moz-default-appearance: checkbox-label;
+  }
 }
 
 /* ..... disabled state ..... */
