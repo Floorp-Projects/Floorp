@@ -95,25 +95,28 @@ public class GeckoJavaSampler {
     }
   }
 
+  /**
+   * A data container for metadata around a marker. This class is thread safe by being immutable.
+   */
   private static class Marker extends JNIObject {
     /** Name of the marker */
-    private String mMarkerName;
+    private final String mMarkerName;
     /** Either start time for the duration markers or time for a point-in-time markers. */
-    private double mTime;
+    private final double mTime;
     /**
      * A fallback field of {@link #mTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
-    private long mJavaTime;
+    private final long mJavaTime;
     /** End time for the duration markers. It's zero for point-in-time markers. */
-    private double mEndTime;
+    private final double mEndTime;
     /**
      * A fallback field of {@link #mEndTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
-    private long mEndJavaTime;
+    private final long mEndJavaTime;
     /** A nullable additional information field for the marker. */
-    private @Nullable String mText;
+    private @Nullable final String mText;
 
     /**
      * Constructor for the Marker class. It initializes different kinds of markers depending on the
@@ -144,37 +147,40 @@ public class GeckoJavaSampler {
         @Nullable final String aText) {
       mMarkerName = aMarkerName;
       mText = aText;
+
       if (aStartTime != null) {
         // Start time is provided. This is an interval marker.
         mTime = aStartTime;
+        mJavaTime = 0;
         if (aEndTime != null) {
           // End time is also provided.
           mEndTime = aEndTime;
+          mEndJavaTime = 0;
         } else {
           // End time is not provided. Get the profiler time now and use it.
-          if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-            mEndTime = getProfilerTime();
-          }
-          if (mEndTime == 0.0d) {
-            // getProfilerTime is not available yet; either libs are not loaded,
-            // or profiling hasn't started on the Gecko side yet
-            mEndJavaTime = SystemClock.elapsedRealtime();
-          }
+          mEndTime =
+              GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+          // if mEndTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+          // or profiling hasn't started on the Gecko side yet
+          mEndJavaTime = mEndTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
         }
+
       } else {
         // Start time is not provided. This is point-in-time marker.
+        mEndTime = 0;
+        mEndJavaTime = 0;
+
         if (aEndTime != null) {
           // End time is also provided. Use that to point the time.
           mTime = aEndTime;
+          mJavaTime = 0;
         } else {
-          if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-            mTime = getProfilerTime();
-          }
-          if (mTime == 0.0d) {
-            // getProfilerTime is not available yet; either libs are not loaded,
-            // or profiling hasn't started on the Gecko side yet
-            mJavaTime = SystemClock.elapsedRealtime();
-          }
+          mTime = GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+          // if mTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+          // or profiling hasn't started on the Gecko side yet
+          mJavaTime = mTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
         }
       }
     }
