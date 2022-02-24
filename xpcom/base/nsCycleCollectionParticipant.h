@@ -686,11 +686,8 @@ T* DowncastCCParticipant(void* aPtr) {
  * builds.
  */
 #ifdef DEBUG
-// clang-format off
-// Force this line to remain this way to make sure we don't trigger the
-// lint cpp-virtual-final. see bug 1505943
-#define NOT_INHERITED_CANT_OVERRIDE virtual void BaseCycleCollectable() final {}
-// clang-format on
+#  define NOT_INHERITED_CANT_OVERRIDE \
+    virtual void BaseCycleCollectable() final {}
 #else
 #  define NOT_INHERITED_CANT_OVERRIDE
 #endif
