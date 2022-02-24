@@ -354,7 +354,11 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     private fun withClipboard(content: String = "", lambda: () -> Unit) {
         val oldClip = clipboard.primaryClip
         try {
-            clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P && content.isEmpty()) {
+                clipboard.clearPrimaryClip()
+            } else {
+                clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+            }
 
             sessionRule.addExternalDelegateUntilTestEnd(
                     ClipboardManager.OnPrimaryClipChangedListener::class,
