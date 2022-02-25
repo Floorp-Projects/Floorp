@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#ts-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
  //Transferable See Bug 1734240
  Pref="dom.streams.transform_streams.enabled"]
 interface TransformStream {

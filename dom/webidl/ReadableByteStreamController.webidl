@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#rbs-controller-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet), Pref="dom.streams.byte_streams.enabled"]
+[Exposed=*, Pref="dom.streams.byte_streams.enabled"]
 interface ReadableByteStreamController {
   [Throws] // Throws on OOM
   readonly attribute ReadableStreamBYOBRequest? byobRequest;
