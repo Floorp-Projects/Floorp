@@ -3,6 +3,7 @@
 ac_add_options --enable-debug-symbols=-g1
 ac_add_options --disable-sandbox
 ac_add_options --disable-warnings-as-errors
+ac_add_options --without-wasm-sandboxed-libraries
 ac_add_options --enable-coverage
 
 CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/darwin && pwd)"
