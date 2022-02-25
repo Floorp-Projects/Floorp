@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -797,7 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Tik HTTPS veiksena</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Siekiant didesnio saugumo, automatiškai bandoma jungtis prie svetainių naudojant HTTPS. HTTPS ryšys užtikrina saugų, šifruotą prisijungimą prie jūsų lankomų svetainių.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Siekiant didesnio saugumo, automatiškai bandoma jungtis prie svetainių naudojant HTTPS. HTTPS ryšys užtikrina saugų, šifruotą prisijungimą prie jūsų lankomų svetainių.</string>
+
+    <string name="preference_https_only_summary3">Siekiant didesnio saugumo, automatiškai bandoma jungtis prie svetainių naudojant šifruotą HTTPS protokolą.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Išimtys</string>
