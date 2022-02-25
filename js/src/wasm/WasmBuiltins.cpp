@@ -270,23 +270,13 @@ const SymbolicAddressSignature SASigStructNew = {
     SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 #ifdef ENABLE_WASM_EXCEPTIONS
 const SymbolicAddressSignature SASigExceptionNew = {
-    SymbolicAddress::ExceptionNew,
-    _RoN,
-    _FailOnNullPtr,
-    3,
-    {_PTR, _RoN, _PTR, _END}};
+    SymbolicAddress::ExceptionNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigThrowException = {
     SymbolicAddress::ThrowException,
     _VOID,
     _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
-const SymbolicAddressSignature SASigPushRefIntoExn = {
-    SymbolicAddress::PushRefIntoExn,
-    _VOID,
-    _FailOnNegI32,
-    3,
-    {_PTR, _RoN, _RoN, _END}};
 #endif
 const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _RoN,
@@ -1284,17 +1274,13 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
 
 #if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
-      *abiType = Args_General3;
+      *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
       return FuncCast(Instance::exceptionNew, *abiType);
     case SymbolicAddress::ThrowException:
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
-    case SymbolicAddress::PushRefIntoExn:
-      *abiType = Args_Int32_GeneralGeneralGeneral;
-      MOZ_ASSERT(*abiType == ToABIType(SASigPushRefIntoExn));
-      return FuncCast(Instance::pushRefIntoExn, *abiType);
 #endif
 
 #ifdef WASM_CODEGEN_DEBUG
@@ -1458,7 +1444,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 #ifdef ENABLE_WASM_EXCEPTIONS
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
-    case SymbolicAddress::PushRefIntoExn:
 #endif
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:

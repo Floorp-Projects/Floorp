@@ -263,10 +263,8 @@ class Instance {
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, void* structDescr);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  static void* exceptionNew(Instance* instance, JSObject* tag, size_t nbytes);
+  static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
-  static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
-                                JSObject* ref);
 #endif
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);

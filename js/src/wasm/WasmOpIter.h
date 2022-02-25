@@ -1600,7 +1600,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
     block.switchToCatch();
   }
 
-  return push(env_.tags[*tagIndex].type.resultType());
+  return push(env_.tags[*tagIndex].type->resultType());
 }
 
 template <typename Policy>
@@ -1674,7 +1674,7 @@ inline bool OpIter<Policy>::readThrow(uint32_t* tagIndex,
     return fail("tag index out of range");
   }
 
-  if (!popWithType(env_.tags[*tagIndex].type.resultType(), argValues)) {
+  if (!popWithType(env_.tags[*tagIndex].type->resultType(), argValues)) {
     return false;
   }
 
