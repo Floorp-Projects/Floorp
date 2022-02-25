@@ -112,17 +112,19 @@ class SyncedTabsIntegration(
             SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_enable_tab_syncing))
 
         SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION ->
-            SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_sign_in_message))
-
-        SyncedTabsView.ErrorType.NO_TABS_AVAILABLE ->
             SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_reauth))
 
-        SyncedTabsView.ErrorType.SYNC_UNAVAILABLE ->
+        SyncedTabsView.ErrorType.NO_TABS_AVAILABLE ->
             SyncedTabsListItem.Error(
                 errorText = context.getString(
                     R.string.synced_tabs_no_tabs_2,
                     context.getString(R.string.app_name)
                 ),
+            )
+
+        SyncedTabsView.ErrorType.SYNC_UNAVAILABLE ->
+            SyncedTabsListItem.Error(
+                errorText = context.getString(R.string.synced_tabs_sign_in_message),
                 errorButton = SyncedTabsListItem.ErrorButton(
                     buttonText = context.getString(R.string.synced_tabs_sign_in_button)
                 ) {
