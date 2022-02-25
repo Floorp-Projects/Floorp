@@ -330,12 +330,12 @@ class WasmInstanceObject : public NativeObject {
       const wasm::DataSegmentVector& dataSegments,
       const wasm::ElemSegmentVector& elemSegments, uint32_t globalDataLength,
       HandleWasmMemoryObject memory,
-      Vector<RefPtr<wasm::ExceptionTag>, 0, SystemAllocPolicy>&& exceptionTags,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
       const JSFunctionVector& funcImports,
       const wasm::GlobalDescVector& globals,
       const wasm::ValVector& globalImportValues,
-      const WasmGlobalObjectVector& globalObjs, HandleObject proto,
+      const WasmGlobalObjectVector& globalObjs,
+      const WasmTagObjectVector& tagObjs, HandleObject proto,
       UniquePtr<wasm::DebugState> maybeDebug);
   void initExportsObj(JSObject& exportsObj);
 
@@ -488,8 +488,7 @@ class WasmTableObject : public NativeObject {
 // types for exports and imports.
 
 class WasmTagObject : public NativeObject {
-  static const unsigned TAG_SLOT = 0;
-  static const unsigned TYPE_SLOT = 1;
+  static const unsigned TYPE_SLOT = 0;
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
@@ -499,7 +498,7 @@ class WasmTagObject : public NativeObject {
   static bool type(JSContext* cx, unsigned argc, Value* vp);
 
  public:
-  static const unsigned RESERVED_SLOTS = 2;
+  static const unsigned RESERVED_SLOTS = 1;
   static const JSClass class_;
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
@@ -514,7 +513,6 @@ class WasmTagObject : public NativeObject {
   wasm::TagType& tagType() const;
   wasm::ValTypeVector& valueTypes() const;
   wasm::ResultType resultType() const;
-  wasm::ExceptionTag& tag() const;
 };
 
 // The class of WebAssembly.Exception. This class is used for
@@ -528,7 +526,6 @@ class WasmExceptionObject : public NativeObject {
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
-  static void finalize(JSFreeOp*, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
   // Named isMethod instead of is to avoid name conflict.
   static bool isMethod(JSContext* cx, unsigned argc, Value* vp);
@@ -545,13 +542,12 @@ class WasmExceptionObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmExceptionObject* create(JSContext* cx,
-                                     wasm::SharedExceptionTag tag,
+  static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag,
                                      Handle<ArrayBufferObject*> values,
                                      HandleArrayObject refs);
   bool isNewborn() const;
 
-  wasm::ExceptionTag& tag() const;
+  WasmTagObject& tag() const;
   ArrayBufferObject& values() const;
   ArrayObject& refs() const;
 

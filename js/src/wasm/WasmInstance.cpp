@@ -122,6 +122,12 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+GCPtrWasmTagObject& Instance::tagTls(const TagDesc& td) const {
+  return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
+}
+#endif
+
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
                             MutableHandle<ArrayObject*> array) {
@@ -1192,7 +1198,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   JSContext* cx = instance->tlsData()->cx;
 
-  SharedExceptionTag tag = instance->exceptionTags()[exnIndex];
   RootedArrayBufferObject buf(cx, ArrayBufferObject::createZeroed(cx, nbytes));
 
   if (!buf) {
@@ -1205,6 +1210,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return nullptr;
   }
 
+  const TagDesc& desc = instance->metadata().tags[exnIndex];
+  RootedWasmTagObject tag(cx, instance->tagTls(desc));
   return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tag, buf, refs))
       .forCompiledCode();
 }
@@ -1379,9 +1386,8 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,
-                   HandleWasmMemoryObject memory,
-                   SharedExceptionTagVector&& exceptionTags,
-                   SharedTableVector&& tables, UniqueDebugState maybeDebug)
+                   HandleWasmMemoryObject memory, SharedTableVector&& tables,
+                   UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       object_(object),
       jsJitArgsRectifier_(
@@ -1393,7 +1399,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       code_(std::move(code)),
       tlsData_(std::move(tlsDataIn)),
       memory_(memory),
-      exceptionTags_(std::move(exceptionTags)),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug))
 #ifdef ENABLE_WASM_GC
@@ -1406,15 +1411,10 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                     const ValVector& globalImportValues,
                     const WasmGlobalObjectVector& globalObjs,
+                    const WasmTagObjectVector& tagObjs,
                     const DataSegmentVector& dataSegments,
                     const ElemSegmentVector& elemSegments) {
   MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
-#ifdef ENABLE_WASM_EXCEPTIONS
-  // Currently the only tags are exception tags.
-  MOZ_ASSERT(exceptionTags_.length() == metadata().tags.length());
-#else
-  MOZ_ASSERT(exceptionTags_.length() == 0);
-#endif
 
 #ifdef DEBUG
   for (auto t : code_->tiers()) {
@@ -1476,6 +1476,18 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     table.length = tables_[i]->length();
     table.functionBase = tables_[i]->functionBase();
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // Initialize tags in the tls data
+  for (size_t i = 0; i < metadata().tags.length(); i++) {
+    const TagDesc& td = metadata().tags[i];
+    MOZ_ASSERT(td.globalDataOffset != UINT32_MAX);
+    MOZ_ASSERT(tagObjs[i] != nullptr);
+    tagTls(td) = tagObjs[i];
+  }
+  tlsData()->pendingException = nullptr;
+  tlsData()->pendingExceptionTagIndex = UINT32_MAX;
+#endif
 
   // Add observer if our memory base may grow
   if (memory_ && memory_->movingGrowable() &&
@@ -1689,6 +1701,12 @@ void Instance::tracePrivate(JSTracer* trc) {
     GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  for (const TagDesc& tag : code().metadata().tags) {
+    TraceNullableEdge(trc, &tagTls(tag), "wasm tag");
+  }
+#endif
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
 #ifdef ENABLE_WASM_GC
@@ -2221,12 +2239,13 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-static uint32_t FindExceptionTagIndex(Instance* instance, JSObject* exn) {
+uint32_t Instance::findExceptionTagIndex(JSObject* exn) {
   if (exn->is<WasmExceptionObject>()) {
-    ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
-    for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
-      ExceptionTag& tag = *instance->exceptionTags()[i];
-      if (&tag == &exnTag) {
+    WasmTagObject* exnTag = &exn->as<WasmExceptionObject>().tag();
+    const TagDescVector& tags = metadata().tags;
+    for (size_t i = 0; i < tags.length(); i++) {
+      const TagDesc& tag = tags[i];
+      if (tagTls(tag) == exnTag) {
         return i;
       }
     }
@@ -2240,7 +2259,7 @@ static uint32_t FindExceptionTagIndex(Instance* instance, JSObject* exn) {
 void Instance::setPendingException(HandleAnyRef exn) {
   tlsData()->pendingException = exn.get().asJSObject();
   tlsData()->pendingExceptionTagIndex =
-      FindExceptionTagIndex(this, exn.get().asJSObject());
+      findExceptionTagIndex(exn.get().asJSObject());
 }
 
 bool Instance::constantRefFunc(uint32_t funcIndex,
