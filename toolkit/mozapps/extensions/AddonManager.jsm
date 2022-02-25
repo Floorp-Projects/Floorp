@@ -79,6 +79,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 var { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["Element"]);
 
@@ -466,6 +469,7 @@ AddonScreenshot.prototype = {
 };
 
 var gStarted = false;
+var gStartedPromise = PromiseUtils.defer();
 var gStartupComplete = false;
 var gCheckCompatibility = true;
 var gStrictCompatibility = true;
@@ -768,10 +772,12 @@ var AddonManagerInternal = {
       }
 
       gStartupComplete = true;
+      gStartedPromise.resolve();
       this.recordTimestamp("AMI_startup_end");
     } catch (e) {
       logger.error("startup failed", e);
       AddonManagerPrivate.recordException("AMI", "startup failed", e);
+      gStartedPromise.reject("startup failed");
     }
 
     logger.debug("Completed startup sequence");
@@ -955,6 +961,10 @@ var AddonManagerInternal = {
     logger.debug("shutdown");
     this.callManagerListeners("onShutdown");
 
+    if (!gStartupComplete) {
+      gStartedPromise.reject("shutting down");
+    }
+
     gRepoShutdownState = "pending";
     gShutdownInProgress = true;
     // Clean up listeners
@@ -1006,6 +1016,7 @@ var AddonManagerInternal = {
       delete this.startupChanges[type];
     }
     gStarted = false;
+    gStartedPromise = PromiseUtils.defer();
     gStartupComplete = false;
     gFinalShutdownBarrier = null;
     gBeforeShutdownBarrier = null;
@@ -3909,6 +3920,15 @@ var AddonManager = {
   /** Boolean indicating whether AddonManager startup has completed. */
   get isReady() {
     return gStartupComplete && !gShutdownInProgress;
+  },
+
+  /**
+   * A promise that is resolved when the AddonManager startup has completed.
+   * This may be rejected if startup of the AddonManager is not successful, or
+   * if shutdown is started before the AddonManager has finished starting.
+   */
+  get readyPromise() {
+    return gStartedPromise.promise;
   },
 
   /** @constructor */
