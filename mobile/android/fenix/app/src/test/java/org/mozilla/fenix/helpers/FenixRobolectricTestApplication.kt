@@ -29,6 +29,8 @@ class FenixRobolectricTestApplication : FenixApplication() {
 
     override fun setupInMainProcessOnly() = Unit
 
+    override fun downloadWallpapers() = Unit
+
     private fun setApplicationTheme() {
         // According to the Robolectric devs, the application context will not have the <application>'s
         // theme but will use the platform's default team so we set our theme here. We change it here

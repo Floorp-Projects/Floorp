@@ -789,7 +789,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     override fun getWorkManagerConfiguration() = Builder().setMinimumLoggingLevel(INFO).build()
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun downloadWallpapers() {
+    open fun downloadWallpapers() {
         if (FeatureFlags.showWallpapers) {
             GlobalScope.launch {
                 components.wallpaperManager.downloadAllRemoteWallpapers()
