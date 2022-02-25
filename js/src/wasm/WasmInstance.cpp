@@ -1196,7 +1196,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->tlsData()->cx;
   RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
-  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tagObj))
+  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
+  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tagObj, proto))
       .forCompiledCode();
 }
 

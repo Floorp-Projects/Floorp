@@ -548,7 +548,8 @@ class WasmExceptionObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag);
+  static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag,
+                                     HandleObject proto);
   bool isNewborn() const;
 
   const wasm::TagType* tagType() const;
