@@ -79,7 +79,7 @@ function initUserSettings() {
 
     try {
       const [defaultTargetBrowsers, targetBrowsers] = await Promise.all([
-        UserSettings.getDefaultTargetBrowsers(),
+        UserSettings.getBrowsersList(),
         UserSettings.getTargetBrowsers(),
       ]);
 
