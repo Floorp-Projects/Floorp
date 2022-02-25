@@ -75,11 +75,11 @@ function nextTest()
     setScale(window, 2);
     // - the iframe will be at 4×, but out here css pixels are only 2× device pixels
 
-    rootElement.getBoundingClientRect(); // flush layout.
-
-    screenx = rootElement.screenX + 120;
-    screeny = rootElement.screenY + 120;
-    $("popup").openPopupAtScreen(screenx, screeny);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      screenx = rootElement.screenX + 20;
+      screeny = rootElement.screenY + 20;
+      $("popup").openPopupAtScreen(screenx, screeny);
+    }));
   }
 }
 
