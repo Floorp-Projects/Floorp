@@ -544,6 +544,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         RootedAnyRef ref(cx, AnyRef::null());
         if (!BoxAnyRef(cx, exn, &ref)) {
           MOZ_ASSERT(cx->isThrowingOutOfMemory());
+          hasCatchableException = false;
           continue;
         }
 
