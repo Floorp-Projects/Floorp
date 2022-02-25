@@ -5015,6 +5015,28 @@ void LIRGenerator::visitWasmLoadTls(MWasmLoadTls* ins) {
   }
 }
 
+void LIRGenerator::visitWasmStoreTls(MWasmStoreTls* ins) {
+  MDefinition* value = ins->value();
+  if (value->type() == MIRType::Int64) {
+#ifdef JS_PUNBOX64
+    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
+#else
+    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+    LInt64Allocation valueAlloc = useInt64Register(value);
+#endif
+    add(new (alloc()) LWasmStoreSlotI64(valueAlloc, tlsPtr, ins->offset()),
+        ins);
+  } else {
+    MOZ_ASSERT(value->type() != MIRType::RefOrNull);
+    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation valueAlloc = useRegisterAtStart(value);
+    add(new (alloc())
+            LWasmStoreSlot(valueAlloc, tlsPtr, ins->offset(), value->type()),
+        ins);
+  }
+}
+
 void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
   MOZ_ASSERT(!ins->isRedundant());
 

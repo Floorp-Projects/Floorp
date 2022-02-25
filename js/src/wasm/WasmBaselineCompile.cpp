@@ -1421,8 +1421,22 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
   return emitInstanceCall(lineOrBytecode, SASigThrowException);
 }
 
-void BaseCompiler::loadPendingException(Register dest) {
-  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, pendingException)), dest);
+void BaseCompiler::consumePendingException(RegRef* exnDst, RegI32* tagDst) {
+  RegPtr pendingExceptionAddr = RegPtr(PreBarrierReg);
+  needPtr(pendingExceptionAddr);
+  masm.computeEffectiveAddress(
+      Address(WasmTlsReg, offsetof(TlsData, pendingException)),
+      pendingExceptionAddr);
+  *exnDst = needRef();
+  masm.loadPtr(Address(pendingExceptionAddr, 0), *exnDst);
+  emitBarrieredClear(pendingExceptionAddr);
+  freePtr(pendingExceptionAddr);
+
+  *tagDst = needI32();
+  masm.load32(Address(WasmTlsReg, offsetof(TlsData, pendingExceptionTagIndex)),
+              *tagDst);
+  masm.store32(Imm32(-1), Address(WasmTlsReg,
+                                  offsetof(TlsData, pendingExceptionTagIndex)));
 }
 #endif
 
@@ -3767,19 +3781,12 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
     fr.setStackHeight(block.stackHeight);
     masm.bind(&block.otherLabel);
 
-    // Try-delegate keeps the pending exception in the TlsData, so we extract
-    // it here rather than relying on an ABI register.
-    RegRef exn = needRef();
-    loadPendingException(exn);
-    pushRef(exn);
-
-    // Called only to clear the pending exception, the result is not used.
-    if (!emitInstanceCall(lineOrBytecode, SASigConsumePendingException)) {
-      return false;
-    }
-    freeI32(popI32());
-    exn = popRef();
-
+    // A try-delegate jumps immediately to its delegated try block, so we are
+    // responsible to unpack the exception and rethrow it.
+    RegRef exn;
+    RegI32 tagIndex;
+    consumePendingException(&exn, &tagIndex);
+    freeI32(tagIndex);
     if (!throwFrom(exn, lineOrBytecode)) {
       return false;
     }
@@ -3927,22 +3934,13 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 
   // Load exception pointer from TlsData and make sure that it is
   // saved before the following call will clear it.
-  RegRef exn = needRef();
-  loadPendingException(exn);
-  pushRef(exn);
-
-  if (!emitInstanceCall(lineOrBytecode, SASigConsumePendingException)) {
-    return false;
-  }
-
-  // Prevent conflict with exn register when popping this result.
-  RegI32 temp = popI32();
-  RegI32 index = needI32();
-  moveI32(temp, index);
-  freeI32(temp);
+  RegRef exn;
+  RegI32 index;
+  consumePendingException(&exn, &index);
 
   // Ensure that the exception is assigned to the block return register
   // before branching to a handler.
+  pushRef(exn);
   ResultType exnResult = ResultType::Single(RefType::extern_());
   popBlockResults(exnResult, tryCatch.stackHeight, ContinuationKind::Jump);
   freeResultRegisters(exnResult);
@@ -5732,6 +5730,17 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
 
   masm.bind(&skipBarrier);
   return true;
+}
+
+// Emits a store of nullptr to a JS object pointer at the address valueAddr.
+// Preserves `valueAddr`.
+void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+  // barrier is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+
+  emitPreBarrier(valueAddr);  // Preserves valueAddr
+  masm.storePtr(ImmWord(0), Address(valueAddr, 0));
 }
 
 //////////////////////////////////////////////////////////////////////////////

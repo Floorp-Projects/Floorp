@@ -9020,6 +9020,35 @@ class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
+class MWasmStoreTls : public MBinaryInstruction, public NoTypePolicy::Data {
+  uint32_t offset_;
+  AliasSet aliases_;
+
+  explicit MWasmStoreTls(MDefinition* tlsPointer, MDefinition* value,
+                         uint32_t offset, MIRType type, AliasSet aliases)
+      : MBinaryInstruction(classOpcode, tlsPointer, value),
+        offset_(offset),
+        aliases_(aliases) {
+    // Different Tls data have different alias classes and only those classes
+    // are allowed.
+    MOZ_ASSERT(aliases_.flags() ==
+               AliasSet::Store(AliasSet::WasmPendingException).flags());
+
+    // The only types supported at the moment.
+    MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
+               type == MIRType::Int64 || type == MIRType::RefOrNull);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreTls)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, tlsPtr), (1, value))
+
+  uint32_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override { return aliases_; }
+};
+
 class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet aliases_;
 
