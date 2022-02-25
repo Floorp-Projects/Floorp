@@ -2901,14 +2901,13 @@ exports.PDFPrintServiceFactory = PDFPrintServiceFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.animationStarted = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RenderingStates = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE_DELTA = exports.DEFAULT_SCALE = exports.AutoPrintRegExp = void 0;
+exports.animationStarted = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RenderingStates = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.OutputScale = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE_DELTA = exports.DEFAULT_SCALE = exports.AutoPrintRegExp = void 0;
 exports.apiPageLayoutToViewerModes = apiPageLayoutToViewerModes;
 exports.apiPageModeToSidebarView = apiPageModeToSidebarView;
 exports.approximateFraction = approximateFraction;
 exports.backtrackBeforeAllVisibleElements = backtrackBeforeAllVisibleElements;
 exports.binarySearchFirstItem = binarySearchFirstItem;
 exports.getActiveOrFocusedElement = getActiveOrFocusedElement;
-exports.getOutputScale = getOutputScale;
 exports.getPageSizeInches = getPageSizeInches;
 exports.getVisibleElements = getVisibleElements;
 exports.isPortraitOrientation = isPortraitOrientation;
@@ -2994,16 +2993,20 @@ exports.SpreadMode = SpreadMode;
 const AutoPrintRegExp = /\bprint\s*\(/;
 exports.AutoPrintRegExp = AutoPrintRegExp;
 
-function getOutputScale(ctx) {
-  const devicePixelRatio = window.devicePixelRatio || 1;
-  const backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
-  const pixelRatio = devicePixelRatio / backingStoreRatio;
-  return {
-    sx: pixelRatio,
-    sy: pixelRatio,
-    scaled: pixelRatio !== 1
-  };
+class OutputScale {
+  constructor() {
+    const pixelRatio = window.devicePixelRatio || 1;
+    this.sx = pixelRatio;
+    this.sy = pixelRatio;
+  }
+
+  get scaled() {
+    return this.sx !== 1 || this.sy !== 1;
+  }
+
 }
+
+exports.OutputScale = OutputScale;
 
 function scrollIntoView(element, spot, scrollMatches = false) {
   let parent = element.offsetParent;
@@ -4654,10 +4657,9 @@ class PasswordPrompt {
     this.label.textContent = await this.l10n.get(`password_${passwordIncorrect ? "invalid" : "label"}`);
   }
 
-  close() {
-    this.overlayManager.close(this.overlayName).then(() => {
-      this.input.value = "";
-    });
+  async close() {
+    await this.overlayManager.close(this.overlayName);
+    this.input.value = "";
   }
 
   #verify() {
@@ -5503,7 +5505,7 @@ let normalizationRegex = null;
 function normalize(text) {
   if (!normalizationRegex) {
     const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join("");
-    normalizationRegex = new RegExp(`([${replace}])|(\\S-\\n)|(\\n)|(\\p{M}+)`, "gum");
+    normalizationRegex = new RegExp(`([${replace}])|(\\p{M}+(?:-\\n)?)|(\\S-\\n)|(\\n)`, "gum");
   }
 
   const rawDiacriticsPositions = [];
@@ -5536,36 +5538,48 @@ function normalize(text) {
     }
 
     if (p2) {
-      positions.push([i - shift, 1 + shift]);
-      shift += 1;
-      shiftOrigin += 1;
-      eol += 1;
-      return p2.charAt(0);
+      const hasTrailingDashEOL = p2.endsWith("\n");
+      const len = hasTrailingDashEOL ? p2.length - 2 : p2.length;
+      hasDiacritics = true;
+      let jj = len;
+
+      if (i + eol === rawDiacriticsPositions[k]?.[1]) {
+        jj -= rawDiacriticsPositions[k][0];
+        ++k;
+      }
+
+      for (let j = 1; j < jj + 1; j++) {
+        positions.push([i - 1 - shift + j, shift - j]);
+      }
+
+      shift -= jj;
+      shiftOrigin += jj;
+
+      if (hasTrailingDashEOL) {
+        i += len - 1;
+        positions.push([i - shift + 1, 1 + shift]);
+        shift += 1;
+        shiftOrigin += 1;
+        eol += 1;
+        return p2.slice(0, len);
+      }
+
+      return p2;
     }
 
     if (p3) {
-      positions.push([i - shift + 1, shift - 1]);
-      shift -= 1;
+      positions.push([i - shift + 1, 1 + shift]);
+      shift += 1;
       shiftOrigin += 1;
       eol += 1;
-      return " ";
+      return p3.charAt(0);
     }
 
-    hasDiacritics = true;
-    let jj = p4.length;
-
-    if (i + eol === rawDiacriticsPositions[k]?.[1]) {
-      jj -= rawDiacriticsPositions[k][0];
-      ++k;
-    }
-
-    for (let j = 1; j < jj + 1; j++) {
-      positions.push([i - 1 - shift + j, shift - j]);
-    }
-
-    shift -= jj;
-    shiftOrigin += jj;
-    return p4;
+    positions.push([i - shift + 1, shift - 1]);
+    shift -= 1;
+    shiftOrigin += 1;
+    eol += 1;
+    return " ";
   });
   positions.push([normalized.length, shift]);
   return [normalized, positions, hasDiacritics];
@@ -9418,7 +9432,7 @@ class PDFThumbnailView {
     const ctx = canvas.getContext("2d", {
       alpha: false
     });
-    const outputScale = (0, _ui_utils.getOutputScale)(ctx);
+    const outputScale = new _ui_utils.OutputScale();
     canvas.width = upscaleFactor * this.canvasWidth * outputScale.sx | 0;
     canvas.height = upscaleFactor * this.canvasHeight * outputScale.sy | 0;
     const transform = outputScale.scaled ? [outputScale.sx, 0, 0, outputScale.sy, 0, 0] : null;
@@ -9789,7 +9803,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.13.133';
+    const viewerVersion = '2.13.189';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -12324,8 +12338,7 @@ class PDFPageView {
     const ctx = canvas.getContext("2d", {
       alpha: false
     });
-    const outputScale = (0, _ui_utils.getOutputScale)(ctx);
-    this.outputScale = outputScale;
+    const outputScale = this.outputScale = new _ui_utils.OutputScale();
 
     if (this.useOnlyCssZoom) {
       const actualSizeViewport = viewport.clone({
@@ -12333,7 +12346,6 @@ class PDFPageView {
       });
       outputScale.sx *= actualSizeViewport.width / viewport.width;
       outputScale.sy *= actualSizeViewport.height / viewport.height;
-      outputScale.scaled = true;
     }
 
     if (this.maxCanvasPixels > 0) {
@@ -12343,7 +12355,6 @@ class PDFPageView {
       if (outputScale.sx > maxScale || outputScale.sy > maxScale) {
         outputScale.sx = maxScale;
         outputScale.sy = maxScale;
-        outputScale.scaled = true;
         this.hasRestrictedScaling = true;
       } else {
         this.hasRestrictedScaling = false;
@@ -12357,7 +12368,7 @@ class PDFPageView {
     canvas.style.width = (0, _ui_utils.roundToDivide)(viewport.width, sfx[1]) + "px";
     canvas.style.height = (0, _ui_utils.roundToDivide)(viewport.height, sfy[1]) + "px";
     this.paintedViewportMap.set(canvas, viewport);
-    const transform = !outputScale.scaled ? null : [outputScale.sx, 0, 0, outputScale.sy, 0, 0];
+    const transform = outputScale.scaled ? [outputScale.sx, 0, 0, outputScale.sy, 0, 0] : null;
     const renderContext = {
       canvasContext: ctx,
       transform,
@@ -14637,8 +14648,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.13.133';
-const pdfjsBuild = 'f8b2a99dd';
+const pdfjsVersion = '2.13.189';
+const pdfjsBuild = '2bb96a708';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;

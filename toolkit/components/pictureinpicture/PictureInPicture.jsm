@@ -204,24 +204,6 @@ var PictureInPicture = {
     actor.sendAsyncMessage("PictureInPicture:KeyToggle");
   },
 
-  _focusPipBrowserWindow(win) {
-    let browser = this.weakWinToBrowser.get(win);
-    let gBrowser = browser?.ownerGlobal?.gBrowser;
-
-    // In some cases, gBrowser can be null. One example is if the parent browser
-    // was already closed.
-    if (!gBrowser) {
-      return;
-    }
-
-    let tab = gBrowser.getTabForBrowser(browser);
-
-    // focus the tab's window
-    if (tab) {
-      tab.ownerGlobal.focus();
-    }
-  },
-
   async focusTabAndClosePip(window, pipActor) {
     let browser = this.weakWinToBrowser.get(window);
     if (!browser) {
@@ -303,7 +285,6 @@ var PictureInPicture = {
     if (!win) {
       return;
     }
-    this._focusPipBrowserWindow(win);
     await this.closePipWindow(win);
     gCloseReasons.set(win, reason);
   },

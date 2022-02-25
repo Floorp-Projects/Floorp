@@ -500,10 +500,6 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
                                              JSObject* enclosingEnvironment,
                                              const InputScope& effectiveScope,
                                              ParserAtomsTable& parserAtoms) {
-  if (!input.options.privateClassFields) {
-    return true;
-  }
-
   effectiveScopePrivateFieldCache_.emplace();
 
   // We compute an environment coordinate relative to the effective scope

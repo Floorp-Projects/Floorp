@@ -254,34 +254,34 @@ class UtilityMemoryReporter : public MemoryReportingProcess {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityMemoryReporter, override)
 
-  bool IsAlive() const override { return bool(GetChild()); }
+  bool IsAlive() const override { return bool(GetParent()); }
 
   bool SendRequestMemoryReport(
       const uint32_t& aGeneration, const bool& aAnonymize,
       const bool& aMinimizeMemoryUsage,
       const Maybe<ipc::FileDescriptor>& aDMDFile) override {
-    UtilityProcessParent* child = GetChild();
-    if (!child) {
+    UtilityProcessParent* parent = GetParent();
+    if (!parent) {
       return false;
     }
 
-    return child->SendRequestMemoryReport(aGeneration, aAnonymize,
+    return parent->SendRequestMemoryReport(aGeneration, aAnonymize,
                                           aMinimizeMemoryUsage, aDMDFile);
   }
 
   int32_t Pid() const override {
-    if (UtilityProcessParent* child = GetChild()) {
-      return (int32_t)child->OtherPid();
+    if (UtilityProcessParent* parent = GetParent()) {
+      return (int32_t)parent->OtherPid();
     }
     return 0;
   }
 
  private:
-  UtilityProcessParent* GetChild() const {
+  UtilityProcessParent* GetParent() const {
     if (RefPtr<UtilityProcessManager> utilitypm =
             UtilityProcessManager::GetSingleton()) {
-      if (UtilityProcessParent* child = utilitypm->GetProcessParent()) {
-        return child;
+      if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+        return parent;
       }
     }
     return nullptr;

@@ -628,16 +628,12 @@ bool shell::enableIteratorHelpers = false;
 #ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = true;
 #endif
-bool shell::enablePrivateClassFields = false;
-bool shell::enablePrivateClassMethods = false;
-bool shell::enableErgonomicBrandChecks = true;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
 #endif
 #ifdef ENABLE_NEW_SET_METHODS
 bool shell::enableNewSetMethods = true;
 #endif
-bool shell::enableClassStaticBlocks = true;
 bool shell::enableImportAssertions = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -11063,17 +11059,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef NIGHTLY_BUILD
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
 #endif
-  enablePrivateClassFields = !op.getBoolOption("disable-private-fields");
-  enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
-  enableErgonomicBrandChecks =
-      !op.getBoolOption("disable-ergonomic-brand-checks");
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
 #endif
 #ifdef ENABLE_NEW_SET_METHODS
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
 #endif
-  enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
   enableImportAssertions = op.getBoolOption("enable-import-assertions");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
@@ -11102,16 +11093,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-      .setPrivateClassFields(enablePrivateClassFields)
-      .setPrivateClassMethods(enablePrivateClassMethods)
-      .setErgnomicBrandChecks(enableErgonomicBrandChecks)
 #ifdef NIGHTLY_BUILD
       .setArrayGrouping(enableArrayGrouping)
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(enableChangeArrayByCopy)
 #endif
-      .setClassStaticBlocks(enableClassStaticBlocks)
       .setImportAssertions(enableImportAssertions);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
@@ -12054,16 +12041,6 @@ int main(int argc, char** argv) {
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-array-grouping",
                         "Enable Array Grouping") ||
-      !op.addBoolOption('\0', "disable-private-fields",
-                        "Disable private class fields") ||
-      !op.addBoolOption('\0', "disable-private-methods",
-                        "Disable private class methods") ||
-      !op.addBoolOption(
-          '\0', "enable-ergonomic-brand-checks",
-          "Enable ergonomic brand checks for private class fields (no-op)") ||
-      !op.addBoolOption(
-          '\0', "disable-ergonomic-brand-checks",
-          "Disable ergonomic brand checks for private class fields") ||
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||
@@ -12084,8 +12061,6 @@ int main(int argc, char** argv) {
 #endif
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
-      !op.addBoolOption('\0', "disable-class-static-blocks",
-                        "Disable class static blocks") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
                         "(no-op) Enable class static blocks") ||
       !op.addBoolOption('\0', "enable-import-assertions",

@@ -36,6 +36,8 @@ parent:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FOGData(ByteBuf buf);
 
+  async InitCompleted();
+
 child:
   async Init(FileDescriptor? sandboxBroker, bool canRecordReleaseTelemetry);
 

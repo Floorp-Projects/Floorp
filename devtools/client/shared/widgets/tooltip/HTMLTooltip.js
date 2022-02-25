@@ -21,12 +21,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getCurrentZoom",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "listenOnce",
   "devtools/shared/async-utils",
   true
@@ -1024,14 +1018,12 @@ HTMLTooltip.prototype = {
       this._onXulPanelHidden
     );
     const onPanelShown = listenOnce(this.xulPanelWrapper, "popupshown");
-    const zoom = getCurrentZoom(this.xulPanelWrapper);
-    this.xulPanelWrapper.openPopupAtScreen(left * zoom, top * zoom, false);
+    this.xulPanelWrapper.openPopupAtScreen(left, top, false);
     return onPanelShown;
   },
 
   _moveXulWrapperTo: function(left, top) {
-    const zoom = getCurrentZoom(this.xulPanelWrapper);
-    this.xulPanelWrapper.moveTo(left * zoom, top * zoom);
+    this.xulPanelWrapper.moveTo(left, top);
   },
 
   _hideXulWrapper: function() {

@@ -750,7 +750,11 @@ bool SVGGeometryFrame::IsInvisible() const {
     return true;
   }
 
-  if (!style->mFill.kind.IsNone() || IsSVGImageFrame()) {
+  if (IsSVGImageFrame()) {
+    return false;
+  }
+
+  if (!style->mFill.kind.IsNone()) {
     float opacity = SVGUtils::GetOpacity(style->mFillOpacity, contextPaint);
     if (opacity > opacity_threshold) {
       return false;

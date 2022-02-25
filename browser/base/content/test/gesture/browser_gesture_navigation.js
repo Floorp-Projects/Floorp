@@ -19,31 +19,32 @@ add_task(async () => {
   await BrowserTestUtils.closeWindow(newBrowser);
 });
 
-add_task(async () => {
-  function createSimpleGestureEvent(type, direction) {
-    let event = document.createEvent("SimpleGestureEvent");
-    event.initSimpleGestureEvent(
-      type,
-      false /* canBubble */,
-      false /* cancelableArg */,
-      window,
-      0 /* detail */,
-      0 /* screenX */,
-      0 /* screenY */,
-      0 /* clientX */,
-      0 /* clientY */,
-      false /* ctrlKey */,
-      false /* altKey */,
-      false /* shiftKey */,
-      false /* metaKey */,
-      0 /* button */,
-      null /* relatedTarget */,
-      0 /* allowedDirections */,
-      direction
-    );
-    return event;
-  }
+function createSimpleGestureEvent(type, direction) {
+  let event = document.createEvent("SimpleGestureEvent");
+  event.initSimpleGestureEvent(
+    type,
+    false /* canBubble */,
+    false /* cancelableArg */,
+    window,
+    0 /* detail */,
+    0 /* screenX */,
+    0 /* screenY */,
+    0 /* clientX */,
+    0 /* clientY */,
+    false /* ctrlKey */,
+    false /* altKey */,
+    false /* shiftKey */,
+    false /* metaKey */,
+    0 /* button */,
+    null /* relatedTarget */,
+    0 /* allowedDirections */,
+    direction,
+    1 /* delta */
+  );
+  return event;
+}
 
+add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["ui.swipeAnimationEnabled", false]],
   });
@@ -76,7 +77,7 @@ add_task(async () => {
   );
 
   let event = createSimpleGestureEvent(
-    "SwipeGestureMayStart",
+    "MozSwipeGestureMayStart",
     SimpleGestureEvent.DIRECTION_LEFT
   );
   newWindow.gGestureSupport._shouldDoSwipeGesture(event);
@@ -89,7 +90,7 @@ add_task(async () => {
   );
 
   event = createSimpleGestureEvent(
-    "SwipeGestureMayStart",
+    "MozSwipeGestureMayStart",
     SimpleGestureEvent.DIRECTION_RIGHT
   );
   newWindow.gGestureSupport._shouldDoSwipeGesture(event);
@@ -98,6 +99,114 @@ add_task(async () => {
     SimpleGestureEvent.DIRECTION_LEFT,
     "Allows only swiping to left, i.e. backward"
   );
+
+  await BrowserTestUtils.closeWindow(newWindow);
+});
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.swipeAnimationEnabled", true]],
+  });
+
+  // Open a new browser window and load two pages so that the browser can go
+  // back but can't go forward.
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow({});
+
+  if (!newWindow.gHistorySwipeAnimation._isSupported()) {
+    await BrowserTestUtils.closeWindow(newWindow);
+    return;
+  }
+
+  function sendSwipeSequence(sendEnd) {
+    let event = createSimpleGestureEvent(
+      "MozSwipeGestureMayStart",
+      SimpleGestureEvent.DIRECTION_LEFT
+    );
+    newWindow.gGestureSupport.handleEvent(event);
+
+    event = createSimpleGestureEvent(
+      "MozSwipeGestureStart",
+      SimpleGestureEvent.DIRECTION_LEFT
+    );
+    newWindow.gGestureSupport.handleEvent(event);
+
+    event = createSimpleGestureEvent(
+      "MozSwipeGestureUpdate",
+      SimpleGestureEvent.DIRECTION_LEFT
+    );
+    newWindow.gGestureSupport.handleEvent(event);
+
+    event = createSimpleGestureEvent(
+      "MozSwipeGestureUpdate",
+      SimpleGestureEvent.DIRECTION_LEFT
+    );
+    newWindow.gGestureSupport.handleEvent(event);
+
+    if (sendEnd) {
+      sendSwipeEnd();
+    }
+  }
+  function sendSwipeEnd() {
+    let event = createSimpleGestureEvent(
+      "MozSwipeGestureEnd",
+      SimpleGestureEvent.DIRECTION_LEFT
+    );
+    newWindow.gGestureSupport.handleEvent(event);
+  }
+
+  // gHistroySwipeAnimation gets initialized in a requestIdleCallback so we need
+  // to wait for the initialization.
+  await TestUtils.waitForCondition(() => {
+    return (
+      // There's no explicit notification for the initialization, so we wait
+      // until `isLTR` matches the browser locale state.
+      newWindow.gHistorySwipeAnimation.isLTR != Services.locale.isAppLocaleRTL
+    );
+  });
+
+  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:mozilla");
+  await BrowserTestUtils.browserLoaded(
+    newWindow.gBrowser.selectedBrowser,
+    false,
+    "about:mozilla"
+  );
+  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:about");
+  await BrowserTestUtils.browserLoaded(
+    newWindow.gBrowser.selectedBrowser,
+    false,
+    "about:about"
+  );
+
+  // Start a swipe that's not enough to navigate
+  sendSwipeSequence(/* sendEnd = */ true);
+
+  // Wait two frames
+  await new Promise(r =>
+    window.requestAnimationFrame(() => window.requestAnimationFrame(r))
+  );
+
+  // The transition to fully stopped shouldn't have had enough time yet to
+  // become fully stopped.
+  ok(
+    newWindow.gHistorySwipeAnimation._isStoppingAnimation,
+    "should be stopping anim"
+  );
+
+  // Start another swipe.
+  sendSwipeSequence(/* sendEnd = */ false);
+
+  // Wait two frames
+  await new Promise(r =>
+    window.requestAnimationFrame(() => window.requestAnimationFrame(r))
+  );
+
+  // We should have started a new swipe, ie we shouldn't be stopping.
+  ok(
+    !newWindow.gHistorySwipeAnimation._isStoppingAnimation,
+    "should not be stopping anim"
+  );
+
+  sendSwipeEnd();
 
   await BrowserTestUtils.closeWindow(newWindow);
 });
