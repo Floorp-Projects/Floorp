@@ -6742,7 +6742,7 @@ fn get_surface_rects(
             spatial_tree,
         );
 
-        let clipped = local_to_world.map(&clipped_local.cast_unit()).unwrap() * surface.device_pixel_scale;
+        let clipped = (local_to_world.map(&clipped_local.cast_unit()).unwrap() * surface.device_pixel_scale).round_out();
         let unclipped = local_to_world.map(&unclipped_local).unwrap() * surface.device_pixel_scale;
 
         (clipped, unclipped)
