@@ -566,9 +566,16 @@
   background-color: color-mix(in srgb, currentColor 11%, transparent);
 }
 
-/* Add a translucent color on top of multiselected tabs */
-.tab-background[multiselected=true]:not([selected=true]) {
-  opacity: .9;
+/* Add a focus outline on top of the multiselected tabs, with the currently selected
+   tab getting a slightly thicker outline. */
+.tab-background[multiselected=true] {
+  outline: 1px solid color-mix(in srgb, var(--focus-outline-color, currentColor) 40%, transparent);
+  outline-offset: -1px;
+}
+
+.tab-background[multiselected=true][selected=true] {
+  outline-width: 2px;
+  outline-offset: -2px;
 }
 
 /* Selected tab with lightweight theme */
