@@ -101,7 +101,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(10);
+/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(11);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -191,7 +191,8 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       metricsFlowUri: this.state.metricsFlowUri,
       utm_term: props.UTMTerm,
       transitions: props.transitions,
-      backdrop: props.backdrop
+      backdrop: props.backdrop,
+      appAndSystemLocaleInfo: props.appAndSystemLocaleInfo
     });
   }
 
@@ -276,10 +277,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
-/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
+/* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(10);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -288,10 +291,13 @@ __webpack_require__.r(__webpack_exports__);
 
 const TRANSITION_OUT_TIME = 1000;
 const MultiStageAboutWelcome = props => {
+  let {
+    screens
+  } = props;
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     // Send impression ping when respective screen first renders
-    props.screens.forEach((screen, order) => {
+    screens.forEach((screen, order) => {
       if (index === order) {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}`);
       }
@@ -307,7 +313,7 @@ const MultiStageAboutWelcome = props => {
     // button from about:home
     const handler = ({
       state
-    }) => setScreenIndex(Math.min(state, props.screens.length - 1)); // Handle page load, e.g., going back to about:welcome from about:home
+    }) => setScreenIndex(Math.min(state, screens.length - 1)); // Handle page load, e.g., going back to about:welcome from about:home
 
 
     handler(window.history); // Watch for browser back/forward button navigation events
@@ -345,7 +351,7 @@ const MultiStageAboutWelcome = props => {
     setTransition(props.transitions ? "out" : ""); // Actually move forwards after all transitions finish.
 
     setTimeout(() => {
-      if (index < props.screens.length - 1) {
+      if (index < screens.length - 1) {
         setTransition(props.transitions ? "in" : "");
         setScreenIndex(prevState => prevState + 1);
       } else if (window.location.href === "about:welcome") {
@@ -406,18 +412,24 @@ const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable, region]);
   const centeredScreens = props.screens.filter(s => s.content.position !== "corner");
+  const {
+    negotiatedLanguage,
+    langPackInstallPhase,
+    languageFilteredScreens
+  } = Object(_LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__["useLanguageSwitcher"])(props.appAndSystemLocaleInfo, screens, index, setScreenIndex);
+  screens = languageFilteredScreens;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `outer-wrapper onboardingContainer proton transition-${transition}`,
     style: props.backdrop ? {
       background: props.backdrop
     } : {}
-  }, props.screens.map((screen, order) => {
+  }, screens.map((screen, order) => {
     const isFirstCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[0].order;
     const isLastCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[centeredScreens.length - 1].order;
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
       key: screen.id + order,
       id: screen.id,
-      totalNumberOfScreens: props.screens.length,
+      totalNumberOfScreens: screens.length,
       isFirstCenteredScreen: isFirstCenteredScreen,
       isLastCenteredScreen: isLastCenteredScreen,
       order: order,
@@ -430,7 +442,10 @@ const MultiStageAboutWelcome = props => {
       flowParams: flowParams,
       activeTheme: activeTheme,
       initialTheme: initialTheme,
-      setActiveTheme: setActiveTheme
+      setActiveTheme: setActiveTheme,
+      appAndSystemLocaleInfo: props.appAndSystemLocaleInfo,
+      negotiatedLanguage: negotiatedLanguage,
+      langPackInstallPhase: langPackInstallPhase
     }) : null;
   })));
 };
@@ -474,7 +489,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     } = action;
 
     if (type === "SHOW_FIREFOX_ACCOUNTS") {
-      let params = { ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__["BASE_PARAMS"],
+      let params = { ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__["BASE_PARAMS"],
         utm_term: `aboutwelcome-${UTMTerm}-screen`
       };
 
@@ -489,7 +504,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
-      Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__["addUtmParams"])(url, `aboutwelcome-${UTMTerm}-screen`);
+      Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__["addUtmParams"])(url, `aboutwelcome-${UTMTerm}-screen`);
 
       if (action.addFlowParams && flowParams) {
         url.searchParams.append("device_id", flowParams.deviceId);
@@ -512,7 +527,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     let {
       props
     } = this;
-    let targetContent = props.content[event.currentTarget.value] || props.content.tiles;
+    let targetContent = props.content[event.currentTarget.value] || props.content.tiles || props.content.languageSwitcher;
 
     if (!(targetContent && targetContent.action)) {
       return;
@@ -555,7 +570,11 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       autoClose: this.props.autoClose,
       activeTheme: this.props.activeTheme,
       totalNumberOfScreens: this.props.totalNumberOfScreens - 1,
+      appAndSystemLocaleInfo: this.props.appAndSystemLocaleInfo,
+      negotiatedLanguage: this.props.negotiatedLanguage,
+      langPackInstallPhase: this.props.langPackInstallPhase,
       handleAction: this.handleAction,
+      messageId: this.props.messageId,
       isFirstCenteredScreen: this.props.isFirstCenteredScreen,
       isLastCenteredScreen: this.props.isLastCenteredScreen
     });
@@ -774,9 +793,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Colorways__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
 /* harmony import */ var _Themes__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8);
 /* harmony import */ var _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3);
+/* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(9);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -848,7 +869,20 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }) : null);
   }
 
+  renderLanguageSwitcher() {
+    return this.props.content.languageSwitcher ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_LanguageSwitcher__WEBPACK_IMPORTED_MODULE_5__["LanguageSwitcher"], {
+      content: this.props.content,
+      langPackInstalled: this.props.langPackInstalled,
+      handleAction: this.props.handleAction,
+      negotiatedLanguage: this.props.negotiatedLanguage,
+      langPackInstallPhase: this.props.langPackInstallPhase,
+      messageId: this.props.messageId
+    }) : null;
+  }
+
   render() {
+    var _this$props$appAndSys, _content$primary_butt;
+
     const {
       autoClose,
       content,
@@ -926,13 +960,15 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       text: content.subtitle
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
       "data-l10n-args": JSON.stringify({
-        "addon-name": this.props.addonName
+        "addon-name": this.props.addonName,
+        ...((_this$props$appAndSys = this.props.appAndSystemLocaleInfo) === null || _this$props$appAndSys === void 0 ? void 0 : _this$props$appAndSys.displayNames)
       })
-    })) : null), this.renderContentTiles(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    })) : null), this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.primary_button ? content.primary_button.label : null
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "primary",
       value: "primary_button",
+      disabled: ((_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.disabled) === true,
       onClick: this.props.handleAction
     })), content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_4__["SecondaryCTA"], {
       content: content,
@@ -1202,6 +1238,251 @@ const Themes = props => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useLanguageSwitcher", function() { return useLanguageSwitcher; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LanguageSwitcher", function() { return LanguageSwitcher; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+/**
+ * The language switcher implements a hook that should be placed at a higher level
+ * than the actual language switcher component, as it needs to preemptively fetch
+ * and install langpacks for the user if there is a language mismatch screen.
+ */
+
+function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setScreenIndex) {
+  const languageMismatchScreenIndex = screens.findIndex(({
+    id
+  }) => id === "AW_LANGUAGE_MISMATCH");
+  const screen = screens[languageMismatchScreenIndex]; // If there is a mismatch, then Firefox can negotiate a better langpack to offer
+  // the user.
+
+  const [negotiatedLanguage, setNegotiatedLanguage] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(function getNegotiatedLanguage() {
+    if (!appAndSystemLocaleInfo) {
+      return;
+    }
+
+    if (appAndSystemLocaleInfo.matchType !== "language-mismatch") {
+      // There is no language mismatch, so there is no need to negotiate a langpack.
+      return;
+    }
+
+    (async () => {
+      const langPack = await window.AWNegotiateLangPackForLanguageMismatch(appAndSystemLocaleInfo);
+
+      if (langPack) {
+        // Convert the BCP 47 identifiers into the proper display names.
+        // e.g. "fr-CA" -> "Canadian French".
+        const displayNames = new Intl.DisplayNames(appAndSystemLocaleInfo.appLocaleRaw, {
+          type: "language"
+        });
+        setNegotiatedLanguage({
+          displayName: displayNames.of(langPack.target_locale),
+          langPack,
+          requestSystemLocales: [langPack.target_locale, appAndSystemLocaleInfo.appLocaleRaw]
+        });
+      } else {
+        setNegotiatedLanguage({
+          displayName: null,
+          langPack: null,
+          requestSystemLocales: null
+        });
+      }
+    })();
+  }, [appAndSystemLocaleInfo]);
+  /**
+   * @type {
+   *  "before-installation"
+   *  | "installing"
+   *  | "installed"
+   *  | "installation-error"
+   *  | "none-available"
+   * }
+   */
+
+  const [langPackInstallPhase, setLangPackInstallPhase] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])("before-installation");
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(function ensureLangPackInstalled() {
+    if (!negotiatedLanguage) {
+      // There are no negotiated languages to download yet.
+      return;
+    }
+
+    setLangPackInstallPhase("installing");
+    window.AWEnsureLangPackInstalled(negotiatedLanguage.langPack).then(() => {
+      setLangPackInstallPhase("installed");
+    }, error => {
+      console.error(error);
+      setLangPackInstallPhase("installation-error");
+    });
+  }, [negotiatedLanguage]);
+  const shouldHideLanguageSwitcher = screen && (appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType) !== "language-mismatch";
+  const [languageFilteredScreens, setLanguageFilteredScreens] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(screens);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(function filterScreen() {
+    if (shouldHideLanguageSwitcher || (negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPack) === null) {
+      if (screenIndex > languageMismatchScreenIndex) {
+        setScreenIndex(screenIndex - 1);
+      }
+
+      setLanguageFilteredScreens(screens.filter(s => s.id !== "AW_LANGUAGE_MISMATCH"));
+    } else {
+      setLanguageFilteredScreens(screens);
+    }
+  }, [screens, negotiatedLanguage]);
+  return {
+    negotiatedLanguage,
+    langPackInstallPhase,
+    languageFilteredScreens
+  };
+}
+/**
+ * The language switcher is a separate component as it needs to perform some asynchronous
+ * network actions such as retrieving the list of langpacks available, and downloading
+ * a new langpack. On a fast connection, this won't be noticeable, but on slow or unreliable
+ * internet this may fail for a user.
+ */
+
+function LanguageSwitcher(props) {
+  const {
+    content,
+    negotiatedLanguage,
+    langPackInstallPhase
+  } = props;
+  const [isAwaitingLangpack, setIsAwaitingLangpack] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(false); // Determine the status of the langpack installation.
+
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    if (isAwaitingLangpack && langPackInstallPhase !== "installing") {
+      window.AWSetRequestedLocales(negotiatedLanguage.requestSystemLocales);
+      requestAnimationFrame(() => {
+        props.handleAction( // Simulate the click event.
+        {
+          currentTarget: {
+            value: "download_complete"
+          }
+        });
+      });
+    }
+  }, [isAwaitingLangpack, langPackInstallPhase]); // The message args are the localized language names.
+
+  const withMessageArgs = obj => {
+    const displayName = negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.displayName;
+
+    if (displayName) {
+      return { ...obj,
+        args: { ...obj.args,
+          negotiatedLanguage: displayName
+        }
+      };
+    }
+
+    return obj;
+  };
+
+  let showWaitingScreen = false;
+  let showPreloadingScreen = false;
+  let showReadyScreen = false;
+
+  if (isAwaitingLangpack && langPackInstallPhase !== "installed") {
+    showWaitingScreen = true;
+  } else if (langPackInstallPhase === "before-installation") {
+    showPreloadingScreen = true;
+  } else {
+    showReadyScreen = true;
+  } // Use {display: "none"} rather than if statements to prevent layout thrashing with
+  // the localized text elements rendering as blank, then filling in the text.
+
+
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    style: {
+      display: showPreloadingScreen ? "block" : "none"
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    className: "primary",
+    value: "primary_button",
+    disabled: true,
+    type: "button"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+    className: "language-loader",
+    src: "chrome://browser/skin/tabbrowser/tab-connecting.png",
+    alt: ""
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: content.languageSwitcher.waiting
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "secondary-cta"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: content.languageSwitcher.skip
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    value: "decline_waiting",
+    type: "button",
+    className: "secondary text-link",
+    onClick: props.handleAction
+  })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    style: {
+      display: showWaitingScreen ? "block" : "none"
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    className: "primary",
+    value: "primary_button",
+    disabled: true,
+    type: "button"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+    className: "language-loader",
+    src: "chrome://browser/skin/tabbrowser/tab-connecting.png",
+    alt: ""
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: withMessageArgs(content.languageSwitcher.downloading)
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "secondary-cta"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: content.languageSwitcher.cancel
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    type: "button",
+    className: "secondary text-link",
+    onClick: () => {
+      setIsAwaitingLangpack(false);
+      props.handleAction({
+        currentTarget: {
+          value: "cancel_waiting"
+        }
+      });
+    }
+  })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    style: {
+      display: showReadyScreen ? "block" : "none"
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: withMessageArgs(content.languageSwitcher.switch)
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    className: "primary",
+    value: "primary_button",
+    onClick: () => {
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, "download_langpack");
+      setIsAwaitingLangpack(true);
+    }
+  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "secondary-cta"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: content.languageSwitcher.not_now
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    type: "button",
+    className: "secondary text-link",
+    value: "decline",
+    onClick: props.handleAction
+  })))));
+}
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BASE_PARAMS", function() { return BASE_PARAMS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addUtmParams", function() { return addUtmParams; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1238,7 +1519,7 @@ function addUtmParams(url, utmTerm) {
 }
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1248,7 +1529,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(10);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
