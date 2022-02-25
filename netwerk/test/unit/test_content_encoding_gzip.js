@@ -181,6 +181,7 @@ function run_test() {
   prefs = Services.prefs;
   cePref = prefs.getCharPref("network.http.accept-encoding");
   prefs.setCharPref("network.http.accept-encoding", "gzip, deflate, br");
+  prefs.setBoolPref("network.http.encoding.trustworthy_is_https", false);
 
   httpserver.registerPathHandler("/test/cegzip1", handler);
   httpserver.registerPathHandler("/test/cegzip2", handler);
