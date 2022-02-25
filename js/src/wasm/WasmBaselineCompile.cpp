@@ -264,7 +264,7 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
   // Jump indirect via table element.
   masm.ma_ldr(DTRAddr(scratch, DtrRegImmShift(switchValue, LSL, 2)), pc, Offset,
               Assembler::Always);
-#elif defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
   ScratchI32 scratch(*this);
   CodeLabel tableCl;
 
@@ -839,7 +839,7 @@ void BaseCompiler::popStackResults(ABIResultIter& iter, StackHeight stackBase) {
     Stk& v = stk_.back();
     switch (v.kind()) {
       case Stk::ConstI32:
-#if defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
         fr.storeImmediatePtrToStack(v.i32val_, resultHeight, temp);
 #else
         fr.storeImmediatePtrToStack(uint32_t(v.i32val_), resultHeight, temp);
@@ -1438,8 +1438,9 @@ void BaseCompiler::loadPendingException(Register dest) {
 RegI32 BaseCompiler::needRotate64Temp() {
 #if defined(JS_CODEGEN_X86)
   return needI32();
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||    \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   return RegI32::Invalid();
 #else
   MOZ_CRASH("BaseCompiler platform hook: needRotate64Temp");
@@ -1493,6 +1494,8 @@ void BaseCompiler::popAndAllocateForMulI64(RegI64* r0, RegI64* r1,
   pop2xI64(r0, r1);
   *temp = needI32();
 #elif defined(JS_CODEGEN_ARM64)
+  pop2xI64(r0, r1);
+#elif defined(JS_CODEGEN_LOONG64)
   pop2xI64(r0, r1);
 #else
   MOZ_CRASH("BaseCompiler porting interface: popAndAllocateForMulI64");
@@ -1550,6 +1553,12 @@ static void QuotientI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
   } else {
     masm.Sdiv(sd, sd, r);
   }
+#  elif defined(JS_CODEGEN_LOONG64)
+  if (isUnsigned) {
+    masm.as_div_du(srcDest.reg, srcDest.reg, rhs.reg);
+  } else {
+    masm.as_div_d(srcDest.reg, srcDest.reg, rhs.reg);
+  }
 #  else
   MOZ_CRASH("BaseCompiler platform hook: quotientI64");
 #  endif
@@ -1589,6 +1598,12 @@ static void RemainderI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
   }
   masm.Mul(t, t, r);
   masm.Sub(sd, sd, t);
+#  elif defined(JS_CODEGEN_LOONG64)
+  if (isUnsigned) {
+    masm.as_mod_du(srcDest.reg, srcDest.reg, rhs.reg);
+  } else {
+    masm.as_mod_d(srcDest.reg, srcDest.reg, rhs.reg);
+  }
 #  else
   MOZ_CRASH("BaseCompiler platform hook: remainderI64");
 #  endif
@@ -1924,7 +1939,7 @@ static RegI32 PopcntTemp(BaseCompiler& bc) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : bc.needI32();
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
   return bc.needI32();
 #else
   MOZ_CRASH("BaseCompiler platform hook: PopcntTemp");
@@ -9843,7 +9858,7 @@ bool js::wasm::BaselinePlatformSupport() {
 #endif
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||   \
     defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
   return true;
 #else
   return false;
