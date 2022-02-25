@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title data-i18n-text="subscribe_title"></title>
+  <meta charset="utf-8">
+  <link href="/css/main.css" rel="stylesheet">
+  <link href="subscribe.css" rel="stylesheet">
+</head>
+<body>
+  <main id="header">
+    <div class="flex" id="title-header">
+      <h1 id="title" class="grow"></h1>
+      <button class="primary icon new icon-white" id="subscribe-button" data-i18n-text="subscribe_addLivemark"></button>
+    </div>
+    <p id="description"></p>
+    <div class="flex">
+      <span class="icon link" id="link-icon"></span>
+      <input id="feed-url" type="text" class="grow">
+    </div>
+    <!-- RSSを読み込む -->
+    <div hidden>
+      <a class="icon view-source" id="view-source-button" data-i18n-text="subscribe_viewSource"></a>
+    </div>
+  </main>
+  <div id="preview"></div>
+  <script src="/shared/i18n.js"></script>
+  <script src="/shared/prefix-utils.js"></script>
+  <script src="/shared/livemark-store.js"></script>
+  <script src="/shared/settings.js"></script>
+  <script src="/shared/feed-parser.js"></script>
+  <script src="../reader/reader.js"></script>
+  <script src="subscribe.js"></script>
+</body>
+</html>

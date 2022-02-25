@@ -19,6 +19,11 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
+pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+pref("datareporting.policy.dataSubmissionEnable", false);
+pref("datareporting.healthreport.uploadEnabled", false);
+pref("extensions.webextensions.restrictedDomains", "");
+/*------------------------------------以下、Firefox の設定-----------------------------------*/
 pref("security.tls.version.min", 3);
 pref("security.tls.version.max", 4);
 pref("security.tls.version.enable-deprecated", false);
@@ -2460,9 +2465,9 @@ pref("dom.ipc.plugins.forcedirect.enabled", true);
 
 // Enable multi by default.
 #if !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
-  pref("dom.ipc.processCount", 8);
+  pref("dom.ipc.processCount", 2);
 #else
-  pref("dom.ipc.processCount", 4);
+  pref("dom.ipc.processCount", 2);
 #endif
 
 // Default to allow only one file:// URL content process.
@@ -3777,7 +3782,6 @@ pref("extensions.webextensions.keepStorageOnUninstall", false);
 pref("extensions.webextensions.keepUuidOnUninstall", false);
 // Redirect basedomain used by identity api
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
-pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com");
 
 // Whether or not the moz-extension resource loads are remoted. For debugging
 // purposes only. Setting this to false will break moz-extension URI loading
@@ -3803,7 +3807,7 @@ pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 // Whether to allow the inline options browser in HTML about:addons page.
 pref("extensions.htmlaboutaddons.inline-options.enabled", true);
 // Show recommendations on the extension and theme list views.
-pref("extensions.htmlaboutaddons.recommendations.enabled", true);
+//pref("extensions.htmlaboutaddons.recommendations.enabled", false);
 
 // The URL for the privacy policy related to recommended add-ons.
 pref("extensions.recommendations.privacyPolicyUrl", "");
@@ -4321,17 +4325,17 @@ pref("toolkit.aboutProcesses.profileDuration", 5);
 // user profile directory for these stylesheets:
 //  * userContent.css
 //  * userChrome.css
-pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
+//pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
 
 #ifdef MOZ_DATA_REPORTING
-  pref("datareporting.policy.dataSubmissionEnabled", true);
+//  pref("datareporting.policy.dataSubmissionEnabled", true);
   pref("datareporting.policy.dataSubmissionPolicyNotifiedTime", "0");
   pref("datareporting.policy.dataSubmissionPolicyAcceptedVersion", 0);
   pref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
   pref("datareporting.policy.currentPolicyVersion", 2);
   pref("datareporting.policy.minimumPolicyVersion", 1);
   pref("datareporting.policy.minimumPolicyVersion.channel-beta", 2);
-  pref("datareporting.policy.firstRunURL", "https://www.mozilla.org/privacy/firefox/");
+  pref("datareporting.policy.firstRunURL", "https://ablaze.one/privacy_policy");
 #endif
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
@@ -4339,7 +4343,7 @@ pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
     pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 
     // Health Report is enabled by default on all channels.
-    pref("datareporting.healthreport.uploadEnabled", true);
+//    pref("datareporting.healthreport.uploadEnabled", true);
   #endif
 #endif
 

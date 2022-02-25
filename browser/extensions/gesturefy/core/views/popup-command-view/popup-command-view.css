@@ -1,0 +1,193 @@
+@font-face {
+  font-weight: normal;
+  font-style: normal;
+  font-family: "Icons";
+  src: url("/resources/fonts/icons.woff");
+}
+
+/* Light Theme */
+
+.light-theme:root, :root {
+  --base-color: #FFF;
+  --base-color-rgb: 255, 255, 255;
+  --text-color: #212121;
+  --textSecond-color: #FFF;
+  --highlighted-color: #2979ff;
+}
+
+/* Dark Theme */
+
+.dark-theme:root {
+  --base-color: #303641;
+  --base-color-rgb: 48, 54, 65;
+  --text-color: #EBEBEB;
+  --textSecond-color: #FFF;
+  --highlighted-color: #2979ff;
+}
+
+/* High Contrast Theme */
+
+.highContrast-theme:root {
+  --base-color: #000;
+  --base-color-rgb: 0, 0, 0;
+  --text-color:#FFF;
+  --textSecond-color: #000;
+  --highlighted-color: #00ff00;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -moz-user-select: none;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+html {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+#list {
+  width: max-content;
+  max-width: 300px;
+  cursor: default;
+  background-color: var(--base-color);
+  list-style: none;
+}
+
+.item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 10px;
+  color: var(--text-color);
+}
+
+.item:hover {
+  background-color: var(--highlighted-color);
+  color: var(--textSecond-color);
+}
+
+.item > img {
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+
+.item > span {
+  vertical-align: middle;
+}
+
+.button {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  padding: 0.25rem 0;
+  line-height: 1.25rem;
+  text-align: center;
+  color: var(--text-color);
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.button.up {
+  top: 0;
+}
+
+.button.down {
+  bottom: 0;
+}
+
+.button:hover {
+  opacity: 0.5;
+}
+
+.button::before {
+  line-height: 1;
+  font-size: 10px;
+  z-index: 1;
+  position: relative;
+}
+
+.button.up::before {
+  content: "U";
+  font-family: Icons;
+  vertical-align: top;
+}
+
+.button.down::before {
+  content: "D";
+  font-family: Icons;
+  vertical-align: bottom;
+}
+
+.button::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5rem;
+  pointer-events: none;
+}
+
+.button.up::after {
+  top: 0;
+  /* ease gradient from https://larsenwork.com/easing-gradients/#editor */
+  background: linear-gradient(
+    to top,
+    rgba(var(--base-color-rgb), 0) 0%,
+    rgba(var(--base-color-rgb), 0.013) 8.1%,
+    rgba(var(--base-color-rgb), 0.049) 15.5%,
+    rgba(var(--base-color-rgb), 0.104) 22.5%,
+    rgba(var(--base-color-rgb), 0.175) 29%,
+    rgba(var(--base-color-rgb), 0.259) 35.3%,
+    rgba(var(--base-color-rgb), 0.352) 41.2%,
+    rgba(var(--base-color-rgb), 0.45) 47.1%,
+    rgba(var(--base-color-rgb), 0.55) 52.9%,
+    rgba(var(--base-color-rgb), 0.648) 58.8%,
+    rgba(var(--base-color-rgb), 0.741) 64.7%,
+    rgba(var(--base-color-rgb), 0.825) 71%,
+    rgba(var(--base-color-rgb), 0.896) 77.5%,
+    rgba(var(--base-color-rgb), 0.951) 84.5%,
+    rgba(var(--base-color-rgb), 0.987) 91.9%,
+    rgb(var(--base-color-rgb)) 100%
+  );
+}
+
+.button.down::after {
+  bottom: 0;
+  /* ease gradient from https://larsenwork.com/easing-gradients/#editor */
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--base-color-rgb), 0) 0%,
+    rgba(var(--base-color-rgb), 0.013) 8.1%,
+    rgba(var(--base-color-rgb), 0.049) 15.5%,
+    rgba(var(--base-color-rgb), 0.104) 22.5%,
+    rgba(var(--base-color-rgb), 0.175) 29%,
+    rgba(var(--base-color-rgb), 0.259) 35.3%,
+    rgba(var(--base-color-rgb), 0.352) 41.2%,
+    rgba(var(--base-color-rgb), 0.45) 47.1%,
+    rgba(var(--base-color-rgb), 0.55) 52.9%,
+    rgba(var(--base-color-rgb), 0.648) 58.8%,
+    rgba(var(--base-color-rgb), 0.741) 64.7%,
+    rgba(var(--base-color-rgb), 0.825) 71%,
+    rgba(var(--base-color-rgb), 0.896) 77.5%,
+    rgba(var(--base-color-rgb), 0.951) 84.5%,
+    rgba(var(--base-color-rgb), 0.987) 91.9%,
+    rgb(var(--base-color-rgb)) 100%
+  );
+}
+
+.button.up.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.button.down.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+}

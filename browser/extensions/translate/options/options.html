@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title data-i18n="extensionName">Translate Web Pages</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+    <link rel="stylesheet" href="options.css">
+</head>
+
+<body class="w3-content" style="max-width:1200px;">
+    <nav class="w3-sidebar w3-bar-block w3-collapse w3-top" style="z-index:3; width:300px" id="sideBar">
+        <div class="w3-container w3-display-container w3-padding-16">
+            <h3 class="w3-wide"><b data-i18n="extensionName">Translate Web Pages</b></h3>
+        </div>
+        <div class="w3-padding-64 w3-large w3-text-grey" style="font-weight:bold">
+            <a href="#languages" class="w3-bar-item w3-button" data-i18n="msgLanguages">Languages</a>
+            <a href="#sites" class="w3-bar-item w3-button" data-i18n="msgSites">Sites</a>
+            <a href="#translations" class="w3-bar-item w3-button" data-i18n="msgTranslations">Translations</a>
+            <a href="#style" class="w3-bar-item w3-button" data-i18n="msgStyle">Style</a>
+            <a href="#hotkeys" class="w3-bar-item w3-button desktopOnly" data-i18n="msgHotkeys">Hotkeys</a>
+            <a href="#storage" class="w3-bar-item w3-button" data-i18n="msgStorage">Storage</a>
+            <a href="#others" class="w3-bar-item w3-button" data-i18n="lblOthers">Others</a>
+        </div>
+        <b><a href="#donation" class="w3-bar-item w3-button w3-padding"><span data-i18n="lblMakeDonation">Make a donation</span> &#10084;</a></b>
+        <a href="#release_notes" class="w3-bar-item w3-button w3-padding" data-i18n="lblReleaseNotes">Release Notes</a>
+        <a href="https://github.com/FilipePS/Traduzir-paginas-web/issues" target="blank"
+            class="w3-bar-item w3-button w3-padding" data-i18n="lblReport">Report a problem</a>
+        <a href="https://crowdin.com/project/translate-web-pages" target="blank" class="w3-bar-item w3-button w3-padding" data-i18n="lblTranslateInterface">Translate the interface</a>
+    </nav>
+
+    <header class="w3-bar w3-top w3-black w3-hide-large w3-xlarge" id="header">
+        <div class="w3-bar-item w3-padding-20 w3-wide" data-i18n="extensionName">Translate Web Pages</div>
+        <a class="w3-bar-item w3-button w3-padding-24 w3-right" id="btnOpenMenu">
+            <div class="menu-container" id="menuContainer">
+                <div class="bar1"></div>
+                <div class="bar2"></div>
+                <div class="bar3"></div>
+                <div class="bar4"></div>
+                <div class="bar5"></div>
+            </div>
+        </a>
+    </header>
+
+    <div class="w3-main" style="margin-left: 300px">
+        <div class="w3-hide-large" style="margin-top:83px"></div>
+
+        <header class="w3-container w3-xlarge">
+            <p id="itemSelectedName" data-i18n="lblSettings">Settings</p>
+        </header>
+
+        <div>
+            <div id="languages" class="w3-container">
+                <p><b data-i18n="btnChangeLanguages">Target languages</b></p>
+                <ul class="w3-ul">
+                    <li class="w3-row">
+                        <p class="w3-half" data-i18n="lblTargetLanguage" data-i18n-ph-value="1">Target language 1</p>
+                        <select id="targetLanguage1" class="w3-select w3-half w3-border w3-round"></select>
+                    </li>
+                    <li class="w3-row">
+                        <p class="w3-half" data-i18n="lblTargetLanguage" data-i18n-ph-value="2">Target language 2</p>
+                        <select id="targetLanguage2" class="w3-select w3-half w3-border w3-round"></select>
+                    </li>
+                    <li class="w3-row">
+                        <p class="w3-half" data-i18n="lblTargetLanguage" data-i18n-ph-value="3">Target language 3</p>
+                        <select id="targetLanguage3" class="w3-select w3-half w3-border w3-round"></select>
+                    </li>
+                </ul>
+                <br>
+                <div class="w3-display-container w3-padding w3-margin-top">
+                    <div class="w3-display-left">
+                        <p><b data-i18n="lblNeverTranslateLangs">Never translate these languages</b></p>
+                    </div>
+                    <div class="w3-display-right">
+                        <div style="position: relative;">
+                            <button class="w3-button w3-blue w3-round w3-margin-right add"
+                                data-i18n="lblAdd">Add</button>
+                            <select id="addToNeverTranslateLangs" class="add">
+                                <option value="" selected disabled hidden></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <ul id="neverTranslateLangs" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                <div class="desktopOnly">
+                    <br>
+                    <div class="w3-display-container w3-padding w3-margin-top">
+                        <div class="w3-display-left">
+                            <p><b data-i18n="optionsAlwaysTranslate">Always translate these languages</b></p>
+                        </div>
+                        <div class="w3-display-right">
+                            <div style="position: relative;">
+                                <button class="w3-button w3-blue w3-round w3-margin-right add"
+                                    data-i18n="lblAdd">Add</button>
+                                <select id="addToAlwaysTranslateLangs" class="add">
+                                    <option value="" selected disabled hidden></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <ul id="alwaysTranslateLangs" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                </div>
+                <div class="desktopOnly">
+                    <br>
+                    <div class="w3-display-container w3-padding w3-margin-top">
+                        <div class="w3-display-left">
+                            <p><b data-i18n="lblShowTranslatedHoveringLangs">Show translated text when hovering over sites
+                                    with these languages</b></p>
+                        </div>
+                        <div class="w3-display-right">
+                            <div style="position: relative;">
+                                <button class="w3-button w3-blue w3-round w3-margin-right add"
+                                    data-i18n="lblAdd">Add</button>
+                                <select id="addLangToTranslateWhenHovering" class="add">
+                                    <option value="" selected disabled hidden></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <ul id="langsToTranslateWhenHovering" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                </div>
+            </div>
+
+            <div id="sites" class="w3-container">
+                <div class="desktopOnly">
+                    <div class="w3-display-container w3-padding w3-margin-top">
+                        <div class="w3-display-left">
+                            <p><b data-i18n="lblAlwaysTranslateSites">Always translate these sites</b></p>
+                        </div>
+                        <div class="w3-display-right">
+                            <button id="addToAlwaysTranslateSites" class="w3-button w3-blue w3-round w3-margin-right add"
+                                data-i18n="lblAdd">Add</button>
+                        </div>
+                    </div>
+                    <ul id="alwaysTranslateSites" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                </div>
+                <br>
+                <div class="w3-display-container w3-padding w3-margin-top">
+                    <div class="w3-display-left">
+                        <p><b data-i18n="optionsNeverTranslate">Never translate these sites</b></p>
+                    </div>
+                    <div class="w3-display-right">
+                        <button id="addToNeverTranslateSites" class="w3-button w3-blue w3-round w3-margin-right add"
+                            data-i18n="lblAdd">Add</button>
+                    </div>
+                </div>
+                <ul id="neverTranslateSites" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                <div class="desktopOnly">
+                    <br>
+                    <div class="w3-display-container w3-padding w3-margin-top">
+                        <div class="w3-display-left">
+                            <p><b data-i18n="lblShowTranslatedHoveringSites">Show translated text when hovering on these
+                                    sites</b></p>
+                        </div>
+                        <div class="w3-display-right">
+                            <button id="addSiteToTranslateWhenHovering"
+                                class="w3-button w3-blue w3-round w3-margin-right add" data-i18n="lblAdd">Add</button>
+                        </div>
+                    </div>
+                    <ul id="sitesToTranslateWhenHovering" class="w3-ul w3-card-4 w3-margin w3-round list"></ul>
+                </div>
+            </div>
+
+            <div id="translations" class="w3-container">
+                <p><b data-i18n="lblPageTranslationService">Page translation service</b></p>
+                <select id="pageTranslatorService" class="w3-select w3-margin">
+                    <option value="google">Google</option>
+                    <option value="yandex">Yandex</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblTextTranslationService">Text Translation Service</b></p>
+                <select id="textTranslatorService" class="w3-select w3-margin">
+                    <option value="google">Google</option>
+                    <option value="yandex">Yandex</option>
+                    <option value="bing">Bing</option>
+                    <option value="deepl" hidden>DeepL</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblTtsSpeed">Text-to-speech audio speed</b></p>
+                <input id="ttsSpeed" type="range" min="0.25" max="2.0" step="0.25" value="1.0">
+                <output id="displayTtsSpeed">1.0</output>
+                <br>
+                <p><b data-i18n="lblTranslateDynamicallyCreatedContent">Translate dynamically created content</b></p>
+                <select id="translateDynamicallyCreatedContent" class="w3-select w3-margin">
+                    <option value="no" data-i18n="msgNo">No</option>
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblShowTranslateSelectedButton">Show the button to translate the selected text</b></p>
+                <select id="showTranslateSelectedButton" class="w3-select w3-margin">
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                </select>
+                <div class="w3-container" id="translateSelectedAdvancedOptions">
+                    <input type="checkbox" class="check" id="dontShowIfPageLangIsTargetLang">
+                    <label for="dontShowIfPageLangIsTargetLang" data-i18n="dontShowIfPageLangIsTargetLang">Do not show
+                        if the page language is the target language</label>
+                    <br>
+                    <input type="checkbox" class="check" id="dontShowIfPageLangIsUnknown">
+                    <label for="dontShowIfPageLangIsUnknown" data-i18n="dontShowIfPageLangIsUnknown">Do not show if the
+                        page language is unknown</label>
+                    <br>
+                    <input type="checkbox" class="check" id="dontShowIfSelectedTextIsTargetLang">
+                    <label for="dontShowIfSelectedTextIsTargetLang" data-i18n="dontShowIfSelectedTextIsTargetLang">Do
+                        not show if the selected text language is the target language</label>
+                    <br>
+                    <input type="checkbox" class="check" id="dontShowIfSelectedTextIsUnknown">
+                    <label for="dontShowIfSelectedTextIsUnknown" data-i18n="dontShowIfSelectedTextIsUnknown">Do not show
+                        if the selected text language is unknown</label>
+                </div>
+                <div class="desktopOnly">
+                    <br>
+                    <p><b data-i18n="lblShowOriginalTextWhenHovering">Show original text when hovering</b></p>
+                    <select id="showOriginalTextWhenHovering" class="w3-select w3-margin">
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                        <option value="no" data-i18n="msgNo">No</option>
+                    </select>
+                </div>
+                <br>
+                <p><b data-i18n="lblAutoTranslateWhenClickingALink">Automatically translate when clicking on a link that takes you to the same domain as the current site</b></p>
+                <select id="autoTranslateWhenClickingALink" class="w3-select w3-margin">
+                    <option value="no" data-i18n="msgNo">No</option>
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblDontSortResults">Do not sort the google translate results</b></p>
+                <select id="dontSortResults" class="w3-select w3-margin">
+                    <option value="no" data-i18n="msgNo">No</option>
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblTranslateTag_pre">Enable translation for the tag &lt;PRE&gt;</b></p>
+                <select id="translateTag_pre" class="w3-select w3-margin">
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                </select>
+                <br>
+                <p><b data-i18n="lblEnableDeepL">Enable DeepL as a text translation service</b></p>
+                <select id="enableDeepL" class="w3-select w3-margin">
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                </select>
+            </div>
+
+            <div id="style" class="w3-container">
+                <div class="desktopOnly">
+                    <p><b data-i18n="msgUseOldPopupInterface">Use the old popup interface</b></p>
+                    <select id="useOldPopup" class="w3-select w3-margin">
+                        <option value="no" data-i18n="msgNo">No</option>
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                    </select>
+                </div>
+
+                <p><b data-i18n="lblDarkMode">Dark mode</b></p>
+                <select id="darkMode" class="w3-select w3-margin">
+                    <option value="auto" data-i18n="msgAutomatic">Automatic</option>
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                </select>
+
+                <div class="desktopOnly">
+                    <p><b data-i18n="popupBlueWhenSiteIsTranslated">Make the pop-up icon blue when the site is
+                            translated</b></p>
+                    <select id="popupBlueWhenSiteIsTranslated" class="w3-select w3-margin">
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                        <option value="no" data-i18n="msgNo">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="hotkeys" class="w3-container desktopOnly">
+                <button data-i18n="openNativeShortcutManager" id="openNativeShortcutManager" class="w3-btn w3-light-grey w3-round w3-border w3-margin" style="width: 60%; max-width: 650px;">Open native shortcut key manager</button>
+
+                <p><b data-i18n="lblKeyboardShortcutsSpecial">Special keyboard shortcuts</b></p>
+                <ul class="w3-container" style="user-select: none; list-style-type: none;">
+                    <li><label for="translateSelectedWhenPressTwice"><input type="checkbox" id="translateSelectedWhenPressTwice"> <span data-i18n="lblTranslateSelectedWhenPressTwice">Translate selected text when pressing <kbd>Ctrl</kbd> twice</span></label></li>
+                    <li><label for="translateTextOverMouseWhenPressTwice"><input type="checkbox" id="translateTextOverMouseWhenPressTwice"> <span data-i18n="lblTranslateTextOverMouseWhenPressTwice">Translate the text over the mouse when pressing <kbd>Ctrl</kbd> twice</span></label></li>
+                </ul>
+                
+                <p><b data-i18n="lblKeyboardShortcuts">Keyboard shortcuts</b></p>
+                <ul id="KeyboardShortcuts" class="w3-container" style="max-width: 680px;"></ul>
+            </div>
+
+            <div id="storage" class="w3-container">
+                <b data-i18n="lblTranslationCache">Translation cache</b>
+                <div class="w3-container">
+                    <span data-i18n="lblStorageUsed">Storage used:</span> <button id="btnCalculateStorage" data-i18n="calculateStorage" style="font-size: 12px;">Calculate</button><i id="storageUsed">0 KB</i>
+                    <br><br>
+                    <button class="w3-button w3-light-grey w3-round" data-i18n="deleteTranslationCache" id="deleteTranslationCache">Delete translation cache</button>
+                </div>
+                <br>
+                <b data-i18n="lblPersonalSettings">Personal settings</b>
+                <div class="w3-container">
+                    <button class="w3-button w3-light-grey w3-round w3-margin-top" data-i18n="backupToFile" id="backupToFile">Backup to file</button><br>
+                    <button class="w3-button w3-light-grey w3-round w3-margin-top" data-i18n="restoreFromFile" id="restoreFromFile">Restore from file</button><br>
+                    <button class="w3-button w3-light-grey w3-round w3-margin-top" data-i18n="resetToDefault" id="resetToDefault">Reset settings to default</button><br>
+                </div>
+            </div>
+
+            <div id="others" class="w3-container">
+                <p><b data-i18n="lblShowReleaseNotes">Show release notes when updating</b></p>
+                <select id="showReleaseNotes" class="w3-select w3-margin">
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                </select>
+                <br>
+                <p><b data-i18n="optionPopupConfig">Show the mobile popup</b></p>
+                <select id="showPopupMobile" class="w3-select w3-margin">
+                    <option value="yes" data-i18n="msgYes">Yes</option>
+                    <option value="no" data-i18n="msgNo">No</option>
+                    <option value="threeFingersOnTheScreen" data-i18n="optionPopupThreeFingers">When I touch three
+                        fingers on the screen</option>
+                </select>
+                <div class="desktopOnly">
+                    <br>
+                    <p><b data-i18n="lblButtonInTheAddressBar">Show button in the address bar</b></p>
+                    <select id="showButtonInTheAddressBar" class="w3-select w3-margin">
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                        <option value="no" data-i18n="msgNo">No</option>
+                    </select>
+                    <br>
+                    <p><b data-i18n="lblShowContextMenu">Show the option to translate the page in the context menu</b></p>
+                    <select id="showTranslatePageContextMenu" class="w3-select w3-margin">
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                        <option value="no" data-i18n="msgNo">No</option>
+                    </select>
+                    <br>
+                    <p><b data-i18n="lblShowTranslateSelectedContextMenu">Show the option to translate the selected text in
+                            the context menu</b></p>
+                    <select id="showTranslateSelectedContextMenu" class="w3-select w3-margin">
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                        <option value="no" data-i18n="msgNo">No</option>
+                    </select>
+                    <br>
+                    <p><b data-i18n="translateClickingOnce">Translate the page by clicking once on the button in the address bar. (To see the popup, right-click)</b></p>
+                    <select id="translateClickingOnce" class="w3-select w3-margin">
+                        <option value="no" data-i18n="msgNo">No</option>
+                        <option value="yes" data-i18n="msgYes">Yes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="donation" class="w3-container">
+                <div class="w3-light-blue w3-padding w3-round">
+                    <p data-i18n="msgThanksForUseExtension">Thank you for using this extension.</p>
+                    <p data-i18n="msgIWillBeGrateful">I will be grateful if you can make a donation.</p>
+                    <a href="https://www.patreon.com/filipeps" target="blank"><img src="/icons/patreon.png"
+                            alt="Become a patreon" width="200px"></a>
+                    <br><br>
+                    <form action="https://www.coinpayments.net/index.php" method="post" target="blank">
+                        <input type="hidden" name="cmd" value="_donate">
+                        <input type="hidden" name="reset" value="1">
+                        <input type="hidden" name="merchant" value="c1d8fe2f52abea27ac1e160150272540">
+                        <input type="hidden" name="item_name" value="Translate Web Pages">
+                        <input type="hidden" name="currency" value="USD">
+                        <input type="hidden" name="amountf" value="10.00000000">
+                        <input type="hidden" name="allow_amount" value="1">
+                        <input type="hidden" name="want_shipping" value="0">
+                        <input type="hidden" name="allow_extra" value="1">
+                        <input type="image" src="/icons/coinpayments.png" alt="CoinPayments.net">
+                    </form>
+
+                    <b><div style="margin-top: 20px; display: inline-block;" data-i18n="donateWithPayPal">Donate With PayPal</div></b>
+                    <select id="currency" style="margin-left: 8px;">
+                        <option value="USD">USD</option>
+                        <option value="BRL">BRL</option>
+                    </select>
+                    <div id="donateInUSD">
+                        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                            <input type="hidden" name="cmd" value="_s-xclick">
+                            <input type="hidden" name="hosted_button_id" value="444D6GGXCM2A8">
+                            <table>
+                            <tr><td><input type="hidden" name="on0" value="Donate With Paypal"></td></tr><tr><td><select name="os0">
+                                <option value="Maximum">20,00 USD</option>
+                                <option value="Pizza">10,00 USD</option>
+                                <option value="Lunch" selected>5,00 USD</option>
+                                <option value="Coffe">3,00 USD</option>
+                            </select> </td></tr>
+                            </table>
+                            <input type="hidden" name="currency_code" value="USD">
+                            <input type="image" src="/icons/btn_donate_LG.webp" border="0" name="submit" alt="PayPal">
+                            <img alt="" border="0" src="/icons/pixel.gif" width="1" height="1">
+                        </form>
+                    </div>
+
+                    <div id="donateInBRL">
+                        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                            <input type="hidden" name="cmd" value="_s-xclick">
+                            <input type="hidden" name="hosted_button_id" value="UKVQDPTUB5HTG">
+                            <table>
+                            <tr><td><input type="hidden" name="on0" value="Doar com o Paypal"></td></tr><tr><td><select name="os0">
+                                <option value="Maximum">50,00 BRL</option>
+                                <option value="Pizza">30,00 BRL</option>
+                                <option value="Lunch" selected>15,00 BRL</option>
+                                <option value="Coffe">5,00 BRL</option>
+                            </select> </td></tr>
+                            </table>
+                            <input type="hidden" name="currency_code" value="BRL">
+                            <input type="image" src="/icons/btn_donate_LG.webp" border="0" name="submit" alt="PayPal">
+                            <img alt="" border="0" src="/icons/pixel.gif" width="1" height="1">
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="release_notes" class="w3-container">
+                <section>
+                    <h4>9.4.2</h4>
+                    <ul>
+                        <li>Fixed bug: Some texts disappear when translating with the option <b>Do not sort the google translate results</b> enabled.</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.4.1</h4>
+                    <ul>
+                        <li>Fixed bug: youtube comments are not translated sometimes</li>
+                        <li>Added: Translate PDF automatically after converting it into HTML</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.4</h4>
+                    <ul>
+                        <li>Added: 
+                            <ul>
+                                <li>PDF Translation
+                                    <ul>
+                                        <li>To translate a PDF it is necessary to convert it into HTML.</li>
+                                        <li>You can convert using one of these services:
+                                            <ul>
+                                                <li><b><em>translatewebpages.org</em></b></li>
+                                                <li><b><em>translate.googleusercontent.com</em></b></li>
+                                            </ul>
+                                        </li>
+                                        <li>Files uploaded to <b><em>translatewebpages.org</em></b> will be deleted in 24 hours.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>Changes:
+                            <ul>
+                                <li>Every time the extension updates the translation cache it will be automatically deleted.</li>
+                                <li>Now all translated text nodes will be encapsulated in a FONT element
+                                    <ul>
+                                        <li>This allows the <em>"Show original text when hovering"</em> feature to work on more sites</li>
+                                    </ul>
+                                </li>
+                                <li>Improved: Detection of which texts are being shown on the screen
+                                    <ul>
+                                        <li>Texts in iframes will only be translated when the iframe is visible</li>
+                                    </ul>
+                                </li>
+                                <li>Improved: Translation appears a little faster when starting to translate the page.</li>
+                                <li>Hide text translation panel if you click on an iframe</li>
+                                <li>Stops playing audio if you close the tab</li>
+                            </ul>
+                        </li>
+                        <li>Fixed:
+                            <ul>
+                                <li>Crash issues when translating certain sites</li>
+                                <li>Parts of the page are not restored when using a text marker extension </li>
+                                <li>After restarting the browser the option <em>"AutoTranslateWhenClickingALink"</em> stops working</li>
+                                <li>Sometimes the extension doesn't work</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                        <li>Bug fixes and general improvements</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.3</h4>
+                    <ul>
+                        <li>Added: (These features need to be enabled in the settings)
+                            <ul>
+                                <li>Button to open the shortcut key manager in chromium-based browsers</li>
+                                <li>Translate selected text when pressing <b>Ctrl</b> twice</li>
+                                <li>Translate the text over the mouse cursor when pressing <b>Ctrl</b> twice</li>
+                                <li>Translate the page by clicking once on the button in the address bar. (To see the popup, right-click)</li>
+                            </ul>
+                        </li>
+                        <li>Changes:
+                            <ul>
+                                <li>Do not hide the selected text translation panel when switching tabs</li>
+                                <li>Show the panel to translate the selected text, even if there is a translation error</li>
+                                <li>Some settings that are not used on mobile devices have been hidden</li>
+                            </ul>
+                        </li>
+                        <li>Fixed:
+                            <ul>
+                                <li>Problem with <i>CSP</i> when showing translation panel on some sites</li>
+                                <li>When typing text to translate, key events are triggered in the page listeners</li>
+                                <li>Translate selected text button reappears when clicking a scroll bar</li>
+                                <li>The "Show translated when hovering" panel is shown while translating the selected text</li>
+                                <li>Some features don't work sometimes</li>
+                                <li>Some parts of the page are not restored when the <b>Do not sort the google translate results</b> option is enabled.</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                        <li>Bug fixes and general improvements</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.2</h4>
+                    <ul>
+                        <li>The <b>webNavigation</b> permission is now optional. If you use the <code>Automatically translate when clicking on a link that takes you to the same domain as the current site</code> option, enable it again in the translation settings.</li>
+                        <li>Now the button to translate selected text is automatically hidden when you press any key</li>
+                        <li>Updated interface translations</li>
+                        <li>Bug fixes and general improvements</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.1</h4>
+                    <ul>
+                        <li>Added:
+                            <ul>
+                                <li>Bing as a text translation service</li>
+                                <li>Do not sort the google translate results</li>
+                                <li>Automatically translate when clicking on a link that takes you to the same domain as the current site</li>
+                                <li>Translate dynamically created content
+                                    <ul>
+                                        <li>This feature already exists, but now you can choose to disable it.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>The old interface is enabled by default</li>
+                        <li>Bug fixes and general improvements</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.0.4</h4>
+                    <ul>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.0.3</h4>
+                    <ul>
+                        <li>Fixed
+                            <ul>
+                                <li>Some settings are not saved when using Firefox Mobile</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.0.2</h4>
+                    <ul>
+                        <li>Fixed
+                            <ul>
+                                <li>There is no way to change the shortcut keys when using a keyboard with a Russian layout.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.0.1</h4>
+                    <ul>
+                        <li>Fixed
+                            <ul>
+                                <li>Text direction in RTL languages</li>
+                                <li>The context menu entry "Translate selected text" is not working in version 9.0 if you disable the option "Show the button to translate the selected text"</li>
+                                <li>A randomly occurring bug that stops the extension working.</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>9.0</h4>
+                    <ul>
+                        <li>Added
+                            <ul>
+                                <li>DeepL as a translation service
+                                    <ul>
+                                        <li>Only for translation of selected text (not when hovering)</li>
+                                        <li>When you translate for the first time, the DeepL website will open. Keep the tab open and the next texts will be translated without having to change the tab.</li>
+                                    </ul>
+                                </li>
+                                <li>Storage options
+                                    <ul>
+                                        <li>Translation cache
+                                            <ul>
+                                                <li>View used space</li>
+                                                <li>Delete the cache*</li>
+                                            </ul>
+                                        </li>
+                                        <li>Personal settings
+                                            <ul>
+                                                <li>Backup to file</li>
+                                                <li>Restore from file*</li>
+                                                <li>Restore default configuration*</li>
+                                            </ul>
+                                        </li>
+                                        <li>* After using these options the extension will be reloaded </li>
+                                    </ul>
+                                    <li>Shortcuts
+                                        <ul>
+                                            <li>Options for changing keyboard shortcuts</li>
+                                            <li>Default shortcuts
+                                                <ul>
+                                                    <li><kbd>Ctrl+Alt+T</kbd> Switch between the translated and the original page</li>
+                                                    <li><kbd>Ctrl+Alt+S</kbd> Translate selected text</li>
+                                                    <li><kbd>Ctrl+Alt+Q</kbd> Switch between translation services</li>
+                                                    <li><kbd>Alt+0</kbd> Restore page to original</li>
+                                                    <li><kbd>Alt+1</kbd> <kbd>Alt+2</kbd> <kbd>Alt+3</kbd> Translate to specific target languages</li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>When to translate selected text
+                                        <ul>
+                                            <li>View original text</li>
+                                            <li>Translate the text you type in place of the original text</li>
+                                            <li>You can also drag this popup</li>
+                                        </ul>
+                                    </li>
+                                    <li>Option to control audio speed (tts)</li>
+                                    <li>Option to hide the button in the address bar</li>
+                                    <li>Option to translate the <kbd>PRE</kbd> tag</li>
+                                    <li>More options in the 3-point menu, and the old popup options button 
+                                        <ul>
+                                            <li>Show original text when hovering</li>
+                                            <li>Show translation when hovering over this site</li>
+                                            <li>Show translation when hovering over websites in PAGE_LANGUAGE</li>
+                                        </ul>
+                                    </li>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>Changes
+                            <ul>
+                                <li>The language for page and text translation may now be different</li>
+                                <li>The page and text translation service can now be different</li>
+                                <li>When an HTML element has a notranslate attribute, its attributes will not be translated</li>
+                                <li>When translating the page with Google, the text formatting will be maintained</li>
+                                <li>The <kbd>PRE</kbd> tag is translated by default</li>
+                                <li>When using the old popup or in the popup the additional translation languages have been hidden, the automatic translation of the page (the one that happens as soon as you open the site), will use targetLanguage1, instead of your previous preference.</li>
+                            </ul>
+                        </li>
+                        <li>Fixed
+                            <ul>
+                                <li>Translation with Yandex</li>
+                                <li>Text formatting when showing original when hovering</li>
+                                <li>Among others</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.9.3</h4>
+                    <ul>
+                        <li>When you click to translate the selected text in the context menu, the translation will only be done in the popup in the address bar if it is not possible to inject the scritps on the page. That is, only if the page is in read mode or is from some domain without permission for scripts like "addons.mozilla.org".</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.9.2</h4>
+                    <ul>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.9.1</h4>
+                    <ul>
+                        <li>Fixed: Translation of the text selected by the context menu does not work if using dark mode</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.9</h4>
+                    <ul>
+                        <li>Changes:
+                            <ul>
+                                <li>Now when clicking on "Translate selected text" in the context menu, the text will be translated in the popup in the address bar</li>
+                                <li>Translate selected text on pages that are not possible to inject scripts such as "addons.mozilla.org" and "about:reader". Only by the button in the context menu</li>
+                            </ul>
+                        </li>
+                        <li>Fixed:
+                            <ul>
+                                <li>Sometimes the popup is not displayed correctly</li>
+                                <li>Parts of the page are not restored when you click "Original"</li>
+                                <li>The pop up shown when translating when hovering, disappears and appears when you click into another target language or translation service</li>
+                                <li>Among others</li>
+                            </ul>
+                        </li>
+                        <li>Optimization in the translation of dynamically created elements</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.8</h4>
+                    <ul>
+                        <li>Added:
+                            <ul>
+                                <li>In the 3-point menu
+                                    <ul>
+                                        <li>Option to always translate this site</li>
+                                        <li>Option to translate the selected text</li>
+                                        <li>These options appear only if the checkboxes that perform the same function are hidden</li>
+                                    </ul>
+                                </li>
+                                <li>Button to open crowdin in settings</li>
+                            </ul>
+                        </li>
+                        <li>Fixed:
+                            <ul>
+                                <li>Icons do not turn blue when the site is translated (when using themes)</li>
+                                <li>Some pages that use shadowRoot are not translated.</li>
+                            </ul>
+                        </li>
+                        <li>Changed the default value of popupPanelSection from 2 to 1</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.7</h4>
+                    <ul>
+                        <li>Added:
+                            <ul>
+                                <li>Help title on some popup buttons</li>
+                                <li>A message teaching you to switch between the new and the old interface quickly.</li>
+                            </ul>
+                        </li>
+                        <li>Changes: 
+                            <ul>
+                                <li>In private tabs:
+                                    <ul>
+                                        <li>Do not save translation cache</li>
+                                        <li>Do not translate automatically</li>
+                                    </ul>
+                                </li>
+                                <li>Now when you click on a translate button, the order of the buttons will not be changed automatically.</li>
+                            </ul>
+                        </li>
+                        <li>Fixed:
+                            <ul>
+                                <li>tts does not work on long texts</li>
+                                <li>among other bugs</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.6.1</h4>
+                    <ul>
+                        <li>Fixed bug: text to speech does not work on some sites</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.6</h4>
+                    <ul>
+                        <li>Added in the popup to translate selected text and translate when hovering
+                            <ul>
+                                <li>Keep text formatting</li>
+                                <li>Buttons to change the target language</li>
+                                <li>Buttons to change the translation service</li>
+                                <li>Button to listen to the translated text</li>
+                            </ul>
+                        </li>
+                        <li>Updated interface translations</li>
+                        <li>Fixed bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.5.2</h4>
+                    <ul>
+                        <li>Fixed a bug where parts of the page were not restored</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.5.1</h4>
+                    <ul>
+                        <li>Fixed translating with yandex</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.5</h4>
+                    <ul>
+                        <li>Added a button in the popup to switch between the old interface and the new one</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.4.2</h4>
+                    <ul>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.4.1</h4>
+                    <ul>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.4</h4>
+                    <ul>
+                        <li>Added option to use the old popup interface in settings</li>
+                        <li>Added "Show the button to translate the selected text" checkbox in the popup </li>
+                        <li>Added an option in the mobile popup to switch the translation of selected text</li>
+                        <li>The default value of "Do not show if the page language is the target language" is now "no"
+                        </li>
+                        <li>Now when a site is marked to never be translated, "✔" will appear next to the option "Never
+                            translate this site". The same goes for other options like "Never translate this language"
+                        </li>
+                        <li>Fixed bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.3</h4>
+                    <ul>
+                        <li>Added the following settings to show the "translate selected text button":
+                            <ul>
+                                <li>Do not show if the page language is the target language (default: yes)</li>
+                                <li>Do not show if the page language is unknown (default: no)</li>
+                                <li>Do not show if the selected text language is the target language (default: yes)</li>
+                                <li>Do not show if the selected text language is unknown (default: no)</li>
+                            </ul>
+                        </li>
+                        <li>Added options to hide the context menu buttons</li>
+                        <li>Fixed bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.2.2</h4>
+                    <ul>
+                        <li>Fixed bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.2.1</h4>
+                    <ul>
+                        <li>Fixed bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.2</h4>
+                    <ul>
+                        <li>Added in the popup
+                            <ul>
+                                <li>Checkbox to always translate this site</li>
+                                <li>Checkbox to show the original text when hovering</li>
+                                <li>Buttons to expand and contract popup sessions</li>
+                            </ul>
+                        </li>
+                        <li>Show original text when hovering is now disabled by default</li>
+                        <li>Added translation for shadowRoot elements</li>
+                        <li>Now when the site is translated, the pop up icon will turn blue</li>
+                        <li>Updated interface translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.1.1</h4>
+                    <ul>
+                        <li>Updated interface translations for: Korean and Chinese Simplified</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.1</h4>
+                    <ul>
+                        <li>Added in the popup
+                            <ul>
+                                <li>The first button now contains the text "Original", its functionality is and has
+                                    always been to show the original text</li>
+                                <li>Checkbox to always translate a language</li>
+                                <li>Checkbox to translate when hovering on this site</li>
+                            </ul>
+                        </li>
+                        <li>Fixed
+                            <ul>
+                                <li>Text "undefined" in translation</li>
+                                <li>Some elements not being translated</li>
+                                <li>Among other bugs</li>
+                            </ul>
+                        </li>
+                        <li>Because privacy issues, hover translation is disabled by default. It is necessary to
+                            activate individually for each site</li>
+                        <li>Updated interface translations for
+                            <ul>
+                                <li>Turkish</li>
+                                <li>German</li>
+                                <li>Vietnamese</li>
+                                <li>Chinese Traditional</li>
+                                <li>Japanese</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.0.4</h4>
+                    <ul>
+                        <li>Fixed bugs</li>
+                        <li>Updated interface translations for
+                            <ul>
+                                <li>Russian</li>
+                                <li>Turkish</li>
+                                <li>Romanian</li>
+                                <li>Italian</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.0.3</h4>
+                    <ul>
+                        <li>Fixed zh-cn translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.0.2</h4>
+                    <ul>
+                        <li>Do not translate when hovering if the page language is the same as the target language</li>
+                        <li>Do not show the button to translate the selected text if the page language is the same as
+                            the target language</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.0.1</h4>
+                    <ul>
+                        <li>Fixed bug that page to change language does not appear</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>8.0</h4>
+                    <ul>
+                        <li>Added
+                            <ul>
+                                <li>new design</li>
+                                <li>show translated text when hovering</li>
+                                <li>shortcut keys to translate the page</li>
+                                <li>save the translations to allow you to translate the pages even without internet (it
+                                    will only work on pages that you have already translated 1 time)</li>
+                                <li>Switch the translation service without having to reload the page</li>
+                                <li>dark mode for the popups that appear on the pages</li>
+                            </ul>
+                        </li>
+                        <li>New donation options</li>
+                        <li>Refactored github code</li>
+                        <li>Update interface translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.7.2</h4>
+                    <ul>
+                        <li>Update interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.7</h4>
+                    <ul>
+                        <li>Fixed</li>
+                        <ul>
+                            <li>HTML tags with editable content are no longer translated</li>
+                            <li>Google translation working in China</li>
+                            <li>Dark mode on the settings page</li>
+                        </ul>
+                        <li>Improved interface translations for
+                            <ul>
+                                <li>Vietnamese</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.6</h4>
+                    <ul>
+                        <li>Fixed bug that the extension stops translating with Google</li>
+                        <li>Added interface translation for
+                            <ul>
+                                <li>Vietnamese</li>
+                                <li>Ukrainian</li>
+                            </ul>
+                        </li>
+                        <li>Improved interface translations for
+                            <ul>
+                                <li>Chinese Simplified</li>
+                                <li>Croatian</li>
+                                <li>Turkish</li>
+                                <li>Slovenian</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.5</h4>
+                    <ul>
+                        <li>Updated interface translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.4</h4>
+                    <ul>
+                        <li>Show original text when hovering</li>
+                        <li>Added option to never translate a language</li>
+                        <li>Now the release notes page will appear at most once every 3 weeks</li>
+                        <li>When a website has the url or language set to never be translated, the mobile popup and the
+                            button for translating selected text will not appear</li>
+                        <li>Added option to hide the button to translate the selected text from the context menu</li>
+                        <li>Dark mode added for mobile popup</li>
+                        <li>Updated interface translations</li>
+                        <li>Fixed several bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.3.x</h4>
+                    <ul>
+                        <li>Fixed button colors in the address bar</li>
+                        <li>Added option to translate selected text through the context menu</li>
+                        <li>Increased button size to translate selected text for mobile devices</li>
+                        <li>Updated translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.3</h4>
+                    <ul>
+                        <li>Added the toolbar button again</li>
+                        <li>Fixed some bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.2</h4>
+                    <ul>
+                        <li>Added a button to translate the selected text</li>
+                        <li>Option to switch between dark and light mode</li>
+                        <li>Option to hide the version notes page when updating</li>
+                        <li>Removed toolbar icon</li>
+                        <li>Change the style of the address bar icon</li>
+                        <li>Fixed some bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.1</h4>
+                    <ul>
+                        <li>Added the option "Always translate this site" in the popup</li>
+                        <li>Fixed some bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>7.0</h4>
+                    <ul>
+                        <li>Added dark mode</li>
+                        <li>Added button to show original page in the context menu</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.9</h4>
+                    <ul>
+                        <li>The button to open the popup was placed in the address bar again</li>
+                        <li>Elements with the class "notranslate" are now not translated</li>
+                        <li>Improved privacy</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.8</h4>
+                    <ul>
+                        <li>Removed translation using widgets. <i>Reason: widgets load external scripts, which goes
+                                against Firefox's extension policy</i></li>
+                        <li>Added the "Translate this site" button on Firefox Mobile</li>
+                        <li>Change popup layout for desktop</li>
+                        <li>Updated interface translations</li>
+                        <li>Fixed several bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.7</h4>
+                    <ul>
+                        <li>Fixed some bugs</li>
+                        <li>Added translation of the interface to new languages</li>
+                        <li>Added the shortcut "Alt + T" to translate the page</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.6</h4>
+                    <ul>
+                        <li>Added interface translation for Dutch</li>
+                        <li>Improve the translation algorithm</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.5</h4>
+                    <ul>
+                        <li>Fixed some bugs</li>
+                        <li>Updated interface translations</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.3</h4>
+                    <ul>
+                        <li>Now the translations are super fast</li>
+                        <li>The title of the sites are translated</li>
+                        <li>Polish interface translation added</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.2</h4>
+                    <ul>
+                        <li>Added translation for html attributes</li>
+                        <li>Dynamically created 'iframes' are now automatically translated</li>
+                        <li>Improved language detection</li>
+                        <li>Updated interface translation</li>
+                        <li>Fixed several bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.1</h4>
+                    <ul>
+                        <li>Support for translating sites into Traditional Chinese (zh-TW)</li>
+                        <li>Added interface translation for Japanese and Traditional Chinese</li>
+                        <li>Updated some interface translations</li>
+                        <li>Fixed some bugs</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>6.0</h4>
+                    <ul>
+                        <li>Added translation for dynamically created elements</li>
+                        <li>Added option to use widgets instead of the new algorithm</li>
+                        <li>Improved language detection on mobile devices</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/platformInfo.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="options.js"></script>
+</body>
+
+</html>

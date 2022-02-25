@@ -4,14 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 DIRS += [
-    "doh-rollout",
+    "floorp-protector",
     "formautofill",
     "screenshots",
     "webcompat",
     "report-site-issue",
     "pictureinpicture",
     "search-detection",
+    "floorp-rss-read",
+    "floorpsync",
+    "translate",
+    "treestyletab",
+    "floorp-system",
+    "gesturefy",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:

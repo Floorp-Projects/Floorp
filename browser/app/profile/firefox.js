@@ -19,6 +19,139 @@
   #endif
 #endif
 
+
+
+//Floorpアップデートを有効化
+pref("enable.floorp.updater", true);
+
+//たくさん閉じようとしたときに警告
+pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnCloseOtherTabs", true);
+
+//デフォルトブラウザーのチェック無効
+pref("browser.shell.checkDefaultBrowser", false);
+
+//addon推奨プロンプトを消す
+pref("extensions.getAddons.showPane", false);
+//軽量化
+pref("browser.tabs.animate", false);
+pref("browser.panorama.animate_zoom", false);
+pref("network.http.pipelining", false);
+pref("network.http.pipelining.firstrequest", true);
+pref("network.http.pipelining.maxrequests", 8);
+pref("network.http.max-connections-per-server", 8);
+pref("network.http.max-connections", 32);
+pref("nglayout.initialpaint.delay", 0);
+pref("toolkit.telemetry.updatePing.enabledr", false);
+pref("content.notify.ontimer", true);
+pref("content.interrupt.parsing", true);
+pref("nglayout.initialpaint.delay", 0);
+
+//調査と思われるものを削除。Torでは削除済み。
+pref("app.normandy.api_url", "");
+pref("app.normandy.enabled", true);
+
+//backdropfilterを既定で有効化します。
+pref("layout.css.backdrop-filter.enabled", true);
+
+//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
+pref("svg.context-properties.content.enabled", true, locked);
+pref("image.avif.enabled", true, locked);
+pref("image.jxl.enabled", true, locked);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
+pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//ブラックリストの参照の有効化
+pref("extensions.blocklist.enabled", true);
+pref("services.blocklist.update_enabled",	true);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減のために、先にリンク先を指定
+pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//Pocket機能を無効化*/
+pref("extensions.pocket.enabled", false);
+
+//コンテンツセキュリティポリシー(CSP)の有効化
+pref("security.csp.enable", true);
+
+//クラッシュレポートを無効化
+pref("breakpad.reportURL", "", locked);
+pref("browser.tabs.crashReporting.sendReport", false);
+pref("browser.crashReports.unsubmittedCheck.enabled",	false);
+
+//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。
+pref("xpinstall.signatures.required", false);
+
+// Firefox による、Mozilla への情報送信テレメンタリーを無効化
+pref("toolkit.telemetry.archive.enabled", false, locked);
+pref("toolkit.telemetry.bhrPing.enabled", false, locked);
+pref("toolkit.telemetry.enabled", false, locked);
+pref("toolkit.telemetry.firstShutdownPing.enabled", false, locked);
+pref("toolkit.telemetry.geckoview.streaming", false, locked);
+pref("toolkit.telemetry.newProfilePing.enabled", false, locked);
+pref("toolkit.telemetry.pioneer-new-studies-available", false, locked);
+pref("toolkit.telemetry.reportingpolicy.firstRun", false, locked);
+pref("toolkit.telemetry.server", "", locked);
+pref("toolkit.telemetry.shutdownPingSender.enabled", false, locked);
+pref("toolkit.telemetry.shutdownPingSender.enabledFirstSession", false, locked);
+pref("toolkit.telemetry.testing.overrideProductsCheck", false, locked);
+pref("toolkit.telemetry.unified", false, locked);
+pref("toolkit.telemetry.updatePing.enabled", false, locked);
+
+//Firefox調査を無効化
+pref("app.shield.optoutstudies.enabled", false, locked);
+
+// CPUのコア数を偽装し、正しい値をウェブサイトに返さないようにします。
+pref("dom.maxHardwareConcurrency",	2);
+
+//Mozillaが提供する位置特定型検索エンジンを使用しない。位置情報がより保護されます。
+pref("browser.search.geoSpecificDefaults", false);
+
+//http 通信時、Floorp は絶対にhttp:// をURLバーから隠しません
+pref("browser.urlbar.trimURLs", false);
+
+//強化型トラッキング保護を強力に
+pref("privacy.trackingprotection.pbmode.enabled", true);
+
+//https:// 通信時、緑色に
+pref("security.secure_connection_icon_color_gray", false);
+
+//「既定でオンを推奨」フィンガープリント対策の一環。
+//参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
+pref("dom.network.enabled", false);
+
+// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。
+pref("media.peerconnection.enabled", true);
+
+//WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
+pref("media.peerconnection.ice.default_address_only", true);
+pref("media.peerconnection.ice.no_host", true);
+
+//アドオンのフィンガープリント採取から保護
+pref("privacy.resistFingerprinting.block_mozAddonManager", true);
+
+//プライバシー機能をオンにし、テレメンタリー採取を無効化します。
+pref("privacy.trackingprotection.origin_telemetry.enabled", false, locked);
+pref("privacy.userContext.enabled", true);
+pref("privacy.userContext.ui.enabled", true);
+pref("trailhead.firstrun.branches", "", locked);
+pref("browser.contentblocking.category", "strict");
+pref("extensions.webcompat-reporter.enabled", false);
+
+//同期システムの一部無効化
+pref("services.sync.prefs.sync.browser.contentblocking.category", false);
+
+pref("browser.startup.page", 3);//自動復元
+pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように
+/*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
+
+//pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
+//pref("datareporting.policy.dataSubmissionEnable", false);
+//pref("datareporting.healthreport.uploadEnabled", false);
+
+/*-----------------------------------------------------------------------------以下、Firefox の既定の設定-----------------------------------------------------------------------------*/
+
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.xhtml");
 
 // Enables some extra Extension System Logging (can reduce performance)
@@ -263,7 +396,7 @@ pref("browser.touchmode.auto", true);
 pref("browser.compactmode.show", false);
 
 // At startup, check if we're the default browser and prompt user if not.
-pref("browser.shell.checkDefaultBrowser", true);
+//pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
@@ -281,7 +414,7 @@ pref("browser.shell.setDefaultPDFHandler", false);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
-pref("browser.startup.page",                1);
+//pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "about:home");
 #ifdef NIGHTLY_BUILD
 pref("browser.startup.homepage.abouthome_cache.enabled", true);
@@ -664,8 +797,8 @@ pref("browser.tabs.insertRelatedAfterCurrent", true);
 // for non-related links. Note that if this is set to true, it will trump
 // the value of browser.tabs.insertRelatedAfterCurrent.
 pref("browser.tabs.insertAfterCurrent", false);
-pref("browser.tabs.warnOnClose", false);
-pref("browser.tabs.warnOnCloseOtherTabs", true);
+//pref("browser.tabs.warnOnClose", false);
+//pref("browser.tabs.warnOnCloseOtherTabs", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
 pref("browser.tabs.loadInBackground", true);
@@ -1148,7 +1281,7 @@ pref("browser.zoom.siteSpecific", true);
 pref("browser.zoom.updateBackgroundTabs", true);
 
 // The breakpad report server to link to in about:crashes
-pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
+//pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
 
 // URL for "Learn More" for DataCollection
 pref("toolkit.datacollection.infoURL",
@@ -1162,7 +1295,7 @@ pref("toolkit.crashreporter.infoURL",
 pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
 // base url for web-based feedback pages
-pref("app.feedback.baseURL", "https://ideas.mozilla.org/");
+pref("app.feedback.baseURL", "https://support.ablaze.one/contact");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -1631,7 +1764,7 @@ pref("security.insecure_connection_icon.enabled", true);
 pref("security.insecure_connection_icon.pbmode.enabled", true);
 
 // For secure connections, show gray instead of green lock icon
-pref("security.secure_connection_icon_color_gray", true);
+//pref("security.secure_connection_icon_color_gray", true);
 
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);
@@ -1756,7 +1889,7 @@ pref("browser.translation.engine", "Google");
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
-pref("toolkit.telemetry.archive.enabled", true);
+//pref("toolkit.telemetry.archive.enabled", true);
 // Enables sending the shutdown ping when Firefox shuts down.
 pref("toolkit.telemetry.shutdownPingSender.enabled", true);
 // Enables sending the shutdown ping using the pingsender from the first session.
@@ -1768,7 +1901,7 @@ pref("toolkit.telemetry.newProfilePing.enabled", true);
 // Enables sending 'update' pings on Firefox updates.
 pref("toolkit.telemetry.updatePing.enabled", true);
 // Enables sending 'bhr' pings when the browser hangs.
-pref("toolkit.telemetry.bhrPing.enabled", true);
+//pref("toolkit.telemetry.bhrPing.enabled", true);
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);
@@ -2000,8 +2133,8 @@ pref("browser.tabs.remote.warmup.maxTabs", 3);
 pref("browser.tabs.remote.warmup.unloadDelayMs", 2000);
 
 // For the about:tabcrashed page
-pref("browser.tabs.crashReporting.sendReport", true);
-pref("browser.tabs.crashReporting.includeURL", false);
+//pref("browser.tabs.crashReporting.sendReport", true);
+//pref("browser.tabs.crashReporting.includeURL", false);
 
 // If true, unprivileged extensions may use experimental APIs on
 // nightly and developer edition.
@@ -2050,7 +2183,7 @@ pref("browser.migrate.chrome.history.maxAgeInDays", 180);
 pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
 
 pref("extensions.pocket.api", "api.getpocket.com");
-pref("extensions.pocket.enabled", true);
+//pref("extensions.pocket.enabled", true);
 pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("extensions.pocket.site", "getpocket.com");
 pref("extensions.pocket.onSaveRecs", true);
@@ -2101,9 +2234,9 @@ pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net htt
 // crash reports, and then show a notification for submitting
 // those reports.
 #ifdef NIGHTLY_BUILD
-  pref("browser.crashReports.unsubmittedCheck.enabled", true);
+//  pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #else
-  pref("browser.crashReports.unsubmittedCheck.enabled", false);
+ // pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #endif
 
 // chancesUntilSuppress is how many times we'll show the unsubmitted
@@ -2138,9 +2271,9 @@ pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
 
 // Normandy client preferences
-pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
+//pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
 pref("app.normandy.dev_mode", false);
-pref("app.normandy.enabled", true);
+//pref("app.normandy.enabled", true);
 pref("app.normandy.first_run", true);
 pref("app.normandy.logging.level", 50); // Warn
 pref("app.normandy.run_interval_seconds", 21600); // 6 hours
@@ -2148,9 +2281,9 @@ pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%
 pref("app.normandy.last_seen_buildid", "");
 pref("app.normandy.onsync_skew_sec", 600);
 #ifdef MOZ_DATA_REPORTING
-  pref("app.shield.optoutstudies.enabled", true);
+//  pref("app.shield.optoutstudies.enabled", true);
 #else
-  pref("app.shield.optoutstudies.enabled", false);
+ // pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences

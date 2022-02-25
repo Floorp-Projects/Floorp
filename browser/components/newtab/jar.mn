@@ -41,6 +41,7 @@ browser.jar:
   content/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
 #endif
   res/activity-stream/prerendered/activity-stream.html (./prerendered/activity-stream.html)
+  content/activity-stream/css/index.css (./css/index.css)
 #ifndef RELEASE_OR_BETA
   res/activity-stream/prerendered/activity-stream-debug.html (./prerendered/activity-stream-debug.html)
 #endif

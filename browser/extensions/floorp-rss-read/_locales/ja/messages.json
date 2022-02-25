@@ -1,0 +1,206 @@
+{
+  "sidebar": {
+  "message": "購読中のサイト"
+},
+  "extensionDescription": {
+    "message": "Floorp の RSS リーダーです"
+  },
+  "reloadLiveBookmark": {
+    "message": "購読した RSS を再読み込み"
+  },
+  "openAllUnreadPages": {
+    "message": "未読のページをすべて開く"
+  },
+  "openSiteUrl": {
+    "message": "\"$site$\"を開く",
+    "placeholders": {
+      "site" : {
+        "content" : "$1"
+      }
+    }
+  },
+  "subscribe": {
+    "message": "RSS で 表示、または購読する"
+  },
+  "subscribe_title": {
+    "message": "フィードのプレビュー"
+  },
+  "subscribe_addLivemark": {
+    "message": "RSS に追加"
+  },
+  "subscribe_viewSource": {
+    "message": "ソースを表示"
+  },
+  "subscribe_failedToFetchFeed": {
+    "message": "フィードの取得に失敗しました。"
+  },
+  "subscribe_noEntriesFound": {
+    "message": "フィードに項目が存在しません。"
+  },
+  "subscribe_subscribed": {
+    "message": "$FOLDER$に追加しました。設定画面で編集できます。",
+    "placeholders": {
+      "folder": {
+        "content": "$1"
+      }
+    }
+  },
+  "noItemsFound": {
+    "message": "アイテムが見つかりませんでした。"
+  },
+  "yourLivemarks": {
+    "description": "Title of the 'Your livemarks' page",
+    "message": "購読中の RSS リスト"
+  },
+  "moreOptions": {
+    "message": "　その他の設定"
+  },
+  "newLivemark": {
+    "message": "　新しく購読する"
+  },
+  "enterFeedURL": {
+    "message": "フィードのURLを入力してください。"
+  },
+  "settings_importExport_heading": {
+    "message": "インポート/エクスポート"
+  },
+  "settings_importExport_description": {
+    "message": "この機能は多くのRSSリーダーで使用されているOPML形式を使用します。"
+  },
+  "settings_importExport_importFeeds": {
+    "message": "リストのインポート"
+  },
+  "settings_importExport_exportFeeds": {
+    "message": "リストのエクスポート"
+  },
+  "settings_importExport_successImport": {
+    "message": "$COUNT$件のフィードのインポートに成功しました。",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "settings_importExport_errorImport": {
+    "message": "OPMLファイルのインポートに失敗しました。"
+  },
+  "settings_refreshInterval_heading": {
+    "message": "更新間隔"
+  },
+  "settings_refreshInterval_description": {
+    "message": "ライブブックマークの更新間隔を設定します。"
+  },
+  "settings_refreshInterval_minutes": {
+    "description": "Shown as 'X minutes' in the settings dialog",
+    "message": "分"
+  },
+  "settings_defaultFolder_heading": {
+    "message": "デフォルトのフォルダー"
+  },
+  "settings_defaultFolder_description": {
+    "message": "新しいライブブックマークはデフォルトでここに保存されます。"
+  },
+  "settings_prefixes_heading": {
+    "message": "ブックマークのプレフィックス"
+  },
+  "settings_prefixes_description": {
+    "message": "指定した文字列がステータスを示すためのブックマークのプリフィックスとして使用されます。"
+  },
+  "settings_prefixes_unread": {
+    "message": "未読："
+  },
+  "settings_prefixes_read": {
+    "message": "既読："
+  },
+  "settings_prefixes_feed_folder": {
+    "message": "全てのアイテムが既読／未読のフォルダに表示"
+  },
+  "settings_prefixes_parent_folders": {
+    "message": "フォルダ中の全てのフォルダが既読／未読のフォルダに表示"
+  },
+  "settings_feedPreview_heading": {
+    "message": "フィードのプレビュー"
+  },
+  "settings_feedPreview_description": {
+    "message": "フィードのURLに直接アクセスした際のフィードのプレビューを有効化する"
+  },
+  "settings_extensionIcon_heading": {
+    "message": "拡張機能のアイコン"
+  },
+  "settings_extensionIcon_description": {
+    "message": ""
+  },
+  "settings_extensionIcon_darkIcon": {
+    "message": "ダークアイコン"
+  },
+  "settings_extensionIcon_lightIcon": {
+    "message": "ライトアイコン"
+  },
+  "settings_extensionIcon_orangeIcon": {
+    "message": "オレンジアイコン"
+  },
+  "settings_about_heading": {
+    "message": "Floorp RSS Reader について"
+  },
+  "settings_about_description_authors": {
+    "message": "このアドオンの開発者："
+  },
+  "settings_about_description_before_foxish": {
+    "description": "Between _before_foxish and _after_foxish there is a 'Foxish' HTML link",
+    "message": "このアドオンは"
+  },
+  "settings_about_description_after_foxish": {
+    "message": "のオープンソースプロジェクトをベースにしています。"
+  },
+  "settings_about_description_support": {
+    "message": "Livemarks の紹介："
+  },
+  "settings_about_donating": {
+    "message": "寄付を行う"
+  },
+  "settings_about_reviewing": {
+    "message": "Livemarks をアドオンストアで見る"
+  },
+  "settings_about_reporting": {
+    "message": "バグや要望を報告する"
+  },
+  "settings_about_translating": {
+    "message": "翻訳に協力する"
+  },
+  "settings_close": {
+    "message": "閉じる"
+  },
+  "settings_editFeed": {
+    "message": "このフィードを編集"
+  },
+  "editLivemark_name": {
+    "message": "名前"
+  },
+  "editLivemark_remove": {
+    "message": "このフィードを削除"
+  },
+  "editLivemark_feedURL": {
+    "message": "フィードのURL"
+  },
+  "editLivemark_siteURL": {
+    "message": "サイトのURL"
+  },
+  "editLivemark_parentFolder": {
+    "message": "親フォルダー"
+  },
+  "editLivemark_maxItems": {
+    "message": "最大アイテム数"
+  },
+  "editLivemark_cancel": {
+    "message": "キャンセル"
+  },
+  "editLivemark_save": {
+    "message": "保存"
+  },
+  "settings_brokenLivemark": {
+    "message": "破損しているライブブックマーク"
+  },
+  "selectFolder_folder": {
+    "message": "破損しているライブブックマークにより使用されているフォルダを選択してください。"
+  }
+}

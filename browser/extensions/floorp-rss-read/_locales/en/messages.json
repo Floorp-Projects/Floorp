@@ -1,0 +1,206 @@
+{
+  "sidebar": {
+  "message": "subscribed Sites"
+},
+  "extensionDescription": {
+    "message": "RSS reader for Floorp"
+  },
+  "reloadLiveBookmark": {
+    "message": "Reload Live Bookmark"
+  },
+  "openAllUnreadPages": {
+    "message": "Open all unread pages"
+  },
+  "openSiteUrl": {
+    "message": "Open \"$site$\"",
+    "placeholders": {
+      "site" : {
+        "content" : "$1"
+      }
+    }
+  },
+  "subscribe": {
+    "message": "Subscribe"
+  },
+  "subscribe_title": {
+    "message": "Feed preview"
+  },
+  "subscribe_addLivemark": {
+    "message": "Add Livemark"
+  },
+  "subscribe_viewSource": {
+    "message": "View source"
+  },
+  "subscribe_failedToFetchFeed": {
+    "message": "Failed to fetch feed"
+  },
+  "subscribe_noEntriesFound": {
+    "message": "No feed entries found"
+  },
+  "subscribe_subscribed": {
+    "message": "Added to $FOLDER$, visit the options page to edit it.",
+    "placeholders": {
+      "folder": {
+        "content": "$1"
+      }
+    }
+  },
+  "noItemsFound": {
+    "message": "No items found"
+  },
+  "yourLivemarks": {
+    "description": "Title of the 'Your livemarks' page",
+    "message": "Your livemarks"
+  },
+  "moreOptions": {
+    "message": "More options"
+  },
+  "newLivemark": {
+    "message": "New livemark"
+  },
+  "enterFeedURL": {
+    "message": "Enter Feed URL"
+  },
+  "settings_importExport_heading": {
+    "message": "Import/Export"
+  },
+  "settings_importExport_description": {
+    "message": "This feature uses the OPML format which is used by most RSS readers."
+  },
+  "settings_importExport_importFeeds": {
+    "message": "Import feeds"
+  },
+  "settings_importExport_exportFeeds": {
+    "message": "Export feeds"
+  },
+  "settings_importExport_successImport": {
+    "message": "Successfully imported $COUNT$ feeds.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "settings_importExport_errorImport": {
+    "message": "Error importing OPML file"
+  },
+  "settings_refreshInterval_heading": {
+    "message": "Refresh interval"
+  },
+  "settings_refreshInterval_description": {
+    "message": "Configure how often livemarks are updated."
+  },
+  "settings_refreshInterval_minutes": {
+    "description": "Shown as 'X minutes' in the settings dialog",
+    "message": "minutes"
+  },
+  "settings_defaultFolder_heading": {
+    "message": "Default folder"
+  },
+  "settings_defaultFolder_description": {
+    "message": "All future livemarks will be saved here by default"
+  },
+  "settings_prefixes_heading": {
+    "message": "Bookmark prefixes"
+  },
+  "settings_prefixes_description": {
+    "message": "The supplied strings will be used as bookmark prefixes to indicate status."
+  },
+  "settings_prefixes_unread": {
+    "message": "Unread:"
+  },
+  "settings_prefixes_read": {
+    "message": "Read:"
+  },
+  "settings_prefixes_feed_folder": {
+    "message": "Show on folders when all their items are read/unread"
+  },
+  "settings_prefixes_parent_folders": {
+    "message": "Show on parent folder when all child folders are read/unread"
+  },
+  "settings_feedPreview_heading": {
+    "message": "Feed preview"
+  },
+  "settings_feedPreview_description": {
+    "message": "Enable feed preview when directly visting a feed URL"
+  },
+  "settings_extensionIcon_heading": {
+    "message": "Extension icon"
+  },
+  "settings_extensionIcon_description": {
+    "message": ""
+  },
+  "settings_extensionIcon_darkIcon": {
+    "message": "Dark icon"
+  },
+  "settings_extensionIcon_lightIcon": {
+    "message": "Light icon"
+  },
+  "settings_extensionIcon_orangeIcon": {
+    "message": "Orange icon"
+  },
+  "settings_about_heading": {
+    "message": "About"
+  },
+  "settings_about_description_authors": {
+    "message": "This add-on was built by:"
+  },
+  "settings_about_description_before_foxish": {
+    "description": "Between _before_foxish and _after_foxish there is a 'Foxish' HTML link",
+    "message": "It's based on "
+  },
+  "settings_about_description_after_foxish": {
+    "message": "."
+  },
+  "settings_about_description_support": {
+    "message": "You can support the add-on by:"
+  },
+  "settings_about_donating": {
+    "message": "Donating"
+  },
+  "settings_about_reviewing": {
+    "message": "Giving a good review"
+  },
+  "settings_about_reporting": {
+    "message": "Reporting issues"
+  },
+  "settings_about_translating": {
+    "message": "Contributing translations"
+  },
+  "settings_close": {
+    "message": "Close"
+  },
+  "settings_editFeed": {
+    "message": "Edit this feed"
+  },
+  "editLivemark_name": {
+    "message": "Name"
+  },
+  "editLivemark_remove": {
+    "message": "Remove this feed"
+  },
+  "editLivemark_feedURL": {
+    "message": "Feed URL"
+  },
+  "editLivemark_siteURL": {
+    "message": "Site URL"
+  },
+  "editLivemark_parentFolder": {
+    "message": "Parent folder"
+  },
+  "editLivemark_maxItems": {
+    "message": "Maximum items"
+  },
+  "editLivemark_cancel": {
+    "message": "Cancel"
+  },
+  "editLivemark_save": {
+    "message": "Save"
+  },
+  "settings_brokenLivemark": {
+    "message": "Broken livemark"
+  },
+  "selectFolder_folder": {
+    "message": "Select folder used by broken livemark"
+  }
+}

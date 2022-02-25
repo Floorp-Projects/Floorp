@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<g fill="context-fill" fill-opacity="context-fill-opacity" fill-rule="evenodd">
+	<path d="M26,2H6C3.8,2,2,3.8,2,6v20c0,2.2,1.8,4,4,4h20c2.2,0,4-1.8,4-4V6C30,3.8,28.2,2,26,2z M12,20
+		c-0.552,0-1-0.447-1-1v-6l16,0v7H12z M5,6c0-0.542,0.458-1,1-1h20c0.542,0,1,0.458,1,1v6.012l-21,0V12c-0.552,0-1-0.448-1-1V6z
+		 M26,27h-8c-0.553,0-1-0.447-1-1v-5.013h10V26C27,26.542,26.542,27,26,27z"/>
+	<path d="M10,8.5C10,9.325,9.325,10,8.5,10S7,9.325,7,8.5S7.675,7,8.5,7S10,7.675,10,8.5z"/>
+	<path d="M16,16.5c0,0.825-0.675,1.5-1.5,1.5S13,17.325,13,16.5s0.675-1.5,1.5-1.5S16,15.675,16,16.5z"/>
+	<path d="M22,23.5c0,0.825-0.675,1.5-1.5,1.5S19,24.325,19,23.5s0.675-1.5,1.5-1.5S22,22.675,22,23.5z"/>
+</g>
+</svg>
