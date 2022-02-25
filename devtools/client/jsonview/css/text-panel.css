@@ -12,6 +12,7 @@
 .textPanelBox pre {
   margin: 8px;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   font-family: var(--monospace-font-family);
   color: var(--theme-text-color-strong);
 }
