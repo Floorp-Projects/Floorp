@@ -16,6 +16,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
@@ -314,12 +315,38 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
+  // First, attempt to retrieve the transform from the cache.
+  Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
+      mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
+          nsGkAtoms::transform);
+  if (!maybeTransform) {
+    return false;
+  }
+  // The transform matrix we cache is meant to operate on rects
+  // within the coordinate space of the frame to which the
+  // transform is applied (self-relative rects). We cache bounds
+  // relative to some ancestor. Remove the relative offset before
+  // transforming. The transform matrix will add it back in.
+  aBounds.MoveTo(0, 0);
+  auto mtxInPixels = gfx::Matrix4x4Typed<CSSPixel, CSSPixel>::FromUnknownMatrix(
+      *(*maybeTransform));
+
+  // Our matrix is in CSS Pixels, so we need our rect to be in CSS
+  // Pixels too. Convert before applying.
+  auto boundsInPixels = CSSRect::FromAppUnits(aBounds);
+  boundsInPixels = mtxInPixels.TransformBounds(boundsInPixels);
+  aBounds = CSSRect::ToAppUnits(boundsInPixels);
+
+  return true;
+}
+
+template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
     if (maybeBounds) {
       nsRect bounds = *maybeBounds;
-      LayoutDeviceIntRect devPxBounds;
       dom::CanonicalBrowsingContext* cbc =
           static_cast<dom::BrowserParent*>(mDoc->Manager())
               ->GetBrowsingContext()
@@ -328,7 +355,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
       nsPresContext* presContext =
           bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
 
+      Unused << ApplyTransform(bounds);
+
+      LayoutDeviceIntRect devPxBounds;
       const Accessible* acc = this;
+
       while (acc) {
         if (LocalAccessible* localAcc =
                 const_cast<Accessible*>(acc)->AsLocal()) {
@@ -349,7 +380,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
           // by GetFullZoom because LocalAccessible::Bounds already does
           // that.
           devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
-
           break;
         }
 
@@ -360,6 +390,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             (remoteAcc == this) ? Nothing() : remoteAcc->RetrieveCachedBounds();
 
         if (maybeRemoteBounds) {
+          nsRect remoteBounds = *maybeRemoteBounds;
           // We need to take into account a non-1 resolution set on the
           // presshell. This happens with async pinch zooming, among other
           // things. We can't reliably query this value in the parent process,
@@ -378,11 +409,10 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             bounds.ScaleRoundOut(res.valueOr(1.0f));
           }
 
-          // Regardless of whether this is a doc, we should offset `bounds`
-          // by the bounds retrieved here. This is how we build screen
-          // coordinates from relative coordinates.
-          nsRect remoteBounds = *maybeRemoteBounds;
+          // We should offset `bounds` by the bounds retrieved above.
+          // This is how we build screen coordinates from relative coordinates.
           bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
+          Unused << remoteAcc->ApplyTransform(bounds);
         }
 
         acc = acc->Parent();
