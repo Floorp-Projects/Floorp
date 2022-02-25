@@ -867,8 +867,7 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setImportAssertions(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.import_assertions"))
 #endif
-      .setErgnomicBrandChecks(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks"));
+      ;
 }
 
 // Mirrored value of javascript.options.self_hosted.use_shared_memory.
