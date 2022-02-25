@@ -67,6 +67,15 @@ class Clipboard : public DOMEventTargetHelper {
                                        ClipboardReadType aClipboardReadType,
                                        ErrorResult& aRv);
 
+  // If necessary, fill the data transfer with data from the clipboard and
+  // resolve a promise with the appropriate object based on aClipboardReadType
+  static void ProcessDataTransfer(DataTransfer& aDataTransfer,
+                                  Promise& aPromise,
+                                  ClipboardReadType aClipboardReadType,
+                                  nsPIDOMWindowInner& aOwner,
+                                  nsIPrincipal& aSubjectPrincipal,
+                                  bool aNeedToFill);
+
   ~Clipboard();
 };
 

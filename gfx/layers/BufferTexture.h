@@ -54,8 +54,6 @@ class BufferTextureData : public TextureData {
 
   BufferTextureData* AsBufferTextureData() override { return this; }
 
-  virtual void RestoreOriginalDescriptor() {}
-
   Maybe<gfx::IntSize> GetYSize() const;
 
   Maybe<gfx::IntSize> GetCbCrSize() const;

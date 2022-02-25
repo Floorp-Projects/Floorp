@@ -417,7 +417,7 @@ function handleRequest(req, res) {
       // DNS response header is 12 bytes, we check for this minimum length
       // at the start of decoding so this is the simplest way to force
       // a decode error.
-      return "<12bytes";
+      return "\x0F\x0F\x0F\x0F";
     }
 
     function responseData() {
