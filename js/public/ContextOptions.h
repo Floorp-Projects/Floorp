@@ -49,8 +49,6 @@ class JS_PUBLIC_API ContextOptions {
         trySmoosh_(false),
 #endif
         fuzzing_(false),
-        privateClassFields_(false),
-        privateClassMethods_(false),
 #ifdef NIGHTLY_BUILD
         arrayGrouping_(true),
 #endif
@@ -147,18 +145,6 @@ class JS_PUBLIC_API ContextOptions {
   bool disableIon() const { return disableIon_; }
   ContextOptions& setDisableIon() {
     disableIon_ = true;
-    return *this;
-  }
-
-  bool privateClassFields() const { return privateClassFields_; }
-  ContextOptions& setPrivateClassFields(bool enabled) {
-    privateClassFields_ = enabled;
-    return *this;
-  }
-
-  bool privateClassMethods() const { return privateClassMethods_; }
-  ContextOptions& setPrivateClassMethods(bool enabled) {
-    privateClassMethods_ = enabled;
     return *this;
   }
 
@@ -297,8 +283,6 @@ class JS_PUBLIC_API ContextOptions {
   bool trySmoosh_ : 1;
 #endif
   bool fuzzing_ : 1;
-  bool privateClassFields_ : 1;
-  bool privateClassMethods_ : 1;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ : 1;
 #endif

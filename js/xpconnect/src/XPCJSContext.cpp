@@ -853,10 +853,6 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
-      .setPrivateClassFields(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_fields"))
-      .setPrivateClassMethods(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_methods"))
       .setClassStaticBlocks(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.class_static_blocks"))
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY

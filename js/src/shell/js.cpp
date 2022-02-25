@@ -628,8 +628,6 @@ bool shell::enableIteratorHelpers = false;
 #ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = true;
 #endif
-bool shell::enablePrivateClassFields = false;
-bool shell::enablePrivateClassMethods = false;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
 #endif
@@ -11062,8 +11060,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef NIGHTLY_BUILD
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
 #endif
-  enablePrivateClassFields = !op.getBoolOption("disable-private-fields");
-  enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
 #endif
@@ -11099,8 +11095,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-      .setPrivateClassFields(enablePrivateClassFields)
-      .setPrivateClassMethods(enablePrivateClassMethods)
 #ifdef NIGHTLY_BUILD
       .setArrayGrouping(enableArrayGrouping)
 #endif
@@ -12050,10 +12044,6 @@ int main(int argc, char** argv) {
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-array-grouping",
                         "Enable Array Grouping") ||
-      !op.addBoolOption('\0', "disable-private-fields",
-                        "Disable private class fields") ||
-      !op.addBoolOption('\0', "disable-private-methods",
-                        "Disable private class methods") ||
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||
