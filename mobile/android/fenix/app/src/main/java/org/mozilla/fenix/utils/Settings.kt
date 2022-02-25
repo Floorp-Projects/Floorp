@@ -1292,9 +1292,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Contile functionality should be visible.
      */
-    var showContileFeature by featureFlagPreference(
+    var showContileFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_contile),
-        default = false,
+        default = { homescreenSections[HomeScreenSection.CONTILE_TOP_SITES] == true },
         featureFlag = FeatureFlags.contileFeature,
     )
 

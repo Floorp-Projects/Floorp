@@ -18,7 +18,8 @@ features:
             "jump-back-in": true,
             "recently-saved": true,
             "recent-explorations": true,
-            "pocket": true
+            "pocket": true,
+            "contile-top-sites": false,
           }
     defaults:
       - channel: nightly
@@ -28,7 +29,8 @@ features:
             "jump-back-in": true,
             "recently-saved": true,
             "recent-explorations": true,
-            "pocket": true
+            "pocket": true,
+            "contile-top-sites": false,
           }
         }
   nimbus-validation:
@@ -84,6 +86,8 @@ types:
             description: The tab groups
           pocket:
             description: The pocket section. This should only be available in the US.
+          contile-top-sites:
+            description: The sponsored shortcuts in the homescreen.
     MessageSurfaceId:
         description: The identity of a message surface, used in the default browser experiments
         variants:
