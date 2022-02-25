@@ -46,10 +46,6 @@ const {
 
 const { isGeneratedId } = require("devtools/client/shared/source-map/index");
 
-function log(msg, data) {
-  info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
-}
-
 function logThreadEvents(dbg, event) {
   const thread = dbg.toolbox.threadFront;
 
@@ -1808,7 +1804,7 @@ function toggleObjectInspectorNode(node) {
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
 
-  log(`Toggling node ${node.innerText}`);
+  info(`Toggling node ${node.innerText}`);
   node.click();
   return waitUntil(
     () => objectInspector.querySelectorAll(".node").length !== properties
@@ -1819,7 +1815,7 @@ function rightClickObjectInspectorNode(dbg, node) {
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
 
-  log(`Right clicking node ${node.innerText}`);
+  info(`Right clicking node ${node.innerText}`);
   rightClickEl(dbg, node);
 
   return waitUntil(
