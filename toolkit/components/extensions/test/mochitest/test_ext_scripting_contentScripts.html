@@ -412,6 +412,7 @@ add_task(async function test_registerContentScripts_js() {
             allFrames: false,
             js: ["script-1.js"],
             matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
           },
           {
             id: "script-2",
@@ -421,6 +422,7 @@ add_task(async function test_registerContentScripts_js() {
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
+            runAt: "document_idle",
           },
           {
             id: "script-3",
@@ -431,12 +433,14 @@ add_task(async function test_registerContentScripts_js() {
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
+            runAt: "document_idle",
           },
           {
             id: "script-4",
             allFrames: false,
             js: ["script-4-1.js", "script-4-2.js"],
             matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
           },
           {
             id: "script-5",
@@ -444,6 +448,7 @@ add_task(async function test_registerContentScripts_js() {
             excludeMatches: [],
             js: ["script-5.js"],
             matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
           },
         ]),
         JSON.stringify(scripts),
