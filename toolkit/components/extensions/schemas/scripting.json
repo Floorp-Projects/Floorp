@@ -170,6 +170,12 @@
             "optional": true,
             "description": "Specifies which pages this content script will be injected into. Must be specified for <code>registerContentScripts()</code>.",
             "items": { "type": "string" }
+          },
+          "runAt": {
+            "$ref": "extensionTypes.RunAt",
+            "optional": true,
+            "default": "document_idle",
+            "description": "Specifies when JavaScript files are injected into the web page. The preferred and default value is <code>document_idle</code>."
           }
         }
       }
