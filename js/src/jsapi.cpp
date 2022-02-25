@@ -2303,7 +2303,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   nonSyntacticScope = rhs.nonSyntacticScope;
 
   topLevelAwait = rhs.topLevelAwait;
-  classStaticBlocks = rhs.classStaticBlocks;
   importAssertions = rhs.importAssertions;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 
@@ -2394,8 +2393,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
-
-  classStaticBlocks = cx->options().classStaticBlocks();
 
   importAssertions = cx->options().importAssertions();
 

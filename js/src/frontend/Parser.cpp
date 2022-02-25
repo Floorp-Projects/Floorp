@@ -8496,11 +8496,6 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
     return null();
   }
 
-  if (!options().classStaticBlocks) {
-    error(JSMSG_CLASS_STATIC_NOT_SUPPORTED);
-    return null();
-  }
-
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::StaticClassBlock;
   FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
   GeneratorKind generatorKind = GeneratorKind::NotGenerator;
