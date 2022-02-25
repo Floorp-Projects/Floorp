@@ -84,7 +84,7 @@ add_task(async function() {
   await gBrowser.selectTabAtIndex(gBrowser.tabs.indexOf(firstTab));
   await checkWorkerThreads(dbg, 2);
 
-  const sources = await waitUntilPredicate(() => {
+  const sources = await waitFor(() => {
     const list = dbg.selectors
       .getSourceList()
       .filter(s => s.url.includes("service-worker.sjs"));
