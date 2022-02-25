@@ -26,6 +26,7 @@
 #include <algorithm>
 
 #include "jsapi.h"
+#include "jsexn.h"
 
 #include "ds/IdValuePair.h"  // js::IdValuePair
 #include "gc/FreeOp.h"
@@ -38,6 +39,7 @@
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"        // JS_{PS,FN}{,_END}
+#include "js/Stack.h"               // BuildStackString
 #include "js/StreamConsumer.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
@@ -3905,6 +3907,36 @@ static bool IsException(HandleValue v) {
   return v.isObject() && v.toObject().is<WasmExceptionObject>();
 }
 
+struct ExceptionOptions {
+  bool traceStack;
+
+  ExceptionOptions() : traceStack(false) {}
+
+  [[nodiscard]] bool init(JSContext* cx, HandleValue val);
+};
+
+bool ExceptionOptions::init(JSContext* cx, HandleValue val) {
+  if (val.isNullOrUndefined()) {
+    return true;
+  }
+
+  if (!val.isObject()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_EXN_OPTIONS);
+    return false;
+  }
+  RootedObject obj(cx, &val.toObject());
+
+  // Get `traceStack` and coerce to boolean
+  RootedValue traceStackVal(cx);
+  if (!JS_GetProperty(cx, obj, "traceStack", &traceStackVal)) {
+    return false;
+  }
+  traceStack = ToBoolean(traceStackVal);
+
+  return true;
+}
+
 bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3934,6 +3966,18 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Get the optional 'options' parameter
+  ExceptionOptions options;
+  if (!options.init(cx, args.get(2))) {
+    return false;
+  }
+
+  // Trace the stack if requested
+  RootedObject stack(cx);
+  if (options.traceStack && !CaptureStack(cx, &stack)) {
+    return false;
+  }
+
   RootedObject proto(
       cx, GetWasmConstructorPrototype(cx, args, JSProto_WasmException));
   if (!proto) {
@@ -3942,7 +3986,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedWasmExceptionObject exnObj(
-      cx, WasmExceptionObject::create(cx, exnTag, proto));
+      cx, WasmExceptionObject::create(cx, exnTag, stack, proto));
   if (!exnObj) {
     return false;
   }
@@ -3979,6 +4023,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 /* static */
 WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
                                                  HandleWasmTagObject tag,
+                                                 HandleObject stack,
                                                  HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmExceptionObject obj(
@@ -4002,6 +4047,7 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
   obj->initFixedSlot(TYPE_SLOT, PrivateValue((void*)tagType));
   InitReservedSlot(obj, DATA_SLOT, data, tagType->size_,
                    MemoryUse::WasmExceptionData);
+  obj->initFixedSlot(STACK_SLOT, ObjectOrNullValue(stack));
 
   MOZ_ASSERT(!obj->isNewborn());
 
@@ -4014,6 +4060,7 @@ bool WasmExceptionObject::isNewborn() const {
 }
 
 const JSPropertySpec WasmExceptionObject::properties[] = {
+    JS_PSG("stack", WasmExceptionObject::getStack, 0),
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Exception", JSPROP_READONLY),
     JS_PS_END};
 
@@ -4091,6 +4138,34 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
 bool WasmExceptionObject::getArg(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsException, getArgImpl>(cx, args);
+}
+
+/* static */
+bool WasmExceptionObject::getStack_impl(JSContext* cx, const CallArgs& args) {
+  RootedWasmExceptionObject exnObj(
+      cx, &args.thisv().toObject().as<WasmExceptionObject>());
+  RootedObject savedFrameObj(cx, exnObj->stack());
+  if (!savedFrameObj) {
+    args.rval().setUndefined();
+    return true;
+  }
+  JSPrincipals* principals = exnObj->realm()->principals();
+  RootedString stackString(cx);
+  if (!BuildStackString(cx, principals, savedFrameObj, &stackString)) {
+    return false;
+  }
+  args.rval().setString(stackString);
+  return true;
+}
+
+/* static */
+bool WasmExceptionObject::getStack(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsException, getStack_impl>(cx, args);
+}
+
+JSObject* WasmExceptionObject::stack() const {
+  return getReservedSlot(STACK_SLOT).toObjectOrNull();
 }
 
 uint8_t* WasmExceptionObject::typedMem() const {
