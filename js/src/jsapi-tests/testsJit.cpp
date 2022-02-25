@@ -23,7 +23,8 @@ void PrepareJit(js::jit::MacroAssembler& masm) {
 #if defined(JS_CODEGEN_ARM)
   save.add(js::jit::d15);
 #endif
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   save.add(js::jit::ra);
 #elif defined(JS_USE_LINK_REGISTER)
   save.add(js::jit::lr);
@@ -40,7 +41,8 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
 #if defined(JS_CODEGEN_ARM)
   save.add(js::jit::d15);
 #endif
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   save.add(js::jit::ra);
 #elif defined(JS_USE_LINK_REGISTER)
   save.add(js::jit::lr);

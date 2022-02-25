@@ -218,6 +218,19 @@ elif CONFIG["JS_CODEGEN_MIPS32"] or CONFIG["JS_CODEGEN_MIPS64"]:
         ]
         if CONFIG["JS_SIMULATOR_MIPS64"]:
             UNIFIED_SOURCES += ["mips64/Simulator-mips64.cpp"]
+elif CONFIG["JS_CODEGEN_LOONG64"]:
+    UNIFIED_SOURCES += [
+        "loong64/Architecture-loong64.cpp",
+        "loong64/Assembler-loong64.cpp",
+        "loong64/Bailouts-loong64.cpp",
+        "loong64/CodeGenerator-loong64.cpp",
+        "loong64/Lowering-loong64.cpp",
+        "loong64/MacroAssembler-loong64.cpp",
+        "loong64/MoveEmitter-loong64.cpp",
+        "loong64/Trampoline-loong64.cpp",
+    ]
+    if CONFIG["JS_SIMULATOR_LOONG64"]:
+        UNIFIED_SOURCES += ["loong64/Simulator-loong64.cpp"]
 
 
 # Generate jit/MIROpsGenerated.h from jit/MIROps.yaml

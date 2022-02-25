@@ -11298,7 +11298,8 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   // condition flags sticking from the incoming branch.
   // Also note: this branch does not need Spectre mitigations, doing that for
   // the capacity check below is sufficient.
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   // Had to reimplement for MIPS because there are no flags.
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.branch32(Assembler::NotEqual, initLength, indexReg, ool->callStub());

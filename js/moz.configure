@@ -156,7 +156,15 @@ set_define("ENABLE_RECORD_TUPLE", enable_record_tuple)
 def jit_default(target, enable_record_tuple):
     if enable_record_tuple:
         return False
-    if target.cpu in ("x86", "x86_64", "arm", "aarch64", "mips32", "mips64"):
+    if target.cpu in (
+        "x86",
+        "x86_64",
+        "arm",
+        "aarch64",
+        "mips32",
+        "mips64",
+        "loongarch64",
+    ):
         return True
     return False
 
@@ -176,7 +184,7 @@ def report_deprecated(value):
 # =======================================================
 option(
     "--enable-simulator",
-    choices=("arm", "arm64", "mips32", "mips64"),
+    choices=("arm", "arm64", "mips32", "mips64", "loong64"),
     nargs=1,
     help="Enable a JIT code simulator for the specified architecture",
 )
@@ -193,7 +201,7 @@ def simulator(jit_enabled, simulator_enabled, target):
         if target.cpu != "x86":
             die("The %s simulator only works on x86." % sim_cpu)
 
-    if sim_cpu in ("arm64", "mips64"):
+    if sim_cpu in ("arm64", "mips64", "loong64"):
         if target.cpu != "x86_64":
             die("The %s simulator only works on x86-64." % sim_cpu)
 
@@ -205,11 +213,13 @@ set_config("JS_SIMULATOR_ARM", simulator.arm)
 set_config("JS_SIMULATOR_ARM64", simulator.arm64)
 set_config("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_config("JS_SIMULATOR_MIPS64", simulator.mips64)
+set_config("JS_SIMULATOR_LOONG64", simulator.loong64)
 set_define("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
 set_define("JS_SIMULATOR_ARM", simulator.arm)
 set_define("JS_SIMULATOR_ARM64", simulator.arm64)
 set_define("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_define("JS_SIMULATOR_MIPS64", simulator.mips64)
+set_define("JS_SIMULATOR_LOONG64", simulator.loong64)
 
 
 @depends("--enable-jit", simulator, target)
@@ -233,6 +243,7 @@ set_config("JS_CODEGEN_ARM", jit_codegen.arm)
 set_config("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_config("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_config("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_config("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_config("JS_CODEGEN_X86", jit_codegen.x86)
 set_config("JS_CODEGEN_X64", jit_codegen.x64)
 set_define("JS_CODEGEN_NONE", jit_codegen.none)
@@ -240,6 +251,7 @@ set_define("JS_CODEGEN_ARM", jit_codegen.arm)
 set_define("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_define("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_define("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_define("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_define("JS_CODEGEN_X86", jit_codegen.x86)
 set_define("JS_CODEGEN_X64", jit_codegen.x64)
 

@@ -967,9 +967,9 @@ struct BaseCompiler final {
   // Immediate-to-register moves.
   //
   // The compiler depends on moveImm32() clearing the high bits of a 64-bit
-  // register on 64-bit systems except MIPS64 where high bits are sign extended
-  // from lower bits, see doc block "64-bit GPRs carrying 32-bit values" in
-  // MacroAssembler.h.
+  // register on 64-bit systems except MIPS64 And LoongArch64 where high bits
+  // are sign extended from lower bits, see doc block "64-bit GPRs carrying
+  // 32-bit values" in MacroAssembler.h.
 
   inline void moveImm32(int32_t v, RegI32 dest);
   inline void moveImm64(int64_t v, RegI64 dest);
