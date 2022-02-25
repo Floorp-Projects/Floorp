@@ -146,7 +146,6 @@ class Instance {
 
   // Exception handling support
 
-  uint32_t findExceptionTagIndex(JSObject* exn);
   void setPendingException(HandleAnyRef exn);
 
   // Constant expression support
@@ -264,8 +263,7 @@ class Instance {
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, void* structDescr);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  static void* exceptionNew(Instance* instance, uint32_t exnIndex,
-                            uint32_t nbytes);
+  static void* exceptionNew(Instance* instance, JSObject* tag, size_t nbytes);
   static int32_t throwException(Instance* instance, JSObject* exn);
   static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
                                 JSObject* ref);

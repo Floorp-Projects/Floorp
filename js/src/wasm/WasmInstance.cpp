@@ -1192,8 +1192,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-/* static */ void* Instance::exceptionNew(Instance* instance, uint32_t exnIndex,
-                                          uint32_t nbytes) {
+/* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag,
+                                          size_t nbytes) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
 
   JSContext* cx = instance->tlsData()->cx;
@@ -1210,9 +1210,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return nullptr;
   }
 
-  const TagDesc& desc = instance->metadata().tags[exnIndex];
-  RootedWasmTagObject tag(cx, instance->tagTls(desc));
-  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tag, buf, refs))
+  RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
+  return AnyRef::fromJSObject(
+             WasmExceptionObject::create(cx, tagObj, buf, refs))
       .forCompiledCode();
 }
 
@@ -1486,7 +1486,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     tagTls(td) = tagObjs[i];
   }
   tlsData()->pendingException = nullptr;
-  tlsData()->pendingExceptionTagIndex = UINT32_MAX;
+  tlsData()->pendingExceptionTag = nullptr;
 #endif
 
   // Add observer if our memory base may grow
@@ -1724,6 +1724,8 @@ void Instance::tracePrivate(JSTracer* trc) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   TraceNullableEdge(trc, &tlsData()->pendingException,
                     "wasm pending exception value");
+  TraceNullableEdge(trc, &tlsData()->pendingExceptionTag,
+                    "wasm pending exception tag");
 #endif
 
   if (maybeDebug_) {
@@ -2239,27 +2241,14 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-uint32_t Instance::findExceptionTagIndex(JSObject* exn) {
-  if (exn->is<WasmExceptionObject>()) {
-    WasmTagObject* exnTag = &exn->as<WasmExceptionObject>().tag();
-    const TagDescVector& tags = metadata().tags;
-    for (size_t i = 0; i < tags.length(); i++) {
-      const TagDesc& tag = tags[i];
-      if (tagTls(tag) == exnTag) {
-        return i;
-      }
-    }
-  }
-
-  // Signal an unknown exception tag, e.g., for a non-imported exception or
-  // JS value.
-  return UINT32_MAX;
+static JSObject* GetExceptionTag(JSObject* exn) {
+  return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
+                                        : nullptr;
 }
 
 void Instance::setPendingException(HandleAnyRef exn) {
   tlsData()->pendingException = exn.get().asJSObject();
-  tlsData()->pendingExceptionTagIndex =
-      findExceptionTagIndex(exn.get().asJSObject());
+  tlsData()->pendingExceptionTag = GetExceptionTag(exn.get().asJSObject());
 }
 
 bool Instance::constantRefFunc(uint32_t funcIndex,

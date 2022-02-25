@@ -274,7 +274,7 @@ const SymbolicAddressSignature SASigExceptionNew = {
     _RoN,
     _FailOnNullPtr,
     3,
-    {_PTR, _I32, _I32, _END}};
+    {_PTR, _RoN, _PTR, _END}};
 const SymbolicAddressSignature SASigThrowException = {
     SymbolicAddress::ThrowException,
     _VOID,
@@ -1284,7 +1284,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
 
 #if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
-      *abiType = Args_General_GeneralInt32Int32;
+      *abiType = Args_General3;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
       return FuncCast(Instance::exceptionNew, *abiType);
     case SymbolicAddress::ThrowException:
