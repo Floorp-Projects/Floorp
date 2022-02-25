@@ -253,7 +253,8 @@ DefaultJitOptions::DefaultJitOptions() {
     }
   }
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   SET_DEFAULT(spectreIndexMasking, false);
   SET_DEFAULT(spectreObjectMitigations, false);
   SET_DEFAULT(spectreStringMitigations, false);

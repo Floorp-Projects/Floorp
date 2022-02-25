@@ -1000,8 +1000,10 @@ Label* CodeGeneratorShared::getJumpLabelForBranch(MBasicBlock* block) {
   return skipTrivialBlocks(block)->lir()->label();
 }
 
-// This function is not used for MIPS/MIPS64. MIPS has branchToBlock.
-#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)
+// This function is not used for MIPS/MIPS64/LOONG64. They have
+// branchToBlock.
+#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64) && \
+    !defined(JS_CODEGEN_LOONG64)
 void CodeGeneratorShared::jumpToBlock(MBasicBlock* mir,
                                       Assembler::Condition cond) {
   // Skip past trivial blocks.

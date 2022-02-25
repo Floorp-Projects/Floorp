@@ -156,6 +156,12 @@ using mozilla::DebugOnly;
 #      define R01_sig(p) ((p)->uc_mcontext.gp_regs[1])
 #      define R32_sig(p) ((p)->uc_mcontext.gp_regs[32])
 #    endif
+#    if defined(__linux__) && defined(__loongarch__)
+#      define EPC_sig(p) ((p)->uc_mcontext.pc)
+#      define RRA_sig(p) ((p)->uc_mcontext.gregs[1])
+#      define RSP_sig(p) ((p)->uc_mcontext.gregs[3])
+#      define RFP_sig(p) ((p)->uc_mcontext.gregs[22])
+#    endif
 #  elif defined(__NetBSD__)
 #    define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
 #    define EBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EBP])
@@ -294,6 +300,23 @@ typedef struct ucontext {
   // Other fields are not used so don't define them here.
 } ucontext_t;
 
+#      elif defined(__loongarch64)
+
+typedef struct {
+  uint64_t pc;
+  uint64_t gregs[32];
+  uint64_t fpregs[32];
+  uint32_t fpc_csr;
+} mcontext_t;
+
+typedef struct ucontext {
+  uint32_t uc_flags;
+  struct ucontext* uc_link;
+  stack_t uc_stack;
+  mcontext_t uc_mcontext;
+  // Other fields are not used so don't define them here.
+} ucontext_t;
+
 #      elif defined(__i386__)
 // x86 version for Android.
 typedef struct {
@@ -376,6 +399,11 @@ struct macos_aarch64_context {
 #    define PC_sig(p) R32_sig(p)
 #    define SP_sig(p) R01_sig(p)
 #    define FP_sig(p) R01_sig(p)
+#  elif defined(__loongarch__)
+#    define PC_sig(p) EPC_sig(p)
+#    define FP_sig(p) RFP_sig(p)
+#    define SP_sig(p) RSP_sig(p)
+#    define LR_sig(p) RRA_sig(p)
 #  endif
 
 static void SetContextPC(CONTEXT* context, uint8_t* pc) {
@@ -410,7 +438,8 @@ static uint8_t* ContextToSP(CONTEXT* context) {
 #  endif
 }
 
-#  if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
+#  if defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
+      defined(__loongarch__)
 static uint8_t* ContextToLR(CONTEXT* context) {
 #    ifdef LR_sig
   return reinterpret_cast<uint8_t*>(LR_sig(context));
@@ -426,7 +455,8 @@ static JS::ProfilingFrameIterator::RegisterState ToRegisterState(
   state.fp = ContextToFP(context);
   state.pc = ContextToPC(context);
   state.sp = ContextToSP(context);
-#  if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
+#  if defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
+      defined(__loongarch__)
   state.lr = ContextToLR(context);
 #  else
   state.lr = (void*)UINTPTR_MAX;
@@ -696,7 +726,7 @@ static void MachExceptionHandlerThread() {
 
 #  else  // If not Windows or Mac, assume Unix
 
-#    ifdef __mips__
+#    if defined(__mips__) || defined(__loongarch__)
 static const uint32_t kWasmTrapSignal = SIGFPE;
 #    else
 static const uint32_t kWasmTrapSignal = SIGILL;

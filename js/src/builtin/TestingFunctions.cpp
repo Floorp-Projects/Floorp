@@ -436,6 +436,24 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_CODEGEN_LOONG64
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "loong64", value)) {
+    return false;
+  }
+
+#ifdef JS_SIMULATOR_LOONG64
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "loong64-simulator", value)) {
+    return false;
+  }
+
 #ifdef MOZ_ASAN
   value = BooleanValue(true);
 #else

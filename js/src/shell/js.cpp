@@ -99,6 +99,9 @@
 #ifdef JS_SIMULATOR_MIPS64
 #  include "jit/mips64/Simulator-mips64.h"
 #endif
+#ifdef JS_SIMULATOR_LOONG64
+#  include "jit/loong64/Simulator-loong64.h"
+#endif
 #include "jit/CacheIRHealth.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
@@ -7388,6 +7391,10 @@ static void SingleStepCallback(void* arg, jit::Simulator* sim, void* pc) {
   state.sp = (void*)sim->getRegister(jit::Simulator::sp);
   state.lr = (void*)sim->getRegister(jit::Simulator::ra);
   state.fp = (void*)sim->getRegister(jit::Simulator::fp);
+#  elif defined(JS_SIMULATOR_LOONG64)
+  state.sp = (void*)sim->getRegister(jit::Simulator::sp);
+  state.lr = (void*)sim->getRegister(jit::Simulator::ra);
+  state.fp = (void*)sim->getRegister(jit::Simulator::fp);
 #  else
 #    error "NYI: Single-step profiling support"
 #  endif
@@ -11441,6 +11448,15 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   if (stopAt >= 0) {
     jit::Simulator::StopSimAt = stopAt;
   }
+#elif defined(JS_SIMULATOR_LOONG64)
+  if (op.getBoolOption("loong64-sim-icache-checks")) {
+    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
+  }
+
+  int32_t stopAt = op.getIntOption("loong64-sim-stop-at");
+  if (stopAt >= 0) {
+    jit::Simulator::StopSimAt = stopAt;
+  }
 #endif
 
   reportWarnings = op.getBoolOption('w');
@@ -12269,6 +12285,13 @@ int main(int argc, char** argv) {
                         "simulator.") ||
       !op.addIntOption('\0', "mips-sim-stop-at", "NUMBER",
                        "Stop the MIPS simulator after the given "
+                       "NUMBER of instructions.",
+                       -1) ||
+      !op.addBoolOption('\0', "loong64-sim-icache-checks",
+                        "Enable icache flush checks in the LoongArch64 "
+                        "simulator.") ||
+      !op.addIntOption('\0', "loong64-sim-stop-at", "NUMBER",
+                       "Stop the LoongArch64 simulator after the given "
                        "NUMBER of instructions.",
                        -1) ||
       !op.addIntOption('\0', "nursery-size", "SIZE-MB",
