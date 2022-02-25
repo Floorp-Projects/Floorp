@@ -1197,7 +1197,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = instance->tlsData()->cx;
   RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
-  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tagObj, proto))
+  RootedObject stack(cx, nullptr);
+  return AnyRef::fromJSObject(
+             WasmExceptionObject::create(cx, tagObj, stack, proto))
       .forCompiledCode();
 }
 
