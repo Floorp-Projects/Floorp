@@ -1656,10 +1656,6 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
-  if (!this->compilationState_.input.options.privateClassFields) {
-    return true;
-  }
-
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
   if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
@@ -7829,12 +7825,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
   Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
   if (handler_.isPrivateName(propName)) {
-    if (!options().privateClassMethods) {
-      // Private methods are not enabled.
-      errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
-      return false;
-    }
-
     if (propAtom == TaggedParserAtomIndex::WellKnown::hashConstructor()) {
       // #constructor is an invalid private name.
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);

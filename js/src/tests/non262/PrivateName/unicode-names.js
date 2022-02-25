@@ -6,11 +6,6 @@ source = `class A {
   #℘;
 }`;
 
-try {
-  Function(source);
-} catch (e) {
-  assertEq(getRealmConfiguration()['privateFields'], false);
-  assertEq(e instanceof SyntaxError, true);
-}
+Function(source);
 
 if (typeof reportCompare === 'function') reportCompare(0, 0);

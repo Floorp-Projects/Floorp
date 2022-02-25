@@ -2302,8 +2302,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   allowHTMLComments = rhs.allowHTMLComments;
   nonSyntacticScope = rhs.nonSyntacticScope;
 
-  privateClassFields = rhs.privateClassFields;
-  privateClassMethods = rhs.privateClassMethods;
   topLevelAwait = rhs.topLevelAwait;
   classStaticBlocks = rhs.classStaticBlocks;
   importAssertions = rhs.importAssertions;
@@ -2396,8 +2394,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
-  privateClassFields = cx->options().privateClassFields();
-  privateClassMethods = cx->options().privateClassMethods();
 
   classStaticBlocks = cx->options().classStaticBlocks();
 
