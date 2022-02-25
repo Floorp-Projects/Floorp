@@ -8,6 +8,7 @@ const {
   openToolbox,
   closeToolbox,
   getBrowserWindow,
+  logTestResult,
   runTest,
   testSetup,
   testTeardown,
@@ -31,9 +32,11 @@ module.exports = async function() {
       encodeURIComponent(
         `function () {
       addMessageListener("do-logs", function () {
+        const start = Cu.now();
         for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
           content.console.log('damp', i+1, content);
         }
+        sendAsyncMessage('logs-done',  Cu.now() - start);
       });
     }`
       ) +
@@ -51,7 +54,19 @@ module.exports = async function() {
   );
 
   // Kick off the logging
+  const onContentProcessLogsDone = new Promise(resolve => {
+    messageManager.addMessageListener("logs-done", function onLogsDone(msg) {
+      messageManager.removeMessageListener("logs-done", onLogsDone);
+      resolve(msg.data);
+    });
+  });
+
   messageManager.sendAsyncMessage("do-logs");
+  const contentProcessConsoleAPIDuration = await onContentProcessLogsDone;
+  logTestResult(
+    "console.content-process-bulklog",
+    contentProcessConsoleAPIDuration
+  );
 
   await allMessagesreceived;
   // Wait for the console to redraw
