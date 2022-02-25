@@ -53,7 +53,6 @@ class Instance {
   const SharedCode code_;
   const UniqueTlsData tlsData_;
   const GCPtrWasmMemoryObject memory_;
-  const SharedExceptionTagVector exceptionTags_;
   const SharedTableVector tables_;
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
@@ -66,6 +65,9 @@ class Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
+#ifdef ENABLE_WASM_EXCEPTIONS
+  GCPtrWasmTagObject& tagTls(const TagDesc& td) const;
+#endif
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -77,12 +79,12 @@ class Instance {
  public:
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
-           SharedExceptionTagVector&& exceptionTags, SharedTableVector&& tables,
-           UniqueDebugState maybeDebug);
+           SharedTableVector&& tables, UniqueDebugState maybeDebug);
   ~Instance();
   bool init(JSContext* cx, const JSFunctionVector& funcImports,
             const ValVector& globalImportValues,
             const WasmGlobalObjectVector& globalObjs,
+            const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
             const ElemSegmentVector& elemSegments);
   void trace(JSTracer* trc);
@@ -116,9 +118,6 @@ class Instance {
   size_t memoryMappedSize() const;
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
   bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
-  const SharedExceptionTagVector& exceptionTags() const {
-    return exceptionTags_;
-  }
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -147,6 +146,7 @@ class Instance {
 
   // Exception handling support
 
+  uint32_t findExceptionTagIndex(JSObject* exn);
   void setPendingException(HandleAnyRef exn);
 
   // Constant expression support

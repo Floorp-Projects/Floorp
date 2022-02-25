@@ -1955,10 +1955,11 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
-    HandleWasmMemoryObject memory, SharedExceptionTagVector&& exceptionTags,
-    SharedTableVector&& tables, const JSFunctionVector& funcImports,
-    const GlobalDescVector& globals, const ValVector& globalImportValues,
-    const WasmGlobalObjectVector& globalObjs, HandleObject proto,
+    HandleWasmMemoryObject memory, SharedTableVector&& tables,
+    const JSFunctionVector& funcImports, const GlobalDescVector& globals,
+    const ValVector& globalImportValues,
+    const WasmGlobalObjectVector& globalObjs,
+    const WasmTagObjectVector& tagObjs, HandleObject proto,
     UniqueDebugState maybeDebug) {
   Rooted<UniquePtr<ExportMap>> exports(cx,
                                        js::MakeUnique<ExportMap>(cx->zone()));
@@ -2040,8 +2041,7 @@ WasmInstanceObject* WasmInstanceObject::create(
 
     // Root the Instance via WasmInstanceObject before any possible GC.
     instance = cx->new_<Instance>(cx, obj, code, std::move(tlsData), memory,
-                                  std::move(exceptionTags), std::move(tables),
-                                  std::move(maybeDebug));
+                                  std::move(tables), std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
@@ -2051,7 +2051,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(!obj->isNewborn());
   }
 
-  if (!instance->init(cx, funcImports, globalImportValues, globalObjs,
+  if (!instance->init(cx, funcImports, globalImportValues, globalObjs, tagObjs,
                       dataSegments, elemSegments)) {
     return nullptr;
   }
@@ -3718,7 +3718,6 @@ const ClassSpec WasmTagObject::classSpec_ = {
 void WasmTagObject::finalize(JSFreeOp* fop, JSObject* obj) {
   WasmTagObject& exnObj = obj->as<WasmTagObject>();
   if (!exnObj.isNewborn()) {
-    fop->release(obj, &exnObj.tag(), MemoryUse::WasmTagTag);
     fop->delete_(obj, &exnObj.tagType(), MemoryUse::WasmTagType);
   }
 }
@@ -3794,14 +3793,6 @@ WasmTagObject* WasmTagObject::create(JSContext* cx,
 
   MOZ_ASSERT(obj->isNewborn());
 
-  SharedExceptionTag tag = SharedExceptionTag(cx->new_<ExceptionTag>());
-  if (!tag) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  InitReservedSlot(obj, TAG_SLOT, tag.forget().take(), MemoryUse::WasmTagTag);
-
   TagType* newType = js_new<TagType>();
   if (!newType || !newType->clone(tagType)) {
     ReportOutOfMemory(cx);
@@ -3862,31 +3853,26 @@ wasm::ResultType WasmTagObject::resultType() const {
   return wasm::ResultType::Vector(valueTypes());
 }
 
-ExceptionTag& WasmTagObject::tag() const {
-  return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
-}
-
 // ============================================================================
 // WebAssembly.Exception class and methods
 
 const JSClassOps WasmExceptionObject::classOps_ = {
-    nullptr,                        // addProperty
-    nullptr,                        // delProperty
-    nullptr,                        // enumerate
-    nullptr,                        // newEnumerate
-    nullptr,                        // resolve
-    nullptr,                        // mayResolve
-    WasmExceptionObject::finalize,  // finalize
-    nullptr,                        // call
-    nullptr,                        // hasInstance
-    nullptr,                        // construct
-    nullptr,                        // trace
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // hasInstance
+    nullptr,  // construct
+    nullptr,  // trace
 };
 
 const JSClass WasmExceptionObject::class_ = {
     "WebAssembly.Exception",
-    JSCLASS_HAS_RESERVED_SLOTS(WasmExceptionObject::RESERVED_SLOTS) |
-        JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_HAS_RESERVED_SLOTS(WasmExceptionObject::RESERVED_SLOTS),
     &WasmExceptionObject::classOps_, &WasmExceptionObject::classSpec_};
 
 const JSClass& WasmExceptionObject::protoClass_ = PlainObject::class_;
@@ -3902,14 +3888,6 @@ const ClassSpec WasmExceptionObject::classSpec_ = {
     WasmExceptionObject::properties,
     nullptr,
     ClassSpec::DontDefineConstructor};
-
-/* static */
-void WasmExceptionObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  WasmExceptionObject& exnObj = obj->as<WasmExceptionObject>();
-  if (!exnObj.isNewborn()) {
-    fop->release(obj, &exnObj.tag(), MemoryUse::WasmExceptionTag);
-  }
-}
 
 static bool IsException(HandleValue v) {
   return v.isObject() && v.toObject().is<WasmExceptionObject>();
@@ -3999,8 +3977,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedWasmExceptionObject exnObj(
-      cx, WasmExceptionObject::create(cx, SharedExceptionTag(&exnTag->tag()),
-                                      buf, refs));
+      cx, WasmExceptionObject::create(cx, exnTag, buf, refs));
 
   args.rval().setObject(*exnObj);
   return true;
@@ -4008,7 +3985,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */
 WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
-                                                 wasm::SharedExceptionTag tag,
+                                                 HandleWasmTagObject tag,
                                                  HandleArrayBufferObject values,
                                                  HandleArrayObject refs) {
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
@@ -4021,9 +3998,7 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
   }
 
   MOZ_ASSERT(obj->isNewborn());
-  InitReservedSlot(obj, TAG_SLOT, tag.forget().take(),
-                   MemoryUse::WasmExceptionTag);
-
+  obj->initFixedSlot(TAG_SLOT, ObjectValue(*tag));
   obj->initFixedSlot(VALUES_SLOT, ObjectValue(*values));
   obj->initFixedSlot(REFS_SLOT, ObjectValue(*refs));
 
@@ -4057,7 +4032,7 @@ bool WasmExceptionObject::isImpl(JSContext* cx, const CallArgs& args) {
   }
 
   RootedWasmTagObject exnTag(cx, &args.get(0).toObject().as<WasmTagObject>());
-  args.rval().setBoolean(&exnTag->tag() == &exnObj->tag());
+  args.rval().setBoolean(exnTag.get() == &exnObj->tag());
 
   return true;
 }
@@ -4084,7 +4059,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
   }
 
   RootedWasmTagObject exnTag(cx, &args.get(0).toObject().as<WasmTagObject>());
-  if (&exnTag->tag() != &exnObj->tag()) {
+  if (exnTag.get() != &exnObj->tag()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_EXN_TAG);
     return false;
@@ -4136,8 +4111,8 @@ const JSFunctionSpec WasmExceptionObject::methods[] = {
 
 const JSFunctionSpec WasmExceptionObject::static_methods[] = {JS_FS_END};
 
-ExceptionTag& WasmExceptionObject::tag() const {
-  return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
+WasmTagObject& WasmExceptionObject::tag() const {
+  return getReservedSlot(TAG_SLOT).toObject().as<WasmTagObject>();
 }
 
 ArrayBufferObject& WasmExceptionObject::values() const {

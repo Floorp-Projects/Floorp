@@ -321,10 +321,14 @@ struct TagType {
 struct TagDesc {
   TagKind kind;
   TagType type;
+  uint32_t globalDataOffset;
   bool isExport;
 
   TagDesc(TagKind kind, TagType&& type, bool isExport = false)
-      : kind(kind), type(std::move(type)), isExport(isExport) {}
+      : kind(kind),
+        type(std::move(type)),
+        globalDataOffset(UINT32_MAX),
+        isExport(isExport) {}
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
