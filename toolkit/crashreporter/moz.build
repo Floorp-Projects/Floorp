@@ -59,9 +59,11 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
             DIRS += ["rust_minidump_writer_linux"]
 
+    if CONFIG["OS_TARGET"] != "Android":
+        DIRS += ["minidump-analyzer"]
+
     DIRS += [
         "client",
-        "minidump-analyzer",
     ]
 
     if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
