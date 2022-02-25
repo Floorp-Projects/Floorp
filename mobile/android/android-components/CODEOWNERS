@@ -25,7 +25,7 @@
 # Release Engineering pipeline
 /.cron.yml @mozilla-mobile/releng @mozilla-mobile/act
 /.taskcluster.yml @mozilla-mobile/releng @mozilla-mobile/act
-/automation/ @mozilla-mobile/releng @mozilla-mobile/act
+/automation/ @mozilla-mobile/act
 /taskcluster/ @mozilla-mobile/releng @mozilla-mobile/act
 
 /components/browser/awesomebar/             @mozilla-mobile/act
