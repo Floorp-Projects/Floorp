@@ -188,7 +188,8 @@ struct ImportValues;
 // the parent process, deserializing the given byte array into a
 // WebAssembly.Module object.
 
-[[nodiscard]] bool CompileAndSerialize(const ShareableBytes& bytecode,
+[[nodiscard]] bool CompileAndSerialize(JSContext* cx,
+                                       const ShareableBytes& bytecode,
                                        Bytes* serialized);
 
 [[nodiscard]] bool DeserializeModule(JSContext* cx, const Bytes& serialized,
