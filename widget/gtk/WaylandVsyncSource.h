@@ -8,8 +8,6 @@
 
 #include "base/thread.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/layers/NativeLayerWayland.h"
@@ -50,10 +48,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
   virtual Display& GetGlobalDisplay() override { return *mGlobalDisplay; }
 
-  static Maybe<TimeDuration> GetFastestVsyncRate();
-
-  class WaylandDisplay final : public mozilla::gfx::VsyncSource::Display,
-                               public LinkedListElement<WaylandDisplay> {
+  class WaylandDisplay final : public mozilla::gfx::VsyncSource::Display {
    public:
     WaylandDisplay();
 
@@ -77,7 +72,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
     virtual void Shutdown() override;
 
    private:
-    ~WaylandDisplay() override;
+    virtual ~WaylandDisplay() = default;
     void Refresh(const MutexAutoLock& aProofOfLock);
     void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
     void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
