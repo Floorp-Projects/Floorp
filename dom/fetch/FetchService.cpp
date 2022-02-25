@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsContentUtils.h"
 #include "FetchLog.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsICookieJarSettings.h"
 #include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/BasePrincipal.h"
@@ -44,23 +46,21 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     MOZ_ASSERT(loadInfo);
 
-    rv = loadInfo->GetLoadingPrincipal(getter_AddRefs(mPrincipal));
+    nsCOMPtr<nsIURI> channelURI;
+    rv = aChannel->GetURI(getter_AddRefs(channelURI));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // Top level document load has no loadingPrincipal, try to use channel's URI
+    nsIScriptSecurityManager* securityManager =
+        nsContentUtils::GetSecurityManager();
+    if (securityManager) {
+      securityManager->GetChannelResultPrincipal(aChannel,
+                                                 getter_AddRefs(mPrincipal));
+    }
+
     if (!mPrincipal) {
-      nsCOMPtr<nsIURI> channelURI;
-      rv = aChannel->GetURI(getter_AddRefs(channelURI));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      mPrincipal = BasePrincipal::CreateContentPrincipal(
-          channelURI, loadInfo->GetOriginAttributes());
-      if (!mPrincipal) {
-        return NS_ERROR_UNEXPECTED;
-      }
+      return NS_ERROR_UNEXPECTED;
     }
 
     // Get loadGroup from channel
