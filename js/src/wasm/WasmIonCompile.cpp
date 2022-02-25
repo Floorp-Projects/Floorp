@@ -77,32 +77,6 @@ struct Control {
 // [SMDOC] WebAssembly Exception Handling (Wasm-EH) in Ion
 // =======================================================
 //
-// Control struct as ControlItem for WebAssembly Exception Handling (Wasm-EH)
-// --------------------------------------------------------------------------
-//
-// Using the above "struct Control" as a ControlItem in IonCompilePolicy,
-// simplifies the compilation of Wasm-EH try-catch blocks in two ways.
-//
-// 1. By collecting any paths we create from throws or potential throws (Wasm
-//    function calls) in the vector tryPadPatches, so they can be bound to
-//    create the landing pad.
-// 2. By keeping track of each handler with its CatchInfo in the vector
-//    tryCatches, to simplify creating the landing pad's control instruction,
-//    after we read End. This control instruction, in general a table switch,
-//    will direct caught exceptions to the correct catch code.
-//
-// Without such a Control structure, we'd have to track the tryPadPatches of
-// potentially nested try blocks manually in the function compiler. Moreover,
-// the landing pad's control instruction, a table switch, would have to be
-// modified every time we read a new catch. With the above control structure,
-// that table switch is created after we read the last catch and know which
-// successors it should have, and whether it has a catch_all block or if it
-// rethrows unhandled exceptions.
-//
-//
-// Design and terminology around the Wasm-EH additions in Ion
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // This documentation aims to explain the design and names used for the Wasm-EH
 // additions in Ion. We'll go through what happens while compiling a Wasm
 // try-catch/catch_all instruction.
@@ -117,10 +91,10 @@ struct Control {
 //
 // Wasm exceptions can be thrown by either a throw instruction (local throw),
 // or by a direct or indirect Wasm function call. On all these occassions, we
-// know we are in try-code, if there is a surrounding ControlItem with
+// know we are in try-code if there is a surrounding ControlItem with
 // LabelKind::Try. The innermost such control is called the "catching try
 // control". In all these occassions, we create a branch to a new block, which
-// contains the exception in its slots, and call this a pre-pad block.
+// contains the exception in its slots, and call this a 'pre-pad block'.
 //
 // Creating pre-pad blocks
 // .......................
@@ -130,9 +104,8 @@ struct Control {
 // call:
 //
 // - If we encounter a throw instruction while in try-code (a local throw), we
-//   create the exception and tag index MDefinitions, create and jump to a
-//   pre-pad block. The exception and tag index are pushed to the pre-pad
-//   block.
+//   create the exception and tag MDefinitions, create and jump to a pre-pad
+//   block. The exception and tag index are pushed to the pre-pad block.
 //
 // - If we encounter a direct, indirect, or imported Wasm function call, then
 //   we set the WasmCall to initialise a WasmTryNote, whose "start", "end", and
@@ -142,15 +115,14 @@ struct Control {
 //   wasm::TlsData::pendingException. We then add a test which branches to a new
 //   pre-pad block if there is a pending exception, or continues with the
 //   opcodes in the try-code, if there was no pending exception. During this
-//   branch, any found exception is pushed to the pre-pad block, and then an
-//   instance call is made from the pre-pad block to clear the pending exception
-//   from the TlsData, and retrieve its local tag index. This tag index is
-//   pushed to the pre-pad block as well.
+//   branch, any found exception is pushed to the pre-pad block, and the
+//   pending tag is pulled from wasm::TlsData::pendingExceptionTag. This tag
+//   is pushed to the pre-pad block as well.
 //
 // We end each pre-pad block with a jump to a nullptr, as is done when using
 // ControlFlowPatches. However, we don't need to collect ControlFlowPatches
 // for our case, because we only have one successor to a pad patch's last
-// instruction. We collect all [1] these last instructíons (jumps-to-be-patched)
+// instruction. We collect all these last instructíons (jumps-to-be-patched)
 // in the catching try control's  `tryPadPatches`.
 //
 // Creating the landing pad
@@ -161,8 +133,8 @@ struct Control {
 // instructions (pad patches). If not, we don't compile any catches and we mark
 // the rest as dead code. If there are pre-pad blocks, we join them to
 // create a landing pad (or just "pad"), which becomes the ControlItem's block.
-// The pad's last two slots are the caught exception, and the exception's local
-// tag index.
+// The pad's last two slots are the caught exception, and the exception's tag
+// object.
 //
 // There are three different forms of try-catch/catch_all Wasm instructions,
 // which result in different form of landing pad.
@@ -172,27 +144,23 @@ struct Control {
 //
 // 2. A single catch_all after a try.
 //    - If the first catch after a try is a catch_all, then there won't be
-//      any more catches, but we need the exception and its local tag index, in
+//      any more catches, but we need the exception and its tag object, in
 //      case the code in a catch_all contains "rethrow" instructions.
-//      - The Wasm instruction "rethrow", gets the exception and tag index to
+//      - The Wasm instruction "rethrow", gets the exception and tag object to
 //        rethrow from the last two slots of the landing pad which, due to
 //        validation, is the l'th surrounding ControlItem.
 //      - We immediately GoTo to a new block after the pad and pop both the
-//        exception and tag index, as we don't need them anymore in this case.
+//        exception and tag object, as we don't need them anymore in this case.
 //
 // 3. Otherwise, there is one or more catch code blocks following.
-//    - In this case, we leave the pad without a last instruction for now, and
-//      compile "catch" or "catch_all" each in a new block created [3] from the
-//      pad, collecting these blocks together with their tag index, into the
-//      ControlItem's CatchInfoVector. Any of these blocks which is not dead
-//      code is finished like a br 0 (including the last block of the end of the
-//      try code). When we finally reach "end" we use the exception's local tag
-//      index (last slot of the pad) to finish the pad with a tableswitch [2].
-//      The successors of the table switch and the case (tag index) they
-//      correspond to (they handle) are added with the help of the Control's
-//      `CatchInfoVector tryCatches`. If there was no catch_all found, the
-//      table's default case is a block which rethrows the exception.
-//
+//    - In this case, we construct the landing pad by creating a sequence
+//      of compare and branch blocks that compare the pending exception tag
+//      object to the tag object of the current tagged catch block. This is
+//      done incrementally as we visit each tagged catch block in the bytecode
+//      stream. At every step, we update the ControlItem's block to point to
+//      the next block to be created in the landing pad sequence. The final
+//      block will either be a rethrow, if there is no catch_all, or else a
+//      jump to a catch_all block.
 //
 // Throws without a catching try control node
 // ..........................................
@@ -250,7 +218,7 @@ struct Control {
 //            V                \     | v4 = f64.const 6                       |
 //   __block2___________        \--->| v5 = create a new exception (&v6) with |
 //  |                   |            |      tag $exn (v7), and store v4 in    |
-//  | v3 = f64.const 2  |            |      the exception's VALUES buffer)    |
+//  | v3 = f64.const 2  |            |      the exception's data buffer)      |
 //  | v10 = GoTo block5 |            | v9 = GoTo block4 (local throw)         |
 //  |___________________|            |________________________________________|
 //            |                                       |
@@ -259,7 +227,7 @@ struct Control {
 //   __block5_____________________________________    |                        |
 //  |                                             |   | v6 = the new exception |
 //  | v11 = call $f                               |   |      now carrying v4   |
-//  | v12 = load exception from TlsData           |   | v7 = tag index $exn    |
+//  | v12 = load exception from TlsData           |   | v7 = tag object $exn   |
 //  | v13 = Test (v12 not nullref?) block7 block6 |   | v8 = GoTo ?? -> block8 |
 //  |_____________________________________________|   |________________________|
 //       0|              1\                                                |
@@ -269,26 +237,26 @@ struct Control {
 //        V                   \-->|                                   |    |
 //  (last block in try code)      | v14 = clear the pending exception |    |
 //   __block6_________________    |       from TlsData and get v12's  |    |
-//  |                         |   |       local tag index &v15        |    |
-//  | v17 = f64.const 3       |   | v15 = tag index of v12            |    |
-//  | v18 = f64.sub v4 v17    |   | v16 = GoTo ?? -> block8           |    |
-//  | v19 GoTo ??? -> block11 |   |___________________________________|    |
+//  |                         |   |       tag object &v15             |    |
+//  | v17 = f64.const 3       |   | v16 = GoTo ?? -> block8           |    |
+//  | v18 = f64.sub v4 v17    |   |___________________________________|    |
+//  | v19 GoTo ??? -> block11 |     |                                      |
 //  |_________________________|     |                                      |
 //             |                    |          (control Try)               |
 //             |                    V__block8__(landing_pad)_______________V
 //             |                    |                                      |
 //             |                    | v20 = Phi(v6, v12) exception         |
-//             |                    | v21 = Phi(v7, v15) tag index         |
-//             |                    | v27 = 1 + v21                        |
-//             |                    | v28 = TableSwitch v27 block10 block9 |
+//             |                    | v21 = Phi(v7, v15) tag object        |
+//             |                    | v27 = load tag object for $exn       |
+//             |                    | v28 = Test v21 == v27 block10 block9 |
 //             |                    |______________________________________|
-//             |                      0|     $exn+1|
-//             |                default|           |
+//             |                 false |      true |
+//             |                       |           |
 //             |                       |           V__block9__(catch_$exn)_____
 //             |                       V           |                           |
 //             |      __block10__(catch_all)_      | v22 = load the first (and |
 //             |     |                       |     |       only) value in      |
-//             |     | v26 = f64.const 5     |     |       v20's VALUES buffer |
+//             |     | v26 = f64.const 5     |     |       v20's data buffer   |
 //             |     | v30 = GoTo block11    |     | v23 = f64.const 4         |
 //             |     |_______________________|     | v24 = f64.add v22 v23     |
 //             |         |                         | v25 = GoTo ??? -> block11 |
@@ -309,25 +277,6 @@ struct Control {
 //   respect to any local wasm state changes, that may have occurred in the try
 //   code before an exception was thrown.
 //
-// Footnotes:
-// ----------
-//
-// [1] We could potentially optimise this by separately collecting any jumps
-//     from pre-pad blocks coming from Wasm function calls, not doing any
-//     instance calls in these pre-pad blocks, but join them to an intermediate
-//     basic block which only does the instance call to consume the pending
-//     exception and get the tag index once. // TODO: Is it worth it?
-//
-// [2] We could potentially optimise this by compiling the case of a single
-//     tagged catch into a plain MTest, although it's possible that in that case
-//     Ion automatically simplifies such a table switch to a test anyway.
-//
-// [3] Each new block created for a catch is "created from the pad block" in the
-//     sense of "newBlock(pad, catch)". This is done to make sure that the catch
-//     has the correct stack position and contents. Each catch block must hold
-//     the exception and tag index in its initial slots, and each must have the
-//     same stack position as the pad, because the pad is later added as a
-//     predecessor.
 
 struct IonCompilePolicy {
   // We store SSA definitions in the value stack.
