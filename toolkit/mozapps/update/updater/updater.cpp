@@ -56,7 +56,9 @@
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 #ifdef XP_WIN
+#  include "mozilla/Maybe.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
+#  include <climits>
 #endif  // XP_WIN
 
 // Amount of the progress bar to use in each of the 3 update stages,
@@ -2211,6 +2213,130 @@ static void WriteStatusFile(int status) {
   WriteStatusFile(text);
 }
 
+#if defined(XP_WIN)
+/*
+ * Parses the passed contents of an update status file and checks if the
+ * contained status matches the expected status.
+ *
+ * @param  statusString The status file contents.
+ * @param  expectedStatus The status to compare the update status file's
+ *                        contents against.
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the status is set to the value indicated by expectedStatus.
+ */
+static bool UpdateStatusIs(const char* statusString, const char* expectedStatus,
+                           mozilla::Maybe<int>* errorCode = nullptr) {
+  if (errorCode) {
+    *errorCode = mozilla::Nothing();
+  }
+
+  // Parse the update status file. Expected format is:
+  //   Update status string
+  //   Optionally followed by:
+  //     Colon character (':')
+  //     Space character (' ')
+  //     Integer error code
+  //   Newline character
+  const char* statusEnd = strchr(statusString, ':');
+  if (statusEnd == nullptr) {
+    statusEnd = strchr(statusString, '\n');
+  }
+  if (statusEnd == nullptr) {
+    statusEnd = strchr(statusString, '\0');
+  }
+  size_t statusLen = statusEnd - statusString;
+  size_t expectedStatusLen = strlen(expectedStatus);
+
+  bool statusMatch =
+      statusLen == expectedStatusLen &&
+      strncmp(statusString, expectedStatus, expectedStatusLen) == 0;
+
+  // We only need to continue parsing if (a) there is a place to store the error
+  // code if we parse it, and (b) there is a status code to parse. If the status
+  // string didn't end with a ':', there won't be an error code after it.
+  if (!errorCode || *statusEnd != ':') {
+    return statusMatch;
+  }
+
+  const char* errorCodeStart = statusEnd + 1;
+  char* errorCodeEnd = nullptr;
+  // strtol skips an arbitrary number of leading whitespace characters. This
+  // technically allows us to successfully consume slightly misformatted status
+  // files, since the expected format is for there to be a single space only.
+  long longErrorCode = strtol(errorCodeStart, &errorCodeEnd, 10);
+  if (errorCodeEnd != errorCodeStart && longErrorCode < INT_MAX &&
+      longErrorCode > INT_MIN) {
+    // We don't allow equality with INT_MAX/INT_MIN for two reasons. It could
+    // be that, on this platform, INT_MAX/INT_MIN equal LONG_MAX/LONG_MIN, which
+    // is what strtol gives us if the parsed value was out of bounds. And those
+    // values are already way, way outside the set of valid update error codes
+    // anyways.
+    errorCode->emplace(static_cast<int>(longErrorCode));
+  }
+  return statusMatch;
+}
+
+/*
+ * Reads the secure update status file and sets statusMatch to true if the
+ * status matches the expected status that was passed.
+ *
+ * @param  expectedStatus The status to compare the update status file's
+ *                        contents against.
+ * @param  statusMatch Out parameter for specifying if the status is set to
+ *                     the value indicated by expectedStatus
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the information was retrieved successfully.
+ */
+static bool CompareSecureUpdateStatus(
+    const char* expectedStatus, bool& statusMatch,
+    mozilla::Maybe<int>* errorCode = nullptr) {
+  NS_tchar statusFilePath[MAX_PATH + 1] = {L'\0'};
+  if (!GetSecureOutputFilePath(gPatchDirPath, L".status", statusFilePath)) {
+    return false;
+  }
+
+  AutoFile file(NS_tfopen(statusFilePath, NS_T("rb")));
+  if (file == nullptr) {
+    return false;
+  }
+
+  const size_t bufferLength = 32;
+  char buf[bufferLength] = {0};
+  size_t charsRead = fread(buf, sizeof(buf[0]), bufferLength - 1, file);
+  if (ferror(file)) {
+    return false;
+  }
+  buf[charsRead] = '\0';
+
+  statusMatch = UpdateStatusIs(buf, expectedStatus, errorCode);
+  return true;
+}
+
+/*
+ * Reads the secure update status file and sets isSucceeded to true if the
+ * status is set to succeeded.
+ *
+ * @param  isSucceeded Out parameter for specifying if the status
+ *                     is set to succeeded or not.
+ * @return true if the information was retrieved successfully.
+ */
+static bool IsSecureUpdateStatusSucceeded(bool& isSucceeded) {
+  return CompareSecureUpdateStatus("succeeded", isSucceeded);
+}
+#endif
+
 #ifdef MOZ_MAINTENANCE_SERVICE
 /*
  * Read the update.status file and sets isPendingService to true if
@@ -2231,44 +2357,53 @@ static bool IsUpdateStatusPendingService() {
     return false;
   }
 
-  char buf[32] = {0};
-  fread(buf, sizeof(buf), 1, file);
-
-  const char kPendingService[] = "pending-service";
-  const char kAppliedService[] = "applied-service";
-
-  return (strncmp(buf, kPendingService, sizeof(kPendingService) - 1) == 0) ||
-         (strncmp(buf, kAppliedService, sizeof(kAppliedService) - 1) == 0);
-}
-#endif
-
-#if defined(XP_WIN)
-/*
- * Reads the secure update status file and sets isSucceeded to true if the
- * status is set to succeeded.
- *
- * @param  isSucceeded Out parameter for specifying if the status
- *         is set to succeeded or not.
- * @return true if the information was retrieved and it is succeeded.
- */
-static bool IsSecureUpdateStatusSucceeded(bool& isSucceeded) {
-  isSucceeded = false;
-  NS_tchar statusFilePath[MAX_PATH + 1] = {L'\0'};
-  if (!GetSecureOutputFilePath(gPatchDirPath, L".status", statusFilePath)) {
-    return FALSE;
-  }
-
-  AutoFile file(NS_tfopen(statusFilePath, NS_T("rb")));
-  if (file == nullptr) {
+  const size_t bufferLength = 32;
+  char buf[bufferLength] = {0};
+  size_t charsRead = fread(buf, sizeof(buf[0]), bufferLength - 1, file);
+  if (ferror(file)) {
     return false;
   }
+  buf[charsRead] = '\0';
 
-  char buf[32] = {0};
-  fread(buf, sizeof(buf), 1, file);
+  return UpdateStatusIs(buf, "pending-service") ||
+         UpdateStatusIs(buf, "applied-service");
+}
 
-  const char kSucceeded[] = "succeeded";
-  isSucceeded = strncmp(buf, kSucceeded, sizeof(kSucceeded) - 1) == 0;
-  return true;
+/*
+ * Reads the secure update status file and sets isFailed to true if the
+ * status is set to failed.
+ *
+ * @param  isFailed Out parameter for specifying if the status
+ *                  is set to failed or not.
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the information was retrieved successfully.
+ */
+static bool IsSecureUpdateStatusFailed(
+    bool& isFailed, mozilla::Maybe<int>* errorCode = nullptr) {
+  return CompareSecureUpdateStatus("failed", isFailed, errorCode);
+}
+
+/**
+ * This function determines whether the error represented by the passed error
+ * code could potentially be recovered from or bypassed by updating without
+ * using the Maintenance Service (i.e. by showing a UAC prompt).
+ * We don't really want to show a UAC prompt, but it's preferable over the
+ * manual update doorhanger
+ *
+ * @param   errorCode An integer error code from the update.status file. Should
+ *                    be one of the codes enumerated in updatererrors.h.
+ * @returns true if the code represents a Maintenance Service specific error.
+ *          Otherwise, false.
+ */
+static bool IsServiceSpecificErrorCode(int errorCode) {
+  return ((errorCode >= 24 && errorCode <= 33) ||
+          (errorCode >= 49 && errorCode <= 58));
 }
 #endif
 
@@ -3396,6 +3531,22 @@ int NS_main(int argc, NS_tchar** argv) {
                     ("The secure ID hasn't changed after launching the updater "
                      "using the service"));
                 gCopyOutputFiles = false;
+              }
+              if (gCopyOutputFiles && !sStagedUpdate && !noServiceFallback) {
+                // If the Maintenance Service fails for a Service-specific
+                // reason, we ought to fall back to attempting to update
+                // without the Service.
+                // However, we need the secure output files to be able to be
+                // check the error code, and we can't fall back when we are
+                // staging, because we will need to show a UAC.
+                bool updateFailed;
+                mozilla::Maybe<int> maybeErrorCode;
+                bool success =
+                    IsSecureUpdateStatusFailed(updateFailed, &maybeErrorCode);
+                if (success && updateFailed && maybeErrorCode.isSome() &&
+                    IsServiceSpecificErrorCode(maybeErrorCode.value())) {
+                  useService = false;
+                }
               }
             }
           } else {
