@@ -905,7 +905,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         return (test.result_cls(extra=extra, *data), [])
 
     def do_testharness(self, protocol, url, timeout):
-        parent_window = protocol.testharness.close_old_windows(protocol)
+        parent_window = protocol.testharness.close_old_windows(self.last_environment["protocol"])
 
         if self.protocol.coverage.is_enabled:
             self.protocol.coverage.reset()
