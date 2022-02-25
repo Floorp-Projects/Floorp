@@ -21,6 +21,9 @@ class nsWindowBase : public nsBaseWidget {
  public:
   typedef mozilla::WidgetEventTime WidgetEventTime;
 
+  explicit nsWindowBase(nsBorderStyle aBorderStyle)
+      : nsBaseWidget(aBorderStyle) {}
+
   /*
    * Return the HWND or null for this widget.
    */
