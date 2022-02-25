@@ -972,6 +972,8 @@ class MarionetteRefTestExecutor(RefTestExecutor):
         self.debug = debug
         self.debug_test = debug_test
 
+        self.install_extensions = browser.extensions
+
         with open(os.path.join(here, "reftest.js")) as f:
             self.script = f.read()
         with open(os.path.join(here, "test-wait.js")) as f:
@@ -983,6 +985,11 @@ class MarionetteRefTestExecutor(RefTestExecutor):
 
     def setup(self, runner):
         super(MarionetteRefTestExecutor, self).setup(runner)
+        for extension_path in self.install_extensions:
+            self.logger.info("Installing extension from %s" % extension_path)
+            addons = Addons(self.protocol.marionette)
+            addons.install(extension_path)
+
         self.implementation.setup(**self.implementation_kwargs)
 
     def teardown(self):
