@@ -20,6 +20,7 @@ using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
 [RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
+using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 
 namespace mozilla {
 namespace a11y {
