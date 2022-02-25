@@ -3756,12 +3756,11 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmTag, &proto)) {
-    return false;
-  }
+  RootedObject proto(cx,
+                     GetWasmConstructorPrototype(cx, args, JSProto_WasmTag));
   if (!proto) {
-    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTag);
+    ReportOutOfMemory(cx);
+    return false;
   }
 
   RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, tagType, proto));
@@ -3935,7 +3934,15 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedWasmExceptionObject exnObj(cx, WasmExceptionObject::create(cx, exnTag));
+  RootedObject proto(
+      cx, GetWasmConstructorPrototype(cx, args, JSProto_WasmException));
+  if (!proto) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  RootedWasmExceptionObject exnObj(
+      cx, WasmExceptionObject::create(cx, exnTag, proto));
   if (!exnObj) {
     return false;
   }
@@ -3971,9 +3978,8 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */
 WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
-                                                 HandleWasmTagObject tag) {
-  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
-
+                                                 HandleWasmTagObject tag,
+                                                 HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmExceptionObject obj(
       cx, NewObjectWithGivenProto<WasmExceptionObject>(cx, proto));

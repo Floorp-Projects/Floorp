@@ -812,6 +812,9 @@ bool Module::instantiateMemory(JSContext* cx,
 bool Module::instantiateTags(JSContext* cx,
                              WasmTagObjectVector& tagObjs) const {
   size_t tagLength = metadata().tags.length();
+  if (tagLength == 0) {
+    return true;
+  }
   size_t importedTagsLength = tagObjs.length();
   if (tagObjs.length() <= tagLength && !tagObjs.resize(tagLength)) {
     ReportOutOfMemory(cx);
