@@ -595,7 +595,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
   if (!lstrcmpi(argv[2], L"software-update")) {
     // This check is also performed in updater.cpp and is performed here
     // as well since the maintenance service can be called directly.
-    if (argc < 4 || !IsValidFullPath(argv[4])) {
+    if (argc <= 4 || !IsValidFullPath(argv[4])) {
       // Since the status file is written to the patch directory and the patch
       // directory is invalid don't write the status file.
       LOG_WARN(("The patch directory path is not valid for this application."));
@@ -633,7 +633,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
 
     // This check is also performed in updater.cpp and is performed here
     // as well since the maintenance service can be called directly.
-    if (argc < 5 || !IsValidFullPath(argv[5])
+    if (argc <= 5 || !IsValidFullPath(argv[5])
     // This build flag is used as a handy proxy to tell when we're a build made
     // for local testing, because there isn't much other reason to set it.
 #ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
@@ -652,7 +652,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
     if (!IsOldCommandline(argc - 3, argv + 3)) {
       // This check is also performed in updater.cpp and is performed here
       // as well since the maintenance service can be called directly.
-      if (argc < 6 || !IsValidFullPath(argv[6])) {
+      if (argc <= 6 || !IsValidFullPath(argv[6])) {
         LOG_WARN(
             ("The working directory path is not valid for this application."));
         if (!WriteStatusFailure(argv[4],
@@ -665,7 +665,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
       // These checks are also performed in updater.cpp and is performed here
       // as well since the maintenance service can be called directly.
       if (_wcsnicmp(argv[6], argv[5], MAX_PATH) != 0) {
-        if (argc < 7 ||
+        if (argc <= 7 ||
             (wcscmp(argv[7], L"-1") != 0 && !wcsstr(argv[7], L"/replace"))) {
           LOG_WARN(
               ("Installation directory and working directory must be the "
