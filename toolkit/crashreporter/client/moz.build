@@ -25,16 +25,8 @@ if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
         "crashreporter_win.cpp",
     ]
-    include("/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild")
     include("/toolkit/crashreporter/breakpad-client/windows/sender/objs.mozbuild")
-    include(
-        "/toolkit/crashreporter/breakpad-client/windows/crash_generation/objs.mozbuild"
-    )
-    include("/toolkit/crashreporter/breakpad-client/windows/common/objs.mozbuild")
-    SOURCES += objs_common
     SOURCES += objs_sender
-    SOURCES += objs_crash_generation
-    SOURCES += objs_client_common
     SOURCES += [
         "../google-breakpad/src/common/windows/http_upload.cc",
     ]
@@ -55,6 +47,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     ]
 elif CONFIG["OS_ARCH"] == "Darwin":
     UNIFIED_SOURCES += [
+        "../google-breakpad/src/common/mac/HTTPMultipartUpload.m",
         "crashreporter_osx.mm",
         "crashreporter_unix_common.cpp",
     ]
@@ -63,8 +56,6 @@ elif CONFIG["OS_ARCH"] == "Darwin":
     ]
     OS_LIBS += ["-framework Cocoa"]
     USE_LIBS += [
-        "breakpad_common_s",
-        "breakpad_mac_common_s",
         "nss",
     ]
 elif CONFIG["OS_ARCH"] == "SunOS":
@@ -78,12 +69,10 @@ elif CONFIG["OS_ARCH"] == "SunOS":
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     UNIFIED_SOURCES += [
+        "../google-breakpad/src/common/linux/http_upload.cc",
         "crashreporter_gtk_common.cpp",
         "crashreporter_linux.cpp",
         "crashreporter_unix_common.cpp",
-    ]
-    USE_LIBS += [
-        "breakpad_linux_common_s",
     ]
     OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]
     OS_LIBS += CONFIG["MOZ_GTHREAD_LIBS"]
