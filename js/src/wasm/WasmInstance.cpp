@@ -1222,29 +1222,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return -1;
 }
 
-/* static */ uint32_t Instance::consumePendingException(Instance* instance) {
-  MOZ_ASSERT(SASigConsumePendingException.failureMode ==
-             FailureMode::Infallible);
-
-  JSContext* cx = instance->tlsData()->cx;
-  RootedObject exn(cx, instance->tlsData()->pendingException);
-  instance->tlsData()->pendingException = nullptr;
-
-  if (exn->is<WasmExceptionObject>()) {
-    ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
-    for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
-      ExceptionTag& tag = *instance->exceptionTags()[i];
-      if (&tag == &exnTag) {
-        return i;
-      }
-    }
-  }
-
-  // Signal an unknown exception tag, e.g., for a non-imported exception or
-  // JS value.
-  return UINT32_MAX;
-}
-
 /* static */ int32_t Instance::pushRefIntoExn(Instance* instance, JSObject* exn,
                                               JSObject* ref) {
   MOZ_ASSERT(SASigPushRefIntoExn.failureMode == FailureMode::FailOnNegI32);
@@ -2242,6 +2219,28 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   DebugCodegen(DebugChannel::Function, "]\n");
 
   return true;
+}
+
+static uint32_t FindExceptionTagIndex(Instance* instance, JSObject* exn) {
+  if (exn->is<WasmExceptionObject>()) {
+    ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
+    for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
+      ExceptionTag& tag = *instance->exceptionTags()[i];
+      if (&tag == &exnTag) {
+        return i;
+      }
+    }
+  }
+
+  // Signal an unknown exception tag, e.g., for a non-imported exception or
+  // JS value.
+  return UINT32_MAX;
+}
+
+void Instance::setPendingException(HandleAnyRef exn) {
+  tlsData()->pendingException = exn.get().asJSObject();
+  tlsData()->pendingExceptionTagIndex =
+      FindExceptionTagIndex(this, exn.get().asJSObject());
 }
 
 bool Instance::constantRefFunc(uint32_t funcIndex,

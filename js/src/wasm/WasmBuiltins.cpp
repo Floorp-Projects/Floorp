@@ -281,12 +281,6 @@ const SymbolicAddressSignature SASigThrowException = {
     _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
-const SymbolicAddressSignature SASigConsumePendingException = {
-    SymbolicAddress::ConsumePendingException,
-    _I32,
-    _Infallible,
-    1,
-    {_PTR, _END}};
 const SymbolicAddressSignature SASigPushRefIntoExn = {
     SymbolicAddress::PushRefIntoExn,
     _VOID,
@@ -564,8 +558,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         }
 
         MOZ_ASSERT(iter.tls() == iter.instance()->tlsData());
-
-        iter.tls()->pendingException = ref.get().asJSObject();
+        iter.instance()->setPendingException(ref);
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
@@ -1298,10 +1291,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
-    case SymbolicAddress::ConsumePendingException:
-      *abiType = Args_Int32_General;
-      MOZ_ASSERT(*abiType == ToABIType(SASigConsumePendingException));
-      return FuncCast(Instance::consumePendingException, *abiType);
     case SymbolicAddress::PushRefIntoExn:
       *abiType = Args_Int32_GeneralGeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigPushRefIntoExn));
@@ -1469,7 +1458,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 #ifdef ENABLE_WASM_EXCEPTIONS
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
-    case SymbolicAddress::ConsumePendingException:
     case SymbolicAddress::PushRefIntoExn:
 #endif
     case SymbolicAddress::ArrayNew:

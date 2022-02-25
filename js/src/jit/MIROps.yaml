@@ -2540,6 +2540,9 @@
 - name: WasmLoadTls
   gen_boilerplate: false
 
+- name: WasmStoreTls
+  gen_boilerplate: false
+
 - name: WasmHeapBase
   gen_boilerplate: false
 

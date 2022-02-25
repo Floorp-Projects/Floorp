@@ -127,7 +127,6 @@ enum class SymbolicAddress {
 #if defined(ENABLE_WASM_EXCEPTIONS)
   ExceptionNew,
   ThrowException,
-  ConsumePendingException,
   PushRefIntoExn,
 #endif
   ArrayNew,
@@ -251,7 +250,6 @@ extern const SymbolicAddressSignature SASigStructNew;
 #ifdef ENABLE_WASM_EXCEPTIONS
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
-extern const SymbolicAddressSignature SASigConsumePendingException;
 extern const SymbolicAddressSignature SASigPushRefIntoExn;
 #endif
 extern const SymbolicAddressSignature SASigArrayNew;
