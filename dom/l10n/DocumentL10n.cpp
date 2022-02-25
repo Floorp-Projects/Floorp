@@ -6,6 +6,7 @@
 
 #include "DocumentL10n.h"
 #include "nsIContentSink.h"
+#include "nsContentUtils.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
@@ -116,6 +117,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nReadyHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nReadyHandler)
 
 void DocumentL10n::TriggerInitialTranslation() {
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
   if (mState >= DocumentL10nState::InitialTranslationTriggered) {
     return;
   }
