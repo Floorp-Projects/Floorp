@@ -1222,8 +1222,8 @@ struct BaseCompiler final {
   // at the end of a series of catch blocks (if none matched the exception).
   [[nodiscard]] bool throwFrom(RegRef exn, uint32_t lineOrBytecode);
 
-  // Load a pending exception object from the TlsData.
-  void loadPendingException(Register dest);
+  // Load the pending exception state from the TlsData and then reset it.
+  void consumePendingException(RegRef* exnDst, RegI32* tagDst);
 #endif
 
   ////////////////////////////////////////////////////////////
@@ -1250,6 +1250,10 @@ struct BaseCompiler final {
   // inside the GC cell `object`. Preserves `object` and `value`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
                                         RegPtr valueAddr, RegRef value);
+
+  // Emits a store of nullptr to a JS object pointer at the address valueAddr,
+  // Preserves `valueAddr`.
+  void emitBarrieredClear(RegPtr valueAddr);
 
   ////////////////////////////////////////////////////////////
   //

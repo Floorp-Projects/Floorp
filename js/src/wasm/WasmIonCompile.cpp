@@ -2717,19 +2717,41 @@ class FunctionCompiler {
     return inTryBlock(&relativeDepth);
   }
 
-  bool clearExceptionGetTag(MDefinition** tagIndex) {
-    // This clears the pending exception from the tls data and returns the
-    // exception's local tag index.
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-    const SymbolicAddressSignature& callee = SASigConsumePendingException;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    return builtinInstanceMethodCall(callee, lineOrBytecode, args, tagIndex);
+  MDefinition* loadPendingException() {
+    MWasmLoadTls* exn = MWasmLoadTls::New(
+        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
+        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
+    curBlock_->add(exn);
+    return exn;
+  }
+
+  MDefinition* loadPendingExceptionTagIndex() {
+    MWasmLoadTls* tagIndex = MWasmLoadTls::New(
+        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingExceptionTagIndex),
+        MIRType::Int32, AliasSet::Load(AliasSet::WasmPendingException));
+    curBlock_->add(tagIndex);
+    return tagIndex;
+  }
+
+  void clearPendingExceptionState() {
+    // Clear the pending exception object
+    auto* pendingExceptionLoc = MWasmDerivedPointer::New(
+        alloc(), tlsPointer_, offsetof(TlsData, pendingException));
+    curBlock_->add(pendingExceptionLoc);
+    auto* null = nullRefConstant();
+    auto* clearObject =
+        MWasmStoreRef::New(alloc(), tlsPointer_, pendingExceptionLoc, null,
+                           AliasSet::WasmPendingException);
+    curBlock_->add(clearObject);
+    // No post barrier is required here as we are storing null
+
+    // Clear the pending exception tag index
+    auto* nullTagIndex = constant(Int32Value(-1), MIRType::Int32);
+    auto* clearTagIndex = MWasmStoreTls::New(
+        alloc(), tlsPointer_, nullTagIndex,
+        offsetof(TlsData, pendingExceptionTagIndex), MIRType::Int32,
+        AliasSet::Store(AliasSet::WasmPendingException));
+    curBlock_->add(clearTagIndex);
   }
 
   bool addPadPatch(MControlInstruction* ins, size_t relativeTryDepth) {
@@ -2766,12 +2788,6 @@ class FunctionCompiler {
 
     MOZ_ASSERT(inTryCode());
 
-    // Get the contents of pendingException from the Wasm TlsData.
-    MWasmLoadTls* pendingException = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
-        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
-    curBlock_->add(pendingException);
-
     // Set up a test to see if there was a pending exception or not.
     MBasicBlock* fallthroughBlock = nullptr;
     if (!newBlock(curBlock_, &fallthroughBlock)) {
@@ -2781,25 +2797,21 @@ class FunctionCompiler {
     if (!newBlock(curBlock_, &prePadBlock)) {
       return false;
     }
+    MDefinition* pendingException = loadPendingException();
     MDefinition* nullVal = nullRefConstant();
     // We use a not-equal comparison to benefit the non-exceptional common case.
     MDefinition* pendingExceptionIsNotNull = compare(
         pendingException, nullVal, JSOp::Ne, MCompare::Compare_RefOrNull);
-
-    // Here we don't null check nullVal and pendingExceptionIsNull because the
-    // temp allocator ballast should make allocation infallible.
-
     MTest* branchIfNull = MTest::New(alloc(), pendingExceptionIsNotNull,
                                      prePadBlock, fallthroughBlock);
     curBlock_->end(branchIfNull);
+
+    // Switch to the prePadBlock
     curBlock_ = prePadBlock;
-
-    // Clear pending exception and get the exceptions local tag index.
-    MDefinition* tagIndex = nullptr;
-    if (!clearExceptionGetTag(&tagIndex)) {
-      return false;
-    }
-
+    // Load the tag index of the pending exception
+    MDefinition* tagIndex = loadPendingExceptionTagIndex();
+    // Clear the pending exception state
+    clearPendingExceptionState();
     // Finish the prePadBlock with a patch.
     if (!endWithPadPatch(prePadBlock, pendingException, tagIndex,
                          relativeTryDepth)) {

@@ -145,6 +145,10 @@ class Instance {
                                 CallArgs args,
                                 CoercionLevel level = CoercionLevel::Spec);
 
+  // Exception handling support
+
+  void setPendingException(HandleAnyRef exn);
+
   // Constant expression support
 
   [[nodiscard]] bool constantRefFunc(uint32_t funcIndex,
@@ -263,7 +267,6 @@ class Instance {
   static void* exceptionNew(Instance* instance, uint32_t exnIndex,
                             uint32_t nbytes);
   static int32_t throwException(Instance* instance, JSObject* exn);
-  static uint32_t consumePendingException(Instance* instance);
   static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
                                 JSObject* ref);
 #endif
