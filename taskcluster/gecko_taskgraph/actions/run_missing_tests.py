@@ -5,9 +5,10 @@
 
 import logging
 
+from taskgraph.util.taskcluster import get_artifact
+
 from .registry import register_callback_action
 from .util import create_tasks, fetch_graph_and_labels
-from gecko_taskgraph.util.taskcluster import get_artifact
 
 logger = logging.getLogger(__name__)
 
