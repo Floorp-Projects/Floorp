@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Async clipboard APIs Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+  const { AppConstants } = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm");
+  const { PlacesUtils } = SpecialPowers.Cu.import("resource://gre/modules/PlacesUtils.jsm");
+
+  // Some of the clipboard code requires reading or writing "text/unicode" when
+  // actually "text/plain" is desired.
+  const kTextUnicodeMimeType = "text/unicode";
+
+  const kTextPlainMimeType = "text/plain";
+
+  function clearClipboard() {
+    Services.clipboard.emptyClipboard(Services.clipboard.kGlobalClipboard);
+  }
+
+  async function testRead() {
+    let expected = "x";
+    await SimpleTest.promiseClipboardChange(expected, () => {
+      SpecialPowers.clipboardCopyString(expected);
+    }, kTextUnicodeMimeType);
+    let items = await navigator.clipboard.read();
+    is(items.length, 1, "read() read exactly one item");
+    const actual = await items[0].getType(kTextPlainMimeType).then(blob => blob.text());
+    is(actual, expected, "read() read the right thing");
+  }
+
+  async function testWrite() {
+    // See bug 666254.
+    if (AppConstants.platform != "macosx") {
+      await SimpleTest.promiseClipboardChange("", () => {
+        clearClipboard();
+      });
+    }
+
+    let expected = "x";
+    // eslint-disable-next-line no-undef
+    let item = new ClipboardItem({[kTextPlainMimeType]: expected});
+    await navigator.clipboard.write([item]);
+    let actual = SpecialPowers.getClipboardData(kTextUnicodeMimeType);
+    is(actual, expected, "write() wrote the right thing");
+  }
+
+  async function testReadText() {
+    let expected = "x";
+    await SimpleTest.promiseClipboardChange(expected, () => {
+      SpecialPowers.clipboardCopyString(expected);
+    }, kTextUnicodeMimeType);
+    let actual = await navigator.clipboard.readText();
+    is(actual, expected, "readText() read the right thing");
+  }
+
+  async function testWriteText() {
+    // See bug 666254.
+    if (AppConstants.platform != "macosx") {
+      await SimpleTest.promiseClipboardChange("", () => {
+        clearClipboard();
+      });
+    }
+
+    let expected = "x";
+    await navigator.clipboard.writeText(expected);
+    let actual = SpecialPowers.getClipboardData(kTextUnicodeMimeType);
+    is(actual, expected, "writeText() wrote the right thing");
+  }
+
+  async function testNoContentsRead() {
+    await SimpleTest.promiseClipboardChange("", () => {
+      clearClipboard();
+    });
+
+    const items = await navigator.clipboard.read();
+
+    // Bug 1756955: at least on Ubuntu 20.04, clearing the clipboard leads to
+    // one item with no types.
+    if (!items.length ||
+        (items.length == 1 && !items[0].types.length)) {
+      ok(true, "read() read the right thing from empty clipboard");
+    } else {
+      ok(false, "read() read the wrong thing from empty clipboard");
+    }
+  }
+
+  async function testNoContentsReadText() {
+    await SimpleTest.promiseClipboardChange("", () => {
+      clearClipboard();
+    });
+    let actual = await navigator.clipboard.readText();
+    is(actual, "", "readText() read the right thing from empty clipboard");
+  }
+
+  function runTest() {
+    (async function() {
+      await SpecialPowers.pushPrefEnv({"set": [
+        ["dom.events.asyncClipboard", true],
+        ["dom.events.asyncClipboard.read", true],
+        ["dom.events.asyncClipboard.clipboardItem", true],
+      ]});
+      await testRead();
+      await testReadText();
+      await testWrite();
+      await testWriteText();
+
+      // See bug 666254.
+      if (AppConstants.platform != "macosx") {
+        await testNoContentsRead();
+        await testNoContentsReadText();
+      }
+
+      SimpleTest.finish();
+    })();
+  }
+  ]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

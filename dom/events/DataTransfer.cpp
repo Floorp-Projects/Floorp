@@ -38,9 +38,11 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FileList.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
@@ -1529,6 +1531,27 @@ void DataTransfer::SetMode(DataTransfer::Mode aMode) {
     mMode = Mode::ReadOnly;
   } else {
     mMode = aMode;
+  }
+}
+
+/* static */
+void DataTransfer::IPCDataTransferTextItemsToDataTransfer(
+    const IPCDataTransfer& aIpcDataTransfer, const bool aHidden,
+    DataTransfer& aDataTransfer) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(aDataTransfer.Items()->Length() == 0);
+
+  uint32_t i = 0;
+  for (const IPCDataTransferItem& item : aIpcDataTransfer.items()) {
+    if (item.data().type() == IPCDataTransferData::TnsString) {
+      RefPtr<nsVariantCC> variant = new nsVariantCC();
+      const nsString& data = item.data().get_nsString();
+      variant->SetAsAString(data);
+
+      aDataTransfer.SetDataWithPrincipalFromOtherProcess(
+          NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
+          nsContentUtils::GetSystemPrincipal(), aHidden);
+    }
   }
 }
 

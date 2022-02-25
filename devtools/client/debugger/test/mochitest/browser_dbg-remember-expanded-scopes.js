@@ -34,6 +34,6 @@ function findNode(dbg, text) {
 }
 
 async function toggleNode(dbg, text) {
-  const node = await waitUntilPredicate(() => findNode(dbg, text));
+  const node = await waitFor(() => findNode(dbg, text));
   return toggleObjectInspectorNode(node);
 }
