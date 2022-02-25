@@ -493,7 +493,6 @@ class WasmTagObject : public NativeObject {
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
   static void finalize(JSFreeOp*, JSObject* obj);
-  static void trace(JSTracer* trc, JSObject* obj);
   static bool typeImpl(JSContext* cx, const CallArgs& args);
   static bool type(JSContext* cx, unsigned argc, Value* vp);
 
@@ -506,12 +505,12 @@ class WasmTagObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmTagObject* create(JSContext* cx, const wasm::TagType& tagType,
+  static WasmTagObject* create(JSContext* cx,
+                               const wasm::SharedTagType& tagType,
                                HandleObject proto);
-  bool isNewborn() const;
 
-  wasm::TagType& tagType() const;
-  wasm::ValTypeVector& valueTypes() const;
+  const wasm::TagType* tagType() const;
+  const wasm::ValTypeVector& valueTypes() const;
   wasm::ResultType resultType() const;
 };
 
@@ -521,17 +520,24 @@ class WasmTagObject : public NativeObject {
 
 class WasmExceptionObject : public NativeObject {
   static const unsigned TAG_SLOT = 0;
-  static const unsigned VALUES_SLOT = 1;
-  static const unsigned REFS_SLOT = 2;
+  static const unsigned TYPE_SLOT = 1;
+  static const unsigned DATA_SLOT = 2;
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
   static void trace(JSTracer* trc, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   // Named isMethod instead of is to avoid name conflict.
   static bool isMethod(JSContext* cx, unsigned argc, Value* vp);
   static bool isImpl(JSContext* cx, const CallArgs& args);
   static bool getArg(JSContext* cx, unsigned argc, Value* vp);
   static bool getArgImpl(JSContext* cx, const CallArgs& args);
+
+  uint8_t* typedMem() const;
+  [[nodiscard]] bool loadValue(JSContext* cx, size_t offset, wasm::ValType type,
+                               MutableHandleValue vp);
+  [[nodiscard]] bool initValue(JSContext* cx, size_t offset, wasm::ValType type,
+                               HandleValue value);
 
  public:
   static const unsigned RESERVED_SLOTS = 3;
@@ -542,21 +548,14 @@ class WasmExceptionObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag,
-                                     Handle<ArrayBufferObject*> values,
-                                     HandleArrayObject refs);
+  static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag);
   bool isNewborn() const;
 
+  const wasm::TagType* tagType() const;
   WasmTagObject& tag() const;
-  ArrayBufferObject& values() const;
-  ArrayObject& refs() const;
 
-  static size_t offsetOfValues() {
-    return NativeObject::getFixedSlotOffset(VALUES_SLOT);
-  }
-
-  static size_t offsetOfRefs() {
-    return NativeObject::getFixedSlotOffset(REFS_SLOT);
+  static size_t offsetOfData() {
+    return NativeObject::getFixedSlotOffset(DATA_SLOT);
   }
 };
 

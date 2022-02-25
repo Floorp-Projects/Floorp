@@ -1192,27 +1192,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-/* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag,
-                                          size_t nbytes) {
+/* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
-
   JSContext* cx = instance->tlsData()->cx;
-
-  RootedArrayBufferObject buf(cx, ArrayBufferObject::createZeroed(cx, nbytes));
-
-  if (!buf) {
-    return nullptr;
-  }
-
-  RootedArrayObject refs(cx, NewDenseEmptyArray(cx));
-
-  if (!refs) {
-    return nullptr;
-  }
-
   RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
-  return AnyRef::fromJSObject(
-             WasmExceptionObject::create(cx, tagObj, buf, refs))
+  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tagObj))
       .forCompiledCode();
 }
 
@@ -1227,29 +1211,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // By always returning -1, we trigger a wasmTrap(Trap::ThrowReported),
   // and use that to trigger the stack walking for this exception.
   return -1;
-}
-
-/* static */ int32_t Instance::pushRefIntoExn(Instance* instance, JSObject* exn,
-                                              JSObject* ref) {
-  MOZ_ASSERT(SASigPushRefIntoExn.failureMode == FailureMode::FailOnNegI32);
-
-  JSContext* cx = instance->tlsData()->cx;
-
-  MOZ_ASSERT(exn->is<WasmExceptionObject>());
-  RootedWasmExceptionObject exnObj(cx, &exn->as<WasmExceptionObject>());
-
-  // TODO/AnyRef-boxing: With boxed immediates and strings, this may need to
-  // handle other kinds of values.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
-  RootedValue refVal(cx, ObjectOrNullValue(ref));
-  RootedArrayObject arr(cx, &exnObj->refs());
-
-  if (!NewbornArrayPush(cx, arr, refVal)) {
-    return -1;
-  }
-
-  return 0;
 }
 #endif
 
@@ -1319,65 +1280,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   }
 
   return 0;
-}
-
-// Note, dst must point into nonmoveable storage that is not in the nursery,
-// this matters for the write barriers.  Furthermore, for pointer types the
-// current value of *dst must be null so that only a post-barrier is required.
-//
-// Regarding the destination not being in the nursery, we have these cases.
-// Either the written location is in the global data section in the
-// WasmInstanceObject, or the Cell of a WasmGlobalObject:
-//
-// - WasmInstanceObjects are always tenured and u.ref_ may point to a
-//   nursery object, so we need a post-barrier since the global data of an
-//   instance is effectively a field of the WasmInstanceObject.
-//
-// - WasmGlobalObjects are always tenured, and they have a Cell field, so a
-//   post-barrier may be needed for the same reason as above.
-
-void CopyValPostBarriered(uint8_t* dst, const Val& src) {
-  switch (src.type().kind()) {
-    case ValType::I32: {
-      int32_t x = src.i32();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::I64: {
-      int64_t x = src.i64();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::F32: {
-      float x = src.f32();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::F64: {
-      double x = src.f64();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::V128: {
-      V128 x = src.v128();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::Rtt:
-    case ValType::Ref: {
-      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-      // barrier is going to have to be more complicated.
-      ASSERT_ANYREF_IS_JSOBJECT;
-      MOZ_ASSERT(*(void**)dst == nullptr,
-                 "should be null so no need for a pre-barrier");
-      AnyRef x = src.ref();
-      memcpy(dst, x.asJSObjectAddress(), sizeof(*x.asJSObjectAddress()));
-      if (!x.isNull()) {
-        JSObject::postWriteBarrier((JSObject**)dst, nullptr, x.asJSObject());
-      }
-      break;
-    }
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1579,7 +1481,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           *(void**)globalAddr =
               (void*)&globalObjs[imported]->val().get().cell();
         } else {
-          CopyValPostBarriered(globalAddr, globalImportValues[imported]);
+          globalImportValues[imported].writeToHeapLocation(globalAddr);
         }
         break;
       }
@@ -1592,11 +1494,14 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         }
 
         if (global.isIndirect()) {
-          void* address = (void*)&globalObjs[i]->val().get().cell();
+          // Initialize the cell
+          wasm::GCPtrVal& cell = globalObjs[i]->val();
+          cell = val.get();
+          // Link to the cell
+          void* address = (void*)&cell.get().cell();
           *(void**)globalAddr = address;
-          CopyValPostBarriered((uint8_t*)address, val.get());
         } else {
-          CopyValPostBarriered(globalAddr, val.get());
+          val.get().writeToHeapLocation(globalAddr);
         }
         break;
       }

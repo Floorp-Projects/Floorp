@@ -2731,17 +2731,14 @@
 - name: IonToWasmCall
   gen_boilerplate: false
 
-- name: WasmExceptionDataPointer
+- name: WasmLoadObjectField
   gen_boilerplate: false
 
-- name: WasmLoadExceptionDataValue
+- name: WasmLoadObjectDataField
   gen_boilerplate: false
 
-- name: WasmStoreExceptionDataValue
+- name: WasmStoreObjectDataField
   gen_boilerplate: false
 
-- name: WasmExceptionRefsPointer
-  gen_boilerplate: false
-
-- name: WasmLoadExceptionRefsValue
+- name: WasmStoreObjectDataRefField
   gen_boilerplate: false
