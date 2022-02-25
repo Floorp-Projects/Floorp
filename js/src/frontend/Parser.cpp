@@ -9497,13 +9497,9 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
   int depth = 0;
   Node pn;
   EnforcedParentheses unparenthesizedExpression = EnforcedParentheses::None;
-  PrivateNameHandling privateNameHandling =
-      cx_->options().ergonomicBrandChecks()
-          ? PrivateNameHandling::PrivateNameAllowed
-          : PrivateNameHandling::PrivateNameProhibited;
   for (;;) {
     pn = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked,
-                   privateNameHandling);
+                   PrivateNameHandling::PrivateNameAllowed);
     if (!pn) {
       return null();
     }
