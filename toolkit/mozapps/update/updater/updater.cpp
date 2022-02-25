@@ -3022,7 +3022,15 @@ int NS_main(int argc, NS_tchar** argv) {
 #ifdef XP_WIN
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
+  // Prevent the updater from falling back from updating with the Maintenance
+  // Service to updating without the Service. Used for Service tests.
+  // This is set below via the MOZ_NO_SERVICE_FALLBACK environment variable.
   bool noServiceFallback = false;
+  // Force the updater to use the Maintenance Service incorrectly, causing it
+  // to fail. Used to test the mechanism that allows the updater to fall back
+  // from using the Maintenance Service to updating without it.
+  // This is set below via the MOZ_FORCE_SERVICE_FALLBACK environment variable.
+  bool forceServiceFallback = false;
 #endif
 
   if (!isDMGInstall) {
@@ -3034,6 +3042,8 @@ int NS_main(int argc, NS_tchar** argv) {
 #    ifdef TEST_UPDATER
     noServiceFallback = EnvHasValue("MOZ_NO_SERVICE_FALLBACK");
     putenv(const_cast<char*>("MOZ_NO_SERVICE_FALLBACK="));
+    forceServiceFallback = EnvHasValue("MOZ_FORCE_SERVICE_FALLBACK");
+    putenv(const_cast<char*>("MOZ_FORCE_SERVICE_FALLBACK="));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test machines to store the
     // allowed name/issuers.
@@ -3388,7 +3398,8 @@ int NS_main(int argc, NS_tchar** argv) {
       }
 
       if (updateLockFileHandle == INVALID_HANDLE_VALUE ||
-          (useService && testOnlyFallbackKeyExists && noServiceFallback)) {
+          (useService && testOnlyFallbackKeyExists &&
+           (noServiceFallback || forceServiceFallback))) {
         HANDLE elevatedFileHandle;
         if (NS_tremove(elevatedLockFilePath) && errno != ENOENT) {
           LOG(("Unable to create elevated lock file! Exiting"));
@@ -3486,9 +3497,19 @@ int NS_main(int argc, NS_tchar** argv) {
           // changing the status.
           WriteStatusFile(SERVICE_UPDATE_STATUS_UNCHANGED);
 
+          int serviceArgc = argc;
+          if (forceServiceFallback && serviceArgc > 2) {
+            // To force the service to fail, we can just pass it too few
+            // arguments. However, we don't want to pass it no arguments,
+            // because then it won't have enough information to write out the
+            // update status file telling us that it failed.
+            serviceArgc = 2;
+          }
+
           // If the update couldn't be started, then set useService to false so
           // we do the update the old way.
-          DWORD ret = LaunchServiceSoftwareUpdateCommand(argc, (LPCWSTR*)argv);
+          DWORD ret =
+              LaunchServiceSoftwareUpdateCommand(serviceArgc, (LPCWSTR*)argv);
           useService = (ret == ERROR_SUCCESS);
           // If the command was launched then wait for the service to be done.
           if (useService) {
@@ -3598,7 +3619,8 @@ int NS_main(int argc, NS_tchar** argv) {
         // write access all along because in that case the only reason we're
         // using the service is because we are testing.
         if (!useService && !noServiceFallback &&
-            updateLockFileHandle == INVALID_HANDLE_VALUE) {
+            (updateLockFileHandle == INVALID_HANDLE_VALUE ||
+             forceServiceFallback)) {
           // Get the secure ID before trying to update so it is possible to
           // determine if the updater has created a new one.
           char uuidStringBefore[UUID_LEN] = {'\0'};
@@ -3615,7 +3637,31 @@ int NS_main(int argc, NS_tchar** argv) {
           sinfo.hwnd = nullptr;
           sinfo.lpFile = argv[0];
           sinfo.lpParameters = cmdLine.get();
-          sinfo.lpVerb = L"runas";
+          if (forceServiceFallback) {
+            // In testing, we don't actually want a UAC prompt. We should
+            // already have the permissions such that we shouldn't need it.
+            // And we don't have a good way of accepting the prompt in
+            // automation.
+            sinfo.lpVerb = L"open";
+            // This handle is what lets the updater that we spawn below know
+            // that it's the elevated updater. We are going to close it so that
+            // it doesn't know that and will run un-elevated. Doing this make
+            // this makes for an imperfect test of the service fallback
+            // functionality because it changes how the (usually) elevated
+            // updater runs. One of the effects of this is that the secure
+            // output files will not be used. So that functionality won't really
+            // be covered by testing. But we can't really have the updater run
+            // elevated, because that would require a UAC, which we have no way
+            // to deal with in automation.
+            CloseHandle(elevatedFileHandle);
+            // We need to let go of the update lock to let the un-elevated
+            // updater we are about to spawn update.
+            if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
+              CloseHandle(updateLockFileHandle);
+            }
+          } else {
+            sinfo.lpVerb = L"runas";
+          }
           sinfo.nShow = SW_SHOWNORMAL;
 
           bool result = ShellExecuteEx(&sinfo);
