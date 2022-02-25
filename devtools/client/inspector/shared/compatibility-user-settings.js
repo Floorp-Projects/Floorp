@@ -27,10 +27,16 @@ const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
 const TARGET_BROWSER_PREF = "devtools.inspector.compatibility.target-browsers";
 
 /**
+ * Returns the full list of browsers in the RemoteSetting devtools-compatibility-browsers
+ * collection (which is a flat copy of MDN compat data), sorted by browser and version.
  *
- * @returns Promise<Array<Object>>
+ * @returns Promise<Array<Object>> : Objects in the array have the following shape:
+ *          - {string} id: The browser id (e.g. `firefox`,`safari_ios`). Should be one of TARGET_BROWSER_ID
+ *          - {string} name: The browser display name (e.g. `Firefox`,`Safari for IOS`, …)
+ *          - {string} version: The browser version (e.g. `99`,`15.3`, `1.0.4`, …)
+ *          - {string} status: The browser status (e.g. `current`,`beta`, …). Should be one of TARGET_BROWSER_STATUS
  */
-async function getDefaultTargetBrowsers() {
+async function getBrowsersList() {
   const records = await RemoteSettings("devtools-compatibility-browsers", {
     filterFunc: record => {
       if (
@@ -77,20 +83,56 @@ async function getDefaultTargetBrowsers() {
 }
 
 /**
+ * Returns the list of browsers for which we should check compatibility issues.
  *
- * @returns Promise<Array<Object>>
+ * @returns Promise<Array<Object>> : Objects in the array have the following shape:
+ *          - {string} id: The browser id (e.g. `firefox`,`safari_ios`). Should be one of TARGET_BROWSER_ID
+ *          - {string} name: The browser display name (e.g. `Firefox`,`Safari for IOS`, …)
+ *          - {string} version: The browser version (e.g. `99`,`15.3`, `1.0.4`, …)
+ *          - {string} status: The browser status (e.g. `current`,`beta`, …). Should be one of TARGET_BROWSER_STATUS
  */
 async function getTargetBrowsers() {
   const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF, "");
-  return targetsString ? JSON.parse(targetsString) : getDefaultTargetBrowsers();
+  const browsers = await getBrowsersList();
+
+  // If not value are stored in the pref, it means the user did not chose specific browsers,
+  // so we need to return the full list.
+  if (!targetsString) {
+    return browsers;
+  }
+
+  const selectedBrowsersAndStatuses = JSON.parse(targetsString);
+  return browsers.filter(
+    browser =>
+      !!selectedBrowsersAndStatuses.find(
+        ({ id, status }) => browser.id == id && browser.status == status
+      )
+  );
 }
 
-function setTargetBrowsers(targets) {
-  Services.prefs.setCharPref(TARGET_BROWSER_PREF, JSON.stringify(targets));
+/**
+ * Store the list of browser id and status that should be used for checking compatibility
+ * issues.
+ *
+ * @param {Object[]} browsers
+ * @param {string} browsers[].id: The browser id. Should be one of TARGET_BROWSER_ID
+ * @param {string} browsers[].status: The browser status. Should be one of TARGET_BROWSER_STATUS
+ */
+function setTargetBrowsers(browsers) {
+  Services.prefs.setCharPref(
+    TARGET_BROWSER_PREF,
+    JSON.stringify(
+      // Only store the id and the status
+      browsers.map(browser => ({
+        id: browser.id,
+        status: browser.status,
+      }))
+    )
+  );
 }
 
 module.exports = {
-  getDefaultTargetBrowsers,
+  getBrowsersList,
   getTargetBrowsers,
   setTargetBrowsers,
 };
