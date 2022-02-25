@@ -1883,7 +1883,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetLayersObserverEpoch(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources(
+    nsTArray<WebRenderParentCommand>&& aCommands) {
   if (mDestroyed) {
     return IPC_OK();
   }
@@ -1896,6 +1897,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   // Clear resources
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
+
+  bool success = ProcessWebRenderParentCommands(aCommands, txn);
+
   txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
   txn.Notify(
       wr::Checkpoint::SceneBuilt,
@@ -1907,6 +1911,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   ScheduleGenerateFrame(wr::RenderReasons::CLEAR_RESOURCES);
 
   ClearAnimationResources();
+
+  if (!success) {
+    return IPC_FAIL(this, "Invalid parent command found");
+  }
 
   return IPC_OK();
 }
