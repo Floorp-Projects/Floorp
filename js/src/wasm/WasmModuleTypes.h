@@ -307,10 +307,12 @@ struct TagType : AtomicRefCounted<TagType> {
     size_ = src.size_;
     return true;
   }
+
+  WASM_DECLARE_SERIALIZABLE(TagType)
 };
 
 using MutableTagType = RefPtr<TagType>;
-using SharedTagType = RefPtr<const TagType>;
+using SharedTagType = SerializableRefPtr<const TagType>;
 
 #ifdef ENABLE_WASM_EXCEPTIONS
 struct TagDesc {
@@ -325,6 +327,8 @@ struct TagDesc {
         type(type),
         globalDataOffset(UINT32_MAX),
         isExport(isExport) {}
+
+  WASM_DECLARE_SERIALIZABLE(TagDesc)
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
