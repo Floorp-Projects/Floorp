@@ -64,9 +64,11 @@ class RecentlyVisitedViewHolder(
             onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
                 when (recentlyVisitedItem) {
                     is RecentHistoryHighlight -> {
+                        metrics.track(Event.HistoryHighlightOpened)
                         interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
                     }
                     is RecentHistoryGroup -> {
+                        metrics.track(Event.HistorySearchGroupOpened)
                         metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
                         interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
                     }

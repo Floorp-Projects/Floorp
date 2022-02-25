@@ -42,6 +42,7 @@ import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
+import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.SearchWidget
@@ -952,6 +953,13 @@ private val Event.wrapper: EventWrapper<*>?
                     ),
                 )
             }
+        )
+
+        is Event.HistoryHighlightOpened -> EventWrapper<NoExtraKeys>(
+            { RecentlyVisitedHomepage.historyHighlightOpened.record() }
+        )
+        is Event.HistorySearchGroupOpened -> EventWrapper<NoExtraKeys>(
+            { RecentlyVisitedHomepage.searchGroupOpened.record() }
         )
 
         // Don't record other events in Glean:

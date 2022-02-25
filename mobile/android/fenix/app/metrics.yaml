@@ -7168,3 +7168,31 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: 114
+
+recently_visited_homepage:
+  history_highlight_opened:
+    type: event
+    description: |
+      User has opened any history highlight from homepage
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23821
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23909
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+  search_group_opened:
+    type: event
+    description: |
+      User has opened a search group from homepage
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23821
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23909
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114

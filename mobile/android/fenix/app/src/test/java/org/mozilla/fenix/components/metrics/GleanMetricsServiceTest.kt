@@ -20,6 +20,7 @@ import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
+import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -317,6 +318,17 @@ class GleanMetricsServiceTest {
         assertFalse(RecentBookmarks.showAllBookmarks.testHasValue())
         gleanService.track(Event.ShowAllBookmarks)
         assertTrue(RecentBookmarks.showAllBookmarks.testHasValue())
+    }
+
+    @Test
+    fun `Home screen recently visited events are correctly recorded`() {
+        assertFalse(RecentlyVisitedHomepage.historyHighlightOpened.testHasValue())
+        gleanService.track(Event.HistoryHighlightOpened)
+        assertTrue(RecentlyVisitedHomepage.historyHighlightOpened.testHasValue())
+
+        assertFalse(RecentlyVisitedHomepage.searchGroupOpened.testHasValue())
+        gleanService.track(Event.HistorySearchGroupOpened)
+        assertTrue(RecentlyVisitedHomepage.searchGroupOpened.testHasValue())
     }
 
     @Test

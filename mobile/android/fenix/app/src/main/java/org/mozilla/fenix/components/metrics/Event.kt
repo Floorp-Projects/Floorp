@@ -84,6 +84,8 @@ sealed class Event {
     data class HistoryRecentSearchesTapped(val source: String) : Event() {
         override val extras = mapOf(History.recentSearchesTappedKeys.pageNumber to source)
     }
+    object HistoryHighlightOpened : Event()
+    object HistorySearchGroupOpened : Event()
     object HistorySearchTermGroupTapped : Event()
     object HistorySearchTermGroupOpenTab : Event()
     object HistorySearchTermGroupRemoveTab : Event()
