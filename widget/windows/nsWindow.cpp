@@ -635,14 +635,14 @@ class InitializeVirtualDesktopManagerTask : public Task {
  **************************************************************/
 
 nsWindow::nsWindow(bool aIsChildWindow)
-    : mBrush(::CreateSolidBrush(NSRGB_2_COLOREF(::GetSysColor(COLOR_BTNFACE)))),
+    : nsWindowBase(eBorderStyle_default),
+      mBrush(::CreateSolidBrush(NSRGB_2_COLOREF(::GetSysColor(COLOR_BTNFACE)))),
       mIsChildWindow(aIsChildWindow),
       mLastPaintEndTime(TimeStamp::Now()),
       mCachedHitTestTime(TimeStamp::Now()),
       mSizeConstraintsScale(GetDefaultScale().scale),
       mDesktopId("DesktopIdMutex") {
-  mWindowType = eWindowType_child;
-  mBorderStyle = eBorderStyle_default;
+  MOZ_ASSERT(mWindowType == eWindowType_child);
 
   if (!gInitializedVirtualDesktopManager) {
     TaskController::Get()->AddTask(
