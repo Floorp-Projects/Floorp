@@ -19,7 +19,7 @@ interface mixin ReadableStreamGenericReader {
   Promise<void> cancel(optional any reason);
 };
 
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
 Pref="dom.streams.readable_stream_default_reader.enabled"]
 interface ReadableStreamDefaultReader {
   [Throws]

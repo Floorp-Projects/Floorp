@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#ts-default-controller-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
  Pref="dom.streams.transform_streams.enabled"]
 interface TransformStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
