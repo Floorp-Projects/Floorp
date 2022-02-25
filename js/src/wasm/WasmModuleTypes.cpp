@@ -206,6 +206,56 @@ bool TagType::initialize(ValTypeVector&& argTypes) {
   return true;
 }
 
+size_t TagType::serializedSize() const {
+  return SerializedPodVectorSize(argTypes_) +
+         SerializedPodVectorSize(argOffsets_) + sizeof(size_);
+}
+
+uint8_t* TagType::serialize(uint8_t* cursor) const {
+  cursor = SerializePodVector(cursor, argTypes_);
+  cursor = SerializePodVector(cursor, argOffsets_);
+  cursor = WriteBytes(cursor, &size_, sizeof(size_));
+  return cursor;
+}
+
+const uint8_t* TagType::deserialize(const uint8_t* cursor) {
+  (cursor = DeserializePodVector(cursor, &argTypes_)) &&
+      (cursor = DeserializePodVector(cursor, &argOffsets_)) &&
+      (cursor = ReadBytes(cursor, &size_, sizeof(size_)));
+  return cursor;
+}
+
+size_t TagType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return argTypes_.sizeOfExcludingThis(mallocSizeOf) +
+         argOffsets_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t TagDesc::serializedSize() const {
+  return sizeof(kind) + type.serializedSize() + sizeof(globalDataOffset) +
+         sizeof(isExport);
+}
+
+uint8_t* TagDesc::serialize(uint8_t* cursor) const {
+  cursor = WriteBytes(cursor, &kind, sizeof(kind));
+  cursor = type.serialize(cursor);
+  cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
+  cursor = WriteBytes(cursor, &isExport, sizeof(isExport));
+  return cursor;
+}
+
+const uint8_t* TagDesc::deserialize(const uint8_t* cursor) {
+  (cursor = ReadBytes(cursor, &kind, sizeof(kind))) &&
+      (cursor = type.deserialize(cursor)) &&
+      (cursor =
+           ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
+      (cursor = ReadBytes(cursor, &isExport, sizeof(isExport)));
+  return cursor;
+}
+
+size_t TagDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return type.sizeOfExcludingThis(mallocSizeOf);
+}
+
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
          SerializedMaybeSize(offsetIfActive) +

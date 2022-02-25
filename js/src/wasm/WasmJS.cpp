@@ -772,8 +772,12 @@ struct MOZ_STACK_CLASS SerializeListener : JS::OptimizedEncodingListener {
   }
 };
 
-bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
+bool wasm::CompileAndSerialize(JSContext* cx, const ShareableBytes& bytecode,
                                Bytes* serialized) {
+  // The caller must check that code caching is available
+  MOZ_ASSERT(CodeCachingAvailable(cx));
+
+  // Create and manually fill in compile args for code caching
   MutableCompileArgs compileArgs = js_new<CompileArgs>(ScriptedCaller());
   if (!compileArgs) {
     return false;
@@ -783,12 +787,19 @@ bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
   // we go straight to tier-2 so that we synchronously call
   // JS::OptimizedEncodingListener::storeOptimizedEncoding().
   compileArgs->baselineEnabled = false;
+  compileArgs->forceTiering = false;
 
   // We always pick Ion here, and we depend on CodeCachingAvailable() having
   // determined that Ion is available, see comments at CodeCachingAvailable().
   // To do better, we need to pass information about which compiler that should
   // be used into CompileAndSerialize().
   compileArgs->ionEnabled = true;
+
+  // Select features that are enabled. This is guaranteed to be consistent with
+  // our compiler selection, as code caching is only available if ion is
+  // available, and ion is only available if it's not disabled by enabled
+  // features.
+  compileArgs->features = FeatureArgs::build(cx, FeatureOptions());
 
   SerializeListener listener(serialized);
 

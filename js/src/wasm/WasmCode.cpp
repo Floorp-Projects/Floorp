@@ -975,7 +975,7 @@ size_t Metadata::serializedSize() const {
          SerializedPodVectorSize(typesRenumbering) +
          SerializedVectorSize(globals) + SerializedPodVectorSize(tables) +
 #ifdef ENABLE_WASM_EXCEPTIONS
-         SerializedPodVectorSize(tags) +
+         SerializedVectorSize(tags) +
 #endif
          sizeof(moduleName) + SerializedPodVectorSize(funcNames) +
          filename.serializedSize() + sourceMapURL.serializedSize();
@@ -990,7 +990,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
   cursor = SerializeVector(cursor, globals);
   cursor = SerializePodVector(cursor, tables);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  cursor = SerializePodVector(cursor, tags);
+  cursor = SerializeVector(cursor, tags);
 #endif
   cursor = WriteBytes(cursor, &moduleName, sizeof(moduleName));
   cursor = SerializePodVector(cursor, funcNames);
@@ -1006,7 +1006,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
       (cursor = DeserializeVector(cursor, &globals)) &&
       (cursor = DeserializePodVector(cursor, &tables)) &&
 #ifdef ENABLE_WASM_EXCEPTIONS
-      (cursor = DeserializePodVector(cursor, &tags)) &&
+      (cursor = DeserializeVector(cursor, &tags)) &&
 #endif
       (cursor = ReadBytes(cursor, &moduleName, sizeof(moduleName))) &&
       (cursor = DeserializePodVector(cursor, &funcNames)) &&
