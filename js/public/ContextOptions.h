@@ -55,7 +55,6 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
 #endif
-        classStaticBlocks_(false),
         importAssertions_(false) {
   }
   // clang-format on
@@ -163,12 +162,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 #endif
-
-  bool classStaticBlocks() const { return classStaticBlocks_; }
-  ContextOptions& setClassStaticBlocks(bool enabled) {
-    classStaticBlocks_ = enabled;
-    return *this;
-  }
 
   bool importAssertions() const { return importAssertions_; }
   ContextOptions& setImportAssertions(bool enabled) {
@@ -289,7 +282,6 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ : 1;
 #endif
-  bool classStaticBlocks_ : 1;
   bool importAssertions_ : 1;
 };
 

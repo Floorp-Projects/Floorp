@@ -186,7 +186,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool nonSyntacticScope = false;
 
   bool topLevelAwait = true;
-  bool classStaticBlocks = false;
   bool useFdlibmForSinCosTan = false;
 
   bool importAssertions = false;
