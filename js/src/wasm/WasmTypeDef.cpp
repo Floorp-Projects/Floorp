@@ -42,7 +42,7 @@ bool FuncType::canHaveJitEntry() const {
 
 bool FuncType::canHaveJitExit() const {
   return !hasUnexposableArgOrRet() && !temporarilyUnsupportedReftypeForExit() &&
-         !temporarilyUnsupportedResultCountForJitExit() &&
+         !hasInt64Arg() && !temporarilyUnsupportedResultCountForJitExit() &&
          JitOptions.enableWasmJitExit;
 }
 
