@@ -853,12 +853,6 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
-      .setPrivateClassFields(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_fields"))
-      .setPrivateClassMethods(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_methods"))
-      .setClassStaticBlocks(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.class_static_blocks"))
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy"))
@@ -867,8 +861,7 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setImportAssertions(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.import_assertions"))
 #endif
-      .setErgnomicBrandChecks(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks"));
+      ;
 }
 
 // Mirrored value of javascript.options.self_hosted.use_shared_memory.

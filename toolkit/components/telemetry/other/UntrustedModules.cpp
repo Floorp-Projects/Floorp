@@ -29,8 +29,6 @@ using MultiGetUntrustedModulesPromise =
     MozPromise<bool /*aIgnored*/, nsresult, true>;
 
 class MOZ_HEAP_CLASS MultiGetUntrustedModulesData final {
-  using BackupType = UntrustedModulesBackupService::BackupType;
-
  public:
   /**
    * @param aFlags [in] Combinations of the flags defined under nsITelemetry.
@@ -101,7 +99,7 @@ class MOZ_HEAP_CLASS MultiGetUntrustedModulesData final {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (aResult.isSome()) {
-      mBackupSvc->Backup(BackupType::Staging, std::move(aResult.ref()));
+      mBackupSvc->Backup(std::move(aResult.ref()));
     }
 
     OnCompletion();
@@ -172,12 +170,12 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
       if (mFlags & nsITelemetry::EXCLUDE_STACKINFO_FROM_LOADEVENTS) {
         // Without the stack info, we can add multiple UntrustedModulesData to
         // the serializer directly.
-        rv = serializer.Add(mBackupSvc->Ref(BackupType::Staging));
+        rv = serializer.Add(mBackupSvc->Staging());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           aPromise->MaybeReject(rv);
           return;
         }
-        rv = serializer.Add(mBackupSvc->Ref(BackupType::Settled));
+        rv = serializer.Add(mBackupSvc->Settled());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           aPromise->MaybeReject(rv);
           return;
@@ -194,8 +192,7 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
       // to "Settled" first, then add "Settled" to the serializer.
       mBackupSvc->SettleAllStagingData();
 
-      const UntrustedModulesBackupData& settledRef =
-          mBackupSvc->Ref(BackupType::Settled);
+      const UntrustedModulesBackupData& settledRef = mBackupSvc->Settled();
       if (settledRef.IsEmpty()) {
         aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
         return;
@@ -210,8 +207,7 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
   } else {
     // When INCLUDE_OLD_LOADEVENTS is not set, we serialize only the "Staging"
     // into a JS object.
-    const UntrustedModulesBackupData& stagingRef =
-        mBackupSvc->Ref(BackupType::Staging);
+    const UntrustedModulesBackupData& stagingRef = mBackupSvc->Staging();
 
     if (stagingRef.IsEmpty()) {
       aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);

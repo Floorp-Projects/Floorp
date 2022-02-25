@@ -10,7 +10,7 @@ information about graphics and the graphics team at Mozilla.
 .. toctree::
    :maxdepth: 1
 
-   GraphicsOverview
+   RenderingOverview
    LayersHistory
    AsyncPanZoom
    AdvancedLayers

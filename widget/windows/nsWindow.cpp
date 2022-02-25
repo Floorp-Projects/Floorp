@@ -632,70 +632,20 @@ class InitializeVirtualDesktopManagerTask : public Task {
  **************************************************************/
 
 nsWindow::nsWindow(bool aIsChildWindow)
-    : nsWindowBase(),
-      mResizeState(NOT_RESIZING),
+    : mBrush(::CreateSolidBrush(NSRGB_2_COLOREF(::GetSysColor(COLOR_BTNFACE)))),
       mIsChildWindow(aIsChildWindow),
+      mLastPaintEndTime(TimeStamp::Now()),
+      mCachedHitTestTime(TimeStamp::Now()),
+      mSizeConstraintsScale(GetDefaultScale().scale),
       mDesktopId("DesktopIdMutex") {
+  mWindowType = eWindowType_child;
+  mBorderStyle = eBorderStyle_default;
+
   if (!gInitializedVirtualDesktopManager) {
     TaskController::Get()->AddTask(
         MakeAndAddRef<InitializeVirtualDesktopManagerTask>());
     gInitializedVirtualDesktopManager = true;
   }
-
-  mIconSmall = nullptr;
-  mIconBig = nullptr;
-  mWnd = nullptr;
-  mLastKillFocusWindow = nullptr;
-  mTransitionWnd = nullptr;
-  mPaintDC = nullptr;
-  mPrevWndProc = nullptr;
-  mNativeDragTarget = nullptr;
-  mDeviceNotifyHandle = nullptr;
-  mInDtor = false;
-  mIsVisible = false;
-  mIsTopWidgetWindow = false;
-  mDisplayPanFeedback = false;
-  mTouchWindow = false;
-  mFutureMarginsToUse = false;
-  mCustomNonClient = false;
-  mHideChrome = false;
-  mFullscreenMode = false;
-  mMousePresent = false;
-  mSimulatedClientArea = false;
-  mDestroyCalled = false;
-  mIsEarlyBlankWindow = false;
-  mIsShowingPreXULSkeletonUI = false;
-  mResizable = false;
-  mHasTaskbarIconBeenCreated = false;
-  mMouseTransparent = false;
-  mPickerDisplayCount = 0;
-  mWindowType = eWindowType_child;
-  mBorderStyle = eBorderStyle_default;
-  mOldSizeMode = nsSizeMode_Normal;
-  mLastSizeMode = nsSizeMode_Normal;
-  mLastSize.width = 0;
-  mLastSize.height = 0;
-  mOldStyle = 0;
-  mOldExStyle = 0;
-  mPainting = 0;
-  mLastKeyboardLayout = 0;
-  mLastPaintEndTime = TimeStamp::Now();
-  mCachedHitTestPoint.x = 0;
-  mCachedHitTestPoint.y = 0;
-  mCachedHitTestTime = TimeStamp::Now();
-  mCachedHitTestResult = 0;
-  mUseResizeMarginOverrides = false;
-  mTransparencyMode = eTransparencyOpaque;
-  memset(&mGlassMargins, 0, sizeof mGlassMargins);
-  DWORD background = ::GetSysColor(COLOR_BTNFACE);
-  mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(background));
-  mSendingSetText = false;
-  mDefaultScale = -1.0;  // not yet set, will be calculated on first use
-  mAspectRatio = 0.0;    // not yet set, will be calculated on first use
-
-  mTaskbarPreview = nullptr;
-
-  mCompositorWidgetDelegate = nullptr;
 
   // Global initialization
   if (!sInstanceCount) {
@@ -722,13 +672,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
       InkCollector::sInkCollector = new InkCollector();
     }
   }  // !sInstanceCount
-
-  mIdleService = nullptr;
-
-  mSizeConstraintsScale = GetDefaultScale().scale;
-  mMaxTextureSize = -1;  // Will be calculated when layer manager is created.
-
-  mRequestFxrOutputPending = false;
 
   sInstanceCount++;
 }

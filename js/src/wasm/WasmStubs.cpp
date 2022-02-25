@@ -939,9 +939,15 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
   masm.jump(ScratchIonEntry);
 }
 
-// Helper function for allocating a BigInt and initializing it from an I64
-// in GenerateJitEntry and GenerateImportInterpExit. The return result is
-// written to scratch.
+// Helper function for allocating a BigInt and initializing it from an I64 in
+// GenerateJitEntry.  The return result is written to scratch.
+//
+// Note that this will create a new frame and must not - in its current form -
+// be called from a context where there is already another stub frame on the
+// stack, as that confuses unwinding during profiling.  This was a problem for
+// its use from GenerateImportJitExit, see bug 1754258.  Therefore,
+// FuncType::canHaveJitExit prevents the present function from being called for
+// exits.
 static void GenerateBigIntInitialization(MacroAssembler& masm,
                                          unsigned bytesPushedByPrologue,
                                          Register64 input, Register scratch,
@@ -1776,10 +1782,9 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
-                                         i->gpr64(), scratch, nullptr,
-                                         throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else {
             masm.store64(i->gpr64(), dst);
           }
@@ -1807,10 +1812,9 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
-                                         i->gpr64(), scratch, nullptr,
-                                         throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else {
             masm.store64(i->gpr64(), dst);
           }
@@ -1873,16 +1877,9 @@ static void FillArgumentArrayForExit(
             GenPrintIsize(DebugChannel::Import, masm, scratch);
             masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
           } else if (type == MIRType::Int64) {
-#if JS_BITS_PER_WORD == 64
-            Register64 scratch64(scratch2);
-#else
-            Register64 scratch64(scratch2, scratch3);
-#endif
-            masm.load64(src, scratch64);
-            GenPrintI64(DebugChannel::Import, masm, scratch64);
-            GenerateBigIntInitialization(masm, sizeof(Frame), scratch64,
-                                         scratch, nullptr, throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else if (type == MIRType::RefOrNull) {
             // This works also for FuncRef because it is distinguishable from a
             // boxed AnyRef.

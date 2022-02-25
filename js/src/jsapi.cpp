@@ -2302,10 +2302,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   allowHTMLComments = rhs.allowHTMLComments;
   nonSyntacticScope = rhs.nonSyntacticScope;
 
-  privateClassFields = rhs.privateClassFields;
-  privateClassMethods = rhs.privateClassMethods;
   topLevelAwait = rhs.topLevelAwait;
-  classStaticBlocks = rhs.classStaticBlocks;
   importAssertions = rhs.importAssertions;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 
@@ -2396,10 +2393,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
-  privateClassFields = cx->options().privateClassFields();
-  privateClassMethods = cx->options().privateClassMethods();
-
-  classStaticBlocks = cx->options().classStaticBlocks();
 
   importAssertions = cx->options().importAssertions();
 
@@ -2613,9 +2606,8 @@ JS_PUBLIC_API JSObject* JS::GetPromisePrototype(JSContext* cx) {
   return GlobalObject::getOrCreatePromisePrototype(cx, global);
 }
 
-JS_PUBLIC_API JS::PromiseState JS::GetPromiseState(
-    JS::HandleObject promiseObj_) {
-  PromiseObject* promiseObj = promiseObj_->maybeUnwrapIf<PromiseObject>();
+JS_PUBLIC_API JS::PromiseState JS::GetPromiseState(JS::HandleObject promise) {
+  PromiseObject* promiseObj = promise->maybeUnwrapIf<PromiseObject>();
   if (!promiseObj) {
     return JS::PromiseState::Pending;
   }
@@ -2634,31 +2626,51 @@ JS_PUBLIC_API JS::Value JS::GetPromiseResult(JS::HandleObject promiseObj) {
                                                          : promise->reason();
 }
 
-JS_PUBLIC_API bool JS::GetPromiseIsHandled(JS::HandleObject promiseObj) {
-  PromiseObject* promise = &promiseObj->as<PromiseObject>();
-  return !promise->isUnhandled();
+JS_PUBLIC_API bool JS::GetPromiseIsHandled(JS::HandleObject promise) {
+  PromiseObject* promiseObj = &promise->as<PromiseObject>();
+  return !promiseObj->isUnhandled();
 }
 
-JS_PUBLIC_API void JS::SetSettledPromiseIsHandled(JSContext* cx,
-                                                  JS::HandleObject promise) {
+static PromiseObject* UnwrapPromise(JSContext* cx, JS::HandleObject promise,
+                                    mozilla::Maybe<AutoRealm>& ar) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(promise);
 
-  mozilla::Maybe<AutoRealm> ar;
-  Rooted<PromiseObject*> promiseObj(cx);
+  PromiseObject* promiseObj;
   if (IsWrapper(promise)) {
     promiseObj = promise->maybeUnwrapAs<PromiseObject>();
     if (!promiseObj) {
       ReportAccessDenied(cx);
-      return;
+      return nullptr;
     }
     ar.emplace(cx, promiseObj);
   } else {
     promiseObj = promise.as<PromiseObject>();
   }
+  return promiseObj;
+}
 
+JS_PUBLIC_API bool JS::SetSettledPromiseIsHandled(JSContext* cx,
+                                                  JS::HandleObject promise) {
+  mozilla::Maybe<AutoRealm> ar;
+  Rooted<PromiseObject*> promiseObj(cx, UnwrapPromise(cx, promise, ar));
+  if (!promiseObj) {
+    return false;
+  }
   js::SetSettledPromiseIsHandled(cx, promiseObj);
+  return true;
+}
+
+JS_PUBLIC_API bool JS::SetAnyPromiseIsHandled(JSContext* cx,
+                                              JS::HandleObject promise) {
+  mozilla::Maybe<AutoRealm> ar;
+  Rooted<PromiseObject*> promiseObj(cx, UnwrapPromise(cx, promise, ar));
+  if (!promiseObj) {
+    return false;
+  }
+  js::SetAnyPromiseIsHandled(cx, promiseObj);
+  return true;
 }
 
 JS_PUBLIC_API JSObject* JS::GetPromiseAllocationSite(JS::HandleObject promise) {

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.per_platform_dummy:transforms
+    - gecko_taskgraph.transforms.mac_dummy:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+only-for-build-platforms:
+    macosx64-shippable/opt
+    macosx64-devedition/opt
+
+kind-dependencies:
+    - build
+    - upload-symbols
+
+job-template:
+    description: Dummy task to pull in mac x64 and aarch64 upload-symbols tasks
+    worker-type: succeed
+    worker:
+        implementation: succeed

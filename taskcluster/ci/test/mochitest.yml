@@ -256,7 +256,7 @@ mochitest-browser-chrome:
                     default: []
             socketprocess_networking+fission:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+wayland: []
             default: []  # we don't run linux opt/debug/asan only with M-swr, now with fission this isn't needed

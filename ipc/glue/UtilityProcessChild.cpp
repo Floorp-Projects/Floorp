@@ -99,6 +99,10 @@ bool UtilityProcessChild::Init(base::ProcessId aParentPid,
 
   mozilla::ipc::SetThisProcessName("Utility Process");
 
+  // Notify the parent process that we have finished our init and that it can
+  // now resolve the pending promise of process startup
+  SendInitCompleted();
+
   return true;
 }
 

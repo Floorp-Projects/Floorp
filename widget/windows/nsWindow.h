@@ -573,42 +573,42 @@ class nsWindow final : public nsWindowBase {
 
  protected:
   nsCOMPtr<nsIWidget> mParent;
-  nsIntSize mLastSize;
+  nsIntSize mLastSize = nsIntSize(0, 0);
   nsIntPoint mLastPoint;
-  HWND mWnd;
-  HWND mTransitionWnd;
-  WNDPROC mPrevWndProc;
+  HWND mWnd = nullptr;
+  HWND mTransitionWnd = nullptr;
+  WNDPROC mPrevWndProc = nullptr;
   HBRUSH mBrush;
   IMEContext mDefaultIMC;
-  HDEVNOTIFY mDeviceNotifyHandle;
-  bool mIsTopWidgetWindow;
-  bool mInDtor;
-  bool mIsVisible;
-  bool mPainting;
-  bool mTouchWindow;
-  bool mDisplayPanFeedback;
-  bool mHideChrome;
+  HDEVNOTIFY mDeviceNotifyHandle = nullptr;
+  bool mIsTopWidgetWindow = false;
+  bool mInDtor = false;
+  bool mIsVisible = false;
+  bool mPainting = false;
+  bool mTouchWindow = false;
+  bool mDisplayPanFeedback = false;
+  bool mHideChrome = false;
   bool mIsRTL;
-  bool mFullscreenMode;
-  bool mMousePresent;
-  bool mSimulatedClientArea;
-  bool mDestroyCalled;
+  bool mFullscreenMode = false;
+  bool mMousePresent = false;
+  bool mSimulatedClientArea = false;
+  bool mDestroyCalled = false;
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
-  bool mIsEarlyBlankWindow;
-  bool mIsShowingPreXULSkeletonUI;
-  bool mResizable;
-  DWORD_PTR mOldStyle;
-  DWORD_PTR mOldExStyle;
-  nsNativeDragTarget* mNativeDragTarget;
-  HKL mLastKeyboardLayout;
-  nsSizeMode mOldSizeMode;
-  nsSizeMode mLastSizeMode;
+  bool mIsEarlyBlankWindow = false;
+  bool mIsShowingPreXULSkeletonUI = false;
+  bool mResizable = false;
+  DWORD_PTR mOldStyle = 0;
+  DWORD_PTR mOldExStyle = 0;
+  nsNativeDragTarget* mNativeDragTarget = nullptr;
+  HKL mLastKeyboardLayout = 0;
+  nsSizeMode mOldSizeMode = nsSizeMode_Normal;
+  nsSizeMode mLastSizeMode = nsSizeMode_Normal;
   WindowHook mWindowHook;
-  uint32_t mPickerDisplayCount;
-  HICON mIconSmall;
-  HICON mIconBig;
-  HWND mLastKillFocusWindow;
+  uint32_t mPickerDisplayCount = 0;
+  HICON mIconSmall = nullptr;
+  HICON mIconBig = nullptr;
+  HWND mLastKillFocusWindow = nullptr;
   static bool sDropShadowEnabled;
   static uint32_t sInstanceCount;
   static TriStateBool sCanQuit;
@@ -624,7 +624,7 @@ class nsWindow final : public nsWindowBase {
   static bool sIsRestoringSession;
   static bool sFirstTopLevelWindowCreated;
 
-  PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
+  PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate = nullptr;
 
   // Always use the helper method to read this property.  See bug 603793.
   static TriStateBool sHasBogusPopupsDropShadowOnMultiMonitor;
@@ -638,12 +638,12 @@ class nsWindow final : public nsWindowBase {
   // Margins we'd like to set once chrome is reshown:
   LayoutDeviceIntMargin mFutureMarginsOnceChromeShows;
   // Indicates we need to apply margins once toggling chrome into showing:
-  bool mFutureMarginsToUse;
+  bool mFutureMarginsToUse = false;
 
   // Indicates custom frames are enabled
-  bool mCustomNonClient;
+  bool mCustomNonClient = false;
   // Indicates custom resize margins are in effect
-  bool mUseResizeMarginOverrides;
+  bool mUseResizeMarginOverrides = false;
   // Width of the left and right portions of the resize region
   int32_t mHorResizeMargin;
   // Height of the top and bottom portions of the resize region
@@ -651,9 +651,11 @@ class nsWindow final : public nsWindowBase {
   // Height of the caption plus border
   int32_t mCaptionHeight;
 
-  double mDefaultScale;
+  // not yet set, will be calculated on first use
+  double mDefaultScale = -1.0;
 
-  float mAspectRatio;
+  // not yet set, will be calculated on first use
+  float mAspectRatio = 0.0;
 
   nsCOMPtr<nsIUserIdleServiceInternal> mIdleService;
 
@@ -680,37 +682,37 @@ class nsWindow final : public nsWindowBase {
   static BYTE sLastMouseButton;
 
   // Graphics
-  HDC mPaintDC;  // only set during painting
+  HDC mPaintDC = nullptr;  // only set during painting
 
   LayoutDeviceIntRect mLastPaintBounds;
 
-  ResizeState mResizeState;
+  ResizeState mResizeState = NOT_RESIZING;
 
   // Transparency
-  nsTransparencyMode mTransparencyMode;
+  nsTransparencyMode mTransparencyMode = eTransparencyOpaque;
   nsIntRegion mPossiblyTransparentRegion;
-  MARGINS mGlassMargins;
+  MARGINS mGlassMargins = {0, 0, 0, 0};
 
   // Win7 Gesture processing and management
   nsWinGesture mGesture;
 
   // Weak ref to the nsITaskbarWindowPreview associated with this window
-  nsWeakPtr mTaskbarPreview;
+  nsWeakPtr mTaskbarPreview = nullptr;
   // True if the taskbar (possibly through the tab preview) tells us that the
   // icon has been created on the taskbar.
-  bool mHasTaskbarIconBeenCreated;
+  bool mHasTaskbarIconBeenCreated = false;
 
   // Indicates that mouse events should be ignored and pass through to the
   // window below. This is currently only used for popups.
-  bool mMouseTransparent;
+  bool mMouseTransparent = false;
 
   // Whether we're in the process of sending a WM_SETTEXT ourselves
-  bool mSendingSetText;
+  bool mSendingSetText = false;
 
   // Whether we we're created as a child window (aka ChildWindow) or not.
   bool mIsChildWindow : 1;
 
-  int32_t mCachedHitTestResult;
+  int32_t mCachedHitTestResult = 0;
 
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
@@ -720,7 +722,7 @@ class nsWindow final : public nsWindowBase {
   mozilla::Maybe<LayoutDeviceIntRect> mWindowButtonsRect;
 
   // Caching for hit test results
-  POINT mCachedHitTestPoint;
+  POINT mCachedHitTestPoint = {0, 0};
   TimeStamp mCachedHitTestTime;
 
   RefPtr<mozilla::widget::InProcessWinCompositorWidget> mBasicLayersSurface;
@@ -729,7 +731,9 @@ class nsWindow final : public nsWindowBase {
   static void InitMouseWheelScrollData();
 
   double mSizeConstraintsScale;  // scale in effect when setting constraints
-  int32_t mMaxTextureSize;
+
+  // Will be calculated when layer manager is created.
+  int32_t mMaxTextureSize = -1;
 
   // Pointer events processing and management
   WinPointerEvents mPointerEvents;
@@ -738,7 +742,7 @@ class nsWindow final : public nsWindowBase {
 
   // When true, used to indicate an async call to RequestFxrOutput to the GPU
   // process after the Compositor is created
-  bool mRequestFxrOutputPending;
+  bool mRequestFxrOutputPending = false;
 
   mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
 

@@ -1656,10 +1656,6 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
-  if (!this->compilationState_.input.options.privateClassFields) {
-    return true;
-  }
-
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
   if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
@@ -7829,12 +7825,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
   Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
   if (handler_.isPrivateName(propName)) {
-    if (!options().privateClassMethods) {
-      // Private methods are not enabled.
-      errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
-      return false;
-    }
-
     if (propAtom == TaggedParserAtomIndex::WellKnown::hashConstructor()) {
       // #constructor is an invalid private name.
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
@@ -8503,11 +8493,6 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   // Both for getting-this-done, and because this will invariably be executed,
   // syntax parsing should be aborted.
   if (!abortIfSyntaxParser()) {
-    return null();
-  }
-
-  if (!options().classStaticBlocks) {
-    error(JSMSG_CLASS_STATIC_NOT_SUPPORTED);
     return null();
   }
 
@@ -9497,13 +9482,9 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
   int depth = 0;
   Node pn;
   EnforcedParentheses unparenthesizedExpression = EnforcedParentheses::None;
-  PrivateNameHandling privateNameHandling =
-      cx_->options().ergonomicBrandChecks()
-          ? PrivateNameHandling::PrivateNameAllowed
-          : PrivateNameHandling::PrivateNameProhibited;
   for (;;) {
     pn = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked,
-                   privateNameHandling);
+                   PrivateNameHandling::PrivateNameAllowed);
     if (!pn) {
       return null();
     }

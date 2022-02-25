@@ -3083,20 +3083,15 @@ template <typename Unit, class AnyCharsAccess>
           break;
         }
 #endif
-        if (options().privateClassFields) {
-          TokenStart start(this->sourceUnits, -1);
-          const Unit* identStart =
-              this->sourceUnits.addressOfNextCodeUnit() - 1;
-          IdentifierEscapes sawEscape;
-          if (!matchIdentifierStart(&sawEscape)) {
-            return badToken();
-          }
-          return identifierName(start, identStart, sawEscape, modifier,
-                                NameVisibility::Private, ttp);
+
+        TokenStart start(this->sourceUnits, -1);
+        const Unit* identStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
+        IdentifierEscapes sawEscape;
+        if (!matchIdentifierStart(&sawEscape)) {
+          return badToken();
         }
-        ungetCodeUnit(unit);
-        error(JSMSG_PRIVATE_FIELDS_NOT_SUPPORTED);
-        return badToken();
+        return identifierName(start, identStart, sawEscape, modifier,
+                              NameVisibility::Private, ttp);
       }
 
       case '=':
