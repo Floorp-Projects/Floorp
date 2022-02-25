@@ -770,7 +770,6 @@ class FilterNodeLightingSoftware : public FilterNodeSoftware {
                                                CoordType aKernelUnitLengthX,
                                                CoordType aKernelUnitLengthY);
 
-  Mutex mLock;
   LightType mLight;
   LightingType mLighting;
   Float mSurfaceScale;
