@@ -180,38 +180,28 @@ size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return initial_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-bool TagType::computeLayout() {
-  StructLayout layout;
-  int32_t refCount = 0;
-  for (const ValType argType : argTypes) {
-    if (argType.isRefRepr()) {
-      refCount++;
-    }
+bool TagType::initialize(ValTypeVector&& argTypes) {
+  MOZ_ASSERT(argTypes_.empty() && argOffsets_.empty() && size_ == 0);
+
+  argTypes_ = std::move(argTypes);
+  if (!argOffsets_.resize(argTypes_.length())) {
+    return false;
   }
-  int32_t refIndex = 0;
-  for (size_t i = 0; i < argTypes.length(); i++) {
-    CheckedInt32 offset;
-    if (argTypes[i].isRefRepr()) {
-      NativeObject::elementsSizeMustNotOverflow();
-      // Reference typed elements need to be loaded in reverse order
-      // as they are pushed stack-like into the exception's Array.
-      offset = (refCount - refIndex - 1) * CheckedInt32(sizeof(Value));
-      refIndex++;
-    } else {
-      offset = layout.addField(FieldType(argTypes[i].packed()));
-    }
+
+  StructLayout layout;
+  for (size_t i = 0; i < argTypes_.length(); i++) {
+    CheckedInt32 offset = layout.addField(FieldType(argTypes_[i].packed()));
     if (!offset.isValid()) {
       return false;
     }
-    argOffsets[i] = offset.value();
+    argOffsets_[i] = offset.value();
   }
-  this->refCount = refCount;
 
   CheckedInt32 size = layout.close();
   if (!size.isValid()) {
     return false;
   }
-  this->bufferSize = size.value();
+  this->size_ = size.value();
 
   return true;
 }
