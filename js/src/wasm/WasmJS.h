@@ -522,6 +522,7 @@ class WasmExceptionObject : public NativeObject {
   static const unsigned TAG_SLOT = 0;
   static const unsigned TYPE_SLOT = 1;
   static const unsigned DATA_SLOT = 2;
+  static const unsigned STACK_SLOT = 3;
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
@@ -532,6 +533,8 @@ class WasmExceptionObject : public NativeObject {
   static bool isImpl(JSContext* cx, const CallArgs& args);
   static bool getArg(JSContext* cx, unsigned argc, Value* vp);
   static bool getArgImpl(JSContext* cx, const CallArgs& args);
+  static bool getStack(JSContext* cx, unsigned argc, Value* vp);
+  static bool getStack_impl(JSContext* cx, const CallArgs& args);
 
   uint8_t* typedMem() const;
   [[nodiscard]] bool loadValue(JSContext* cx, size_t offset, wasm::ValType type,
@@ -540,7 +543,7 @@ class WasmExceptionObject : public NativeObject {
                                HandleValue value);
 
  public:
-  static const unsigned RESERVED_SLOTS = 3;
+  static const unsigned RESERVED_SLOTS = 4;
   static const JSClass class_;
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
@@ -549,9 +552,10 @@ class WasmExceptionObject : public NativeObject {
   static bool construct(JSContext*, unsigned, Value*);
 
   static WasmExceptionObject* create(JSContext* cx, Handle<WasmTagObject*> tag,
-                                     HandleObject proto);
+                                     HandleObject stack, HandleObject proto);
   bool isNewborn() const;
 
+  JSObject* stack() const;
   const wasm::TagType* tagType() const;
   WasmTagObject& tag() const;
 
