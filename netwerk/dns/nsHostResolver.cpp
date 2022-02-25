@@ -1326,7 +1326,9 @@ bool nsHostResolver::MaybeRetryTRRLookup(
     return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
   }
 
-  if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_NXDOMAIN ||
+  if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_RCODE_FAIL ||
+      aFirstAttemptSkipReason == TRRSkippedReason::TRR_NO_ANSWERS ||
+      aFirstAttemptSkipReason == TRRSkippedReason::TRR_NXDOMAIN ||
       aFirstAttemptSkipReason == TRRSkippedReason::TRR_DISABLED_FLAG ||
       aFirstAttemptSkipReason == TRRSkippedReason::TRR_NOT_CONFIRMED) {
     LOG(

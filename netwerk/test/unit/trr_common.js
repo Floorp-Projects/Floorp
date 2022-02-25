@@ -401,13 +401,7 @@ async function test_no_answers_fallback() {
   info("Now in strict mode - no fallback");
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
   dns.clearCache(true);
-  let { inStatus } = await new TRRDNSListener("confirm.example.com", {
-    expectedSuccess: false,
-  });
-  Assert.ok(
-    !Components.isSuccessCode(inStatus),
-    `${inStatus} should be an error code`
-  );
+  await new TRRDNSListener("confirm.example.com", "127.0.0.1");
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 }
 
@@ -974,10 +968,7 @@ async function test_ipv6_trr_fallback() {
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
   setModeAndURI(2, "doh?responseIP=none");
-  let { inStatus: inStatus2 } = await new TRRDNSListener("ipv6.host.com", {
-    expectedSuccess: false,
-  });
-  equal(inStatus2, Cr.NS_ERROR_UNKNOWN_HOST);
+  await new TRRDNSListener("ipv6.host.com", "1:1::2");
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 
   override.clearOverrides();
@@ -1010,10 +1001,7 @@ async function test_ipv4_trr_fallback() {
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
   setModeAndURI(2, "doh?responseIP=none");
-  let { inStatus: inStatus2 } = await new TRRDNSListener("ipv4.host.com", {
-    expectedSuccess: false,
-  });
-  equal(inStatus2, Cr.NS_ERROR_UNKNOWN_HOST);
+  await new TRRDNSListener("ipv4.host.com", "3.4.5.6");
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 
   override.clearOverrides();

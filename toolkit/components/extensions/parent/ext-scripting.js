@@ -122,8 +122,7 @@ const makeInternalContentScript = details => {
       matchAboutBlank: true,
       matches: details.matches,
       originAttributesPatterns: null,
-      // TODO: Bug 1755978 - Add support for `details.runAt`.
-      runAt: "document_idle",
+      runAt: details.runAt,
     },
   };
 };
@@ -261,6 +260,7 @@ this.scripting = class extends ExtensionAPI {
                   jsPath.replace(extension.baseURL, "")
                 ),
                 matches: options.matches,
+                runAt: options.runAt,
               };
             })
             .filter(script => script);
