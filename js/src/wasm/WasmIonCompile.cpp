@@ -2427,7 +2427,8 @@ class FunctionCompiler {
     // patches around.
 #ifdef ENABLE_WASM_EXCEPTIONS
     for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
-      if (iter().controlKind(depth) != LabelKind::Try) {
+      LabelKind kind = iter().controlKind(depth);
+      if (kind != LabelKind::Try && kind != LabelKind::Body) {
         continue;
       }
       Control& control = iter().controlItem(depth);
