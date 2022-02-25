@@ -40,7 +40,7 @@ add_task(async function() {
   // invoke test
   invokeInTab("test");
   // should not pause
-  is(isPaused(dbg), false);
+  assertNotPaused(dbg);
 
   // unblackbox
   await clickElement(dbg, "blackbox");
