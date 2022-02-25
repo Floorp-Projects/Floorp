@@ -57,7 +57,6 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
 #endif
-        ergonomicBrandChecks_(false),
         classStaticBlocks_(false),
         importAssertions_(false) {
   }
@@ -160,12 +159,6 @@ class JS_PUBLIC_API ContextOptions {
   bool privateClassMethods() const { return privateClassMethods_; }
   ContextOptions& setPrivateClassMethods(bool enabled) {
     privateClassMethods_ = enabled;
-    return *this;
-  }
-
-  bool ergonomicBrandChecks() const { return ergonomicBrandChecks_; }
-  ContextOptions& setErgnomicBrandChecks(bool enabled) {
-    ergonomicBrandChecks_ = enabled;
     return *this;
   }
 
@@ -312,7 +305,6 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ : 1;
 #endif
-  bool ergonomicBrandChecks_ : 1;
   bool classStaticBlocks_ : 1;
   bool importAssertions_ : 1;
 };
