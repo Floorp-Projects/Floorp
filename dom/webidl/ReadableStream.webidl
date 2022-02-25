@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
 //Transferable See Bug 1734240
 ]
 interface ReadableStream {
