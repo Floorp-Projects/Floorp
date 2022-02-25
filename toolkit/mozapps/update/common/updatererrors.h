@@ -42,6 +42,9 @@
 #define VERSION_DOWNGRADE_ERROR 23
 
 // Error codes 24-33 and 49-58 are for the Windows maintenance service.
+// Note: If more maintenance service error codes are added, the implementations
+// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.jsm should be
+// updated to account for them.
 #define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
 #define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
 #define SERVICE_UPDATER_SIGN_ERROR 26
@@ -69,6 +72,9 @@
 #define RENAME_ERROR_EXPECTED_FILE 48
 
 // Error codes 24-33 and 49-58 are for the Windows maintenance service.
+// Note: If more maintenance service error codes are added, the implementations
+// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.jsm should be
+// updated to account for them.
 #define SERVICE_COULD_NOT_COPY_UPDATER 49
 #define SERVICE_STILL_APPLYING_TERMINATED 50
 #define SERVICE_STILL_APPLYING_NO_EXIT_CODE 51
