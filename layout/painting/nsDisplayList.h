@@ -39,7 +39,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/EffectsInfo.h"
-#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/gfx/UserData.h"
 #include "mozilla/layers/BSPTree.h"
 #include "mozilla/layers/LayerAttributes.h"
@@ -100,6 +99,7 @@ class DisplayListBuilder;
 }  // namespace wr
 
 namespace dom {
+class RemoteBrowser;
 class Selection;
 }  // namespace dom
 
@@ -6580,33 +6580,6 @@ class nsDisplayText final : public nsPaintedDisplayItem {
                ? static_cast<nsDisplayText*>(aItem)
                : nullptr;
   }
-
-  struct ClipEdges {
-    ClipEdges(const nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
-              nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
-      nsRect r = aFrame->ScrollableOverflowRect() + aToReferenceFrame;
-      if (aFrame->GetWritingMode().IsVertical()) {
-        mVisIStart = aVisIStartEdge > 0 ? r.y + aVisIStartEdge : nscoord_MIN;
-        mVisIEnd = aVisIEndEdge > 0
-                       ? std::max(r.YMost() - aVisIEndEdge, mVisIStart)
-                       : nscoord_MAX;
-      } else {
-        mVisIStart = aVisIStartEdge > 0 ? r.x + aVisIStartEdge : nscoord_MIN;
-        mVisIEnd = aVisIEndEdge > 0
-                       ? std::max(r.XMost() - aVisIEndEdge, mVisIStart)
-                       : nscoord_MAX;
-      }
-    }
-
-    void Intersect(nscoord* aVisIStart, nscoord* aVisISize) const {
-      nscoord end = *aVisIStart + *aVisISize;
-      *aVisIStart = std::max(*aVisIStart, mVisIStart);
-      *aVisISize = std::max(std::min(end, mVisIEnd) - *aVisIStart, 0);
-    }
-
-    nscoord mVisIStart;
-    nscoord mVisIEnd;
-  };
 
   nscoord& VisIStartEdge() { return mVisIStartEdge; }
   nscoord& VisIEndEdge() { return mVisIEndEdge; }
