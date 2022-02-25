@@ -7,6 +7,7 @@ import { Localized } from "./MSLocalized";
 import { Colorways } from "./Colorways";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export class MultiStageProtonScreen extends React.PureComponent {
   componentDidMount() {
@@ -94,6 +95,19 @@ export class MultiStageProtonScreen extends React.PureComponent {
     );
   }
 
+  renderLanguageSwitcher() {
+    return this.props.content.languageSwitcher ? (
+      <LanguageSwitcher
+        content={this.props.content}
+        langPackInstalled={this.props.langPackInstalled}
+        handleAction={this.props.handleAction}
+        negotiatedLanguage={this.props.negotiatedLanguage}
+        langPackInstallPhase={this.props.langPackInstallPhase}
+        messageId={this.props.messageId}
+      />
+    ) : null;
+  }
+
   render() {
     const {
       autoClose,
@@ -104,6 +118,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
       isLastCenteredScreen,
       totalNumberOfScreens: total,
     } = this.props;
+
     const windowObj = this.props.windowObj || window;
     let currentURL = windowObj.location.href;
     const includeNoodles = content.has_noodles;
@@ -186,12 +201,14 @@ export class MultiStageProtonScreen extends React.PureComponent {
                     <h2
                       data-l10n-args={JSON.stringify({
                         "addon-name": this.props.addonName,
+                        ...this.props.appAndSystemLocaleInfo?.displayNames,
                       })}
                     />
                   </Localized>
                 ) : null}
               </div>
               {this.renderContentTiles()}
+              {this.renderLanguageSwitcher()}
               <div>
                 <Localized
                   text={
@@ -201,6 +218,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
                   <button
                     className="primary"
                     value="primary_button"
+                    disabled={content.primary_button?.disabled === true}
                     onClick={this.props.handleAction}
                   />
                 </Localized>
