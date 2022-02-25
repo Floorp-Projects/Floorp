@@ -1428,23 +1428,6 @@ void CompareManager::Cleanup() {
   }
 }
 
-class NoopPromiseHandler final : public PromiseNativeHandler {
- public:
-  NS_DECL_ISUPPORTS
-
-  NoopPromiseHandler() { AssertIsOnMainThread(); }
-
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-
- private:
-  ~NoopPromiseHandler() { AssertIsOnMainThread(); }
-};
-
-NS_IMPL_ISUPPORTS0(NoopPromiseHandler)
-
 }  // namespace
 
 nsresult PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName) {
@@ -1470,10 +1453,9 @@ nsresult PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName) {
     return rv.StealNSResult();
   }
 
-  // Add a no-op promise handler to ensure that if this promise gets rejected,
+  // Set [[PromiseIsHandled]] to ensure that if this promise gets rejected,
   // we don't end up reporting a rejected promise to the console.
-  RefPtr<NoopPromiseHandler> promiseHandler = new NoopPromiseHandler();
-  promise->AppendNativeHandler(promiseHandler);
+  MOZ_ALWAYS_TRUE(promise->SetAnyPromiseIsHandled());
 
   // We don't actually care about the result of the delete operation.
   return NS_OK;
