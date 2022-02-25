@@ -279,23 +279,27 @@ function messageIsCSSError(msg) {
 let imageURIsToReferencesMap = new Map();
 let customPropsToReferencesMap = new Map();
 
-function processCSSRules(sheet) {
-  for (let rule of sheet.cssRules) {
-    if (rule instanceof CSSConditionRule || rule instanceof CSSKeyframesRule) {
-      processCSSRules(rule);
+function processCSSRules(container) {
+  for (let rule of container.cssRules) {
+    if (rule.styleSheet) {
+      processCSSRules(rule.styleSheet); // @import
       continue;
     }
-    if (!(rule instanceof CSSStyleRule) && !(rule instanceof CSSKeyframeRule)) {
+    if (rule.cssRules) {
+      processCSSRules(rule); // @supports, @media, @layer (block), @keyframes
       continue;
     }
-
+    if (!rule.style) {
+      continue; // @layer (statement), @scroll-timeline, @font-feature-values, @counter-style
+    }
     // Extract urls from the css text.
-    // Note: CSSRule.cssText always has double quotes around URLs even
+    // Note: CSSRule.style.cssText always has double quotes around URLs even
     //       when the original CSS file didn't.
-    let urls = rule.cssText.match(/url\("[^"]*"\)/g);
-    // Extract props by searching all "--" preceeded by "var(" or a non-word
+    let cssText = rule.style.cssText;
+    let urls = cssText.match(/url\("[^"]*"\)/g);
+    // Extract props by searching all "--" preceded by "var(" or a non-word
     // character.
-    let props = rule.cssText.match(/(var\(|\W)(--[\w\-]+)/g);
+    let props = cssText.match(/(var\(|\W|^)(--[\w\-]+)/g);
     if (!urls && !props) {
       continue;
     }
@@ -327,8 +331,10 @@ function processCSSRules(sheet) {
         customPropsToReferencesMap.set(prop, prevValue + 1);
       } else {
         // Remove the extra non-word character captured by the regular
-        // expression.
-        prop = prop.substring(1);
+        // expression if needed.
+        if (prop[0] != "-") {
+          prop = prop.substring(1);
+        }
         if (!customPropsToReferencesMap.has(prop)) {
           customPropsToReferencesMap.set(prop, undefined);
         }
