@@ -77,8 +77,8 @@ struct TlsData {
   //   - If the unwind target is a `try-delegate`, it is unset by the delegated
   //     try-catch block or function body block.
   GCPtrObject pendingException;
-  // The module-local index of the pending exception.
-  uint32_t pendingExceptionTagIndex;
+  // The tag of the pending exception.
+  GCPtrObject pendingExceptionTag;
 #endif
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
