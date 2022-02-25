@@ -731,8 +731,6 @@ add_task(async function test_on_visited() {
     let onVisited = onVisitedData[index];
     ok(PlacesUtils.isValidGuid(onVisited.id), "onVisited received a valid id");
     equal(onVisited.url, expected.url, "onVisited received the expected url");
-    // Title will be blank until bug 1287928 lands
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1287928
     equal(
       onVisited.title,
       expected.title,
@@ -776,10 +774,14 @@ add_task(async function test_on_visited() {
   let onTitleChangedData = await extension.awaitMessage(
     "on-title-changed-data"
   );
-  equal(
-    onTitleChangedData.title,
-    "Title Changed",
-    "ontitleChanged received the expected title."
+  Assert.deepEqual(
+    {
+      id: onVisitedData[3].id,
+      url: SINGLE_VISIT_URL,
+      title: "Title Changed",
+    },
+    onTitleChangedData,
+    "expected event data for onTitleChanged"
   );
 
   await extension.unload();

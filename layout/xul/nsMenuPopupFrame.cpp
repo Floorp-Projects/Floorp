@@ -1490,7 +1490,6 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
-  nsDeviceContext* devContext = presContext->DeviceContext();
   nsPoint offsetForContextMenu;
 
   bool isNoAutoHide = IsNoAutoHide();
@@ -1548,34 +1547,19 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       mScreenRect.y = screenPoint.y - margin.top;
     }
   } else {
-    // The popup is positioned at a screen coordinate.
-    // First convert the screen position in mScreenRect from CSS pixels into
-    // device pixels, ignoring any zoom as mScreenRect holds unzoomed screen
-    // coordinates.
-    int32_t factor = devContext->AppUnitsPerDevPixelAtUnitFullZoom();
-
-    // Depending on the platform, context menus should be offset by varying
-    // amounts to ensure that they don't appear directly where the cursor is.
-    // Otherwise, it is too easy to have the context menu close up again.
+    // The popup is positioned at a screen coordinate. Depending on the
+    // platform, context menus should be offset by varying amounts to ensure
+    // that they don't appear directly where the cursor is. Otherwise, it is too
+    // easy to have the context menu close up again.
     if (mAdjustOffsetForContextMenu) {
-      nsPoint offsetForContextMenuDev;
-      offsetForContextMenuDev.x =
-          CSSPixel::ToAppUnits(LookAndFeel::GetInt(
-              LookAndFeel::IntID::ContextMenuOffsetHorizontal)) /
-          factor;
-      offsetForContextMenuDev.y =
-          CSSPixel::ToAppUnits(LookAndFeel::GetInt(
-              LookAndFeel::IntID::ContextMenuOffsetVertical)) /
-          factor;
-      offsetForContextMenu.x =
-          presContext->DevPixelsToAppUnits(offsetForContextMenuDev.x);
-      offsetForContextMenu.y =
-          presContext->DevPixelsToAppUnits(offsetForContextMenuDev.y);
+      const CSSIntPoint offset(
+          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetHorizontal),
+          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetVertical));
+
+      offsetForContextMenu = CSSIntPoint::ToAppUnits(offset);
     }
 
-    // next, convert into app units accounting for the zoom
-    screenPoint.x = presContext->DevPixelsToAppUnits(mScreenRect.x / factor);
-    screenPoint.y = presContext->DevPixelsToAppUnits(mScreenRect.y / factor);
+    screenPoint = mScreenRect.TopLeft();
     anchorRect = nsRect(screenPoint, nsSize(0, 0));
 
     // add the margins on the popup

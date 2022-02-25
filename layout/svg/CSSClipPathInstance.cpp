@@ -28,14 +28,12 @@ namespace mozilla {
 /* static*/
 void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
     gfxContext& aContext, nsIFrame* aFrame, const gfxMatrix& aTransform) {
-  aContext.NewPath();
   RefPtr<Path> path =
       CreateClipPathForFrame(aContext.GetDrawTarget(), aFrame, aTransform);
   if (!path) {
     return;
   }
-  aContext.SetPath(path);
-  aContext.Clip();
+  aContext.Clip(path);
 }
 
 /* static*/

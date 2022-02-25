@@ -12,6 +12,7 @@
 #  include "ipc/IPCMessageUtils.h"
 #  include "mozilla/CombinedStacks.h"
 #  include "mozilla/DebugOnly.h"
+#  include "mozilla/LinkedList.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/TypedEnumBits.h"
@@ -169,7 +170,30 @@ class ModulesMap final
       : nsRefPtrHashtable<nsStringCaseInsensitiveHashKey, ModuleRecord>() {}
 };
 
+struct ProcessedModuleLoadEventContainer final
+    : public LinkedListElement<ProcessedModuleLoadEventContainer> {
+  ProcessedModuleLoadEvent mEvent;
+  ProcessedModuleLoadEventContainer() = default;
+  explicit ProcessedModuleLoadEventContainer(ProcessedModuleLoadEvent&& aEvent)
+      : mEvent(std::move(aEvent)) {}
+
+  ProcessedModuleLoadEventContainer(ProcessedModuleLoadEventContainer&&) =
+      default;
+  ProcessedModuleLoadEventContainer& operator=(
+      ProcessedModuleLoadEventContainer&&) = default;
+  ProcessedModuleLoadEventContainer(const ProcessedModuleLoadEventContainer&) =
+      delete;
+  ProcessedModuleLoadEventContainer& operator=(
+      const ProcessedModuleLoadEventContainer&) = delete;
+};
+using UntrustedModuleLoadingEvents =
+    AutoCleanLinkedList<ProcessedModuleLoadEventContainer>;
+
 class UntrustedModulesData final {
+  // Merge aNewData.mEvents into this->mModules and also
+  // make module entries in aNewData point to items in this->mModules.
+  void MergeModules(UntrustedModulesData& aNewData);
+
  public:
   // Ensure mEvents will never retain more than kMaxEvents events.
   // This constant matches the maximum in Telemetry::CombinedStacks.
@@ -178,6 +202,7 @@ class UntrustedModulesData final {
   UntrustedModulesData()
       : mProcessType(XRE_GetProcessType()),
         mPid(::GetCurrentProcessId()),
+        mNumEvents(0),
         mSanitizationFailures(0),
         mTrustTestFailures(0) {}
 
@@ -188,22 +213,26 @@ class UntrustedModulesData final {
   UntrustedModulesData& operator=(const UntrustedModulesData&) = delete;
 
   explicit operator bool() const {
-    return !mEvents.empty() || mSanitizationFailures || mTrustTestFailures ||
+    return !mEvents.isEmpty() || mSanitizationFailures || mTrustTestFailures ||
            mXULLoadDurationMS.isSome();
   }
 
   void AddNewLoads(const ModulesMap& aModulesMap,
-                   Vector<ProcessedModuleLoadEvent>&& aEvents,
+                   UntrustedModuleLoadingEvents&& aEvents,
                    Vector<Telemetry::ProcessedStack>&& aStacks);
   void Merge(UntrustedModulesData&& aNewData);
-
+  void MergeWithoutStacks(UntrustedModulesData&& aNewData);
   void Swap(UntrustedModulesData& aOther);
+
+  // Drop callstack data and old loading events.
+  void Truncate();
 
   GeckoProcessType mProcessType;
   DWORD mPid;
   TimeDuration mElapsed;
   ModulesMap mModules;
-  Vector<ProcessedModuleLoadEvent> mEvents;
+  uint32_t mNumEvents;
+  UntrustedModuleLoadingEvents mEvents;
   Telemetry::CombinedStacks mStacks;
   Maybe<double> mXULLoadDurationMS;
   uint32_t mSanitizationFailures;
@@ -440,9 +469,9 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     WriteParam(aMsg, aParam.mElapsed);
     WriteParam(aMsg, aParam.mModules);
 
-    aMsg->WriteUInt32(aParam.mEvents.length());
-    for (auto& evt : aParam.mEvents) {
-      WriteEvent(aMsg, evt);
+    aMsg->WriteUInt32(aParam.mNumEvents);
+    for (auto event : aParam.mEvents) {
+      WriteEvent(aMsg, event->mEvent);
     }
 
     WriteParam(aMsg, aParam.mStacks);
@@ -473,20 +502,18 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     }
 
     // We read mEvents manually so that we can use ReadEvent defined below.
-    uint32_t eventsLen;
-    if (!ReadParam(aMsg, aIter, &eventsLen)) {
+    if (!ReadParam(aMsg, aIter, &aResult->mNumEvents)) {
       return false;
     }
 
-    if (!aResult->mEvents.resize(eventsLen)) {
-      return false;
-    }
-
-    for (uint32_t curEventIdx = 0; curEventIdx < eventsLen; ++curEventIdx) {
-      if (!ReadEvent(aMsg, aIter, &(aResult->mEvents[curEventIdx]),
-                     aResult->mModules)) {
+    for (uint32_t curEventIdx = 0; curEventIdx < aResult->mNumEvents;
+         ++curEventIdx) {
+      auto newEvent =
+          mozilla::MakeUnique<mozilla::ProcessedModuleLoadEventContainer>();
+      if (!ReadEvent(aMsg, aIter, &newEvent->mEvent, aResult->mModules)) {
         return false;
       }
+      aResult->mEvents.insertBack(newEvent.release());
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mStacks)) {

@@ -451,6 +451,10 @@ class GCRuntime {
 
   bool isShutdownGC() const { return gcOptions() == JS::GCOptions::Shutdown; }
 
+#ifdef DEBUG
+  bool isShuttingDown() const { return hadShutdownGC; }
+#endif
+
   bool initSweepActions();
 
   void setGrayRootsTracer(JSGrayRootsTracer traceOp, void* data);
@@ -715,6 +719,8 @@ class GCRuntime {
 
   friend class AutoCallGCCallbacks;
   void maybeCallGCCallback(JSGCStatus status, JS::GCReason reason);
+
+  void startCollection(JS::GCReason reason);
 
   void purgeRuntime();
   [[nodiscard]] bool beginPreparePhase(JS::GCReason reason,
@@ -1051,6 +1057,11 @@ class GCRuntime {
 
   /* Whether any sweeping will take place in the separate GC helper thread. */
   MainThreadData<bool> sweepOnBackgroundThread;
+
+#ifdef DEBUG
+  /* Shutdown has started. Further collections must be shutdown collections. */
+  MainThreadData<bool> hadShutdownGC;
+#endif
 
   /* Singly linked list of zones to be swept in the background. */
   HelperThreadLockData<ZoneList> backgroundSweepZones;

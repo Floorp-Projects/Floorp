@@ -10,22 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var utilityPid = undefined;
-const utilityProcessTest = Cc[
-  "@mozilla.org/utility-process-test;1"
-].createInstance(Ci.nsIUtilityProcessTest);
-
-add_task(async () => {
-  await utilityProcessTest
-    .startProcess()
-    .then(async pid => {
-      utilityPid = pid;
-      ok(true, "Could start Utility process: " + pid);
-    })
-    .catch(async () => {
-      ok(false, "Cannot start Utility process?");
-    });
-});
+startUtilityProcess();
 
 add_task(async () => {
   info("Start the profiler");
@@ -66,7 +51,4 @@ add_task(async () => {
   Services.profiler.StopProfiler();
 });
 
-add_task(async () => {
-  info("Stop Utility Process");
-  utilityProcessTest.stopProcess();
-});
+cleanUtilityProcessShutdown();

@@ -134,6 +134,15 @@ class FuncType {
   bool canHaveJitEntry() const;
   bool canHaveJitExit() const;
 
+  bool hasInt64Arg() const {
+    for (ValType arg : args()) {
+      if (arg.kind() == ValType::Kind::I64) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool hasUnexposableArgOrRet() const {
     for (ValType arg : args()) {
       if (!arg.isExposable()) {
