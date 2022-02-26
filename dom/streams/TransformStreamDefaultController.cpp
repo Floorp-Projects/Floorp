@@ -101,7 +101,7 @@ void SetUpTransformStreamDefaultControllerFromTransformer(
     // Step 2. Let transformAlgorithm be the following steps, taking a chunk
     // argument:
     transformAlgorithm = [](JSContext* aCx,
-                            TransformStreamDefaultController aController,
+                            TransformStreamDefaultController& aController,
                             JS::HandleValue aChunk,
                             ErrorResult& aRv) -> already_AddRefed<Promise> {
       MOZ_ASSERT(!aController.GetTransformCallback());
@@ -127,7 +127,7 @@ void SetUpTransformStreamDefaultControllerFromTransformer(
     controller->SetTransformerMembers(aTransformerDict.mTransform.Value(),
                                       aTransformer);
     transformAlgorithm =
-        [](JSContext* aCx, TransformStreamDefaultController aController,
+        [](JSContext* aCx, TransformStreamDefaultController& aController,
            JS::HandleValue aChunk, ErrorResult& aRv)
             MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> already_AddRefed<Promise> {
       MOZ_ASSERT(aController.GetTransformCallback());
