@@ -27,83 +27,126 @@ var { getSettingsAPI } = ExtensionPreferencesManager;
 
 const CAPTIVE_URL_PREF = "captivedetect.canonicalURL";
 
-function nameForCPSState(state) {
-  switch (state) {
-    case gCPS.UNKNOWN:
-      return "unknown";
-    case gCPS.NOT_CAPTIVE:
-      return "not_captive";
-    case gCPS.UNLOCKED_PORTAL:
-      return "unlocked_portal";
-    case gCPS.LOCKED_PORTAL:
-      return "locked_portal";
-    default:
-      return "unknown";
-  }
-}
-
 var { ExtensionError } = ExtensionUtils;
 
 this.captivePortal = class extends ExtensionAPI {
-  getAPI(context) {
-    function checkEnabled() {
-      if (!gCaptivePortalEnabled) {
-        throw new ExtensionError("Captive Portal detection is not enabled");
-      }
+  checkCaptivePortalEnabled() {
+    if (!gCaptivePortalEnabled) {
+      throw new ExtensionError("Captive Portal detection is not enabled");
     }
+  }
 
+  nameForCPSState(state) {
+    switch (state) {
+      case gCPS.UNKNOWN:
+        return "unknown";
+      case gCPS.NOT_CAPTIVE:
+        return "not_captive";
+      case gCPS.UNLOCKED_PORTAL:
+        return "unlocked_portal";
+      case gCPS.LOCKED_PORTAL:
+        return "locked_portal";
+      default:
+        return "unknown";
+    }
+  }
+
+  PERSISTENT_EVENTS = {
+    onStateChanged: fire => {
+      this.checkCaptivePortalEnabled();
+
+      let observer = (subject, topic) => {
+        fire.async({ state: this.nameForCPSState(gCPS.state) });
+      };
+
+      Services.obs.addObserver(
+        observer,
+        "ipc:network:captive-portal-set-state"
+      );
+      return {
+        unregister: () => {
+          Services.obs.removeObserver(
+            observer,
+            "ipc:network:captive-portal-set-state"
+          );
+        },
+        convert(_fire, context) {
+          fire = _fire;
+        },
+      };
+    },
+    onConnectivityAvailable: fire => {
+      this.checkCaptivePortalEnabled();
+
+      let observer = (subject, topic, data) => {
+        fire.async({ status: data });
+      };
+
+      Services.obs.addObserver(observer, "network:captive-portal-connectivity");
+      return {
+        unregister: () => {
+          Services.obs.removeObserver(
+            observer,
+            "network:captive-portal-connectivity"
+          );
+        },
+        convert(_fire, context) {
+          fire = _fire;
+        },
+      };
+    },
+    "captiveURL.onChange": fire => {
+      let listener = (text, id) => {
+        fire.async({
+          levelOfControl: "not_controllable",
+          value: Services.prefs.getStringPref(CAPTIVE_URL_PREF),
+        });
+      };
+      Services.prefs.addObserver(CAPTIVE_URL_PREF, listener);
+      return {
+        unregister: () => {
+          Services.prefs.removeObserver(CAPTIVE_URL_PREF, listener);
+        },
+        convert(_fire, context) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
+  primeListener(extension, event, fire) {
+    if (Object.hasOwn(this.PERSISTENT_EVENTS, event)) {
+      return this.PERSISTENT_EVENTS[event](fire);
+    }
+  }
+
+  getAPI(context) {
+    let self = this;
     return {
       captivePortal: {
         getState() {
-          checkEnabled();
-          return nameForCPSState(gCPS.state);
+          self.checkCaptivePortalEnabled();
+          return self.nameForCPSState(gCPS.state);
         },
         getLastChecked() {
-          checkEnabled();
+          self.checkCaptivePortalEnabled();
           return gCPS.lastChecked;
         },
         onStateChanged: new EventManager({
           context,
-          name: "captivePortal.onStateChanged",
+          module: "captivePortal",
+          event: "onStateChanged",
           register: fire => {
-            checkEnabled();
-
-            let observer = (subject, topic) => {
-              fire.async({ state: nameForCPSState(gCPS.state) });
-            };
-
-            Services.obs.addObserver(
-              observer,
-              "ipc:network:captive-portal-set-state"
-            );
-            return () => {
-              Services.obs.removeObserver(
-                observer,
-                "ipc:network:captive-portal-set-state"
-              );
-            };
+            return self.PERSISTENT_EVENTS.onStateChanged(fire).unregister;
           },
         }).api(),
         onConnectivityAvailable: new EventManager({
           context,
-          name: "captivePortal.onConnectivityAvailable",
+          module: "captivePortal",
+          event: "onConnectivityAvailable",
           register: fire => {
-            checkEnabled();
-
-            let observer = (subject, topic, data) => {
-              fire.async({ status: data });
-            };
-
-            Services.obs.addObserver(
-              observer,
-              "network:captive-portal-connectivity"
-            );
-            return () => {
-              Services.obs.removeObserver(
-                observer,
-                "network:captive-portal-connectivity"
-              );
-            };
+            return self.PERSISTENT_EVENTS.onConnectivityAvailable(fire)
+              .unregister;
           },
         }).api(),
         canonicalURL: getSettingsAPI({
@@ -115,18 +158,11 @@ this.captivePortal = class extends ExtensionAPI {
           readOnly: true,
           onChange: new ExtensionCommon.EventManager({
             context,
-            name: "captiveURL.onChange",
+            module: "captivePortal",
+            event: "captiveURL.onChange",
             register: fire => {
-              let listener = (text, id) => {
-                fire.async({
-                  levelOfControl: "not_controllable",
-                  value: Services.prefs.getStringPref(CAPTIVE_URL_PREF),
-                });
-              };
-              Services.prefs.addObserver(CAPTIVE_URL_PREF, listener);
-              return () => {
-                Services.prefs.removeObserver(CAPTIVE_URL_PREF, listener);
-              };
+              return self.PERSISTENT_EVENTS["captiveURL.onChange"](fire)
+                .unregister;
             },
           }).api(),
         }),
