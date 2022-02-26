@@ -819,8 +819,16 @@ addAccessibleTask(
     testSelectionRange(browser, editable, p1, 0, p1, 1);
     testTextGetSelection(editable, 0, 1, 0);
     testTextGetSelection(p1, 0, 1, 0);
-
     const p2 = findAccessibleChildByID(docAcc, "p2", [nsIAccessibleText]);
+    if (isCacheEnabled && browser.isRemoteBrowser) {
+      is(p2.selectionCount, 0, "p2 selectionCount is 0");
+    } else {
+      todo(
+        false,
+        "Siblings report wrong selection in non-cache implementation"
+      );
+    }
+
     // Selecting across two Accessibles with only a partial selection in the
     // second.
     info("Selecting ab in editable");
@@ -899,6 +907,17 @@ addAccessibleTask(
     is(editable.selectionCount, 2, "editable selectionCount is 2");
     testTextGetSelection(editable, 0, 1, 0);
     testTextGetSelection(editable, 1, 2, 1);
+    if (isCacheEnabled && browser.isRemoteBrowser) {
+      is(p1.selectionCount, 1, "p1 selectionCount is 1");
+      testTextGetSelection(p1, 0, 1, 0);
+      is(p2.selectionCount, 1, "p2 selectionCount is 1");
+      testTextGetSelection(p2, 0, 1, 0);
+    } else {
+      todo(
+        false,
+        "Siblings report wrong selection in non-cache implementation"
+      );
+    }
   },
   {
     chrome: true,
