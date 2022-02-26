@@ -421,8 +421,13 @@ class MOZ_NON_PARAM Val : public LitVal {
     return cell_.ref_.asJSObjectAddress();
   }
 
+  // Read from `loc` which is a rooted location and needs no barriers.
   void readFromRootedLocation(const void* loc);
+  // Write to `loc` which is a rooted location and needs no barriers.
   void writeToRootedLocation(void* loc, bool mustWrite64) const;
+
+  // Write to `loc` which is in the heap and must be barriered.
+  void writeToHeapLocation(void* loc) const;
 
   // See the comment for `ToWebAssemblyValue` below.
   static bool fromJSValue(JSContext* cx, ValType targetType, HandleValue val,

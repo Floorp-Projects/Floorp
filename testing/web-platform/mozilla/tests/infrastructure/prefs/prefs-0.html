@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<link rel="match" href="prefs-false.html"/>
+<div id="result"></div>
+<script>
+// This can be any pref, as long as it doesn't affect the test and the default value is false
+// If it's updated here prefs-1.html and prefs-2.html need the same update
+result.innerHTML = SpecialPowers.getBoolPref("apz.allow_zooming_out");
+document.documentElement.classList.remove("reftest-wait");
+</script>
+</html>

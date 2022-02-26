@@ -9,10 +9,11 @@ from datetime import datetime
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
 from mozbuild.util import memoize
+from taskgraph.util.taskcluster import find_task_id
 
 from gecko_taskgraph import files_changed
 from gecko_taskgraph.optimize import register_strategy, OptimizationStrategy
-from gecko_taskgraph.util.taskcluster import find_task_id, status_task
+from gecko_taskgraph.util.taskcluster import status_task
 
 logger = logging.getLogger(__name__)
 

@@ -320,6 +320,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
  protected:
   void SetParent(Derived* aParent);
   Maybe<nsRect> RetrieveCachedBounds() const;
+  bool ApplyTransform(nsRect& aBounds) const;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;

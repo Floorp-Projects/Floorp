@@ -480,6 +480,7 @@ MSG_DEF(JSMSG_WASM_BAD_EXN_ARG,        0, JSEXN_TYPEERR,     "first argument mus
 MSG_DEF(JSMSG_WASM_BAD_EXN_PAYLOAD,    0, JSEXN_TYPEERR,     "second argument must be an object")
 MSG_DEF(JSMSG_WASM_BAD_EXN_PAYLOAD_LEN, 2, JSEXN_TYPEERR,    "expected {0} values but got {1}")
 MSG_DEF(JSMSG_WASM_BAD_EXN_TAG,        0, JSEXN_TYPEERR,     "exception's tag did not match the provided exception tag")
+MSG_DEF(JSMSG_WASM_BAD_EXN_OPTIONS,    0, JSEXN_TYPEERR,     "argument cannot be converted to an ExceptionOptions")
 MSG_DEF(JSMSG_WASM_BAD_FUNCTION_VALUE, 0, JSEXN_TYPEERR,     "second argument must be a function")
 MSG_DEF(JSMSG_WASM_BAD_ARG_TYPE,       0, JSEXN_TYPEERR,     "parameters and results must be an iterator of value types")
 MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_TYPEERR,     "cannot transfer WebAssembly/asm.js ArrayBuffer")

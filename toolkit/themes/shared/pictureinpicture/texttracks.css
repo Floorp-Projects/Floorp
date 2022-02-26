@@ -25,6 +25,7 @@
     line-height: clamp(14.4px, calc(0.08 * 100vh), 57.6px);
     white-space: pre-line;
     width: max-content;
+    font-family: sans-serif;
  }
 
  #texttracks:empty {

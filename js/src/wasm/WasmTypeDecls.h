@@ -61,8 +61,10 @@ using WasmGlobalObjectVector =
 using RootedWasmGlobalObject = Rooted<WasmGlobalObject*>;
 
 class WasmTagObject;
+using GCPtrWasmTagObject = GCPtr<WasmTagObject*>;
 using WasmTagObjectVector = GCVector<WasmTagObject*, 0, SystemAllocPolicy>;
 using RootedWasmTagObject = Rooted<WasmTagObject*>;
+using HandleWasmTagObject = Handle<WasmTagObject*>;
 
 class WasmExceptionObject;
 using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
