@@ -27,6 +27,12 @@ namespace mozilla::dom {
 
 mozilla::LazyLogModule gFetchLog("Fetch");
 
+FetchServiceResponse CreateErrorResponse(nsresult aRv) {
+  IPCPerformanceTimingData ipcTimingData;
+  return MakeTuple(InternalResponse::NetworkError(aRv), ipcTimingData,
+                   EmptyString(), EmptyString());
+}
+
 // FetchInstance
 
 FetchService::FetchInstance::FetchInstance(SafeRefPtr<InternalRequest> aRequest)
@@ -129,8 +135,7 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FETCH_LOG(
         ("FetchInstance::Fetch FetchDriver::Fetch failed(0x%X)", (uint32_t)rv));
-    return FetchServiceResponsePromise::CreateAndResolve(
-        InternalResponse::NetworkError(rv), __func__);
+    return FetchService::NetworkErrorResponse(rv);
   }
 
   return mResponsePromiseHolder.Ensure(__func__);
@@ -147,7 +152,7 @@ void FetchService::FetchInstance::Cancel() {
   }
 
   mResponsePromiseHolder.ResolveIfExists(
-      InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+      CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -156,7 +161,7 @@ void FetchService::FetchInstance::OnResponseEnd(
   if (aReason == eAborted) {
     FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));
     mResponsePromiseHolder.ResolveIfExists(
-        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+        CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
     return;
   }
   if (!mResponsePromiseHolder.IsEmpty()) {
@@ -174,13 +179,18 @@ void FetchService::FetchInstance::OnResponseEnd(
   }
 
   // Get PerformanceTimingData from FetchDriver.
-  nsAutoString initiatorType;
-  nsAutoString entryName;
+  nsString initiatorType;
+  nsString entryName;
   UniquePtr<PerformanceTimingData> performanceTiming(
       mFetchDriver->GetPerformanceTimingData(initiatorType, entryName));
+  MOZ_ASSERT(performanceTiming);
+
+  FetchServiceResponse response =
+      MakeTuple(std::move(mResponse), performanceTiming->ToIPC(), initiatorType,
+                entryName);
 
   // Resolve the FetchServiceResponsePromise
-  mResponsePromiseHolder.ResolveIfExists(std::move(mResponse), __func__);
+  mResponsePromiseHolder.ResolveIfExists(std::move(response), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseAvailableInternal(
@@ -216,8 +226,8 @@ already_AddRefed<FetchService> FetchService::GetInstance() {
 /*static*/
 RefPtr<FetchServiceResponsePromise> FetchService::NetworkErrorResponse(
     nsresult aRv) {
-  return FetchServiceResponsePromise::CreateAndResolve(
-      InternalResponse::NetworkError(aRv), __func__);
+  return FetchServiceResponsePromise::CreateAndResolve(CreateErrorResponse(aRv),
+                                                       __func__);
 }
 
 FetchService::FetchService() {
