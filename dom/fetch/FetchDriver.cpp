@@ -34,6 +34,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/PreloaderBase.h"
@@ -1543,6 +1544,23 @@ void FetchDriver::SetController(
     const Maybe<ServiceWorkerDescriptor>& aController) {
   MOZ_ASSERT(!mFetchCalled);
   mController = aController;
+}
+
+PerformanceTimingData* FetchDriver::GetPerformanceTimingData(
+    nsAString& aInitiatorType, nsAString& aEntryName) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(mChannel);
+
+  nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
+  if (!timedChannel) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (!httpChannel) {
+    return nullptr;
+  }
+  return dom::PerformanceTimingData::Create(timedChannel, httpChannel, 0,
+                                            aInitiatorType, aEntryName);
 }
 
 void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
