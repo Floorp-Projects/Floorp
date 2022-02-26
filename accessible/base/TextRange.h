@@ -9,11 +9,8 @@
 
 #include <utility>
 
-#include "nsCaseTreatment.h"
-#include "nsRect.h"
 #include "nsTArray.h"
 
-class nsIVariant;
 class nsRange;
 
 namespace mozilla {
@@ -102,100 +99,11 @@ class TextRange final {
   void Text(nsAString& aText) const;
 
   /**
-   * Return list of bounding rects of the text range by lines.
-   */
-  void Bounds(nsTArray<nsIntRect> aRects) const;
-
-  enum ETextUnit { eFormat, eWord, eLine, eParagraph, ePage, eDocument };
-
-  /**
-   * Move the range or its points on specified amount of given units.
-   */
-  void Move(ETextUnit aUnit, int32_t aCount) {
-    MoveEnd(aUnit, aCount);
-    MoveStart(aUnit, aCount);
-  }
-  void MoveStart(ETextUnit aUnit, int32_t aCount) {
-    MoveInternal(aUnit, aCount, *mStartContainer, mStartOffset, mEndContainer,
-                 mEndOffset);
-  }
-  void MoveEnd(ETextUnit aUnit, int32_t aCount) {
-    MoveInternal(aUnit, aCount, *mEndContainer, mEndOffset);
-  }
-
-  /**
-   * Move the range points to the closest unit boundaries.
-   */
-  void Normalize(ETextUnit aUnit);
-
-  /**
    * Crops the range if it overlaps the given accessible element boundaries,
    * returns true if the range was cropped successfully.
    */
   bool Crop(LocalAccessible* aContainer);
 
-  enum EDirection { eBackward, eForward };
-
-  /**
-   * Return range enclosing the found text.
-   */
-  void FindText(const nsAString& aText, EDirection aDirection,
-                nsCaseTreatment aCaseSensitive, TextRange* aFoundRange) const;
-
-  enum EAttr {
-    eAnimationStyleAttr,
-    eAnnotationObjectsAttr,
-    eAnnotationTypesAttr,
-    eBackgroundColorAttr,
-    eBulletStyleAttr,
-    eCapStyleAttr,
-    eCaretBidiModeAttr,
-    eCaretPositionAttr,
-    eCultureAttr,
-    eFontNameAttr,
-    eFontSizeAttr,
-    eFontWeightAttr,
-    eForegroundColorAttr,
-    eHorizontalTextAlignmentAttr,
-    eIndentationFirstLineAttr,
-    eIndentationLeadingAttr,
-    eIndentationTrailingAttr,
-    eIsActiveAttr,
-    eIsHiddenAttr,
-    eIsItalicAttr,
-    eIsReadOnlyAttr,
-    eIsSubscriptAttr,
-    eIsSuperscriptAttr,
-    eLinkAttr,
-    eMarginBottomAttr,
-    eMarginLeadingAttr,
-    eMarginTopAttr,
-    eMarginTrailingAttr,
-    eOutlineStylesAttr,
-    eOverlineColorAttr,
-    eOverlineStyleAttr,
-    eSelectionActiveEndAttr,
-    eStrikethroughColorAttr,
-    eStrikethroughStyleAttr,
-    eStyleIdAttr,
-    eStyleNameAttr,
-    eTabsAttr,
-    eTextFlowDirectionsAttr,
-    eUnderlineColorAttr,
-    eUnderlineStyleAttr
-  };
-
-  /**
-   * Return range enclosing text having requested attribute.
-   */
-  void FindAttr(EAttr aAttr, nsIVariant* aValue, EDirection aDirection,
-                TextRange* aFoundRange) const;
-
-  /**
-   * Add/remove the text range from selection.
-   */
-  void AddToSelection() const;
-  void RemoveFromSelection() const;
   MOZ_CAN_RUN_SCRIPT bool SetSelectionAt(int32_t aSelectionNum) const;
 
   /**
@@ -255,11 +163,6 @@ class TextRange final {
    */
   bool TextInternal(nsAString& aText, LocalAccessible* aCurrent,
                     uint32_t aStartIntlOffset) const;
-
-  void MoveInternal(ETextUnit aUnit, int32_t aCount,
-                    HyperTextAccessible& aContainer, int32_t aOffset,
-                    HyperTextAccessible* aStopContainer = nullptr,
-                    int32_t aStopOffset = 0);
 
   /**
    * A helper method returning a common parent for two given accessible
