@@ -18,6 +18,7 @@
 namespace mozilla {
 namespace a11y {
 
+class TextRange;
 class xpcAccessibleGeneric;
 
 #if !defined(XP_WIN)
@@ -313,6 +314,8 @@ class DocAccessibleParent : public RemoteAccessible,
   }
 
   bool IsCaretAtEndOfLine() const { return mIsCaretAtEndOfLine; }
+
+  virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
  private:
   ~DocAccessibleParent() {
