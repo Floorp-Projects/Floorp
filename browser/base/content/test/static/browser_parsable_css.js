@@ -279,8 +279,35 @@ function messageIsCSSError(msg) {
 let imageURIsToReferencesMap = new Map();
 let customPropsToReferencesMap = new Map();
 
+function neverMatches(mediaList) {
+  const perPlatformMediaQueryMap = {
+    macosx: ["(-moz-platform: macos)"],
+    win: [
+      "(-moz-platform: windows)",
+      "(-moz-platform: windows-win7)",
+      "(-moz-platform: windows-win8)",
+      "(-moz-platform: windows-win10)",
+    ],
+    linux: ["(-moz-platform: linux)"],
+    android: ["(-moz-platform: android)"],
+  };
+  for (let platform in perPlatformMediaQueryMap) {
+    if (platform === AppConstants.platform) {
+      continue;
+    }
+    if (perPlatformMediaQueryMap[platform].includes(mediaList.mediaText)) {
+      // This query only matches on another platform that isn't ours.
+      return true;
+    }
+  }
+  return false;
+}
+
 function processCSSRules(container) {
   for (let rule of container.cssRules) {
+    if (rule.media && neverMatches(rule.media)) {
+      continue;
+    }
     if (rule.styleSheet) {
       processCSSRules(rule.styleSheet); // @import
       continue;
