@@ -285,8 +285,9 @@ class OutputHandler:
 class WebDriverBrowser(Browser):
     __metaclass__ = ABCMeta
 
-    def __init__(self, logger, binary, webdriver_binary, webdriver_args=None,
-                 host="127.0.0.1", port=None, base_path="/", env=None, **kwargs):
+    def __init__(self, logger, binary=None, webdriver_binary=None,
+                 webdriver_args=None, host="127.0.0.1", port=None, base_path="/",
+                 env=None, **kwargs):
         super().__init__(logger)
 
         if webdriver_binary is None:
