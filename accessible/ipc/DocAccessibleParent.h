@@ -152,10 +152,10 @@ class DocAccessibleParent : public RemoteAccessible,
   virtual mozilla::ipc::IPCResult RecvAnnouncementEvent(
       const uint64_t& aID, const nsString& aAnnouncement,
       const uint16_t& aPriority) override;
+#endif
 
   virtual mozilla::ipc::IPCResult RecvTextSelectionChangeEvent(
       const uint64_t& aID, nsTArray<TextRangeData>&& aSelection) override;
-#endif
 
   mozilla::ipc::IPCResult RecvRoleChangedEvent(const a11y::role& aRole) final;
 
@@ -388,6 +388,7 @@ class DocAccessibleParent : public RemoteAccessible,
   uint64_t mCaretId;
   int32_t mCaretOffset;
   bool mIsCaretAtEndOfLine;
+  nsTArray<TextRangeData> mTextSelections;
 
   static uint64_t sMaxDocID;
   static nsTHashMap<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
