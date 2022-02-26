@@ -1534,6 +1534,9 @@ async function schedulePreciseGCAndForceCC(maxCount) {
  *        A function to be run only if the funcOrProperies is not a function.
  * @param isTask
  *        Optional flag that indicates whether `func` is a task. Defaults to `false`.
+ * @param isSetup
+ *        Optional flag that indicates whether `func` is a setup task. Defaults to `false`.
+ *        Implies isTask.
  *
  * Each test function must call run_next_test() when it's done. Test files
  * should call run_next_test() in their run_test function to execute all
@@ -1544,9 +1547,17 @@ async function schedulePreciseGCAndForceCC(maxCount) {
 var _gSupportedProperties = ["skip_if", "pref_set"];
 var _gTests = [];
 var _gRunOnlyThisTest = null;
-function add_test(properties, func = properties, isTask = false) {
+function add_test(
+  properties,
+  func = properties,
+  isTask = false,
+  isSetup = false
+) {
+  if (isSetup) {
+    isTask = true;
+  }
   if (typeof properties == "function") {
-    properties = { isTask };
+    properties = { isTask, isSetup };
     _gTests.push([properties, func]);
   } else if (typeof properties == "object") {
     // Ensure only documented properties are in the object.
@@ -1556,6 +1567,7 @@ function add_test(properties, func = properties, isTask = false) {
       }
     }
     properties.isTask = isTask;
+    properties.isSetup = isSetup;
     _gTests.push([properties, func]);
   } else {
     do_throw("add_test() should take a function or an object and a function");
@@ -1623,6 +1635,13 @@ function add_task(properties, func = properties) {
   return add_test(properties, func, true);
 }
 
+/**
+ * add_setup is like add_task, but creates setup tasks.
+ */
+function add_setup(properties, func = properties) {
+  return add_test(properties, func, true, true);
+}
+
 const _setTaskPrefs = prefs => {
   for (let [pref, value] of prefs) {
     if (value === undefined) {
@@ -1675,11 +1694,20 @@ const _getTaskPrefs = prefs => {
 var _gRunningTest = null;
 var _gTestIndex = 0; // The index of the currently running test.
 var _gTaskRunning = false;
+var _gSetupRunning = false;
 function run_next_test() {
   if (_gTaskRunning) {
     throw new Error(
       "run_next_test() called from an add_task() test function. " +
-        "run_next_test() should not be called from inside add_task() " +
+        "run_next_test() should not be called from inside add_setup() or add_task() " +
+        "under any circumstances!"
+    );
+  }
+
+  if (_gSetupRunning) {
+    throw new Error(
+      "run_next_test() called from an add_setup() test function. " +
+        "run_next_test() should not be called from inside add_setup() or add_task() " +
         "under any circumstances!"
     );
   }
@@ -1693,12 +1721,18 @@ function run_next_test() {
 
       // Must set to pending before we check for skip, so that we keep the
       // running counts correct.
-      _testLogger.info(_TEST_NAME + " | Starting " + _gRunningTest.name);
+      _testLogger.info(
+        `${_TEST_NAME} | Starting ${_properties.isSetup ? "setup " : ""}${
+          _gRunningTest.name
+        }`
+      );
       do_test_pending(_gRunningTest.name);
 
       if (
         (typeof _properties.skip_if == "function" && _properties.skip_if()) ||
-        (_gRunOnlyThisTest && _gRunningTest != _gRunOnlyThisTest)
+        (_gRunOnlyThisTest &&
+          _gRunningTest != _gRunOnlyThisTest &&
+          !_properties.isSetup)
       ) {
         let _condition = _gRunOnlyThisTest
           ? "only one task may run."
@@ -1730,11 +1764,15 @@ function run_next_test() {
       }
 
       if (_properties.isTask) {
-        _gTaskRunning = true;
+        if (_properties.isSetup) {
+          _gSetupRunning = true;
+        } else {
+          _gTaskRunning = true;
+        }
         let startTime = Cu.now();
         (async () => _gRunningTest())().then(
           result => {
-            _gTaskRunning = false;
+            _gTaskRunning = _gSetupRunning = false;
             ChromeUtils.addProfilerMarker(
               "task",
               { category: "Test", startTime },
@@ -1747,7 +1785,7 @@ function run_next_test() {
             run_next_test();
           },
           ex => {
-            _gTaskRunning = false;
+            _gTaskRunning = _gSetupRunning = false;
             ChromeUtils.addProfilerMarker(
               "task",
               { category: "Test", startTime },
@@ -1779,6 +1817,16 @@ function run_next_test() {
         }
       }
     }
+  }
+
+  function frontLoadSetups() {
+    _gTests.sort(([propsA, funcA], [propsB, funcB]) => {
+      return propsB.isSetup ? 1 : 0;
+    });
+  }
+
+  if (!_gTestIndex) {
+    frontLoadSetups();
   }
 
   // For sane stacks during failures, we execute this code soon, but not now.
