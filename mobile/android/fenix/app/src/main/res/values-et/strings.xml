@@ -639,32 +639,78 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Suletakse ühe kuu pärast</string>
 
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Vanad kaardid liigutatakse mitteaktiivsete alla</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Kaardid, mida sa pole vaadanud 2 nädalat, liigutatakse mitteaktiivsete kaartide alla.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Eemalda</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Praegu toimuvad</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox võib aegajalt paigaldada ja käivitada uuringuid.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Rohkem teavet</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Muudatuste rakendamiseks äpp suletakse</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Olgu</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Loobu</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Äpist väljumine muudatuste rakendamiseks…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Avatud kaardid</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Privaatsed kaardid</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Sünkroniseeritud kaardid</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lisa kaart</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Lisa privaatne kaart</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privaatne</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sünkrooni</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Jaga kõiki kaarte</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Hiljuti suletud kaardid</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Hiljuti suletud</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Konto sätted</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Kaartide seaded</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Sulge kõik kaardid</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Lisa järjehoidjatesse</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Sulge</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Jaga valitud kaarte</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Valitud kaartide menüü</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Eemalda kaart kollektsioonist</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Vali kaardid</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Sulge kaart</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Sulge kaart %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Ava kaartide menüü</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Salvesta kaardid kollektsiooni</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Kaartide menüü</string>
     <!-- Text for the menu button to delete a collection -->
@@ -673,16 +719,40 @@
     <string name="collection_rename">Nimeta kollektsioon ümber</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Ava kaardid</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Kollektsiooni nimi</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Muuda nime</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Eemalda</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Kustuta ajaloost</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (privaatne režiim)</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Teised kaardid</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Sisesta otsitav fraas</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Sisesta otsitav fraas</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Kustuta ajalugu</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Ajalugu kustutatud</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Ajaloost kustutati %1$s</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Kustuta</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d valitud</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Täna</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Eile</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Viimased 7 päeva</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -691,6 +761,20 @@
     <string name="history_older">Vanemad</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ajalugu puudub</string>
+
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Allalaadimised on eemaldatud</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Allalaadimine %1$s eemaldati</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Allalaaditud faile pole</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d allalaadimist valitud</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Eemalda</string>
 
 
     <!-- Crashes -->
@@ -704,6 +788,11 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Taasta kaart</string>
 
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Kas oled kindel, et soovid selle kausta kustutada?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s kustutab valitud järjehoidjad ja/või kaustad.</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Kausta lisamine</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -752,6 +841,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Kustutati järjehoidja %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Järjehoidjad kustutati</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Valitud kaustade kustutamine</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">VÕTA TAGASI</string>
 
@@ -782,6 +875,12 @@
     <string name="preference_phone_feature_location">Asukoht</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Teavitused</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Püsiv salvestusruum</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Saidiülesed küpsised</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRMiga kaitstud sisu</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Alati küsitakse</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -799,18 +898,29 @@
     <string name="tracking_protection_off">Väljas</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Heli ja video on lubatud</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Heli ja video automaatne esitamine lubatakse</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Heli ja video blokitakse ainult mobiilset andmesidet kasutades</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Heli ja videot esitatakse ainult wifis olles</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Blokitakse ainult heli</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Blokitakse ainult heli</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Blokitakse heli ja video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Blokitakse heli ja video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Sees</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Väljas</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Sees</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Väljas</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -818,6 +928,8 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Kollektsioonide menüü</string>
 
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Kogu asju, mis on sulle olulised.\nGrupeeri sarnaseid otsinguid, saite ja kaarte, et hiljem neile kiiresti ligi pääseda.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Kaartide valimine</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -840,12 +952,17 @@
     <string name="create_collection_save_to_collection_tab_selected">%d kaart valitud</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Kaardid salvestati!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Kollektsioon salvesti!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Kaart salvestati!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Sulge</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Salvesta</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Vaata</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Kollektsioon %d</string>
@@ -894,6 +1011,15 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Sulge privaatsed kaardid</string>
 
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Turundus</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s on kiire ja privaatne</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Määra %1$s oma vaikebrauseriks</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kollektsioon kustutatud</string>
@@ -905,6 +1031,8 @@
     <string name="snackbar_tab_closed">Kaart suleti</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Kaardid suleti</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Järjehoidjad salvestati!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Lisati top saitide hulka!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -922,6 +1050,10 @@
     <string name="qr_scanner_dialog_positive">LUBA</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">KEELA</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Veebiaadress pole korrektne.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Olgu</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Kas oled kindel, et soovid kustutada kollektsiooni %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->

@@ -169,7 +169,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instaliraj</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Sinkronizirane kartice</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Sinkronizirane kartice</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ponovna sinkronizacija</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -415,9 +415,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Prikaži</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Dodirnite logotip za promjenu pozadine</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Dodirnite logotip za promjenu pozadine</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Promijeni sliku pozadine dodirom na logotip početne stranice Firefoxa</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Kruži i ažuriraj sliku bez napuštanja početne stranice.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Kruži i ažuriraj sliku bez napuštanja početne stranice.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Firefox logo - promijenite pozadinu, tipka</string>
@@ -729,7 +731,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Upiši pojam za pretragu</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Upiši pojam za pretragu</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Upiši pojmove pretrage</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Izbriši povijest</string>
 
