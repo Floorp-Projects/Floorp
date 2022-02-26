@@ -28,7 +28,7 @@ class TransformStreamDefaultController final : public nsISupports,
                                                public nsWrapperCache {
  public:
   using TransformAlgorithm = already_AddRefed<Promise> (*)(
-      JSContext* aCx, TransformStreamDefaultController aController,
+      JSContext* aCx, TransformStreamDefaultController& aController,
       JS::HandleValue aChunk, ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
