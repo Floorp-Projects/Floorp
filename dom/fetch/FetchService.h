@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,7 +12,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FetchDriver.h"
-#include "mozilla/dom/PerformanceTimingTypes.h"
 #include "mozilla/dom/SafeRefPtr.h"
 
 class nsILoadGroup;
@@ -23,12 +24,8 @@ namespace mozilla::dom {
 class InternalRequest;
 class InternalResponse;
 
-using FetchServiceResponse =
-    Tuple<SafeRefPtr<InternalResponse>, IPCPerformanceTimingData, nsString,
-          nsString>;
-
 using FetchServiceResponsePromise =
-    MozPromise<FetchServiceResponse, CopyableErrorResult, true>;
+    MozPromise<SafeRefPtr<InternalResponse>, CopyableErrorResult, true>;
 
 /**
  * FetchService is a singleton object which designed to be used in parent
@@ -105,7 +102,6 @@ class FetchService final {
     nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
     RefPtr<PerformanceStorage> mPerformanceStorage;
     RefPtr<FetchDriver> mFetchDriver;
-    SafeRefPtr<InternalResponse> mResponse;
 
     MozPromiseHolder<FetchServiceResponsePromise> mResponsePromiseHolder;
   };

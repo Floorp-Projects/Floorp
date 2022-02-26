@@ -25,7 +25,7 @@ class FetchEventOpParent final : public PFetchEventOpParent {
 
   // Transition from the Pending state to the Started state. Returns the preload
   // response, if it has already arrived.
-  Maybe<ParentToParentResponseWithTiming> OnStart(
+  Maybe<ParentToParentInternalResponse> OnStart(
       MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent);
 
   // Transition from the Started state to the Finished state.
@@ -37,12 +37,12 @@ class FetchEventOpParent final : public PFetchEventOpParent {
   // IPDL methods
 
   mozilla::ipc::IPCResult RecvPreloadResponse(
-      ParentToParentResponseWithTiming&& aResponse);
+      ParentToParentInternalResponse&& aResponse);
 
   void ActorDestroy(ActorDestroyReason) override;
 
   struct Pending {
-    Maybe<ParentToParentResponseWithTiming> mPreloadResponse;
+    Maybe<ParentToParentInternalResponse> mPreloadResponse;
   };
 
   struct Started {

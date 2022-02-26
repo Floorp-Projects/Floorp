@@ -25,9 +25,9 @@ using namespace ipc;
 
 namespace dom {
 
-Maybe<ParentToParentResponseWithTiming> FetchEventOpParent::OnStart(
+Maybe<ParentToParentInternalResponse> FetchEventOpParent::OnStart(
     MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent) {
-  Maybe<ParentToParentResponseWithTiming> preloadResponse =
+  Maybe<ParentToParentInternalResponse> preloadResponse =
       std::move(mState.as<Pending>().mPreloadResponse);
   mState = AsVariant(Started{std::move(aFetchEventOpProxyParent)});
   return preloadResponse;
@@ -39,7 +39,7 @@ void FetchEventOpParent::OnFinish() {
 }
 
 mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
-    ParentToParentResponseWithTiming&& aResponse) {
+    ParentToParentInternalResponse&& aResponse) {
   AssertIsOnBackgroundThread();
 
   mState.match(
@@ -48,17 +48,11 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
         aPending.mPreloadResponse = Some(std::move(aResponse));
       },
       [&aResponse](Started& aStarted) {
-        ParentToChildResponseWithTiming response;
         auto backgroundParent = WrapNotNull(
             WrapNotNull(aStarted.mFetchEventOpProxyParent->Manager())
                 ->Manager());
-        response.response() =
-            ToParentToChild(aResponse.response(), backgroundParent);
-        response.timingData() = aResponse.timingData();
-        response.initiatorType() = aResponse.initiatorType();
-        response.entryName() = aResponse.entryName();
         Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
-            response);
+            ToParentToChild(aResponse, backgroundParent));
       },
       [](const Finished&) {});
 
