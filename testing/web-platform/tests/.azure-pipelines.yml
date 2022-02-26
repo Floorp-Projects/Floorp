@@ -122,6 +122,7 @@ jobs:
     displayName: 'Run tests (Firefox Nightly)'
   - script: |
       set -eux -o pipefail
+      export SYSTEM_VERSION_COMPAT=0
       ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info --channel preview safari infrastructure/
     displayName: 'Run tests (Safari Technology Preview)'
   - template: tools/ci/azure/publish_logs.yml
@@ -505,6 +506,7 @@ jobs:
   - template: tools/ci/azure/update_manifest.yml
   - script: |
       set -eux -o pipefail
+      export SYSTEM_VERSION_COMPAT=0
       ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel stable --kill-safari safari
     displayName: 'Run tests'
   - task: PublishBuildArtifacts@1
@@ -542,6 +544,7 @@ jobs:
   - template: tools/ci/azure/update_manifest.yml
   - script: |
       set -eux -o pipefail
+      export SYSTEM_VERSION_COMPAT=0
       ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel preview --kill-safari safari
     displayName: 'Run tests'
   - task: PublishBuildArtifacts@1
