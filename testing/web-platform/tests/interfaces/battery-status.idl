@@ -3,12 +3,11 @@
 // (https://github.com/w3c/webref)
 // Source: Battery Status API (https://w3c.github.io/battery/)
 
-[SecureContext]
 partial interface Navigator {
   Promise<BatteryManager> getBattery();
 };
 
-[SecureContext, Exposed=Window]
+[Exposed=Window]
 interface BatteryManager : EventTarget {
     readonly        attribute boolean             charging;
     readonly        attribute unrestricted double chargingTime;

@@ -21,7 +21,8 @@ async function makeTest(t, { source, target, expected }) {
   const scriptUrl =
       resolveUrl("resources/service-worker.js", sourceResolveOptions(source));
 
-  const realTargetUrl = preflightUrl(target);
+  const realTargetUrl =
+      resolveUrl("resources/preflight.py", targetResolveOptions(target));
 
   // Fetch a URL within the service worker's scope, but tell it which URL to
   // really fetch.

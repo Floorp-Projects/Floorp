@@ -105,9 +105,7 @@ function runEventTest(params, description) {
   runBfcacheTest(params, description);
 }
 
-async function navigateAndThenBack(pageA, pageB, urlB,
-                                   funcBeforeBackNavigation,
-                                   argsBeforeBackNavigation) {
+async function navigateAndThenBack(pageA, pageB, urlB, funcBeforeBackNavigation) {
   await pageA.execute_script(
     (url) => {
       prepareNavigation(() => {
@@ -119,8 +117,7 @@ async function navigateAndThenBack(pageA, pageB, urlB,
 
   await pageB.execute_script(waitForPageShow);
   if (funcBeforeBackNavigation) {
-    await pageB.execute_script(funcBeforeBackNavigation,
-                               argsBeforeBackNavigation);
+    await pageB.execute_script(funcBeforeBackNavigation);
   }
   await pageB.execute_script(
     () => {
@@ -139,7 +136,6 @@ function runBfcacheTest(params, description) {
     argsBeforeNavigation: [],
     targetOrigin: originCrossSite,
     funcBeforeBackNavigation: () => {},
-    argsBeforeBackNavigation: [],
     shouldBeCached: true,
     funcAfterAssertion: () => {},
   }
@@ -169,8 +165,7 @@ function runBfcacheTest(params, description) {
     await pageA.execute_script(params.funcBeforeNavigation,
                                params.argsBeforeNavigation);
     await navigateAndThenBack(pageA, pageB, urlB,
-                              params.funcBeforeBackNavigation,
-                              params.argsBeforeBackNavigation);
+                              params.funcBeforeBackNavigation);
 
     if (params.shouldBeCached) {
       await assert_bfcached(pageA);
