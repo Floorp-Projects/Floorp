@@ -44,6 +44,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/gfx/Matrix.h"
 #include "nsIContent.h"
 #include "nsIFormControl.h"
 
@@ -606,8 +607,44 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
   return accessible;
 }
 
-nsRect LocalAccessible::ParentRelativeBounds() {
+nsIFrame* LocalAccessible::FindNearestAccessibleAncestorFrame() {
+  nsIFrame* frame = GetFrame();
   nsIFrame* boundingFrame = nullptr;
+
+  if (IsDoc() &&
+      nsCoreUtils::IsTopLevelContentDocInProcess(AsDoc()->DocumentNode())) {
+    // Tab documents and OOP iframe docs won't have ancestor accessibles
+    // with frames. Instead, bound by their presshell's root frame.
+    boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+  }
+
+  // Iterate through accessible's ancestors to find one with a frame.
+  LocalAccessible* ancestor = mParent;
+  while (ancestor && !boundingFrame) {
+    if (ancestor->IsDoc()) {
+      // If we find a doc accessible, use its presshell's root frame
+      // (since doc accessibles themselves don't have frames).
+      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+      break;
+    }
+
+    if ((boundingFrame = ancestor->GetFrame())) {
+      // Otherwise, if the ancestor has a frame, use that
+      break;
+    }
+
+    ancestor = ancestor->LocalParent();
+  }
+
+  if (!boundingFrame) {
+    MOZ_ASSERT_UNREACHABLE("No ancestor with frame?");
+    boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+  }
+
+  return boundingFrame;
+}
+
+nsRect LocalAccessible::ParentRelativeBounds() {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
     if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
@@ -632,45 +669,9 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       }
     }
 
-    // We need to find a frame to make our bounds relative to. We'll store this
-    // in `boundingFrame`. Ultimately, we'll create screen-relative coordinates
-    // by summing the x, y offsets of our ancestors' bounds in
-    // RemoteAccessibleBase::Bounds(), so it is important that our bounding
-    // frame have a corresponding accessible.
-    if (IsDoc() &&
-        nsCoreUtils::IsTopLevelContentDocInProcess(AsDoc()->DocumentNode())) {
-      // Tab documents and OOP iframe docs won't have ancestor accessibles with
-      // frames. We'll use their presshell root frame instead.
-      // XXX bug 1736635: Should DocAccessibles return their presShell frame on
-      // GetFrame()?
-      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-    }
-
-    // Iterate through ancestors to find one with a frame.
-    LocalAccessible* parent = mParent;
-    while (parent && !boundingFrame) {
-      if (parent->IsDoc()) {
-        // If we find a doc accessible, use its presshell's root frame
-        // (since doc accessibles themselves don't have frames).
-        boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-        break;
-      }
-
-      if ((boundingFrame = parent->GetFrame())) {
-        // Otherwise, if the parent has a frame, use that
-        break;
-      }
-
-      parent = parent->LocalParent();
-    }
-
-    if (!boundingFrame) {
-      MOZ_ASSERT_UNREACHABLE("No ancestor with frame?");
-      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-    }
-
-    nsRect unionRect = nsLayoutUtils::GetAllInFlowRectsUnion(
-        frame, boundingFrame, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+    nsIFrame* boundingFrame = FindNearestAccessibleAncestorFrame();
+    nsRect unionRect =
+        nsLayoutUtils::GetAllInFlowRectsUnion(frame, boundingFrame);
 
     if (unionRect.IsEmpty()) {
       // If we end up with a 0x0 rect from above (or one with negative
@@ -3246,6 +3247,34 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  if (aCacheDomain & CacheDomain::TransformMatrix) {
+    nsIFrame* frame = GetFrame();
+
+    if (frame && frame->IsTransformed()) {
+      // We need to find a frame to make our transform relative to.
+      // It's important this frame have a corresponding accessible,
+      // because this transform is applied while walking the accessibility
+      // tree (in the parent process), not the frame tree.
+      nsIFrame* boundingFrame = FindNearestAccessibleAncestorFrame();
+      // This matrix is only valid when applied to CSSPixel points/rects
+      // in the coordinate space of `frame`. It also includes the translation
+      // to the parent space.
+      gfx::Matrix4x4 mtx = nsLayoutUtils::GetTransformToAncestor(
+                               RelativeTo{frame}, RelativeTo{boundingFrame},
+                               nsIFrame::IN_CSS_UNITS)
+                               .GetMatrix();
+
+      UniquePtr<gfx::Matrix4x4> ptr = MakeUnique<gfx::Matrix4x4>(mtx);
+      fields->SetAttribute(nsGkAtoms::transform, std::move(ptr));
+    } else {
+      // Otherwise, if we're bundling a transform update but this
+      // frame isn't transformed (or doesn't exist), we need
+      // to send a DeleteEntry() to remove any
+      // transform that was previously cached for this frame.
+      fields->SetAttribute(nsGkAtoms::transform, DeleteEntry());
+    }
+  }
+
   if (aCacheDomain & CacheDomain::DOMNodeID && mContent) {
     nsAtom* id = mContent->GetID();
     if (id) {
@@ -3327,6 +3356,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       // Note our frame's current computed style so we can track style changes
       // later on.
       mOldComputedStyle = frame->Style();
+      if (frame->IsTransformed()) {
+        mStateFlags |= eOldFrameHasValidTransformStyle;
+      } else {
+        mStateFlags &= ~eOldFrameHasValidTransformStyle;
+      }
     }
   }
 
@@ -3343,7 +3377,6 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
 
   if (nsIFrame* frame = GetFrame()) {
     const ComputedStyle* newStyle = frame->Style();
-    MOZ_ASSERT(newStyle != mOldComputedStyle, "New style matches old style!");
 
     nsAutoCString oldVal, newVal;
     mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display, oldVal);
@@ -3352,7 +3385,39 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
     }
 
+    bool newHasValidTransformStyle = frame->IsTransformed();
+    bool oldHasValidTransformStyle =
+        (mStateFlags & eOldFrameHasValidTransformStyle) != 0;
+
+    // We should send a transform update if we're adding or
+    // removing transform styling altogether.
+    bool sendTransformUpdate =
+        newHasValidTransformStyle || oldHasValidTransformStyle;
+
+    if (newHasValidTransformStyle && oldHasValidTransformStyle) {
+      // If we continue to have transform styling, verify
+      // our transform has actually changed.
+      nsChangeHint transformHint =
+          newStyle->StyleDisplay()->CalcTransformPropertyDifference(
+              *mOldComputedStyle->StyleDisplay());
+      // If this hint exists, it implies we found a property difference
+      sendTransformUpdate = !!transformHint;
+    }
+
+    if (sendTransformUpdate) {
+      // Queuing a cache update for the TransformMatrix domain doesn't
+      // necessarily mean we'll send the matrix itself, we may
+      // send a DeleteEntry() instead. See BundleFieldsForCache for
+      // more information.
+      mDoc->QueueCacheUpdate(this, CacheDomain::TransformMatrix);
+    }
+
     mOldComputedStyle = newStyle;
+    if (newHasValidTransformStyle) {
+      mStateFlags |= eOldFrameHasValidTransformStyle;
+    } else {
+      mStateFlags &= ~eOldFrameHasValidTransformStyle;
+    }
   }
 }
 

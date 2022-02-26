@@ -20,6 +20,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/loong64/Simulator-loong64.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/RematerializedFrame.h"
@@ -460,9 +461,9 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return virtualPointerAtStackOffset(priorOffset);
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||   \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
-    defined(JS_CODEGEN_X64)
-    // On X64, ARM, ARM64, and MIPS, the frame pointer save location depends on
-    // the caller of the rectifier frame.
+    defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_LOONG64)
+    // On X64, ARM, ARM64, MIPS and LoongArch, the frame pointer save location
+    // depends on the caller of the rectifier frame.
     BufferPointer<RectifierFrameLayout> priorFrame =
         pointerAtStackOffset<RectifierFrameLayout>(priorOffset);
     FrameType priorType = priorFrame->prevType();

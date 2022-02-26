@@ -5,9 +5,9 @@
 
 import re
 
+from taskgraph.util.taskcluster import get_artifact_url
 
 from gecko_taskgraph.util.time import json_time_from_now
-from gecko_taskgraph.util.taskcluster import get_artifact_url
 
 TASK_REFERENCE_PATTERN = re.compile("<([^>]+)>")
 ARTIFACT_REFERENCE_PATTERN = re.compile("<([^/]+)/([^>]+)>")

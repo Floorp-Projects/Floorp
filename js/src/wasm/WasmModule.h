@@ -129,15 +129,7 @@ class Module : public JS::WasmModule {
   bool instantiateMemory(JSContext* cx,
                          MutableHandleWasmMemoryObject memory) const;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  bool instantiateImportedTag(JSContext* cx, Handle<WasmTagObject*> tagObj,
-                              WasmTagObjectVector& tagObjs,
-                              SharedExceptionTagVector* tags) const;
-  bool instantiateLocalTag(JSContext* cx, const TagDesc& ed,
-                           WasmTagObjectVector& tagObjs,
-                           SharedExceptionTagVector* tags,
-                           uint32_t tagIndex) const;
-  bool instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs,
-                       SharedExceptionTagVector* tags) const;
+  bool instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs) const;
 #endif
   bool instantiateImportedTable(JSContext* cx, const TableDesc& td,
                                 Handle<WasmTableObject*> table,

@@ -729,7 +729,8 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
   // Save the return address if it wasn't already saved by the call insn.
 #ifdef JS_USE_LINK_REGISTER
-#  if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS64)
+#  if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS64) || \
+      defined(JS_CODEGEN_LOONG64)
   masm.pushReturnAddress();
 #  elif defined(JS_CODEGEN_ARM64)
   // WasmPush updates framePushed() unlike pushReturnAddress(), but that's
@@ -2201,8 +2202,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   // The native ABI preserves the TLS, heap and global registers since they
   // are non-volatile.
   MOZ_ASSERT(NonVolatileRegs.has(WasmTlsReg));
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   MOZ_ASSERT(NonVolatileRegs.has(HeapReg));
 #endif
 
@@ -2666,6 +2668,17 @@ static const LiveRegisterSet RegsToPreserve(
                          (Registers::SetType(1) << Registers::k1) |
                          (Registers::SetType(1) << Registers::sp) |
                          (Registers::SetType(1) << Registers::zero))),
+    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+#  ifdef ENABLE_WASM_SIMD
+#    error "high lanes of SIMD registers need to be saved too."
+#  endif
+#elif defined(JS_CODEGEN_LOONG64)
+static const LiveRegisterSet RegsToPreserve(
+    GeneralRegisterSet(Registers::AllMask &
+                       ~((uint32_t(1) << Registers::tp) |
+                         (uint32_t(1) << Registers::fp) |
+                         (uint32_t(1) << Registers::sp) |
+                         (uint32_t(1) << Registers::zero))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #  ifdef ENABLE_WASM_SIMD
 #    error "high lanes of SIMD registers need to be saved too."

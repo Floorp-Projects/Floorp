@@ -122,6 +122,12 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+GCPtrWasmTagObject& Instance::tagTls(const TagDesc& td) const {
+  return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
+}
+#endif
+
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
                             MutableHandle<ArrayObject*> array) {
@@ -1186,26 +1192,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-/* static */ void* Instance::exceptionNew(Instance* instance, uint32_t exnIndex,
-                                          uint32_t nbytes) {
+/* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
-
   JSContext* cx = instance->tlsData()->cx;
-
-  SharedExceptionTag tag = instance->exceptionTags()[exnIndex];
-  RootedArrayBufferObject buf(cx, ArrayBufferObject::createZeroed(cx, nbytes));
-
-  if (!buf) {
-    return nullptr;
-  }
-
-  RootedArrayObject refs(cx, NewDenseEmptyArray(cx));
-
-  if (!refs) {
-    return nullptr;
-  }
-
-  return AnyRef::fromJSObject(WasmExceptionObject::create(cx, tag, buf, refs))
+  RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
+  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
+  RootedObject stack(cx, nullptr);
+  return AnyRef::fromJSObject(
+             WasmExceptionObject::create(cx, tagObj, stack, proto))
       .forCompiledCode();
 }
 
@@ -1220,52 +1214,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // By always returning -1, we trigger a wasmTrap(Trap::ThrowReported),
   // and use that to trigger the stack walking for this exception.
   return -1;
-}
-
-/* static */ uint32_t Instance::consumePendingException(Instance* instance) {
-  MOZ_ASSERT(SASigConsumePendingException.failureMode ==
-             FailureMode::Infallible);
-
-  JSContext* cx = instance->tlsData()->cx;
-  RootedObject exn(cx, instance->tlsData()->pendingException);
-  instance->tlsData()->pendingException = nullptr;
-
-  if (exn->is<WasmExceptionObject>()) {
-    ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
-    for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
-      ExceptionTag& tag = *instance->exceptionTags()[i];
-      if (&tag == &exnTag) {
-        return i;
-      }
-    }
-  }
-
-  // Signal an unknown exception tag, e.g., for a non-imported exception or
-  // JS value.
-  return UINT32_MAX;
-}
-
-/* static */ int32_t Instance::pushRefIntoExn(Instance* instance, JSObject* exn,
-                                              JSObject* ref) {
-  MOZ_ASSERT(SASigPushRefIntoExn.failureMode == FailureMode::FailOnNegI32);
-
-  JSContext* cx = instance->tlsData()->cx;
-
-  MOZ_ASSERT(exn->is<WasmExceptionObject>());
-  RootedWasmExceptionObject exnObj(cx, &exn->as<WasmExceptionObject>());
-
-  // TODO/AnyRef-boxing: With boxed immediates and strings, this may need to
-  // handle other kinds of values.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
-  RootedValue refVal(cx, ObjectOrNullValue(ref));
-  RootedArrayObject arr(cx, &exnObj->refs());
-
-  if (!NewbornArrayPush(cx, arr, refVal)) {
-    return -1;
-  }
-
-  return 0;
 }
 #endif
 
@@ -1337,74 +1285,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return 0;
 }
 
-// Note, dst must point into nonmoveable storage that is not in the nursery,
-// this matters for the write barriers.  Furthermore, for pointer types the
-// current value of *dst must be null so that only a post-barrier is required.
-//
-// Regarding the destination not being in the nursery, we have these cases.
-// Either the written location is in the global data section in the
-// WasmInstanceObject, or the Cell of a WasmGlobalObject:
-//
-// - WasmInstanceObjects are always tenured and u.ref_ may point to a
-//   nursery object, so we need a post-barrier since the global data of an
-//   instance is effectively a field of the WasmInstanceObject.
-//
-// - WasmGlobalObjects are always tenured, and they have a Cell field, so a
-//   post-barrier may be needed for the same reason as above.
-
-void CopyValPostBarriered(uint8_t* dst, const Val& src) {
-  switch (src.type().kind()) {
-    case ValType::I32: {
-      int32_t x = src.i32();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::I64: {
-      int64_t x = src.i64();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::F32: {
-      float x = src.f32();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::F64: {
-      double x = src.f64();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::V128: {
-      V128 x = src.v128();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::Rtt:
-    case ValType::Ref: {
-      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-      // barrier is going to have to be more complicated.
-      ASSERT_ANYREF_IS_JSOBJECT;
-      MOZ_ASSERT(*(void**)dst == nullptr,
-                 "should be null so no need for a pre-barrier");
-      AnyRef x = src.ref();
-      memcpy(dst, x.asJSObjectAddress(), sizeof(*x.asJSObjectAddress()));
-      if (!x.isNull()) {
-        JSObject::postWriteBarrier((JSObject**)dst, nullptr, x.asJSObject());
-      }
-      break;
-    }
-  }
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,
-                   HandleWasmMemoryObject memory,
-                   SharedExceptionTagVector&& exceptionTags,
-                   SharedTableVector&& tables, UniqueDebugState maybeDebug)
+                   HandleWasmMemoryObject memory, SharedTableVector&& tables,
+                   UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       object_(object),
       jsJitArgsRectifier_(
@@ -1416,7 +1304,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       code_(std::move(code)),
       tlsData_(std::move(tlsDataIn)),
       memory_(memory),
-      exceptionTags_(std::move(exceptionTags)),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug))
 #ifdef ENABLE_WASM_GC
@@ -1429,15 +1316,10 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                     const ValVector& globalImportValues,
                     const WasmGlobalObjectVector& globalObjs,
+                    const WasmTagObjectVector& tagObjs,
                     const DataSegmentVector& dataSegments,
                     const ElemSegmentVector& elemSegments) {
   MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
-#ifdef ENABLE_WASM_EXCEPTIONS
-  // Currently the only tags are exception tags.
-  MOZ_ASSERT(exceptionTags_.length() == metadata().tags.length());
-#else
-  MOZ_ASSERT(exceptionTags_.length() == 0);
-#endif
 
 #ifdef DEBUG
   for (auto t : code_->tiers()) {
@@ -1499,6 +1381,18 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     table.length = tables_[i]->length();
     table.functionBase = tables_[i]->functionBase();
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // Initialize tags in the tls data
+  for (size_t i = 0; i < metadata().tags.length(); i++) {
+    const TagDesc& td = metadata().tags[i];
+    MOZ_ASSERT(td.globalDataOffset != UINT32_MAX);
+    MOZ_ASSERT(tagObjs[i] != nullptr);
+    tagTls(td) = tagObjs[i];
+  }
+  tlsData()->pendingException = nullptr;
+  tlsData()->pendingExceptionTag = nullptr;
+#endif
 
   // Add observer if our memory base may grow
   if (memory_ && memory_->movingGrowable() &&
@@ -1590,7 +1484,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           *(void**)globalAddr =
               (void*)&globalObjs[imported]->val().get().cell();
         } else {
-          CopyValPostBarriered(globalAddr, globalImportValues[imported]);
+          globalImportValues[imported].writeToHeapLocation(globalAddr);
         }
         break;
       }
@@ -1603,11 +1497,14 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         }
 
         if (global.isIndirect()) {
-          void* address = (void*)&globalObjs[i]->val().get().cell();
+          // Initialize the cell
+          wasm::GCPtrVal& cell = globalObjs[i]->val();
+          cell = val.get();
+          // Link to the cell
+          void* address = (void*)&cell.get().cell();
           *(void**)globalAddr = address;
-          CopyValPostBarriered((uint8_t*)address, val.get());
         } else {
-          CopyValPostBarriered(globalAddr, val.get());
+          val.get().writeToHeapLocation(globalAddr);
         }
         break;
       }
@@ -1713,6 +1610,12 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  for (const TagDesc& tag : code().metadata().tags) {
+    TraceNullableEdge(trc, &tagTls(tag), "wasm tag");
+  }
+#endif
+
   TraceNullableEdge(trc, &memory_, "wasm buffer");
 #ifdef ENABLE_WASM_GC
   if (hasGcTypes_) {
@@ -1729,6 +1632,8 @@ void Instance::tracePrivate(JSTracer* trc) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   TraceNullableEdge(trc, &tlsData()->pendingException,
                     "wasm pending exception value");
+  TraceNullableEdge(trc, &tlsData()->pendingExceptionTag,
+                    "wasm pending exception tag");
 #endif
 
   if (maybeDebug_) {
@@ -2242,6 +2147,16 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   DebugCodegen(DebugChannel::Function, "]\n");
 
   return true;
+}
+
+static JSObject* GetExceptionTag(JSObject* exn) {
+  return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
+                                        : nullptr;
+}
+
+void Instance::setPendingException(HandleAnyRef exn) {
+  tlsData()->pendingException = exn.get().asJSObject();
+  tlsData()->pendingExceptionTag = GetExceptionTag(exn.get().asJSObject());
 }
 
 bool Instance::constantRefFunc(uint32_t funcIndex,

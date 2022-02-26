@@ -697,7 +697,10 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
             aMaxMessageSize != mMaxMessageSize ? "yes" : "no"));
 }
 
-uint64_t DataChannelConnection::GetMaxMessageSize() { return mMaxMessageSize; }
+uint64_t DataChannelConnection::GetMaxMessageSize() {
+  MutexAutoLock lock(mLock);
+  return mMaxMessageSize;
+}
 
 void DataChannelConnection::AppendStatsToReport(
     const UniquePtr<dom::RTCStatsCollection>& aReport,
