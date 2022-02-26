@@ -49,7 +49,15 @@ class ShadowIncludingTreeIterator {
 
   bool operator!=(std::nullptr_t) const { return !!mCurrent; }
 
+  explicit operator bool() const { return !!mCurrent; }
+
   void operator++() { Next(); }
+
+  void SkipChildren() {
+    MOZ_ASSERT(mCurrent, "Shouldn't be at end");
+    mCurrent = mCurrent->GetNextNonChildNode(mRoots.LastElement());
+    WalkOutOfShadowRootsIfNeeded();
+  }
 
   nsINode* operator*() { return mCurrent; }
 
@@ -67,6 +75,10 @@ class ShadowIncludingTreeIterator {
     }
 
     mCurrent = mCurrent->GetNextNode(mRoots.LastElement());
+    WalkOutOfShadowRootsIfNeeded();
+  }
+
+  void WalkOutOfShadowRootsIfNeeded() {
     while (!mCurrent) {
       // Nothing left under this root.  Keep trying to pop the stack until we
       // find a node or run out of stack.
