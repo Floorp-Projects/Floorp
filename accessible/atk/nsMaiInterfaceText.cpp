@@ -6,6 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 #include "mozilla/a11y/PDocAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
@@ -444,49 +445,49 @@ static gint getOffsetAtPointCB(AtkText* aText, gint aX, gint aY,
 }
 
 static gint getTextSelectionCountCB(AtkText* aText) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return 0;
-    }
-
-    return text->SelectionCount();
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return 0;
   }
 
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return proxy->SelectionCount();
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return 0;
   }
 
-  return 0;
+  return text->SelectionCount();
 }
 
 static gchar* getTextSelectionCB(AtkText* aText, gint aSelectionNum,
                                  gint* aStartOffset, gint* aEndOffset) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  int32_t startOffset = 0, endOffset = 0;
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return nullptr;
-    }
-
-    text->SelectionBoundsAt(aSelectionNum, &startOffset, &endOffset);
-    *aStartOffset = startOffset;
-    *aEndOffset = endOffset;
-
-    return getTextCB(aText, *aStartOffset, *aEndOffset);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return nullptr;
   }
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+
+  int32_t startOffset = 0, endOffset = 0;
+  if (acc->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessible* remote = acc->AsRemote();
     nsString data;
-    proxy->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);
+    remote->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
     NS_ConvertUTF16toUTF8 dataAsUTF8(data);
     return (dataAsUTF8.get()) ? g_strdup(dataAsUTF8.get()) : nullptr;
   }
-  return nullptr;
+
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return nullptr;
+  }
+
+  text->SelectionBoundsAt(aSelectionNum, &startOffset, &endOffset);
+  *aStartOffset = startOffset;
+  *aEndOffset = endOffset;
+
+  return getTextCB(aText, *aStartOffset, *aEndOffset);
 }
 
 // set methods
