@@ -121,15 +121,9 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   ParentToChildServiceWorkerFetchEventOpArgs copyArgs(aArgs.common(),
                                                       Nothing());
   if (aArgs.preloadResponse().isSome()) {
-    // Convert the preload response to ParentToChildResponseWithTiming.
-    ParentToChildResponseWithTiming response;
-    response.response() =
-        ToParentToChild(aArgs.preloadResponse().ref().response(),
-                        WrapNotNull(aManager->Manager()));
-    response.timingData() = aArgs.preloadResponse().ref().timingData();
-    response.initiatorType() = aArgs.preloadResponse().ref().initiatorType();
-    response.entryName() = aArgs.preloadResponse().ref().entryName();
-    copyArgs.preloadResponse() = Some(response);
+    // Convert the preload response to ParentToChildInternalResponse.
+    copyArgs.preloadResponse() = Some(ToParentToChild(
+        aArgs.preloadResponse().ref(), WrapNotNull(aManager->Manager())));
   }
 
   FetchEventOpProxyParent* actor =
@@ -141,16 +135,11 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   // need to add it to the arguments. Note that we have to make sure that the
   // arguments don't contain the preload response already, otherwise we'll end
   // up overwriting it with a Nothing.
-  Maybe<ParentToParentResponseWithTiming> preloadResponse =
+  Maybe<ParentToParentInternalResponse> preloadResponse =
       actor->mReal->OnStart(WrapNotNull(actor));
   if (copyArgs.preloadResponse().isNothing() && preloadResponse.isSome()) {
-    ParentToChildResponseWithTiming response;
-    response.response() = ToParentToChild(preloadResponse.ref().response(),
-                                          WrapNotNull(aManager->Manager()));
-    response.timingData() = preloadResponse.ref().timingData();
-    response.initiatorType() = preloadResponse.ref().initiatorType();
-    response.entryName() = preloadResponse.ref().entryName();
-    copyArgs.preloadResponse() = Some(response);
+    copyArgs.preloadResponse() = Some(ToParentToChild(
+        preloadResponse.ref(), WrapNotNull(aManager->Manager())));
   }
 
   IPCInternalRequest& copyRequest = copyArgs.common().internalRequest();

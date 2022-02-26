@@ -16,7 +16,6 @@
 #include "nsWrapperCache.h"
 #include "Performance.h"
 #include "nsITimedChannel.h"
-#include "mozilla/dom/PerformanceTimingTypes.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
@@ -45,10 +44,6 @@ class PerformanceTimingData final {
 
   PerformanceTimingData(nsITimedChannel* aChannel, nsIHttpChannel* aHttpChannel,
                         DOMHighResTimeStamp aZeroTime);
-
-  explicit PerformanceTimingData(const IPCPerformanceTimingData& aIPCData);
-
-  IPCPerformanceTimingData ToIPC();
 
   void SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
                                     nsITimedChannel* aChannel);
