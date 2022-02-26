@@ -25,7 +25,7 @@ RenderExternalTextureHost::RenderExternalTextureHost(
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor: {
       const layers::YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
-      mSize = ycbcr.ySize();
+      mSize = ycbcr.display().Size();
       mFormat = gfx::SurfaceFormat::YUV;
       break;
     }
@@ -63,16 +63,17 @@ bool RenderExternalTextureHost::CreateSurfaces() {
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     const gfx::SurfaceFormat surfaceFormat =
         SurfaceFormatForColorDepth(desc.colorDepth());
+    auto cbcrSize = layers::ImageDataSerializer::GetCroppedCbCrSize(desc);
 
     mSurfaces[0] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetYChannel(GetBuffer(), desc),
-        desc.yStride(), desc.ySize(), surfaceFormat);
+        desc.yStride(), desc.display().Size(), surfaceFormat);
     mSurfaces[1] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetCbChannel(GetBuffer(), desc),
-        desc.cbCrStride(), desc.cbCrSize(), surfaceFormat);
+        desc.cbCrStride(), cbcrSize, surfaceFormat);
     mSurfaces[2] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetCrChannel(GetBuffer(), desc),
-        desc.cbCrStride(), desc.cbCrSize(), surfaceFormat);
+        desc.cbCrStride(), cbcrSize, surfaceFormat);
   }
 
   for (size_t i = 0; i < PlaneCount(); ++i) {
@@ -239,19 +240,21 @@ bool RenderExternalTextureHost::MapPlane(RenderCompositor* aCompositor,
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetYChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.yStride();
-          aPlaneInfo.mSize = desc.ySize();
+          aPlaneInfo.mSize = desc.display().Size();
           break;
         case 1:
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetCbChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.cbCrStride();
-          aPlaneInfo.mSize = desc.cbCrSize();
+          aPlaneInfo.mSize =
+              layers::ImageDataSerializer::GetCroppedCbCrSize(desc);
           break;
         case 2:
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetCrChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.cbCrStride();
-          aPlaneInfo.mSize = desc.cbCrSize();
+          aPlaneInfo.mSize =
+              layers::ImageDataSerializer::GetCroppedCbCrSize(desc);
           break;
       }
       break;
