@@ -18,52 +18,63 @@ using namespace mozilla::a11y;
 
 // nsISupports and cycle collection
 
-NS_IMPL_CYCLE_COLLECTION(xpcAccessibleTextRange, mRange.mRoot,
-                         mRange.mStartContainer, mRange.mEndContainer)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(xpcAccessibleTextRange)
+NS_INTERFACE_MAP_BEGIN(xpcAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY(xpcAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleTextRange)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(xpcAccessibleTextRange)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(xpcAccessibleTextRange)
+NS_IMPL_ADDREF(xpcAccessibleTextRange)
+NS_IMPL_RELEASE(xpcAccessibleTextRange)
+
+a11y::TextRange xpcAccessibleTextRange::Range() {
+  return a11y::TextRange(mRoot->ToInternalGeneric(),
+                         mStartContainer->ToInternalGeneric(), mStartOffset,
+                         mEndContainer->ToInternalGeneric(), mEndOffset);
+}
+
+void xpcAccessibleTextRange::SetRange(TextRange& aRange) {
+  mRoot = ToXPCText(aRange.Root());
+  mStartContainer = ToXPCText(aRange.StartContainer());
+  mStartOffset = aRange.StartOffset();
+  mEndContainer = ToXPCText(aRange.EndContainer());
+  mEndOffset = aRange.EndOffset();
+}
 
 // nsIAccessibleTextRange
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetStartContainer(nsIAccessibleText** aAnchor) {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  NS_IF_ADDREF(*aAnchor = ToXPCText(mRange.StartContainer()));
+  NS_IF_ADDREF(*aAnchor = mStartContainer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetStartOffset(int32_t* aOffset) {
   NS_ENSURE_ARG_POINTER(aOffset);
-  *aOffset = mRange.StartOffset();
+  *aOffset = mStartOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetEndContainer(nsIAccessibleText** aAnchor) {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  NS_IF_ADDREF(*aAnchor = ToXPCText(mRange.EndContainer()));
+  NS_IF_ADDREF(*aAnchor = mEndContainer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetEndOffset(int32_t* aOffset) {
   NS_ENSURE_ARG_POINTER(aOffset);
-  *aOffset = mRange.EndOffset();
+  *aOffset = mEndOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetContainer(nsIAccessible** aContainer) {
   NS_ENSURE_ARG_POINTER(aContainer);
-  NS_IF_ADDREF(*aContainer = ToXPC(mRange.Container()));
+  NS_IF_ADDREF(*aContainer = ToXPC(Range().Container()));
   return NS_OK;
 }
 
@@ -74,8 +85,8 @@ xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList) {
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<LocalAccessible*> objects;
-  mRange.EmbeddedChildren(&objects);
+  nsTArray<Accessible*> objects;
+  Range().EmbeddedChildren(&objects);
 
   uint32_t len = objects.Length();
   for (uint32_t idx = 0; idx < len; idx++) {
@@ -93,7 +104,7 @@ xpcAccessibleTextRange::Compare(nsIAccessibleTextRange* aOtherRange,
   RefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
   if (!xpcRange || !aResult) return NS_ERROR_INVALID_ARG;
 
-  *aResult = (mRange == xpcRange->mRange);
+  *aResult = (Range() == xpcRange->Range());
   return NS_OK;
 }
 
@@ -105,11 +116,13 @@ xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
   RefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
   if (!xpcRange || !aResult) return NS_ERROR_INVALID_ARG;
 
-  TextPoint p =
-      (aEndPoint == EndPoint_Start) ? mRange.StartPoint() : mRange.EndPoint();
+  TextRange thisRange = Range();
+  TextRange otherRange = xpcRange->Range();
+  TextPoint p = (aEndPoint == EndPoint_Start) ? thisRange.StartPoint()
+                                              : thisRange.EndPoint();
   TextPoint otherPoint = (aOtherRangeEndPoint == EndPoint_Start)
-                             ? xpcRange->mRange.StartPoint()
-                             : xpcRange->mRange.EndPoint();
+                             ? otherRange.StartPoint()
+                             : otherRange.EndPoint();
 
   if (p == otherPoint) {
     *aResult = 0;
@@ -123,7 +136,7 @@ xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
 NS_IMETHODIMP
 xpcAccessibleTextRange::GetText(nsAString& aText) {
   nsAutoString text;
-  mRange.Text(text);
+  Range().Text(text);
   aText.Assign(text);
 
   return NS_OK;
@@ -131,10 +144,14 @@ xpcAccessibleTextRange::GetText(nsAString& aText) {
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
-  LocalAccessible* container = aContainer->ToInternalAccessible();
+  Accessible* container = aContainer->ToInternalGeneric();
   NS_ENSURE_TRUE(container, NS_ERROR_INVALID_ARG);
 
-  *aSuccess = mRange.Crop(container);
+  TextRange range = Range();
+  *aSuccess = range.Crop(container);
+  if (*aSuccess) {
+    SetRange(range);
+  }
   return NS_OK;
 }
 

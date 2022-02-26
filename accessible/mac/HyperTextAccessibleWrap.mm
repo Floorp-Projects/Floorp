@@ -403,25 +403,26 @@ void HyperTextAccessibleWrap::LeftWordAt(int32_t aOffset,
     return;
   }
 
+  auto* startContainer = static_cast<HyperTextAccessibleWrap*>(
+      start.mContainer->AsLocal()->AsHyperText());
   if ((NativeState() & states::EDITABLE) &&
-      !(start.mContainer->NativeState() & states::EDITABLE)) {
+      !(startContainer->NativeState() & states::EDITABLE)) {
     // The word search crossed an editable boundary. Return the first word of
     // the editable root.
     return EditableRoot()->RightWordAt(0, aStartContainer, aStartOffset,
                                        aEndContainer, aEndOffset);
   }
 
-  TextPoint end =
-      static_cast<HyperTextAccessibleWrap*>(start.mContainer)
-          ->FindTextPoint(start.mOffset, eDirNext, eSelectWord, eEndWord);
+  TextPoint end = startContainer->FindTextPoint(start.mOffset, eDirNext,
+                                                eSelectWord, eEndWord);
   if (end < here) {
-    *aStartContainer = end.mContainer;
-    *aEndContainer = here.mContainer;
+    *aStartContainer = end.mContainer->AsLocal()->AsHyperText();
+    *aEndContainer = here.mContainer->AsLocal()->AsHyperText();
     *aStartOffset = end.mOffset;
     *aEndOffset = here.mOffset;
   } else {
-    *aStartContainer = start.mContainer;
-    *aEndContainer = end.mContainer;
+    *aStartContainer = startContainer;
+    *aEndContainer = end.mContainer->AsLocal()->AsHyperText();
     *aStartOffset = start.mOffset;
     *aEndOffset = end.mOffset;
   }
@@ -440,24 +441,25 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
     return;
   }
 
+  auto* endContainer = static_cast<HyperTextAccessibleWrap*>(
+      end.mContainer->AsLocal()->AsHyperText());
   if ((NativeState() & states::EDITABLE) &&
-      !(end.mContainer->NativeState() & states::EDITABLE)) {
+      !(endContainer->NativeState() & states::EDITABLE)) {
     // The word search crossed an editable boundary. Return with no result.
     return;
   }
 
-  TextPoint start =
-      static_cast<HyperTextAccessibleWrap*>(end.mContainer)
-          ->FindTextPoint(end.mOffset, eDirPrevious, eSelectWord, eStartWord);
+  TextPoint start = endContainer->FindTextPoint(end.mOffset, eDirPrevious,
+                                                eSelectWord, eStartWord);
 
   if (here < start) {
-    *aStartContainer = here.mContainer;
-    *aEndContainer = start.mContainer;
+    *aStartContainer = here.mContainer->AsLocal()->AsHyperText();
+    *aEndContainer = start.mContainer->AsLocal()->AsHyperText();
     *aStartOffset = here.mOffset;
     *aEndOffset = start.mOffset;
   } else {
-    *aStartContainer = start.mContainer;
-    *aEndContainer = end.mContainer;
+    *aStartContainer = start.mContainer->AsLocal()->AsHyperText();
+    *aEndContainer = endContainer;
     *aStartOffset = start.mOffset;
     *aEndOffset = end.mOffset;
   }
@@ -477,9 +479,10 @@ void HyperTextAccessibleWrap::LineAt(int32_t aOffset, bool aNextLine,
     return;
   }
 
-  TextPoint start = static_cast<HyperTextAccessibleWrap*>(end.mContainer)
-                        ->FindTextPoint(end.mOffset, eDirPrevious,
-                                        eSelectBeginLine, eDefaultBehavior);
+  auto* endContainer = static_cast<HyperTextAccessibleWrap*>(
+      end.mContainer->AsLocal()->AsHyperText());
+  TextPoint start = endContainer->FindTextPoint(
+      end.mOffset, eDirPrevious, eSelectBeginLine, eDefaultBehavior);
 
   if (!aNextLine && here < start) {
     start = FindTextPoint(aOffset, eDirPrevious, eSelectBeginLine,
@@ -488,13 +491,14 @@ void HyperTextAccessibleWrap::LineAt(int32_t aOffset, bool aNextLine,
       return;
     }
 
-    end = static_cast<HyperTextAccessibleWrap*>(start.mContainer)
-              ->FindTextPoint(start.mOffset, eDirNext, eSelectEndLine,
-                              eDefaultBehavior);
+    auto* startContainer = static_cast<HyperTextAccessibleWrap*>(
+        start.mContainer->AsLocal()->AsHyperText());
+    end = startContainer->FindTextPoint(start.mOffset, eDirNext, eSelectEndLine,
+                                        eDefaultBehavior);
   }
 
-  *aStartContainer = start.mContainer;
-  *aEndContainer = end.mContainer;
+  *aStartContainer = start.mContainer->AsLocal()->AsHyperText();
+  *aEndContainer = end.mContainer->AsLocal()->AsHyperText();
   *aStartOffset = start.mOffset;
   *aEndOffset = end.mOffset;
 }
@@ -524,12 +528,14 @@ void HyperTextAccessibleWrap::ParagraphAt(int32_t aOffset,
     return;
   }
 
-  TextPoint start = static_cast<HyperTextAccessibleWrap*>(end.mContainer)
+  auto* endContainer = static_cast<HyperTextAccessibleWrap*>(
+      end.mContainer->AsLocal()->AsHyperText());
+  TextPoint start = static_cast<HyperTextAccessibleWrap*>(endContainer)
                         ->FindTextPoint(end.mOffset, eDirPrevious,
                                         eSelectParagraph, eDefaultBehavior);
 
-  *aStartContainer = start.mContainer;
-  *aEndContainer = end.mContainer;
+  *aStartContainer = start.mContainer->AsLocal()->AsHyperText();
+  *aEndContainer = endContainer;
   *aStartOffset = start.mOffset;
   *aEndOffset = end.mOffset;
 }
@@ -572,7 +578,7 @@ void HyperTextAccessibleWrap::NextClusterAt(
     *aNextContainer = this;
     *aNextOffset = aOffset;
   } else {
-    *aNextContainer = next.mContainer;
+    *aNextContainer = next.mContainer->AsLocal()->AsHyperText();
     *aNextOffset = next.mOffset;
   }
 }
@@ -582,7 +588,7 @@ void HyperTextAccessibleWrap::PreviousClusterAt(
     int32_t* aPrevOffset) {
   TextPoint prev =
       FindTextPoint(aOffset, eDirPrevious, eSelectCluster, eDefaultBehavior);
-  *aPrevContainer = prev.mContainer;
+  *aPrevContainer = prev.mContainer->AsLocal()->AsHyperText();
   *aPrevOffset = prev.mOffset;
 }
 
