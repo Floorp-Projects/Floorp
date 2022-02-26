@@ -8,16 +8,14 @@ callback ComputePressureUpdateCallback = undefined (
   ComputePressureObserver observer
 );
 
-enum ComputePressureTarget { "cpu" };
-
 [Exposed=Window]
 interface ComputePressureObserver {
-  constructor(ComputePressureUpdateCallback callback);
-  undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
-  undefined unobserve(ComputePressureTarget target);
-  undefined disconnect();
-  sequence<ComputePressureEntry> takeRecords();
-  [SameObject] static readonly attribute FrozenArray<DOMString> supportedTargetTypes;
+  constructor(
+    ComputePressureUpdateCallback callback,
+    optional ComputePressureObserverOptions options = {}
+  );
+  undefined observe();
+  undefined unobserve();
 };
 
 dictionary ComputePressureEntry {

@@ -16,15 +16,11 @@
 var notEditable = document.querySelector('#not-editable');
 var editable = document.querySelector('#editable');
 
-promise_test(async function() {
+promise_test(async () => {
     notEditable.focus();
     var oldValue = notEditable.textContent;
     assert_equals(oldValue, "I'm not editable.");
-    await promise_rejects_js(
-        this,
-        Error,
-        test_driver.send_keys(notEditable, 'a'),
-        "send_keys should reject for non-interactive elements");
+    await test_driver.send_keys(document.body, 'a');
     assert_equals(notEditable.textContent, oldValue);
 }, "Can't edit inert contenteditable");
 
@@ -32,7 +28,7 @@ promise_test(async () => {
     editable.focus();
     var oldValue = editable.textContent;
     assert_equals(oldValue, "I'm editable.");
-    await test_driver.send_keys(editable, 'a');
+    await test_driver.send_keys(document.body, 'a');
     assert_not_equals(editable.textContent, oldValue);
 }, "Can edit non-inert contenteditable");
 

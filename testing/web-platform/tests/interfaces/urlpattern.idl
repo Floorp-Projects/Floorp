@@ -50,5 +50,5 @@ dictionary URLPatternResult {
 
 dictionary URLPatternComponentResult {
   USVString input;
-  record<USVString, (USVString or undefined)> groups;
+  record<USVString, USVString> groups;
 };

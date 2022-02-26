@@ -9,11 +9,10 @@ enum AutoplayPolicy {
   "disallowed"
 };
 
-enum AutoplayPolicyMediaType { "mediaelement", "audiocontext" };
+partial interface Document {
+  readonly attribute AutoplayPolicy autoplayPolicy;
+};
 
-[Exposed=Window]
-partial interface Navigator {
-  AutoplayPolicy getAutoplayPolicy(AutoplayPolicyMediaType type);
-  AutoplayPolicy getAutoplayPolicy(HTMLMediaElement element);
-  AutoplayPolicy getAutoplayPolicy(AudioContext context);
+partial interface HTMLMediaElement {
+  readonly attribute AutoplayPolicy autoplayPolicy;
 };

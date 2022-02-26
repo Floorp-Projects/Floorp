@@ -7,7 +7,7 @@
     <link rel="help" href="https://w3c.github.io/DOM-Parsing/#widl-Element-outerHTML">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
-    <script src="../../resources/common.js"></script>
+    <script src="../html-element-list.js"></script>
   </head>
   <body>
     <div id="log"></div>
@@ -16,8 +16,7 @@
         var doc = document.implementation.createDocument(null, "");
         assert_equals(doc.contentType, "application/xml");
         var html_ns = "http://www.w3.org/1999/xhtml";
-        const non_void_elements = HTML5_ELEMENTS.filter(el => !HTML5_VOID_ELEMENTS.includes(el));
-        non_void_elements.forEach(function(ele) {
+        elements_with_end_tag.forEach(function(ele) {
           test(function() {
             var e = doc.createElementNS(html_ns, ele);
             assert_equals(e.outerHTML,
@@ -25,7 +24,7 @@
                           ele + " node created." );
           }, "Node for " + ele);
         });
-        HTML5_VOID_ELEMENTS.forEach(function(ele) {
+        elements_without_end_tag.forEach(function(ele) {
           test(function() {
             var e = doc.createElementNS(html_ns, ele);
             assert_equals(e.outerHTML,

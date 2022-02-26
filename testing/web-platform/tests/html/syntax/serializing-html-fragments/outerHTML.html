@@ -7,20 +7,19 @@
     <link rel="help" href="https://dvcs.w3.org/hg/innerhtml/raw-file/tip/index.html#widl-Element-outerHTML">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
-    <script src="../../resources/common.js"></script>
+    <script src="../html-element-list.js"></script>
   </head>
   <body>
     <div id="log"></div>
     <script>
       test(function() {
-        const non_void_elements = HTML5_ELEMENTS.filter(el => !HTML5_VOID_ELEMENTS.includes(el));
-        non_void_elements.forEach(function(ele) {
+        elements_with_end_tag.forEach(function(ele) {
           test(function() {
             var e = document.createElement(ele);
             assert_equals(e.outerHTML, "<" + ele + "></" + ele + ">", ele + " node created." );
           }, "Node for " + ele);
         });
-        HTML5_VOID_ELEMENTS.forEach(function(ele) {
+        elements_without_end_tag.forEach(function(ele) {
           test(function() {
             var e = document.createElement(ele);
             assert_equals(e.outerHTML, "<" + ele + ">", ele + " node created." );
