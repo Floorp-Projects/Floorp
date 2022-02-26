@@ -203,7 +203,7 @@ bool TextRange::Crop(Accessible* aContainer) {
         // The start boundary and the container are siblings.
         container = aContainer;
       }
-    } else if (containerPos != 0) {
+    } else {
       // The container does not contain the start boundary.
       boundary = boundaryParents[boundaryPos];
       container = containerParents[containerPos];
@@ -243,7 +243,7 @@ bool TextRange::Crop(Accessible* aContainer) {
     } else {
       container = aContainer;
     }
-  } else if (containerPos != 0) {
+  } else {
     boundary = boundaryParents[boundaryPos];
     container = containerParents[containerPos];
   }
