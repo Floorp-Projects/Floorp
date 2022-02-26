@@ -132,9 +132,9 @@ ia2AccessibleText::get_nSelections(long* aNSelections) {
   if (!aNSelections) return E_INVALIDARG;
   *aNSelections = 0;
 
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   *aNSelections = textAcc->SelectionCount();
@@ -171,9 +171,9 @@ ia2AccessibleText::get_selection(long aSelectionIndex, long* aStartOffset,
   *aStartOffset = *aEndOffset = 0;
 
   int32_t startOffset = 0, endOffset = 0;
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   if (!textAcc->SelectionBoundsAt(aSelectionIndex, &startOffset, &endOffset)) {
