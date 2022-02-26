@@ -130,25 +130,6 @@ xpcAccessibleTextRange::GetText(nsAString& aText) {
 }
 
 NS_IMETHODIMP
-xpcAccessibleTextRange::GetBounds(nsIArray** aRectList) { return NS_OK; }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::Move(uint32_t aUnit, int32_t aCount) { return NS_OK; }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::MoveStart(uint32_t aUnit, int32_t aCount) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::MoveEnd(uint32_t aUnit, int32_t aCount) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::Normalize(uint32_t aUnit) { return NS_OK; }
-
-NS_IMETHODIMP
 xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
   LocalAccessible* container = aContainer->ToInternalAccessible();
   NS_ENSURE_TRUE(container, NS_ERROR_INVALID_ARG);
@@ -156,29 +137,6 @@ xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
   *aSuccess = mRange.Crop(container);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::FindText(const nsAString& aText, bool aIsBackward,
-                                 bool aIsIgnoreCase,
-                                 nsIAccessibleTextRange** aRange) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::FindAttr(uint32_t aAttr, nsIVariant* aVal,
-                                 bool aIsBackward,
-                                 nsIAccessibleTextRange** aRange) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::AddToSelection() { return NS_OK; }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::RemoveFromSelection() { return NS_OK; }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::Select() { return NS_OK; }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::ScrollIntoView(uint32_t aHow) { return NS_OK; }

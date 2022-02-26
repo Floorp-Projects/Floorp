@@ -152,10 +152,6 @@ void TextRange::Text(nsAString& aText) const {
   }
 }
 
-void TextRange::Bounds(nsTArray<nsIntRect> aRects) const {}
-
-void TextRange::Normalize(ETextUnit aUnit) {}
-
 bool TextRange::Crop(LocalAccessible* aContainer) {
   uint32_t boundaryPos = 0, containerPos = 0;
   AutoTArray<LocalAccessible*, 30> boundaryParents, containerParents;
@@ -241,17 +237,6 @@ bool TextRange::Crop(LocalAccessible* aContainer) {
 
   return true;
 }
-
-void TextRange::FindText(const nsAString& aText, EDirection aDirection,
-                         nsCaseTreatment aCaseSensitive,
-                         TextRange* aFoundRange) const {}
-
-void TextRange::FindAttr(EAttr aAttr, nsIVariant* aValue, EDirection aDirection,
-                         TextRange* aFoundRange) const {}
-
-void TextRange::AddToSelection() const {}
-
-void TextRange::RemoveFromSelection() const {}
 
 bool TextRange::SetSelectionAt(int32_t aSelectionNum) const {
   RefPtr<dom::Selection> domSel = mRoot->DOMSelection();
@@ -473,11 +458,6 @@ bool TextRange::TextInternal(nsAString& aText, LocalAccessible* aCurrent,
 
   return moveNext;
 }
-
-void TextRange::MoveInternal(ETextUnit aUnit, int32_t aCount,
-                             HyperTextAccessible& aContainer, int32_t aOffset,
-                             HyperTextAccessible* aStopContainer,
-                             int32_t aStopOffset) {}
 
 LocalAccessible* TextRange::CommonParent(LocalAccessible* aAcc1,
                                          LocalAccessible* aAcc2,

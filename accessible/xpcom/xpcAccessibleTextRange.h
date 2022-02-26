@@ -45,20 +45,7 @@ class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
                               uint32_t aOtherRangeEndPoint,
                               int32_t* aResult) final;
   NS_IMETHOD GetText(nsAString& aText) final;
-  NS_IMETHOD GetBounds(nsIArray** aRectList) final;
-  NS_IMETHOD Move(uint32_t aUnit, int32_t aCount) final;
-  NS_IMETHOD MoveStart(uint32_t aUnit, int32_t aCount) final;
-  NS_IMETHOD MoveEnd(uint32_t aUnit, int32_t aCount) final;
-  NS_IMETHOD Normalize(uint32_t aUnit) final;
   NS_IMETHOD Crop(nsIAccessible* aContainer, bool* aSuccess) final;
-  NS_IMETHOD FindText(const nsAString& aText, bool aIsBackward,
-                      bool aIsIgnoreCase,
-                      nsIAccessibleTextRange** aRange) final;
-  NS_IMETHOD FindAttr(uint32_t aAttr, nsIVariant* aVal, bool aIsBackward,
-                      nsIAccessibleTextRange** aRange) final;
-  NS_IMETHOD AddToSelection() final;
-  NS_IMETHOD RemoveFromSelection() final;
-  NS_IMETHOD Select() final;
   NS_IMETHOD ScrollIntoView(uint32_t aHow) final;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLETEXTRANGE_IMPL_IID)
