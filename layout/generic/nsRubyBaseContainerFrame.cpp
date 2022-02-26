@@ -20,6 +20,7 @@
 #include "nsPresContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsTextFrame.h"
+#include "gfxContext.h"
 #include "RubyUtils.h"
 
 using namespace mozilla;
