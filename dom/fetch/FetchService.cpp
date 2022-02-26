@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,10 +15,12 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla::dom {
@@ -152,15 +152,13 @@ void FetchService::FetchInstance::Cancel() {
 
 void FetchService::FetchInstance::OnResponseEnd(
     FetchDriverObserver::EndReason aReason) {
+  FETCH_LOG(("FetchInstance::OnResponseEnd [%p]", this));
   if (aReason == eAborted) {
+    FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));
     mResponsePromiseHolder.ResolveIfExists(
         InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+    return;
   }
-}
-
-void FetchService::FetchInstance::OnResponseAvailableInternal(
-    SafeRefPtr<InternalResponse> aResponse) {
-  FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
   if (!mResponsePromiseHolder.IsEmpty()) {
     // Remove the FetchInstance from FetchInstanceTable
     RefPtr<FetchServiceResponsePromise> responsePromise =
@@ -171,12 +169,24 @@ void FetchService::FetchInstance::OnResponseAvailableInternal(
     MOZ_ASSERT(entry);
     entry.Remove();
     FETCH_LOG(
-        ("FetchInstance::OnResponseAvailableInternal entry of "
-         "responsePromise[%p] is removed",
+        ("FetchInstance::OnResponseEnd entry of responsePromise[%p] is removed",
          responsePromise.get()));
   }
+
+  // Get PerformanceTimingData from FetchDriver.
+  nsAutoString initiatorType;
+  nsAutoString entryName;
+  UniquePtr<PerformanceTimingData> performanceTiming(
+      mFetchDriver->GetPerformanceTimingData(initiatorType, entryName));
+
   // Resolve the FetchServiceResponsePromise
-  mResponsePromiseHolder.ResolveIfExists(std::move(aResponse), __func__);
+  mResponsePromiseHolder.ResolveIfExists(std::move(mResponse), __func__);
+}
+
+void FetchService::FetchInstance::OnResponseAvailableInternal(
+    SafeRefPtr<InternalResponse> aResponse) {
+  FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
+  mResponse = std::move(aResponse);
 }
 
 // TODO:
