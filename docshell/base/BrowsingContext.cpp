@@ -170,6 +170,15 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
+// static
+void BrowsingContext::UpdateCurrentTopByBrowserId(
+    BrowsingContext* aNewBrowsingContext) {
+  if (aNewBrowsingContext->IsTopContent()) {
+    sCurrentTopByBrowserId->InsertOrUpdate(aNewBrowsingContext->BrowserId(),
+                                           aNewBrowsingContext);
+  }
+}
+
 BrowsingContext* BrowsingContext::GetParent() const {
   return mParentWindow ? mParentWindow->GetBrowsingContext() : nullptr;
 }
@@ -2910,6 +2919,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
 
   const bool isInBFCache = GetIsInBFCache();
   if (!isInBFCache) {
+    UpdateCurrentTopByBrowserId(this);
     PreOrderWalk([&](BrowsingContext* aContext) {
       aContext->mIsInBFCache = false;
       nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();

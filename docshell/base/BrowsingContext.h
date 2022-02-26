@@ -268,6 +268,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return GetCurrentTopByBrowserId(aId);
   }
 
+  static void UpdateCurrentTopByBrowserId(BrowsingContext* aNewBrowsingContext);
+
   static already_AddRefed<BrowsingContext> GetFromWindow(
       WindowProxyHolder& aProxy);
   static already_AddRefed<BrowsingContext> GetFromWindow(
