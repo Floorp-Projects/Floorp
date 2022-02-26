@@ -1682,10 +1682,16 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [self, globalObjectAsSupports = std::move(globalObjectAsSupports)](
-                SafeRefPtr<InternalResponse> aInternalResponse) {
-              self->mPreloadResponse->MaybeResolve(
-                  MakeRefPtr<Response>(globalObjectAsSupports,
-                                       std::move(aInternalResponse), nullptr));
+                FetchEventPreloadResponseArgs&& aArgs) {
+              SafeRefPtr<InternalResponse> preloadResponse;
+              IPCPerformanceTimingData timingData;
+              nsString initiatorType;
+              nsString entryName;
+              Tie(preloadResponse, timingData, initiatorType, entryName) =
+                  std::move(aArgs);
+
+              self->mPreloadResponse->MaybeResolve(MakeRefPtr<Response>(
+                  globalObjectAsSupports, std::move(preloadResponse), nullptr));
               self->mPreloadResponsePromiseRequestHolder.Complete();
             },
             [self](int) {
