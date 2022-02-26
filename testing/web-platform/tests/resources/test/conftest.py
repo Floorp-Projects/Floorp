@@ -89,6 +89,62 @@ def resolve_uri(context, uri):
     return os.path.exists(os.path.join(base, path))
 
 
+def _summarize(actual):
+    def _scrub_stack(test_obj):
+        copy = dict(test_obj)
+        del copy['stack']
+        return copy
+
+    def _expand_status(status_obj):
+        for key, value in [item for item in status_obj.items()]:
+            # In "status" and "test" objects, the "status" value enum
+            # definitions are interspersed with properties for unrelated
+            # metadata. The following condition is a best-effort attempt to
+            # ignore non-enum properties.
+            if key != key.upper() or not isinstance(value, int):
+                continue
+
+            del status_obj[key]
+
+            if status_obj['status'] == value:
+                status_obj[u'status_string'] = key
+
+        del status_obj['status']
+
+        return status_obj
+
+    def _summarize_test(test_obj):
+        del test_obj['index']
+
+        assert 'phase' in test_obj
+        assert 'phases' in test_obj
+        assert 'COMPLETE' in test_obj['phases']
+        assert test_obj['phase'] == test_obj['phases']['COMPLETE']
+        del test_obj['phases']
+        del test_obj['phase']
+
+        return _expand_status(_scrub_stack(test_obj))
+
+    def _summarize_status(status_obj):
+        return _expand_status(_scrub_stack(status_obj))
+
+
+    summarized = {}
+
+    summarized[u'summarized_status'] = _summarize_status(actual['status'])
+    summarized[u'summarized_tests'] = [
+        _summarize_test(test) for test in actual['tests']]
+    summarized[u'summarized_tests'].sort(key=lambda test_obj: test_obj.get('name'))
+    summarized[u'summarized_asserts'] = [
+        {"assert_name": assert_item["assert_name"],
+        "test": assert_item["test"]["name"] if assert_item["test"] else None,
+        "args": assert_item["args"],
+        "status": assert_item["status"]} for assert_item in actual["asserts"]]
+    summarized[u'type'] = actual['type']
+
+    return summarized
+
+
 class HTMLItem(pytest.Item, pytest.Collector):
     def __init__(self, parent, filename, test_type):
         self.url = parent.session.config.server.url(filename)
@@ -181,7 +237,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
             'runTest("%s", "foo", arguments[0])' % self.url
         )
 
-        summarized = self._summarize(copy.deepcopy(actual))
+        summarized = _summarize(copy.deepcopy(actual))
 
         print(json.dumps(summarized, indent=2))
 
@@ -205,7 +261,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
         print(json.dumps(actual, indent=2))
 
-        summarized = self._summarize(copy.deepcopy(actual))
+        summarized = _summarize(copy.deepcopy(actual))
 
         print(json.dumps(summarized, indent=2))
 
@@ -229,65 +285,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
         assert summarized == self.expected
 
-    def _summarize(self, actual):
-        summarized = {}
-
-        summarized[u'summarized_status'] = self._summarize_status(actual['status'])
-        summarized[u'summarized_tests'] = [
-            self._summarize_test(test) for test in actual['tests']]
-        summarized[u'summarized_tests'].sort(key=lambda test_obj: test_obj.get('name'))
-        summarized[u'summarized_asserts'] = [
-            {"assert_name": assert_item["assert_name"],
-            "test": assert_item["test"]["name"] if assert_item["test"] else None,
-            "args": assert_item["args"],
-            "status": assert_item["status"]} for assert_item in actual["asserts"]]
-        summarized[u'type'] = actual['type']
-
-        return summarized
-
     @staticmethod
     def _assert_sequence(nums):
         if nums and len(nums) > 0:
             assert nums == list(range(1, nums[-1] + 1))
-
-    @staticmethod
-    def _scrub_stack(test_obj):
-        copy = dict(test_obj)
-        del copy['stack']
-        return copy
-
-    @staticmethod
-    def _expand_status(status_obj):
-        for key, value in [item for item in status_obj.items()]:
-            # In "status" and "test" objects, the "status" value enum
-            # definitions are interspersed with properties for unrelated
-            # metadata. The following condition is a best-effort attempt to
-            # ignore non-enum properties.
-            if key != key.upper() or not isinstance(value, int):
-                continue
-
-            del status_obj[key]
-
-            if status_obj['status'] == value:
-                status_obj[u'status_string'] = key
-
-        del status_obj['status']
-
-        return status_obj
-
-    @staticmethod
-    def _summarize_test(test_obj):
-        del test_obj['index']
-
-        assert 'phase' in test_obj
-        assert 'phases' in test_obj
-        assert 'COMPLETE' in test_obj['phases']
-        assert test_obj['phase'] == test_obj['phases']['COMPLETE']
-        del test_obj['phases']
-        del test_obj['phase']
-
-        return HTMLItem._expand_status(HTMLItem._scrub_stack(test_obj))
-
-    @staticmethod
-    def _summarize_status(status_obj):
-        return HTMLItem._expand_status(HTMLItem._scrub_stack(status_obj))
