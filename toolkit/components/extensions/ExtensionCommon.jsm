@@ -2306,8 +2306,8 @@ class EventManager {
         EventManager._writePersistentListeners(extension);
         continue;
       }
-      for (let [event, eventEntry] of moduleEntry) {
-        for (let listener of eventEntry.values()) {
+      for (let [event, listeners] of moduleEntry) {
+        for (let [key, listener] of listeners) {
           let primed = { pendingEvents: [] };
 
           let fireEvent = (...args) =>
@@ -2326,27 +2326,51 @@ class EventManager {
             async: fireEvent,
           };
 
-          let handler = api.primeListener(
-            extension,
-            event,
-            fire,
-            listener.params,
-            isInStartup
-          );
-          if (handler) {
-            listener.primed = primed;
-            Object.assign(primed, handler);
+          try {
+            let handler = api.primeListener(
+              extension,
+              event,
+              fire,
+              listener.params,
+              isInStartup
+            );
+            if (handler) {
+              listener.primed = primed;
+              Object.assign(primed, handler);
+            }
+          } catch (e) {
+            Cu.reportError(
+              `Error priming listener ${module}.${event}: ${e} :: ${e.stack}`
+            );
+            // Force this listener to be cleared.
+            listener.error = true;
+          }
+          // If an attempt to prime a listener failed, ensure it is cleared now.
+          // If a module is a startup blocking module, not all listeners may
+          // get primed during early startup.  For that reason, we don't clear
+          // persisted listeners during early startup.  At the end of background
+          // execution any listeners that were not renewed will be cleared.
+          if (listener.error || (!isInStartup && !listener.primed)) {
+            EventManager.clearPersistentListener(extension, module, event, key);
           }
         }
       }
     }
   }
 
-  // Remove any primed listeners that were not re-registered.
-  // This function is called after the background page has started.
-  // The removed listeners are removed from the set of saved listeners, unless
-  // `clearPersistent` is false. If false, the listeners are cleared from
-  // memory, but not removed from the extension's startup data.
+  /**
+   * This is called as a result of background script startup-finished and shutdown.
+   *
+   * After startup, it removes any remaining primed listeners.  These exist if the
+   * listener was not renewed during startup.  In this case the persisted listener
+   * data is also removed.
+   *
+   * During shutdown, care should be taken to set clearPersistent to false.
+   * persisted listener data should NOT be cleared during shutdown.
+   *
+   * @param {Extension} extension
+   * @param {boolean} clearPersistent whether the persisted listener data should be cleared.
+   */
   static clearPrimedListeners(extension, clearPersistent = true) {
     if (!extension.persistentListeners) {
       return;
@@ -2356,19 +2380,29 @@ class EventManager {
       for (let [event, listeners] of moduleEntry) {
         for (let [key, listener] of listeners) {
           let { primed } = listener;
+          // When a primed listener is renewed, primed is set to null
+          // When a new listener has beed added, primed is undefined.
+          // In both cases, we do not want to clear the persisted listener data.
           if (!primed) {
             continue;
           }
+
+          // When a primed listener was not renewed, primed will still be truthy.
+          // These need to be cleared on shutdown (important for event pages), but
+          // we only clear the persisted listener data after the startup of a background.
+          // Release any pending events and unregister the primed handler.
           listener.primed = null;
 
           for (let evt of primed.pendingEvents) {
             evt.reject(new Error("listener not re-registered"));
           }
+          primed.unregister();
 
+          // Clear any persisted events that were not renewed, should typically
+          // only be done at the end of the background page load.
           if (clearPersistent) {
             EventManager.clearPersistentListener(extension, module, event, key);
           }
-          primed.unregister();
         }
       }
     }
