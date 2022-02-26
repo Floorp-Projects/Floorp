@@ -125,12 +125,6 @@ aboutwelcome:
       description: >-
         Should the urlbar should be focused when users first land on
         about:welcome?
-    languageMismatchEnabled:
-      type: boolean
-      fallbackPref: intl.multilingual.aboutWelcome.languageMismatchEnabled
-      description: >-
-        Suggest to change the language on about:welcome when there is a mismatch with
-        the OS.
     transitions:
       type: boolean
       description: Enable transition effect between screens
