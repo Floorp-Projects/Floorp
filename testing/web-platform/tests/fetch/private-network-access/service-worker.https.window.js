@@ -24,7 +24,8 @@ async function makeTest(t, { source, target, expected }) {
   const sourceUrl = resolveUrl("resources/service-worker-bridge.html",
                                sourceResolveOptions(source));
 
-  const targetUrl = preflightUrl(target);
+  const targetUrl =
+      resolveUrl("resources/preflight.py", targetResolveOptions(target));
   targetUrl.searchParams.append("body", "undefined");
   targetUrl.searchParams.append("mime-type", "application/javascript");
 

@@ -4,7 +4,7 @@
 // Source: WebGPU (https://gpuweb.github.io/gpuweb/)
 
 interface mixin GPUObjectBase {
-    attribute (USVString or undefined) label;
+    attribute USVString? label;
 };
 
 dictionary GPUObjectDescriptorBase {
@@ -181,7 +181,6 @@ dictionary GPUTextureDescriptor : GPUObjectDescriptorBase {
     GPUTextureDimension dimension = "2d";
     required GPUTextureFormat format;
     required GPUTextureUsageFlags usage;
-    sequence<GPUTextureFormat> viewFormats = [];
 };
 
 enum GPUTextureDimension {
@@ -883,7 +882,7 @@ interface mixin GPUDebugCommandsMixin {
 [Exposed=(Window, DedicatedWorker), SecureContext]
 interface GPUComputePassEncoder {
     undefined setPipeline(GPUComputePipeline pipeline);
-    undefined dispatch(GPUSize32 workgroupCountX, optional GPUSize32 workgroupCountY = 1, optional GPUSize32 workgroupCountZ = 1);
+    undefined dispatch(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
     undefined dispatchIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     undefined endPass();
@@ -975,28 +974,24 @@ dictionary GPURenderPassColorAttachment {
     required GPUTextureView view;
     GPUTextureView resolveTarget;
 
-    GPUColor clearValue;
-    required GPULoadOp loadOp;
+    required (GPULoadOp or GPUColor) loadValue;
     required GPUStoreOp storeOp;
 };
 
 dictionary GPURenderPassDepthStencilAttachment {
     required GPUTextureView view;
 
-    float depthClearValue = 0;
-    GPULoadOp depthLoadOp;
-    GPUStoreOp depthStoreOp;
+    required (GPULoadOp or float) depthLoadValue;
+    required GPUStoreOp depthStoreOp;
     boolean depthReadOnly = false;
 
-    GPUStencilValue stencilClearValue = 0;
-    GPULoadOp stencilLoadOp;
-    GPUStoreOp stencilStoreOp;
+    required (GPULoadOp or GPUStencilValue) stencilLoadValue;
+    required GPUStoreOp stencilStoreOp;
     boolean stencilReadOnly = false;
 };
 
 enum GPULoadOp {
     "load",
-    "clear",
 };
 
 enum GPUStoreOp {
@@ -1095,7 +1090,6 @@ dictionary GPUCanvasConfiguration {
     required GPUDevice device;
     required GPUTextureFormat format;
     GPUTextureUsageFlags usage = 0x10;  // GPUTextureUsage.RENDER_ATTACHMENT
-    sequence<GPUTextureFormat> viewFormats = [];
     GPUPredefinedColorSpace colorSpace = "srgb";
     GPUCanvasCompositingAlphaMode compositingAlphaMode = "opaque";
     GPUExtent3D size;

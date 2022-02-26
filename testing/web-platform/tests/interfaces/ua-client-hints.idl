@@ -17,7 +17,6 @@ dictionary UADataValues {
   DOMString platform;
   DOMString platformVersion;
   DOMString uaFullVersion; // deprecated in favor of fullVersionList
-  boolean wow64;
   sequence<NavigatorUABrandVersion> fullVersionList;
 };
 
