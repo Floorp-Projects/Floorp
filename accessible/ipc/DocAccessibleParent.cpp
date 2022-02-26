@@ -1108,5 +1108,16 @@ DocAccessiblePlatformExtParent* DocAccessibleParent::GetPlatformExtension() {
 
 #endif  // !defined(XP_WIN)
 
+void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
+  for (const auto& data : mTextSelections) {
+    aRanges->AppendElement(
+        TextRange(const_cast<DocAccessibleParent*>(this),
+                  const_cast<RemoteAccessible*>(GetAccessible(data.StartID())),
+                  data.StartOffset(),
+                  const_cast<RemoteAccessible*>(GetAccessible(data.EndID())),
+                  data.EndOffset()));
+  }
+}
+
 }  // namespace a11y
 }  // namespace mozilla

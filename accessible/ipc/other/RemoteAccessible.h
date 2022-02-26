@@ -61,6 +61,12 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual nsAtom* LandmarkRole() const override;
 
+  virtual int32_t SelectionCount() override;
+
+  using RemoteAccessibleBase<RemoteAccessible>::SelectionBoundsAt;
+  bool SelectionBoundsAt(int32_t aSelectionNum, nsString& aData,
+                         int32_t* aStartOffset, int32_t* aEndOffset);
+
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {

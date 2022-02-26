@@ -226,16 +226,10 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   bool IsCaretAtEndOfLine() const;
 
-  /**
-   * Return selected regions count within the accessible.
-   */
-  int32_t SelectionCount();
+  virtual int32_t SelectionCount() override;
 
-  /**
-   * Return the start and end offset of the specified selection.
-   */
-  bool SelectionBoundsAt(int32_t aSelectionNum, int32_t* aStartOffset,
-                         int32_t* aEndOffset);
+  virtual bool SelectionBoundsAt(int32_t aSelectionNum, int32_t* aStartOffset,
+                                 int32_t* aEndOffset) override;
 
   /*
    * Changes the start and end offset of the specified selection.
@@ -277,11 +271,7 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   void EnclosingRange(TextRange& aRange) const;
 
-  /**
-   * Return an array of disjoint ranges for selected text within the text
-   * control or the document this accessible belongs to.
-   */
-  void SelectionRanges(nsTArray<TextRange>* aRanges) const;
+  virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
   /**
    * Return an array of disjoint ranges of visible text within the text control
