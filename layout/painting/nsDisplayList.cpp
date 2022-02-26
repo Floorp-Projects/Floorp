@@ -21,6 +21,7 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"

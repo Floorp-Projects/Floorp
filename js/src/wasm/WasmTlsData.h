@@ -73,10 +73,12 @@ struct TlsData {
   //
   //   - Only non-null while unwinding the control stack from a wasm-exit stub.
   //     until the nearest enclosing Wasm try-catch or try-delegate block.
-  //   - Set by wasm::HandleThrow, unset by Instance::consumePendingException.
+  //   - Set by Instance::setPendingException, unset by JIT code.
   //   - If the unwind target is a `try-delegate`, it is unset by the delegated
   //     try-catch block or function body block.
   GCPtrObject pendingException;
+  // The tag of the pending exception.
+  GCPtrObject pendingExceptionTag;
 #endif
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),

@@ -18,7 +18,9 @@ struct PipeToReadRequest;
 class WriteFinishedPromiseHandler;
 class ShutdownActionFinishedPromiseHandler;
 
+class ReadableStream;
 class ReadableStreamDefaultReader;
+class WritableStream;
 class WritableStreamDefaultWriter;
 
 // https://streams.spec.whatwg.org/#readable-stream-pipe-to (Steps 14-15.)

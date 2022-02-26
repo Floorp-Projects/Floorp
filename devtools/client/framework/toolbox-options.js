@@ -14,12 +14,6 @@ const L10N = new LocalizationHelper(
 
 loader.lazyRequireGetter(
   this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "openDocLink",
   "devtools/client/shared/link",
   true
@@ -430,18 +424,12 @@ OptionsPanel.prototype = {
   setupAdditionalOptions: function() {
     const prefDefinitions = [];
 
-    // New performance panel can be used in NIGHTLY or DEV_EDITION. We keep the
-    // setting hidden in RELEASE or BETA. Should be removed in Bug 1693316.
-    const isNewPerfAllowed =
-      AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION;
-    if (isNewPerfAllowed) {
-      prefDefinitions.push({
-        pref: "devtools.performance.new-panel-enabled",
-        label: L10N.getStr("options.enableNewPerformancePanel"),
-        id: "devtools-new-performance",
-        parentId: "context-options",
-      });
-    }
+    prefDefinitions.push({
+      pref: "devtools.performance.new-panel-enabled",
+      label: L10N.getStr("options.enableNewPerformancePanel"),
+      id: "devtools-new-performance",
+      parentId: "context-options",
+    });
 
     if (GetPref("devtools.custom-formatters")) {
       prefDefinitions.push({

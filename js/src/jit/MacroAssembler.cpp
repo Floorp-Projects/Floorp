@@ -2414,8 +2414,9 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   }
   int32_t framePushedAfterTls = framePushed();
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||     \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   ScratchDoubleScope fpscratch(*this);
   if (widenFloatToDouble) {
     convertFloat32ToDouble(src, fpscratch);
@@ -2452,8 +2453,9 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   }
   storeCallInt32Result(dest);
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||     \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   // Nothing
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   if (widenFloatToDouble) {
@@ -4153,6 +4155,8 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
   ma_sll(temp1, temp1, temp3);
 #elif JS_CODEGEN_MIPS64
   ma_dsll(temp1, temp1, temp3);
+#elif JS_CODEGEN_LOONG64
+  as_sll_d(temp1, temp1, temp3);
 #elif JS_CODEGEN_NONE
   MOZ_CRASH();
 #else
@@ -4266,7 +4270,7 @@ void MacroAssembler::debugAssertCanonicalInt32(Register r) {
     branchPtr(Assembler::BelowOrEqual, r, ImmWord(UINT32_MAX), &ok);
     breakpoint();
     bind(&ok);
-#    elif defined(JS_CODEGEN_MIPS64)
+#    elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
     Label ok;
     ScratchRegisterScope scratch(asMasm());
     move32SignExtendToPtr(r, scratch);

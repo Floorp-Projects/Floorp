@@ -320,7 +320,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       mMinFrameSizeMs = opusParams.minFrameSizeMs;
       if (remoteMsection.GetAttributeList().HasAttribute(
               SdpAttribute::kMaxptimeAttribute)) {
-        mFrameSizeMs = remoteMsection.GetAttributeList().GetMaxptime();
+        mMaxFrameSizeMs = remoteMsection.GetAttributeList().GetMaxptime();
       } else {
         mMaxFrameSizeMs = opusParams.maxFrameSizeMs;
       }

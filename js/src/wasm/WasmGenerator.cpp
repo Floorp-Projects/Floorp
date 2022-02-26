@@ -274,6 +274,15 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
   }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  for (TagDesc& tag : moduleEnv_->tags) {
+    if (!allocateGlobalBytes(sizeof(WasmTagObject*), sizeof(void*),
+                             &tag.globalDataOffset)) {
+      return false;
+    }
+  }
+#endif
+
   if (!isAsmJS()) {
     // Copy type definitions to metadata that are required at runtime,
     // allocating global data so that codegen can find the type id's at

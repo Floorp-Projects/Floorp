@@ -508,10 +508,6 @@ mozilla::ipc::IPCResult WebRenderBridgeChild::RecvWrReleasedImages(
 void WebRenderBridgeChild::BeginClearCachedResources() {
   mSentDisplayList = false;
   mIsInClearCachedResources = true;
-  // Clear display list and animtaions at parent side before clearing cached
-  // resources on client side. It prevents to clear resources before clearing
-  // display list at parent side.
-  SendClearCachedResources();
 }
 
 void WebRenderBridgeChild::EndClearCachedResources() {
@@ -519,7 +515,9 @@ void WebRenderBridgeChild::EndClearCachedResources() {
     mIsInClearCachedResources = false;
     return;
   }
-  ProcessWebRenderParentCommands();
+  SendClearCachedResources(mParentCommands);
+  mParentCommands.Clear();
+
   mIsInClearCachedResources = false;
 }
 

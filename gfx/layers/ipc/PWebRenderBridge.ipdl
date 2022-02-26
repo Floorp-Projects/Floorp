@@ -68,7 +68,7 @@ parent:
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
-  async ClearCachedResources();
+  async ClearCachedResources(WebRenderParentCommand[] commands);
   async SetDefaultClearColor(uint32_t aColor);
   // Invalidate rendered frame
   async InvalidateRenderedFrame();

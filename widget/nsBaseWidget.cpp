@@ -132,12 +132,14 @@ NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 //
 //-------------------------------------------------------------------------
 
-nsBaseWidget::nsBaseWidget()
+nsBaseWidget::nsBaseWidget() : nsBaseWidget(eBorderStyle_none) {}
+
+nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
     : mWidgetListener(nullptr),
       mAttachedWidgetListener(nullptr),
       mPreviouslyAttachedWidgetListener(nullptr),
       mCompositorVsyncDispatcher(nullptr),
-      mBorderStyle(eBorderStyle_none),
+      mBorderStyle(aBorderStyle),
       mBounds(0, 0, 0, 0),
       mOriginalBounds(nullptr),
       mSizeMode(nsSizeMode_Normal),

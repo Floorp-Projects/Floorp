@@ -1399,6 +1399,10 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveMasks(
 
 SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
     nsIFrame* aTextPathFrame) {
+  // Continuations can come and go during reflow, and we don't need to observe
+  // the referenced element more than once for a given node.
+  aTextPathFrame = aTextPathFrame->FirstContinuation();
+
   SVGTextPathObserver* property =
       aTextPathFrame->GetProperty(HrefAsTextPathProperty());
 

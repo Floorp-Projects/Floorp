@@ -56,7 +56,9 @@
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 #ifdef XP_WIN
+#  include "mozilla/Maybe.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
+#  include <climits>
 #endif  // XP_WIN
 
 // Amount of the progress bar to use in each of the 3 update stages,
@@ -2211,6 +2213,130 @@ static void WriteStatusFile(int status) {
   WriteStatusFile(text);
 }
 
+#if defined(XP_WIN)
+/*
+ * Parses the passed contents of an update status file and checks if the
+ * contained status matches the expected status.
+ *
+ * @param  statusString The status file contents.
+ * @param  expectedStatus The status to compare the update status file's
+ *                        contents against.
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the status is set to the value indicated by expectedStatus.
+ */
+static bool UpdateStatusIs(const char* statusString, const char* expectedStatus,
+                           mozilla::Maybe<int>* errorCode = nullptr) {
+  if (errorCode) {
+    *errorCode = mozilla::Nothing();
+  }
+
+  // Parse the update status file. Expected format is:
+  //   Update status string
+  //   Optionally followed by:
+  //     Colon character (':')
+  //     Space character (' ')
+  //     Integer error code
+  //   Newline character
+  const char* statusEnd = strchr(statusString, ':');
+  if (statusEnd == nullptr) {
+    statusEnd = strchr(statusString, '\n');
+  }
+  if (statusEnd == nullptr) {
+    statusEnd = strchr(statusString, '\0');
+  }
+  size_t statusLen = statusEnd - statusString;
+  size_t expectedStatusLen = strlen(expectedStatus);
+
+  bool statusMatch =
+      statusLen == expectedStatusLen &&
+      strncmp(statusString, expectedStatus, expectedStatusLen) == 0;
+
+  // We only need to continue parsing if (a) there is a place to store the error
+  // code if we parse it, and (b) there is a status code to parse. If the status
+  // string didn't end with a ':', there won't be an error code after it.
+  if (!errorCode || *statusEnd != ':') {
+    return statusMatch;
+  }
+
+  const char* errorCodeStart = statusEnd + 1;
+  char* errorCodeEnd = nullptr;
+  // strtol skips an arbitrary number of leading whitespace characters. This
+  // technically allows us to successfully consume slightly misformatted status
+  // files, since the expected format is for there to be a single space only.
+  long longErrorCode = strtol(errorCodeStart, &errorCodeEnd, 10);
+  if (errorCodeEnd != errorCodeStart && longErrorCode < INT_MAX &&
+      longErrorCode > INT_MIN) {
+    // We don't allow equality with INT_MAX/INT_MIN for two reasons. It could
+    // be that, on this platform, INT_MAX/INT_MIN equal LONG_MAX/LONG_MIN, which
+    // is what strtol gives us if the parsed value was out of bounds. And those
+    // values are already way, way outside the set of valid update error codes
+    // anyways.
+    errorCode->emplace(static_cast<int>(longErrorCode));
+  }
+  return statusMatch;
+}
+
+/*
+ * Reads the secure update status file and sets statusMatch to true if the
+ * status matches the expected status that was passed.
+ *
+ * @param  expectedStatus The status to compare the update status file's
+ *                        contents against.
+ * @param  statusMatch Out parameter for specifying if the status is set to
+ *                     the value indicated by expectedStatus
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the information was retrieved successfully.
+ */
+static bool CompareSecureUpdateStatus(
+    const char* expectedStatus, bool& statusMatch,
+    mozilla::Maybe<int>* errorCode = nullptr) {
+  NS_tchar statusFilePath[MAX_PATH + 1] = {L'\0'};
+  if (!GetSecureOutputFilePath(gPatchDirPath, L".status", statusFilePath)) {
+    return false;
+  }
+
+  AutoFile file(NS_tfopen(statusFilePath, NS_T("rb")));
+  if (file == nullptr) {
+    return false;
+  }
+
+  const size_t bufferLength = 32;
+  char buf[bufferLength] = {0};
+  size_t charsRead = fread(buf, sizeof(buf[0]), bufferLength - 1, file);
+  if (ferror(file)) {
+    return false;
+  }
+  buf[charsRead] = '\0';
+
+  statusMatch = UpdateStatusIs(buf, expectedStatus, errorCode);
+  return true;
+}
+
+/*
+ * Reads the secure update status file and sets isSucceeded to true if the
+ * status is set to succeeded.
+ *
+ * @param  isSucceeded Out parameter for specifying if the status
+ *                     is set to succeeded or not.
+ * @return true if the information was retrieved successfully.
+ */
+static bool IsSecureUpdateStatusSucceeded(bool& isSucceeded) {
+  return CompareSecureUpdateStatus("succeeded", isSucceeded);
+}
+#endif
+
 #ifdef MOZ_MAINTENANCE_SERVICE
 /*
  * Read the update.status file and sets isPendingService to true if
@@ -2231,44 +2357,53 @@ static bool IsUpdateStatusPendingService() {
     return false;
   }
 
-  char buf[32] = {0};
-  fread(buf, sizeof(buf), 1, file);
-
-  const char kPendingService[] = "pending-service";
-  const char kAppliedService[] = "applied-service";
-
-  return (strncmp(buf, kPendingService, sizeof(kPendingService) - 1) == 0) ||
-         (strncmp(buf, kAppliedService, sizeof(kAppliedService) - 1) == 0);
-}
-#endif
-
-#if defined(XP_WIN)
-/*
- * Reads the secure update status file and sets isSucceeded to true if the
- * status is set to succeeded.
- *
- * @param  isSucceeded Out parameter for specifying if the status
- *         is set to succeeded or not.
- * @return true if the information was retrieved and it is succeeded.
- */
-static bool IsSecureUpdateStatusSucceeded(bool& isSucceeded) {
-  isSucceeded = false;
-  NS_tchar statusFilePath[MAX_PATH + 1] = {L'\0'};
-  if (!GetSecureOutputFilePath(gPatchDirPath, L".status", statusFilePath)) {
-    return FALSE;
-  }
-
-  AutoFile file(NS_tfopen(statusFilePath, NS_T("rb")));
-  if (file == nullptr) {
+  const size_t bufferLength = 32;
+  char buf[bufferLength] = {0};
+  size_t charsRead = fread(buf, sizeof(buf[0]), bufferLength - 1, file);
+  if (ferror(file)) {
     return false;
   }
+  buf[charsRead] = '\0';
 
-  char buf[32] = {0};
-  fread(buf, sizeof(buf), 1, file);
+  return UpdateStatusIs(buf, "pending-service") ||
+         UpdateStatusIs(buf, "applied-service");
+}
 
-  const char kSucceeded[] = "succeeded";
-  isSucceeded = strncmp(buf, kSucceeded, sizeof(kSucceeded) - 1) == 0;
-  return true;
+/*
+ * Reads the secure update status file and sets isFailed to true if the
+ * status is set to failed.
+ *
+ * @param  isFailed Out parameter for specifying if the status
+ *                  is set to failed or not.
+ * @param  errorCode Optional out parameter. If a pointer is passed and the
+ *                   update status file contains an error code, the code
+ *                   will be returned via the out parameter. If a pointer is
+ *                   passed and the update status file does not contain an error
+ *                   code, or any error code after the status could not be
+ *                   parsed, mozilla::Nothing will be returned via this
+ *                   parameter.
+ * @return true if the information was retrieved successfully.
+ */
+static bool IsSecureUpdateStatusFailed(
+    bool& isFailed, mozilla::Maybe<int>* errorCode = nullptr) {
+  return CompareSecureUpdateStatus("failed", isFailed, errorCode);
+}
+
+/**
+ * This function determines whether the error represented by the passed error
+ * code could potentially be recovered from or bypassed by updating without
+ * using the Maintenance Service (i.e. by showing a UAC prompt).
+ * We don't really want to show a UAC prompt, but it's preferable over the
+ * manual update doorhanger
+ *
+ * @param   errorCode An integer error code from the update.status file. Should
+ *                    be one of the codes enumerated in updatererrors.h.
+ * @returns true if the code represents a Maintenance Service specific error.
+ *          Otherwise, false.
+ */
+static bool IsServiceSpecificErrorCode(int errorCode) {
+  return ((errorCode >= 24 && errorCode <= 33) ||
+          (errorCode >= 49 && errorCode <= 58));
 }
 #endif
 
@@ -2887,7 +3022,15 @@ int NS_main(int argc, NS_tchar** argv) {
 #ifdef XP_WIN
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
+  // Prevent the updater from falling back from updating with the Maintenance
+  // Service to updating without the Service. Used for Service tests.
+  // This is set below via the MOZ_NO_SERVICE_FALLBACK environment variable.
   bool noServiceFallback = false;
+  // Force the updater to use the Maintenance Service incorrectly, causing it
+  // to fail. Used to test the mechanism that allows the updater to fall back
+  // from using the Maintenance Service to updating without it.
+  // This is set below via the MOZ_FORCE_SERVICE_FALLBACK environment variable.
+  bool forceServiceFallback = false;
 #endif
 
   if (!isDMGInstall) {
@@ -2899,6 +3042,8 @@ int NS_main(int argc, NS_tchar** argv) {
 #    ifdef TEST_UPDATER
     noServiceFallback = EnvHasValue("MOZ_NO_SERVICE_FALLBACK");
     putenv(const_cast<char*>("MOZ_NO_SERVICE_FALLBACK="));
+    forceServiceFallback = EnvHasValue("MOZ_FORCE_SERVICE_FALLBACK");
+    putenv(const_cast<char*>("MOZ_FORCE_SERVICE_FALLBACK="));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test machines to store the
     // allowed name/issuers.
@@ -3253,7 +3398,8 @@ int NS_main(int argc, NS_tchar** argv) {
       }
 
       if (updateLockFileHandle == INVALID_HANDLE_VALUE ||
-          (useService && testOnlyFallbackKeyExists && noServiceFallback)) {
+          (useService && testOnlyFallbackKeyExists &&
+           (noServiceFallback || forceServiceFallback))) {
         HANDLE elevatedFileHandle;
         if (NS_tremove(elevatedLockFilePath) && errno != ENOENT) {
           LOG(("Unable to create elevated lock file! Exiting"));
@@ -3351,9 +3497,19 @@ int NS_main(int argc, NS_tchar** argv) {
           // changing the status.
           WriteStatusFile(SERVICE_UPDATE_STATUS_UNCHANGED);
 
+          int serviceArgc = argc;
+          if (forceServiceFallback && serviceArgc > 2) {
+            // To force the service to fail, we can just pass it too few
+            // arguments. However, we don't want to pass it no arguments,
+            // because then it won't have enough information to write out the
+            // update status file telling us that it failed.
+            serviceArgc = 2;
+          }
+
           // If the update couldn't be started, then set useService to false so
           // we do the update the old way.
-          DWORD ret = LaunchServiceSoftwareUpdateCommand(argc, (LPCWSTR*)argv);
+          DWORD ret =
+              LaunchServiceSoftwareUpdateCommand(serviceArgc, (LPCWSTR*)argv);
           useService = (ret == ERROR_SUCCESS);
           // If the command was launched then wait for the service to be done.
           if (useService) {
@@ -3396,6 +3552,22 @@ int NS_main(int argc, NS_tchar** argv) {
                     ("The secure ID hasn't changed after launching the updater "
                      "using the service"));
                 gCopyOutputFiles = false;
+              }
+              if (gCopyOutputFiles && !sStagedUpdate && !noServiceFallback) {
+                // If the Maintenance Service fails for a Service-specific
+                // reason, we ought to fall back to attempting to update
+                // without the Service.
+                // However, we need the secure output files to be able to be
+                // check the error code, and we can't fall back when we are
+                // staging, because we will need to show a UAC.
+                bool updateFailed;
+                mozilla::Maybe<int> maybeErrorCode;
+                bool success =
+                    IsSecureUpdateStatusFailed(updateFailed, &maybeErrorCode);
+                if (success && updateFailed && maybeErrorCode.isSome() &&
+                    IsServiceSpecificErrorCode(maybeErrorCode.value())) {
+                  useService = false;
+                }
               }
             }
           } else {
@@ -3447,7 +3619,8 @@ int NS_main(int argc, NS_tchar** argv) {
         // write access all along because in that case the only reason we're
         // using the service is because we are testing.
         if (!useService && !noServiceFallback &&
-            updateLockFileHandle == INVALID_HANDLE_VALUE) {
+            (updateLockFileHandle == INVALID_HANDLE_VALUE ||
+             forceServiceFallback)) {
           // Get the secure ID before trying to update so it is possible to
           // determine if the updater has created a new one.
           char uuidStringBefore[UUID_LEN] = {'\0'};
@@ -3464,7 +3637,31 @@ int NS_main(int argc, NS_tchar** argv) {
           sinfo.hwnd = nullptr;
           sinfo.lpFile = argv[0];
           sinfo.lpParameters = cmdLine.get();
-          sinfo.lpVerb = L"runas";
+          if (forceServiceFallback) {
+            // In testing, we don't actually want a UAC prompt. We should
+            // already have the permissions such that we shouldn't need it.
+            // And we don't have a good way of accepting the prompt in
+            // automation.
+            sinfo.lpVerb = L"open";
+            // This handle is what lets the updater that we spawn below know
+            // that it's the elevated updater. We are going to close it so that
+            // it doesn't know that and will run un-elevated. Doing this make
+            // this makes for an imperfect test of the service fallback
+            // functionality because it changes how the (usually) elevated
+            // updater runs. One of the effects of this is that the secure
+            // output files will not be used. So that functionality won't really
+            // be covered by testing. But we can't really have the updater run
+            // elevated, because that would require a UAC, which we have no way
+            // to deal with in automation.
+            CloseHandle(elevatedFileHandle);
+            // We need to let go of the update lock to let the un-elevated
+            // updater we are about to spawn update.
+            if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
+              CloseHandle(updateLockFileHandle);
+            }
+          } else {
+            sinfo.lpVerb = L"runas";
+          }
           sinfo.nShow = SW_SHOWNORMAL;
 
           bool result = ShellExecuteEx(&sinfo);

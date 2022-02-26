@@ -105,6 +105,16 @@ static constexpr Register RabaldrScratchI32 = CallTempReg2;
 static constexpr Register RabaldrScratchI32 = CallTempReg2;
 #endif
 
+#ifdef JS_CODEGEN_LOONG64
+// We use our own scratch register, because the macro assembler uses
+// the regular scratch register(s) pretty liberally.  We could
+// work around that in several cases but the mess does not seem
+// worth it yet.  CallTempReg2 seems safe.
+
+#  define RABALDR_SCRATCH_I32
+static constexpr Register RabaldrScratchI32 = CallTempReg2;
+#endif
+
 #ifdef RABALDR_SCRATCH_F32_ALIASES_F64
 #  if !defined(RABALDR_SCRATCH_F32) || !defined(RABALDR_SCRATCH_F64)
 #    error "Bad configuration"
@@ -373,12 +383,8 @@ struct SpecificRegs {
 
   SpecificRegs() : abiReturnRegI64(ReturnReg64) {}
 };
-#elif defined(JS_CODEGEN_ARM64)
-struct SpecificRegs {
-  // Required by gcc.
-  SpecificRegs() {}
-};
-#elif defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
 struct SpecificRegs {
   // Required by gcc.
   SpecificRegs() {}
