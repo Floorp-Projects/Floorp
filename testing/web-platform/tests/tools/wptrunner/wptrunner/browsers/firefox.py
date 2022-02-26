@@ -883,12 +883,13 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
         super().start(group_metadata, **kwargs)
 
     def stop(self, force=False):
-        # Initially wait for any WebDriver session to cleanly shutdown
-        # When this is called the executor is usually sending a end session
+        # Initially wait for any WebDriver session to cleanly shutdown if the
+        # process doesn't have to be force stopped.
+        # When this is called the executor is usually sending an end session
         # command to the browser. We don't have a synchronisation mechanism
         # that allows us to know that process is ongoing, so poll the status
         # endpoint until there isn't a session, before killing the driver.
-        if self.is_alive():
+        if self.is_alive() and not force:
             end_time = time.time() + BrowserInstance.shutdown_timeout
             while time.time() < end_time:
                 self.logger.debug("Waiting for WebDriver session to end")
