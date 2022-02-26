@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,23 +17,15 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/PerformanceStorage.h"
-#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla::dom {
 
 mozilla::LazyLogModule gFetchLog("Fetch");
-
-FetchServiceResponse CreateErrorResponse(nsresult aRv) {
-  IPCPerformanceTimingData ipcTimingData;
-  return MakeTuple(InternalResponse::NetworkError(aRv), ipcTimingData,
-                   EmptyString(), EmptyString());
-}
 
 // FetchInstance
 
@@ -135,7 +129,8 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FETCH_LOG(
         ("FetchInstance::Fetch FetchDriver::Fetch failed(0x%X)", (uint32_t)rv));
-    return FetchService::NetworkErrorResponse(rv);
+    return FetchServiceResponsePromise::CreateAndResolve(
+        InternalResponse::NetworkError(rv), __func__);
   }
 
   return mResponsePromiseHolder.Ensure(__func__);
@@ -152,18 +147,20 @@ void FetchService::FetchInstance::Cancel() {
   }
 
   mResponsePromiseHolder.ResolveIfExists(
-      CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
+      InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
     FetchDriverObserver::EndReason aReason) {
-  FETCH_LOG(("FetchInstance::OnResponseEnd [%p]", this));
   if (aReason == eAborted) {
-    FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));
     mResponsePromiseHolder.ResolveIfExists(
-        CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
-    return;
+        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
   }
+}
+
+void FetchService::FetchInstance::OnResponseAvailableInternal(
+    SafeRefPtr<InternalResponse> aResponse) {
+  FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
   if (!mResponsePromiseHolder.IsEmpty()) {
     // Remove the FetchInstance from FetchInstanceTable
     RefPtr<FetchServiceResponsePromise> responsePromise =
@@ -174,31 +171,12 @@ void FetchService::FetchInstance::OnResponseEnd(
     MOZ_ASSERT(entry);
     entry.Remove();
     FETCH_LOG(
-        ("FetchInstance::OnResponseEnd entry of responsePromise[%p] is removed",
+        ("FetchInstance::OnResponseAvailableInternal entry of "
+         "responsePromise[%p] is removed",
          responsePromise.get()));
   }
-
-  // Get PerformanceTimingData from FetchDriver.
-  nsString initiatorType;
-  nsString entryName;
-  UniquePtr<PerformanceTimingData> performanceTiming(
-      mFetchDriver->GetPerformanceTimingData(initiatorType, entryName));
-  MOZ_ASSERT(performanceTiming);
-
-  initiatorType = u"navigation"_ns;
-
-  FetchServiceResponse response =
-      MakeTuple(std::move(mResponse), performanceTiming->ToIPC(), initiatorType,
-                entryName);
-
   // Resolve the FetchServiceResponsePromise
-  mResponsePromiseHolder.ResolveIfExists(std::move(response), __func__);
-}
-
-void FetchService::FetchInstance::OnResponseAvailableInternal(
-    SafeRefPtr<InternalResponse> aResponse) {
-  FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
-  mResponse = std::move(aResponse);
+  mResponsePromiseHolder.ResolveIfExists(std::move(aResponse), __func__);
 }
 
 // TODO:
@@ -228,8 +206,8 @@ already_AddRefed<FetchService> FetchService::GetInstance() {
 /*static*/
 RefPtr<FetchServiceResponsePromise> FetchService::NetworkErrorResponse(
     nsresult aRv) {
-  return FetchServiceResponsePromise::CreateAndResolve(CreateErrorResponse(aRv),
-                                                       __func__);
+  return FetchServiceResponsePromise::CreateAndResolve(
+      InternalResponse::NetworkError(aRv), __func__);
 }
 
 FetchService::FetchService() {

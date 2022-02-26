@@ -93,12 +93,12 @@ struct ServiceWorkerFetchEventOpArgsCommon {
 
 struct ParentToParentServiceWorkerFetchEventOpArgs {
   ServiceWorkerFetchEventOpArgsCommon common;
-  ParentToParentResponseWithTiming? preloadResponse;
+  ParentToParentInternalResponse? preloadResponse;
 };
 
 struct ParentToChildServiceWorkerFetchEventOpArgs {
   ServiceWorkerFetchEventOpArgsCommon common;
-  ParentToChildResponseWithTiming? preloadResponse;
+  ParentToChildInternalResponse? preloadResponse;
 };
 
 union ServiceWorkerOpArgs {
