@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "TextRange.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsIAccessibleTextRange.h"
+#include "xpcAccessibleHyperText.h"
 
 namespace mozilla {
 namespace a11y {
@@ -27,11 +27,9 @@ class TextRange;
 
 class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
  public:
-  explicit xpcAccessibleTextRange(TextRange&& aRange)
-      : mRange(std::forward<TextRange>(aRange)) {}
+  explicit xpcAccessibleTextRange(TextRange& aRange) { SetRange(aRange); }
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(xpcAccessibleTextRange)
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetStartContainer(nsIAccessibleText** aAnchor) final;
   NS_IMETHOD GetStartOffset(int32_t* aOffset) final;
@@ -57,10 +55,21 @@ class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
 
   friend class xpcAccessibleHyperText;
 
-  xpcAccessibleTextRange(const xpcAccessibleTextRange&) = delete;
   xpcAccessibleTextRange& operator=(const xpcAccessibleTextRange&) = delete;
 
-  TextRange mRange;
+  void SetRange(TextRange& aRange);
+
+  TextRange Range();
+
+  // We can't hold a strong reference to an Accessible, but XPCOM needs strong
+  // references. Thus, instead of holding a TextRange here, we hold
+  // xpcAccessibleHyperText references and create the TextRange for each call
+  // using Range().
+  RefPtr<xpcAccessibleHyperText> mRoot;
+  RefPtr<xpcAccessibleHyperText> mStartContainer;
+  int32_t mStartOffset;
+  RefPtr<xpcAccessibleHyperText> mEndContainer;
+  int32_t mEndOffset;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(xpcAccessibleTextRange,
