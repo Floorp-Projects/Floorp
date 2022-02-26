@@ -48,6 +48,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
+#include "nsDisplayList.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
