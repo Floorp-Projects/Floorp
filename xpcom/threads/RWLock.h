@@ -44,17 +44,19 @@ class RWLock : public detail::RWLockImpl, public BlockingResourceBase {
 
 #ifdef DEBUG
   bool LockedForWritingByCurrentThread();
-  bool TryReadLock();
+  [[nodiscard]] bool TryReadLock();
   void ReadLock();
   void ReadUnlock();
-  bool TryWriteLock();
+  [[nodiscard]] bool TryWriteLock();
   void WriteLock();
   void WriteUnlock();
 #else
-  bool TryReadLock() { return detail::RWLockImpl::tryReadLock(); }
+  [[nodiscard]] bool TryReadLock() { return detail::RWLockImpl::tryReadLock(); }
   void ReadLock() { detail::RWLockImpl::readLock(); }
   void ReadUnlock() { detail::RWLockImpl::readUnlock(); }
-  bool TryWriteLock() { return detail::RWLockImpl::tryWriteLock(); }
+  [[nodiscard]] bool TryWriteLock() {
+    return detail::RWLockImpl::tryWriteLock();
+  }
   void WriteLock() { detail::RWLockImpl::writeLock(); }
   void WriteUnlock() { detail::RWLockImpl::writeUnlock(); }
 #endif
@@ -184,15 +186,15 @@ class StaticRWLock {
   StaticRWLock() { MOZ_ASSERT(!mLock); }
 #endif
 
-  bool TryReadLock() { return Lock()->TryReadLock(); }
+  [[nodiscard]] bool TryReadLock() { return Lock()->TryReadLock(); }
   void ReadLock() { Lock()->ReadLock(); }
   void ReadUnlock() { Lock()->ReadUnlock(); }
-  bool TryWriteLock() { return Lock()->TryWriteLock(); }
+  [[nodiscard]] bool TryWriteLock() { return Lock()->TryWriteLock(); }
   void WriteLock() { Lock()->WriteLock(); }
   void WriteUnlock() { Lock()->WriteUnlock(); }
 
  private:
-  RWLock* Lock() {
+  [[nodiscard]] RWLock* Lock() {
     if (mLock) {
       return mLock;
     }
@@ -216,9 +218,9 @@ class StaticRWLock {
 #endif
 
   // Disallow these operators.
-  StaticRWLock& operator=(StaticRWLock* aRhs);
-  static void* operator new(size_t) noexcept(true);
-  static void operator delete(void*);
+  StaticRWLock& operator=(StaticRWLock* aRhs) = delete;
+  static void* operator new(size_t) noexcept(true) = delete;
+  static void operator delete(void*) = delete;
 };
 
 typedef BaseAutoTryReadLock<StaticRWLock> StaticAutoTryReadLock;
