@@ -30,10 +30,14 @@ using FetchEventRespondWithResult =
 using FetchEventRespondWithPromise =
     MozPromise<FetchEventRespondWithResult, CancelInterceptionArgs, true>;
 
+using FetchEventPreloadResponseArgs =
+    Tuple<SafeRefPtr<InternalResponse>, IPCPerformanceTimingData, nsString,
+          nsString>;
+
 // The reject type int is arbitrary, since this promise will never get rejected.
 // Unfortunately void is not supported as a reject type.
 using FetchEventPreloadResponsePromise =
-    MozPromise<SafeRefPtr<InternalResponse>, int, true>;
+    MozPromise<FetchEventPreloadResponseArgs, int, true>;
 
 using ServiceWorkerOpPromise =
     MozPromise<ServiceWorkerOpResult, nsresult, true>;
