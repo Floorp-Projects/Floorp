@@ -340,7 +340,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         lifecycleScope.launch(IO) {
             try {
-                components.core.contileTopSitesProvider.refreshTopSitesIfCacheExpired()
+                if (settings().showContileFeature) {
+                    components.core.contileTopSitesProvider.refreshTopSitesIfCacheExpired()
+                }
             } catch (e: Exception) {
                 Logger.error("Failed to refresh contile top sites", e)
             }
