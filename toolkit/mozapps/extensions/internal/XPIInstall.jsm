@@ -241,8 +241,8 @@ class Package {
     return new TextDecoder().decode(buffer);
   }
 
-  async verifySignedState(addon) {
-    if (!shouldVerifySignedState(addon)) {
+  async verifySignedState(addonId, addonType, addonLocation) {
+    if (!shouldVerifySignedState(addonType, addonLocation)) {
       return {
         signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
         cert: null,
@@ -257,7 +257,7 @@ class Package {
       root = Ci.nsIX509CertDB.AddonsStageRoot;
     }
 
-    return this.verifySignedStateForRoot(addon, root);
+    return this.verifySignedStateForRoot(addonId, root);
   }
 
   flushCache() {}
@@ -308,7 +308,7 @@ DirPackage = class DirPackage extends Package {
     return IOUtils.read(PathUtils.join(this.filePath, ...path));
   }
 
-  async verifySignedStateForRoot(addon, root) {
+  async verifySignedStateForRoot(addonId, root) {
     return { signedState: AddonManager.SIGNEDSTATE_UNKNOWN, cert: null };
   }
 };
@@ -345,7 +345,7 @@ XPIPackage = class XPIPackage extends Package {
     return response.arrayBuffer();
   }
 
-  verifySignedStateForRoot(addon, root) {
+  verifySignedStateForRoot(addonId, root) {
     return new Promise(resolve => {
       let callback = {
         openSignedAppFileFinished(aRv, aZipReader, aCert) {
@@ -353,7 +353,7 @@ XPIPackage = class XPIPackage extends Package {
             aZipReader.close();
           }
           resolve({
-            signedState: getSignedStatus(aRv, aCert, addon.id),
+            signedState: getSignedStatus(aRv, aCert, addonId),
             cert: aCert,
           });
         },
@@ -441,14 +441,30 @@ function waitForAllPromises(promises) {
  *
  * @param {Package} aPackage
  *        The install package for the add-on
- * @returns {AddonInternal}
+ * @param {XPIStateLocation} aLocation
+ *        The install location the add-on is installed in, or will be
+ *        installed to.
+ * @returns {{ addon: AddonInternal, verifiedSignedState: object}}
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromWebManifest(aPackage) {
-  let extension = new ExtensionData(
-    XPIInternal.maybeResolveURI(aPackage.rootURI)
-  );
+async function loadManifestFromWebManifest(aPackage, aLocation) {
+  let verifiedSignedState;
+  let extension = await ExtensionData.constructAsync({
+    rootURI: XPIInternal.maybeResolveURI(aPackage.rootURI),
+    async checkPrivileged(type, id) {
+      verifiedSignedState = await aPackage.verifySignedState(
+        id,
+        type,
+        aLocation
+      );
+      return ExtensionData.getIsPrivileged({
+        signedState: verifiedSignedState.signedState,
+        builtIn: aLocation.isBuiltin,
+        temporarilyInstalled: aLocation.isTemporary,
+      });
+    },
+  });
 
   let manifest = await extension.loadManifest();
 
@@ -489,7 +505,7 @@ async function loadManifestFromWebManifest(aPackage) {
   addon.aboutURL = null;
   addon.dependencies = Object.freeze(Array.from(extension.dependencies));
   addon.startupData = extension.startupData;
-  addon.hidden = manifest.hidden;
+  addon.hidden = extension.isPrivileged && manifest.hidden;
   addon.incognito = manifest.incognito;
 
   if (addon.type === "theme" && (await aPackage.hasResource("preview.png"))) {
@@ -574,7 +590,7 @@ async function loadManifestFromWebManifest(aPackage) {
   addon.softDisabled =
     addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
 
-  return addon;
+  return { addon, verifiedSignedState };
 }
 
 async function readRecommendationStates(aPackage, aAddonID) {
@@ -649,13 +665,23 @@ function generateTemporaryInstallID(aFile) {
 
 var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   let addon;
+  let verifiedSignedState;
   if (await aPackage.hasResource("manifest.json")) {
-    addon = await loadManifestFromWebManifest(aPackage);
+    ({ addon, verifiedSignedState } = await loadManifestFromWebManifest(
+      aPackage,
+      aLocation
+    ));
   } else {
+    // TODO bug 1674799: Remove this unused branch.
     for (let loader of AddonManagerPrivate.externalExtensionLoaders.values()) {
       if (await aPackage.hasResource(loader.manifestFile)) {
         addon = await loader.loadManifest(aPackage);
         addon.loader = loader.name;
+        verifiedSignedState = await aPackage.verifySignedState(
+          addon.id,
+          addon.type,
+          aLocation
+        );
         break;
       }
     }
@@ -671,12 +697,9 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   addon.rootURI = aPackage.rootURI.spec;
   addon.location = aLocation;
 
-  let { signedState, cert } = await aPackage.verifySignedState(addon);
+  let { signedState, cert } = verifiedSignedState;
   addon.signedState = signedState;
   addon.signedDate = cert?.validity?.notBefore / 1000 || null;
-  if (!addon.isPrivileged) {
-    addon.hidden = false;
-  }
 
   if (!addon.id) {
     if (cert) {
@@ -865,7 +888,7 @@ function getSignedStatus(aRv, aCert, aAddonID) {
   }
 }
 
-function shouldVerifySignedState(aAddon) {
+function shouldVerifySignedState(aAddonType, aLocation) {
   // TODO when KEY_APP_SYSTEM_DEFAULTS and KEY_APP_SYSTEM_ADDONS locations
   // are removed, we need to reorganize the logic here.  At that point we
   // should:
@@ -874,25 +897,25 @@ function shouldVerifySignedState(aAddon) {
   //   return SIGNED_TYPES.has(type)
 
   // We don't care about signatures for default system add-ons
-  if (aAddon.location.name == KEY_APP_SYSTEM_DEFAULTS) {
+  if (aLocation.name == KEY_APP_SYSTEM_DEFAULTS) {
     return false;
   }
 
   // Updated system add-ons should always have their signature checked
-  if (aAddon.location.isSystem) {
+  if (aLocation.isSystem) {
     return true;
   }
 
   if (
-    aAddon.location.isBuiltin ||
-    aAddon.location.scope & AppConstants.MOZ_UNSIGNED_SCOPES
+    aLocation.isBuiltin ||
+    aLocation.scope & AppConstants.MOZ_UNSIGNED_SCOPES
   ) {
     return false;
   }
 
   // Otherwise only check signatures if the add-on is one of the signed
   // types.
-  return XPIDatabase.SIGNED_TYPES.has(aAddon.type);
+  return XPIDatabase.SIGNED_TYPES.has(aAddonType);
 }
 
 /**
@@ -909,7 +932,11 @@ function shouldVerifySignedState(aAddon) {
 var verifyBundleSignedState = async function(aBundle, aAddon) {
   let pkg = Package.get(aBundle);
   try {
-    let { signedState } = await pkg.verifySignedState(aAddon);
+    let { signedState } = await pkg.verifySignedState(
+      aAddon.id,
+      aAddon.type,
+      aAddon.location
+    );
     return signedState;
   } finally {
     pkg.close();

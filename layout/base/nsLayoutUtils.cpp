@@ -8616,7 +8616,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     CSSPoint layoutScrollOffset =
         CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
     CSSPoint visualScrollOffset =
-        aIsRootContent && presShell->IsVisualViewportOffsetSet()
+        aIsRootContent
             ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
             : layoutScrollOffset;
     metrics.SetVisualScrollOffset(visualScrollOffset);

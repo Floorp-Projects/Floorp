@@ -19,7 +19,7 @@ async function generateAddon(data) {
   let fileURI = Services.io.newFileURI(xpi);
   let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/`);
 
-  let extension = new ExtensionData(jarURI);
+  let extension = new ExtensionData(jarURI, false);
   await extension.loadManifest();
 
   return extension;
