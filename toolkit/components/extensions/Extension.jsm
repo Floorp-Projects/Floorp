@@ -1037,7 +1037,7 @@ class ExtensionData {
     this.manifest = manifest;
     this.rawManifest = manifest;
 
-    if (manifest && manifest.default_locale) {
+    if (manifest.default_locale) {
       await this.initLocale();
     }
 
@@ -1045,7 +1045,7 @@ class ExtensionData {
     // have isPrivileged, so ignore fluent localization in that pass.
     // This means that fluent cannot be used to localize manifest properties
     // read from the add-on manager (e.g., author, homepage, etc.)
-    if (manifest && manifest.l10n_resources && "isPrivileged" in this) {
+    if (manifest.l10n_resources && this.constructor != ExtensionData) {
       if (this.isPrivileged) {
         this.fluentL10n = new Localization(manifest.l10n_resources, true);
       } else {
