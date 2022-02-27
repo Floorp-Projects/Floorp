@@ -27,7 +27,7 @@ add_task(async function test_json_parser() {
   let fileURI = Services.io.newFileURI(xpi);
   let uri = NetUtil.newURI(`jar:${fileURI.spec}!/`);
 
-  let extension = new ExtensionData(uri);
+  let extension = new ExtensionData(uri, false);
 
   await extension.parseManifest();
 
@@ -51,7 +51,7 @@ add_task(async function test_getExtensionVersionWithoutValidation() {
   });
   let fileURI = Services.io.newFileURI(xpi);
   let uri = NetUtil.newURI(`jar:${fileURI.spec}!/`);
-  let extension = new ExtensionData(uri);
+  let extension = new ExtensionData(uri, false);
 
   let rawVersion = await extension.getExtensionVersionWithoutValidation();
   Assert.deepEqual(
