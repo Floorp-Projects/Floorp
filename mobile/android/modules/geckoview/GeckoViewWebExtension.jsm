@@ -636,7 +636,10 @@ var GeckoViewWebExtension = {
 
   async ensureBuiltIn(aUri, aId) {
     await AddonManager.readyPromise;
-    const extensionData = new ExtensionData(aUri);
+    // Although the add-on is privileged in practice due to it being installed
+    // as a built-in extension, we pass isPrivileged=false since the exact flag
+    // doesn't matter as we are only using ExtensionData to read the version.
+    const extensionData = new ExtensionData(aUri, false);
     const [extensionVersion, extension] = await Promise.all([
       extensionData.getExtensionVersionWithoutValidation(),
       this.extensionById(aId),
