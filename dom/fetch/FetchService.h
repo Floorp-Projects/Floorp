@@ -102,6 +102,7 @@ class FetchService final {
     nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
     RefPtr<PerformanceStorage> mPerformanceStorage;
     RefPtr<FetchDriver> mFetchDriver;
+    SafeRefPtr<InternalResponse> mResponse;
 
     MozPromiseHolder<FetchServiceResponsePromise> mResponsePromiseHolder;
   };

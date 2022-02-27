@@ -38,6 +38,7 @@ class Document;
 class InternalRequest;
 class InternalResponse;
 class PerformanceStorage;
+class PerformanceTimingData;
 
 /**
  * Provides callbacks to be called when response is available or on error.
@@ -123,6 +124,9 @@ class FetchDriver final : public nsIStreamListener,
   void SetOriginStack(UniquePtr<SerializedStackHolder>&& aOriginStack) {
     mOriginStack = std::move(aOriginStack);
   }
+
+  PerformanceTimingData* GetPerformanceTimingData(nsAString& aInitiatorType,
+                                                  nsAString& aEntryName);
 
   // AbortFollower
   void RunAbortAlgorithm() override;
