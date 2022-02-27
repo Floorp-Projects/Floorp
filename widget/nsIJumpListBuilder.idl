@@ -156,6 +156,4 @@ interface nsIJumpListBuilder : nsISupports
    * @throw NS_ERROR_UNEXPECTED on internal errors.
    */
   boolean deleteActiveList();
-
-  void setAppUserModelID(in AString aAppUserModelId);
 };

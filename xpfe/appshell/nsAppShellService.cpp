@@ -710,10 +710,6 @@ nsresult nsAppShellService::JustCreateTopWindow(
 
   widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
 
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
-    widgetInitData.mIsPrivate = true;
-  }
-
   nsresult rv =
       window->Initialize(parent, center ? aParent : nullptr, aInitialWidth,
                          aInitialHeight, aIsHiddenWindow, widgetInitData);
