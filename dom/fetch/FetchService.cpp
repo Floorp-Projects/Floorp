@@ -185,6 +185,8 @@ void FetchService::FetchInstance::OnResponseEnd(
       mFetchDriver->GetPerformanceTimingData(initiatorType, entryName));
   MOZ_ASSERT(performanceTiming);
 
+  initiatorType = u"navigation"_ns;
+
   FetchServiceResponse response =
       MakeTuple(std::move(mResponse), performanceTiming->ToIPC(), initiatorType,
                 entryName);
