@@ -49,7 +49,7 @@ add_task(async function test_validate_manifest() {
   for (const xpi of searchExtensions) {
     info(`loading: ${SEARCH_EXTENSIONS_PATH}/${xpi}/`);
     let fileURI = getFileURI(`${SEARCH_EXTENSIONS_PATH}/${xpi}/`);
-    let extension = new ExtensionData(fileURI);
+    let extension = new ExtensionData(fileURI, false);
     await extension.loadManifest();
     let locales = await extension.promiseLocales();
     for (let locale of locales.keys()) {
