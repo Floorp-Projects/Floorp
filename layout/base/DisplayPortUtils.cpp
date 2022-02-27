@@ -81,8 +81,7 @@ DisplayPortMargins DisplayPortMargins::ForScrollFrame(
     nsIFrame* scrollFrame = do_QueryFrame(aScrollFrame);
     PresShell* presShell = scrollFrame->PresShell();
     layoutOffset = CSSPoint::FromAppUnits(aScrollFrame->GetScrollPosition());
-    if (aScrollFrame->IsRootScrollFrameOfDocument() &&
-        presShell->IsVisualViewportOffsetSet()) {
+    if (aScrollFrame->IsRootScrollFrameOfDocument()) {
       visualOffset =
           CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset());
 
