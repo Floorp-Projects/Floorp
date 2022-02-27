@@ -11843,6 +11843,25 @@
   value: false
   mirror: always
 
+# Tweak which elements are allowed in <svg:use> subtrees, and in which
+# circumstances. See RemoveForbiddenNodes in SVGUseElement.cpp for the spec
+# text.
+#
+# - 0: Don't restrict ever.
+# - 1: Restrict only cross-document.
+# - 2/other: restrict always.
+#
+# We allow the behavior to be configurable via this pref. Our chosen default
+# value forbids non-graphical content in <svg:use> clones of cross-document
+# elements. This is a compromise between our more-permissive pre-existing
+# behavior (which SVG 2 seems to call for, and maps to pref value 0) and the
+# behavior of other UAs (which SVG 1.1 seems to call for, and maps to pref
+# value 2).
+- name: svg.use-element.graphics-element-restrictions
+  type: int32_t
+  value: 1
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "telemetry."
 #---------------------------------------------------------------------------

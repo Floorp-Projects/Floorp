@@ -10,8 +10,7 @@
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGGraphicsElementBase = SVGTransformableElement;
 
@@ -32,7 +31,10 @@ class SVGGraphicsElement : public SVGGraphicsElementBase, public SVGTests {
   }
 
   bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+  bool IsSVGGraphicsElement() const final { return true; }
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
+
+  // Overrides SVGTests.
   SVGElement* AsSVGElement() final { return this; }
 
  protected:
@@ -51,7 +53,6 @@ class SVGGraphicsElement : public SVGGraphicsElementBase, public SVGTests {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGGRAPHICSELEMENT_H_

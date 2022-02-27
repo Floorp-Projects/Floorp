@@ -18,6 +18,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/InternalRequest.h"
+#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/ServiceWorkerOp.h"
@@ -77,8 +79,13 @@ void FetchEventOpProxyChild::Initialize(
         MakeRefPtr<FetchEventPreloadResponsePromise::Private>(__func__);
     mPreloadResponsePromise->UseSynchronousTaskDispatch(__func__);
     if (aArgs.preloadResponse().isSome()) {
-      mPreloadResponsePromise->Resolve(
-          InternalResponse::FromIPC(aArgs.preloadResponse().ref()), __func__);
+      FetchEventPreloadResponseArgs response = MakeTuple(
+          InternalResponse::FromIPC(aArgs.preloadResponse().ref().response()),
+          aArgs.preloadResponse().ref().timingData(),
+          aArgs.preloadResponse().ref().initiatorType(),
+          aArgs.preloadResponse().ref().entryName());
+
+      mPreloadResponsePromise->Resolve(std::move(response), __func__);
     }
   }
 
@@ -177,13 +184,16 @@ FetchEventOpProxyChild::GetPreloadResponsePromise() {
 }
 
 mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
-    ParentToChildInternalResponse&& aResponse) {
+    ParentToChildResponseWithTiming&& aResponse) {
   // Receiving this message implies that navigation preload is enabled, so
   // Initialize() should have created this promise.
   MOZ_ASSERT(mPreloadResponsePromise);
 
-  mPreloadResponsePromise->Resolve(InternalResponse::FromIPC(aResponse),
-                                   __func__);
+  FetchEventPreloadResponseArgs response = MakeTuple(
+      InternalResponse::FromIPC(aResponse.response()), aResponse.timingData(),
+      aResponse.initiatorType(), aResponse.entryName());
+
+  mPreloadResponsePromise->Resolve(std::move(response), __func__);
 
   return IPC_OK();
 }
@@ -196,8 +206,12 @@ void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
   // be valid anymore since it is too late to respond to the FetchEvent.
   // Resolve the preload response promise with NS_ERROR_DOM_ABORT_ERR.
   if (mPreloadResponsePromise) {
-    mPreloadResponsePromise->Resolve(
-        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+    IPCPerformanceTimingData timingData;
+    FetchEventPreloadResponseArgs response =
+        MakeTuple(InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR),
+                  timingData, EmptyString(), EmptyString());
+
+    mPreloadResponsePromise->Resolve(std::move(response), __func__);
   }
 
   mOp->RevokeActor(this);

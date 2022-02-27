@@ -49,6 +49,10 @@ UNIFIED_SOURCES += [
     "PerformanceWorker.cpp",
 ]
 
+IPDL_SOURCES += [
+    "PerformanceTimingTypes.ipdlh",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]

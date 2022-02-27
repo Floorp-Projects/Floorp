@@ -205,6 +205,67 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   }
 }
 
+PerformanceTimingData::PerformanceTimingData(
+    const IPCPerformanceTimingData& aIPCData)
+    : mNextHopProtocol(aIPCData.nextHopProtocol()),
+      mAsyncOpen(aIPCData.asyncOpen()),
+      mRedirectStart(aIPCData.redirectStart()),
+      mRedirectEnd(aIPCData.redirectEnd()),
+      mDomainLookupStart(aIPCData.domainLookupStart()),
+      mDomainLookupEnd(aIPCData.domainLookupEnd()),
+      mConnectStart(aIPCData.connectStart()),
+      mSecureConnectionStart(aIPCData.secureConnectionStart()),
+      mConnectEnd(aIPCData.connectEnd()),
+      mRequestStart(aIPCData.requestStart()),
+      mResponseStart(aIPCData.responseStart()),
+      mCacheReadStart(aIPCData.cacheReadStart()),
+      mResponseEnd(aIPCData.responseEnd()),
+      mCacheReadEnd(aIPCData.cacheReadEnd()),
+      mWorkerStart(aIPCData.workerStart()),
+      mWorkerRequestStart(aIPCData.workerRequestStart()),
+      mWorkerResponseEnd(aIPCData.workerResponseEnd()),
+      mZeroTime(aIPCData.zeroTime()),
+      mFetchStart(aIPCData.fetchStart()),
+      mEncodedBodySize(aIPCData.encodedBodySize()),
+      mTransferSize(aIPCData.transferSize()),
+      mDecodedBodySize(aIPCData.decodedBodySize()),
+      mRedirectCount(aIPCData.redirectCount()),
+      mAllRedirectsSameOrigin(aIPCData.allRedirectsSameOrigin()),
+      mAllRedirectsPassTAO(aIPCData.allRedirectsPassTAO()),
+      mSecureConnection(aIPCData.secureConnection()),
+      mTimingAllowed(aIPCData.timingAllowed()),
+      mInitialized(aIPCData.initialized()) {
+  for (const auto& serverTimingData : aIPCData.serverTiming()) {
+    RefPtr<nsServerTiming> timing = new nsServerTiming();
+    timing->SetName(serverTimingData.name());
+    timing->SetDuration(serverTimingData.duration());
+    timing->SetDescription(serverTimingData.description());
+    mServerTiming.AppendElement(timing);
+  }
+}
+
+IPCPerformanceTimingData PerformanceTimingData::ToIPC() {
+  nsTArray<IPCServerTiming> ipcServerTiming;
+  for (auto& serverTimingData : mServerTiming) {
+    nsAutoCString name;
+    Unused << serverTimingData->GetName(name);
+    double duration = 0;
+    Unused << serverTimingData->GetDuration(&duration);
+    nsAutoCString description;
+    Unused << serverTimingData->GetDescription(description);
+    ipcServerTiming.AppendElement(IPCServerTiming(name, duration, description));
+  }
+  return IPCPerformanceTimingData(
+      ipcServerTiming, mNextHopProtocol, mAsyncOpen, mRedirectStart,
+      mRedirectEnd, mDomainLookupStart, mDomainLookupEnd, mConnectStart,
+      mSecureConnectionStart, mConnectEnd, mRequestStart, mResponseStart,
+      mCacheReadStart, mResponseEnd, mCacheReadEnd, mWorkerStart,
+      mWorkerRequestStart, mWorkerResponseEnd, mZeroTime, mFetchStart,
+      mEncodedBodySize, mTransferSize, mDecodedBodySize, mRedirectCount,
+      mAllRedirectsSameOrigin, mAllRedirectsPassTAO, mSecureConnection,
+      mTimingAllowed, mInitialized);
+}
+
 void PerformanceTimingData::SetPropertiesFromHttpChannel(
     nsIHttpChannel* aHttpChannel, nsITimedChannel* aChannel) {
   MOZ_ASSERT(aHttpChannel);

@@ -8,6 +8,11 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "MainThreadUtils.h"
+#include "gfxPlatform.h"
+
+#ifdef MOZ_WAYLAND
+#  include "WaylandVsyncSource.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -269,6 +274,33 @@ void VsyncSource::Display::UpdateVsyncStatus() {
 RefPtr<RefreshTimerVsyncDispatcher>
 VsyncSource::Display::GetRefreshTimerVsyncDispatcher() {
   return mRefreshTimerVsyncDispatcher;
+}
+
+// static
+Maybe<TimeDuration> VsyncSource::GetFastestVsyncRate() {
+  Maybe<TimeDuration> retVal;
+  if (!gfxPlatform::Initialized()) {
+    return retVal;
+  }
+
+  mozilla::gfx::VsyncSource* vsyncSource =
+      gfxPlatform::GetPlatform()->GetHardwareVsync();
+  if (vsyncSource && vsyncSource->GetGlobalDisplay().IsVsyncEnabled()) {
+    retVal.emplace(vsyncSource->GetGlobalDisplay().GetVsyncRate());
+  }
+
+#ifdef MOZ_WAYLAND
+  Maybe<TimeDuration> waylandRate = WaylandVsyncSource::GetFastestVsyncRate();
+  if (waylandRate) {
+    if (!retVal) {
+      retVal.emplace(*waylandRate);
+    } else if (*waylandRate < *retVal) {
+      retVal = waylandRate;
+    }
+  }
+#endif
+
+  return retVal;
 }
 
 void VsyncSource::Shutdown() { GetGlobalDisplay().Shutdown(); }

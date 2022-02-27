@@ -44,6 +44,14 @@ struct ShowEventData
   bool EventSuppressed;
 };
 
+struct TextRangeData
+{
+  uint64_t StartID;
+  uint64_t EndID;
+  int32_t StartOffset;
+  int32_t EndOffset;
+};
+
 [ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PDocAccessible
 {
@@ -80,6 +88,7 @@ parent:
   async ScrollingEvent(uint64_t aID, uint64_t aType,
                        uint32_t aScrollX, uint32_t aScrollY,
                        uint32_t aMaxScrollX, uint32_t aMaxScrollY);
+  async TextSelectionChangeEvent(uint64_t aID, TextRangeData[] aSelection);
 
   /*
    * Tell the parent document to bind the existing document as a new child

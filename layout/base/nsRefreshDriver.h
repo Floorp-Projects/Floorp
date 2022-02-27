@@ -359,8 +359,19 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    *
    * If we're animating and we have skipped paints a time in the past
    * is returned.
+   *
+   * If aCheckType is AllVsyncListeners and we're in the parent process,
+   * which doesn't have a RefreshDriver ticking, but some other process does
+   * have, the return value is
+   * (now + refreshrate - layout.idle_period.time_limit) as an approximation
+   * when something will happen.
+   * This can be useful check when parent process tries to avoid having too
+   * long idle periods for example when it is sending input events to an
+   * active child process.
    */
-  static mozilla::TimeStamp GetIdleDeadlineHint(mozilla::TimeStamp aDefault);
+  enum IdleCheck { OnlyThisProcessRefreshDriver, AllVsyncListeners };
+  static mozilla::TimeStamp GetIdleDeadlineHint(mozilla::TimeStamp aDefault,
+                                                IdleCheck aCheckType);
 
   /**
    * It returns the expected timestamp of the next tick or nothing if the next
