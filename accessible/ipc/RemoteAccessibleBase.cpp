@@ -687,6 +687,12 @@ bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::SelectionRanges(
+    nsTArray<TextRange>* aRanges) const {
+  Document()->SelectionRanges(aRanges);
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
     int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
   if (!mCachedFields) {

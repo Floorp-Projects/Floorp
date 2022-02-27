@@ -5,6 +5,7 @@
 include IPCStream;
 include ChannelInfo;
 include PBackgroundSharedTypes;
+include PerformanceTimingTypes;
 
 include protocol PRemoteLazyInputStream;
 
@@ -98,6 +99,20 @@ struct ChildToParentInternalResponse {
   ChildToParentStream? body;
   int64_t bodySize;
   ChildToParentStream? alternativeBody;
+};
+
+struct ParentToParentResponseWithTiming {
+  ParentToParentInternalResponse response;
+  IPCPerformanceTimingData timingData;
+  nsString initiatorType;
+  nsString entryName;
+};
+
+struct ParentToChildResponseWithTiming {
+  ParentToChildInternalResponse response;
+  IPCPerformanceTimingData timingData;
+  nsString initiatorType;
+  nsString entryName;
 };
 
 } // namespace ipc

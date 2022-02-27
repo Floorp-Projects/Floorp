@@ -559,6 +559,10 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
 
+test-pref(svg.use-element.graphics-element-restrictions,0) == use-restrictions.svg use-restrictions-not-restricted-ref.svg
+test-pref(svg.use-element.graphics-element-restrictions,1) != use-restrictions.svg use-restrictions-not-restricted-ref.svg
+test-pref(svg.use-element.graphics-element-restrictions,1) ref-pref(svg.use-element.graphics-element-restrictions,2) != use-restrictions.svg use-restrictions.svg
+
 == use-element-shadow-tree-rule-matching.html pass.svg
 == use-image-01.svg pass.svg
 
