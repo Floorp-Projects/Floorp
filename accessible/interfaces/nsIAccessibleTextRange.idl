@@ -58,96 +58,9 @@ interface nsIAccessibleTextRange : nsISupports
   readonly attribute AString text;
 
   /**
-   * Return list of rects of the range.
-   */
-  readonly attribute nsIArray bounds;
-
-  const unsigned long FormatUnit = 0;
-  const unsigned long WordUnit = 1;
-  const unsigned long LineUnit = 2;
-  const unsigned long ParagraphUnit = 3;
-  const unsigned long PageUnit = 4;
-  const unsigned long DocumentUnit = 5;
-
-  /**
-   *  Move the boundary(ies) by the given number of the unit.
-   */
-  void move(in unsigned long aUnit, in long aCount);
-  void moveStart(in unsigned long aUnit, in long aCount);
-  void moveEnd(in unsigned long aUnit, in long aCount);
-
-  /**
-   * Normalize the range to the closest unit of the given type.
-   */
-  void normalize(in unsigned long aUnit);
-
-  /**
    * Crops the range by the given accessible element.
    */
   boolean crop(in nsIAccessible aContainer);
-
-  /**
-   * Return range enclosing the found text.
-   */
-  nsIAccessibleTextRange findText(in AString aText, in boolean aIsBackward,
-                                  in boolean aIsIgnoreCase);
-
-  /**
-   * Text attributes. Used in conjunction with findAttrs().
-   */
-  const unsigned long AnimationStyleAttr = 0;
-  const unsigned long AnnotationObjectsAttr = 1;
-  const unsigned long AnnotationTypesAttr = 2;
-  const unsigned long BackgroundColorAttr = 3;
-  const unsigned long BulletStyleAttr = 4;
-  const unsigned long CapStyleAttr = 5;
-  const unsigned long CaretBidiModeAttr = 6;
-  const unsigned long CaretPositionAttr = 7;
-  const unsigned long CultureAttr = 8;
-  const unsigned long FontNameAttr = 9;
-  const unsigned long FontSizeAttr = 10;
-  const unsigned long FontWeightAttr = 11;
-  const unsigned long ForegroundColorAttr = 12;
-  const unsigned long HorizontalTextAlignmentAttr = 13;
-  const unsigned long IndentationFirstLineAttr = 14;
-  const unsigned long IndentationLeadingAttr = 15;
-  const unsigned long IndentationTrailingAttr = 16;
-  const unsigned long IsActiveAttr = 17;
-  const unsigned long IsHiddenAttr = 18;
-  const unsigned long IsItalicAttr = 19;
-  const unsigned long IsReadOnlyAttr = 20;
-  const unsigned long IsSubscriptAttr = 21;
-  const unsigned long IsSuperscriptAttr = 22;
-  const unsigned long LinkAttr = 23;
-  const unsigned long MarginBottomAttr = 24;
-  const unsigned long MarginLeadingAttr = 25;
-  const unsigned long MarginTopAttr = 26;
-  const unsigned long MarginTrailingAttr = 27;
-  const unsigned long OutlineStylesAttr = 28;
-  const unsigned long OverlineColorAttr = 29;
-  const unsigned long OverlineStyleAttr = 30;
-  const unsigned long SelectionActiveEndAttr = 31;
-  const unsigned long StrikethroughColorAttr = 32;
-  const unsigned long StrikethroughStyleAttr = 33;
-  const unsigned long StyleIdAttr = 34;
-  const unsigned long StyleNameAttr = 35;
-  const unsigned long TabsAttr = 36;
-  const unsigned long TextFlowDirectionsAttr = 37;
-  const unsigned long UnderlineColorAttr = 38;
-  const unsigned long UnderlineStyleAttr = 39;
-
-  /**
-   * Return range enslosing the text having requested attribute.
-   */
-  nsIAccessibleTextRange findAttr(in unsigned long aAttr, in nsIVariant aValue,
-                                  in boolean aIsBackward);
-
-  /**
-   * Add/remove the text range from selection.
-   */
-  void addToSelection();
-  void removeFromSelection();
-  void select();
 
   const unsigned long AlignToTop = 0;
   const unsigned long AlignToBottom = 1;

@@ -29,9 +29,8 @@ class PerformanceStorageWorker final : public PerformanceStorage {
 
   void AddEntry(nsIHttpChannel* aChannel,
                 nsITimedChannel* aTimedChannel) override;
-  virtual void AddEntry(const nsString& entryName,
-                        const nsString& initiatorType,
-                        UniquePtr<PerformanceTimingData>&& aData) override {}
+  void AddEntry(const nsString& aEntryName, const nsString& aInitiatorType,
+                UniquePtr<PerformanceTimingData>&& aData) override;
   void AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData);
 
  private:

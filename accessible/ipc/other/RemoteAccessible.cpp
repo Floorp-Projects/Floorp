@@ -195,6 +195,9 @@ uint32_t RemoteAccessible::CharacterCount() const {
 }
 
 int32_t RemoteAccessible::SelectionCount() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::SelectionCount();
+  }
   int32_t count = 0;
   Unused << mDoc->SendSelectionCount(mID, &count);
   return count;

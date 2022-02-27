@@ -120,6 +120,20 @@ void PerformanceStorageWorker::AddEntry(nsIHttpChannel* aChannel,
   Unused << NS_WARN_IF(!r->Dispatch());
 }
 
+void PerformanceStorageWorker::AddEntry(
+    const nsString& aEntryName, const nsString& aInitiatorType,
+    UniquePtr<PerformanceTimingData>&& aData) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (!aData) {
+    return;
+  }
+
+  UniquePtr<PerformanceProxyData> data = MakeUnique<PerformanceProxyData>(
+      std::move(aData), aInitiatorType, aEntryName);
+
+  AddEntryOnWorker(std::move(data));
+}
+
 void PerformanceStorageWorker::ShutdownOnWorker() {
   MutexAutoLock lock(mMutex);
 

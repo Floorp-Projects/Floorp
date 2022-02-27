@@ -189,6 +189,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
+  virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
+
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 
