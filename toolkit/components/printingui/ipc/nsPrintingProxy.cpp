@@ -123,22 +123,6 @@ nsPrintingProxy::ShowPageSetupDialog(mozIDOMWindowProxy* parent,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
-                                            bool aUsePrinterNamePrefix,
-                                            uint32_t aFlags) {
-  nsresult rv;
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PrintData settings;
-  rv = printSettingsSvc->SerializeToPrintData(aPS, &settings);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags, &rv);
-  return rv;
-}
-
 PPrintSettingsDialogChild* nsPrintingProxy::AllocPPrintSettingsDialogChild() {
   // The parent process will never initiate the PPrintSettingsDialog
   // protocol connection, so no need to provide an allocator here.
