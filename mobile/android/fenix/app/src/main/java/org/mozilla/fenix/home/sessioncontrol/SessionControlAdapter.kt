@@ -21,10 +21,10 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
-import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
-import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksHeaderViewHolder
 import org.mozilla.fenix.home.pocket.PocketCategoriesViewHolder
 import org.mozilla.fenix.home.pocket.PocketRecommendationsHeaderViewHolder
+import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
+import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksHeaderViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
@@ -84,11 +84,13 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
          *
          * See https://github.com/mozilla-mobile/fenix/pull/20189#issuecomment-877124730
          */
+        @Suppress("ComplexCondition")
         override fun getChangePayload(newItem: AdapterItem): Any? {
             val newTopSites = (newItem as? TopSitePager)
             val oldTopSites = (this as? TopSitePager)
 
             if (newTopSites == null || oldTopSites == null ||
+                newTopSites.topSites.size > oldTopSites.topSites.size ||
                 (newTopSites.topSites.size > TopSitePagerViewHolder.TOP_SITES_PER_PAGE)
                 != (oldTopSites.topSites.size > TopSitePagerViewHolder.TOP_SITES_PER_PAGE)
             ) {

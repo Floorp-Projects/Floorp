@@ -50,6 +50,18 @@ class SessionControlAdapterTest {
     }
 
     @Test
+    fun `GIVEN topSitePager with 3 topSites WHEN getChangePayload with 5 items THEN return null`() {
+        val newItem = TopSitePager(mockk(relaxed = true))
+        val topSitePager = TopSitePager(mockk(relaxed = true))
+        every { topSitePager.topSites.size } returns 3
+        every { newItem.topSites.size } returns 5
+
+        val result = topSitePager.getChangePayload(newItem)
+
+        assertNull(result)
+    }
+
+    @Test
     fun `GIVEN two topSites WHEN getChangePayload called with one changed item THEN return TopSitePagerPayload with changes`() {
         val topSite0 = TopSite.Frecent(-1, "topSite0", "", 0)
         val topSite1 = TopSite.Frecent(-1, "topSite1", "", 0)
