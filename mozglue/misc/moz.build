@@ -15,6 +15,7 @@ EXPORTS.mozilla += [
     "MmapFaultHandler.h",
     "PlatformConditionVariable.h",
     "PlatformMutex.h",
+    "PlatformRWLock.h",
     "Printf.h",
     "Sprintf.h",
     "StackWalk.h",
@@ -105,6 +106,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "ConditionVariable_windows.cpp",
         "Mutex_windows.cpp",
+        "RWLock_windows.cpp",
     ]
 # WASI hasn't supported cond vars and mutexes yet so noop implementation is used.
 elif CONFIG["OS_ARCH"] == "WASI":
@@ -116,6 +118,7 @@ else:
     SOURCES += [
         "ConditionVariable_posix.cpp",
         "Mutex_posix.cpp",
+        "RWLock_posix.cpp",
     ]
 
 if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
