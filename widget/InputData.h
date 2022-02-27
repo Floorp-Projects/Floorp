@@ -437,10 +437,6 @@ class PanGestureInput : public InputData {
 
   bool mHandledByAPZ : 1;
 
-  // true if this is a PANGESTURE_END event that will be followed by a
-  // PANGESTURE_MOMENTUMSTART event.
-  bool mFollowedByMomentum : 1;
-
   // If this is true, and this event started a new input block that couldn't
   // find a scrollable target which is scrollable in the horizontal component
   // of the scroll start direction, then this input block needs to be put on
@@ -468,9 +464,6 @@ class PanGestureInput : public InputData {
   bool mIsNoLineOrPageDelta : 1;
 
   void SetHandledByAPZ(bool aHandled) { mHandledByAPZ = aHandled; }
-  void SetFollowedByMomentum(bool aFollowed) {
-    mFollowedByMomentum = aFollowed;
-  }
   void SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(
       bool aRequires) {
     mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
