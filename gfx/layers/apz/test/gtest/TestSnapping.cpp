@@ -126,3 +126,57 @@ TEST_F(APZCSnappingTesterMock, Snap_After_Pinch) {
 
   apzc->AssertStateIsSmoothMsdScroll();
 }
+
+TEST_F(APZCSnappingTesterMock, SnapOnPanEnd) {
+  const char* treeShape = "x";
+  nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+  };
+  CreateScrollData(treeShape, layerVisibleRegion);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                            CSSRect(0, 0, 100, 400));
+
+  // Set up two snap points, 30 and 100.
+  ScrollSnapInfo snap;
+  snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
+  snap.mSnapPositionY.AppendElement(30 * AppUnitsPerCSSPixel());
+  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+
+  // Save the scroll snap info on the root APZC.
+  ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
+    aSm.SetSnapInfo(ScrollSnapInfo(snap));
+  });
+
+  UniquePtr<ScopedLayerTreeRegistration> registration =
+      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
+  UpdateHitTestingTree();
+
+  RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
+
+  // Send a series of pan gestures to scroll to position at 50.
+  const ScreenIntPoint position = ScreenIntPoint(50, 30);
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, position,
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, position,
+             ScreenPoint(0, 40), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, position,
+             ScreenPoint(0, 0), mcc->Time());
+
+  // Now a smooth animation has been triggered for snapping to 30.
+  apzc->AssertStateIsSmoothMsdScroll();
+
+  apzc->AdvanceAnimationsUntilEnd();
+  // The snapped position should be 30 rather than 100 because it's the nearest
+  // snap point.
+  EXPECT_EQ(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      30);
+}
