@@ -505,7 +505,7 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
   addon.aboutURL = null;
   addon.dependencies = Object.freeze(Array.from(extension.dependencies));
   addon.startupData = extension.startupData;
-  addon.hidden = manifest.hidden;
+  addon.hidden = extension.isPrivileged && manifest.hidden;
   addon.incognito = manifest.incognito;
 
   if (addon.type === "theme" && (await aPackage.hasResource("preview.png"))) {
@@ -700,9 +700,6 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   let { signedState, cert } = verifiedSignedState;
   addon.signedState = signedState;
   addon.signedDate = cert?.validity?.notBefore / 1000 || null;
-  if (!addon.isPrivileged) {
-    addon.hidden = false;
-  }
 
   if (!addon.id) {
     if (cert) {
