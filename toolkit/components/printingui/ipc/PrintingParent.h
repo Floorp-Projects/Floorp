@@ -31,10 +31,6 @@ class PrintingParent final : public PPrintingParent {
       PPrintSettingsDialogParent* aDialog, PBrowserParent* aParent,
       const PrintData& aData) final;
 
-  mozilla::ipc::IPCResult RecvSavePrintSettings(
-      const PrintData& data, const bool& usePrinterNamePrefix,
-      const uint32_t& flags, nsresult* rv) final;
-
   PPrintSettingsDialogParent* AllocPPrintSettingsDialogParent() final;
 
   bool DeallocPPrintSettingsDialogParent(

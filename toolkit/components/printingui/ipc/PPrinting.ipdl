@@ -26,10 +26,6 @@ parent:
 
   async PPrintSettingsDialog();
 
-  sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,
-                         uint32_t flags)
-    returns(nsresult rv);
-
 child:
   async PRemotePrintJob();
   async __delete__();
