@@ -46,8 +46,6 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
         val existingJob = view.get()?.getTag(R.id.mozac_browser_thumbnails_tag_job) as? Job
         existingJob?.cancel()
 
-        view.get()?.setImageDrawable(placeholder)
-
         // Create a loading job
         val deferredThumbnail = storage.loadThumbnail(request)
 
@@ -58,7 +56,11 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
 
         try {
             val thumbnail = deferredThumbnail.await()
-            view.get()?.setImageBitmap(thumbnail)
+            if (thumbnail != null) {
+                view.get()?.setImageBitmap(thumbnail)
+            } else {
+                view.get()?.setImageDrawable(placeholder)
+            }
         } catch (e: CancellationException) {
             view.get()?.setImageDrawable(error)
         } finally {

@@ -44,7 +44,6 @@ class ThumbnailLoaderTest {
 
         loader.loadIntoView(view, request)
 
-        verify(view).setImageDrawable(null)
         verify(view).addOnAttachStateChangeListener(any())
         verify(view).setTag(eq(R.id.mozac_browser_thumbnails_tag_job), any())
         verify(view, never()).setImageBitmap(any())
@@ -69,8 +68,6 @@ class ThumbnailLoaderTest {
         doReturn(result).`when`(storage).loadThumbnail(request)
 
         loader.loadIntoView(view, request, placeholder = placeholder, error = error)
-
-        verify(view).setImageDrawable(placeholder)
 
         result.cancel()
 
