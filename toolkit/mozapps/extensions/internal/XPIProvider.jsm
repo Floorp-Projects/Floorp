@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
   SitePermission: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -1804,6 +1805,13 @@ class BootstrapScope {
           }
         }
       }
+      // TODO D128233: Replace AddonInternal's isPrivileged getter with a call to
+      // Extensions.getIsPrivileged, and use addon.isPrivileged instead of this.
+      const isPrivileged = ExtensionData.getIsPrivileged({
+        signedState: addon.signedState,
+        builtIn: addon.location.isBuiltin,
+        temporarilyInstalled: addon.location.isTemporary,
+      });
 
       let params = {
         id: addon.id,
@@ -1813,6 +1821,7 @@ class BootstrapScope {
         temporarilyInstalled: addon.location.isTemporary,
         builtIn: addon.location.isBuiltin,
         isSystem: addon.location.isSystem,
+        isPrivileged,
         recommendationState: addon.recommendationState,
       };
 

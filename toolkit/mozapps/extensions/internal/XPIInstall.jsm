@@ -441,14 +441,30 @@ function waitForAllPromises(promises) {
  *
  * @param {Package} aPackage
  *        The install package for the add-on
- * @returns {AddonInternal}
+ * @param {XPIStateLocation} aLocation
+ *        The install location the add-on is installed in, or will be
+ *        installed to.
+ * @returns {{ addon: AddonInternal, verifiedSignedState: object}}
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromWebManifest(aPackage) {
-  let extension = new ExtensionData(
-    XPIInternal.maybeResolveURI(aPackage.rootURI)
-  );
+async function loadManifestFromWebManifest(aPackage, aLocation) {
+  let verifiedSignedState;
+  let extension = await ExtensionData.constructAsync({
+    rootURI: XPIInternal.maybeResolveURI(aPackage.rootURI),
+    async checkPrivileged(type, id) {
+      verifiedSignedState = await aPackage.verifySignedState(
+        id,
+        type,
+        aLocation
+      );
+      return ExtensionData.getIsPrivileged({
+        signedState: verifiedSignedState.signedState,
+        builtIn: aLocation.isBuiltin,
+        temporarilyInstalled: aLocation.isTemporary,
+      });
+    },
+  });
 
   let manifest = await extension.loadManifest();
 
@@ -574,7 +590,7 @@ async function loadManifestFromWebManifest(aPackage) {
   addon.softDisabled =
     addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
 
-  return addon;
+  return { addon, verifiedSignedState };
 }
 
 async function readRecommendationStates(aPackage, aAddonID) {
@@ -649,13 +665,23 @@ function generateTemporaryInstallID(aFile) {
 
 var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   let addon;
+  let verifiedSignedState;
   if (await aPackage.hasResource("manifest.json")) {
-    addon = await loadManifestFromWebManifest(aPackage);
+    ({ addon, verifiedSignedState } = await loadManifestFromWebManifest(
+      aPackage,
+      aLocation
+    ));
   } else {
+    // TODO bug 1674799: Remove this unused branch.
     for (let loader of AddonManagerPrivate.externalExtensionLoaders.values()) {
       if (await aPackage.hasResource(loader.manifestFile)) {
         addon = await loader.loadManifest(aPackage);
         addon.loader = loader.name;
+        verifiedSignedState = await aPackage.verifySignedState(
+          addon.id,
+          addon.type,
+          aLocation
+        );
         break;
       }
     }
@@ -671,11 +697,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   addon.rootURI = aPackage.rootURI.spec;
   addon.location = aLocation;
 
-  let { signedState, cert } = await aPackage.verifySignedState(
-    addon.id,
-    addon.type,
-    aLocation
-  );
+  let { signedState, cert } = verifiedSignedState;
   addon.signedState = signedState;
   addon.signedDate = cert?.validity?.notBefore / 1000 || null;
   if (!addon.isPrivileged) {
