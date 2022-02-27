@@ -80,6 +80,7 @@ async function testLoadManifest({ location, expectPrivileged }) {
   let { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
     let addon = await XPIInstall.loadManifestFromFile(xpi, location);
     actualPermissions = addon.userPermissions;
+    equal(addon.isPrivileged, expectPrivileged, "addon.isPrivileged");
   });
   if (expectPrivileged) {
     AddonTestUtils.checkMessages(messages, {

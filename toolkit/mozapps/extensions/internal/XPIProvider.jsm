@@ -566,6 +566,14 @@ class XPIState {
     return this.loader == null;
   }
 
+  get isPrivileged() {
+    return ExtensionData.getIsPrivileged({
+      signedState: this.signedState,
+      builtIn: this.location.isBuiltin,
+      temporarilyInstalled: this.location.isTemporary,
+    });
+  }
+
   /**
    * Update the last modified time for an add-on on disk.
    *
@@ -1805,13 +1813,6 @@ class BootstrapScope {
           }
         }
       }
-      // TODO D128233: Replace AddonInternal's isPrivileged getter with a call to
-      // Extensions.getIsPrivileged, and use addon.isPrivileged instead of this.
-      const isPrivileged = ExtensionData.getIsPrivileged({
-        signedState: addon.signedState,
-        builtIn: addon.location.isBuiltin,
-        temporarilyInstalled: addon.location.isTemporary,
-      });
 
       let params = {
         id: addon.id,
@@ -1821,7 +1822,7 @@ class BootstrapScope {
         temporarilyInstalled: addon.location.isTemporary,
         builtIn: addon.location.isBuiltin,
         isSystem: addon.location.isSystem,
-        isPrivileged,
+        isPrivileged: addon.isPrivileged,
         recommendationState: addon.recommendationState,
       };
 
