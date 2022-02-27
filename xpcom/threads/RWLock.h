@@ -12,10 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/BlockingResourceBase.h"
-
-#ifndef XP_WIN
-#  include <pthread.h>
-#endif
+#include "mozilla/PlatformRWLock.h"
 
 namespace mozilla {
 
@@ -41,17 +38,9 @@ namespace mozilla {
 //
 // It is unspecified whether RWLock gives priority to waiting readers or
 // a waiting writer when unlocking.
-class RWLock : public BlockingResourceBase {
+class RWLock : public detail::RWLockImpl, public BlockingResourceBase {
  public:
   explicit RWLock(const char* aName);
-
-  // Windows rwlocks don't need any special handling to be destroyed, but
-  // POSIX ones do.
-#ifdef XP_WIN
-  ~RWLock() = default;
-#else
-  ~RWLock();
-#endif
 
 #ifdef DEBUG
   bool LockedForWritingByCurrentThread();
@@ -62,33 +51,18 @@ class RWLock : public BlockingResourceBase {
   void WriteLock();
   void WriteUnlock();
 #else
-  bool TryReadLock() { return TryReadLockInternal(); }
-  void ReadLock() { ReadLockInternal(); }
-  void ReadUnlock() { ReadUnlockInternal(); }
-  bool TryWriteLock() { return TryWriteLockInternal(); }
-  void WriteLock() { WriteLockInternal(); }
-  void WriteUnlock() { WriteUnlockInternal(); }
+  bool TryReadLock() { return detail::RWLockImpl::tryReadLock(); }
+  void ReadLock() { detail::RWLockImpl::readLock(); }
+  void ReadUnlock() { detail::RWLockImpl::readUnlock(); }
+  bool TryWriteLock() { return detail::RWLockImpl::tryWriteLock(); }
+  void WriteLock() { detail::RWLockImpl::writeLock(); }
+  void WriteUnlock() { detail::RWLockImpl::writeUnlock(); }
 #endif
 
  private:
-  bool TryReadLockInternal();
-  void ReadLockInternal();
-  void ReadUnlockInternal();
-  bool TryWriteLockInternal();
-  void WriteLockInternal();
-  void WriteUnlockInternal();
-
   RWLock() = delete;
   RWLock(const RWLock&) = delete;
   RWLock& operator=(const RWLock&) = delete;
-
-#ifndef XP_WIN
-  pthread_rwlock_t mRWLock;
-#else
-  // SRWLock is pointer-sized.  We declare it in such a fashion here to
-  // avoid pulling in windows.h wherever this header is used.
-  void* mRWLock;
-#endif
 
 #ifdef DEBUG
   // We record the owning thread for write locks only.
