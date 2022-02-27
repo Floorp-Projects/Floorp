@@ -2025,6 +2025,7 @@ class BootstrapScope {
     return Management.emit("update", {
       id: data.id,
       resourceURI: data.resourceURI,
+      isPrivileged: data.isPrivileged,
     });
   }
 
