@@ -11197,7 +11197,14 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
     }
   }
 
-  nsPoint prevOffset = GetVisualViewportOffset();
+  // Careful here not to call GetVisualViewportOffset to get the previous visual
+  // viewport offset because if mVisualViewportOffset is nothing then we'll get
+  // the layout scroll position directly from the scroll frame and it has likely
+  // already been updated.
+  nsPoint prevOffset = aPrevLayoutScrollPos;
+  if (mVisualViewportOffset.isSome()) {
+    prevOffset = *mVisualViewportOffset;
+  }
   if (prevOffset == newOffset) {
     return false;
   }
