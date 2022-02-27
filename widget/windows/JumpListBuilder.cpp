@@ -132,29 +132,19 @@ JumpListBuilder::JumpListBuilder()
   if (!jumpListMgr) {
     return;
   }
+
+  // GetAppUserModelID can only be called once we're back on the main thread.
+  nsString modelId;
+  // MSIX packages explicitly do not support setting the appid from within
+  // the app, as it is set in the package manifest instead.
+  if (mozilla::widget::WinTaskbar::GetAppUserModelID(modelId) &&
+      !mozilla::widget::WinUtils::HasPackageIdentity()) {
+    jumpListMgr->SetAppID(modelId.get());
+  }
 }
 
 JumpListBuilder::~JumpListBuilder() {
   Preferences::RemoveObserver(this, kPrefTaskbarEnabled);
-}
-
-NS_IMETHODIMP JumpListBuilder::SetAppUserModelID(
-    const nsAString& aAppUserModelId) {
-  if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
-
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  mAppUserModelId.Assign(aAppUserModelId);
-  // MSIX packages explicitly do not support setting the appid from within
-  // the app, as it is set in the package manifest instead.
-  if (!mozilla::widget::WinUtils::HasPackageIdentity()) {
-    jumpListMgr->SetAppID(mAppUserModelId.get());
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t* aAvailable) {
@@ -524,12 +514,15 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool* _retval) {
     AbortListBuild();
   }
 
+  nsAutoString uid;
+  if (!WinTaskbar::GetAppUserModelID(uid)) return NS_OK;
+
   RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
   if (!jumpListMgr) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (SUCCEEDED(jumpListMgr->DeleteList(mAppUserModelId.get()))) {
+  if (SUCCEEDED(jumpListMgr->DeleteList(uid.get()))) {
     *_retval = true;
   }
 
