@@ -38,6 +38,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "ExtensionData",
+  "resource://gre/modules/Extension.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
@@ -575,6 +580,12 @@ ExtensionTestCommon = class ExtensionTestCommon {
       signedState = AddonManager.SIGNEDSTATE_SYSTEM;
     }
 
+    let isPrivileged = ExtensionData.getIsPrivileged({
+      signedState,
+      builtIn: false,
+      temporarilyInstalled: !!data.temporarilyInstalled,
+    });
+
     return new Extension(
       {
         id,
@@ -583,6 +594,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
         signedState,
         incognitoOverride: data.incognitoOverride,
         temporarilyInstalled: !!data.temporarilyInstalled,
+        isPrivileged,
         TEST_NO_ADDON_MANAGER: true,
         // By default we set TEST_NO_DELAYED_STARTUP to true
         TEST_NO_DELAYED_STARTUP: !data.delayedStartup,

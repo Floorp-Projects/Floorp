@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
@@ -480,17 +481,22 @@ class AddonInternal {
     return this.isCompatibleWith();
   }
 
-  // This matches Extension.isPrivileged with the exception of temporarily installed extensions.
   get isPrivileged() {
-    return (
-      this.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
-      this.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
-      this.location.isBuiltin
-    );
+    return ExtensionData.getIsPrivileged({
+      signedState: this.signedState,
+      builtIn: this.location.isBuiltin,
+      temporarilyInstalled: this.location.isTemporary,
+    });
   }
 
   get hidden() {
-    return this.location.hidden || (this._hidden && this.isPrivileged) || false;
+    return (
+      this.location.hidden ||
+      // The hidden flag is intended to only be used for features that are part
+      // of the application. Temporary add-ons should not be hidden.
+      (this._hidden && this.isPrivileged && !this.location.isTemporary) ||
+      false
+    );
   }
 
   set hidden(val) {

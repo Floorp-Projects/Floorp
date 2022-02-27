@@ -530,9 +530,10 @@ const manifestTypes = new Map([
  * `loadManifest` has been called, and completed.
  */
 class ExtensionData {
-  constructor(rootURI) {
+  constructor(rootURI, isPrivileged = false) {
     this.rootURI = rootURI;
     this.resourceURL = rootURI.spec;
+    this.isPrivileged = isPrivileged;
 
     this.manifest = null;
     this.type = null;
@@ -551,6 +552,38 @@ class ExtensionData {
     this.errors = [];
     this.warnings = [];
     this.eventPagesEnabled = eventPagesEnabled;
+  }
+
+  /**
+   * A factory function that allows the construction of ExtensionData, with
+   * the isPrivileged flag computed asynchronously.
+   *
+   * @param {nsIURI} rootURI
+   *  The URI pointing to the extension root.
+   * @param {function(type, id)} checkPrivileged
+   *  An (async) function that takes the addon type and addon ID and returns
+   *  whether the given add-on is privileged.
+   * @returns {ExtensionData}
+   */
+  static async constructAsync({ rootURI, checkPrivileged }) {
+    let extension = new ExtensionData(rootURI);
+    // checkPrivileged depends on the extension type and id.
+    await extension.initializeAddonTypeAndID();
+    let { type, id } = extension;
+    // Map the extension type to the type name used by the add-on manager.
+    // TODO bug 1757084: Remove this.
+    type = type == "langpack" ? "locale" : type;
+    extension.isPrivileged = await checkPrivileged(type, id);
+    return extension;
+  }
+
+  static getIsPrivileged({ signedState, builtIn, temporarilyInstalled }) {
+    return (
+      signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
+      signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
+      builtIn ||
+      (AddonSettings.EXPERIMENTS_ENABLED && temporarilyInstalled)
+    );
   }
 
   get builtinMessages() {
@@ -725,25 +758,8 @@ class ExtensionData {
     });
   }
 
-  canCheckSignature() {
-    // ExtensionData instances can't check the signature because it is not yet
-    // available when XPIProvider does use it to load the extension manifest.
-    //
-    // This method will return true for the ExtensionData subclasses (like
-    // the Extension class) to enable the additional validation that would require
-    // the signature to be available (e.g. to check if the extension is allowed to
-    // use a privileged permission).
-    return this.constructor != ExtensionData;
-  }
-
   get restrictSchemes() {
-    // mozillaAddons permission is only allowed for privileged addons and
-    // filtered out if the extension isn't privileged.
-    // When the manifest is loaded by an explicit ExtensionData class
-    // instance, the signature data isn't available yet and this helper
-    // would always return false, but it will return true when appropriate
-    // (based on the isPrivileged boolean property) for the Extension class.
-    return !this.hasPermission("mozillaAddons");
+    return !(this.isPrivileged && this.hasPermission("mozillaAddons"));
   }
 
   /**
@@ -1027,17 +1043,50 @@ class ExtensionData {
     return Schemas.normalize(this.rawManifest, manifestType, context);
   }
 
+  async initializeAddonTypeAndID() {
+    if (this.type) {
+      // Already initialized.
+      return;
+    }
+    this.rawManifest = await this.readJSON("manifest.json");
+    let manifest = this.rawManifest;
+
+    if (manifest.theme) {
+      this.type = "theme";
+    } else if (manifest.langpack_id) {
+      // TODO bug 1757084: This should be "locale".
+      this.type = "langpack";
+    } else if (manifest.dictionaries) {
+      this.type = "dictionary";
+    } else if (manifest.site_permissions) {
+      this.type = "sitepermission";
+    } else {
+      this.type = "extension";
+    }
+
+    if (!this.id) {
+      let bss =
+        manifest.browser_specific_settings?.gecko ||
+        manifest.applications?.gecko;
+      let id = bss?.id;
+      // This is a basic type check.
+      // When parseManifest is called, the ID is validated more thoroughly
+      // because the id is defined to be an ExtensionID type in
+      // toolkit/components/extensions/schemas/manifest.json
+      if (typeof id == "string") {
+        this.id = id;
+      }
+    }
+  }
+
   // eslint-disable-next-line complexity
   async parseManifest() {
-    let [manifest] = await Promise.all([
-      this.readJSON("manifest.json"),
-      Management.lazyInit(),
-    ]);
+    await Promise.all([this.initializeAddonTypeAndID(), Management.lazyInit()]);
 
+    let manifest = this.rawManifest;
     this.manifest = manifest;
-    this.rawManifest = manifest;
 
-    if (manifest && manifest.default_locale) {
+    if (manifest.default_locale) {
       await this.initLocale();
     }
 
@@ -1045,25 +1094,13 @@ class ExtensionData {
     // have isPrivileged, so ignore fluent localization in that pass.
     // This means that fluent cannot be used to localize manifest properties
     // read from the add-on manager (e.g., author, homepage, etc.)
-    if (manifest && manifest.l10n_resources && "isPrivileged" in this) {
+    if (manifest.l10n_resources && this.constructor != ExtensionData) {
       if (this.isPrivileged) {
         this.fluentL10n = new Localization(manifest.l10n_resources, true);
       } else {
         // Warn but don't make this fatal.
         Cu.reportError("Ignoring l10n_resources in unprivileged extension");
       }
-    }
-
-    if (this.manifest.theme) {
-      this.type = "theme";
-    } else if (this.manifest.langpack_id) {
-      this.type = "langpack";
-    } else if (this.manifest.dictionaries) {
-      this.type = "dictionary";
-    } else if (this.manifest.site_permissions) {
-      this.type = "sitepermission";
-    } else {
-      this.type = "extension";
     }
 
     let normalized = await this._getNormalizedManifest();
@@ -1096,8 +1133,6 @@ class ExtensionData {
       this.logWarning("Event pages are not currently supported.");
     }
 
-    this.id ??= manifest.applications?.gecko?.id;
-
     let apiNames = new Set();
     let dependencies = new Set();
     let originPermissions = new Set();
@@ -1106,6 +1141,9 @@ class ExtensionData {
 
     let schemaPromises = new Map();
 
+    // Note: this.id and this.type were computed in initializeAddonTypeAndID.
+    // The format of `this.id` was confirmed to be a valid extensionID by the
+    // Schema validation as part of the _getNormalizedManifest() call.
     let result = {
       apiNames,
       dependencies,
@@ -1148,18 +1186,6 @@ class ExtensionData {
         } else if (type.api) {
           apiNames.add(type.api);
         } else if (type.invalid) {
-          if (!this.canCheckSignature() && PRIVILEGED_PERMS.has(perm)) {
-            // Do not emit the warning if the invalid permission is a privileged one
-            // and the current instance can't yet check for a valid signature
-            // (see Bug 1675858 and the inline comment inside the canCheckSignature
-            // method for more details).
-            //
-            // This parseManifest method will be called again on the Extension class
-            // instance, which will have the signature available and the invalid
-            // extension permission warnings will be collected and logged if necessary.
-            continue;
-          }
-
           this.manifestWarning(`Invalid extension permission: ${perm}`);
           continue;
         }
@@ -1999,6 +2025,7 @@ class BootstrapScope {
     return Management.emit("update", {
       id: data.id,
       resourceURI: data.resourceURI,
+      isPrivileged: data.isPrivileged,
     });
   }
 
@@ -2101,7 +2128,7 @@ let pendingExtensions = new Map();
  */
 class Extension extends ExtensionData {
   constructor(addonData, startupReason) {
-    super(addonData.resourceURI);
+    super(addonData.resourceURI, addonData.isPrivileged);
 
     this.startupStates = new Set();
     this.state = "Not started";
@@ -2343,15 +2370,6 @@ class Extension extends ExtensionData {
 
   get manifestCacheKey() {
     return [this.id, this.version, Services.locale.appLocaleAsBCP47];
-  }
-
-  get isPrivileged() {
-    return (
-      this.addonData.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
-      this.addonData.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
-      this.addonData.builtIn ||
-      (AddonSettings.EXPERIMENTS_ENABLED && this.temporarilyInstalled)
-    );
   }
 
   get temporarilyInstalled() {
