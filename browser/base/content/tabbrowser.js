@@ -49,14 +49,14 @@
       this.tabContainer.init();
       this._setupInitialBrowserAndTab();
 
-      if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
-        this.tabpanels.style.backgroundColor = "-moz-default-background-color";
-      } else if (
+      if (
         Services.prefs.getIntPref("browser.display.document_color_use") == 2
       ) {
-        this.tabpanels.style.backgroundColor = Services.prefs.getCharPref(
-          "browser.display.background_color"
-        );
+        this.tabpanels.style.backgroundColor = Services.prefs.getBoolPref(
+          "browser.display.use_system_colors"
+        )
+          ? "canvas"
+          : Services.prefs.getCharPref("browser.display.background_color");
       }
 
       this._setFindbarData();
