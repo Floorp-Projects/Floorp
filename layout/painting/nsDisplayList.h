@@ -896,14 +896,17 @@ class nsDisplayListBuilder {
     return mPool.Allocate(aId, aSize);
   }
   void* Allocate(size_t aSize, DisplayItemType aType) {
-    static_assert(size_t(DisplayItemType::TYPE_ZERO) ==
-                      size_t(DisplayListArenaObjectId::CLIPCHAIN),
-                  "");
 #define DECLARE_DISPLAY_ITEM_TYPE(name_, ...)                \
   static_assert(size_t(DisplayItemType::TYPE_##name_) ==     \
                     size_t(DisplayListArenaObjectId::name_), \
                 "");
 #include "nsDisplayItemTypesList.h"
+    static_assert(size_t(DisplayItemType::TYPE_MAX) ==
+                      size_t(DisplayListArenaObjectId::CLIPCHAIN),
+                  "");
+    static_assert(size_t(DisplayItemType::TYPE_MAX) + 1 ==
+                      size_t(DisplayListArenaObjectId::LISTNODE),
+                  "");
 #undef DECLARE_DISPLAY_ITEM_TYPE
     return Allocate(aSize, DisplayListArenaObjectId(size_t(aType)));
   }
@@ -1730,8 +1733,6 @@ class nsDisplayListBuilder {
    */
   void ReuseDisplayItem(nsDisplayItem* aItem);
 
-  ListArenaAllocator& GetListAllocator() { return mListPool; }
-
  private:
   bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aVisibleRect,
@@ -1930,8 +1931,6 @@ class nsDisplayListBuilder {
 
   // Stores reusable items collected during display list preprocessing.
   nsTHashSet<nsDisplayItem*> mReuseableItems;
-
-  ArenaAllocator<4096, 8> mListPool;
 };
 
 // All types are defined in nsDisplayItemTypes.h
@@ -3050,8 +3049,7 @@ class nsDisplayList {
   const_iterator begin() const { return iterator(mBottom); }
   const_iterator end() const { return iterator(nullptr); }
 
-  explicit nsDisplayList(nsDisplayListBuilder* aBuilder)
-      : mPool(aBuilder->GetListAllocator()) {}
+  explicit nsDisplayList(nsDisplayListBuilder* aBuilder) : mBuilder(aBuilder) {}
 
   nsDisplayList() = delete;
   nsDisplayList(const nsDisplayList&) = delete;
@@ -3070,12 +3068,12 @@ class nsDisplayList {
       : mBottom(aOther.mBottom),
         mTop(aOther.mTop),
         mLength(aOther.mLength),
-        mPool(aOther.mPool) {
+        mBuilder(aOther.mBuilder) {
     aOther.SetEmpty();
   }
 
   nsDisplayList& operator=(nsDisplayList&& aOther) {
-    MOZ_RELEASE_ASSERT(&mPool == &aOther.mPool);
+    MOZ_RELEASE_ASSERT(mBuilder == aOther.mBuilder);
 
     if (this != &aOther) {
       MOZ_RELEASE_ASSERT(IsEmpty());
@@ -3132,7 +3130,7 @@ class nsDisplayList {
    */
   void AppendToTop(nsDisplayList* aList) {
     MOZ_ASSERT(aList != this);
-    MOZ_RELEASE_ASSERT(&mPool == &aList->mPool);
+    MOZ_RELEASE_ASSERT(mBuilder == aList->mBuilder);
 
     if (aList->IsEmpty()) {
       return;
@@ -3343,13 +3341,14 @@ class nsDisplayList {
 
  private:
   inline Node* Allocate(nsDisplayItem* aItem) {
-    void* ptr = mPool.Allocate(sizeof(Node));
+    void* ptr =
+        mBuilder->Allocate(sizeof(Node), DisplayListArenaObjectId::LISTNODE);
     return new (ptr) Node(aItem);
   }
 
   inline void Deallocate(Node* aNode) {
     aNode->~Node();
-    // Memory remains reserved by the arena allocator.
+    mBuilder->Destroy(DisplayListArenaObjectId::LISTNODE, aNode);
   }
 
   void SetEmpty() {
@@ -3361,7 +3360,7 @@ class nsDisplayList {
   Node* mBottom = nullptr;
   Node* mTop = nullptr;
   size_t mLength = 0;
-  ListArenaAllocator& mPool;
+  nsDisplayListBuilder* mBuilder = nullptr;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // This checks that the invariant of display lists owning their items is held.
