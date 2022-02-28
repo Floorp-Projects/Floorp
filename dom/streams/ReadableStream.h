@@ -121,7 +121,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Cancel(
       JSContext* cx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
-  void GetReader(JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
+  void GetReader(const ReadableStreamGetReaderOptions& aOptions,
                  OwningReadableStreamReader& resultReader, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> PipeThrough(
