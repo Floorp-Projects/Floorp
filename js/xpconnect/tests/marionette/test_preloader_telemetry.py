@@ -56,11 +56,11 @@ class TestScriptPreloader(MarionetteTestCase):
             try:
                 if os.stat(path).st_mtime > start_time:
                     return
-                if time.time() > expires:
-                    raise Exception("Never observed file change for {}".format(path))
-                time.sleep(1)
             except OSError:
                 pass
+            if time.time() > expires:
+                raise Exception("Never observed file change for {}".format(path))
+            time.sleep(1)
 
     def wait_for_observer_notification(self, name):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
