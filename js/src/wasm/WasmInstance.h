@@ -146,7 +146,9 @@ class Instance {
 
   // Exception handling support
 
+#ifdef ENABLE_WASM_EXCEPTIONS
   void setPendingException(HandleAnyRef exn);
+#endif
 
   // Constant expression support
 
