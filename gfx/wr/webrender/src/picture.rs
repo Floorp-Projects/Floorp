@@ -6772,7 +6772,7 @@ fn get_surface_rects(
     let task_size_f = clipped.size();
 
     if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
-        let max_dimension = task_size_f.width.max(task_size_f.height);
+        let max_dimension = clipped_local.width().max(clipped_local.height());
 
         surface.raster_spatial_node_index = surface.surface_spatial_node_index;
         surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
