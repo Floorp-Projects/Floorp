@@ -4373,14 +4373,6 @@
   value: "#FFFFFF"
   mirror: never
 
-# Use CreateElementTransaction or not.  This is available only in a couple of
-# release cycles to make it possible to cancel stopping using
-# CreateElementTransaction.
-- name: editor.create_element_transaction.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Default length unit of indent blocks with CSS.
 # TODO: Delete this pref after checking the compatibility with the other
 #       browsers.

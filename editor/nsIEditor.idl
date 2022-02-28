@@ -267,10 +267,9 @@ interface nsIEditor  : nsISupports
   void endTransaction();
 
   /**
-   * While setting the flag with this method to false, CreateElementTransaction,
-   * DeleteRangeTransaction, DeleteTextTransaction, InsertNodeTransaction,
-   * InsertTextTransaction and SplitNodeTransaction won't change Selection
-   * after modifying the DOM tree.
+   * While setting the flag with this method to false,  DeleteRangeTransaction,
+   * DeleteTextTransaction, InsertNodeTransaction, InsertTextTransaction and
+   * SplitNodeTransaction won't change Selection after modifying the DOM tree.
    * Note that calling this with false does not guarantee that Selection won't
    * be changed because other transaction may ignore this flag, editor itself
    * may change selection, and current selection may become invalid after
