@@ -62,7 +62,8 @@ function waitForState(dbg, predicate, msg) {
     info(`Waiting for state change: ${msg || ""}`);
     if (predicate(dbg.store.getState())) {
       info(`Finished waiting for state change: ${msg || ""}`);
-      return resolve();
+      resolve();
+      return;
     }
 
     const unsubscribe = dbg.store.subscribe(() => {
@@ -87,7 +88,7 @@ function waitForState(dbg, predicate, msg) {
  */
 async function waitForSources(dbg, ...sources) {
   if (sources.length === 0) {
-    return Promise.resolve();
+    return;
   }
 
   info(`Waiting on sources: ${sources.join(", ")}`);
@@ -100,6 +101,7 @@ async function waitForSources(dbg, ...sources) {
           `source ${url} exists`
         );
       }
+      return Promise.resolve();
     })
   );
 
@@ -969,7 +971,8 @@ async function invokeWithBreakpoint(
   ]);
 
   if (invokeFailed) {
-    return invokeResult;
+    await invokeResult;
+    return;
   }
 
   assertPausedLocation(dbg);
@@ -1632,7 +1635,7 @@ async function waitForContextMenu(dbg) {
   );
 
   if (popup.state == "open") {
-    return;
+    return popup;
   }
 
   await new Promise(resolve => {
@@ -1789,7 +1792,7 @@ async function clickAtPos(dbg, pos) {
   const tokenEl = await getTokenFromPosition(dbg, pos);
 
   if (!tokenEl) {
-    return false;
+    return;
   }
 
   const { top, left } = tokenEl.getBoundingClientRect();
@@ -1810,7 +1813,7 @@ async function clickAtPos(dbg, pos) {
 async function rightClickAtPos(dbg, pos) {
   const el = await getTokenFromPosition(dbg, pos);
   if (!el) {
-    return false;
+    return;
   }
 
   EventUtils.synthesizeMouseAtCenter(el, { type: "contextmenu" }, dbg.win);
@@ -1820,7 +1823,7 @@ async function hoverAtPos(dbg, pos) {
   const tokenEl = await getTokenFromPosition(dbg, pos);
 
   if (!tokenEl) {
-    return false;
+    return;
   }
 
   info(`Hovering on token ${tokenEl.innerText}`);
@@ -1840,7 +1843,7 @@ async function closePreviewAtPos(dbg, line, column) {
   const tokenEl = await getTokenFromPosition(dbg, pos);
 
   if (!tokenEl) {
-    return false;
+    return;
   }
 
   InspectorUtils.removePseudoClassLock(tokenEl, ":hover");

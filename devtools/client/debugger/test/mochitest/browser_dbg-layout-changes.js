@@ -58,14 +58,19 @@ async function switchHost(dbg, hostType) {
 function resizeToolboxWindow(dbg, host) {
   const { toolbox } = dbg;
   const sizeOption = host.split(":")[1];
+  if (!sizeOption) {
+    return;
+  }
+
   const win = toolbox.win.parent;
 
-  const breakpoint = 800;
+  let breakpoint = 800;
   if (sizeOption == "big" && win.outerWidth <= breakpoint) {
-    return resizeWindow(dbg, breakpoint + 300);
+    breakpoint += 300;
   } else if (sizeOption == "small" && win.outerWidth >= breakpoint) {
-    return resizeWindow(dbg, breakpoint - 300);
+    breakpoint -= 300;
   }
+  resizeWindow(dbg, breakpoint);
 }
 
 function resizeWindow(dbg, width) {
