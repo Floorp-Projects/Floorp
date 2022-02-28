@@ -11,7 +11,7 @@ browser.jar:
 * skin/classic/browser/compacttheme.css
   skin/classic/browser/pageInfo.css
 * skin/classic/browser/webRTC-indicator.css
-  skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
+* skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/monitor-base.png
