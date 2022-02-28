@@ -12747,6 +12747,13 @@
   value: false
   mirror: always
 
+# Whether native GTK context menus are enabled.
+# Disabled because at the very least there's missing custom icon support.
+- name: widget.gtk.native-context-menus
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether we use overlay scrollbars on GTK.
 - name: widget.gtk.overlay-scrollbars.enabled
   type: RelaxedAtomicBool

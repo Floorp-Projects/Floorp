@@ -13,6 +13,7 @@
 #if defined(MOZ_WAYLAND)
 #  include "nsClipboardWayland.h"
 #endif
+#include "nsGtkUtils.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"

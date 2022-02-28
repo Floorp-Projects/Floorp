@@ -9,6 +9,8 @@
 #include "nsISupportsImpl.h"
 #include "Units.h"
 
+class nsPresContext;
+
 namespace mozilla {
 using Modifiers = uint16_t;
 class ErrorResult;
@@ -27,7 +29,8 @@ class NativeMenu {
   // Show this menu as a context menu at the specified position.
   // This call assumes that the popupshowing event for the root popup has
   // already been sent and "approved", i.e. preventDefault() was not called.
-  virtual void ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) = 0;
+  virtual void ShowAsContextMenu(nsPresContext* aPc,
+                                 const CSSIntPoint& aPosition) = 0;
 
   // Close the menu and synchronously fire popuphiding / popuphidden events.
   // Returns false if the menu wasn't open.
