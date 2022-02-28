@@ -5994,10 +5994,15 @@ script.preloader:
   mainthread_recompile:
     bug_numbers:
       - 1364235
+      - 1590385
+      - 1623098
+      - 1649954
+      - 1689257
+      - 1754639
     description:
       How many times we ended up recompiling a script from the script preloader
       on the main thread.
-    expires: "100"
+    expires: "116"
     keyed: false
     kind: uint
     notification_emails:
