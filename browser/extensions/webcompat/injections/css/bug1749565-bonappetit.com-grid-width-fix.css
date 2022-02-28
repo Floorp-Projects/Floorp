@@ -1,9 +1,0 @@
-/**
- * www.bonappetit.com - Content doesn't fit the screen
- * Bug #1749565 - https://bugzilla.mozilla.org/show_bug.cgi?id=1749565
- * WebCompat issue #88752 - https://webcompat.com/issues/88752
- */
-
-.grid-layout--adrail .grid-layout__content {
-  min-width: 0;
-}
