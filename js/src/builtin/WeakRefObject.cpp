@@ -305,7 +305,7 @@ static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
 }
 
 void WeakRefMap::traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock) {
-  mozilla::Maybe<typename Base::Enum> e;
+  mozilla::Maybe<Enum> e;
   for (e.emplace(*this); !e->empty(); e->popFront()) {
     // If target is dying, clear the target field of all weakRefs, and remove
     // the entry from the map.
@@ -331,25 +331,15 @@ void WeakRefMap::traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock) {
 // Like GCVector::sweep, but this method will also update the target in every
 // weakRef in this GCVector.
 void WeakRefHeapPtrVector::traceWeak(JSTracer* trc, JSObject* target) {
-  HeapPtrObject* src = begin();
-  HeapPtrObject* dst = begin();
-  while (src != end()) {
-    auto result = TraceWeakEdge(trc, src, "WeakRef");
+  mutableEraseIf([&](HeapPtrObject& obj) -> bool {
+    auto result = TraceWeakEdge(trc, &obj, "WeakRef");
     if (result.isDead()) {
       UnwrapWeakRef(result.initialTarget())->clearTarget();
     } else {
       UnwrapWeakRef(result.finalTarget())->setTargetUnbarriered(target);
-
-      if (src != dst) {
-        *dst = std::move(*src);
-      }
-      dst++;
     }
-    src++;
-  }
-
-  MOZ_ASSERT(dst <= end());
-  shrinkBy(end() - dst);
+    return result.isDead();
+  });
 }
 
 }  // namespace js
