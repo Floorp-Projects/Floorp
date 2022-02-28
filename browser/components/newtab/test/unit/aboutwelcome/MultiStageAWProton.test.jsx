@@ -42,35 +42,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
       assert.equal(wrapper.find("main").prop("pos"), "corner");
     });
-
-    it("should autoClose on last screen", () => {
-      const fakeWindow = {
-        location: {
-          href: "test",
-        },
-        document: {
-          querySelector: () => {
-            return { className: "dialog-last" };
-          },
-        },
-      };
-      const SCREEN_PROPS = {
-        order: 1,
-        autoClose: true,
-        totalNumberOfScreens: 1,
-        content: {
-          title: "test title",
-          subtitle: "test subtitle",
-        },
-        windowObj: fakeWindow,
-      };
-      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
-      assert.ok(wrapper.exists());
-      assert.equal(fakeWindow.location.href, "test");
-
-      clock.tick(20001);
-      assert.equal(fakeWindow.location.href, "about:home");
-    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
@@ -143,7 +114,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should have an image caption", async () => {
       const data = await prepConfig();
 
-      assert.property(data.screens[0].content, "help_text");
+      assert.property(data.screens[0].content.help_text, "text");
     });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
