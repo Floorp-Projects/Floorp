@@ -333,7 +333,7 @@ void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
-    JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv) {
+    ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1. Let reader be a new ReadableStreamBYOBReader.
   RefPtr<ReadableStreamBYOBReader> reader =
       new ReadableStreamBYOBReader(aStream->GetParentObject());
