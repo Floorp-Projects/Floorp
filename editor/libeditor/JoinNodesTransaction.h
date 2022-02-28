@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef JoinNodeTransaction_h
-#define JoinNodeTransaction_h
+#ifndef JoinNodesTransaction_h
+#define JoinNodesTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // for EditTransactionBase, etc.
-#include "nsCOMPtr.h"                     // for nsCOMPtr
+#include "EditTransactionBase.h"  // for EditTransactionBase, etc.
+
+#include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"    // for REFNSIID
 #include "nscore.h"  // for NS_IMETHOD
@@ -25,10 +26,10 @@ class HTMLEditor;
  * children of E2.  After DoTransaction() and RedoTransaction(), E1 is removed
  * from the content tree and E2 remains.
  */
-class JoinNodeTransaction final : public EditTransactionBase {
+class JoinNodesTransaction final : public EditTransactionBase {
  protected:
-  JoinNodeTransaction(HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
-                      nsIContent& aRightContent);
+  JoinNodesTransaction(HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
+                       nsIContent& aRightContent);
 
  public:
   /**
@@ -39,7 +40,7 @@ class JoinNodeTransaction final : public EditTransactionBase {
    * @param aLeftContent    The first of two nodes to join.
    * @param aRightContent   The second of two nodes to join.
    */
-  static already_AddRefed<JoinNodeTransaction> MaybeCreate(
+  static already_AddRefed<JoinNodesTransaction> MaybeCreate(
       HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
       nsIContent& aRightContent);
 
@@ -49,17 +50,17 @@ class JoinNodeTransaction final : public EditTransactionBase {
    */
   bool CanDoIt() const;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodeTransaction,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodesTransaction,
                                            EditTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTRANSACTIONBASE
-  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(JoinNodeTransaction)
+  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(JoinNodesTransaction)
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
   friend std::ostream& operator<<(std::ostream& aStream,
-                                  const JoinNodeTransaction& aTransaction);
+                                  const JoinNodesTransaction& aTransaction);
 
  protected:
   RefPtr<HTMLEditor> mHTMLEditor;
@@ -80,4 +81,4 @@ class JoinNodeTransaction final : public EditTransactionBase {
 
 }  // namespace mozilla
 
-#endif  // #ifndef JoinNodeTransaction_h
+#endif  // #ifndef JoinNodesTransaction_h

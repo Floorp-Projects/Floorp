@@ -69,7 +69,7 @@ UNIFIED_SOURCES += [
     "InsertNodeTransaction.cpp",
     "InsertTextTransaction.cpp",
     "InternetCiter.cpp",
-    "JoinNodeTransaction.cpp",
+    "JoinNodesTransaction.cpp",
     "PlaceholderTransaction.cpp",
     "ReplaceTextTransaction.cpp",
     "SelectionState.cpp",

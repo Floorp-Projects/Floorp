@@ -3,13 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "JoinNodeTransaction.h"
+#include "JoinNodesTransaction.h"
 
+#include "HTMLEditor.h"  // for HTMLEditor
 #include "HTMLEditUtils.h"
-#include "mozilla/HTMLEditor.h"  // for HTMLEditor
+
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Text.h"
+
 #include "nsAString.h"
 #include "nsDebug.h"          // for NS_ASSERTION, etc.
 #include "nsError.h"          // for NS_ERROR_NULL_POINTER, etc.
@@ -21,27 +23,32 @@ namespace mozilla {
 using namespace dom;
 
 // static
-already_AddRefed<JoinNodeTransaction> JoinNodeTransaction::MaybeCreate(
+already_AddRefed<JoinNodesTransaction> JoinNodesTransaction::MaybeCreate(
     HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
     nsIContent& aRightContent) {
-  RefPtr<JoinNodeTransaction> transaction =
-      new JoinNodeTransaction(aHTMLEditor, aLeftContent, aRightContent);
+  RefPtr<JoinNodesTransaction> transaction =
+      new JoinNodesTransaction(aHTMLEditor, aLeftContent, aRightContent);
   if (NS_WARN_IF(!transaction->CanDoIt())) {
     return nullptr;
   }
   return transaction.forget();
 }
 
-JoinNodeTransaction::JoinNodeTransaction(HTMLEditor& aHTMLEditor,
-                                         nsIContent& aLeftContent,
-                                         nsIContent& aRightContent)
+JoinNodesTransaction::JoinNodesTransaction(HTMLEditor& aHTMLEditor,
+                                           nsIContent& aLeftContent,
+                                           nsIContent& aRightContent)
     : mHTMLEditor(&aHTMLEditor),
       mLeftContent(&aLeftContent),
       mRightContent(&aRightContent),
-      mOffset(0) {}
+      mOffset(0) {
+  // printf("JoinNodesTransaction size: %zu\n", sizeof(JoinNodesTransaction));
+  static_assert(sizeof(JoinNodesTransaction) <= 64,
+                "Transaction classes may be created a lot and may be alive "
+                "long so that keep the foot print smaller as far as possible");
+}
 
 std::ostream& operator<<(std::ostream& aStream,
-                         const JoinNodeTransaction& aTransaction) {
+                         const JoinNodesTransaction& aTransaction) {
   aStream << "{ mLeftContent=" << aTransaction.mLeftContent.get();
   if (aTransaction.mLeftContent) {
     aStream << " (" << *aTransaction.mLeftContent << ")";
@@ -59,14 +66,14 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodeTransaction, EditTransactionBase,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodesTransaction, EditTransactionBase,
                                    mHTMLEditor, mLeftContent, mRightContent,
                                    mParentNode)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodeTransaction)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodesTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-bool JoinNodeTransaction::CanDoIt() const {
+bool JoinNodesTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mLeftContent) || NS_WARN_IF(!mRightContent) ||
       NS_WARN_IF(!mHTMLEditor) || !mLeftContent->GetParentNode()) {
     return false;
@@ -76,9 +83,9 @@ bool JoinNodeTransaction::CanDoIt() const {
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from
 // the content tree and right node remains.
-NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
+NS_IMETHODIMP JoinNodesTransaction::DoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p JoinNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
   if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mLeftContent) ||
@@ -113,9 +120,9 @@ NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
 
 // XXX: What if instead of split, we just deleted the unneeded children of
 //     mRight and re-inserted mLeft?
-NS_IMETHODIMP JoinNodeTransaction::UndoTransaction() {
+NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p JoinNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
   if (NS_WARN_IF(!mParentNode) || NS_WARN_IF(!mLeftContent) ||
@@ -134,9 +141,9 @@ NS_IMETHODIMP JoinNodeTransaction::UndoTransaction() {
   return splitNodeResult.Rv();
 }
 
-NS_IMETHODIMP JoinNodeTransaction::RedoTransaction() {
+NS_IMETHODIMP JoinNodesTransaction::RedoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
-          ("%p JoinNodeTransaction::%s this=%s", this, __FUNCTION__,
+          ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
   return DoTransaction();
 }
