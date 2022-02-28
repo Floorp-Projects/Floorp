@@ -1082,7 +1082,7 @@ void MessageChannel::PeekMessages(
 }
 
 void MessageChannel::ProcessPendingRequests(
-    AutoEnterTransaction& aTransaction) {
+    ActorLifecycleProxy* aProxy, AutoEnterTransaction& aTransaction) {
   mMonitor->AssertCurrentThreadOwns();
 
   AssertMaybeDeferredCountCorrect();
@@ -1140,7 +1140,7 @@ void MessageChannel::ProcessPendingRequests(
     // loop around to check for more afterwards.
 
     for (auto it = toProcess.begin(); it != toProcess.end(); it++) {
-      ProcessPendingRequest(std::move(*it));
+      ProcessPendingRequest(aProxy, std::move(*it));
     }
   }
 
@@ -1158,6 +1158,8 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
   mMonitor->AssertNotCurrentThreadOwns();
   MOZ_RELEASE_ASSERT(!mIsSameThreadChannel,
                      "sync send over same-thread channel will deadlock!");
+
+  RefPtr<ActorLifecycleProxy> proxy = Listener()->GetLifecycleProxy();
 
 #ifdef OS_WIN
   SyncStackFrame frame(this);
@@ -1263,7 +1265,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
 
   while (true) {
     MOZ_RELEASE_ASSERT(!transact.IsCanceled());
-    ProcessPendingRequests(transact);
+    ProcessPendingRequests(proxy, transact);
     if (transact.IsComplete()) {
       break;
     }
@@ -1369,7 +1371,8 @@ bool MessageChannel::HasPendingEvents() {
   return Connected() && !mPending.isEmpty();
 }
 
-bool MessageChannel::ProcessPendingRequest(Message&& aUrgent) {
+bool MessageChannel::ProcessPendingRequest(ActorLifecycleProxy* aProxy,
+                                           Message&& aUrgent) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
@@ -1379,7 +1382,7 @@ bool MessageChannel::ProcessPendingRequest(Message&& aUrgent) {
   // keep the error relevant information
   msgid_t msgType = aUrgent.type();
 
-  DispatchMessage(std::move(aUrgent));
+  DispatchMessage(aProxy, std::move(aUrgent));
   if (!Connected()) {
     ReportConnectionError("ProcessPendingRequest", msgType);
     return false;
@@ -1418,7 +1421,8 @@ bool MessageChannel::ShouldRunMessage(const Message& aMsg) {
   return true;
 }
 
-void MessageChannel::RunMessage(MessageTask& aTask) {
+void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
+                                MessageTask& aTask) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
@@ -1455,7 +1459,7 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
     mMaybeDeferredPendingCount--;
   }
 
-  DispatchMessage(std::move(msg));
+  DispatchMessage(aProxy, std::move(msg));
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable,
@@ -1472,6 +1476,11 @@ MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
 nsresult MessageChannel::MessageTask::Run() {
   mMonitor->AssertNotCurrentThreadOwns();
 
+  // Drop the toplevel actor's lifecycle proxy outside of our monitor if we take
+  // it, as destroying our ActorLifecycleProxy reference can acquire the
+  // monitor.
+  RefPtr<ActorLifecycleProxy> proxy;
+
   MonitorAutoLock lock(*mMonitor);
 
   // In case we choose not to run this message, we may need to be able to Post
@@ -1483,7 +1492,8 @@ nsresult MessageChannel::MessageTask::Run() {
   }
 
   Channel()->AssertWorkerThread();
-  Channel()->RunMessage(*this);
+  proxy = Channel()->Listener()->GetLifecycleProxy();
+  Channel()->RunMessage(proxy, *this);
   return NS_OK;
 }
 
@@ -1555,11 +1565,10 @@ MessageChannel::MessageTask::GetType(uint32_t* aType) {
   return NS_OK;
 }
 
-void MessageChannel::DispatchMessage(Message&& aMsg) {
+void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
+                                     Message&& aMsg) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
-
-  RefPtr<ActorLifecycleProxy> listenerProxy = mListener->GetLifecycleProxy();
 
   Maybe<AutoNoJSAPI> nojsapi;
   if (NS_IsMainThread() && CycleCollectedJSContext::Get()) {
@@ -1585,9 +1594,9 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
       mListener->ArtificialSleep();
 
       if (aMsg.is_sync()) {
-        DispatchSyncMessage(listenerProxy, aMsg, *getter_Transfers(reply));
+        DispatchSyncMessage(aProxy, aMsg, *getter_Transfers(reply));
       } else {
-        DispatchAsyncMessage(listenerProxy, aMsg);
+        DispatchAsyncMessage(aProxy, aMsg);
       }
 
       mListener->ArtificialSleep();
