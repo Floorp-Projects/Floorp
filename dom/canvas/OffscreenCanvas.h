@@ -88,7 +88,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   uint32_t Height() const { return mHeight; }
   void SetWidth(uint32_t aWidth, ErrorResult& aRv);
   void SetHeight(uint32_t aHeight, ErrorResult& aRv);
-  void UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight);
 
   void GetContext(JSContext* aCx, const OffscreenRenderingContextId& aContextId,
                   JS::Handle<JS::Value> aContextOptions,
@@ -137,9 +136,13 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
       CanvasContextType aContextType) override;
 
-  void SetNeutered() { mNeutered = true; }
+  void SetNeutered() {
+    mWidth = 0;
+    mHeight = 0;
+    mNeutered = true;
+  }
 
-  bool IsNeutered() const { return mNeutered; }
+  bool MayNeuter() const { return !mNeutered && !mCurrentContext; }
 
   void SetWriteOnly() { mIsWriteOnly = true; }
 
