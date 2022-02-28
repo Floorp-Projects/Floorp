@@ -17,8 +17,29 @@ namespace js {
 
 class FinalizationRegistryObject;
 class FinalizationRecordObject;
+class WeakRefObject;
 
 namespace gc {
+
+// WeakRefHeapPtrVector is a GCVector of WeakRefObjects.
+class WeakRefHeapPtrVector
+    : public GCVector<js::HeapPtrObject, 1, js::ZoneAllocPolicy> {
+ public:
+  // Called to update pointer to and possibly clear the target of each
+  // WeakRefObject.
+  using GCVector::GCVector;
+  void traceWeak(JSTracer* trc, JSObject* target);
+};
+
+// WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
+// WeakRef to the list of JS WeakRefs.
+class WeakRefMap
+    : public GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
+                       MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy> {
+ public:
+  using GCHashMap::GCHashMap;
+  void traceWeak(JSTracer* trc);
+};
 
 // Per-zone data structures to support FinalizationRegistry and WeakRef.
 class FinalizationObservers {
@@ -48,20 +69,29 @@ class FinalizationObservers {
   using WrapperWeakSet = ObjectValueWeakMap;
   WrapperWeakSet crossZoneWrappers;
 
+  // A map of weak ref targets to a vector of weak refs that are observing the
+  // target. The weak refs may be in other zones and are wrapped appropriately.
+  WeakRefMap weakRefMap;
+
  public:
   explicit FinalizationObservers(Zone* zone);
   ~FinalizationObservers();
 
+  // FinalizationRegistry support:
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
   bool addRecord(HandleObject target, HandleObject record);
-
   void clearRecords();
-
-  void traceRoots(JSTracer* trc);
-  void traceWeakEdges(JSTracer* trc);
 
   void updateForRemovedRecord(JSObject* wrapper,
                               FinalizationRecordObject* record);
+
+  // WeakRef support:
+  bool addWeakRefTarget(HandleObject target, HandleObject weakRef);
+
+  bool unregisterWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
+
+  void traceRoots(JSTracer* trc);
+  void traceWeakEdges(JSTracer* trc);
 
  private:
   bool addCrossZoneWrapper(JSObject* wrapper);

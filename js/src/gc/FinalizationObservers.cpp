@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Finalization registry GC implementation.
+ * GC support for FinalizationRegistry and WeakRef objects.
  */
 
 #include "gc/FinalizationObservers.h"
@@ -13,6 +13,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/FinalizationRegistryObject.h"
+#include "builtin/WeakRefObject.h"
 #include "gc/GCInternals.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
@@ -27,7 +28,11 @@ using namespace js;
 using namespace js::gc;
 
 FinalizationObservers::FinalizationObservers(Zone* zone)
-    : zone(zone), registries(zone), recordMap(zone), crossZoneWrappers(zone) {}
+    : zone(zone),
+      registries(zone),
+      recordMap(zone),
+      crossZoneWrappers(zone),
+      weakRefMap(zone) {}
 
 FinalizationObservers::~FinalizationObservers() {
   MOZ_ASSERT(registries.empty());
@@ -165,7 +170,8 @@ void FinalizationObservers::clearRecords() {
   crossZoneWrappers.clear();
 }
 
-void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
+void GCRuntime::traceWeakFinalizationObserverEdges(JSTracer* trc, Zone* zone) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(trc->runtime()));
   FinalizationObservers* observers = zone->finalizationObservers();
   if (observers) {
     observers->traceWeakEdges(trc);
@@ -179,6 +185,9 @@ void FinalizationObservers::traceRoots(JSTracer* trc) {
 }
 
 void FinalizationObservers::traceWeakEdges(JSTracer* trc) {
+  // Sweep weak ref data.
+  weakRefMap.traceWeak(trc);
+
   // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
 
@@ -270,8 +279,8 @@ void GCRuntime::nukeFinalizationRecordWrapper(
     JSObject* wrapper, FinalizationRecordObject* record) {
   if (record->isInRecordMap()) {
     FinalizationRegistryObject::unregisterRecord(record);
-    wrapper->zone()->finalizationObservers()->updateForRemovedRecord(wrapper,
-                                                                     record);
+    FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
+    observers->updateForRemovedRecord(wrapper, record);
   }
 }
 
@@ -297,6 +306,93 @@ void GCRuntime::queueFinalizationRegistryForCleanup(
   AutoTouchingGrayThings atgt;
 
   queue->setQueuedForCleanup(true);
+}
+
+bool GCRuntime::registerWeakRef(HandleObject target, HandleObject weakRef) {
+  MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+  MOZ_ASSERT(UncheckedUnwrap(weakRef)->is<WeakRefObject>());
+  MOZ_ASSERT(target->compartment() == weakRef->compartment());
+
+  Zone* zone = target->zone();
+  return zone->ensureFinalizationObservers() &&
+         zone->finalizationObservers()->addWeakRefTarget(target, weakRef);
+}
+
+bool FinalizationObservers::addWeakRefTarget(HandleObject target,
+                                             HandleObject weakRef) {
+  auto ptr = weakRefMap.lookupForAdd(target);
+  if (!ptr && !weakRefMap.add(ptr, target, WeakRefHeapPtrVector(zone))) {
+    return false;
+  }
+
+  auto& refs = ptr->value();
+  return refs.emplaceBack(weakRef);
+}
+
+void GCRuntime::nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef) {
+  FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
+  if (!observers) {
+    return;
+  }
+
+  if (observers->unregisterWeakRefWrapper(wrapper, weakRef)) {
+    weakRef->clearTarget();
+  }
+}
+
+bool FinalizationObservers::unregisterWeakRefWrapper(JSObject* wrapper,
+                                                     WeakRefObject* weakRef) {
+  JSObject* target = weakRef->target();
+  MOZ_ASSERT(target);
+
+  bool removed = false;
+  WeakRefHeapPtrVector& weakRefs = weakRefMap.lookup(target)->value();
+  weakRefs.eraseIf([wrapper, &removed](JSObject* obj) {
+    bool remove = obj == wrapper;
+    if (remove) {
+      removed = true;
+    }
+    return remove;
+  });
+
+  return removed;
+}
+
+static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
+  MOZ_ASSERT(!JS_IsDeadWrapper(obj));
+  obj = UncheckedUnwrapWithoutExpose(obj);
+  return &obj->as<WeakRefObject>();
+}
+
+void WeakRefMap::traceWeak(JSTracer* trc) {
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    // If target is dying, clear the target field of all weakRefs, and remove
+    // the entry from the map.
+    auto result = TraceWeakEdge(trc, &e.front().mutableKey(), "WeakRef target");
+    if (result.isDead()) {
+      for (JSObject* obj : e.front().value()) {
+        UnwrapWeakRef(obj)->clearTarget();
+      }
+      e.removeFront();
+    } else {
+      // Update the target field after compacting.
+      e.front().value().traceWeak(trc, result.finalTarget());
+    }
+  }
+}
+
+// Like GCVector::sweep, but this method will also update the target in every
+// weakRef in this GCVector.
+void WeakRefHeapPtrVector::traceWeak(JSTracer* trc, JSObject* target) {
+  mutableEraseIf([&](HeapPtrObject& obj) -> bool {
+    auto result = TraceWeakEdge(trc, &obj, "WeakRef");
+    if (result.isDead()) {
+      UnwrapWeakRef(result.initialTarget())->clearTarget();
+    } else {
+      UnwrapWeakRef(result.finalTarget())->setTargetUnbarriered(target);
+    }
+    return result.isDead();
+  });
 }
 
 FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)
