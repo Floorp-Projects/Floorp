@@ -56,7 +56,7 @@ void SetUpReadableStreamBYOBReader(JSContext* aCx,
   }
 
   // Step 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
-  ReadableStreamReaderGenericInitialize(aCx, reader, &stream, rv);
+  ReadableStreamReaderGenericInitialize(reader, &stream, rv);
   if (rv.Failed()) {
     return;
   }
