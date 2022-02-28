@@ -44,7 +44,7 @@ already_AddRefed<TeeState> TeeState::Create(JSContext* aCx,
   RefPtr<TeeState> teeState = new TeeState(aCx, aStream, aCloneForBranch2);
 
   RefPtr<ReadableStreamDefaultReader> reader =
-      AcquireReadableStreamDefaultReader(aCx, teeState->GetStream(), aRv);
+      AcquireReadableStreamDefaultReader(teeState->GetStream(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
