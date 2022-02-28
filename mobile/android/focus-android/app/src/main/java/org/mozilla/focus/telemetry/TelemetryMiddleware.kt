@@ -65,9 +65,6 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
                     TelemetryWrapper.downloadDialogDownloadEvent(sentToDownload = false)
                 }
             }
-            else -> {
-                // no-op
-            }
         }
     }
 

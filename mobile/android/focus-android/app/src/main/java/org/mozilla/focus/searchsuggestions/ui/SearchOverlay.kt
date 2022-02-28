@@ -65,9 +65,6 @@ fun SearchOverlay(
                 )
             }
         }
-        else -> {
-            // no-op
-        }
     }
 }
 
