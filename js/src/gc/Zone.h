@@ -37,7 +37,7 @@ class JitZone;
 
 namespace gc {
 
-class FinalizationRegistryZone;
+class FinalizationObservers;
 class ZoneList;
 
 using ZoneComponentFinder = ComponentFinder<JS::Zone>;
@@ -285,8 +285,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneData<js::ShapeZone> shapeZone_;
 
   // Information about finalization registries, created on demand.
-  js::ZoneOrGCTaskData<js::UniquePtr<js::gc::FinalizationRegistryZone>>
-      finalizationRegistryZone_;
+  js::ZoneOrGCTaskData<js::UniquePtr<js::gc::FinalizationObservers>>
+      finalizationObservers_;
 
   js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
 
@@ -624,10 +624,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void sweepEphemeronTablesAfterMinorGC();
 
-  js::gc::FinalizationRegistryZone* finalizationRegistryZone() {
-    return finalizationRegistryZone_.ref().get();
+  js::gc::FinalizationObservers* finalizationObservers() {
+    return finalizationObservers_.ref().get();
   }
-  bool ensureFinalizationRegistryZone();
+  bool ensureFinalizationObservers();
 
   bool isOnList() const;
   Zone* nextZone() const;

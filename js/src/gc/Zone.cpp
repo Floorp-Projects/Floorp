@@ -174,7 +174,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       externalStringCache_(this),
       functionToStringCache_(this),
       shapeZone_(this, this),
-      finalizationRegistryZone_(this),
+      finalizationObservers_(this),
       jitZone_(this, nullptr),
       gcScheduled_(false),
       gcScheduledSaved_(false),
@@ -198,7 +198,7 @@ Zone::~Zone() {
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
   DebugAPI::deleteDebugScriptMap(debugScriptMap);
-  js_delete(finalizationRegistryZone_.ref().release());
+  js_delete(finalizationObservers_.ref().release());
 
   MOZ_ASSERT(gcWeakMapList().isEmpty());
 
@@ -770,8 +770,8 @@ void Zone::traceRootsInMajorGC(JSTracer* trc) {
   // calling this only during major (non-nursery) collections.
   traceScriptTableRoots(trc);
 
-  if (FinalizationRegistryZone* frzone = finalizationRegistryZone()) {
-    frzone->traceRoots(trc);
+  if (FinalizationObservers* observers = finalizationObservers()) {
+    observers->traceRoots(trc);
   }
 }
 
@@ -917,8 +917,8 @@ void Zone::clearScriptLCov(Realm* realm) {
 
 void Zone::clearRootsForShutdownGC() {
   // Finalization callbacks are not called if we're shutting down.
-  if (finalizationRegistryZone()) {
-    finalizationRegistryZone()->clearRecords();
+  if (finalizationObservers()) {
+    finalizationObservers()->clearRecords();
   }
 
   clearKeptObjects();
@@ -938,11 +938,11 @@ bool Zone::keepDuringJob(HandleObject target) {
 
 void Zone::clearKeptObjects() { keptObjects.ref().clear(); }
 
-bool Zone::ensureFinalizationRegistryZone() {
-  if (finalizationRegistryZone_.ref()) {
+bool Zone::ensureFinalizationObservers() {
+  if (finalizationObservers_.ref()) {
     return true;
   }
 
-  finalizationRegistryZone_ = js::MakeUnique<FinalizationRegistryZone>(this);
-  return bool(finalizationRegistryZone_.ref());
+  finalizationObservers_ = js::MakeUnique<FinalizationObservers>(this);
+  return bool(finalizationObservers_.ref());
 }
