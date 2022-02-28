@@ -48,6 +48,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Намоиш додани ҳамаи хатбаракҳои нигоҳдошташуда</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Тоза кардан</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s аз ҷониби Mozilla истеҳсол карда шудааст.</string>
 
@@ -70,7 +73,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Шумо метавонед Firefox-ро танзим кунед, ки он дар барномаҳо пайвандҳоро ба таври худкор кушояд.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Шумо метавонед Firefox-ро танзим кунед, ки он дар барномаҳо пайвандҳоро ба таври худкор кушояд.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Шумо метавонед %1$s-ро танзим кунед, ки он дар барномаҳо пайвандҳоро ба таври худкор кушояд.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Гузариш ба танзимот</string>
     <!-- Text for the negative action button -->
@@ -99,7 +104,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Пас аз як моҳ ба таври худкор пӯшида шавад?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox метавонад варақаҳоеро, ки шумо дар давоми як моҳи охир надидаед, пӯшонад.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox метавонад варақаҳоеро, ки шумо дар давоми як моҳи охир надидаед, пӯшонад.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s метавонад варақаҳоеро, ки шумо дар давоми як моҳи охир надидаед, пӯшонад.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Пӯшидан</string>
 
@@ -130,6 +138,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d сомона</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Тоза кардан</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -248,12 +260,16 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Дар Firefox чӣ нав аст</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Дар Firefox чӣ нав аст</string>
 
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Дар %1$s чӣ нав аст</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Акнун ба он сомонае, ки шумо ба қарибӣ тамошо кардаед, баргардонидан осонтар аст.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Шахсисозии саҳифаи асосии Firefox</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Шахсисозии саҳифаи асосии Firefox</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Шахсисозии саҳифаи асосии %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Ба варақаҳои кушода, хатбаракҳо ва таърихи тамошокунӣ гузаред.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -271,7 +287,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Кушодани варақаи нави Firefox</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Кушодани варақаи нави Firefox</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Кушодани варақаи нави %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Ҷустуҷӯ</string>
     <!-- Text preview for larger sized widgets -->
@@ -646,7 +664,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Фаъол</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Баъзе вақт Firefox метавонад омӯзишҳоро насб ва иҷро намояд.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Баъзе вақт Firefox метавонад омӯзишҳоро насб ва иҷро намояд.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">Баъзе вақт %1$s метавонад омӯзишҳоро насб ва иҷро намояд.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Маълумоти бештар</string>
 
@@ -1156,9 +1176,12 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Хуш омадед ба %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Firefox-ро байни дастгоҳҳо ҳамоҳанг кунед</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Firefox-ро байни дастгоҳҳо ҳамоҳанг кунед</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">%1$s-ро байни дастгоҳҳо ҳамоҳанг кунед</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Хатбаракҳо, таърих ва ниҳонвожаҳоро ба Firefox дар ин дастгоҳ интиқол диҳед.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Хатбаракҳо, таърих ва ниҳонвожаҳоро ба %1$s дар ин дастгоҳ интиқол диҳед.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Бақайдгирӣ</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1166,7 +1189,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Махфияти доимӣ</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартӣ (пешфарз)</string>
     <!-- text for standard blocking option button description -->
@@ -1673,7 +1698,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Лутфан ҳамоҳангсозии варақаҳоро фаъол кунед.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Шумо дар дастгоҳҳои дигари худ дар Firefox ягон варақаи кушодашуда надоред.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Шумо дар дастгоҳҳои дигари худ дар Firefox ягон варақаи кушодашуда надоред.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Шумо дар дастгоҳҳои дигари худ дар %1$s ягон варақаи кушодашуда надоред.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Дидани рӯйхати варақаҳо аз дастгоҳҳои дигар.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

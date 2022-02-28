@@ -49,6 +49,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Näytä kaikki tallennetut kirjanmerkit -painike</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Poista</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s on Mozillan tuote.</string>
 
@@ -70,7 +73,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Voit asettaa Firefoxin avaamaan linkit automaattisesti sovelluksissa.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Voit asettaa Firefoxin avaamaan linkit automaattisesti sovelluksissa.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Voit asettaa %1$sin avaamaan linkit automaattisesti sovelluksissa.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Siirry asetuksiin</string>
     <!-- Text for the negative action button -->
@@ -98,7 +103,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Suljetaanko automaattisesti kuukauden jälkeen?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox voi sulkea välilehdet, joita et ole katsonut viimeisen kuukauden aikana.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox voi sulkea välilehdet, joita et ole katsonut viimeisen kuukauden aikana.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s voi sulkea välilehdet, joita et ole katsonut viimeisen kuukauden aikana.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Sulje</string>
 
@@ -129,6 +137,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d sivustoa</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Poista</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -250,11 +262,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Mitä uutta Firefoxissa</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Mitä uutta Firefoxissa</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Mitä uutta %1$s sisältää</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Nyt on aiempaa helpompaa jatkaa siitä, mihin jäit.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Personoitu Firefox-kotisivu</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Personoitu Firefox-kotisivu</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Personoitu %1$s-kotisivu</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Siirry avoimiin välilehtiisi, kirjanmerkkeihisi ja selaushistoriaasi.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -271,7 +287,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Avaa uusi Firefox-välilehti</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Avaa uusi Firefox-välilehti</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Avaa uusi %1$s-välilehti</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Hae</string>
     <!-- Text preview for larger sized widgets -->
@@ -653,7 +671,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Käynnissä</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox saattaa asentaa ja suorittaa tutkimuksia silloin tällöin.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox saattaa asentaa ja suorittaa tutkimuksia silloin tällöin.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s saattaa asentaa ja suorittaa tutkimuksia silloin tällöin.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Lue lisää</string>
 
@@ -1163,9 +1183,12 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Tervetuloa %siin!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Synkronoi Firefox laitteidesi välillä</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synkronoi Firefox laitteidesi välillä</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Synkronoi %1$s laitteiden välillä</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Tuo kirjanmerkit, historia ja salasanat Firefoxiin tässä laitteessa.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Tuo kirjanmerkit, historia ja salasanat %1$siin tässä laitteessa.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Rekisteröidy</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1173,7 +1196,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Yksityisyys aina päällä</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox estää automaattisesti yrityksiä seuraamasta sinua salaa ympäri verkkoa.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox estää automaattisesti yrityksiä seuraamasta sinua salaa ympäri verkkoa.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s estää automaattisesti yrityksiä seuraamasta sinua salaa ympäri verkkoa.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Tavallinen (oletus)</string>
     <!-- text for standard blocking option button description -->
@@ -1683,7 +1708,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Ota välilehtien synkronointi käyttöön.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Sinulla ei ole muilla laitteilla avoimia välilehtiä Firefoxissa.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Sinulla ei ole muilla laitteilla avoimia välilehtiä Firefoxissa.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Sinulla ei ole %1$sissa avoimia välilehtiä muilla laitteilla.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Katso välilehtilistaus muilta laitteiltasi.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

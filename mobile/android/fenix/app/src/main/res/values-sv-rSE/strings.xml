@@ -291,6 +291,8 @@
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Öppna en ny Firefox-flik</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Öppna en ny %1$s-flik</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Sök</string>
     <!-- Text preview for larger sized widgets -->
