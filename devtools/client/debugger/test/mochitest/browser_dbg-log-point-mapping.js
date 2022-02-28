@@ -6,6 +6,8 @@
  * Tests that expressions in log points are source mapped.
  */
 
+"use strict";
+
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
 

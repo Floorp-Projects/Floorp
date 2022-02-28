@@ -4,6 +4,8 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   await selectSource(dbg, "simple1.js");

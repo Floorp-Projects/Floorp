@@ -4,6 +4,9 @@
 
 // Test that URL-less sources have tabs added to the UI but
 // do not persist upon reload
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-scripts.html",

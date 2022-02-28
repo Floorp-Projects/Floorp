@@ -4,6 +4,9 @@
 
 // Confirms that a conditional panel is opened at the
 // correct location in generated files.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sourcemaps.html", "entry.js");
 

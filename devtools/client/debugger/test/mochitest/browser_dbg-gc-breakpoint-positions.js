@@ -4,6 +4,8 @@
 
 // Test that we can set breakpoints in scripts that have been GCed.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-gc-breakpoint-positions.html",

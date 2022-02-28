@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests that the length of outline functions for original and pretty printed source matches
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 

@@ -5,6 +5,8 @@
 // Test settings multiple types of breakpoints on the same line
 // Only the last should be used
 
+"use strict";
+
 // Line where we set a breakpoint in simple2.js
 const BREAKPOINT_LINE = 5;
 

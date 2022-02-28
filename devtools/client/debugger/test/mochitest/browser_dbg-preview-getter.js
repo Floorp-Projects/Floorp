@@ -5,6 +5,8 @@
 // This test checks if 'executing getter' in a preview correctly displays values.
 // Bug 1456441 - 'execute getter' not working in Preview
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-preview-getter.html",

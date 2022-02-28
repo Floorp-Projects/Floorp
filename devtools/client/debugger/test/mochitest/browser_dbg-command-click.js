@@ -4,6 +4,9 @@
 
 // This test checks to see if holding down the command key and clicking on function call
 // will jump the debugger to that call.
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.command-click", true);
   info(

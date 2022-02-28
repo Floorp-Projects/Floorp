@@ -4,6 +4,8 @@
 
 // Test that properties with the same value objec be expanded. See Bug 1617210.
 
+"use strict";
+
 const httpServer = createTestHTTPServer();
 httpServer.registerContentType("html", "text/html");
 httpServer.registerContentType("js", "application/javascript");

@@ -78,7 +78,7 @@ module.exports = {
       },
     },
     {
-      files: ["client/framework/**", "client/debugger/test/**"],
+      files: ["client/framework/**"],
       rules: {
         strict: "off",
       },

@@ -6,6 +6,9 @@
  * Test reloading an original file while the sourcemap is loading.
  * The test passes when the selected source is visible after two reloads.
  */
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sourcemaps.html");
 

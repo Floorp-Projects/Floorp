@@ -10,6 +10,8 @@
  * 3. expand properties
  */
 
+"use strict";
+
 const EXPRESSION_SELECTORS = {
   plusIcon: ".watch-expressions-pane button.plus",
   input: "input.input-expression",

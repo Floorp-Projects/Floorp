@@ -5,6 +5,8 @@
 // When stepping into a function, 'let' variables should show as uninitialized
 // instead of undefined.
 
+"use strict";
+
 add_task(async function test() {
   const dbg = await initDebugger("doc-step-in-uninitialized.html");
   invokeInTab("main");

@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test enabling and disabling a breakpoint using the check boxes
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 

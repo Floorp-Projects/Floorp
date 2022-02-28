@@ -6,6 +6,8 @@
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
 
+"use strict";
+
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
   Services.prefs.setBoolPref(
