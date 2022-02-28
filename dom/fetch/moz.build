@@ -45,8 +45,8 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "ChannelInfo.ipdlh",
     "FetchTypes.ipdlh",
+    "IPCChannelInfo.ipdlh",
 ]
 
 LOCAL_INCLUDES += [
