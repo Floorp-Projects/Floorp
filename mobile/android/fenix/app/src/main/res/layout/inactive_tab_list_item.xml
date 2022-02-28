@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:background="@color/photonLightGrey30"
+    android:background="?borderPrimary"
     android:importantForAccessibility="no"
     android:paddingStart="1dp"
     android:paddingEnd="1dp">

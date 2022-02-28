@@ -8,7 +8,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:paddingHorizontal="1dp"
-    android:background="@color/photonLightGrey30">
+    android:background="?borderPrimary">
 
     <FrameLayout
         android:layout_width="match_parent"
