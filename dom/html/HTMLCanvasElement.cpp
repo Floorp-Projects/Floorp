@@ -1190,14 +1190,6 @@ void HTMLCanvasElement::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
 
 void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
                                                     uint32_t aHeight) {
-  // We need to keep our placeholder canvas dimensions in sync with the actual
-  // offscreen canvas. It is only a placeholder if we transferred the object to
-  // a worker thread.
-  if (mOffscreenCanvas->IsNeutered()) {
-    mOffscreenCanvas->UpdateNeuteredSize(aWidth, aHeight);
-  }
-
-  // We always need to update the canvas element itself however.
   ErrorResult rv;
   SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, rv);
   MOZ_ASSERT(!rv.Failed());

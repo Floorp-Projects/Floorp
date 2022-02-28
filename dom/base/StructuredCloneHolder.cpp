@@ -1227,7 +1227,7 @@ bool StructuredCloneHolder::CustomWriteTransferHandler(
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(canvas);
 
-        if (canvas->IsNeutered()) {
+        if (!canvas->MayNeuter()) {
           return false;
         }
 
