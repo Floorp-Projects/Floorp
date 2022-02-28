@@ -126,6 +126,7 @@ export function createGeneratedSource(sourceResource) {
   return createSourceObject({
     id: makeSourceId(sourceResource),
     url: sourceResource.url,
+    thread: sourceResource.targetFront.getCachedFront("thread").actorID,
     extensionName: sourceResource.extensionName,
     isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
     isExtension:
@@ -142,6 +143,7 @@ export function createGeneratedSource(sourceResource) {
 function createSourceObject({
   id,
   url,
+  thread = null,
   extensionName = null,
   isWasm = false,
   isExtension = false,
@@ -156,6 +158,9 @@ function createSourceObject({
 
     // Absolute URL for the source. This may be a fake URL for pretty printed sources
     url,
+
+    // The thread actor id of the thread/target which this source belongs to
+    thread,
 
     // By default refers to the absolute URL, but this will be updated
     // if user defines a project root. In this case it will be crafted via `getRelativeUrl`
@@ -199,11 +204,14 @@ function createSourceObject({
  *        The ID of the source, computed by source map codebase.
  * @param {String} url
  *        The URL of the original source file.
+ * @param {String} thread
+ *        The thread actor id of the thread the related generated source belongs to
  */
-export function createSourceMapOriginalSource(id, url) {
+export function createSourceMapOriginalSource(id, url, thread) {
   return createSourceObject({
     id,
     url,
+    thread,
     isOriginal: true,
   });
 }
@@ -220,11 +228,14 @@ export function createSourceMapOriginalSource(id, url) {
  * @param {String} url
  *        The URL of the pretty-printed source file.
  *        This URL doesn't work. It is the URL of the non-pretty-printed file with ":formated" suffix.
+ * @param {String} thread
+ *        The thread actor id of the thread the related generated source belongs to
  */
-export function createPrettyPrintOriginalSource(id, url) {
+export function createPrettyPrintOriginalSource(id, url, thread) {
   return createSourceObject({
     id,
     url,
+    thread,
     isOriginal: true,
     isPrettyPrinted: true,
   });
