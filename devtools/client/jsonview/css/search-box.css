@@ -5,6 +5,10 @@
 /******************************************************************************/
 /* Search Box */
 
+.devtools-searchbox {
+  background-color: var(--theme-body-background);
+}
+
 .devtools-filterinput {
   margin-inline-start: auto; /* Align to the right */
 }
