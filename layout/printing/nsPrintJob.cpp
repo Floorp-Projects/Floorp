@@ -632,36 +632,7 @@ nsresult nsPrintJob::Print(Document* aSourceDoc,
                              ? mPrtPreview->mPrintObject->mDocument.get()
                              : aSourceDoc;
 
-  nsresult rv = CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
-
-  if (!aPrintSettings) {
-    // This is temporary until after bug 1602410 lands.
-    return rv;
-  }
-
-  // Save the print settings if the user picked them.
-  // We should probably do this immediately after the user confirms their
-  // selection (that is, move this to nsPrintingPromptService::ShowPrintDialog,
-  // just after the nsIPrintDialogService::Show call returns).
-  bool printSilently;
-  aPrintSettings->GetPrintSilent(&printSilently);
-  if (!printSilently) {  // user picked settings
-    bool saveOnCancel;
-    aPrintSettings->GetSaveOnCancel(&saveOnCancel);
-    if ((rv != NS_ERROR_ABORT || saveOnCancel) &&
-        Preferences::GetBool("print.save_print_settings", false)) {
-      nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-          do_GetService("@mozilla.org/gfx/printsettings-service;1");
-      printSettingsService->SavePrintSettingsToPrefs(
-          aPrintSettings, true,
-          nsIPrintSettings::kInitSaveAll &
-              ~nsIPrintSettings::kInitSaveToFileName);
-      printSettingsService->SavePrintSettingsToPrefs(
-          aPrintSettings, false, nsIPrintSettings::kInitSavePrinterName);
-    }
-  }
-
-  return rv;
+  return CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
 }
 
 nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,

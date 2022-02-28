@@ -128,22 +128,6 @@ mozilla::ipc::IPCResult PrintingParent::RecvShowPrintDialog(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult PrintingParent::RecvSavePrintSettings(
-    const PrintData& aData, const bool& aUsePrinterNamePrefix,
-    const uint32_t& aFlags, nsresult* aResult) {
-  nsCOMPtr<nsIPrintSettings> settings;
-  *aResult = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
-  NS_ENSURE_SUCCESS(*aResult, IPC_OK());
-
-  *aResult = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
-  NS_ENSURE_SUCCESS(*aResult, IPC_OK());
-
-  *aResult = mPrintSettingsSvc->SavePrintSettingsToPrefs(
-      settings, aUsePrinterNamePrefix, aFlags);
-
-  return IPC_OK();
-}
-
 PPrintSettingsDialogParent* PrintingParent::AllocPPrintSettingsDialogParent() {
   return new PrintSettingsDialogParent();
 }

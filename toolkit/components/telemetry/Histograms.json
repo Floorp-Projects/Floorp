@@ -11260,22 +11260,12 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["bvandyk@mozilla.com", "pehrsons@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "112",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303, 1754645],
     "description": "The length of time (in seconds) that a recording lasted. Recorded when a recorder stops"
-  },
-  "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "pehrsons@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
-    "description": "Records the type of timeout that happened while attempting to init the encoder. Audio = 0, Video = 1. Recorded immediately following a timeout"
   },
   "DEVTOOLS_ENTRY_POINT": {
     "record_in_processes": ["main"],

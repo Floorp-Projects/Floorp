@@ -83,3 +83,5 @@ fuzzy(1,15) platform(linux) force_subpixel_aa_where_possible(false) == text-fixe
 # despite 4x on-the-fly scale change.
 skip_on(android) fuzzy(220,7600) == raster_root_C_8192.yaml raster_root_C_ref.yaml
 == subpx-bg-mask.yaml subpx-bg-mask-ref.yaml
+platform(linux,mac) == rotate-snap-clip.yaml rotate-snap-clip-ref.yaml
+platform(linux,mac) == rotate-snap-filter.yaml rotate-snap-filter-ref.yaml

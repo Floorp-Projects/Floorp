@@ -337,7 +337,7 @@ void OffTheBooksMutex::AssertCurrentThreadOwns() const {
 //
 
 bool RWLock::TryReadLock() {
-  bool locked = this->TryReadLockInternal();
+  bool locked = this->detail::RWLockImpl::tryReadLock();
   MOZ_ASSERT_IF(locked, mOwningThread == nullptr);
   return locked;
 }
@@ -346,17 +346,17 @@ void RWLock::ReadLock() {
   // All we want to ensure here is that we're not attempting to acquire the
   // read lock while this thread is holding the write lock.
   CheckAcquire();
-  this->ReadLockInternal();
+  this->detail::RWLockImpl::readLock();
   MOZ_ASSERT(mOwningThread == nullptr);
 }
 
 void RWLock::ReadUnlock() {
   MOZ_ASSERT(mOwningThread == nullptr);
-  this->ReadUnlockInternal();
+  this->detail::RWLockImpl::readUnlock();
 }
 
 bool RWLock::TryWriteLock() {
-  bool locked = this->TryWriteLockInternal();
+  bool locked = this->detail::RWLockImpl::tryWriteLock();
   if (locked) {
     mOwningThread = PR_GetCurrentThread();
     Acquire();
@@ -366,7 +366,7 @@ bool RWLock::TryWriteLock() {
 
 void RWLock::WriteLock() {
   CheckAcquire();
-  this->WriteLockInternal();
+  this->detail::RWLockImpl::writeLock();
   mOwningThread = PR_GetCurrentThread();
   Acquire();
 }
@@ -374,7 +374,7 @@ void RWLock::WriteLock() {
 void RWLock::WriteUnlock() {
   Release();
   mOwningThread = nullptr;
-  this->WriteUnlockInternal();
+  this->detail::RWLockImpl::writeUnlock();
 }
 
 //
