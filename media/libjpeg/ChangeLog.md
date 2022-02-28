@@ -1,3 +1,27 @@
+2.1.3
+=====
+
+### Significant changes relative to 2.1.2
+
+1. Fixed a regression introduced by 2.0 beta1[7] whereby cjpeg compressed PGM
+input files into full-color JPEG images unless the `-grayscale` option was
+used.
+
+2. cjpeg now automatically compresses GIF and 8-bit BMP input files into
+grayscale JPEG images if the input files contain only shades of gray.
+
+3. The build system now enables the intrinsics implementation of the AArch64
+(Arm 64-bit) Neon SIMD extensions by default when using GCC 12 or later.
+
+4. Fixed a segfault that occurred while decompressing a 4:2:0 JPEG image using
+the merged (non-fancy) upsampling algorithms (that is, with
+`cinfo.do_fancy_upsampling` set to `FALSE`) along with `jpeg_crop_scanline()`.
+Specifically, the segfault occurred if the number of bytes remaining in the
+output buffer was less than the number of bytes required to represent one
+uncropped scanline of the output image.  For that reason, the issue could only
+be reproduced using the libjpeg API, not using djpeg.
+
+
 2.1.2
 =====
 
@@ -641,7 +665,7 @@ algorithm that caused incorrect dithering in the output image.  This algorithm
 now produces bitwise-identical results to the unmerged algorithms.
 
 12. The SIMD function symbols for x86[-64]/ELF, MIPS/ELF, macOS/x86[-64] (if
-libjpeg-turbo is built with YASM), and iOS/Arm[64] builds are now private.
+libjpeg-turbo is built with Yasm), and iOS/Arm[64] builds are now private.
 This prevents those symbols from being exposed in applications or shared
 libraries that link statically with libjpeg-turbo.
 
@@ -1526,8 +1550,8 @@ either the fast or the accurate DCT/IDCT algorithms in the underlying codec.
 
 ### Significant changes relative to 1.2 beta1:
 
-1. Fixed build issue with YASM on Unix systems (the libjpeg-turbo build system
-was not adding the current directory to the assembler include path, so YASM
+1. Fixed build issue with Yasm on Unix systems (the libjpeg-turbo build system
+was not adding the current directory to the assembler include path, so Yasm
 was not able to find jsimdcfg.inc.)
 
 2. Fixed out-of-bounds read in SSE2 SIMD code that occurred when decompressing
@@ -1595,7 +1619,7 @@ transposed or rotated 90 degrees.
 8. All legacy VirtualGL code has been re-factored, and this has allowed
 libjpeg-turbo, in its entirety, to be re-licensed under a BSD-style license.
 
-9. libjpeg-turbo can now be built with YASM.
+9. libjpeg-turbo can now be built with Yasm.
 
 10. Added SIMD acceleration for ARM Linux and iOS platforms that support
 NEON instructions.
