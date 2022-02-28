@@ -19,7 +19,6 @@ from mozbuild.frontend.data import (
     Exports,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
-    GeneratedSources,
     HostProgram,
     HostRustLibrary,
     HostRustProgram,
@@ -1338,7 +1337,9 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(len(objs), 6)
 
-        generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
+        generated_sources = [
+            o for o in objs if isinstance(o, Sources) and o.generated_files
+        ]
         self.assertEqual(len(generated_sources), 6)
 
         suffix_map = {obj.canonical_suffix: obj for obj in generated_sources}
@@ -1355,7 +1356,8 @@ class TestEmitterBasic(unittest.TestCase):
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
             self.assertEqual(
-                sources.files, [mozpath.join(reader.config.topobjdir, f) for f in files]
+                sources.generated_files,
+                [mozpath.join(reader.config.topobjdir, f) for f in files],
             )
 
             for f in files:

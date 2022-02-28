@@ -319,7 +319,7 @@ class WebIDLCollection(ContextDerived):
         # from regular ones so tests bindings aren't shipped.
         return list(
             group_unified_files(
-                self.all_regular_cpp_basenames(),
+                sorted(self.all_regular_cpp_basenames()),
                 unified_prefix="UnifiedBindings",
                 unified_suffix="cpp",
                 files_per_unified_file=32,
@@ -1088,20 +1088,28 @@ class JARManifest(ContextDerived):
 class BaseSources(ContextDerived):
     """Base class for files to be compiled during the build."""
 
-    __slots__ = ("files", "canonical_suffix")
+    __slots__ = ("files", "static_files", "generated_files", "canonical_suffix")
 
-    def __init__(self, context, files, canonical_suffix):
+    def __init__(self, context, static_files, generated_files, canonical_suffix):
         ContextDerived.__init__(self, context)
 
-        self.files = files
+        # Sorted so output is consistent and we don't bump mtimes, but always
+        # order generated files after static ones to be consistent across build
+        # environments, which may have different objdir paths relative to
+        # topsrcdir.
+        self.static_files = sorted(static_files)
+        self.generated_files = sorted(generated_files)
+        self.files = self.static_files + self.generated_files
         self.canonical_suffix = canonical_suffix
 
 
 class Sources(BaseSources):
     """Represents files to be compiled during the build."""
 
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
+    def __init__(self, context, static_files, generated_files, canonical_suffix):
+        BaseSources.__init__(
+            self, context, static_files, generated_files, canonical_suffix
+        )
 
 
 class PgoGenerateOnlySources(BaseSources):
@@ -1110,42 +1118,25 @@ class PgoGenerateOnlySources(BaseSources):
     These files are only used during the PGO generation phase."""
 
     def __init__(self, context, files):
-        BaseSources.__init__(self, context, files, ".cpp")
-
-
-class GeneratedSources(BaseSources):
-    """Represents generated files to be compiled during the build."""
-
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
+        BaseSources.__init__(self, context, files, [], ".cpp")
 
 
 class HostSources(HostMixin, BaseSources):
     """Represents files to be compiled for the host during the build."""
 
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
-
-
-class HostGeneratedSources(HostMixin, BaseSources):
-    """Represents generated files to be compiled for the host during the build."""
-
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
+    def __init__(self, context, static_files, generated_files, canonical_suffix):
+        BaseSources.__init__(
+            self, context, static_files, generated_files, canonical_suffix
+        )
 
 
 class WasmSources(BaseSources):
     """Represents files to be compiled with the wasm compiler during the build."""
 
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
-
-
-class WasmGeneratedSources(BaseSources):
-    """Represents generated files to be compiled with the wasm compiler during the build."""
-
-    def __init__(self, context, files, canonical_suffix):
-        BaseSources.__init__(self, context, files, canonical_suffix)
+    def __init__(self, context, static_files, generated_files, canonical_suffix):
+        BaseSources.__init__(
+            self, context, static_files, generated_files, canonical_suffix
+        )
 
 
 class UnifiedSources(BaseSources):
@@ -1153,15 +1144,21 @@ class UnifiedSources(BaseSources):
 
     __slots__ = ("have_unified_mapping", "unified_source_mapping")
 
-    def __init__(self, context, files, canonical_suffix, files_per_unified_file):
-        BaseSources.__init__(self, context, files, canonical_suffix)
+    def __init__(self, context, static_files, generated_files, canonical_suffix):
+        BaseSources.__init__(
+            self, context, static_files, generated_files, canonical_suffix
+        )
+
+        unified_build = context.config.substs.get(
+            "ENABLE_UNIFIED_BUILD", False
+        ) or context.get("REQUIRES_UNIFIED_BUILD", False)
+        files_per_unified_file = (
+            context.get("FILES_PER_UNIFIED_FILE", 16) if unified_build else 1
+        )
 
         self.have_unified_mapping = files_per_unified_file > 1
 
         if self.have_unified_mapping:
-            # Sorted so output is consistent and we don't bump mtimes.
-            source_files = list(sorted(self.files))
-
             # On Windows, path names have a maximum length of 255 characters,
             # so avoid creating extremely long path names.
             unified_prefix = context.relsrcdir
@@ -1173,7 +1170,10 @@ class UnifiedSources(BaseSources):
             unified_prefix = "Unified_%s_%s" % (suffix, unified_prefix)
             self.unified_source_mapping = list(
                 group_unified_files(
-                    source_files,
+                    # NOTE: self.files is already (partially) sorted, and we
+                    # intentionally do not re-sort it here to avoid a dependency
+                    # on the build environment's objdir path.
+                    self.files,
                     unified_prefix=unified_prefix,
                     unified_suffix=suffix,
                     files_per_unified_file=files_per_unified_file,

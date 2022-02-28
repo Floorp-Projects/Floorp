@@ -31,15 +31,15 @@ from mozbuild.frontend.data import (
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     GeneratedFile,
-    GeneratedSources,
     GnProjectData,
     HostLibrary,
-    HostGeneratedSources,
+    HostSources,
     IPDLCollection,
     LocalizedPreprocessedFiles,
     LocalizedFiles,
     SandboxedWasmLibrary,
     SharedLibrary,
+    Sources,
     StaticLibrary,
     UnifiedSources,
     XPIDLModule,
@@ -155,6 +155,9 @@ class CommonBackend(BuildBackend):
             self._handle_xpcom_collection(obj)
 
         elif isinstance(obj, UnifiedSources):
+            if obj.generated_files:
+                self._handle_generated_sources(obj.generated_files)
+
             # Unified sources aren't relevant to artifact builds.
             if self.environment.is_artifact_build:
                 return True
@@ -178,8 +181,9 @@ class CommonBackend(BuildBackend):
             )
             return False
 
-        elif isinstance(obj, (GeneratedSources, HostGeneratedSources)):
-            self._handle_generated_sources(obj.files)
+        elif isinstance(obj, (Sources, HostSources)):
+            if obj.generated_files:
+                self._handle_generated_sources(obj.generated_files)
             return False
 
         elif isinstance(obj, GeneratedFile):
