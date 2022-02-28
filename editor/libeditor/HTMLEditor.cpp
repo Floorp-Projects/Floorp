@@ -5,7 +5,6 @@
 
 #include "HTMLEditor.h"
 
-#include "CreateElementTransaction.h"  // for CreateElementTransaction
 #include "EditAction.h"
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"
@@ -2971,37 +2970,26 @@ HTMLEditor::CreateAndInsertElementWithTransaction(
 
   RefPtr<Element> newElement;
   nsresult rv;
-  if (StaticPrefs::editor_create_element_transaction_enabled()) {
-    RefPtr<CreateElementTransaction> transaction =
-        CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
-    rv = DoTransactionInternal(transaction);
-    if (MOZ_LIKELY(NS_SUCCEEDED(rv))) {
-      newElement = transaction->GetNewElement();
-      MOZ_ASSERT(newElement);
+  newElement = CreateHTMLContent(&aTagName);
+  NS_WARNING_ASSERTION(newElement, "EditorBase::CreateHTMLContent() failed");
+  if (MOZ_LIKELY(newElement)) {
+    rv = MarkElementDirty(*newElement);
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING("EditorBase::MarkElementDirty() caused destroying the editor");
+      rv = NS_ERROR_EDITOR_DESTROYED;
+    } else {
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "EditorBase::MarkElementDirty() failed, but ignored");
+      RefPtr<InsertNodeTransaction> transaction =
+          InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
+      rv = DoTransactionInternal(transaction);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      newElement = nullptr;
     }
   } else {
-    newElement = CreateHTMLContent(&aTagName);
-    NS_WARNING_ASSERTION(newElement, "EditorBase::CreateHTMLContent() failed");
-    if (MOZ_LIKELY(newElement)) {
-      rv = MarkElementDirty(*newElement);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING(
-            "EditorBase::MarkElementDirty() caused destroying the editor");
-        rv = NS_ERROR_EDITOR_DESTROYED;
-      } else {
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::MarkElementDirty() failed, but ignored");
-        RefPtr<InsertNodeTransaction> transaction =
-            InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
-        rv = DoTransactionInternal(transaction);
-      }
-      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-        newElement = nullptr;
-      }
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
+    rv = NS_ERROR_FAILURE;
   }
   if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
     rv = NS_ERROR_EDITOR_DESTROYED;
