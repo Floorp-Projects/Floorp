@@ -26,8 +26,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TeeState)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TeeState::TeeState(JSContext* aCx, ReadableStream* aStream,
-                   bool aCloneForBranch2)
+TeeState::TeeState(ReadableStream* aStream, bool aCloneForBranch2)
     : mStream(aStream),
       mReason1(JS::NullValue()),
       mReason2(JS::NullValue()),
@@ -37,11 +36,10 @@ TeeState::TeeState(JSContext* aCx, ReadableStream* aStream,
                      "cloneForBranch2 path is not implemented.");
 }
 
-already_AddRefed<TeeState> TeeState::Create(JSContext* aCx,
-                                            ReadableStream* aStream,
+already_AddRefed<TeeState> TeeState::Create(ReadableStream* aStream,
                                             bool aCloneForBranch2,
                                             ErrorResult& aRv) {
-  RefPtr<TeeState> teeState = new TeeState(aCx, aStream, aCloneForBranch2);
+  RefPtr<TeeState> teeState = new TeeState(aStream, aCloneForBranch2);
 
   RefPtr<ReadableStreamDefaultReader> reader =
       AcquireReadableStreamDefaultReader(teeState->GetStream(), aRv);

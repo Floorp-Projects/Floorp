@@ -1071,7 +1071,7 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   MOZ_ASSERT(aStream->Controller()->IsByte());
 
   // Step 3-13 captured as part of TeeState allocation
-  RefPtr<TeeState> teeState = TeeState::Create(aCx, aStream, false, aRv);
+  RefPtr<TeeState> teeState = TeeState::Create(aStream, false, aRv);
   if (aRv.Failed()) {
     return;
   }
