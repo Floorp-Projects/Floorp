@@ -8,6 +8,8 @@
 
 #include "EditTransactionBase.h"  // for EditTransactionBase, etc.
 
+#include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
+
 #include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"    // for REFNSIID
@@ -59,11 +61,31 @@ class JoinNodesTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
+  /**
+   * GetExistingContent() and GetRemovedContent() never returns nullptr
+   * unless the cycle collector clears them out.
+   */
+  nsIContent* GetExistingContent() const { return mKeepingContent; }
+  nsIContent* GetRemovedContent() const { return mRemovedContent; }
+  nsINode* GetParentNode() const { return mParentNode; }
+
+  template <typename EditorDOMPointType>
+  EditorDOMPointType CreateJoinedPoint() const {
+    if (MOZ_UNLIKELY(!mKeepingContent)) {
+      return EditorDOMPointType();
+    }
+    return EditorDOMPointType(
+        mKeepingContent, std::min(mJoinedOffset, mKeepingContent->Length()));
+  }
+
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const JoinNodesTransaction& aTransaction);
 
  protected:
   virtual ~JoinNodesTransaction() = default;
+
+  enum class RedoingTransaction { No, Yes };
+  MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(RedoingTransaction);
 
   RefPtr<HTMLEditor> mHTMLEditor;
 
