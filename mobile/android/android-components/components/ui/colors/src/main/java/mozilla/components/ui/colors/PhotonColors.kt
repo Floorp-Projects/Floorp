@@ -133,6 +133,7 @@ object PhotonColors {
     val DarkGrey10 = Color(0xFF52525E)
     val DarkGrey20 = Color(0xFF4A4A55)
     val DarkGrey30 = Color(0xFF42414D)
+    val DarkGrey30A95 = Color(0xF242414D)
     val DarkGrey30A96 = Color(0xF542414D)
     val DarkGrey40 = Color(0xFF3A3944)
     val DarkGrey50 = Color(0xFF32313C)
@@ -142,6 +143,7 @@ object PhotonColors {
     val DarkGrey90 = Color(0xFF15141A)
     val DarkGrey90A40 = Color(0x6615141A)
     val DarkGrey90A60 = Color(0x9915141A)
+    val DarkGrey90A95 = Color(0xF215141A)
     val DarkGrey90A96 = Color(0xF515141A)
 
     // Violet

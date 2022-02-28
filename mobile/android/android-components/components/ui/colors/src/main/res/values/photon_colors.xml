@@ -170,6 +170,7 @@
 	<color name="photonDarkGrey10">#ff52525e</color>
 	<color name="photonDarkGrey20">#ff4a4a55</color>
 	<color name="photonDarkGrey30">#ff42414d</color>
+	<color name="photonDarkGrey30A95">#f242414d</color>
 	<color name="photonDarkGrey30A96">#f542414d</color>
 	<color name="photonDarkGrey40">#ff3a3944</color>
 	<color name="photonDarkGrey50">#ff32313c</color>
@@ -179,6 +180,7 @@
 	<color name="photonDarkGrey90">#ff15141a</color>
 	<color name="photonDarkGrey90A40">#6615141a</color>
 	<color name="photonDarkGrey90A60">#9915141a</color>
+	<color name="photonDarkGrey90A95">#f215141a</color>
 	<color name="photonDarkGrey90A96">#f515141a</color>
 
 	<!-- Violet -->
