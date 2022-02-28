@@ -388,7 +388,7 @@ class Settings(
         }
 
     var shouldUseNimbusPreview: Boolean
-        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), true)
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), false)
         set(value) {
             preferences.edit()
                 .putBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), value)
