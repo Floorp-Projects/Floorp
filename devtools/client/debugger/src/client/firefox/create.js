@@ -291,3 +291,52 @@ export function createThread(actor, target) {
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
   };
 }
+
+/**
+ * Defines the shape of a breakpoint
+ */
+export function createBreakpoint({
+  id,
+  thread,
+  disabled = false,
+  options = {},
+  location,
+  astLocation,
+  generatedLocation,
+  text,
+  originalText,
+}) {
+  return {
+    // The unique identifier (string) for the breakpoint, for details on its format and creation See `makeBreakpointId`
+    id,
+
+    // The thread actor id (string) which the source this breakpoint is created in belongs to
+    thread,
+
+    // This (boolean) specifies if the breakpoint is disabled or not
+    disabled,
+
+    // This (object) stores extra information about the breakpoint, which defines the type of the breakpoint (i.e conditional breakpoints, log points)
+    // {
+    //    condition: <Boolean>,
+    //    logValue: <String>,
+    //    hidden: <Boolean>
+    // }
+    options,
+
+    // The location (object) information for the original source, for details on its format and structure See `makeBreakpointLocation`
+    location,
+
+    // The source map location (object) infomation, for details see `getASTLocation`
+    astLocation,
+
+    // The location (object) information for the generated source, for details on its format and structure See `makeBreakpointLocation`
+    generatedLocation,
+
+    // The text (string) on the line which the brekpoint is set in the generated source
+    text,
+
+    // The text (string) on the line which the breakpoint is set in the original source
+    originalText,
+  };
+}
