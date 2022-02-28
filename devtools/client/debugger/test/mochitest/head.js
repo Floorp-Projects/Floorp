@@ -4,6 +4,8 @@
 
 /* eslint-disable no-unused-vars */
 
+"use strict";
+
 // This head.js file is only imported by debugger mochitests.
 // Anything that is meant to be used by tests of other panels should be moved to shared-head.js
 // Also, any symbol that may conflict with other test symbols should stay in head.js

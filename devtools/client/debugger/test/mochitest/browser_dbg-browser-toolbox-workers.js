@@ -5,6 +5,8 @@
 // Test that all kinds of workers show up properly in the multiprocess browser
 // toolbox.
 
+"use strict";
+
 requestLongerTimeout(4);
 
 /* import-globals-from ../../../framework/browser-toolbox/test/helpers-browser-toolbox.js */

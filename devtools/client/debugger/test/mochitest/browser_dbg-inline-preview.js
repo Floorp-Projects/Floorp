@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test checking inline preview feature
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.inline-preview", true);
 

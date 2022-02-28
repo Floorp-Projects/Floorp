@@ -5,6 +5,8 @@
 // Test that the debugger pauses and is automatically highlighted and selected,
 // even when it hasn't been opened.
 
+"use strict";
+
 const IFRAME_TEST_COM_URI = `https://example.com/document-builder.sjs?html=${encodeURI(
   `<script>const a=2;\ndebugger;\nconsole.log(a);</script>`
 )}`;

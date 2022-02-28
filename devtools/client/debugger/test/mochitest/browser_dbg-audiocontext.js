@@ -5,6 +5,8 @@
 // Test the AudioContext are paused and resume appropriately when using the
 // debugger.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-audiocontext.html");
 

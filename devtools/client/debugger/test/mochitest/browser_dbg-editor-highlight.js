@@ -6,6 +6,8 @@
 // matter if the source text doesn't exist yet or even if the source
 // doesn't exist.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   const {

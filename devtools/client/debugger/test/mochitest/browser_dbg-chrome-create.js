@@ -6,6 +6,8 @@
  * Tests that a chrome debugger can be created in a new process.
  */
 
+"use strict";
+
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);

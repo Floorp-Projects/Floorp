@@ -10,6 +10,9 @@
  *  4. stepOver to the end of a function
  *  5. stepUp at the end of a function
  */
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-debugger-statements.html");
 

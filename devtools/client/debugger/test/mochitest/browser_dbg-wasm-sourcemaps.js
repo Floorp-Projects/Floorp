@@ -1,11 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-requestLongerTimeout(2);
 
 /**
  * Test WebAssembly source maps
  */
+
+"use strict";
+
+requestLongerTimeout(2);
+
 add_task(async function() {
   const dbg = await initDebugger("doc-wasm-sourcemaps.html");
   await reload(dbg);

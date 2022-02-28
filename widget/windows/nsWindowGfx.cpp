@@ -444,7 +444,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
 // call for RequesetFxrOutput as soon as the compositor for this widget is
 // available.
 void nsWindow::CreateCompositor() {
-  nsWindowBase::CreateCompositor();
+  nsBaseWidget::CreateCompositor();
 
   MaybeEnableWindowOcclusion(/* aEnable */ true);
 
@@ -456,7 +456,7 @@ void nsWindow::CreateCompositor() {
 void nsWindow::DestroyCompositor() {
   MaybeEnableWindowOcclusion(/* aEnable */ false);
 
-  nsWindowBase::DestroyCompositor();
+  nsBaseWidget::DestroyCompositor();
 }
 
 void nsWindow::RequestFxrOutput() {

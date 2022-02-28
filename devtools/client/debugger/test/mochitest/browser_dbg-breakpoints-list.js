@@ -5,6 +5,8 @@
 // Testing displaying breakpoints in the breakpoints list and the tooltip
 // shows the thread information.
 
+"use strict";
+
 add_task(async function testBreakpointsListForMultipleTargets() {
   const dbg = await initDebugger(
     "doc_dbg-fission-frame-sources.html",

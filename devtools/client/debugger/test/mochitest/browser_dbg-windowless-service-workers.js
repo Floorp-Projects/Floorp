@@ -4,6 +4,9 @@
 
 // Test that we can detect a new service worker and hit breakpoints that we've
 // set in it.
+
+"use strict";
+
 add_task(async function() {
   info("Subtest #1");
   await pushPref("devtools.debugger.features.windowless-service-workers", true);

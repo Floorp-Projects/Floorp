@@ -4,6 +4,8 @@
 
 // Tests early event breakpoints and event breakpoints in a remote frame.
 
+"use strict";
+
 add_task(async function() {
   await pushPref(
     "devtools.debugger.features.event-listeners-breakpoints",

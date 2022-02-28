@@ -5,6 +5,9 @@
 // Tests to make sure we do not accidentally slide the breakpoint up to the first
 // function with the same name in the file.
 // TODO: Likely to remove this test when removing the breakpoint sliding functionality
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-duplicate-functions.html",

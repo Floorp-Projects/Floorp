@@ -4,6 +4,8 @@
 
 // Tests re-opening pretty printed tabs on load
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html", "math.min.js");
 

@@ -6,6 +6,9 @@
  * Test reload via an href link, which refers to the same document.
  * It seems to cause different codepath compared to F5.
  */
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-reload-link.html",

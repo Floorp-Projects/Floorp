@@ -4,6 +4,8 @@
 
 // Tests that Step In is cancelled when navigating to another page
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
 

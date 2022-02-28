@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that adjacent scopes are merged together as expected.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-merge-scopes.html");
 

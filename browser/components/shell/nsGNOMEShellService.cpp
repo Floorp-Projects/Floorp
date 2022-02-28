@@ -189,7 +189,7 @@ nsGNOMEShellService::IsDefaultBrowser(bool aForAllTypes,
 
   if (widget::IsRunningUnderSnap()) {
     const gchar* argv[] = {"xdg-settings", "check", "default-web-browser",
-                           (SNAP_INSTANCE_NAME ".desktop"), nullptr};
+                           (MOZ_APP_NAME ".desktop"), nullptr};
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);
     gchar* output = nullptr;
@@ -269,7 +269,7 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers) {
 
   if (widget::IsRunningUnderSnap()) {
     const gchar* argv[] = {"xdg-settings", "set", "default-web-browser",
-                           (SNAP_INSTANCE_NAME ".desktop"), nullptr};
+                           (MOZ_APP_NAME ".desktop"), nullptr};
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDOUT_TO_DEV_NULL |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);
