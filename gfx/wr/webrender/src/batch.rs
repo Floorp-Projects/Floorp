@@ -1541,13 +1541,6 @@ impl BatchBuilder {
                 let blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
-                let prim_header = PrimitiveHeader {
-                    local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
-                    specific_prim_address: prim_cache_address,
-                    transform_id,
-                };
-
                 match picture.context_3d {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(_), .. } => {
@@ -1567,6 +1560,45 @@ impl BatchBuilder {
                         let brush_flags = BrushFlags::PERSPECTIVE_INTERPOLATION;
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
+
+                        // If we are drawing with snapping enabled, the local rect of the prim must be in the raster
+                        // space, to avoid situations where there is a 180deg rotation in between the root and primitive
+                        // space not being correctly applied.
+                        let prim_header = if surface.surface_spatial_node_index == surface.raster_spatial_node_index {
+                            PrimitiveHeader {
+                                local_rect: prim_rect,
+                                local_clip_rect: prim_info.combined_local_clip_rect,
+                                specific_prim_address: prim_cache_address,
+                                transform_id,
+                            }
+                        } else {
+                            let map_local_to_raster = SpaceMapper::new_with_target(
+                                surface.raster_spatial_node_index,
+                                surface.surface_spatial_node_index,
+                                LayoutRect::max_rect(),
+                                ctx.spatial_tree,
+                            );
+
+                            let prim_rect = map_local_to_raster
+                                .map(&prim_rect)
+                                .unwrap();
+                            let local_clip_rect = map_local_to_raster
+                                .map(&prim_info.combined_local_clip_rect)
+                                .unwrap();
+                            let transform_id = transforms
+                                .get_id(
+                                    surface.raster_spatial_node_index,
+                                    root_spatial_node_index,
+                                    ctx.spatial_tree,
+                                );
+
+                            PrimitiveHeader {
+                                local_rect: prim_rect,
+                                local_clip_rect,
+                                specific_prim_address: prim_cache_address,
+                                transform_id,
+                            }
+                        };
 
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
                             && surface.is_opaque
@@ -2110,10 +2142,8 @@ impl BatchBuilder {
                                 };
 
                                 let prim_header = PrimitiveHeader {
-                                    local_rect: prim_rect,
-                                    local_clip_rect: prim_info.combined_local_clip_rect,
                                     specific_prim_address: prim_cache_address,
-                                    transform_id,
+                                    ..prim_header
                                 };
 
                                 let prim_header_index = prim_headers.push(

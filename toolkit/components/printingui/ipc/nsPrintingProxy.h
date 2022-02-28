@@ -25,16 +25,6 @@ class nsPrintingProxy final : public nsIPrintingPromptService,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTINGPROMPTSERVICE
 
-  /**
-   * Used to proxy nsIPrintSettings.savePrintSettingsToPrefs calls to the
-   * parent process.
-   *
-   * @param aFlags - kInitSave* flags from nsIPrintSettings's to specify
-   *          which settings to save.
-   */
-  nsresult SavePrintSettings(nsIPrintSettings* aPS, bool aUsePrinterNamePrefix,
-                             uint32_t aFlags);
-
  protected:
   PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild() final;
 

@@ -1,0 +1,24 @@
+---
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [0, 0, 400, 30]
+      complex:
+        - rect: [0, 0, 400, 30]
+          radius: {
+            top-left: 2,
+            top-right: 2,
+            bottom-left: 2,
+            bottom-right: 2,
+          }
+    - type: stacking-context
+      clip-node: 2
+      items:
+        - type: stacking-context
+          items:
+            - text: "Should be upright"
+              origin: 20 24
+              size: 18
+              color: black
+              font: "VeraBd.ttf"
