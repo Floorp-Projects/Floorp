@@ -182,7 +182,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       keepPropMapTables_(this, false),
       wasCollected_(false),
       listNext_(NotOnList),
-      weakRefMap_(this, this),
       keptObjects(this, this) {
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
