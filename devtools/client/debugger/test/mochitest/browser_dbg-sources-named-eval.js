@@ -4,6 +4,8 @@
 
 // Make sure named eval sources appear in the list.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sources.html",

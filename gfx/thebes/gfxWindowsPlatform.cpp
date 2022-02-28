@@ -315,6 +315,13 @@ void gfxWindowsPlatform::InitMemoryReportersForGPUProcess() {
 /* static */
 nsresult gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(
     uint64_t* aResult) {
+  // If win32k is locked down then we should not have any GPU processing and
+  // cannot use these APIs either way.
+  if (IsWin32kLockedDown()) {
+    *aResult = 0;
+    return NS_OK;
+  }
+
   nsModuleHandle module(LoadLibrary(L"gdi32.dll"));
   if (!module) {
     return NS_ERROR_NOT_AVAILABLE;

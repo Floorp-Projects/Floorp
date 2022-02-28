@@ -4,6 +4,9 @@
 
 // This test checks to see if command button highlights and unhighlights
 // calls when debugger is paused.
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.command-click", true);
   const dbg = await initDebugger("doc-command-click.html", "simple4.js");

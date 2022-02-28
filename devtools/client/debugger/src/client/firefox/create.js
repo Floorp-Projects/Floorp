@@ -126,6 +126,7 @@ export function createGeneratedSource(sourceResource) {
   return createSourceObject({
     id: makeSourceId(sourceResource),
     url: sourceResource.url,
+    thread: sourceResource.targetFront.getCachedFront("thread").actorID,
     extensionName: sourceResource.extensionName,
     isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
     isExtension:
@@ -142,6 +143,7 @@ export function createGeneratedSource(sourceResource) {
 function createSourceObject({
   id,
   url,
+  thread = null,
   extensionName = null,
   isWasm = false,
   isExtension = false,
@@ -156,6 +158,9 @@ function createSourceObject({
 
     // Absolute URL for the source. This may be a fake URL for pretty printed sources
     url,
+
+    // The thread actor id of the thread/target which this source belongs to
+    thread,
 
     // By default refers to the absolute URL, but this will be updated
     // if user defines a project root. In this case it will be crafted via `getRelativeUrl`
@@ -199,11 +204,14 @@ function createSourceObject({
  *        The ID of the source, computed by source map codebase.
  * @param {String} url
  *        The URL of the original source file.
+ * @param {String} thread
+ *        The thread actor id of the thread the related generated source belongs to
  */
-export function createSourceMapOriginalSource(id, url) {
+export function createSourceMapOriginalSource(id, url, thread) {
   return createSourceObject({
     id,
     url,
+    thread,
     isOriginal: true,
   });
 }
@@ -220,11 +228,14 @@ export function createSourceMapOriginalSource(id, url) {
  * @param {String} url
  *        The URL of the pretty-printed source file.
  *        This URL doesn't work. It is the URL of the non-pretty-printed file with ":formated" suffix.
+ * @param {String} thread
+ *        The thread actor id of the thread the related generated source belongs to
  */
-export function createPrettyPrintOriginalSource(id, url) {
+export function createPrettyPrintOriginalSource(id, url, thread) {
   return createSourceObject({
     id,
     url,
+    thread,
     isOriginal: true,
     isPrettyPrinted: true,
   });
@@ -278,5 +289,54 @@ export function createThread(actor, target) {
     targetType: target.targetType,
     name,
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
+  };
+}
+
+/**
+ * Defines the shape of a breakpoint
+ */
+export function createBreakpoint({
+  id,
+  thread,
+  disabled = false,
+  options = {},
+  location,
+  astLocation,
+  generatedLocation,
+  text,
+  originalText,
+}) {
+  return {
+    // The unique identifier (string) for the breakpoint, for details on its format and creation See `makeBreakpointId`
+    id,
+
+    // The thread actor id (string) which the source this breakpoint is created in belongs to
+    thread,
+
+    // This (boolean) specifies if the breakpoint is disabled or not
+    disabled,
+
+    // This (object) stores extra information about the breakpoint, which defines the type of the breakpoint (i.e conditional breakpoints, log points)
+    // {
+    //    condition: <Boolean>,
+    //    logValue: <String>,
+    //    hidden: <Boolean>
+    // }
+    options,
+
+    // The location (object) information for the original source, for details on its format and structure See `makeBreakpointLocation`
+    location,
+
+    // The source map location (object) infomation, for details see `getASTLocation`
+    astLocation,
+
+    // The location (object) information for the generated source, for details on its format and structure See `makeBreakpointLocation`
+    generatedLocation,
+
+    // The text (string) on the line which the brekpoint is set in the generated source
+    text,
+
+    // The text (string) on the line which the breakpoint is set in the original source
+    originalText,
   };
 }

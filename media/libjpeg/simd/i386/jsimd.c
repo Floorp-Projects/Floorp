@@ -2,7 +2,7 @@
  * jsimd_i386.c
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009-2011, 2013-2014, 2016, 2018, D. R. Commander.
+ * Copyright (C) 2009-2011, 2013-2014, 2016, 2018, 2022, D. R. Commander.
  * Copyright (C) 2015-2016, 2018, Matthieu Darbois.
  *
  * Based on the x86 SIMD extension for IJG JPEG library,
@@ -44,7 +44,7 @@ LOCAL(void)
 init_simd(void)
 {
 #ifndef NO_GETENV
-  char *env = NULL;
+  char env[2] = { 0 };
 #endif
 
   if (simd_support != ~0U)
@@ -54,26 +54,19 @@ init_simd(void)
 
 #ifndef NO_GETENV
   /* Force different settings through environment variables */
-  env = getenv("JSIMD_FORCEMMX");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCEMMX") && !strcmp(env, "1"))
     simd_support &= JSIMD_MMX;
-  env = getenv("JSIMD_FORCE3DNOW");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCE3DNOW") && !strcmp(env, "1"))
     simd_support &= JSIMD_3DNOW | JSIMD_MMX;
-  env = getenv("JSIMD_FORCESSE");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCESSE") && !strcmp(env, "1"))
     simd_support &= JSIMD_SSE | JSIMD_MMX;
-  env = getenv("JSIMD_FORCESSE2");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCESSE2") && !strcmp(env, "1"))
     simd_support &= JSIMD_SSE2;
-  env = getenv("JSIMD_FORCEAVX2");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCEAVX2") && !strcmp(env, "1"))
     simd_support &= JSIMD_AVX2;
-  env = getenv("JSIMD_FORCENONE");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_FORCENONE") && !strcmp(env, "1"))
     simd_support = 0;
-  env = getenv("JSIMD_NOHUFFENC");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if (!GETENV_S(env, 2, "JSIMD_NOHUFFENC") && !strcmp(env, "1"))
     simd_huffman = 0;
 #endif
 }

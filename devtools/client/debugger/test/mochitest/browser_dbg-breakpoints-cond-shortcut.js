@@ -5,6 +5,8 @@
 // Test opening conditional panel using keyboard shortcut.
 // Should access the closest breakpoint to a passed in cursorPosition.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
 

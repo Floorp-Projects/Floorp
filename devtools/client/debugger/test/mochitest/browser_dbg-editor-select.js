@@ -4,6 +4,9 @@
 
 // Tests that the editor highlights the correct location when the
 // debugger pauses
+
+"use strict";
+
 requestLongerTimeout(2);
 
 add_task(async function() {

@@ -4,6 +4,9 @@
 
 // The test has a lot of interactions between debugger and console panels which
 // might take more than 30s to complete on a slow machine.
+
+"use strict";
+
 requestLongerTimeout(2);
 
 // Tests that pretty-printing updates console messages.

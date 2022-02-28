@@ -10,6 +10,8 @@
 // removed in which case the correct behaviours should begin to pass. To see the
 // failures with breakpoints shifting make flag IS_BREAKPOINT_SHIFTING_ENABLED = false
 
+"use strict";
+
 const IS_BREAKPOINT_SHIFTING_ENABLED = true;
 
 const httpServer = createTestHTTPServer();

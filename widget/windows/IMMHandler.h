@@ -21,7 +21,6 @@
 #include <windows.h>
 
 class nsWindow;
-class nsWindowBase;
 
 namespace mozilla {
 namespace widget {
@@ -33,14 +32,14 @@ class IMEContext final {
   IMEContext() : mWnd(nullptr), mIMC(nullptr) {}
 
   explicit IMEContext(HWND aWnd);
-  explicit IMEContext(nsWindowBase* aWindowBase);
+  explicit IMEContext(nsWindow* aWindowBase);
 
   ~IMEContext() { Clear(); }
 
   HIMC get() const { return mIMC; }
 
   void Init(HWND aWnd);
-  void Init(nsWindowBase* aWindowBase);
+  void Init(nsWindow* aWindowBase);
   void Clear();
 
   bool IsValid() const { return !!mIMC; }

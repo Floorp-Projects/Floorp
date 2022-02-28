@@ -84,11 +84,8 @@ export const MultiStageAboutWelcome = props => {
         if (index < props.screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
-        } else if (window.location.href === "about:welcome") {
-          AboutWelcomeUtils.handleUserAction({
-            type: "OPEN_ABOUT_PAGE",
-            data: { args: "home", where: "current" },
-          });
+        } else {
+          window.AWFinish();
         }
       },
       props.transitions ? TRANSITION_OUT_TIME : 0
@@ -164,7 +161,6 @@ export const MultiStageAboutWelcome = props => {
               isFirstCenteredScreen={isFirstCenteredScreen}
               isLastCenteredScreen={isLastCenteredScreen}
               order={order}
-              autoClose={screen.autoClose}
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
@@ -174,6 +170,7 @@ export const MultiStageAboutWelcome = props => {
               activeTheme={activeTheme}
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
+              autoAdvance={screen.auto_advance}
             />
           ) : null;
         })}
@@ -250,13 +247,11 @@ export class WelcomeScreen extends React.PureComponent {
 
   async handleAction(event) {
     let { props } = this;
-
-    let targetContent =
-      props.content[event.currentTarget.value] || props.content.tiles;
+    let { value } = event.currentTarget;
+    let targetContent = props.content[value] || props.content.tiles;
     if (!(targetContent && targetContent.action)) {
       return;
     }
-
     // Send telemetry before waiting on actions
     AboutWelcomeUtils.sendActionTelemetry(
       props.messageId,
@@ -298,12 +293,12 @@ export class WelcomeScreen extends React.PureComponent {
         content={this.props.content}
         id={this.props.id}
         order={this.props.order}
-        autoClose={this.props.autoClose}
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
         handleAction={this.handleAction}
         isFirstCenteredScreen={this.props.isFirstCenteredScreen}
         isLastCenteredScreen={this.props.isLastCenteredScreen}
+        autoAdvance={this.props.autoAdvance}
       />
     );
   }

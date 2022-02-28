@@ -32,28 +32,17 @@ bool GdkIsX11Display();
 
 GdkDevice* GdkGetPointer();
 
+// Return the snap's instance name, or null when not running as a snap.
+const char* GetSnapInstanceName();
+inline bool IsRunningUnderSnap() { return !!GetSnapInstanceName(); }
 bool IsRunningUnderFlatpak();
-
-// When packaged as a snap, strict confinement needs to be accounted for.
-// See https://snapcraft.io/docs for details.
-// Name as defined on e.g.
-// https://snapcraft.io/firefox or https://snapcraft.io/thunderbird
-#ifdef MOZ_APP_NAME
-#  define SNAP_INSTANCE_NAME MOZ_APP_NAME
-#endif
-
-bool IsRunningUnderSnap();
 inline bool IsRunningUnderFlatpakOrSnap() {
   return IsRunningUnderFlatpak() || IsRunningUnderSnap();
 }
 
-// Return the snap's instance name, or null when not running as a snap.
-const char* GetSnapInstanceName();
-
 enum class PortalKind {
   FilePicker,
   MimeHandler,
-  Print,
   Settings,
 };
 bool ShouldUsePortal(PortalKind);

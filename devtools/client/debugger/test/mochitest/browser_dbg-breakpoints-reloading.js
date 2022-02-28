@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests breakpoints syncing when reloading
+
+"use strict";
+
 requestLongerTimeout(3);
 
 // Tests that a breakpoint set is correctly synced after reload

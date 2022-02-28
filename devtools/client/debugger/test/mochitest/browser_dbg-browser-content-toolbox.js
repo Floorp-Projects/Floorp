@@ -6,6 +6,8 @@
  * Tests that the debugger is succesfully loaded in the Browser Content Toolbox.
  */
 
+"use strict";
+
 const {
   gDevToolsBrowser,
 } = require("devtools/client/framework/devtools-browser");

@@ -21,7 +21,7 @@
  *   |  |                |                   |               |               |
  *   |  |                v                   |               v               |
  *   |  |  +-------------+-------------+     | +-------------+------------+  |
- *   |  |  |       Registrations       |     | | FinalizationRegistryZone |  |
+ *   |  |  |       Registrations       |     | |  FinalizationObservers   |  |
  *   |  |  |         weak map          |     | +-------------+------------+  |
  *   |  |  +---------------------------+     |               |               |
  *   |  |  | Unregister  :   Records   |     |               v               |
@@ -116,7 +116,7 @@ using RootedFinalizationQueueObject = Rooted<FinalizationQueueObject*>;
 //
 // Finalization records are added to a per-zone record map. They are removed
 // when the record is queued for cleanup, or if the interest in finalization is
-// cancelled. See FinalizationRegistryZone::shouldRemoveRecord for the possible
+// cancelled. See FinalizationObservers::shouldRemoveRecord for the possible
 // reasons.
 
 class FinalizationRecordObject : public NativeObject {

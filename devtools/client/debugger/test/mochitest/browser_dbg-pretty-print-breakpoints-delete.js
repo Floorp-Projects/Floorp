@@ -5,6 +5,8 @@
 // Tests that breakpoints in pretty printed files
 // are properly removed when the user deletes them on either the generated or original files.
 
+"use strict";
+
 add_task(async function() {
   info(
     "Test removing the breakpoint from the minified file (generated source) works"

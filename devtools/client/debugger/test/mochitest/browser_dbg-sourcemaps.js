@@ -4,6 +4,9 @@
 
 // Tests loading sourcemapped sources, setting breakpoints, and
 // stepping in them.
+
+"use strict";
+
 requestLongerTimeout(2);
 
 add_task(async function() {
