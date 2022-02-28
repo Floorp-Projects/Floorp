@@ -134,11 +134,6 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
         // Mime portal breaks default browser handling, see bug 1516290.
         autoBehavior = IsRunningUnderFlatpakOrSnap();
         return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();
-      case PortalKind::Print:
-        // Print portal still needs more work, so auto behavior is just when
-        // flatpak is enabled.
-        autoBehavior = IsRunningUnderFlatpak();
-        return StaticPrefs::widget_use_xdg_desktop_portal_print();
       case PortalKind::Settings:
         autoBehavior = true;
         return StaticPrefs::widget_use_xdg_desktop_portal_settings();
