@@ -469,7 +469,7 @@ AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
       new ReadableStreamDefaultReader(aStream->GetParentObject());
 
   // Step 2.
-  SetUpReadableStreamDefaultReader(aCx, reader, aStream, aRv);
+  SetUpReadableStreamDefaultReader(reader, aStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
