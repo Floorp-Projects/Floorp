@@ -666,12 +666,12 @@ def gen_copy(fun_name, cpp_type, size, unroll, direction):
                 insns += fmt_insn("str %x[scratch], [%x[dst], OFFSET]")
         elif cpu_arch == "arm":
             if size == 1:
-                insns += fmt_insn("ldrb %[scratch], [%[src], OFFSET]")
-                insns += fmt_insn("strb %[scratch], [%[dst], OFFSET]")
+                insns += fmt_insn("ldrb %[scratch], [%[src], #OFFSET]")
+                insns += fmt_insn("strb %[scratch], [%[dst], #OFFSET]")
             else:
                 assert size == 4
-                insns += fmt_insn("ldr %[scratch], [%[src], OFFSET]")
-                insns += fmt_insn("str %[scratch], [%[dst], OFFSET]")
+                insns += fmt_insn("ldr %[scratch], [%[src], #OFFSET]")
+                insns += fmt_insn("str %[scratch], [%[dst], #OFFSET]")
         else:
             raise Exception("Unexpected arch")
         insns = insns.replace("OFFSET", str(offset * size))
