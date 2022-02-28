@@ -478,8 +478,7 @@ AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
 }
 
 // https://streams.spec.whatwg.org/#rs-get-reader
-void ReadableStream::GetReader(JSContext* aCx,
-                               const ReadableStreamGetReaderOptions& aOptions,
+void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
                                OwningReadableStreamReader& resultReader,
                                ErrorResult& aRv) {
   // Step 1. If options["mode"] does not exist,
