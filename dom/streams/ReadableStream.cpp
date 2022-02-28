@@ -824,8 +824,7 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 2. Implicit.
 
   // Steps 3-12 are contained in the construction of Tee State.
-  RefPtr<TeeState> teeState =
-      TeeState::Create(aCx, aStream, aCloneForBranch2, aRv);
+  RefPtr<TeeState> teeState = TeeState::Create(aStream, aCloneForBranch2, aRv);
   if (aRv.Failed()) {
     return;
   }

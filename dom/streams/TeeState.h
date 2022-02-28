@@ -38,8 +38,7 @@ struct TeeState : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TeeState)
 
-  static already_AddRefed<TeeState> Create(JSContext* aCx,
-                                           ReadableStream* aStream,
+  static already_AddRefed<TeeState> Create(ReadableStream* aStream,
                                            bool aCloneForBranch2,
                                            ErrorResult& aRv);
 
@@ -134,7 +133,7 @@ struct TeeState : public nsISupports {
   }
 
  private:
-  TeeState(JSContext* aCx, ReadableStream* aStream, bool aCloneForBranch2);
+  TeeState(ReadableStream* aStream, bool aCloneForBranch2);
 
   // Implicit:
   RefPtr<ReadableStream> mStream;
