@@ -48,7 +48,6 @@ internal interface TabCollectionDao {
     )
     fun getTabCollections(): Flow<List<TabCollectionWithTabs>>
 
-    @Transaction
     @Query(
         """
         SELECT *

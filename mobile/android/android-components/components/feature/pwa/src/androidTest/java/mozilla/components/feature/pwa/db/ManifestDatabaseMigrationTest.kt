@@ -15,7 +15,6 @@ class ManifestDatabaseMigrationTest {
     private val TEST_DB = "migration-test"
 
     @Rule @JvmField
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         ManifestDatabase::class.java.canonicalName,

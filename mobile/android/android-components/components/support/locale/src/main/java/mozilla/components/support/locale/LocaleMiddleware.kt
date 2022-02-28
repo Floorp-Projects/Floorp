@@ -38,9 +38,6 @@ class LocaleMiddleware(
         when (action) {
             is LocaleAction.RestoreLocaleStateAction -> restoreLocale(context.store)
             is LocaleAction.UpdateLocaleAction -> updateLocale(action.locale)
-            else -> {
-                // no-op
-            }
         }
 
         next(action)

@@ -68,9 +68,6 @@ class DownloadMiddleware(
                     return
                 }
             }
-            else -> {
-                // no-op
-            }
         }
 
         next(action)
@@ -87,9 +84,6 @@ class DownloadMiddleware(
             }
             is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
             is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
-            else -> {
-                // no-op
-            }
         }
     }
 

@@ -43,9 +43,6 @@ class ContainerMiddleware(
             is InitAction -> initializeContainers(context.store)
             is ContainerAction.AddContainerAction -> addContainer(action)
             is ContainerAction.RemoveContainerAction -> removeContainer(context.store, action)
-            else -> {
-                // no-op
-            }
         }
 
         next(action)

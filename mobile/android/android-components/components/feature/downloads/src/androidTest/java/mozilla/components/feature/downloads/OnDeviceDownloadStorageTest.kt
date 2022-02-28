@@ -38,7 +38,6 @@ class OnDeviceDownloadStorageTest {
     private lateinit var database: DownloadsDatabase
 
     @get:Rule
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         DownloadsDatabase::class.java.canonicalName,

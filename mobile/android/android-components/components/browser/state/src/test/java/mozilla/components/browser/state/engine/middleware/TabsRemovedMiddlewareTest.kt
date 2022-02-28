@@ -246,8 +246,9 @@ class TabsRemovedMiddlewareTest {
                 is TabListAction.RemoveTabAction,
                 is CustomTabListAction.RemoveAllCustomTabsAction,
                 is CustomTabListAction.RemoveCustomTabAction -> return
-                else -> next(action)
             }
+
+            next(action)
         }
     }
 }

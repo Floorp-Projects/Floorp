@@ -34,7 +34,6 @@ class OnDeviceSitePermissionsStorageTest {
     private lateinit var database: SitePermissionsDatabase
 
     @get:Rule
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         SitePermissionsDatabase::class.java.canonicalName,

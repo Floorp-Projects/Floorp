@@ -73,9 +73,6 @@ class RecentlyClosedMiddleware(
             is InitAction -> {
                 initializeRecentlyClosed(context.store)
             }
-            else -> {
-                // no-op
-            }
         }
 
         next(action)

@@ -261,9 +261,6 @@ internal fun PopupWindow.displayPopup(currentData: MenuPositioningData) {
 
         is BrowserMenuPlacement.AnchoredToTop.ManualAnchoring,
         is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring -> showAtAnchorLocation(currentData)
-        else -> {
-            // no-op
-        }
     }
 }
 

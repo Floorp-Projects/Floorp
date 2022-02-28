@@ -17,11 +17,11 @@ import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -33,14 +33,12 @@ class DownloadCancelDialogFragmentTest {
         spy(DownloadCancelDialogFragment.newInstance(2)).apply {
             doReturn(testContext).`when`(this).requireContext()
             doReturn(mockFragmentManager()).`when`(this).parentFragmentManager
-            var wasAcceptClicked = false
-            onAcceptClicked = { _, _ -> wasAcceptClicked = true }
 
             with(onCreateDialog(null)) {
                 findViewById<Button>(R.id.accept_button).apply { performClick() }
             }
 
-            assertTrue(wasAcceptClicked)
+            verify(this).onAcceptClicked
         }
     }
 
@@ -49,14 +47,12 @@ class DownloadCancelDialogFragmentTest {
         spy(DownloadCancelDialogFragment.newInstance(2)).apply {
             doReturn(testContext).`when`(this).requireContext()
             doReturn(mockFragmentManager()).`when`(this).parentFragmentManager
-            var wasDenyCalled = false
-            onDenyClicked = { wasDenyCalled = true }
 
             with(onCreateDialog(null)) {
                 findViewById<Button>(R.id.deny_button).apply { performClick() }
             }
 
-            assertTrue(wasDenyCalled)
+            verify(this).onDenyClicked
         }
     }
 
