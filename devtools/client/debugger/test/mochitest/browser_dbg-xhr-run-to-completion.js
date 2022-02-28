@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that XHR handlers are not called when pausing in the debugger.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-xhr-run-to-completion.html");
   invokeInTab("singleRequest", "doc-xhr-run-to-completion.html");

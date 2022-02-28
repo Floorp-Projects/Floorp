@@ -5,6 +5,8 @@
 // Tests opening the console first, clicking a link
 // opens the editor at the correct location.
 
+"use strict";
+
 add_task(async function() {
   const toolbox = await initPane("doc-script-switching.html", "webconsole");
   const node = await waitForLink(toolbox, "hi");

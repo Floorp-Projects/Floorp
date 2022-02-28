@@ -4,6 +4,8 @@
 
 // Tests that you can switch tools, without losing your editor position
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
 

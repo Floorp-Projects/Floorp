@@ -7,6 +7,8 @@
 // generated and original sources of scripts with source maps specified either
 // inline  or in their HTTP response headers.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-gc-sources.html",

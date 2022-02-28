@@ -4,6 +4,9 @@
 
 // Tests that breakpoints set in the pretty printed files display and paused
 // correctly.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 

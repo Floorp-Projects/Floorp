@@ -4,6 +4,9 @@
 
 // Test basic windowless worker functionality: the main thread and worker can be
 // separately controlled from the same debugger.
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.windowless-workers", true);
   await pushPref("devtools.debugger.workers-visible", true);

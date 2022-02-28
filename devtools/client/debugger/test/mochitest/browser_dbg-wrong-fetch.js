@@ -5,6 +5,8 @@
 // Test that incorrect source contents are not shown if the server refetches
 // different HTML when attaching to an open page.
 
+"use strict";
+
 add_task(async function() {
   await addTab(`${EXAMPLE_URL}different_html.sjs`);
 

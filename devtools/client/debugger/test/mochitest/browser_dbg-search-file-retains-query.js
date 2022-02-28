@@ -4,6 +4,8 @@
 
 // Tests the search bar retains previous query on re-opening.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {

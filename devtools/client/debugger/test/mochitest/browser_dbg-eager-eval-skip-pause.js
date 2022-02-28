@@ -4,6 +4,8 @@
 
 // Test that eager evaluation skips breakpoints and debugger statements
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-strict.html");
   const { hud } = await getDebuggerSplitConsole(dbg);

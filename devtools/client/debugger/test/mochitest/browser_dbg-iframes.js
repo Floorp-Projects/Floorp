@@ -4,6 +4,9 @@
 
 // Test is taking too much time to complete on some hardware since
 // release at https://bugzilla.mozilla.org/show_bug.cgi?id=1423158
+
+"use strict";
+
 requestLongerTimeout(3);
 
 /**

@@ -7,6 +7,9 @@
 // We wrap it in a setTimeout to avoid errors in the webconsole actor which
 // would still be processing the outcome of the evaluation after we destroy
 // the thread actor.
+
+"use strict";
+
 const EVALED_SOURCE_TEXT = `setTimeout(function() {
   debugger;
   console.log("SECOND LINE");

@@ -4,6 +4,8 @@
 
 // Tests removing tabs with keyboard shortcuts
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-scripts.html",

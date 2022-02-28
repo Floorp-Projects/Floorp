@@ -4,6 +4,8 @@
 
 // Tests that the source tree works.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sources-querystring.html",

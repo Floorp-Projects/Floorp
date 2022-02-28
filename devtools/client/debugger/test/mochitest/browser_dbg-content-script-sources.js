@@ -4,6 +4,8 @@
 
 // Tests that the content scripts are listed in the source tree.
 
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
   const extension = await installAndStartExtension();

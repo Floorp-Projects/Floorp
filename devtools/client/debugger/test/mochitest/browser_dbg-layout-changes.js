@@ -6,6 +6,9 @@
  * This if the debugger's layout is correctly modified when the toolbox's
  * host changes.
  */
+
+"use strict";
+
 requestLongerTimeout(2);
 
 let gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
