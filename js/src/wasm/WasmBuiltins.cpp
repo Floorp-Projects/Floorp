@@ -555,10 +555,8 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         rfe->framePointer = (uint8_t*)iter.frame();
         rfe->tlsData = iter.instance()->tlsData();
 
-        size_t offsetAdjustment = 0;
         rfe->stackPointer =
-            (uint8_t*)(rfe->framePointer -
-                       (tryNote->framePushed + offsetAdjustment));
+            (uint8_t*)(rfe->framePointer - tryNote->framePushed);
         rfe->target = iter.instance()->codeBase(tier) + tryNote->entryPoint;
 
         // Make sure to clear trapping state if we got here due to a trap.
