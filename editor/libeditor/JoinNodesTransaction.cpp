@@ -5,7 +5,8 @@
 
 #include "JoinNodesTransaction.h"
 
-#include "HTMLEditor.h"  // for HTMLEditor
+#include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
+#include "HTMLEditor.h"      // for HTMLEditor
 #include "HTMLEditUtils.h"
 
 #include "mozilla/Logging.h"
@@ -38,9 +39,8 @@ JoinNodesTransaction::JoinNodesTransaction(HTMLEditor& aHTMLEditor,
                                            nsIContent& aLeftContent,
                                            nsIContent& aRightContent)
     : mHTMLEditor(&aHTMLEditor),
-      mLeftContent(&aLeftContent),
-      mRightContent(&aRightContent),
-      mOffset(0) {
+      mRemovedContent(&aLeftContent),
+      mKeepingContent(&aRightContent) {
   // printf("JoinNodesTransaction size: %zu\n", sizeof(JoinNodesTransaction));
   static_assert(sizeof(JoinNodesTransaction) <= 64,
                 "Transaction classes may be created a lot and may be alive "
@@ -49,36 +49,36 @@ JoinNodesTransaction::JoinNodesTransaction(HTMLEditor& aHTMLEditor,
 
 std::ostream& operator<<(std::ostream& aStream,
                          const JoinNodesTransaction& aTransaction) {
-  aStream << "{ mLeftContent=" << aTransaction.mLeftContent.get();
-  if (aTransaction.mLeftContent) {
-    aStream << " (" << *aTransaction.mLeftContent << ")";
-  }
-  aStream << ", mRightContent=" << aTransaction.mRightContent.get();
-  if (aTransaction.mRightContent) {
-    aStream << " (" << *aTransaction.mRightContent << ")";
-  }
-  aStream << ", mParentNode=" << aTransaction.mParentNode.get();
+  aStream << "{ mParentNode=" << aTransaction.mParentNode.get();
   if (aTransaction.mParentNode) {
     aStream << " (" << *aTransaction.mParentNode << ")";
   }
-  aStream << ", mOffset=" << aTransaction.mOffset
+  aStream << ", mRemovedContent=" << aTransaction.mRemovedContent.get();
+  if (aTransaction.mRemovedContent) {
+    aStream << " (" << *aTransaction.mRemovedContent << ")";
+  }
+  aStream << ", mKeepingContent=" << aTransaction.mKeepingContent.get();
+  if (aTransaction.mKeepingContent) {
+    aStream << " (" << *aTransaction.mKeepingContent << ")";
+  }
+  aStream << ", mJoinedOffset=" << aTransaction.mJoinedOffset
           << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
   return aStream;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodesTransaction, EditTransactionBase,
-                                   mHTMLEditor, mLeftContent, mRightContent,
-                                   mParentNode)
+                                   mHTMLEditor, mParentNode, mRemovedContent,
+                                   mKeepingContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodesTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 bool JoinNodesTransaction::CanDoIt() const {
-  if (NS_WARN_IF(!mLeftContent) || NS_WARN_IF(!mRightContent) ||
-      NS_WARN_IF(!mHTMLEditor) || !mLeftContent->GetParentNode()) {
+  if (NS_WARN_IF(!mKeepingContent) || NS_WARN_IF(!mRemovedContent) ||
+      NS_WARN_IF(!mHTMLEditor) || !mKeepingContent->IsInComposedDoc()) {
     return false;
   }
-  return HTMLEditUtils::IsRemovableFromParentNode(*mLeftContent);
+  return HTMLEditUtils::IsRemovableFromParentNode(*mRemovedContent);
 }
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from
@@ -88,32 +88,31 @@ NS_IMETHODIMP JoinNodesTransaction::DoTransaction() {
           ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mLeftContent) ||
-      NS_WARN_IF(!mRightContent)) {
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mKeepingContent) ||
+      NS_WARN_IF(!mRemovedContent)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Get the parent node
-  nsINode* leftContentParent = mLeftContent->GetParentNode();
-  if (NS_WARN_IF(!leftContentParent)) {
+  nsINode* removingContentParentNode = mRemovedContent->GetParentNode();
+  if (NS_WARN_IF(!removingContentParentNode)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Verify that mLeftContent and mRightContent have the same parent
-  if (leftContentParent != mRightContent->GetParentNode()) {
+  // Verify that the joining content nodes have the same parent
+  if (removingContentParentNode != mKeepingContent->GetParentNode()) {
     NS_ASSERTION(false, "Nodes do not have same parent");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Set this instance's mParentNode.  Other methods will see a non-null
   // mParentNode and know all is well
-  mParentNode = leftContentParent;
-  mOffset = mLeftContent->Length();
+  mParentNode = removingContentParentNode;
+  mJoinedOffset = mRemovedContent->Length();
 
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsIContent> leftContent = *mLeftContent;
-  OwningNonNull<nsIContent> rightContent = *mRightContent;
-  nsresult rv = htmlEditor->DoJoinNodes(rightContent, leftContent);
+  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+  const OwningNonNull<nsIContent> removingContent = *mRemovedContent;
+  const OwningNonNull<nsIContent> keepingContent = *mKeepingContent;
+  const nsresult rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
   return rv;
 }
@@ -125,17 +124,18 @@ NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
           ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mParentNode) || NS_WARN_IF(!mLeftContent) ||
-      NS_WARN_IF(!mRightContent) || NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!mParentNode) || NS_WARN_IF(!mKeepingContent) ||
+      NS_WARN_IF(!mRemovedContent) || NS_WARN_IF(!mHTMLEditor)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsIContent> leftContent = *mLeftContent;
+  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+  const OwningNonNull<nsIContent> removedContent = *mRemovedContent;
 
-  SplitNodeResult splitNodeResult = htmlEditor->DoSplitNode(
-      EditorDOMPoint(mRightContent, std::min(mOffset, mRightContent->Length())),
-      leftContent);
+  const SplitNodeResult splitNodeResult = htmlEditor->DoSplitNode(
+      EditorDOMPoint(mKeepingContent,
+                     std::min(mJoinedOffset, mKeepingContent->Length())),
+      removedContent);
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
                        "HTMLEditor::DoSplitNode() failed");
   return splitNodeResult.Rv();
