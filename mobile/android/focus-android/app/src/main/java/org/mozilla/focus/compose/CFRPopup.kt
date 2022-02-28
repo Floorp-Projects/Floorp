@@ -162,6 +162,18 @@ internal class CFRPopupFullScreenLayout(
         container.context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     /**
+     * Listener for when the anchor is removed from the screen.
+     * Useful in the following situations:
+     *   - lack of purpose - if there is no anchor the context/action to which this popup refers to disappeared
+     *   - leak from WindowManager - if removing the app from task manager while the popup is shown.
+     *
+     * Will not inform client about this since the user did not expressly dismissed this popup.
+     */
+    private val anchorDetachedListener = OnViewDetachedListener {
+        dismiss()
+    }
+
+    /**
      * When the screen is rotated the popup may get improperly anchored
      * because of the async nature of insets and screen rotation.
      * To avoid any improper anchorage the popups are automatically dismissed.
@@ -178,6 +190,7 @@ internal class CFRPopupFullScreenLayout(
         ViewTreeLifecycleOwner.set(this, ViewTreeLifecycleOwner.get(container))
         ViewTreeSavedStateRegistryOwner.set(this, ViewTreeSavedStateRegistryOwner.get(container))
         GeckoScreenOrientation.getInstance().addListener(orientationChangeListener)
+        anchor.addOnAttachStateChangeListener(anchorDetachedListener)
     }
 
     /**
@@ -353,6 +366,7 @@ internal class CFRPopupFullScreenLayout(
      */
     @VisibleForTesting
     internal fun dismiss() {
+        anchor.removeOnAttachStateChangeListener(anchorDetachedListener)
         GeckoScreenOrientation.getInstance().removeListener(orientationChangeListener)
         disposeComposition()
         ViewTreeLifecycleOwner.set(this, null)
@@ -388,6 +402,20 @@ internal class CFRPopupFullScreenLayout(
         return this.value
             .dpToPx(container.resources.displayMetrics)
             .roundToInt()
+    }
+}
+
+/**
+ * Simpler [View.OnAttachStateChangeListener] only informing about
+ * [View.OnAttachStateChangeListener.onViewDetachedFromWindow].
+ */
+private class OnViewDetachedListener(val onDismiss: () -> Unit) : View.OnAttachStateChangeListener {
+    override fun onViewAttachedToWindow(v: View?) {
+        // no-op
+    }
+
+    override fun onViewDetachedFromWindow(v: View?) {
+        onDismiss()
     }
 }
 
