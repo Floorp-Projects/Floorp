@@ -62,8 +62,7 @@ class ReadableStreamGenericReader : public nsISupports {
   RefPtr<ReadableStream> mStream;
 };
 
-bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
-                                           ReadableStreamGenericReader* aReader,
+bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
                                            ReadableStream* aStream,
                                            ErrorResult& aRv);
 
