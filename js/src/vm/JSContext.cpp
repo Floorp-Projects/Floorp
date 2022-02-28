@@ -1063,7 +1063,8 @@ JSContext::~JSContext() {
   TlsContext.set(nullptr);
 }
 
-void JSContext::setHelperThread(const AutoLockHelperThreadState& locked) {
+void JSContext::setHelperThread(const JS::ContextOptions& options,
+                                const AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(isHelperThreadContext());
   MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
   MOZ_ASSERT(currentThread_ == ThreadId());
@@ -1071,6 +1072,7 @@ void JSContext::setHelperThread(const AutoLockHelperThreadState& locked) {
   TlsContext.set(this);
   currentThread_ = ThreadId::ThisThreadId();
   nativeStackBase_.emplace(GetNativeStackBase());
+  options_ = options;
 }
 
 void JSContext::clearHelperThread(const AutoLockHelperThreadState& locked) {
@@ -1080,6 +1082,7 @@ void JSContext::clearHelperThread(const AutoLockHelperThreadState& locked) {
 
   currentThread_ = ThreadId();
   nativeStackBase_.reset();
+  options_ = JS::ContextOptions();
   TlsContext.set(nullptr);
 }
 
