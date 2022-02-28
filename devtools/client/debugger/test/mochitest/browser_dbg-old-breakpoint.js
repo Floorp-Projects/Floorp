@@ -4,6 +4,9 @@
 
 // Test that we show a breakpoint in the UI when there is an old pending
 // breakpoint with an invalid original location.
+
+"use strict";
+
 add_task(async function() {
   clearDebuggerPreferences();
 

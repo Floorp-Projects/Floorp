@@ -4,6 +4,9 @@
 
 // Test hovering in a script that is paused on load
 // and doesn't have functions.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
 

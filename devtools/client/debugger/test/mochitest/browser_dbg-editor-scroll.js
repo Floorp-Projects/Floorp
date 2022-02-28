@@ -4,6 +4,9 @@
 
 // Tests that the editor keeps proper scroll position per document
 // while also moving to the correct location upon pause/breakpoint selection
+
+"use strict";
+
 requestLongerTimeout(2);
 
 add_task(async function() {

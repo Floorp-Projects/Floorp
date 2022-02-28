@@ -4,6 +4,8 @@
 
 // Test that breakpoints work when set in inline scripts that do not start at column 0.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-inline-script-offset.html");
   await selectSource(dbg, "doc-inline-script-offset.html");

@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that we can pause on exceptions early in newly created workers.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-worker-exception.html");
 

@@ -4,6 +4,8 @@
 
 // Tests pretty-printing a source that is currently paused.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html", "math.min.js");
   const thread = dbg.selectors.getCurrentThread();

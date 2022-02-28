@@ -7,6 +7,8 @@
  * required from other panel test files.
  */
 
+"use strict";
+
 /* eslint-disable no-unused-vars */
 
 // We can't use "import globals from head.js" because of bug 1395426.

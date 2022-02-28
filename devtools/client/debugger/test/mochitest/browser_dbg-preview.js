@@ -4,6 +4,9 @@
 
 // Test hovering on an object, which will show a popup and on a
 // simple value, which will show a tooltip.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-preview.html", "preview.js");
 

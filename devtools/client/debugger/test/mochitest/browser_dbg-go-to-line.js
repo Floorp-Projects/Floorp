@@ -4,6 +4,8 @@
 
 // Test the "go to line" feature correctly responses to keyboard shortcuts.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   await selectSource(dbg, "long.js");

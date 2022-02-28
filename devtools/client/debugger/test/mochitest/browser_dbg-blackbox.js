@@ -5,6 +5,8 @@
 // This test covers all the blackboxing functionality relating to a selected
 // source open in the debugger editor.
 
+"use strict";
+
 requestLongerTimeout(5);
 
 const contextMenuItems = {

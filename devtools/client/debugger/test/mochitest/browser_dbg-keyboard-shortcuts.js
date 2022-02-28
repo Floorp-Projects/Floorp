@@ -6,6 +6,8 @@
  * Test keyboard shortcuts.
  */
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-debugger-statements.html");
 

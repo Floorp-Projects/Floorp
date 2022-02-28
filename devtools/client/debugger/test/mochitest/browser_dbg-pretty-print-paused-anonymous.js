@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests that pretty-printing a file with no URL works while paused.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
 

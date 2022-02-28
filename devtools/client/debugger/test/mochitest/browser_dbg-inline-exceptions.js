@@ -5,6 +5,8 @@
 // This test checks the appearance of an inline exception
 // and the content of the exception tooltip.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-exceptions.html");
   await selectSource(dbg, "exceptions.js");

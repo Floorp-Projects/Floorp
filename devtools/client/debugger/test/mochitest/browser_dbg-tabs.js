@@ -4,6 +4,8 @@
 
 // Tests adding and removing tabs
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-scripts.html",
