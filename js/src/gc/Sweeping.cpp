@@ -23,7 +23,7 @@
 #include "builtin/WeakRefObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/AllocKind.h"
-#include "gc/FinalizationRegistry.h"
+#include "gc/FinalizationObservers.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"

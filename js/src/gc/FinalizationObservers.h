@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_FinalizationRegistry_h
-#define gc_FinalizationRegistry_h
+#ifndef gc_FinalizationObservers_h
+#define gc_FinalizationObservers_h
 
 #include "gc/Barrier.h"
 #include "gc/WeakMap.h"
@@ -90,4 +90,4 @@ class FinalizationRegistryGlobalData {
 }  // namespace gc
 }  // namespace js
 
-#endif  // gc_FinalizationRegistry_h
+#endif  // gc_FinalizationObservers_h

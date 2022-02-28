@@ -9,7 +9,7 @@
 
 #include <type_traits>
 
-#include "gc/FinalizationRegistry.h"
+#include "gc/FinalizationObservers.h"
 #include "gc/FreeOp.h"
 #include "gc/GCLock.h"
 #include "gc/Policy.h"
