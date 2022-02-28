@@ -10,21 +10,20 @@ import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.hamcrest.Matchers.allOf
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class BrowserRobot {
@@ -98,26 +97,12 @@ class BrowserRobot {
         tabsCounter.check(matches(withContentDescription("$tabsCount open tabs. Tap to switch tabs.")))
     }
 
-    fun verifyTabsOrder(vararg tabTitle: String) {
-        for (tab in tabTitle.indices) {
-            onView(withId(R.id.sessions)).check(
-                matches(
-                    hasDescendant(
-                        allOf(
-                            hasDescendant(
-                                withText(tabTitle[tab])
-                            ),
-                            withParentIndex(tab)
-                        )
-                    )
-                )
-            )
-        }
+    fun verifyTabsCounterNotShown() {
+        assertFalse(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/counter_root"))
+                .waitForExists(waitingTimeShort)
+        )
     }
-
-    fun openTabsTray(): ViewInteraction = tabsCounter.perform(click())
-
-    fun selectTab(tabTitle: String): ViewInteraction = onView(withText(tabTitle)).perform(click())
 
     fun verifyShareAppsListOpened() =
         assertTrue(shareAppsList.waitForExists(waitingTime))
@@ -214,6 +199,13 @@ class BrowserRobot {
 
             SiteSecurityInfoSheetRobot().interact()
             return SiteSecurityInfoSheetRobot.Transition()
+        }
+
+        fun openTabsTray(interact: TabsTrayRobot.() -> Unit): TabsTrayRobot.Transition {
+            tabsCounter.perform(click())
+
+            TabsTrayRobot().interact()
+            return TabsTrayRobot.Transition()
         }
     }
 }

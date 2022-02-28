@@ -87,15 +87,39 @@ class MultitaskingTest {
             verifySnackBarText("New private tab opened")
             clickSnackBarActionButton("SWITCH")
             verifyNumberOfTabsOpened(3)
-
-            // Open tabs tray and switch to first tab.
-            openTabsTray()
+        }.openTabsTray {
             verifyTabsOrder(tab1Title, tab3Title, tab2Title)
-            selectTab(tab1Title)
+        }.selectTab(tab1Title) {
             verifyPageContent("Tab 1")
         }.clearBrowsingData {
             verifySnackBarText(eraseBrowsingSnackBarText)
             assertTrue(store.state.privateTabs.isEmpty())
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun closeTabButtonTest() {
+        val tab1Url = webServer.url("tab1.html").toString()
+        val tab1Title = webServer.hostName + "/tab1.html"
+        val tab2Title = webServer.hostName + "/tab2.html"
+        val tab3Title = webServer.hostName + "/tab3.html"
+
+        searchScreen {
+        }.loadPage(tab1Url) {
+            verifyPageContent("Tab 1")
+            longPressLink("Tab 2")
+            openLinkInNewTab()
+            longPressLink("Tab 3")
+            openLinkInNewTab()
+            verifyNumberOfTabsOpened(3)
+        }.openTabsTray {
+            verifyTabsOrder(tab1Title, tab3Title, tab2Title)
+        }.closeTab(tab1Title) {
+        }.openTabsTray {
+            verifyTabsOrder(tab3Title, tab2Title)
+        }.closeTab(tab3Title) {
+            verifyTabsCounterNotShown()
         }
     }
 }
