@@ -507,7 +507,7 @@ void ReadableStream::GetReader(JSContext* aCx,
 
   RefPtr<ReadableStream> thisRefPtr = this;
   RefPtr<ReadableStreamBYOBReader> byobReader =
-      AcquireReadableStreamBYOBReader(aCx, thisRefPtr, aRv);
+      AcquireReadableStreamBYOBReader(thisRefPtr, aRv);
   if (aRv.Failed()) {
     return;
   }

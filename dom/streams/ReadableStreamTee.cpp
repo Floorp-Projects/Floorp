@@ -882,7 +882,7 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
 
     // Step 16.1.3. Set reader to !AcquireReadableStreamBYOBReader(stream).
     RefPtr<ReadableStreamBYOBReader> reader =
-        AcquireReadableStreamBYOBReader(aCx, aTeeState->GetStream(), aRv);
+        AcquireReadableStreamBYOBReader(aTeeState->GetStream(), aRv);
     if (aRv.Failed()) {
       return;
     }
