@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("ipdltest")
+
+EXPORTS.mozilla._ipdltest += [
+    "IPDLUnitTest.h",
+    "IPDLUnitTestChild.h",
+    "IPDLUnitTestParent.h",
+    "TestBasicChild.h",
+    "TestBasicParent.h",
+]
+
+SOURCES += [
+    "IPDLUnitTest.cpp",
+    "TestBasic.cpp",
+]
+
+IPDL_SOURCES += [
+    "PIPDLUnitTest.ipdl",
+    "PTestBasic.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul-gtest"
