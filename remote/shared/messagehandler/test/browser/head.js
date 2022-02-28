@@ -142,6 +142,7 @@ async function installSidebarExtension() {
         </html>
       `,
       "sidebar.js": function() {
+        const { browser } = this;
         browser.test.sendMessage("sidebar-loaded", {
           bcId: SpecialPowers.wrap(window).browsingContext.id,
         });
@@ -154,6 +155,7 @@ async function installSidebarExtension() {
         </html>
       `,
       "tab.js": function() {
+        const { browser } = this;
         browser.test.sendMessage("tab-loaded", {
           bcId: SpecialPowers.wrap(window).browsingContext.id,
         });
