@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
 #include "nsString.h"
-#include "nsWindowBase.h"
+#include "nsWindow.h"
 
 #include "WinUtils.h"
 #include "WritingModes.h"
@@ -145,9 +145,8 @@ class TSFTextStore final : public ITextStoreACP,
   static void Terminate(void);
 
   static bool ProcessRawKeyMessage(const MSG& aMsg);
-  static void ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
-                             WPARAM& aWParam, LPARAM& aLParam,
-                             MSGResult& aResult);
+  static void ProcessMessage(nsWindow* aWindow, UINT aMessage, WPARAM& aWParam,
+                             LPARAM& aLParam, MSGResult& aResult);
 
   static void SetIMEOpenState(bool);
   static bool GetIMEOpenState(void);
@@ -161,11 +160,10 @@ class TSFTextStore final : public ITextStoreACP,
     textStore->CommitCompositionInternal(aDiscard);
   }
 
-  static void SetInputContext(nsWindowBase* aWidget,
-                              const InputContext& aContext,
+  static void SetInputContext(nsWindow* aWidget, const InputContext& aContext,
                               const InputContextAction& aAction);
 
-  static nsresult OnFocusChange(bool aGotFocus, nsWindowBase* aFocusedWidget,
+  static nsresult OnFocusChange(bool aGotFocus, nsWindow* aFocusedWidget,
                                 const InputContext& aContext);
   static nsresult OnTextChange(const IMENotification& aIMENotification) {
     NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
@@ -243,11 +241,11 @@ class TSFTextStore final : public ITextStoreACP,
     return (sEnabledTextStore && sEnabledTextStore->mComposition.isSome());
   }
 
-  static bool IsComposingOn(nsWindowBase* aWidget) {
+  static bool IsComposingOn(nsWindow* aWidget) {
     return (IsComposing() && sEnabledTextStore->mWidget == aWidget);
   }
 
-  static nsWindowBase* GetEnabledWindowBase() {
+  static nsWindow* GetEnabledWindowBase() {
     return sEnabledTextStore ? sEnabledTextStore->mWidget.get() : nullptr;
   }
 
@@ -294,14 +292,14 @@ class TSFTextStore final : public ITextStoreACP,
   TSFTextStore();
   ~TSFTextStore();
 
-  static bool CreateAndSetFocus(nsWindowBase* aFocusedWidget,
+  static bool CreateAndSetFocus(nsWindow* aFocusedWidget,
                                 const InputContext& aContext);
   static void EnsureToDestroyAndReleaseEnabledTextStoreIf(
       RefPtr<TSFTextStore>& aTextStore);
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
 
-  bool Init(nsWindowBase* aWidget, const InputContext& aContext);
+  bool Init(nsWindow* aWidget, const InputContext& aContext);
   void Destroy();
   void ReleaseTSFObjects();
 
@@ -421,7 +419,7 @@ class TSFTextStore final : public ITextStoreACP,
   bool MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd);
 
   // Holds the pointer to our current win32 widget
-  RefPtr<nsWindowBase> mWidget;
+  RefPtr<nsWindow> mWidget;
   // mDispatcher is a helper class to dispatch composition events.
   RefPtr<TextEventDispatcher> mDispatcher;
   // Document manager for the currently focused editor

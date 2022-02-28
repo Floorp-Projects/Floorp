@@ -1835,7 +1835,7 @@ TSFTextStore::~TSFTextStore() {
           ("0x%p TSFTextStore instance is destroyed", this));
 }
 
-bool TSFTextStore::Init(nsWindowBase* aWidget, const InputContext& aContext) {
+bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p TSFTextStore::Init(aWidget=0x%p)", this, aWidget));
 
@@ -2282,7 +2282,7 @@ void TSFTextStore::FlushPendingActions() {
     return;
   }
 
-  RefPtr<nsWindowBase> widget(mWidget);
+  RefPtr<nsWindow> widget(mWidget);
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(gIMELog, LogLevel::Error,
@@ -5694,8 +5694,7 @@ TSFTextStore::UnadviseMouseSink(DWORD dwCookie) {
 }
 
 // static
-nsresult TSFTextStore::OnFocusChange(bool aGotFocus,
-                                     nsWindowBase* aFocusedWidget,
+nsresult TSFTextStore::OnFocusChange(bool aGotFocus, nsWindow* aFocusedWidget,
                                      const InputContext& aContext) {
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("  TSFTextStore::OnFocusChange(aGotFocus=%s, "
@@ -5782,7 +5781,7 @@ void TSFTextStore::EnsureToDestroyAndReleaseEnabledTextStoreIf(
 }
 
 // static
-bool TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
+bool TSFTextStore::CreateAndSetFocus(nsWindow* aFocusedWidget,
                                      const InputContext& aContext) {
   // TSF might do something which causes that we need to access static methods
   // of TSFTextStore.  At that time, sEnabledTextStore may be necessary.
@@ -6610,7 +6609,7 @@ bool TSFTextStore::GetIMEOpenState() {
 }
 
 // static
-void TSFTextStore::SetInputContext(nsWindowBase* aWidget,
+void TSFTextStore::SetInputContext(nsWindow* aWidget,
                                    const InputContext& aContext,
                                    const InputContextAction& aAction) {
   MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -7030,7 +7029,7 @@ bool TSFTextStore::ProcessRawKeyMessage(const MSG& aMsg) {
 }
 
 // static
-void TSFTextStore::ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
+void TSFTextStore::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                                   WPARAM& aWParam, LPARAM& aLParam,
                                   MSGResult& aResult) {
   switch (aMessage) {

@@ -9,7 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsWindowBase.h"
+#include "nsWindow.h"
 #include "nsWindowDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -394,7 +394,7 @@ class MOZ_STACK_CLASS NativeKey final {
     }
   };
 
-  NativeKey(nsWindowBase* aWidget, const MSG& aMessage,
+  NativeKey(nsWindow* aWidget, const MSG& aMessage,
             const ModifierKeyState& aModKeyState,
             HKL aOverrideKeyboardLayout = 0,
             nsTArray<FakeCharMsg>* aFakeCharMsgs = nullptr);
@@ -474,7 +474,7 @@ class MOZ_STACK_CLASS NativeKey final {
   // mReceivedMsg is set when another instance starts to handle the message
   // unexpectedly.
   MSG mReceivedMsg;
-  RefPtr<nsWindowBase> mWidget;
+  RefPtr<nsWindow> mWidget;
   RefPtr<TextEventDispatcher> mDispatcher;
   HKL mKeyboardLayout;
   MSG mMsg;
@@ -921,7 +921,7 @@ class KeyboardLayout {
   /**
    * Implementation of nsIWidget::SynthesizeNativeKeyEvent().
    */
-  nsresult SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
+  nsresult SynthesizeNativeKeyEvent(nsWindow* aWidget,
                                     int32_t aNativeKeyboardLayout,
                                     int32_t aNativeKeyCode,
                                     uint32_t aModifierFlags,
@@ -1058,7 +1058,7 @@ class RedirectedKeyDownMessageManager {
    */
   class MOZ_STACK_CLASS AutoFlusher final {
    public:
-    AutoFlusher(nsWindowBase* aWidget, const MSG& aMsg)
+    AutoFlusher(nsWindow* aWidget, const MSG& aMsg)
         : mCancel(!RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)),
           mWidget(aWidget),
           mMsg(aMsg) {}
@@ -1079,7 +1079,7 @@ class RedirectedKeyDownMessageManager {
 
    private:
     bool mCancel;
-    RefPtr<nsWindowBase> mWidget;
+    RefPtr<nsWindow> mWidget;
     const MSG& mMsg;
   };
 
