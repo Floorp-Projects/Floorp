@@ -188,8 +188,7 @@ MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> ReadableStreamCancel(
     ErrorResult& aRv);
 
 extern already_AddRefed<ReadableStreamDefaultReader>
-AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
-                                   ErrorResult& aRv);
+AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv);
 
 extern bool ReadableStreamHasBYOBReader(ReadableStream* aStream);
 extern bool ReadableStreamHasDefaultReader(ReadableStream* aStream);

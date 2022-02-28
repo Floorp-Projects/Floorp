@@ -462,8 +462,7 @@ already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-reader
 already_AddRefed<ReadableStreamDefaultReader>
-AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
-                                   ErrorResult& aRv) {
+AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1.
   RefPtr<ReadableStreamDefaultReader> reader =
       new ReadableStreamDefaultReader(aStream->GetParentObject());
@@ -488,7 +487,7 @@ void ReadableStream::GetReader(JSContext* aCx,
   if (!aOptions.mMode.WasPassed()) {
     RefPtr<ReadableStream> thisRefPtr = this;
     RefPtr<ReadableStreamDefaultReader> defaultReader =
-        AcquireReadableStreamDefaultReader(aCx, thisRefPtr, aRv);
+        AcquireReadableStreamDefaultReader(thisRefPtr, aRv);
     if (aRv.Failed()) {
       return;
     }

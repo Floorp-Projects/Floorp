@@ -582,8 +582,7 @@ void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
     }
 
     // Step 15.1.3. Set reader to ! AcquireReadableStreamDefaultReader(stream).
-    reader =
-        AcquireReadableStreamDefaultReader(aCx, aTeeState->GetStream(), aRv);
+    reader = AcquireReadableStreamDefaultReader(aTeeState->GetStream(), aRv);
     if (aRv.Failed()) {
       return;
     }
