@@ -1095,7 +1095,7 @@ struct BaseCompiler final {
   void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr, Label* ok);
   void boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr, Label* ok);
 
-#if defined(RABALDR_HAS_HEAPREG)
+#if defined(WASM_HAS_HEAPREG)
   template <typename RegIndexType>
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check, RegPtr tls,

@@ -207,7 +207,7 @@ static inline RegI64 RegPtrToRegIntptr(RegPtr r) {
   return RegI64(Register64(Register(r)));
 }
 
-#  ifndef RABALDR_HAS_HEAPREG
+#  ifndef WASM_HAS_HEAPREG
 static inline RegPtr RegIntptrToRegPtr(RegI64 r) {
   return RegPtr(Register64(r).reg);
 }
@@ -215,12 +215,12 @@ static inline RegPtr RegIntptrToRegPtr(RegI64 r) {
 #else
 static inline RegI32 RegPtrToRegIntptr(RegPtr r) { return RegI32(Register(r)); }
 
-#  ifndef RABALDR_HAS_HEAPREG
+#  ifndef WASM_HAS_HEAPREG
 static inline RegPtr RegIntptrToRegPtr(RegI32 r) { return RegPtr(Register(r)); }
 #  endif
 #endif
 
-#ifdef RABALDR_HAS_HEAPREG
+#ifdef WASM_HAS_HEAPREG
 void BaseCompiler::pushHeapBase() {
   RegPtr heapBase = need<RegPtr>();
   move(RegPtr(HeapReg), heapBase);
@@ -377,7 +377,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     // memoryBase nor boundsCheckLimit from tls.
     MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
   }
-#ifdef RABALDR_HAS_HEAPREG
+#ifdef WASM_HAS_HEAPREG
   // We have HeapReg and don't need to load the memoryBase from tls.
   MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
 #endif
@@ -421,7 +421,7 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
 }
 
 bool BaseCompiler::needTlsForAccess(const AccessCheck& check) {
-#ifndef RABALDR_HAS_HEAPREG
+#ifndef WASM_HAS_HEAPREG
   // Platform requires Tls for memory base.
   return true;
 #else
@@ -868,7 +868,7 @@ static inline Register ToRegister(RegI64 r) { return r.low; }
 // but is otherwise clean and flexible and keeps code and supporting definitions
 // entirely co-located.
 
-#ifdef RABALDR_HAS_HEAPREG
+#ifdef WASM_HAS_HEAPREG
 
 // RegIndexType is RegI32 for Memory32 and RegI64 for Memory64.
 template <typename RegIndexType>
@@ -901,7 +901,7 @@ Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
 
 #endif
 
-#ifndef RABALDR_HAS_HEAPREG
+#ifndef WASM_HAS_HEAPREG
 #  ifdef JS_CODEGEN_X86
 using ScratchAtomicNoHeapReg = ScratchEBX;
 #  else
@@ -958,7 +958,7 @@ void BaseCompiler::atomicLoad64(MemoryAccessDesc* access) {
   AccessCheck check;
   RegIndexType rp = popMemoryAccess<RegIndexType>(access, &check);
 
-#  ifdef RABALDR_HAS_HEAPREG
+#  ifdef WASM_HAS_HEAPREG
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   masm.wasmAtomicLoad64(*access, memaddr, temp, rd);
@@ -1362,7 +1362,7 @@ void BaseCompiler::atomicRMW64(MemoryAccessDesc* access, ValType type,
   AccessCheck check;
   RegIndexType rp = popMemoryAccess<RegIndexType>(access, &check);
 
-#if defined(RABALDR_HAS_HEAPREG)
+#if defined(WASM_HAS_HEAPREG)
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_rmw64::Perform(this, *access, memaddr, op, rv, temp, rd);
@@ -1652,7 +1652,7 @@ void BaseCompiler::atomicXchg64(MemoryAccessDesc* access,
   AccessCheck check;
   RegIndexType rp = popMemoryAccess<RegIndexType>(access, &check);
 
-#ifdef RABALDR_HAS_HEAPREG
+#ifdef WASM_HAS_HEAPREG
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr =
       prepareAtomicMemoryAccess<RegIndexType>(access, &check, tls, rp);
@@ -2048,7 +2048,7 @@ void BaseCompiler::atomicCmpXchg64(MemoryAccessDesc* access, ValType type) {
   AccessCheck check;
   RegIndexType rp = popMemoryAccess<RegIndexType>(access, &check);
 
-#ifdef RABALDR_HAS_HEAPREG
+#ifdef WASM_HAS_HEAPREG
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_cmpxchg64::Perform(this, *access, memaddr, rexpect, rnew, rd);
