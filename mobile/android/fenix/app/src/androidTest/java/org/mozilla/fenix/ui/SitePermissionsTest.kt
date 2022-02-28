@@ -69,6 +69,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see https://github.com/mozilla-mobile/fenix/issues/23358")
     @SmokeTest
     @Test
     fun rememberAllowAudioVideoPermissionChoiceTest() {
