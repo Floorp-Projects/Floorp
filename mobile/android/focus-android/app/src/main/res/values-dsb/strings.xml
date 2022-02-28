@@ -898,4 +898,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Rejtarik zacyniś</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Zda se, až toś to sedło wopytujo wam slědowaś. Klikniśo na šćitowy symbol za sedłowe nastajenja a blokěrowańsku statistiku pśeslědowakow.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Wuskokujuce wokno zacyniś</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Sćo šćitany!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Toś te standardne nastajenja mócny šćit póbituju. Ale jo lažko, nastajenja wašym specifiskim pótrjebam pśiměriś.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Zachyśiś</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Pótusniśo tłocašk papjernika, aby swóje wósobinske daty, pśeglědowańsku historiju a wěcej z toś togo pósejźenja wulašował. Wopytajśo!</string>
+
 </resources>

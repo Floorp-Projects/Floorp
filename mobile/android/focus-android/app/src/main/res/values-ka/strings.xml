@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -799,7 +799,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">მხოლოდ-HTTPS რეჟიმი</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">თავადვე ეცდება დაუკავშირდეს საიტებს HTTPS-ით, მეტი უსაფრთხოებისთვის. HTTPS-კავშირებით მონაცემები გადაიცემა დაცულად, დაშიფრულად საიტზე, რომელსაც ეწვევით.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">თავადვე ეცდება დაუკავშირდეს საიტებს HTTPS-ით, მეტი უსაფრთხოებისთვის. HTTPS-კავშირებით მონაცემები გადაიცემა დაცულად, დაშიფრულად საიტზე, რომელსაც ეწვევით.</string>
+
+    <string name="preference_https_only_summary3">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">გამონაკლისები</string>
@@ -896,4 +898,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ჩანართის დახურვა</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">როგორც ჩანს, ეს საიტი თქვენს თვალთვალს ცდილობდა. დაწკაპეთ ფარზე საიტის პარამეტრებისა და შეზღუდვების გასაცნობად.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ამომხტარი ფანჯრის დახურვა</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">დაცული ხართ!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">ეს ნაგულისხმევი პარამეტრები ძლიერ დაცვას გთავაზობთ. თუმცა, მარტივად შეგიძლიათ პარამეტრების შესწორება და საკუთარ საჭიროებებზე მორგება.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">დახურვა</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">მოაცილეთ პირადი მონაცემები, მონახულებული გვერდების ისტორია და მსგავსი ინფორმაცია ამ სეანსიდან, ნაგვის ურნის ღილაკზე შეხებით. თავადვე გამოცადეთ!</string>
+
 </resources>

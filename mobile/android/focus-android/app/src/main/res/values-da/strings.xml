@@ -505,7 +505,7 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Tilføj genveje til din startskærm</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">Gå hurtigt tilbage til dine yndlingssider i %1$s. Vælg blot \&quot;Føj til startskærm\&quot; fra menuen i %1$s.</string>
+    <string name="firstrun_shortcut_text">Gå hurtigt tilbage til dine yndlingssider i %1$s. Vælg blot \&quot;Føj til startskærmen\&quot; fra menuen i %1$s.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Gør beskyttelse af dit privatliv til en vane</string>
@@ -900,4 +900,5 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Luk faneblad</string>
-</resources>
+
+    </resources>

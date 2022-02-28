@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Të mëtejshme</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Leje sajti</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Vetëluaje</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Lejo audio dhe video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blloko vetëm audio</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">E këshilluar</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blloko audio dhe video</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Studime</string>
 
@@ -779,8 +797,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mënyra Vetëm-HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS-ja furnizon një lidhje të sigurt, të fshehtëzuar, mes %1$s dhe sajtit që vizitoni. Shumica e sajteve e mbulojnë përdorimin e HTTPS-së, dhe nëse është aktivizuar mënyrë Vetëm-HTTPS, atëherë %1$s-i do t’i kalojë krejt lidhjet nën mënyrën HTTPS.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Përpiqet automatikisht të lidhet me sajtet duke përdorur HTTPS, për më tepër siguri. Lidhjet HTTPS furnizojnë një lidhje të siguruar, të fshehtëzuar, me sajtet që vizitoni.</string>
+    <string name="preference_https_only_summary3">Përpiqet automatikisht të lidhet me sajtet duke përdorur protokollin HTTPS të fshehtëzimit, për më tepër siguri.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Përjashtime</string>
@@ -845,8 +865,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hiqe</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Riemërtojeni</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Riemërtojeni</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Emër shkurtoreje</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -864,6 +889,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ndiq temën e pajisjes</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Sajti që kërkuat nuk mbulon HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Si parazgjedhje, %1$s përpiqet të lidhet duke përdorur HTTPS, për siguri më të madhe. Për ta ndryshuar këtë rregullim, ose për të mësuar më tepër, kaloni te Rregullime &gt; Privatësi &amp; Siguri &gt; Siguri.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

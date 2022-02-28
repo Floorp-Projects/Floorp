@@ -898,4 +898,22 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tab schließen</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Anscheinend hat diese Website versucht, Sie zu verfolgen. Klicken Sie auf den Schild, um die Website-Einstellungen und Tracker-Blockierungsstatistiken aufzurufen.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Pop-up schließen</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Sie sind geschützt!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Diese Standardeinstellungen bieten starken Schutz. Es ist jedoch einfach, die Einstellungen an Ihre spezifischen Anforderungen anzupassen.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Schließen</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Löschen Sie Ihre persönlichen Daten, die Surf-Chronik und mehr aus dieser Sitzung, indem Sie auf die Schaltfläche „Papierkorb“ tippen. Probieren Sie es aus!</string>
+
 </resources>

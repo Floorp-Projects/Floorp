@@ -900,4 +900,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zavrieť kartu</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Zdá sa, že táto stránka sa vás pokúšala sledovať. Kliknutím na štít zobrazíte nastavenia pre túto stránku a štatistiky blokovania sledovania.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Zavrieť vyskakovacie okno</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Ste chránení!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Tieto predvolené nastavenia ponúkajú silnú ochranu. Je však ľahké vyladiť nastavenia tak, aby vyhovovali vašim špecifickým potrebám.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Zavrieť</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Zbavte sa svojich osobných údajov, histórie prehliadania a ďalších vecí z tejto relácie ťuknutím na tlačidlo koša. Skúste to!</string>
+
 </resources>
