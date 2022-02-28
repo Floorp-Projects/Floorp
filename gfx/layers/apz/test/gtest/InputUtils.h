@@ -129,6 +129,10 @@ APZEventResult PanGesture(PanGestureInput::PanGestureType aType,
                           Modifiers aModifiers = MODIFIER_NONE) {
   PanGestureInput input(aType, MillisecondsSinceStartup(aTime), aTime, aPoint,
                         aDelta, aModifiers);
+  if (aType == PanGestureInput::PANGESTURE_END) {
+    input.mFollowedByMomentum = true;
+  }
+
   return aTarget->ReceiveInputEvent(input);
 }
 
