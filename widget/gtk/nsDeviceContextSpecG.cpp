@@ -274,71 +274,18 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
 }
 
 void nsDeviceContextSpecGTK::StartPrintJob() {
-  // When using flatpak, we have to call the Print method of the portal
-  //
-  // FIXME: This code doesn't seem to be working alright, see bug 1688720.
-  if (widget::ShouldUsePortal(widget::PortalKind::Print)) {
-    GError* error = nullptr;
-    GDBusProxy* dbusProxy = g_dbus_proxy_new_for_bus_sync(
-        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
-        "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
-        "org.freedesktop.portal.Print", nullptr, &error);
-    if (!dbusProxy) {
-      NS_WARNING(
-          nsPrintfCString("Unable to create dbus proxy: %s", error->message)
-              .get());
-      g_error_free(error);
-      return;
-    }
-    int fd = open(mSpoolName.get(), O_RDONLY | O_CLOEXEC);
-    if (fd == -1) {
-      NS_WARNING("Failed to open spool file.");
-      g_object_unref(dbusProxy);
-      return;
-    }
-    static auto s_g_unix_fd_list_new = reinterpret_cast<GUnixFDList* (*)(void)>(
-        dlsym(RTLD_DEFAULT, "g_unix_fd_list_new"));
-    NS_ASSERTION(s_g_unix_fd_list_new,
-                 "Cannot find g_unix_fd_list_new function.");
+  GtkPrintJob* job =
+      gtk_print_job_new(mTitle.get(), mPrintSettings->GetGtkPrinter(),
+                        mGtkPrintSettings, mGtkPageSetup);
 
-    GUnixFDList* fd_list = s_g_unix_fd_list_new();
-    static auto s_g_unix_fd_list_append =
-        reinterpret_cast<gint (*)(GUnixFDList*, gint, GError**)>(
-            dlsym(RTLD_DEFAULT, "g_unix_fd_list_append"));
-    int idx = s_g_unix_fd_list_append(fd_list, fd, NULL);
-    close(fd);
+  if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
 
-    // We'll pass empty options as long as we don't have token from PreparePrint
-    // dbus call (which we don't use). This unfortunately leads to showing gtk
-    // print dialog and also the duplex or printer specific settings is not
-    // honored, so this needs to be fixed when the portal provides more options.
-    GVariantBuilder opt_builder;
-    g_variant_builder_init(&opt_builder, G_VARIANT_TYPE_VARDICT);
-
-    g_dbus_proxy_call_with_unix_fd_list(
-        dbusProxy, "Print",
-        g_variant_new("(ssh@a{sv})", "", /* window */
-                      "Print",           /* title */
-                      idx, g_variant_builder_end(&opt_builder)),
-        G_DBUS_CALL_FLAGS_NONE, -1, fd_list, NULL,
-        NULL,      // portal result cb function
-        nullptr);  // userdata
-    g_object_unref(fd_list);
-    g_object_unref(dbusProxy);
-  } else {
-    GtkPrintJob* job =
-        gtk_print_job_new(mTitle.get(), mPrintSettings->GetGtkPrinter(),
-                          mGtkPrintSettings, mGtkPageSetup);
-
-    if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
-
-    // Now gtk owns the print job, and will be released via our callback.
-    gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
-                       [](gpointer aData) {
-                         auto* spoolFile = static_cast<nsIFile*>(aData);
-                         NS_RELEASE(spoolFile);
-                       });
-  }
+  // Now gtk owns the print job, and will be released via our callback.
+  gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
+                     [](gpointer aData) {
+                       auto* spoolFile = static_cast<nsIFile*>(aData);
+                       NS_RELEASE(spoolFile);
+                     });
 }
 
 void nsDeviceContextSpecGTK::EnumeratePrinters() {
@@ -411,15 +358,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     // to set in the permissions (thats because files and directories have
     // different numbers of bits for their permissions)
     destFile->SetPermissions(0666 & ~(mask));
-
-    // Notify flatpak printing portal that file is completely written
-    if (widget::ShouldUsePortal(widget::PortalKind::Print)) {
-      // Use the name of the file for printing to match with
-      // nsFlatpakPrintPortal
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      // Pass filename to be sure that observer process the right data
-      os->NotifyObservers(nullptr, "print-to-file-finished", targetPath.get());
-    }
   }
   return NS_OK;
 }

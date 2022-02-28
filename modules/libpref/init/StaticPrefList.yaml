@@ -12884,15 +12884,6 @@
   value: 2
   mirror: always
 
-# Whether to use gtk portal for the print dialog.
-#  - 0: never
-#  - 1: always
-#  - 2: auto (for now only true for flatpak, since it needs work, see bug 1688720).
-- name: widget.use-xdg-desktop-portal.print
-  type: int32_t
-  value: 2
-  mirror: always
-
 # Whether to try to use XDG portal for settings / look-and-feel information.
 # https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.Settings
 #  - 0: never
