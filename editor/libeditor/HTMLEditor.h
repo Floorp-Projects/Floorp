@@ -50,7 +50,7 @@ class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EditResult;
 class EmptyEditableFunctor;
-class JoinNodeTransaction;
+class JoinNodesTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
 class MoveNodeResult;
@@ -4598,7 +4598,7 @@ class HTMLEditor final : public EditorBase,
   friend class CSSEditUtils;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
-  friend class JoinNodeTransaction;
+  friend class JoinNodesTransaction;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;

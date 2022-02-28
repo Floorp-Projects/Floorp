@@ -13,7 +13,7 @@
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "InsertNodeTransaction.h"
-#include "JoinNodeTransaction.h"
+#include "JoinNodesTransaction.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
 #include "TypeInState.h"
@@ -4717,10 +4717,10 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
   // Find the number of children of the lefthand node
   const uint32_t oldLeftNodeLen = aLeftContent.Length();
 
-  RefPtr<JoinNodeTransaction> transaction =
-      JoinNodeTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
+  RefPtr<JoinNodesTransaction> transaction =
+      JoinNodesTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
   if (MOZ_UNLIKELY(!transaction)) {
-    NS_WARNING("JoinNodeTransaction::MaybeCreate() failed");
+    NS_WARNING("JoinNodesTransaction::MaybeCreate() failed");
     return JoinNodesResult(NS_ERROR_FAILURE);
   }
 
@@ -4748,7 +4748,7 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
   // after that, thus we need to avoid invalid point (Although it shouldn't
   // occur).
   // XXX Some other transactions manage range updater by themselves.
-  //     Why doesn't JoinNodeTransaction do it?
+  //     Why doesn't JoinNodesTransaction do it?
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
       EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), aLeftContent,
       atRightContent.Offset(), JoinNodesDirection::LeftNodeIntoRightNode);

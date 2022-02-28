@@ -17,7 +17,7 @@
 #include "EditAggregateTransaction.h"
 #include "InsertNodeTransaction.h"
 #include "InsertTextTransaction.h"
-#include "JoinNodeTransaction.h"
+#include "JoinNodesTransaction.h"
 #include "PlaceholderTransaction.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
@@ -83,7 +83,7 @@ NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteTextTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(EditAggregateTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(InsertNodeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(InsertTextTransaction)
-NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(JoinNodeTransaction)
+NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(JoinNodesTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(PlaceholderTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ReplaceTextTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(SplitNodeTransaction)
