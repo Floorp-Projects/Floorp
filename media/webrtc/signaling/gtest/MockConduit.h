@@ -42,7 +42,6 @@ class MockConduit : public MediaSessionConduit {
   MOCK_CONST_METHOD0(GetLocalSSRCs, Ssrcs());
   MOCK_CONST_METHOD0(GetRemoteSSRC, Maybe<Ssrc>());
   MOCK_METHOD1(UnsetRemoteSSRC, void(Ssrc));
-  MOCK_METHOD0(DisableSsrcChanges, void());
   MOCK_CONST_METHOD1(HasCodecPluginID, bool(uint64_t));
   MOCK_METHOD0(RtcpByeEvent, MediaEventSource<void>&());
   MOCK_METHOD0(RtcpTimeoutEvent, MediaEventSource<void>&());
