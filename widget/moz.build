@@ -189,6 +189,7 @@ EXPORTS.mozilla.widget += [
     "InProcessCompositorWidget.h",
     "MediaKeysEventSourceFactory.h",
     "NativeMenu.h",
+    "NativeMenuSupport.h",
     "nsAutoRollup.h",
     "nsXPLookAndFeel.h",
     "PuppetBidiKeyboard.h",

@@ -10,6 +10,10 @@
 
 class nsIWidget;
 
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+#  define HAS_NATIVE_MENU_SUPPORT 1
+#endif
+
 namespace mozilla {
 
 namespace dom {
