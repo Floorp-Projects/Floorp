@@ -1067,25 +1067,8 @@ const PanelUI = {
     return iconAnchor || candidate;
   },
 
-  _addedShortcuts: false,
-  _formatPrintButtonShortcuts() {
-    let printButton = this.mainView.querySelector("#appMenu-print-button2");
-    if (printButton) {
-      if (!printButton.hasAttribute("shortcut")) {
-        printButton.setAttribute(
-          "shortcut",
-          ShortcutUtils.prettifyShortcut(
-            document.getElementById(printButton.getAttribute("key"))
-          )
-        );
-      }
-    }
-  },
   _ensureShortcutsShown(view = this.mainView) {
     if (view.hasAttribute("added-shortcuts")) {
-      // The print button shorcut visibility can change depending on the pref value,
-      // so we need to check this each time, even if we've already added shortcuts.
-      this._formatPrintButtonShortcuts();
       return;
     }
     view.setAttribute("added-shortcuts", "true");
@@ -1097,7 +1080,6 @@ const PanelUI = {
       }
       button.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(key));
     }
-    this._formatPrintButtonShortcuts();
   },
 };
 
