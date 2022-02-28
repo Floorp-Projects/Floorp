@@ -1,0 +1,16 @@
+# Verify that snapping on a filtered surface with a 180 deg rotation + a local 180 deg rotation works correctly
+---
+root:
+  items:
+    - type: stacking-context
+      filters: [opacity(0.5)]
+      transform: rotate(180)
+      items:
+        - type: stacking-context
+          transform: rotate(180)
+          items:
+            - text: "Should be upright"
+              origin: 20 24
+              size: 18
+              color: black
+              font: "VeraBd.ttf"
