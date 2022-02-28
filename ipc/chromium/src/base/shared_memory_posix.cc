@@ -18,6 +18,8 @@
 
 #ifdef OS_LINUX
 #  include "linux_memfd_defs.h"
+#endif
+#ifdef MOZ_WIDGET_GTK
 #  include "mozilla/WidgetUtilsGtk.h"
 #endif
 
@@ -261,7 +263,7 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
     return false;
   }
   *str += '/';
-#  ifdef OS_LINUX
+#  ifdef MOZ_WIDGET_GTK
   // The Snap package environment doesn't provide a private /dev/shm
   // (it's used for communication with services like PulseAudio);
   // instead AppArmor is used to restrict access to it.  Anything with
