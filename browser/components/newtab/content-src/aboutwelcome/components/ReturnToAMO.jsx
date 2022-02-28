@@ -87,7 +87,7 @@ export class ReturnToAMO extends React.PureComponent {
           id={this.props.messageId}
           order={this.props.order}
           totalNumberOfScreens={this.props.totalNumberOfScreens}
-          autoClose={this.props.autoClose}
+          autoAdvance={this.props.auto_advance}
           iconURL={
             type.includes("theme")
               ? this.props.themeScreenshots[0]?.url

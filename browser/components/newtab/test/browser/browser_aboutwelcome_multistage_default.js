@@ -89,7 +89,7 @@ const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP4",
     order: 3,
-    autoClose: true,
+    auto_advance: "primary_button",
     content: {
       title: "Step 4",
       primary_button: {
