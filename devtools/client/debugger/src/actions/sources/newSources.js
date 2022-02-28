@@ -46,11 +46,14 @@ function loadSourceMaps(cx, sources) {
     try {
       const sourceList = await Promise.all(
         sources.map(async sourceActor => {
-          const originalSources = await dispatch(
+          const originalSourcesInfo = await dispatch(
             loadSourceMap(cx, sourceActor)
           );
-          sourceQueue.queueOriginalSources(originalSources);
-          return originalSources;
+          originalSourcesInfo.forEach(
+            sourceInfo => (sourceInfo.thread = sourceActor.thread)
+          );
+          sourceQueue.queueOriginalSources(originalSourcesInfo);
+          return originalSourcesInfo;
         })
       );
 
@@ -204,20 +207,20 @@ export function newOriginalSource(sourceInfo) {
   };
 }
 
-export function newOriginalSources(sourceInfo) {
+export function newOriginalSources(originalSourcesInfo) {
   return async ({ dispatch, getState }) => {
     const state = getState();
     const seen = new Set();
     const sources = [];
 
-    for (const { id, url } of sourceInfo) {
+    for (const { id, url, thread } of originalSourcesInfo) {
       if (seen.has(id) || getSource(state, id)) {
         continue;
       }
 
       seen.add(id);
 
-      sources.push(createSourceMapOriginalSource(id, url));
+      sources.push(createSourceMapOriginalSource(id, url, thread));
     }
 
     const cx = getContext(state);
