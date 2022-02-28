@@ -946,7 +946,7 @@ static const wchar_t* GetNSWindowPropName() {
 }
 
 /* static */
-bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget) {
+bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindow* aWidget) {
   if (!aWidget) {
     ::RemovePropW(aWnd, GetNSWindowPropName());
     return true;
@@ -955,8 +955,8 @@ bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget) {
 }
 
 /* static */
-nsWindowBase* WinUtils::GetNSWindowBasePtr(HWND aWnd) {
-  return static_cast<nsWindowBase*>(::GetPropW(aWnd, GetNSWindowPropName()));
+nsWindow* WinUtils::GetNSWindowBasePtr(HWND aWnd) {
+  return static_cast<nsWindow*>(::GetPropW(aWnd, GetNSWindowPropName()));
 }
 
 /* static */

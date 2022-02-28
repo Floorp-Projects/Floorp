@@ -83,7 +83,6 @@ UNIFIED_SOURCES += [
     "nsUserIdleServiceWin.cpp",
     "nsUXThemeData.cpp",
     "nsWindow.cpp",
-    "nsWindowBase.cpp",
     "nsWindowDbg.cpp",
     "nsWindowGfx.cpp",
     "nsWinGesture.cpp",
