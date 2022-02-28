@@ -227,11 +227,15 @@ class RequestPanel extends Component {
     if (postData && limit <= postData.length) {
       error = REQUEST_TRUNCATED;
     }
-
     if (formDataSections && formDataSections.length === 0 && postData) {
       if (!error) {
-        const json = parseJSON(postData).json;
-        if (json) {
+        const jsonParsedPostData = parseJSON(postData);
+        const { json, strippedChars } = jsonParsedPostData;
+        // If XSSI characters were present in the request just display the raw
+        // data because a request should never have XSSI escape characters
+        if (strippedChars) {
+          hasFormattedDisplay = false;
+        } else if (json) {
           component = PropertiesView;
           componentProps = {
             object: sortObjectKeys(json),
