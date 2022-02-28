@@ -20,8 +20,8 @@ class FinalizationRecordObject;
 
 namespace gc {
 
-// Per-zone data structures to support FinalizationRegistry.
-class FinalizationRegistryZone {
+// Per-zone data structures to support FinalizationRegistry and WeakRef.
+class FinalizationObservers {
   Zone* const zone;
 
   // The set of all finalization registries in the associated zone. These are
@@ -49,8 +49,8 @@ class FinalizationRegistryZone {
   WrapperWeakSet crossZoneWrappers;
 
  public:
-  explicit FinalizationRegistryZone(Zone* zone);
-  ~FinalizationRegistryZone();
+  explicit FinalizationObservers(Zone* zone);
+  ~FinalizationObservers();
 
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
   bool addRecord(HandleObject target, HandleObject record);
