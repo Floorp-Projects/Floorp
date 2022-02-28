@@ -18,12 +18,12 @@ const TARGET_BROWSERS = [
   {
     // Chrome doesn't need any prefix for both user-select and text-size-adjust.
     id: "chrome",
-    status: "current",
+    version: "84",
   },
   {
     // The safari_ios needs -webkit prefix for both properties.
     id: "safari_ios",
-    status: "current",
+    version: "13",
   },
 ];
 
