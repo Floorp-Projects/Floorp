@@ -59,9 +59,7 @@ ProcessRuntime::ProcessRuntime(const ProcessCategory aProcessCategory)
 #  if defined(MOZILLA_INTERNAL_API)
   // If we're inside XUL, and we're the parent process, then we trust that
   // this has already been initialized for us prior to XUL being loaded.
-  // Only required in the child if the Resource ID has been passed down.
-  if (aProcessCategory != ProcessCategory::GeckoBrowserParent &&
-      ActCtxResource::GetAccessibilityResourceId()) {
+  if (aProcessCategory != ProcessCategory::GeckoBrowserParent) {
     mActCtxRgn.emplace(ActCtxResource::GetAccessibilityResource());
   }
 #  elif defined(MOZ_HAS_MOZGLUE)
