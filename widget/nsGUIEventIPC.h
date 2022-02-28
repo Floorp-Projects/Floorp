@@ -1219,6 +1219,7 @@ struct ParamTraits<mozilla::PanGestureInput>
     WriteParam(aMsg, aParam.mUserDeltaMultiplierY);
     WriteParam(aMsg, aParam.mDeltaType);
     WriteParam(aMsg, aParam.mHandledByAPZ);
+    WriteParam(aMsg, aParam.mFollowedByMomentum);
     WriteParam(
         aMsg,
         aParam
@@ -1243,6 +1244,8 @@ struct ParamTraits<mozilla::PanGestureInput>
            ReadParam(aMsg, aIter, &aResult->mDeltaType) &&
            ReadBoolForBitfield(aMsg, aIter, aResult,
                                &paramType::SetHandledByAPZ) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetFollowedByMomentum) &&
            ReadBoolForBitfield(
                aMsg, aIter, aResult,
                &paramType::
