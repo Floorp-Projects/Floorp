@@ -1292,8 +1292,8 @@
         Ci.nsIScreenManager
       );
       let screen = screenManager.screenForRect(
-        screenXDevPx,
-        screenYDevPx,
+        screenXDevPx / window.desktopToDeviceScale,
+        screenYDevPx / window.desktopToDeviceScale,
         1,
         1
       );
