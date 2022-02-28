@@ -23,7 +23,8 @@ data class AppState(
     val topSites: List<TopSite> = emptyList(),
     val autoplayRulesChanged: Boolean = false,
     val secretSettingsEnabled: Boolean = false,
-    val showEraseTabsCfr: Boolean = false
+    val showEraseTabsCfr: Boolean = false,
+    val showTrackingProtectionCfr: Boolean = false
 ) : State
 
 /**

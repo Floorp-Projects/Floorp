@@ -37,7 +37,7 @@ class SettingsAdvancedTest {
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("tab3.html"))
         webServer.enqueue(createMockResponseFromAsset("tab3.html"))
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 

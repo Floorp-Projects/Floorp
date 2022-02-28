@@ -28,7 +28,7 @@ class ShortcutsTest {
 
     @Before
     fun setUp() {
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.start()

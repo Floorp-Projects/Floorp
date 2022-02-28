@@ -42,7 +42,7 @@ class PrivacySecuritySettingsFragment :
         ) {
             preferenceScreen.removePreference(biometricPreference)
         }
-        if (!Features.SHOULD_SHOW_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN ||
+        if (!Features.IS_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN_ENABLED ||
             !requireContext().settings.shouldShowPrivacySecuritySettingsToolTip
         ) {
             preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_tool_tip)))

@@ -35,6 +35,7 @@ object AppReducer : Reducer<AppState, AppAction> {
                 action
             )
             is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
+            is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
         }
     }
 }
@@ -170,6 +171,16 @@ private fun secretSettingsStateChanged(state: AppState, action: AppAction.Secret
  */
 private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowEraseTabsCfrChange): AppState {
     return state.copy(showEraseTabsCfr = action.value)
+}
+
+/**
+ * The state of tracking protection CFR changed
+ */
+private fun showTrackingProtectionCfrChanged(
+    state: AppState,
+    action: AppAction.ShowTrackingProtectionCfrChange
+): AppState {
+    return state.copy(showTrackingProtectionCfr = action.value)
 }
 
 @Suppress("ComplexMethod")

@@ -37,7 +37,7 @@ class ThreeDotMainMenuTest {
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         webServer.start()
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 

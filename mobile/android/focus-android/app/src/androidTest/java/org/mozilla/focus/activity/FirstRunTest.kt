@@ -35,7 +35,7 @@ class FirstRunTest {
     fun startWebServer() {
         webServer = MockWebServer()
         webServer.start()
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 

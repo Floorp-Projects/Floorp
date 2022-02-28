@@ -66,7 +66,7 @@ class EraseBrowsingDataTest {
         } catch (e: IOException) {
             throw AssertionError("Could not start web server", e)
         }
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 

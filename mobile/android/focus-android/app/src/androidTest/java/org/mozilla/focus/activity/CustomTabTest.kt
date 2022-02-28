@@ -54,7 +54,7 @@ class CustomTabTest {
 
     @Before
     fun setUp() {
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))

@@ -90,4 +90,9 @@ sealed class AppAction : Action {
      * State of erase tabs CFR has changed
      */
     data class ShowEraseTabsCfrChange(val value: Boolean) : AppAction()
+
+    /**
+     * State of show Tracking Protection CFR has changed
+     */
+    data class ShowTrackingProtectionCfrChange(val value: Boolean) : AppAction()
 }

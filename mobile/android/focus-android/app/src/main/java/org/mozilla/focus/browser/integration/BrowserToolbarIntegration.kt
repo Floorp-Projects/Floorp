@@ -13,7 +13,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -35,14 +34,14 @@ import org.mozilla.focus.R
 import org.mozilla.focus.compose.CFRPopup
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isCustomTab
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.HardwareUtils
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
     private val store: BrowserStore,
     private val toolbar: BrowserToolbar,
@@ -53,7 +52,6 @@ class BrowserToolbarIntegration(
     private val onUrlLongClicked: () -> Boolean,
     private val eraseActionListener: () -> Unit,
     private val tabCounterListener: () -> Unit,
-    private val onTrackingProtectionShown: () -> Unit,
     private val customTabId: String? = null,
     inTesting: Boolean = false
 ) : LifecycleAwareFeature {
@@ -65,8 +63,12 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal var securityIndicatorScope: CoroutineScope? = null
+
     @VisibleForTesting
     internal var eraseTabsCfrScope: CoroutineScope? = null
+
+    @VisibleForTesting
+    internal var trackingProtectionCfrScope: CoroutineScope? = null
     private var tabsCounterScope: CoroutineScope? = null
     private var customTabsFeature: CustomTabsToolbarFeature? = null
     private var navigationButtonsIntegration: NavigationButtonsIntegration? = null
@@ -212,16 +214,16 @@ class BrowserToolbarIntegration(
         observerSecurityIndicatorChanges()
         if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == false) {
             setBrowserActionButtons()
-            if (Features.SHOW_ERASE_CFR) {
-                observeEraseCfr()
-            }
+            observeEraseCfr()
         }
+        observeTrackingProtectionCfr()
     }
 
     @VisibleForTesting
     internal fun observeEraseCfr() {
         eraseTabsCfrScope = fragment.components?.appStore?.flowScoped { flow ->
             flow.mapNotNull { state -> state.showEraseTabsCfr }
+                .ifChanged()
                 .collect { showEraseCfr ->
                     if (showEraseCfr) {
                         val eraseActionView =
@@ -246,6 +248,33 @@ class BrowserToolbarIntegration(
     }
 
     @VisibleForTesting
+    internal fun observeTrackingProtectionCfr() {
+        trackingProtectionCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+            flow.mapNotNull { state -> state.showTrackingProtectionCfr }
+                .ifChanged()
+                .collect { showTrackingProtectionCfr ->
+                    if (showTrackingProtectionCfr) {
+                        CFRPopup(
+                            container = fragment.requireView(),
+                            text = fragment.getString(R.string.cfr_for_toolbar_shield_icon),
+                            anchor = toolbar.findViewById(
+                                R.id.mozac_browser_toolbar_tracking_protection_indicator
+                            ),
+                            onDismiss = ::onDismissTrackingProtectionCfr
+                        ).apply {
+                            show()
+                            fragment.components?.appStore?.dispatch(AppAction.ShowTrackingProtectionCfrChange(false))
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun onDismissTrackingProtectionCfr() {
+        fragment.requireContext().settings.shouldShowCfrForTrackingProtection = false
+    }
+
+    @VisibleForTesting
     internal fun observerSecurityIndicatorChanges() {
         securityIndicatorScope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
@@ -255,7 +284,6 @@ class BrowserToolbarIntegration(
                     val url = it.content.url
                     if (secure && Indicators.SECURITY in toolbar.display.indicators) {
                         addTrackingProtectionIndicator()
-                        onTrackingProtectionShown()
                     } else if (!secure && Indicators.SECURITY !in toolbar.display.indicators &&
                         !url.trim().startsWith("about:")
                     ) {
@@ -267,13 +295,23 @@ class BrowserToolbarIntegration(
 
     override fun stop() {
         presenter.stop()
-
         toolbarController.stop()
         customTabsFeature?.stop()
         navigationButtonsIntegration?.stop()
         stopObserverSecurityIndicatorChanges()
         toolbar.removeBrowserAction(tabsAction)
         tabsCounterScope?.cancel()
+        stopObserverEraseTabsCfrChanges()
+        stopObserverTrackingProtectionCfrChanges()
+    }
+
+    @VisibleForTesting
+    internal fun stopObserverTrackingProtectionCfrChanges() {
+        trackingProtectionCfrScope?.cancel()
+    }
+
+    @VisibleForTesting
+    internal fun stopObserverEraseTabsCfrChanges() {
         eraseTabsCfrScope?.cancel()
     }
 

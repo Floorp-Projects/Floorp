@@ -85,8 +85,7 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
-                inTesting = true,
-                onTrackingProtectionShown = {},
+                inTesting = true
             )
         )
     }
@@ -110,11 +109,40 @@ class BrowserToolbarIntegrationTest {
     @Test
     fun `WHEN start method is called THEN observe erase tabs CFR changes`() {
         doNothing().`when`(browserToolbarIntegration).observeEraseCfr()
-        Features.SHOW_ERASE_CFR = true
+        Features.IS_ERASE_CFR_ENABLED = true
 
         browserToolbarIntegration.start()
 
         verify(browserToolbarIntegration).observeEraseCfr()
+    }
+
+    @Test
+    fun `WHEN start method is called THEN observe tracking protection CFR changes`() {
+        doNothing().`when`(browserToolbarIntegration).observeTrackingProtectionCfr()
+
+        browserToolbarIntegration.start()
+
+        verify(browserToolbarIntegration).observeTrackingProtectionCfr()
+    }
+
+    @Test
+    fun `WHEN stopping THEN stop tracking protection CFR changes`() {
+
+        doNothing().`when`(browserToolbarIntegration).stopObserverTrackingProtectionCfrChanges()
+
+        browserToolbarIntegration.stop()
+
+        verify(browserToolbarIntegration).stopObserverTrackingProtectionCfrChanges()
+    }
+
+    @Test
+    fun `WHEN stopping THEN stop erase tabs CFR changes`() {
+
+        doNothing().`when`(browserToolbarIntegration).stopObserverEraseTabsCfrChanges()
+
+        browserToolbarIntegration.stop()
+
+        verify(browserToolbarIntegration).stopObserverEraseTabsCfrChanges()
     }
 
     @Test

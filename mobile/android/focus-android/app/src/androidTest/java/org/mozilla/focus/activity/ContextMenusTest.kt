@@ -34,7 +34,7 @@ class ContextMenusTest {
 
     @Before
     fun setup() {
-        featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         webServer.enqueue(TestHelper.createMockResponseFromAsset("tab1.html"))

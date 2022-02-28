@@ -9,14 +9,14 @@ package org.mozilla.focus.utils
  */
 object Features {
     const val SEARCH_TERMS_OR_URL: Boolean = true
-    val SHOULD_SHOW_CFR_FOR_SHIELD_TOOLBAR_ICON = AppConstants.isDevOrNightlyBuild
-    val SHOULD_SHOW_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN = AppConstants.isDevOrNightlyBuild
-    const val SHOULD_SHOW_HOME_PAGE_PRO_TIPS = true
+    val IS_TRACKING_PROTECTION_CFR_ENABLED = AppConstants.isDevOrNightlyBuild
+    val IS_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN_ENABLED = AppConstants.isDevOrNightlyBuild
+    const val ARE_HOME_PAGE_PRO_TIPS_ENABLED = true
 
     /**
      * Erase tabs CFR
      */
-    var SHOW_ERASE_CFR = AppConstants.isDevOrNightlyBuild
+    var IS_ERASE_CFR_ENABLED = AppConstants.isDevOrNightlyBuild
 
     /**
      * Replace the current [FirstrunFragment.kt] which has multiple cards with

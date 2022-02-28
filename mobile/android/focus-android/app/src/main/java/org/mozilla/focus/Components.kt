@@ -132,7 +132,7 @@ class Components(
     }
 
     val store by lazy {
-        val cfrMiddleware = if (Features.SHOW_ERASE_CFR) {
+        val cfrMiddleware = if (Features.IS_ERASE_CFR_ENABLED || Features.IS_TRACKING_PROTECTION_CFR_ENABLED) {
             listOf(CfrMiddleware(context.components))
         } else {
             listOf()

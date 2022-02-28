@@ -3,12 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -18,21 +13,21 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.MainActivityIntentsTestRule
-import org.mozilla.focus.helpers.TestHelper.isPackageInstalled
+import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
-// This test verifies the "Open in..." option from the main menu
+// This test opens and verifies the share overlay
 @RunWith(AndroidJUnit4ClassRunner::class)
-class OpenInExternalBrowserDialogueTest {
+class ShareWebsiteTest {
     private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
-    var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
+    var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
     @Before
     fun setUp() {
@@ -52,33 +47,25 @@ class OpenInExternalBrowserDialogueTest {
 
     @After
     fun tearDown() {
-        mActivityTestRule.activity.finishAndRemoveTask()
-        webServer.shutdown()
+        try {
+            webServer.shutdown()
+        } catch (e: IOException) {
+            throw AssertionError("Could not stop web server", e)
+        }
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
-    fun openPageInExternalAppTest() {
-        val pageUrl = webServer.url("").toString()
-
+    fun shareTabTest() {
+        /* Go to a webpage */
         searchScreen {
-        }.loadPage(pageUrl) {
+        }.loadPage(webServer.url("").toString()) {
+            progressBar.waitUntilGone(waitingTime)
         }.openMainMenu {
-            clickOpenInOption()
-            verifyOpenInDialog()
-            clickOpenInChrome()
-            assertChromeOpens()
+        }.openShareScreen {
+            verifyShareAppsListOpened()
+            mDevice.pressBack()
         }
-    }
-}
-
-private fun assertChromeOpens() {
-    val googleChrome = "com.google.android.apps.chrome"
-    if (isPackageInstalled(googleChrome)) {
-        Intents.intended(IntentMatchers.toPackage(googleChrome))
-    } else {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.findObject(UiSelector().textContains("No app found")).waitForExists(waitingTime)
     }
 }
