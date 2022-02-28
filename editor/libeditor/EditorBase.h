@@ -81,7 +81,7 @@ class HTMLEditUtils;
 class IMEContentObserver;
 class InsertNodeTransaction;
 class InsertTextTransaction;
-class JoinNodeTransaction;
+class JoinNodesTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
 class ParagraphStateAtSelection;
@@ -2785,7 +2785,7 @@ class EditorBase : public nsIEditor,
   friend class HTMLEditUtils;
   friend class InsertNodeTransaction;
   friend class InsertTextTransaction;
-  friend class JoinNodeTransaction;
+  friend class JoinNodesTransaction;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;
