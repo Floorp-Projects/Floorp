@@ -1000,6 +1000,16 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult RestorePreservedSelection();
   void StopPreservingSelection();
 
+  /**
+   * Called when JoinNodesTransaction::DoTransaction() did its transaction.
+   * Note that this is not called when undoing nor redoing.
+   *
+   * @param aTransaction        The transaction which did join nodes.
+   * @param aDoJoinNodesResult  Result of the doing join nodes.
+   */
+  MOZ_CAN_RUN_SCRIPT void DidJoinNodesTransaction(
+      const JoinNodesTransaction& aTransaction, nsresult aDoJoinNodesResult);
+
  protected:  // edit sub-action handler
   /**
    * CanHandleHTMLEditSubAction() checks whether there is at least one

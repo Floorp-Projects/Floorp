@@ -75,7 +75,9 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 bool JoinNodesTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mKeepingContent) || NS_WARN_IF(!mRemovedContent) ||
-      NS_WARN_IF(!mHTMLEditor) || !mKeepingContent->IsInComposedDoc()) {
+      NS_WARN_IF(!mHTMLEditor) ||
+      NS_WARN_IF(mRemovedContent->IsBeingRemoved()) ||
+      !mKeepingContent->IsInComposedDoc()) {
     return false;
   }
   return HTMLEditUtils::IsRemovableFromParentNode(*mRemovedContent);
@@ -88,18 +90,25 @@ NS_IMETHODIMP JoinNodesTransaction::DoTransaction() {
           ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mKeepingContent) ||
-      NS_WARN_IF(!mRemovedContent)) {
+  return DoTransactionInternal(RedoingTransaction::No);
+}
+
+nsresult JoinNodesTransaction::DoTransactionInternal(
+    RedoingTransaction aRedoingTransaction) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mKeepingContent) ||
+                   NS_WARN_IF(!mRemovedContent) ||
+                   NS_WARN_IF(mRemovedContent->IsBeingRemoved()))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsINode* removingContentParentNode = mRemovedContent->GetParentNode();
-  if (NS_WARN_IF(!removingContentParentNode)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!removingContentParentNode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Verify that the joining content nodes have the same parent
-  if (removingContentParentNode != mKeepingContent->GetParentNode()) {
+  if (MOZ_UNLIKELY(removingContentParentNode !=
+                   mKeepingContent->GetParentNode())) {
     NS_ASSERTION(false, "Nodes do not have same parent");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -107,13 +116,43 @@ NS_IMETHODIMP JoinNodesTransaction::DoTransaction() {
   // Set this instance's mParentNode.  Other methods will see a non-null
   // mParentNode and know all is well
   mParentNode = removingContentParentNode;
+  // For now, setting mJoinedOffset to removed content length so that
+  // CreateJoinedPoint returns a point in mKeepingContent whose offset is
+  // the result if all content in mRemovedContent are moved to start of
+  // mKeepingContent.  The offset will be adjusted below.
   mJoinedOffset = mRemovedContent->Length();
 
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> removingContent = *mRemovedContent;
   const OwningNonNull<nsIContent> keepingContent = *mKeepingContent;
-  const nsresult rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
+  // FYI: ComputeIndexInParentNode() never returns Nothing here because it's not
+  //      being removed (i.e., it's in the parent child node chain).
+  const uint32_t removingContentOffset =
+      *removingContent->ComputeIndexInParentNode();
+  nsresult rv;
+  // Let's try to get actual joined point with the tacker.
+  EditorDOMPoint joinNodesPoint(mKeepingContent, 0u);
+  {
+    AutoTrackDOMPoint trackJoinNodePoint(htmlEditor->RangeUpdaterRef(),
+                                         &joinNodesPoint);
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
+
+    DebugOnly<nsresult> rvIgnored =
+        htmlEditor->RangeUpdaterRef().SelAdjJoinNodes(
+            CreateJoinedPoint<EditorRawDOMPoint>(), removingContent,
+            removingContentOffset, JoinNodesDirection::LeftNodeIntoRightNode);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
+  }
+  // Adjust join node offset to the actual offset where the original first
+  // content of the right node is.
+  mJoinedOffset = joinNodesPoint.Offset();
+
+  if (aRedoingTransaction == RedoingTransaction::No) {
+    htmlEditor->DidJoinNodesTransaction(*this, rv);
+  }
+
   return rv;
 }
 
@@ -145,7 +184,7 @@ NS_IMETHODIMP JoinNodesTransaction::RedoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
           ("%p JoinNodesTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
-  return DoTransaction();
+  return DoTransactionInternal(RedoingTransaction::Yes);
 }
 
 }  // namespace mozilla

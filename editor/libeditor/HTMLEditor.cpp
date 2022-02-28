@@ -4706,16 +4706,9 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  // Remember some values; later used for saved selection updating.
-  // Find the offset between the nodes to be joined.
-  EditorDOMPoint atRightContent(&aRightContent);
-  if (MOZ_UNLIKELY(NS_WARN_IF(!atRightContent.IsSet()))) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aRightContent.GetParentNode()))) {
     return JoinNodesResult(NS_ERROR_FAILURE);
   }
-  Unused << atRightContent.Offset();  // Compute the offset first.
-
-  // Find the number of children of the lefthand node
-  const uint32_t oldLeftNodeLen = aLeftContent.Length();
 
   RefPtr<JoinNodesTransaction> transaction =
       JoinNodesTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
@@ -4724,45 +4717,67 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
     return JoinNodesResult(NS_ERROR_FAILURE);
   }
 
-  nsresult rv;
-  {
-    AutoEditorDOMPointChildInvalidator lockOffset(atRightContent);
-    rv = DoTransactionInternal(transaction);
-    if (MOZ_UNLIKELY(Destroyed())) {
-      rv = NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::DoTransactionInternal() failed");
+  const nsresult rv = DoTransactionInternal(transaction);
+  // FYI: Now, DidJoinNodesTransaction() must have been run if succeeded.
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    return JoinNodesResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+
+  // This shouldn't occur unless the cycle collector runs by chrome script
+  // forcibly.
+  if (MOZ_UNLIKELY(NS_WARN_IF(!transaction->GetRemovedContent()) ||
+                   NS_WARN_IF(!transaction->GetExistingContent()))) {
+    return JoinNodesResult(NS_ERROR_UNEXPECTED);
   }
 
   // If joined node is moved to different place, offset may not have any
   // meaning.  In this case, the web app modified the DOM tree takes on the
   // responsibility for the remaning things.
-  if (MOZ_UNLIKELY(NS_WARN_IF(aRightContent.GetParentNode() !=
-                              atRightContent.GetContainer()))) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(transaction->GetExistingContent()->GetParent() !=
+                              transaction->GetParentNode()))) {
     return JoinNodesResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("EditorBase::DoTransactionInternal() failed");
+    return JoinNodesResult(rv);
+  }
+
+  return JoinNodesResult(transaction->CreateJoinedPoint<EditorDOMPoint>(),
+                         *transaction->GetRemovedContent(),
+                         JoinNodesDirection::LeftNodeIntoRightNode);
+}
+
+void HTMLEditor::DidJoinNodesTransaction(
+    const JoinNodesTransaction& aTransaction, nsresult aDoJoinNodesResult) {
+  // This shouldn't occur unless the cycle collector runs by chrome script
+  // forcibly.
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aTransaction.GetRemovedContent()) ||
+                   NS_WARN_IF(!aTransaction.GetExistingContent()))) {
+    return;
+  }
+
+  // If joined node is moved to different place, offset may not have any
+  // meaning.  In this case, the web app modified the DOM tree takes on the
+  // responsibility for the remaning things.
+  if (MOZ_UNLIKELY(aTransaction.GetExistingContent()->GetParentNode() !=
+                   aTransaction.GetParentNode())) {
+    return;
   }
 
   // Be aware, the joined point should be created for each call because
   // they may refer the child node, but some of them may change the DOM tree
   // after that, thus we need to avoid invalid point (Although it shouldn't
   // occur).
-  // XXX Some other transactions manage range updater by themselves.
-  //     Why doesn't JoinNodesTransaction do it?
-  DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
-      EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), aLeftContent,
-      atRightContent.Offset(), JoinNodesDirection::LeftNodeIntoRightNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
-
   TopLevelEditSubActionDataRef().DidJoinContents(
-      *this, EditorRawDOMPoint(&aRightContent, oldLeftNodeLen));
+      *this, aTransaction.CreateJoinedPoint<EditorRawDOMPoint>());
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(aDoJoinNodesResult)) {
     if (RefPtr<TextServicesDocument> textServicesDocument =
             mTextServicesDocument) {
       textServicesDocument->DidJoinContents(
-          EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), aLeftContent,
+          aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
+          *aTransaction.GetRemovedContent(),
           JoinNodesDirection::LeftNodeIntoRightNode);
     }
   }
@@ -4770,24 +4785,13 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
   if (!mActionListeners.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidJoinContents(
-          EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), &aLeftContent,
-          true);
+          aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
+          aTransaction.GetRemovedContent(), true);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidJoinContents() failed, but ignored");
     }
   }
-
-  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-    return JoinNodesResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-    return JoinNodesResult(rv);
-  }
-  return JoinNodesResult(
-      EditorDOMPoint(&aRightContent,
-                     std::min(oldLeftNodeLen, aRightContent.Length())),
-      aLeftContent, JoinNodesDirection::LeftNodeIntoRightNode);
 }
 
 nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
