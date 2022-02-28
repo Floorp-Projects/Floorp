@@ -66,7 +66,6 @@ class AutoTransactionsConserveSelection;
 class AutoUpdateViewBatch;
 class ChangeAttributeTransaction;
 class CompositionTransaction;
-class CreateElementTransaction;
 class CSSEditUtils;
 class DeleteNodeTransaction;
 class DeleteRangeTransaction;
@@ -2777,7 +2776,6 @@ class EditorBase : public nsIEditor,
   friend class AlignStateAtSelection;
   friend class AutoRangeArray;
   friend class CompositionTransaction;
-  friend class CreateElementTransaction;
   friend class CSSEditUtils;
   friend class DeleteNodeTransaction;
   friend class DeleteRangeTransaction;

@@ -10,7 +10,6 @@
 #include "ChangeAttributeTransaction.h"
 #include "ChangeStyleTransaction.h"
 #include "CompositionTransaction.h"
-#include "CreateElementTransaction.h"
 #include "DeleteNodeTransaction.h"
 #include "DeleteRangeTransaction.h"
 #include "DeleteTextTransaction.h"
@@ -76,7 +75,6 @@ LogModule* EditTransactionBase::GetLogModule() {
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeAttributeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeStyleTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(CompositionTransaction)
-NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(CreateElementTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteNodeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteRangeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteTextTransaction)
