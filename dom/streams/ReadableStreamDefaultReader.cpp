@@ -402,8 +402,7 @@ already_AddRefed<Promise> ReadableStreamGenericReader::Cancel(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-reader
-void SetUpReadableStreamDefaultReader(JSContext* aCx,
-                                      ReadableStreamDefaultReader* aReader,
+void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
                                       ReadableStream* aStream,
                                       ErrorResult& aRv) {
   // Step 1.
