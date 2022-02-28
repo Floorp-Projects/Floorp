@@ -51,6 +51,8 @@ UNIFIED_SOURCES += [
     "MozContainer.cpp",
     "MPRISServiceHandler.cpp",
     "NativeKeyBindings.cpp",
+    "NativeMenuGtk.cpp",
+    "NativeMenuSupport.cpp",
     "nsApplicationChooser.cpp",
     "nsAppShell.cpp",
     "nsBidiKeyboard.cpp",

@@ -100,20 +100,14 @@ void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
   }
 }
 
-void OffscreenCanvas::UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight) {
-  MOZ_ASSERT(mNeutered);
-  MOZ_ASSERT(!mCurrentContext);
-  mWidth = aWidth;
-  mHeight = aHeight;
-}
-
 void OffscreenCanvas::GetContext(
     JSContext* aCx, const OffscreenRenderingContextId& aContextId,
     JS::Handle<JS::Value> aContextOptions,
     Nullable<OwningOffscreenRenderingContext>& aResult, ErrorResult& aRv) {
   if (mNeutered) {
     aResult.SetNull();
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.ThrowInvalidStateError(
+        "Cannot create context for placeholder canvas transferred to worker.");
     return;
   }
 
@@ -250,6 +244,18 @@ OffscreenCanvasCloneData* OffscreenCanvas::ToCloneData() {
 
 already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
     ErrorResult& aRv) {
+  if (mNeutered) {
+    aRv.ThrowInvalidStateError(
+        "Cannot get bitmap from placeholder canvas transferred to worker.");
+    return nullptr;
+  }
+
+  if (!mCurrentContext) {
+    aRv.ThrowInvalidStateError(
+        "Cannot get bitmap from canvas without a context.");
+    return nullptr;
+  }
+
   RefPtr<ImageBitmap> result =
       ImageBitmap::CreateFromOffscreenCanvas(GetOwnerGlobal(), *this, aRv);
   if (aRv.Failed()) {

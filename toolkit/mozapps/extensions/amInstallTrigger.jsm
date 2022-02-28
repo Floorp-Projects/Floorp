@@ -164,14 +164,55 @@ InstallTrigger.prototype = {
       }
     }
 
+    const getTriggeringSource = () => {
+      let url;
+      let host;
+      try {
+        if (this._url?.schemeIs("http") || this._url?.schemeIs("https")) {
+          url = this._url.spec;
+          host = this._url.host;
+        } else if (this._url?.schemeIs("blob")) {
+          // For a blob url, we keep the blob url as the sourceURL and
+          // we pick the related sourceHost from either the principal
+          // or the precursorPrincipal (if the principal is a null principal
+          // and the precursor one is defined).
+          url = this._url.spec;
+          host =
+            this._principal.isNullPrincipal &&
+            this._principal.precursorPrincipal
+              ? this._principal.precursorPrincipal.host
+              : this._principal.host;
+        } else if (!this._principal.isNullPrincipal) {
+          url = this._principal.exposableSpec;
+          host = this._principal.host;
+        } else if (this._principal.precursorPrincipal) {
+          url = this._principal.precursorPrincipal.exposableSpec;
+          host = this._principal.precursorPrincipal.host;
+        } else {
+          // Fallback to this._url as last resort.
+          url = this._url.spec;
+          host = this._url.host;
+        }
+      } catch (err) {
+        Cu.reportError(err);
+      }
+      // Fallback to an empty string if url and host are still undefined.
+      return {
+        sourceURL: url || "",
+        sourceHost: host || "",
+      };
+    };
+
+    const { sourceHost, sourceURL } = getTriggeringSource();
+
     let installData = {
       uri: url.spec,
       hash: item.Hash || null,
       name: item.name,
       icon: iconUrl ? iconUrl.spec : null,
       method: "installTrigger",
-      sourceHost: this._window.location?.host,
-      sourceURL: this._window.location?.href,
+      sourceHost,
+      sourceURL,
     };
 
     return this._mediator.install(

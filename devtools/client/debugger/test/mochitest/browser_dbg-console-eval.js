@@ -5,6 +5,8 @@
 // Tests that clicking the DOM node button in any ObjectInspect
 // opens the Inspector panel
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 

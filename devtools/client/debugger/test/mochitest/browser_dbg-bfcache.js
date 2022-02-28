@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
-
 // Test the debugger when navigating using the BFCache.
+
+"use strict";
+
+PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 add_task(async function() {
   info("Run test with bfcacheInParent DISABLED");

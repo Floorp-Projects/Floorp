@@ -37,7 +37,6 @@ module.exports = {
         "client/shared/*.jsm",
         "client/shared/widgets/*.jsm",
         "client/storage/VariablesView.jsm",
-        "client/debugger/test/**",
       ],
       rules: {
         "consistent-return": "off",
@@ -78,7 +77,7 @@ module.exports = {
       },
     },
     {
-      files: ["client/framework/**", "client/debugger/test/**"],
+      files: ["client/framework/**"],
       rules: {
         strict: "off",
       },

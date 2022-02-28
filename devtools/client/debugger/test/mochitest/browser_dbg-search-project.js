@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Testing basic project search
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-script-switching.html",

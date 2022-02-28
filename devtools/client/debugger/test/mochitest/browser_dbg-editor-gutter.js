@@ -5,6 +5,8 @@
 // Tests the breakpoint gutter and making sure breakpoint icons exist
 // correctly
 
+"use strict";
+
 // FIXME bug 1524374 removing breakpoints in this test can cause uncaught
 // rejections and make bug 1512742 permafail.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);

@@ -276,6 +276,15 @@ function handleRequest(request, response) {
           response.finish();
           break;
         }
+        case "json-valid-xssi-protection": {
+          response.setStatusLine(request.httpVersion, status, "OK");
+          response.setHeader("Content-Type", "text/json; charset=utf-8", false);
+          setCacheHeaders();
+          response.write(')]}\'\n{"greeting": "Hello good XSSI protection"}');
+          response.finish();
+          break;
+        }
+
         case "font": {
           response.setStatusLine(request.httpVersion, status, "OK");
           response.setHeader("Content-Type", "font/woff", false);

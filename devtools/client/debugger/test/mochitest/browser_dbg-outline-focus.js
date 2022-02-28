@@ -4,6 +4,8 @@
 
 // Tests that after clicking a function in edtior, outline focuses that function
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html", "long.js");
 

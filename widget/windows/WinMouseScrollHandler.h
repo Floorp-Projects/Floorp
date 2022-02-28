@@ -16,7 +16,7 @@
 #include <windows.h>
 #include "nsPoint.h"
 
-class nsWindowBase;
+class nsWindow;
 
 namespace mozilla {
 namespace widget {
@@ -33,7 +33,7 @@ class MouseScrollHandler {
   static void Shutdown();
 
   static bool NeedsMessage(UINT aMsg);
-  static bool ProcessMessage(nsWindowBase* aWidget, UINT msg, WPARAM wParam,
+  static bool ProcessMessage(nsWindow* aWidget, UINT msg, WPARAM wParam,
                              LPARAM lParam, MSGResult& aResult);
 
   /**
@@ -41,7 +41,7 @@ class MouseScrollHandler {
    * this method.
    */
   static nsresult SynthesizeNativeMouseScrollEvent(
-      nsWindowBase* aWidget, const LayoutDeviceIntPoint& aPoint,
+      nsWindow* aWidget, const LayoutDeviceIntPoint& aPoint,
       uint32_t aNativeMessage, int32_t aDelta, uint32_t aModifierFlags,
       uint32_t aAdditionalFlags);
 
@@ -68,7 +68,7 @@ class MouseScrollHandler {
    * InitEvent() initializes the aEvent.  If aPoint is null, the result of
    * GetCurrentMessagePos() will be used.
    */
-  static void InitEvent(nsWindowBase* aWidget, WidgetGUIEvent& aEvent,
+  static void InitEvent(nsWindow* aWidget, WidgetGUIEvent& aEvent,
                         LPARAM* aPoint);
 
   /**
@@ -102,7 +102,7 @@ class MouseScrollHandler {
    * @param aWParam     The wParam value of the message.
    * @param aLParam     The lParam value of the message.
    */
-  void ProcessNativeMouseWheelMessage(nsWindowBase* aWidget, UINT aMessage,
+  void ProcessNativeMouseWheelMessage(nsWindow* aWidget, UINT aMessage,
                                       WPARAM aWParam, LPARAM aLParam);
 
   /**
@@ -117,7 +117,7 @@ class MouseScrollHandler {
    * @param aLParam     The lParam value of the message.
    * @return            TRUE if the message is processed.  Otherwise, FALSE.
    */
-  bool ProcessNativeScrollMessage(nsWindowBase* aWidget, UINT aMessage,
+  bool ProcessNativeScrollMessage(nsWindow* aWidget, UINT aMessage,
                                   WPARAM aWParam, LPARAM aLParam);
 
   /**
@@ -130,8 +130,8 @@ class MouseScrollHandler {
    * @param aWParam     The wParam value of the original message.
    * @param aLParam     The lParam value of the original message.
    */
-  void HandleMouseWheelMessage(nsWindowBase* aWidget, UINT aMessage,
-                               WPARAM aWParam, LPARAM aLParam);
+  void HandleMouseWheelMessage(nsWindow* aWidget, UINT aMessage, WPARAM aWParam,
+                               LPARAM aLParam);
 
   /**
    * HandleScrollMessageAsMouseWheelMessage() processes the MOZ_WM_VSCROLL and
@@ -144,9 +144,8 @@ class MouseScrollHandler {
    * @param aWParam     The wParam value of the original message.
    * @param aLParam     The lParam value of the original message.
    */
-  void HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget,
-                                              UINT aMessage, WPARAM aWParam,
-                                              LPARAM aLParam);
+  void HandleScrollMessageAsMouseWheelMessage(nsWindow* aWidget, UINT aMessage,
+                                              WPARAM aWParam, LPARAM aLParam);
 
   /**
    * ComputeMessagePos() computes the cursor position when the message was
@@ -167,8 +166,7 @@ class MouseScrollHandler {
      * @param aWidget   An nsWindow which is handling the event.
      * @param aMessage  Must be WM_MOUSEWHEEL or WM_MOUSEHWHEEL.
      */
-    EventInfo(nsWindowBase* aWidget, UINT aMessage, WPARAM aWParam,
-              LPARAM aLParam);
+    EventInfo(nsWindow* aWidget, UINT aMessage, WPARAM aWParam, LPARAM aLParam);
 
     bool CanDispatchWheelEvent() const;
 
@@ -235,7 +233,7 @@ class MouseScrollHandler {
      * @return                  TRUE if the event is ready to dispatch.
      *                          Otherwise, FALSE.
      */
-    bool InitWheelEvent(nsWindowBase* aWidget, WidgetWheelEvent& aWheelEvent,
+    bool InitWheelEvent(nsWindow* aWidget, WidgetWheelEvent& aWheelEvent,
                         const ModifierKeyState& aModKeyState, LPARAM aLParam);
 
    private:
@@ -383,8 +381,8 @@ class MouseScrollHandler {
                         WPARAM aWParam, LPARAM aLParam,
                         const BYTE (&aKeyStates)[256]);
 
-    void NativeMessageReceived(nsWindowBase* aWidget, UINT aMessage,
-                               WPARAM aWParam, LPARAM aLParam);
+    void NativeMessageReceived(nsWindow* aWidget, UINT aMessage, WPARAM aWParam,
+                               LPARAM aLParam);
 
     void NotifyNativeMessageHandlingFinished();
     void NotifyInternalMessageHandlingFinished();
@@ -472,8 +470,8 @@ class MouseScrollHandler {
        * Key message handler for Elantech's hack.  Returns TRUE if the message
        * is consumed by this handler.  Otherwise, FALSE.
        */
-      static bool HandleKeyMessage(nsWindowBase* aWidget, UINT aMsg,
-                                   WPARAM aWParam, LPARAM aLParam);
+      static bool HandleKeyMessage(nsWindow* aWidget, UINT aMsg, WPARAM aWParam,
+                                   LPARAM aLParam);
 
       static void UpdateZoomUntil();
       static bool IsZooming();

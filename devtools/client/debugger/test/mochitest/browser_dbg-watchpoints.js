@@ -7,6 +7,8 @@
 // - Tests adding a watchpoint, resuming to after the youngest frame has popped,
 // then removing and adding a watchpoint during the same pause
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
 

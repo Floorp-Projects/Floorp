@@ -9,6 +9,8 @@
 // - 'Un/Blackbox files in this directory'
 // - 'Un/Blackbox files outside this directory'
 
+"use strict";
+
 const SOURCE_FILES = {
   nestedSource: "nested-source.js",
   codeReload1: "code_reload_1.js",

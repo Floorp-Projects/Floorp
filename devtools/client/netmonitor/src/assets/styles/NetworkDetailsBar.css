@@ -566,6 +566,16 @@
   margin-inline-start: 6px;
 }
 
+.network-monitor #response-panel .notification[data-key="xssi-string-removed-info-box"] {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.network-monitor #response-panel .notification[data-key="xssi-string-removed-info-box"] .notificationInner .messageText {
+  white-space: normal;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 #timings-panel .learn-more-link {
   width: -moz-max-content;
 }

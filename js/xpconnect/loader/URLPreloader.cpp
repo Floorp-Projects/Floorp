@@ -312,9 +312,13 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
       entry->mResultCode = NS_ERROR_NOT_INITIALIZED;
 
       if (entry->isInList()) {
+#ifdef NIGHTLY_BUILD
         MOZ_DIAGNOSTIC_ASSERT(pendingURLs.contains(entry),
-                              "Entry should not be in pendingURLs");
+                              "Entry should be in pendingURLs");
+        MOZ_DIAGNOSTIC_ASSERT(key.mPath.Length() > 0,
+                              "Path should be non-empty");
         MOZ_DIAGNOSTIC_ASSERT(false, "Entry should be new and not in any list");
+#endif
         return Err(NS_ERROR_UNEXPECTED);
       }
 

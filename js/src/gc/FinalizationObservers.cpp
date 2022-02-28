@@ -5,14 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Finalization registry GC implementation.
+ * GC support for FinalizationRegistry and WeakRef objects.
  */
 
-#include "gc/FinalizationRegistry.h"
+#include "gc/FinalizationObservers.h"
 
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/FinalizationRegistryObject.h"
+#include "builtin/WeakRefObject.h"
 #include "gc/GCInternals.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
@@ -26,10 +27,14 @@
 using namespace js;
 using namespace js::gc;
 
-FinalizationRegistryZone::FinalizationRegistryZone(Zone* zone)
-    : zone(zone), registries(zone), recordMap(zone), crossZoneWrappers(zone) {}
+FinalizationObservers::FinalizationObservers(Zone* zone)
+    : zone(zone),
+      registries(zone),
+      recordMap(zone),
+      crossZoneWrappers(zone),
+      weakRefMap(zone) {}
 
-FinalizationRegistryZone::~FinalizationRegistryZone() {
+FinalizationObservers::~FinalizationObservers() {
   MOZ_ASSERT(registries.empty());
   MOZ_ASSERT(recordMap.empty());
   MOZ_ASSERT(crossZoneWrappers.empty());
@@ -37,8 +42,8 @@ FinalizationRegistryZone::~FinalizationRegistryZone() {
 
 bool GCRuntime::addFinalizationRegistry(
     JSContext* cx, Handle<FinalizationRegistryObject*> registry) {
-  if (!cx->zone()->ensureFinalizationRegistryZone() ||
-      !cx->zone()->finalizationRegistryZone()->addRegistry(registry)) {
+  if (!cx->zone()->ensureFinalizationObservers() ||
+      !cx->zone()->finalizationObservers()->addRegistry(registry)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -46,7 +51,7 @@ bool GCRuntime::addFinalizationRegistry(
   return true;
 }
 
-bool FinalizationRegistryZone::addRegistry(
+bool FinalizationObservers::addRegistry(
     Handle<FinalizationRegistryObject*> registry) {
   return registries.put(registry);
 }
@@ -60,8 +65,8 @@ bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
   MOZ_ASSERT(target->compartment() == record->compartment());
 
   Zone* zone = cx->zone();
-  if (!zone->ensureFinalizationRegistryZone() ||
-      !zone->finalizationRegistryZone()->addRecord(target, record)) {
+  if (!zone->ensureFinalizationObservers() ||
+      !zone->finalizationObservers()->addRecord(target, record)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -69,8 +74,8 @@ bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
   return true;
 }
 
-bool FinalizationRegistryZone::addRecord(HandleObject target,
-                                         HandleObject record) {
+bool FinalizationObservers::addRecord(HandleObject target,
+                                      HandleObject record) {
   // Add a record to the record map and clean up on failure.
   //
   // The following must be updated and kept in sync:
@@ -118,7 +123,7 @@ bool FinalizationRegistryZone::addRecord(HandleObject target,
   return true;
 }
 
-bool FinalizationRegistryZone::addCrossZoneWrapper(JSObject* wrapper) {
+bool FinalizationObservers::addCrossZoneWrapper(JSObject* wrapper) {
   MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
   MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
 
@@ -127,7 +132,7 @@ bool FinalizationRegistryZone::addCrossZoneWrapper(JSObject* wrapper) {
   return crossZoneWrappers.add(ptr, wrapper, UndefinedValue());
 }
 
-void FinalizationRegistryZone::removeCrossZoneWrapper(JSObject* wrapper) {
+void FinalizationObservers::removeCrossZoneWrapper(JSObject* wrapper) {
   MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
   MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
 
@@ -147,7 +152,7 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
   return &obj->as<FinalizationRecordObject>();
 }
 
-void FinalizationRegistryZone::clearRecords() {
+void FinalizationObservers::clearRecords() {
 #ifdef DEBUG
   // Check crossZoneWrappers was correct before clearing.
   for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
@@ -165,20 +170,24 @@ void FinalizationRegistryZone::clearRecords() {
   crossZoneWrappers.clear();
 }
 
-void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
-  FinalizationRegistryZone* frzone = zone->finalizationRegistryZone();
-  if (frzone) {
-    frzone->traceWeakEdges(trc);
+void GCRuntime::traceWeakFinalizationObserverEdges(JSTracer* trc, Zone* zone) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(trc->runtime()));
+  FinalizationObservers* observers = zone->finalizationObservers();
+  if (observers) {
+    observers->traceWeakEdges(trc);
   }
 }
 
-void FinalizationRegistryZone::traceRoots(JSTracer* trc) {
+void FinalizationObservers::traceRoots(JSTracer* trc) {
   // The crossZoneWrappers weak map is traced as a root; this does not keep any
   // of its entries alive by itself.
   crossZoneWrappers.trace(trc);
 }
 
-void FinalizationRegistryZone::traceWeakEdges(JSTracer* trc) {
+void FinalizationObservers::traceWeakEdges(JSTracer* trc) {
+  // Sweep weak ref data.
+  weakRefMap.traceWeak(trc);
+
   // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
 
@@ -237,7 +246,7 @@ void FinalizationRegistryZone::traceWeakEdges(JSTracer* trc) {
 }
 
 // static
-bool FinalizationRegistryZone::shouldRemoveRecord(
+bool FinalizationObservers::shouldRemoveRecord(
     FinalizationRecordObject* record) {
   // Records are removed from the target's vector for the following reasons:
   return !record ||                        // Nuked CCW to record.
@@ -245,7 +254,7 @@ bool FinalizationRegistryZone::shouldRemoveRecord(
          !record->queue()->hasRegistry();  // Dead finalization registry.
 }
 
-void FinalizationRegistryZone::updateForRemovedRecord(
+void FinalizationObservers::updateForRemovedRecord(
     JSObject* wrapper, FinalizationRecordObject* record) {
   // Remove other references to a record when it has been removed from the
   // zone's record map. See addRecord().
@@ -270,8 +279,8 @@ void GCRuntime::nukeFinalizationRecordWrapper(
     JSObject* wrapper, FinalizationRecordObject* record) {
   if (record->isInRecordMap()) {
     FinalizationRegistryObject::unregisterRecord(record);
-    wrapper->zone()->finalizationRegistryZone()->updateForRemovedRecord(wrapper,
-                                                                        record);
+    FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
+    observers->updateForRemovedRecord(wrapper, record);
   }
 }
 
@@ -297,6 +306,93 @@ void GCRuntime::queueFinalizationRegistryForCleanup(
   AutoTouchingGrayThings atgt;
 
   queue->setQueuedForCleanup(true);
+}
+
+bool GCRuntime::registerWeakRef(HandleObject target, HandleObject weakRef) {
+  MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+  MOZ_ASSERT(UncheckedUnwrap(weakRef)->is<WeakRefObject>());
+  MOZ_ASSERT(target->compartment() == weakRef->compartment());
+
+  Zone* zone = target->zone();
+  return zone->ensureFinalizationObservers() &&
+         zone->finalizationObservers()->addWeakRefTarget(target, weakRef);
+}
+
+bool FinalizationObservers::addWeakRefTarget(HandleObject target,
+                                             HandleObject weakRef) {
+  auto ptr = weakRefMap.lookupForAdd(target);
+  if (!ptr && !weakRefMap.add(ptr, target, WeakRefHeapPtrVector(zone))) {
+    return false;
+  }
+
+  auto& refs = ptr->value();
+  return refs.emplaceBack(weakRef);
+}
+
+void GCRuntime::nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef) {
+  FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
+  if (!observers) {
+    return;
+  }
+
+  if (observers->unregisterWeakRefWrapper(wrapper, weakRef)) {
+    weakRef->clearTarget();
+  }
+}
+
+bool FinalizationObservers::unregisterWeakRefWrapper(JSObject* wrapper,
+                                                     WeakRefObject* weakRef) {
+  JSObject* target = weakRef->target();
+  MOZ_ASSERT(target);
+
+  bool removed = false;
+  WeakRefHeapPtrVector& weakRefs = weakRefMap.lookup(target)->value();
+  weakRefs.eraseIf([wrapper, &removed](JSObject* obj) {
+    bool remove = obj == wrapper;
+    if (remove) {
+      removed = true;
+    }
+    return remove;
+  });
+
+  return removed;
+}
+
+static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
+  MOZ_ASSERT(!JS_IsDeadWrapper(obj));
+  obj = UncheckedUnwrapWithoutExpose(obj);
+  return &obj->as<WeakRefObject>();
+}
+
+void WeakRefMap::traceWeak(JSTracer* trc) {
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    // If target is dying, clear the target field of all weakRefs, and remove
+    // the entry from the map.
+    auto result = TraceWeakEdge(trc, &e.front().mutableKey(), "WeakRef target");
+    if (result.isDead()) {
+      for (JSObject* obj : e.front().value()) {
+        UnwrapWeakRef(obj)->clearTarget();
+      }
+      e.removeFront();
+    } else {
+      // Update the target field after compacting.
+      e.front().value().traceWeak(trc, result.finalTarget());
+    }
+  }
+}
+
+// Like GCVector::sweep, but this method will also update the target in every
+// weakRef in this GCVector.
+void WeakRefHeapPtrVector::traceWeak(JSTracer* trc, JSObject* target) {
+  mutableEraseIf([&](HeapPtrObject& obj) -> bool {
+    auto result = TraceWeakEdge(trc, &obj, "WeakRef");
+    if (result.isDead()) {
+      UnwrapWeakRef(result.initialTarget())->clearTarget();
+    } else {
+      UnwrapWeakRef(result.finalTarget())->setTargetUnbarriered(target);
+    }
+    return result.isDead();
+  });
 }
 
 FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)

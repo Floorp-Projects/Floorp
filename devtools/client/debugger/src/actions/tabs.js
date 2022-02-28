@@ -17,7 +17,7 @@ import {
 } from "../selectors";
 
 export function updateTab(source, framework) {
-  const { url, id: sourceId, isOriginal } = source;
+  const { url, id: sourceId, isOriginal, thread } = source;
 
   return {
     type: "UPDATE_TAB",
@@ -25,17 +25,19 @@ export function updateTab(source, framework) {
     framework,
     isOriginal,
     sourceId,
+    thread,
   };
 }
 
 export function addTab(source) {
-  const { url, id: sourceId, isOriginal } = source;
+  const { url, id: sourceId, isOriginal, thread } = source;
 
   return {
     type: "ADD_TAB",
     url,
     isOriginal,
     sourceId,
+    thread,
   };
 }
 

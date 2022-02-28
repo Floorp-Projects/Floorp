@@ -23,7 +23,7 @@
 #include "builtin/WeakRefObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/AllocKind.h"
-#include "gc/FinalizationRegistry.h"
+#include "gc/FinalizationObservers.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
@@ -982,9 +982,8 @@ void js::NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper) {
   JSObject* target = UncheckedUnwrapWithoutExpose(wrapper);
   if (target->is<WeakRefObject>()) {
     WeakRefObject* weakRef = &target->as<WeakRefObject>();
-    GCRuntime* gc = &cx->runtime()->gc;
-    if (weakRef->target() && gc->unregisterWeakRefWrapper(wrapper)) {
-      weakRef->clearTarget();
+    if (weakRef->target()) {
+      cx->runtime()->gc.nukeWeakRefWrapper(wrapper, weakRef);
     }
   }
 
@@ -1240,23 +1239,16 @@ bool UniqueIdGCPolicy::traceWeak(JSTracer* trc, Cell** keyp, uint64_t* valuep) {
   return (*keyp)->isMarkedAny();
 }
 
-void GCRuntime::sweepWeakRefs() {
-  for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    AutoSetThreadIsSweeping threadIsSweeping(zone);
-    zone->weakRefMap().traceWeak(&sweepingTracer, &storeBuffer());
-  }
-}
-
-void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
+void GCRuntime::sweepFinalizationObserversOnMainThread() {
   // This calls back into the browser which expects to be called from the main
   // thread.
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
   gcstats::AutoPhase ap2(stats(),
-                         gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
+                         gcstats::PhaseKind::SWEEP_FINALIZATION_OBSERVERS);
   SweepingTracer trc(rt);
   AutoLockStoreBuffer lock(&storeBuffer());
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    traceWeakFinalizationRegistryEdges(&trc, zone);
+    traceWeakFinalizationObserverEdges(&trc, zone);
   }
 }
 
@@ -1485,7 +1477,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   // parallel with that. This triggers a read barrier and can add marking work
   // for zones that are still marking. Must happen before sweeping realm
   // globals.
-  sweepFinalizationRegistriesOnMainThread();
+  sweepFinalizationObserversOnMainThread();
 
   // This must happen before updating embedding weak pointers.
   sweepRealmGlobals();
@@ -1507,8 +1499,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                       PhaseKind::SWEEP_WEAKMAPS, lock);
     AutoRunParallelTask sweepUniqueIds(this, &GCRuntime::sweepUniqueIds,
                                        PhaseKind::SWEEP_UNIQUEIDS, lock);
-    AutoRunParallelTask sweepWeakRefs(this, &GCRuntime::sweepWeakRefs,
-                                      PhaseKind::SWEEP_WEAKREFS, lock);
 
     WeakCacheTaskVector sweepCacheTasks;
     bool canSweepWeakCachesOffThread =

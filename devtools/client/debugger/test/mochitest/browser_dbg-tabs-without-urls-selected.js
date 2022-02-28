@@ -4,6 +4,9 @@
 
 // Test that URL-less sources have tabs and selecting that location does not
 // create a new tab for the same URL-less source
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-scripts.html",

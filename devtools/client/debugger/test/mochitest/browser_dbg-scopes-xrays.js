@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that xrays do not interfere with examining objects in the scopes pane.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scopes-xrays.html");
 

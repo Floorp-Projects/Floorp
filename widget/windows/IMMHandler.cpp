@@ -153,7 +153,7 @@ static IMMHandler* gIMMHandler = nullptr;
 
 IMEContext::IMEContext(HWND aWnd) : mWnd(aWnd), mIMC(::ImmGetContext(aWnd)) {}
 
-IMEContext::IMEContext(nsWindowBase* aWindowBase)
+IMEContext::IMEContext(nsWindow* aWindowBase)
     : mWnd(aWindowBase->GetWindowHandle()),
       mIMC(::ImmGetContext(aWindowBase->GetWindowHandle())) {}
 
@@ -163,7 +163,7 @@ void IMEContext::Init(HWND aWnd) {
   mIMC = ::ImmGetContext(mWnd);
 }
 
-void IMEContext::Init(nsWindowBase* aWindowBase) {
+void IMEContext::Init(nsWindow* aWindowBase) {
   Init(aWindowBase->GetWindowHandle());
 }
 

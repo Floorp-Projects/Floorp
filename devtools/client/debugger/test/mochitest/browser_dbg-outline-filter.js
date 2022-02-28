@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the outline pane fuzzy filtering of outline items
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   await selectSource(dbg, "long.js", 1);

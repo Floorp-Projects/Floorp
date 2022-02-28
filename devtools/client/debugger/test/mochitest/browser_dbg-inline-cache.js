@@ -9,6 +9,8 @@
  *   - Reload inside debugger with toolbox caching enabled
  */
 
+"use strict";
+
 // Breakpoint position calculations can throw when interrupted by a navigation.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Resource .*? does not exist/);
 

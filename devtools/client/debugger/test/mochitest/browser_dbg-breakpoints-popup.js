@@ -4,6 +4,8 @@
 
 // Verify that we hit breakpoints on popups
 
+"use strict";
+
 const TEST_URI = "https://example.org/document-builder.sjs?html=main page";
 const POPUP_URL = `https://example.com/document-builder.sjs?html=${escape(`popup for breakpoints
   <script>
