@@ -63,20 +63,22 @@ class JoinNodesTransaction final : public EditTransactionBase {
                                   const JoinNodesTransaction& aTransaction);
 
  protected:
+  virtual ~JoinNodesTransaction() = default;
+
   RefPtr<HTMLEditor> mHTMLEditor;
 
-  // The nodes to operate upon.  After the merge, mRightContent remains and
-  // mLeftContent is removed from the content tree.
-  nsCOMPtr<nsIContent> mLeftContent;
-  nsCOMPtr<nsIContent> mRightContent;
-
-  // The offset into mNode where the children of mElement are split (for
-  // undo). mOffset is the index of the first child in the right node.  -1
-  // means the left node had no children.
-  uint32_t mOffset;
-
-  // The parent node containing mLeftContent and mRightContent.
+  // The original parent of the left/right nodes.
   nsCOMPtr<nsINode> mParentNode;
+
+  // Removed content after joined.
+  nsCOMPtr<nsIContent> mRemovedContent;
+
+  // The keeping content node which contains ex-children of mRemovedContent.
+  nsCOMPtr<nsIContent> mKeepingContent;
+
+  // Offset where the original first content is in mKeepingContent after
+  // doing or redoing.
+  uint32_t mJoinedOffset = 0u;
 };
 
 }  // namespace mozilla
