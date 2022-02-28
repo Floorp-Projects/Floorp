@@ -158,6 +158,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWWaitForMigrationClose.bind(this), window, {
       defineAs: "AWWaitForMigrationClose",
     });
+
+    Cu.exportFunction(this.AWFinish.bind(this), window, {
+      defineAs: "AWFinish",
+    });
   }
 
   /**
@@ -267,6 +271,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetRegion() {
     return this.wrapPromise(this.sendQuery("AWPage:GET_REGION"));
+  }
+
+  AWFinish() {
+    this.contentWindow.location.href = "about:home";
   }
 
   /**

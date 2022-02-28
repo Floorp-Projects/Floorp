@@ -2,13 +2,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { Colorways } from "./Colorways";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 
-export class MultiStageProtonScreen extends React.PureComponent {
+export const MultiStageProtonScreen = props => {
+  const { autoAdvance, handleAction, order } = props;
+  useEffect(() => {
+    if (autoAdvance) {
+      const timer = setTimeout(() => {
+        handleAction({
+          currentTarget: {
+            value: autoAdvance,
+          },
+        });
+      }, 20000);
+      return () => clearTimeout(timer);
+    }
+    return () => {};
+  }, [autoAdvance, handleAction, order]);
+
+  return (
+    <ProtonScreen
+      content={props.content}
+      id={props.id}
+      order={props.order}
+      activeTheme={props.activeTheme}
+      totalNumberOfScreens={props.totalNumberOfScreens}
+      handleAction={props.handleAction}
+      isFirstCenteredScreen={props.isFirstCenteredScreen}
+      isLastCenteredScreen={props.isLastCenteredScreen}
+      autoAdvance={props.autoAdvance}
+      isRtamo={props.isRtamo}
+      isTheme={props.isTheme}
+      iconURL={props.iconURL}
+    />
+  );
+};
+
+export class ProtonScreen extends React.PureComponent {
   componentDidMount() {
     this.mainContentHeader.focus();
   }
@@ -27,20 +61,6 @@ export class MultiStageProtonScreen extends React.PureComponent {
       };
     }
     return {};
-  }
-
-  handleAutoClose(windowObj, currentURL) {
-    const autoCloseTime = 20000;
-    setTimeout(function() {
-      // set the timer to close last screen and redirect to about:home after 20 seconds
-      const screenEl = windowObj.document.querySelector(".screen");
-      if (
-        windowObj.location.href === currentURL &&
-        screenEl.className.includes("dialog-last")
-      ) {
-        windowObj.location.href = "about:home";
-      }
-    }, autoCloseTime);
   }
 
   getScreenClassName(
@@ -96,7 +116,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
 
   render() {
     const {
-      autoClose,
+      autoAdvance,
       content,
       isRtamo,
       isTheme,
@@ -104,11 +124,9 @@ export class MultiStageProtonScreen extends React.PureComponent {
       isLastCenteredScreen,
       totalNumberOfScreens: total,
     } = this.props;
-    const windowObj = this.props.windowObj || window;
-    let currentURL = windowObj.location.href;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoClose || isCornerPosition;
+    const hideStepsIndicator = autoAdvance || isCornerPosition;
     // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
     const screenClassName = this.getScreenClassName(
@@ -116,9 +134,6 @@ export class MultiStageProtonScreen extends React.PureComponent {
       isFirstCenteredScreen,
       isLastCenteredScreen
     );
-    if (autoClose) {
-      this.handleAutoClose(windowObj, currentURL);
-    }
 
     return (
       <main

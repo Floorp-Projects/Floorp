@@ -348,14 +348,8 @@ const MultiStageAboutWelcome = props => {
       if (index < props.screens.length - 1) {
         setTransition(props.transitions ? "in" : "");
         setScreenIndex(prevState => prevState + 1);
-      } else if (window.location.href === "about:welcome") {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
-          type: "OPEN_ABOUT_PAGE",
-          data: {
-            args: "home",
-            where: "current"
-          }
-        });
+      } else {
+        window.AWFinish();
       }
     }, props.transitions ? TRANSITION_OUT_TIME : 0);
   }; // Update top sites with default sites by region when region is available
@@ -421,7 +415,6 @@ const MultiStageAboutWelcome = props => {
       isFirstCenteredScreen: isFirstCenteredScreen,
       isLastCenteredScreen: isLastCenteredScreen,
       order: order,
-      autoClose: screen.autoClose,
       content: screen.content,
       navigate: handleTransition,
       topSites: topSites,
@@ -430,7 +423,8 @@ const MultiStageAboutWelcome = props => {
       flowParams: flowParams,
       activeTheme: activeTheme,
       initialTheme: initialTheme,
-      setActiveTheme: setActiveTheme
+      setActiveTheme: setActiveTheme,
+      autoAdvance: screen.auto_advance
     }) : null;
   })));
 };
@@ -512,7 +506,10 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     let {
       props
     } = this;
-    let targetContent = props.content[event.currentTarget.value] || props.content.tiles;
+    let {
+      value
+    } = event.currentTarget;
+    let targetContent = props.content[value] || props.content.tiles;
 
     if (!(targetContent && targetContent.action)) {
       return;
@@ -552,12 +549,12 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       content: this.props.content,
       id: this.props.id,
       order: this.props.order,
-      autoClose: this.props.autoClose,
       activeTheme: this.props.activeTheme,
       totalNumberOfScreens: this.props.totalNumberOfScreens - 1,
       handleAction: this.handleAction,
       isFirstCenteredScreen: this.props.isFirstCenteredScreen,
-      isLastCenteredScreen: this.props.isLastCenteredScreen
+      isLastCenteredScreen: this.props.isLastCenteredScreen,
+      autoAdvance: this.props.autoAdvance
     });
   }
 
@@ -768,6 +765,7 @@ const DEFAULT_RTAMO_CONTENT = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MultiStageProtonScreen", function() { return MultiStageProtonScreen; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ProtonScreen", function() { return ProtonScreen; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
@@ -782,7 +780,42 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+const MultiStageProtonScreen = props => {
+  const {
+    autoAdvance,
+    handleAction,
+    order
+  } = props;
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    if (autoAdvance) {
+      const timer = setTimeout(() => {
+        handleAction({
+          currentTarget: {
+            value: autoAdvance
+          }
+        });
+      }, 20000);
+      return () => clearTimeout(timer);
+    }
+
+    return () => {};
+  }, [autoAdvance, handleAction, order]);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(ProtonScreen, {
+    content: props.content,
+    id: props.id,
+    order: props.order,
+    activeTheme: props.activeTheme,
+    totalNumberOfScreens: props.totalNumberOfScreens,
+    handleAction: props.handleAction,
+    isFirstCenteredScreen: props.isFirstCenteredScreen,
+    isLastCenteredScreen: props.isLastCenteredScreen,
+    autoAdvance: props.autoAdvance,
+    isRtamo: props.isRtamo,
+    isTheme: props.isTheme,
+    iconURL: props.iconURL
+  });
+};
+class ProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
   componentDidMount() {
     this.mainContentHeader.focus();
   }
@@ -800,18 +833,6 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }
 
     return {};
-  }
-
-  handleAutoClose(windowObj, currentURL) {
-    const autoCloseTime = 20000;
-    setTimeout(function () {
-      // set the timer to close last screen and redirect to about:home after 20 seconds
-      const screenEl = windowObj.document.querySelector(".screen");
-
-      if (windowObj.location.href === currentURL && screenEl.className.includes("dialog-last")) {
-        windowObj.location.href = "about:home";
-      }
-    }, autoCloseTime);
   }
 
   getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen) {
@@ -850,7 +871,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
 
   render() {
     const {
-      autoClose,
+      autoAdvance,
       content,
       isRtamo,
       isTheme,
@@ -858,19 +879,12 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       isLastCenteredScreen,
       totalNumberOfScreens: total
     } = this.props;
-    const windowObj = this.props.windowObj || window;
-    let currentURL = windowObj.location.href;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoClose || isCornerPosition; // Assign proton screen style 'screen-1' or 'screen-2' by checking
+    const hideStepsIndicator = autoAdvance || isCornerPosition; // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
 
     const screenClassName = this.getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen);
-
-    if (autoClose) {
-      this.handleAutoClose(windowObj, currentURL);
-    }
-
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id || ""} ${screenClassName}`,
       role: "dialog",
@@ -1353,7 +1367,7 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
       id: this.props.messageId,
       order: this.props.order,
       totalNumberOfScreens: this.props.totalNumberOfScreens,
-      autoClose: this.props.autoClose,
+      autoAdvance: this.props.auto_advance,
       iconURL: type.includes("theme") ? (_this$props$themeScre = this.props.themeScreenshots[0]) === null || _this$props$themeScre === void 0 ? void 0 : _this$props$themeScre.url : this.props.iconURL,
       addonName: this.props.name,
       handleAction: this.handleAction,
