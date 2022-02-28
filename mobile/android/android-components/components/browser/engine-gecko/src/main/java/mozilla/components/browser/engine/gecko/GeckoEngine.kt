@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.util.JsonReader
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.activity.GeckoActivityDelegate
+import mozilla.components.browser.engine.gecko.activity.GeckoScreenOrientationDelegate
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.ext.getEtpLevel
 import mozilla.components.browser.engine.gecko.ext.getStrictSocialTrackingProtection
@@ -32,6 +33,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.activity.ActivityDelegate
+import mozilla.components.concept.engine.activity.OrientationDelegate
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -65,7 +67,7 @@ import java.lang.ref.WeakReference
 /**
  * Gecko-based implementation of Engine interface.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
@@ -502,6 +504,22 @@ class GeckoEngine(
      */
     override fun unregisterActivityDelegate() {
         runtime.activityDelegate = null
+    }
+
+    /**
+     * See [Engine.registerScreenOrientationDelegate].
+     */
+    override fun registerScreenOrientationDelegate(
+        delegate: OrientationDelegate
+    ) {
+        runtime.orientationController.delegate = GeckoScreenOrientationDelegate(delegate)
+    }
+
+    /**
+     * See [Engine.unregisterScreenOrientationDelegate].
+     */
+    override fun unregisterScreenOrientationDelegate() {
+        runtime.orientationController.delegate = null
     }
 
     /**

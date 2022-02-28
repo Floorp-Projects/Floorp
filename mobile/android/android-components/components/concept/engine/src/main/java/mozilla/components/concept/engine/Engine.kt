@@ -10,6 +10,7 @@ import android.util.JsonReader
 import androidx.annotation.MainThread
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.activity.ActivityDelegate
+import mozilla.components.concept.engine.activity.OrientationDelegate
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.utils.EngineVersion
@@ -193,6 +194,21 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * Un-registers the attached [ActivityDelegate] if one was added with [registerActivityDelegate].
      */
     fun unregisterActivityDelegate(): Unit =
+        throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
+
+    /**
+     * Registers an [OrientationDelegate] to be notified when a website asked the engine
+     * to lock the the app on a certain screen orientation.
+     */
+    fun registerScreenOrientationDelegate(
+        delegate: OrientationDelegate
+    ): Unit = throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
+
+    /**
+     * Un-registers the attached [OrientationDelegate] if one was added with
+     * [registerScreenOrientationDelegate].
+     */
+    fun unregisterScreenOrientationDelegate(): Unit =
         throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
 
     /**

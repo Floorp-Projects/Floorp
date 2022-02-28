@@ -48,6 +48,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
@@ -62,6 +63,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.OrientationController
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
@@ -1986,6 +1988,32 @@ class GeckoEngineTest {
         engine.unregisterActivityDelegate()
 
         verify(runtime).activityDelegate = null
+    }
+
+    @Test
+    fun `registerScreenOrientationDelegate sets delegate`() {
+        val orientationController = mock<OrientationController>()
+        val runtime = mock<GeckoRuntime>()
+        doReturn(orientationController).`when`(runtime).orientationController
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        engine.registerScreenOrientationDelegate(mock())
+
+        verify(orientationController).delegate = any()
+    }
+
+    @Test
+    fun `unregisterScreenOrientationDelegate sets delegate to null`() {
+        val orientationController = mock<OrientationController>()
+        val runtime = mock<GeckoRuntime>()
+        doReturn(orientationController).`when`(runtime).orientationController
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        engine.registerScreenOrientationDelegate(mock())
+        verify(orientationController).delegate = any()
+
+        engine.unregisterScreenOrientationDelegate()
+        verify(orientationController).delegate = null
     }
 
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {
