@@ -2154,10 +2154,12 @@ static JSObject* GetExceptionTag(JSObject* exn) {
                                         : nullptr;
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
 void Instance::setPendingException(HandleAnyRef exn) {
   tlsData()->pendingException = exn.get().asJSObject();
   tlsData()->pendingExceptionTag = GetExceptionTag(exn.get().asJSObject());
 }
+#endif
 
 bool Instance::constantRefFunc(uint32_t funcIndex,
                                MutableHandleFuncRef result) {
