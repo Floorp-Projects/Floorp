@@ -1763,7 +1763,6 @@ class RecursiveMakeBackend(MakeBackend):
         sorted_ipdl_sources,
         sorted_nonstatic_ipdl_sources,
         sorted_static_ipdl_sources,
-        unified_ipdl_cppsrcs_mapping,
     ):
         # Write out a master list of all IPDL source files.
         mk = Makefile()
@@ -1788,10 +1787,6 @@ class RecursiveMakeBackend(MakeBackend):
                 " ".join(sorted_nonstatic_ipdl_basenames),
                 " ".join(sorted_static_ipdl_sources),
             )
-        )
-
-        self._add_unified_build_rules(
-            mk, unified_ipdl_cppsrcs_mapping, unified_files_makefile_variable="CPPSRCS"
         )
 
         # Preprocessed ipdl files are generated in ipdl_dir.

@@ -184,10 +184,8 @@ class CompileDBBackend(CommonBackend):
         sorted_ipdl_sources,
         sorted_nonstatic_ipdl_sources,
         sorted_static_ipdl_sources,
-        unified_ipdl_cppsrcs_mapping,
     ):
-        for f in unified_ipdl_cppsrcs_mapping:
-            self._build_db_line(ipdl_dir, None, self.environment, f[0], ".cpp")
+        pass
 
     def _handle_webidl_build(
         self,
