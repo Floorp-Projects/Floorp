@@ -206,6 +206,7 @@ class WeakMap
 
   using Base::all;
   using Base::clear;
+  using Base::count;
   using Base::empty;
   using Base::has;
   using Base::shallowSizeOfExcludingThis;

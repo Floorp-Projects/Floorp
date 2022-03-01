@@ -154,16 +154,7 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
 
 void FinalizationObservers::clearRecords() {
 #ifdef DEBUG
-  // Check crossZoneWrappers was correct before clearing.
-  for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
-    for (JSObject* object : e.front().value()) {
-      FinalizationRecordObject* record = UnwrapFinalizationRecord(object);
-      if (record && record->zone() != zone) {
-        removeCrossZoneWrapper(object);
-      }
-    }
-  }
-  MOZ_ASSERT(crossZoneWrappers.empty());
+  checkTables();
 #endif
 
   recordMap.clear();
@@ -395,6 +386,23 @@ void WeakRefHeapPtrVector::traceWeak(JSTracer* trc, JSObject* target) {
   });
 }
 
+#ifdef DEBUG
+void FinalizationObservers::checkTables() const {
+  // Check all cross-zone wrappers are present in crossZoneWrappers.
+  size_t count = 0;
+  for (auto r = recordMap.all(); !r.empty(); r.popFront()) {
+    for (JSObject* object : r.front().value()) {
+      FinalizationRecordObject* record = UnwrapFinalizationRecord(object);
+      if (record && record->zone() != zone) {
+        MOZ_ASSERT(crossZoneWrappers.has(object));
+        count++;
+      }
+    }
+  }
+  MOZ_ASSERT(crossZoneWrappers.count() == count);
+}
+#endif
+
 FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)
     : recordSet(zone) {}
 
@@ -405,7 +413,8 @@ bool FinalizationRegistryGlobalData::addRecord(
 
 void FinalizationRegistryGlobalData::removeRecord(
     FinalizationRecordObject* record) {
-  MOZ_ASSERT(recordSet.has(record));
+  MOZ_ASSERT_IF(!record->runtimeFromMainThread()->gc.isShuttingDown(),
+                recordSet.has(record));
   recordSet.remove(record);
 }
 
