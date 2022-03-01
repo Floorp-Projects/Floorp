@@ -36,16 +36,10 @@ uint32_t gfxFT2LockedFace::GetGlyph(uint32_t aCharCode) {
     }
   }
 
-  uint32_t gid = FcFreeTypeCharIndex(mFace, aCharCode);
+  return FcFreeTypeCharIndex(mFace, aCharCode);
 #else
-  uint32_t gid = FT_Get_Char_Index(mFace, aCharCode);
+  return FT_Get_Char_Index(mFace, aCharCode);
 #endif
-  if (!gid && mFace->charmap->encoding == FT_ENCODING_MS_SYMBOL) {
-    if (auto pua = gfxFontUtils::MapLegacySymbolFontCharToPUA(aCharCode)) {
-      gid = FT_Get_Char_Index(mFace, pua);
-    }
-  }
-  return gid;
 }
 
 typedef FT_UInt (*GetCharVariantFunction)(FT_Face face, FT_ULong charcode,
