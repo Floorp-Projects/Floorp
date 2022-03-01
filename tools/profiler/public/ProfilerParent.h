@@ -74,14 +74,14 @@ class ProfilerParent final : public PProfilerParent {
   // This will start the profiler in all child processes. The returned promise
   // will be resolved when all child have completed their operation
   // (successfully or not.)
-  static RefPtr<GenericPromise> ProfilerStarted(
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerStarted(
       nsIProfilerStartParams* aParams);
   static void ProfilerWillStopIfStarted();
-  static RefPtr<GenericPromise> ProfilerStopped();
-  static RefPtr<GenericPromise> ProfilerPaused();
-  static RefPtr<GenericPromise> ProfilerResumed();
-  static RefPtr<GenericPromise> ProfilerPausedSampling();
-  static RefPtr<GenericPromise> ProfilerResumedSampling();
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerStopped();
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerPaused();
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerResumed();
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerPausedSampling();
+  [[nodiscard]] static RefPtr<GenericPromise> ProfilerResumedSampling();
   static void ClearAllPages();
 
   // Create a "Final" update that the Child can return to its Parent.
