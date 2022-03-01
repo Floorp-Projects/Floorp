@@ -30,7 +30,6 @@ using mozilla::Mutex;
 using mozilla::MutexAutoLock;
 using mozilla::ThrottledEventQueue;
 using std::function;
-using std::move;
 using std::string;
 
 namespace TestThrottledEventQueue {
@@ -49,7 +48,7 @@ struct RunnableQueue : nsISerialEventTarget {
 
   [[nodiscard]] nsresult Run() {
     while (!runnables.empty()) {
-      auto runnable = move(runnables.front());
+      auto runnable = std::move(runnables.front());
       runnables.pop();
       nsresult rv = runnable->Run();
       if (NS_FAILED(rv)) return rv;
@@ -97,8 +96,8 @@ struct RunnableQueue : nsISerialEventTarget {
 NS_IMPL_ISUPPORTS(RunnableQueue, nsIEventTarget, nsISerialEventTarget)
 
 static void Enqueue(nsIEventTarget* target, function<void()>&& aCallable) {
-  nsresult rv =
-      target->Dispatch(NS_NewRunnableFunction("TEQ GTest", move(aCallable)));
+  nsresult rv = target->Dispatch(
+      NS_NewRunnableFunction("TEQ GTest", std::move(aCallable)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
 }
 

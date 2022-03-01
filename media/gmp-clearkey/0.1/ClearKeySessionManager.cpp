@@ -68,7 +68,7 @@ void ClearKeySessionManager::Init(bool aDistinctiveIdentifierAllowed,
   };
 
   mPersistence->EnsureInitialized(aPersistentStateAllowed,
-                                  move(onPersistentStateLoaded));
+                                  std::move(onPersistentStateLoaded));
 }
 
 void ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
@@ -89,7 +89,7 @@ void ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   };
 
   // If we haven't loaded, don't do this yet
-  if (MaybeDeferTillInitialized(move(deferrer))) {
+  if (MaybeDeferTillInitialized(std::move(deferrer))) {
     CK_LOGD("Deferring CreateSession");
     return;
   }
@@ -179,7 +179,7 @@ void ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
     self->LoadSession(aPromiseId, sessionId.data(), sessionId.size());
   };
 
-  if (MaybeDeferTillInitialized(move(deferrer))) {
+  if (MaybeDeferTillInitialized(std::move(deferrer))) {
     CK_LOGD("Deferring LoadSession");
     return;
   }
@@ -213,7 +213,7 @@ void ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
     self->mHost->OnResolveNewSessionPromise(aPromiseId, nullptr, 0);
   };
 
-  ReadData(mHost, sessionId, move(success), move(failure));
+  ReadData(mHost, sessionId, std::move(success), std::move(failure));
 }
 
 void ClearKeySessionManager::PersistentSessionDataLoaded(
@@ -297,7 +297,7 @@ void ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   };
 
   // If we haven't fully loaded, defer calling this method
-  if (MaybeDeferTillInitialized(move(deferrer))) {
+  if (MaybeDeferTillInitialized(std::move(deferrer))) {
     CK_LOGD("Deferring LoadSession");
     return;
   }
@@ -389,7 +389,7 @@ void ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
                                  message, strlen(message));
   };
 
-  WriteData(mHost, sessionId, keydata, move(resolve), move(reject));
+  WriteData(mHost, sessionId, keydata, std::move(resolve), std::move(reject));
 }
 
 void ClearKeySessionManager::Serialize(const ClearKeySession* aSession,
@@ -423,7 +423,7 @@ void ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   };
 
   // If we haven't loaded, call this method later.
-  if (MaybeDeferTillInitialized(move(deferrer))) {
+  if (MaybeDeferTillInitialized(std::move(deferrer))) {
     CK_LOGD("Deferring CloseSession");
     return;
   }
@@ -474,7 +474,7 @@ void ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
   };
 
   // If we haven't fully loaded, defer calling this method.
-  if (MaybeDeferTillInitialized(move(deferrer))) {
+  if (MaybeDeferTillInitialized(std::move(deferrer))) {
     CK_LOGD("Deferring RemoveSession");
     return;
   }
@@ -526,7 +526,8 @@ void ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
                                  message, strlen(message));
   };
 
-  WriteData(mHost, sessionId, emptyKeydata, move(resolve), move(reject));
+  WriteData(mHost, sessionId, emptyKeydata, std::move(resolve),
+            std::move(reject));
 }
 
 void ClearKeySessionManager::SetServerCertificate(uint32_t aPromiseId,
@@ -586,7 +587,7 @@ bool ClearKeySessionManager::MaybeDeferTillInitialized(
     return false;
   }
 
-  mDeferredInitialize.emplace(move(aMaybeDefer));
+  mDeferredInitialize.emplace(std::move(aMaybeDefer));
   return true;
 }
 
