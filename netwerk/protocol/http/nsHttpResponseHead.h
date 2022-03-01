@@ -43,8 +43,8 @@ class nsHttpResponseHead {
   nsHttpResponseHead(const nsHttpResponseHead& aOther);
   nsHttpResponseHead& operator=(const nsHttpResponseHead& aOther);
 
-  void Enter() { mRecursiveMutex.Lock(); }
-  void Exit() { mRecursiveMutex.Unlock(); }
+  void Enter() const { mRecursiveMutex.Lock(); }
+  void Exit() const { mRecursiveMutex.Unlock(); }
 
   HttpVersion Version();
   uint16_t Status() const;
