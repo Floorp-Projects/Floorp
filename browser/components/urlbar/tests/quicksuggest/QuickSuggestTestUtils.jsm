@@ -291,20 +291,11 @@ class QSTestUtils {
     this.Assert.ok(helpButton, "The help button should be present");
     this.Assert.equal(result.payload.helpUrl, LEARN_MORE_URL, "Result helpURL");
 
-    let blockButton = row._buttons.get("block");
-    if (!isBestMatch) {
-      this.Assert.ok(
-        !blockButton,
-        "The block button is not present since the row is not a best match"
-      );
-    } else if (!UrlbarPrefs.get("bestMatch.blockingEnabled")) {
-      this.Assert.ok(
-        !blockButton,
-        "The block button is not present since blocking is disabled"
-      );
-    } else {
-      this.Assert.ok(blockButton, "The block button is present");
-    }
+    this.Assert.equal(
+      !!row._buttons.get("block"),
+      isBestMatch,
+      "The block button is present iff the suggestion is a best match"
+    );
 
     return details;
   }
