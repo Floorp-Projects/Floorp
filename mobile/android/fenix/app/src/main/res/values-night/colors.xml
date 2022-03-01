@@ -68,7 +68,7 @@
     <!-- Text Inverted/On Color -->
     <color name="fx_mobile_text_color_oncolor_secondary">@color/photonLightGrey40</color>
     <!-- Action Primary text -->
-    <color name="fx_mobile_text_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_text_color_action_primary">@color/photonLightGrey05</color>
     <!-- Action Secondary text -->
     <color name="fx_mobile_text_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Action Tertiary text -->

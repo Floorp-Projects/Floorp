@@ -69,7 +69,7 @@
             android:letterSpacing="0"
             android:text="@string/add_to_homescreen_title"
             android:textAllCaps="false"
-            android:textColor="?contrastText"
+            android:textColor="?textActionPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/cancel_button"

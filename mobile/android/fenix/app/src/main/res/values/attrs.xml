@@ -17,6 +17,8 @@
     <!-- Text -->
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
+    <!-- Action Primary text -->
+    <attr name="textActionPrimary" format="reference" />
 
     <!-- Icon -->
     <!-- Active tab -->

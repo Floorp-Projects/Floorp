@@ -45,6 +45,8 @@
         <!-- Text -->
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
+        <!-- Action Primary text -->
+        <item name="textActionPrimary">@color/fx_mobile_text_color_action_primary</item>
 
         <!-- Icon -->
         <!-- Active tab -->
@@ -236,6 +238,8 @@
         <!-- Text -->
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
+        <!-- Action Primary text -->
+        <item name="textActionPrimary">@color/fx_mobile_private_text_color_action_primary</item>
 
         <!-- Icon -->
         <!-- Active tab -->
@@ -357,7 +361,7 @@
     <style name="PositiveButton" parent="NeutralButton">
         <item name="backgroundTint">?actionPrimary</item>
         <item name="iconTint">?contrastText</item>
-        <item name="android:textColor">?contrastText</item>
+        <item name="android:textColor">?textActionPrimary</item>
     </style>
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
