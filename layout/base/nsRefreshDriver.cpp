@@ -734,7 +734,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
   ~VsyncRefreshDriverTimer() override {
     if (mVsyncDispatcher) {
-      mVsyncDispatcher->RemoveChildRefreshTimer(mVsyncObserver);
+      mVsyncDispatcher->RemoveVsyncObserver(mVsyncObserver);
       mVsyncDispatcher = nullptr;
     } else if (mVsyncChild) {
       mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
@@ -754,7 +754,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     mLastFireId = VsyncId();
 
     if (mVsyncDispatcher) {
-      mVsyncDispatcher->AddChildRefreshTimer(mVsyncObserver);
+      mVsyncDispatcher->AddVsyncObserver(mVsyncObserver);
     } else if (mVsyncChild) {
       mVsyncChild->AddChildRefreshTimer(mVsyncObserver);
       mVsyncObserver->OnTimerStart();
@@ -766,7 +766,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (mVsyncDispatcher) {
-      mVsyncDispatcher->RemoveChildRefreshTimer(mVsyncObserver);
+      mVsyncDispatcher->RemoveVsyncObserver(mVsyncObserver);
     } else if (mVsyncChild) {
       mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
     }
