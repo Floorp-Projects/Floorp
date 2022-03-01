@@ -27,13 +27,12 @@
 
 #include "hwy/aligned_allocator.h"
 #include "hwy/base.h"
-#include "hwy/highway_export.h"
 
 namespace hwy {
 
 // Type-independent parts of Image<> - reduces code duplication and facilitates
 // moving member function implementations to cc file.
-struct HWY_CONTRIB_DLLEXPORT ImageBase {
+struct ImageBase {
   // Returns required alignment in bytes for externally allocated memory.
   static size_t VectorSize();
 
@@ -101,7 +100,8 @@ struct HWY_CONTRIB_DLLEXPORT ImageBase {
  protected:
   // Returns pointer to the start of a row.
   HWY_INLINE void* VoidRow(const size_t y) const {
-#if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
+#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
+    defined(THREAD_SANITIZER)
     if (y >= ysize_) {
       HWY_ABORT("Row(%" PRIu64 ") >= %u\n", static_cast<uint64_t>(y), ysize_);
     }
@@ -291,7 +291,8 @@ class Image3 {
  private:
   // Returns pointer to the start of a row.
   HWY_INLINE void* VoidPlaneRow(const size_t c, const size_t y) const {
-#if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
+#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
+    defined(THREAD_SANITIZER)
     if (c >= kNumPlanes || y >= ysize()) {
       HWY_ABORT("PlaneRow(%" PRIu64 ", %" PRIu64 ") >= %" PRIu64 "\n",
                 static_cast<uint64_t>(c), static_cast<uint64_t>(y),

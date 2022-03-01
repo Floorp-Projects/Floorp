@@ -20,7 +20,7 @@
 #define JXL_OS_LINUX 0
 #endif
 
-#ifdef __APPLE__
+#ifdef __MACH__
 #define JXL_OS_MAC 1
 #else
 #define JXL_OS_MAC 0

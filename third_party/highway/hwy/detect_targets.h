@@ -161,6 +161,11 @@
 // user to override this without any guarantee of success.
 #ifndef HWY_BASELINE_TARGETS
 
+#if defined(HWY_EMULATE_SVE)
+#define HWY_BASELINE_TARGETS HWY_SVE  // does not support SVE2
+#define HWY_BASELINE_AVX3_DL 0
+#else
+
 // Also check HWY_ARCH to ensure that simulating unknown platforms ends up with
 // HWY_TARGET == HWY_SCALAR.
 
@@ -181,7 +186,7 @@
 #define HWY_BASELINE_PPC8 0
 #endif
 
-// SVE2 compiles, but is not yet tested.
+// SVE compiles, but is not yet tested.
 #if HWY_ARCH_ARM && defined(__ARM_FEATURE_SVE2)
 #define HWY_BASELINE_SVE2 HWY_SVE2
 #else
@@ -301,6 +306,8 @@
    HWY_BASELINE_SVE | HWY_BASELINE_NEON | HWY_BASELINE_SSSE3 |              \
    HWY_BASELINE_SSE4 | HWY_BASELINE_AVX2 | HWY_BASELINE_AVX3 |              \
    HWY_BASELINE_AVX3_DL | HWY_BASELINE_RVV)
+
+#endif  // HWY_EMULATE_SVE
 
 #else
 // User already defined HWY_BASELINE_TARGETS, but we still need to define

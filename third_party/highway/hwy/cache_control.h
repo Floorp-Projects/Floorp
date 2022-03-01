@@ -36,7 +36,9 @@
 // undefine them in this header; these functions are anyway deprecated.
 // TODO(janwas): remove when these functions are removed.
 #pragma push_macro("LoadFence")
+#pragma push_macro("StoreFence")
 #undef LoadFence
+#undef StoreFence
 
 namespace hwy {
 
@@ -69,6 +71,9 @@ HWY_INLINE HWY_ATTR_CACHE void FlushStream() {
   _mm_sfence();
 #endif
 }
+
+// DEPRECATED, replace with `FlushStream`.
+HWY_INLINE HWY_ATTR_CACHE void StoreFence() { FlushStream(); }
 
 // Optionally begins loading the cache line containing "p" to reduce latency of
 // subsequent actual loads.
@@ -104,6 +109,7 @@ HWY_INLINE HWY_ATTR_CACHE void Pause() {
 }  // namespace hwy
 
 // TODO(janwas): remove when these functions are removed. (See above.)
+#pragma pop_macro("StoreFence")
 #pragma pop_macro("LoadFence")
 
 #endif  // HIGHWAY_HWY_CACHE_CONTROL_H_
