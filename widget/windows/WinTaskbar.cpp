@@ -407,7 +407,8 @@ WinTaskbar::GetOverlayIconController(
 }
 
 NS_IMETHODIMP
-WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder** aJumpListBuilder) {
+WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
+                                  nsIJumpListBuilder** aJumpListBuilder) {
   nsresult rv;
 
   if (JumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
@@ -417,6 +418,10 @@ WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder** aJumpListBuilder) {
   if (NS_FAILED(rv)) return NS_ERROR_UNEXPECTED;
 
   NS_IF_ADDREF(*aJumpListBuilder = builder);
+
+  nsAutoString aumid;
+  GenerateAppUserModelID(aumid, aPrivateBrowsing);
+  builder->SetAppUserModelID(aumid);
 
   return NS_OK;
 }

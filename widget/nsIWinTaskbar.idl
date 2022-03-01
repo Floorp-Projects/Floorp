@@ -129,7 +129,7 @@ interface nsIWinTaskbar : nsISupports
    * @throw NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
    * currently building a list.
    */
-  nsIJumpListBuilder createJumpListBuilder();
+  nsIJumpListBuilder createJumpListBuilder(in boolean aPrivateBrowsing);
 
   /**
    * Application window taskbar group settings
