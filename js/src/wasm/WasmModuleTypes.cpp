@@ -230,6 +230,8 @@ size_t TagType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          argOffsets_.sizeOfExcludingThis(mallocSizeOf);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+
 size_t TagDesc::serializedSize() const {
   return sizeof(kind) + type.serializedSize() + sizeof(globalDataOffset) +
          sizeof(isExport);
@@ -255,6 +257,8 @@ const uint8_t* TagDesc::deserialize(const uint8_t* cursor) {
 size_t TagDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return type.sizeOfExcludingThis(mallocSizeOf);
 }
+
+#endif // ENABLE_WASM_EXCEPTIONS
 
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
