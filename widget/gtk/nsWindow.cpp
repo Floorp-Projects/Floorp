@@ -2029,7 +2029,7 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   }
 }
 
-bool nsWindow::WaylandPopupFitsParentWindow(GdkRectangle* aSize) {
+bool nsWindow::WaylandPopupFitsParentWindow(const GdkRectangle& aSize) {
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   nsWindow* parentWindow =
       get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow));
@@ -2052,8 +2052,8 @@ bool nsWindow::WaylandPopupFitsParentWindow(GdkRectangle* aSize) {
   // this coordinates are used by mBounds.
   int parentWidth = gdk_window_get_width(parentGdkWindow) + x;
   int parentHeight = gdk_window_get_width(parentGdkWindow) + y;
-  int popupWidth = aSize->width;
-  int popupHeight = aSize->height;
+  int popupWidth = aSize.width;
+  int popupHeight = aSize.height;
 
   auto popupBounds = DevicePixelsToGdkRectRoundOut(mBounds);
 
@@ -2062,11 +2062,10 @@ bool nsWindow::WaylandPopupFitsParentWindow(GdkRectangle* aSize) {
 }
 
 void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
-  GdkPoint position = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
-  GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
+  GdkRectangle rect = DevicePixelsToGdkRectRoundOut(mBounds);
 
-  LOG("nsWindow::NativeMoveResizeWaylandPopup %d,%d -> %d x %d\n", position.x,
-      position.y, size.width, size.height);
+  LOG("nsWindow::NativeMoveResizeWaylandPopup %d,%d -> %d x %d\n", rect.x,
+      rect.y, rect.width, rect.height);
 
   // Compositor may be confused by windows with width/height = 0
   // and positioning such windows leads to Bug 1555866.
@@ -2097,11 +2096,11 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   }
 
   if (aResize) {
-    LOG("  set size [%d, %d]\n", size.width, size.height);
-    gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+    LOG("  set size [%d, %d]\n", rect.width, rect.height);
+    gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
   }
 
-  if (!aMove && WaylandPopupFitsParentWindow(&size)) {
+  if (!aMove && WaylandPopupFitsParentWindow(rect)) {
     // Popup position has not been changed and its position/size fits
     // parent window so no need to reposition the window.
     LOG("  fits parent window size, just resize\n");
@@ -2114,8 +2113,8 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   // Save popup position for former re-calculations when popup hierarchy
   // is changed.
   LOG("  popup position changed from [%d, %d] to [%d, %d]\n", mPopupPosition.x,
-      mPopupPosition.y, position.x, position.y);
-  mPopupPosition = position;
+      mPopupPosition.y, rect.x, rect.y);
+  mPopupPosition = {rect.x, rect.y};
 
   UpdateWaylandPopupHierarchy();
 }
@@ -5940,11 +5939,10 @@ nsAutoCString nsWindow::GetDebugTag() const {
 }
 
 void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
-  GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
-  GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
+  GdkRectangle rect = DevicePixelsToGdkRectRoundOut(mBounds);
 
   LOG("nsWindow::NativeMoveResize move %d resize %d to %d,%d -> %d x %d\n",
-      aMoved, aResized, topLeft.x, topLeft.y, size.width, size.height);
+      aMoved, aResized, rect.x, rect.y, rect.width, rect.height);
 
   if (aResized && !AreBoundsSane()) {
     LOG("  bounds are insane, hidding the window");
@@ -5960,8 +5958,8 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
       NativeShow(false);
     }
     if (aMoved) {
-      LOG("  moving to %d x %d", topLeft.x, topLeft.y);
-      gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
+      LOG("  moving to %d x %d", rect.x, rect.y);
+      gtk_window_move(GTK_WINDOW(mShell), rect.x, rect.y);
     }
     return;
   }
@@ -5972,7 +5970,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
       !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
     LOG("  store position of hidden popup window");
     mHiddenPopupPositioned = true;
-    mPopupPosition = topLeft;
+    mPopupPosition = {rect.x, rect.y};
   }
 
   if (IsWaylandPopup()) {
@@ -5980,15 +5978,15 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   } else {
     // x and y give the position of the window manager frame top-left.
     if (aMoved) {
-      gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
+      gtk_window_move(GTK_WINDOW(mShell), rect.x, rect.y);
     }
     if (aResized) {
-      gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+      gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
       if (mIsDragPopup) {
         // DND window is placed inside container so we need to make hard size
         // request to ensure parent container is resized too.
-        gtk_widget_set_size_request(GTK_WIDGET(mShell), size.width,
-                                    size.height);
+        gtk_widget_set_size_request(GTK_WIDGET(mShell), rect.width,
+                                    rect.height);
       }
     }
   }
