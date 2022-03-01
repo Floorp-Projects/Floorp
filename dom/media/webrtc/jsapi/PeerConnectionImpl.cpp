@@ -3217,8 +3217,12 @@ void PeerConnectionImpl::StartCallTelem() {
 void PeerConnectionImpl::StunAddrsHandler::OnMDNSQueryComplete(
     const nsCString& hostname, const Maybe<nsCString>& address) {
   MOZ_ASSERT(NS_IsMainThread());
-  auto itor = pc_->mQueriedMDNSHostnames.find(hostname.BeginReading());
-  if (itor != pc_->mQueriedMDNSHostnames.end()) {
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  auto itor = pcw.impl()->mQueriedMDNSHostnames.find(hostname.BeginReading());
+  if (itor != pcw.impl()->mQueriedMDNSHostnames.end()) {
     if (address) {
       for (auto& cand : itor->second) {
         // Replace obfuscated address with actual address
@@ -3232,14 +3236,14 @@ void PeerConnectionImpl::StunAddrsHandler::OnMDNSQueryComplete(
           }
         }
         std::string mungedCandidate = o.str();
-        pc_->StampTimecard("Done looking up mDNS name");
-        pc_->mTransportHandler->AddIceCandidate(
+        pcw.impl()->StampTimecard("Done looking up mDNS name");
+        pcw.impl()->mTransportHandler->AddIceCandidate(
             cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
       }
     } else {
-      pc_->StampTimecard("Failed looking up mDNS name");
+      pcw.impl()->StampTimecard("Failed looking up mDNS name");
     }
-    pc_->mQueriedMDNSHostnames.erase(itor);
+    pcw.impl()->mQueriedMDNSHostnames.erase(itor);
   }
 }
 
@@ -3247,15 +3251,17 @@ void PeerConnectionImpl::StunAddrsHandler::OnStunAddrsAvailable(
     const mozilla::net::NrIceStunAddrArray& addrs) {
   CSFLogInfo(LOGTAG, "%s: receiving (%d) stun addrs", __FUNCTION__,
              (int)addrs.Length());
-  if (pc_) {
-    pc_->mStunAddrs = addrs.Clone();
-    pc_->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
-    pc_->FlushIceCtxOperationQueueIfReady();
-    // If parent process returns 0 STUN addresses, change ICE connection
-    // state to failed.
-    if (!pc_->mStunAddrs.Length()) {
-      pc_->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
-    }
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  pcw.impl()->mStunAddrs = addrs.Clone();
+  pcw.impl()->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
+  pcw.impl()->FlushIceCtxOperationQueueIfReady();
+  // If parent process returns 0 STUN addresses, change ICE connection
+  // state to failed.
+  if (!pcw.impl()->mStunAddrs.Length()) {
+    pcw.impl()->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
   }
 }
 
