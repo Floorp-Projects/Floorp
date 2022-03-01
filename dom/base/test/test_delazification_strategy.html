@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1753709 -->
+<!-- Script delazification strategy is not supposed to have any observable
+     side-effect. To make it observable, the ScriptLoader is instrumented to
+     trigger events on the script tag. These events are used to validate that
+     the strategy is used as execpected. This does not garantee that all
+     functions are delazified properly, but this should be checked in the JS
+     engine test suite.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for triggering eager delazification.</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <script type="application/javascript">
+    async function WaitForScriptTagEvent() {
+      var url = "file_delazification_strategy.html";
+      var iframe = document.createElement("iframe");
+
+      // Call the resolve function when the event is one of the expected events.
+      // This is made to be used by a promise and provided to event listeners.
+      function resolve_with_event(resolve, evt) {
+        // If we have multiple script tags in the loaded source, make sure
+        // we only watch a single one.
+        if (evt.target.id != "watchme")
+          return;
+
+        switch (evt.type) {
+          case "delazification_on_demand_only":
+          case "delazification_concurrent_depth_first":
+          case "delazification_parse_everything_eagerly":
+            resolve(evt.type.split('_').slice(1).join('_'));
+            break;
+          case "scriptloader_main_thread_compile":
+            resolve(evt.type);
+            break;
+        }
+        return;
+      }
+
+      // Create an event listener, which resolves a promise.
+      let log_event;
+      let scriptLoaderTrace = new Promise((resolve, reject) => {
+        log_event = resolve_with_event.bind(this, resolve);
+      });
+
+      // Wait until the iframe is fully loaded.
+      await new Promise(resolve => {
+        iframe.onload = resolve;
+        iframe.src = url;
+        document.body.appendChild(iframe);
+      });
+
+      // Register all events.
+      let events = [
+        "delazification_on_demand_only",
+        "delazification_concurrent_depth_first",
+        "delazification_parse_everything_eagerly",
+        "scriptloader_main_thread_compile"
+      ];
+      let iwin = iframe.contentWindow;
+      for (let evt of events) {
+        iwin.addEventListener(evt, log_event);
+      }
+
+      // Add a script tag, which will trigger one of the previous events.
+      let script = document.createElement("script");
+      script.setAttribute("id", "watchme");
+      script.setAttribute("src", "file_delazification_strategy.js");
+      iframe.contentDocument.body.appendChild(script);
+
+      // Wait for the event emitted by ScriptLoader, while processing the
+      // previous script.
+      let result = await scriptLoaderTrace;
+
+      // Remove the events and the iframe.
+      for (let evt of events) {
+        iwin.removeEventListener(evt, log_event);
+      }
+      document.body.removeChild(iframe);
+      return result;
+    }
+
+    // Setting dom.expose_test_interfaces pref causes the
+    // nsScriptLoadRequest to fire event on script tags, with information
+    // about its internal state. The ScriptLoader source send events to
+    // trace these and resolve a promise with the path taken by the
+    // script loader.
+    //
+    // Setting dom.script_loader.bytecode_cache.enabled to false in order
+    // to prevent the bytecode cache to perturb this test case.
+    //
+    // Setting dom.script_loader.external_scripts.speculate_* are used to
+    // force off-main-thread compilation, while hoping that we have enough
+    // processors to run the test case
+    //
+    // Setting dom.delazification.* are used to select the delazification
+    // strategy and to check that it is well selected.
+    promise_test(async function() {
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.expose_test_interfaces', true],
+        ['dom.script_loader.bytecode_cache.enabled', false],
+        ['dom.script_loader.external_scripts.speculate_non_parser_inserted.enable', true],
+        ['dom.script_loader.external_scripts.speculate_async.enabled', true],
+        ['dom.script_loader.external_scripts.speculate_link_preload.enabled', true],
+        // Parse everything eagerly
+        ['dom.script_loader.delazification.strategy', 255],
+        ['dom.script_loader.delazification.max_size', 0],
+        ['dom.script_loader.delazification.min_mem', 0],
+      ]});
+
+      assert_equals(await WaitForScriptTagEvent(), "on_demand_only",
+                    "[1] AttemptAsyncScriptCompile: On demand only");
+    }, "Check that max_size can disable delazification strategy");
+
+    promise_test(async function() {
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.expose_test_interfaces', true],
+        ['dom.script_loader.bytecode_cache.enabled', false],
+        // Enable OffMainThread compilation for everything, and cross-fingers
+        // about the number of CPU.
+        ['dom.script_loader.external_scripts.speculate_non_parser_inserted.enable', true],
+        ['dom.script_loader.external_scripts.speculate_async.enabled', true],
+        ['dom.script_loader.external_scripts.speculate_link_preload.enabled', true],
+        // Parse everything eagerly
+        ['dom.script_loader.delazification.strategy', 255],
+        ['dom.script_loader.delazification.max_size', 10485760],
+        // 4 TB should of RAM be enough.
+        ['dom.script_loader.delazification.min_mem', 4096],
+      ]});
+
+      assert_equals(await WaitForScriptTagEvent(), "on_demand_only",
+                    "[2] AttemptAsyncScriptCompile: On demand only");
+    }, "Check that min_mem can disable delazification strategy");
+
+    promise_test(async function() {
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.expose_test_interfaces', true],
+        ['dom.script_loader.bytecode_cache.enabled', false],
+        // Enable OffMainThread compilation for everything, and cross-fingers
+        // about the number of CPU.
+        ['dom.script_loader.external_scripts.speculate_non_parser_inserted.enable', true],
+        ['dom.script_loader.external_scripts.speculate_async.enabled', true],
+        ['dom.script_loader.external_scripts.speculate_link_preload.enabled', true],
+        ['dom.script_loader.delazification.max_size', 10485760],
+        ['dom.script_loader.delazification.min_mem', 0],
+      ]});
+
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.script_loader.delazification.strategy', 0],
+      ]});
+      assert_equals(await WaitForScriptTagEvent(), "on_demand_only",
+                    "[3] AttemptAsyncScriptCompile: On demand only");
+
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.script_loader.delazification.strategy', 1],
+      ]});
+      assert_equals(await WaitForScriptTagEvent(), "concurrent_depth_first",
+                    "[3] AttemptAsyncScriptCompile: Concurrent Depth First");
+
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.script_loader.delazification.strategy', 255],
+      ]});
+      assert_equals(await WaitForScriptTagEvent(), "parse_everything_eagerly",
+                    "[3] AttemptAsyncScriptCompile: Parse Everything Eagerly");
+    }, "Check enabling delazification strategy works");
+
+    done();
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1753709">Mozilla Bug 1753709</a>
+</body>
+</html>
