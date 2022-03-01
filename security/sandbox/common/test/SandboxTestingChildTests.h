@@ -23,7 +23,11 @@
 #    include <sys/syscall.h>
 #    include <sys/un.h>
 #    include "mozilla/ProcInfo_linux.h"
-#  endif  // XP_LINUX
+#    ifdef MOZ_X11
+#      include "X11/Xlib.h"
+#      include "X11UndefineNone.h"
+#    endif  // MOZ_X11
+#  endif    // XP_LINUX
 #  include <sys/socket.h>
 #  include <sys/stat.h>
 #  include <sys/types.h>
@@ -266,7 +270,22 @@ void RunTestsContent(SandboxTestingChild* child) {
                        return fd;
                      });
   }
-#  endif  // XP_LINUX
+
+#    ifdef MOZ_X11
+  // Check that X11 access is blocked (bug 1129492).
+  // This will fail if security.sandbox.content.headless is turned off.
+  if (PR_GetEnv("DISPLAY")) {
+    Display* disp = XOpenDisplay(nullptr);
+
+    child->SendReportTestResults(
+        "x11_access"_ns, !disp,
+        disp ? "XOpenDisplay succeeded"_ns : "XOpenDisplay failed"_ns);
+    if (disp) {
+      XCloseDisplay(disp);
+    }
+  }
+#    endif  // MOZ_X11
+#  endif    // XP_LINUX
 
 #  ifdef XP_MACOSX
   // Test that content processes can not connect to the macOS window server.
