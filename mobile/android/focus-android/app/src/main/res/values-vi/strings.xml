@@ -899,4 +899,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Đóng thẻ</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Có vẻ như trang web này đang cố gắng theo dõi bạn. Nhấp vào khiên để cài đặt trang web và số liệu thống kê trình chặn theo dõi.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Đóng cửa sổ bật lên</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Bạn đã được bảo vệ!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Các cài đặt mặc định này cung cấp khả năng bảo vệ mạnh mẽ. Tuy nhiên, thật dễ dàng để điều chỉnh cài đặt để đáp ứng các nhu cầu cụ thể của bạn.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Bỏ qua</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Loại bỏ dữ liệu cá nhân, lịch sử duyệt web của bạn và hơn thế nữa khỏi phiên này bằng cách nhấn vào nút thùng rác. Hãy thử một lần!</string>
+
 </resources>
