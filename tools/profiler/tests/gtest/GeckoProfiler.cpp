@@ -40,6 +40,7 @@
 #  include "NetworkMarker.h"
 #  include "platform.h"
 #  include "ProfileBuffer.h"
+#  include "ProfilerControl.h"
 
 #  include "js/Initialization.h"
 #  include "js/Printf.h"
