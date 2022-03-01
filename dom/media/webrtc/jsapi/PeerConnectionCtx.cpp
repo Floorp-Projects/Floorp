@@ -207,7 +207,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
 
     nsresult rv = NS_OK;
 
-    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+    rv = observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
                                       false);
     MOZ_ALWAYS_SUCCEEDS(rv);
     rv = observerService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
@@ -218,7 +218,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
-    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    if (strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID) == 0) {
       CSFLogDebug(LOGTAG, "Shutting down PeerConnectionCtx");
       PeerConnectionCtx::Destroy();
 
@@ -229,7 +229,8 @@ class PeerConnectionCtxObserver : public nsIObserver {
       nsresult rv = observerService->RemoveObserver(
           this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       MOZ_ALWAYS_SUCCEEDS(rv);
-      rv = observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      rv = observerService->RemoveObserver(this,
+                                           NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
       MOZ_ALWAYS_SUCCEEDS(rv);
 
       // Make sure we're not deleted while still inside ::Observe()
@@ -257,7 +258,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
         services::GetObserverService();
     if (observerService) {
       observerService->RemoveObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
     }
   }
 };
@@ -537,7 +538,7 @@ static void GMPReady_m() {
 
 static void GMPReady() {
   GetMainThreadEventTarget()->Dispatch(WrapRunnableNM(&GMPReady_m),
-                                           NS_DISPATCH_NORMAL);
+                                       NS_DISPATCH_NORMAL);
 };
 
 void PeerConnectionCtx::initGMP() {
