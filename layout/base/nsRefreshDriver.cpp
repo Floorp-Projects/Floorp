@@ -18,6 +18,7 @@
  */
 
 #include "nsRefreshDriver.h"
+#include "nsThreadUtils.h"
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -494,33 +495,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       MOZ_ASSERT(NS_IsMainThread());
     }
 
-    class ParentProcessVsyncNotifier final : public Runnable,
-                                             public nsIRunnablePriority {
-     public:
-      explicit ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver)
-          : Runnable(
-                "VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::"
-                "ParentProcessVsyncNotifier"),
-            mObserver(aObserver) {}
-
-      NS_DECL_ISUPPORTS_INHERITED
-
-      NS_IMETHOD Run() override {
-        MOZ_ASSERT(NS_IsMainThread());
-        mObserver->NotifyVsyncOnMainThread();
-        return NS_OK;
-      }
-
-      NS_IMETHOD GetPriority(uint32_t* aPriority) override {
-        *aPriority = nsIRunnablePriority::PRIORITY_VSYNC;
-        return NS_OK;
-      }
-
-     private:
-      ~ParentProcessVsyncNotifier() = default;
-      RefPtr<RefreshDriverVsyncObserver> mObserver;
-    };
-
     bool NotifyVsync(const VsyncEvent& aVsync) override {
       // Compress vsync notifications such that only 1 may run at a time
       // This is so that we don't flood the refresh driver with vsync messages
@@ -548,7 +522,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // thread.
       // TODO: On Linux Wayland, the vsync thread is currently the main thread,
       // and yet we still dispatch the runnable. Do we need to?
-      nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
+      nsCOMPtr<nsIRunnable> vsyncEvent = new PrioritizableRunnable(
+          NS_NewRunnableFunction(
+              "VsyncRefreshDriverTimer::NotifyVsyncOnMainThread",
+              [self = RefPtr{this}]() { self->NotifyVsyncOnMainThread(); }),
+          nsIRunnablePriority::PRIORITY_VSYNC);
       NS_DispatchToMainThread(vsyncEvent);
       return true;
     }
@@ -822,11 +800,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   TimeDuration mVsyncRate;
   bool mIsTicking = false;
 };  // VsyncRefreshDriverTimer
-
-NS_IMPL_ISUPPORTS_INHERITED(
-    VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::
-        ParentProcessVsyncNotifier,
-    Runnable, nsIRunnablePriority)
 
 /**
  * Since the content process takes some time to setup
