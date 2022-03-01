@@ -588,9 +588,11 @@ void GMPChild::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
+#if !defined(XP_WIN) || !defined(_ARM64_)
   // Send the last bits of Glean data over to the main process.
   glean::FlushFOGData(
       [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
+#endif
 
   if (mProfilerController) {
     mProfilerController->Shutdown();
