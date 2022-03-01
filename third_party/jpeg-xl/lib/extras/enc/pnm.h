@@ -11,7 +11,6 @@
 // TODO(janwas): workaround for incorrect Win64 codegen (cause unknown)
 #include <hwy/highway.h>
 
-#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
@@ -22,8 +21,9 @@ namespace jxl {
 namespace extras {
 
 // Transforms from io->c_current to `c_desired` and encodes into `bytes`.
-Status EncodeImagePNM(const PackedPixelFile& ppf, size_t bits_per_sample,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes);
+Status EncodeImagePNM(const CodecInOut* io, const ColorEncoding& c_desired,
+                      size_t bits_per_sample, ThreadPool* pool,
+                      PaddedBytes* bytes);
 
 }  // namespace extras
 }  // namespace jxl

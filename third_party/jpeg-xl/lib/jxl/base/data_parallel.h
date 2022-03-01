@@ -56,6 +56,7 @@ class ThreadPool {
   static Status NoInit(size_t num_threads) { return true; }
 
  private:
+
   // class holding the state of a Run() call to pass to the runner_ as an
   // opaque_jpegxl pointer.
   template <class InitFunc, class DataFunc>

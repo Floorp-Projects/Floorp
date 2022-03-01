@@ -18,10 +18,7 @@
 // Memory allocator with support for alignment and offsets.
 
 #include <stddef.h>
-
 #include <memory>
-
-#include "hwy/highway_export.h"
 
 namespace hwy {
 
@@ -39,15 +36,15 @@ using FreePtr = void (*)(void* opaque, void* memory);
 // bytes of newly allocated memory, aligned to the larger of HWY_ALIGNMENT and
 // the vector size. Calls `alloc` with the passed `opaque` pointer to obtain
 // memory or malloc() if it is null.
-HWY_DLLEXPORT void* AllocateAlignedBytes(size_t payload_size,
-                                         AllocPtr alloc_ptr, void* opaque_ptr);
+void* AllocateAlignedBytes(size_t payload_size, AllocPtr alloc_ptr,
+                           void* opaque_ptr);
 
 // Frees all memory. No effect if `aligned_pointer` == nullptr, otherwise it
 // must have been returned from a previous call to `AllocateAlignedBytes`.
 // Calls `free_ptr` with the passed `opaque_ptr` pointer to free the memory; if
 // `free_ptr` function is null, uses the default free().
-HWY_DLLEXPORT void FreeAlignedBytes(const void* aligned_pointer,
-                                    FreePtr free_ptr, void* opaque_ptr);
+void FreeAlignedBytes(const void* aligned_pointer, FreePtr free_ptr,
+                      void* opaque_ptr);
 
 // Class that deletes the aligned pointer passed to operator() calling the
 // destructor before freeing the pointer. This is equivalent to the
@@ -79,10 +76,8 @@ class AlignedDeleter {
   // array. TypeArrayDeleter<T> would match this prototype.
   using ArrayDeleter = void (*)(void* t_ptr, size_t t_size);
 
-  HWY_DLLEXPORT static void DeleteAlignedArray(void* aligned_pointer,
-                                               FreePtr free_ptr,
-                                               void* opaque_ptr,
-                                               ArrayDeleter deleter);
+  static void DeleteAlignedArray(void* aligned_pointer, FreePtr free_ptr,
+                                 void* opaque_ptr, ArrayDeleter deleter);
 
   FreePtr free_;
   void* opaque_ptr_;
@@ -112,8 +107,8 @@ template <typename T, typename... Args>
 AlignedUniquePtr<T> MakeUniqueAligned(Args&&... args) {
   T* ptr = static_cast<T*>(AllocateAlignedBytes(
       sizeof(T), /*alloc_ptr=*/nullptr, /*opaque_ptr=*/nullptr));
-  return AlignedUniquePtr<T>(new (ptr) T(std::forward<Args>(args)...),
-                             AlignedDeleter());
+  return AlignedUniquePtr<T>(
+      new (ptr) T(std::forward<Args>(args)...), AlignedDeleter());
 }
 
 // Helpers for array allocators (avoids overflow)

@@ -297,11 +297,6 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
         std::move(input.frame);
     input_queue.erase(input_queue.begin());
     num_queued_frames--;
-    for (unsigned idx = 0; idx < input_frame->ec_initialized.size(); idx++) {
-      if (!input_frame->ec_initialized[idx]) {
-        return JXL_API_ERROR("Extra channel %u is not initialized", idx);
-      }
-    }
 
     // TODO(zond): If the input queue is empty and the frames_closed is true,
     // then mark this frame as the last.
@@ -1060,28 +1055,6 @@ JxlEncoderStatus JxlEncoderSetParallelRunner(JxlEncoder* enc,
   return JXL_ENC_SUCCESS;
 }
 
-namespace {
-JxlEncoderStatus GetCurrentDimensions(
-    const JxlEncoderFrameSettings* frame_settings, size_t& xsize,
-    size_t& ysize) {
-  xsize = frame_settings->enc->metadata.xsize();
-  ysize = frame_settings->enc->metadata.ysize();
-  if (frame_settings->values.header.layer_info.have_crop) {
-    xsize = frame_settings->values.header.layer_info.xsize;
-    ysize = frame_settings->values.header.layer_info.ysize;
-  }
-  if (frame_settings->values.cparams.already_downsampled) {
-    size_t factor = frame_settings->values.cparams.resampling;
-    xsize = jxl::DivCeil(xsize, factor);
-    ysize = jxl::DivCeil(ysize, factor);
-  }
-  if (xsize == 0 || ysize == 0) {
-    return JXL_API_ERROR("zero-sized frame is not allowed");
-  }
-  return JXL_ENC_SUCCESS;
-}
-}  // namespace
-
 JxlEncoderStatus JxlEncoderAddJPEGFrame(
     const JxlEncoderFrameSettings* frame_settings, const uint8_t* buffer,
     size_t size) {
@@ -1135,28 +1108,13 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
       // default move constructor there.
       jxl::JxlEncoderQueuedFrame{
           frame_settings->values,
-          jxl::ImageBundle(&frame_settings->enc->metadata.m),
-          {}});
+          jxl::ImageBundle(&frame_settings->enc->metadata.m)});
   if (!queued_frame) {
     return JXL_ENC_ERROR;
   }
   queued_frame->frame.SetFromImage(std::move(*io.Main().color()),
                                    io.Main().c_current());
-  size_t xsize, ysize;
-  if (GetCurrentDimensions(frame_settings, xsize, ysize) != JXL_ENC_SUCCESS) {
-    return JXL_API_ERROR("bad dimensions");
-  }
-  if (xsize != static_cast<size_t>(io.Main().jpeg_data->width) ||
-      ysize != static_cast<size_t>(io.Main().jpeg_data->height)) {
-    return JXL_API_ERROR("JPEG dimensions don't match frame dimensions");
-  }
-  std::vector<jxl::ImageF> extra_channels(
-      frame_settings->enc->metadata.m.num_extra_channels);
-  for (auto& extra_channel : extra_channels) {
-    extra_channel = jxl::ImageF(xsize, ysize);
-    queued_frame->ec_initialized.push_back(0);
-  }
-  queued_frame->frame.SetExtraChannels(std::move(extra_channels));
+  // TODO(firsching) add extra channels here
   queued_frame->frame.jpeg_data = std::move(io.Main().jpeg_data);
   queued_frame->frame.color_transform = io.Main().color_transform;
   queued_frame->frame.chroma_subsampling = io.Main().chroma_subsampling;
@@ -1164,6 +1122,28 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
   QueueFrame(frame_settings, queued_frame);
   return JXL_ENC_SUCCESS;
 }
+
+namespace {
+JxlEncoderStatus GetCurrentDimensions(
+    const JxlEncoderFrameSettings* frame_settings, size_t& xsize,
+    size_t& ysize) {
+  xsize = frame_settings->enc->metadata.xsize();
+  ysize = frame_settings->enc->metadata.ysize();
+  if (frame_settings->values.header.layer_info.have_crop) {
+    xsize = frame_settings->values.header.layer_info.xsize;
+    ysize = frame_settings->values.header.layer_info.ysize;
+  }
+  if (frame_settings->values.cparams.already_downsampled) {
+    size_t factor = frame_settings->values.cparams.resampling;
+    xsize = jxl::DivCeil(xsize, factor);
+    ysize = jxl::DivCeil(ysize, factor);
+  }
+  if (xsize == 0 || ysize == 0) {
+    return JXL_API_ERROR("zero-sized frame is not allowed");
+  }
+  return JXL_ENC_SUCCESS;
+}
+}  // namespace
 
 JxlEncoderStatus JxlEncoderAddImageFrame(
     const JxlEncoderFrameSettings* frame_settings,
@@ -1187,8 +1167,7 @@ JxlEncoderStatus JxlEncoderAddImageFrame(
       // default move constructor there.
       jxl::JxlEncoderQueuedFrame{
           frame_settings->values,
-          jxl::ImageBundle(&frame_settings->enc->metadata.m),
-          {}});
+          jxl::ImageBundle(&frame_settings->enc->metadata.m)});
 
   if (!queued_frame) {
     return JXL_ENC_ERROR;
@@ -1223,14 +1202,6 @@ JxlEncoderStatus JxlEncoderAddImageFrame(
     extra_channel = jxl::ImageF(xsize, ysize);
   }
   queued_frame->frame.SetExtraChannels(std::move(extra_channels));
-  for (auto& ec_info : frame_settings->enc->metadata.m.extra_channel_info) {
-    if (has_interleaved_alpha && ec_info.type == jxl::ExtraChannel::kAlpha) {
-      queued_frame->ec_initialized.push_back(1);
-      has_interleaved_alpha = 0;  // only first Alpha is initialized
-    } else {
-      queued_frame->ec_initialized.push_back(0);
-    }
-  }
 
   if (!jxl::BufferToImageBundle(*pixel_format, xsize, ysize, buffer, size,
                                 frame_settings->enc->thread_pool.get(),
@@ -1312,7 +1283,6 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
                                 .frame->frame.extra_channels()[index])) {
     return JXL_API_ERROR("Failed to set buffer for extra channel");
   }
-  frame_settings->enc->input_queue.back().frame->ec_initialized[index] = 1;
 
   return JXL_ENC_SUCCESS;
 }

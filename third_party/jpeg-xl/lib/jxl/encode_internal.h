@@ -51,7 +51,6 @@ constexpr unsigned char kLevelBoxHeader[] = {0, 0, 0, 0x9, 'j', 'x', 'l', 'l'};
 struct JxlEncoderQueuedFrame {
   JxlEncoderFrameSettingsValues option_values;
   ImageBundle frame;
-  std::vector<uint8_t> ec_initialized;
 };
 
 struct JxlEncoderQueuedBox {
