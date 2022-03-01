@@ -37,9 +37,9 @@ namespace layers {
 /* static */
 RefPtr<UiCompositorControllerChild>
 UiCompositorControllerChild::CreateForSameProcess(
-    const LayersId& aRootLayerTreeId, nsBaseWidget* aWidget) {
+    const LayersId& aRootLayerTreeId) {
   RefPtr<UiCompositorControllerChild> child =
-      new UiCompositorControllerChild(0, aWidget);
+      new UiCompositorControllerChild(0);
   child->mParent = new UiCompositorControllerParent(aRootLayerTreeId);
   GetUiThread()->Dispatch(
       NewRunnableMethod(
@@ -53,9 +53,9 @@ UiCompositorControllerChild::CreateForSameProcess(
 RefPtr<UiCompositorControllerChild>
 UiCompositorControllerChild::CreateForGPUProcess(
     const uint64_t& aProcessToken,
-    Endpoint<PUiCompositorControllerChild>&& aEndpoint, nsBaseWidget* aWidget) {
+    Endpoint<PUiCompositorControllerChild>&& aEndpoint) {
   RefPtr<UiCompositorControllerChild> child =
-      new UiCompositorControllerChild(aProcessToken, aWidget);
+      new UiCompositorControllerChild(aProcessToken);
 
   RefPtr<nsIRunnable> task =
       NewRunnableMethod<Endpoint<PUiCompositorControllerChild>&&>(
@@ -183,6 +183,10 @@ void UiCompositorControllerChild::Destroy() {
   }
 }
 
+void UiCompositorControllerChild::SetBaseWidget(nsBaseWidget* aWidget) {
+  mWidget = aWidget;
+}
+
 bool UiCompositorControllerChild::DeallocPixelBuffer(Shmem& aMem) {
   return DeallocShmem(aMem);
 }
@@ -253,8 +257,8 @@ mozilla::ipc::IPCResult UiCompositorControllerChild::RecvScreenPixels(
 
 // private:
 UiCompositorControllerChild::UiCompositorControllerChild(
-    const uint64_t& aProcessToken, nsBaseWidget* aWidget)
-    : mIsOpen(false), mProcessToken(aProcessToken), mWidget(aWidget) {}
+    const uint64_t& aProcessToken)
+    : mIsOpen(false), mProcessToken(aProcessToken), mWidget(nullptr) {}
 
 UiCompositorControllerChild::~UiCompositorControllerChild() = default;
 
