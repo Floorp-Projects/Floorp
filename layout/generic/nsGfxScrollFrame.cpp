@@ -5634,6 +5634,10 @@ void ScrollFrameHelper::AppendAnonymousContentTo(
 }
 
 void ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData) {
+  if (mIsRoot) {
+    mOuter->PresShell()->ResetVisualViewportOffset();
+  }
+
   mAnchor.Destroy();
 
   if (mScrollbarActivity) {
