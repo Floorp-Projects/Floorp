@@ -725,7 +725,10 @@ FinderHighlighter.prototype = {
     if (this._testing) {
       window.dispatchEvent(
         new CustomEvent("find-scrollmarks-changed", {
-          detail: Array.from(marks),
+          detail: {
+            marks: Array.from(marks),
+            onHorizontalScrollbar,
+          },
         })
       );
     }
