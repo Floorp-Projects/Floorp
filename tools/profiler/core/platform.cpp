@@ -4740,11 +4740,10 @@ static void NotifyObservers(const char* aTopic,
   }
 }
 
-static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
-                                  const Maybe<double>& aDuration,
-                                  double aInterval, uint32_t aFeatures,
-                                  const char** aFilters, uint32_t aFilterCount,
-                                  uint64_t aActiveTabID) {
+[[nodiscard]] static RefPtr<GenericPromise> NotifyProfilerStarted(
+    const PowerOfTwo32& aCapacity, const Maybe<double>& aDuration,
+    double aInterval, uint32_t aFeatures, const char** aFilters,
+    uint32_t aFilterCount, uint64_t aActiveTabID) {
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
@@ -4754,8 +4753,9 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
       aCapacity.Value(), aDuration, aInterval, aFeatures,
       std::move(filtersArray), aActiveTabID);
 
-  ProfilerParent::ProfilerStarted(params);
+  RefPtr<GenericPromise> startPromise = ProfilerParent::ProfilerStarted(params);
   NotifyObservers("profiler-started", params);
+  return startPromise;
 }
 
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
@@ -5061,8 +5061,8 @@ void profiler_init(void* aStackTop) {
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(capacity, duration, interval, features, filters.begin(),
-                        filters.length(), 0);
+  Unused << NotifyProfilerStarted(capacity, duration, interval, features,
+                                  filters.begin(), filters.length(), 0);
 }
 
 static void locked_profiler_save_profile_to_file(
@@ -5118,7 +5118,7 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
-    ProfilerParent::ProfilerStopped();
+    Unused << ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -5627,10 +5627,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
 }
 
-void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
-                    uint32_t aFeatures, const char** aFilters,
-                    uint32_t aFilterCount, uint64_t aActiveTabID,
-                    const Maybe<double>& aDuration) {
+RefPtr<GenericPromise> profiler_start(PowerOfTwo32 aCapacity, double aInterval,
+                                      uint32_t aFeatures, const char** aFilters,
+                                      uint32_t aFilterCount,
+                                      uint64_t aActiveTabID,
+                                      const Maybe<double>& aDuration) {
   LOG("profiler_start");
 
   ProfilerParent::ProfilerWillStopIfStarted();
@@ -5668,12 +5669,12 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
-    ProfilerParent::ProfilerStopped();
+    Unused << ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
-  NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                        aFilterCount, aActiveTabID);
+  return NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures,
+                               aFilters, aFilterCount, aActiveTabID);
 }
 
 void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
@@ -5719,7 +5720,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
-    ProfilerParent::ProfilerStopped();
+    Unused << ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -5727,8 +5728,8 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   if (startedProfiler) {
     invoke_profiler_state_change_callbacks(ProfilingState::Started);
 
-    NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                          aFilterCount, aActiveTabID);
+    Unused << NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures,
+                                    aFilters, aFilterCount, aActiveTabID);
   }
 }
 
@@ -5800,7 +5801,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   return samplerThread;
 }
 
-void profiler_stop() {
+RefPtr<GenericPromise> profiler_stop() {
   LOG("profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5822,7 +5823,7 @@ void profiler_stop() {
     PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
-      return;
+      return GenericPromise::CreateAndResolve(/* unused */ true, __func__);
     }
 
     samplerThread = locked_profiler_stop(lock);
@@ -5833,7 +5834,7 @@ void profiler_stop() {
   // locks gPSMutex, for example when it wants to insert a marker.
   // (This has been seen in practise in bug 1346356, when we were still firing
   // these notifications synchronously.)
-  ProfilerParent::ProfilerStopped();
+  RefPtr<GenericPromise> promise = ProfilerParent::ProfilerStopped();
   NotifyObservers("profiler-stopped");
 
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
@@ -5846,6 +5847,8 @@ void profiler_stop() {
   // in a way that's safe with respect to other gPSMutex-locking operations
   // that may have occurred in the meantime.
   delete samplerThread;
+
+  return promise;
 }
 
 bool profiler_is_paused() {
@@ -5871,7 +5874,7 @@ bool profiler_is_paused() {
   return ActivePS::AppendPostSamplingCallback(lock, std::move(aCallback));
 }
 
-void profiler_pause() {
+RefPtr<GenericPromise> profiler_pause() {
   LOG("profiler_pause");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5882,7 +5885,7 @@ void profiler_pause() {
     PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
-      return;
+      return GenericPromise::CreateAndResolve(/* unused */ true, __func__);
     }
 
 #if defined(GP_OS_android)
@@ -5899,11 +5902,12 @@ void profiler_pause() {
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  ProfilerParent::ProfilerPaused();
+  RefPtr<GenericPromise> promise = ProfilerParent::ProfilerPaused();
   NotifyObservers("profiler-paused");
+  return promise;
 }
 
-void profiler_resume() {
+RefPtr<GenericPromise> profiler_resume() {
   LOG("profiler_resume");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5912,7 +5916,7 @@ void profiler_resume() {
     PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
-      return;
+      return GenericPromise::CreateAndResolve(/* unused */ true, __func__);
     }
 
     ActivePS::Buffer(lock).AddEntry(
@@ -5930,10 +5934,12 @@ void profiler_resume() {
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  ProfilerParent::ProfilerResumed();
+  RefPtr<GenericPromise> promise = ProfilerParent::ProfilerResumed();
   NotifyObservers("profiler-resumed");
 
   invoke_profiler_state_change_callbacks(ProfilingState::Resumed);
+
+  return promise;
 }
 
 bool profiler_is_sampling_paused() {
@@ -5948,7 +5954,7 @@ bool profiler_is_sampling_paused() {
   return ActivePS::IsSamplingPaused(lock);
 }
 
-void profiler_pause_sampling() {
+RefPtr<GenericPromise> profiler_pause_sampling() {
   LOG("profiler_pause_sampling");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5957,7 +5963,7 @@ void profiler_pause_sampling() {
     PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
-      return;
+      return GenericPromise::CreateAndResolve(/* unused */ true, __func__);
     }
 
 #if defined(GP_OS_android)
@@ -5975,11 +5981,12 @@ void profiler_pause_sampling() {
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  ProfilerParent::ProfilerPausedSampling();
+  RefPtr<GenericPromise> promise = ProfilerParent::ProfilerPausedSampling();
   NotifyObservers("profiler-paused-sampling");
+  return promise;
 }
 
-void profiler_resume_sampling() {
+RefPtr<GenericPromise> profiler_resume_sampling() {
   LOG("profiler_resume_sampling");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5988,7 +5995,7 @@ void profiler_resume_sampling() {
     PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
-      return;
+      return GenericPromise::CreateAndResolve(/* unused */ true, __func__);
     }
 
     ActivePS::Buffer(lock).AddEntry(
@@ -6006,8 +6013,9 @@ void profiler_resume_sampling() {
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  ProfilerParent::ProfilerResumedSampling();
+  RefPtr<GenericPromise> promise = ProfilerParent::ProfilerResumedSampling();
   NotifyObservers("profiler-resumed-sampling");
+  return promise;
 }
 
 bool profiler_feature_active(uint32_t aFeature) {

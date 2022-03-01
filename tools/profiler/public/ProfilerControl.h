@@ -42,6 +42,7 @@ static inline void profiler_shutdown(
 
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Maybe.h"
+#  include "mozilla/MozPromise.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/Vector.h"
 
@@ -115,14 +116,18 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown = IsFastShutdown::No);
 //               It's being used to determine the profiled tab. It's "0" if
 //               we failed to get the ID.
 //   "aDuration" is the duration of entries in the profiler's circular buffer.
-void profiler_start(
+// Returns as soon as this process' profiler has started, the returned promise
+// gets resolved when profilers in sub-processes (if any) have started.
+RefPtr<mozilla::GenericPromise> profiler_start(
     mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
     const char** aFilters, uint32_t aFilterCount, uint64_t aActiveTabID,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
 // profiler is inactive. After stopping the profiler is "inactive".
-void profiler_stop();
+// Returns as soon as this process' profiler has stopped, the returned promise
+// gets resolved when profilers in sub-processes (if any) have stopped.
+RefPtr<mozilla::GenericPromise> profiler_stop();
 
 // If the profiler is inactive, start it. If it's already active, restart it if
 // the requested settings differ from the current settings. Both the check and
@@ -144,13 +149,19 @@ void profiler_ensure_started(
 // Timeline markers will still be stored. This feature will keep JavaScript
 // profiling enabled, thus allowing toggling the profiler without invalidating
 // the JIT.
-void profiler_pause();
-void profiler_resume();
+// Returns as soon as this process' profiler has paused/resumed, the returned
+// promise gets resolved when profilers in sub-processes (if any) have
+// paused/resumed.
+RefPtr<mozilla::GenericPromise> profiler_pause();
+RefPtr<mozilla::GenericPromise> profiler_resume();
 
 // Only pause and resume the periodic sampling loop, including stack sampling,
 // counters, and profiling overheads.
-void profiler_pause_sampling();
-void profiler_resume_sampling();
+// Returns as soon as this process' profiler has paused/resumed sampling, the
+// returned promise gets resolved when profilers in sub-processes (if any) have
+// paused/resumed sampling.
+RefPtr<mozilla::GenericPromise> profiler_pause_sampling();
+RefPtr<mozilla::GenericPromise> profiler_resume_sampling();
 
 //---------------------------------------------------------------------------
 // Get information from the profiler
