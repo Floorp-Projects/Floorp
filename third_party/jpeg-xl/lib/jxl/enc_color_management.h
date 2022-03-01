@@ -46,13 +46,15 @@ class ColorSpaceTransform {
     input_profile.icc.size = icc_src_.size();
     ConvertInternalToExternalColorEncoding(c_src,
                                            &input_profile.color_encoding);
-    input_profile.num_channels = c_src.Channels();
+    input_profile.num_channels = c_src.IsCMYK() ? 4 : c_src.Channels();
     JxlColorProfile output_profile;
     icc_dst_ = c_dst.ICC();
     output_profile.icc.data = icc_dst_.data();
     output_profile.icc.size = icc_dst_.size();
     ConvertInternalToExternalColorEncoding(c_dst,
                                            &output_profile.color_encoding);
+    if (c_dst.IsCMYK())
+      return JXL_FAILURE("Conversion to CMYK is not supported");
     output_profile.num_channels = c_dst.Channels();
     cms_data_ = cms_.init(cms_.init_data, num_threads, xsize, &input_profile,
                           &output_profile, intensity_target);

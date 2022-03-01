@@ -17,8 +17,6 @@
 #include <stdint.h>
 #include <string.h>  // memcmp
 
-#include "hwy/base.h"
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/mask_test.cc"
 #include "hwy/foreach_target.h"
@@ -55,13 +53,18 @@ struct TestFirstN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
-
     const RebindToSigned<D> di;
     using TI = TFromD<decltype(di)>;
     using TN = SignedFromSize<HWY_MIN(sizeof(size_t), sizeof(TI))>;
     const size_t max_len = static_cast<size_t>(LimitsMax<TN>());
 
-    for (size_t len = 0; len <= HWY_MIN(2 * N, max_len); ++len) {
+// TODO(janwas): 8-bit FirstN (using SlideUp) causes spike to freeze.
+#if HWY_TARGET == HWY_RVV
+    if (sizeof(T) == 1) return;
+#endif
+
+    const size_t max_lanes = AdjustedReps(HWY_MIN(2 * N, size_t(64)));
+    for (size_t len = 0; len <= HWY_MIN(max_lanes, max_len); ++len) {
       const auto expected =
           RebindMask(d, Lt(Iota(di, 0), Set(di, static_cast<TI>(len))));
       const auto actual = FirstN(d, len);
@@ -368,7 +371,7 @@ struct TestFindFirstTrue {
     memset(bool_lanes.get(), 0, N * sizeof(TI));
 
     // For all combinations of zero/nonzero state of subset of lanes:
-    const size_t max_lanes = HWY_MIN(N, size_t(10));
+    const size_t max_lanes = AdjustedLog2Reps(HWY_MIN(N, size_t(9)));
 
     HWY_ASSERT_EQ(intptr_t(-1), FindFirstTrue(d, MaskFalse(d)));
     HWY_ASSERT_EQ(intptr_t(0), FindFirstTrue(d, MaskTrue(d)));
@@ -407,7 +410,7 @@ struct TestLogicalMask {
     HWY_ASSERT_MASK_EQ(d, m_all, Not(m0));
 
     // For all combinations of zero/nonzero state of subset of lanes:
-    const size_t max_lanes = HWY_MIN(N, size_t(6));
+    const size_t max_lanes = AdjustedLog2Reps(HWY_MIN(N, size_t(6)));
     for (size_t code = 0; code < (1ull << max_lanes); ++code) {
       for (size_t i = 0; i < max_lanes; ++i) {
         bool_lanes[i] = (code & (1ull << i)) ? TI(1) : TI(0);

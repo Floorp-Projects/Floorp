@@ -545,6 +545,8 @@ Status FrameDecoder::ProcessACGlobal(BitReader* br) {
   if (frame_header_.encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(dec_state_->shared_storage.matrices.Decode(
         br, &modular_frame_decoder_));
+    JXL_RETURN_IF_ERROR(dec_state_->shared_storage.matrices.EnsureComputed(
+        dec_state_->used_acs));
 
     size_t num_histo_bits =
         CeilLog2Nonzero(dec_state_->shared->frame_dim.num_groups);

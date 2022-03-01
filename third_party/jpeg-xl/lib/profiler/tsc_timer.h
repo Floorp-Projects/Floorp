@@ -24,7 +24,7 @@
 #undef LoadFence
 #endif
 
-#if defined(__MACH__)
+#if defined(__APPLE__)
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #endif
@@ -122,7 +122,7 @@ static HWY_INLINE HWY_MAYBE_UNUSED Ticks TicksBefore() {
   LARGE_INTEGER counter;
   (void)QueryPerformanceCounter(&counter);
   t = counter.QuadPart;
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
   t = mach_absolute_time();
 #elif defined(__HAIKU__)
   t = system_time_nsecs();  // since boot

@@ -486,7 +486,7 @@ struct AsinImpl<float> {
   }
 };
 
-#if HWY_CAP_FLOAT64 && HWY_CAP_INTEGER64
+#if HWY_HAVE_FLOAT64 && HWY_HAVE_INTEGER64
 
 template <>
 struct AsinImpl<double> {
@@ -531,7 +531,7 @@ struct AtanImpl<float> {
   }
 };
 
-#if HWY_CAP_FLOAT64 && HWY_CAP_INTEGER64
+#if HWY_HAVE_FLOAT64 && HWY_HAVE_INTEGER64
 
 template <>
 struct AtanImpl<double> {
@@ -635,7 +635,7 @@ struct CosSinImpl<float> {
   }
 };
 
-#if HWY_CAP_FLOAT64 && HWY_CAP_INTEGER64
+#if HWY_HAVE_FLOAT64 && HWY_HAVE_INTEGER64
 
 template <>
 struct CosSinImpl<double> {
@@ -787,7 +787,7 @@ struct LogImpl<float> {
   }
 };
 
-#if HWY_CAP_FLOAT64 && HWY_CAP_INTEGER64
+#if HWY_HAVE_FLOAT64 && HWY_HAVE_INTEGER64
 template <>
 struct ExpImpl<double> {
   // Rounds double toward zero and returns as int32_t.
