@@ -7,7 +7,7 @@
 const { WasmRemap } = require("../utils/wasmRemap");
 const { createConsumer } = require("../utils/createConsumer");
 
-jest.mock("devtools-utils/src/network-request");
+jest.mock("../utils/network-request");
 
 describe("wasm source maps", () => {
   test("smoke test", async () => {
@@ -96,16 +96,18 @@ describe("wasm source maps", () => {
       isWasm: true,
     };
 
-    require("devtools-utils/src/network-request").mockImplementationOnce(() => {
-      const content = JSON.stringify({
-        version: 3,
-        file: "min.js",
-        names: [],
-        sources: ["one.js"],
-        mappings: "CAAC,IAAM",
-      });
-      return { content };
-    });
+    require("../utils/network-request").networkRequest.mockImplementationOnce(
+      () => {
+        const content = JSON.stringify({
+          version: 3,
+          file: "min.js",
+          names: [],
+          sources: ["one.js"],
+          mappings: "CAAC,IAAM",
+        });
+        return { content };
+      }
+    );
 
     const { getOriginalURLs, getOriginalLocation } = require("../source-map");
 

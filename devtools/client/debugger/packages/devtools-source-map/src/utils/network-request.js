@@ -32,4 +32,4 @@ function networkRequest(url, opts) {
   ]);
 }
 
-module.exports = networkRequest;
+module.exports = { networkRequest };

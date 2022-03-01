@@ -30,10 +30,12 @@ async function setupBundleFixtureAndData(name) {
     sourceMapBaseURL: `http://example.com/${name}.js`,
   };
 
-  require("devtools-utils/src/network-request").mockImplementationOnce(() => {
-    const content = getMap(`fixtures/${name}.js.map`);
-    return { content };
-  });
+  require("../utils/network-request").networkRequest.mockImplementationOnce(
+    () => {
+      const content = getMap(`fixtures/${name}.js.map`);
+      return { content };
+    }
+  );
 
   return getOriginalURLs(source);
 }

@@ -41,7 +41,6 @@ function isRequire(t, node) {
 const VENDORS = [
   "classnames",
   "devtools-environment",
-  "devtools-utils",
   "fuzzaldrin-plus",
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
