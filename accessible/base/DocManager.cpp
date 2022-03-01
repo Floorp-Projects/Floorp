@@ -454,7 +454,9 @@ DocAccessible* DocManager::CreateDocOrRootAccessible(Document* aDocument) {
     return nullptr;
   }
 
-  // Ignore documents without presshell and not having root frame.
+  // Ignore documents without presshell. We must not ignore documents with no
+  // root frame because DOM focus can hit such documents and ignoring them would
+  // prevent a11y focus.
   PresShell* presShell = aDocument->GetPresShell();
   if (!presShell || presShell->IsDestroying()) {
     return nullptr;

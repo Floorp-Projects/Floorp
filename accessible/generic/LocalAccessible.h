@@ -103,6 +103,9 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   /**
    * Return frame for this accessible.
+   * Note that this will return null for display: contents. Also,
+   * DocAccessible::GetFrame can return null if the frame tree hasn't been
+   * created yet.
    */
   virtual nsIFrame* GetFrame() const;
 
