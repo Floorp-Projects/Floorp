@@ -27,6 +27,11 @@ add_task(async function title_field_in_snapshots() {
   await db.execute(`SELECT title FROM moz_places_metadata_snapshots`);
 });
 
+add_task(async function hidden_field_in_snapshots_groups() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(`SELECT hidden FROM moz_places_metadata_snapshots_groups`);
+});
+
 add_task(async function indexes_in_database() {
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(
