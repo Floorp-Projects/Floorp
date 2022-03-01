@@ -61,7 +61,7 @@ class WallpaperFileManagerTest {
         val currentName = "current"
         val currentWallpaper = Wallpaper.Expired(currentName)
         val availableName = "available"
-        val available = Wallpaper.Remote.Focus(name = availableName)
+        val available = Wallpaper.Remote.House(name = availableName)
         val unavailableName = "unavailable"
         createAllFiles(currentName)
         createAllFiles(availableName)

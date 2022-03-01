@@ -145,6 +145,6 @@ class WallpaperManagerTest {
             TimeRelation.LATER -> fakeCalendar.add(Calendar.DATE, 5)
         }
         val relativeTime = fakeCalendar.time
-        return Wallpaper.Remote.Focus(name = name, expirationDate = relativeTime)
+        return Wallpaper.Remote.House(name = name, expirationDate = relativeTime)
     }
 }
