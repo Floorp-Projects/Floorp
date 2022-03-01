@@ -899,6 +899,13 @@ void ProfilerParent::ClearAllPages() {
   });
 }
 
+/* static */
+RefPtr<GenericPromise> ProfilerParent::WaitOnePeriodicSampling() {
+  return SendAndConvertPromise([](ProfilerParent* profilerParent) {
+    return profilerParent->SendWaitOnePeriodicSampling();
+  });
+}
+
 void ProfilerParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mDestroyed = true;
