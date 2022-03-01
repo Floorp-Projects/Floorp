@@ -10,9 +10,8 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
 
-#include "builtin/Array.h"                // js::NewDenseFullyAllocatedArray
-#include "builtin/Promise.h"              // js::RejectPromiseWithPendingError
-#include "builtin/streams/PipeToState.h"  // js::PipeToState
+#include "builtin/Array.h"    // js::NewDenseFullyAllocatedArray
+#include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamDefaultController{Close,Enqueue}, js::ReadableStreamControllerError, js::SourceAlgorithms
@@ -631,49 +630,4 @@ static bool TeeReaderErroredHandler(JSContext* cx, unsigned argc,
 
   // Step 19: Return « branch1, branch2 ».
   return true;
-}
-
-/**
- * Streams spec, 3.4.10.
- *      ReadableStreamPipeTo ( source, dest, preventClose, preventAbort,
- *                             preventCancel, signal )
- */
-PromiseObject* js::ReadableStreamPipeTo(JSContext* cx,
-                                        Handle<ReadableStream*> unwrappedSource,
-                                        Handle<WritableStream*> unwrappedDest,
-                                        bool preventClose, bool preventAbort,
-                                        bool preventCancel,
-                                        Handle<JSObject*> signal) {
-  cx->check(signal);
-
-  // Step 1. Assert: ! IsReadableStream(source) is true.
-  // Step 2. Assert: ! IsWritableStream(dest) is true.
-  // Step 3. Assert: Type(preventClose) is Boolean, Type(preventAbort) is
-  //         Boolean, and Type(preventCancel) is Boolean.
-  // (These are guaranteed by the type system.)
-
-  // Step 12: Let promise be a new promise.
-  //
-  // We reorder this so that this promise can be rejected and returned in case
-  // of internal error.
-  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
-  if (!promise) {
-    return nullptr;
-  }
-
-  // Steps 4-11, 13-14.
-  Rooted<PipeToState*> pipeToState(
-      cx,
-      PipeToState::create(cx, promise, unwrappedSource, unwrappedDest,
-                          preventClose, preventAbort, preventCancel, signal));
-  if (!pipeToState) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-
-    return promise;
-  }
-
-  // Step 15.
-  return promise;
 }
