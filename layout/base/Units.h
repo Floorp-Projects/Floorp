@@ -440,6 +440,15 @@ struct LayoutDevicePixel {
         NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));
   }
 
+  static LayoutDeviceIntRect FromAppUnitsRounded(const nsRect& aRect,
+                                                 nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntRect(
+        NSAppUnitsToIntPixels(aRect.x, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.y, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.Width(), aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.Height(), aAppUnitsPerDevPixel));
+  }
+
   static LayoutDeviceIntPoint FromAppUnitsToNearest(
       const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntPoint::FromUnknownPoint(
