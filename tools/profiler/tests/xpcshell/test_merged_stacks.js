@@ -11,7 +11,7 @@ add_task(async () => {
   const threads = [];
   const features = ["js", "stackwalk"];
 
-  Services.profiler.StartProfiler(entries, interval, features, threads);
+  await Services.profiler.StartProfiler(entries, interval, features, threads);
 
   // Call the following to get a nice stack in the profiler:
   // functionA -> functionB -> functionC

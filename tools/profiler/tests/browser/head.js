@@ -13,12 +13,12 @@ const BASE_URL = "http://example.com/browser/tools/profiler/tests/browser/";
 const BASE_URL_HTTPS =
   "https://example.com/browser/tools/profiler/tests/browser/";
 
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   if (Services.profiler.IsActive()) {
     info(
       "The profiler was found to still be running at the end of the test, which means that some error likely occured. Let's stop it to prevent issues with following tests!"
     );
-    Services.profiler.StopProfiler();
+    await Services.profiler.StopProfiler();
   }
 });
 
@@ -34,9 +34,11 @@ registerCleanupFunction(() => {
  * @returns {Promise}
  */
 async function stopProfilerNowAndGetThreads(contentPid) {
+  // Don't await the pause, because each process will handle it before it
+  // receives the following `getProfileDataAsync()`.
   Services.profiler.Pause();
   const profile = await Services.profiler.getProfileDataAsync();
-  Services.profiler.StopProfiler();
+  await Services.profiler.StopProfiler();
 
   const parentThread = profile.threads[0];
   const contentProcess = profile.processes.find(

@@ -39,7 +39,7 @@ async function test_with_filter(fnFilterWithContentId) {
     );
 
     info("Start the profiler to test filters including 'pid:<content>'.");
-    startProfiler({ threads: fnFilterWithContentId(contentPid) });
+    await startProfiler({ threads: fnFilterWithContentId(contentPid) });
 
     let pidsWithSamplerThread = null;
     await TestUtils.waitForCondition(
