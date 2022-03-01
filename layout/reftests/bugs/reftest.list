@@ -820,12 +820,14 @@ fuzzy(0-2,0-21) == 398682-1.html 398682-1-ref.html
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
-random-if(gtkWidget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
-random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
-random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+# These tests are expected to fail on Windows and Mac since bug 1756720 deliberately changed behavior here;
+# random elsewhere depending on font availability.
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-standards-css.html 399636-standards-ref.html
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-standards-html.html 399636-standards-ref.html
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-quirks-css.html 399636-quirks-ref.html
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
-fails-if(cocoaWidget||winWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
+random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
