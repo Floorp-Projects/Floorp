@@ -168,7 +168,8 @@ bool MessagePortParent::ForceClose(const nsID& aUUID,
   if (!service) {
     NS_WARNING(
         "The service must exist if we want to close an existing MessagePort.");
-    return false;
+    // There is nothing to close so we are ok.
+    return true;
   }
 
   return service->ForceClose(aUUID, aDestinationUUID, aSequenceID);
