@@ -35,6 +35,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/net/DataChannel.h"
+#include "mozilla/TupleCycleCollection.h"
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -160,6 +161,7 @@ struct PeerConnectionAutoTimer {
 
 class PeerConnectionImpl final
     : public nsISupports,
+      public nsWrapperCache,
       public mozilla::DataChannelConnection::DataConnectionListener,
       public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
   struct Internal;  // Avoid exposing c includes to bindings
@@ -168,10 +170,12 @@ class PeerConnectionImpl final
   explicit PeerConnectionImpl(
       const mozilla::dom::GlobalObject* aGlobal = nullptr);
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PeerConnectionImpl)
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandle<JSObject*> aReflector);
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   static already_AddRefed<PeerConnectionImpl> Constructor(
       const mozilla::dom::GlobalObject& aGlobal);
@@ -204,9 +208,6 @@ class PeerConnectionImpl final
   static void ListenThread(void* aData);
   static void ConnectThread(void* aData);
 
-  // Get the main thread
-  nsCOMPtr<nsIThread> GetMainThread() { return mThread; }
-
   // Get the STS thread
   nsISerialEventTarget* GetSTSThread() {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -219,12 +220,11 @@ class PeerConnectionImpl final
   }
 
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsGlobalWindowInner* aWindow, nsISupports* aThread);
+                      nsGlobalWindowInner* aWindow);
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsGlobalWindowInner& aWindow, nsISupports* aThread,
-                  ErrorResult& rv);
+                  nsGlobalWindowInner& aWindow, ErrorResult& rv);
 
   void SetCertificate(mozilla::dom::RTCCertificate& aCertificate);
   const RefPtr<mozilla::dom::RTCCertificate>& Certificate() const;
@@ -416,7 +416,6 @@ class PeerConnectionImpl final
 
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
-
   void CollectConduitTelemetryData();
 
   // for monitoring changes in track ownership
@@ -465,13 +464,7 @@ class PeerConnectionImpl final
                                      uint32_t aMaxMessageSize, bool aMMSSet);
 
   nsresult CheckApiState(bool assert_ice_ready) const;
-  void CheckThread() const { MOZ_ASSERT(CheckThreadInt(), "Wrong thread"); }
-  bool CheckThreadInt() const {
-    bool on;
-    NS_ENSURE_SUCCESS(mThread->IsOnCurrentThread(&on), false);
-    NS_ENSURE_TRUE(on, false);
-    return true;
-  }
+  void CheckThread() const { MOZ_ASSERT(NS_IsMainThread(), "Wrong thread"); }
 
   // test-only: called from AddRIDExtension and AddRIDFilter
   // for simulcast mochitests.
@@ -522,7 +515,6 @@ class PeerConnectionImpl final
   mozilla::dom::RTCIceConnectionState mIceConnectionState;
   mozilla::dom::RTCIceGatheringState mIceGatheringState;
 
-  nsCOMPtr<nsIThread> mThread;
   RefPtr<PeerConnectionObserver> mPCObserver;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
@@ -711,7 +703,7 @@ class PeerConnectionImpl final
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   bool mRtxIsAllowed = true;
 
-  std::vector<RefPtr<TransceiverImpl>> mTransceivers;
+  nsTArray<RefPtr<TransceiverImpl>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
 

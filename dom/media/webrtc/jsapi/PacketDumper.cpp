@@ -32,15 +32,22 @@ void PacketDumper::Dump(size_t level, dom::mozPacketDumpType type, bool sending,
     return;
   }
 
-  RefPtr<PeerConnectionImpl> pc = mPc;
+  // We do not pass a strong ref into the closure, because we're on STS, and
+  // PeerConnectionImpl is cycle-collected (refcount can be manipulated only on
+  // main).
+  std::string pcHandle = mPc->GetHandle();
 
   UniquePtr<uint8_t[]> ownedPacket = MakeUnique<uint8_t[]>(size);
   memcpy(ownedPacket.get(), data, size);
 
   RefPtr<Runnable> dumpRunnable = media::NewRunnableFrom(std::bind(
-      [pc, level, type, sending,
+      [pcHandle, level, type, sending,
        size](UniquePtr<uint8_t[]>& packet) -> nsresult {
-        pc->DumpPacket_m(level, type, sending, packet, size);
+        PeerConnectionWrapper pcw(pcHandle);
+        RefPtr<PeerConnectionImpl> pc = pcw.impl();
+        if (pc) {
+          pc->DumpPacket_m(level, type, sending, packet, size);
+        }
         return NS_OK;
       },
       std::move(ownedPacket)));

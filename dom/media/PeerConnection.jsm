@@ -567,7 +567,7 @@ class RTCPeerConnection {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    this._impl.initialize(observer, this._win, Services.tm.currentThread);
+    this._impl.initialize(observer, this._win);
 
     this.setConfiguration(rtcConfig);
 

@@ -243,7 +243,25 @@ void PeerConnectionAutoTimer::UnregisterConnection(bool aContainedAV) {
 
 bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 
-NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
+  tmp->Close();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
+                                  mSTSThread, mTransceivers, mReceiveStreams)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPCObserver, mWindow, mCertificate,
+                                    mSTSThread, mTransceivers, mReceiveStreams)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PeerConnectionImpl)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PeerConnectionImpl)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PeerConnectionImpl)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
     const dom::GlobalObject& aGlobal) {
@@ -254,10 +272,13 @@ already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
   return pc.forget();
 }
 
-bool PeerConnectionImpl::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto,
-                                    JS::MutableHandle<JSObject*> aReflector) {
-  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto, aReflector);
+JSObject* PeerConnectionImpl::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
+  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsPIDOMWindowInner* PeerConnectionImpl::GetParentObject() const {
+  return mWindow;
 }
 
 bool PCUuidGenerator::Generate(std::string* idp) {
@@ -376,17 +397,10 @@ PeerConnectionImpl::~PeerConnectionImpl() {
 }
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                                        nsGlobalWindowInner* aWindow,
-                                        nsISupports* aThread) {
+                                        nsGlobalWindowInner* aWindow) {
   nsresult res;
 
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  if (!mThread) {
-    mThread = do_QueryInterface(aThread);
-    MOZ_ASSERT(mThread);
-  }
-  CheckThread();
 
   mPCObserver = &aObserver;
 
@@ -444,7 +458,7 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mName = temp;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
-  res = PeerConnectionCtx::InitializeGlobal(mThread);
+  res = PeerConnectionCtx::InitializeGlobal();
   NS_ENSURE_SUCCESS(res, res);
 
   mTransportHandler->CreateIceCtx("PC:" + GetName());
@@ -480,12 +494,10 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                     nsGlobalWindowInner& aWindow,
-                                    nsISupports* aThread, ErrorResult& rv) {
+                                    ErrorResult& rv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  mThread = do_QueryInterface(aThread);
 
-  nsresult res = Initialize(aObserver, &aWindow, aThread);
+  nsresult res = Initialize(aObserver, &aWindow);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
@@ -1172,7 +1184,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
 
   STAMP_TIMECARD(mTimeCard, "Create Offer");
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), aOptions] {
         std::string offer;
 
@@ -1206,7 +1218,7 @@ PeerConnectionImpl::CreateAnswer() {
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
 
@@ -1445,6 +1457,10 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
     return nullptr;
   }
 
+  if (!mWindow) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -1508,7 +1524,7 @@ PeerConnectionImpl::AddIceCandidate(
       mRawTrickledCandidates.push_back(aCandidate);
     }
     // Spec says we queue a task for these updates
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
           if (IsClosed()) {
             return;
@@ -1529,7 +1545,7 @@ PeerConnectionImpl::AddIceCandidate(
                 static_cast<unsigned>(*result.mError), aCandidate,
                 level.valueOr(-1), errorString.c_str());
 
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__,
         [this, self = RefPtr<PeerConnectionImpl>(this), errorString, result] {
           if (IsClosed()) {
@@ -1985,7 +2001,7 @@ PeerConnectionImpl::Close() {
     transceiver->Shutdown_m();
   }
 
-  mTransceivers.clear();
+  mTransceivers.Clear();
 
   mQueuedIceCtxOperations.clear();
 
@@ -2203,7 +2219,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
   // Spec says we queue a task for all the stuff that ends up back in JS
   auto newSignalingState = GetSignalingState();
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
                  newSignalingState, sdpType, remote] {
         if (IsClosed()) {
@@ -2401,10 +2417,7 @@ const RefPtr<MediaTransportHandler> PeerConnectionImpl::GetTransportHandler()
   return mTransportHandler;
 }
 
-const std::string& PeerConnectionImpl::GetHandle() {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  return mHandle;
-}
+const std::string& PeerConnectionImpl::GetHandle() { return mHandle; }
 
 const std::string& PeerConnectionImpl::GetName() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -3093,7 +3106,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   UniquePtr<dom::RTCStatsReportInternal> report(
       new dom::RTCStatsReportInternal);
   report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
-  report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  if (mWindow) {
+    report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  }
   report->mConfiguration.Construct(mJsConfiguration);
   // TODO(bug 1589416): We need to do better here.
   if (!mIceStartTime.IsNull()) {
@@ -3142,9 +3157,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     }
   }
 
-  return dom::RTCStatsPromise::All(mThread, promises)
+  return dom::RTCStatsPromise::All(GetMainThreadSerialEventTarget(), promises)
       ->Then(
-          mThread, __func__,
+          GetMainThreadSerialEventTarget(), __func__,
           [report = std::move(report), idGen = mIdGenerator](
               nsTArray<UniquePtr<dom::RTCStatsCollection>> aStats) mutable {
             idGen->RewriteIds(std::move(aStats), report.get());
@@ -3810,7 +3825,7 @@ nsresult PeerConnectionImpl::AddTransceiver(
     }
   }
 
-  mTransceivers.push_back(transceiver);
+  mTransceivers.AppendElement(transceiver);
   *aTransceiverImpl = transceiver;
 
   return NS_OK;
