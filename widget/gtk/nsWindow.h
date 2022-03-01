@@ -769,7 +769,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
-  bool WaylandPopupFitsParentWindow(GdkRectangle* aSize);
+  bool WaylandPopupFitsParentWindow(const GdkRectangle& aSize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
   nsAutoCString GetFrameTag() const;
