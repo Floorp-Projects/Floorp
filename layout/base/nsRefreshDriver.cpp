@@ -507,23 +507,18 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
       NS_IMETHOD Run() override {
         MOZ_ASSERT(NS_IsMainThread());
-        sVsyncPriorityEnabled = mozilla::BrowserTabsRemoteAutostart();
-
         mObserver->NotifyVsyncOnMainThread();
         return NS_OK;
       }
 
       NS_IMETHOD GetPriority(uint32_t* aPriority) override {
-        *aPriority = sVsyncPriorityEnabled
-                         ? nsIRunnablePriority::PRIORITY_VSYNC
-                         : nsIRunnablePriority::PRIORITY_NORMAL;
+        *aPriority = nsIRunnablePriority::PRIORITY_VSYNC;
         return NS_OK;
       }
 
      private:
       ~ParentProcessVsyncNotifier() = default;
       RefPtr<RefreshDriverVsyncObserver> mObserver;
-      static mozilla::Atomic<bool> sVsyncPriorityEnabled;
     };
 
     bool NotifyVsync(const VsyncEvent& aVsync) override {
@@ -832,9 +827,6 @@ NS_IMPL_ISUPPORTS_INHERITED(
     VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::
         ParentProcessVsyncNotifier,
     Runnable, nsIRunnablePriority)
-
-mozilla::Atomic<bool> VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::
-    ParentProcessVsyncNotifier::sVsyncPriorityEnabled(false);
 
 /**
  * Since the content process takes some time to setup
