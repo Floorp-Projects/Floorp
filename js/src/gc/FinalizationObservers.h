@@ -93,6 +93,10 @@ class FinalizationObservers {
   void traceRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
 
+#ifdef DEBUG
+  void checkTables() const;
+#endif
+
  private:
   bool addCrossZoneWrapper(JSObject* wrapper);
   void removeCrossZoneWrapper(JSObject* wrapper);
