@@ -79,9 +79,3 @@ checkPropertyDescriptor(proto, Symbol.toStringTag, false, false, true);
 let weakRef = new WeakRef({});
 assertEq(Object.getPrototypeOf(weakRef), proto);
 
-let obj = {};
-let wr = new WeakRef(obj);
-gc();
-drainJobQueue();
-assertEq(obj, wr.deref());
-
