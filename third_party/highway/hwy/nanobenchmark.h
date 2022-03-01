@@ -47,6 +47,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "hwy/highway_export.h"
+
 // Enables sanity checks that verify correct operation at the cost of
 // longer benchmark runs.
 #ifndef NANOBENCHMARK_ENABLE_CHECKS
@@ -72,23 +74,23 @@ namespace platform {
 // Returns tick rate, useful for converting measurements to seconds. Invariant
 // means the tick counter frequency is independent of CPU throttling or sleep.
 // This call may be expensive, callers should cache the result.
-double InvariantTicksPerSecond();
+HWY_DLLEXPORT double InvariantTicksPerSecond();
 
 // Returns current timestamp [in seconds] relative to an unspecified origin.
 // Features: monotonic (no negative elapsed time), steady (unaffected by system
 // time changes), high-resolution (on the order of microseconds).
-double Now();
+HWY_DLLEXPORT double Now();
 
 // Returns ticks elapsed in back to back timer calls, i.e. a function of the
 // timer resolution (minimum measurable difference) and overhead.
 // This call is expensive, callers should cache the result.
-uint64_t TimerResolution();
+HWY_DLLEXPORT uint64_t TimerResolution();
 
 }  // namespace platform
 
 // Returns 1, but without the compiler knowing what the value is. This prevents
 // optimizing out code.
-int Unpredictable1();
+HWY_DLLEXPORT int Unpredictable1();
 
 // Input influencing the function being measured (e.g. number of bytes to copy).
 using FuncInput = size_t;
@@ -164,9 +166,9 @@ struct Result {
 //   uniform distribution over [0, 4) could be represented as {3,0,2,1}.
 // Returns how many Result were written to "results": one per unique input, or
 //   zero if the measurement failed (an error message goes to stderr).
-size_t Measure(const Func func, const uint8_t* arg, const FuncInput* inputs,
-               const size_t num_inputs, Result* results,
-               const Params& p = Params());
+HWY_DLLEXPORT size_t Measure(const Func func, const uint8_t* arg,
+                             const FuncInput* inputs, const size_t num_inputs,
+                             Result* results, const Params& p = Params());
 
 // Calls operator() of the given closure (lambda function).
 template <class Closure>

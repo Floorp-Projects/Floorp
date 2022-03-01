@@ -7,4 +7,4 @@ Name: libhwy
 Description: Efficient and performance-portable SIMD wrapper
 Version: @HWY_LIBRARY_VERSION@
 Libs: -L${libdir} -lhwy
-Cflags: -I${includedir}
+Cflags: -I${includedir} -D@DLLEXPORT_TO_DEFINE@

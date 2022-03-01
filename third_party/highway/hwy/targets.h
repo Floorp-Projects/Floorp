@@ -22,6 +22,7 @@
 
 #include "hwy/base.h"
 #include "hwy/detect_targets.h"
+#include "hwy/highway_export.h"
 
 namespace hwy {
 
@@ -29,7 +30,7 @@ namespace hwy {
 // Implemented in targets.cc; unconditionally compiled to support the use case
 // of binary-only distributions. The HWY_SUPPORTED_TARGETS wrapper may allow
 // eliding calls to this function.
-uint32_t SupportedTargets();
+HWY_DLLEXPORT uint32_t SupportedTargets();
 
 // Evaluates to a function call, or literal if there is a single target.
 #if (HWY_TARGETS & (HWY_TARGETS - 1)) == 0
@@ -44,7 +45,7 @@ uint32_t SupportedTargets();
 // lower target is desired. For this reason, attempts to disable targets which
 // are in HWY_ENABLED_BASELINE have no effect so SupportedTargets() always
 // returns at least the baseline target.
-void DisableTargets(uint32_t disabled_targets);
+HWY_DLLEXPORT void DisableTargets(uint32_t disabled_targets);
 
 // Set the mock mask of CPU supported targets instead of the actual CPU
 // supported targets computed in SupportedTargets(). The return value of
@@ -52,11 +53,11 @@ void DisableTargets(uint32_t disabled_targets);
 // regardless of this mock, to prevent accidentally adding targets that are
 // known to be buggy in the current CPU. Call with a mask of 0 to disable the
 // mock and use the actual CPU supported targets instead.
-void SetSupportedTargetsForTest(uint32_t targets);
+HWY_DLLEXPORT void SetSupportedTargetsForTest(uint32_t targets);
 
 // Returns whether the SupportedTargets() function was called since the last
 // SetSupportedTargetsForTest() call.
-bool SupportedTargetsCalledForTest();
+HWY_DLLEXPORT bool SupportedTargetsCalledForTest();
 
 // Return the list of targets in HWY_TARGETS supported by the CPU as a list of
 // individual HWY_* target macros such as HWY_SCALAR or HWY_NEON. This list
@@ -225,7 +226,7 @@ struct ChosenTarget {
  public:
   // Update the ChosenTarget mask based on the current CPU supported
   // targets.
-  void Update();
+  HWY_DLLEXPORT void Update();
 
   // Reset the ChosenTarget to the uninitialized state.
   void DeInit() { mask_.store(1); }
@@ -245,11 +246,12 @@ struct ChosenTarget {
   }
 
  private:
-  // Initialized to 1 so GetChosenTargetIndex() returns 0.
+  // Initialized to 1 so GetIndex() returns 0.
   std::atomic<uint32_t> mask_{1};
 };
 
-extern ChosenTarget chosen_target;
+// For internal use (e.g. by FunctionCache and DisableTargets).
+HWY_DLLEXPORT ChosenTarget& GetChosenTarget();
 
 }  // namespace hwy
 
