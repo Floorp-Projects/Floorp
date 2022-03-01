@@ -143,6 +143,7 @@ EXPORTS += [
     "public/ChildProfilerController.h",
     "public/GeckoProfiler.h",
     "public/ProfilerBindings.h",
+    "public/ProfilerControl.h",
     "public/ProfilerParent.h",
     "public/ProfilerRustBindings.h",
 ]

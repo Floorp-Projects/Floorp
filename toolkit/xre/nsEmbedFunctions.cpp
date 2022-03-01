@@ -85,6 +85,7 @@
 
 #include "GeckoProfiler.h"
 #include "BaseProfiler.h"
+#include "ProfilerControl.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #  include "mozilla/sandboxTarget.h"

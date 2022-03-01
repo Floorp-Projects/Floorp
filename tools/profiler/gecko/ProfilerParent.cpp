@@ -7,11 +7,11 @@
 #include "ProfilerParent.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "GeckoProfiler.h"
 #  include "nsProfiler.h"
 #endif
 
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 #include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ClearOnShutdown.h"

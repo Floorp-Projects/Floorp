@@ -96,6 +96,7 @@
 #include "ogg/ogg.h"
 
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 
 #include "jsapi.h"
 #include "js/Initialization.h"

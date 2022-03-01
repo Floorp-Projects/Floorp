@@ -36,6 +36,7 @@
 #include "ProfilerBacktrace.h"
 #include "ProfilerChild.h"
 #include "ProfilerCodeAddressService.h"
+#include "ProfilerControl.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerParent.h"
 #include "ProfilerRustBindings.h"

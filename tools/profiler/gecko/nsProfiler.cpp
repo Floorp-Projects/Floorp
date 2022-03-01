@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 #include "ProfilerParent.h"
 #include "js/Array.h"  // JS::NewArrayObject
 #include "js/JSON.h"

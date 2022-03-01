@@ -8,6 +8,7 @@
 
 #include "GeckoProfiler.h"
 #include "platform.h"
+#include "ProfilerControl.h"
 #include "ProfilerParent.h"
 
 #include "nsThreadUtils.h"
