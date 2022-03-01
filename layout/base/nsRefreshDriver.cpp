@@ -799,18 +799,22 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     }
   }
 
-  // When using local vsync source, we keep a strong ref to it here to ensure
-  // that the weak ref in the vsync dispatcher does not end up dangling.
-  // As this is a local vsync source, it is not affected by gfxPlatform vsync
-  // source reinit.
+  // Used in the parent process when we have a per-widget vsync source
+  // (currently only on Linux Wayland), to re-query the vsync rate.
   RefPtr<gfx::VsyncSource> mVsyncSource;
+
+  // Always non-null. Has a weak pointer to us and notifies us of vsync.
   RefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
-  // Used for parent process.
+
+  // Used in the parent process. We register mVsyncObserver with it for the
+  // duration during which we want to receive vsync notifications.
   RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
-  // Used for child process.
-  // The mVsyncChild will be always available before VsncChild::ActorDestroy().
+  // Used it the content process. We register mVsyncObserver with it for the
+  // duration during which we want to receive vsync notifications. The
+  // mVsyncChild will be always available before VsyncChild::ActorDestroy().
   // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
   RefPtr<VsyncMainChild> mVsyncChild;
+
   TimeDuration mVsyncRate;
   bool mIsTicking = false;
 };  // VsyncRefreshDriverTimer
