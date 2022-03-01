@@ -201,7 +201,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         activity?.let { activity ->
             AlertDialog.Builder(activity).apply {
                 setMessage(R.string.bookmark_deletion_confirmation)
-                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                setNegativeButton(R.string.bookmark_delete_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->

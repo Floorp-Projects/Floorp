@@ -62,7 +62,7 @@ fun CollectionsDialog.show(
 
     val builder = AlertDialog.Builder(context).setTitle(R.string.tab_tray_select_collection)
         .setView(layout)
-        .setPositiveButton(android.R.string.ok) { dialog, _ ->
+        .setPositiveButton(R.string.create_collection_positive) { dialog, _ ->
             val selectedCollection =
                 (list.adapter as CollectionsListAdapter).getSelectedCollection()
             val collection = storage.cachedTabCollections[selectedCollection]
@@ -73,7 +73,7 @@ fun CollectionsDialog.show(
             }
 
             dialog.dismiss()
-        }.setNegativeButton(android.R.string.cancel) { dialog, _ ->
+        }.setNegativeButton(R.string.create_collection_negative) { dialog, _ ->
             onNegativeButtonClick.invoke()
 
             dialog.cancel()
@@ -110,7 +110,7 @@ internal fun CollectionsDialog.showAddNewDialog(
 
     AlertDialog.Builder(context)
         .setTitle(R.string.tab_tray_add_new_collection)
-        .setView(layout).setPositiveButton(android.R.string.ok) { dialog, _ ->
+        .setView(layout).setPositiveButton(R.string.create_collection_positive) { dialog, _ ->
 
             MainScope().launch {
                 val id = storage.createCollection(
@@ -122,7 +122,7 @@ internal fun CollectionsDialog.showAddNewDialog(
 
             dialog.dismiss()
         }
-        .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+        .setNegativeButton(R.string.create_collection_negative) { dialog, _ ->
             onNegativeButtonClick.invoke()
             dialog.cancel()
         }

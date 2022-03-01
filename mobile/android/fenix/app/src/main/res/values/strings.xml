@@ -774,6 +774,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Are you sure you want to delete this folder?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s will delete the selected items.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Cancel</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Add folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -840,8 +842,16 @@
     <string name="phone_feature_recommended">Recommended</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Clear permissions</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Cancel</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Clear permission</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Cancel</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Clear permissions on all sites</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -938,6 +948,10 @@
     <string name="create_collection_save">Save</string>
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">View</string>
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Cancel</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Collection %d</string>
@@ -1598,6 +1612,8 @@
     <string name="login_deletion_confirmation">Are you sure you want to delete this login?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Delete</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Cancel</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Login options</string>
     <!--  The editable text field for a login's web address. -->

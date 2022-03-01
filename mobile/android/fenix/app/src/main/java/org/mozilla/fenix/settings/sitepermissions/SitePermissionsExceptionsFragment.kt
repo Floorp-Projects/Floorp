@@ -103,11 +103,11 @@ class SitePermissionsExceptionsFragment :
             AlertDialog.Builder(requireContext()).apply {
                 setMessage(R.string.confirm_clear_permissions_on_all_sites)
                 setTitle(R.string.clear_permissions)
-                setPositiveButton(android.R.string.ok) { dialog: DialogInterface, _ ->
+                setPositiveButton(R.string.clear_permissions_positive) { dialog: DialogInterface, _ ->
                     deleteAllSitePermissions()
                     dialog.dismiss()
                 }
-                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                setNegativeButton(R.string.clear_permissions_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
             }.show()

@@ -154,11 +154,11 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
             AlertDialog.Builder(requireContext()).apply {
                 setMessage(R.string.confirm_clear_permission_site)
                 setTitle(R.string.clear_permission)
-                setPositiveButton(android.R.string.ok) { dialog: DialogInterface, _ ->
+                setPositiveButton(R.string.clear_permission_positive) { dialog: DialogInterface, _ ->
                     clearPermissions()
                     dialog.dismiss()
                 }
-                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                setNegativeButton(R.string.clear_permission_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
             }.show()
