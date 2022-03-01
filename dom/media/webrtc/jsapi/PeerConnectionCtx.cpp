@@ -265,16 +265,10 @@ class PeerConnectionCtxObserver : public nsIObserver {
 NS_IMPL_ISUPPORTS(PeerConnectionCtxObserver, nsIObserver);
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
-nsIThread* PeerConnectionCtx::gMainThread;
 StaticRefPtr<PeerConnectionCtxObserver>
     PeerConnectionCtx::gPeerConnectionCtxObserver;
 
-nsresult PeerConnectionCtx::InitializeGlobal(nsIThread* mainThread) {
-  if (!gMainThread) {
-    gMainThread = mainThread;
-  }
-
-  MOZ_ASSERT(gMainThread == mainThread);
+nsresult PeerConnectionCtx::InitializeGlobal() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult res;
@@ -542,7 +536,7 @@ static void GMPReady_m() {
 };
 
 static void GMPReady() {
-  PeerConnectionCtx::gMainThread->Dispatch(WrapRunnableNM(&GMPReady_m),
+  GetMainThreadEventTarget()->Dispatch(WrapRunnableNM(&GMPReady_m),
                                            NS_DISPATCH_NORMAL);
 };
 

@@ -23,8 +23,7 @@ interface PeerConnectionImpl  {
 
   /* Must be called first. Observer events dispatched on the thread provided */
   [Throws]
-  void initialize(PeerConnectionObserver observer, Window window,
-                  nsISupports thread);
+  void initialize(PeerConnectionObserver observer, Window window);
 
   /* JSEP calls */
   [Throws]
