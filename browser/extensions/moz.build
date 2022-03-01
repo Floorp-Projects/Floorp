@@ -14,11 +14,9 @@ DIRS += [
     "pictureinpicture",
     "search-detection",
     "floorp-rss-read",
-    "floorpsync",
     "translate",
     "treestyletab",
     "floorp-system",
-    "gesturefy",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:
