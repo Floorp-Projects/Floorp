@@ -85,3 +85,4 @@ skip_on(android) fuzzy(220,7600) == raster_root_C_8192.yaml raster_root_C_ref.ya
 == subpx-bg-mask.yaml subpx-bg-mask-ref.yaml
 platform(linux,mac) == rotate-snap-clip.yaml rotate-snap-clip-ref.yaml
 platform(linux,mac) == rotate-snap-filter.yaml rotate-snap-filter-ref.yaml
+== mix-blend-layers.yaml mix-blend-layers-ref.yaml
