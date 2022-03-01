@@ -23,6 +23,8 @@
     <!-- Icon -->
     <!-- Active tab -->
     <attr name="iconActive" format="reference" />
+    <!-- Icon inverted (on color) -->
+    <attr name="iconOnColor" format="reference" />
 
     <!-- Border -->
     <!-- Default, Divider, Dotted -->

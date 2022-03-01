@@ -211,7 +211,7 @@
     <!-- Disabled icon -->
     <color name="fx_mobile_private_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Icon inverted (on color) -->
-    <color name="fx_mobile_private_icon_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_private_icon_color_oncolor">@color/photonLightGrey05</color>
     <!-- Information -->
     <color name="fx_mobile_private_icon_color_information" tools:ignore="UnusedResources">@color/photonBlue30</color>
     <!-- Icon button -->

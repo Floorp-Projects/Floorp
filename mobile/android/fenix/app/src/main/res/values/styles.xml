@@ -51,6 +51,8 @@
         <!-- Icon -->
         <!-- Active tab -->
         <item name="iconActive">@color/fx_mobile_icon_color_active</item>
+        <!-- Icon inverted (on color) -->
+        <item name="iconOnColor">@color/fx_mobile_icon_color_oncolor</item>
 
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
@@ -244,6 +246,8 @@
         <!-- Icon -->
         <!-- Active tab -->
         <item name="iconActive">@color/fx_mobile_private_icon_color_active</item>
+        <!-- Icon inverted (on color) -->
+        <item name="iconOnColor">@color/fx_mobile_private_icon_color_oncolor</item>
 
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
@@ -360,7 +364,7 @@
 
     <style name="PositiveButton" parent="NeutralButton">
         <item name="backgroundTint">?actionPrimary</item>
-        <item name="iconTint">?contrastText</item>
+        <item name="iconTint">?iconOnColor</item>
         <item name="android:textColor">?textActionPrimary</item>
     </style>
 
