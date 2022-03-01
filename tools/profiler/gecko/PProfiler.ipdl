@@ -18,13 +18,14 @@ namespace mozilla {
 async protocol PProfiler
 {
 child:
-  async Start(ProfilerInitParams params);
-  async EnsureStarted(ProfilerInitParams params);
-  async Stop();
-  async Pause();
-  async Resume();
-  async PauseSampling();
-  async ResumeSampling();
+  // The unused returned value is to have a promise we can await.
+  async Start(ProfilerInitParams params) returns (bool unused);
+  async EnsureStarted(ProfilerInitParams params) returns (bool unused);
+  async Stop() returns (bool unused);
+  async Pause() returns (bool unused);
+  async Resume() returns (bool unused);
+  async PauseSampling() returns (bool unused);
+  async ResumeSampling() returns (bool unused);
 
   async AwaitNextChunkManagerUpdate() returns (ProfileBufferChunkManagerUpdate update);
   async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);
