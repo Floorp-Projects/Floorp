@@ -68,6 +68,7 @@ async function renderInfo({
     infoLinkUrl ||
       RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
   );
+  linkEl.setAttribute("target", "_blank");
 
   linkEl.addEventListener("click", () => {
     window.PrivateBrowsingRecordClick("info_link");
@@ -111,6 +112,7 @@ async function renderPromo({
 
   if (vpnPromoUrl) {
     linkEl.setAttribute("href", vpnPromoUrl);
+    linkEl.setAttribute("target", "_blank");
     linkEl.addEventListener("click", () => {
       window.PrivateBrowsingRecordClick("promo_link");
     });
