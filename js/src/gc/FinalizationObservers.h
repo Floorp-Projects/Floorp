@@ -67,7 +67,7 @@ class FinalizationObservers {
   // marking rules keep the wrappers alive while the record is alive and ensure
   // that they are both swept in the same sweep group.
   using WrapperWeakSet = ObjectValueWeakMap;
-  WrapperWeakSet crossZoneWrappers;
+  WrapperWeakSet crossZoneRecords;
 
   // A map of weak ref targets to a vector of weak refs that are observing the
   // target. The weak refs may be in other zones and are wrapped appropriately.
@@ -98,8 +98,8 @@ class FinalizationObservers {
 #endif
 
  private:
-  bool addCrossZoneWrapper(JSObject* wrapper);
-  void removeCrossZoneWrapper(JSObject* wrapper);
+  bool addCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
+  void removeCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
 
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
