@@ -214,11 +214,6 @@ class PeerConnectionImpl final
     return mSTSThread;
   }
 
-  nsPIDOMWindowInner* GetWindow() const {
-    PC_AUTO_ENTER_API_CALL_NO_CHECK();
-    return mWindow;
-  }
-
   nsresult Initialize(PeerConnectionObserver& aObserver,
                       nsGlobalWindowInner* aWindow);
 

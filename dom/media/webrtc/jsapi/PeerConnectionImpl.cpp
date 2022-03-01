@@ -2443,13 +2443,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
 
   mIceConnectionState = domState;
 
-  // Uncount this connection as active on the inner window upon close.
-  if (mWindow && mActiveOnWindow &&
-      mIceConnectionState == RTCIceConnectionState::Closed) {
-    mWindow->RemovePeerConnection();
-    mActiveOnWindow = false;
-  }
-
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
   switch (mIceConnectionState) {
