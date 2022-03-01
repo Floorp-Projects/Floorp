@@ -80,7 +80,6 @@
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/fx_mobile_text_color_warning</item>
         <item name="disabled">@color/fx_mobile_text_color_disabled</item>
-        <item name="snackbar">@color/fx_mobile_action_color_primary</item>
         <item name="accentUsedOnDarkBackground">@color/fx_mobile_text_color_accent</item>
         <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
@@ -272,7 +271,6 @@
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
         <item name="destructive">@color/fx_mobile_private_text_color_warning</item>
         <item name="disabled">@color/fx_mobile_private_text_color_disabled</item>
-        <item name="snackbar">@color/snackbar_private_theme</item>
         <item name="accentUsedOnDarkBackground">@color/accent_high_contrast_private_theme</item>
         <item name="toolbarStartGradient">@color/fx_mobile_private_layer_color_4_start</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_private_layer_color_4_center</item>
