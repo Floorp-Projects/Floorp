@@ -1893,12 +1893,15 @@ PeerConnectionImpl::Close() {
 
   mSignalingState = RTCSignalingState::Closed;
 
-  // We do this at the end of the call because we want to make sure we've waited
-  // for all trickle ICE candidates to come in; this can happen well after we've
-  // transitioned to connected. As a bonus, this allows us to detect race
-  // conditions where a stats dispatch happens right as the PC closes.
+  // When ICE completes, we record a bunch of statistics that outlive the
+  // PeerConnection. This includes a call to GetStats, as well as some
+  // telemetry. We do this at the end of the call because we want to make sure
+  // we've waited for all trickle ICE candidates to come in; this can happen
+  // well after we've transitioned to connected. As a bonus, this allows us to
+  // detect race conditions where a stats dispatch happens right as the PC
+  // closes.
   if (!mPrivateWindow) {
-    RecordLongtermICEStatistics();
+    WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
   }
   RecordEndOfCallTelemetry();
 
@@ -3108,10 +3111,6 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           [](nsresult rv) {
             return dom::RTCStatsReportPromise::CreateAndReject(rv, __func__);
           });
-}
-
-void PeerConnectionImpl::RecordLongtermICEStatistics() {
-  WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
 }
 
 void PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type) {
