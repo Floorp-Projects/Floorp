@@ -13,6 +13,8 @@
 
 #include "nsThreadUtils.h"
 
+#include <memory>
+
 namespace mozilla {
 
 /* static */ DataMutexBase<ProfilerChild::ProfilerChildAndUpdate,
@@ -220,6 +222,32 @@ mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling(
     ResumeSamplingResolver&& aResolve) {
   profiler_resume_sampling();
   aResolve(/* unused */ true);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ProfilerChild::RecvWaitOnePeriodicSampling(
+    WaitOnePeriodicSamplingResolver&& aResolve) {
+  std::shared_ptr<WaitOnePeriodicSamplingResolver> resolve =
+      std::make_shared<WaitOnePeriodicSamplingResolver>(std::move(aResolve));
+  if (!profiler_callback_after_sampling(
+          [self = RefPtr(this), resolve](SamplingState aSamplingState) mutable {
+            if (self->mDestroyed) {
+              return;
+            }
+            MOZ_RELEASE_ASSERT(self->mThread);
+            self->mThread->Dispatch(NS_NewRunnableFunction(
+                "nsProfiler::WaitOnePeriodicSampling result on main thread",
+                [resolve = std::move(resolve), aSamplingState]() {
+                  (*resolve)(aSamplingState ==
+                                 SamplingState::SamplingCompleted ||
+                             aSamplingState ==
+                                 SamplingState::NoStackSamplingCompleted);
+                }));
+          })) {
+    // Callback was not added (e.g., profiler is not running) and will never be
+    // invoked, so we need to resolve the promise here.
+    (*resolve)(false);
+  }
   return IPC_OK();
 }
 

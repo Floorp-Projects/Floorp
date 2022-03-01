@@ -84,6 +84,8 @@ class ProfilerParent final : public PProfilerParent {
   [[nodiscard]] static RefPtr<GenericPromise> ProfilerResumedSampling();
   static void ClearAllPages();
 
+  [[nodiscard]] static RefPtr<GenericPromise> WaitOnePeriodicSampling();
+
   // Create a "Final" update that the Child can return to its Parent.
   static ProfileBufferChunkManagerUpdate MakeFinalUpdate();
 
