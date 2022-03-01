@@ -74,8 +74,9 @@ void TextAttrsMgr::GetAttributes(AccAttributes* aAttributes,
   }
 
   nsIFrame* rootFrame = mHyperTextAcc->GetFrame();
-  MOZ_ASSERT(rootFrame, "No frame for accessible!");
-  if (!rootFrame) return;
+  if (!rootFrame) {
+    return;
+  }
 
   nsIContent *offsetNode = nullptr, *offsetElm = nullptr;
   nsIFrame* frame = nullptr;
