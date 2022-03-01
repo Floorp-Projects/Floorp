@@ -36,7 +36,7 @@ struct TestLoadStore {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
-    const auto hi = Iota(d, 1 + N);
+    const auto hi = Iota(d, static_cast<T>(1 + N));
     const auto lo = Iota(d, 1);
     auto lanes = AllocateAligned<T>(2 * N);
     Store(hi, d, &lanes[N]);
@@ -135,7 +135,7 @@ struct TestStoreInterleaved3 {
 HWY_NOINLINE void TestAllStoreInterleaved3() {
 #if HWY_TARGET == HWY_RVV
   // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestStoreInterleaved3, 4> test;
+  const ForExtendableVectors<TestStoreInterleaved3, 2> test;
 #else
   const ForPartialVectors<TestStoreInterleaved3> test;
 #endif
@@ -198,7 +198,7 @@ struct TestStoreInterleaved4 {
 HWY_NOINLINE void TestAllStoreInterleaved4() {
 #if HWY_TARGET == HWY_RVV
   // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestStoreInterleaved4, 4> test;
+  const ForExtendableVectors<TestStoreInterleaved4, 2> test;
 #else
   const ForPartialVectors<TestStoreInterleaved4> test;
 #endif
@@ -230,7 +230,7 @@ struct TestLoadDup128 {
 };
 
 HWY_NOINLINE void TestAllLoadDup128() {
-  ForAllTypes(ForGE128Vectors<TestLoadDup128>());
+  ForAllTypes(ForGEVectors<128, TestLoadDup128>());
 }
 
 struct TestStream {
@@ -245,7 +245,7 @@ struct TestStream {
     std::fill(out.get(), out.get() + 2 * affected_lanes, T(0));
 
     Stream(v, d, out.get());
-    StoreFence();
+    FlushStream();
     const auto actual = Load(d, out.get());
     HWY_ASSERT_VEC_EQ(d, v, actual);
     // Ensure Stream didn't modify more memory than expected
@@ -386,7 +386,7 @@ HWY_NOINLINE void TestAllGather() {
 
 HWY_NOINLINE void TestAllCache() {
   LoadFence();
-  StoreFence();
+  FlushStream();
   int test = 0;
   Prefetch(&test);
   FlushCacheline(&test);

@@ -78,6 +78,13 @@ size_t ImageBundle::DetectRealBitdepth() const {
   // and there may be slight imprecisions in the floating point image.
 }
 
+const ImageF& ImageBundle::black() const {
+  JXL_ASSERT(HasBlack());
+  const size_t ec = metadata_->Find(ExtraChannel::kBlack) -
+                    metadata_->extra_channel_info.data();
+  JXL_ASSERT(ec < extra_channels_.size());
+  return extra_channels_[ec];
+}
 const ImageF& ImageBundle::alpha() const {
   JXL_ASSERT(HasAlpha());
   const size_t ec = metadata_->Find(ExtraChannel::kAlpha) -

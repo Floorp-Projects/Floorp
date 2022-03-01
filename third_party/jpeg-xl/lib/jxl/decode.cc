@@ -1462,6 +1462,7 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec, const uint8_t* in,
         bool is_rgba = dec->image_out_format.num_channels == 4;
         dec->frame_dec->MaybeSetFloatCallback(
             [dec](const float* pixels, size_t x, size_t y, size_t num_pixels) {
+              JXL_DASSERT(num_pixels > 0);
               dec->image_out_callback(dec->image_out_opaque, x, y, num_pixels,
                                       pixels);
             },
@@ -2422,6 +2423,10 @@ JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec) {
 
   if (!dec->frame_dec->Flush()) {
     return JXL_DEC_ERROR;
+  }
+
+  if (dec->jpeg_decoder.IsOutputSet() && dec->ib->jpeg_data != nullptr) {
+    return JXL_DEC_SUCCESS;
   }
 
   if (dec->frame_dec->HasRGBBuffer()) {

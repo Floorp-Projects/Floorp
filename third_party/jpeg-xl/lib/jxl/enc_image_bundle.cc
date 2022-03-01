@@ -50,6 +50,25 @@ Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
         // Interleave input.
         if (is_gray) {
           src_buf = rect.ConstPlaneRow(ib->color(), 0, y);
+        } else if (ib->c_current().IsCMYK()) {
+          if (!ib->HasBlack()) {
+            ok.store(false);
+            return;
+          }
+          const float* JXL_RESTRICT row_in0 =
+              rect.ConstPlaneRow(ib->color(), 0, y);
+          const float* JXL_RESTRICT row_in1 =
+              rect.ConstPlaneRow(ib->color(), 1, y);
+          const float* JXL_RESTRICT row_in2 =
+              rect.ConstPlaneRow(ib->color(), 2, y);
+          const float* JXL_RESTRICT row_in3 = rect.ConstRow(ib->black(), y);
+          for (size_t x = 0; x < rect.xsize(); x++) {
+            // CMYK convention in JXL: 0 = max ink, 1 = white
+            mutable_src_buf[4 * x + 0] = row_in0[x];
+            mutable_src_buf[4 * x + 1] = row_in1[x];
+            mutable_src_buf[4 * x + 2] = row_in2[x];
+            mutable_src_buf[4 * x + 3] = row_in3[x];
+          }
         } else {
           const float* JXL_RESTRICT row_in0 =
               rect.ConstPlaneRow(ib->color(), 0, y);
@@ -107,7 +126,7 @@ Status ImageBundle::CopyTo(const Rect& rect, const ColorEncoding& c_desired,
 Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
                          const JxlCmsInterface& cms, ThreadPool* pool,
                          ImageBundle* store, const ImageBundle** out) {
-  if (in.c_current().SameColorEncoding(c_desired)) {
+  if (in.c_current().SameColorEncoding(c_desired) && !in.HasBlack()) {
     *out = &in;
     return true;
   }

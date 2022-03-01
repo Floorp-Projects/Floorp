@@ -61,7 +61,7 @@ HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
 
   uint64_t max_ulp = 0;
   // Emulation is slower, so cannot afford as many.
-  constexpr UintT kSamplesPerRange = static_cast<UintT>(AdjustedReps(10000));
+  constexpr UintT kSamplesPerRange = static_cast<UintT>(AdjustedReps(4000));
   for (int range_index = 0; range_index < range_count; ++range_index) {
     const UintT start = ranges[range_index][0];
     const UintT stop = ranges[range_index][1];
@@ -96,23 +96,10 @@ HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
   HWY_ASSERT(max_ulp <= max_error_ulp);
 }
 
-// TODO(janwas): remove once RVV supports fractional LMUL
-#undef DEFINE_MATH_TEST_FUNC
-#if HWY_TARGET == HWY_RVV
-
-#define DEFINE_MATH_TEST_FUNC(NAME)                    \
-  HWY_NOINLINE void TestAll##NAME() {                  \
-    ForFloatTypes(ForShrinkableVectors<Test##NAME>()); \
-  }
-
-#else
-
 #define DEFINE_MATH_TEST_FUNC(NAME)                 \
   HWY_NOINLINE void TestAll##NAME() {               \
     ForFloatTypes(ForPartialVectors<Test##NAME>()); \
   }
-
-#endif
 
 #undef DEFINE_MATH_TEST
 #define DEFINE_MATH_TEST(NAME, F32x1, F32xN, F32_MIN, F32_MAX, F32_ERROR, \
