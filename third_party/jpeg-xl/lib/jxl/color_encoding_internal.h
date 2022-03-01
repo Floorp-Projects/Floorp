@@ -290,6 +290,7 @@ struct ColorEncoding : public Fields {
   void DecideIfWantICC();
 
   bool IsGray() const { return color_space_ == ColorSpace::kGray; }
+  bool IsCMYK() const { return cmyk_; }
   size_t Channels() const { return IsGray() ? 1 : 3; }
 
   // Returns false if the field is invalid and unusable.
@@ -399,7 +400,7 @@ struct ColorEncoding : public Fields {
  private:
   // Returns true if all fields have been initialized (possibly to kUnknown).
   // Returns false if the ICC profile is invalid or decoding it fails.
-  // Defined in color_management.cc.
+  // Defined in enc_color_management.cc.
   Status SetFieldsFromICC();
 
   // If true, the codestream contains an ICC profile and we do not serialize
@@ -414,6 +415,7 @@ struct ColorEncoding : public Fields {
   PaddedBytes icc_;  // Valid ICC profile
 
   ColorSpace color_space_;  // Can be kUnknown
+  bool cmyk_ = false;
 
   // Only used if white_point == kCustom.
   Customxy white_;
