@@ -815,7 +815,7 @@ already_AddRefed<Promise> ReadableStreamPipeTo(
   // Note: In the interests of simplicity, we choose here to always acquire
   // a default reader.
   RefPtr<ReadableStreamDefaultReader> reader =
-      AcquireReadableStreamDefaultReader(cx, aSource, aRv);
+      AcquireReadableStreamDefaultReader(aSource, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -91,8 +91,8 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
 };
 
 extern void SetUpReadableStreamDefaultReader(
-    JSContext* aCx, ReadableStreamDefaultReader* aReader,
-    ReadableStream* aStream, ErrorResult& aRv);
+    ReadableStreamDefaultReader* aReader, ReadableStream* aStream,
+    ErrorResult& aRv);
 
 void ReadableStreamDefaultReaderErrorReadRequests(
     JSContext* aCx, ReadableStreamDefaultReader* aReader,

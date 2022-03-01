@@ -798,15 +798,6 @@ class TestGroupUnifiedFiles(unittest.TestCase):
         for i, amount in enumerate(expected_amounts):
             check_mapping(i, amount)
 
-    def test_unsorted_files(self):
-        unsorted_files = ["a%d.cpp" % i for i in range(11)]
-        sorted_files = sorted(unsorted_files)
-        mapping = list(group_unified_files(unsorted_files, "Unified", "cpp", 5))
-
-        self.assertEqual(mapping[0][1], sorted_files[0:5])
-        self.assertEqual(mapping[1][1], sorted_files[5:10])
-        self.assertEqual(mapping[2][1], sorted_files[10:])
-
 
 class TestMisc(unittest.TestCase):
     def test_pair(self):

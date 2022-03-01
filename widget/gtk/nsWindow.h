@@ -393,9 +393,11 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntPoint& aLockCenter) override;
   void LockNativePointer() override;
   void UnlockNativePointer() override;
-  nsRect GetPreferredPopupRect() override { return mPreferredPopupRect; };
+  LayoutDeviceIntRect GetPreferredPopupRect() const override {
+    return mPreferredPopupRect;
+  };
   void FlushPreferredPopupRect() override {
-    mPreferredPopupRect = nsRect(0, 0, 0, 0);
+    mPreferredPopupRect = LayoutDeviceIntRect();
     mPreferredPopupRectFlushed = true;
   };
 #endif
@@ -733,7 +735,7 @@ class nsWindow final : public nsBaseWidget {
   void ApplySizeConstraints(void);
 
   // Wayland Popup section
-  void WaylandGetParentPosition(int* aX, int* aY);
+  GdkPoint WaylandGetParentPosition();
   bool WaylandPopupNeedsTrackInHierarchy();
   bool WaylandPopupIsAnchored();
   bool WaylandPopupIsMenu();
@@ -767,7 +769,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
-  bool WaylandPopupFitsParentWindow(GdkRectangle* aSize);
+  bool WaylandPopupFitsParentWindow(const GdkRectangle& aSize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
   nsAutoCString GetFrameTag() const;
@@ -778,35 +780,26 @@ class nsWindow final : public nsBaseWidget {
   void LogPopupHierarchy();
 #endif
 
-  /*  mPopupPosition is the original popup position from layout,
-   *  set by nsWindow::Move() or nsWindow::Resize().
-   */
+  // mPopupPosition is the original popup position from layout, set by
+  // nsWindow::Move() or nsWindow::Resize().
   GdkPoint mPopupPosition{};
 
-  /*  mRelativePopupPosition is popup position calculated against parent window.
-   */
+  // mRelativePopupPosition is popup position calculated against parent window.
   GdkPoint mRelativePopupPosition{};
 
-  /* mRelativePopupOffset is used by context menus.
-   */
+  // mRelativePopupOffset is used by context menus.
   GdkPoint mRelativePopupOffset{};
 
-  /* Last used anchor for move-to-rect.
-   */
-  LayoutDeviceIntRect mPopupLastAnchor;
-
-  /* Toplevel window (first element) of linked list of wayland popups.
-   * It's nullptr if we're the toplevel.
-   */
+  // Toplevel window (first element) of linked list of Wayland popups. It's null
+  // if we're the toplevel.
   RefPtr<nsWindow> mWaylandToplevel;
 
-  /* Next/Previous popups in Wayland popup hieararchy.
-   */
+  // Next/Previous popups in Wayland popup hierarchy.
   RefPtr<nsWindow> mWaylandPopupNext;
   RefPtr<nsWindow> mWaylandPopupPrev;
 
   // Used by WaylandPopupMove() to track popup movement.
-  nsRect mPreferredPopupRect;
+  LayoutDeviceIntRect mPreferredPopupRect;
 
   LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 

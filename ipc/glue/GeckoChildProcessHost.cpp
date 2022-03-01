@@ -1111,7 +1111,13 @@ bool PosixProcessLauncher::DoSetup() {
     mLaunchOptions->env_map["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
 #  elif OS_MACOSX  // defined(OS_LINUX) || defined(OS_BSD)
-    mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = path.get();
+    // If we're running with gtests, add the gtest XUL ahead of normal XUL on
+    // the DYLD_LIBRARY_PATH so that plugin-container.app loads it instead.
+    nsCString new_dyld_lib_path(path.get());
+    if (PR_GetEnv("MOZ_RUN_GTEST")) {
+      new_dyld_lib_path = path + "/gtest:"_ns + new_dyld_lib_path;
+    }
+    mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = new_dyld_lib_path.get();
 
     // DYLD_INSERT_LIBRARIES is currently unused by default but we allow
     // it to be set by the external environment.

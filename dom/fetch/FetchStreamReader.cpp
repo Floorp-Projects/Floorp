@@ -198,7 +198,7 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
   RefPtr<ReadableStreamDefaultReader> reader =
-      AcquireReadableStreamDefaultReader(aCx, aStream, aRv);
+      AcquireReadableStreamDefaultReader(aStream, aRv);
   if (aRv.Failed()) {
     CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

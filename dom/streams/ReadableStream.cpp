@@ -462,14 +462,13 @@ already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-reader
 already_AddRefed<ReadableStreamDefaultReader>
-AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
-                                   ErrorResult& aRv) {
+AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1.
   RefPtr<ReadableStreamDefaultReader> reader =
       new ReadableStreamDefaultReader(aStream->GetParentObject());
 
   // Step 2.
-  SetUpReadableStreamDefaultReader(aCx, reader, aStream, aRv);
+  SetUpReadableStreamDefaultReader(reader, aStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -479,8 +478,7 @@ AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
 }
 
 // https://streams.spec.whatwg.org/#rs-get-reader
-void ReadableStream::GetReader(JSContext* aCx,
-                               const ReadableStreamGetReaderOptions& aOptions,
+void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
                                OwningReadableStreamReader& resultReader,
                                ErrorResult& aRv) {
   // Step 1. If options["mode"] does not exist,
@@ -488,7 +486,7 @@ void ReadableStream::GetReader(JSContext* aCx,
   if (!aOptions.mMode.WasPassed()) {
     RefPtr<ReadableStream> thisRefPtr = this;
     RefPtr<ReadableStreamDefaultReader> defaultReader =
-        AcquireReadableStreamDefaultReader(aCx, thisRefPtr, aRv);
+        AcquireReadableStreamDefaultReader(thisRefPtr, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -507,7 +505,7 @@ void ReadableStream::GetReader(JSContext* aCx,
 
   RefPtr<ReadableStream> thisRefPtr = this;
   RefPtr<ReadableStreamBYOBReader> byobReader =
-      AcquireReadableStreamBYOBReader(aCx, thisRefPtr, aRv);
+      AcquireReadableStreamBYOBReader(thisRefPtr, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -826,8 +824,7 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 2. Implicit.
 
   // Steps 3-12 are contained in the construction of Tee State.
-  RefPtr<TeeState> teeState =
-      TeeState::Create(aCx, aStream, aCloneForBranch2, aRv);
+  RefPtr<TeeState> teeState = TeeState::Create(aStream, aCloneForBranch2, aRv);
   if (aRv.Failed()) {
     return;
   }
