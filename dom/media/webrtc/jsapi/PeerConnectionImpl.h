@@ -768,6 +768,10 @@ class PeerConnectionImpl final
 
   mozilla::UniquePtr<SignalHandler> mSignalHandler;
 
+  // Make absolutely sure our refcount does not go to 0 before Close() is called
+  // This is because Close does a stats query, which needs the
+  // PeerConnectionImpl to stick around until the query is done.
+  RefPtr<PeerConnectionImpl> mKungFuDeathGrip;
   RefPtr<PacketDumper> mPacketDumper;
 
  public:
