@@ -7,16 +7,6 @@
 var EXPORTED_SYMBOLS = ["SubDialog", "SubDialogManager"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gDragService",
-  "@mozilla.org/widget/dragservice;1",
-  "nsIDragService"
-);
 
 /**
  * The SubDialog resize callback.
@@ -179,11 +169,6 @@ SubDialog.prototype = {
       return;
     }
     this._addDialogEventListeners();
-
-    // Ensure we end any pending drag sessions:
-    if (gDragService.getCurrentSession()) {
-      gDragService.endDragSession(true);
-    }
 
     // If the parent is chrome we also need open the dialog as chrome, otherwise
     // the openDialog call will fail.
