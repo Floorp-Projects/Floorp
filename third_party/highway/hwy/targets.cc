@@ -15,25 +15,23 @@
 #include "hwy/targets.h"
 
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include <atomic>
+#include <cstddef>
+#include <limits>
 
-#include "hwy/base.h"
-
-#if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
+#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
+    defined(THREAD_SANITIZER)
 #include "sanitizer/common_interface_defs.h"  // __sanitizer_print_stack_trace
-#endif
-
-#include <stdlib.h>  // abort / exit
+#endif                                        // defined(*_SANITIZER)
 
 #if HWY_ARCH_X86
 #include <xmmintrin.h>
 #if HWY_COMPILER_MSVC
 #include <intrin.h>
-#else  // !HWY_COMPILER_MSVC
+#else  // HWY_COMPILER_MSVC
 #include <cpuid.h>
 #endif  // HWY_COMPILER_MSVC
 #endif  // HWY_ARCH_X86
@@ -95,7 +93,7 @@ std::atomic<uint32_t> supported_{0};  // Not yet initialized
 uint32_t supported_targets_for_test_ = 0;
 
 // Mask of targets disabled at runtime with DisableTargets.
-uint32_t supported_mask_{LimitsMax<uint32_t>()};
+uint32_t supported_mask_{std::numeric_limits<uint32_t>::max()};
 
 #if HWY_ARCH_X86
 // Arbritrary bit indices indicating which instruction set extensions are
@@ -192,22 +190,21 @@ HWY_NORETURN void HWY_FORMAT(3, 4)
   va_end(args);
 
   fprintf(stderr, "Abort at %s:%d: %s\n", file, line, buf);
-
-// If compiled with any sanitizer, they can also print a stack trace.
-#if HWY_IS_ASAN || HWY_IS_MSAN || HWY_IS_TSAN
+#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
+    defined(THREAD_SANITIZER)
+  // If compiled with any sanitizer print a stack trace. This call doesn't crash
+  // the program, instead the trap below will crash it also allowing gdb to
+  // break there.
   __sanitizer_print_stack_trace();
-#endif  // HWY_IS_*
+#endif  // defined(*_SANITIZER)
   fflush(stderr);
 
-// Now terminate the program:
-#if HWY_ARCH_RVV
-  exit(1);  // trap/abort just freeze Spike.
-#elif HWY_IS_DEBUG_BUILD && !HWY_COMPILER_MSVC
-  // Facilitates breaking into a debugger, but don't use this in non-debug
-  // builds because it looks like "illegal instruction", which is misleading.
-  __builtin_trap();
-#else
+#if HWY_COMPILER_MSVC
   abort();  // Compile error without this due to HWY_NORETURN.
+#elif HWY_ARCH_RVV
+  exit(1);  // trap/abort just freeze Spike
+#else
+  __builtin_trap();
 #endif
 }
 
@@ -216,7 +213,7 @@ void DisableTargets(uint32_t disabled_targets) {
   // We can call Update() here to initialize the mask but that will trigger a
   // call to SupportedTargets() which we use in tests to tell whether any of the
   // highway dynamic dispatch functions were used.
-  GetChosenTarget().DeInit();
+  chosen_target.DeInit();
 }
 
 void SetSupportedTargetsForTest(uint32_t targets) {
@@ -225,7 +222,7 @@ void SetSupportedTargetsForTest(uint32_t targets) {
   // if not zero.
   supported_.store(0, std::memory_order_release);
   supported_targets_for_test_ = targets;
-  GetChosenTarget().DeInit();
+  chosen_target.DeInit();
 }
 
 bool SupportedTargetsCalledForTest() {
@@ -347,10 +344,8 @@ uint32_t SupportedTargets() {
   return bits & supported_mask_;
 }
 
-HWY_DLLEXPORT ChosenTarget& GetChosenTarget() {
-  static ChosenTarget chosen_target;
-  return chosen_target;
-}
+// Declared in targets.h
+ChosenTarget chosen_target;
 
 void ChosenTarget::Update() {
   // The supported variable contains the current CPU supported targets shifted

@@ -102,13 +102,9 @@ void ComputeSegments(const Spline::Point& center, const float intensity,
                      std::vector<SplineSegment>& segments,
                      std::vector<std::pair<size_t, size_t>>& segments_by_y,
                      size_t* pixel_limit) {
-  // In worst case zero-sized dot spans over 2 rows / columns.
-  constexpr const float kThinDotSpan = 2.0f;
   // Sanity check sigma, inverse sigma and intensity
   if (!(std::isfinite(sigma) && sigma != 0.0f && std::isfinite(1.0f / sigma) &&
         std::isfinite(intensity))) {
-    // Even no-draw should still be accounted.
-    *pixel_limit -= std::min<size_t>(*pixel_limit, kThinDotSpan * kThinDotSpan);
     return;
   }
 #if JXL_HIGH_PRECISION
@@ -134,7 +130,7 @@ void ComputeSegments(const Spline::Point& center, const float intensity,
   segment.inv_sigma = 1.0f / sigma;
   segment.sigma_over_4_times_intensity = .25f * sigma * intensity;
   segment.maximum_distance = maximum_distance;
-  float cost = 2.0f * maximum_distance + kThinDotSpan;
+  float cost = 2.0f * maximum_distance + 2.0f;
   // Check cost^2 fits size_t.
   if (cost >= static_cast<float>(1 << 15)) {
     // Too much to rasterize.
@@ -146,8 +142,9 @@ void ComputeSegments(const Spline::Point& center, const float intensity,
     *pixel_limit = 0;
     return;
   }
-  // TODO(eustas): perhaps we should charge less: (y1 - y0) <= cost
   *pixel_limit -= area_cost;
+  // TODO(eustas): this will work incorrectly for (center.y >= 1 << 23)
+  //               we have to use double precision in that case...
   ssize_t y0 = center.y - maximum_distance + .5f;
   ssize_t y1 = center.y + maximum_distance + 1.5f;  // one-past-the-end
   for (ssize_t y = std::max<ssize_t>(y0, 0); y < y1; y++) {
@@ -421,7 +418,7 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
   int current_x = static_cast<int>(roundf(starting_point.x)),
       current_y = static_cast<int>(roundf(starting_point.y));
   // It is not in spec, but reasonable limit to avoid overflows.
-  constexpr int kPosLimit = 1u << 23;
+  constexpr int kPosLimit = 1u << 30;
   if ((current_x >= kPosLimit) || (current_x <= -kPosLimit) ||
       (current_y >= kPosLimit) || (current_y <= -kPosLimit)) {
     return JXL_FAILURE("Spline coordinates out of bounds");

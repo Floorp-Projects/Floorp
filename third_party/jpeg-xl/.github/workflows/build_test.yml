@@ -34,7 +34,7 @@ jobs:
             env_stack_size: 1
             max_stack: 3000
             # Conformance tooling test requires numpy.
-            apt_pkgs: graphviz python3-numpy
+            apt_pkgs: python3-numpy
           - name: lowprecision
             mode: release
             test_in_pr: true
@@ -461,8 +461,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
-      EM_VERSION: 3.1.4
-      V8_VERSION: 9.8.177
+      EM_VERSION: 2.0.23
+      V8_VERSION: 9.3.22
       V8: ${{ github.workspace }}/.jsvu/v8
       BUILD_TARGET: wasm32
 
@@ -506,7 +506,7 @@ jobs:
           ${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.variant }}
 
     - name: Install emsdk
-      uses: mymindstorm/setup-emsdk@v11
+      uses: mymindstorm/setup-emsdk@v10
       # TODO(deymo): We could cache this action but it doesn't work when running
       # in a matrix.
       with:

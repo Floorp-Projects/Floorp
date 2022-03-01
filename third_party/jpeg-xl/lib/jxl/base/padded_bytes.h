@@ -160,11 +160,9 @@ class PaddedBytes {
   }
 
   void append(const uint8_t* begin, const uint8_t* end) {
-    if (end - begin > 0) {
-      size_t old_size = size();
-      resize(size() + (end - begin));
-      memcpy(data() + old_size, begin, end - begin);
-    }
+    size_t old_size = size();
+    resize(size() + (end - begin));
+    memcpy(data() + old_size, begin, end - begin);
   }
 
  private:
