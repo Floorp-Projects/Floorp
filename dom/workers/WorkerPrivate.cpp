@@ -4798,15 +4798,8 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
   auto comparator = GetUniquePtrComparator(data->mTimeouts);
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  // We want to make sure to run *something*, even if the timer fired a little
-  // early. Fudge the value of now to at least include the first timeout.
-  const TimeStamp actual_now = TimeStamp::Now();
-  const TimeStamp now = std::max(actual_now, data->mTimeouts[0]->mTargetTime);
-
-  if (now != actual_now) {
-    LOG(TimeoutsLog(), ("Worker %p fudged timeout by %f ms.\n", this,
-                        (now - actual_now).ToMilliseconds()));
-  }
+  const TimeStamp now = TimeStamp::Now();
+  MOZ_DIAGNOSTIC_ASSERT(now >= data->mTimeouts[0]->mTargetTime);
 
   AutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < data->mTimeouts.Length(); index++) {
@@ -4932,9 +4925,9 @@ bool WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx) {
 
   double delta =
       (data->mTimeouts[0]->mTargetTime - TimeStamp::Now()).ToMilliseconds();
-  uint32_t delay =
-      delta > 0 ? static_cast<uint32_t>(std::min(delta, double(UINT32_MAX)))
-                : 0;
+  uint32_t delay = delta > 0 ? static_cast<uint32_t>(std::ceil(
+                                   std::min(delta, double(UINT32_MAX))))
+                             : 0;
 
   LOG(TimeoutsLog(),
       ("Worker %p scheduled timer for %d ms, %zu pending timeouts\n", this,
