@@ -5,13 +5,10 @@
 
 package org.mozilla.focus.activity.robots
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
@@ -60,7 +57,32 @@ class SearchRobot {
         assertTrue(searchBar.text.equals(text))
     }
 
-    fun clearSearchBar() = clearSearchButton.perform(click())
+    fun clickToolbar() {
+        toolbar.waitForExists(waitingTime)
+        toolbar.click()
+    }
+
+    fun longPressSearchBar() {
+        searchBar.waitForExists(waitingTime)
+        searchBar.longClick()
+    }
+
+    fun pasteAndLoadLink() {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
+                val pasteText = mDevice.findObject(By.textContains("Paste"))
+                pasteText.click()
+                mDevice.pressEnter()
+                break
+            } catch (e: NullPointerException) {
+                longPressSearchBar()
+            }
+        }
+    }
+
+    fun clearSearchBar() = clearSearchButton.click()
 
     class Transition {
         fun loadPage(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -95,6 +117,9 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 private val searchBar =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
+private val toolbar =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))
+
 private val searchSuggestionsTitle = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/enable_search_suggestions_title")
@@ -118,4 +143,4 @@ private val suggestionsList = mDevice.findObject(
         .resourceId("$packageName:id/search_suggestions_view")
 )
 
-private val clearSearchButton = onView(withId(R.id.mozac_browser_toolbar_clear_view))
+private val clearSearchButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))

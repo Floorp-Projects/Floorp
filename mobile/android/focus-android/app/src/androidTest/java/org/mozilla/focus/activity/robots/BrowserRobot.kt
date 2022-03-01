@@ -146,6 +146,8 @@ class BrowserRobot {
         shareLink.check(matches(isDisplayed()))
     }
 
+    fun clickContextMenuCopyLink() = copyLink.perform(click())
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(waitingTime)
