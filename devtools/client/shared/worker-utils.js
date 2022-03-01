@@ -141,7 +141,10 @@ function asErrorMessage(error) {
   };
 }
 
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-};
+// Might be loaded within a worker thread where `module` isn't available.
+if (typeof module !== "undefined") {
+  module.exports = {
+    WorkerDispatcher,
+    workerHandler,
+  };
+}
