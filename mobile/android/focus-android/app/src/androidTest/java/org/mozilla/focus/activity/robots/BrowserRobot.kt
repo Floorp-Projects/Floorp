@@ -148,6 +148,15 @@ class BrowserRobot {
 
     fun clickContextMenuCopyLink() = copyLink.perform(click())
 
+    fun clickLinkMatchingText(expectedText: String) {
+        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(expectedText)).also { it.click() }
+    }
+
+    fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) = assertOpenLinksInAppsPrompt(openLinksInAppsEnabled, link)
+
+    fun clickOpenLinksInAppsCancelButton() = openLinksInAppsCancelButton.click()
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(waitingTime)
@@ -226,6 +235,24 @@ inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     }
 }
 
+private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) {
+    if (openLinksInAppsEnabled) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/parentPanel")).waitForExists(waitingTime)
+        assertTrue(openLinksInAppsMessage.waitForExists(waitingTimeShort))
+        assertTrue(openLinksInAppsLink(link).exists())
+        assertTrue(openLinksInAppsCancelButton.waitForExists(waitingTimeShort))
+        assertTrue(openLinksInAppsOpenButton.waitForExists(waitingTimeShort))
+    } else {
+        assertFalse(
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/parentPanel")
+            ).waitForExists(waitingTimeShort)
+        )
+    }
+}
+
+private fun openLinksInAppsLink(link: String) = mDevice.findObject(UiSelector().textContains(link))
+
 private val browserURLbar = mDevice.findObject(
     UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
 )
@@ -257,3 +284,9 @@ private val openLinkInPrivateTab = onView(withText("Open link in private tab"))
 private val copyLink = onView(withText("Copy link"))
 
 private val shareLink = onView(withText("Share link"))
+
+private val openLinksInAppsMessage = mDevice.findObject(UiSelector().resourceId("$packageName:id/alertTitle"))
+
+private val openLinksInAppsCancelButton = mDevice.findObject(UiSelector().textContains("CANCEL"))
+
+private val openLinksInAppsOpenButton = mDevice.findObject(UiSelector().textContains("OPEN"))

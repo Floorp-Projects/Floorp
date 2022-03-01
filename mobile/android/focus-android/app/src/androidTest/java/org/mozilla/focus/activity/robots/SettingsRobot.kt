@@ -13,6 +13,7 @@ import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.getStringResource
+import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
@@ -85,6 +86,15 @@ class SettingsRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun goBackToHomeScreen(
+            interact: SearchRobot.() -> Unit
+        ): SearchRobot.Transition {
+            mDevice.pressBack()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
     }
 }
