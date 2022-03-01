@@ -55,13 +55,47 @@ LazyLogModule gClipboardLog("WidgetClipboard");
 static GPollFunc sPollFunc;
 
 // Wrapper function to disable hang monitoring while waiting in poll().
-static gint PollWrapper(GPollFD* ufds, guint nfsd, gint timeout_) {
+static gint PollWrapper(GPollFD* aUfds, guint aNfsd, gint aTimeout) {
+  if (aTimeout == 0) {
+    // When the timeout is 0, there is no wait, so no point in notifying
+    // the BackgroundHangMonitor and the profiler.
+    return (*sPollFunc)(aUfds, aNfsd, aTimeout);
+  }
+
   mozilla::BackgroundHangMonitor().NotifyWait();
   gint result;
   {
+    gint timeout = aTimeout;
+    gint64 begin = 0;
+    if (aTimeout != -1) {
+      begin = g_get_monotonic_time();
+    }
+
     AUTO_PROFILER_LABEL("PollWrapper", IDLE);
     AUTO_PROFILER_THREAD_SLEEP;
-    result = (*sPollFunc)(ufds, nfsd, timeout_);
+    do {
+      result = (*sPollFunc)(aUfds, aNfsd, timeout);
+
+      // The result will be -1 with the EINTR error if the poll was interrupted
+      // by a signal, typically the signal sent by the profiler to sample the
+      // process. We are only done waiting if we are not in that case.
+      if (result != -1 || errno != EINTR) {
+        break;
+      }
+
+      if (aTimeout != -1) {
+        // Adjust the timeout to account for the time already spent waiting.
+        gint elapsedSinceBegin = (g_get_monotonic_time() - begin) / 1000;
+        if (elapsedSinceBegin < aTimeout) {
+          timeout = aTimeout - elapsedSinceBegin;
+        } else {
+          // poll returns 0 to indicate the call timed out before any fd
+          // became ready.
+          result = 0;
+          break;
+        }
+      }
+    } while (true);
   }
   mozilla::BackgroundHangMonitor().NotifyActivity();
   return result;
@@ -347,18 +381,7 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
-  bool didProcessEvent = false;
-  if (mayWait) {
-    // Block until we get an event. If g_main_context_iteration returns false,
-    // keep calling it until it returns true. It can return false if it is
-    // interrupted by a signal, for example during profiling, and we want to
-    // ignore such interruptions.
-    while (!didProcessEvent) {
-      didProcessEvent = g_main_context_iteration(nullptr, true);
-    }
-  } else {
-    didProcessEvent = g_main_context_iteration(nullptr, false);
-  }
+  bool didProcessEvent = g_main_context_iteration(nullptr, mayWait);
 #ifdef MOZ_WAYLAND
   mozilla::widget::WaylandDispatchDisplays();
 #endif
