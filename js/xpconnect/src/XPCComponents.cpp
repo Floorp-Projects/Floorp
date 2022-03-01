@@ -49,6 +49,7 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptError.h"
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "nsCommandLine.h"
 #include "nsCommandParams.h"

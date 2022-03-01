@@ -46,8 +46,8 @@
 
 #include "nsIXULRuntime.h"
 #include "nsIAppStartup.h"
-#include "GeckoProfiler.h"
 #include "Components.h"
+#include "ProfilerControl.h"
 
 #ifdef ANDROID
 #  include <android/log.h>

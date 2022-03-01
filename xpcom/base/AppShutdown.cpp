@@ -12,7 +12,7 @@
 #  include <unistd.h>
 #endif
 
-#include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/PoisonIOInterposer.h"
