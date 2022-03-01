@@ -54,6 +54,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
+  // Whether best match results can be blocked.
+  ["bestMatch.blockingEnabled", false],
+
   // Whether the best match feature is enabled.
   ["bestMatch.enabled", true],
 

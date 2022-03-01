@@ -1285,7 +1285,9 @@ class UrlbarView {
     body.appendChild(bottom);
     item._elements.set("bottom", bottom);
 
-    this._addRowButton(item, "block", "firefox-suggest-urlbar-block");
+    if (UrlbarPrefs.get("bestMatch.blockingEnabled")) {
+      this._addRowButton(item, "block", "firefox-suggest-urlbar-block");
+    }
     if (result.payload.helpUrl) {
       this._addRowButton(item, "help", result.payload.helpL10nId);
     }
