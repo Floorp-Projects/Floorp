@@ -2645,7 +2645,10 @@ void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const {
   }
 }
 
-void ScrollFrameHelper::InvalidateVerticalScrollbar() const {
+void ScrollFrameHelper::InvalidateScrollbars() const {
+  if (mHScrollbarBox) {
+    mHScrollbarBox->InvalidateFrameSubtree();
+  }
   if (mVScrollbarBox) {
     mVScrollbarBox->InvalidateFrameSubtree();
   }
