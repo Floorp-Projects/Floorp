@@ -11,8 +11,7 @@ import { getNextStep } from "./steps";
 import { hasSyntaxError } from "./validate";
 import mapExpression from "./mapExpression";
 
-import { workerUtils } from "devtools-utils";
-const { workerHandler } = workerUtils;
+import { workerHandler } from "devtools/client/shared/worker-utils";
 
 function clearState() {
   clearASTs();
