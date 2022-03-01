@@ -27,6 +27,8 @@ child:
   async PauseSampling() returns (bool unused);
   async ResumeSampling() returns (bool unused);
 
+  async WaitOnePeriodicSampling() returns (bool sampled);
+
   async AwaitNextChunkManagerUpdate() returns (ProfileBufferChunkManagerUpdate update);
   async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);
 

@@ -57,6 +57,8 @@ class ProfilerChild final : public PProfilerChild,
       PauseSamplingResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvResumeSampling(
       ResumeSamplingResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvWaitOnePeriodicSampling(
+      WaitOnePeriodicSamplingResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvAwaitNextChunkManagerUpdate(
       AwaitNextChunkManagerUpdateResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvDestroyReleasedChunksAtOrBefore(
