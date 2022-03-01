@@ -12,6 +12,7 @@
 #define mozilla_ipc_ByteBufUtils_h
 
 #include "mozilla/ipc/ByteBuf.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/mozalloc_oom.h"
 #include "ipc/IPCMessageUtils.h"
 
@@ -24,9 +25,15 @@ struct ParamTraits<mozilla::ipc::ByteBuf> {
   // this is where we transfer the memory from the ByteBuf to IPDL, avoiding a
   // copy
   static void Write(Message* aMsg, paramType&& aParam) {
-    WriteParam(aMsg, aParam.mLen);
+    // We need to send the length as a 32-bit value, not a size_t, because on
+    // ARM64 Windows we end up with a 32-bit GMP process sending a ByteBuf to
+    // a 64-bit parent process. WriteBytesZeroCopy takes a uint32_t as an
+    // argument, so it would end up getting truncated anyways. See bug 1757534.
+    mozilla::CheckedInt<uint32_t> length = aParam.mLen;
+    MOZ_RELEASE_ASSERT(length.isValid());
+    WriteParam(aMsg, length.value());
     // hand over ownership of the buffer to the Message
-    aMsg->WriteBytesZeroCopy(aParam.mData, aParam.mLen, aParam.mCapacity);
+    aMsg->WriteBytesZeroCopy(aParam.mData, length.value(), aParam.mCapacity);
     aParam.mData = nullptr;
     aParam.mCapacity = 0;
     aParam.mLen = 0;
@@ -38,7 +45,7 @@ struct ParamTraits<mozilla::ipc::ByteBuf> {
     // For users the can handle a non-contiguous result using ExtractBuffers
     // is an option, alternatively if the users don't need to take ownership of
     // the data they can use the removed FlattenBytes (bug 1297981)
-    size_t length;
+    uint32_t length;
     if (!ReadParam(aMsg, aIter, &length)) return false;
     if (!aResult->Allocate(length)) {
       mozalloc_handle_oom(length);
