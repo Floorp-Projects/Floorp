@@ -67,6 +67,12 @@ interface nsIWinTaskbar : nsISupports
   readonly attribute AString defaultGroupId;
 
   /**
+   * Same as above, but a different value so that Private Browsing windows
+   * can be separated in the Taskbar.
+   */
+  readonly attribute AString defaultPrivateGroupId;
+
+  /**
    * Taskbar window and tab preview management
    */
 
