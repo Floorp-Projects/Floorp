@@ -19,7 +19,6 @@ import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
@@ -237,11 +236,6 @@ sealed class Event {
     object TabsTrayInactiveTabsCFRDismissed : Event()
     object TabsTrayInactiveTabsCFRIsVisible : Event()
 
-    object InactiveTabsSurveyOpened : Event()
-    data class InactiveTabsOffSurvey(val feedback: String) : Event() {
-        override val extras: Map<Preferences.turnOffInactiveTabsSurveyKeys, String>
-            get() = mapOf(Preferences.turnOffInactiveTabsSurveyKeys.feedback to feedback.lowercase(Locale.ROOT))
-    }
     data class InactiveTabsCountUpdate(val count: Int) : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()

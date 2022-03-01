@@ -224,10 +224,6 @@
     <!-- A value  of `true` means the jump back in onboarding popup has not been shown yet -->
     <string name="pref_key_should_show_jump_back_in_tabs_popup" translatable="false">pref_key_should_show_jump_back_in_tabs_popup</string>
 
-    <!-- A value  of `true` means the inactive tabs turn off - survey hasn't been shown yet-->
-    <string name="pref_key_should_show_inactive_tabs_turn_off_survey" translatable="false">pref_key_should_show_inactive_tabs_turn_off_survey</string>
-
-
     <string name="pref_key_migrating_from_fenix_nightly_tip" translatable="false">pref_key_migrating_from_fenix_nightly_tip</string>
     <string name="pref_key_migrating_from_firefox_nightly_tip" translatable="false">pref_key_migrating_from_firefox_nightly_tip</string>
     <string name="pref_key_migrating_from_fenix_tip" translatable="false">pref_key_migrating_from_fenix_tip</string>

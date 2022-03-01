@@ -409,7 +409,7 @@
         <item name="android:textColor">?primaryText</item>
     </style>
 
-    <style name="Body12TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+    <style name="Body12TextStyle" parent="TextAppearance.MaterialComponents.Body1" tools:ignore="UnusedResources">
         <item name="android:textColor">?primaryText</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textAllCaps">false</item>

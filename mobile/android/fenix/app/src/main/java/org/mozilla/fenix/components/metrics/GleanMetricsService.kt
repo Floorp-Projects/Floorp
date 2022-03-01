@@ -696,13 +696,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayOpenInactiveTab -> EventWrapper<NoExtraKeys>(
             { TabsTray.openInactiveTab.add() }
         )
-        is Event.InactiveTabsSurveyOpened -> EventWrapper<NoExtraKeys>(
-            { Preferences.inactiveTabsSurveyOpened.record(it) }
-        )
-        is Event.InactiveTabsOffSurvey -> EventWrapper(
-            { Preferences.turnOffInactiveTabsSurvey.record(it) },
-            { Preferences.turnOffInactiveTabsSurveyKeys.valueOf(it) }
-        )
         is Event.InactiveTabsCountUpdate -> EventWrapper<NoExtraKeys>(
             { Metrics.inactiveTabsCount.set(this.count.toLong()) },
         )

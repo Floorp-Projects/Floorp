@@ -2001,40 +2001,6 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: 107
-  inactive_tabs_survey_opened:
-    type: event
-    description: >
-      A survey for asking the user why she intends to turn off the
-      inactive tabs feature is shown.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/21732
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/21862#issuecomment-949598042
-      - https://github.com/mozilla-mobile/fenix/pull/23453#issuecomment-1024694220
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 111
-  turn_off_inactive_tabs_survey:
-    type: event
-    description: >
-      The user has disabled inactive tabs feature and responded
-      to our request for feedback.
-    extra_keys:
-      feedback:
-        description: |
-          The user's feedback regarding inactive tabs feature.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/21732
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/21862#issuecomment-946977614
-      - https://github.com/mozilla-mobile/fenix/pull/23453#issuecomment-1024694220
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 111
   search_term_groups_enabled:
     type: boolean
     description: |
