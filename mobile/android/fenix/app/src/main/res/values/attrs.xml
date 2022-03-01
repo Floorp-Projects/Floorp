@@ -10,6 +10,10 @@
     <attr name="layer3" format="reference" />
     <attr name="scrim" format="reference" />
 
+    <!-- Action -->
+    <!-- Primary button, Snackbar, Floating action button, Chip selected -->
+    <attr name="actionPrimary" format="reference" />
+
     <!-- Text -->
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />

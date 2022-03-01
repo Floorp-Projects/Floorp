@@ -147,7 +147,7 @@
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
-    <color name="fx_mobile_private_action_color_primary" tools:ignore="UnusedResources">@color/photonViolet60</color>
+    <color name="fx_mobile_private_action_color_primary">@color/photonViolet60</color>
     <!-- Secondary button -->
     <color name="fx_mobile_private_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Filter -->

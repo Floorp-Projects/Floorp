@@ -38,6 +38,10 @@
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
         <item name="scrim">@color/fx_mobile_layer_color_scrim</item>
 
+        <!-- Action -->
+        <!-- Primary button, Snackbar, Floating action button, Chip selected -->
+        <item name="actionPrimary">@color/fx_mobile_action_color_primary</item>
+
         <!-- Text -->
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
@@ -225,6 +229,10 @@
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
         <item name="scrim">@color/fx_mobile_private_layer_color_scrim</item>
 
+        <!-- Action -->
+        <!-- Primary button, Snackbar, Floating action button, Chip selected -->
+        <item name="actionPrimary">@color/fx_mobile_private_action_color_primary</item>
+
         <!-- Text -->
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
@@ -347,7 +355,7 @@
     </style>
 
     <style name="PositiveButton" parent="NeutralButton">
-        <item name="backgroundTint">?accent</item>
+        <item name="backgroundTint">?actionPrimary</item>
         <item name="iconTint">?contrastText</item>
         <item name="android:textColor">?contrastText</item>
     </style>
