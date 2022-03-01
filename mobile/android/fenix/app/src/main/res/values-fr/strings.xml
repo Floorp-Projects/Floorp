@@ -50,6 +50,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Bouton Afficher tous les marque-pages enregistrés</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Supprimer</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s est réalisé par Mozilla.</string>
 
@@ -69,7 +72,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Vous pouvez configurer Firefox pour ouvrir automatiquement les liens dans des applications.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Vous pouvez configurer Firefox pour ouvrir automatiquement les liens dans des applications.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Vous pouvez configurer %1$s pour ouvrir automatiquement les liens dans des applications.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Ouvrir les paramètres</string>
 
@@ -98,7 +103,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Fermeture automatique après un mois ?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Fermer</string>
 
@@ -129,6 +137,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d sites</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Supprimer</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -249,11 +261,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Les nouveautés de Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Les nouveautés de Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Nouveautés dans %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Il est désormais plus facile de reprendre là où vous en étiez.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Accueil personnalisé de Firefox</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Accueil personnalisé de Firefox</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Accueil personnalisé de %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Accédez à vos onglets ouverts, vos marque-pages et votre historique de navigation.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -271,7 +287,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Ouvrir un nouvel onglet dans Firefox</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ouvrir un nouvel onglet dans Firefox</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Ouvrir un nouvel onglet %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Rechercher</string>
     <!-- Text preview for larger sized widgets -->
@@ -653,7 +671,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Activées</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox peut installer et lancer des études de temps en temps.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox peut installer et lancer des études de temps en temps.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s peut installer et lancer des études de temps en temps.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">En savoir plus</string>
 
@@ -1182,10 +1202,13 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="onboarding_header">Bienvenue dans %s !</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Synchronisez Firefox entre vos appareils</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Importez vos marque-pages, votre historique et vos mots de passe dans Firefox sur cet appareil.</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchronisez Firefox entre vos appareils</string>
 
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Synchronisez %1$s entre vos appareils</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Importez vos marque-pages, votre historique et vos mots de passe dans %1$s sur cet appareil.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Se connecter</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1193,7 +1216,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Confidentialité toujours assurée</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (par défaut)</string>
     <!-- text for standard blocking option button description -->
@@ -1698,7 +1723,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Veuillez activer la synchronisation des onglets.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Vous n’avez aucun onglet ouvert dans %1$s sur vos autres appareils.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Affichez la liste des onglets de vos autres appareils.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

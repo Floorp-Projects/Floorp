@@ -49,6 +49,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Kõigi salvestatud järjehoidjate kuvamise nupp</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Eemalda</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s on Mozilla poolt toodetud.</string>
 
@@ -70,7 +73,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Saad seadistada Firefoxi linke avama teistes äppides.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Saad seadistada Firefoxi linke avama teistes äppides.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Saad seadistada %1$si linke automaatselt avama teistes äppides.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Mine sätetesse</string>
     <!-- Text for the negative action button -->
@@ -97,7 +102,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Kas sulgeda automaatselt kuu aja pärast?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox saab sulgeda kaardid, mida sa pole viimase kuu jooksul vaadanud.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox saab sulgeda kaardid, mida sa pole viimase kuu jooksul vaadanud.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s saab sulgeda kaardid, mida sa pole viimase kuu jooksul vaadanud.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Sulge</string>
 
@@ -127,6 +135,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d saiti</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Eemalda</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -247,12 +259,16 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Mis on uut Firefoxis</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Mis on uut Firefoxis</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Mis on uut %1$sis</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Nüüd on lihtsam jätkata sealt, kus pooleli jäi.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Isikupärastatud Firefoxi avaleht</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Isikupärastatud Firefoxi avaleht</string>
 
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Isikupärastatud %1$si avaleht</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Liigu oma avatud kaartide, järjehoidjate ja lehitsemise ajaloo juurde.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -269,7 +285,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Ava uus Firefoxi kaart</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ava uus Firefoxi kaart</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Ava uus kaart %1$sis</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Otsi</string>
     <!-- Text preview for larger sized widgets -->
@@ -651,7 +669,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Praegu toimuvad</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox võib aegajalt paigaldada ja käivitada uuringuid.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox võib aegajalt paigaldada ja käivitada uuringuid.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s võib aegajalt paigaldada ja käivitada uuringuid.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Rohkem teavet</string>
     <!-- Dialog message shown after removing a study -->
@@ -1056,6 +1076,10 @@
     <string name="qr_scanner_dialog_invalid_ok">Olgu</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Kas oled kindel, et soovid kustutada kollektsiooni %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Selle kaardi kustutamine kustutab kogu kollektsiooni. Sa võid luua uue kollektsiooni igal ajal.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Kas kustutada kollektsioon %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Kustuta</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -1069,11 +1093,15 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Fondi suurus</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Automaatne fondi suurus</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Fondi suurus vastab Androidi sätetele. Keela, et hallata fondi suurust siin.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Lehitsemisandmete kustutamine</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Avatud kaardid</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d kaarti</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1091,6 +1119,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Vabastab salvestusruumi</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Saitide õigused</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Allalaadimised</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Kustuta lehitsemise andmed</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1113,16 +1143,75 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Lehitsemisandmete kustutamine…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview on nüüd Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">
+Firefox Nightlyt uuendatakse igal ööl ning see sisaldab uusi eksperimetaalseid funktsionaalsusi.
+Samas võib see olla vähem stabiilne. Stabiilsema kogemuse saamiseks võid alla laadida meie brauseri beeta versiooni.</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Hangi Firefox Androidile beeta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly on liikunud</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">
+        This app will no longer receive security updates. Stop using this app and switch to the new Nightly.
+        \n\nTo transfer your bookmarks, logins, and history to another app, create a Firefox account.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Lülitu uuele Nightlyle</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly on liikunud</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">
+See äpp ei saa enam turvauuendusi. Hangi uus Nightly ja lõpeta selle äpi kasutamine.
+\n\nOma järjehoidjate, kasutajakontode ja ajaloo teise äppi liigutamiseks loo Firefoxi konto.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Hangi uus Nightly</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Tere tulemast %si!</string>
 
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sünkroniseeri Firefox seadmete vahel</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Sünkroniseeri %1$s seadmete vahel</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Too järjehoidjad, ajalugu ja paroolid %1$si selles seadmes.</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Registreeru</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync on sisse lülitatud</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Alati sisse lülitatud privaatsus</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox takistab automaatselt ettevõtetel sinu salajase jälitamise.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s takistab automaatselt ettevõtetel sinu salajase jälitamise.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Tavaline (vaikimisi)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Tasakaalustatud privaatsuse ja jõudluse jaoks. Lehed laaditakse tavapäraselt.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Range</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokib rohkem jälitajaid ning lehed laadivad kiiremini, aga mõned lehtedel olevad funktsionaalsused võivad katki minna.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Vali oma tööriistariba asukoht</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Aseta tööriistariba käeulatusse. Hoia seda all või liiguta üles.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Sinu privaatsus</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">Me oleme %si loonud nii, et sulle jääks võimalus otsustada, mida sa jagad võrgus ja mida sa jagad meiega.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Loe meie privaatsuspoliitikat</string>
 
@@ -1132,6 +1221,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Vali oma teema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Säästa akut ja oma silmi, lubades tume teema.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automaatne</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1160,6 +1251,10 @@
     <string name="sign_in_with_camera">Logi sisse oma kaameraga</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Kasuta selle asemel e-posti aadressi</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Pole kontot? <u>Loo üks</u>, et sünkroniseerida Firefoxi seadmete vahel.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s lõpetab sinu kontoga sünkroniseerimise, aga ei kustuta lehitsemise andmeid sellest seadmest.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Ühenda lahti</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1179,14 +1274,22 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Rohkem teavet</string>
 
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Tavaline (vaikimisi)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Tasakaalustatud privaatsuse ja jõudluse jaoks. Lehed laaditakse tavapäraselt.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mis on blokitud tavalise jälitamisvastase kaitse poolt</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Range</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokib rohkem jälitajaid ning lehed laadivad kiiremini, aga mõned lehtedel olevad funktsionaalsused võivad katki minna.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mis on blokitud tugevama jälitamisvastase kaitse poolt</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Kohandatud</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Vali blokitavad jälitajad ja skriptid.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Mis on blokitud kohandatud jälitamisvastase kaitse poolt</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1211,6 +1314,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Krüptorahakaevurid</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Seadmetuvastajad</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Üksikasjad</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokitud</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1252,8 +1357,20 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | avatud lähtekoodiga teegid</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Ümbersuunavad jälitajad</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Kustutatakse küpsised, mis on seatud teadaolevate jälitavate saitide poolt.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Mõned allpool märgitud jälitajad on sellel lehel osaliselt lubatud, sest suhtlesid nendega *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Rohkem teavet</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Kasutajatugi</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Kokkujooksmised</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Privaatsusreeglid</string>
     <!-- About page link text to open know your rights link -->
@@ -1262,6 +1379,11 @@
     <string name="about_licensing_information">Litsentsist</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Kasutatavad teegid</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Debug menu: %1$d click(s) left to enable</string>
+    <string name="about_debug_menu_toast_done">Debug menu enabled</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1279,8 +1401,13 @@
     <string name="add_to_homescreen_cancel">Loobu</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Lisa</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Mine veebilehele</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Otsetee nimi</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Sa võid lisada selle lehe oma seadme avaekraanile, et pääseda sellele kiirelt ligi ja kasutada seda äpi sarnase kasutuskogemusega.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Kasutajatunnused ja paroolid</string>
@@ -1291,6 +1418,17 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Pakutakse salvestamist</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ei salvestata kunagi</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Täidetakse automaatselt %1$sis</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$si kasutamisel täidetakse ja salvestatakse saitide kasutajanimesid ja paroole.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Täidetakse automaatselt teistes äppides</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Kasutajanimesid ja paroole täidetakse teisest seadmes olevates äppides.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Lisa uus konto</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Kasutajatunnuste sünkroniseerimine</string>

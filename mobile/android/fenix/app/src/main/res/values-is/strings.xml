@@ -48,6 +48,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Sýna hnapp fyrir öll vistuð bókamerki</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Fjarlægja</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s er framleitt af Mozilla.</string>
 
@@ -69,7 +72,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Þú getur stillt Firefox til að opna tengla sjálfvirkt í forritum.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Þú getur stillt Firefox til að opna tengla sjálfvirkt í forritum.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Þú getur stillt %1$s til að opna tengla sjálfvirkt í forritum.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Fara í stillingar</string>
     <!-- Text for the negative action button -->
@@ -95,7 +100,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Loka sjálfvirkt eftir einn mánuð?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox getur lokað flipum sem þú hefur ekki skoðað síðastliðinn mánuð.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox getur lokað flipum sem þú hefur ekki skoðað síðastliðinn mánuð.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s getur lokað flipum sem þú hefur ekki skoðað síðastliðinn mánuð.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Loka</string>
 
@@ -125,6 +133,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d vefsvæði</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Fjarlægja</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -244,11 +256,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Hvað er nýtt í Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Hvað er nýtt í Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Hvað er nýtt í %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Nú er auðveldara að halda áfram þar sem frá var horfið.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Persónuleg Firefox upphafssíða</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Persónuleg Firefox upphafssíða</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Persónuleg %1$s upphafssíða</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Hoppaðu í opna flipa, bókamerki og vafraferil.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -266,7 +282,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Opna nýjan Firefox-flipa</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Opna nýjan Firefox-flipa</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Opna nýjan %1$s-flipa</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Leita</string>
 
@@ -643,7 +661,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Virkt</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox kann að setja upp og keyra rannsóknir af og til.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox kann að setja upp og keyra rannsóknir af og til.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s kann að setja upp og keyra rannsóknir af og til.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Frekari upplýsingar</string>
     <!-- Dialog message shown after removing a study -->
@@ -1145,9 +1165,12 @@
     <string name="onboarding_header">Velkomin í %s!</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Samstilla Firefox á milli tækja</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Samstilla Firefox á milli tækja</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Samstilla %1$s á milli tækja</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Komdu með bókamerki, feril og lykilorð yfir í Firefox á þessu tæki.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Komdu með bókamerki, feril og lykilorð yfir í %1$s á þessu tæki.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Skráðu þig</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1155,7 +1178,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Sívökul friðhelgi</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Staðlað (sjálfgefið)</string>
     <!-- text for standard blocking option button description -->
@@ -1661,7 +1686,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Virkjaðu samstillingu flipa.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Þú ert ekki með neina Firefox flipa opna á hinum tækjunum þínum.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Þú ert ekki með neina Firefox flipa opna á hinum tækjunum þínum.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Þú ert ekki með neina %1$s-flipa opna á hinum tækjunum þínum.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Skoða lista yfir flipa frá öðrum tækjum.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

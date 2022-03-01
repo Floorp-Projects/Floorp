@@ -48,6 +48,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Dangos fotwm nodau tudalen wedi’u cadw</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Tynnu</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Mae %1$s yn cael ei greu gan Mozilla.</string>
 
@@ -69,7 +72,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Gallwch osod Firefox i agor dolenni mewn apiau’n awtomatig.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Gallwch osod Firefox i agor dolenni mewn apiau’n awtomatig.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Gallwch osod %1$s i agor dolenni mewn apiau’n awtomatig.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Mynd i gosodiadau</string>
     <!-- Text for the negative action button -->
@@ -97,7 +102,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Autogau ar ôl mis?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">Gall %1$s gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Cau</string>
 
@@ -128,6 +136,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d gwefan</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Tynnu</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -245,11 +257,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Beth sy’n newydd yn Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Beth sy’n newydd yn Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Beth sy’n newydd yn %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Mae nawr yn haws ailgychwyn o’r lle y gwnaethoch chi adael.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Tudalen cartref personoledig Firefox</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Tudalen cartref personoledig Firefox</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Tudalen cartref personoledig %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Symudwch i’ch tabiau agored, nodau tudalen, a’ch hanes pori.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -266,7 +282,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Agorwch tab Firefox newydd</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Agorwch tab Firefox newydd</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Agor tab %1$s newydd</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Chwilio</string>
     <!-- Text preview for larger sized widgets -->
@@ -643,7 +661,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Gweithredol</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Efallai y bydd Firefox yn gosod a rhedeg astudiaethau o bryd i’w gilydd.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Efallai y bydd Firefox yn gosod a rhedeg astudiaethau o bryd i’w gilydd.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">Gall %1$s osod a rhedeg astudiaethau o bryd i’w gilydd.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Dysgu rhagor</string>
 
@@ -1145,9 +1165,12 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Croeso i %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Cydweddu Firefox rhwng dyfeisiau</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Cydweddu Firefox rhwng dyfeisiau</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Cydweddu %1$s rhwng dyfeisiau</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Dewch â nodau tudalen, hanes, a chyfrineiriau i Firefox ar y ddyfais hon.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Dewch â nodau tudalen, hanes, a chyfrineiriau i %1$s ar y ddyfais hon.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Ymuno</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1156,7 +1179,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Preifatrwydd parhaus</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Mae Firefox yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Mae Firefox yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">Mae %1$s yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Safonol (rhagosodedig)</string>
     <!-- text for standard blocking option button description -->
@@ -1664,7 +1689,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="synced_tabs_enable_tab_syncing">Galluogwch gydweddu tabiau.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Nid oes gennych unrhyw dabiau ar agor yn Firefox ar eich dyfeisiau eraill.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Nid oes gennych unrhyw dabiau ar agor yn Firefox ar eich dyfeisiau eraill.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Nid oes gennych unrhyw dabiau ar agor yn %1$s ar eich dyfeisiau eraill.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Gweld rhestr o dabiau o’ch dyfeisiau eraill.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

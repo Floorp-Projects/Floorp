@@ -74,6 +74,8 @@
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Pode configurar o Firefox para abrir automaticamente as ligações nas aplicações.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Pode configurar o %1$s para abrir automaticamente as ligações nas aplicações.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Ir para as definições</string>
     <!-- Text for the negative action button -->
@@ -102,6 +104,9 @@
     <string name="tab_tray_inactive_auto_close_title">Auto-encerrar após um mês?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
     <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">O Firefox pode encerrar separadores que não acedeu no último mês.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">O %1$s pode encerrar separadores que não acedeu no último mês.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Encerrar</string>
 
@@ -255,10 +260,14 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">O que há de novo no Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Novidades do %s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Agora é mais simples continuar de onde parou.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Página inicial personalizada do Firefox</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Página inicial personalizada do %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Aceda aos seus separadores abertos, marcadores e histórico de navegação.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -276,6 +285,8 @@
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Abrir um novo separador Firefox</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Abrir um novo separador do %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Pesquisar</string>
     <!-- Text preview for larger sized widgets -->
@@ -424,6 +435,8 @@
     <string name="wallpaper_updated_snackbar_action">Ver</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Toque no logotipo para alterar o fundo</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Altere o fundo ao tocar no logótipo da página principal do Firefox</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Percorra e atualize a imagem sem sair da página principal.</string>
 
@@ -1157,6 +1170,9 @@
     <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincronizar o Firefox entre dispositivos</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
     <string name="onboarding_account_sign_in_header_2">Sincronize %1$s entre dispositivos</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Traga os marcadores, histórico e palavras-passe para o %1$s neste dispositivo.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Registar</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1166,6 +1182,8 @@
     <string name="onboarding_tracking_protection_header_3">Privacidade sempre ativa</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">O Firefox impede automaticamente que as empresas o sigam secretamente pela Internet.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">O %1$s impede automaticamente que as empresas o sigam secretamente pela Internet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Padrão (predefinição)</string>
     <!-- text for standard blocking option button description -->
@@ -1677,6 +1695,8 @@
     <string name="synced_tabs_enable_tab_syncing">Por favor, ative a sincronização de separadores.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Não tem quaisquer separadores abertos no Firefox dos seus outros dispositivos.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Não tem quaisquer separadores abertos no %1$s nos seus outros dispositivos.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Ver uma lista de separadores dos seus outros dispositivos.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
