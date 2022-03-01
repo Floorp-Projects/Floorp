@@ -866,6 +866,9 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     GaborishInverse(opsin, 0.9908511000000001f, pool);
   }
 
+  FindBestDequantMatrices(cparams, *opsin, modular_frame_encoder,
+                          &enc_state->shared.matrices);
+
   cfl_heuristics.Init(*opsin);
   acs_heuristics.Init(*opsin, enc_state);
 
@@ -933,9 +936,6 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     cfl_heuristics.ComputeDC(/*fast=*/cparams.speed_tier >= SpeedTier::kWombat,
                              &enc_state->shared.cmap);
   }
-
-  FindBestDequantMatrices(cparams, *opsin, modular_frame_encoder,
-                          &enc_state->shared.matrices);
 
   // Refine quantization levels.
   FindBestQuantizer(original_pixels, *opsin, enc_state, cms, pool, aux_out);

@@ -22,9 +22,6 @@
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
-// Not yet implemented
-#if HWY_TARGET != HWY_RVV
-
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
@@ -85,8 +82,8 @@ struct TestLowerQuarter {
 };
 
 HWY_NOINLINE void TestAllLowerHalf() {
-  ForAllTypes(ForDemoteVectors<TestLowerHalf>());
-  ForAllTypes(ForDemoteVectors<TestLowerQuarter, 4>());
+  ForAllTypes(ForHalfVectors<TestLowerHalf>());
+  ForAllTypes(ForHalfVectors<TestLowerQuarter, 2>());
 }
 
 struct TestUpperHalf {
@@ -95,21 +92,14 @@ struct TestUpperHalf {
     // Scalar does not define UpperHalf.
 #if HWY_TARGET != HWY_SCALAR
     const Half<D> d2;
-
-    const auto v = Iota(d, 1);
-    const size_t N = Lanes(d);
-    auto lanes = AllocateAligned<T>(N);
-    std::fill(lanes.get(), lanes.get() + N, T(0));
-
-    Store(UpperHalf(d2, v), d2, lanes.get());
+    const size_t N2 = Lanes(d2);
+    HWY_ASSERT(N2 * 2 == Lanes(d));
+    auto expected = AllocateAligned<T>(N2);
     size_t i = 0;
-    for (; i < Lanes(d2); ++i) {
-      HWY_ASSERT_EQ(T(Lanes(d2) + 1 + i), lanes[i]);
+    for (; i < N2; ++i) {
+      expected[i] = static_cast<T>(N2 + 1 + i);
     }
-    // Other half remains unchanged
-    for (; i < N; ++i) {
-      HWY_ASSERT_EQ(T(0), lanes[i]);
-    }
+    HWY_ASSERT_VEC_EQ(d2, expected.get(), UpperHalf(d2, Iota(d, 1)));
 #else
     (void)d;
 #endif
@@ -117,7 +107,7 @@ struct TestUpperHalf {
 };
 
 HWY_NOINLINE void TestAllUpperHalf() {
-  ForAllTypes(ForShrinkableVectors<TestUpperHalf>());
+  ForAllTypes(ForHalfVectors<TestUpperHalf>());
 }
 
 struct TestZeroExtendVector {
@@ -126,23 +116,23 @@ struct TestZeroExtendVector {
     const Twice<D> d2;
 
     const auto v = Iota(d, 1);
+    const size_t N = Lanes(d);
     const size_t N2 = Lanes(d2);
+    // If equal, then N was already MaxLanes(d) and it's not clear what
+    // Combine or ZeroExtendVector should return.
+    if (N2 == N) return;
+    HWY_ASSERT(N2 == 2 * N);
     auto lanes = AllocateAligned<T>(N2);
     Store(v, d, &lanes[0]);
-    Store(v, d, &lanes[N2 / 2]);
+    Store(v, d, &lanes[N]);
 
     const auto ext = ZeroExtendVector(d2, v);
     Store(ext, d2, lanes.get());
 
-    size_t i = 0;
     // Lower half is unchanged
-    for (; i < N2 / 2; ++i) {
-      HWY_ASSERT_EQ(T(1 + i), lanes[i]);
-    }
+    HWY_ASSERT_VEC_EQ(d, v, Load(d, &lanes[0]));
     // Upper half is zero
-    for (; i < N2; ++i) {
-      HWY_ASSERT_EQ(T(0), lanes[i]);
-    }
+    HWY_ASSERT_VEC_EQ(d, Zero(d), Load(d, &lanes[N]));
   }
 };
 
@@ -158,7 +148,7 @@ struct TestCombine {
     auto lanes = AllocateAligned<T>(N2);
 
     const auto lo = Iota(d, 1);
-    const auto hi = Iota(d, N2 / 2 + 1);
+    const auto hi = Iota(d, static_cast<T>(N2 / 2 + 1));
     const auto combined = Combine(d2, hi, lo);
     Store(combined, d2, lanes.get());
 
@@ -232,7 +222,7 @@ struct TestConcatOddEven {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
 #if HWY_TARGET != HWY_RVV && HWY_TARGET != HWY_SCALAR
     const size_t N = Lanes(d);
-    const auto hi = Iota(d, N);
+    const auto hi = Iota(d, static_cast<T>(N));
     const auto lo = Iota(d, 0);
     const auto even = Add(Iota(d, 0), Iota(d, 0));
     const auto odd = Add(even, Set(d, 1));
@@ -272,7 +262,3 @@ int main(int argc, char **argv) {
 }
 
 #endif  // HWY_ONCE
-
-#else
-int main(int, char**) { return 0; }
-#endif  // HWY_TARGET != HWY_RVV

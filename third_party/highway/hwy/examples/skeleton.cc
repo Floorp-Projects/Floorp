@@ -24,11 +24,14 @@
 // Generates code for each enabled target by re-including this source file.
 #include "hwy/foreach_target.h"
 
+// Must come after foreach_target.h to avoid redefinition errors.
 #include "hwy/highway.h"
 
 // Optional, can instead add HWY_ATTR to all functions.
 HWY_BEFORE_NAMESPACE();
 namespace skeleton {
+// This namespace name is unique per target, which allows code for multiple
+// targets to co-exist in the same translation unit.
 namespace HWY_NAMESPACE {
 
 // Highway ops reside here; ADL does not find templates nor builtins.
@@ -47,7 +50,7 @@ template <class DF>
 ATTR_MSAN void OneFloorLog2(const DF df, const uint8_t* HWY_RESTRICT values,
                             uint8_t* HWY_RESTRICT log2) {
   // Type tags for converting to other element types (Rebind = same count).
-  const Rebind<int32_t, DF> d32;
+  const RebindToSigned<DF> d32;
   const Rebind<uint8_t, DF> d8;
 
   const auto u8 = Load(d8, values);
@@ -59,7 +62,7 @@ ATTR_MSAN void OneFloorLog2(const DF df, const uint8_t* HWY_RESTRICT values,
 void CodepathDemo() {
   // Highway defaults to portability, but per-target codepaths may be selected
   // via #if HWY_TARGET == HWY_SSE4 or by testing capability macros:
-#if HWY_CAP_INTEGER64
+#if HWY_HAVE_INTEGER64
   const char* gather = "Has int64";
 #else
   const char* gather = "No int64";
@@ -71,20 +74,16 @@ void FloorLog2(const uint8_t* HWY_RESTRICT values, size_t count,
                uint8_t* HWY_RESTRICT log2) {
   CodepathDemo();
 
-  // Second argument is necessary on RVV until it supports fractional lengths.
-  const ScalableTag<float, 2> df;
-
+  const ScalableTag<float> df;
   const size_t N = Lanes(df);
   size_t i = 0;
   for (; i + N <= count; i += N) {
     OneFloorLog2(df, values + i, log2 + i);
   }
-  // TODO(janwas): implement
-#if HWY_TARGET != HWY_RVV
   for (; i < count; ++i) {
-    OneFloorLog2(HWY_CAPPED(float, 1)(), values + i, log2 + i);
+    CappedTag<float, 1> d1;
+    OneFloorLog2(d1, values + i, log2 + i);
   }
-#endif
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -92,6 +91,9 @@ void FloorLog2(const uint8_t* HWY_RESTRICT values, size_t count,
 }  // namespace skeleton
 HWY_AFTER_NAMESPACE();
 
+// The table of pointers to the various implementations in HWY_NAMESPACE must
+// be compiled only once (foreach_target #includes this file multiple times).
+// HWY_ONCE is true for only one of these 'compilation passes'.
 #if HWY_ONCE
 
 namespace skeleton {
@@ -105,6 +107,8 @@ HWY_EXPORT(FloorLog2);
 // is equivalent to inlining this function.
 void CallFloorLog2(const uint8_t* HWY_RESTRICT in, const size_t count,
                    uint8_t* HWY_RESTRICT out) {
+  // This must reside outside of HWY_NAMESPACE because it references (calls the
+  // appropriate one from) the per-target implementations there.
   return HWY_DYNAMIC_DISPATCH(FloorLog2)(in, count, out);
 }
 

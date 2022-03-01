@@ -121,7 +121,7 @@ class JxlToJpegDecoder {
     auto write = [&tmp_next_out, &tmp_avail_size](const uint8_t* buf,
                                                   size_t len) {
       size_t to_write = std::min<size_t>(tmp_avail_size, len);
-      memcpy(tmp_next_out, buf, to_write);
+      if (to_write != 0) memcpy(tmp_next_out, buf, to_write);
       tmp_next_out += to_write;
       tmp_avail_size -= to_write;
       return to_write;

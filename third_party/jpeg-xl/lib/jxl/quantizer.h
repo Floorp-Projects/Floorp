@@ -123,10 +123,6 @@ class Quantizer {
     return dequant_->InvMatrix(quant_kind, c);
   }
 
-  JXL_INLINE size_t DequantMatrixOffset(size_t quant_kind, size_t c) const {
-    return dequant_->MatrixOffset(quant_kind, c);
-  }
-
   // Calculates DC quantization step.
   JXL_INLINE float GetDcStep(size_t c) const {
     return inv_quant_dc_ * dequant_->DCQuant(c);
