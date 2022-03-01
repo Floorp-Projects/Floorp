@@ -44,16 +44,20 @@ function appUpdater(options = {}) {
     "chrome://browser/locale/browser.properties"
   );
 
-  let manualURL = new URL(
-    Services.urlFormatter.formatURLPref("app.update.url.manual")
-  );
+  try {
+    let manualURL = new URL(
+      Services.urlFormatter.formatURLPref("app.update.url.manual")
+    );
 
-  let manualLink = document.getElementById("manualLink");
-  // Strip hash and search parameters for display text.
-  manualLink.textContent = manualURL.origin + manualURL.pathname;
-  manualLink.href = manualURL.href;
+    let manualLink = document.getElementById("manualLink");
+    // Strip hash and search parameters for display text.
+    manualLink.textContent = manualURL.origin + manualURL.pathname;
+    manualLink.href = manualURL.href;
 
-  document.getElementById("failedLink").href = manualURL.href;
+    document.getElementById("failedLink").href = manualURL.href;
+  } catch (e) {
+    console.error("Invalid manual update url.", e);
+  }
 
   this._appUpdater.check();
 }

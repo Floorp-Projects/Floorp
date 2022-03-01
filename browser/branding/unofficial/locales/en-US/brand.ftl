@@ -20,7 +20,7 @@
 -brand-short-name = Legacy
 -brand-full-name = FloorpLegacy
 # This brand name can be used in messages where the product name needs to
-# remain unchanged across different versions (Floorp ブラウザ, Beta, etc.).
+# remain unchanged across different versions (Nightly, Beta, etc.).
 -brand-product-name = Legacy
 -vendor-short-name = Ablaze
 trademarkInfo = Legacy and the Floorplogos are trademarks of the Ablaze.

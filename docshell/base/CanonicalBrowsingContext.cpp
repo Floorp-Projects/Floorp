@@ -308,6 +308,11 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetExplicitActive(GetExplicitActive());
   txn.SetHasRestoreData(GetHasRestoreData());
   txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
+  // As this is a different BrowsingContext, set InitialSandboxFlags to the
+  // current flags in the new context so that they also apply to any initial
+  // about:blank documents created in it.
+  txn.SetSandboxFlags(GetSandboxFlags());
+  txn.SetInitialSandboxFlags(GetSandboxFlags());
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {

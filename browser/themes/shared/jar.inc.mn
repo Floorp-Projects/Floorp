@@ -7,6 +7,12 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest
 
+  skin/classic/browser/dino.js                                 (../shared/icons/dino.js)
+  skin/classic/browser/index.css                               (../shared/icons/index.css)
+  skin/classic/browser/dino.html                               (../shared/icons/dino.html)
+  skin/classic/browser/100-offline-sprite.png                      (../shared/icons/100-offline-sprite.png)
+  skin/classic/browser/200-offline-sprite.png                      (../shared/icons/200-offline-sprite.png)
+
   skin/classic/browser/ablaze.png                              (../shared/icons/ablaze.png)
   skin/classic/browser/support-m.svg                           (../shared/icons/support-m.svg)
   skin/classic/browser/settings-m.svg                          (../shared/icons/settings-m.svg)

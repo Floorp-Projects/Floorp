@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # NSIS branding defines for official release builds.
-# The Floorp ブラウザ build branding.nsi is located in browser/installer/windows/nsis/
+# The nightly build branding.nsi is located in browser/installer/windows/nsis/
 # The unofficial build branding.nsi is located in browser/branding/unofficial/
 
 # BrandFullNameInternal is used for some registry and file system values

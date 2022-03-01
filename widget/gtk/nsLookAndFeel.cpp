@@ -1285,7 +1285,8 @@ Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
   RefPtr<GVariant> variant = dont_AddRef(g_dbus_proxy_call_sync(
       mDBusSettingsProxy, "Read",
       g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
-      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, &error));
+      G_DBUS_CALL_FLAGS_NONE,
+      StaticPrefs::widget_gtk_settings_portal_timeout_ms(), nullptr, &error));
   if (!variant) {
     LOGLNF("color-scheme query error: %s\n", error->message);
     g_error_free(error);

@@ -12709,7 +12709,21 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+
+# The timeout we should spend on a DBUS call to the Settings proxy before
+# giving up.
 #
+# -1 for the default system timeout, INT_MAX for "infinite time".
+#
+# This runs just once, but during startup, so make sure it doesn't take too
+# long. Three seconds should be way more than enough, and if we don't get the
+# reply on time then the only potential issue is that we use a light instead of
+# dark interface or vice versa.
+- name: widget.gtk.settings-portal-timeout-ms
+  type: int32_t
+  value: 3000
+  mirror: always
+
 # Whether to use gtk portal for the file picker.
 #  - 0: never
 #  - 1: always
