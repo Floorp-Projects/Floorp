@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "chrome://browser/skin/downloads/progressmeter.css";
+@import "chrome://browser/skin/downloads/download-blockedStates.css";
+
 /*** View and outer controls ***/
 
 #downloadsListBox {
@@ -83,19 +86,15 @@
 }
 
 .downloadIconShow > .button-box > .button-icon {
-%ifdef XP_MACOSX
-  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
-%else
   list-style-image: url("chrome://global/skin/icons/folder.svg");
-%endif
+}
+
+@media (-moz-platform: macos) {
+  .downloadIconShow > .button-box > .button-icon {
+    list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+  }
 }
 
 .downloadIconRetry > .button-box > .button-icon {
   list-style-image: url("chrome://global/skin/icons/reload.svg");
 }
-
-/*** Progressmeter ***/
-%include progressmeter.inc.css
-
-/*** Blocked iconography ***/
-%include download-blockedStates.inc.css

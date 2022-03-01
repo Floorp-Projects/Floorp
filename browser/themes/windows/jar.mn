@@ -16,8 +16,8 @@ browser.jar:
 * skin/classic/browser/webRTC-indicator.css
   skin/classic/browser/webRTC-legacy-indicator.css  (../shared/webRTC-legacy-indicator.css)
 * skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
-* skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
-* skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
+  skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
+  skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
   skin/classic/browser/notification-icons/camera.png           (notification-icons/camera.png)
   skin/classic/browser/notification-icons/microphone.png       (notification-icons/microphone.png)
   skin/classic/browser/notification-icons/screen.png           (notification-icons/screen.png)

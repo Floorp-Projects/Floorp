@@ -582,8 +582,7 @@ void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
     }
 
     // Step 15.1.3. Set reader to ! AcquireReadableStreamDefaultReader(stream).
-    reader =
-        AcquireReadableStreamDefaultReader(aCx, aTeeState->GetStream(), aRv);
+    reader = AcquireReadableStreamDefaultReader(aTeeState->GetStream(), aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -882,7 +881,7 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
 
     // Step 16.1.3. Set reader to !AcquireReadableStreamBYOBReader(stream).
     RefPtr<ReadableStreamBYOBReader> reader =
-        AcquireReadableStreamBYOBReader(aCx, aTeeState->GetStream(), aRv);
+        AcquireReadableStreamBYOBReader(aTeeState->GetStream(), aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -1072,7 +1071,7 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   MOZ_ASSERT(aStream->Controller()->IsByte());
 
   // Step 3-13 captured as part of TeeState allocation
-  RefPtr<TeeState> teeState = TeeState::Create(aCx, aStream, false, aRv);
+  RefPtr<TeeState> teeState = TeeState::Create(aStream, false, aRv);
   if (aRv.Failed()) {
     return;
   }

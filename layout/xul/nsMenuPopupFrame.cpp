@@ -1585,7 +1585,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
   if (IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
-      nsRect prefRect = widget->GetPreferredPopupRect();
+      nsRect prefRect = LayoutDeviceIntRect::ToAppUnits(
+          widget->GetPreferredPopupRect(), presContext->AppUnitsPerDevPixel());
       if (prefRect.width > 0 && prefRect.height > 0) {
         // shrink the the popup down if it is larger than the prefered size.
         if (mRect.width > prefRect.width) {
@@ -2375,29 +2376,37 @@ void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
 void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs) {
   nsIWidget* widget = GetWidget();
   nsPoint appUnitsPos = CSSPixel::ToAppUnits(aPos);
+
+  // reposition the popup at the specified coordinates. Don't clear the anchor
+  // and position, because the popup can be reset to its anchor position by
+  // using (-1, -1) as coordinates.
+  //
+  // Subtract off the margin as it will be added to the position when
+  // SetPopupPosition is called.
+  {
+    nsMargin margin(0, 0, 0, 0);
+    StyleMargin()->GetMargin(margin);
+
+    // Workaround for bug 788189.  See also bug 708278 comment #25 and
+    // following.
+    if (mAdjustOffsetForContextMenu) {
+      margin.left += CSSPixel::ToAppUnits(
+          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetHorizontal));
+      margin.top += CSSPixel::ToAppUnits(
+          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetVertical));
+    }
+
+    appUnitsPos.x -= margin.left;
+    appUnitsPos.y -= margin.top;
+  }
+
   if ((mScreenRect.x == appUnitsPos.x && mScreenRect.y == appUnitsPos.y) &&
       (!widget || widget->GetClientOffset() == mLastClientOffset)) {
     return;
   }
 
-  // reposition the popup at the specified coordinates. Don't clear the anchor
-  // and position, because the popup can be reset to its anchor position by
-  // using (-1, -1) as coordinates. Subtract off the margin as it will be
-  // added to the position when SetPopupPosition is called.
-  nsMargin margin(0, 0, 0, 0);
-  StyleMargin()->GetMargin(margin);
-
-  // Workaround for bug 788189.  See also bug 708278 comment #25 and following.
-  if (mAdjustOffsetForContextMenu) {
-    margin.left += CSSPixel::ToAppUnits(
-        LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetHorizontal));
-    margin.top += CSSPixel::ToAppUnits(
-        LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetVertical));
-  }
-
   mAnchorType = MenuPopupAnchorType_Point;
-  mScreenRect.x = appUnitsPos.x - margin.left;
-  mScreenRect.y = appUnitsPos.y - margin.top;
+  mScreenRect.MoveTo(appUnitsPos);
 
   SetPopupPosition(nullptr, true, false);
 

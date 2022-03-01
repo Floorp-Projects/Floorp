@@ -38,8 +38,7 @@ JSObject* ReadableStreamBYOBReader::WrapObject(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-byob-reader
-void SetUpReadableStreamBYOBReader(JSContext* aCx,
-                                   ReadableStreamBYOBReader* reader,
+void SetUpReadableStreamBYOBReader(ReadableStreamBYOBReader* reader,
                                    ReadableStream& stream, ErrorResult& rv) {
   // Step 1. If !IsReadableStreamLocked(stream) is true, throw a TypeError
   // exception.
@@ -56,7 +55,7 @@ void SetUpReadableStreamBYOBReader(JSContext* aCx,
   }
 
   // Step 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
-  ReadableStreamReaderGenericInitialize(aCx, reader, &stream, rv);
+  ReadableStreamReaderGenericInitialize(reader, &stream, rv);
   if (rv.Failed()) {
     return;
   }
@@ -75,7 +74,7 @@ ReadableStreamBYOBReader::Constructor(const GlobalObject& global,
       new ReadableStreamBYOBReader(globalObject);
 
   // Step 1.
-  SetUpReadableStreamBYOBReader(global.Context(), reader, stream, rv);
+  SetUpReadableStreamBYOBReader(reader, stream, rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -334,13 +333,13 @@ void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
-    JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv) {
+    ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1. Let reader be a new ReadableStreamBYOBReader.
   RefPtr<ReadableStreamBYOBReader> reader =
       new ReadableStreamBYOBReader(aStream->GetParentObject());
 
   // Step 2. Perform ? SetUpReadableStreamBYOBReader(reader, stream).
-  SetUpReadableStreamBYOBReader(aCx, reader, *aStream, aRv);
+  SetUpReadableStreamBYOBReader(reader, *aStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

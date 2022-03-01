@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "chrome://browser/skin/downloads/progressmeter.css";
+@import "chrome://browser/skin/downloads/download-blockedStates.css";
+
 /*** Panel and outer controls ***/
 
 #downloadsListBox {
@@ -259,9 +262,3 @@
 #downloadsFooterButtons > toolbarseparator {
   margin-inline: 0;
 }
-
-/*** Progressmeter ***/
-%include progressmeter.inc.css
-
-/*** Blocked iconography ***/
-%include download-blockedStates.inc.css

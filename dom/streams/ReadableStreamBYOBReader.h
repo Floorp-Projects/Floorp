@@ -68,7 +68,7 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
 };
 
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
-    JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv);
+    ReadableStream* aStream, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
     JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,

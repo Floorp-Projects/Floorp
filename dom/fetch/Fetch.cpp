@@ -1570,7 +1570,7 @@ void FetchBody<Derived>::LockStream(JSContext* aCx, ReadableStream* aStream,
                                     ErrorResult& aRv) {
   // This is native stream, creating a reader will not execute any JS code.
   RefPtr<ReadableStreamDefaultReader> reader =
-      AcquireReadableStreamDefaultReader(aCx, aStream, aRv);
+      AcquireReadableStreamDefaultReader(aStream, aRv);
   if (aRv.Failed()) {
     return;
   }

@@ -124,8 +124,8 @@ void VRManagerChild::InitSameProcess() {
 
   sVRManagerChildSingleton = new VRManagerChild();
   sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
-  sVRManagerChildSingleton->Open(sVRManagerParentSingleton->GetIPCChannel(),
-                                 CompositorThread(), mozilla::ipc::ChildSide);
+  sVRManagerChildSingleton->Open(sVRManagerParentSingleton, CompositorThread(),
+                                 mozilla::ipc::ChildSide);
 }
 
 /* static */
