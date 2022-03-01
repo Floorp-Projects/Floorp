@@ -247,12 +247,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
   tmp->Close();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
-                                  mSTSThread, mTransceivers, mReceiveStreams)
+                                  mSTSThread, mTransceivers, mReceiveStreams,
+                                  mKungFuDeathGrip)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPCObserver, mWindow, mCertificate,
-                                    mSTSThread, mTransceivers, mReceiveStreams)
+                                    mSTSThread, mTransceivers, mReceiveStreams,
+                                    mKungFuDeathGrip)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PeerConnectionImpl)
 
@@ -347,6 +349,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       connectStr(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(aGlobal, mWindow);
+  mKungFuDeathGrip = this;
   if (aGlobal) {
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
