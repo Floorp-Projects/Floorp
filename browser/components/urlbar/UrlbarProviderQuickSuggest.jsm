@@ -99,9 +99,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {string} The help URL for the Quick Suggest best match feature.
    */
   get bestMatchHelpUrl() {
-    return (
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "top-pick"
-    );
+    return this.helpUrl;
   }
 
   /**
