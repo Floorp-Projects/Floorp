@@ -12,7 +12,7 @@ add_task(async () => {
   const threads = [];
   const features = [];
 
-  Services.profiler.StartProfiler(entries, interval, features, threads);
+  await Services.profiler.StartProfiler(entries, interval, features, threads);
 
   await functionA();
 

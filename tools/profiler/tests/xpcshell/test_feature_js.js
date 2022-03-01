@@ -11,13 +11,15 @@ add_task(async () => {
   const threads = [];
   const features = ["js"];
 
-  Services.profiler.StartProfiler(entries, interval, features, threads);
+  await Services.profiler.StartProfiler(entries, interval, features, threads);
 
   // Call the following to get a nice stack in the profiler:
   // functionA -> functionB -> functionC -> captureAtLeastOneJsSample
   const sampleIndex = await functionA();
 
   const profile = await Services.profiler.getProfileDataAsync();
+  await Services.profiler.StopProfiler();
+
   const [thread] = profile.threads;
   const { samples } = thread;
 
