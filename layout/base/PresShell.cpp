@@ -11229,6 +11229,8 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
   return true;
 }
 
+void PresShell::ResetVisualViewportOffset() { mVisualViewportOffset.reset(); }
+
 void PresShell::ScrollToVisual(const nsPoint& aVisualViewportOffset,
                                FrameMetrics::ScrollOffsetUpdateType aUpdateType,
                                ScrollMode aMode) {
