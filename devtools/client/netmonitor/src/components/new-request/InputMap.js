@@ -8,9 +8,6 @@ const { Component, createRef } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const {
-  updateTextareaRows,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
 const { div, input, textarea, button } = dom;
 
 const CUSTOM_NEW_REQUEST_INPUT_NAME = L10N.getStr(
@@ -51,33 +48,6 @@ class InputMap extends Component {
       name: "",
       value: "",
     };
-
-    this.updateAllTextareaRows = this.updateAllTextareaRows.bind(this);
-  }
-
-  componentDidMount() {
-    if (this.props.resizeable) {
-      this.updateAllTextareaRows();
-      this.resizeObserver = new ResizeObserver(entries => {
-        this.updateAllTextareaRows();
-      });
-
-      this.resizeObserver.observe(this.listRef.current);
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-  }
-
-  updateAllTextareaRows() {
-    const valueTextareas =
-      this.listRef.current?.querySelectorAll("textarea") || [];
-    for (const valueTextarea of valueTextareas) {
-      updateTextareaRows(valueTextarea);
-    }
   }
 
   render() {
@@ -121,31 +91,45 @@ class InputMap extends Component {
             disabled: !!item.disabled,
             wrap: "off",
           }),
-          textarea({
-            className: "tabpanel-summary-input-name",
-            id: "http-custom-input-name",
-            name: `name-${index}`,
-            value: item.name,
-            disabled: !!item.disabled,
-            onChange: event => {
-              onUpdate(event);
-              this.props.resizeable && updateTextareaRows(event.target);
-            },
-            rows: 1,
-          }),
-          textarea({
-            className: "tabpanel-summary-input-value",
-            id: "http-custom-input-value",
-            name: `value-${index}`,
-            placeholder: "value",
-            disabled: !!item.disabled,
-            onChange: event => {
-              onUpdate(event);
-              this.props.resizeable && updateTextareaRows(event.target);
-            },
-            value: item.value,
-            rows: 1,
-          }),
+          div(
+            { className: "tabpanel-summary-input-name" },
+            div(
+              {
+                className: "auto-growing-textarea",
+                "data-replicated-value": item.name,
+              },
+              textarea({
+                id: "http-custom-input-name",
+                name: `name-${index}`,
+                value: item.name,
+                disabled: !!item.disabled,
+                onChange: event => {
+                  onUpdate(event);
+                },
+                rows: 1,
+              })
+            )
+          ),
+          div(
+            { className: "tabpanel-summary-input-value" },
+            div(
+              {
+                className: "auto-growing-textarea",
+                "data-replicated-value": item.value,
+              },
+              textarea({
+                id: "http-custom-input-value",
+                name: `value-${index}`,
+                placeholder: "value",
+                disabled: !!item.disabled,
+                onChange: event => {
+                  onUpdate(event);
+                },
+                value: item.value,
+                rows: 1,
+              })
+            )
+          ),
           !item.disabled &&
             onDelete &&
             button({
@@ -168,27 +152,45 @@ class InputMap extends Component {
             checked: true,
             type: "checkbox",
           }),
-          textarea({
-            className: "tabpanel-summary-input-name",
-            type: "text",
-            ref: "addInputName",
-            checked: true,
-            value: name,
-            rows: 1,
-            placeholder: CUSTOM_NEW_REQUEST_INPUT_NAME,
-            onChange: e => this.setState({ name: e.target.value }),
-            onKeyDown,
-          }),
-          textarea({
-            className: "tabpanel-summary-input-value",
-            type: "text",
-            ref: "addInputValue",
-            value: value,
-            onChange: e => this.setState({ value: e.target.value }),
-            rows: 1,
-            placeholder: CUSTOM_NEW_REQUEST_INPUT_VALUE,
-            onKeyDown,
-          })
+          div(
+            { className: "tabpanel-summary-input-name" },
+            div(
+              {
+                className: "auto-growing-textarea",
+                "data-replicated-value": name,
+              },
+              textarea({
+                id: "http-custom-input-name",
+                type: "text",
+                ref: "addInputName",
+                checked: true,
+                value: name,
+                rows: 1,
+                placeholder: CUSTOM_NEW_REQUEST_INPUT_NAME,
+                onChange: e => this.setState({ name: e.target.value }),
+                onKeyDown,
+              })
+            )
+          ),
+          div(
+            { className: "tabpanel-summary-input-value" },
+            div(
+              {
+                className: "auto-growing-textarea",
+                "data-replicated-value": value,
+              },
+              textarea({
+                id: "http-custom-input-value",
+                type: "text",
+                ref: "addInputValue",
+                value: value,
+                onChange: e => this.setState({ value: e.target.value }),
+                rows: 1,
+                placeholder: CUSTOM_NEW_REQUEST_INPUT_VALUE,
+                onKeyDown,
+              })
+            )
+          )
         )
     );
   }

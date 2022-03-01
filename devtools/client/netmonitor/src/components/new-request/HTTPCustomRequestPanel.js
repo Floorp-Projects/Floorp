@@ -23,7 +23,6 @@ const {
 const {
   getUrlQuery,
   parseQueryString,
-  updateTextareaRows,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const InputMap = createFactory(
   require("devtools/client/netmonitor/src/components/new-request/InputMap")
@@ -147,22 +146,6 @@ class HTTPCustomRequestPanel extends Component {
     this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
     this.getStateFromPref = this.getStateFromPref.bind(this);
   }
-
-  componentDidMount() {
-    updateTextareaRows(this.URLTextareaRef.current);
-    this.resizeObserver = new ResizeObserver(entries => {
-      updateTextareaRows(this.URLTextareaRef.current);
-    });
-
-    this.resizeObserver.observe(this.URLTextareaRef.current);
-  }
-
-  componentWillUnmount() {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-  }
-
   updateStateAndPref(nextState, cb) {
     this.setState(nextState, cb);
 
@@ -280,16 +263,13 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   handleClear() {
-    this.updateStateAndPref(
-      {
-        method: "",
-        url: "",
-        urlQueryParams: [],
-        headers: [],
-        requestPostData: "",
-      },
-      () => updateTextareaRows(this.URLTextareaRef.current)
-    );
+    this.updateStateAndPref({
+      method: "",
+      url: "",
+      urlQueryParams: [],
+      headers: [],
+      requestPostData: "",
+    });
   }
 
   render() {
@@ -342,20 +322,25 @@ class HTTPCustomRequestPanel extends Component {
               )
             )
           ),
-          textarea({
-            className: "http-custom-url-value",
-            id: "http-custom-url-value",
-            name: "url",
-            placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
-            ref: this.URLTextareaRef,
-            onChange: event => {
-              this.handleChangeURL(event);
-              updateTextareaRows(event.target);
+          div(
+            {
+              className: "auto-growing-textarea",
+              "data-replicated-value": url,
             },
-            onBlur: this.handleTextareaChange,
-            value: url,
-            rows: 1,
-          })
+            textarea({
+              className: "http-custom-url-value",
+              id: "http-custom-url-value",
+              name: "url",
+              placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
+              ref: this.URLTextareaRef,
+              onChange: event => {
+                this.handleChangeURL(event);
+              },
+              onBlur: this.handleTextareaChange,
+              value: url,
+              rows: 1,
+            })
+          )
         ),
         div(
           {
