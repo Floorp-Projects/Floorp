@@ -1562,9 +1562,16 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     screenPoint = mScreenRect.TopLeft();
     anchorRect = nsRect(screenPoint, nsSize(0, 0));
 
-    // add the margins on the popup
-    screenPoint.MoveBy(margin.left + offsetForContextMenu.x,
-                       margin.top + offsetForContextMenu.y);
+    // Right-align RTL context menus, and apply margin and offsets as per the
+    // platform conventions.
+    if (mIsContextMenu && IsDirectionRTL()) {
+      screenPoint.x -= mRect.Width();
+      screenPoint.MoveBy(-margin.right - offsetForContextMenu.x,
+                         margin.top + offsetForContextMenu.y);
+    } else {
+      screenPoint.MoveBy(margin.left + offsetForContextMenu.x,
+                         margin.top + offsetForContextMenu.y);
+    }
 
 #ifdef XP_MACOSX
     // OSX tooltips follow standard flip rule but other popups flip horizontally
