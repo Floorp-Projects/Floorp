@@ -41,6 +41,11 @@
 
 #include <algorithm>
 
+// Work around conflicting define in rpcndr.h
+#if defined(small)
+#  undef small
+#endif  // defined(small)
+
 namespace mozilla {
 
 using namespace dom;

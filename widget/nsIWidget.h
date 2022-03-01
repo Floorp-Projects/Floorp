@@ -1710,10 +1710,11 @@ class nsIWidget : public nsISupports {
   // Get rectangle of the screen where the window is placed.
   // It's used to detect popup overflow under Wayland because
   // Screenmanager does not work under it.
-  virtual nsRect GetPreferredPopupRect() {
+  virtual LayoutDeviceIntRect GetPreferredPopupRect() const {
     NS_WARNING("GetPreferredPopupRect implemented only for wayland");
-    return nsRect(0, 0, 0, 0);
+    return LayoutDeviceIntRect();
   }
+
   virtual void FlushPreferredPopupRect() {
     NS_WARNING("FlushPreferredPopupRect implemented only for wayland");
     return;
