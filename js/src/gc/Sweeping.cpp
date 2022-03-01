@@ -628,6 +628,12 @@ bool Compartment::findSweepGroupEdges() {
 }
 
 bool Zone::findSweepGroupEdges(Zone* atomsZone) {
+#ifdef DEBUG
+  if (FinalizationObservers* observers = finalizationObservers()) {
+    observers->checkTables();
+  }
+#endif
+
   // Any zone may have a pointer to an atom in the atoms zone, and these aren't
   // in the cross compartment map.
   if (atomsZone->wasGCStarted() && !addSweepGroupEdgeTo(atomsZone)) {
