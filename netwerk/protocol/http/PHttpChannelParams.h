@@ -187,6 +187,7 @@ struct ParamTraits<mozilla::net::nsHttpRequestHead> {
   typedef mozilla::net::nsHttpRequestHead paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
+    aParam.Enter();
     WriteParam(aMsg, aParam.mHeaders);
     WriteParam(aMsg, aParam.mMethod);
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
@@ -195,12 +196,14 @@ struct ParamTraits<mozilla::net::nsHttpRequestHead> {
     WriteParam(aMsg, aParam.mOrigin);
     WriteParam(aMsg, static_cast<uint8_t>(aParam.mParsedMethod));
     WriteParam(aMsg, aParam.mHTTPS);
+    aParam.Exit();
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     uint32_t version;
     uint8_t method;
+    aResult->Enter();
     if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
         !ReadParam(aMsg, aIter, &aResult->mMethod) ||
         !ReadParam(aMsg, aIter, &version) ||
@@ -209,12 +212,14 @@ struct ParamTraits<mozilla::net::nsHttpRequestHead> {
         !ReadParam(aMsg, aIter, &aResult->mOrigin) ||
         !ReadParam(aMsg, aIter, &method) ||
         !ReadParam(aMsg, aIter, &aResult->mHTTPS)) {
+      aResult->Exit();
       return false;
     }
 
     aResult->mVersion = static_cast<mozilla::net::HttpVersion>(version);
     aResult->mParsedMethod =
         static_cast<mozilla::net::nsHttpRequestHead::ParsedMethodType>(method);
+    aResult->Exit();
     return true;
   }
 };
@@ -226,6 +231,7 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
   typedef mozilla::net::nsHttpResponseHead paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
+    aParam.Enter();
     WriteParam(aMsg, aParam.mHeaders);
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
     WriteParam(aMsg, aParam.mStatus);
@@ -244,11 +250,13 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
     WriteParam(aMsg, aParam.mCacheControlMaxAgeSet);
     WriteParam(aMsg, aParam.mCacheControlMaxAge);
     WriteParam(aMsg, aParam.mPragmaNoCache);
+    aParam.Exit();
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     uint32_t version;
+    aResult->Enter();
     if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
         !ReadParam(aMsg, aIter, &version) ||
         !ReadParam(aMsg, aIter, &aResult->mStatus) ||
@@ -267,10 +275,13 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
         !ReadParam(aMsg, aIter, &aResult->mCacheControlStaleWhileRevalidate) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAgeSet) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAge) ||
-        !ReadParam(aMsg, aIter, &aResult->mPragmaNoCache))
+        !ReadParam(aMsg, aIter, &aResult->mPragmaNoCache)) {
+      aResult->Exit();
       return false;
+    }
 
     aResult->mVersion = static_cast<mozilla::net::HttpVersion>(version);
+    aResult->Exit();
     return true;
   }
 };
