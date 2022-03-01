@@ -113,7 +113,9 @@ impl<Request, Response> Drop for Proxy<Request, Response> {
         // Must drop Sender before waking the connection, otherwise
         // the wake may be processed before Sender is closed.
         unsafe { ManuallyDrop::drop(&mut self.tx) }
-        self.wake_connection();
+        if self.handle.is_some() {
+            self.wake_connection()
+        }
     }
 }
 
@@ -178,12 +180,6 @@ pub(crate) fn make_client<C: Client>(
         in_flight: VecDeque::with_capacity(32),
     };
 
-    // Sender is Send, but !Sync, so it's not safe to move between threads
-    // without cloning it first.  Force a clone here, since we use Proxy in
-    // native code and it's possible to move it between threads without Rust's
-    // type system noticing.
-    #[allow(clippy::redundant_clone)]
-    let tx = tx.clone();
     let proxy = Proxy {
         handle: None,
         tx: ManuallyDrop::new(tx),

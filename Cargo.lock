@@ -266,8 +266,9 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc#8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
 dependencies = [
+ "arrayvec 0.7.2",
  "ashmem",
  "audio_thread_priority",
  "bincode",
@@ -291,7 +292,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc#8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -302,7 +303,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc#8b5c7db0f0af54f25a2ee7f7aa55c2a0689c97fc"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
