@@ -29,10 +29,7 @@ const SUGGESTIONS = [1, 2, 3].map(i => ({
 
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.bestMatch.enabled", true],
-      ["browser.urlbar.bestMatch.blockingEnabled", true],
-    ],
+    set: [["browser.urlbar.bestMatch.enabled", true]],
   });
 
   await PlacesUtils.history.clear();
@@ -47,31 +44,15 @@ add_task(async function init() {
 
 // Picks the block button with the keyboard.
 add_task(async function basicBlock_keyboard() {
-  await doBasicBlockTest(() => {
-    // Arrow down twice to select the block button: once to select the main
-    // part of the best match row, once to select the block button.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
-    EventUtils.synthesizeKey("KEY_Enter");
-  });
+  await doBasicBlockTest(true);
 });
 
 // Picks the block button with the mouse.
 add_task(async function basicBlock_mouse() {
-  await doBasicBlockTest(blockButton => {
-    EventUtils.synthesizeMouseAtCenter(blockButton, {});
-  });
+  await doBasicBlockTest(false);
 });
 
-// Uses the key shortcut to block a best match.
-add_task(async function basicBlock_keyShortcut() {
-  await doBasicBlockTest(() => {
-    // Arrow down once to select the best match row.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
-  });
-});
-
-async function doBasicBlockTest(doBlock) {
+async function doBasicBlockTest(useKeyboard) {
   // Do a search that triggers the best match.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -89,9 +70,18 @@ async function doBasicBlockTest(doBlock) {
     isBestMatch: true,
   });
 
-  // Block the suggestion.
-  let blockButton = details.element.row._buttons.get("block");
-  doBlock(blockButton);
+  // Pick the block button.
+  if (useKeyboard) {
+    // Arrow down twice to select the block button: once to select the main part
+    // of the best match row, once to select the block button.
+    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
+    EventUtils.synthesizeKey("KEY_Enter");
+  } else {
+    EventUtils.synthesizeMouseAtCenter(
+      details.element.row._buttons.get("block"),
+      {}
+    );
+  }
 
   // The row should have been removed.
   Assert.ok(
@@ -153,64 +143,4 @@ add_task(async function blockMultiple() {
 
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
-});
-
-// Tests with blocking disabled.
-add_task(async function blockingDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.blockingEnabled", false]],
-  });
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: SUGGESTIONS[0].keywords[0],
-  });
-
-  let expectedResultCount = 2;
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    expectedResultCount,
-    "Two rows are present after searching (heuristic + best match)"
-  );
-
-  // `assertIsQuickSuggest()` asserts that the block button is not present when
-  // `bestMatch.blockingEnabled` is false, but check it again here since it's
-  // central to this test.
-  let details = await QuickSuggestTestUtils.assertIsQuickSuggest({
-    window,
-    originalUrl: SUGGESTIONS[0].url,
-    isBestMatch: true,
-  });
-  Assert.ok(
-    !details.element.row._buttons.get("block"),
-    "Block button is not present"
-  );
-
-  // Arrow down once to select the best match row and then press the key
-  // shortcut to block.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
-
-  // Nothing should happen.
-  Assert.ok(
-    UrlbarTestUtils.isPopupOpen(window),
-    "View remains open after key shortcut"
-  );
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    expectedResultCount,
-    "Same number of results after key shortcut"
-  );
-  await QuickSuggestTestUtils.assertIsQuickSuggest({
-    window,
-    originalUrl: SUGGESTIONS[0].url,
-    isBestMatch: true,
-  });
-  Assert.ok(
-    !(await UrlbarProviderQuickSuggest.isSuggestionBlocked(SUGGESTIONS[0].url)),
-    "Suggestion is not blocked"
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
