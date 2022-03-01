@@ -81,10 +81,6 @@ class RefreshTimerVsyncDispatcher final {
 
   void MoveToDisplay(gfx::VsyncSource::Display* aDisplay);
 
-  // Set chrome process's RefreshTimer to this dispatcher.
-  // This function can be called from any thread.
-  void SetParentRefreshTimer(VsyncObserver* aVsyncObserver);
-
   // Add or remove the content process' RefreshTimer to this dispatcher. This
   // will be a no-op for AddChildRefreshTimer() if the observer is already
   // registered.
@@ -102,7 +98,6 @@ class RefreshTimerVsyncDispatcher final {
   // hold a RefPtr back without causing a cyclic dependency.
   gfx::VsyncSource::Display* mDisplay;
   Mutex mRefreshTimersLock;
-  RefPtr<VsyncObserver> mParentRefreshTimer;
   nsTArray<RefPtr<VsyncObserver>> mChildRefreshTimers;
 };
 

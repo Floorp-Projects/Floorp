@@ -134,22 +134,6 @@ void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   for (size_t i = 0; i < mChildRefreshTimers.Length(); i++) {
     mChildRefreshTimers[i]->NotifyVsync(aVsync);
   }
-
-  if (mParentRefreshTimer) {
-    mParentRefreshTimer->NotifyVsync(aVsync);
-  }
-}
-
-void RefreshTimerVsyncDispatcher::SetParentRefreshTimer(
-    VsyncObserver* aVsyncObserver) {
-  MOZ_ASSERT(NS_IsMainThread());
-  {  // lock scope because UpdateVsyncStatus runs on main thread and will
-     // deadlock
-    MutexAutoLock lock(mRefreshTimersLock);
-    mParentRefreshTimer = aVsyncObserver;
-  }
-
-  UpdateVsyncStatus();
 }
 
 void RefreshTimerVsyncDispatcher::AddChildRefreshTimer(
@@ -190,7 +174,7 @@ void RefreshTimerVsyncDispatcher::UpdateVsyncStatus() {
 bool RefreshTimerVsyncDispatcher::NeedsVsync() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mRefreshTimersLock);
-  return (mParentRefreshTimer != nullptr) || !mChildRefreshTimers.IsEmpty();
+  return !mChildRefreshTimers.IsEmpty();
 }
 
 }  // namespace mozilla
