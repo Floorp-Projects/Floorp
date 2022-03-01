@@ -132,7 +132,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_new"
-            app:tint="?neutral" />
+            app:tint="?iconOnColor" />
 
         <TextView
             android:id="@+id/bottom_bar_text"
@@ -144,7 +144,7 @@
             android:gravity="center_vertical"
             android:singleLine="true"
             android:text="@string/create_collection_add_new_collection"
-            android:textColor="?neutral"
+            android:textColor="?textActionPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -160,7 +160,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:text="@string/create_collection_save"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
-            android:textColor="?neutral"
+            android:textColor="?textActionPrimary"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

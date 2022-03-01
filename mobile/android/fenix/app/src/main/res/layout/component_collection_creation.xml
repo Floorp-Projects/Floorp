@@ -157,7 +157,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_close"
-            app:tint="?neutral" />
+            app:tint="?iconOnColor" />
 
         <TextView
             android:id="@+id/bottom_bar_text"
@@ -166,7 +166,7 @@
             android:fontFamily="@font/metropolis_semibold"
             android:gravity="center_vertical"
             android:text="@string/create_collection_save_to_collection_empty"
-            android:textColor="?neutral"
+            android:textColor="?textActionPrimary"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/save_button"
@@ -180,7 +180,7 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
             android:text="@string/create_collection_save"
-            android:textColor="@color/photonWhite"
+            android:textColor="?textActionPrimary"
             app:fontFamily="@font/metropolis_medium"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
