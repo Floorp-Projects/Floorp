@@ -764,6 +764,7 @@ mochitest-media:
                 default: true
         extra-options:
             - --setpref=webgl.out-of-process=false
+            - --setpref=security.sandbox.content.headless=false
     tier:
         by-test-platform:
             .*ccov.*: 2
@@ -910,6 +911,7 @@ mochitest-webgl1-core:
         mochitest-flavor: plain
         extra-options:
             - --setpref=webgl.out-of-process=false
+            - --setpref=security.sandbox.content.headless=false
 
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
@@ -984,6 +986,7 @@ mochitest-webgl1-ext:
         chunked: true
         extra-options:
             - --setpref=webgl.out-of-process=false
+            - --setpref=security.sandbox.content.headless=false
 
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
@@ -1125,6 +1128,7 @@ mochitest-webgl2-ext:
         chunked: true
         extra-options:
             - --setpref=webgl.out-of-process=false
+            - --setpref=security.sandbox.content.headless=false
 
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
@@ -1146,6 +1150,7 @@ mochitest-webgl2-deqp:
         chunked: true
         extra-options:
             - --setpref=webgl.out-of-process=false
+            - --setpref=security.sandbox.content.headless=false
 
 mochitest-webgpu:
     description: "Mochitest webgpu run"
