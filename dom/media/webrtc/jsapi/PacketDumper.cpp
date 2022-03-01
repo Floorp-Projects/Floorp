@@ -18,9 +18,7 @@ RefPtr<PacketDumper> PacketDumper::GetPacketDumper(
     return pcw.impl()->GetPacketDumper();
   }
 
-  // Maybe return a new PacketDumper that is not hooked to anything?
-  MOZ_ASSERT(false, "No PC for provided handle");
-  return nullptr;
+  return new PacketDumper("");
 }
 
 PacketDumper::PacketDumper(const std::string& aPcHandle)
