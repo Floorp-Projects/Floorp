@@ -185,6 +185,7 @@ void FlushAllChildData(
     promises.EmplaceBack(socketParent->SendFlushFOGData());
   }
 
+#if !defined(XP_WIN) || !defined(_ARM64_)
   {
     RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
         gmp::GeckoMediaPluginServiceParent::GetSingleton());
@@ -194,6 +195,7 @@ void FlushAllChildData(
     // GeckoMediaPluginServiceParent code do it for us.
     gmps->SendFlushFOGData(promises);
   }
+#endif
 
   if (RefPtr<UtilityProcessManager> utilityManager =
           UtilityProcessManager::GetSingleton()) {
