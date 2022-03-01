@@ -44,7 +44,6 @@
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
 
-using std::move;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -881,7 +880,7 @@ void MediaTrackGraphImpl::DeviceChanged() {
   // the graph, with the new info.
   RefPtr<MediaTrackGraphImpl> self = this;
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "MaxChannelCountUpdateOnBgThread", [self{move(self)}]() {
+      "MaxChannelCountUpdateOnBgThread", [self{std::move(self)}]() {
         uint32_t maxChannelCount = CubebUtils::MaxNumberOfChannels();
         self->Dispatch(NS_NewRunnableFunction(
             "MaxChannelCountUpdateToMainThread",
@@ -1015,7 +1014,7 @@ void MediaTrackGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
         continue;
       }
       if (keptUpdateCount != i) {
-        mTrackUpdates[keptUpdateCount] = move(mTrackUpdates[i]);
+        mTrackUpdates[keptUpdateCount] = std::move(mTrackUpdates[i]);
         MOZ_ASSERT(!mTrackUpdates[i].mTrack);
       }
       ++keptUpdateCount;
@@ -1038,7 +1037,7 @@ void MediaTrackGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
     }
     mNextMainThreadGraphTime = mProcessedTime;
     if (!mPendingUpdateRunnables.IsEmpty()) {
-      mUpdateRunnables.AppendElements(move(mPendingUpdateRunnables));
+      mUpdateRunnables.AppendElements(std::move(mPendingUpdateRunnables));
     }
   }
 
@@ -1107,7 +1106,7 @@ void MediaTrackGraphImpl::RunMessageAfterProcessing(
 
   // Only one block is used for messages from the graph thread.
   MOZ_ASSERT(mFrontMessageQueue.Length() == 1);
-  mFrontMessageQueue[0].mMessages.AppendElement(move(aMessage));
+  mFrontMessageQueue[0].mMessages.AppendElement(std::move(aMessage));
 }
 
 void MediaTrackGraphImpl::RunMessagesInQueue() {
@@ -1404,7 +1403,7 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
   }
 
   if (Switching()) {
-    RefPtr<GraphDriver> nextDriver = move(mNextDriver);
+    RefPtr<GraphDriver> nextDriver = std::move(mNextDriver);
     return IterationResult::CreateSwitchDriver(
         nextDriver, NewRunnableMethod<StoreRefPtrPassByPtr<GraphDriver>>(
                         "MediaTrackGraphImpl::SetCurrentDriver", this,
@@ -1768,7 +1767,8 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       // held.
       for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
         MessageBlock& mb = mBackMessageQueue[i];
-        controlMessagesToRunDuringShutdown.AppendElements(move(mb.mMessages));
+        controlMessagesToRunDuringShutdown.AppendElements(
+            std::move(mb.mMessages));
       }
       mBackMessageQueue.Clear();
       MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
@@ -1865,12 +1865,12 @@ void MediaTrackGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage) {
     return;
   }
 
-  mCurrentTaskMessageQueue.AppendElement(move(aMessage));
+  mCurrentTaskMessageQueue.AppendElement(std::move(aMessage));
   EnsureRunInStableState();
 }
 
 void MediaTrackGraphImpl::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
-  mMainThread->Dispatch(move(aRunnable));
+  mMainThread->Dispatch(std::move(aRunnable));
 }
 
 MediaTrack::MediaTrack(TrackRate aSampleRate, MediaSegment::Type aType,
@@ -2173,7 +2173,7 @@ void MediaTrack::Resume() {
 void MediaTrack::AddListenerImpl(
     already_AddRefed<MediaTrackListener> aListener) {
   RefPtr<MediaTrackListener> l(aListener);
-  mTrackListeners.AppendElement(move(l));
+  mTrackListeners.AppendElement(std::move(l));
 
   PrincipalHandle lastPrincipalHandle = mSegment->GetLastPrincipalHandle();
   mTrackListeners.LastElement()->NotifyPrincipalHandleChanged(
@@ -2240,7 +2240,7 @@ RefPtr<GenericPromise> MediaTrack::RemoveListener(
     message->mRemovedPromise.Reject(NS_ERROR_FAILURE, __func__);
     return p;
   }
-  GraphImpl()->AppendMessage(move(message));
+  GraphImpl()->AppendMessage(std::move(message));
   return p;
 }
 
@@ -3300,7 +3300,7 @@ void MediaTrackGraphImpl::CollectSizesForMemoryReport(
     NS_IMETHOD Run() override {
       TRACE("MTG::FinishCollectReports ControlMessage");
       MediaTrackGraphImpl::FinishCollectReports(mHandleReport, mHandlerData,
-                                                move(mAudioTrackSizes));
+                                                std::move(mAudioTrackSizes));
       return NS_OK;
     }
 
@@ -3316,8 +3316,8 @@ void MediaTrackGraphImpl::CollectSizesForMemoryReport(
     RefPtr<nsISupports> mHandlerData;
   };
 
-  RefPtr<FinishCollectRunnable> runnable =
-      new FinishCollectRunnable(move(aHandleReport), move(aHandlerData));
+  RefPtr<FinishCollectRunnable> runnable = new FinishCollectRunnable(
+      std::move(aHandleReport), std::move(aHandlerData));
 
   auto audioTrackSizes = &runnable->mAudioTrackSizes;
 
@@ -3454,7 +3454,7 @@ auto MediaTrackGraph::NotifyWhenDeviceStarted(MediaTrack* aTrack)
   MOZ_ASSERT(NS_IsMainThread());
   MozPromiseHolder<GraphStartedPromise> h;
   RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
-  aTrack->GraphImpl()->NotifyWhenGraphStarted(aTrack, move(h));
+  aTrack->GraphImpl()->NotifyWhenGraphStarted(aTrack, std::move(h));
   return p;
 }
 
@@ -3470,8 +3470,8 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
         RefPtr<MediaTrack> aTrack,
         MozPromiseHolder<GraphStartedPromise>&& aHolder)
         : ControlMessage(nullptr),
-          mMediaTrack(move(aTrack)),
-          mHolder(move(aHolder)) {}
+          mMediaTrack(std::move(aTrack)),
+          mHolder(std::move(aHolder)) {}
     void Run() override {
       TRACE("MTG::GraphStartedNotificationControlMessage ControlMessage");
       // This runs on the graph thread, so when this runs, and the current
@@ -3485,7 +3485,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",
-            [holder = move(mHolder)]() mutable {
+            [holder = std::move(mHolder)]() mutable {
               holder.Resolve(true, __func__);
             }));
       } else {
@@ -3494,8 +3494,8 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
                 StoreCopyPassByRRef<RefPtr<MediaTrack>>,
                 StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>>(
                 "MediaTrackGraphImpl::NotifyWhenGraphStarted", graphImpl,
-                &MediaTrackGraphImpl::NotifyWhenGraphStarted, move(mMediaTrack),
-                move(mHolder)));
+                &MediaTrackGraphImpl::NotifyWhenGraphStarted,
+                std::move(mMediaTrack), std::move(mHolder)));
       }
     }
     void RunDuringShutdown() override {
@@ -3510,7 +3510,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
 
   MediaTrackGraphImpl* graph = aTrack->GraphImpl();
   graph->AppendMessage(MakeUnique<GraphStartedNotificationControlMessage>(
-      move(aTrack), move(aHolder)));
+      std::move(aTrack), std::move(aHolder)));
 }
 
 class AudioContextOperationControlMessage : public ControlMessage {
@@ -3523,9 +3523,9 @@ class AudioContextOperationControlMessage : public ControlMessage {
       AudioContextOperation aOperation,
       MozPromiseHolder<AudioContextOperationPromise>&& aHolder)
       : ControlMessage(aDestinationTrack),
-        mTracks(move(aTracks)),
+        mTracks(std::move(aTracks)),
         mAudioContextOperation(aOperation),
-        mHolder(move(aHolder)) {}
+        mHolder(std::move(aHolder)) {}
   void Run() override {
     TRACE_COMMENT("MTG::ApplyAudioContextOperationImpl ControlMessage",
                   kAudioContextOptionsStrings[static_cast<uint8_t>(
@@ -3578,7 +3578,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
       continue;
     }
     if (shrinking) {  // Fill-in gaps in the array.
-      *moveDest = move(op);
+      *moveDest = std::move(op);
     }
     ++moveDest;
   }
@@ -3591,7 +3591,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
   // Resolve after main thread state is up to date with completed processing.
   DispatchToMainThreadStableState(NS_NewRunnableFunction(
       "MediaTrackGraphImpl::ApplyAudioContextOperationImpl",
-      [holder = move(aMessage->mHolder), state]() mutable {
+      [holder = std::move(aMessage->mHolder), state]() mutable {
         holder.Resolve(state, __func__);
       }));
 }
@@ -3599,8 +3599,8 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
 MediaTrackGraphImpl::PendingResumeOperation::PendingResumeOperation(
     AudioContextOperationControlMessage* aMessage)
     : mDestinationTrack(aMessage->GetTrack()),
-      mTracks(move(aMessage->mTracks)),
-      mHolder(move(aMessage->mHolder)) {
+      mTracks(std::move(aMessage->mTracks)),
+      mHolder(std::move(aMessage->mHolder)) {
   MOZ_ASSERT(aMessage->mAudioContextOperation == AudioContextOperation::Resume);
 }
 
@@ -3613,7 +3613,7 @@ void MediaTrackGraphImpl::PendingResumeOperation::Apply(
   // The graph is provided through the parameter so that it is available even
   // when the track is destroyed.
   aGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(
-      "PendingResumeOperation::Apply", [holder = move(mHolder)]() mutable {
+      "PendingResumeOperation::Apply", [holder = std::move(mHolder)]() mutable {
         holder.Resolve(AudioContextState::Running, __func__);
       }));
 }
@@ -3638,7 +3638,7 @@ auto MediaTrackGraph::ApplyAudioContextOperation(
   RefPtr<AudioContextOperationPromise> p = holder.Ensure(__func__);
   MediaTrackGraphImpl* graphImpl = static_cast<MediaTrackGraphImpl*>(this);
   graphImpl->AppendMessage(MakeUnique<AudioContextOperationControlMessage>(
-      aDestinationTrack, move(aTracks), aOperation, move(holder)));
+      aDestinationTrack, std::move(aTracks), aOperation, std::move(holder)));
   return p;
 }
 
@@ -3834,7 +3834,7 @@ void MediaTrackGraph::DispatchToMainThreadStableState(
     already_AddRefed<nsIRunnable> aRunnable) {
   AssertOnGraphThreadOrNotRunning();
   static_cast<MediaTrackGraphImpl*>(this)
-      ->mPendingUpdateRunnables.AppendElement(move(aRunnable));
+      ->mPendingUpdateRunnables.AppendElement(std::move(aRunnable));
 }
 
 Watchable<mozilla::GraphTime>& MediaTrackGraphImpl::CurrentTime() {
