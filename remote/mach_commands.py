@@ -585,6 +585,13 @@ def create_parser_puppeteer():
     description="Run Puppeteer unit tests.",
     parser=create_parser_puppeteer,
 )
+@CommandArgument(
+    "--no-install",
+    dest="install",
+    action="store_false",
+    default=True,
+    help="Do not install the Puppeteer package",
+)
 def puppeteer_test(
     command_context,
     binary=None,
@@ -594,6 +601,7 @@ def puppeteer_test(
     headless=False,
     extra_prefs=None,
     extra_options=None,
+    install=False,
     verbosity=0,
     tests=None,
     product="firefox",
@@ -648,7 +656,8 @@ def puppeteer_test(
     if verbosity > 2:
         prefs["remote.log.truncate"] = False
 
-    install_puppeteer(command_context, product, ci)
+    if install:
+        install_puppeteer(command_context, product, ci)
 
     params = {
         "binary": binary,
