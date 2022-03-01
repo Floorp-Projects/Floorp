@@ -509,7 +509,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         MOZ_ASSERT(NS_IsMainThread());
         sVsyncPriorityEnabled = mozilla::BrowserTabsRemoteAutostart();
 
-        mObserver->NotifyParentProcessVsync();
+        mObserver->NotifyVsyncOnMainThread();
         return NS_OK;
       }
 
@@ -540,16 +540,25 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       }
 
       if (XRE_IsContentProcess()) {
-        NotifyParentProcessVsync();
+        // In the content process, NotifyVsync is called by VsyncMainChild on
+        // the main thread. No need to use a runnable, just call
+        // NotifyVsyncOnMainThread() directly.
+        NotifyVsyncOnMainThread();
         return true;
       }
 
+      // In the parent process, NotifyVsync is called on the vsync thread, which
+      // on most platforms is different from the main thread, so we need to
+      // dispatch a runnable for running NotifyVsyncOnMainThread on the main
+      // thread.
+      // TODO: On Linux Wayland, the vsync thread is currently the main thread,
+      // and yet we still dispatch the runnable. Do we need to?
       nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
       NS_DispatchToMainThread(vsyncEvent);
       return true;
     }
 
-    void NotifyParentProcessVsync() {
+    void NotifyVsyncOnMainThread() {
       // IMPORTANT: All paths through this method MUST hold a strong ref on
       // |this| for the duration of the TickRefreshDriver callback.
       MOZ_ASSERT(NS_IsMainThread());
