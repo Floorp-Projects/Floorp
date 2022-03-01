@@ -501,9 +501,8 @@ class AdjustedTargetForShadow {
     int32_t blurRadius = state.ShadowBlurRadius();
     bounds.Inflate(blurRadius);
     bounds.RoundOut();
-    bounds.ToIntRect(&mTempRect);
-
-    if (!mFinalTarget->CanCreateSimilarDrawTarget(mTempRect.Size(),
+    if (!bounds.ToIntRect(&mTempRect) ||
+        !mFinalTarget->CanCreateSimilarDrawTarget(mTempRect.Size(),
                                                   SurfaceFormat::B8G8R8A8)) {
       mTarget = mFinalTarget;
       mCtx = nullptr;
@@ -595,7 +594,7 @@ class AdjustedTarget {
       bounds = bounds.Intersect(*aBounds);
     }
     gfx::Rect boundsAfterFilter = BoundsAfterFilter(bounds, aCtx);
-    if (!aCtx->IsTargetValid()) {
+    if (!aCtx->IsTargetValid() || !boundsAfterFilter.IsFinite()) {
       return;
     }
 
