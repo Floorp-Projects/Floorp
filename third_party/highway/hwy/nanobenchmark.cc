@@ -37,7 +37,7 @@
 #include <windows.h>
 #endif
 
-#if defined(__MACH__)
+#if defined(__APPLE__)
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #endif
@@ -148,7 +148,7 @@ inline Ticks Start() {
   LARGE_INTEGER counter;
   (void)QueryPerformanceCounter(&counter);
   t = counter.QuadPart;
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
   t = mach_absolute_time();
 #elif defined(__HAIKU__)
   t = system_time_nsecs();  // since boot
@@ -405,7 +405,7 @@ double NominalClockRate() {
 
 }  // namespace
 
-double InvariantTicksPerSecond() {
+HWY_DLLEXPORT double InvariantTicksPerSecond() {
 #if HWY_ARCH_PPC && defined(__GLIBC__)
   return double(__ppc_get_timebase_freq());
 #elif HWY_ARCH_X86
@@ -415,7 +415,7 @@ double InvariantTicksPerSecond() {
   LARGE_INTEGER freq;
   (void)QueryPerformanceFrequency(&freq);
   return double(freq.QuadPart);
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
   // https://developer.apple.com/library/mac/qa/qa1398/_index.html
   mach_timebase_info_data_t timebase;
   (void)mach_timebase_info(&timebase);
@@ -426,12 +426,12 @@ double InvariantTicksPerSecond() {
 #endif
 }
 
-double Now() {
+HWY_DLLEXPORT double Now() {
   static const double mul = 1.0 / InvariantTicksPerSecond();
   return static_cast<double>(timer::Start()) * mul;
 }
 
-uint64_t TimerResolution() {
+HWY_DLLEXPORT uint64_t TimerResolution() {
   // Nested loop avoids exceeding stack/L1 capacity.
   timer::Ticks repetitions[Params::kTimerSamples];
   for (size_t rep = 0; rep < Params::kTimerSamples; ++rep) {
@@ -656,10 +656,11 @@ timer::Ticks Overhead(const uint8_t* arg, const InputVec* inputs,
 
 }  // namespace
 
-int Unpredictable1() { return timer::Start() != ~0ULL; }
+HWY_DLLEXPORT int Unpredictable1() { return timer::Start() != ~0ULL; }
 
-size_t Measure(const Func func, const uint8_t* arg, const FuncInput* inputs,
-               const size_t num_inputs, Result* results, const Params& p) {
+HWY_DLLEXPORT size_t Measure(const Func func, const uint8_t* arg,
+                             const FuncInput* inputs, const size_t num_inputs,
+                             Result* results, const Params& p) {
   NANOBENCHMARK_CHECK(num_inputs != 0);
 
 #if HWY_ARCH_X86

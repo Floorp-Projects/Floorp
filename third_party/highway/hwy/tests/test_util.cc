@@ -30,9 +30,6 @@ bool BytesEqual(const void* p1, const void* p2, const size_t size,
   const uint8_t* bytes2 = reinterpret_cast<const uint8_t*>(p2);
   for (size_t i = 0; i < size; ++i) {
     if (bytes1[i] != bytes2[i]) {
-      fprintf(stderr, "Mismatch at byte %" PRIu64 " of %" PRIu64 ": %d != %d\n",
-              static_cast<uint64_t>(i), static_cast<uint64_t>(size), bytes1[i],
-              bytes2[i]);
       if (pos != nullptr) {
         *pos = i;
       }
