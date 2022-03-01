@@ -1585,7 +1585,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
   if (IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
-      nsRect prefRect = widget->GetPreferredPopupRect();
+      nsRect prefRect = LayoutDeviceIntRect::ToAppUnits(
+          widget->GetPreferredPopupRect(), presContext->AppUnitsPerDevPixel());
       if (prefRect.width > 0 && prefRect.height > 0) {
         // shrink the the popup down if it is larger than the prefered size.
         if (mRect.width > prefRect.width) {
