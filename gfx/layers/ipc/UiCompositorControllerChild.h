@@ -32,11 +32,10 @@ class UiCompositorControllerChild final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerChild)
 
   static RefPtr<UiCompositorControllerChild> CreateForSameProcess(
-      const LayersId& aRootLayerTreeId, nsBaseWidget* aWidget);
+      const LayersId& aRootLayerTreeId);
   static RefPtr<UiCompositorControllerChild> CreateForGPUProcess(
       const uint64_t& aProcessToken,
-      Endpoint<PUiCompositorControllerChild>&& aEndpoint,
-      nsBaseWidget* aWidget);
+      Endpoint<PUiCompositorControllerChild>&& aEndpoint);
 
   bool Pause();
   bool Resume();
@@ -52,6 +51,7 @@ class UiCompositorControllerChild final
 
   void Destroy();
 
+  void SetBaseWidget(nsBaseWidget* aWidget);
   bool DeallocPixelBuffer(Shmem& aMem);
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -88,8 +88,7 @@ class UiCompositorControllerChild final
                                            bool aNeedsYFlip);
 
  private:
-  explicit UiCompositorControllerChild(const uint64_t& aProcessToken,
-                                       nsBaseWidget* aWidget);
+  explicit UiCompositorControllerChild(const uint64_t& aProcessToken);
   virtual ~UiCompositorControllerChild();
   void OpenForSameProcess();
   void OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint);
