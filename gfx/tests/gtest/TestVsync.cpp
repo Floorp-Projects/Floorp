@@ -147,13 +147,13 @@ TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications) {
   ASSERT_TRUE(vsyncDispatcher != nullptr);
 
   RefPtr<TestVsyncObserver> testVsyncObserver = new TestVsyncObserver();
-  vsyncDispatcher->AddChildRefreshTimer(testVsyncObserver);
+  vsyncDispatcher->AddVsyncObserver(testVsyncObserver);
   ASSERT_TRUE(globalDisplay.IsVsyncEnabled());
 
   testVsyncObserver->WaitForVsyncNotification();
   ASSERT_TRUE(testVsyncObserver->DidGetVsyncNotification());
 
-  vsyncDispatcher->RemoveChildRefreshTimer(testVsyncObserver);
+  vsyncDispatcher->RemoveVsyncObserver(testVsyncObserver);
   testVsyncObserver->ResetVsyncNotification();
   testVsyncObserver->WaitForVsyncNotification();
   ASSERT_FALSE(testVsyncObserver->DidGetVsyncNotification());
