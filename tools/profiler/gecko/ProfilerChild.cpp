@@ -156,7 +156,7 @@ void ProfilerChild::ResetChunkManager() {
 }
 
 mozilla::ipc::IPCResult ProfilerChild::RecvStart(
-    const ProfilerInitParams& params) {
+    const ProfilerInitParams& params, StartResolver&& aResolve) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
@@ -168,11 +168,12 @@ mozilla::ipc::IPCResult ProfilerChild::RecvStart(
 
   SetupChunkManager();
 
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
-    const ProfilerInitParams& params) {
+    const ProfilerInitParams& params, EnsureStartedResolver&& aResolve) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
@@ -185,32 +186,40 @@ mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
 
   SetupChunkManager();
 
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvStop() {
+mozilla::ipc::IPCResult ProfilerChild::RecvStop(StopResolver&& aResolve) {
   ResetChunkManager();
   profiler_stop();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvPause() {
+mozilla::ipc::IPCResult ProfilerChild::RecvPause(PauseResolver&& aResolve) {
   profiler_pause();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvResume() {
+mozilla::ipc::IPCResult ProfilerChild::RecvResume(ResumeResolver&& aResolve) {
   profiler_resume();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvPauseSampling() {
+mozilla::ipc::IPCResult ProfilerChild::RecvPauseSampling(
+    PauseSamplingResolver&& aResolve) {
   profiler_pause_sampling();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling() {
+mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling(
+    ResumeSamplingResolver&& aResolve) {
   profiler_resume_sampling();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
