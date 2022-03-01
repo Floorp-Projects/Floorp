@@ -398,7 +398,7 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
   RefPtr<UiCompositorControllerChild> result;
 
   if (!EnsureGPUReady()) {
-    result = UiCompositorControllerChild::CreateForSameProcess(aId, aWidget);
+    result = UiCompositorControllerChild::CreateForSameProcess(aId);
   } else {
     ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
     ipc::Endpoint<PUiCompositorControllerChild> childPipe;
@@ -412,12 +412,15 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
 
     mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
     result = UiCompositorControllerChild::CreateForGPUProcess(
-        mProcessToken, std::move(childPipe), aWidget);
+        mProcessToken, std::move(childPipe));
 
     if (result) {
       result->SetCompositorSurfaceManager(
           mProcess->GetCompositorSurfaceManager());
     }
+  }
+  if (result) {
+    result->SetBaseWidget(aWidget);
   }
   return result.forget();
 }

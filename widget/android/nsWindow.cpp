@@ -1476,11 +1476,6 @@ void GeckoViewSupport::Open(
 
   AUTO_PROFILER_LABEL("mozilla::widget::GeckoViewSupport::Open", OTHER);
 
-  // We'll need gfxPlatform to be initialized to create a compositor later.
-  // Might as well do that now so that the GPU process launch can get a head
-  // start.
-  gfxPlatform::GetPlatform();
-
   nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   MOZ_RELEASE_ASSERT(ww);
 
@@ -1826,6 +1821,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     parent->mChildren.AppendElement(this);
     mParent = parent;
   }
+
+  CreateLayerManager();
 
 #ifdef DEBUG_ANDROID_WIDGET
   DumpWindows();
