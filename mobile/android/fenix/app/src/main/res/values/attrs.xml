@@ -41,7 +41,6 @@
     <attr name="snackbar" format="reference" />
     <attr name="foundation" format="reference" />
     <attr name="above" format="reference" />
-    <attr name="inset" format="reference" />
     <attr name="neutral" format="reference" />
     <attr name="neutralFaded" format="reference" />
     <attr name="destructive" format="reference"/>

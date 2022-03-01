@@ -76,7 +76,6 @@
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
         <item name="foundation">@color/fx_mobile_layer_color_1</item>
         <item name="above">@color/fx_mobile_layer_color_2</item>
-        <item name="inset">@color/inset_normal_theme</item>
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/fx_mobile_text_color_warning</item>
@@ -269,7 +268,6 @@
         <item name="accentHighContrast">@color/accent_high_contrast_private_theme</item>
         <item name="foundation">@color/fx_mobile_private_layer_color_1</item>
         <item name="above">@color/fx_mobile_private_layer_color_1</item>
-        <item name="inset">@color/fx_mobile_private_layer_color_1</item>
         <item name="neutral">@color/neutral_private_theme</item>
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
         <item name="destructive">@color/fx_mobile_private_text_color_warning</item>
