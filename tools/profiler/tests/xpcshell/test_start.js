@@ -2,14 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
+add_task(async () => {
   Assert.ok(!Services.profiler.IsActive());
 
-  Services.profiler.StartProfiler(10, 100, []);
+  let startPromise = Services.profiler.StartProfiler(10, 100, []);
 
   Assert.ok(Services.profiler.IsActive());
 
-  Services.profiler.StopProfiler();
+  await startPromise;
+  Assert.ok(Services.profiler.IsActive());
+
+  let stopPromise = Services.profiler.StopProfiler();
 
   Assert.ok(!Services.profiler.IsActive());
-}
+
+  await stopPromise;
+  Assert.ok(!Services.profiler.IsActive());
+});

@@ -5,8 +5,8 @@
     "resource://gre/modules/Services.jsm"
   );
 
-  function startProfiler(settings) {
-    Services.profiler.StartProfiler(
+  async function startProfiler(settings) {
+    let startPromise = Services.profiler.StartProfiler(
       settings.entries,
       settings.interval,
       settings.features,
@@ -15,7 +15,11 @@
       settings.duration
     );
 
-    info("Profiler has started");
+    info("Parent Profiler has started");
+
+    await startPromise;
+
+    info("Child profilers have started");
   }
 
   function getProfile() {
@@ -31,9 +35,11 @@
     return profile;
   }
 
-  function stopProfiler() {
-    Services.profiler.StopProfiler();
-    info("Profiler has stopped");
+  async function stopProfiler() {
+    let stopPromise = Services.profiler.StopProfiler();
+    info("Parent profiler has stopped");
+    await stopPromise;
+    info("Child profilers have stopped");
   }
 
   function end(error) {
