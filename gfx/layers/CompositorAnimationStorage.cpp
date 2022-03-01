@@ -25,16 +25,6 @@ namespace layers {
 
 using gfx::Matrix4x4;
 
-void CompositorAnimationStorage::Clear() {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  // This function should only be called via the non Webrender version of
-  // SampleAnimations.
-  mLock.AssertCurrentThreadOwns();
-
-  mAnimatedValues.Clear();
-  mAnimations.clear();
-}
-
 void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MutexAutoLock lock(mLock);
@@ -91,7 +81,7 @@ OMTAValue CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const {
   return omtaValue;
 }
 
-void CompositorAnimationStorage::SetAnimatedValueForWebRender(
+void CompositorAnimationStorage::SetAnimatedValue(
     uint64_t aId, AnimatedValue* aPreviousValue,
     const gfx::Matrix4x4& aFrameTransform, const TransformData& aData) {
   mLock.AssertCurrentThreadOwns();
@@ -106,26 +96,7 @@ void CompositorAnimationStorage::SetAnimatedValueForWebRender(
   MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
   MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
 
-  aPreviousValue->SetTransformForWebRender(aFrameTransform, aData);
-}
-
-void CompositorAnimationStorage::SetAnimatedValue(
-    uint64_t aId, AnimatedValue* aPreviousValue,
-    const gfx::Matrix4x4& aTransformInDevSpace,
-    const gfx::Matrix4x4& aFrameTransform, const TransformData& aData) {
-  mLock.AssertCurrentThreadOwns();
-
-  if (!aPreviousValue) {
-    MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.InsertOrUpdate(
-        aId, MakeUnique<AnimatedValue>(aTransformInDevSpace, aFrameTransform,
-                                       aData));
-    return;
-  }
-  MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
-  MOZ_ASSERT(aPreviousValue == GetAnimatedValue(aId));
-
-  aPreviousValue->SetTransform(aTransformInDevSpace, aFrameTransform, aData);
+  aPreviousValue->SetTransform(aFrameTransform, aData);
 }
 
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
@@ -297,8 +268,8 @@ bool CompositorAnimationStorage::SampleAnimations(
           }
         }
 
-        SetAnimatedValueForWebRender(iter.first, previousValue, frameTransform,
-                                     transformData);
+        SetAnimatedValue(iter.first, previousValue, frameTransform,
+                         transformData);
         break;
       }
       default:
