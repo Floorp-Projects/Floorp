@@ -21,26 +21,6 @@ class WeakRefObject;
 
 namespace gc {
 
-// WeakRefHeapPtrVector is a GCVector of WeakRefObjects.
-class WeakRefHeapPtrVector
-    : public GCVector<js::HeapPtrObject, 1, js::ZoneAllocPolicy> {
- public:
-  // Called to update pointer to and possibly clear the target of each
-  // WeakRefObject.
-  using GCVector::GCVector;
-  void traceWeak(JSTracer* trc, JSObject* target);
-};
-
-// WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
-// WeakRef to the list of JS WeakRefs.
-class WeakRefMap
-    : public GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
-                       MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy> {
- public:
-  using GCHashMap::GCHashMap;
-  void traceWeak(JSTracer* trc);
-};
-
 // Per-zone data structures to support FinalizationRegistry and WeakRef.
 class FinalizationObservers {
   Zone* const zone;
@@ -63,15 +43,26 @@ class FinalizationObservers {
                 ZoneAllocPolicy>;
   RecordMap recordMap;
 
-  // A weak map used as a set of cross-zone record wrappers. The weak map
-  // marking rules keep the wrappers alive while the record is alive and ensure
-  // that they are both swept in the same sweep group.
+  // A weak map used as a set of cross-zone wrappers. This is used for both
+  // finalization registries and weak refs. For the former it has wrappers to
+  // finalization record objects and for the latter wrappers to weak refs.
+  //
+  // The weak map marking rules keep the wrappers alive while their targets are
+  // alive and ensure that they are both swept in the same sweep group.
   using WrapperWeakSet = ObjectValueWeakMap;
   WrapperWeakSet crossZoneRecords;
 
   // A map of weak ref targets to a vector of weak refs that are observing the
   // target. The weak refs may be in other zones and are wrapped appropriately.
+  using WeakRefHeapPtrVector =
+      GCVector<js::HeapPtrObject, 1, js::ZoneAllocPolicy>;
+  using WeakRefMap =
+      GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
+                MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
   WeakRefMap weakRefMap;
+
+  // A weak map used as a set of cross-zone weak refs wrappers.
+  WrapperWeakSet crossZoneWeakRefs;
 
  public:
   explicit FinalizationObservers(Zone* zone);
@@ -88,7 +79,7 @@ class FinalizationObservers {
   // WeakRef support:
   bool addWeakRefTarget(HandleObject target, HandleObject weakRef);
 
-  bool unregisterWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
+  void unregisterWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
 
   void traceRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
@@ -100,6 +91,13 @@ class FinalizationObservers {
  private:
   bool addCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
   void removeCrossZoneWrapper(WrapperWeakSet& weakSet, JSObject* wrapper);
+
+  void updateForRemovedWeakRef(JSObject* wrapper, WeakRefObject* weakRef);
+
+  void traceWeakFinalizationRegistryEdges(JSTracer* trc);
+  void traceWeakWeakRefEdges(JSTracer* trc);
+  void traceWeakWeakRefVector(JSTracer* trc, WeakRefHeapPtrVector& weakRefs,
+                              JSObject* target);
 
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
