@@ -340,8 +340,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       ,
       mPrivateWindow(false),
       mActiveOnWindow(false),
-      mPacketDumpEnabled(false),
-      mPacketDumpFlagsMutex("Packet dump flags mutex"),
       mTimestampMaker(mWindow),
       mIdGenerator(new RTCStatsIdGenerator()),
       listenPort(0),
@@ -1615,40 +1613,11 @@ void PeerConnectionImpl::OnMediaError(const std::string& aError) {
   // TODO: Let content know about this somehow.
 }
 
-bool PeerConnectionImpl::ShouldDumpPacket(size_t level,
-                                          dom::mozPacketDumpType type,
-                                          bool sending) const {
-  if (!mPacketDumpEnabled) {
-    return false;
-  }
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-
-  const std::vector<unsigned>* packetDumpFlags;
-
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  if (level < packetDumpFlags->size()) {
-    unsigned flag = 1 << (unsigned)type;
-    return flag & packetDumpFlags->at(level);
-  }
-
-  return false;
-}
-
 void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
                                       bool sending,
                                       UniquePtr<uint8_t[]>& packet,
                                       size_t size) {
   if (IsClosed()) {
-    return;
-  }
-
-  if (!ShouldDumpPacket(level, type, sending)) {
     return;
   }
 
@@ -1742,43 +1711,13 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
                                               dom::mozPacketDumpType type,
                                               bool sending) {
-  mPacketDumpEnabled = true;
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level >= packetDumpFlags->size()) {
-    packetDumpFlags->resize(level + 1);
-  }
-
-  (*packetDumpFlags)[level] |= flag;
-  return NS_OK;
+  return GetPacketDumper()->EnablePacketDump(level, type, sending);
 }
 
 nsresult PeerConnectionImpl::DisablePacketDump(unsigned long level,
                                                dom::mozPacketDumpType type,
                                                bool sending) {
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level < packetDumpFlags->size()) {
-    (*packetDumpFlags)[level] &= ~flag;
-  }
-
-  return NS_OK;
+  return GetPacketDumper()->DisablePacketDump(level, type, sending);
 }
 
 void PeerConnectionImpl::StampTimecard(const char* aEvent) {
