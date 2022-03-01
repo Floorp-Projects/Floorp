@@ -81,6 +81,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: getPageThumbURL(TEST_URL1),
@@ -96,6 +97,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
@@ -111,6 +113,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
@@ -134,6 +137,7 @@ add_task(async function test_add_and_query_builderMetadata() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     builderMetadata: { domain: "example.com" },
     snapshotCount: urls.length,
   });
@@ -422,4 +426,128 @@ add_task(async function test_minimum_size() {
     builder: "domain",
     snapshotCount: 4,
   });
+});
+
+add_task(async function test_hidden_groups() {
+  await delete_all_groups();
+
+  let group1 = await SnapshotGroups.add(
+    {
+      title: "Test Group 1",
+      builder: "domain",
+    },
+    []
+  );
+
+  let group2 = await SnapshotGroups.add(
+    {
+      title: "Test Group 2",
+      builder: "domain",
+    },
+    []
+  );
+
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should return all groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  await SnapshotGroups.updateMetadata({
+    id: group1,
+    hidden: true,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should be only one visible group.");
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group 2",
+    builder: "domain",
+    hidden: false,
+    snapshotCount: 0,
+  });
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: true,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  await SnapshotGroups.updateMetadata({
+    id: group1,
+    hidden: false,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two visible groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+
+  await SnapshotGroups.updateMetadata({
+    id: group2,
+    hidden: true,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should be only one visible group.");
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group 1",
+    builder: "domain",
+    hidden: false,
+    snapshotCount: 0,
+  });
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: true,
+      snapshotCount: 0,
+    },
+  ]);
 });
