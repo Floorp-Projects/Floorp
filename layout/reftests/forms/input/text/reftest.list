@@ -1,6 +1,6 @@
 == bounds-1.html bounds-1-ref.html
 fuzzy(0-65,0-3) == size-1.html size-1-ref.html
-== size-2.html size-2-ref.html
+fuzzy-if(winWidget,0-36,0-1) == size-2.html size-2-ref.html
 == baseline-1.html baseline-1-ref.html
 == chrome://reftest/content/forms/input/text/centering-1.xhtml chrome://reftest/content/forms/input/text/centering-1-ref.xhtml
 == chrome://reftest/content/forms/input/text/dynamic-height-1.xhtml chrome://reftest/content/forms/input/text/dynamic-height-1-ref.xhtml
