@@ -511,6 +511,9 @@ pref("browser.urlbar.merino.clientVariants", "");
 // Whether the best match feature in the urlbar is enabled.
 pref("browser.urlbar.bestMatch.enabled", false);
 
+// Whether best match results can be blocked.
+pref("browser.urlbar.bestMatch.blockingEnabled", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
