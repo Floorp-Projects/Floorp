@@ -333,6 +333,8 @@ Profiler
 - Make sure your initialization path contains a `SendInitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessHost.cpp#222-223>`_. You will want to perform the call once a ``OnChannelConnected`` is issued, thus ensuring your new process is connected to IPC.
 - Provide an implementation for `InitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#147-151>`_
 
+- You will probably want to make sure your child process code register within the profiler a proper name, otherwise it will default to ``GeckoMain`` ; this can be done by issuing ``profiler_set_process_name(nsCString("XxX"))`` on the child init side.
+
 Static Components
 #################
 

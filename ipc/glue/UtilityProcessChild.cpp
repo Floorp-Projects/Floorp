@@ -30,6 +30,7 @@
 #include "nsDebugImpl.h"
 #include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
+#include "GeckoProfiler.h"
 
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/FOGIPC.h"
@@ -98,6 +99,7 @@ bool UtilityProcessChild::Init(base::ProcessId aParentPid,
   mSandbox = (SandboxingKind)aSandboxingKind;
 
   mozilla::ipc::SetThisProcessName("Utility Process");
+  profiler_set_process_name(nsCString("Utility Process"));
 
   // Notify the parent process that we have finished our init and that it can
   // now resolve the pending promise of process startup
