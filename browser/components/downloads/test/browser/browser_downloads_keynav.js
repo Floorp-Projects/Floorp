@@ -152,21 +152,9 @@ add_task(async function test_downloads_keynav() {
   EventUtils.synthesizeMouseAtCenter(listbox.getItemAtIndex(1), {
     type: "mousemove",
   });
-  is(listbox.selectedIndex, 1, "downloads list selected index after mousemove");
+  is(listbox.selectedIndex, 0, "downloads list selected index after mousemove");
 
-  checkTabbing(listbox, 1);
-
-  EventUtils.synthesizeKey("VK_UP", {});
-  is(
-    document.activeElement,
-    listbox,
-    "downloads list is focused after up to index 0"
-  );
-  is(
-    listbox.selectedIndex,
-    0,
-    "downloads list selected index after up to index 0"
-  );
+  checkTabbing(listbox, 0);
 
   EventUtils.synthesizeKey("VK_UP", {});
   is(
