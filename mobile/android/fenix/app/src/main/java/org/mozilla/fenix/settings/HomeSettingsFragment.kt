@@ -5,10 +5,9 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.preference.CheckBoxPreference
 import androidx.navigation.findNavController
+import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
-import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.FeatureFlags
@@ -86,9 +85,6 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
             }
             isVisible = FeatureFlags.showWallpapers
         }
-
-        requirePreference<PreferenceCategory>(R.string.pref_key_start_on_home_category).isVisible =
-            FeatureFlags.showStartOnHomeSettings
 
         addToRadioGroup(
             openingScreenRadioHomepage,

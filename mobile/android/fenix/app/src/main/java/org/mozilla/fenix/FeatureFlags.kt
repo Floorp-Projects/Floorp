@@ -24,11 +24,6 @@ object FeatureFlags {
     val addressesFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the Start On Home feature in the settings page.
-     */
-    const val showStartOnHomeSettings = true
-
-    /**
      * Enables the "recent" tabs feature in the home screen.
      */
     const val showRecentTabsFeature = true

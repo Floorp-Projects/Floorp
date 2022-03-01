@@ -537,9 +537,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.tabButton.setOnClickListener {
-            if (FeatureFlags.showStartOnHomeSettings) {
-                requireComponents.analytics.metrics.track(Event.StartOnHomeOpenTabsTray)
-            }
+            requireComponents.analytics.metrics.track(Event.StartOnHomeOpenTabsTray)
             openTabsTray()
         }
 
