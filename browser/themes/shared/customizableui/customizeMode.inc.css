@@ -180,6 +180,12 @@ toolbarpaletteitem toolbarbutton[disabled] {
   color: inherit !important;
 }
 
+#PersonalToolbar toolbarpaletteitem toolbarbutton[checked="true"],
+toolbar toolbarpaletteitem toolbarbutton[checked="true"]
+  > :where(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack) {
+  background-color: revert !important;
+}
+
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 toolbarpaletteitem > #search-container,
