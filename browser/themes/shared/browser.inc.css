@@ -37,6 +37,9 @@
 	display: none !important;
 }
 
+.private-browsing-indicator{
+	display: none !important;
+}
 #import-button {
 	margin-right: 10px !important;
 	margin-top: -0.4em !important;
