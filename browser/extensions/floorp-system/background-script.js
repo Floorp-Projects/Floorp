@@ -7,7 +7,7 @@ browser.browserAction.onClicked.addListener(tab => {
 				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
 
 const BROWSER_VERSION = "8.5.9"
-const APP_ID = "floorp"
+const APP_ID = "floorp-global"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
 const Notify = (url, now, latest) =>{
@@ -47,3 +47,15 @@ window.onload = () =>{
             }
         })();
     };
+
+    function initializePageAction(tab) {
+        if (typeof tab.url != 'undefined' && tab.url.length ) {
+            browser.pageAction.show(tab.id);
+        }
+    }
+    var gettingAllTabs = browser.tabs.query({});
+    gettingAllTabs.then((tabs) => {
+        for (let tab of tabs) {
+            initializePageAction(tab);
+        }
+    });

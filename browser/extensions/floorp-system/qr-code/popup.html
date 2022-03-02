@@ -1,72 +1,50 @@
-<!DOCTYPE html>
-<html lang="ja">
-	<head>
-		<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-		<style>
-			h3{
-				position: relative;
-				left: 15px;
-				font-family: メイリオ/Meiryo;
-				text-align: left;
-				color: white;
-			}
-			body { 
-				padding: 3px;
-				margin: 0;
-				width: 300px;
-				height: 350px;
-				overflow: hidden;
-				background: rgb(63, 63, 63);
-			}
-			#qrimg {
-				margin:  0 auto !important;
-				text-align:  center;  
-				padding: 25px;
-				padding-top: 25px;
-				width: 250px;
-				height: 250px;
-				background-color: white;
-				border-radius: 33px;
-			}
-			#qractions {
-				position: relative;
-				text-align:right;
-			}
-			#qractions {
-                 position: absolute;
-                 right: 0;
-                 bottom: 0;
-            }
-			#qractions {
-				right: 10px;
-				bottom: 10px;
-			}
-            .btn-flat-dashed-filled {
-                display: inline-block;
-                padding: 0.5em 1em;
-                text-decoration: none;
-                color: #ffffff;
-                background: #2196F3;
-                border-radius: 3px;
-                transition: .4s;
-            }
+<html>
+    <head>
+        <meta charset="utf-8"/>
+    <style>
+div.container{
+    text-align: center;
+}
 
-            .btn-flat-dashed-filled:hover {
-                background: #2196F3;
-                color: #FFF;
-            }
+body{
+    min-height: 3.5em;
+    min-width: 245px;
+    background-color: rgb(77, 77, 77);
+}
 
-		</style>
-	</head>
-	<body>
-	<h3><section id="scan-code">コードをスキャンしてください</section></h3>
-		<div id="qractions">
-			<a id="qrsave" title="Save as file" class="btn-flat-dashed-filled"></a>
-		</div>
-		<img id="qrimg" />
-		<script src="qrious.js"></script>
-		<script src="popup.js"></script>
-	</body>
+#qr-code{
+    min-width: 1.5em;
+    min-height: 1.5em;
+    padding: 1em;
+    margin-top: 1.7em;
+}
+
+img{
+    background-color: white;
+	padding: 1em;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 20px;
+}
+
+#title{
+    position: fixed;
+    top: 0.24em;
+    font-size: 1.2em;
+    color: white;
+    left: 1em;
+    top: 0.4em;
+    font-family: Meiryo !important;
+}
+    </style>
+    </head>
+    <body>
+        <div id="title">QR コードをスキャンしてください
+        </div>
+        <div class="container">
+            <div id="qr-code"></div>
+        </div>
+        <script src="qrcode.min.js"></script>
+        <script src="popup.js"></script>
+    </body>
 </html>
-
-
