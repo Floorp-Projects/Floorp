@@ -188,27 +188,16 @@ ScreenOrientation::LockOrientationTask::Run() {
     return NS_OK;
   }
 
-  RefPtr<LockOrientationPromise> lockOrientationPromise =
-      mScreenOrientation->LockDeviceOrientation(mOrientationLock,
-                                                mIsFullscreen);
-
-  if (NS_WARN_IF(!lockOrientationPromise)) {
-    mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-    mDocument->ClearOrientationPendingPromise();
-    return NS_OK;
-  }
-
-  lockOrientationPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr{this}](
-          const LockOrientationPromise::ResolveOrRejectValue& aValue) {
-        if (aValue.IsResolve()) {
-          return NS_OK;
-        }
-        self->mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-        self->mDocument->ClearOrientationPendingPromise();
-        return NS_OK;
-      });
+  mScreenOrientation->LockDeviceOrientation(mOrientationLock, mIsFullscreen)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}](
+                 const LockOrientationPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 return;
+               }
+               self->mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+               self->mDocument->ClearOrientationPendingPromise();
+             });
 
   BrowsingContext* bc = mDocument->GetBrowsingContext();
   if (OrientationLockContains(bc->GetCurrentOrientationType()) ||
@@ -392,14 +381,8 @@ RefPtr<LockOrientationPromise> ScreenOrientation::LockDeviceOrientation(
     }
   }
 
-  RefPtr<LockOrientationPromise> halPromise =
-      hal::LockScreenOrientation(aOrientation);
-  if (!halPromise) {
-    return LockOrientationPromise::CreateAndReject(false, __func__);
-  }
-
   mTriedToLockDeviceOrientation = true;
-  return halPromise;
+  return hal::LockScreenOrientation(aOrientation);
 }
 
 void ScreenOrientation::Unlock(ErrorResult& aRv) {
