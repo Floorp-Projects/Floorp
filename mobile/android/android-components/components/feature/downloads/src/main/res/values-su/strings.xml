@@ -47,4 +47,11 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Teu bisa muka %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Butuh aksés idin berkas jeung média pikeun ngundeur berkas. Buka setélan Android, toél idin, laju pilih idinan.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Bedokeun ngundeur nyamuni?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Bolaykeun ngundeur</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Angger dina langlangan nyamuni</string>
 </resources>
