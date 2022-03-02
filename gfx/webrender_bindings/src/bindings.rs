@@ -1081,10 +1081,14 @@ pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
 pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
-    // Clamp the number of workers between 1 and 8. We get diminishing returns
+    // Clamp the number of workers between 1 and 4/8. We get diminishing returns
     // with high worker counts and extra overhead because of rayon and font
     // management.
-    let num_threads = num_cpus::get().max(2).min(8);
+
+    // We clamp to 4 high priority threads because contention and memory usage
+    // make it not worth going higher
+    let max = if low_priority { 8 } else { 4 };
+    let num_threads = num_cpus::get().min(max);
 
     let priority_tag = if low_priority { "LP" } else { "" };
 
