@@ -71,7 +71,7 @@ class AddToHomescreenTest {
         searchScreen {
         }.loadPage(pageUrl) {
             progressBar.waitUntilGone(waitingTime)
-        }.openThreeDotMenu {
+        }.openMainMenu {
         }.openAddToHSDialog {
             addShortcutWithTitle(pageTitle)
             handleAddAutomaticallyDialog()
@@ -88,7 +88,7 @@ class AddToHomescreenTest {
         // Open website, and click 'Add to homescreen'
         searchScreen {
         }.loadPage(pageUrl) {
-        }.openThreeDotMenu {
+        }.openMainMenu {
         }.openAddToHSDialog {
             // leave shortcut title empty and add it to HS
             addShortcutNoTitle()

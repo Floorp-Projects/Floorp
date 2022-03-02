@@ -83,6 +83,11 @@ class SearchRobot {
     }
 
     fun clearSearchBar() = clearSearchButton.click()
+    fun verifySearchSuggestionsContain(title: String) {
+        assertTrue(
+            suggestionsList.getChild(UiSelector().textContains(title)).waitForExists(waitingTime)
+        )
+    }
 
     class Transition {
         fun loadPage(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

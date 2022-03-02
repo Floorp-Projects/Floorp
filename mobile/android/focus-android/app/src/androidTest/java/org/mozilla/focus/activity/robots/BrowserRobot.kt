@@ -185,15 +185,6 @@ class BrowserRobot {
             return ThreeDotMainMenuRobot.Transition()
         }
 
-        fun openThreeDotMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
-            mainMenu
-                .check(matches(isDisplayed()))
-                .perform(click())
-
-            ThreeDotMainMenuRobot().interact()
-            return ThreeDotMainMenuRobot.Transition()
-        }
-
         fun openSiteSettingsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             securityIcon.click()
 

@@ -12,6 +12,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
@@ -20,6 +21,7 @@ import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 
 class HomeScreenRobot {
 
@@ -75,6 +77,39 @@ class HomeScreenRobot {
             .perform(swipeRight())
     }
 
+    fun verifyPageShortcutExists(title: String) {
+        assertTrue(
+            topSitesList
+                .getChild(UiSelector().textContains(title))
+                .waitForExists(waitingTime)
+        )
+    }
+
+    fun longTapPageShortcut(title: String) {
+        mDevice.findObject(By.text(title)).click(4000)
+    }
+
+    fun clickRenameShortcut() {
+        mDevice.findObject(UiSelector().text("Rename"))
+            .also {
+                it.waitForExists(waitingTimeShort)
+                it.click()
+            }
+    }
+
+    fun renameShortcutAndSave(newTitle: String) {
+        val titleTextField = mDevice.findObject(UiSelector().className("android.widget.EditText"))
+        val okButton = mDevice.findObject(UiSelector().textContains("ok"))
+
+        titleTextField.clearTextField()
+        titleTextField.text = newTitle
+        okButton.click()
+        // the dialog is not always dismissed on first click of the Ok button (not manually reproducible)
+        if (!mDevice.findObject(UiSelector().text("Rename")).waitUntilGone(waitingTimeShort)) {
+            okButton.click()
+        }
+    }
+
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             editURLBar.waitForExists(waitingTime)
@@ -90,6 +125,14 @@ class HomeScreenRobot {
             val tipTextLink = mDevice.findObject(UiSelector().textContains(linkText))
             tipTextLink.waitForExists(waitingTime)
             tipTextLink.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickPageShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTimeShort)
+            mDevice.findObject(UiSelector().text(title)).click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -131,3 +174,5 @@ private val finishBtn = mDevice.findObject(
 )
 
 private val homeScreenTips = onView(withId(R.id.home_tips))
+
+private val topSitesList = mDevice.findObject(UiSelector().resourceId("$packageName:id/topSites"))
