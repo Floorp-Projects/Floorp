@@ -83,31 +83,30 @@ class WritableStreamDefaultWriter final : public nsISupports,
   RefPtr<Promise> mClosedPromise;
 };
 
-extern void SetUpWritableStreamDefaultWriter(
-    WritableStreamDefaultWriter* aWriter, WritableStream* aStream,
-    ErrorResult& aRv);
+void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
+                                      WritableStream* aStream,
+                                      ErrorResult& aRv);
 
-extern void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
+void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
     WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
 
-extern void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
     WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
 
-extern Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
+Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
     WritableStreamDefaultWriter* aWriter);
 
-extern void WritableStreamDefaultWriterRelease(
-    JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv);
+void WritableStreamDefaultWriterRelease(JSContext* aCx,
+                                        WritableStreamDefaultWriter* aWriter,
+                                        ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise>
-WritableStreamDefaultWriterWrite(JSContext* aCx,
-                                 WritableStreamDefaultWriter* aWriter,
-                                 JS::Handle<JS::Value> aChunk,
-                                 ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
+    JSContext* aCx, WritableStreamDefaultWriter* aWriter,
+    JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise>
+MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise>
 WritableStreamDefaultWriterCloseWithErrorPropagation(
     JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv);
 

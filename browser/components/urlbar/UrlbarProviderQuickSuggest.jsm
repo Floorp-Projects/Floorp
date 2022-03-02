@@ -99,9 +99,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {string} The help URL for the Quick Suggest best match feature.
    */
   get bestMatchHelpUrl() {
-    return (
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "top-pick"
-    );
+    return this.helpUrl;
   }
 
   /**
@@ -294,6 +292,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(result) {
+    if (!UrlbarPrefs.get("bestMatch.blockingEnabled")) {
+      this.logger.info("Blocking disabled, ignoring key shortcut");
+      return false;
+    }
+
     this.logger.info("Blocking result: " + JSON.stringify(result));
     this.blockSuggestion(result.payload.originalUrl);
     return true;

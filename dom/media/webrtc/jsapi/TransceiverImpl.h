@@ -78,7 +78,7 @@ class TransceiverImpl : public nsISupports,
   void ResetSync();
 
   nsresult SyncWithMatchingVideoConduits(
-      std::vector<RefPtr<TransceiverImpl>>& transceivers);
+      nsTArray<RefPtr<TransceiverImpl>>& transceivers);
 
   void Shutdown_m();
 

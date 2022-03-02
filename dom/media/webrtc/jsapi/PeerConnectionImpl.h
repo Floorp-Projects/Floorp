@@ -28,13 +28,14 @@
 #include "sdp/SdpMediaSection.h"
 
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/RTCPeerConnectionBinding.h"  // mozPacketDumpType, maybe move?
+#include "jsapi/PacketDumper.h"
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "PrincipalChangeObserver.h"
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/net/DataChannel.h"
+#include "mozilla/TupleCycleCollection.h"
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -160,6 +161,7 @@ struct PeerConnectionAutoTimer {
 
 class PeerConnectionImpl final
     : public nsISupports,
+      public nsWrapperCache,
       public mozilla::DataChannelConnection::DataConnectionListener,
       public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
   struct Internal;  // Avoid exposing c includes to bindings
@@ -168,10 +170,12 @@ class PeerConnectionImpl final
   explicit PeerConnectionImpl(
       const mozilla::dom::GlobalObject* aGlobal = nullptr);
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PeerConnectionImpl)
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandle<JSObject*> aReflector);
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   static already_AddRefed<PeerConnectionImpl> Constructor(
       const mozilla::dom::GlobalObject& aGlobal);
@@ -204,27 +208,18 @@ class PeerConnectionImpl final
   static void ListenThread(void* aData);
   static void ConnectThread(void* aData);
 
-  // Get the main thread
-  nsCOMPtr<nsIThread> GetMainThread() { return mThread; }
-
   // Get the STS thread
   nsISerialEventTarget* GetSTSThread() {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mSTSThread;
   }
 
-  nsPIDOMWindowInner* GetWindow() const {
-    PC_AUTO_ENTER_API_CALL_NO_CHECK();
-    return mWindow;
-  }
-
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsGlobalWindowInner* aWindow, nsISupports* aThread);
+                      nsGlobalWindowInner* aWindow);
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsGlobalWindowInner& aWindow, nsISupports* aThread,
-                  ErrorResult& rv);
+                  nsGlobalWindowInner& aWindow, ErrorResult& rv);
 
   void SetCertificate(mozilla::dom::RTCCertificate& aCertificate);
   const RefPtr<mozilla::dom::RTCCertificate>& Certificate() const;
@@ -416,16 +411,12 @@ class PeerConnectionImpl final
 
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
-
   void CollectConduitTelemetryData();
 
   // for monitoring changes in track ownership
   virtual void PrincipalChanged(dom::MediaStreamTrack* aTrack) override;
 
   void OnMediaError(const std::string& aError);
-
-  bool ShouldDumpPacket(size_t level, dom::mozPacketDumpType type,
-                        bool sending) const;
 
   void DumpPacket_m(size_t level, dom::mozPacketDumpType type, bool sending,
                     UniquePtr<uint8_t[]>& packet, size_t size);
@@ -447,6 +438,14 @@ class PeerConnectionImpl final
                dom::RTCIceTransportPolicy::Relay;
   }
 
+  RefPtr<PacketDumper> GetPacketDumper() {
+    if (!mPacketDumper) {
+      mPacketDumper = new PacketDumper(mHandle);
+    }
+
+    return mPacketDumper;
+  }
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -465,13 +464,7 @@ class PeerConnectionImpl final
                                      uint32_t aMaxMessageSize, bool aMMSSet);
 
   nsresult CheckApiState(bool assert_ice_ready) const;
-  void CheckThread() const { MOZ_ASSERT(CheckThreadInt(), "Wrong thread"); }
-  bool CheckThreadInt() const {
-    bool on;
-    NS_ENSURE_SUCCESS(mThread->IsOnCurrentThread(&on), false);
-    NS_ENSURE_TRUE(on, false);
-    return true;
-  }
+  void CheckThread() const { MOZ_ASSERT(NS_IsMainThread(), "Wrong thread"); }
 
   // test-only: called from AddRIDExtension and AddRIDFilter
   // for simulcast mochitests.
@@ -495,13 +488,6 @@ class PeerConnectionImpl final
       JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
       ErrorResult& aRv);
 
-  // When ICE completes, we record a bunch of statistics that outlive the
-  // PeerConnection. This is just telemetry right now, but this can also
-  // include things like dumping the RLogConnector somewhere, saving away
-  // an RTCStatsReport somewhere so it can be inspected after the call is over,
-  // or other things.
-  void RecordLongtermICEStatistics();
-
   void RecordIceRestartStatistics(JsepSdpType type);
 
   void StoreConfigurationForAboutWebrtc(const RTCConfiguration& aConfig);
@@ -522,7 +508,6 @@ class PeerConnectionImpl final
   mozilla::dom::RTCIceConnectionState mIceConnectionState;
   mozilla::dom::RTCIceGatheringState mIceGatheringState;
 
-  nsCOMPtr<nsIThread> mThread;
   RefPtr<PeerConnectionObserver> mPCObserver;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
@@ -600,11 +585,6 @@ class PeerConnectionImpl final
   uint16_t mMaxReceiving[SdpMediaSection::kMediaTypes];
   uint16_t mMaxSending[SdpMediaSection::kMediaTypes];
 
-  std::vector<unsigned> mSendPacketDumpFlags;
-  std::vector<unsigned> mRecvPacketDumpFlags;
-  Atomic<bool> mPacketDumpEnabled;
-  mutable Mutex mPacketDumpFlagsMutex;
-
   // used to store the raw trickle candidate string for display
   // on the about:webrtc raw candidates table.
   std::vector<std::string> mRawTrickledCandidates;
@@ -625,7 +605,8 @@ class PeerConnectionImpl final
 
   class StunAddrsHandler : public net::StunAddrsListener {
    public:
-    explicit StunAddrsHandler(PeerConnectionImpl* aPc) : pc_(aPc) {}
+    explicit StunAddrsHandler(PeerConnectionImpl* aPc)
+        : mPcHandle(aPc->GetHandle()) {}
 
     void OnMDNSQueryComplete(const nsCString& hostname,
                              const Maybe<nsCString>& address) override;
@@ -634,7 +615,9 @@ class PeerConnectionImpl final
         const mozilla::net::NrIceStunAddrArray& addrs) override;
 
    private:
-    RefPtr<PeerConnectionImpl> pc_;
+    // This class is not cycle-collected, so we must avoid grabbing a strong
+    // reference.
+    const std::string mPcHandle;
     virtual ~StunAddrsHandler() {}
   };
 
@@ -711,7 +694,7 @@ class PeerConnectionImpl final
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   bool mRtxIsAllowed = true;
 
-  std::vector<RefPtr<TransceiverImpl>> mTransceivers;
+  nsTArray<RefPtr<TransceiverImpl>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
 
@@ -784,6 +767,12 @@ class PeerConnectionImpl final
   };
 
   mozilla::UniquePtr<SignalHandler> mSignalHandler;
+
+  // Make absolutely sure our refcount does not go to 0 before Close() is called
+  // This is because Close does a stats query, which needs the
+  // PeerConnectionImpl to stick around until the query is done.
+  RefPtr<PeerConnectionImpl> mKungFuDeathGrip;
+  RefPtr<PacketDumper> mPacketDumper;
 
  public:
   // these are temporary until the DataChannel Listen/Connect API is removed

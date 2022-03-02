@@ -600,7 +600,7 @@ FinderHighlighter.prototype = {
     this._removeRangeOutline(window);
   },
 
-  // Update the tick marks that should appear on the page's vertical scrollbar.
+  // Update the tick marks that should appear on the page's scrollbar(s).
   updateScrollMarks() {
     // Only show scrollbar marks when normal highlighting is enabled.
     if (this.useModal() || !this._highlightAll) {
@@ -610,7 +610,12 @@ FinderHighlighter.prototype = {
 
     let marks = new Set(); // Use a set so duplicate values are removed.
     let window = this.finder._getWindow();
+    // Show the marks on the horizontal scrollbar for vertical writing modes.
+    let onHorizontalScrollbar = !window
+      .getComputedStyle(window.document.body || window.document.documentElement)
+      .writingMode.startsWith("horizontal");
     let yStart = window.scrollY;
+    let xStart = window.scrollX;
 
     let hasRanges = false;
     if (window) {
@@ -632,7 +637,7 @@ FinderHighlighter.prototype = {
         }
 
         // No need to calculate the mark positions if there is no visible scrollbar.
-        if (window.scrollMaxY > 0) {
+        if (window.scrollMaxY > 0 && !onHorizontalScrollbar) {
           // Use the body's scrollHeight if available.
           let scrollHeight =
             window.document.body?.scrollHeight ||
@@ -644,6 +649,18 @@ FinderHighlighter.prototype = {
             let yPos = Math.round((yStart + rect.y + rect.height / 2) * yAdj); // use the midpoint
             marks.add(yPos);
           }
+        } else if (window.scrollMaxX > 0 && onHorizontalScrollbar) {
+          // Use the body's scrollWidth if available.
+          let scrollWidth =
+            window.document.body?.scrollWidth ||
+            window.document.documentElement.scrollWidth;
+          let xAdj = window.scrollMaxX / scrollWidth;
+
+          for (let r = 0; r < rangeCount; r++) {
+            let rect = findSelection.getRangeAt(r).getBoundingClientRect();
+            let xPos = Math.round((xStart + rect.x + rect.width / 2) * xAdj);
+            marks.add(xPos);
+          }
         }
       }
     }
@@ -651,7 +668,7 @@ FinderHighlighter.prototype = {
     if (hasRanges) {
       // Assign the marks to the window and add a listener for the MozScrolledAreaChanged
       // event which fires whenever the scrollable area's size is updated.
-      this.setScrollMarks(window, Array.from(marks));
+      this.setScrollMarks(window, Array.from(marks), onHorizontalScrollbar);
 
       if (!this._marksListener) {
         this._marksListener = event => {
@@ -699,15 +716,19 @@ FinderHighlighter.prototype = {
    *
    * @param window window to set the scrollbar marks on
    * @param marks array of integer scrollbar mark positions
+   * @param onHorizontalScrollbar whether to display the marks on the horizontal scrollbar
    */
-  setScrollMarks(window, marks) {
-    window.setScrollMarks(marks);
+  setScrollMarks(window, marks, onHorizontalScrollbar = false) {
+    window.setScrollMarks(marks, onHorizontalScrollbar);
 
     // Fire an event containing the found mark values if testing mode is enabled.
     if (this._testing) {
       window.dispatchEvent(
         new CustomEvent("find-scrollmarks-changed", {
-          detail: Array.from(marks),
+          detail: {
+            marks: Array.from(marks),
+            onHorizontalScrollbar,
+          },
         })
       );
     }

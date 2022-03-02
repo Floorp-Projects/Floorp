@@ -177,387 +177,6 @@ HWY_NOINLINE void TestAllAbs() {
   ForFloatTypes(ForPartialVectors<TestFloatAbs>());
 }
 
-template <bool kSigned>
-struct TestLeftShifts {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T t, D d) {
-    if (kSigned) {
-      // Also test positive values
-      TestLeftShifts</*kSigned=*/false>()(t, d);
-    }
-
-    using TI = MakeSigned<T>;
-    using TU = MakeUnsigned<T>;
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    const auto values = Iota(d, kSigned ? -TI(N) : TI(0));  // value to shift
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-
-    // 0
-    HWY_ASSERT_VEC_EQ(d, values, ShiftLeft<0>(values));
-    HWY_ASSERT_VEC_EQ(d, values, ShiftLeftSame(values, 0));
-
-    // 1
-    for (size_t i = 0; i < N; ++i) {
-      const T value = kSigned ? T(T(i) - T(N)) : T(i);
-      expected[i] = T(TU(value) << 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeft<1>(values));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeftSame(values, 1));
-
-    // max
-    for (size_t i = 0; i < N; ++i) {
-      const T value = kSigned ? T(T(i) - T(N)) : T(i);
-      expected[i] = T(TU(value) << kMaxShift);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeft<kMaxShift>(values));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftLeftSame(values, kMaxShift));
-  }
-};
-
-template <bool kSigned>
-struct TestVariableLeftShifts {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T t, D d) {
-    if (kSigned) {
-      // Also test positive values
-      TestVariableLeftShifts</*kSigned=*/false>()(t, d);
-    }
-
-    using TI = MakeSigned<T>;
-    using TU = MakeUnsigned<T>;
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    const auto v0 = Zero(d);
-    const auto v1 = Set(d, 1);
-    const auto values = Iota(d, kSigned ? -TI(N) : TI(0));  // value to shift
-
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-    const auto max_shift = Set(d, kMaxShift);
-    const auto small_shifts = And(Iota(d, 0), max_shift);
-    const auto large_shifts = max_shift - small_shifts;
-
-    // Same: 0
-    HWY_ASSERT_VEC_EQ(d, values, Shl(values, v0));
-
-    // Same: 1
-    for (size_t i = 0; i < N; ++i) {
-      const T value = kSigned ? T(i) - T(N) : T(i);
-      expected[i] = T(TU(value) << 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shl(values, v1));
-
-    // Same: max
-    for (size_t i = 0; i < N; ++i) {
-      const T value = kSigned ? T(i) - T(N) : T(i);
-      expected[i] = T(TU(value) << kMaxShift);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shl(values, max_shift));
-
-    // Variable: small
-    for (size_t i = 0; i < N; ++i) {
-      const T value = kSigned ? T(i) - T(N) : T(i);
-      expected[i] = T(TU(value) << (i & kMaxShift));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shl(values, small_shifts));
-
-    // Variable: large
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(TU(1) << (kMaxShift - (i & kMaxShift)));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shl(v1, large_shifts));
-  }
-};
-
-struct TestUnsignedRightShifts {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    const auto values = Iota(d, 0);
-
-    const T kMax = LimitsMax<T>();
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-
-    // Shift by 0
-    HWY_ASSERT_VEC_EQ(d, values, ShiftRight<0>(values));
-    HWY_ASSERT_VEC_EQ(d, values, ShiftRightSame(values, 0));
-
-    // Shift by 1
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(T(i & kMax) >> 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRight<1>(values));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRightSame(values, 1));
-
-    // max
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(T(i & kMax) >> kMaxShift);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRight<kMaxShift>(values));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRightSame(values, kMaxShift));
-  }
-};
-
-struct TestRotateRight {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    constexpr size_t kBits = sizeof(T) * 8;
-    const auto mask_shift = Set(d, T{kBits});
-    // Cover as many bit positions as possible to test shifting out
-    const auto values = Shl(Set(d, T{1}), And(Iota(d, 0), mask_shift));
-
-    // Rotate by 0
-    HWY_ASSERT_VEC_EQ(d, values, RotateRight<0>(values));
-
-    // Rotate by 1
-    Store(values, d, expected.get());
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> 1) | (expected[i] << (kBits - 1));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<1>(values));
-
-    // Rotate by half
-    Store(values, d, expected.get());
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> (kBits / 2)) | (expected[i] << (kBits / 2));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<kBits / 2>(values));
-
-    // Rotate by max
-    Store(values, d, expected.get());
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> (kBits - 1)) | (expected[i] << 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<kBits - 1>(values));
-  }
-};
-
-struct TestVariableUnsignedRightShifts {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    const auto v0 = Zero(d);
-    const auto v1 = Set(d, 1);
-    const auto values = Iota(d, 0);
-
-    const T kMax = LimitsMax<T>();
-    const auto max = Set(d, kMax);
-
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-    const auto max_shift = Set(d, kMaxShift);
-    const auto small_shifts = And(Iota(d, 0), max_shift);
-    const auto large_shifts = max_shift - small_shifts;
-
-    // Same: 0
-    HWY_ASSERT_VEC_EQ(d, values, Shr(values, v0));
-
-    // Same: 1
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(T(i & kMax) >> 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(values, v1));
-
-    // Same: max
-    HWY_ASSERT_VEC_EQ(d, v0, Shr(values, max_shift));
-
-    // Variable: small
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(i) >> (i & kMaxShift);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(values, small_shifts));
-
-    // Variable: Large
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = kMax >> (kMaxShift - (i & kMaxShift));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(max, large_shifts));
-  }
-};
-
-template <int kAmount, typename T>
-T RightShiftNegative(T val) {
-  // C++ shifts are implementation-defined for negative numbers, and we have
-  // seen divisions replaced with shifts, so resort to bit operations.
-  using TU = hwy::MakeUnsigned<T>;
-  TU bits;
-  CopyBytes<sizeof(T)>(&val, &bits);
-
-  const TU shifted = TU(bits >> kAmount);
-
-  const TU all = TU(~TU(0));
-  const size_t num_zero = sizeof(TU) * 8 - 1 - kAmount;
-  const TU sign_extended = static_cast<TU>((all << num_zero) & LimitsMax<TU>());
-
-  bits = shifted | sign_extended;
-  CopyBytes<sizeof(T)>(&bits, &val);
-  return val;
-}
-
-class TestSignedRightShifts {
- public:
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-    constexpr T kMin = LimitsMin<T>();
-    constexpr T kMax = LimitsMax<T>();
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-
-    // First test positive values, negative are checked below.
-    const auto v0 = Zero(d);
-    const auto values = And(Iota(d, 0), Set(d, kMax));
-
-    // Shift by 0
-    HWY_ASSERT_VEC_EQ(d, values, ShiftRight<0>(values));
-    HWY_ASSERT_VEC_EQ(d, values, ShiftRightSame(values, 0));
-
-    // Shift by 1
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(T(i & kMax) >> 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRight<1>(values));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRightSame(values, 1));
-
-    // max
-    HWY_ASSERT_VEC_EQ(d, v0, ShiftRight<kMaxShift>(values));
-    HWY_ASSERT_VEC_EQ(d, v0, ShiftRightSame(values, kMaxShift));
-
-    // Even negative value
-    Test<0>(kMin, d, __LINE__);
-    Test<1>(kMin, d, __LINE__);
-    Test<2>(kMin, d, __LINE__);
-    Test<kMaxShift>(kMin, d, __LINE__);
-
-    const T odd = static_cast<T>(kMin + 1);
-    Test<0>(odd, d, __LINE__);
-    Test<1>(odd, d, __LINE__);
-    Test<2>(odd, d, __LINE__);
-    Test<kMaxShift>(odd, d, __LINE__);
-  }
-
- private:
-  template <int kAmount, typename T, class D>
-  void Test(T val, D d, int line) {
-    const auto expected = Set(d, RightShiftNegative<kAmount>(val));
-    const auto in = Set(d, val);
-    const char* file = __FILE__;
-    AssertVecEqual(d, expected, ShiftRight<kAmount>(in), file, line);
-    AssertVecEqual(d, expected, ShiftRightSame(in, kAmount), file, line);
-  }
-};
-
-struct TestVariableSignedRightShifts {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    using TU = MakeUnsigned<T>;
-    const size_t N = Lanes(d);
-    auto expected = AllocateAligned<T>(N);
-
-    constexpr T kMin = LimitsMin<T>();
-    constexpr T kMax = LimitsMax<T>();
-
-    constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
-
-    // First test positive values, negative are checked below.
-    const auto v0 = Zero(d);
-    const auto positive = Iota(d, 0) & Set(d, kMax);
-
-    // Shift by 0
-    HWY_ASSERT_VEC_EQ(d, positive, ShiftRight<0>(positive));
-    HWY_ASSERT_VEC_EQ(d, positive, ShiftRightSame(positive, 0));
-
-    // Shift by 1
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = T(T(i & kMax) >> 1);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRight<1>(positive));
-    HWY_ASSERT_VEC_EQ(d, expected.get(), ShiftRightSame(positive, 1));
-
-    // max
-    HWY_ASSERT_VEC_EQ(d, v0, ShiftRight<kMaxShift>(positive));
-    HWY_ASSERT_VEC_EQ(d, v0, ShiftRightSame(positive, kMaxShift));
-
-    const auto max_shift = Set(d, kMaxShift);
-    const auto small_shifts = And(Iota(d, 0), max_shift);
-    const auto large_shifts = max_shift - small_shifts;
-
-    const auto negative = Iota(d, kMin);
-
-    // Test varying negative to shift
-    for (size_t i = 0; i < N; ++i) {
-      expected[i] = RightShiftNegative<1>(static_cast<T>(kMin + i));
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(negative, Set(d, 1)));
-
-    // Shift MSB right by small amounts
-    for (size_t i = 0; i < N; ++i) {
-      const size_t amount = i & kMaxShift;
-      const TU shifted = ~((1ull << (kMaxShift - amount)) - 1);
-      CopyBytes<sizeof(T)>(&shifted, &expected[i]);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(Set(d, kMin), small_shifts));
-
-    // Shift MSB right by large amounts
-    for (size_t i = 0; i < N; ++i) {
-      const size_t amount = kMaxShift - (i & kMaxShift);
-      const TU shifted = ~((1ull << (kMaxShift - amount)) - 1);
-      CopyBytes<sizeof(T)>(&shifted, &expected[i]);
-    }
-    HWY_ASSERT_VEC_EQ(d, expected.get(), Shr(Set(d, kMin), large_shifts));
-  }
-};
-
-HWY_NOINLINE void TestAllShifts() {
-  ForUnsignedTypes(ForPartialVectors<TestLeftShifts</*kSigned=*/false>>());
-  ForSignedTypes(ForPartialVectors<TestLeftShifts</*kSigned=*/true>>());
-  ForUnsignedTypes(ForPartialVectors<TestUnsignedRightShifts>());
-  ForSignedTypes(ForPartialVectors<TestSignedRightShifts>());
-}
-
-HWY_NOINLINE void TestAllVariableShifts() {
-  const ForPartialVectors<TestLeftShifts</*kSigned=*/false>> shl_u;
-  const ForPartialVectors<TestLeftShifts</*kSigned=*/true>> shl_s;
-  const ForPartialVectors<TestUnsignedRightShifts> shr_u;
-  const ForPartialVectors<TestSignedRightShifts> shr_s;
-
-  shl_u(uint16_t());
-  shr_u(uint16_t());
-
-  shl_u(uint32_t());
-  shr_u(uint32_t());
-
-  shl_s(int16_t());
-  shr_s(int16_t());
-
-  shl_s(int32_t());
-  shr_s(int32_t());
-
-#if HWY_CAP_INTEGER64
-  shl_u(uint64_t());
-  shr_u(uint64_t());
-
-  shl_s(int64_t());
-  shr_s(int64_t());
-#endif
-}
-
-HWY_NOINLINE void TestAllRotateRight() {
-  const ForPartialVectors<TestRotateRight> test;
-  test(uint32_t());
-#if HWY_CAP_INTEGER64
-  test(uint64_t());
-#endif
-}
-
 struct TestUnsignedMinMax {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
@@ -642,6 +261,84 @@ HWY_NOINLINE void TestAllMinMax() {
   ForUnsignedTypes(ForPartialVectors<TestUnsignedMinMax>());
   ForSignedTypes(ForPartialVectors<TestSignedMinMax>());
   ForFloatTypes(ForPartialVectors<TestFloatMinMax>());
+}
+
+class TestMinMax128 {
+  template <class D>
+  static HWY_NOINLINE Vec<D> Make128(D d, uint64_t hi, uint64_t lo) {
+    alignas(16) uint64_t in[2];
+    in[0] = lo;
+    in[1] = hi;
+    return LoadDup128(d, in);
+  }
+
+ public:
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    using V = Vec<D>;
+    const size_t N = Lanes(d);
+    auto a_lanes = AllocateAligned<T>(N);
+    auto b_lanes = AllocateAligned<T>(N);
+    auto min_lanes = AllocateAligned<T>(N);
+    auto max_lanes = AllocateAligned<T>(N);
+    RandomState rng;
+
+    const V v00 = Zero(d);
+    const V v01 = Make128(d, 0, 1);
+    const V v10 = Make128(d, 1, 0);
+    const V v11 = Add(v01, v10);
+
+    // Same arg
+    HWY_ASSERT_VEC_EQ(d, v00, Min128(d, v00, v00));
+    HWY_ASSERT_VEC_EQ(d, v01, Min128(d, v01, v01));
+    HWY_ASSERT_VEC_EQ(d, v10, Min128(d, v10, v10));
+    HWY_ASSERT_VEC_EQ(d, v11, Min128(d, v11, v11));
+    HWY_ASSERT_VEC_EQ(d, v00, Max128(d, v00, v00));
+    HWY_ASSERT_VEC_EQ(d, v01, Max128(d, v01, v01));
+    HWY_ASSERT_VEC_EQ(d, v10, Max128(d, v10, v10));
+    HWY_ASSERT_VEC_EQ(d, v11, Max128(d, v11, v11));
+
+    // First arg less
+    HWY_ASSERT_VEC_EQ(d, v00, Min128(d, v00, v01));
+    HWY_ASSERT_VEC_EQ(d, v01, Min128(d, v01, v10));
+    HWY_ASSERT_VEC_EQ(d, v10, Min128(d, v10, v11));
+    HWY_ASSERT_VEC_EQ(d, v01, Max128(d, v00, v01));
+    HWY_ASSERT_VEC_EQ(d, v10, Max128(d, v01, v10));
+    HWY_ASSERT_VEC_EQ(d, v11, Max128(d, v10, v11));
+
+    // Second arg less
+    HWY_ASSERT_VEC_EQ(d, v00, Min128(d, v01, v00));
+    HWY_ASSERT_VEC_EQ(d, v01, Min128(d, v10, v01));
+    HWY_ASSERT_VEC_EQ(d, v10, Min128(d, v11, v10));
+    HWY_ASSERT_VEC_EQ(d, v01, Max128(d, v01, v00));
+    HWY_ASSERT_VEC_EQ(d, v10, Max128(d, v10, v01));
+    HWY_ASSERT_VEC_EQ(d, v11, Max128(d, v11, v10));
+
+    // Also check 128-bit blocks are independent
+    for (size_t rep = 0; rep < AdjustedReps(1000); ++rep) {
+      for (size_t i = 0; i < N; ++i) {
+        a_lanes[i] = Random64(&rng);
+        b_lanes[i] = Random64(&rng);
+      }
+      const V a = Load(d, a_lanes.get());
+      const V b = Load(d, b_lanes.get());
+      for (size_t i = 0; i < N; i += 2) {
+        const bool lt = a_lanes[i + 1] == b_lanes[i + 1]
+                            ? (a_lanes[i] < b_lanes[i])
+                            : (a_lanes[i + 1] < b_lanes[i + 1]);
+        min_lanes[i + 0] = lt ? a_lanes[i + 0] : b_lanes[i + 0];
+        min_lanes[i + 1] = lt ? a_lanes[i + 1] : b_lanes[i + 1];
+        max_lanes[i + 0] = lt ? b_lanes[i + 0] : a_lanes[i + 0];
+        max_lanes[i + 1] = lt ? b_lanes[i + 1] : a_lanes[i + 1];
+      }
+      HWY_ASSERT_VEC_EQ(d, min_lanes.get(), Min128(d, a, b));
+      HWY_ASSERT_VEC_EQ(d, max_lanes.get(), Max128(d, a, b));
+    }
+  }
+};
+
+HWY_NOINLINE void TestAllMinMax128() {
+  ForGEVectors<128, TestMinMax128>()(uint64_t());
 }
 
 struct TestUnsignedMul {
@@ -834,11 +531,11 @@ struct TestMulEvenOdd64 {
 };
 
 HWY_NOINLINE void TestAllMulEven() {
-  ForExtendableVectors<TestMulEven> test;
+  ForGEVectors<64, TestMulEven> test;
   test(int32_t());
   test(uint32_t());
 
-  ForGE128Vectors<TestMulEvenOdd64>()(uint64_t());
+  ForGEVectors<128, TestMulEvenOdd64>()(uint64_t());
 }
 
 struct TestMulAdd {
@@ -1113,7 +810,6 @@ AlignedFreeUniquePtr<T[]> RoundTestCases(T /*unused*/, D d, size_t& padded) {
     // negative +/- epsilon
     T(-1) + eps,
     T(-1) - eps,
-#if !defined(HWY_EMULATE_SVE)  // these are not safe to just cast to int
     // +/- huge (but still fits in float)
     T(1E34),
     T(-1E35),
@@ -1122,7 +818,6 @@ AlignedFreeUniquePtr<T[]> RoundTestCases(T /*unused*/, D d, size_t& padded) {
     -std::numeric_limits<T>::infinity(),
     // qNaN
     GetLane(NaN(d))
-#endif
   };
   const size_t kNumTestCases = sizeof(test_cases) / sizeof(test_cases[0]);
   const size_t N = Lanes(d);
@@ -1369,6 +1064,41 @@ HWY_NOINLINE void TestAllAbsDiff() {
   ForPartialVectors<TestAbsDiff>()(float());
 }
 
+struct TestSumsOf8 {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    RandomState rng;
+
+    const size_t N = Lanes(d);
+    if (N < 8) return;
+    const Repartition<uint64_t, D> du64;
+
+    auto in_lanes = AllocateAligned<T>(N);
+    auto sum_lanes = AllocateAligned<uint64_t>(N / 8);
+
+    for (size_t rep = 0; rep < 100; ++rep) {
+      for (size_t i = 0; i < N; ++i) {
+        in_lanes[i] = Random64(&rng) & 0xFF;
+      }
+
+      for (size_t idx_sum = 0; idx_sum < N / 8; ++idx_sum) {
+        uint64_t sum = 0;
+        for (size_t i = 0; i < 8; ++i) {
+          sum += in_lanes[idx_sum * 8 + i];
+        }
+        sum_lanes[idx_sum] = sum;
+      }
+
+      const Vec<D> in = Load(d, in_lanes.get());
+      HWY_ASSERT_VEC_EQ(du64, sum_lanes.get(), SumsOf8(in));
+    }
+  }
+};
+
+HWY_NOINLINE void TestAllSumsOf8() {
+  ForGEVectors<64, TestSumsOf8>()(uint8_t());
+}
+
 struct TestNeg {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
@@ -1397,10 +1127,8 @@ namespace hwy {
 HWY_BEFORE_TEST(HwyArithmeticTest);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllPlusMinus);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllSaturatingArithmetic);
-HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllShifts);
-HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllVariableShifts);
-HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllRotateRight);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllMinMax);
+HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllMinMax128);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllAverage);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllAbs);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllMul);
@@ -1420,6 +1148,7 @@ HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllTrunc);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllCeil);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllFloor);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllAbsDiff);
+HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllSumsOf8);
 HWY_EXPORT_AND_TEST_P(HwyArithmeticTest, TestAllNeg);
 }  // namespace hwy
 

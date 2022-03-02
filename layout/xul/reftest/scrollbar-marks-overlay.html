@@ -4,13 +4,15 @@
 <script>
   function doTest() {
     frames[0].setScrollMarks([30, 70, 110]);
+    frames[1].setScrollMarks([45, 165], true);
     document.documentElement.removeAttribute("class");
   }
 </script>
 </head>
 <body onload="doTest()">
-<div style='border: 1px solid red; position: absolute; width: 300px; height; 100px; padding: 0;'>
-<iframe style='position: relative; border: none;height: 200px;' src='data:text/html,<p style="height: 400px;"></p>'></iframe>
+<div style='border: 1px solid red; position: absolute; width: 300px; padding: 0;'>
+  <iframe style='position: relative; border: none; height: 200px; vertical-align: middle;' src='data:text/html,<p style="height: 400px;"></p>'></iframe>
+  <iframe style='position: relative; border: none; height: 200px; vertical-align: middle;' src='data:text/html,<p style="height: 100%; width: 600px;"></p>'></iframe>
 </div>
 </body>
 </html>

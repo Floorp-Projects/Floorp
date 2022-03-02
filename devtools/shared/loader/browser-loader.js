@@ -39,6 +39,7 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/shared/source-map",
   "resource://devtools/client/shared/redux",
   "resource://devtools/client/shared/vendor",
+  "resource://devtools/client/shared/worker-utils",
 ];
 
 const COMMON_LIBRARY_DIRS = ["resource://devtools/client/shared/vendor"];

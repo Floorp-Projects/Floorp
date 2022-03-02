@@ -936,17 +936,6 @@ bool DelazifyTask::init(
       // inner functions before the siblings functions.
       strategy = cx->make_unique<DepthFirstDelazification>();
       break;
-    case JS::DelazificationOption::ConcurrentBreathFirst:
-      // ConcurrentDepthFirst visit all functions to be delazified, visiting the
-      // siblings functions before the inner functions.
-      MOZ_CRASH("Strategy is not yet implemented");
-      break;
-    case JS::DelazificationOption::ConcurrentMostFrequentNameFirst:
-      // ConcurrentMostFrequentNameFirst uses the frequency of names to
-      // determine the order in which functions should be delazified. Unamed
-      // functions are delazified first.
-      MOZ_CRASH("Strategy is not yet implemented");
-      break;
     case JS::DelazificationOption::ParseEverythingEagerly:
       // ParseEverythingEagerly parse all functions eagerly, thus leaving no
       // functions to be parsed on demand.

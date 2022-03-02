@@ -10,10 +10,3 @@
   --downloads-item-details-opacity: 0.7;
   --downloads-item-disabled-opacity: 0.7;
 }
-
-.downloadButton:focus > .button-box,
-#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected],
-#downloadsPanel[keyfocus] #downloadsSummary:focus {
-  outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
-}

@@ -1316,7 +1316,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 
   nsTArray<uint32_t>& GetScrollMarks() { return mScrollMarks; }
-  void SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks);
+  bool GetScrollMarksOnHScrollbar() const { return mScrollMarksOnHScrollbar; }
+  void SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks,
+                      bool aOnHScrollbar);
 
   // Don't use this value directly, call StorageAccess::StorageAllowedForWindow
   // instead.
@@ -1410,6 +1412,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Whether this window has opened an external-protocol iframe without user
   // activation once already. Only relevant for top windows.
   bool mHasOpenedExternalProtocolFrame : 1;
+
+  bool mScrollMarksOnHScrollbar : 1;
 
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsGenericHashKey<mozilla::dom::GamepadHandle>,
