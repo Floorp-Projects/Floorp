@@ -3713,7 +3713,11 @@ uint32_t SpecularLightingSoftware::LightPixel(const Point3D& aNormal,
                                               const Point3D& aVectorToLight,
                                               uint32_t aColor) {
   Point3D vectorToEye(0, 0, 1);
-  Point3D halfwayVector = Normalized(aVectorToLight + vectorToEye);
+  Point3D halfwayVector = aVectorToLight + vectorToEye;
+  Float halfwayLength = halfwayVector.Length();
+  if (halfwayLength > 0) {
+    halfwayVector /= halfwayLength;
+  }
   Float dotNH = aNormal.DotProduct(halfwayVector);
   uint16_t dotNHi =
       uint16_t(dotNH * (dotNH >= 0) * (1 << PowCache::sInputIntPrecisionBits));
