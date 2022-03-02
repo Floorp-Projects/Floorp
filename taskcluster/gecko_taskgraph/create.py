@@ -10,10 +10,10 @@ import logging
 
 
 from slugid import nice as slugid
+from taskgraph.util.parameterization import resolve_timestamps
 from taskgraph.util.taskcluster import get_session, CONCURRENCY
 from taskgraph.util.time import current_json_time
 
-from gecko_taskgraph.util.parameterization import resolve_timestamps
 
 logger = logging.getLogger(__name__)
 
