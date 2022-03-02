@@ -30,7 +30,7 @@ from mozpack.files import (
     MercurialFile,
     MercurialRevisionFinder,
     MinifiedJavaScript,
-    MinifiedProperties,
+    MinifiedCommentStripped,
     PreprocessedFile,
 )
 
@@ -875,8 +875,8 @@ foo2_xpt = GeneratedFile(
 )
 
 
-class TestMinifiedProperties(TestWithTmpDir):
-    def test_minified_properties(self):
+class TestMinifiedCommentStripped(TestWithTmpDir):
+    def test_minified_comment_stripped(self):
         propLines = [
             "# Comments are removed",
             "foo = bar",
@@ -885,10 +885,10 @@ class TestMinifiedProperties(TestWithTmpDir):
         ]
         prop = GeneratedFile("\n".join(propLines))
         self.assertEqual(
-            MinifiedProperties(prop).open().readlines(), [b"foo = bar\n", b"\n"]
+            MinifiedCommentStripped(prop).open().readlines(), [b"foo = bar\n", b"\n"]
         )
         open(self.tmppath("prop"), "w").write("\n".join(propLines))
-        MinifiedProperties(File(self.tmppath("prop"))).copy(self.tmppath("prop2"))
+        MinifiedCommentStripped(File(self.tmppath("prop"))).copy(self.tmppath("prop2"))
         self.assertEqual(open(self.tmppath("prop2")).readlines(), ["foo = bar\n", "\n"])
 
 
