@@ -171,7 +171,7 @@ class OnboardingFragment : Fragment() {
                 style = focusTypography.onboardingSubtitle
             )
             Text(
-                text = stringResource(id = descriptionId),
+                text = stringResource(id = descriptionId, getString(R.string.onboarding_short_app_name)),
                 modifier = Modifier.constrainAs(description) {
                     top.linkTo(title.bottom)
                     start.linkTo(title.start)

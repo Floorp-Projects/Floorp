@@ -478,13 +478,14 @@
     <string name="onboarding_incognito_title">Where incognito meets invisible</string>
 
     <!-- Onboarding: Incognito Description -->
-    <string name="onboarding_incognito_description">Focus is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
 
     <!-- Onboarding: History Title -->
     <string name="onboarding_history_title">Browse like it never happened</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">One tap erases your browsing history and cookies—and stops ads from following your around.</string>
+    <string name="onboarding_history_description">One tap erases your browsing history and cookies — and stops ads from following your around.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacy that fits any situation</string>

@@ -4,4 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="app_name" translatable="false">Firefox Klar</string>
+
+    <!-- This String is the short version of app name -->
+    <string name="onboarding_short_app_name" translatable="false">Klar</string>
+
 </resources>

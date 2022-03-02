@@ -7,4 +7,7 @@
 
     <!-- This String is used in the User Agent -->
     <string name="useragent_appname" translatable="false">Focus</string>
+
+    <!-- This String is the short version of app name -->
+    <string name="onboarding_short_app_name" translatable="false">Focus</string>
 </resources>
