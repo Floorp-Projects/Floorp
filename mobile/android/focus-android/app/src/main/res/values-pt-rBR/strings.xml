@@ -901,4 +901,23 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Fechar aba</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Parece que este site estava tentando rastrear você. Clique no escudo para abrir configurações do site e ver estatísticas de bloqueio de rastreadores.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Fechar painel</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Você está protegido!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Estas configurações padrão oferecem proteção forte. Mas é fácil ajustar as configurações para atender às suas necessidades específicas.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Descartar</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Remova desta sessão seus dados pessoais, o histórico de navegação e muito mais, tocando no botão de lixeira. Experimente!</string>
+
 </resources>

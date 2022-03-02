@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -638,6 +638,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Leuwih lengkep</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Idin loka</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Otomaén</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Idinan audio jeung pidéo</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Peungpeuk audio hungkul</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Disarankeun</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Peungpeuk audio jeung pidéo</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Studi</string>
 
@@ -776,8 +794,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mode Ngan-HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS nyayagakeun sambungan anu aman diénkripsi antara %1$s jeung raramatloka anu dianjangan. Raramatloka kiwari biasana ngarojong HTTPS, sarta lamun Mode Ngan-HTTPS dihurungkeun, mangka %1$s bakal ngaronjatkeun sakur sambunganana ka HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Iwal</string>
@@ -843,8 +859,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Piceun</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Ganti ngaran</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Ganti ngaran</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Ngaran takulan</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -866,4 +887,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tutup tab</string>
-</resources>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Tutup popup</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Anjeun kajaga!</string>
+
+    </resources>

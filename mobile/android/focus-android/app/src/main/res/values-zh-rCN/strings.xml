@@ -907,10 +907,21 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">关闭标签页</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">看起来这个网站正在试图跟踪您，点击盾牌即可查看网站设置和跟踪器拦截状态。</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">关闭弹窗</string>
 
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">保护您是我的首要职责</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">默认设置已提供足够强大的保护。如您有特殊需求，也可方便地调整这些设置。</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">知道了</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">点击垃圾桶图标，即可删除该会话中的个人数据、浏览历史等。试试吧！</string>
+
+</resources>
