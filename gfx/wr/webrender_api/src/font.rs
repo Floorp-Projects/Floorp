@@ -2,7 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
 use peek_poke::PeekPoke;
+#[cfg(target_os = "macos")]
+use serde::de::{self, Deserialize, Deserializer};
+#[cfg(target_os = "macos")]
+use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 #[cfg(not(target_os = "macos"))]
@@ -198,9 +206,37 @@ pub struct NativeFontHandle {
 }
 
 #[cfg(target_os = "macos")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NativeFontHandle {
-    pub name: String,
+#[derive(Clone)]
+pub struct NativeFontHandle(pub CGFont);
+
+#[cfg(target_os = "macos")]
+impl Serialize for NativeFontHandle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0
+            .postscript_name()
+            .to_string()
+            .serialize(serializer)
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl<'de> Deserialize<'de> for NativeFontHandle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let postscript_name: String = Deserialize::deserialize(deserializer)?;
+
+        match CGFont::from_name(&CFString::new(&*postscript_name)) {
+            Ok(font) => Ok(NativeFontHandle(font)),
+            Err(_) => Err(de::Error::custom(
+                "Couldn't find a font with that PostScript name!",
+            )),
+        }
+    }
 }
 
 #[repr(C)]

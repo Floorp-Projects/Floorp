@@ -5753,6 +5753,8 @@ dependencies = [
  "app_units",
  "bitflags",
  "byteorder",
+ "core-foundation",
+ "core-graphics",
  "crossbeam-channel",
  "derive_more",
  "euclid",
