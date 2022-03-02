@@ -19,6 +19,8 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/LookAndFeel.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsString.h"
 #include "nsIWidget.h"
@@ -31,6 +33,8 @@
  * until it's fixed. */
 #ifndef __MINGW32__
 
+#  include <inspectable.h>
+#  include <roapi.h>
 #  include <windows.ui.viewmanagement.h>
 
 #  pragma comment(lib, "runtimeobject.lib")
@@ -130,6 +134,90 @@ IDataPackage4 : public IInspectable {
 
 #  endif
 
+#  ifndef RuntimeClass_Windows_UI_ViewManagement_UISettings
+#    define RuntimeClass_Windows_UI_ViewManagement_UISettings \
+      L"Windows.UI.ViewManagement.UISettings"
+#  endif
+#  if WINDOWS_FOUNDATION_UNIVERSALAPICONTRACT_VERSION < 0x80000
+namespace ABI {
+namespace Windows {
+namespace UI {
+namespace ViewManagement {
+
+class UISettings;
+class UISettingsAutoHideScrollBarsChangedEventArgs;
+interface IUISettingsAutoHideScrollBarsChangedEventArgs;
+MIDL_INTERFACE("87afd4b2-9146-5f02-8f6b-06d454174c0f")
+IUISettingsAutoHideScrollBarsChangedEventArgs : public IInspectable{};
+
+}  // namespace ViewManagement
+}  // namespace UI
+}  // namespace Windows
+}  // namespace ABI
+
+namespace ABI {
+namespace Windows {
+namespace Foundation {
+
+template <>
+struct __declspec(uuid("808aef30-2660-51b0-9c11-f75dd42006b4"))
+    ITypedEventHandler<ABI::Windows::UI::ViewManagement::UISettings*,
+                       ABI::Windows::UI::ViewManagement::
+                           UISettingsAutoHideScrollBarsChangedEventArgs*>
+    : ITypedEventHandler_impl<
+          ABI::Windows::Foundation::Internal::AggregateType<
+              ABI::Windows::UI::ViewManagement::UISettings*,
+              ABI::Windows::UI::ViewManagement::IUISettings*>,
+          ABI::Windows::Foundation::Internal::AggregateType<
+              ABI::Windows::UI::ViewManagement::
+                  UISettingsAutoHideScrollBarsChangedEventArgs*,
+              ABI::Windows::UI::ViewManagement::
+                  IUISettingsAutoHideScrollBarsChangedEventArgs*>> {
+  static const wchar_t* z_get_rc_name_impl() {
+    return L"Windows.Foundation.TypedEventHandler`2<Windows.UI.ViewManagement."
+           L"UISettings, "
+           L"Windows.UI.ViewManagement."
+           L"UISettingsAutoHideScrollBarsChangedEventArgs>";
+  }
+};
+// Define a typedef for the parameterized interface specialization's mangled
+// name. This allows code which uses the mangled name for the parameterized
+// interface to access the correct parameterized interface specialization.
+typedef ITypedEventHandler<ABI::Windows::UI::ViewManagement::UISettings*,
+                           ABI::Windows::UI::ViewManagement::
+                               UISettingsAutoHideScrollBarsChangedEventArgs*>
+    __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs_t;
+#    define __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs \
+      ABI::Windows::Foundation::                                                                                                                            \
+          __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs_t
+
+}  // namespace Foundation
+}  // namespace Windows
+}  // namespace ABI
+
+namespace ABI {
+namespace Windows {
+namespace UI {
+namespace ViewManagement {
+class UISettings;
+class UISettingsAutoHideScrollBarsChangedEventArgs;
+interface IUISettings5;
+MIDL_INTERFACE("5349d588-0cb5-5f05-bd34-706b3231f0bd")
+IUISettings5 : public IInspectable {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE get_AutoHideScrollBars(boolean * value) = 0;
+  virtual HRESULT STDMETHODCALLTYPE add_AutoHideScrollBarsChanged(
+      __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs *
+          handler,
+      EventRegistrationToken * token) = 0;
+  virtual HRESULT STDMETHODCALLTYPE remove_AutoHideScrollBarsChanged(
+      EventRegistrationToken token) = 0;
+};
+}  // namespace ViewManagement
+}  // namespace UI
+}  // namespace Windows
+}  // namespace ABI
+#  endif
 #endif
 
 using namespace mozilla;
@@ -240,6 +328,59 @@ NS_IMETHODIMP
 WindowsUIUtils::GetInTabletMode(bool* aResult) {
   *aResult = GetInTabletMode();
   return NS_OK;
+}
+
+bool WindowsUIUtils::ComputeOverlayScrollbars() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+#ifndef __MINGW32__
+  // We need to keep this alive for ~ever so that change callbacks work as
+  // expected, sigh.
+  static ComPtr<IUISettings5> sUiSettings;
+
+  if (!IsWin11OrLater()) {
+    // While in theory Windows 10 supports overlay scrollbar settings, it's off
+    // by default and it's untested whether our Win10 scrollbar drawing code
+    // deals with it properly.
+    return false;
+  }
+
+  if (!StaticPrefs::widget_windows_overlay_scrollbars_enabled()) {
+    return false;
+  }
+
+  if (!sUiSettings) {
+    ComPtr<IInspectable> uiSettingsAsInspectable;
+    ::RoActivateInstance(
+        HStringReference(RuntimeClass_Windows_UI_ViewManagement_UISettings)
+            .Get(),
+        &uiSettingsAsInspectable);
+    if (NS_WARN_IF(!uiSettingsAsInspectable)) {
+      return false;
+    }
+
+    if (NS_WARN_IF(FAILED(uiSettingsAsInspectable.As(&sUiSettings)))) {
+      return false;
+    }
+
+    EventRegistrationToken unusedToken;
+    auto callback = Callback<ITypedEventHandler<
+        UISettings*, UISettingsAutoHideScrollBarsChangedEventArgs*>>(
+        [](auto...) {
+          // Scrollbar sizes change layout.
+          LookAndFeel::NotifyChangedAllWindows(
+              widget::ThemeChangeKind::StyleAndLayout);
+          return S_OK;
+        });
+    (void)NS_WARN_IF(FAILED(sUiSettings->add_AutoHideScrollBarsChanged(
+        callback.Get(), &unusedToken)));
+  }
+
+  boolean autoHide = false;
+  sUiSettings->get_AutoHideScrollBars(&autoHide);
+  return autoHide;
+#endif
+  return false;
 }
 
 void WindowsUIUtils::UpdateInTabletMode() {
