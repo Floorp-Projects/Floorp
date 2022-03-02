@@ -1753,7 +1753,7 @@ void BuildTextRunsScanner::FlushFrames(bool aFlushLineBreaks,
 
   if (aFlushLineBreaks) {
     FlushLineBreaks(aSuppressTrailingBreak ? nullptr : textRun.get());
-    if (!mDoLineBreaking) {
+    if (!mDoLineBreaking && textRun) {
       CreateObserversForAnimatedGlyphs(textRun.get());
     }
   }
