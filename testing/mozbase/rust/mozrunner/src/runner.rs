@@ -130,7 +130,7 @@ pub struct FirefoxProcess {
     // The profile field is not directly used, but it is kept to avoid its
     // Drop removing the (temporary) profile directory.
     #[allow(dead_code)]
-    profile: Profile,
+    profile: Option<Profile>,
 }
 
 impl RunnerProcess for FirefoxProcess {
@@ -180,7 +180,7 @@ impl RunnerProcess for FirefoxProcess {
 #[derive(Debug)]
 pub struct FirefoxRunner {
     path: PathBuf,
-    profile: Profile,
+    profile: Option<Profile>,
     args: Vec<OsString>,
     envs: HashMap<OsString, OsString>,
     stdout: Option<Stdio>,
@@ -193,7 +193,7 @@ impl FirefoxRunner {
     /// On macOS, `path` can optionally point to an application bundle,
     /// i.e. _/Applications/Firefox.app_, as well as to an executable program
     /// such as _/Applications/Firefox.app/Content/MacOS/firefox-bin_.
-    pub fn new(path: &Path, profile: Profile) -> FirefoxRunner {
+    pub fn new(path: &Path, profile: Option<Profile>) -> FirefoxRunner {
         let mut envs: HashMap<OsString, OsString> = HashMap::new();
         envs.insert("MOZ_NO_REMOTE".into(), "1".into());
 
@@ -268,7 +268,9 @@ impl Runner for FirefoxRunner {
     }
 
     fn start(mut self) -> Result<FirefoxProcess, RunnerError> {
-        self.profile.user_prefs()?.write()?;
+        if let Some(ref mut profile) = self.profile {
+            profile.user_prefs()?.write()?;
+        }
 
         let stdout = self.stdout.unwrap_or_else(Stdio::inherit);
         let stderr = self.stderr.unwrap_or_else(Stdio::inherit);
@@ -299,8 +301,10 @@ impl Runner for FirefoxRunner {
         if !seen_no_remote {
             cmd.arg("-no-remote");
         }
-        if !seen_profile {
-            cmd.arg("-profile").arg(&self.profile.path);
+        if let Some(ref profile) = self.profile {
+            if !seen_profile {
+                cmd.arg("-profile").arg(&profile.path);
+            }
         }
 
         info!("Running command: {:?}", cmd);
