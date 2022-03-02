@@ -3213,18 +3213,54 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
   /* get the attributes from the tokenizer */
   n = XmlGetAttributes(enc, attStr, attsSize, atts);
+
+  /* Detect and prevent integer overflow */
+  if (n > INT_MAX - nDefaultAtts) {
+    return XML_ERROR_NO_MEMORY;
+  }
+
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
     ATTRIBUTE *temp;
 #ifdef XML_ATTR_INFO
     XML_AttrInfo *temp2;
 #endif
+
+    /* Detect and prevent integer overflow */
+    if ((nDefaultAtts > INT_MAX - INIT_ATTS_SIZE)
+        || (n > INT_MAX - (nDefaultAtts + INIT_ATTS_SIZE))) {
+      return XML_ERROR_NO_MEMORY;
+    }
+
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
+
+    /* Detect and prevent integer overflow.
+     * The preprocessor guard addresses the "always false" warning
+     * from -Wtype-limits on platforms where
+     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(ATTRIBUTE)) {
+      parser->m_attsSize = oldAttsSize;
+      return XML_ERROR_NO_MEMORY;
+    }
+#endif
+
     temp = (ATTRIBUTE *)REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL)
       return XML_ERROR_NO_MEMORY;
     atts = temp;
 #ifdef XML_ATTR_INFO
+    /* Detect and prevent integer overflow.
+     * The preprocessor guard addresses the "always false" warning
+     * from -Wtype-limits on platforms where
+     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#  if UINT_MAX >= SIZE_MAX
+    if ((unsigned)parser->m_attsSize > (size_t)(-1) / sizeof(XML_AttrInfo)) {
+      parser->m_attsSize = oldAttsSize;
+      return XML_ERROR_NO_MEMORY;
+    }
+#  endif
+
     temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
     if (temp2 == NULL)
       return XML_ERROR_NO_MEMORY;
@@ -3620,9 +3656,31 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   tagNamePtr->prefixLen = prefixLen;
   for (i = 0; localPart[i++];)
     ;  /* i includes null terminator */
+
+  /* Detect and prevent integer overflow */
+  if (binding->uriLen > INT_MAX - prefixLen
+      || i > INT_MAX - (binding->uriLen + prefixLen)) {
+    return XML_ERROR_NO_MEMORY;
+  }
+
   n = i + binding->uriLen + prefixLen;
   if (n > binding->uriAlloc) {
     TAG *p;
+
+    /* Detect and prevent integer overflow */
+    if (n > INT_MAX - EXPAND_SPARE) {
+      return XML_ERROR_NO_MEMORY;
+    }
+    /* Detect and prevent integer overflow.
+     * The preprocessor guard addresses the "always false" warning
+     * from -Wtype-limits on platforms where
+     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+    if ((unsigned)(n + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+      return XML_ERROR_NO_MEMORY;
+    }
+#endif
+
     uri = (XML_Char *)MALLOC((n + EXPAND_SPARE) * sizeof(XML_Char));
     if (!uri)
       return XML_ERROR_NO_MEMORY;
@@ -3723,6 +3781,21 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (freeBindingList) {
     b = freeBindingList;
     if (len > b->uriAlloc) {
+      /* Detect and prevent integer overflow */
+      if (len > INT_MAX - EXPAND_SPARE) {
+        return XML_ERROR_NO_MEMORY;
+      }
+
+      /* Detect and prevent integer overflow.
+       * The preprocessor guard addresses the "always false" warning
+       * from -Wtype-limits on platforms where
+       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+      if ((unsigned)(len + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+        return XML_ERROR_NO_MEMORY;
+      }
+#endif
+
       XML_Char *temp = (XML_Char *)REALLOC(b->uri,
                           sizeof(XML_Char) * (len + EXPAND_SPARE));
       if (temp == NULL)
@@ -3736,6 +3809,21 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     b = (BINDING *)MALLOC(sizeof(BINDING));
     if (!b)
       return XML_ERROR_NO_MEMORY;
+
+    /* Detect and prevent integer overflow */
+    if (len > INT_MAX - EXPAND_SPARE) {
+      return XML_ERROR_NO_MEMORY;
+    }
+    /* Detect and prevent integer overflow.
+     * The preprocessor guard addresses the "always false" warning
+     * from -Wtype-limits on platforms where
+     * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+    if ((unsigned)(len + EXPAND_SPARE) > (size_t)(-1) / sizeof(XML_Char)) {
+      return XML_ERROR_NO_MEMORY;
+    }
+#endif
+
     b->uri = (XML_Char *)MALLOC(sizeof(XML_Char) * (len + EXPAND_SPARE));
     if (!b->uri) {
       FREE(b);
@@ -6046,7 +6134,24 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, XML_Bool isCdata,
     }
     else {
       DEFAULT_ATTRIBUTE *temp;
+
+      /* Detect and prevent integer overflow */
+      if (type->allocDefaultAtts > INT_MAX / 2) {
+        return 0;
+      }
+
       int count = type->allocDefaultAtts * 2;
+
+      /* Detect and prevent integer overflow.
+       * The preprocessor guard addresses the "always false" warning
+       * from -Wtype-limits on platforms where
+       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+      if ((unsigned)count > (size_t)(-1) / sizeof(DEFAULT_ATTRIBUTE)) {
+        return 0;
+      }
+#endif
+
       temp = (DEFAULT_ATTRIBUTE *)
         REALLOC(type->defaultAtts, (count * sizeof(DEFAULT_ATTRIBUTE)));
       if (temp == NULL)
@@ -6697,8 +6802,20 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize)
     /* check for overflow (table is half full) */
     if (table->used >> (table->power - 1)) {
       unsigned char newPower = table->power + 1;
+
+      /* Detect and prevent invalid shift */
+      if (newPower >= sizeof(unsigned long) * 8 /* bits per byte */) {
+        return NULL;
+      }
+
       size_t newSize = (size_t)1 << newPower;
       unsigned long newMask = (unsigned long)newSize - 1;
+
+      /* Detect and prevent integer overflow */
+      if (newSize > (size_t)(-1) / sizeof(NAMED *)) {
+        return NULL;
+      }
+
       size_t tsize = newSize * sizeof(NAMED *);
       NAMED **newV = (NAMED **)table->mem->malloc_fcn(tsize);
       if (!newV)
@@ -7035,6 +7152,20 @@ nextScaffoldPart(XML_Parser parser)
   if (dtd->scaffCount >= dtd->scaffSize) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
+      /* Detect and prevent integer overflow */
+      if (dtd->scaffSize > UINT_MAX / 2u) {
+        return -1;
+      }
+      /* Detect and prevent integer overflow.
+       * The preprocessor guard addresses the "always false" warning
+       * from -Wtype-limits on platforms where
+       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+      if (dtd->scaffSize > (size_t)(-1) / 2u / sizeof(CONTENT_SCAFFOLD)) {
+        return -1;
+      }
+#endif
+
       temp = (CONTENT_SCAFFOLD *)
         REALLOC(dtd->scaffold, dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD));
       if (temp == NULL)
@@ -7111,8 +7242,26 @@ build_model (XML_Parser parser)
   XML_Content *ret;
   XML_Content *cpos;
   XML_Char * str;
-  int allocsize = (dtd->scaffCount * sizeof(XML_Content)
-                   + (dtd->contentStringLen * sizeof(XML_Char)));
+
+  /* Detect and prevent integer overflow.
+   * The preprocessor guard addresses the "always false" warning
+   * from -Wtype-limits on platforms where
+   * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+  if (dtd->scaffCount > (size_t)(-1) / sizeof(XML_Content)) {
+    return NULL;
+  }
+  if (dtd->contentStringLen > (size_t)(-1) / sizeof(XML_Char)) {
+    return NULL;
+  }
+#endif
+  if (dtd->scaffCount * sizeof(XML_Content)
+      > (size_t)(-1) - dtd->contentStringLen * sizeof(XML_Char)) {
+    return NULL;
+  }
+
+  const size_t allocsize = (dtd->scaffCount * sizeof(XML_Content)
+                            + (dtd->contentStringLen * sizeof(XML_Char)));
 
   ret = (XML_Content *)MALLOC(allocsize);
   if (!ret)
