@@ -82,7 +82,7 @@ parent:
       returns (WakeLockInformation aWakeLockInfo);
 
     async LockScreenOrientation(ScreenOrientation aOrientation)
-      returns (bool allowed);
+      returns (nsresult result);
     async UnlockScreenOrientation();
 
 child:

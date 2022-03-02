@@ -178,4 +178,22 @@ class OrientationDelegateTest : BaseSessionTest() {
             }
         })
     }
+
+    @Test fun orientationLockUnsupported() {
+        // If no delegate, orientation.lock must throws NotSupportedError
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
+        goFullscreen()
+
+        val promise = mainSession.evaluatePromiseJS("""
+          new Promise(r => {
+            screen.orientation.lock('landscape-primary')
+            .then(() => r("successful"))
+            .catch(e => r(e.name))
+          })
+        """.trimIndent())
+
+        assertThat("The operation must throw NotSupportedError",
+                   promise.value,
+                   equalTo("NotSupportedError"))
+    }
 }

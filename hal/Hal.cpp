@@ -378,7 +378,7 @@ void NotifyWakeLockChange(const WakeLockInformation& aInfo) {
   WakeLockObservers()->BroadcastInformation(aInfo);
 }
 
-RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
+RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
     const ScreenOrientation& aOrientation) {
   AssertMainThread();
   RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation), nullptr);
