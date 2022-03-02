@@ -3235,7 +3235,11 @@ Toolbox.prototype = {
       this.isBrowserToolbox &&
       Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
 
-    if (isMultiProcessBrowserToolbox) {
+    if (this.target.isXpcShellTarget) {
+      // This will only be displayed for local development and can remain
+      // hardcoded in english.
+      title = "XPCShell Toolbox";
+    } else if (isMultiProcessBrowserToolbox) {
       title = L10N.getStr("toolbox.multiProcessBrowserToolboxTitle");
     } else if (this.target.name && this.target.name != this.target.url) {
       const url = this.target.isWebExtension
