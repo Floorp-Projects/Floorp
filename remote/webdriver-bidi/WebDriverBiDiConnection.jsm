@@ -171,6 +171,11 @@ class WebDriverBiDiConnection extends WebSocketConnection {
       } else {
         assert.session(this.session);
 
+        // Bug 1741854 - Workaround to deny internal methods to be called
+        if (command.startsWith("_")) {
+          throw new error.UnknownCommandError(method);
+        }
+
         // Finally, instruct the session to execute the command
         result = await this.session.execute(module, command, params);
       }

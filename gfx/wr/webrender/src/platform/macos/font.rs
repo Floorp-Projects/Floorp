@@ -14,7 +14,7 @@ use core_graphics::base::{kCGBitmapByteOrder32Little};
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::CGContext;
 use core_graphics::context::{CGBlendMode, CGTextDrawingMode};
-use core_graphics::font::CGGlyph;
+use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
@@ -276,16 +276,28 @@ impl FontContext {
         // and use the descriptor for that. Normally we'd try to avoid new_from_CGFont
         // because that adds the CGFont to the descriptor cache which can keep the CGFont
         // around for a long time, but that should be ok for non-web (native) fonts.
+        let cf_name = CFString::new(&native_font_handle.name);
 
-        let name = native_font_handle.0.postscript_name();
         // For "hidden" system fonts, whose names start with a period,
         // we can't instantiate CTFonts via a descriptor. We're really
         // supposed to use CTFontCreateUIFontForLanguage, but for now
         // we just use the CGFont.
-        let desc = if name.to_string().starts_with('.') {
-            core_text::font::new_from_CGFont(&native_font_handle.0, 0.).copy_descriptor()
+        let desc = if native_font_handle.name.starts_with('.') {
+            let cg_font = match CGFont::from_name(&cf_name) {
+                Ok(cg_font) => cg_font,
+                Err(_) => {
+                    // If for some reason we failed to load a font descriptor, then our
+                    // only options are to either abort or substitute a fallback font.
+                    // It is preferable to use a fallback font instead so that rendering
+                    // can at least still proceed in some fashion without erroring.
+                    // Lucida Grande is the fallback font in Gecko, so use that here.
+                    CGFont::from_name(&CFString::from_static_string("Lucida Grande"))
+                        .expect("couldn't find font with postscript name and couldn't load fallback font")
+                }
+            };
+            core_text::font::new_from_CGFont(&cg_font, 0.).copy_descriptor()
         } else {
-            core_text::font_descriptor::new_from_postscript_name(&name)
+            core_text::font_descriptor::new_from_postscript_name(&cf_name)
         };
 
         self.ct_font_descs

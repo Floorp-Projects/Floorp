@@ -125,9 +125,14 @@ function registerProxyFilterEvent(
 }
 
 this.proxy = class extends ExtensionAPI {
-  primeListener(extension, event, fire, params) {
+  primeListener(event, fire, params) {
     if (event === "onRequest") {
-      return registerProxyFilterEvent(undefined, extension, fire, ...params);
+      return registerProxyFilterEvent(
+        undefined,
+        this.extension,
+        fire,
+        ...params
+      );
     }
   }
 

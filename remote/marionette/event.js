@@ -226,10 +226,14 @@ event.sendKeys = function(keyString, win) {
   }
 
   for (let i = 0; i < keyString.length; i++) {
-    const rawKey = keyString.charAt(i);
-    const key = { ...keyData.getData(rawKey), ...modifiers };
-    if (key.modifier) {
-      modifiers[key.modifier] = true;
+    let keyValue = keyString.charAt(i);
+    if (modifiers.shiftKey) {
+      keyValue = keyData.getShiftedKey(keyValue);
+    }
+    const data = keyData.getData(keyValue);
+    const key = { ...data, ...modifiers };
+    if (data.modifier) {
+      modifiers[data.modifier] = true;
     }
     event.sendSingleKey(key, win);
   }
