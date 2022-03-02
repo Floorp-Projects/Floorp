@@ -4,16 +4,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Tests that CRLite is left in the uninitialized state when the profile
-// contains a corrupted coverage file. Specifically, this handles the case
-// where the coverage file is truncated in a MinTimestamp field.
+// contains a corrupted enrollment file. Specifically, this handles the case
+// where the enrollment file is truncated in an issuer ID field.
 
 "use strict";
 
 /* eslint-disable no-unused-vars */
-let coverage = do_get_file(
-  "test_crlite_corrupted/trunc-min-timestamp.coverage"
+let coverage = do_get_file("test_crlite_preexisting/crlite.coverage");
+let enrollment = do_get_file(
+  "test_crlite_corrupted/trunc-issuer-id.enrollment"
 );
-let enrollment = do_get_file("test_crlite_preexisting/crlite.enrollment");
 let filter = do_get_file("test_crlite_filters/20201017-0-filter");
 
 load("./corrupted_crlite_helper.js");

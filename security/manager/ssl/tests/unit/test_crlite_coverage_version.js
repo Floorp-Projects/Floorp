@@ -11,7 +11,7 @@
 
 /* eslint-disable no-unused-vars */
 let coverage = do_get_file("test_crlite_corrupted/version-0.coverage");
-let enrollment = do_get_file("test_crlite_preexisting/data.safe.bin");
+let enrollment = do_get_file("test_crlite_preexisting/crlite.enrollment");
 let filter = do_get_file("test_crlite_filters/20201017-0-filter");
 
 load("./corrupted_crlite_helper.js");
