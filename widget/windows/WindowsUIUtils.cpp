@@ -134,13 +134,12 @@ IDataPackage4 : public IInspectable {
 
 using namespace mozilla;
 
-WindowsUIUtils::WindowsUIUtils() : mInTabletMode(eTabletModeUnknown) {}
+enum class TabletModeState : uint8_t { Unknown, Off, On };
+static TabletModeState sInTabletModeState;
 
+WindowsUIUtils::WindowsUIUtils() = default;
 WindowsUIUtils::~WindowsUIUtils() = default;
 
-/*
- * Implement the nsISupports methods...
- */
 NS_IMPL_ISUPPORTS(WindowsUIUtils, nsIWindowsUIUtils)
 
 NS_IMETHODIMP
@@ -229,27 +228,31 @@ WindowsUIUtils::SetWindowIconNoData(mozIDOMWindowProxy* aWindow) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-WindowsUIUtils::GetInTabletMode(bool* aResult) {
-  if (mInTabletMode == eTabletModeUnknown) {
-    UpdateTabletModeState();
+bool WindowsUIUtils::GetInTabletMode() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+  if (sInTabletModeState == TabletModeState::Unknown) {
+    UpdateInTabletMode();
   }
-  *aResult = mInTabletMode == eTabletModeOn;
-  return NS_OK;
+  return sInTabletModeState == TabletModeState::On;
 }
 
 NS_IMETHODIMP
-WindowsUIUtils::UpdateTabletModeState() {
+WindowsUIUtils::GetInTabletMode(bool* aResult) {
+  *aResult = GetInTabletMode();
+  return NS_OK;
+}
+
+void WindowsUIUtils::UpdateInTabletMode() {
 #ifndef __MINGW32__
   if (!IsWin10OrLater()) {
-    return NS_OK;
+    return;
   }
 
   nsresult rv;
   nsCOMPtr<nsIWindowMediator> winMediator(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
 
   nsCOMPtr<nsIWidget> widget;
@@ -264,7 +267,7 @@ WindowsUIUtils::UpdateTabletModeState() {
 
     rv = appShell->GetHiddenDOMWindow(getter_AddRefs(navWin));
     if (NS_FAILED(rv) || !navWin) {
-      return rv;
+      return;
     }
   }
 
@@ -272,7 +275,7 @@ WindowsUIUtils::UpdateTabletModeState() {
   widget = widget::WidgetUtils::DOMWindowToWidget(win);
 
   if (!widget) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   HWND winPtr = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -282,31 +285,33 @@ WindowsUIUtils::UpdateTabletModeState() {
       HStringReference(RuntimeClass_Windows_UI_ViewManagement_UIViewSettings)
           .Get(),
       &uiViewSettingsInterop);
-  if (SUCCEEDED(hr)) {
-    ComPtr<IUIViewSettings> uiViewSettings;
-    hr = uiViewSettingsInterop->GetForWindow(winPtr,
-                                             IID_PPV_ARGS(&uiViewSettings));
-    if (SUCCEEDED(hr)) {
-      UserInteractionMode mode;
-      hr = uiViewSettings->get_UserInteractionMode(&mode);
-      if (SUCCEEDED(hr)) {
-        TabletModeState oldTabletModeState = mInTabletMode;
-        mInTabletMode = (mode == UserInteractionMode_Touch) ? eTabletModeOn
-                                                            : eTabletModeOff;
-        if (mInTabletMode != oldTabletModeState) {
-          nsCOMPtr<nsIObserverService> observerService =
-              mozilla::services::GetObserverService();
-          observerService->NotifyObservers(
-              nullptr, "tablet-mode-change",
-              ((mInTabletMode == eTabletModeOn) ? u"tablet-mode"
-                                                : u"normal-mode"));
-        }
-      }
-    }
+  if (FAILED(hr)) {
+    return;
+  }
+  ComPtr<IUIViewSettings> uiViewSettings;
+  hr = uiViewSettingsInterop->GetForWindow(winPtr,
+                                           IID_PPV_ARGS(&uiViewSettings));
+  if (FAILED(hr)) {
+    return;
+  }
+  UserInteractionMode mode;
+  hr = uiViewSettings->get_UserInteractionMode(&mode);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  TabletModeState oldTabletModeState = sInTabletModeState;
+  sInTabletModeState = mode == UserInteractionMode_Touch ? TabletModeState::On
+                                                         : TabletModeState::Off;
+  if (sInTabletModeState != oldTabletModeState) {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    observerService->NotifyObservers(nullptr, "tablet-mode-change",
+                                     sInTabletModeState == TabletModeState::On
+                                         ? u"tablet-mode"
+                                         : u"normal-mode");
   }
 #endif
-
-  return NS_OK;
 }
 
 #ifndef __MINGW32__

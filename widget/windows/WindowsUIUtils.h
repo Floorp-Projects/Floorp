@@ -13,8 +13,6 @@
 using SharePromise =
     mozilla::MozPromise<bool, nsresult, /* IsExclusive */ true>;
 
-enum TabletModeState { eTabletModeUnknown = 0, eTabletModeOff, eTabletModeOn };
-
 class WindowsUIUtils final : public nsIWindowsUIUtils {
  public:
   NS_DECL_ISUPPORTS
@@ -25,10 +23,11 @@ class WindowsUIUtils final : public nsIWindowsUIUtils {
   static RefPtr<SharePromise> Share(nsAutoString aTitle, nsAutoString aText,
                                     nsAutoString aUrl);
 
+  static void UpdateInTabletMode();
+  static bool GetInTabletMode();
+
  protected:
   ~WindowsUIUtils();
-
-  TabletModeState mInTabletMode;
 };
 
 #endif  // mozilla_widget_WindowsUIUtils_h__
