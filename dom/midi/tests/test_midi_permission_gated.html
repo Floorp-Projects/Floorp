@@ -6,6 +6,7 @@
   </head>
 
   <body onload="runTests()">
+    <iframe id="ifr" src="https://www.example.com/tests/dom/midi/tests/file_empty.html"></iframe>
     <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
 
@@ -15,47 +16,61 @@
       });
       ok(
         await SpecialPowers.testPermission(
-          "midi",
-          SpecialPowers.Services.perms.UNKNOWN_ACTION,
-          document
-        ),
-        "midi value should have UNKNOWN permission"
-      );
-      ok(
-        await SpecialPowers.testPermission(
           "midi-sysex",
           SpecialPowers.Services.perms.UNKNOWN_ACTION,
           document
         ),
         "midi-sysex value should have UNKNOWN permission"
       );
+      ok(
+        await SpecialPowers.testPermission(
+          "midi-sysex",
+          SpecialPowers.Services.perms.UNKNOWN_ACTION,
+          SpecialPowers.wrap($("ifr")).contentDocument
+        ),
+        "permission should also not be set for iframe"
+      );
 
       // Gated permission should fail without addon installed.
-      try {
-        await navigator.requestMIDIAccess({ sysex: false });
-        ok(false, "MIDI Access Request gate failed");
-      } catch (ex) {
-        ok(true, "MIDI Access Request denied by default");
+      for (let sysex of [false, true]) {
+        try {
+          await navigator.requestMIDIAccess({ sysex });
+          ok(false, "MIDI Access Request gate failed");
+        } catch (ex) {
+          ok(true, "MIDI Access Request denied by default");
+        }
       }
 
       // When an addon is installed, the permission is inserted.  Test
       // that the request succeeds after we insert the permission.
       await SpecialPowers.addPermission(
-        "midi",
+        "midi-sysex",
         SpecialPowers.Services.perms.ALLOW_ACTION,
         document
       );
 
       // Gated permission should allow access after addon inserted permission.
-      try {
-        await navigator.requestMIDIAccess({ sysex: false });
-        ok(true, "MIDI Access Request allowed");
-      } catch (ex) {
-        ok(false, "MIDI Access Request failed");
+      for (let sysex of [false, true]) {
+        try {
+          await navigator.requestMIDIAccess({ sysex });
+          ok(true, "MIDI Access Request allowed");
+        } catch (ex) {
+          ok(false, "MIDI Access Request failed");
+        }
       }
 
-      // Remove the permission
-      await SpecialPowers.removePermission("midi", document);
+      // Gated permission should also apply to subdomains.
+      for (let sysex of [false, true]) {
+        try {
+          await SpecialPowers.wrap($("ifr")).contentWindow.navigator.requestMIDIAccess({ sysex });
+          ok(true, "MIDI Access Request allowed for subdomain");
+        } catch (ex) {
+          ok(false, "MIDI Access Request failed for subdomain");
+        }
+      }
+
+      // Remove the permission.
+      await SpecialPowers.removePermission("midi-sysex", document);
 
       SimpleTest.finish();
     }
