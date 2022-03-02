@@ -450,7 +450,8 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
 });
 
 this.privacy = class extends ExtensionAPI {
-  primeListener(extension, event, fire) {
+  primeListener(event, fire) {
+    let { extension } = this;
     let listener = getPrimedSettingsListener({
       extension,
       name: event,

@@ -11,7 +11,7 @@ const { ExtensionAPI } = ExtensionCommon;
 /* global EventManager */
 const API = class extends ExtensionAPI {
   static namespace = undefined;
-  primeListener(extension, event, fire, params) {
+  primeListener(event, fire, params) {
     // eslint-disable-next-line no-undef
     let { eventName, throwError, ignoreListener } =
       this.constructor.testOptions || {};
