@@ -48,6 +48,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Ցուցադրել բոլոր պահպանված էջանիշների կոճակը</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Հեռացնել</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s-ը մշակված է Mozilla-ի կողմից:</string>
 
@@ -67,7 +70,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Դուք կարող եք կայել Firefox-ը ինքնաշխատ բացել հղումները հավելվածներում:</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Դուք կարող եք կայել Firefox-ը ինքնաշխատ բացել հղումները հավելվածներում:</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Դուք կարող եք կայել %1$s-ը ինքնաշխատ բացել հղումները հավելվածներում:</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Անցնել Կարգավորումներին</string>
     <!-- Text for the negative action button -->
@@ -95,7 +100,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Ինքնափակե՞լ մեկ ամսից:</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Փակել</string>
 
@@ -127,6 +135,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d կայքեր</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Հեռացնել</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -245,11 +257,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Ինչն է նոր Firefox-ում</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Ինչն է նոր Firefox-ում</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Ինչն է նոր %1$s-ում</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Այժմ ավելի հեշտ է շարունակել այն տեղից, որտեղ կանգ եք առել:</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Անհատականացված Firefox-ի տնային էջ</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Անհատականացված Firefox-ի տնային էջ</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Անհատականացված %1$s գլխավոր էջ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Անցեք ձեր բաց ներդիրներին, էջանիշերին և զննման պատմությանը:</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -266,7 +282,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Բացել Firefox-ի նոր ներդիր</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Բացել Firefox-ի նոր ներդիր</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Բացել նոր %1$s ներդիր</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Որոնել</string>
     <!-- Text preview for larger sized widgets -->
@@ -642,7 +660,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Գործուն</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox-ը կարող է ժամանակ առ ժամանակ տեղադրել և գործարկել ուսումնասիրություններ:</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox-ը կարող է ժամանակ առ ժամանակ տեղադրել և գործարկել ուսումնասիրություններ:</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s-ը կարող է ժամանակ առ ժամանակ տեղադրել և աշխատեցնել ուսումնասիրություններ:</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Իմանալ ավելին</string>
 
@@ -1145,9 +1165,12 @@
     <string name="onboarding_header">Բարի գալուստ %s:</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Համաժամեցնել Firefox-ը</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Համաժամեցնել Firefox-ը</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Համաժամացրեք %1$s-ը սարքերի միջև</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Բերեք էջանիշերը, պատմությունը և գաղտնաբառերը Firefox՝ այս սարքում:</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Այս սարքում բերեք էջանիշները, պատմությունը և գաղտնաբառերը %1$s-ում:</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Գրանցվել</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1155,7 +1178,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Միշտ գաղտնիություն</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox-ը ինքնաշխատ կանգնեցնում է ընկերությունների՝ հետևելու Ձեզ առցանց:</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox-ը ինքնաշխատ կանգնեցնում է ընկերությունների՝ հետևելու Ձեզ առցանց:</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s-ը ինքնաշխատ կանգնեցնում է ընկերություններին՝ Ձեզ առցանց հետևելուց:</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Ստանդարտ (սկզբնադիր)</string>
     <!-- text for standard blocking option button description -->
@@ -1663,7 +1688,9 @@
     <string name="synced_tabs_enable_tab_syncing">Խնդրում ենք միացնել ներդիրի համաժամացումը:</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Դուք չունեք բացված որևէ ներդիր Firefox-ի ձեր մյուս սարքերում:</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Դուք չունեք բացված որևէ ներդիր Firefox-ի ձեր մյուս սարքերում:</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Դուք չունեք բաց ներդիրներ %1$s-ում ձեր այլ սարքերում:</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Դիտեք այլ սարքերում ձեր ներդիրների ցանկը:</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
