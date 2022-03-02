@@ -15,7 +15,7 @@ const TEST_URI = `
     user-modify: read-only;
   }
   div {
-    font-variant-alternates: historical-forms;
+    -moz-context-properties: fill;
   }
   </style>
   <body>
@@ -45,10 +45,10 @@ const TEST_DATA_ALL = [
   ...TEST_DATA_SELECTED,
   {
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-    property: "font-variant-alternates",
-    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
-    deprecated: true,
-    experimental: false,
+    property: "-moz-context-properties",
+    url: "https://developer.mozilla.org/docs/Web/CSS/-moz-context-properties",
+    deprecated: false,
+    experimental: true,
   },
 ];
 
