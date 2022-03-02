@@ -562,6 +562,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // Used for store rectangle which the popup is going to be anchored to,
   // we need that for Wayland
   nsRect mAnchorRect;
+  // Store SizedToPopup attribute for MoveTo call to avoid
+  // unwanted popup resize there.
+  bool mSizedToPopup = false;
 
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
@@ -585,26 +588,19 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   struct ReflowCallbackData {
     ReflowCallbackData()
-        : mPosted(false),
-          mAnchor(nullptr),
-          mSizedToPopup(false),
-          mIsOpenChanged(false) {}
-    void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup,
-                    bool aIsOpenChanged) {
+        : mPosted(false), mAnchor(nullptr), mIsOpenChanged(false) {}
+    void MarkPosted(nsIFrame* aAnchor, bool aIsOpenChanged) {
       mPosted = true;
       mAnchor = aAnchor;
-      mSizedToPopup = aSizedToPopup;
       mIsOpenChanged = aIsOpenChanged;
     }
     void Clear() {
       mPosted = false;
       mAnchor = nullptr;
-      mSizedToPopup = false;
       mIsOpenChanged = false;
     }
     bool mPosted;
     nsIFrame* mAnchor;
-    bool mSizedToPopup;
     bool mIsOpenChanged;
   };
   ReflowCallbackData mReflowCallbackData;
