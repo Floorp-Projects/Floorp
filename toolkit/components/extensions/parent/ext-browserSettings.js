@@ -375,7 +375,8 @@ this.browserSettings = class extends ExtensionAPI {
     };
   }
 
-  primeListener(extension, event, fire) {
+  primeListener(event, fire) {
+    let { extension } = this;
     if (event == "homepageOverride") {
       return this.homePageOverrideListener(fire);
     }
