@@ -6,7 +6,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
-import { useLanguageSwitcher } from "./LanguageSwitcher";
 import {
   BASE_PARAMS,
   addUtmParams,
@@ -16,12 +15,10 @@ import {
 const TRANSITION_OUT_TIME = 1000;
 
 export const MultiStageAboutWelcome = props => {
-  let { screens } = props;
-
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
     // Send impression ping when respective screen first renders
-    screens.forEach((screen, order) => {
+    props.screens.forEach((screen, order) => {
       if (index === order) {
         AboutWelcomeUtils.sendImpressionTelemetry(
           `${props.message_id}_${order}_${screen.id}`
@@ -40,7 +37,7 @@ export const MultiStageAboutWelcome = props => {
     // or last screen index if a user navigates by pressing back
     // button from about:home
     const handler = ({ state }) =>
-      setScreenIndex(Math.min(state, screens.length - 1));
+      setScreenIndex(Math.min(state, props.screens.length - 1));
 
     // Handle page load, e.g., going back to about:welcome from about:home
     handler(window.history);
@@ -84,7 +81,7 @@ export const MultiStageAboutWelcome = props => {
     // Actually move forwards after all transitions finish.
     setTimeout(
       () => {
-        if (index < screens.length - 1) {
+        if (index < props.screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
         } else {
@@ -143,26 +140,13 @@ export const MultiStageAboutWelcome = props => {
     s => s.content.position !== "corner"
   );
 
-  const {
-    negotiatedLanguage,
-    langPackInstallPhase,
-    languageFilteredScreens,
-  } = useLanguageSwitcher(
-    props.appAndSystemLocaleInfo,
-    screens,
-    index,
-    setScreenIndex
-  );
-
-  screens = languageFilteredScreens;
-
   return (
     <React.Fragment>
       <div
         className={`outer-wrapper onboardingContainer proton transition-${transition}`}
         style={props.backdrop ? { background: props.backdrop } : {}}
       >
-        {screens.map((screen, order) => {
+        {props.screens.map((screen, order) => {
           const isFirstCenteredScreen =
             screen.content.position !== "corner" &&
             screen.order === centeredScreens[0].order;
@@ -173,7 +157,7 @@ export const MultiStageAboutWelcome = props => {
             <WelcomeScreen
               key={screen.id + order}
               id={screen.id}
-              totalNumberOfScreens={screens.length}
+              totalNumberOfScreens={props.screens.length}
               isFirstCenteredScreen={isFirstCenteredScreen}
               isLastCenteredScreen={isLastCenteredScreen}
               order={order}
@@ -187,8 +171,6 @@ export const MultiStageAboutWelcome = props => {
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
               autoAdvance={screen.auto_advance}
-              negotiatedLanguage={negotiatedLanguage}
-              langPackInstallPhase={langPackInstallPhase}
             />
           ) : null;
         })}
@@ -266,11 +248,7 @@ export class WelcomeScreen extends React.PureComponent {
   async handleAction(event) {
     let { props } = this;
     let { value } = event.currentTarget;
-    let targetContent =
-      props.content[value] ||
-      props.content.tiles ||
-      props.content.languageSwitcher;
-
+    let targetContent = props.content[value] || props.content.tiles;
     if (!(targetContent && targetContent.action)) {
       return;
     }
@@ -317,11 +295,7 @@ export class WelcomeScreen extends React.PureComponent {
         order={this.props.order}
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
-        appAndSystemLocaleInfo={this.props.appAndSystemLocaleInfo}
-        negotiatedLanguage={this.props.negotiatedLanguage}
-        langPackInstallPhase={this.props.langPackInstallPhase}
         handleAction={this.handleAction}
-        messageId={this.props.messageId}
         isFirstCenteredScreen={this.props.isFirstCenteredScreen}
         isLastCenteredScreen={this.props.isLastCenteredScreen}
         autoAdvance={this.props.autoAdvance}
