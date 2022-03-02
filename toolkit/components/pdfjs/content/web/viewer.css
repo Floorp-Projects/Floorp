@@ -2259,9 +2259,6 @@ html[dir="rtl"] .treeItemToggler::before {
   background-color: rgba(0, 0, 0, 0.2);
   z-index: 40000;
 }
-#overlayContainer > * {
-  overflow: auto;
-}
 
 #overlayContainer > .container {
   display: table-cell;
