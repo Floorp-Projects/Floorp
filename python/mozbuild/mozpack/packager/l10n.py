@@ -270,7 +270,9 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
 
-def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
+def repack(
+    source, l10n, extra_l10n={}, non_resources=[], non_chrome=set(), minify=False
+):
     """
     Replace localized data from the `source` directory with localized data
     from `l10n` and `extra_l10n`.
@@ -289,15 +291,16 @@ def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
     is in that format.
     The `non_chrome` argument gives a list of file/directory patterns for
     localized files that are not listed in a chrome.manifest.
+    If `minify`, `.properties` files are minified.
     """
-    app_finder = UnpackFinder(source)
-    l10n_finder = UnpackFinder(l10n)
+    app_finder = UnpackFinder(source, minify=minify)
+    l10n_finder = UnpackFinder(l10n, minify=minify)
     if extra_l10n:
         finders = {
             "": l10n_finder,
         }
         for base, path in six.iteritems(extra_l10n):
-            finders[base] = UnpackFinder(path)
+            finders[base] = UnpackFinder(path, minify=minify)
         l10n_finder = ComposedFinder(finders)
     copier = FileCopier()
     compress = min(app_finder.compressed, JAR_DEFLATED)

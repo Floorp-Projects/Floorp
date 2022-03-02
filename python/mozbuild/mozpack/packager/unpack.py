@@ -42,11 +42,12 @@ class UnpackFinder(BaseFinder):
     or with files from a FileFinder using the given path as its root.
     """
 
-    def __init__(self, source, omnijar_name=None, unpack_xpi=True):
+    def __init__(self, source, omnijar_name=None, unpack_xpi=True, **kwargs):
         if isinstance(source, BaseFinder):
+            assert not kwargs
             self._finder = source
         else:
-            self._finder = FileFinder(source)
+            self._finder = FileFinder(source, **kwargs)
         self.base = self._finder.base
         self.files = FileRegistry()
         self.kind = "flat"
