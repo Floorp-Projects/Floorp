@@ -6971,7 +6971,7 @@
 
 - name: layers.gpu-process.enabled
   type: bool
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
