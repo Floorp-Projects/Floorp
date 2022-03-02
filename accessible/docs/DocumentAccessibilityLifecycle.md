@@ -35,12 +35,24 @@ Note that scenario 1 or 2 could happen for a child document as well.
 
 Scenario 3 would then apply for any child documents encountered while building the accessibility trees for these top level DocAccessibles.
 
+### Scenario 5: Document gets focus before layout begins
+It is possible for a document to get focus before layout has begun and before DOM loading is complete.
+In that case, there will be a PresShell, but it will have no root frame.
+Despite this, it is necessary to create the document because otherwise, a11y focus would go nowhere while the document had DOM focus.
+
+1. [a11y::FocusManager gets notified of a DOM focus change (FocusManager::NotifyOfDOMFocus)](https://searchfox.org/mozilla-central/rev/04dbb1a865894aec20eb02585aa75acccc0b72d5/accessible/base/FocusManager.cpp#126).
+2. It gets the DocAccessible for the child document (DocManager::GetDocAccessible).
+3. Because it doesn't exist yet, [the DocAccessible gets created (DocManager::CreateDocOrRootAccessible)](https://searchfox.org/mozilla-central/rev/4e87b5392eafe1f1d49017e76f7317b06ec0b1d8/accessible/base/DocManager.cpp#62).
+
 ## 2. Initial tree creation
 1. When a DocAccessible is created, it [creates a refresh observer (NotificationController)](https://searchfox.org/mozilla-central/rev/36f79bed679ad7ec46f7cd05868a8f6dc823e1be/accessible/generic/DocAccessible.cpp#368) which performs various processing asynchronously.
 2. When the NotificationController is created, it [schedules processing for the next possible refresh tick](https://searchfox.org/mozilla-central/rev/36f79bed679ad7ec46f7cd05868a8f6dc823e1be/accessible/base/NotificationController.cpp#39).
 3. Once a refresh tick occurs [while there is not an interruptible reflow in progress](https://searchfox.org/mozilla-central/rev/36f79bed679ad7ec46f7cd05868a8f6dc823e1be/accessible/base/NotificationController.cpp#615), the DocAccessible's [initial update is triggered (DocAccessible::DoInitialUpdate)](https://searchfox.org/mozilla-central/source/accessible/base/NotificationController.cpp#649).
 4. For a top level document, the [DocAccessibleChild IPC actor is created](https://searchfox.org/mozilla-central/rev/36f79bed679ad7ec46f7cd05868a8f6dc823e1be/accessible/generic/DocAccessible.cpp#1752). See the section on IPC actor creation below.
 5. The [DOM tree is walked and the accessibility tree is built for the document down (DocAccessible::CacheChildrenInSubtree)](https://searchfox.org/mozilla-central/rev/36f79bed679ad7ec46f7cd05868a8f6dc823e1be/accessible/generic/DocAccessible.cpp#1789).
+
+Note that the document might still have no layout frame if the PresShell still has no frame; see scenario 5 in DocAccessible creation above.
+Nevertheless, DoInitialUpdate must be called because otherwise, we wouldn't create the IPC actor, which would in turn mean remote documents in this state couldn't get a11y focus.
 
 ## 3. Child document binding
 Child document here refers to a child document in the same process; e.g. an in-process iframe or a parent process document such as an about: page.

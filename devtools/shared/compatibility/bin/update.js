@@ -7,11 +7,10 @@
 // This dataset needs to be manually synchronized periodically
 
 // The subsets from the dataset required by the Compatibility panel are:
-// * browsers: https://github.com/mdn/browser-compat-data/tree/master/browsers
 // * css.properties: https://github.com/mdn/browser-compat-data/tree/master/css
 
-// The MDN compatibility data is available as a node package ("@mdn/browser-compat-data").
-// This node script downloads `browsers.json` and `css-properties.json` and updates the relevant files.
+// The MDN compatibility data is available as a node package ("@mdn/browser-compat-data"),
+// which is used here to update `../dataset/css-properties.json`.
 
 /* global __dirname */
 
@@ -19,7 +18,6 @@
 
 const compatData = require("@mdn/browser-compat-data");
 exportData(compatData.css.properties, "css-properties.json");
-exportData(compatData.browsers, "browsers.json");
 
 function exportData(data, fileName) {
   const fs = require("fs");

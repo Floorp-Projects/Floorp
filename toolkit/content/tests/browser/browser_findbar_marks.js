@@ -4,7 +4,7 @@
 // Reftests in layout/xul/reftest are used to verify their appearance.
 
 const TEST_PAGE_URI =
-  "data:text/html,<body style='font-size: 20px; margin: 0;'><p style='margin: 0; height: 30px;'>This is some fun text.</p><p style='margin-top: 2000px; height: 30px;'>This is some tex to find.</p><p style='margin-top: 500px; height: 30px;'>This is some text to find.</p></body>";
+  "data:text/html,<body style='font-size: 20px; margin: 0;'><p style='margin: 0; block-size: 30px;'>This is some fun text.</p><p style='margin-block-start: 2000px; block-size: 30px;'>This is some tex to find.</p><p style='margin-block-start: 500px; block-size: 30px;'>This is some text to find.</p></body>";
 
 let gUpdateCount = 0;
 
@@ -129,6 +129,33 @@ add_task(async function test_findmarks() {
   gBrowser.removeTab(tab);
 });
 
+add_task(async function test_findmarks_vertical() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PAGE_URI
+  );
+  let browser = tab.linkedBrowser;
+  let endFn = initForBrowser(browser);
+
+  for (let mode of [
+    "sideways-lr",
+    "sideways-rl",
+    "vertical-lr",
+    "vertical-rl",
+  ]) {
+    await SpecialPowers.spawn(browser, [mode], writingMode => {
+      let document = content.document;
+      document.documentElement.style.writingMode = writingMode;
+    });
+
+    await promiseFindFinished(gBrowser, "tex", true);
+    await getMarks(browser, true, true);
+  }
+
+  endFn();
+  gBrowser.removeTab(tab);
+});
+
 // This test verifies what happens when scroll marks are visible and the window is resized.
 add_task(async function test_found_resize() {
   let window2 = await BrowserTestUtils.openNewBrowserWindow({});
@@ -169,11 +196,12 @@ add_task(async function test_found_resize() {
 // call to getMarks. If increase is true, then the marks should
 // have been updated, and if increase is false, the marks should
 // not have been updated.
-async function getMarks(browser, increase) {
+async function getMarks(browser, increase, shouldBeOnHScrollbar = false) {
   let results = await SpecialPowers.spawn(browser, [], () => {
-    let marks = content.lastMarks;
-    content.lastMarks = null;
+    let { marks, onHorizontalScrollbar } = content.lastMarks;
+    content.lastMarks = {};
     return {
+      onHorizontalScrollbar,
       marks: marks || [],
       count: content.eventsCount,
     };
@@ -184,6 +212,12 @@ async function getMarks(browser, increase) {
   // characters occurs. This check allows for mutliple updates to occur.
   if (increase) {
     Assert.ok(results.count > gUpdateCount, "expected events count");
+
+    Assert.strictEqual(
+      results.onHorizontalScrollbar,
+      shouldBeOnHScrollbar,
+      "marks should be on the horizontal scrollbar"
+    );
   } else {
     Assert.equal(results.count, gUpdateCount, "expected events count");
   }

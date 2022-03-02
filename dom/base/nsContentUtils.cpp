@@ -2297,7 +2297,11 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
 
 /* static */
 bool nsContentUtils::UseStandinsForNativeColors() {
-  return ShouldResistFingerprinting() ||
+  return ShouldResistFingerprinting(
+             "we want to have consistent colors across the browser if RFP is "
+             "enabled, so we check the global preference"
+             "not excluding chrome browsers or webpages, so we call the legacy "
+             "RFP function to prevent that") ||
          StaticPrefs::ui_use_standins_for_native_colors();
 }
 

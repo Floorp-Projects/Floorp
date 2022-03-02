@@ -81,6 +81,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: getPageThumbURL(TEST_URL1),
@@ -96,6 +97,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
@@ -111,6 +113,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
@@ -134,6 +137,7 @@ add_task(async function test_add_and_query_builderMetadata() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    hidden: false,
     builderMetadata: { domain: "example.com" },
     snapshotCount: urls.length,
   });
@@ -179,14 +183,57 @@ add_task(async function test_update_metadata() {
   );
 
   groups[0].title = "Modified title";
+  // This should be ignored.
   groups[0].builder = "pinned";
   await SnapshotGroups.updateMetadata(groups[0]);
 
   let updated_groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
-  assertSnapshotGroup(groups[0], {
+  assertSnapshotGroup(updated_groups[0], {
     title: "Modified title",
-    builder: "pinned",
+    builder: "domain",
+    snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
+  });
+
+  await SnapshotGroups.updateMetadata({
+    id: groups[0].id,
+    title: "Only changed title",
+  });
+
+  updated_groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
+  assertSnapshotGroup(updated_groups[0], {
+    title: "Only changed title",
+    builder: "domain",
+    snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
+  });
+
+  await SnapshotGroups.updateMetadata({
+    id: groups[0].id,
+    builderMetadata: { foo: "bar" },
+  });
+
+  updated_groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
+  assertSnapshotGroup(updated_groups[0], {
+    title: "Only changed title",
+    builder: "domain",
+    builderMetadata: { foo: "bar" },
+    snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
+  });
+
+  await SnapshotGroups.updateMetadata({
+    id: groups[0].id,
+    title: "Modified title",
+    builderMetadata: null,
+  });
+
+  updated_groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
+  assertSnapshotGroup(updated_groups[0], {
+    title: "Modified title",
+    builder: "domain",
+    builderMetadata: null,
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 });
@@ -194,11 +241,11 @@ add_task(async function test_update_metadata() {
 add_task(async function test_update_urls() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 snapshot group");
-  Assert.equal(
-    groups[0].title,
-    "Modified title",
-    "SnapshotGroup title should be retrieved"
-  );
+  assertSnapshotGroup(groups[0], {
+    title: "Modified title",
+    builder: "domain",
+    snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
+  });
 
   await SnapshotGroups.updateUrls(groups[0].id, [
     TEST_URL5,
@@ -210,7 +257,7 @@ add_task(async function test_update_urls() {
   Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Modified title",
-    builder: "pinned",
+    builder: "domain",
     snapshotCount: [TEST_URL5, TEST_URL3, TEST_URL1].length,
   });
 });
@@ -379,4 +426,128 @@ add_task(async function test_minimum_size() {
     builder: "domain",
     snapshotCount: 4,
   });
+});
+
+add_task(async function test_hidden_groups() {
+  await delete_all_groups();
+
+  let group1 = await SnapshotGroups.add(
+    {
+      title: "Test Group 1",
+      builder: "domain",
+    },
+    []
+  );
+
+  let group2 = await SnapshotGroups.add(
+    {
+      title: "Test Group 2",
+      builder: "domain",
+    },
+    []
+  );
+
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should return all groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  await SnapshotGroups.updateMetadata({
+    id: group1,
+    hidden: true,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should be only one visible group.");
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group 2",
+    builder: "domain",
+    hidden: false,
+    snapshotCount: 0,
+  });
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: true,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  await SnapshotGroups.updateMetadata({
+    id: group1,
+    hidden: false,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two visible groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+  ]);
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+
+  await SnapshotGroups.updateMetadata({
+    id: group2,
+    hidden: true,
+  });
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should be only one visible group.");
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group 1",
+    builder: "domain",
+    hidden: false,
+    snapshotCount: 0,
+  });
+
+  groups = await SnapshotGroups.query({ hidden: true, skipMinimum: true });
+  Assert.equal(groups.length, 2, "Should be two total groups.");
+  assertSnapshotGroupList(orderedGroups(groups, [group1, group2]), [
+    {
+      title: "Test Group 1",
+      builder: "domain",
+      hidden: false,
+      snapshotCount: 0,
+    },
+    {
+      title: "Test Group 2",
+      builder: "domain",
+      hidden: true,
+      snapshotCount: 0,
+    },
+  ]);
 });

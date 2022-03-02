@@ -1113,24 +1113,25 @@ Status FinalizeImageRect(
 
       // TODO(veluca): all blending should happen here.
 
+      Rect image_line_rect = upsampled_frame_rect.Lines(available_y, num_ys)
+                                 .Crop(Rect(0, 0, frame_dim.xsize_upsampled,
+                                            frame_dim.ysize_upsampled));
+      if ((image_line_rect.xsize()) == 0 || image_line_rect.ysize() == 0) {
+        continue;
+      }
+
       if (dec_state->rgb_output != nullptr) {
         HWY_DYNAMIC_DISPATCH(FloatToRGBA8)
         (*output_pixel_data_storage,
          upsampled_frame_rect_for_storage.Lines(available_y, num_ys),
          dec_state->rgb_output_is_rgba, alpha,
-         alpha_rect.Lines(available_y, num_ys),
-         upsampled_frame_rect.Lines(available_y, num_ys)
-             .Crop(Rect(0, 0, frame_dim.xsize_upsampled,
-                        frame_dim.ysize_upsampled)),
+         alpha_rect.Lines(available_y, num_ys), image_line_rect,
          dec_state->rgb_output, dec_state->rgb_stride);
       }
       if (dec_state->pixel_callback != nullptr) {
         Rect alpha_line_rect = alpha_rect.Lines(available_y, num_ys);
         Rect color_input_line_rect =
             upsampled_frame_rect_for_storage.Lines(available_y, num_ys);
-        Rect image_line_rect = upsampled_frame_rect.Lines(available_y, num_ys)
-                                   .Crop(Rect(0, 0, frame_dim.xsize_upsampled,
-                                              frame_dim.ysize_upsampled));
         const float* line_buffers[4];
         for (size_t iy = 0; iy < image_line_rect.ysize(); iy++) {
           for (size_t c = 0; c < 3; c++) {

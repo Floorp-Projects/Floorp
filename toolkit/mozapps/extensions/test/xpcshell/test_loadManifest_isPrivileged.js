@@ -183,8 +183,19 @@ add_task(async function test_temporary_privileged_signature() {
 add_task(async function test_temporary_experiments_enabled() {
   AddonTestUtils.usePrivilegedSignatures = false;
   Services.prefs.setBoolPref("extensions.experiments.enabled", true);
+
+  // Experiments can only be used if AddonSettings.EXPERIMENTS_ENABLED is true.
+  // This is the condition behind the flag, minus Cu.isInAutomation. Currently
+  // that flag is false despite this being a test (see bug 1598804), but that
+  // is desired in this case because we want the test to confirm the real-world
+  // behavior instead of test-specific behavior.
+  const areTemporaryExperimentsAllowed =
+    !AppConstants.MOZ_REQUIRE_SIGNING ||
+    AppConstants.NIGHTLY_BUILD ||
+    AppConstants.MOZ_DEV_EDITION;
+
   await testLoadManifest({
-    expectPrivileged: true,
+    expectPrivileged: areTemporaryExperimentsAllowed,
     location: getInstallLocation({ isTemporary: true }),
   });
 });

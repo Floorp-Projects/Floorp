@@ -22,6 +22,7 @@ EXPORTS.hwy += [
     "/third_party/highway/hwy/detect_targets.h",
     "/third_party/highway/hwy/foreach_target.h",
     "/third_party/highway/hwy/highway.h",
+    "/third_party/highway/hwy/highway_export.h",
     "/third_party/highway/hwy/targets.h",
 ]
 

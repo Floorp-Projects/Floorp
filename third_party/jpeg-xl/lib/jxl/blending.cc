@@ -453,7 +453,7 @@ void PerformBlending(const float* const* bg, const float* const* fg,
     JXL_ABORT("Unreachable");
   }
   for (size_t i = 0; i < 3 + num_ec; i++) {
-    memcpy(out[i] + x0, tmp.Row(i), xsize * sizeof(**out));
+    if (xsize != 0) memcpy(out[i] + x0, tmp.Row(i), xsize * sizeof(**out));
   }
 }
 

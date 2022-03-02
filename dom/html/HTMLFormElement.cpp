@@ -1132,10 +1132,9 @@ int32_t HTMLFormElement::CompareFormControlPosition(Element* aElement1,
 /* static */
 void HTMLFormElement::AssertDocumentOrder(
     const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm) {
-  // TODO: remove the return statement with bug 598468.
+  // TODO: remove the if directive with bug 598468.
   // This is done to prevent asserts in some edge cases.
-  return;
-
+#  if 0
   // Only iterate if aControls is not empty, since otherwise
   // |aControls.Length() - 1| will be a very large unsigned number... not what
   // we want here.
@@ -1146,6 +1145,7 @@ void HTMLFormElement::AssertDocumentOrder(
           "Form controls not ordered correctly");
     }
   }
+#  endif
 }
 
 /**
@@ -1158,10 +1158,9 @@ void HTMLFormElement::AssertDocumentOrder(
 void HTMLFormElement::AssertDocumentOrder(
     const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
     nsIContent* aForm) {
-  // TODO: remove the return statement with bug 598468.
+  // TODO: remove the if directive with bug 598468.
   // This is done to prevent asserts in some edge cases.
-  return;
-
+#  if 0
   // Only iterate if aControls is not empty, since otherwise
   // |aControls.Length() - 1| will be a very large unsigned number... not what
   // we want here.
@@ -1172,6 +1171,7 @@ void HTMLFormElement::AssertDocumentOrder(
           "Form controls not ordered correctly");
     }
   }
+#  endif
 }
 #endif
 

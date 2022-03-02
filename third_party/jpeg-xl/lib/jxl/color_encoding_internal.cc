@@ -692,9 +692,16 @@ Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
   MatMul(kBradford, w, 3, 3, 1, lms);
   MatMul(kBradford, w50, 3, 3, 1, lms50);
 
+  if (lms[0] == 0 || lms[1] == 0 || lms[2] == 0) {
+    return JXL_FAILURE("Invalid white point");
+  }
   float a[9] = {
+      //       /----> 0, 1, 2, 3,          /----> 4, 5, 6, 7,          /----> 8,
       lms50[0] / lms[0], 0, 0, 0, lms50[1] / lms[1], 0, 0, 0, lms50[2] / lms[2],
   };
+  if (!std::isfinite(a[0]) || !std::isfinite(a[4]) || !std::isfinite(a[8])) {
+    return JXL_FAILURE("Invalid white point");
+  }
 
   float b[9];
   MatMul(a, kBradford, 3, 3, 3, b);

@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @property {string} title
  *   The title of the group, this may be automatically generated or
  *   user assigned.
+ * @property {boolean} hidden
+ *   Whether the group is hidden or not.
  * @property {string} builder
  *   The builder that was used to create the group (e.g. "domain", "pinned").
  * @property {object} builderMetadata
@@ -104,24 +106,46 @@ const SnapshotGroups = new (class SnapshotGroups {
    * Modifies the metadata for a snapshot group.
    *
    * @param {SnapshotGroup} group
-   *   The details of the group to modify. If lastAccessed and SnapshotCount are specified, then they are ignored.
+   *   The partial details of the group to modify. Must include the group's id. Any other properties
+   *   update those properties of the group. If builder, imageUrl, lastAccessed or snapshotCount are
+   *   specified then they are ignored.
    */
   async updateMetadata(group) {
     await PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:updateMetadata",
-      db => {
-        return db.executeCached(
-          `
-        UPDATE moz_places_metadata_snapshots_groups
-        SET title = :title, builder = :builder, builder_data = :builder_data
-        WHERE id = :id
-      `,
-          {
-            id: group.id,
-            title: group.title,
-            builder: group.builder,
-            builder_data: JSON.stringify(group.builderMetadata),
+      async db => {
+        let params = { id: group.id };
+        let updates = {
+          title: group.title,
+          builder_data:
+            "builderMetadata" in group
+              ? JSON.stringify(group.builderMetadata)
+              : undefined,
+        };
+
+        if ("hidden" in group) {
+          updates.hidden = group.hidden ? 1 : 0;
+        }
+
+        let setters = [];
+        for (let [key, value] of Object.entries(updates)) {
+          if (value !== undefined) {
+            setters.push(`${key} = :${key}`);
+            params[key] = value;
           }
+        }
+
+        if (!setters.length) {
+          return;
+        }
+
+        await db.executeCached(
+          `
+            UPDATE moz_places_metadata_snapshots_groups
+            SET ${setters.join(", ")}
+            WHERE id = :id
+          `,
+          params
         );
       }
     );
@@ -189,6 +213,8 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @param {number} [options.limit]
    *   A numerical limit to the number of snapshots to retrieve, defaults to 50.
    *   Use -1 to specify no limit.
+   * @param {boolean} [options.hidden]
+   *   Pass true to also return hidden groups.
    * @param {string} [options.builder]
    *   Limit searching snapshot groups to results from a particular builder.
    * @param {boolean} [options.skipMinimum]
@@ -198,10 +224,15 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @returns {SnapshotGroup[]}
    *   An array of snapshot groups, in descending order of last access time.
    */
-  async query({ limit = 50, builder = "", skipMinimum = false } = {}) {
+  async query({
+    limit = 50,
+    builder = undefined,
+    hidden = false,
+    skipMinimum = false,
+  } = {}) {
     let db = await PlacesUtils.promiseDBConnection();
 
-    let params = { builder };
+    let params = {};
     let sizeFragment = "";
     let limitFragment = "";
     if (!skipMinimum) {
@@ -213,9 +244,22 @@ const SnapshotGroups = new (class SnapshotGroups {
       limitFragment = "LIMIT :limit";
     }
 
+    let whereTerms = [];
+
+    if (builder) {
+      whereTerms.push("builder = :builder");
+      params.builder = builder;
+    }
+
+    if (!hidden) {
+      whereTerms.push("hidden = 0");
+    }
+
+    let where = whereTerms.length ? `WHERE ${whereTerms.join(" AND ")}` : "";
+
     let rows = await db.executeCached(
       `
-      SELECT g.id, g.title, g.builder, g.builder_data,
+      SELECT g.id, g.title, g.hidden, g.builder, g.builder_data,
             COUNT(s.group_id) AS snapshot_count,
             MAX(sn.last_interaction_at) AS last_access,
             (SELECT group_concat(IFNULL(preview_image_url, ''), '|')
@@ -233,7 +277,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       FROM moz_places_metadata_snapshots_groups g
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
-      WHERE builder = :builder OR :builder = ""
+      ${where}
       GROUP BY g.id ${sizeFragment}
       ORDER BY last_access DESC
       ${limitFragment}
@@ -398,6 +442,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       id: row.getResultByName("id"),
       imageUrl,
       title: row.getResultByName("title"),
+      hidden: row.getResultByName("hidden") == 1,
       builder: row.getResultByName("builder"),
       builderMetadata: JSON.parse(row.getResultByName("builder_data")),
       snapshotCount: row.getResultByName("snapshot_count"),

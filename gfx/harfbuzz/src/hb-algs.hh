@@ -226,8 +226,14 @@ struct
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<2>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
 
+/* Sadly, we must give further hints to VS2015 to build the following template item */
+#if !defined (_MSC_VER) || defined (__clang__) || (_MSC_VER >= 1910)
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v))>>{} (hb_deref (v)))
+#else
+  template <typename T> constexpr auto
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v).hash ())>>{} (hb_deref (v)))
+#endif
 
   template <typename T,
 	    hb_enable_if (std::is_integral<T>::value)> constexpr auto

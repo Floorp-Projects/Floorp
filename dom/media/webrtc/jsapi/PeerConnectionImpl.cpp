@@ -243,7 +243,26 @@ void PeerConnectionAutoTimer::UnregisterConnection(bool aContainedAV) {
 
 bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 
-NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
+  tmp->Close();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
+                                  mSTSThread, mReceiveStreams, mKungFuDeathGrip)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPCObserver, mWindow, mCertificate,
+                                    mSTSThread, mReceiveStreams,
+                                    mKungFuDeathGrip)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PeerConnectionImpl)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PeerConnectionImpl)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PeerConnectionImpl)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
     const dom::GlobalObject& aGlobal) {
@@ -254,10 +273,13 @@ already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
   return pc.forget();
 }
 
-bool PeerConnectionImpl::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto,
-                                    JS::MutableHandle<JSObject*> aReflector) {
-  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto, aReflector);
+JSObject* PeerConnectionImpl::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
+  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsPIDOMWindowInner* PeerConnectionImpl::GetParentObject() const {
+  return mWindow;
 }
 
 bool PCUuidGenerator::Generate(std::string* idp) {
@@ -319,8 +341,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       ,
       mPrivateWindow(false),
       mActiveOnWindow(false),
-      mPacketDumpEnabled(false),
-      mPacketDumpFlagsMutex("Packet dump flags mutex"),
       mTimestampMaker(mWindow),
       mIdGenerator(new RTCStatsIdGenerator()),
       listenPort(0),
@@ -328,6 +348,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       connectStr(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(aGlobal, mWindow);
+  mKungFuDeathGrip = this;
   if (aGlobal) {
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
@@ -365,28 +386,15 @@ PeerConnectionImpl::~PeerConnectionImpl() {
     mTimeCard = nullptr;
   }
 
-  if (PeerConnectionCtx::isActive()) {
-    PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
-  } else {
-    CSFLogError(LOGTAG, "PeerConnectionCtx is already gone. Ignoring...");
-  }
-
   CSFLogInfo(LOGTAG, "%s: PeerConnectionImpl destructor invoked for %s",
              __FUNCTION__, mHandle.c_str());
 }
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                                        nsGlobalWindowInner* aWindow,
-                                        nsISupports* aThread) {
+                                        nsGlobalWindowInner* aWindow) {
   nsresult res;
 
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  if (!mThread) {
-    mThread = do_QueryInterface(aThread);
-    MOZ_ASSERT(mThread);
-  }
-  CheckThread();
 
   mPCObserver = &aObserver;
 
@@ -444,7 +452,7 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mName = temp;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
-  res = PeerConnectionCtx::InitializeGlobal(mThread);
+  res = PeerConnectionCtx::InitializeGlobal();
   NS_ENSURE_SUCCESS(res, res);
 
   mTransportHandler->CreateIceCtx("PC:" + GetName());
@@ -480,12 +488,10 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                     nsGlobalWindowInner& aWindow,
-                                    nsISupports* aThread, ErrorResult& rv) {
+                                    ErrorResult& rv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  mThread = do_QueryInterface(aThread);
 
-  nsresult res = Initialize(aObserver, &aWindow, aThread);
+  nsresult res = Initialize(aObserver, &aWindow);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
@@ -1172,7 +1178,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
 
   STAMP_TIMECARD(mTimeCard, "Create Offer");
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), aOptions] {
         std::string offer;
 
@@ -1206,7 +1212,7 @@ PeerConnectionImpl::CreateAnswer() {
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
 
@@ -1445,6 +1451,10 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
     return nullptr;
   }
 
+  if (!mWindow) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -1508,7 +1518,7 @@ PeerConnectionImpl::AddIceCandidate(
       mRawTrickledCandidates.push_back(aCandidate);
     }
     // Spec says we queue a task for these updates
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
           if (IsClosed()) {
             return;
@@ -1529,7 +1539,7 @@ PeerConnectionImpl::AddIceCandidate(
                 static_cast<unsigned>(*result.mError), aCandidate,
                 level.valueOr(-1), errorString.c_str());
 
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__,
         [this, self = RefPtr<PeerConnectionImpl>(this), errorString, result] {
           if (IsClosed()) {
@@ -1599,40 +1609,11 @@ void PeerConnectionImpl::OnMediaError(const std::string& aError) {
   // TODO: Let content know about this somehow.
 }
 
-bool PeerConnectionImpl::ShouldDumpPacket(size_t level,
-                                          dom::mozPacketDumpType type,
-                                          bool sending) const {
-  if (!mPacketDumpEnabled) {
-    return false;
-  }
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-
-  const std::vector<unsigned>* packetDumpFlags;
-
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  if (level < packetDumpFlags->size()) {
-    unsigned flag = 1 << (unsigned)type;
-    return flag & packetDumpFlags->at(level);
-  }
-
-  return false;
-}
-
 void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
                                       bool sending,
                                       UniquePtr<uint8_t[]>& packet,
                                       size_t size) {
   if (IsClosed()) {
-    return;
-  }
-
-  if (!ShouldDumpPacket(level, type, sending)) {
     return;
   }
 
@@ -1726,43 +1707,13 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
                                               dom::mozPacketDumpType type,
                                               bool sending) {
-  mPacketDumpEnabled = true;
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level >= packetDumpFlags->size()) {
-    packetDumpFlags->resize(level + 1);
-  }
-
-  (*packetDumpFlags)[level] |= flag;
-  return NS_OK;
+  return GetPacketDumper()->EnablePacketDump(level, type, sending);
 }
 
 nsresult PeerConnectionImpl::DisablePacketDump(unsigned long level,
                                                dom::mozPacketDumpType type,
                                                bool sending) {
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level < packetDumpFlags->size()) {
-    (*packetDumpFlags)[level] &= ~flag;
-  }
-
-  return NS_OK;
+  return GetPacketDumper()->DisablePacketDump(level, type, sending);
 }
 
 void PeerConnectionImpl::StampTimecard(const char* aEvent) {
@@ -1936,14 +1887,18 @@ PeerConnectionImpl::Close() {
     return NS_OK;
   }
 
+  STAMP_TIMECARD(mTimeCard, "Close");
   mSignalingState = RTCSignalingState::Closed;
 
-  // We do this at the end of the call because we want to make sure we've waited
-  // for all trickle ICE candidates to come in; this can happen well after we've
-  // transitioned to connected. As a bonus, this allows us to detect race
-  // conditions where a stats dispatch happens right as the PC closes.
+  // When ICE completes, we record a bunch of statistics that outlive the
+  // PeerConnection. This includes a call to GetStats, as well as some
+  // telemetry. We do this at the end of the call because we want to make sure
+  // we've waited for all trickle ICE candidates to come in; this can happen
+  // well after we've transitioned to connected. As a bonus, this allows us to
+  // detect race conditions where a stats dispatch happens right as the PC
+  // closes.
   if (!mPrivateWindow) {
-    RecordLongtermICEStatistics();
+    WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
   }
   RecordEndOfCallTelemetry();
 
@@ -1985,7 +1940,7 @@ PeerConnectionImpl::Close() {
     transceiver->Shutdown_m();
   }
 
-  mTransceivers.clear();
+  mTransceivers.Clear();
 
   mQueuedIceCtxOperations.clear();
 
@@ -2032,12 +1987,18 @@ PeerConnectionImpl::Close() {
           })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [transportHandler = std::move(mTransportHandler),
-           privateWindow = mPrivateWindow]() mutable {
+          [this, self = RefPtr<PeerConnectionImpl>(this)]() mutable {
             CSFLogDebug(LOGTAG, "PCImpl->mTransportHandler::RemoveTransports");
-            transportHandler->RemoveTransportsExcept(std::set<std::string>());
-            if (privateWindow) {
-              transportHandler->ExitPrivateMode();
+            mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
+            if (mPrivateWindow) {
+              mTransportHandler->ExitPrivateMode();
+            }
+            mTransportHandler = nullptr;
+            if (PeerConnectionCtx::isActive()) {
+              // If we're shutting down xpcom, this Instance will be unset
+              // before calling Close() on all remaining PCs, to avoid
+              // reentrancy.
+              PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
             }
           });
 
@@ -2203,7 +2164,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
   // Spec says we queue a task for all the stuff that ends up back in JS
   auto newSignalingState = GetSignalingState();
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
                  newSignalingState, sdpType, remote] {
         if (IsClosed()) {
@@ -2401,10 +2362,7 @@ const RefPtr<MediaTransportHandler> PeerConnectionImpl::GetTransportHandler()
   return mTransportHandler;
 }
 
-const std::string& PeerConnectionImpl::GetHandle() {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  return mHandle;
-}
+const std::string& PeerConnectionImpl::GetHandle() { return mHandle; }
 
 const std::string& PeerConnectionImpl::GetName() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -2486,13 +2444,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
   }
 
   mIceConnectionState = domState;
-
-  // Uncount this connection as active on the inner window upon close.
-  if (mWindow && mActiveOnWindow &&
-      mIceConnectionState == RTCIceConnectionState::Closed) {
-    mWindow->RemovePeerConnection();
-    mActiveOnWindow = false;
-  }
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
@@ -3093,7 +3044,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   UniquePtr<dom::RTCStatsReportInternal> report(
       new dom::RTCStatsReportInternal);
   report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
-  report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  if (mWindow && mWindow->GetBrowsingContext()) {
+    report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  }
   report->mConfiguration.Construct(mJsConfiguration);
   // TODO(bug 1589416): We need to do better here.
   if (!mIceStartTime.IsNull()) {
@@ -3142,9 +3095,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     }
   }
 
-  return dom::RTCStatsPromise::All(mThread, promises)
+  return dom::RTCStatsPromise::All(GetMainThreadSerialEventTarget(), promises)
       ->Then(
-          mThread, __func__,
+          GetMainThreadSerialEventTarget(), __func__,
           [report = std::move(report), idGen = mIdGenerator](
               nsTArray<UniquePtr<dom::RTCStatsCollection>> aStats) mutable {
             idGen->RewriteIds(std::move(aStats), report.get());
@@ -3154,10 +3107,6 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           [](nsresult rv) {
             return dom::RTCStatsReportPromise::CreateAndReject(rv, __func__);
           });
-}
-
-void PeerConnectionImpl::RecordLongtermICEStatistics() {
-  WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
 }
 
 void PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type) {
@@ -3263,8 +3212,12 @@ void PeerConnectionImpl::StartCallTelem() {
 void PeerConnectionImpl::StunAddrsHandler::OnMDNSQueryComplete(
     const nsCString& hostname, const Maybe<nsCString>& address) {
   MOZ_ASSERT(NS_IsMainThread());
-  auto itor = pc_->mQueriedMDNSHostnames.find(hostname.BeginReading());
-  if (itor != pc_->mQueriedMDNSHostnames.end()) {
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  auto itor = pcw.impl()->mQueriedMDNSHostnames.find(hostname.BeginReading());
+  if (itor != pcw.impl()->mQueriedMDNSHostnames.end()) {
     if (address) {
       for (auto& cand : itor->second) {
         // Replace obfuscated address with actual address
@@ -3278,14 +3231,14 @@ void PeerConnectionImpl::StunAddrsHandler::OnMDNSQueryComplete(
           }
         }
         std::string mungedCandidate = o.str();
-        pc_->StampTimecard("Done looking up mDNS name");
-        pc_->mTransportHandler->AddIceCandidate(
+        pcw.impl()->StampTimecard("Done looking up mDNS name");
+        pcw.impl()->mTransportHandler->AddIceCandidate(
             cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
       }
     } else {
-      pc_->StampTimecard("Failed looking up mDNS name");
+      pcw.impl()->StampTimecard("Failed looking up mDNS name");
     }
-    pc_->mQueriedMDNSHostnames.erase(itor);
+    pcw.impl()->mQueriedMDNSHostnames.erase(itor);
   }
 }
 
@@ -3293,15 +3246,17 @@ void PeerConnectionImpl::StunAddrsHandler::OnStunAddrsAvailable(
     const mozilla::net::NrIceStunAddrArray& addrs) {
   CSFLogInfo(LOGTAG, "%s: receiving (%d) stun addrs", __FUNCTION__,
              (int)addrs.Length());
-  if (pc_) {
-    pc_->mStunAddrs = addrs.Clone();
-    pc_->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
-    pc_->FlushIceCtxOperationQueueIfReady();
-    // If parent process returns 0 STUN addresses, change ICE connection
-    // state to failed.
-    if (!pc_->mStunAddrs.Length()) {
-      pc_->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
-    }
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  pcw.impl()->mStunAddrs = addrs.Clone();
+  pcw.impl()->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
+  pcw.impl()->FlushIceCtxOperationQueueIfReady();
+  // If parent process returns 0 STUN addresses, change ICE connection
+  // state to failed.
+  if (!pcw.impl()->mStunAddrs.Length()) {
+    pcw.impl()->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
   }
 }
 
@@ -3810,7 +3765,7 @@ nsresult PeerConnectionImpl::AddTransceiver(
     }
   }
 
-  mTransceivers.push_back(transceiver);
+  mTransceivers.AppendElement(transceiver);
   *aTransceiverImpl = transceiver;
 
   return NS_OK;
