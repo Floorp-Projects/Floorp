@@ -113,8 +113,6 @@ class nsWindow final : public nsBaseWidget {
   static mozilla::Modifiers GetModifiers(int32_t aMetaState);
   static mozilla::TimeStamp GetEventTimeStamp(int64_t aEventTime);
 
-  void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
-
   void InitEvent(mozilla::WidgetGUIEvent& event,
                  LayoutDeviceIntPoint* aPoint = 0);
 
@@ -268,6 +266,8 @@ class nsWindow final : public nsBaseWidget {
  private:
   void CreateLayerManager();
   void RedrawAll();
+
+  void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 
   mozilla::layers::LayersId GetRootLayerId() const;
   RefPtr<mozilla::layers::UiCompositorControllerChild>

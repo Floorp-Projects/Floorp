@@ -1808,6 +1808,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mBounds = rect;
+  SetSizeConstraints(SizeConstraints());
 
   BaseCreate(nullptr, aInitData);
 
@@ -2052,16 +2053,20 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   ALOG("nsWindow[%p]::Resize [%f %f %f %f] (repaint %d)", (void*)this, aX, aY,
        aWidth, aHeight, aRepaint);
 
-  bool needPositionDispatch = aX != mBounds.x || aY != mBounds.y;
-  bool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
+  LayoutDeviceIntRect oldBounds = mBounds;
 
   mBounds.x = NSToIntRound(aX);
   mBounds.y = NSToIntRound(aY);
   mBounds.width = NSToIntRound(aWidth);
   mBounds.height = NSToIntRound(aHeight);
 
+  ConstrainSize(&mBounds.width, &mBounds.height);
+
+  bool needPositionDispatch = mBounds.TopLeft() != oldBounds.TopLeft();
+  bool needSizeDispatch = mBounds.Size() != oldBounds.Size();
+
   if (needSizeDispatch) {
-    OnSizeChanged(gfx::IntSize::Truncate(aWidth, aHeight));
+    OnSizeChanged(mBounds.Size().ToUnknownSize());
   }
 
   if (needPositionDispatch) {
@@ -2293,9 +2298,6 @@ void nsWindow::ShowDynamicToolbar() {
 void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
   ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width,
        aSize.height);
-
-  mBounds.width = aSize.width;
-  mBounds.height = aSize.height;
 
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, aSize.width, aSize.height);
