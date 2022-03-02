@@ -79,6 +79,7 @@ class AboutWelcome extends React.PureComponent {
         utm_term={props.UTMTerm}
         transitions={props.transitions}
         backdrop={props.backdrop}
+        appAndSystemLocaleInfo={props.appAndSystemLocaleInfo}
       />
     );
   }
