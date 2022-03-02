@@ -23,7 +23,7 @@ class ConnectionWorker final : public Connection {
       WorkerPrivate* aWorkerPrivate, ErrorResult& aRv);
 
  private:
-  ConnectionWorker();
+  explicit ConnectionWorker(bool aShouldResistFingerprinting);
   ~ConnectionWorker();
 
   virtual void ShutdownInternal() override;

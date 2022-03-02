@@ -1801,7 +1801,9 @@ network::Connection* Navigator::GetConnection(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    mConnection = network::Connection::CreateForWindow(mWindow);
+    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+    mConnection = network::Connection::CreateForWindow(
+        mWindow, nsContentUtils::ShouldResistFingerprinting(doc));
   }
 
   return mConnection;
