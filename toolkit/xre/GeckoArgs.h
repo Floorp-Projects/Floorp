@@ -129,6 +129,11 @@ static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
 static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};
 static CommandLineArg<bool> sNotForBrowser{"-notForBrowser", "notforbrowser"};
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+static CommandLineArg<uint64_t> sA11yResourceId{"-a11yResourceId",
+                                                "a11yresourceid"};
+#endif  // defined(XP_WIN) && defined(ACCESSIBILITY)
+
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop
 #endif
