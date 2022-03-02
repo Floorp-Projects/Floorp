@@ -1970,7 +1970,7 @@ impl ResourceCache {
                         #[cfg(target_os = "macos")]
                         FontTemplate::Native(ref native) => {
                             PlainFontTemplate {
-                                data: native.name.clone(),
+                                data: native.0.postscript_name().to_string(),
                                 index: 0,
                             }
                         }

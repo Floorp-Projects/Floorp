@@ -46,6 +46,11 @@ use webrender::{
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
+#[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
+
 extern "C" {
     #[cfg(target_os = "android")]
     fn __android_log_write(prio: c_int, tag: *const c_char, text: *const c_char) -> c_int;
@@ -2293,9 +2298,20 @@ fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
 #[cfg(target_os = "macos")]
 fn read_font_descriptor(bytes: &mut WrVecU8, _index: u32) -> NativeFontHandle {
     let chars = bytes.flush_into_vec();
-    NativeFontHandle {
-        name: String::from_utf8(chars).unwrap()
-    }
+    let name = String::from_utf8(chars).unwrap();
+    let font = match CGFont::from_name(&CFString::new(&*name)) {
+        Ok(font) => font,
+        Err(_) => {
+            // If for some reason we failed to load a font descriptor, then our
+            // only options are to either abort or substitute a fallback font.
+            // It is preferable to use a fallback font instead so that rendering
+            // can at least still proceed in some fashion without erroring.
+            // Lucida Grande is the fallback font in Gecko, so use that here.
+            CGFont::from_name(&CFString::from_static_string("Lucida Grande"))
+                .expect("Failed reading font descriptor and could not load fallback font")
+        },
+    };
+    NativeFontHandle(font)
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
