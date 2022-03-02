@@ -6,10 +6,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
-TESTING_JS_MODULES += [
-    "tests/LangPackMatcherTestUtils.jsm",
-]
-
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit == "windows":
@@ -51,7 +47,6 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "LangPackMatcher.jsm",
     "PluralForm.jsm",
 ]
 
