@@ -6,10 +6,10 @@
 
 namespace mozilla::hal_impl {
 
-RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
+RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
     const hal::ScreenOrientation& aOrientation) {
-  return mozilla::MozPromise<bool, bool, false>::CreateAndReject(false,
-                                                                 __func__);
+  return GenericNonExclusivePromise::CreateAndReject(
+      NS_ERROR_DOM_NOT_SUPPORTED_ERR, __func__);
 }
 
 void UnlockScreenOrientation() {}

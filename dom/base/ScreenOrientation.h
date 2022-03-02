@@ -74,7 +74,7 @@ class ScreenOrientation final : public DOMEventTargetHelper {
 
   // This method calls into the HAL to lock the device and sets
   // up listeners for full screen change.
-  RefPtr<MozPromise<bool, bool, false>> LockDeviceOrientation(
+  RefPtr<GenericNonExclusivePromise> LockDeviceOrientation(
       hal::ScreenOrientation aOrientation, bool aIsFullscreen);
 
   // This method calls in to the HAL to unlock the device and removes
