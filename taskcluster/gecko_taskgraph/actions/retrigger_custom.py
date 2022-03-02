@@ -6,9 +6,9 @@
 import json
 import logging
 
+from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.util.taskcluster import get_task_definition
 
-from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
 from .util import create_task_from_def, fetch_graph_and_labels
 
