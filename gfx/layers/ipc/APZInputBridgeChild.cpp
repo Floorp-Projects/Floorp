@@ -10,7 +10,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 namespace layers {
@@ -55,27 +54,27 @@ void APZInputBridgeChild::Open(Endpoint<PAPZInputBridgeChild>&& aEndpoint) {
 
 void APZInputBridgeChild::Destroy() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
 
   // Destroy will get called from the main thread, so we must synchronously
   // dispatch to the controller thread to close the bridge.
-  layers::SynchronousTask task("layers::APZInputBridgeChild::Destroy");
-  APZThreadUtils::RunOnControllerThread(
-      NS_NewRunnableFunction("layers::APZInputBridgeChild::Destroy", [&]() {
-        APZThreadUtils::AssertOnControllerThread();
-        AutoCompleteTask complete(&task);
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod("layers::APZInputBridgeChild::Destroy", this,
+                          &APZInputBridgeChild::Destroy),
+        nsIThread::DISPATCH_SYNC);
+    return;
+  }
 
-        // Clear the process token so that we don't notify the GPUProcessManager
-        // about an abnormal shutdown, thereby tearing down the GPU process.
-        mProcessToken = 0;
+  APZThreadUtils::AssertOnControllerThread();
 
-        if (mIsOpen) {
-          PAPZInputBridgeChild::Close();
-          mIsOpen = false;
-        }
-      }));
+  // Clear the process token so that we don't notify the GPUProcessManager
+  // about an abnormal shutdown, thereby tearing down the GPU process.
+  mProcessToken = 0;
 
-  task.Wait();
+  if (mIsOpen) {
+    PAPZInputBridgeChild::Close();
+    mIsOpen = false;
+  }
 }
 
 void APZInputBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {

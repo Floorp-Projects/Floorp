@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -157,34 +156,31 @@ bool UiCompositorControllerChild::EnableLayerUpdateNotifications(
 }
 
 void UiCompositorControllerChild::Destroy() {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (!IsOnUiThread()) {
+    GetUiThread()->Dispatch(
+        NewRunnableMethod("layers::UiCompositorControllerChild::Destroy", this,
+                          &UiCompositorControllerChild::Destroy),
+        nsIThread::DISPATCH_SYNC);
+    return;
+  }
 
-  layers::SynchronousTask task("UiCompositorControllerChild::Destroy");
-  GetUiThread()->Dispatch(NS_NewRunnableFunction(
-      "layers::UiCompositorControllerChild::Destroy", [&]() {
-        MOZ_ASSERT(IsOnUiThread());
-        AutoCompleteTask complete(&task);
+  // Clear the process token so that we don't notify the GPUProcessManager
+  // about an abnormal shutdown, thereby tearing down the GPU process.
+  mProcessToken = 0;
 
-        // Clear the process token so that we don't notify the GPUProcessManager
-        // about an abnormal shutdown, thereby tearing down the GPU process.
-        mProcessToken = 0;
+  if (mWidget) {
+    // Dispatch mWidget to main thread to prevent it from being destructed by
+    // the ui thread.
+    RefPtr<nsIWidget> widget = std::move(mWidget);
+    NS_ReleaseOnMainThread("UiCompositorControllerChild::mWidget",
+                           widget.forget());
+  }
 
-        if (mWidget) {
-          // Dispatch mWidget to main thread to prevent it from being destructed
-          // by the ui thread.
-          RefPtr<nsIWidget> widget = std::move(mWidget);
-          NS_ReleaseOnMainThread("UiCompositorControllerChild::mWidget",
-                                 widget.forget());
-        }
-
-        if (mIsOpen) {
-          // Close the underlying IPC channel.
-          PUiCompositorControllerChild::Close();
-          mIsOpen = false;
-        }
-      }));
-
-  task.Wait();
+  if (mIsOpen) {
+    // Close the underlying IPC channel.
+    PUiCompositorControllerChild::Close();
+    mIsOpen = false;
+  }
 }
 
 bool UiCompositorControllerChild::DeallocPixelBuffer(Shmem& aMem) {
