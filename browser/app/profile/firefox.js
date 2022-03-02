@@ -2174,6 +2174,8 @@ pref("app.normandy.onsync_skew_sec", 600);
 // live reloading when switching between LTR and RTL languages.
 pref("intl.multilingual.liveReload", false);
 pref("intl.multilingual.liveReloadBidirectional", false);
+// Suggest to change the language on about:welcome when there is a mismatch with the OS.
+pref("intl.multilingual.aboutWelcome.languageMismatchEnabled", false);
 
 
 // Simulate conditions that will happen when the browser
