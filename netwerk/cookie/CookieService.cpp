@@ -325,9 +325,6 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     return NS_OK;
   }
 
-  nsICookie::schemeType schemeType =
-      CookieCommons::PrincipalToSchemeType(principal);
-
   CookieStorage* storage = PickStorage(principal->OriginAttributesRef());
 
   nsAutoCString baseDomain;
@@ -397,10 +394,6 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) {
-      continue;
-    }
-
-    if (!CookieCommons::MaybeCompareScheme(cookie, schemeType)) {
       continue;
     }
 
@@ -925,8 +918,6 @@ void CookieService::GetCookiesForURI(
                                             baseDomainFromURI);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsICookie::schemeType schemeType = CookieCommons::URIToSchemeType(aHostURI);
-
   // check default prefs
   uint32_t rejectedReason = aRejectedReason;
   uint32_t priorCookieCount = storage->CountCookiesFromHost(
@@ -990,12 +981,6 @@ void CookieService::GetCookiesForURI(
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) {
-      continue;
-    }
-
-    // The scheme doesn't match.
-    if (!CookieCommons::MaybeCompareSchemeWithLogging(crc, aHostURI, cookie,
-                                                      schemeType)) {
       continue;
     }
 
