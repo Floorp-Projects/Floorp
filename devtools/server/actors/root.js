@@ -520,33 +520,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return null;
   },
 
-  _getParentProcessDescriptor() {
-    if (!this._processDescriptorActorPool) {
-      this._processDescriptorActorPool = new Pool(
-        this.conn,
-        "process-descriptors"
-      );
-      const options = { id: 0, parent: true };
-      const descriptor = new ProcessDescriptorActor(this.conn, options);
-      this._processDescriptorActorPool.manage(descriptor);
-      return descriptor;
-    }
-    for (const descriptor of this._processDescriptorActorPool.poolChildren()) {
-      if (descriptor.isParent) {
-        return descriptor;
-      }
-    }
-    return null;
-  },
-
-  _isParentBrowsingContext(id) {
-    // TODO: We may stop making the parent process codepath so special
-    const window = Services.wm.getMostRecentWindow(
-      DevToolsServer.chromeWindowType
-    );
-    return id == window.docShell.browsingContext.id;
-  },
-
   /**
    * Remove the extra actor (added by ActorRegistry.addGlobalActor or
    * ActorRegistry.addTargetScopedActor) name |name|.
