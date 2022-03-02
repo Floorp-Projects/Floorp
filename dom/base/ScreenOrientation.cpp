@@ -191,21 +191,38 @@ ScreenOrientation::LockOrientationTask::Run() {
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}](
               const GenericNonExclusivePromise::ResolveOrRejectValue& aValue) {
+            if (self->mPromise->State() != Promise::PromiseState::Pending) {
+              // mPromise is already resolved or rejected by
+              // DispatchChangeEventAndResolvePromise() or
+              // AbortInProcessOrientationPromises().
+              return;
+            }
+
+            if (self->mDocument->GetOrientationPendingPromise() !=
+                self->mPromise) {
+              // mPromise is old promise now and document has new promise by
+              // later `orientation.lock` call. Old promise is already rejected
+              // by AbortInProcessOrientationPromises()
+              return;
+            }
             if (aValue.IsResolve()) {
+              if (BrowsingContext* bc = self->mDocument->GetBrowsingContext()) {
+                if (self->OrientationLockContains(
+                        bc->GetCurrentOrientationType()) ||
+                    (self->mOrientationLock ==
+                         hal::ScreenOrientation::Default &&
+                     bc->GetCurrentOrientationAngle() == 0)) {
+                  // Orientation lock will not cause an orientation change, so
+                  // we need to manually resolve the promise here.
+                  self->mPromise->MaybeResolveWithUndefined();
+                  self->mDocument->ClearOrientationPendingPromise();
+                }
+              }
               return;
             }
             self->mPromise->MaybeReject(aValue.RejectValue());
             self->mDocument->ClearOrientationPendingPromise();
           });
-
-  BrowsingContext* bc = mDocument->GetBrowsingContext();
-  if (OrientationLockContains(bc->GetCurrentOrientationType()) ||
-      (mOrientationLock == hal::ScreenOrientation::Default &&
-       bc->GetCurrentOrientationAngle() == 0)) {
-    // Orientation lock will not cause an orientation change.
-    mPromise->MaybeResolveWithUndefined();
-    mDocument->ClearOrientationPendingPromise();
-  }
 
   return NS_OK;
 }
