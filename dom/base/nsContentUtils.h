@@ -899,8 +899,7 @@ class nsContentUtils {
                                   const nsACString& aType);
 
   // Returns true if the pref exists and is not UNKNOWN_ACTION.
-  static bool HasExactSitePerm(nsIPrincipal* aPrincipal,
-                               const nsACString& aType);
+  static bool HasSitePerm(nsIPrincipal* aPrincipal, const nsACString& aType);
 
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(Document* aDoc1, Document* aDoc2);
