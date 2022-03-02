@@ -102,8 +102,36 @@ const DEFAULT_WELCOME_CONTENT = {
       },
     },
     {
-      id: "AW_IMPORT_SETTINGS",
+      id: "AW_LANGUAGE_MISMATCH",
       order: 2,
+      content: {
+        title: { string_id: "onboarding-live-language-header" },
+        subtitle: { string_id: "onboarding-live-language-subtitle" },
+        has_noodles: true,
+        languageSwitcher: {
+          switch: {
+            string_id: "onboarding-live-language-switch-button-label",
+          },
+          downloading: {
+            string_id: "onboarding-live-language-button-label-downloading",
+          },
+          cancel: {
+            string_id: "onboarding-live-language-secondary-cancel-download",
+          },
+          not_now: {
+            string_id: "onboarding-live-language-not-now-button-label",
+          },
+          waiting: { string_id: "onboarding-live-language-waiting-button" },
+          skip: { string_id: "onboarding-live-language-skip-button-label" },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_IMPORT_SETTINGS",
+      order: 3,
       content: {
         title: {
           string_id: "mr1-onboarding-import-header",
@@ -135,7 +163,7 @@ const DEFAULT_WELCOME_CONTENT = {
     },
     {
       id: "AW_CHOOSE_THEME",
-      order: 3,
+      order: 4,
       content: {
         title: {
           string_id: "mr1-onboarding-theme-header",
@@ -409,6 +437,25 @@ async function prepareContentForReact(content) {
     delete content.screens?.find(
       screen => screen.content?.help_text?.deleteIfNotEn
     )?.content.help_text.text;
+  }
+
+  if (content.languageMismatchEnabled) {
+    const screen = content?.screens?.find(s => s.id === "AW_LANGUAGE_MISMATCH");
+    if (screen) {
+      // Add the display names for the OS and Firefox languages, like "American English".
+      const { appAndSystemLocaleInfo } = content;
+      function addMessageArgs(obj) {
+        for (const value of Object.values(obj)) {
+          if (value?.string_id) {
+            value.args = appAndSystemLocaleInfo.displayNames;
+          }
+        }
+      }
+      addMessageArgs(screen.content.languageSwitcher);
+      addMessageArgs(screen.content);
+    }
+  } else {
+    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH");
   }
 
   return content;

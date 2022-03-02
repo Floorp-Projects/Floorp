@@ -188,6 +188,13 @@ module.exports = function(config) {
               functions: 96,
               branches: 70,
             },
+            "content-src/aboutwelcome/components/LanguageSwitcher.jsx": {
+              // This file is covered by the mochitest: browser_aboutwelcome_multistage_languageSwitcher.js
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
             "content-src/aboutwelcome/**/*.jsx": {
               statements: 62,
               lines: 60,
