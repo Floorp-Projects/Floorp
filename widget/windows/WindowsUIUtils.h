@@ -26,6 +26,9 @@ class WindowsUIUtils final : public nsIWindowsUIUtils {
   static void UpdateInTabletMode();
   static bool GetInTabletMode();
 
+  // Use LookAndFeel for a cached getter.
+  static bool ComputeOverlayScrollbars();
+
  protected:
   ~WindowsUIUtils();
 };
