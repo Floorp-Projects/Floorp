@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<style>
+body {
+  font: 32px sans-serif;
+}
+.description {
+  font: 16px serif;
+}
+div {
+  position: relative;
+  height: 3em;
+}
+div p {
+  position: absolute;
+  color: red;
+}
+p + p {
+  color: green;
+}
+.red {
+  color: red;
+}
+.green {
+  color: green;
+}
+</style>
+<body>
+<p class=description>In each line, the <span class=green>green</span> glyphs should exactly overlay the <span class=red>red</span> ones:</p>
+</body>
+<script>
+// Some ideographs that should have lang-specific font variants (examples found in
+// https://en.wikipedia.org/wiki/Han_unification).
+const doingTest = (location.search != "?ref");
+const testStr = "今令免入全关具刃化外情才抵次海直真示神空者草蔥角道雇骨";
+["zh-CN", "zh-HK", "zh-TW", "ja-JP", "ko-KR"].forEach((lang) => {
+  let div = document.createElement("div");
+  document.body.appendChild(div);
+  // Create two layers of text, red and then green. In the test rendering, one layer
+  // has the "correct" lang tag, and the other has an ill-formed version with underscore;
+  // nevertheless we want it to render identically.
+  let p1 = document.createElement("p");
+  p1.lang = lang;
+  p1.textContent = testStr;
+  div.appendChild(p1);
+  if (doingTest) {
+    lang = lang.replace("-", "_");
+  }
+  let p2 = document.createElement("p");
+  p2.lang = lang;
+  p2.textContent = testStr;
+  div.appendChild(p2);
+});
+</script>

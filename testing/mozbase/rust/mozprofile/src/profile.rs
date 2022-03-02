@@ -19,6 +19,12 @@ pub struct Profile {
     user_prefs: Option<PrefFile>,
 }
 
+impl PartialEq for Profile {
+    fn eq(&self, other: &Profile) -> bool {
+        self.path == other.path
+    }
+}
+
 impl Profile {
     pub fn new() -> IoResult<Profile> {
         let dir = Builder::new().prefix("rust_mozprofile").tempdir()?;

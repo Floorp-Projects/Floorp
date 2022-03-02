@@ -962,34 +962,35 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult OnModifyDocument();
 
   /**
-   * DoSplitNode() creates a new node (left node) identical to an existing
-   * node (right node), and split the contents between the same point in both
-   * nodes.
+   * DoSplitNode() inserts aNewNode (left node before the container of
+   * aStartOfRightNode (right node), and moves all content before
+   * aStartOfRightNode to aNewNode.
    *
    * @param aStartOfRightNode   The point to split.  Its container will be
-   *                            the right node, i.e., become the new node's
+   *                            the right node, i.e., becomes aNewNode's
    *                            next sibling.  And the point will be start
    *                            of the right node.
-   * @param aNewLeftNode        The new node called as left node, so, this
-   *                            becomes the container of aPointToSplit's
-   *                            previous sibling.
+   * @param aNewNode            The new node called as left node, so, this
+   *                            becomes the container of all previous content
+   *                            before aPointToSplit.
    */
-  MOZ_CAN_RUN_SCRIPT SplitNodeResult DoSplitNode(
-      const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewLeftNode);
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  DoSplitNode(const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode);
 
   /**
-   * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and
-   * remove aContentToJoin from the DOM tree.  aContentToJoin and aContentToKeep
-   * must have same parent, aParent.  Additionally, if one of aContentToJoin or
-   * aContentToKeep is a text node, the other must be a text node.
+   * DoJoinNodes() merges contents in aContentToRemove to aContentToKeep and
+   * remove aContentToRemove from the DOM tree.  aContentToRemove and
+   * aContentToKeep must have same parent.  Additionally, if one of
+   * aContentToRemove or aContentToKeep is a text node, the other must be a
+   * text node.
    *
-   * @param aContentToKeep  The node that will remain after the join.
-   * @param aContentToJoin  The node that will be joined with aContentToKeep.
-   *                        There is no requirement that the two nodes be of the
-   *                        same type.
+   * @param aContentToKeep    The node that will remain after the join.
+   * @param aContentToRemove  The node that will be joined with aContentToKeep.
+   *                          There is no requirement that the two nodes be of
+   *                          the same type.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove);
 
   /**
    * Routines for managing the preservation of selection across

@@ -30,7 +30,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Unused.h"
 #include "nsIContentPolicy.h"
-#include "nsIWindowsUIUtils.h"
+#include "WindowsUIUtils.h"
 #include "nsContentUtils.h"
 
 #include "mozilla/Logging.h"
@@ -1858,17 +1858,6 @@ WinUtils::GetPowerPlatformRole() {
   return power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
 }
 
-static bool IsWindows10TabletMode() {
-  nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-      do_GetService("@mozilla.org/windows-ui-utils;1"));
-  if (NS_WARN_IF(!uiUtils)) {
-    return false;
-  }
-  bool isInTabletMode = false;
-  uiUtils->GetInTabletMode(&isInTabletMode);
-  return isInTabletMode;
-}
-
 static bool CallGetAutoRotationState(AR_STATE* aRotationState) {
   typedef BOOL(WINAPI * GetAutoRotationStateFunc)(PAR_STATE pState);
   static GetAutoRotationStateFunc get_auto_rotation_state_func =
@@ -1891,7 +1880,7 @@ static bool IsTabletDevice() {
     return false;
   }
 
-  if (IsWindows10TabletMode()) {
+  if (WindowsUIUtils::GetInTabletMode()) {
     return true;
   }
 

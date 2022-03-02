@@ -176,5 +176,7 @@ skip-if(!cocoaWidget) == osaka-mono-exists.html osaka-mono-exists-ref.html
 random-if(!winWidget&&!cocoaWidget) == wingdings-1.html wingdings-1-ref.html
 random-if(!winWidget&&!cocoaWidget) != wingdings-1.html wingdings-1-notref.html
 
+== illformed-lang-tags-1.html illformed-lang-tags-1.html?ref
+
 # Reset default prefs.
 defaults

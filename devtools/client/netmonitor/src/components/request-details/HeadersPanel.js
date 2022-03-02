@@ -771,27 +771,21 @@ class HeadersPanel extends Component {
           L10N.getStr("netmonitor.headers.toolbar.block")
         ),
         span({ className: "devtools-separator" }),
-        newEditAndResendPref
-          ? button(
-              {
-                id: "edit-resend-button",
-                className: "devtools-button",
-                title: EDIT_AND_RESEND,
-                onClick: () => {
+        button(
+          {
+            id: "edit-resend-button",
+            className: !newEditAndResendPref
+              ? "devtools-button devtools-dropdown-button"
+              : "devtools-button",
+            title: RESEND,
+            onClick: !newEditAndResendPref
+              ? this.onShowResendMenu
+              : () => {
                   openHTTPCustomRequestTab();
                 },
-              },
-              span({ className: "title" }, EDIT_AND_RESEND)
-            )
-          : button(
-              {
-                id: "edit-resend-button",
-                className: "devtools-button devtools-dropdown-button",
-                title: RESEND,
-                onClick: this.onShowResendMenu,
-              },
-              span({ className: "title" }, RESEND)
-            )
+          },
+          span({ className: "title" }, RESEND)
+        )
       ),
       div(
         { className: "panel-container" },
