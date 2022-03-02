@@ -4458,7 +4458,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
 }
 
 SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                                        nsIContent& aNewLeftNode) {
+                                        nsIContent& aNewNode) {
   // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
   //     operation after modifying DOM node with JS.
   if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
@@ -4469,29 +4469,29 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
   for (SelectionType selectionType : kPresentSelectionTypes) {
-    SavedRange range;
-    range.mSelection = GetSelection(selectionType);
-    if (MOZ_UNLIKELY(NS_WARN_IF(!range.mSelection &&
+    SavedRange savingRange;
+    savingRange.mSelection = GetSelection(selectionType);
+    if (MOZ_UNLIKELY(NS_WARN_IF(!savingRange.mSelection &&
                                 selectionType == SelectionType::eNormal))) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
-    if (!range.mSelection) {
+    if (!savingRange.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
       continue;
     }
 
-    for (uint32_t j : IntegerRange(range.mSelection->RangeCount())) {
-      const nsRange* r = range.mSelection->GetRangeAt(j);
+    for (uint32_t j : IntegerRange(savingRange.mSelection->RangeCount())) {
+      const nsRange* r = savingRange.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r);
       MOZ_ASSERT(r->IsPositioned());
       // XXX Looks like that SavedRange should have mStart and mEnd which
       //     are RangeBoundary.  Then, we can avoid to compute offset here.
-      range.mStartContainer = r->GetStartContainer();
-      range.mStartOffset = r->StartOffset();
-      range.mEndContainer = r->GetEndContainer();
-      range.mEndOffset = r->EndOffset();
+      savingRange.mStartContainer = r->GetStartContainer();
+      savingRange.mStartOffset = r->StartOffset();
+      savingRange.mEndContainer = r->GetEndContainer();
+      savingRange.mEndOffset = r->EndOffset();
 
-      savedRanges.AppendElement(range);
+      savedRanges.AppendElement(savingRange);
     }
   }
 
@@ -4502,11 +4502,8 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
   // Fix the child before mutation observer may touch the DOM tree.
   nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChild();
-  ErrorResult error;
-  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(), error);
-  // InsertBefore() may call MightThrowJSException() even if there is no
-  // error. We don't need the flag here.
-  error.WouldReportJSException();
+  IgnoredErrorResult error;
+  parent->InsertBefore(aNewNode, aStartOfRightNode.GetContainer(), error);
   if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("nsINode::InsertBefore() failed");
     return SplitNodeResult(error.StealNSResult());
@@ -4517,7 +4514,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   if (!aStartOfRightNode.IsStartOfContainer()) {
     // If it's a text node, just shuffle around some text
     Text* rightAsText = aStartOfRightNode.GetContainerAsText();
-    Text* leftAsText = aNewLeftNode.GetAsText();
+    Text* leftAsText = aNewNode.GetAsText();
     if (rightAsText && leftAsText) {
       // Fix right node
       nsAutoString leftText;
@@ -4549,7 +4546,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
         //     to the left node?
         IgnoredErrorResult ignoredError;
         MoveAllChildren(*aStartOfRightNode.GetContainer(),
-                        EditorRawDOMPoint(&aNewLeftNode, 0), ignoredError);
+                        EditorRawDOMPoint(&aNewNode, 0u), ignoredError);
         NS_WARNING_ASSERTION(
             !ignoredError.Failed(),
             "HTMLEditor::MoveAllChildren() failed, but ignored");
@@ -4563,7 +4560,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
         //     to the left node?
         IgnoredErrorResult ignoredError;
         MovePreviousSiblings(*firstChildOfRightNode,
-                             EditorRawDOMPoint(&aNewLeftNode, 0), ignoredError);
+                             EditorRawDOMPoint(&aNewNode, 0u), ignoredError);
         NS_WARNING_ASSERTION(
             !ignoredError.Failed(),
             "HTMLEditor::MovePreviousSiblings() failed, but ignored");
@@ -4579,62 +4576,59 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   NS_WARNING_ASSERTION(!Destroyed(),
                        "The editor is destroyed during splitting a node");
 
-  bool allowedTransactionsToChangeSelection =
+  const bool allowedTransactionsToChangeSelection =
       AllowsTransactionsToChangeSelection();
 
   RefPtr<Selection> previousSelection;
-  for (size_t i = 0; i < savedRanges.Length(); ++i) {
-    // Adjust the selection if needed.
-    SavedRange& range = savedRanges[i];
-
+  for (SavedRange& savedRange : savedRanges) {
     // If we have not seen the selection yet, clear all of its ranges.
-    if (range.mSelection != previousSelection) {
-      MOZ_KnownLive(range.mSelection)->RemoveAllRanges(error);
+    if (savedRange.mSelection != previousSelection) {
+      MOZ_KnownLive(savedRange.mSelection)->RemoveAllRanges(error);
       if (MOZ_UNLIKELY(error.Failed())) {
         NS_WARNING("Selection::RemoveAllRanges() failed");
         return SplitNodeResult(error.StealNSResult());
       }
-      previousSelection = range.mSelection;
+      previousSelection = savedRange.mSelection;
     }
 
     // XXX Looks like that we don't need to modify normal selection here
     //     because selection will be modified by the caller if
     //     AllowsTransactionsToChangeSelection() will return true.
     if (allowedTransactionsToChangeSelection &&
-        range.mSelection->Type() == SelectionType::eNormal) {
+        savedRange.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
       continue;
     }
 
     // Split the selection into existing node and new node.
-    if (range.mStartContainer == aStartOfRightNode.GetContainer()) {
-      if (range.mStartOffset < aStartOfRightNode.Offset()) {
-        range.mStartContainer = &aNewLeftNode;
-      } else if (range.mStartOffset >= aStartOfRightNode.Offset()) {
-        range.mStartOffset -= aStartOfRightNode.Offset();
+    if (savedRange.mStartContainer == aStartOfRightNode.GetContainer()) {
+      if (savedRange.mStartOffset < aStartOfRightNode.Offset()) {
+        savedRange.mStartContainer = &aNewNode;
+      } else if (savedRange.mStartOffset >= aStartOfRightNode.Offset()) {
+        savedRange.mStartOffset -= aStartOfRightNode.Offset();
       } else {
         NS_WARNING(
             "The stored start offset was smaller than the right node offset");
-        range.mStartOffset = 0;
+        savedRange.mStartOffset = 0u;
       }
     }
 
-    if (range.mEndContainer == aStartOfRightNode.GetContainer()) {
-      if (range.mEndOffset < aStartOfRightNode.Offset()) {
-        range.mEndContainer = &aNewLeftNode;
-      } else if (range.mEndOffset >= aStartOfRightNode.Offset()) {
-        range.mEndOffset -= aStartOfRightNode.Offset();
+    if (savedRange.mEndContainer == aStartOfRightNode.GetContainer()) {
+      if (savedRange.mEndOffset < aStartOfRightNode.Offset()) {
+        savedRange.mEndContainer = &aNewNode;
+      } else if (savedRange.mEndOffset >= aStartOfRightNode.Offset()) {
+        savedRange.mEndOffset -= aStartOfRightNode.Offset();
       } else {
         NS_WARNING(
             "The stored end offset was smaller than the right node offset");
-        range.mEndOffset = 0;
+        savedRange.mEndOffset = 0u;
       }
     }
 
     RefPtr<nsRange> newRange =
-        nsRange::Create(range.mStartContainer, range.mStartOffset,
-                        range.mEndContainer, range.mEndOffset, error);
+        nsRange::Create(savedRange.mStartContainer, savedRange.mStartOffset,
+                        savedRange.mEndContainer, savedRange.mEndOffset, error);
     if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING("nsRange::Create() failed");
       return SplitNodeResult(error.StealNSResult());
@@ -4642,7 +4636,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     // The `MOZ_KnownLive` annotation is only necessary because of a bug
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
     // static analyzer.
-    MOZ_KnownLive(range.mSelection)
+    MOZ_KnownLive(savedRange.mSelection)
         ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, error);
     if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING(
@@ -4666,13 +4660,13 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   if (MOZ_UNLIKELY(
           NS_WARN_IF(parent !=
                      aStartOfRightNode.GetContainer()->GetParentNode()) ||
-          NS_WARN_IF(parent != aNewLeftNode.GetParentNode()) ||
-          NS_WARN_IF(aNewLeftNode.GetNextSibling() !=
+          NS_WARN_IF(parent != aNewNode.GetParentNode()) ||
+          NS_WARN_IF(aNewNode.GetNextSibling() !=
                      aStartOfRightNode.GetContainer()))) {
     return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
-  return SplitNodeResult(&aNewLeftNode, aStartOfRightNode.ContainerAsContent(),
+  return SplitNodeResult(&aNewNode, aStartOfRightNode.ContainerAsContent(),
                          SplitNodeDirection::LeftNodeIsNewOne);
 }
 
