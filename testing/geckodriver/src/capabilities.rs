@@ -935,7 +935,7 @@ mod tests {
             assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
-            assert!(false, "CLI arguments for Firefox not found");
+            panic!("CLI arguments for Firefox not found");
         }
     }
 
@@ -979,7 +979,7 @@ mod tests {
             assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
-            assert!(false, "CLI arguments for Firefox not found");
+            panic!("CLI arguments for Firefox not found");
         }
 
         assert!(opts
