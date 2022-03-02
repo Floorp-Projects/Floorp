@@ -568,7 +568,7 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter invokes PendingIntent if provided for foreground child process crashes`() {
-        val context = Robolectric.setupActivity(Activity::class.java)
+        val context = Robolectric.buildActivity(Activity::class.java).setup().get()
 
         val intent = Intent("action")
         val pendingIntent = spy(PendingIntent.getActivity(context, 0, intent, 0))
@@ -607,7 +607,7 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter does not invoke PendingIntent if provided for main process crashes`() {
-        val context = Robolectric.setupActivity(Activity::class.java)
+        val context = Robolectric.buildActivity(Activity::class.java).setup().get()
 
         val intent = Intent("action")
         val pendingIntent = spy(PendingIntent.getActivity(context, 0, intent, 0))
@@ -634,7 +634,7 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter does not invoke PendingIntent if provided for background child process crashes`() {
-        val context = Robolectric.setupActivity(Activity::class.java)
+        val context = Robolectric.buildActivity(Activity::class.java).setup().get()
 
         val intent = Intent("action")
         val pendingIntent = spy(PendingIntent.getActivity(context, 0, intent, 0))

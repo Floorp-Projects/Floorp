@@ -1335,7 +1335,7 @@ class PromptFeatureTest {
     @Test
     fun `User can stop further popups from being displayed on the current page`() {
         val feature = PromptFeature(
-            activity = Robolectric.setupActivity(Activity::class.java),
+            activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager
         ) { }
@@ -1802,7 +1802,7 @@ class PromptFeatureTest {
     fun `A Repost PromptRequest prompt will be shown as a ConfirmDialogFragment`() {
         val feature = PromptFeature(
             // Proper activity here to allow for the feature to properly execute "container.context.getString"
-            activity = Robolectric.setupActivity(Activity::class.java),
+            activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager,
             shareDelegate = mock(),
@@ -1830,7 +1830,7 @@ class PromptFeatureTest {
     @Test
     fun `Positive button on a Repost dialog will call onAccept and consume the dialog`() {
         val feature = PromptFeature(
-            activity = Robolectric.setupActivity(Activity::class.java),
+            activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager
         ) { }
@@ -1856,7 +1856,7 @@ class PromptFeatureTest {
     @Test
     fun `Negative button on a Repost dialog will call onDismiss and consume the dialog`() {
         val feature = PromptFeature(
-            activity = Robolectric.setupActivity(Activity::class.java),
+            activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager
         ) { }

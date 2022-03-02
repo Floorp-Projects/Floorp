@@ -1353,7 +1353,7 @@ class SystemEngineViewTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.N])
     fun captureThumbnailOnPreO() {
-        val activity = Robolectric.setupActivity(Activity::class.java)
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val engineView = SystemEngineView(activity)
         val webView = mock<WebView>()
 
@@ -1383,7 +1383,7 @@ class SystemEngineViewTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O], shadows = [PixelCopyShadow::class])
     fun captureThumbnailOnPostO() {
-        val activity = Robolectric.setupActivity(Activity::class.java)
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val engineView = SystemEngineView(activity)
         val webView = mock<WebView>()
         whenever(webView.width).thenReturn(100)
