@@ -98,5 +98,6 @@ private fun shouldLoadInExistingTab(url: String): Boolean {
     val cleanedUrl = url.lowercase().trim()
     return cleanedUrl.startsWith("http:") ||
         cleanedUrl.startsWith("https:") ||
-        cleanedUrl.startsWith("data:")
+        cleanedUrl.startsWith("data:") ||
+        cleanedUrl.startsWith("focus:")
 }
