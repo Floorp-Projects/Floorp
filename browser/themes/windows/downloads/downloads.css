@@ -10,14 +10,6 @@
   border: 0;
 }
 
-#downloadsSummary:focus-visible {
-  outline-offset: -5px;
-}
-
-#downloadsPanel:not([keyfocus]) #downloadsSummary:focus-visible {
-  outline: none;
-}
-
 /*** List items and similar elements in the summary ***/
 
 :root {
@@ -25,17 +17,6 @@
   --downloads-item-font-size-factor: 0.9;
   --downloads-item-details-opacity: 0.6;
   --downloads-item-disabled-opacity: 0.6;
-}
-
-#downloadsPanel:not([keyfocus]) .downloadButton:focus-visible {
-  outline: none;
-}
-
-/*** Highlighted list items ***/
-
-#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected] {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
 }
 
 /*** Progress bars ***/

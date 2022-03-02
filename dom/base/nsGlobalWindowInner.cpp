@@ -920,6 +920,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mHasSeenGamepadInput(false),
       mHintedWasLoading(false),
       mHasOpenedExternalProtocolFrame(false),
+      mScrollMarksOnHScrollbar(false),
       mStorageAllowedReasonCache(0),
       mSuspendDepth(0),
       mFreezeDepth(0),
@@ -7707,9 +7708,10 @@ ContentMediaController* nsGlobalWindowInner::GetContentMediaController() {
   return mContentMediaController;
 }
 
-void nsGlobalWindowInner::SetScrollMarks(
-    const nsTArray<uint32_t>& aScrollMarks) {
+void nsGlobalWindowInner::SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks,
+                                         bool aOnHScrollbar) {
   mScrollMarks.Assign(aScrollMarks);
+  mScrollMarksOnHScrollbar = aOnHScrollbar;
 
   // Mark the scrollbar for repainting.
   if (mDoc) {
@@ -7717,7 +7719,7 @@ void nsGlobalWindowInner::SetScrollMarks(
     if (presShell) {
       nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
       if (sf) {
-        sf->InvalidateVerticalScrollbar();
+        sf->InvalidateScrollbars();
       }
     }
   }

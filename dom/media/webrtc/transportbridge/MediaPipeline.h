@@ -235,7 +235,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   UniquePtr<MediaPipelineFilter> mFilter;
   const UniquePtr<webrtc::RtpHeaderParser> mRtpParser;
 
-  UniquePtr<PacketDumper> mPacketDumper;
+  RefPtr<PacketDumper> mPacketDumper;
 
   MediaEventProducerExc<MediaPacket, webrtc::RTPHeader> mRtpReceiveEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtcpReceiveEvent;

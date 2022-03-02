@@ -2149,12 +2149,12 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
 static JSObject* GetExceptionTag(JSObject* exn) {
   return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
                                         : nullptr;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 void Instance::setPendingException(HandleAnyRef exn) {
   tlsData()->pendingException = exn.get().asJSObject();
   tlsData()->pendingExceptionTag = GetExceptionTag(exn.get().asJSObject());

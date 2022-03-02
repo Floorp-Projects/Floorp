@@ -4,17 +4,17 @@
 <script>
   // Account for scrollbar buttons on Windows
 const hasScrollbarButtons = navigator.platform.indexOf("Win") >= 0;
-const scrollbarButtonHeight = 16;
+const scrollbarButtonSize = 16;
 
 function assignMarks()
 {
-  let frame = document.getElementById('frame');
-  let width = frame.getBoundingClientRect().width;
+  let frame0 = document.getElementById('frame0');
+  let width = frame0.getBoundingClientRect().width;
 
-  let innerRect = frame.contentDocument.documentElement.getBoundingClientRect();
-  let markWidth = width - innerRect.width - 2;
+  let innerRect0 = frame0.contentDocument.documentElement.getBoundingClientRect();
+  let markWidth = width - innerRect0.width - 2;
 
-  let scrollButtonHeight = hasScrollbarButtons ? scrollbarButtonHeight : 0;
+  let scrollButtonHeight = hasScrollbarButtons ? scrollbarButtonSize : 0;
   let sliderHeight = 200 - scrollButtonHeight * 2;
 
   let one = document.getElementById('one');
@@ -29,16 +29,36 @@ function assignMarks()
   three.style.width = markWidth + "px";
   three.style.top = (Math.floor(110 / frames[0].scrollMaxY * sliderHeight) + scrollButtonHeight) + "px";
 
+  let frame1 = document.getElementById('frame1');
+  let height = frame1.getBoundingClientRect().height;
+
+  let innerRect1 = frame1.contentDocument.documentElement.getBoundingClientRect();
+  let markHeight = height - innerRect1.height - 2;
+
+  let scrollButtonWidth = hasScrollbarButtons ? scrollbarButtonSize : 0;
+  let sliderWidth = 300 - scrollButtonWidth * 2;
+
+  let four = document.getElementById('four');
+  four.style.height = markHeight + "px";
+  four.style.left = (Math.floor(45 / frames[1].scrollMaxX * sliderWidth) + scrollButtonWidth) + "px";
+
+  let five = document.getElementById('five');
+  five.style.height = markHeight + "px";
+  five.style.left = (Math.floor(165 / frames[1].scrollMaxX * sliderWidth) + scrollButtonWidth) + "px";
+
   document.documentElement.removeAttribute("class");
 }
 </script>
 </head>
 <body onload="assignMarks()">
-<div style='border: 1px solid red; position: absolute; width: 300px; height; 100px; padding: 0;'>
-<iframe id='frame' style='position: relative; border: none; height: 200px;' src='data:text/html,<p style="height: 400px;"></p>'></iframe>
+<div style='border: 1px solid red; position: absolute; width: 300px; padding: 0;'>
+  <iframe id='frame0' style='position: relative; border: none; height: 200px; vertical-align: middle;' src='data:text/html,<p style="height: 400px;"></p>'></iframe>
   <div id='one' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
   <div id='two' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
   <div id='three' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
+  <iframe id='frame1' style='position: relative; border: none; height: 200px; vertical-align: middle;' src='data:text/html,<p style="height: 100%; width: 600px;"></p>'></iframe>
+  <div id='four' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; bottom: 0px;'></div>
+  <div id='five' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; bottom: 0px;'></div>
 </div>
 </body>
 </html>

@@ -441,7 +441,7 @@ nsresult TransceiverImpl::UpdateConduit() {
 void TransceiverImpl::ResetSync() { mSyncGroup = std::string(); }
 
 nsresult TransceiverImpl::SyncWithMatchingVideoConduits(
-    std::vector<RefPtr<TransceiverImpl>>& transceivers) {
+    nsTArray<RefPtr<TransceiverImpl>>& transceivers) {
   if (mJsepTransceiver->IsStopped()) {
     return NS_OK;
   }

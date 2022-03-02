@@ -212,6 +212,20 @@ struct hb_buffer_t
   HB_INTERNAL void enter ();
   HB_INTERNAL void leave ();
 
+#ifndef HB_NO_BUFFER_VERIFY
+  HB_INTERNAL
+#endif
+  bool verify (hb_buffer_t        *text_buffer,
+	       hb_font_t          *font,
+	       const hb_feature_t *features,
+	       unsigned int        num_features,
+	       const char * const *shapers)
+#ifndef HB_NO_BUFFER_VERIFY
+  ;
+#else
+  { return true; }
+#endif
+
   unsigned int backtrack_len () const { return have_output ? out_len : idx; }
   unsigned int lookahead_len () const { return len - idx; }
   uint8_t next_serial () { return ++serial ? serial : ++serial; }

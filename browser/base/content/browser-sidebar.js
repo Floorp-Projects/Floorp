@@ -399,6 +399,12 @@ var SidebarUI = {
    * @return {Promise}
    */
   toggle(commandID = this.lastOpenedId, triggerNode) {
+    if (
+      CustomizationHandler.isCustomizing() ||
+      CustomizationHandler.isExitingCustomizeMode
+    ) {
+      return Promise.resolve();
+    }
     // First priority for a default value is this.lastOpenedId which is set during show()
     // and not reset in hide(), unlike currentID. If show() hasn't been called and we don't
     // have a persisted command either, or the command doesn't exist anymore, then

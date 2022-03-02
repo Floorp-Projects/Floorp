@@ -1203,7 +1203,12 @@
       "../node_modules/parse-script-tags/node_modules/@babel/types/lib/validators/isSpecifierDefault.js": 1051,
       "../node_modules/parse-script-tags/node_modules/@babel/types/lib/validators/isValidES3Identifier.js": 1052,
       "../node_modules/parse-script-tags/node_modules/@babel/types/lib/validators/isVar.js": 1053,
-      "../node_modules/parse-script-tags/node_modules/@babel/parser/lib/index.js": 1054
+      "../node_modules/parse-script-tags/node_modules/@babel/parser/lib/index.js": 1054,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-handler.js": 1055,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/utils/network-request.js": 1056,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-dispatcher.js": 1057,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/utils/privileged-network-request.js": 1058,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/worker-utils.js": 1059
     },
     "usedIds": {
       "0": 0,
@@ -2260,7 +2265,12 @@
       "1051": 1051,
       "1052": 1052,
       "1053": 1053,
-      "1054": 1054
+      "1054": 1054,
+      "1055": 1055,
+      "1056": 1056,
+      "1057": 1057,
+      "1058": 1058,
+      "1059": 1059
     }
   },
   "chunks": {

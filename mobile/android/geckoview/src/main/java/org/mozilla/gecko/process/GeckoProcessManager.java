@@ -110,6 +110,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     final Selector selector = new Selector(GeckoProcessType.GPU);
     final GpuProcessConnection conn =
         (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
+    if (conn == null) {
+      return null;
+    }
     return conn.getCompositorSurfaceManager();
   }
 

@@ -1,3 +1,15 @@
+highway (0.16.0-1) UNRELEASED; urgency=medium
+
+  * Add contrib/sort (vectorized quicksort)
+  * Add IfNegativeThenElse, IfVecThenElse
+  * Add Reverse2,4,8, ReverseBlocks, DupEven/Odd, AESLastRound
+  * Add OrAnd, Min128, Max128, Lt128, SumsOf8
+  * Support capped/partial vectors on RVV/SVE, int64 in WASM
+  * Support SVE2, shared library build
+  * Remove deprecated overloads without the required d arg (UpperHalf etc.)
+
+ -- Jan Wassenberg <janwas@google.com>  Thu, 03 Feb 2022 11:00:00 +0100
+
 highway (0.15.0-1) UNRELEASED; urgency=medium
 
   * New ops: CompressBlendedStore, ConcatOdd/Even, IndicesFromVec

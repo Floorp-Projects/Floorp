@@ -2,6 +2,7 @@
 #include "hb-aat-map.cc"
 #include "hb-blob.cc"
 #include "hb-buffer-serialize.cc"
+#include "hb-buffer-verify.cc"
 #include "hb-buffer.cc"
 #include "hb-common.cc"
 #include "hb-draw.cc"

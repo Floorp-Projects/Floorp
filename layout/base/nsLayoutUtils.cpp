@@ -1851,11 +1851,15 @@ void nsLayoutUtils::ConstrainToCoordValues(float& aStart, float& aSize) {
   // can't return a value greater than nscoord_MAX. If aSize is greater than
   // nscoord_MAX then we reduce it to nscoord_MAX while keeping the rect
   // centered:
-  if (aSize > float(nscoord_MAX)) {
+  if (MOZ_UNLIKELY(std::isnan(aSize))) {
+    // Can happen if aStart is -inf and aSize is +inf for example.
+    aStart = 0.0f;
+    aSize = float(nscoord_MAX);
+  } else if (aSize > float(nscoord_MAX)) {
     float excess = aSize - float(nscoord_MAX);
     excess /= 2;
     aStart += excess;
-    aSize = (float)nscoord_MAX;
+    aSize = float(nscoord_MAX);
   }
 }
 
@@ -1882,7 +1886,11 @@ void nsLayoutUtils::ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize) {
   aSize = max - aStart;
   // If the width if still greater than the max nscoord, then bring both
   // endpoints in by the same amount until it fits.
-  if (aSize > nscoord_MAX) {
+  if (MOZ_UNLIKELY(std::isnan(aSize))) {
+    // Can happen if aStart is -inf and aSize is +inf for example.
+    aStart = 0.0f;
+    aSize = nscoord_MAX;
+  } else if (aSize > nscoord_MAX) {
     gfxFloat excess = aSize - nscoord_MAX;
     excess /= 2;
 

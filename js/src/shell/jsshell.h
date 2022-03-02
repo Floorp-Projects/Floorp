@@ -126,7 +126,7 @@ extern bool enableAsyncStackCaptureDebuggeeOnly;
 extern bool enableStreams;
 extern bool enableReadableByteStreams;
 extern bool enableBYOBStreamReaders;
-extern bool enableWritableStreams;
+
 extern bool enableReadableStreamPipeTo;
 extern bool enableWeakRefs;
 extern bool enableToSource;

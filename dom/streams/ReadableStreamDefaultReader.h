@@ -90,9 +90,9 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   LinkedList<RefPtr<ReadRequest>> mReadRequests = {};
 };
 
-extern void SetUpReadableStreamDefaultReader(
-    ReadableStreamDefaultReader* aReader, ReadableStream* aStream,
-    ErrorResult& aRv);
+void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
+                                      ReadableStream* aStream,
+                                      ErrorResult& aRv);
 
 void ReadableStreamDefaultReaderErrorReadRequests(
     JSContext* aCx, ReadableStreamDefaultReader* aReader,

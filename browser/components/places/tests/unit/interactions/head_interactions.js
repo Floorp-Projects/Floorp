@@ -309,6 +309,43 @@ function assertSnapshotGroup(group, expected) {
 }
 
 /**
+ * Asserts that the list of snapshot groups match the expected values.
+ *
+ * @param {SnapshotGroup[]} received
+ *   The received snapshots.
+ * @param {SnapshotGroup[]} expected
+ *   The expected snapshots.
+ */
+async function assertSnapshotGroupList(received, expected) {
+  info(
+    `Found ${received.length} snapshot groups:\n ${JSON.stringify(received)}`
+  );
+  Assert.equal(
+    received.length,
+    expected.length,
+    "Should have the expected number of snapshots"
+  );
+  for (let i = 0; i < expected.length; i++) {
+    assertSnapshotGroup(received[i], expected[i]);
+  }
+}
+
+/**
+ * Given a list of snapshot groups and a list of ids returns the groups in that
+ * order.
+ *
+ * @param {SnapshotGroup[]} list
+ *   The list of groups.
+ * @param {string[]} order
+ *   The ids of groups.
+ * @returns {SnapshotGroup[]} The list of groups in the order expected.
+ */
+function orderedGroups(list, order) {
+  let groups = Object.fromEntries(list.map(g => [g.id, g]));
+  return order.map(id => groups[id]);
+}
+
+/**
  * Queries overlapping snapshots from the database and asserts their expected values.
  *
  * @param {Snapshot[]} expected

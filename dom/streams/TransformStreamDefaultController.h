@@ -75,7 +75,7 @@ class TransformStreamDefaultController final : public nsISupports,
   JS::Heap<JSObject*> mTransformer;
 };
 
-extern void SetUpTransformStreamDefaultControllerFromTransformer(
+void SetUpTransformStreamDefaultControllerFromTransformer(
     JSContext* aCx, TransformStream& aStream, JS::HandleObject aTransformer,
     Transformer& aTransformerDict);
 

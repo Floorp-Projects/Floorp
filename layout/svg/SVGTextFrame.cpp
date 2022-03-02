@@ -5186,6 +5186,9 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
     gfxMatrix m(GetCanvasTM());
     if (!m.IsSingular()) {
       contextScale = GetContextScale(m);
+      if (!std::isfinite(contextScale)) {
+        contextScale = 1.0f;
+      }
     }
   }
   mLastContextScale = contextScale;

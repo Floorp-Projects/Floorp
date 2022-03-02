@@ -1,3 +1,29 @@
+Overview of changes leading to 3.4.0
+Sunday, February 13, 2022
+====================================
+- Perform sanity checks on shaping results is now part of “harfbuzz” library
+  and can be enabled by setting the buffer flag HB_BUFFER_FLAG_VERIFY.
+  (Behdad Esfahbod)
+- Arabic Mark Transient Reordering Algorithm have been updated to revision 6.
+  (Khaled Hosny)
+- ISO 15924 code for mathematical notation, ‘Zmth’, now maps to the OpenType
+  ‘math’ tag. (Alexis King)
+- It is now possible to get at once all math kerning values for a given glyph
+  at a given corner. (Alexis King)
+- Fix locale_t portability issues on systems the typdef’s it to a void pointer.
+  (Behdad Esfahbod)
+
+- New API:
++HB_BUFFER_FLAG_VERIFY
++HB_OT_TAG_MATH_SCRIPT
++HB_SCRIPT_MATH
++hb_ot_math_kern_entry_t
++hb_ot_math_get_glyph_kernings
+
+- Deprecated API
++HB_OT_MATH_SCRIPT
+
+
 Overview of changes leading to 3.3.2
 Sunday, February 6, 2022
 ====================================
