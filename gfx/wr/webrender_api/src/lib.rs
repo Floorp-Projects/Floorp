@@ -24,6 +24,10 @@ extern crate bitflags;
 extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
+#[cfg(target_os = "macos")]
+extern crate core_foundation;
+#[cfg(target_os = "macos")]
+extern crate core_graphics;
 extern crate derive_more;
 #[macro_use]
 extern crate malloc_size_of_derive;
