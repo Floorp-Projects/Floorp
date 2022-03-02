@@ -192,7 +192,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
               overallProgress >= double(UINT64_MAX)
           ? UINT64_MAX  // In GetComputedTimingDictionary(),
                         // we will convert this into Infinity
-          : static_cast<uint64_t>(overallProgress);
+          : static_cast<uint64_t>(std::max(overallProgress, 0.0));
 
   // Convert the overall progress to a fraction of a single iteration--the
   // simply iteration progress.
