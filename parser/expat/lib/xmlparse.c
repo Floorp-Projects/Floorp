@@ -3383,10 +3383,17 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 /* END MOZILLA CHANGE */
     int j;  /* hash table index */
     unsigned long version = nsAttsVersion;
-    int nsAttsSize = (int)1 << nsAttsPower;
+
+    /* Detect and prevent invalid shift */
+    if (parser->m_nsAttsPower >= sizeof(unsigned int) * 8 /* bits per byte */) {
+      return XML_ERROR_NO_MEMORY;
+    }
+
+    unsigned int nsAttsSize = 1u << nsAttsPower;
 /* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
     if (nPrefixes) {
 /* END MOZILLA CHANGE */
+    unsigned char oldNsAttsPower = parser->m_nsAttsPower;
     /* size of hash table must be at least 2 * (# of prefixed attributes) */
     if ((nPrefixes << 1) >> nsAttsPower) {  /* true for nsAttsPower = 0 */
       NS_ATT *temp;
@@ -3394,7 +3401,28 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       while (nPrefixes >> nsAttsPower++);
       if (nsAttsPower < 3)
         nsAttsPower = 3;
-      nsAttsSize = (int)1 << nsAttsPower;
+
+      /* Detect and prevent invalid shift */
+      if (parser->m_nsAttsPower >= sizeof(nsAttsSize) * 8 /* bits per byte */) {
+        /* Restore actual size of memory in m_nsAtts */
+        parser->m_nsAttsPower = oldNsAttsPower;
+        return XML_ERROR_NO_MEMORY;
+      }
+
+      nsAttsSize = 1u << parser->m_nsAttsPower;
+
+      /* Detect and prevent integer overflow.
+       * The preprocessor guard addresses the "always false" warning
+       * from -Wtype-limits on platforms where
+       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
+#if UINT_MAX >= SIZE_MAX
+      if (nsAttsSize > (size_t)(-1) / sizeof(NS_ATT)) {
+        /* Restore actual size of memory in m_nsAtts */
+        parser->m_nsAttsPower = oldNsAttsPower;
+        return XML_ERROR_NO_MEMORY;
+      }
+#endif
+
       temp = (NS_ATT *)REALLOC(nsAtts, nsAttsSize * sizeof(NS_ATT));
       if (!temp)
         return XML_ERROR_NO_MEMORY;
