@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -27,8 +28,6 @@ static RefPtr<nsThread> GetUiThread() {
   return nullptr;
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
-
-static bool IsOnUiThread() { return GetUiThread()->IsOnCurrentThread(); }
 
 namespace mozilla {
 namespace layers {
@@ -156,31 +155,34 @@ bool UiCompositorControllerChild::EnableLayerUpdateNotifications(
 }
 
 void UiCompositorControllerChild::Destroy() {
-  if (!IsOnUiThread()) {
-    GetUiThread()->Dispatch(
-        NewRunnableMethod("layers::UiCompositorControllerChild::Destroy", this,
-                          &UiCompositorControllerChild::Destroy),
-        nsIThread::DISPATCH_SYNC);
-    return;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
 
-  // Clear the process token so that we don't notify the GPUProcessManager
-  // about an abnormal shutdown, thereby tearing down the GPU process.
-  mProcessToken = 0;
+  layers::SynchronousTask task("UiCompositorControllerChild::Destroy");
+  GetUiThread()->Dispatch(NS_NewRunnableFunction(
+      "layers::UiCompositorControllerChild::Destroy", [&]() {
+        MOZ_ASSERT(GetUiThread()->IsOnCurrentThread());
+        AutoCompleteTask complete(&task);
 
-  if (mWidget) {
-    // Dispatch mWidget to main thread to prevent it from being destructed by
-    // the ui thread.
-    RefPtr<nsIWidget> widget = std::move(mWidget);
-    NS_ReleaseOnMainThread("UiCompositorControllerChild::mWidget",
-                           widget.forget());
-  }
+        // Clear the process token so that we don't notify the GPUProcessManager
+        // about an abnormal shutdown, thereby tearing down the GPU process.
+        mProcessToken = 0;
 
-  if (mIsOpen) {
-    // Close the underlying IPC channel.
-    PUiCompositorControllerChild::Close();
-    mIsOpen = false;
-  }
+        if (mWidget) {
+          // Dispatch mWidget to main thread to prevent it from being destructed
+          // by the ui thread.
+          RefPtr<nsIWidget> widget = std::move(mWidget);
+          NS_ReleaseOnMainThread("UiCompositorControllerChild::mWidget",
+                                 widget.forget());
+        }
+
+        if (mIsOpen) {
+          // Close the underlying IPC channel.
+          PUiCompositorControllerChild::Close();
+          mIsOpen = false;
+        }
+      }));
+
+  task.Wait();
 }
 
 bool UiCompositorControllerChild::DeallocPixelBuffer(Shmem& aMem) {
@@ -259,7 +261,7 @@ UiCompositorControllerChild::UiCompositorControllerChild(
 UiCompositorControllerChild::~UiCompositorControllerChild() = default;
 
 void UiCompositorControllerChild::OpenForSameProcess() {
-  MOZ_ASSERT(IsOnUiThread());
+  MOZ_ASSERT(GetUiThread()->IsOnCurrentThread());
 
   mIsOpen = Open(mParent, mozilla::layers::CompositorThread(),
                  mozilla::ipc::ChildSide);
@@ -278,7 +280,7 @@ void UiCompositorControllerChild::OpenForSameProcess() {
 
 void UiCompositorControllerChild::OpenForGPUProcess(
     Endpoint<PUiCompositorControllerChild>&& aEndpoint) {
-  MOZ_ASSERT(IsOnUiThread());
+  MOZ_ASSERT(GetUiThread()->IsOnCurrentThread());
 
   mIsOpen = aEndpoint.Bind(this);
 
