@@ -4,7 +4,7 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 AC_DEFUN([MOZ_PROG_CHECKMSYS],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-if test `uname -s | grep -c MINGW 2>/dev/null` != "0"; then
+if test `uname -s | grep -c "MINGW\|MSYS" 2>/dev/null` != "0"; then
   msyshost=1
 fi
 ])
