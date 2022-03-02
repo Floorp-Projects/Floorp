@@ -261,6 +261,8 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_NOT_SAME_DEVICE:
       [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
     case ERROR_CANNOT_MAKE:
+      [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
+    case ERROR_CONTENT_BLOCKED:
       rv = NS_ERROR_FILE_ACCESS_DENIED;
       break;
     case ERROR_SHARING_VIOLATION:  // CreateFile without sharing flags
