@@ -978,18 +978,19 @@ class HTMLEditor final : public EditorBase,
       const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewLeftNode);
 
   /**
-   * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and
-   * remove aContentToJoin from the DOM tree.  aContentToJoin and aContentToKeep
-   * must have same parent, aParent.  Additionally, if one of aContentToJoin or
-   * aContentToKeep is a text node, the other must be a text node.
+   * DoJoinNodes() merges contents in aContentToRemove to aContentToKeep and
+   * remove aContentToRemove from the DOM tree.  aContentToRemove and
+   * aContentToKeep must have same parent.  Additionally, if one of
+   * aContentToRemove or aContentToKeep is a text node, the other must be a
+   * text node.
    *
-   * @param aContentToKeep  The node that will remain after the join.
-   * @param aContentToJoin  The node that will be joined with aContentToKeep.
-   *                        There is no requirement that the two nodes be of the
-   *                        same type.
+   * @param aContentToKeep    The node that will remain after the join.
+   * @param aContentToRemove  The node that will be joined with aContentToKeep.
+   *                          There is no requirement that the two nodes be of
+   *                          the same type.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove);
 
   /**
    * Routines for managing the preservation of selection across
