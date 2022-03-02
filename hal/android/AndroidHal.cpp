@@ -101,25 +101,39 @@ static bool IsSupportedScreenOrientation(hal::ScreenOrientation aOrientation) {
   return false;
 }
 
-RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
+RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
     const hal::ScreenOrientation& aOrientation) {
-  using LockPromise = MozPromise<bool, bool, false>;
-
   if (!IsSupportedScreenOrientation(aOrientation)) {
     NS_WARNING("Unsupported screen orientation type");
-    return LockPromise::CreateAndReject(false, __func__);
+    return GenericNonExclusivePromise::CreateAndReject(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR, __func__);
   }
 
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
   if (!runtime) {
-    return LockPromise::CreateAndReject(false, __func__);
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_DOM_ABORT_ERR,
+                                                       __func__);
   }
   auto result = runtime->LockScreenOrientation(uint32_t(aOrientation));
   auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
-  if (!geckoResult) {
-    return LockPromise::CreateAndReject(false, __func__);
-  }
-  return LockPromise::FromGeckoResult(geckoResult);
+  return GenericNonExclusivePromise::FromGeckoResult(geckoResult)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](const GenericNonExclusivePromise::ResolveOrRejectValue& aValue) {
+            if (aValue.IsResolve()) {
+              if (aValue.ResolveValue()) {
+                return GenericNonExclusivePromise::CreateAndResolve(true,
+                                                                    __func__);
+              }
+              // Delegated orientation controller returns failure for
+              // lock.
+              return GenericNonExclusivePromise::CreateAndReject(
+                  NS_ERROR_DOM_ABORT_ERR, __func__);
+            }
+            // Browser side doesn't implement orientation delegate.
+            return GenericNonExclusivePromise::CreateAndReject(
+                NS_ERROR_DOM_NOT_SUPPORTED_ERR, __func__);
+          });
 }
 
 void UnlockScreenOrientation() {
