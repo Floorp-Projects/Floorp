@@ -773,10 +773,10 @@ class ManifestFile(BaseFile):
         return len(self._entries) + len(self._interfaces) == 0
 
 
-class MinifiedProperties(BaseFile):
+class MinifiedCommentStripped(BaseFile):
     """
-    File class for minified properties. This wraps around a BaseFile instance,
-    and removes lines starting with a # from its content.
+    File class for content minified by stripping comments. This wraps around a
+    BaseFile instance, and removes lines starting with a # from its content.
     """
 
     def __init__(self, file):
@@ -786,7 +786,7 @@ class MinifiedProperties(BaseFile):
     def open(self):
         """
         Return a file-like object allowing to read() the minified content of
-        the properties file.
+        the underlying file.
         """
         content = "".join(
             l
@@ -935,8 +935,8 @@ class BaseFinder(object):
         if not self._minify or isinstance(file, ExecutableFile):
             return file
 
-        if path.endswith(".properties"):
-            return MinifiedProperties(file)
+        if path.endswith((".ftl", ".properties")):
+            return MinifiedCommentStripped(file)
 
         if self._minify_js and path.endswith((".js", ".jsm")):
             return MinifiedJavaScript(file, self._minify_js_verify_command)
