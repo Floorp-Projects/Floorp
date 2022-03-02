@@ -12,6 +12,7 @@
 #include "nsUXThemeConstants.h"
 #include "nsWindowsHelpers.h"
 #include "WinUtils.h"
+#include "WindowsUIUtils.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
@@ -497,7 +498,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     case IntID::UseOverlayScrollbars:
-      aResult = false;
+      aResult = WindowsUIUtils::ComputeOverlayScrollbars();
       break;
     case IntID::AllowOverlayScrollbarsOverlap:
       aResult = 0;
