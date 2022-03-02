@@ -195,5 +195,17 @@ class OrientationDelegateTest : BaseSessionTest() {
         assertThat("The operation must throw NotSupportedError",
                    promise.value,
                    equalTo("NotSupportedError"))
+
+        val promise2 = mainSession.evaluatePromiseJS("""
+          new Promise(r => {
+            screen.orientation.lock(screen.orientation.type)
+            .then(() => r("successful"))
+            .catch(e => r(e.name))
+          })
+        """.trimIndent())
+
+        assertThat("The operation must throw NotSupportedError even if same orientation",
+                   promise2.value,
+                   equalTo("NotSupportedError"))
     }
 }
