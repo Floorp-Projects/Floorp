@@ -2329,9 +2329,10 @@ media:
   video_hardware_decoding_support:
     bug_numbers:
       - 1733722
+      - 1754657
     description: >
       Record whether hardware decoding is supported for the specific video codec. The key is the type of video codec, eg. video/vp9.
-    expires: "100"
+    expires: "112"
     kind: boolean
     keyed: true
     notification_emails:
@@ -2347,9 +2348,10 @@ media:
   video_hd_hardware_decoding_support:
     bug_numbers:
       - 1741286
+      - 1754657
     description: >
       Record whether hardware decoding is supported for the specific video codec, this only records video in HD (1280*720) or higher resultion. The key is the type of video codec, eg. video/vp9.
-    expires: "100"
+    expires: "112"
     kind: boolean
     keyed: true
     notification_emails:
