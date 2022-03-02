@@ -616,3 +616,6 @@ tasks.register('printVariants') {
         println 'variants: ' + JsonOutput.toJson(variants)
     }
 }
+
+// Enable expiration by major version.
+ext.gleanExpireByVersion = 1
