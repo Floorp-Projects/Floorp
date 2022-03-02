@@ -12748,7 +12748,7 @@
 #  - 2: auto (for now only true for flatpak, since it needs work, see bug 1688720).
 - name: widget.use-xdg-desktop-portal.print
   type: int32_t
-  value: 2
+  value: 0
   mirror: always
 
 # Whether to try to use XDG portal for settings / look-and-feel information.
