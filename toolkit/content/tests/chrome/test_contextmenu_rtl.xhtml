@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Context Menu RTL position"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<menupopup id="context-menu" style="max-width: 100px; direction: rtl">
+  <menuitem label="Item"/>
+</menupopup>
+<script>
+<![CDATA[
+
+add_task(async function() {
+  // This test checks behavior of non-native menus,
+  // so disable native context menus for this test.
+  await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
+  const menu = document.getElementById("context-menu");
+  const shown = new Promise(resolve => menu.addEventListener("popupshown", resolve, { once: true }));
+  const point = {
+    x: window.screenX + screen.width / 2,
+    y: window.screenY + screen.height / 2,
+  };
+  menu.openPopupAtScreen(point.x, point.y, true, null);
+  await shown;
+  const rect = menu.getBoundingClientRect();
+  const margin = parseFloat(getComputedStyle(menu).marginRight);
+  info(`${menu.screenX} + ${rect.width} + ${margin} < ${point.x}`);
+  ok(menu.screenX + rect.width + margin < point.x, "Should be right-aligned");
+  menu.hidePopup();
+});
+
+]]>
+</script>
+</window>
