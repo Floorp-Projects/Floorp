@@ -21,7 +21,7 @@
 #include "nsWindow.h"
 #include "WinUtils.h"
 #include "nsIWindowsRegKey.h"
-#include "nsIWindowsUIUtils.h"
+#include "WindowsUIUtils.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -944,15 +944,7 @@ bool IMEHandler::IsKeyboardPresentOnSlate() {
 
 // static
 bool IMEHandler::IsInTabletMode() {
-  nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-      do_GetService("@mozilla.org/windows-ui-utils;1"));
-  if (NS_WARN_IF(!uiUtils)) {
-    Preferences::SetString(kOskDebugReason,
-                           L"IITM: nsIWindowsUIUtils not available.");
-    return false;
-  }
-  bool isInTabletMode = false;
-  uiUtils->GetInTabletMode(&isInTabletMode);
+  bool isInTabletMode = WindowsUIUtils::GetInTabletMode();
   if (isInTabletMode) {
     Preferences::SetString(kOskDebugReason, L"IITM: GetInTabletMode=true.");
   } else {
