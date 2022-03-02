@@ -11,8 +11,8 @@ namespace mozilla::dom {
 
 struct QueuingStrategy;
 
-extern double ExtractHighWaterMark(const QueuingStrategy& aStrategy,
-                                   double aDefaultHWM, ErrorResult& aRv);
+double ExtractHighWaterMark(const QueuingStrategy& aStrategy,
+                            double aDefaultHWM, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 
