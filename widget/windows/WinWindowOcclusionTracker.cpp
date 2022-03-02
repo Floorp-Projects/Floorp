@@ -172,13 +172,15 @@ void SerializedTaskDispatcher::Destroy() {
 
 void SerializedTaskDispatcher::PostTaskToMain(
     already_AddRefed<nsIRunnable> aTask) {
+  RefPtr<nsIRunnable> task = aTask;
+
   auto data = mData.Lock();
   if (data->mDestroyed) {
     return;
   }
 
   nsISerialEventTarget* eventTarget = GetMainThreadSerialEventTarget();
-  data->mTasks.push({std::move(aTask), eventTarget});
+  data->mTasks.push({std::move(task), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -186,6 +188,8 @@ void SerializedTaskDispatcher::PostTaskToMain(
 
 void SerializedTaskDispatcher::PostTaskToCalculator(
     already_AddRefed<nsIRunnable> aTask) {
+  RefPtr<nsIRunnable> task = aTask;
+
   auto data = mData.Lock();
   if (data->mDestroyed) {
     return;
@@ -193,7 +197,7 @@ void SerializedTaskDispatcher::PostTaskToCalculator(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push({std::move(aTask), eventTarget});
+  data->mTasks.push({std::move(task), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -236,6 +240,8 @@ void SerializedTaskDispatcher::HandleDelayedTask(
   MOZ_ASSERT(WinWindowOcclusionTracker::IsInWinWindowOcclusionThread());
   CALC_LOG(LogLevel::Debug, "SerializedTaskDispatcher::HandleDelayedTask()");
 
+  RefPtr<nsIRunnable> task = aTask;
+
   auto data = mData.Lock();
   if (data->mDestroyed) {
     return;
@@ -243,7 +249,7 @@ void SerializedTaskDispatcher::HandleDelayedTask(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push({std::move(aTask), eventTarget});
+  data->mTasks.push({std::move(task), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
