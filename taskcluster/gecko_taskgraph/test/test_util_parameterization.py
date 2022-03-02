@@ -30,7 +30,7 @@ class TestTimestamps(unittest.TestCase):
         input = {"key": [{"key2": [{"relative-datestamp": "1 day"}]}]}
         self.assertEqual(
             resolve_timestamps(now, input),
-            {"key": [{"key2": ["2018-01-02T00:00:00.000Z"]}]},
+            {"key": [{"key2": ["2018-01-02T00:00:00Z"]}]},
         )
 
     def test_appears_with_other_keys(self):
