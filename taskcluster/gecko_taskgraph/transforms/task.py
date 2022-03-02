@@ -16,10 +16,8 @@ import time
 from copy import deepcopy
 
 import attr
-from mozbuild.util import memoize
-from taskgraph.util.time import value_of
-from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 
+from mozbuild.util import memoize
 from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.treeherder import split_symbol
@@ -39,7 +37,9 @@ from gecko_taskgraph.util.scriptworker import (
     get_release_config,
 )
 from gecko_taskgraph.util.signed_artifacts import get_signed_artifacts
+from gecko_taskgraph.util.time import value_of
 from gecko_taskgraph.util.workertypes import worker_type_implementation
+from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 from gecko_taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
 from ..util.workertypes import get_worker_type
