@@ -70,5 +70,16 @@ let AVAILABLE_PIP_OVERRIDES;
         videoWrapperScriptPath: "video-wrappers/youtube.js",
       },
     },
+
+    primeVideo: {
+      "https://*.primevideo.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
+      },
+      "https://*.amazon.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
+      },
+    },
   };
 }
