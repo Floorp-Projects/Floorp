@@ -29,7 +29,7 @@ const CAPTIVE_URL_PREF = "captivedetect.canonicalURL";
 
 var { ExtensionError } = ExtensionUtils;
 
-this.captivePortal = class extends ExtensionAPI {
+this.captivePortal = class extends ExtensionAPIPersistent {
   checkCaptivePortalEnabled() {
     if (!gCaptivePortalEnabled) {
       throw new ExtensionError("Captive Portal detection is not enabled");
@@ -52,7 +52,7 @@ this.captivePortal = class extends ExtensionAPI {
   }
 
   PERSISTENT_EVENTS = {
-    onStateChanged: fire => {
+    onStateChanged({ fire }) {
       this.checkCaptivePortalEnabled();
 
       let observer = (subject, topic) => {
@@ -75,7 +75,7 @@ this.captivePortal = class extends ExtensionAPI {
         },
       };
     },
-    onConnectivityAvailable: fire => {
+    onConnectivityAvailable({ fire }) {
       this.checkCaptivePortalEnabled();
 
       let observer = (subject, topic, data) => {
@@ -95,7 +95,7 @@ this.captivePortal = class extends ExtensionAPI {
         },
       };
     },
-    "captiveURL.onChange": fire => {
+    "captiveURL.onChange": ({ fire }) => {
       let listener = (text, id) => {
         fire.async({
           levelOfControl: "not_controllable",
@@ -114,12 +114,6 @@ this.captivePortal = class extends ExtensionAPI {
     },
   };
 
-  primeListener(extension, event, fire) {
-    if (Object.hasOwn(this.PERSISTENT_EVENTS, event)) {
-      return this.PERSISTENT_EVENTS[event](fire);
-    }
-  }
-
   getAPI(context) {
     let self = this;
     return {
@@ -136,18 +130,13 @@ this.captivePortal = class extends ExtensionAPI {
           context,
           module: "captivePortal",
           event: "onStateChanged",
-          register: fire => {
-            return self.PERSISTENT_EVENTS.onStateChanged(fire).unregister;
-          },
+          extensionApi: self,
         }).api(),
         onConnectivityAvailable: new EventManager({
           context,
           module: "captivePortal",
           event: "onConnectivityAvailable",
-          register: fire => {
-            return self.PERSISTENT_EVENTS.onConnectivityAvailable(fire)
-              .unregister;
-          },
+          extensionApi: self,
         }).api(),
         canonicalURL: getSettingsAPI({
           context,
@@ -160,10 +149,7 @@ this.captivePortal = class extends ExtensionAPI {
             context,
             module: "captivePortal",
             event: "captiveURL.onChange",
-            register: fire => {
-              return self.PERSISTENT_EVENTS["captiveURL.onChange"](fire)
-                .unregister;
-            },
+            extensionApi: self,
           }).api(),
         }),
       },

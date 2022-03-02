@@ -220,8 +220,8 @@ void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
  * Lock the screen orientation to the specific orientation.
  * @return A promise indicating that the screen orientation has been locked.
  */
-[[nodiscard]] RefPtr<mozilla::MozPromise<bool, bool, false>>
-LockScreenOrientation(const hal::ScreenOrientation& aOrientation);
+[[nodiscard]] RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
+    const hal::ScreenOrientation& aOrientation);
 
 /**
  * Unlock the screen orientation.

@@ -103,5 +103,11 @@ nsString Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
   return result;
 }
 
+template <>
+nsresult Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
+  MOZ_ASSERT(aData.IsInstanceOf<jni::Throwable>());
+  return NS_ERROR_FAILURE;
+}
+
 }  // namespace jni
 }  // namespace mozilla

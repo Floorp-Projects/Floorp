@@ -69,21 +69,24 @@ void GetCurrentNetworkInformation(NetworkInformation* aNetworkInfo) {
   Hal()->SendGetCurrentNetworkInformation(aNetworkInfo);
 }
 
-RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
+RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
     const hal::ScreenOrientation& aOrientation) {
   return Hal()
       ->SendLockScreenOrientation(aOrientation)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [=](const mozilla::MozPromise<bool, ipc::ResponseRejectReason,
-                                        true>::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve() && aValue.ResolveValue()) {
-              return mozilla::MozPromise<bool, bool, false>::CreateAndResolve(
-                  true, __func__);
-            }
-            return mozilla::MozPromise<bool, bool, false>::CreateAndReject(
-                false, __func__);
-          });
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [](const mozilla::MozPromise<nsresult, ipc::ResponseRejectReason,
+                                          true>::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 if (NS_SUCCEEDED(aValue.ResolveValue())) {
+                   return GenericNonExclusivePromise::CreateAndResolve(
+                       true, __func__);
+                 }
+                 return GenericNonExclusivePromise::CreateAndReject(
+                     aValue.ResolveValue(), __func__);
+               }
+               return GenericNonExclusivePromise::CreateAndReject(
+                   NS_ERROR_FAILURE, __func__);
+             });
 }
 
 void UnlockScreenOrientation() { Hal()->SendUnlockScreenOrientation(); }
@@ -223,15 +226,17 @@ class HalParent : public PHalParent,
     // fullscreen.  We don't have that information currently.
 
     hal::LockScreenOrientation(aOrientation)
-        ->Then(GetMainThreadSerialEventTarget(), __func__,
-               [aResolve](const mozilla::MozPromise<
-                          bool, bool, false>::ResolveOrRejectValue& aValue) {
-                 if (aValue.IsResolve()) {
-                   aResolve(aValue.ResolveValue());
-                 } else {
-                   aResolve(false);
-                 }
-               });
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [aResolve](const GenericNonExclusivePromise::ResolveOrRejectValue&
+                           aValue) {
+              if (aValue.IsResolve()) {
+                MOZ_ASSERT(aValue.ResolveValue());
+                aResolve(NS_OK);
+                return;
+              }
+              aResolve(aValue.RejectValue());
+            });
     return IPC_OK();
   }
 

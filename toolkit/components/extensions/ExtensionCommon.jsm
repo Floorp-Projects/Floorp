@@ -364,6 +364,72 @@ class ExtensionAPI extends EventEmitter {
 }
 
 /**
+ * Subclass to add APIs commonly used with persistent events.
+ * If a namespace uses events, it should use this subclass.
+ *
+ * this.apiNamespace = class extends ExtensionAPIPersistent {};
+ */
+class ExtensionAPIPersistent extends ExtensionAPI {
+  /**
+   * Check for event entry.
+   *
+   * @param {string} event The event name e.g. onStateChanged
+   * @returns {boolean}
+   */
+  hasEventRegistrar(event) {
+    return (
+      this.PERSISTENT_EVENTS && Object.hasOwn(this.PERSISTENT_EVENTS, event)
+    );
+  }
+
+  /**
+   * Get the event registration fuction
+   *
+   * @param {string} event The event name e.g. onStateChanged
+   * @returns {Function} register is used to start the listener
+   *                     register returns an object containing
+   *                     a convert and unregister function.
+   */
+  getEventRegistrar(event) {
+    if (this.hasEventRegistrar(event)) {
+      return this.PERSISTENT_EVENTS[event].bind(this);
+    }
+  }
+
+  /**
+   * Used when instantiating an EventManager instance to register the listener.
+   *
+   * @param {Object} options used for event registration
+   * @param {BaseContext} options.context Passed when creating an EventManager instance.
+   * @param {string} options.event The function passed to the listener to fire the event.
+   * @param {Function} options.fire The function passed to the listener to fire the event.
+   * @returns {Function} the unregister function used in the EventManager.
+   */
+  registerEventListener(options) {
+    let register = this.getEventRegistrar(options.event);
+    if (register) {
+      return register(options).unregister;
+    }
+  }
+
+  /**
+   * Used to prime a listener for when the background script is not running.
+   *
+   * @param {string} event The event name e.g. onStateChanged or captiveURL.onChange.
+   * @param {Function} fire The function passed to the listener to fire the event.
+   * @param {Array} params Params passed to the event listener.
+   * @param {boolean} isInStartup unused here but passed for subclass use.
+   * @returns {Object} the unregister and convert functions used in the EventManager.
+   */
+  primeListener(event, fire, params, isInStartup) {
+    let register = this.getEventRegistrar(event);
+    if (register) {
+      return register({ fire, isInStartup }, ...params);
+    }
+  }
+}
+
+/**
  * A wrapper around a window that returns the window iff the inner window
  * matches the inner window at the construction of this wrapper.
  *
@@ -1743,6 +1809,7 @@ class SchemaAPIManager extends EventEmitter {
       Cr,
       Cu,
       ExtensionAPI,
+      ExtensionAPIPersistent,
       ExtensionCommon,
       MatchGlob,
       MatchPattern,
@@ -2145,6 +2212,9 @@ class EventManager {
    *        The API module name, required for persistent events.
    * @param {string} params.event
    *        The API event name, required for persistent events.
+   * @param {ExtensionAPI} params.extensionApi
+   *        The API intance.  If the API uses the ExtensionAPIPersistent class, some simplification is
+   *        possible by passing the api (self or this) and the internal register function will be used.
    * @param {string} [params.name]
    *        A name used only for debugging.  If not provided, name is built from module and event.
    * @param {functon} params.register
@@ -2160,6 +2230,7 @@ class EventManager {
       event,
       name,
       register,
+      extensionApi,
       inputHandling = false,
     } = params;
     this.context = context;
@@ -2168,9 +2239,19 @@ class EventManager {
     this.name = name;
     this.register = register;
     this.inputHandling = inputHandling;
-
     if (!name) {
       this.name = `${module}.${event}`;
+    }
+
+    if (!this.register && extensionApi instanceof ExtensionAPIPersistent) {
+      this.register = fire => {
+        return extensionApi.registerEventListener({ context, event, fire });
+      };
+    }
+    if (!this.register) {
+      throw new Error(
+        `EventManager requires register method for ${this.name}.`
+      );
     }
 
     this.canPersistEvents =
@@ -2328,7 +2409,6 @@ class EventManager {
 
           try {
             let handler = api.primeListener(
-              extension,
               event,
               fire,
               listener.params,
