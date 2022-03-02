@@ -464,18 +464,16 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
 static bool StateChangeMayAffectFrame(const Element& aElement,
                                       const nsIFrame& aFrame,
                                       EventStates aStates) {
+  const bool brokenChanged = aStates.HasState(NS_EVENT_STATE_BROKEN);
   if (aFrame.IsGeneratedContentFrame()) {
     if (aElement.IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage)) {
-      return aStates.HasState(NS_EVENT_STATE_BROKEN);
+      return brokenChanged;
     }
-
     // If it's other generated content, ignore LOADING/etc state changes on it.
     return false;
   }
 
-  const bool brokenChanged = aStates.HasState(NS_EVENT_STATE_BROKEN);
   const bool loadingChanged = aStates.HasState(NS_EVENT_STATE_LOADING);
-
   if (!brokenChanged && !loadingChanged) {
     return false;
   }
@@ -484,6 +482,11 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
     // Loading state doesn't affect <img>, see
     // `nsImageFrame::ShouldCreateImageFrameFor`.
     return brokenChanged;
+  }
+
+  if (aElement.IsSVGElement(nsGkAtoms::image)) {
+    // <image> gets an SVGImageFrame all the time.
+    return false;
   }
 
   return brokenChanged || loadingChanged;

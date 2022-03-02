@@ -98,6 +98,10 @@ mach command:
    implement ancillary functionality in Python. If you do implement something
    in Python, hooking it up to ``mach`` is often trivial.
 
+How do I use 3rd-party Python packages in my ``mach`` command?
+--------------------------------------------------------------
+
+See :ref:`Using third-party Python packages`.
 
 How does ``mach`` fit into the modules system?
 ----------------------------------------------
