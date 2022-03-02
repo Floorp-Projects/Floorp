@@ -8,7 +8,7 @@ export TARGET=$1
 COMPRESS_EXT=zst
 # This script is for building dump_syms
 case "$(uname -s)" in
-MINGW*)
+MINGW*|MSYS*)
     UPLOAD_DIR=$PWD/public/build
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
@@ -53,7 +53,7 @@ Linux)
         ;;
     esac
     ;;
-MINGW*)
+MINGW*|MSYS*)
     cargo build --verbose --release
     ;;
 esac
