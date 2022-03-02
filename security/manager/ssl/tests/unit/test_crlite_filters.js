@@ -15,10 +15,7 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const {
-  CRLiteFiltersClient,
-  IntermediatePreloadsClient,
-} = RemoteSecuritySettings.init();
+const { CRLiteFiltersClient } = RemoteSecuritySettings.init();
 
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
@@ -26,6 +23,11 @@ const INTERMEDIATES_ENABLED_PREF =
   "security.remote_settings.intermediates.enabled";
 const INTERMEDIATES_DL_PER_POLL_PREF =
   "security.remote_settings.intermediates.downloads_per_poll";
+
+// crlite_enrollment_id.py test_crlite_filters/issuer.pem
+const ISSUER_PEM_UID = "UbH9/ZAnjuqf79Xhah1mFOWo6ZvgQCgsdheWfjvVUM8=";
+// crlite_enrollment_id.py test_crlite_filters/no-sct-issuer.pem
+const NO_SCT_ISSUER_PEM_UID = "Myn7EasO1QikOtNmo/UZdh6snCAw0BOY6wgU8OsUeeY=";
 
 function getHashCommon(aStr, useBase64) {
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
@@ -98,6 +100,8 @@ async function syncAndDownload(filters, clear = true) {
       parent: filter.type == "diff" ? filter.parent : undefined,
       id: filter.id,
       coverage: filter.type == "full" ? filter.coverage : undefined,
+      enrolledIssuers:
+        filter.type == "full" ? filter.enrolledIssuers : undefined,
     };
 
     await localDB.create(record);
@@ -357,15 +361,6 @@ add_task(async function test_crlite_filters_multiple_days() {
   );
 });
 
-function getCRLiteEnrollmentRecordFor(nsCert) {
-  let { subjectString, spkiHashString } = getSubjectAndSPKIHash(nsCert);
-  return {
-    subjectDN: btoa(subjectString),
-    pubKeyHash: spkiHashString,
-    crlite_enrolled: true,
-  };
-}
-
 add_task(async function test_crlite_confirm_revocations_mode() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
   Services.prefs.setIntPref(
@@ -381,20 +376,6 @@ add_task(async function test_crlite_confirm_revocations_mode() {
   let noSCTCertIssuer = constructCertFromFile(
     "test_crlite_filters/no-sct-issuer.pem"
   );
-
-  let crliteEnrollmentRecords = [
-    getCRLiteEnrollmentRecordFor(issuerCert),
-    getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
-  ];
-
-  await IntermediatePreloadsClient.onSync({
-    data: {
-      current: crliteEnrollmentRecords,
-      created: crliteEnrollmentRecords,
-      updated: [],
-      deleted: [],
-    },
-  });
 
   let result = await syncAndDownload([
     {
@@ -413,6 +394,7 @@ add_task(async function test_crlite_confirm_revocations_mode() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
   ]);
   equal(
@@ -484,20 +466,6 @@ add_task(async function test_crlite_filters_and_check_revocation() {
     "test_crlite_filters/no-sct-issuer.pem"
   );
 
-  let crliteEnrollmentRecords = [
-    getCRLiteEnrollmentRecordFor(issuerCert),
-    getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
-  ];
-
-  await IntermediatePreloadsClient.onSync({
-    data: {
-      current: crliteEnrollmentRecords,
-      created: crliteEnrollmentRecords,
-      updated: [],
-      deleted: [],
-    },
-  });
-
   let result = await syncAndDownload([
     {
       timestamp: "2020-10-17T00:00:00Z",
@@ -515,6 +483,7 @@ add_task(async function test_crlite_filters_and_check_revocation() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
   ]);
   equal(
@@ -723,6 +692,7 @@ add_task(async function test_crlite_filters_and_check_revocation() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
   ]);
   equal(
@@ -757,6 +727,7 @@ add_task(async function test_crlite_filters_avoid_reprocessing_filters() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
     {
       timestamp: "2019-01-01T06:00:00Z",
