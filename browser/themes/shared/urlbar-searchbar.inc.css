@@ -410,9 +410,9 @@
   color: var(--urlbar-box-hover-text-color);
 }
 
-.urlbar-page-action:-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: -2px;
+.urlbar-page-action:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(-1 * var(--focus-outline-width));
 }
 
 #urlbar-go-button,

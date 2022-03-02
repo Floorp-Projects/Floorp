@@ -24,10 +24,10 @@
   fill: currentColor;
 }
 
-.blocked-permission-icon:-moz-focusring,
-.notification-anchor-icon:-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: calc(var(--urlbar-icon-padding) - 2px);
+.blocked-permission-icon:focus-visible,
+.notification-anchor-icon:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--urlbar-icon-padding) - var(--focus-outline-width));
 }
 
 /* This class can be used alone or in combination with the class defining the
