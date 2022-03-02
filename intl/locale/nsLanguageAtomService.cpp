@@ -190,6 +190,14 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
 
     Locale loc;
     auto result = LocaleParser::TryParse(langStr, loc);
+    if (!result.isOk()) {
+      // Did the author (wrongly) use '_' instead of '-' to separate subtags?
+      // If so, fix it up and re-try parsing.
+      if (langStr.Contains('_')) {
+        langStr.ReplaceChar('_', '-');
+        result = LocaleParser::TryParse(langStr, loc);
+      }
+    }
     if (result.isOk() && loc.Canonicalize().isOk()) {
       // Fill in script subtag if not present.
       if (loc.Script().Missing()) {
