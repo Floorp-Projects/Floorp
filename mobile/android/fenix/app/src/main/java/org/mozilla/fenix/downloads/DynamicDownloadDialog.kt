@@ -12,6 +12,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
+import org.mozilla.fenix.GleanMetrics.Downloads
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.DownloadDialogLayoutBinding
 import org.mozilla.fenix.ext.settings
@@ -99,9 +100,15 @@ class DynamicDownloadDialog(
                         download = downloadState
                     )
 
+                    if (downloadState.contentType == "application/pdf") {
+                        Downloads.downloadedPdfOpenCount.add()
+                    }
+
                     if (!fileWasOpened) {
                         onCannotOpenFile(downloadState)
                     }
+
+
 
                     dismiss()
                 }

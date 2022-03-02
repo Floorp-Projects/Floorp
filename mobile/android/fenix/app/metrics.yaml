@@ -7397,3 +7397,43 @@ recently_visited_homepage:
     data_sensitivity:
       - interaction
     expires: 114
+downloads:
+  pdf_download_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many times a pdf has been downloaded.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24075
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/24061
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Download
+  downloaded_pdf_open_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many times open button has been clicked
+      for a downloaded pdf.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24075
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/-
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 107
+    metadata:
+      tags:
+        - Download
