@@ -4,40 +4,96 @@
 
 "use strict";
 
-// Tests for inspect node in browser context menu
-
-const FRAME_URI =
-  "data:text/html;charset=utf-8," +
-  encodeURI(`<div id="in-frame">div in the iframe</div>`);
-const HTML = `
+// Tests for inspecting iframes and frames in browser context menu
+const IFRAME_URI = `data:text/html;charset=utf-8,${encodeURI(
+  `<div id="in-iframe">div in the iframe</div>`
+)}`;
+const TEST_IFRAME_DOC_URI = `data:text/html;charset=utf-8,${encodeURI(`
   <div id="salutation">Salution in top document</div>
-  <iframe src="${FRAME_URI}"></iframe>
-`;
+  <iframe src="${IFRAME_URI}"></iframe>`)}`;
 
-const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
+// <frameset> acts as the body element, so we can't use them in a document with other elements
+// and have to set a dedicated document so we can test them.
+const SAME_ORIGIN_FRAME_URI = `https://example.com/document-builder.sjs?html=<h2 id=in-same-origin-frame>h2 in the same origin frame</h2>`;
+const REMOTE_ORIGIN_FRAME_URI = `https://example.org/document-builder.sjs?html=<h3 id=in-remote-frame>h3 in the remote frame</h3>`;
+const TEST_FRAME_DOC_URI = `https://example.com/document-builder.sjs?html=${encodeURI(`
+  <frameset cols="50%,50%">
+    <frame class=same-origin src="${SAME_ORIGIN_FRAME_URI}"></frame>
+    <frame class=remote src="${REMOTE_ORIGIN_FRAME_URI}"></frame>
+  </frameset>`)}`;
 
 add_task(async function() {
   await pushPref("devtools.command-button-frames.enabled", true);
-
-  await addTab(TEST_URI);
-
-  // Use context menu with root frame selected in toolbox
-  await testContextMenuWithinIframe(async inspector => {
-    return getNodeFrontInFrames(["iframe", "#in-frame"], inspector);
+  await addTab(TEST_IFRAME_DOC_URI);
+  info(
+    "Test inspecting element in <iframe> with top document selected in the frame picker"
+  );
+  await testContextMenuWithinFrame({
+    selector: ["iframe", "#in-iframe"],
+    nodeFrontGetter: inspector =>
+      getNodeFrontInFrames(["iframe", "#in-iframe"], inspector),
   });
 
-  // Use context menu with inner frame selected in toolbox
-  await changeToolboxToInnerFrame();
-  await testContextMenuWithinIframe(async inspector => {
-    return getNodeFront("#in-frame", inspector);
+  info(
+    "Test inspecting element in <iframe> with iframe document selected in the frame picker"
+  );
+  await changeToolboxToFrame(IFRAME_URI, 2);
+  await testContextMenuWithinFrame({
+    selector: ["iframe", "#in-iframe"],
+    nodeFrontGetter: inspector => getNodeFront("#in-iframe", inspector),
+  });
+  await changeToolboxToFrame(TEST_IFRAME_DOC_URI, 2);
+
+  await navigateTo(TEST_FRAME_DOC_URI);
+
+  info(
+    "Test inspecting element in same origin <frame> with top document selected in the frame picker"
+  );
+  await testContextMenuWithinFrame({
+    selector: ["frame.same-origin", "#in-same-origin-frame"],
+    nodeFrontGetter: inspector =>
+      getNodeFrontInFrames(
+        ["frame.same-origin", "#in-same-origin-frame"],
+        inspector
+      ),
+  });
+
+  info(
+    "Test inspecting element in remote <frame> with top document selected in the frame picker"
+  );
+  await testContextMenuWithinFrame({
+    selector: ["frame.remote", "#in-remote-frame"],
+    nodeFrontGetter: inspector =>
+      getNodeFrontInFrames(["frame.remote", "#in-remote-frame"], inspector),
+  });
+
+  info(
+    "Test inspecting element in <frame> with frame document selected in the frame picker"
+  );
+  await changeToolboxToFrame(SAME_ORIGIN_FRAME_URI, 3);
+  await testContextMenuWithinFrame({
+    selector: ["frame.same-origin", "#in-same-origin-frame"],
+    nodeFrontGetter: inspector =>
+      getNodeFront("#in-same-origin-frame", inspector),
   });
 });
 
-async function testContextMenuWithinIframe(nodeFrontGetter) {
+/**
+ * Pick a given element on the page with the 'Inspect Element' context menu entry and check
+ * that the expected node is selected in the markup view.
+ *
+ * @param {Object} options
+ * @param {Array<String>} options.selector: The selector of the element in the frame we
+ *                        want to select
+ * @param {Function} options.nodeFrontGetter: A function that will be executed to retrieve
+ *                   the nodeFront that should be selected as a result of the 'Inspect Element' action.
+ */
+async function testContextMenuWithinFrame({ selector, nodeFrontGetter }) {
   info(
-    "Opening inspector via 'Inspect Element' context menu item within an iframe"
+    `Opening inspector via 'Inspect Element' context menu on ${JSON.stringify(
+      selector
+    )}`
   );
-  const selector = ["iframe", "#in-frame"];
   await clickOnInspectMenuItem(selector);
 
   info("Checking inspector state.");
@@ -51,7 +107,14 @@ async function testContextMenuWithinIframe(nodeFrontGetter) {
   );
 }
 
-async function changeToolboxToInnerFrame() {
+/**
+ * Select a specific document in the toolbox frame picker
+ *
+ * @param {String} frameUrl: The frame URL to select
+ * @param {Number} expectedFramesCount: The number of frames that should be displayed in
+ *                 the frame picker
+ */
+async function changeToolboxToFrame(frameUrl, expectedFramesCount) {
   const { toolbox } = await getActiveInspector();
 
   const btn = toolbox.doc.getElementById("command-button-frames");
@@ -63,15 +126,15 @@ async function changeToolboxToInnerFrame() {
   info("Select the iframe in the frame list.");
   const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
   const frames = Array.from(menuList.querySelectorAll(".command"));
-  is(frames.length, 2, "Two frames shown in the switcher");
+  is(frames.length, expectedFramesCount, "Two frames shown in the switcher");
 
-  const innerFrameButton = frames.filter(
-    b => b.querySelector(".label").textContent === FRAME_URI
-  )[0];
-  ok(innerFrameButton, "Found frame button for inner frame");
+  const innerFrameButton = frames.find(
+    frame => frame.querySelector(".label").textContent === frameUrl
+  );
+  ok(innerFrameButton, `Found frame button for inner frame "${frameUrl}"`);
 
   const newRoot = toolbox.getPanel("inspector").once("new-root");
-  info("Switch toolbox to inner frame");
+  info(`Switch toolbox to inner frame "${frameUrl}"`);
   innerFrameButton.click();
   await newRoot;
 }
