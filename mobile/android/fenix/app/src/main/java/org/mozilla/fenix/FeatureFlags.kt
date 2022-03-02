@@ -44,11 +44,6 @@ object FeatureFlags {
     const val inactiveTabs = true
 
     /**
-     * Enables showing the home screen behind the search dialog
-     */
-    const val showHomeBehindSearch = true
-
-    /**
      * Identifies and separates the tabs list with a group containing search term tabs.
      */
     val tabGroupFeature = Config.channel.isNightlyOrDebug

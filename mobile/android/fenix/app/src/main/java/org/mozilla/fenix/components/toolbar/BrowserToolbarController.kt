@@ -15,7 +15,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -98,7 +97,7 @@ class DefaultBrowserToolbarController(
         // covered up with the search results). So, skip the navigation event in that case.
         // If we don't, there's a visual flickr as we navigate to Home and then display search
         // results on top it.
-        if (FeatureFlags.showHomeBehindSearch && currentSession?.content?.searchTerms.isNullOrBlank()) {
+        if (currentSession?.content?.searchTerms.isNullOrBlank()) {
             browserAnimator.captureEngineViewAndDrawStatically {
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome()

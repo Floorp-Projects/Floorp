@@ -59,7 +59,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -96,19 +95,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onStart() {
         super.onStart()
 
-        if (FeatureFlags.showHomeBehindSearch) {
-            // This will need to be handled for the update to R. We need to resize here in order to
-            // see the whole homescreen behind the search dialog.
-            @Suppress("DEPRECATION")
-            requireActivity().window.setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            )
-        } else {
-            // https://github.com/mozilla-mobile/fenix/issues/14279
-            // To prevent GeckoView from resizing we're going to change the softInputMode to not adjust
-            // the size of the window.
-            requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-        }
+        // This will need to be handled for the update to R. We need to resize here in order to
+        // see the whole homescreen behind the search dialog.
+        @Suppress("DEPRECATION")
+        requireActivity().window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
+
         // Refocus the toolbar editing and show keyboard if the QR fragment isn't showing
         if (childFragmentManager.findFragmentByTag(QR_FRAGMENT_TAG) == null) {
             toolbarView.view.edit.focus()
@@ -495,7 +488,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 // In case we're displaying search results, we wouldn't have navigated to home, and
                 // so we don't need to navigate "back to" browser fragment.
                 // See mirror of this logic in BrowserToolbarController#handleToolbarClick.
-                if (FeatureFlags.showHomeBehindSearch && store.state.searchTerms.isBlank()) {
+                if (store.state.searchTerms.isBlank()) {
                     val args by navArgs<SearchDialogFragmentArgs>()
                     args.sessionId?.let {
                         findNavController().navigate(
