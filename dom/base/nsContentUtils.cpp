@@ -3798,8 +3798,8 @@ bool nsContentUtils::IsExactSitePermDeny(nsIPrincipal* aPrincipal,
                       true);
 }
 
-bool nsContentUtils::HasExactSitePerm(nsIPrincipal* aPrincipal,
-                                      const nsACString& aType) {
+bool nsContentUtils::HasSitePerm(nsIPrincipal* aPrincipal,
+                                 const nsACString& aType) {
   if (!aPrincipal) {
     return false;
   }
@@ -3809,8 +3809,7 @@ bool nsContentUtils::HasExactSitePerm(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t perm;
-  nsresult rv =
-      permMgr->TestExactPermissionFromPrincipal(aPrincipal, aType, &perm);
+  nsresult rv = permMgr->TestPermissionFromPrincipal(aPrincipal, aType, &perm);
   NS_ENSURE_SUCCESS(rv, false);
 
   return perm != nsIPermissionManager::UNKNOWN_ACTION;
