@@ -782,16 +782,11 @@ add_task(async function test_getRegisteredContentScripts_during_a_registration()
       ]);
 
       const scripts = await browser.scripting.getRegisteredContentScripts();
+      // This test covers the case where `options` is `undefined` in the
+      // `getRegisteredContentScripts()` implementation because we call this
+      // method during a registration that is not yet complete.
       browser.test.assertEq(
-        JSON.stringify([
-          {
-            id: "a-script",
-            allFrames: false,
-            js: ["script.js"],
-            matches: ["*://test1.example.com/*"],
-            runAt: "document_idle",
-          },
-        ]),
+        "[]",
         JSON.stringify(scripts),
         "expected empty result array"
       );
