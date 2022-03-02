@@ -88,13 +88,19 @@ permalink: /changelog/
 
 * **lib-crash-sentry**
   * 🌟️️ Add `sendCaughtExceptions` config flag to `SentryService`, allowing consumers to disable submitting caught exceptions. By default it's enabled, maintaining prior behaviour. Useful in projects with high volumes of caught exceptions and multiple release channels.
-  
+
 * **site-permission-feature**
   * 🆕 New Add to SitePermissionsFeature a property to set visibility for NotAskAgainCheckBox
 
 * **feature-search**
   * 🆕 Update search Engines and Search Engine Icons
-  
+
+* **browser-storage-sync**
+  * ⚠️ **This is a breaking change**: When constructing a `RemoteTabsStorage` object you must now a `Context` which is used to determine the location of the sqlite database which is used to persist the remote tabs [#11799](https://github.com/mozilla-mobile/android-components/pull/11799).
+
+* **feature-syncedtabs**
+  * ⚠️ **This is a breaking change**: When constructing a `SyncedTabsStorage`, the `tabsStorage: RemoteTabsStorage` parameter is no longer optional so must be supplied [#11799](https://github.com/mozilla-mobile/android-components/pull/11799).
+
 # 99.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v98.0.0...v99.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/146?closed=1)
