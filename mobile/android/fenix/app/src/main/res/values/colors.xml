@@ -279,9 +279,6 @@
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen70</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue50</color>
 
-    <!-- Tab tray -->
-    <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
-
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
 

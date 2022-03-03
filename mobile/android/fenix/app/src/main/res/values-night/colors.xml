@@ -140,9 +140,6 @@
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen60</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
 
-    <!-- Tab tray -->
-    <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
-
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/fx_mobile_text_color_primary</color>
 
