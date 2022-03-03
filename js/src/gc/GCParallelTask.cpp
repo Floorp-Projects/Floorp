@@ -9,8 +9,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
-#include "gc/FreeOp.h"
-#include "gc/GCInternals.h"
 #include "gc/ParallelWork.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
@@ -158,14 +156,11 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
   setRunning(lock);
 
-  JSFreeOp freeOp(gc->rt, false);
-  MOZ_RELEASE_ASSERT(TlsFreeOp.init());
-  TlsFreeOp.set(&freeOp);
-
+  JS::ContextOptions options;  // The GC doesn't use any context options.
+  AutoSetHelperThreadContext usesContext(options, lock);
+  AutoSetContextRuntime ascr(gc->rt);
   gc::AutoSetThreadIsPerformingGC performingGC;
   runTask(lock);
-
-  TlsFreeOp.set(nullptr);
 
   setFinished(lock);
 }

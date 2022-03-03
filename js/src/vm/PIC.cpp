@@ -295,6 +295,7 @@ void js::ForOfPIC::Chain::trace(JSTracer* trc) {
 }
 
 static void ForOfPIC_finalize(JSFreeOp* fop, JSObject* obj) {
+  MOZ_ASSERT(fop->maybeOnHelperThread());
   if (ForOfPIC::Chain* chain =
           ForOfPIC::fromJSObject(&obj->as<NativeObject>())) {
     chain->finalize(fop, obj);

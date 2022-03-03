@@ -14,7 +14,6 @@
 
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
-#include "gc/FreeOp.h"
 #include "gc/GCMarker.h"
 #include "gc/IteratorUtils.h"
 #include "gc/Nursery.h"
@@ -920,8 +919,6 @@ class GCRuntime {
 
   // Embedders can use this zone however they wish.
   MainThreadData<JS::Zone*> systemZone;
-
-  MainThreadData<JSFreeOp> mainThreadFreeOp;
 
  private:
   // All zones in the runtime, except the atoms zone.
