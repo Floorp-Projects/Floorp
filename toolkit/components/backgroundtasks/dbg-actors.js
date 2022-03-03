@@ -16,24 +16,19 @@ const {
 } = require("devtools/server/actors/utils/actor-registry");
 
 /**
- * xpcshell-test (XPCST) specific actors.
+ * background-task specific actors.
  *
  */
 
 /**
- * Construct a root actor appropriate for use in a server running xpcshell
- * tests. <snip boilerplate> :)
+ * Construct a root actor appropriate for use in a server running a background task.
  */
 function createRootActor(connection) {
   let parameters = {
-    tabList: new XPCSTTabList(connection),
+    tabList: new BackgroundTaskTabList(connection),
     processList: new ProcessActorList(),
     globalActorFactories: ActorRegistry.globalActorFactories,
-    onShutdown() {
-      // If the user never switches to the "debugger" tab we might get a
-      // shutdown before we've attached.
-      Services.obs.notifyObservers(null, "xpcshell-test-devtools-shutdown");
-    },
+    onShutdown() {},
   };
   return new RootActor(connection, parameters);
 }
@@ -42,7 +37,7 @@ exports.createRootActor = createRootActor;
 /**
  * A "stub" TabList implementation that provides no tabs.
  */
-class XPCSTTabList extends BrowserTabList {
+class BackgroundTaskTabList extends BrowserTabList {
   getList() {
     return Promise.resolve([]);
   }

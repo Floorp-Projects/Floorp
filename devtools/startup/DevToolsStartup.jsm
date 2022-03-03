@@ -1242,6 +1242,7 @@ DevToolsStartup.prototype = {
     return this;
   },
 
+  // Keep `DevToolsStartup.helpInfo` synchronized with `BackgroundTasksManager.helpInfo`.
   /* eslint-disable max-len */
   helpInfo:
     "  --jsconsole        Open the Browser Console.\n" +
