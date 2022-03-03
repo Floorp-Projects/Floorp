@@ -6005,8 +6005,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   }
 
   CSSPoint startPosition = Metrics().GetVisualScrollOffset();
-  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::LINES, predictedDelta,
-                                        startPosition)) {
+  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::DEVICE_PIXELS,
+                                        predictedDelta, startPosition)) {
     APZC_LOG(
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "
