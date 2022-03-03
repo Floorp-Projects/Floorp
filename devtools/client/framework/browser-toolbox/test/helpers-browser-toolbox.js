@@ -33,10 +33,17 @@ const { DevToolsClient } = require("devtools/client/devtools-client");
  *        - {Boolean} enableBrowserToolboxFission: pass true to enable the OBT.
  *        - {Boolean} enableContentMessages: pass true to log content messages
  *          in the Console.
+ *        - {Function} existingProcessClose: if truth-y, connect to an existing
+ *          browser toolbox process rather than launching a new one and
+ *          connecting to it.  The given function is expected to return an
+ *          object containing an `exitCode`, like `{exitCode}`, and will be
+ *          awaited in the returned `destroy()` function.  `exitCode` is
+ *          asserted to be 0 (success).
  */
 async function initBrowserToolboxTask({
   enableBrowserToolboxFission,
   enableContentMessages,
+  existingProcessClose,
 } = {}) {
   if (AppConstants.ASAN) {
     ok(
@@ -59,15 +66,24 @@ async function initBrowserToolboxTask({
     "resource://testing-common/PromiseTestUtils.jsm"
   ).PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 
-  const process = await new Promise(onRun => {
-    BrowserToolboxLauncher.init(null, onRun, /* overwritePreferences */ true);
-  });
-  ok(true, "Browser toolbox started\n");
-  is(
-    BrowserToolboxLauncher.getBrowserToolboxSessionState(),
-    true,
-    "Has session state"
-  );
+  let process;
+  if (!existingProcessClose) {
+    process = await new Promise(onRun => {
+      BrowserToolboxLauncher.init(null, onRun, /* overwritePreferences */ true);
+    });
+    ok(true, "Browser toolbox started");
+    is(
+      BrowserToolboxLauncher.getBrowserToolboxSessionState(),
+      true,
+      "Has session state"
+    );
+  } else {
+    ok(true, "Connecting to existing browser toolbox");
+    ok(
+      !enableBrowserToolboxFission,
+      "Not trying to control preferences in existing browser toolbox"
+    );
+  }
 
   // The port of the DevToolsServer installed in the toolbox process is fixed.
   // See browser-toolbox-window.js
@@ -95,9 +111,8 @@ async function initBrowserToolboxTask({
 
   ok(true, "Connected");
 
-  const preferenceFront = await client.mainRoot.getFront("preference");
-
   if (enableContentMessages) {
+    const preferenceFront = await client.mainRoot.getFront("preference");
     await preferenceFront.setBoolPref(
       "devtools.browserconsole.contentMessages",
       true
@@ -179,7 +194,9 @@ async function initBrowserToolboxTask({
       return null;
     }
 
-    const closePromise = process._dbgProcess.wait();
+    const closePromise = existingProcessClose
+      ? existingProcessClose()
+      : process._dbgProcess.wait();
     evaluateExpression("gToolbox.destroy()").catch(e => {
       // Ignore connection close as the toolbox destroy may destroy
       // everything quickly enough so that evaluate request is still pending
@@ -193,11 +210,13 @@ async function initBrowserToolboxTask({
 
     is(exitCode, 0, "The remote debugger process died cleanly");
 
-    is(
-      BrowserToolboxLauncher.getBrowserToolboxSessionState(),
-      false,
-      "No session state after closing"
-    );
+    if (!existingProcessClose) {
+      is(
+        BrowserToolboxLauncher.getBrowserToolboxSessionState(),
+        false,
+        "No session state after closing"
+      );
+    }
 
     await client.close();
     destroyed = true;
