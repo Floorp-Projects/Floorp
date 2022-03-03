@@ -320,15 +320,6 @@ bool IsMarkedBlack(JSObject* obj);
 
 #endif
 
-struct MOZ_RAII AutoTouchingGrayThings {
-#ifdef DEBUG
-  AutoTouchingGrayThings();
-  ~AutoTouchingGrayThings();
-#else
-  AutoTouchingGrayThings() {}
-#endif
-};
-
 template <typename T, typename Enable = void>
 struct InternalBarrierMethods {};
 
