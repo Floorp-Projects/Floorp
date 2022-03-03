@@ -28,6 +28,7 @@ import android.webkit.WebView
 import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
@@ -73,7 +74,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Robolectric
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.io.StringReader
 
@@ -918,7 +918,7 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
-        val view = View(RuntimeEnvironment.systemContext)
+        val view = View(ApplicationProvider.getApplicationContext())
         val customViewCallback = mock<WebChromeClient.CustomViewCallback>()
 
         assertNull(engineSession.fullScreenCallback)
@@ -939,7 +939,7 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
-        val view = View(RuntimeEnvironment.systemContext)
+        val view = View(ApplicationProvider.getApplicationContext())
         val customViewCallback = mock<WebChromeClient.CustomViewCallback>()
 
         engineSession.webView.tag = "not_webview"
@@ -954,7 +954,7 @@ class SystemEngineViewTest {
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
-        val view = View(RuntimeEnvironment.systemContext)
+        val view = View(ApplicationProvider.getApplicationContext())
         val customViewCallback = mock<WebChromeClient.CustomViewCallback>()
 
         // When the fullscreen view isn't available
