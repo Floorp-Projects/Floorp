@@ -30,6 +30,12 @@ function run_test() {
   run_next_test();
 }
 
+add_task(function test_setup() {
+  // FOG needs a profile and to be init.
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
+
 add_task(async function test_client_id() {
   const invalidIDs = [
     [-1, "setIntPref"],
@@ -47,6 +53,7 @@ add_task(async function test_client_id() {
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
+  Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
@@ -57,6 +64,7 @@ add_task(async function test_client_id() {
   clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
+  Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
 
   // If the DRS data is broken, we should end up with the cached ID.
   let oldClientID = clientID;
@@ -65,6 +73,7 @@ add_task(async function test_client_id() {
     await CommonUtils.writeJSON({ clientID: invalidID }, drsPath);
     clientID = await ClientID.getClientID();
     Assert.equal(clientID, oldClientID);
+    Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
   }
 
   // Test that valid DRS actually works.
@@ -73,12 +82,14 @@ add_task(async function test_client_id() {
   await CommonUtils.writeJSON({ clientID: validClientID }, drsPath);
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
+  Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
 
   // Test that reloading a valid DRS works.
   await ClientID._reset();
   Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
+  Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
 
   // Assure that cached IDs are being checked for validity.
   for (let [invalidID, prefFunc] of invalidIDs) {
@@ -111,12 +122,14 @@ add_task(async function test_setCanaryClientID() {
   await ClientID.setCanaryClientID();
   let clientID = await ClientID.getClientID();
   Assert.equal(KNOWN_UUID, clientID);
+  Assert.equal(clientID, Glean.legacyTelemetry.clientId.testGetValue());
 });
 
 add_task(async function test_removeParallelGet() {
   // We should get a valid UUID after reset
   await ClientID.removeClientID();
   let firstClientID = await ClientID.getClientID();
+  Assert.equal(firstClientID, Glean.legacyTelemetry.clientId.testGetValue());
 
   // We should get the same ID twice when requesting it in parallel to a reset.
   let promiseRemoveClientID = ClientID.removeClientID();
@@ -135,4 +148,5 @@ add_task(async function test_removeParallelGet() {
     otherClientID,
     "Getting the client ID in parallel to a reset should give the same id."
   );
+  Assert.equal(newClientID, Glean.legacyTelemetry.clientId.testGetValue());
 });
