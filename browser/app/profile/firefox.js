@@ -24,6 +24,8 @@
 //Floorpアップデートを有効化
 pref("enable.floorp.updater", true);
 
+pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
+
 //たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);

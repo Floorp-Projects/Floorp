@@ -16,11 +16,11 @@
 
 @media (min-width: 100px) {
   .closebox {
-    position: fixed;
-    right: 4px;
+    position: relative;
+    right: 10px;
   }
 }
 
 .sound-button{
-   position: fixed;
+   position: absolute;
 }

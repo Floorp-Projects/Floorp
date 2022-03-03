@@ -6,7 +6,7 @@ browser.browserAction.onClicked.addListener(tab => {
 			if (sessionInfo.tab && sessionInfo.tab.windowId === tab.windowId) {
 				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
 
-const BROWSER_VERSION = "8.5.9"
+const BROWSER_VERSION = "8.6.0"
 const APP_ID = "floorp"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
