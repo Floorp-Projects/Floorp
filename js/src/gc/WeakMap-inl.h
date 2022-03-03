@@ -197,7 +197,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
 
 template <class K, class V>
 void WeakMap<K, V>::trace(JSTracer* trc) {
-  MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), isInList());
+  MOZ_ASSERT(isInList());
 
   TraceNullableEdge(trc, &memberOf, "WeakMap owner");
 

@@ -1030,8 +1030,8 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
 GlobalObjectData::GlobalObjectData(Zone* zone) : varNames(zone) {}
 
 void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
-  // Atoms are always tenured.
-  if (!JS::RuntimeHeapIsMinorCollecting()) {
+  // Atoms are always tenured so don't need to be traced during minor GC.
+  if (trc->runtime()->heapState() != JS::HeapState::MinorCollecting) {
     varNames.trace(trc);
   }
 

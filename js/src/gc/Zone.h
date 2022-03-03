@@ -367,12 +367,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return isCollectingFromAnyThread();
   }
 
-  bool isCollectingFromAnyThread() const {
-    if (RuntimeHeapIsCollecting()) {
-      return wasGCStarted();
-    } else {
-      return needsIncrementalBarrier();
-    }
+  inline bool isCollectingFromAnyThread() const {
+    return needsIncrementalBarrier() || wasGCStarted();
   }
 
   bool shouldMarkInZone() const {
