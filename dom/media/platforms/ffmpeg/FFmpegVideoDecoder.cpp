@@ -663,11 +663,11 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
     FFMPEG_LOG("Failed to lock the texture");
     return AVERROR(EINVAL);
   }
+  auto autoUnlock = MakeScopeExit([&] { texture->Unlock(); });
 
   layers::MappedYCbCrTextureData mapped;
   if (!texture->BorrowMappedYCbCrData(mapped)) {
     FFMPEG_LOG("Failed to borrow mapped data for the texture");
-    texture->Unlock();
     return AVERROR(EINVAL);
   }
 
@@ -1024,21 +1024,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     RefPtr<ImageBufferWrapper> wrapper = static_cast<ImageBufferWrapper*>(
         mLib->av_buffer_get_opaque(mFrame->buf[0]));
     MOZ_ASSERT(wrapper);
-    auto* image = wrapper->AsImage();
-    RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
-    if (!texture) {
-      NS_WARNING("Failed to get the texture client!");
-    } else {
-      FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
-      // Texture was locked to ensure no one can modify or access texture's data
-      // except ffmpeg decoder. After finisheing decoding, texture's data would
-      // be avaliable for accessing for everyone so we unlock texture.
-      texture->Unlock();
-      v = VideoData::CreateFromImage(
-          mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
-          TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
-          TimeUnit::FromMicroseconds(-1));
-    }
+    FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
+    v = VideoData::CreateFromImage(
+        mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
+        TimeUnit::FromMicroseconds(aDuration), wrapper->AsImage(),
+        !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
   }
 #endif
   if (!v) {
