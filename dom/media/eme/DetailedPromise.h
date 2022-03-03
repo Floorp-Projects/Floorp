@@ -25,11 +25,6 @@ class DetailedPromise : public Promise {
                                                   ErrorResult& aRv,
                                                   const nsACString& aName);
 
-  static already_AddRefed<DetailedPromise> Create(
-      nsIGlobalObject* aGlobal, ErrorResult& aRv, const nsACString& aName,
-      Telemetry::HistogramID aSuccessLatencyProbe,
-      Telemetry::HistogramID aFailureLatencyProbe);
-
   template <typename T>
   void MaybeResolve(T&& aArg) {
     EME_LOG("%s promise resolved", mName.get());

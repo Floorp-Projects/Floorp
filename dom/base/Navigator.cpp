@@ -2120,9 +2120,7 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
   }
 
   RefPtr<DetailedPromise> promise = DetailedPromise::Create(
-      mWindow->AsGlobal(), aRv, "navigator.requestMediaKeySystemAccess"_ns,
-      Telemetry::VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS,
-      Telemetry::VIDEO_EME_REQUEST_FAILURE_LATENCY_MS);
+      mWindow->AsGlobal(), aRv, "navigator.requestMediaKeySystemAccess"_ns);
   if (aRv.Failed()) {
     return nullptr;
   }
