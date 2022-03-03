@@ -107,6 +107,8 @@ class Suggestions {
    *
    * @param {string} phrase
    *   The search string.
+   * @returns {object}
+   *   The matched suggestion object or null if none.
    */
   async query(phrase) {
     log.info("Handling query for", phrase);
@@ -119,13 +121,9 @@ class Suggestions {
     if (!result) {
       return null;
     }
-    return {
-      // TODO (bug 1752604): Replace this simplistic hardcoded length comparison
-      // with the final best match logic.
-      is_best_match:
-        typeof result._test_is_best_match == "boolean"
-          ? result._test_is_best_match
-          : phrase.length >= 5,
+
+    let suggestion = {
+      is_best_match: false,
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
       url: result.url,
@@ -139,6 +137,18 @@ class Suggestions {
       icon: await this._fetchIcon(result.icon),
       position: result.position,
     };
+
+    // Determine if the suggestion is a best match.
+    if (typeof result._test_is_best_match == "boolean") {
+      suggestion.is_best_match = result._test_is_best_match;
+    } else if (this._config.best_match) {
+      let { best_match } = this._config;
+      suggestion.is_best_match =
+        best_match.min_search_string_length <= phrase.length &&
+        !best_match.blocked_suggestion_ids.includes(resultID);
+    }
+
+    return suggestion;
   }
 
   /**
@@ -321,6 +331,9 @@ class Suggestions {
   // or initialization is ongoing; see `readyPromise`.
   _settingsTaskQueue = new TaskQueue();
 
+  // Configuration data synced from remote settings.
+  _config = {};
+
   // Maps from result IDs to the corresponding results.
   _results = new Map();
 
@@ -369,9 +382,18 @@ class Suggestions {
         );
       }
 
-      let data = await this._rs.get({ filters: { type: "data" } });
-      let icons = await this._rs.get({ filters: { type: "icon" } });
-      await Promise.all(icons.map(r => this._rs.attachments.download(r)));
+      let [configArray, data] = await Promise.all([
+        this._rs.get({ filters: { type: "configuration" } }),
+        this._rs.get({ filters: { type: "data" } }),
+        this._rs
+          .get({ filters: { type: "icon" } })
+          .then(icons =>
+            Promise.all(icons.map(i => this._rs.attachments.download(i)))
+          ),
+      ]);
+
+      log.debug("Got configuration:", configArray);
+      this._config = configArray?.[0]?.configuration || {};
 
       this._results = new Map();
       this._tree = new KeywordTree();
