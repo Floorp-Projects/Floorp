@@ -307,10 +307,21 @@ BrowserToolboxLauncher.prototype = {
 
         proc.stdin.close();
         const dumpPipe = async pipe => {
+          let leftover = "";
           let data = await pipe.readString();
           while (data) {
-            dump("> " + data);
+            data = leftover + data;
+            const lines = data.split(/\r\n|\r|\n/);
+            if (lines.length) {
+              for (const line of lines.slice(0, -1)) {
+                dump(`${proc.pid}> ${line}\n`);
+              }
+              leftover = lines[lines.length - 1];
+            }
             data = await pipe.readString();
+          }
+          if (leftover) {
+            dump(`${proc.pid}> ${leftover}\n`);
           }
         };
         dumpPipe(proc.stdout);
