@@ -76,7 +76,7 @@ html|input.findbar-textbox:-moz-lwtheme {
 html|input.findbar-textbox:focus {
   border-color: transparent;
   outline: var(--focus-outline);
-  outline-offset: calc(-1 * var(--focus-outline-width));
+  outline-offset: var(--focus-outline-inset);
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
