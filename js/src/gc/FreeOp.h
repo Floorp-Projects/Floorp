@@ -40,13 +40,12 @@ class JSFreeOp {
 
   js::jit::JitPoisonRangeVector jitPoisonRanges;
 
-  const bool isDefault;
   bool isCollecting_;
 
   friend class js::gc::AutoSetThreadIsPerformingGC;
 
  public:
-  explicit JSFreeOp(JSRuntime* maybeRuntime, bool isDefault = false);
+  explicit JSFreeOp(JSRuntime* maybeRuntime);
   ~JSFreeOp();
 
   JSRuntime* runtime() const {
@@ -55,14 +54,6 @@ class JSFreeOp {
   }
 
   bool onMainThread() const { return runtime_ != nullptr; }
-
-  bool maybeOnHelperThread() const {
-    // Sometimes background finalization happens on the main thread so
-    // runtime_ being null doesn't always mean we are off thread.
-    return !runtime_;
-  }
-
-  bool isDefaultFreeOp() const { return isDefault; }
   bool isCollecting() const { return isCollecting_; }
 
   // Deprecated. Where possible, memory should be tracked against the owning GC

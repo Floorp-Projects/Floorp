@@ -953,7 +953,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       nurserySuppressions_(this),
       options_(this, options),
       freeLists_(this, nullptr),
-      defaultFreeOp_(this, runtime, true),
+      defaultFreeOp_(this, runtime),
       freeUnusedMemory(false),
       measuringExecutionTime_(this, false),
       jitActivation(this, nullptr),
