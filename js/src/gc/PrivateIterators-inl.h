@@ -51,7 +51,7 @@ class GCZonesIter {
 
  public:
   explicit GCZonesIter(GCRuntime* gc) : zone(gc) {
-    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+    MOZ_ASSERT(gc->heapState() != JS::HeapState::Idle);
     if (!done() && !zone->wasGCStarted()) {
       next();
     }
