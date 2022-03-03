@@ -423,42 +423,40 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Send the custom impression and click pings
     if (!isPrivate) {
-      let isQuickSuggestLinkClicked =
+      let is_clicked =
         details.selIndex == resultIndex && details.selType !== "help";
-      let {
-        sponsoredAdvertiser,
-        sponsoredImpressionUrl,
-        sponsoredClickUrl,
-        sponsoredBlockId,
-        requestId,
-      } = result.payload;
-      // Always use lowercase to make the reporting consistent
-      let advertiser = sponsoredAdvertiser.toLocaleLowerCase();
-
       let scenario = UrlbarPrefs.get("quicksuggest.scenario");
+      let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
+
+      // Always use lowercase to make the reporting consistent
+      let advertiser = result.payload.sponsoredAdvertiser.toLocaleLowerCase();
+
       // impression
       PartnerLinkAttribution.sendContextualServicesPing(
         {
-          scenario,
           advertiser,
-          block_id: sponsoredBlockId,
+          is_clicked,
+          match_type,
+          scenario,
+          block_id: result.payload.sponsoredBlockId,
           position: telemetryResultIndex,
-          reporting_url: sponsoredImpressionUrl,
-          is_clicked: isQuickSuggestLinkClicked,
-          request_id: requestId,
+          reporting_url: result.payload.sponsoredImpressionUrl,
+          request_id: result.payload.requestId,
         },
         CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
       );
+
       // click
-      if (isQuickSuggestLinkClicked) {
+      if (is_clicked) {
         PartnerLinkAttribution.sendContextualServicesPing(
           {
-            scenario,
             advertiser,
-            block_id: sponsoredBlockId,
+            match_type,
+            scenario,
+            block_id: result.payload.sponsoredBlockId,
             position: telemetryResultIndex,
-            reporting_url: sponsoredClickUrl,
-            request_id: requestId,
+            reporting_url: result.payload.sponsoredClickUrl,
+            request_id: result.payload.requestId,
           },
           CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
         );
