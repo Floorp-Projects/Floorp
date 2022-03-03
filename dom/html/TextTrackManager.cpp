@@ -163,7 +163,6 @@ already_AddRefed<TextTrack> TextTrackManager::AddTextTrack(
              NS_ConvertUTF16toUTF8(aLabel).get(),
              NS_ConvertUTF16toUTF8(aLanguage).get());
   AddCues(track);
-  ReportTelemetryForTrack(track);
 
   if (aTextTrackSource == TextTrackSource::Track) {
     RefPtr<nsIRunnable> task = NewRunnableMethod(
@@ -182,7 +181,6 @@ void TextTrackManager::AddTextTrack(TextTrack* aTextTrack) {
   WEBVTT_LOG("AddTextTrack TextTrack %p", aTextTrack);
   mTextTracks->AddTextTrack(aTextTrack, CompareTextTracks(mMediaElement));
   AddCues(aTextTrack);
-  ReportTelemetryForTrack(aTextTrack);
 
   if (aTextTrack->GetTextTrackSource() == TextTrackSource::Track) {
     RefPtr<nsIRunnable> task = NewRunnableMethod(
@@ -846,15 +844,6 @@ void TextTrackManager::NotifyReset() {
     (*mTextTracks)[idx]->SetCuesInactive();
   }
   UpdateCueDisplay();
-}
-
-void TextTrackManager::ReportTelemetryForTrack(TextTrack* aTextTrack) const {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aTextTrack);
-  MOZ_ASSERT(mTextTracks->Length() > 0);
-
-  TextTrackKind kind = aTextTrack->Kind();
-  Telemetry::Accumulate(Telemetry::WEBVTT_TRACK_KINDS, uint32_t(kind));
 }
 
 bool TextTrackManager::IsLoaded() {
