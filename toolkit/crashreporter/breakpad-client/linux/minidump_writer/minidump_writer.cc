@@ -219,7 +219,7 @@ class MinidumpWriter {
   bool Dump() {
     // A minidump file contains a number of tagged streams. This is the number
     // of stream which we write.
-    unsigned kNumWriters = 13;
+    unsigned kNumWriters = 14;
 
     TypedMDRVA<MDRawDirectory> dir(&minidump_writer_);
     {
@@ -245,6 +245,10 @@ class MinidumpWriter {
     MDRawDirectory dirent;
 
     if (!WriteThreadListStream(&dirent))
+      return false;
+    dir.CopyIndex(dir_index++, &dirent);
+
+    if (!WriteThreadNamesStream(&dirent))
       return false;
     dir.CopyIndex(dir_index++, &dirent);
 
@@ -508,6 +512,52 @@ class MinidumpWriter {
       }
 
       list.CopyIndexAfterObject(i, &thread, sizeof(thread));
+    }
+
+    return true;
+  }
+
+  bool WriteThreadName(pid_t tid, char* name, MDRawThreadName *thread_name) {
+    MDLocationDescriptor string_location;
+
+    if (!minidump_writer_.WriteString(name, 0, &string_location))
+      return false;
+
+    thread_name->thread_id = tid;
+    thread_name->rva_of_thread_name = string_location.rva;
+    return true;
+  }
+
+  // Write the threads' names.
+  bool WriteThreadNamesStream(MDRawDirectory* thread_names_stream) {
+    TypedMDRVA<MDRawThreadNamesList> list(&minidump_writer_);
+    const unsigned num_threads = dumper_->threads().size();
+
+    if (!list.AllocateObjectAndArray(num_threads, sizeof(MDRawThreadName))) {
+      return false;
+    }
+
+    thread_names_stream->stream_type = MD_THREAD_NAMES_STREAM;
+    thread_names_stream->location = list.location();
+    list.get()->number_of_thread_names = num_threads;
+
+    MDRawThreadName thread_name;
+    int thread_idx = 0;
+
+    for (unsigned int i = 0; i < num_threads; ++i) {
+      const pid_t tid = dumper_->threads()[i];
+      // This is a constant from the Linux kernel, documented in man 5 proc.
+      // The comm entries in /proc are no longer than this.
+      static const size_t TASK_COMM_LEN = 16;
+      char name[TASK_COMM_LEN];
+      memset(&thread_name, 0, sizeof(MDRawThreadName));
+
+      if (dumper_->GetThreadNameByIndex(i, name, sizeof(name))) {
+        if (WriteThreadName(tid, name, &thread_name)) {
+          list.CopyIndexAfterObject(thread_idx++, &thread_name,
+                                  sizeof(MDRawThreadName));
+        }
+      }
     }
 
     return true;
