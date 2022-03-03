@@ -467,6 +467,9 @@ the following:
 :context_id:
   A UUID representing this user. Note that it's not client_id, nor can it be
   used to link to a client_id.
+:match_type:
+  "best-match" if the suggestion was a best match or "firefox-suggest" if it was
+  a non-best-match suggestion.
 :position:
   The index of the suggestion in the list of results (1-based).
 :reporting_url:
@@ -489,9 +492,13 @@ Changelog
   Firefox 94.0.2
     ``request_id`` is added to the payload. [Bug 1736117_]
 
+  Firefox 99.0
+    ``match_type`` is added to the payload. [Bug 1754622_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1729576: https://bugzilla.mozilla.org/show_bug.cgi?id=1729576
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
+.. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 
 Impression
 ~~~~~~~~~~
@@ -519,6 +526,9 @@ The impression ping payload contains the following:
   The matched keywords that lead to the suggestion. This is only included when
   the user has opted in to data collection and the suggestion is provided by
   remote settings.
+:match_type:
+  "best-match" if the suggestion was a best match or "firefox-suggest" if it was
+  a non-best-match suggestion.
 :position:
   The index of the suggestion in the list of results (1-based).
 :reporting_url:
@@ -565,6 +575,9 @@ Changelog
     - Stop sending ``search_query`` and ``matched_keywords`` in the custom
       impression ping for Firefox Suggest. [Bug 1748348_]
 
+  Firefox 99.0
+    ``match_type`` is added to the payload. [Bug 1754622_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
@@ -572,6 +585,7 @@ Changelog
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1748348: https://bugzilla.mozilla.org/show_bug.cgi?id=1748348
+.. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 
 Nimbus Exposure Event
 ---------------------
