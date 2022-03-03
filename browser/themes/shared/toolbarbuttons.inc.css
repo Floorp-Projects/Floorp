@@ -192,14 +192,14 @@ toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-te
 toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
   color: inherit;
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
 }
 
 :root[uidensity=compact] findbar toolbarbutton.tabbable:focus-visible,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-icon,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-text,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
-  outline-offset: calc(var(--focus-outline-width) * -1 - 1px);
+  outline-offset: calc(var(--focus-outline-inset) - 1px);
 }
 
 toolbar .toolbarbutton-1:focus-visible {
