@@ -168,6 +168,7 @@ class CCGCScheduler {
   void PokeShrinkingGC();
   void PokeFullGC();
   void MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects);
+  void PokeMinorGC(JS::GCReason aReason);
 
   void UserIsInactive();
   void UserIsActive();
