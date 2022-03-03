@@ -103,11 +103,11 @@ async function assertGetTab(client, rootFront, tab) {
   // from assertGetTab.
   const tab2 = await addTab("data:text/html,second tab");
   const tabDescriptor2 = await rootFront.getTab({
-    outerWindowID: tab2.linkedBrowser.outerWindowID,
+    browserId: tab2.linkedBrowser.browserId,
   });
   ok(
     !tabDescriptor2.isLocalTab,
-    "getTab's tab descriptor aren't considered as local tabs when we pass an outerWindowID"
+    "getTab's tab descriptor aren't considered as local tabs when we pass an browserId"
   );
   await removeTab(tab2);
 
