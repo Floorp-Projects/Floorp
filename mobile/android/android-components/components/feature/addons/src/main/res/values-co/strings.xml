@@ -51,7 +51,7 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Cuttighjà l’impiegu di l’estensioni è urganizà i temi</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Scambià messaghji cù d’altre appiecazioni chì quessa</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Scambià messaghji cù d’altre appiecazioni chè quessa</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Affissavvi nutificazioni</string>
     <!-- Description for pkcs11 permission. -->

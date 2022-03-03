@@ -110,7 +110,7 @@
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
-      <p>L’indirizzu richiesta indicheghja un portu (i.e. : <q>mozilla.org:80</q> per u portu 80 nant’à mozilla.org) chì hè di solitu impiegatu per d’<em>altri</em> scopi chì a navigazione nant’à u Web. U navigatore hà abbandunatu a richiesta per a vostra prutezzione è a vostra sicurità.</p>
+      <p>L’indirizzu richiesta indicheghja un portu (i.e. : <q>mozilla.org:80</q> per u portu 80 nant’à mozilla.org) chì hè di solitu impiegatu per d’<em>altri</em> scopi chè a navigazione nant’à u Web. U navigatore hà abbandunatu a richiesta per a vostra prutezzione è a vostra sicurità.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
