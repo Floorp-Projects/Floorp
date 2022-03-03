@@ -76,6 +76,12 @@ enum class ImageFormat {
   D3D11_SHARE_HANDLE_TEXTURE,
 
   /**
+   * A wrapper of ID3D11Texture2D of IMFSample.
+   * Expected to be used in GPU process.
+   */
+  D3D11_TEXTURE_IMF_SAMPLE,
+
+  /**
    * A wrapper around a drawable TextureClient.
    */
   TEXTURE_WRAPPER,
