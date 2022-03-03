@@ -344,29 +344,16 @@ const SnapshotGroups = new (class SnapshotGroups {
       throw new Error("Unknown sortBy value");
     }
     let start = Math.max(0, startIndex);
-    let db = await PlacesUtils.promiseDBConnection();
-    let urlRows = await db.executeCached(
-      `
-      SELECT h.url
-      FROM moz_places_metadata_groups_to_snapshots s
-      JOIN moz_places_metadata_snapshots sn USING(place_id)
-      JOIN moz_places h ON h.id = s.place_id
-      WHERE s.group_id = :group_id
-      ORDER BY ${sortBy} ${sortDescending ? "DESC" : "ASC"}
-      LIMIT ${start + count}
-    `,
-      { group_id: id }
-    );
 
-    let snapshots = [];
-    let urls = urlRows.map(row => row.getResultByName("url"));
-    let end = Math.min(urls.length, count + start);
-    for (let i = start; i < end; i++) {
-      let snapShot = await Snapshots.get(urls[i]);
-      snapshots.push(snapShot);
-    }
+    let snapshots = await Snapshots.query({
+      limit: start + count,
+      group: id,
+      sortBy,
+      sortDescending,
+    });
 
-    return snapshots;
+    let end = Math.min(snapshots.length, count + start);
+    return snapshots.slice(start, end);
   }
 
   /**
