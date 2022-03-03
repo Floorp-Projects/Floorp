@@ -479,7 +479,6 @@ void NS_SetCurrentThreadName(const char* aName) {
     nsThread* thread = nsThreadManager::get().GetCurrentThread();
     thread->SetThreadNameInternal(nsDependentCString(aName));
   }
-  CrashReporter::SetCurrentThreadName(aName);
 }
 
 nsIThread* NS_GetCurrentThread() {

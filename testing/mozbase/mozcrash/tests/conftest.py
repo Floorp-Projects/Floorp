@@ -87,7 +87,6 @@ def minidump_files(request, tmpdir):
   "Add-ons":"",
   "CrashTime":"1494582646",
   "UptimeTS":"14.9179586",
-  "ThreadIdNameMapping":"",
   "ContentSandboxEnabled":"1",
   "ProcessType":"content",
   "StartupTime":"1000000000",

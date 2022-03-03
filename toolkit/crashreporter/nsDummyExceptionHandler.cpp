@@ -260,15 +260,4 @@ void AddLibraryMapping(const char* library_name, uintptr_t start_address,
                        size_t mapping_length, size_t file_offset) {}
 #endif
 
-// From ThreadAnnotation.cpp
-
-void InitThreadAnnotation() {}
-
-void SetCurrentThreadName(const char* aName) {}
-
-void GetFlatThreadAnnotation(
-    const std::function<void(const char*)>& aCallback) {}
-
-void ShutdownThreadAnnotation() {}
-
 }  // namespace CrashReporter
