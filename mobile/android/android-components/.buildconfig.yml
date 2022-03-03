@@ -371,6 +371,14 @@ projects:
     path: components/lib/crash
     description: 'A generic crash reporter library that can report crashes to multiple services.'
     publish: true
+  lib-crash-sentry:
+    path: components/lib/crash-sentry
+    description: 'A crash reporter for Sentry.io that that uses lib-crash.'
+    publish: true
+  lib-crash-sentry-legacy:
+    path: components/lib/crash-sentry-legacy
+    description: 'A crash reporter for a hosted version of Sentry that uses lib-crash.'
+    publish: true
   lib-dataprotect:
     path: components/lib/dataprotect
     description: 'A component using AndroidKeyStore to protect user data.'

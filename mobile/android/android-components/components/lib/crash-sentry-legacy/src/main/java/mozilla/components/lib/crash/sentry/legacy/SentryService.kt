@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.lib.crash.service
+package mozilla.components.lib.crash.sentry.legacy
 
 import android.content.Context
 import android.net.Uri
@@ -18,15 +18,18 @@ import io.sentry.event.EventBuilder
 import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
+import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.crash.service.LIB_CRASH_INFO_PREFIX
 import java.util.Date
 import java.util.Locale
 import mozilla.components.concept.base.crash.Breadcrumb as CrashBreadcrumb
 
 /**
- * A [CrashReporterService] implementation that uploads crash reports to a Sentry server.
+ * A [CrashReporterService] implementation that uploads crash reports using
+ * the Sentry SDK version 1.7.21 and below.
  *
- * This implementation will add default tags to every sent crash report (like the used Android Components version)
- * prefixed with "ac.".
+ * This implementation will add default tags to every sent crash report
+ * (like which Android Components version is being used) prefixed with "ac.".
  *
  * @param context The application [Context].
  * @param dsn Data Source Name of the Sentry server.
@@ -179,5 +182,5 @@ private fun createMessage(crash: Crash.UncaughtExceptionCrash): String {
 }
 
 private fun createMessage(throwable: Throwable): String {
-    return "$INFO_PREFIX ${throwable.message}"
+    return "$LIB_CRASH_INFO_PREFIX ${throwable.message}"
 }

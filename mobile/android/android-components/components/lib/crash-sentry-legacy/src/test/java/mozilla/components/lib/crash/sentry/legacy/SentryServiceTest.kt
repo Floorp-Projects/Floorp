@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.lib.crash.service
+package mozilla.components.lib.crash.sentry.legacy
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.sentry.SentryClient
@@ -367,7 +367,7 @@ class SentryServiceTest {
             )
         )
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
-        crashBreadCrumbs.addAll(reporter.crashBreadcrumbs)
+        crashBreadCrumbs.addAll(reporter.crashBreadcrumbsCopy())
         val nativeCrash = Crash.NativeCodeCrash(
             0,
             "dump.path",
@@ -425,7 +425,7 @@ class SentryServiceTest {
         )
         val throwable = RuntimeException("Test")
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
-        crashBreadCrumbs.addAll(reporter.crashBreadcrumbs)
+        crashBreadCrumbs.addAll(reporter.crashBreadcrumbsCopy())
 
         service.report(throwable, crashBreadCrumbs)
         verify(clientContext).recordBreadcrumb(any())

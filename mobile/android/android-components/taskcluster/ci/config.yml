@@ -68,6 +68,8 @@ treeherder:
         feature-webcompat: feature-webcompat
         feature-webnotifications: feature-webnotifications
         lib-crash: lib-crash
+        lib-crash-sentry: lib-crash-sentry
+        lib-crash-sentry-legacy: lib-crash-sentry-legacy
         lib-dataprotect: lib-dataprotect
         lib-fetch-okhttp: lib-fetch-okhttp
         lib-jexl: lib-jexl

@@ -22,7 +22,8 @@ object Versions {
     const val lint = "27.0.1"
     const val detekt = "1.17.1"
 
-    const val sentry = "1.7.21"
+    const val sentry_legacy = "1.7.21"
+    const val sentry_latest = "5.6.1"
     const val okhttp = "3.13.1"
     const val zxing = "3.3.0"
     const val jna = "5.5.0"
@@ -170,7 +171,8 @@ object Dependencies {
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"
-    const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
+    const val thirdparty_sentry_legacy = "io.sentry:sentry-android:${Versions.sentry_legacy}"
+    const val thirdparty_sentry_latest = "io.sentry:sentry-android:${Versions.sentry_latest}"
     const val thirdparty_zxing = "com.google.zxing:core:${Versions.zxing}"
     const val thirdparty_jna = "net.java.dev.jna:jna:${Versions.jna}@jar"
     const val thirdparty_disklrucache = "com.jakewharton:disklrucache:${Versions.disklrucache}"

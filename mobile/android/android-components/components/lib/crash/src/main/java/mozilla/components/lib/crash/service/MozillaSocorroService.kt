@@ -540,7 +540,7 @@ class MozillaSocorroService(
 
     private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
         return when (isCaughtException) {
-            true -> "$INFO_PREFIX ${throwable.getStacktraceAsString()}"
+            true -> "$LIB_CRASH_INFO_PREFIX ${throwable.getStacktraceAsString()}"
             false -> throwable.getStacktraceAsString()
         }
     }

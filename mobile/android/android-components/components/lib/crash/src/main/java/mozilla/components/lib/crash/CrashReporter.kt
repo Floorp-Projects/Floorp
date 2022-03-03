@@ -99,7 +99,7 @@ class CrashReporter(
     /**
      * Get a copy of the crashBreadCrumbs
      */
-    internal fun crashBreadcrumbsCopy(): ArrayList<Breadcrumb> {
+    fun crashBreadcrumbsCopy(): ArrayList<Breadcrumb> {
         @Suppress("UNCHECKED_CAST")
         return crashBreadcrumbs.clone() as ArrayList<Breadcrumb>
     }

@@ -72,10 +72,8 @@ dependencies {
     implementation Dependencies.androidx_room_runtime
     kapt Dependencies.androidx_room_compiler
 
-    // We only compile against Sentry, GeckoView, and Glean. It's up to the app to add those dependencies if it wants to
-    // send crash reports to Socorro (GV) or Sentry.
-    compileOnly Dependencies.thirdparty_sentry
-    testImplementation Dependencies.thirdparty_sentry
+    // We only compile against GeckoView and Glean. It's up to the app to add those dependencies if it wants to
+    // send crash reports to Socorro (GV).
     compileOnly project(":service-glean")
     testImplementation project(":service-glean")
     testImplementation Dependencies.androidx_work_testing
