@@ -30,7 +30,7 @@ add_task(async function() {
   const targetTab = await addTab("data:text/html,somehtml");
 
   const { tab } = await openAboutToolbox({
-    id: targetTab.linkedBrowser.outerWindowID,
+    id: targetTab.linkedBrowser.browserId,
     remoteId: "this-firefox-this-firefox",
     type: "tab",
   });
