@@ -5791,9 +5791,23 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
             wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT) {
           newWidth = rect->right - rect->left;
           newHeight = newWidth * mAspectRatio;
+          if (newHeight < mSizeConstraints.mMinSize.height) {
+            newHeight = mSizeConstraints.mMinSize.height;
+            newWidth = newHeight / mAspectRatio;
+          } else if (newHeight > mSizeConstraints.mMaxSize.height) {
+            newHeight = mSizeConstraints.mMaxSize.height;
+            newWidth = newHeight / mAspectRatio;
+          }
         } else {
           newHeight = rect->bottom - rect->top;
           newWidth = newHeight / mAspectRatio;
+          if (newWidth < mSizeConstraints.mMinSize.width) {
+            newWidth = mSizeConstraints.mMinSize.width;
+            newHeight = newWidth * mAspectRatio;
+          } else if (newWidth > mSizeConstraints.mMaxSize.width) {
+            newWidth = mSizeConstraints.mMaxSize.width;
+            newHeight = newWidth * mAspectRatio;
+          }
         }
 
         switch (wParam) {
