@@ -158,7 +158,7 @@ class VisualStudioBackend(CommonBackend):
                 basename,
                 target,
                 build_command=command,
-                clean_command="$(SolutionDir)\\mach.bat build clean",
+                clean_command="$(SolutionDir)\\mach.bat clobber",
             )
 
             projects[basename] = (project_id, basename, target)
