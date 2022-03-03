@@ -570,9 +570,12 @@ JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime, bool isDefault)
   MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
 }
 
-JSFreeOp::~JSFreeOp() {
-  if (!jitPoisonRanges.empty()) {
+JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+
+void JSFreeOp::poisonJitCode() {
+  if (hasJitCodeToPoison()) {
     jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
+    jitPoisonRanges.clearAndFree();
   }
 }
 
