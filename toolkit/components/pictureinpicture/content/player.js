@@ -227,15 +227,15 @@ let Player = {
       case "keydown": {
         if (event.keyCode == KeyEvent.DOM_VK_TAB) {
           this.controls.setAttribute("keying", true);
-        } else if (
-          event.keyCode == KeyEvent.DOM_VK_ESCAPE &&
-          this.controls.hasAttribute("keying")
-        ) {
-          this.controls.removeAttribute("keying");
-
-          // We preventDefault to avoid exiting fullscreen if we happen
-          // to be in it.
+        } else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
           event.preventDefault();
+          if (this.isFullscreen) {
+            // We handle the ESC key, in fullscreen modus as intent to leave only the fullscreen mode
+            document.exitFullscreen();
+          } else {
+            // We handle the ESC key, as an intent to leave the picture-in-picture modus
+            this.onClose();
+          }
         } else if (
           Services.prefs.getBoolPref(KEYBOARD_CONTROLS_ENABLED_PREF, false) &&
           (event.keyCode != KeyEvent.DOM_VK_SPACE || !event.target.id)
@@ -305,7 +305,7 @@ let Player = {
 
   onDblClick(event) {
     if (event.target.id == "controls") {
-      if (document.fullscreenElement == document.body) {
+      if (this.isFullscreen) {
         document.exitFullscreen();
       } else {
         document.body.requestFullscreen();
@@ -326,10 +326,7 @@ let Player = {
       }
 
       case "close": {
-        this.actor.sendAsyncMessage("PictureInPicture:Pause", {
-          reason: "pip-closed",
-        });
-        this.closePipWindow({ reason: "close-button" });
+        this.onClose();
         break;
       }
 
@@ -350,6 +347,13 @@ let Player = {
         break;
       }
     }
+  },
+
+  onClose() {
+    this.actor.sendAsyncMessage("PictureInPicture:Pause", {
+      reason: "pip-closed",
+    });
+    this.closePipWindow({ reason: "close-button" });
   },
 
   onKeyDown(event) {
@@ -623,6 +627,15 @@ let Player = {
     const audioButton = document.getElementById("audio");
     let strId = "pictureinpicture-" + (isMuted ? "unmute" : "mute");
     document.l10n.setAttributes(audioButton, strId);
+  },
+
+  /**
+   * GET isFullscreen returns true if the video is running in fullscreen mode
+   *
+   * @returns {boolean}
+   */
+  get isFullscreen() {
+    return document.fullscreenElement == document.body;
   },
 
   /**
