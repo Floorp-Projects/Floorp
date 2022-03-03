@@ -898,4 +898,9 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Fermer l’onglet</string>
-</resources>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Vous êtes protégé·e !</string>
+
+    </resources>

@@ -903,4 +903,23 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Chjode l’unghjetta</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Pare chì stu situ pruvava di seguitavvi. Fate un cliccu nant’à u scudu per vede e preferenze per u situ è e statistiche di blucchime di i perseguitatori.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Chjode a finestra popup</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Site prutetti !</string>
+
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Ste preferenze predefinite furniscenu una prutezzione forte. Ma hè faciule di mudificalle per suddisfà i vostri bisogni specifichi.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Righjittà</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Sbarazzatevi di i vostri dati persunali, cronolugia di navigazione è ancu di più di sta sessione picchichjendu nant’à u buttone di a curbella. Pruvate puru !</string>
+
 </resources>
