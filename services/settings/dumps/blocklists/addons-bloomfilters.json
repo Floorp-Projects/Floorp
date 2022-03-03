@@ -3,6 +3,22 @@
     {
       "stash": {
         "blocked": [
+          "{44a402f4-c627-4ecb-87c4-5fe5d0599047}:10.0.1",
+          "{83e2015a-e472-4351-a409-eab977a62bb6}:4.0.0",
+          "{bdd06799-956a-4228-9688-6a6bb3969d04}:1.0.0",
+          "{6111770a-21eb-40a1-8022-39d7acedb2f0}:0.5.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1646152603459,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1646159708703,
+      "id": "2efbeab7-0e69-4aeb-b0c1-e51a962487b3",
+      "last_modified": 1646159885129
+    },
+    {
+      "stash": {
+        "blocked": [
           "{26a95c93-9bd4-4ee3-9936-8e1a034b5973}:1.1.2",
           "{7abf9a18-ef2d-4f62-882e-db74da28703d}:1.0.0",
           "{7abf9a18-ef2d-4f62-882e-db74da28703d}:1.0.1"
