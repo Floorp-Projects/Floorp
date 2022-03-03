@@ -208,7 +208,7 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   bool isUnmarkGrayTracer = IsTracerKind(trc, JS::TracerKind::UnmarkGray);
   bool isClearEdgesTracer = IsTracerKind(trc, JS::TracerKind::ClearEdges);
 
-  if (TlsContext.get()->isMainThreadContext()) {
+  if (TlsContext.get()) {
     // If we're on the main thread we must have access to the runtime and zone.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
@@ -2745,13 +2745,12 @@ static inline void CheckIsMarkedThing(T* thing) {
 
   // Allow the current thread access if it is sweeping or in sweep-marking, but
   // try to check the zone. Some threads have access to all zones when sweeping.
-  JSContext* cx = TlsContext.get();
-  MOZ_ASSERT(cx->gcUse != JSContext::GCUse::Finalizing);
-  if (cx->gcUse == JSContext::GCUse::Sweeping ||
-      cx->gcUse == JSContext::GCUse::Marking) {
+  JSFreeOp* fop = TlsFreeOp.get();
+  MOZ_ASSERT(fop->gcUse() != GCUse::Finalizing);
+  if (fop->gcUse() == GCUse::Sweeping || fop->gcUse() == GCUse::Marking) {
     Zone* zone = thing->zoneFromAnyThread();
-    MOZ_ASSERT_IF(cx->gcSweepZone,
-                  cx->gcSweepZone == zone || zone->isAtomsZone());
+    MOZ_ASSERT_IF(fop->gcSweepZone(),
+                  fop->gcSweepZone() == zone || zone->isAtomsZone());
     return;
   }
 
@@ -2798,7 +2797,7 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thing) {
   // Permanent things are never finalized by non-owning runtimes. Zone state is
   // unknown in this case.
 #ifdef DEBUG
-  JSRuntime* rt = TlsContext.get()->runtime();
+  JSRuntime* rt = TlsFreeOp.get()->runtimeFromAnyThread();
   MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
 #endif
 
@@ -3167,9 +3166,11 @@ bool GCMarker::traceBarrieredCells(SliceBudget& budget) {
              CurrentThreadIsGCMarking());
   MOZ_ASSERT(markColor() == MarkColor::Black);
 
-  AutoGeckoProfilerEntry profilingStackFrame(
-      TlsContext.get(), "GCMarker::traceBarrieredCells",
-      JS::ProfilingCategoryPair::GCCC_Barrier);
+  mozilla::Maybe<AutoGeckoProfilerEntry> profilingStackFrame;
+  if (JSContext* cx = TlsContext.get()) {
+    profilingStackFrame.emplace(cx, "GCMarker::traceBarrieredCells",
+                                JS::ProfilingCategoryPair::GCCC_Barrier);
+  }
 
   BarrierBuffer& buffer = barrierBuffer();
   while (!buffer.empty()) {

@@ -28,8 +28,7 @@ static inline bool OnHelperThread() {
 
   if (Helper == AllowedHelperThread::GCTask ||
       Helper == AllowedHelperThread::GCTaskOrIonCompile) {
-    JSContext* cx = TlsContext.get();
-    if (cx->defaultFreeOp()->isCollecting()) {
+    if (CurrentThreadIsPerformingGC()) {
       return true;
     }
   }
@@ -102,7 +101,9 @@ void CheckGlobalLock<Lock, Helper>::check() const {
 
   switch (Lock) {
     case GlobalLock::GCLock:
-      TlsContext.get()->runtime()->gc.assertCurrentThreadHasLockedGC();
+      TlsFreeOp.get()
+          ->runtimeFromAnyThread()
+          ->gc.assertCurrentThreadHasLockedGC();
       break;
     case GlobalLock::ScriptDataLock:
       TlsContext.get()->runtime()->assertCurrentThreadHasScriptDataAccess();
