@@ -108,8 +108,6 @@ class DynamicDownloadDialog(
                         onCannotOpenFile(downloadState)
                     }
 
-
-
                     dismiss()
                 }
             }
