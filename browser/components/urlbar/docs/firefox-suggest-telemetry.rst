@@ -92,6 +92,8 @@ checkbox or toggle switch in the preferences UI. Keys are the following:
 
 :firefoxSuggestBestMatch:
   This key is incremented when the "Top pick" checkbox is clicked.
+:firefoxSuggestBestMatchLearnMore:
+  This key is incremented when opening the learn more link for best match.
 :firefoxSuggestDataCollectionToggle:
   This key is incremented when the toggle switch for data collection
   is clicked.
@@ -109,9 +111,11 @@ Changelog
     [Bug 1735976_]
   Firefox 99.0
     Introduced firefoxSuggestBestMatch. [Bug 1755100_]
+    Introduced firefoxSuggestBestMatchLearnMore. [Bug 1756917_]
 
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1755100: https://bugzilla.mozilla.org/show_bug.cgi?id=1755100
+.. _1756917: https://bugzilla.mozilla.org/show_bug.cgi?id=1756917
 
 contextual.services.quicksuggest.click
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
