@@ -49,13 +49,6 @@ class Task:
     def __attrs_post_init__(self):
         self.attributes["kind"] = self.kind
 
-    @property
-    def name(self):
-        if self.label.startswith(self.kind + "-"):
-            return self.label[len(self.kind) + 1 :]
-        else:
-            raise AttributeError(f"Task {self.label} does not have a name.")
-
     def to_json(self):
         rv = {
             "kind": self.kind,
