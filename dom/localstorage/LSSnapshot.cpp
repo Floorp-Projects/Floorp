@@ -135,7 +135,7 @@ LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
       mActor(nullptr),
       mInitLength(0),
       mLength(0),
-      mExactUsage(0),
+      mUsage(0),
       mPeakUsage(0),
       mLoadState(LoadState::Initial),
       mHasOtherProcessDatabases(false),
@@ -212,7 +212,7 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
     MOZ_ASSERT(loadState == LoadState::AllOrderedItems);
   }
 
-  mExactUsage = aInitInfo.initialUsage();
+  mUsage = aInitInfo.usage();
   mPeakUsage = aInitInfo.peakUsage();
 
   mLoadState = aInitInfo.loadState();
@@ -597,7 +597,7 @@ int64_t LSSnapshot::GetUsage() const {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  return mExactUsage;
+  return mUsage;
 }
 
 void LSSnapshot::ScheduleStableStateCallback() {
@@ -894,13 +894,13 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mPeakUsage >= mExactUsage);
+  MOZ_ASSERT(mPeakUsage >= mUsage);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  int64_t newExactUsage = mExactUsage + aDelta;
-  if (newExactUsage > mPeakUsage) {
-    const int64_t minSize = newExactUsage - mPeakUsage;
+  int64_t newUsage = mUsage + aDelta;
+  if (newUsage > mPeakUsage) {
+    const int64_t minSize = newUsage - mPeakUsage;
 
     int64_t size;
     if (NS_WARN_IF(!mActor->SendIncreasePeakUsage(minSize, &size))) {
@@ -916,7 +916,7 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
     mPeakUsage += size;
   }
 
-  mExactUsage = newExactUsage;
+  mUsage = newUsage;
   return NS_OK;
 }
 

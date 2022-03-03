@@ -1593,7 +1593,7 @@ class Datastore final
 
   void Clear(Database* aDatabase);
 
-  void BeginUpdateBatch(int64_t aSnapshotInitialUsage);
+  void BeginUpdateBatch(int64_t aSnapshotUsage);
 
   int64_t EndUpdateBatch(int64_t aSnapshotPeakUsage);
 
@@ -1956,12 +1956,12 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   void Init(nsTHashtable<nsStringHashKey>& aLoadedItems,
             nsTHashSet<nsString>&& aUnknownItems, uint32_t aNextLoadIndex,
-            uint32_t aTotalLength, int64_t aInitialUsage, int64_t aPeakUsage,
+            uint32_t aTotalLength, int64_t aUsage, int64_t aPeakUsage,
             LSSnapshot::LoadState aLoadState, bool aHasOtherProcessDatabases,
             bool aHasOtherProcessObservers) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aInitialUsage >= 0);
-    MOZ_ASSERT(aPeakUsage >= aInitialUsage);
+    MOZ_ASSERT(aUsage >= 0);
+    MOZ_ASSERT(aPeakUsage >= aUsage);
     MOZ_ASSERT_IF(aLoadState != LSSnapshot::LoadState::AllOrderedItems,
                   aNextLoadIndex < aTotalLength);
     MOZ_ASSERT(mTotalLength == 0);
@@ -1972,7 +1972,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
     mUnknownItems = std::move(aUnknownItems);
     mNextLoadIndex = aNextLoadIndex;
     mTotalLength = aTotalLength;
-    mUsage = aInitialUsage;
+    mUsage = aUsage;
     mPeakUsage = aPeakUsage;
     if (aLoadState == LSSnapshot::LoadState::AllOrderedKeys) {
       MOZ_ASSERT(mUnknownItems.Count() == 0);
@@ -4963,15 +4963,15 @@ void Datastore::Clear(Database* aDatabase) {
   }
 }
 
-void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
+void Datastore::BeginUpdateBatch(int64_t aSnapshotUsage) {
   AssertIsOnBackgroundThread();
-  // Don't assert `aSnapshotInitialUsage >= 0`, it can be negative when multiple
+  // Don't assert `aSnapshotUsage >= 0`, it can be negative when multiple
   // snapshots are operating in parallel.
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mUpdateBatchUsage == -1);
   MOZ_ASSERT(!mInUpdateBatch);
 
-  mUpdateBatchUsage = aSnapshotInitialUsage;
+  mUpdateBatchUsage = aSnapshotUsage;
 
   if (IsPersistent()) {
     mConnection->BeginUpdateBatch();
@@ -5560,9 +5560,9 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
 
   uint32_t totalLength = mDatastore->GetLength();
 
-  int64_t initialUsage = mDatastore->GetUsage();
+  int64_t usage = mDatastore->GetUsage();
 
-  int64_t peakUsage = initialUsage;
+  int64_t peakUsage = usage;
 
   if (aIncreasePeakUsage) {
     int64_t size =
@@ -5575,7 +5575,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   bool hasOtherProcessObservers = mDatastore->HasOtherProcessObservers(this);
 
   snapshot->Init(loadedItems, std::move(unknownItems), nextLoadIndex,
-                 totalLength, initialUsage, peakUsage, loadState,
+                 totalLength, usage, peakUsage, loadState,
                  hasOtherProcessDatabases, hasOtherProcessObservers);
 
   RegisterSnapshot(snapshot);
@@ -5583,7 +5583,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   aInitInfo->addKeyToUnknownItems() = addKeyToUnknownItems;
   aInitInfo->itemInfos() = std::move(itemInfos);
   aInitInfo->totalLength() = totalLength;
-  aInitInfo->initialUsage() = initialUsage;
+  aInitInfo->usage() = usage;
   aInitInfo->peakUsage() = peakUsage;
   aInitInfo->loadState() = loadState;
   aInitInfo->hasOtherProcessDatabases() = hasOtherProcessDatabases;
