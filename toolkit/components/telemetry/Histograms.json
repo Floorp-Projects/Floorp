@@ -13596,18 +13596,6 @@
     "n_buckets": 100,
     "bug_numbers": [1294349, 1570634, 1606206, 1689267]
   },
-  "VIDEO_VP9_BENCHMARK_FPS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozill.com", "bryce@mozilla.com"],
-    "expires_in_version": "100",
-    "bug_numbers": [1230265, 1570634, 1606206, 1689267],
-    "kind": "linear",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "720p VP9 decode benchmark measurement in frames per second",
-    "releaseChannelCollection": "opt-out"
-  },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
