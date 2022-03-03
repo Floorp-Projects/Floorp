@@ -3,7 +3,7 @@
 
 "use strict";
 
-requestLongerTimeout(2);
+requestLongerTimeout(4);
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
