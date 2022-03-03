@@ -14,6 +14,7 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/layers/D3D11ShareHandleImage.h"
+#include "mozilla/layers/D3D11TextureIMFSampleImage.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -186,6 +187,20 @@ bool GLBlitHelper::BlitImage(layers::D3D11ShareHandleImage* const srcImage,
 
 // -------------------------------------
 
+bool GLBlitHelper::BlitImage(layers::D3D11TextureIMFSampleImage* const srcImage,
+                             const gfx::IntSize& destSize,
+                             const OriginPos destOrigin) const {
+  const auto& data = srcImage->GetData();
+  if (!data) return false;
+
+  layers::SurfaceDescriptorD3D10 desc;
+  if (!data->SerializeSpecific(&desc)) return false;
+
+  return BlitDescriptor(desc, destSize, destOrigin);
+}
+
+// -------------------------------------
+
 bool GLBlitHelper::BlitImage(layers::D3D11YCbCrImage* const srcImage,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
@@ -209,6 +224,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   if (!d3d) return false;
 
   const auto& handle = desc.handle();
+  const auto& arrayIndex = desc.arrayIndex();
   const auto& format = desc.format();
   const auto& clipSize = desc.size();
 
@@ -231,8 +247,12 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   }
   const RefPtr<ID3D11Texture2D> texList[2] = {tex, tex};
   const EGLAttrib postAttribs0[] = {LOCAL_EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG, 0,
+                                    LOCAL_EGL_D3D_TEXTURE_SUBRESOURCE_ID_ANGLE,
+                                    static_cast<EGLAttrib>(arrayIndex),
                                     LOCAL_EGL_NONE};
   const EGLAttrib postAttribs1[] = {LOCAL_EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG, 1,
+                                    LOCAL_EGL_D3D_TEXTURE_SUBRESOURCE_ID_ANGLE,
+                                    static_cast<EGLAttrib>(arrayIndex),
                                     LOCAL_EGL_NONE};
   const EGLAttrib* const postAttribsList[2] = {postAttribs0, postAttribs1};
   // /layers/d3d11/CompositorD3D11.cpp uses bt601 for EffectTypes::NV12.
