@@ -37,7 +37,7 @@
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, BuiltDisplayList, PrimitiveFlags};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
-use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData, SharedFontInstanceMap};
+use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
@@ -52,7 +52,7 @@ use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance}
 use crate::clip::{PolygonDataHandle};
 use crate::spatial_tree::{SceneSpatialTree, SpatialNodeIndex, get_external_scroll_offset};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
-use crate::glyph_rasterizer::FontInstance;
+use crate::glyph_rasterizer::{FontInstance, SharedFontInstanceMap};
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};

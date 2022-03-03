@@ -42,7 +42,7 @@ use api::ExternalImageId;
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{VoidPtrToSizeFn, PremultipliedColorF};
-use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
+use api::{RenderNotifier, ImageBufferKind};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
@@ -68,7 +68,7 @@ use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_cache::GlyphCache;
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer, SharedFontInstanceMap};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance, CopyInstance};
