@@ -234,10 +234,9 @@ class AboutWelcomeParent extends JSWindowActorParent {
    *
    * @param {string} type
    * @param {any=} data
-   * @param {Browser} browser
-   * @param {Window} window
+   * @param {Browser} the xul:browser rendering the page
    */
-  async onContentMessage(type, data, browser, window) {
+  async onContentMessage(type, data, browser) {
     log.debug(`Received content event: ${type}`);
     switch (type) {
       case "AWPage:SET_WELCOME_MESSAGE_SEEN":
@@ -327,12 +326,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
   receiveMessage(message) {
     const { name, data } = message;
     let browser;
-    let window;
 
     if (this.manager.rootFrameLoader) {
       browser = this.manager.rootFrameLoader.ownerElement;
-      window = browser.ownerGlobal;
-      return this.onContentMessage(name, data, browser, window);
+      return this.onContentMessage(name, data, browser);
     }
 
     log.warn(`Not handling ${name} because the browser doesn't exist.`);
