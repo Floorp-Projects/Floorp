@@ -376,7 +376,7 @@ class CycleCollectedJSRuntime {
 
   bool IsIdleGCTaskNeeded() {
     return !HasPendingIdleGCTask() && Runtime() &&
-           JS::IsIdleGCTaskNeeded(Runtime());
+           JS::WantEagerMinorGC(Runtime()) != JS::GCReason::NO_REASON;
   }
 
  public:
