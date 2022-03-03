@@ -10,6 +10,7 @@ import android.app.TimePickerDialog
 import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build.VERSION_CODES.LOLLIPOP
+import android.os.Looper.getMainLooper
 import android.widget.DatePicker
 import android.widget.NumberPicker
 import android.widget.TimePicker
@@ -37,6 +38,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
@@ -90,10 +92,14 @@ class TimePickerDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
+
         verify(mockFeature).onConfirm(eq("sessionId"), eq("uid"), any())
 
         val neutralButton = dialog.getButton(BUTTON_NEUTRAL)
         neutralButton.performClick()
+        shadowOf(getMainLooper()).idle()
+
         verify(mockFeature).onClear("sessionId", "uid")
     }
 

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.app.links
 
+import android.os.Looper.getMainLooper
 import android.widget.Button
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -17,6 +18,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class SimpleRedirectDialogFragmentTest {
@@ -46,6 +48,8 @@ class SimpleRedirectDialogFragmentTest {
 
         val confirmButton = dialog.findViewById<Button>(android.R.id.button1)
         confirmButton?.performClick()
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(onConfirmCalled)
         assertFalse(onCancelCalled)
     }
@@ -74,6 +78,8 @@ class SimpleRedirectDialogFragmentTest {
 
         val confirmButton = dialog.findViewById<Button>(android.R.id.button2)
         confirmButton?.performClick()
+        shadowOf(getMainLooper()).idle()
+
         assertFalse(onConfirmCalled)
         assertTrue(onCancelCalled)
     }

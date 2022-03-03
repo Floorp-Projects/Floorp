@@ -6,6 +6,7 @@ package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
+import android.os.Looper.getMainLooper
 import android.os.Parcelable
 import android.view.LayoutInflater
 import android.widget.LinearLayout
@@ -45,6 +46,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ChoiceDialogFragmentTest {
@@ -318,9 +320,11 @@ class ChoiceDialogFragmentTest {
         adapter.bindViewHolder(holder, 0)
 
         holder.itemView.performClick()
-
+        shadowOf(getMainLooper()).idle()
         verify(mockFeature).onConfirm("sessionId", "uid", choices.first())
+
         dialog.dismiss()
+        shadowOf(getMainLooper()).idle()
         verify(mockFeature).onCancel("sessionId", "uid")
     }
 
@@ -346,9 +350,13 @@ class ChoiceDialogFragmentTest {
         adapter.bindViewHolder(holder, 0)
 
         holder.itemView.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", choices.first())
+
         dialog.dismiss()
+        shadowOf(getMainLooper()).idle()
+
         verify(mockFeature).onCancel("sessionId", "uid")
     }
 
@@ -378,11 +386,13 @@ class ChoiceDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", fragment.mapSelectChoice.keys.toTypedArray())
 
         val negativeButton = dialog.getButton(BUTTON_NEGATIVE)
         negativeButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature, times(2)).onCancel("sessionId", "uid")
     }
@@ -416,6 +426,7 @@ class ChoiceDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", fragment.mapSelectChoice.keys.toTypedArray())
     }

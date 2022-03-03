@@ -5,6 +5,7 @@
 package mozilla.components.feature.accounts
 
 import android.content.Context
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -34,6 +35,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.coroutines.CoroutineContext
 
@@ -183,6 +185,9 @@ class FirefoxAccountsAuthFeatureTest {
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
             feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode1&state=testState1", null, false, false, false, false, false)
         )
+
+        shadowOf(getMainLooper()).idle()
+
         verify(manager).finishAuthentication(
             FxaAuthData(authType = AuthType.OtherExternal(null), code = "testCode1", state = "testState1")
         )
@@ -192,6 +197,9 @@ class FirefoxAccountsAuthFeatureTest {
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
             feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode2&state=testState2&action=signin", null, false, false, false, false, false)
         )
+
+        shadowOf(getMainLooper()).idle()
+
         verify(manager).finishAuthentication(
             FxaAuthData(authType = AuthType.Signin, code = "testCode2", state = "testState2")
         )
@@ -201,6 +209,9 @@ class FirefoxAccountsAuthFeatureTest {
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
             feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode3&state=testState3&action=signup", null, false, false, false, false, false)
         )
+
+        shadowOf(getMainLooper()).idle()
+
         verify(manager).finishAuthentication(
             FxaAuthData(authType = AuthType.Signup, code = "testCode3", state = "testState3")
         )
@@ -210,6 +221,9 @@ class FirefoxAccountsAuthFeatureTest {
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
             feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode4&state=testState4&action=pairing", null, false, false, false, false, false)
         )
+
+        shadowOf(getMainLooper()).idle()
+
         verify(manager).finishAuthentication(
             FxaAuthData(authType = AuthType.Pairing, code = "testCode4", state = "testState4")
         )
@@ -219,6 +233,9 @@ class FirefoxAccountsAuthFeatureTest {
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
             feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode5&state=testState5&action=someNewActionType", null, false, false, false, false, false)
         )
+
+        shadowOf(getMainLooper()).idle()
+
         verify(manager).finishAuthentication(
             FxaAuthData(authType = AuthType.OtherExternal("someNewActionType"), code = "testCode5", state = "testState5")
         )

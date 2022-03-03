@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa.feature
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -24,6 +25,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class WebAppActivityFeatureTest {
@@ -83,6 +85,7 @@ class WebAppActivityFeatureTest {
         `when`(icons.loadIcon(any())).thenReturn(CompletableDeferred(icon))
 
         WebAppActivityFeature(activity, icons, manifest).onResume(mock())
+        shadowOf(getMainLooper()).idle()
 
         verify(activity).setTaskDescription(any())
     }

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Looper.getMainLooper
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineView.Companion.DARK_COVER
@@ -32,6 +33,7 @@ import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.robolectric.Robolectric.buildActivity
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineViewTest {
@@ -73,6 +75,8 @@ class GeckoEngineViewTest {
         }
         verify(mockGeckoView).capturePixels()
         geckoResult.complete(mock())
+        shadowOf(getMainLooper()).idle()
+
         assertNotNull(thumbnail)
 
         geckoResult = GeckoResult()
@@ -83,6 +87,8 @@ class GeckoEngineViewTest {
             thumbnail = it
         }
         geckoResult.completeExceptionally(mock())
+        shadowOf(getMainLooper()).idle()
+
         assertNull(thumbnail)
 
         // Test GeckoView throwing an exception

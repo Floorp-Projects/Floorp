@@ -5,6 +5,7 @@
 package mozilla.components.support.base.observer
 
 import android.app.Activity
+import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
@@ -25,6 +26,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ObserverRegistryTest {
@@ -227,6 +229,7 @@ class ObserverRegistryTest {
         registry.register(observer3, MockedLifecycleOwner(Lifecycle.State.CREATED))
         registry.register(observer4, view)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(getMainLooper()).idle()
 
         assertFalse(observer1.notified)
         assertFalse(observer2.notified)
@@ -352,6 +355,7 @@ class ObserverRegistryTest {
         assertFalse(observer.notified)
 
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(getMainLooper()).idle()
         assertTrue(view.isAttachedToWindow)
 
         registry.notifyObservers {
@@ -366,6 +370,7 @@ class ObserverRegistryTest {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
         val view = View(testContext)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(getMainLooper()).idle()
 
         val registry = ObserverRegistry<TestObserver>()
         val observer = TestObserver()
@@ -385,6 +390,8 @@ class ObserverRegistryTest {
         observer.notified = false
 
         activity.windowManager.removeView(view)
+        shadowOf(getMainLooper()).idle()
+
         assertFalse(view.isAttachedToWindow)
 
         registry.notifyObservers {

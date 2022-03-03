@@ -5,6 +5,7 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
@@ -17,6 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class BaseDomainAutocompleteProviderTest {
@@ -60,6 +62,7 @@ class BaseDomainAutocompleteProviderTest {
         val domainsCount = domains.size
 
         val provider = createAndInitProvider(testContext, list) { domains }
+        shadowOf(getMainLooper()).idle()
 
         assertCompletion(provider, list, domainsCount, "m", "m", "mozilla.org", "http://mozilla.org")
         assertCompletion(provider, list, domainsCount, "moz", "moz", "mozilla.org", "http://mozilla.org")
@@ -83,6 +86,7 @@ class BaseDomainAutocompleteProviderTest {
         val domainsCount = domains.size
 
         val provider = createAndInitProvider(testContext, list) { domains }
+        shadowOf(getMainLooper()).idle()
 
         assertCompletion(provider, list, domainsCount, "m", "m", "mozilla.org", "http://mozilla.org")
         assertCompletion(provider, list, domainsCount, "moz", "moz", "mozilla.org", "http://mozilla.org")

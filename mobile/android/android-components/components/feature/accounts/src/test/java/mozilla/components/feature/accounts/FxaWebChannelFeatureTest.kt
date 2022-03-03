@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.accounts
 
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.BrowserState
@@ -42,6 +43,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class FxaWebChannelFeatureTest {
@@ -165,6 +167,8 @@ class FxaWebChannelFeatureTest {
         webchannelFeature.extensionController = controller
 
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
+
         verify(controller).registerContentMessageHandler(eq(engineSession), any(), any())
     }
 
@@ -178,6 +182,7 @@ class FxaWebChannelFeatureTest {
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines)
         whenever(port.senderUrl()).thenReturn("https://bar.foo/email")
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -213,6 +218,7 @@ class FxaWebChannelFeatureTest {
             setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
         )
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -246,6 +252,7 @@ class FxaWebChannelFeatureTest {
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -285,6 +292,7 @@ class FxaWebChannelFeatureTest {
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -337,6 +345,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -392,6 +401,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -446,6 +456,8 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
+
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
             eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
@@ -492,6 +504,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -538,6 +551,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -578,6 +592,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -610,6 +625,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -644,6 +660,7 @@ class FxaWebChannelFeatureTest {
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
@@ -757,6 +774,8 @@ class FxaWebChannelFeatureTest {
             state = state,
             declinedEngines = declined ?: emptySet()
         )
+        shadowOf(getMainLooper()).idle()
+
         verify(accountManager).finishAuthentication(expectedAuthData)
     }
 

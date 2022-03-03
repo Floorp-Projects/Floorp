@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.os.Looper.getMainLooper
 import androidx.paging.DataSource
 import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
@@ -38,6 +39,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class OnDiskSitePermissionsStorageTest {
@@ -71,6 +73,7 @@ class OnDiskSitePermissionsStorageTest {
         val sitePermissions = createNewSitePermission()
 
         storage.update(sitePermissions)
+        shadowOf(getMainLooper()).idle()
 
         verify(mockDAO).update(any())
         verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
@@ -108,6 +111,8 @@ class OnDiskSitePermissionsStorageTest {
 
         storage.remove(sitePermissions)
 
+        shadowOf(getMainLooper()).idle()
+
         verify(mockDAO).deleteSitePermissions(any())
         verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
     }
@@ -115,6 +120,7 @@ class OnDiskSitePermissionsStorageTest {
     @Test
     fun `remove all SitePermissions`() = runBlockingTest {
         storage.removeAll()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockDAO).deleteAllSitePermissions()
         verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS))

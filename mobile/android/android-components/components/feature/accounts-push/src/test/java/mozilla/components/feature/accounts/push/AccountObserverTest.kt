@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.accounts.push
 
+import android.os.Looper.getMainLooper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.concept.base.crash.CrashReporting
@@ -28,6 +29,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class AccountObserverTest {
@@ -63,12 +65,14 @@ class AccountObserverTest {
         `when`(lifecycleOwner.lifecycle).thenReturn(lifecycle)
 
         observer.onAuthenticated(account, AuthType.Existing)
+        shadowOf(getMainLooper()).idle()
 
         verify(constellation).registerDeviceObserver(any(), eq(lifecycleOwner), anyBoolean())
 
         reset(constellation)
 
         observer.onAuthenticated(account, AuthType.Recovered)
+        shadowOf(getMainLooper()).idle()
 
         verify(constellation).registerDeviceObserver(any(), eq(lifecycleOwner), anyBoolean())
     }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.isActive
 import mozilla.components.browser.state.action.ContentAction
@@ -24,6 +25,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ToolbarBehaviorControllerTest {
@@ -45,6 +47,7 @@ class ToolbarBehaviorControllerTest {
         assertNull(controller.updatesScope)
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         assertNotNull(controller.updatesScope)
         verify(customTabContent, times(3)).loading
@@ -68,6 +71,7 @@ class ToolbarBehaviorControllerTest {
         assertNull(controller.updatesScope)
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         assertNotNull(controller.updatesScope)
         verify(customTabContent, never()).loading
@@ -86,6 +90,7 @@ class ToolbarBehaviorControllerTest {
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(controller).disableScrolling()
     }
@@ -102,6 +107,7 @@ class ToolbarBehaviorControllerTest {
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(controller).enableScrolling()
     }
@@ -111,6 +117,7 @@ class ToolbarBehaviorControllerTest {
         val controller = spy(ToolbarBehaviorController(mock(), BrowserStore(BrowserState())))
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
         assertTrue(controller.updatesScope!!.isActive)
 
         controller.stop()
@@ -151,6 +158,7 @@ class ToolbarBehaviorControllerTest {
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(controller).expandToolbar()
         verify(store).dispatch(ContentAction.UpdateExpandedToolbarStateAction("123", false))
@@ -168,6 +176,7 @@ class ToolbarBehaviorControllerTest {
         val controller = spy(ToolbarBehaviorController(mock(), store))
 
         controller.start()
+        shadowOf(getMainLooper()).idle()
 
         verify(controller, never()).expandToolbar()
     }

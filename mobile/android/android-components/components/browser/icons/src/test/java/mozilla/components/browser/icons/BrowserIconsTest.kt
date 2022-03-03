@@ -6,6 +6,7 @@ package mozilla.components.browser.icons
 
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.os.Looper.getMainLooper
 import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
@@ -35,6 +36,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 import java.io.OutputStream
 
 @RunWith(AndroidJUnit4::class)
@@ -223,6 +225,7 @@ class BrowserIconsTest {
         verify(view, never()).setImageBitmap(any())
 
         result.complete(mockedIcon)
+        shadowOf(getMainLooper()).idle()
         job.joinBlocking()
 
         verify(view).setImageBitmap(mockedBitmap)
@@ -247,6 +250,7 @@ class BrowserIconsTest {
         verify(view).setImageDrawable(placeholder)
 
         result.cancel()
+        shadowOf(getMainLooper()).idle()
         job.joinBlocking()
 
         verify(view).setImageDrawable(error)

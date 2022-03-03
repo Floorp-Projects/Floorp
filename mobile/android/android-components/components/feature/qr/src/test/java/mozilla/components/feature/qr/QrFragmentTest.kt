@@ -12,6 +12,7 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.os.Build
+import android.os.Looper.getMainLooper
 import android.util.Size
 import android.view.Display
 import android.view.Surface
@@ -49,6 +50,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.nio.ByteBuffer
 
@@ -61,6 +63,7 @@ class QrFragmentTest {
         val qrFragment = spy(QrFragment.newInstance(scanCompleteListener))
 
         qrFragment.scanCompleteListener?.onScanComplete("result")
+        shadowOf(getMainLooper()).idle()
         verify(scanCompleteListener).onScanComplete("result")
     }
 
@@ -203,6 +206,7 @@ class QrFragmentTest {
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
 
         qrFragment.tryScanningSource(source)
+        shadowOf(getMainLooper()).idle()
 
         verify(listener).onScanComplete(eq("qrcode-result"))
         assertEquals(QrFragment.STATE_QRCODE_EXIST, QrFragment.qrState)

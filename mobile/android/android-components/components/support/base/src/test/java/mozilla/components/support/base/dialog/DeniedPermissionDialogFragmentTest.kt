@@ -5,6 +5,7 @@
 package mozilla.components.support.base.dialog
 
 import android.content.DialogInterface.BUTTON_POSITIVE
+import android.os.Looper.getMainLooper
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,6 +19,7 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class DeniedPermissionDialogFragmentTest {
@@ -57,6 +59,8 @@ class DeniedPermissionDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+
+        shadowOf(getMainLooper()).idle()
 
         verify(fragment).openSettingsPage()
     }

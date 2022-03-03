@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package mozilla.components.browser.engine.gecko
 
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.V
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.StorageController
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class GeckoTrackingProtectionExceptionStorageTest {
@@ -169,6 +171,7 @@ class GeckoTrackingProtectionExceptionStorageTest {
         storage.remove("https://example.com/")
 
         geckoResult.complete(listOf(contentPermission))
+        shadowOf(getMainLooper()).idle()
 
         verify(storageController).setPermission(contentPermission, VALUE_DENY)
     }
@@ -196,6 +199,7 @@ class GeckoTrackingProtectionExceptionStorageTest {
         storage.removeAll(listOf(session))
 
         geckoResult.complete(listOf(contentPermission))
+        shadowOf(getMainLooper()).idle()
 
         verify(storageController).setPermission(contentPermission, VALUE_DENY)
         assertFalse(excludedOnTrackingProtection)
@@ -217,6 +221,7 @@ class GeckoTrackingProtectionExceptionStorageTest {
         }
 
         geckoResult.complete(listOf(contentPermission))
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(exceptionList!!.isNotEmpty())
         val exception = exceptionList!!.first() as GeckoTrackingProtectionException
@@ -246,6 +251,7 @@ class GeckoTrackingProtectionExceptionStorageTest {
         }
 
         geckoResult.complete(listOf(contentPermission))
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(containsException)
 

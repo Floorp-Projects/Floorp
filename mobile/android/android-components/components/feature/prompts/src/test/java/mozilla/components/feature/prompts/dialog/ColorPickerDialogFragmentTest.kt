@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface
+import android.os.Looper.getMainLooper
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -23,6 +24,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ColorPickerDialogFragmentTest {
@@ -70,6 +72,7 @@ class ColorPickerDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", "#4f4663")
     }
@@ -90,6 +93,7 @@ class ColorPickerDialogFragmentTest {
 
         val negativeButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         negativeButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onCancel("sessionId", "uid")
     }

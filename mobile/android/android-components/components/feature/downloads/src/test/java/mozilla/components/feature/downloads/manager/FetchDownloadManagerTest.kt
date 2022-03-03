@@ -12,6 +12,7 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Looper.getMainLooper
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
@@ -35,6 +36,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class FetchDownloadManagerTest {
@@ -79,6 +81,8 @@ class FetchDownloadManagerTest {
         assertEquals(download, store.state.downloads[download.id])
 
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(downloadStopped)
     }
 
@@ -95,12 +99,15 @@ class FetchDownloadManagerTest {
         val id = downloadManager.download(download)!!
         store.waitUntilIdle()
         notifyDownloadFailed(id)
+        shadowOf(getMainLooper()).idle()
         assertTrue(downloadStopped)
 
         downloadStopped = false
         downloadManager.tryAgain(id)
         verify(context).startService(any())
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(downloadStopped)
     }
 
@@ -178,6 +185,8 @@ class FetchDownloadManagerTest {
         store.waitUntilIdle()
 
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(downloadStopped)
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
@@ -200,6 +209,8 @@ class FetchDownloadManagerTest {
         assertEquals(downloadWithFileName, store.state.downloads[downloadWithFileName.id])
 
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
+
         store.waitUntilIdle()
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
@@ -224,6 +235,7 @@ class FetchDownloadManagerTest {
         val id = downloadManager.download(downloadWithFileName)!!
         store.waitUntilIdle()
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(downloadStopped)
         assertEquals("5MB.zip", downloadName)

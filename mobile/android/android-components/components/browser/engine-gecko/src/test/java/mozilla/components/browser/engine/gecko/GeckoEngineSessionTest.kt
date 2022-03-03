@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.content.Intent
 import android.graphics.Color
 import android.os.Handler
+import android.os.Looper.getMainLooper
 import android.os.Message
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -89,6 +90,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import org.mozilla.geckoview.WebResponse
+import org.robolectric.Shadows.shadowOf
 import java.security.Principal
 import java.security.cert.X509Certificate
 
@@ -1291,6 +1293,7 @@ class GeckoEngineSessionTest {
 
         val policy = TrackingProtectionPolicy.recommended()
         session.updateTrackingProtection(policy)
+        shadowOf(getMainLooper()).idle()
 
         verify(session).updateContentBlocking(policy)
         assertTrue(session.etpEnabled!!)
@@ -1420,16 +1423,19 @@ class GeckoEngineSessionTest {
         session.updateTrackingProtection(policy)
 
         observers.forEach { session.register(it) }
+        shadowOf(getMainLooper()).idle()
 
         observers.forEach {
             verify(it).onTrackerBlockingEnabledChange(true)
         }
 
         observers.forEach { session.unregister(it) }
+        shadowOf(getMainLooper()).idle()
 
         session.updateTrackingProtection(TrackingProtectionPolicy.none())
 
         observers.forEach { session.register(it) }
+        shadowOf(getMainLooper()).idle()
 
         observers.forEach {
             verify(it).onTrackerBlockingEnabledChange(false)
@@ -2169,6 +2175,7 @@ class GeckoEngineSessionTest {
         })
 
         engineSession.findAll("mozilla")
+        shadowOf(getMainLooper()).idle()
 
         assertEquals("mozilla", findObserved)
         assertTrue(findResultObserved)
@@ -2200,10 +2207,14 @@ class GeckoEngineSessionTest {
         })
 
         engineSession.findNext(true)
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(findResultObserved)
         verify(sessionFinder).find(null, 0)
 
         engineSession.findNext(false)
+        shadowOf(getMainLooper()).idle()
+
         assertTrue(findResultObserved)
         verify(sessionFinder).find(null, GeckoSession.FINDER_FIND_BACKWARDS)
     }

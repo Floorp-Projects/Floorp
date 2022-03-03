@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
 import android.content.Context
+import android.os.Looper.getMainLooper
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
@@ -30,6 +31,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED
 import org.robolectric.Robolectric.buildActivity
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class NestedGeckoViewTest {
@@ -83,6 +85,7 @@ class NestedGeckoViewTest {
         nestedWebView.childHelper = mockChildHelper
 
         nestedWebView.onTouchEvent(downEvent)
+        shadowOf(getMainLooper()).idle()
 
         // We pass a deep copy to `updateInputResult`.
         // Can't easily check for equality, `eventTime` should be good enough.

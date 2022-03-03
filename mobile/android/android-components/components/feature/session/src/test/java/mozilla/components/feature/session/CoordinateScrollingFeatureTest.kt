@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import android.os.Looper.getMainLooper
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.appbar.AppBarLayout
@@ -21,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.any
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class CoordinateScrollingFeatureTest {
@@ -51,6 +53,7 @@ class CoordinateScrollingFeatureTest {
     @Test
     fun `when session loading StateChanged and engine canScrollVertically is false must remove scrollFlags`() {
         scrollFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         store.dispatch(ContentAction.UpdateLoadingStateAction("mozilla", true)).joinBlocking()
 
@@ -63,6 +66,7 @@ class CoordinateScrollingFeatureTest {
         whenever(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
 
         scrollFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         store.dispatch(ContentAction.UpdateLoadingStateAction("mozilla", true)).joinBlocking()
 
@@ -75,6 +79,7 @@ class CoordinateScrollingFeatureTest {
         whenever(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
         scrollFeature = CoordinateScrollingFeature(store, mockEngineView, mockView, 12)
         scrollFeature.start()
+        shadowOf(getMainLooper()).idle()
 
         store.dispatch(ContentAction.UpdateLoadingStateAction("mozilla", true)).joinBlocking()
 

@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface
+import android.os.Looper.getMainLooper
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,6 +22,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ConfirmDialogFragmentTest {
@@ -81,6 +83,7 @@ class ConfirmDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", false)
     }
@@ -97,6 +100,7 @@ class ConfirmDialogFragmentTest {
 
         val negativeButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         negativeButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onCancel("sessionId", "uid", false)
     }

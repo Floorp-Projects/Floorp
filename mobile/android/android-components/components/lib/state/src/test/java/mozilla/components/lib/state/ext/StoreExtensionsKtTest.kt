@@ -5,6 +5,8 @@
 package mozilla.components.lib.state.ext
 
 import android.app.Activity
+import android.os.Looper
+import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
@@ -35,6 +37,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -485,6 +488,7 @@ class StoreExtensionsKtTest {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
         val view = View(testContext)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(view.isAttachedToWindow)
 
@@ -502,6 +506,7 @@ class StoreExtensionsKtTest {
         assertTrue(stateObserved)
 
         activity.windowManager.removeView(view)
+        shadowOf(getMainLooper()).idle()
         assertFalse(view.isAttachedToWindow)
 
         stateObserved = false
@@ -530,6 +535,7 @@ class StoreExtensionsKtTest {
         assertFalse(stateObserved)
 
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(Looper.getMainLooper()).idle()
         assertTrue(view.isAttachedToWindow)
         assertTrue(stateObserved)
 
@@ -542,6 +548,8 @@ class StoreExtensionsKtTest {
         assertTrue(stateObserved)
 
         activity.windowManager.removeView(view)
+        shadowOf(Looper.getMainLooper()).idle()
+
         assertFalse(view.isAttachedToWindow)
 
         stateObserved = false

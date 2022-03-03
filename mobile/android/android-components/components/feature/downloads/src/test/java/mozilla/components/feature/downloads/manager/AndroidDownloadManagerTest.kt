@@ -10,6 +10,7 @@ import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.Request
 import android.content.Intent
 import android.os.Build
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
@@ -29,6 +30,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
@@ -67,6 +69,7 @@ class AndroidDownloadManagerTest {
         assertEquals(download.copy(id = id), store.state.downloads[id])
 
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
         assertTrue(downloadCompleted)
     }
 
@@ -78,13 +81,14 @@ class AndroidDownloadManagerTest {
         grantPermissions()
 
         val id = downloadManager.download(download)!!
-        store.waitUntilIdle()
         notifyDownloadFailed(id)
+        shadowOf(getMainLooper()).idle()
         assertTrue(downloadStopped)
 
         downloadStopped = false
         downloadManager.tryAgain(id)
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
         assertTrue(downloadStopped)
     }
 
@@ -131,7 +135,6 @@ class AndroidDownloadManagerTest {
             downloadWithFileName,
             cookie = "yummy_cookie=choco"
         )!!
-        store.waitUntilIdle()
 
         downloadManager.onDownloadStopped = { _, _, status ->
             downloadStatus = status
@@ -139,6 +142,7 @@ class AndroidDownloadManagerTest {
         }
 
         notifyDownloadCompleted(id)
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(downloadCompleted)
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
@@ -162,7 +166,7 @@ class AndroidDownloadManagerTest {
         assertEquals(downloadWithFileName.copy(id = id), store.state.downloads[id])
 
         notifyDownloadCompleted(id)
-        store.waitUntilIdle()
+        shadowOf(getMainLooper()).idle()
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
 

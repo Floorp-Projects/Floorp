@@ -5,6 +5,7 @@
 package mozilla.components.feature.syncedtabs.presenter
 
 import android.content.Context
+import android.os.Looper.getMainLooper
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runBlockingTest
@@ -20,6 +21,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class DefaultPresenterTest {
@@ -135,6 +137,7 @@ class DefaultPresenterTest {
         )
 
         presenter.accountObserver.onLoggedOut()
+        shadowOf(getMainLooper()).idle()
 
         verify(view).onError(ErrorType.SYNC_UNAVAILABLE)
     }
@@ -150,6 +153,7 @@ class DefaultPresenterTest {
         )
 
         presenter.accountObserver.onAuthenticated(mock(), mock())
+        shadowOf(getMainLooper()).idle()
 
         verify(controller).refreshSyncedTabs()
     }
@@ -165,6 +169,7 @@ class DefaultPresenterTest {
         )
 
         presenter.accountObserver.onAuthenticationProblems()
+        shadowOf(getMainLooper()).idle()
 
         verify(view).onError(ErrorType.SYNC_NEEDS_REAUTHENTICATION)
     }

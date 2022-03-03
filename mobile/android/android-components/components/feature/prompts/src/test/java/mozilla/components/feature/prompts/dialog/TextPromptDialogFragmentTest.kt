@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface.BUTTON_POSITIVE
+import android.os.Looper.getMainLooper
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -24,6 +25,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class TextPromptDialogFragmentTest {
@@ -107,6 +109,7 @@ class TextPromptDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", false to "defaultValue")
     }
@@ -131,6 +134,7 @@ class TextPromptDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
+        shadowOf(getMainLooper()).idle()
 
         verify(mockFeature).onConfirm("sessionId", "uid", true to "defaultValue")
     }

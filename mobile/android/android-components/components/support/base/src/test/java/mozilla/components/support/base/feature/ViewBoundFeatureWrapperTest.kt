@@ -7,6 +7,7 @@ package mozilla.components.support.base.feature
 import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
@@ -26,6 +27,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class ViewBoundFeatureWrapperTest {
@@ -161,6 +163,7 @@ class ViewBoundFeatureWrapperTest {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
         val view = View(activity)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        shadowOf(getMainLooper()).idle()
 
         assertTrue(view.isAttachedToWindow)
 
@@ -175,6 +178,7 @@ class ViewBoundFeatureWrapperTest {
         verify(wrapper, never()).clear()
 
         activity.windowManager.removeView(view)
+        shadowOf(getMainLooper()).idle()
 
         verify(wrapper).clear()
     }
