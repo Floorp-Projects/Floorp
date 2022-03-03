@@ -36,6 +36,13 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
+const DEFAULT_CONFIG = {
+  best_match: {
+    blocked_suggestion_ids: [],
+    min_search_string_length: 4,
+  },
+};
+
 const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
   "firefox-suggest";
@@ -85,6 +92,11 @@ class QSTestUtils {
     return UPDATE_TOPIC;
   }
 
+  get DEFAULT_CONFIG() {
+    // Return a clone so callers can modify it.
+    return Cu.cloneInto(DEFAULT_CONFIG, this);
+  }
+
   /**
    * Call to init the utils. This allows this instance to access test helpers
    * available in the test's scope like Assert.
@@ -128,12 +140,14 @@ class QSTestUtils {
    * @param {array} [results]
    *   Array of quick suggest result objects. If not given, then this function
    *   won't set up any mock data.
+   * @param {object} [config]
+   *   Configuration object.
    * @returns {function}
    *   A cleanup function. You only need to call this function if you're in a
    *   browser chrome test and you did not also call `init`. You can ignore it
    *   otherwise.
    */
-  async ensureQuickSuggestInit(results = null) {
+  async ensureQuickSuggestInit(results = null, config = DEFAULT_CONFIG) {
     this.info?.(
       "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
     );
@@ -151,6 +165,9 @@ class QSTestUtils {
 
     if (results) {
       UrlbarQuickSuggest._addResults(results);
+    }
+    if (config) {
+      this.setConfig(config);
     }
 
     return cleanup;
@@ -176,6 +193,29 @@ class QSTestUtils {
     this.info?.("initNimbusFeature done");
 
     this.registerCleanupFunction(doCleanup);
+  }
+
+  /**
+   * Sets the quick suggest configuration. You should call this again with
+   * `DEFAULT_CONFIG` before your test finishes. See also `withConfig()`.
+   *
+   * @param {object} config
+   */
+  setConfig(config) {
+    UrlbarQuickSuggest._config = config;
+  }
+
+  /**
+   * Sets the quick suggest configuration, calls your callback, and restores the
+   * default configuration.
+   *
+   * @param {object} config
+   * @param {function} callback
+   */
+  async withConfig({ config, callback }) {
+    this.setConfig(config);
+    await callback();
+    this.setConfig(DEFAULT_CONFIG);
   }
 
   /**
