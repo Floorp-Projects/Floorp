@@ -18,6 +18,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
@@ -173,9 +174,26 @@ void SessionAccessibility::Paste(int32_t aID) {
 }
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
-    RemoteAccessible* aAccessible) {
-  auto tab =
-      static_cast<dom::BrowserParent*>(aAccessible->Document()->Manager());
+    Accessible* aAccessible) {
+  if (aAccessible->IsLocal()) {
+    RootAccessible* rootAcc = aAccessible->AsLocal()->RootAccessible();
+    nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
+    if (!vm) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
+    // `rootWidget` can be one of several types. Here we make sure it is an
+    // android nsWindow.
+    if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {
+      return window->GetSessionAccessibility();
+    }
+
+    return nullptr;
+  }
+
+  auto tab = static_cast<dom::BrowserParent*>(
+      aAccessible->AsRemote()->Document()->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   MOZ_ASSERT(frame);
   if (!frame) {
@@ -184,24 +202,6 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
 
   LocalAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
   return chromeDoc ? GetInstanceFor(chromeDoc) : nullptr;
-}
-
-RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
-    LocalAccessible* aAccessible) {
-  RootAccessible* rootAcc = aAccessible->RootAccessible();
-  nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
-  if (!vm) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
-  // `rootWidget` can be one of several types. Here we make sure it is an
-  // android nsWindow.
-  if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {
-    return window->GetSessionAccessibility();
-  }
-
-  return nullptr;
 }
 
 void SessionAccessibility::SendAccessibilityFocusedEvent(
