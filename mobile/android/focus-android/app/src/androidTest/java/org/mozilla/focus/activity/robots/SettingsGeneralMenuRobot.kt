@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
@@ -9,6 +10,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
@@ -17,6 +19,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
+import org.hamcrest.Matchers.allOf
+import org.junit.Assert.assertFalse
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
@@ -80,6 +84,29 @@ class SettingsGeneralMenuRobot {
         onView(withText(language)).perform(click())
     }
 
+    fun verifyThemesList() {
+        darkThemeToggle.check(matches(isDisplayed()))
+        lightThemeToggle.check(matches(isDisplayed()))
+        deviceThemeToggle
+            .check(matches(isDisplayed()))
+            .check(matches(isChecked()))
+    }
+
+    fun verifyThemeApplied(isDarkTheme: Boolean = false, isLightTheme: Boolean = false, getThemeState: Boolean) {
+        when {
+            // getUiTheme() returns true if dark is applied
+            isDarkTheme -> assertTrue("Dark theme not applied", getThemeState)
+            // getUiTheme() returns false if light is applied
+            isLightTheme -> assertFalse("Light theme not applied", getThemeState)
+        }
+    }
+
+    fun selectDarkTheme() = darkThemeToggle.perform(click())
+
+    fun selectLightTheme() = lightThemeToggle.perform(click())
+
+    fun selectDeviceTheme() = deviceThemeToggle.perform(click())
+
     class Transition {
         // add here transitions to other robot classes
     }
@@ -100,3 +127,27 @@ private val openWithList = mDevice.findObject(
 private fun languageMenuButton(localizedText: String = "Language") = onView(withText(localizedText))
 
 private val languageMenu = UiScrollable(UiSelector().scrollable(true))
+
+private val darkThemeToggle =
+    onView(
+        allOf(
+            withId(R.id.radio_button),
+            hasSibling(withText("Dark"))
+        )
+    )
+
+private val lightThemeToggle =
+    onView(
+        allOf(
+            withId(R.id.radio_button),
+            hasSibling(withText("Light"))
+        )
+    )
+
+private val deviceThemeToggle =
+    onView(
+        allOf(
+            withId(R.id.radio_button),
+            hasSibling(withText("Follow device theme"))
+        )
+    )
