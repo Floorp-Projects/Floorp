@@ -78,6 +78,10 @@
 #ifndef GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_PPC_H__
 #define GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_PPC_H__
 
+/* Use the same 32-bit alignment when accessing these structures from 64-bit
+ * code as is used natively in 32-bit code. */
+#pragma pack(push, 4)
+
 #define MD_FLOATINGSAVEAREA_PPC_FPR_COUNT 32
 
 typedef struct {
@@ -103,15 +107,6 @@ typedef struct {
 
 
 #define MD_CONTEXT_PPC_GPR_COUNT 32
-
-/* Use the same 32-bit alignment when accessing this structure from 64-bit code
- * as is used natively in 32-bit code.  #pragma pack is a MSVC extension
- * supported by gcc. */
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma pack(4)
-#else
-#pragma pack(push, 4)
-#endif
 
 typedef struct {
   /* context_flags is not present in ppc_thread_state, but it aids
@@ -145,11 +140,7 @@ enum MDPPCRegisterNumbers {
   MD_CONTEXT_PPC_REG_SP = 1
 };
 
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma pack(0)
-#else
 #pragma pack(pop)
-#endif
 
 /* For (MDRawContextPPC).context_flags.  These values indicate the type of
  * context stored in the structure.  MD_CONTEXT_PPC is Breakpad-defined.  Its
