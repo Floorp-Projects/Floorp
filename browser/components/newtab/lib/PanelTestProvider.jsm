@@ -314,6 +314,108 @@ const MESSAGES = () => [
     trigger: { id: "defaultBrowserCheck" },
   },
   {
+    id: "BETTER_INTERNET_GLOBAL_ROLLOUT",
+    groups: ["eco"],
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL:
+          "chrome://activity-stream/content/data/content/assets/remote/mountain.svg",
+        size: "115px",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-better-internet-header",
+          },
+          size: "24px",
+        },
+        text: {
+          label: {
+            string_id: "spotlight-better-internet-body",
+          },
+          size: "16px",
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-pin-primary-button",
+          },
+          action: {
+            type: "PIN_FIREFOX_TO_TASKBAR",
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-pin-secondary-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "userMonthlyActivity|length >= 1 && userMonthlyActivity|length <= 6 && doesAppNeedPin",
+  },
+  {
+    id: "PEACE_OF_MIND_GLOBAL_ROLLOUT",
+    groups: ["eco"],
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL:
+          "chrome://activity-stream/content/data/content/assets/remote/umbrella.png",
+        size: "115px",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-peace-mind-header",
+          },
+          size: "24px",
+        },
+        text: {
+          label: {
+            string_id: "spotlight-peace-mind-body",
+          },
+          size: "16px",
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-pin-primary-button",
+          },
+          action: {
+            type: "PIN_FIREFOX_TO_TASKBAR",
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-pin-secondary-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "userMonthlyActivity|length >= 7 && userMonthlyActivity|length <= 13 && doesAppNeedPin",
+  },
+  {
     id: "MULTISTAGE_SPOTLIGHT_MESSAGE",
     groups: ["panel-test-provider"],
     template: "spotlight",
