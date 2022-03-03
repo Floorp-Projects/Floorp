@@ -15,6 +15,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const TEST_URL = "http://example.com/quicksuggest?q=frabbits";
 const TEST_SEARCH_STRING = "frab";
+
+const BEST_MATCH_URL = "http://example.com/best-match";
+const BEST_MATCH_SEARCH_STRING = "bestmatch";
+
 const TEST_DATA = [
   {
     id: 1,
@@ -24,6 +28,16 @@ const TEST_DATA = [
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "Test-Advertiser",
+  },
+  {
+    id: 2,
+    url: BEST_MATCH_URL,
+    title: "Best match",
+    keywords: [BEST_MATCH_SEARCH_STRING],
+    click_url: "http://click.reporting.test.com/",
+    impression_url: "http://impression.reporting.test.com/",
+    advertiser: "Test-Advertiser",
+    _test_is_best_match: true,
   },
 ];
 
@@ -311,19 +325,42 @@ add_task(async function click_mouse_online_dataCollectionEnabled() {
   });
 });
 
-async function doClickTest({ useKeyboard, scenario }) {
+// Tests impression and click telemetry for best matches.
+add_task(async function bestMatch() {
+  UrlbarPrefs.set("bestMatch.enabled", true);
+  await QuickSuggestTestUtils.setScenario("offline");
+  await doClickTest({
+    useKeyboard: false,
+    scenario: "offline",
+    searchString: BEST_MATCH_SEARCH_STRING,
+    url: BEST_MATCH_URL,
+    block_id: 2,
+    isBestMatch: true,
+  });
+  UrlbarPrefs.clear("bestMatch.enabled");
+});
+
+async function doClickTest({
+  useKeyboard,
+  scenario,
+  block_id = undefined,
+  isBestMatch = false,
+  searchString = TEST_SEARCH_STRING,
+  url = TEST_URL,
+}) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: TEST_SEARCH_STRING,
+      value: searchString,
       fireInputEvent: true,
     });
     let index = 1;
     let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
       window,
       index,
-      url: TEST_URL,
+      url,
+      isBestMatch,
     });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       if (useKeyboard) {
@@ -337,12 +374,22 @@ async function doClickTest({ useKeyboard, scenario }) {
       [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
       [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
     });
+    let match_type = isBestMatch ? "best-match" : "firefox-suggest";
     QuickSuggestTestUtils.assertImpressionPing({
       index,
       spy,
       scenario,
+      block_id,
+      match_type,
+      is_clicked: true,
     });
-    QuickSuggestTestUtils.assertClickPing({ index, spy, scenario });
+    QuickSuggestTestUtils.assertClickPing({
+      index,
+      spy,
+      scenario,
+      block_id,
+      match_type,
+    });
   });
 
   await PlacesUtils.history.clear();
@@ -388,7 +435,11 @@ add_task(async function click_beforeSearchSuggestions() {
         [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
         [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
       });
-      QuickSuggestTestUtils.assertImpressionPing({ index, spy });
+      QuickSuggestTestUtils.assertImpressionPing({
+        index,
+        spy,
+        is_clicked: true,
+      });
       QuickSuggestTestUtils.assertClickPing({ index, spy });
     });
   });

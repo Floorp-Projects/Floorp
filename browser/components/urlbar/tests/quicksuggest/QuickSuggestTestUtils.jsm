@@ -399,8 +399,14 @@ class QSTestUtils {
    *   The expected advertiser in the ping.
    * @param {number} [block_id]
    *   The expected block_id in the ping.
+   * @param {number} [is_clicked]
+   *   The expected is_clicked in the ping.
+   * @param {string} [match_type]
+   *   The expected match type, one of: "best-match", "firefox-suggest"
    * @param {string} [reporting_url]
    *   The expected reporting_url in the ping.
+   * @param {string} [request_id]
+   *   The expected request_id in the ping.
    * @param {string} [scenario]
    *   The quick suggest scenario, one of: "history", "offline", "online"
    */
@@ -409,7 +415,10 @@ class QSTestUtils {
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
+    is_clicked = false,
+    match_type = "firefox-suggest",
     reporting_url = "http://impression.reporting.test.com/",
+    request_id = null,
     scenario = "offline",
   }) {
     // Find the call for `QS_IMPRESSION`.
@@ -420,23 +429,17 @@ class QSTestUtils {
     this.Assert.equal(calls.length, 1, "Sent one impression ping");
 
     let payload = calls[0].args[0];
-
-    // Check payload properties that should match exactly.
-    let expectedPayload = {
+    this._assertPingPayload(payload, {
       advertiser,
       block_id,
+      is_clicked,
+      match_type,
       position: index + 1,
       reporting_url,
+      request_id,
       scenario,
-    };
-    let actualPayload = {};
-    for (let key of Object.keys(expectedPayload)) {
-      actualPayload[key] = payload[key];
-    }
-    this.Assert.deepEqual(actualPayload, expectedPayload, "Payload is correct");
-
-    // Check payload properties that don't need to match exactly.
-    this.Assert.ok(!!payload.context_id, "Should set the context_id");
+      context_id: actual => !!actual,
+    });
   }
 
   /**
@@ -466,8 +469,12 @@ class QSTestUtils {
    *   The expected advertiser in the ping.
    * @param {number} [block_id]
    *   The expected block_id in the ping.
+   * @param {string} [match_type]
+   *   The expected match type, one of: "best-match", "firefox-suggest"
    * @param {string} [reporting_url]
    *   The expected reporting_url in the ping.
+   * @param {string} [request_id]
+   *   The expected request_id in the ping.
    * @param {string} [scenario]
    *   The quick suggest scenario, one of: "history", "offline", "online"
    */
@@ -476,7 +483,9 @@ class QSTestUtils {
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
+    match_type = "firefox-suggest",
     reporting_url = "http://click.reporting.test.com/",
+    request_id = null,
     scenario = "offline",
   }) {
     // Find the call for `QS_SELECTION`.
@@ -487,23 +496,16 @@ class QSTestUtils {
     this.Assert.equal(calls.length, 1, "Sent one click ping");
 
     let payload = calls[0].args[0];
-
-    // Check payload properties that should match exactly.
-    let expectedPayload = {
+    this._assertPingPayload(payload, {
       advertiser,
       block_id,
+      match_type,
       position: index + 1,
       reporting_url,
+      request_id,
       scenario,
-    };
-    let actualPayload = {};
-    for (let key of Object.keys(expectedPayload)) {
-      actualPayload[key] = payload[key];
-    }
-    this.Assert.deepEqual(actualPayload, expectedPayload, "Payload is correct");
-
-    // Check payload properties that don't need to match exactly.
-    this.Assert.ok(!!payload.context_id, "Should set the context_id");
+      context_id: actual => !!actual,
+    });
   }
 
   /**
@@ -519,6 +521,40 @@ class QSTestUtils {
       return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION);
     });
     this.Assert.equal(calls.length, 0, "Did not send a click ping");
+  }
+
+  /**
+   * Helper for checking contextual services ping payloads.
+   *
+   * @param {object} actualPayload
+   *   The actual payload in the ping.
+   * @param {object} expectedPayload
+   *   An object describing the expected payload. Non-function values in this
+   *   object are checked for equality against the corresponding actual payload
+   *   values. Function values are called and passed the corresponding actual
+   *   values and should return true if the actual values are correct.
+   */
+  _assertPingPayload(actualPayload, expectedPayload) {
+    this.info?.("Checking ping payload: " + JSON.stringify(actualPayload));
+
+    this.Assert.equal(
+      Object.entries(actualPayload).length,
+      Object.entries(expectedPayload).length,
+      "Payload has expected number of properties"
+    );
+
+    for (let [key, expectedValue] of Object.entries(expectedPayload)) {
+      let actualValue = actualPayload[key];
+      if (typeof expectedValue == "function") {
+        this.Assert.ok(expectedValue(actualValue), "Payload property: " + key);
+      } else {
+        this.Assert.equal(
+          actualValue,
+          expectedValue,
+          "Payload property: " + key
+        );
+      }
+    }
   }
 
   /**
