@@ -33,11 +33,6 @@ const NotifyNew = (url, now, latest) =>{
         "title": msg.getMessage("notificationTitle"),
         "message": msg.getMessage("notificationContent-last", [now, latest])
     });
-    browser.notifications.onClicked.addListener(() =>{
-        browser.tabs.create({
-            "url": url
-        });
-    });
     return null;
 };
 
