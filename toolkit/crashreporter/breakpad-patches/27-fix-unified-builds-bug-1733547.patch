@@ -1,0 +1,22 @@
+diff --git a/src/processor/stack_frame_symbolizer.cc b/src/processor/stack_frame_symbolizer.cc
+--- a/src/processor/stack_frame_symbolizer.cc
++++ b/src/processor/stack_frame_symbolizer.cc
+@@ -124,17 +124,16 @@ StackFrameSymbolizer::SymbolizerResult S
+ 
+     case SymbolSupplier::INTERRUPT:
+       return kInterrupt;
+ 
+     default:
+       BPLOG(ERROR) << "Unknown SymbolResult enum: " << symbol_result;
+       return kError;
+   }
+-  return kError;
+ }
+ 
+ WindowsFrameInfo* StackFrameSymbolizer::FindWindowsFrameInfo(
+     const StackFrame* frame) {
+   return resolver_ ? resolver_->FindWindowsFrameInfo(frame) : NULL;
+ }
+ 
+ CFIFrameInfo* StackFrameSymbolizer::FindCFIFrameInfo(
+
