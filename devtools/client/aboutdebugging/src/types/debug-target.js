@@ -57,7 +57,7 @@ const debugTarget = {
   icon: PropTypes.string.isRequired,
   // unique id for the target (unique in the scope of the application lifecycle).
   // - extensions: {String} extension id (for instance "someextension@mozilla.org")
-  // - tabs: {Number} outerWindowID
+  // - tabs: {Number} browserId
   // - workers: {String} id for the WorkerTargetActor corresponding to the worker
   id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   // display name for the debug target.
