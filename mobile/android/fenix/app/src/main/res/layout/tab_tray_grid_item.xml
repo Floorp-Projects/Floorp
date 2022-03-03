@@ -103,7 +103,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                     android:importantForAccessibility="no"
                     android:padding="22dp"
                     app:srcCompat="@drawable/mozac_ic_globe"
-                    app:tint="?tabTrayThumbnailIcon" />
+                    app:tint="?iconSecondary" />
 
                 <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
                     android:id="@+id/mozac_browser_tabstray_thumbnail"

@@ -84,7 +84,7 @@
     <!-- Inactive tab -->
     <color name="fx_mobile_icon_color_primary_inactive">@color/photonLightGrey05A60</color>
     <!-- Secondary icon -->
-    <color name="fx_mobile_icon_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_icon_color_secondary">@color/photonLightGrey40</color>
     <!-- Active tab -->
     <color name="fx_mobile_icon_color_active">@color/photonViolet40</color>
     <!-- Disabled icon -->
@@ -142,7 +142,6 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
-    <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonDarkGrey05</color>
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/fx_mobile_text_color_primary</color>

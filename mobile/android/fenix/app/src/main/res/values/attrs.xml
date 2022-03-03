@@ -25,6 +25,8 @@
     <attr name="textActionPrimary" format="reference" />
 
     <!-- Icon -->
+    <!-- Secondary icon -->
+    <attr name="iconSecondary" format="reference" />
     <!-- Active tab -->
     <attr name="iconActive" format="reference" />
     <!-- Icon inverted (on color) -->
@@ -75,9 +77,6 @@
     <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
     <attr name="awesomeBarIndicatorColor" format="reference|color"/>
     <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
-
-    <!-- Tab tray -->
-    <attr name="tabTrayThumbnailIcon" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />

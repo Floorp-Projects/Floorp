@@ -84,7 +84,7 @@
     <!-- Inactive tab -->
     <color name="fx_mobile_icon_color_primary_inactive">@color/photonDarkGrey90A60</color>
     <!-- Secondary icon -->
-    <color name="fx_mobile_icon_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <color name="fx_mobile_icon_color_secondary">@color/photonDarkGrey05</color>
     <!-- Active tab -->
     <color name="fx_mobile_icon_color_active">@color/photonInk20</color>
     <!-- Disabled icon -->
@@ -209,7 +209,7 @@
     <!-- Inactive tab -->
     <color name="fx_mobile_private_icon_color_primary_inactive" tools:ignore="UnusedResources">@color/photonLightGrey05A60</color>
     <!-- Secondary icon -->
-    <color name="fx_mobile_private_icon_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_private_icon_color_secondary">@color/photonLightGrey40</color>
     <!-- Active tab -->
     <color name="fx_mobile_private_icon_color_active">@color/photonViolet40</color>
     <!-- Disabled icon -->
@@ -281,7 +281,6 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
-    <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonLightGrey60</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
