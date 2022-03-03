@@ -416,8 +416,8 @@ typedef enum JSGCParamKey {
   JSGC_MINOR_GC_NUMBER = 45,
 
   /**
-   * JS::RunIdleTimeGCTask will collect the nursery if it hasn't been collected
-   * in this many milliseconds.
+   * JS::MaybeRunNurseryCollection will collect the nursery if it hasn't been
+   * collected in this many milliseconds.
    *
    * Default: 5000
    * Pref: None
@@ -551,7 +551,7 @@ namespace JS {
   D(OUT_OF_NURSERY, 10)                                                \
   D(EVICT_NURSERY, 11)                                                 \
   D(SHARED_MEMORY_LIMIT, 13)                                           \
-  D(IDLE_TIME_COLLECTION, 14)                                          \
+  D(EAGER_NURSERY_COLLECTION, 14)                                      \
   D(BG_TASK_FINISHED, 15)                                              \
   D(ABORT_GC, 16)                                                      \
   D(FULL_WHOLE_CELL_BUFFER, 17)                                        \
@@ -1239,7 +1239,8 @@ namespace JS {
 
 extern JS_PUBLIC_API bool IsIdleGCTaskNeeded(JSRuntime* rt);
 
-extern JS_PUBLIC_API void RunIdleTimeGCTask(JSRuntime* rt);
+extern JS_PUBLIC_API void MaybeRunNurseryCollection(JSRuntime* rt,
+                                                    JS::GCReason reason);
 
 extern JS_PUBLIC_API void SetHostCleanupFinalizationRegistryCallback(
     JSContext* cx, JSHostCleanupFinalizationRegistryCallback cb, void* data);
