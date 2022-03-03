@@ -71,6 +71,9 @@ browser.urlbar.autoFill (boolean, default: true)
   Autofill is the the feature that automatically completes domains and URLs that
   the user has visited as the user is typing them in the urlbar textbox.
 
+browser.urlbar.bestMatch.enabled (boolean, default: false)
+  Whether the best match feature is enabled.
+
 browser.urlbar.autoFill.stddevMultiplier (float, default: 0.0)
   Affects the frecency threshold of the autofill algorithm.  The threshold is
   the mean of all origin frecencies, plus one standard deviation multiplied by
@@ -177,6 +180,10 @@ browser.urlbar.speculativeConnect.enabled (boolean, default: true)
 
 browser.urlbar.sponsoredTopSites (boolean, default: false)
   Whether top sites may include sponsored ones.
+
+browser.urlbar.suggest.bestmatch (boolean, default: true)
+  Whether to show the best match result is enabled. This pref is ignored if
+  browser.urlbar.bestMatch.enabled is false.
 
 browser.urlbar.suggest.quicksuggest.nonsponsored (boolean, default: false)
   Whether results will include non-sponsored quick suggest suggestions.
