@@ -56,6 +56,11 @@ class D3D11TextureData final : public TextureData {
                                   TextureAllocationFlags aAllocFlags,
                                   ID3D11Device* aDevice = nullptr);
 
+  static already_AddRefed<TextureClient> CreateTextureClient(
+      ID3D11Texture2D* aTexture, uint32_t aIndex, gfx::IntSize aSize,
+      gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
+      gfx::ColorRange aColorRange, KnowsCompositor* aKnowsCompositor);
+
   virtual ~D3D11TextureData();
 
   bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
@@ -100,8 +105,9 @@ class D3D11TextureData final : public TextureData {
   TextureFlags GetTextureFlags() const override;
 
  private:
-  D3D11TextureData(ID3D11Texture2D* aTexture, gfx::IntSize aSize,
-                   gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
+  D3D11TextureData(ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
+                   gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                   TextureAllocationFlags aFlags);
 
   void GetDXGIResource(IDXGIResource** aOutResource);
 
@@ -127,6 +133,7 @@ class D3D11TextureData final : public TextureData {
   const bool mHasSynchronization;
 
   RefPtr<ID3D11Texture2D> mTexture;
+  uint32_t mArrayIndex = 0;
   const TextureAllocationFlags mAllocationFlags;
 };
 
@@ -299,8 +306,8 @@ class DataTextureSourceD3D11 : public DataTextureSource,
  protected:
   gfx::IntRect GetTileRect(uint32_t aIndex) const;
 
-  std::vector<RefPtr<ID3D11Texture2D> > mTileTextures;
-  std::vector<RefPtr<ID3D11ShaderResourceView> > mTileSRVs;
+  std::vector<RefPtr<ID3D11Texture2D>> mTileTextures;
+  std::vector<RefPtr<ID3D11ShaderResourceView>> mTileSRVs;
   RefPtr<ID3D11Device> mDevice;
   gfx::SurfaceFormat mFormat;
   TextureFlags mFlags;
@@ -369,6 +376,7 @@ class DXGITextureHostD3D11 : public TextureHost {
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11Texture2D> mTexture;
+  uint32_t mArrayIndex = 0;
   RefPtr<DataTextureSourceD3D11> mTextureSource;
   gfx::IntSize mSize;
   WindowsHandle mHandle;
