@@ -6,6 +6,8 @@
     <!-- Design system color attributes -->
 
     <!-- Layers -->
+    <!-- Card background, Menu background, Dialog, Banner -->
+    <attr name="layer2" format="reference" />
     <!-- Search -->
     <attr name="layer3" format="reference" />
     <!-- Selected tab -->
@@ -75,7 +77,6 @@
     <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
 
     <!-- Tab tray -->
-    <attr name="tabTrayThumbnailItemBackground" format="reference" />
     <attr name="tabTrayThumbnailIcon" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">

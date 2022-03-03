@@ -142,7 +142,6 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
-    <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonDarkGrey05</color>
 
     <!-- Reader View colors -->

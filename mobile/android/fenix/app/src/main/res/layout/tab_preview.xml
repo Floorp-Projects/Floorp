@@ -9,7 +9,7 @@
         android:id="@+id/previewThumbnail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?tabTrayThumbnailItemBackground" />
+        android:background="?layer2" />
 
     <LinearLayout
         android:id="@+id/fakeToolbar"

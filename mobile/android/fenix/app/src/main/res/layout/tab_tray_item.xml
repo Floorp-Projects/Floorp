@@ -33,8 +33,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:backgroundTint="?tabTrayThumbnailItemBackground"
-        app:cardBackgroundColor="@color/photonWhite"
+        app:cardBackgroundColor="?layer2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 

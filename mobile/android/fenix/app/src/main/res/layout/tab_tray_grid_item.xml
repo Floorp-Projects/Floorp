@@ -92,8 +92,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                 style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/tab_tray_grid_item_thumbnail_height"
-                android:backgroundTint="?tabTrayThumbnailItemBackground"
-                app:cardBackgroundColor="@color/photonWhite"
+                app:cardBackgroundColor="?layer2"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/horizonatal_divider">
 
