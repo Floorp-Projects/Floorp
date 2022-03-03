@@ -84,6 +84,35 @@ The following scalars are recorded for Firefox Suggest. For general information
 on scalar telemetry in Firefox, see the
 :doc:`/toolkit/components/telemetry/collection/scalars` document.
 
+browser.ui.interaction.preferences_panePrivacy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user clicks a Firefox Suggest
+checkbox or toggle switch in the preferences UI. Keys are the following:
+
+:firefoxSuggestBestMatch:
+  This key is incremented when the "Top pick" checkbox is clicked.
+:firefoxSuggestDataCollectionToggle:
+  This key is incremented when the toggle switch for data collection
+  is clicked.
+:firefoxSuggestNonsponsoredToggle:
+  This key is incremented when the toggle switch for non-sponsored suggestions
+  is clicked.
+:firefoxSuggestSponsoredToggle:
+  This key is incremented when the toggle switch for sponsored suggestions
+  is clicked.
+
+Changelog
+  Firefox 94.0.2
+    Introduced firefoxSuggestDataCollectionToggle,
+    firefoxSuggestNonsponsoredToggle and firefoxSuggestSponsoredToggle.
+    [Bug 1735976_]
+  Firefox 99.0
+    Introduced firefoxSuggestBestMatch. [Bug 1755100_]
+
+.. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
+.. _1755100: https://bugzilla.mozilla.org/show_bug.cgi?id=1755100
+
 contextual.services.quicksuggest.click
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

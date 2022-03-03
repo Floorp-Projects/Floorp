@@ -657,6 +657,50 @@ add_task(async function dataCollectionToggled() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", !enabled);
 });
 
+// Tests telemetry recorded when clicking the checkbox for best match in
+// preferences UI. The telemetry will be stored as following keyed scalar.
+// scalar: browser.ui.interaction.preferences_panePrivacy
+// key:    firefoxSuggestBestMatch
+add_task(async function bestmatchCheckbox() {
+  // Set the initial enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  // Open preferences page for best match.
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences#privacy",
+    true
+  );
+
+  for (let i = 0; i < 2; i++) {
+    Services.telemetry.clearScalars();
+
+    // Click on the checkbox.
+    const doc = gBrowser.selectedBrowser.contentDocument;
+    const checkboxId = "firefoxSuggestBestMatch";
+    const checkbox = doc.getElementById(checkboxId);
+    checkbox.scrollIntoView();
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + checkboxId,
+      {},
+      gBrowser.selectedBrowser
+    );
+
+    TelemetryTestUtils.assertKeyedScalar(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "browser.ui.interaction.preferences_panePrivacy",
+      checkboxId,
+      1
+    );
+  }
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
 // Tests the Nimbus exposure event gets recorded after a quick suggest result
 // impression.
 add_task(async function nimbusExposure() {
