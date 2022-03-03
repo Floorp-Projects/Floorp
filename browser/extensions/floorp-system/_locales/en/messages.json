@@ -43,5 +43,19 @@
         "example" : "https://developer.mozilla.org"
       }
     }
+  },
+  "notificationContent-last": {
+    "message": "The Floorp you are using is the latest version.\n No update is required.\nThank you for using Floorp browser.",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
   }
 }
