@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Html_Control_Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+</head>
+
+<p>Misc Link Types</p>
+<section>
+    <a href="https://duckduckgo.com/">External link</a>
+</section>
+
+<section>
+    <a href="mailto://example@example.com">Email link</a>
+    <a href="tel://1234567890">Telephone link</a>
+</section>
+
+<p>Drop-down Form</p>
+<select id="dropDown">
+    <option type="text" text="The Only Ones">The Only Ones</option>
+    <option type="text" text="The National">The National</option>
+</select>
+<button onclick="printOption()" id="submitOption"> Submit drop down option </button>
+<div id="displayOption"></div>
+
+<section>
+    <p>Copy <input type="text" placeholder="and Paste" id="textInput"> me</p>
+    <button onclick="printInput()" id="submitInput"> Submit input </button>
+    <div id="displayInput"></div>
+</section>
+
+<script>
+    function printOption() {
+      let dropDown = document.querySelector("#dropDown");
+      let displayOption = document.querySelector("#displayOption");
+
+      displayOption.innerHTML = "Selected option is: " + dropDown.value;
+    }
+  </script>
+
+<script>
+    function printInput() {
+      let textInput = document.querySelector("#textInput");
+      let displayInput = document.querySelector("#displayInput");
+
+      displayInput.innerHTML = "You entered: " + textInput.value;
+    }
+  </script>
+</html>

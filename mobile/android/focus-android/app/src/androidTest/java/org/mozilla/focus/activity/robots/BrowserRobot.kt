@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
+import org.mozilla.focus.helpers.TestHelper.progressBar
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
@@ -157,6 +158,108 @@ class BrowserRobot {
 
     fun clickOpenLinksInAppsCancelButton() = openLinksInAppsCancelButton.click()
 
+    fun clickDropDownForm() {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            .waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains("Drop-down Form")).waitForExists(waitingTime)
+        dropDownForm.click()
+    }
+
+    fun clickAndWriteTextInInputBox(text: String) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            .waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains("Input Text")).waitForExists(waitingTime)
+        textInputBox.click()
+        textInputBox.setText(text)
+    }
+
+    fun longPressTextInputBox() {
+        textInputBox.waitForExists(waitingTime)
+        textInputBox.longClick()
+    }
+
+    fun longClickText(expectedText: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.findObject(UiSelector().textContains(expectedText))
+                    .waitForExists(waitingTime)
+                mDevice.findObject(By.textContains(expectedText)).also { it.longClick() }
+                break
+            } catch (e: NullPointerException) {
+                browserScreen {
+                }.openMainMenu {
+                }.clickReloadButton {}
+            }
+        }
+    }
+
+    fun longClickAndCopyText(expectedText: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+                mDevice.findObject(By.textContains(expectedText)).also { it.longClick() }
+
+                mDevice.findObject(UiSelector().textContains("Copy")).waitForExists(waitingTime)
+                mDevice.findObject(By.textContains("Copy")).also { it.click() }
+                break
+            } catch (e: NullPointerException) {
+                browserScreen {
+                }.openMainMenu {
+                }.clickReloadButton {}
+            }
+        }
+    }
+
+    fun verifyCopyOptionDoesNotExist() =
+        assertFalse(mDevice.findObject(UiSelector().textContains("Copy")).waitForExists(waitingTime))
+
+    fun clickAndPasteTextInInputBox() {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
+                mDevice.findObject(By.textContains("Paste")).also { it.click() }
+                break
+            } catch (e: NullPointerException) {
+                longPressTextInputBox()
+            }
+        }
+    }
+
+    fun clickSubmitTextInputButton() {
+        submitTextInputButton.waitForExists(waitingTime)
+        submitTextInputButton.click()
+    }
+
+    fun selectDropDownOption(optionName: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/customPanel")
+        ).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(optionName)).also { it.click() }
+    }
+
+    fun clickSubmitDropDownButton() {
+        submitDropDownButton.waitForExists(waitingTime)
+        submitDropDownButton.click()
+    }
+
+    fun verifySelectedDropDownOption(optionName: String) {
+        mDevice.findObject(
+            UiSelector()
+                .textContains("Submit drop down option")
+                .resourceId("submitOption")
+        ).waitForExists(waitingTime)
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected option is: $optionName")
+            ).waitForExists(waitingTime)
+        )
+    }
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(waitingTime)
@@ -208,6 +311,14 @@ class BrowserRobot {
 
             TabsTrayRobot().interact()
             return TabsTrayRobot.Transition()
+        }
+
+        fun goToPreviousPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.pressBack()
+            progressBar.waitUntilGone(waitingTime)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
     }
 }
@@ -281,3 +392,32 @@ private val openLinksInAppsMessage = mDevice.findObject(UiSelector().resourceId(
 private val openLinksInAppsCancelButton = mDevice.findObject(UiSelector().textContains("CANCEL"))
 
 private val openLinksInAppsOpenButton = mDevice.findObject(UiSelector().textContains("OPEN"))
+
+private val dropDownForm =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("dropDown")
+            .className("android.widget.Spinner")
+            .packageName("$packageName")
+    )
+
+private val submitDropDownButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains("Submit drop down option")
+            .resourceId("submitOption")
+    )
+
+private val textInputBox =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("textInput")
+            .packageName("$packageName")
+    )
+
+private val submitTextInputButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains("Submit input")
+            .resourceId("submitInput")
+    )

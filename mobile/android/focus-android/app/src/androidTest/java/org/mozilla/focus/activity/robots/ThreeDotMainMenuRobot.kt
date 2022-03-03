@@ -20,6 +20,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
+import org.mozilla.focus.helpers.TestHelper.progressBar
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 
@@ -113,6 +114,14 @@ class ThreeDotMainMenuRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickReloadButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            reloadButton.click()
+            progressBar.waitUntilGone(waitingTime)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -131,6 +140,11 @@ private val addShortcutButton =
         UiSelector()
             .text("Add to Shortcuts")
     )
+
+private val reloadButton = mDevice.findObject(
+    UiSelector()
+        .description("Reload website")
+)
 
 private val addToHomeButton = mDevice.findObject(
     UiSelector()
