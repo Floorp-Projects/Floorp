@@ -14148,30 +14148,6 @@
     "kind": "flag",
     "description": "Tracks situations when the user opts for auto-detecting the language of a page"
   },
-  "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed.",
-    "bug_numbers": [1714303]
-  },
-  "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1714303],
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
-  },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
