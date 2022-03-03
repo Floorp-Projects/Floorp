@@ -73,14 +73,10 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "LoadLibraryRemote.cpp",
         ]
 
-    if CONFIG["ENABLE_TESTS"]:
-        DIRS += ["test/gtest"]
-
     TEST_DIRS += ["test"]
 
     UNIFIED_SOURCES += [
         "nsExceptionHandler.cpp",
-        "ThreadAnnotation.cpp",
     ]
 
     if CONFIG["OS_ARCH"] == "Darwin":
