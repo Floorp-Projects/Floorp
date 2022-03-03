@@ -291,6 +291,20 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
+JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime)
+    : runtime_(maybeRuntime), isCollecting_(false) {
+  MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
+}
+
+JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+
+void JSFreeOp::poisonJitCode() {
+  if (hasJitCodeToPoison()) {
+    jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
+    jitPoisonRanges.clearAndFree();
+  }
+}
+
 #ifdef DEBUG
 void GCRuntime::verifyAllChunks() {
   AutoLockGC lock(this);
