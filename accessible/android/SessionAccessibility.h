@@ -16,7 +16,7 @@ namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap;
-class RemoteAccessible;
+class Accessible;
 class RootAccessibleWrap;
 class BatchData;
 
@@ -42,10 +42,7 @@ class SessionAccessibility final
   }
 
   static void Init();
-  static RefPtr<SessionAccessibility> GetInstanceFor(
-      RemoteAccessible* aAccessible);
-  static RefPtr<SessionAccessibility> GetInstanceFor(
-      LocalAccessible* aAccessible);
+  static RefPtr<SessionAccessibility> GetInstanceFor(Accessible* aAccessible);
 
   // Native implementations
   using Base::AttachNative;
