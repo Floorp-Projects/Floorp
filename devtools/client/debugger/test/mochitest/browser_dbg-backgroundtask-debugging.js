@@ -17,6 +17,8 @@
  * this have so far not been robust in automation.
  */
 
+"use strict";
+
 requestLongerTimeout(4);
 
 /* import-globals-from ../../../framework/browser-toolbox/test/helpers-browser-toolbox.js */
