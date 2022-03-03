@@ -701,6 +701,73 @@ add_task(async function bestmatchCheckbox() {
   await SpecialPowers.popPrefEnv();
 });
 
+// Tests telemetry recorded when opening the learn more link for best match in
+// the preferences UI. The telemetry will be stored as following keyed scalar.
+// scalar: browser.ui.interaction.preferences_panePrivacy
+// key:    firefoxSuggestBestMatchLearnMore
+add_task(async function bestmatchLearnMore() {
+  // Set the initial enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  // Open preferences page for best match.
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences#privacy",
+    true
+  );
+
+  // Click on the learn more link.
+  Services.telemetry.clearScalars();
+  const learnMoreLinkId = "firefoxSuggestBestMatchLearnMore";
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const link = doc.getElementById(learnMoreLinkId);
+  link.scrollIntoView();
+  const onLearnMoreOpenedByClick = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#" + learnMoreLinkId,
+    {},
+    gBrowser.selectedBrowser
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "browser.ui.interaction.preferences_panePrivacy",
+    "firefoxSuggestBestMatchLearnMore",
+    1
+  );
+  await onLearnMoreOpenedByClick;
+  gBrowser.removeCurrentTab();
+
+  // Type enter key on the learm more link.
+  Services.telemetry.clearScalars();
+  link.focus();
+  const onLearnMoreOpenedByKey = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+  );
+  await BrowserTestUtils.synthesizeKey(
+    "KEY_Enter",
+    {},
+    gBrowser.selectedBrowser
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "browser.ui.interaction.preferences_panePrivacy",
+    "firefoxSuggestBestMatchLearnMore",
+    1
+  );
+  await onLearnMoreOpenedByKey;
+  gBrowser.removeCurrentTab();
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
 // Tests the Nimbus exposure event gets recorded after a quick suggest result
 // impression.
 add_task(async function nimbusExposure() {
