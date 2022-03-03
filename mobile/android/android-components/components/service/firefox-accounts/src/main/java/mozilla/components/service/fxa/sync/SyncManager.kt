@@ -110,7 +110,11 @@ object GlobalSyncableStoreProvider {
  */
 internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
     fun isSyncActive(): Boolean
-    fun syncNow(reason: SyncReason, debounce: Boolean = false)
+    fun syncNow(
+        reason: SyncReason,
+        debounce: Boolean = false,
+        customEngineSubset: List<SyncEngine> = listOf(),
+    )
     fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long)
     fun stopPeriodicSync()
     fun workersStateChanged(isRunning: Boolean)
@@ -150,12 +154,17 @@ internal abstract class SyncManager(
      *
      * @param reason A [SyncReason] indicating why this sync is being requested.
      * @param debounce Whether or not this sync should debounced.
+     * @param customEngineSubset A subset of supported engines to sync. Defaults to all supported engines.
      */
-    internal fun now(reason: SyncReason, debounce: Boolean = false) = synchronized(this) {
+    internal fun now(
+        reason: SyncReason,
+        debounce: Boolean = false,
+        customEngineSubset: List<SyncEngine> = listOf(),
+    ) = synchronized(this) {
         if (syncDispatcher == null) {
             logger.info("Sync is not enabled. Ignoring 'sync now' request.")
         }
-        syncDispatcher?.syncNow(reason, debounce)
+        syncDispatcher?.syncNow(reason, debounce, customEngineSubset)
     }
 
     /**

@@ -127,8 +127,12 @@ class FxaAccountManagerTest {
             return inner.isSyncActive()
         }
 
-        override fun syncNow(reason: SyncReason, debounce: Boolean) {
-            inner.syncNow(reason, debounce)
+        override fun syncNow(
+            reason: SyncReason,
+            debounce: Boolean,
+            customEngineSubset: List<SyncEngine>,
+        ) {
+            inner.syncNow(reason, debounce, customEngineSubset)
         }
 
         override fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long) {
@@ -1692,25 +1696,25 @@ class FxaAccountManagerTest {
         // onAuthenticated - mapping of AuthType to SyncReason
         integration.onAuthenticated(mock(), AuthType.Signin)
         verify(syncManager, times(1)).start()
-        verify(syncManager, times(1)).now(eq(SyncReason.FirstSync), anyBoolean())
+        verify(syncManager, times(1)).now(eq(SyncReason.FirstSync), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.Signup)
         verify(syncManager, times(2)).start()
-        verify(syncManager, times(2)).now(eq(SyncReason.FirstSync), anyBoolean())
+        verify(syncManager, times(2)).now(eq(SyncReason.FirstSync), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.Pairing)
         verify(syncManager, times(3)).start()
-        verify(syncManager, times(3)).now(eq(SyncReason.FirstSync), anyBoolean())
+        verify(syncManager, times(3)).now(eq(SyncReason.FirstSync), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.MigratedReuse)
         verify(syncManager, times(4)).start()
-        verify(syncManager, times(4)).now(eq(SyncReason.FirstSync), anyBoolean())
+        verify(syncManager, times(4)).now(eq(SyncReason.FirstSync), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.OtherExternal("test"))
         verify(syncManager, times(5)).start()
-        verify(syncManager, times(5)).now(eq(SyncReason.FirstSync), anyBoolean())
+        verify(syncManager, times(5)).now(eq(SyncReason.FirstSync), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.Existing)
         verify(syncManager, times(6)).start()
-        verify(syncManager, times(1)).now(eq(SyncReason.Startup), anyBoolean())
+        verify(syncManager, times(1)).now(eq(SyncReason.Startup), anyBoolean(), eq(listOf()))
         integration.onAuthenticated(mock(), AuthType.Recovered)
         verify(syncManager, times(7)).start()
-        verify(syncManager, times(2)).now(eq(SyncReason.Startup), anyBoolean())
+        verify(syncManager, times(2)).now(eq(SyncReason.Startup), anyBoolean(), eq(listOf()))
         verifyNoMoreInteractions(syncManager)
 
         // onProfileUpdated - no-op

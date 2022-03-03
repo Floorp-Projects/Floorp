@@ -277,11 +277,19 @@ open class FxaAccountManager(
      *
      * @param reason A [SyncReason] indicating why this sync is being requested.
      * @param debounce Boolean flag indicating if this sync may be debounced (in case another sync executed recently).
+     * @param customEngineSubset A subset of supported engines to sync. Defaults to all supported engines.
      */
     suspend fun syncNow(
         reason: SyncReason,
-        debounce: Boolean = false
+        debounce: Boolean = false,
+        customEngineSubset: List<SyncEngine> = listOf(),
     ) = withContext(coroutineContext) {
+        check(
+            customEngineSubset.isEmpty() ||
+                syncConfig?.supportedEngines?.containsAll(customEngineSubset) == true
+        ) {
+            "Custom engines for sync must be a subset of supported engines."
+        }
         when (val s = state) {
             // Can't sync while we're still doing stuff.
             is State.Active -> Unit
@@ -311,7 +319,7 @@ open class FxaAccountManager(
                         checkNotNull(syncManager == null) {
                             "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
                         }
-                        syncManager?.now(reason, debounce)
+                        syncManager?.now(reason, debounce, customEngineSubset)
                     }
                 }
                 else -> logger.info("Ignoring syncNow request, not in the right state: $s")

@@ -161,7 +161,11 @@ internal class WorkManagerSyncDispatcher(
         return isSyncActive
     }
 
-    override fun syncNow(reason: SyncReason, debounce: Boolean) {
+    override fun syncNow(
+        reason: SyncReason,
+        debounce: Boolean,
+        customEngineSubset: List<SyncEngine>,
+    ) {
         logger.debug("Immediate sync requested, reason = $reason, debounce = $debounce")
         val delayMs = if (reason == SyncReason.Startup) {
             // Startup delay is there to avoid SQLITE_BUSY crashes, since we currently do a poor job
@@ -177,7 +181,7 @@ internal class WorkManagerSyncDispatcher(
             // Use the 'keep' policy to minimize overhead from multiple "sync now" operations coming in
             // at the same time.
             ExistingWorkPolicy.KEEP,
-            regularSyncWorkRequest(reason, delayMs, debounce)
+            regularSyncWorkRequest(reason, delayMs, debounce, customEngineSubset)
         ).enqueue()
     }
 
@@ -234,9 +238,10 @@ internal class WorkManagerSyncDispatcher(
     private fun regularSyncWorkRequest(
         reason: SyncReason,
         delayMs: Long = 0L,
-        debounce: Boolean = false
+        debounce: Boolean = false,
+        customEngineSubset: List<SyncEngine> = listOf()
     ): OneTimeWorkRequest {
-        val data = getWorkerData(reason)
+        val data = getWorkerData(reason, customEngineSubset)
         return OneTimeWorkRequestBuilder<WorkManagerSyncWorker>()
             .setConstraints(
                 Constraints.Builder()
@@ -255,9 +260,13 @@ internal class WorkManagerSyncDispatcher(
             .build()
     }
 
-    private fun getWorkerData(reason: SyncReason): Data {
+    private fun getWorkerData(
+        reason: SyncReason,
+        customEngineSubset: List<SyncEngine> = listOf(),
+    ): Data {
+        val enginesToSync = customEngineSubset.takeIf { it.isNotEmpty() } ?: supportedEngines
         return Data.Builder()
-            .putStringArray(KEY_DATA_STORES, supportedEngines.map { it.nativeName }.toTypedArray())
+            .putStringArray(KEY_DATA_STORES, enginesToSync.map { it.nativeName }.toTypedArray())
             .putString(KEY_REASON, reason.asString())
             .build()
     }
