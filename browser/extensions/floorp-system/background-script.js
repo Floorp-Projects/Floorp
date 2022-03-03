@@ -10,6 +10,7 @@ const BROWSER_VERSION = "8.6.0"
 const APP_ID = "floorp"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
+
 const Notify = (url, now, latest) =>{
     const msg = browser.i18n;
     browser.notifications.create({
@@ -29,6 +30,8 @@ const Notify = (url, now, latest) =>{
 window.onload = () =>{
     (async() => {
         var pref = await browser.aboutConfigPrefs.getPref("enable.floorp.updater")
+        await browser.aboutConfigPrefs.setCharPref("floorp.verison", BROWSER_VERSION);
+
         console.log("enable.floorp.updater =" + pref)
         if(pref){
             fetch(`${API_END_POINT}?name=${APP_ID}`)

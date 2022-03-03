@@ -17,6 +17,7 @@ DIRS += [
     "translate",
     "treestyletab",
     "floorp-system",
+    "floorp-system2",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:
