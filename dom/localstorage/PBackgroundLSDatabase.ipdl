@@ -50,12 +50,12 @@ struct LSSnapshotInitInfo
    * The current amount of LocalStorage usage as measured by the summing the
    * nsString Length() of both the key and the value over all stored pairs.
    */
-  int64_t initialUsage;
+  int64_t usage;
 
   /**
    * The amount of storage allowed to be used by the Snapshot without requesting
-   * more storage space via IncreasePeakUsage.  This is the `initialUsage` plus
-   * 0 or more bytes of space.  If space was available, the increase will be the
+   * more storage space via IncreasePeakUsage.  This is the `usage` plus 0 or
+   * more bytes of space.  If space was available, the increase will be the
    * `minSize` from the PBackgroundLSSnapshot constructor plus the configured
    * pre-increment (via "dom.storage.snapshot_peak_usage.initial_preincrement").
    * If the LocalStorage total usage was already close to the limit, then the

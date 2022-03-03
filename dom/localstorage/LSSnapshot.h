@@ -103,7 +103,7 @@ class LSSnapshot final : public nsIRunnable {
 
   uint32_t mInitLength;
   uint32_t mLength;
-  int64_t mExactUsage;
+  int64_t mUsage;
   int64_t mPeakUsage;
 
   LoadState mLoadState;
