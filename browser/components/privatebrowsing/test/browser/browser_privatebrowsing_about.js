@@ -15,18 +15,20 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
 });
 
 /**
- * Clicks the given link and checks this opens the given URI in the same tab.
+ * Clicks the given link and checks this opens the given URI in the new tab.
  *
  * This function does not return to the previous page.
  */
 async function testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
-  let loadedPromise = BrowserTestUtils.browserLoaded(tab);
+  let loadedPromise = BrowserTestUtils.waitForNewTab(win.gBrowser, url =>
+    url.startsWith(expectedUrl)
+  );
   await SpecialPowers.spawn(tab, [elementId], async function(elemId) {
     content.document.getElementById(elemId).click();
   });
   await loadedPromise;
   is(
-    tab.currentURI.spec,
+    win.gBrowser.selectedBrowser.currentURI.spec,
     expectedUrl,
     `Clicking ${elementId} opened ${expectedUrl} in the same tab.`
   );
