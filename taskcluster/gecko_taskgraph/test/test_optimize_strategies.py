@@ -56,7 +56,6 @@ def generate_tasks(*tasks):
             "optimization",
             "dependencies",
             "soft_dependencies",
-            "release_artifacts",
         ):
             task.setdefault(attr, None)
 
