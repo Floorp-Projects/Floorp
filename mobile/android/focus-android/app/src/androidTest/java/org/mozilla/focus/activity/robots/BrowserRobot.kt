@@ -8,6 +8,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -17,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.hamcrest.Matchers.not
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
@@ -260,6 +262,35 @@ class BrowserRobot {
         )
     }
 
+    fun enterFindInPageQuery(expectedText: String) {
+        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime)
+        findInPageQuery.perform(ViewActions.clearText())
+        mDevice.wait(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
+        findInPageQuery.perform(ViewActions.typeText(expectedText))
+        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
+    }
+
+    fun verifyFindNextInPageResult(ratioCounter: String) {
+        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        val resultsCounter = mDevice.findObject(By.text(ratioCounter))
+        findInPageResult.check(matches(withText((ratioCounter))))
+        findInPageNextButton.perform(click())
+        resultsCounter.wait(Until.textNotEquals(ratioCounter), waitingTime)
+    }
+
+    fun verifyFindPrevInPageResult(ratioCounter: String) {
+        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        val resultsCounter = mDevice.findObject(By.text(ratioCounter))
+        findInPageResult.check(matches(withText((ratioCounter))))
+        findInPagePrevButton.perform(click())
+        resultsCounter.wait(Until.textNotEquals(ratioCounter), waitingTime)
+    }
+
+    fun closeFindInPage() {
+        findInPageCloseButton.perform(click())
+        findInPageQuery.check(matches(not(isDisplayed())))
+    }
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(waitingTime)
@@ -386,6 +417,17 @@ private val openLinkInPrivateTab = onView(withText("Open link in private tab"))
 private val copyLink = onView(withText("Copy link"))
 
 private val shareLink = onView(withText("Share link"))
+
+// Find in page toolbar
+private val findInPageQuery = onView(withId(R.id.find_in_page_query_text))
+
+private val findInPageResult = onView(withId(R.id.find_in_page_result_text))
+
+private val findInPageNextButton = onView(withId(R.id.find_in_page_next_btn))
+
+private val findInPagePrevButton = onView(withId(R.id.find_in_page_prev_btn))
+
+private val findInPageCloseButton = onView(withId(R.id.find_in_page_close_btn))
 
 private val openLinksInAppsMessage = mDevice.findObject(UiSelector().resourceId("$packageName:id/alertTitle"))
 
