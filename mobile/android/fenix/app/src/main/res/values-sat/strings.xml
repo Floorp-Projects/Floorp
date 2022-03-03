@@ -1532,11 +1532,15 @@
     <string name="credit_cards_menu_delete_card">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱛ ᱛᱮ?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">ᱥᱟᱺᱪᱟᱣ</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">ᱥᱟᱺᱪᱟᱣ</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱠᱟᱰ</string>
@@ -1708,6 +1712,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">ᱠᱷᱩᱞᱟᱹᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱴᱮᱵᱽ ᱠᱚ ᱨᱮᱭᱟᱜ ᱫᱳᱞ ᱯᱟᱥᱱᱟᱣ ᱢᱮ</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱴᱮᱵᱽ ᱠᱚ ᱨᱮᱭᱟᱜ ᱫᱳᱞ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">ᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨᱮᱱᱟ</string>
@@ -1755,22 +1764,22 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Firefox ᱥᱩᱫᱷᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢ ᱢᱮ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Firefox ᱥᱩᱫᱷᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢ ᱢᱮ</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">ᱵᱟᱝ ᱪᱟᱹᱞᱩᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱪᱮᱫᱟᱜ ᱵᱚᱸᱫ ᱠᱮᱜᱼᱟᱢ ?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">ᱵᱟᱝ ᱪᱟᱹᱞᱩᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱪᱮᱫᱟᱜ ᱵᱚᱸᱫ ᱠᱮᱜᱼᱟᱢ ?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">ᱤᱧ ᱵᱟᱹᱧ ᱵᱩᱡᱷᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱱᱚᱶᱟ ᱫᱚ ᱪᱮᱞᱠᱟ ᱛᱮ ᱠᱟᱹᱢᱤ ᱠᱟᱱᱟ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">ᱤᱧ ᱵᱟᱹᱧ ᱵᱩᱡᱷᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱱᱚᱶᱟ ᱫᱚ ᱪᱮᱞᱠᱟ ᱛᱮ ᱠᱟᱹᱢᱤ ᱠᱟᱱᱟ</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">ᱤᱧ ᱫᱚ ᱢᱟᱨᱮ ᱴᱮᱵᱽ ᱠᱚ ᱤᱧ ᱛᱮᱜᱮ ᱯᱷᱟᱨᱪᱟ ᱥᱮᱱᱟᱹᱧ ᱠᱟᱱᱟ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">ᱤᱧ ᱫᱚ ᱢᱟᱨᱮ ᱴᱮᱵᱽ ᱠᱚ ᱤᱧ ᱛᱮᱜᱮ ᱯᱷᱟᱨᱪᱟ ᱥᱮᱱᱟᱹᱧ ᱠᱟᱱᱟ</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱡᱤᱞᱤᱧ ᱟ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱡᱤᱞᱤᱧ ᱟ</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱠᱷᱟᱴᱚ ᱜᱮᱭᱟ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱠᱷᱟᱴᱚ ᱜᱮᱭᱟ</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">ᱠᱩᱞ ᱢᱮ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ᱠᱩᱞ ᱢᱮ</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Firefox ᱟᱡ ᱛᱮ ᱠᱷᱩᱞᱟᱹ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ, ᱤᱢᱮᱞ, ᱟᱨ ᱢᱮᱥᱮᱡᱽ ᱨᱮᱭᱟᱜ ᱞᱤᱝᱠ ᱥᱮᱴ ᱢᱮ ᱾ </string>
