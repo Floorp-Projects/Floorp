@@ -771,92 +771,45 @@ add_task(async function bestmatchLearnMore() {
 // Tests the Nimbus exposure event gets recorded after a quick suggest result
 // impression.
 add_task(async function nimbusExposure() {
-  // Exposure event recording is queued to the idle thread, so wait for idle
-  // before we start so any events from previous tasks will have been recorded
-  // and won't interfere with this task.
-  await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
+  await QuickSuggestTestUtils.clearExposureEvent();
 
-  Services.telemetry.clearEvents();
-  NimbusFeatures.urlbar._didSendExposureEvent = false;
-  UrlbarProviderQuickSuggest._recordedExposureEvent = false;
-  let doExperimentCleanup = await QuickSuggestTestUtils.enrollExperiment({
+  await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
       quickSuggestEnabled: true,
       quickSuggestShouldShowOnboardingDialog: false,
     },
+    callback: async () => {
+      // No exposure event should be recorded after only enrolling.
+      await QuickSuggestTestUtils.assertExposureEvent(false);
+
+      // Do a search that doesn't trigger a quick suggest result. No exposure
+      // event should be recorded.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "nimbusExposure no result",
+        fireInputEvent: true,
+      });
+      await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
+      await UrlbarTestUtils.promisePopupClose(window);
+      QuickSuggestTestUtils.assertExposureEvent(false);
+
+      // Do a search that does trigger a quick suggest result. The exposure
+      // event should be recorded.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: TEST_SEARCH_STRING,
+        fireInputEvent: true,
+      });
+      await QuickSuggestTestUtils.assertIsQuickSuggest({
+        window,
+        index: 1,
+        url: TEST_URL,
+      });
+      await QuickSuggestTestUtils.assertExposureEvent(true, "control");
+
+      await UrlbarTestUtils.promisePopupClose(window);
+    },
   });
-
-  // This filter is needed to exclude the enrollment event.
-  let filter = {
-    category: "normandy",
-    method: "expose",
-    object: "nimbus_experiment",
-  };
-
-  // No exposure event should be recorded after only enrolling.
-  Assert.ok(
-    !UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent remains false after enrolling"
-  );
-  TelemetryTestUtils.assertEvents([], filter);
-
-  // Do a search that doesn't trigger a quick suggest result. No exposure event
-  // should be recorded.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "nimbusExposure no result",
-    fireInputEvent: true,
-  });
-  await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
-  await UrlbarTestUtils.promisePopupClose(window);
-  Assert.ok(
-    !UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent remains false after no quick suggest result"
-  );
-  TelemetryTestUtils.assertEvents([], filter);
-
-  // Do a search that does trigger a quick suggest result. The exposure event
-  // should be recorded.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_SEARCH_STRING,
-    fireInputEvent: true,
-  });
-  await QuickSuggestTestUtils.assertIsQuickSuggest({
-    window,
-    index: 1,
-    url: TEST_URL,
-  });
-  Assert.ok(
-    UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent is true after showing quick suggest result"
-  );
-
-  // The event recording is queued to the idle thread when the search starts, so
-  // likewise queue the assert to idle instead of doing it immediately.
-  await new Promise(resolve => {
-    Services.tm.idleDispatchToMainThread(() => {
-      TelemetryTestUtils.assertEvents(
-        [
-          {
-            category: "normandy",
-            method: "expose",
-            object: "nimbus_experiment",
-            extra: {
-              branchSlug: "control",
-              featureId: "urlbar",
-            },
-          },
-        ],
-        filter
-      );
-      resolve();
-    });
-  });
-
-  await UrlbarTestUtils.promisePopupClose(window);
-
-  await doExperimentCleanup();
 });
 
 // The "firefox-suggest-update" notification should cause TelemetryEnvironment

@@ -327,6 +327,13 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["ui.popup.disable_autohide", false],
 ]);
 
+// Default values for Nimbus urlbar variables that do not have fallback prefs.
+// Variables with fallback prefs do not need to be defined here because their
+// defaults are the values of their fallbacks.
+const NIMBUS_DEFAULTS = {
+  isBestMatchExperiment: false,
+};
+
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
 // in mozIPlacesAutoComplete.
 const SUGGEST_PREF_TO_BEHAVIOR = {
@@ -1177,7 +1184,9 @@ class Preferences {
 
   get _nimbus() {
     if (!this.__nimbus) {
-      this.__nimbus = NimbusFeatures.urlbar.getAllVariables();
+      this.__nimbus = NimbusFeatures.urlbar.getAllVariables({
+        defaultValues: NIMBUS_DEFAULTS,
+      });
     }
     return this.__nimbus;
   }
