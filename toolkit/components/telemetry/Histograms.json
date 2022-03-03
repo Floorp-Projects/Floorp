@@ -13564,13 +13564,13 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "110",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668, 1570634, 1606206, 1685399]
+    "bug_numbers": [1289668, 1570634, 1606206, 1685399, 1754648]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["content"],
