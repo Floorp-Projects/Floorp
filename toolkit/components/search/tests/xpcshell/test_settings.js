@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { getAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
-);
-
 const legacyUseSavedOrderPrefName =
   SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
 
@@ -26,6 +22,7 @@ add_task(async function setup() {
 
   await SearchTestUtils.useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 });
 
 async function loadSettingsFile(settingsFile, setVersion) {
@@ -55,15 +52,14 @@ async function checkLoadSettingProperties(
   expectedUseDBValue
 ) {
   info("init search service");
+  let ss = Services.search.wrappedJSObject;
 
   await loadSettingsFile(settingsFile, setVersion);
 
   const settingsFileWritten = promiseAfterSettings();
-  let ss = new SearchService();
-  let result = await ss.init();
 
-  info("init'd search service");
-  Assert.ok(Components.isSuccessCode(result));
+  await ss.reset();
+  await Services.search.init();
 
   await settingsFileWritten;
 
@@ -104,7 +100,6 @@ async function checkLoadSettingProperties(
   );
 
   removeSettingsFile();
-  ss._removeObservers();
 }
 
 add_task(async function test_legacy_setting_engine_properties() {
@@ -124,14 +119,13 @@ add_task(async function test_current_setting_engine_properties() {
 
 add_task(async function test_settings_metadata_properties() {
   info("init search service");
+  let ss = Services.search.wrappedJSObject;
+
   await loadSettingsFile("data/search.json");
 
   const settingsFileWritten = promiseAfterSettings();
-  let ss = new SearchService();
-  let result = await ss.init();
-
-  info("init'd search service");
-  Assert.ok(Components.isSuccessCode(result));
+  await ss.reset();
+  await Services.search.init();
 
   await settingsFileWritten;
 
@@ -152,19 +146,21 @@ add_task(async function test_settings_metadata_properties() {
   }
 
   removeSettingsFile();
-  ss._removeObservers();
 });
 
 /**
  * Test that the JSON settings written in the profile is correct.
  */
 add_task(async function test_settings_write() {
+  let ss = Services.search.wrappedJSObject;
   info("test settings writing");
 
   await loadSettingsFile("data/search.json");
 
   const settingsFileWritten = promiseAfterSettings();
+  await ss.reset();
   await Services.search.init();
+
   await settingsFileWritten;
   removeSettingsFile();
 
