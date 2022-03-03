@@ -436,11 +436,24 @@ class MozillaSocorroService(
                         "Content-Type: application/octet-stream\r\n\r\n"
                     ).toByteArray()
             )
+        } catch (e: IOException) {
+            logger.error("failed to write boundary", e)
+            return
+        }
+
+        try {
             val fileInputStream = FileInputStream(file).channel
             fileInputStream.transferTo(0, fileInputStream.size(), Channels.newChannel(os))
             fileInputStream.close()
         } catch (e: IOException) {
             logger.error("failed to send file", e)
+        }
+
+        try {
+            // Add EOL to separate from the next part
+            os.write("\r\n".toByteArray())
+        } catch (e: IOException) {
+            logger.error("failed to write EOL", e)
         }
     }
 
