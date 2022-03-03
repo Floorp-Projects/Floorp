@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsICommandLineHandler.idl"
 
 interface nsICommandLine;
 
 /**
  * Import and run named backgroundtask implementations.
  */
-[scriptable, function, uuid(4d48c536-e16f-4699-8f9c-add4f28f92f0)]
-interface nsIBackgroundTasksManager : nsISupports
+[scriptable, uuid(4d48c536-e16f-4699-8f9c-add4f28f92f0)]
+interface nsIBackgroundTasksManager : nsICommandLineHandler
 {
   /**
    * Run the named background task.

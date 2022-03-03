@@ -136,10 +136,9 @@ nsresult BackgroundTasks::RunBackgroundTask(nsICommandLine* aCmdLine) {
   }
 
   nsCOMPtr<nsIBackgroundTasksManager> manager =
-      do_ImportModule("resource://gre/modules/BackgroundTasksManager.jsm",
-                      "BackgroundTasksManager", fallible);
+      do_GetService("@mozilla.org/backgroundtasksmanager;1");
 
-  NS_ENSURE_TRUE(manager, NS_ERROR_FAILURE);
+  MOZ_RELEASE_ASSERT(manager, "Could not get background tasks manager service");
 
   NS_ConvertASCIItoUTF16 name(task.ref().get());
   Unused << manager->RunBackgroundTaskNamed(name, aCmdLine);

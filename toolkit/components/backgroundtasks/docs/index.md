@@ -44,7 +44,7 @@ The exit codes 2-4 have special meaning:
 
 See [`BackgroundTasksManager.EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
 
-## Test-only Background Tasks
+## Test-only background tasks
 
 There is special support for test-only background tasks.  Add to your `moz.build` file a stanza like:
 
@@ -55,6 +55,10 @@ TESTING_JS_MODULES.backgroundtasks += [
 ```
 
 For more details, see [`XPCSHELL_TESTING_MODULES_URI`](https://searchfox.org/mozilla-central/search?q=XPCSHELL_TESTING_MODULES_URI).
+
+## Debugging background tasks
+
+Background task mode supports using the JavaScript debugger and the Firefox Devtools and Browser Toolbox.  When invoked with the command line parameters `--jsdebugger` (and optionally `--wait-for-jsdebugger`), the background task framework will launch a Browser Toolbox, connect to the background task, and pause execution at the first line of the task implementation.  The Browser Toolbox is launched with a temporary profile (located inside the transient temporary profile the background task itself creates, for historical reasons.)  The Browser Toolbox profile's preferences are copied from the default browsing profile, allowing to configure devtools preferences.  (The `--start-debugger-server` command line option is also recognized; see the output of `firefox --backgroundtask success --attach-console --help` for details.)
 
 ## The background task mode runtime environment
 

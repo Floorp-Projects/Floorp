@@ -41,6 +41,10 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
+    "dbg-actors.js",
+]
+
+EXTRA_JS_MODULES.backgroundtasks += [
     "BackgroundTask_exception.jsm",
     "BackgroundTask_failure.jsm",
     "BackgroundTask_success.jsm",
