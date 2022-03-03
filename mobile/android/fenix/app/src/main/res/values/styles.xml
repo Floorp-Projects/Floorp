@@ -93,7 +93,6 @@
         <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_normal_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_normal_theme</item>
-        <item name="swipeDeleteBackground">@color/swipe_delete_background_normal_theme</item>
         <item name="onboardingDarkGradientStartBackground">@color/photonViolet70</item>
         <item name="onboardingDarkGradientEndBackground">@color/photonViolet40</item>
         <item name="onboardingSelected">@color/onboarding_illustration_selected_normal_theme</item>
@@ -284,7 +283,6 @@
         <item name="fillLinkFromClipboard">@color/accent_high_contrast_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
-        <item name="swipeDeleteBackground">@color/swipe_delete_background_private_theme</item>
         <item name="onboardingDarkGradientStartBackground">@color/photonViolet60</item>
         <item name="onboardingDarkGradientEndBackground">@color/photonPurple50</item>
         <item name="onboardingSelected">@color/accent_private_theme</item>

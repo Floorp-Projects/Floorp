@@ -69,7 +69,6 @@
     <attr name="fillLinkFromClipboard" format="reference"/>
     <attr name="syncDisconnected" format="reference" />
     <attr name="syncDisconnectedBackground" format="reference" />
-    <attr name="swipeDeleteBackground" format="reference" />
     <attr name="onboardingDarkGradientStartBackground" format="reference" />
     <attr name="onboardingDarkGradientEndBackground" format="reference" />
     <attr name="onboardingSelected" format="reference"/>

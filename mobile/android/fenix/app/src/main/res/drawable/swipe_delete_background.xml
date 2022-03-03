@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/swipe_delete_background_normal_theme" />
+    <solid android:color="@color/fx_mobile_layer_color_3" />
 </shape>

@@ -5,5 +5,5 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
        android:shape="rectangle">
-    <solid android:color="?swipeDeleteBackground" />
+    <solid android:color="?layer3" />
 </shape>
