@@ -768,12 +768,12 @@ bool DebuggerObject::CallData::isFrozenMethod() {
 }
 
 bool DebuggerObject::CallData::getOwnPropertyNamesMethod() {
-  Rooted<IdVector> ids(cx, IdVector(cx));
+  RootedIdVector ids(cx);
   if (!DebuggerObject::getOwnPropertyNames(cx, object, &ids)) {
     return false;
   }
 
-  RootedObject obj(cx, IdVectorToArray(cx, ids));
+  JSObject* obj = IdVectorToArray(cx, ids);
   if (!obj) {
     return false;
   }
@@ -783,12 +783,12 @@ bool DebuggerObject::CallData::getOwnPropertyNamesMethod() {
 }
 
 bool DebuggerObject::CallData::getOwnPropertySymbolsMethod() {
-  Rooted<IdVector> ids(cx, IdVector(cx));
+  RootedIdVector ids(cx);
   if (!DebuggerObject::getOwnPropertySymbols(cx, object, &ids)) {
     return false;
   }
 
-  RootedObject obj(cx, IdVectorToArray(cx, ids));
+  JSObject* obj = IdVectorToArray(cx, ids);
   if (!obj) {
     return false;
   }
@@ -798,12 +798,12 @@ bool DebuggerObject::CallData::getOwnPropertySymbolsMethod() {
 }
 
 bool DebuggerObject::CallData::getOwnPrivatePropertiesMethod() {
-  Rooted<IdVector> ids(cx, IdVector(cx));
+  RootedIdVector ids(cx);
   if (!DebuggerObject::getOwnPrivateProperties(cx, object, &ids)) {
     return false;
   }
 
-  RootedObject obj(cx, IdVectorToArray(cx, ids));
+  JSObject* obj = IdVectorToArray(cx, ids);
   if (!obj) {
     return false;
   }
@@ -1946,30 +1946,31 @@ bool DebuggerObject::getPrototypeOf(JSContext* cx, HandleDebuggerObject object,
 /* static */
 bool DebuggerObject::getOwnPropertyNames(JSContext* cx,
                                          HandleDebuggerObject object,
-                                         MutableHandle<IdVector> result) {
-  RootedObject referent(cx, object->referent());
+                                         MutableHandleIdVector result) {
+  MOZ_ASSERT(result.empty());
 
-  RootedIdVector ids(cx);
+  RootedObject referent(cx, object->referent());
   {
     Maybe<AutoRealm> ar;
     EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
-    if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids)) {
+    if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN,
+                         result)) {
       return false;
     }
   }
 
-  for (size_t i = 0; i < ids.length(); i++) {
-    cx->markId(ids[i]);
+  for (size_t i = 0; i < result.length(); i++) {
+    cx->markId(result[i]);
   }
 
-  return result.append(ids.begin(), ids.end());
+  return true;
 }
 
-bool GetSymbolPropertyKeys(JSContext* cx, HandleDebuggerObject object,
-                           JS::MutableHandleIdVector props,
-                           bool includePrivate) {
+static bool GetSymbolPropertyKeys(JSContext* cx, HandleDebuggerObject object,
+                                  JS::MutableHandleIdVector props,
+                                  bool includePrivate) {
   RootedObject referent(cx, object->referent());
 
   {
@@ -1994,50 +1995,49 @@ bool GetSymbolPropertyKeys(JSContext* cx, HandleDebuggerObject object,
 /* static */
 bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
                                            HandleDebuggerObject object,
-                                           MutableHandle<IdVector> result) {
-  RootedIdVector ids(cx);
-  if (!GetSymbolPropertyKeys(cx, object, &ids, false)) {
+                                           MutableHandleIdVector result) {
+  MOZ_ASSERT(result.empty());
+
+  if (!GetSymbolPropertyKeys(cx, object, result, false)) {
     return false;
   }
 
-  for (size_t i = 0; i < ids.length(); i++) {
-    cx->markId(ids[i]);
+  for (size_t i = 0; i < result.length(); i++) {
+    cx->markAtom(result[i].toSymbol());
   }
 
-  return result.append(ids.begin(), ids.end());
+  return true;
 }
 
 /* static */
 bool DebuggerObject::getOwnPrivateProperties(JSContext* cx,
                                              HandleDebuggerObject object,
-                                             MutableHandle<IdVector> result) {
-  RootedIdVector ids(cx);
-  if (!GetSymbolPropertyKeys(cx, object, &ids, true)) {
+                                             MutableHandleIdVector result) {
+  MOZ_ASSERT(result.empty());
+
+  if (!GetSymbolPropertyKeys(cx, object, result, true)) {
     return false;
   }
 
-  for (size_t i = 0; i < ids.length(); i++) {
-    PropertyKey id = ids[i];
-
-    if (id.isPrivateName()) {
-      // Private *methods* create a Private Brand, a special private name
-      // stamped onto the symbol, to indicate it is possible to execute private
-      // methods from the class on this object. We don't want to return such
-      // items here, so we check if we're dealing with a private property, e.g.
-      // the Symbol description starts with a "#" character
-      JSAtom* privateDescription = id.toSymbol()->description();
-      char16_t firstChar;
-      if (!privateDescription->getChar(cx, 0, &firstChar)) {
-        return false;
-      }
-
-      if (firstChar == '#') {
-        cx->markId(id);
-        if (!result.append(id)) {
-          return false;
-        }
-      }
+  result.eraseIf([](PropertyKey key) {
+    if (!key.isPrivateName()) {
+      return true;
     }
+    // Private *methods* create a Private Brand, a special private name
+    // stamped onto the symbol, to indicate it is possible to execute private
+    // methods from the class on this object. We don't want to return such
+    // items here, so we check if we're dealing with a private property, e.g.
+    // the Symbol description starts with a "#" character.
+    JSAtom* privateDescription = key.toSymbol()->description();
+    if (privateDescription->length() == 0) {
+      return true;
+    }
+    char16_t firstChar = privateDescription->latin1OrTwoByteChar(0);
+    return firstChar != '#';
+  });
+
+  for (size_t i = 0; i < result.length(); i++) {
+    cx->markAtom(result[i].toSymbol());
   }
 
   return true;

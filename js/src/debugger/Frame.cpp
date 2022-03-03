@@ -1921,7 +1921,7 @@ const JSFunctionSpec DebuggerFrame::methods_[] = {
     JS_DEBUG_FN("eval", evalMethod, 1),
     JS_DEBUG_FN("evalWithBindings", evalWithBindingsMethod, 1), JS_FS_END};
 
-JSObject* js::IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
+JSObject* js::IdVectorToArray(JSContext* cx, HandleIdVector ids) {
   if (MOZ_UNLIKELY(ids.length() > UINT32_MAX)) {
     ReportAllocationOverflow(cx);
     return nullptr;
