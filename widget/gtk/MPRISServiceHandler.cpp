@@ -19,6 +19,7 @@
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "WidgetUtilsGtk.h"
 
 #define LOGMPRIS(msg, ...)                   \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
@@ -654,17 +655,25 @@ bool MPRISServiceHandler::InitLocalImageFolder() {
     return true;
   }
 
-  nsresult rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
-                                       getter_AddRefs(mLocalImageFolder));
+  nsresult rv = NS_ERROR_FAILURE;
+  if (IsRunningUnderFlatpak()) {
+    // The XDG_DATA_HOME points to the same location in the host and guest
+    // filesystem.
+    if (const auto* xdgDataHome = g_getenv("XDG_DATA_HOME")) {
+      rv = NS_NewNativeLocalFile(nsDependentCString(xdgDataHome), true,
+                                 getter_AddRefs(mLocalImageFolder));
+    }
+  } else {
+    rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
+                                getter_AddRefs(mLocalImageFolder));
+  }
+
   if (NS_FAILED(rv) || !mLocalImageFolder) {
     LOGMPRIS("Failed to get the image folder");
     return false;
   }
 
-  auto cleanup =
-      MakeScopeExit([this, self = RefPtr<MPRISServiceHandler>(this)] {
-        mLocalImageFolder = nullptr;
-      });
+  auto cleanup = MakeScopeExit([&] { mLocalImageFolder = nullptr; });
 
   rv = mLocalImageFolder->Append(u"firefox-mpris"_ns);
   if (NS_FAILED(rv)) {
