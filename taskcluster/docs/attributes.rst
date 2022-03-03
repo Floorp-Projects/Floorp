@@ -295,6 +295,11 @@ artifact_map
 For beetmover jobs, this indicates which yaml file should be used to
 generate the upstream artifacts and payload instructions to the task.
 
+release_artifacts
+=================
+A set of artifacts that are candidates for downstream release tasks to operate
+on.
+
 batch
 =====
 Used by `perftest` to indicates that a task can be run as a batch.
