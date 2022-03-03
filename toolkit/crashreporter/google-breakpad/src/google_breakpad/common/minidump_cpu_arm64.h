@@ -91,6 +91,10 @@ typedef struct {
                                MD_CONTEXT_ARM64_FLOATING_POINT)
 #define MD_CONTEXT_ARM64_ALL (MD_CONTEXT_ARM64_FULL | MD_CONTEXT_ARM64_DEBUG)
 
+/* Use the same 32-bit alignment when accessing these structures from 64-bit
+ * code as is used natively in 32-bit code. */
+#pragma pack(push, 4)
+
 typedef struct {
   /* Determines which fields of this struct are populated */
   uint32_t context_flags;
@@ -129,10 +133,6 @@ typedef struct {
   /* 32 128-bit floating point registers, d0 .. d31. */
   uint128_struct regs[MD_FLOATINGSAVEAREA_ARM64_FPR_COUNT];
 } MDFloatingSaveAreaARM64_Old;
-
-/* Use the same 32-bit alignment when accessing this structure from 64-bit code
- * as is used natively in 32-bit code. */
-#pragma pack(push, 4)
 
 typedef struct {
   /* The next field determines the layout of the structure, and which parts
