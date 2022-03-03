@@ -140,12 +140,8 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
-    <color name="tab_tray_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
     <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonDarkGrey05</color>
-
-    <!-- Tab History -->
-    <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/fx_mobile_text_color_primary</color>

@@ -8,6 +8,8 @@
     <!-- Layers -->
     <!-- Search -->
     <attr name="layer3" format="reference" />
+    <!-- Selected tab -->
+    <attr name="layerNonOpaque" format="reference" />
     <attr name="scrim" format="reference" />
 
     <!-- Action -->
@@ -75,9 +77,6 @@
     <!-- Tab tray -->
     <attr name="tabTrayThumbnailItemBackground" format="reference" />
     <attr name="tabTrayThumbnailIcon" format="reference" />
-
-    <!-- Tab History -->
-    <attr name="tabHistoryItemSelectedBackground" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />

@@ -138,7 +138,7 @@
     <!-- App Bar Top (edit), Text Cursor, Selected Tab Check -->
     <color name="fx_mobile_private_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Selected tab -->
-    <color name="fx_mobile_private_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet50A32</color>
+    <color name="fx_mobile_private_layer_color_accent_nonopaque">@color/photonViolet50A32</color>
     <color name="fx_mobile_private_layer_color_scrim">@color/photonDarkGrey90A95</color>
     <!-- Tooltip -->
     <color name="fx_mobile_private_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet70</color>
@@ -248,9 +248,6 @@
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
 
-    <!-- Tab Tray -->
-    <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
-
     <!-- Private theme color palette -->
     <color name="accent_private_theme">@color/photonViolet50</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
@@ -280,12 +277,8 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
-    <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
     <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonLightGrey60</color>
-
-    <!-- Tab History -->
-    <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_normal_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>

@@ -32,7 +32,7 @@ class TabHistoryViewHolder(
 
         if (item.isSelected) {
             view.setBackgroundColor(
-                view.context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground)
+                view.context.getColorFromAttr(R.attr.layerNonOpaque)
             )
         } else {
             view.background = null

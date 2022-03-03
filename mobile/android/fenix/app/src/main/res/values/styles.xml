@@ -36,6 +36,8 @@
         <!-- Layers -->
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
+        <!-- Selected tab -->
+        <item name="layerNonOpaque">@color/fx_mobile_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_layer_color_scrim</item>
 
         <!-- Action -->
@@ -108,9 +110,6 @@
 
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
-
-        <!-- Tab History -->
-        <item name="tabHistoryItemSelectedBackground">@color/tab_history_item_selected_background_normal_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
@@ -229,6 +228,8 @@
         <!-- Layers -->
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
+        <!-- Selected tab -->
+        <item name="layerNonOpaque">@color/fx_mobile_private_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_private_layer_color_scrim</item>
 
         <!-- Action -->
@@ -300,9 +301,6 @@
         <!-- Tab Tray -->
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
-
-        <!-- Tab History -->
-        <item name="tabHistoryItemSelectedBackground">@color/tab_tray_item_selected_background_dark_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
