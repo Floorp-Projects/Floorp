@@ -43,10 +43,10 @@
   color: var(--urlbar-box-hover-text-color);
 }
 
-.identity-box-button:not(:active):focus-visible,
-#tracking-protection-icon-container:not(:active):focus-visible {
+.identity-box-button:focus-visible,
+#tracking-protection-icon-container:focus-visible {
   outline: var(--focus-outline);
-  outline-offset: calc(-1 * var(--focus-outline-width));
+  outline-offset: var(--focus-outline-inset);
 }
 
 .identity-box-button {

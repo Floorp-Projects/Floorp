@@ -69,7 +69,7 @@
 #downloadsSummary:focus-visible,
 .downloadsPanelFooterButton:focus-visible {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
 }
 
 #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
