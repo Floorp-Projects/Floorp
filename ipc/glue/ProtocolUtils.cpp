@@ -138,6 +138,14 @@ void ProtocolErrorBreakpoint(const char* aMsg) {
   printf_stderr("IPDL protocol error: %s\n", aMsg);
 }
 
+void PickleFatalError(const char* aMsg, IProtocol* aActor) {
+  if (aActor) {
+    aActor->FatalError(aMsg);
+  } else {
+    FatalError(aMsg, false);
+  }
+}
+
 void FatalError(const char* aMsg, bool aIsParent) {
 #ifndef FUZZING
   ProtocolErrorBreakpoint(aMsg);
