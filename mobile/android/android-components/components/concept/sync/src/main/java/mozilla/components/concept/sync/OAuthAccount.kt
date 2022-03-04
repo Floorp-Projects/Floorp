@@ -296,6 +296,13 @@ enum class AuthFlowError {
  */
 interface AccountObserver {
     /**
+     * Account state has been resolved and can now be queried.
+     *
+     * @param authenticatedAccount Currently resolved authenticated account, if any.
+     */
+    fun onReady(authenticatedAccount: OAuthAccount?) = Unit
+
+    /**
      * Account just got logged out.
      */
     fun onLoggedOut() = Unit

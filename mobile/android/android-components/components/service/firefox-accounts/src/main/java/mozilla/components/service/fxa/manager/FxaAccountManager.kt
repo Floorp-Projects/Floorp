@@ -173,6 +173,7 @@ open class FxaAccountManager(
     // initialization, instead of triggering the full state machine knowing in advance we'll hit auth problems.
     // See https://github.com/mozilla-mobile/android-components/issues/5102
     @Volatile private var state: State = State.Idle(AccountState.NotAuthenticated)
+    @Volatile private var isAccountManagerReady: Boolean = false
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
     @VisibleForTesting
@@ -337,6 +338,11 @@ open class FxaAccountManager(
      */
     suspend fun start() = withContext(coroutineContext) {
         processQueue(Event.Account.Start)
+
+        if (!isAccountManagerReady) {
+            notifyObservers { onReady(authenticatedAccount()) }
+            isAccountManagerReady = true
+        }
     }
 
     /**
