@@ -177,6 +177,8 @@ class BackgroundServices(
         // unexpected logouts.
         accountManager.register(accountAbnormalities)
 
+        accountManager.register(AccountManagerReadyObserver(accountManagerAvailableQueue))
+
         // Enable push if it's configured.
         push.feature?.let { autoPushFeature ->
             FxaPushSupportFeature(context, accountManager, autoPushFeature, crashReporter)
@@ -190,10 +192,7 @@ class BackgroundServices(
 
         MainScope().launch {
             accountManager.start()
-            accountAbnormalities.accountManagerStarted(accountManager)
         }
-    }.also {
-        accountManagerAvailableQueue.ready()
     }
 
     /**
@@ -201,6 +200,14 @@ class BackgroundServices(
      */
     private val notificationManager by lazyMonitored {
         NotificationManager(context)
+    }
+}
+
+private class AccountManagerReadyObserver(
+    private val accountManagerAvailableQueue: RunWhenReadyQueue
+) : AccountObserver {
+    override fun onReady(authenticatedAccount: OAuthAccount?) {
+        accountManagerAvailableQueue.ready()
     }
 }
 

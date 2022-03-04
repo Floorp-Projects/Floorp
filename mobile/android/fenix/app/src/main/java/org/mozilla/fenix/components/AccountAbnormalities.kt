@@ -89,17 +89,7 @@ class AccountAbnormalities(
         hadAccountPrior = prefPair.second
     }
 
-    /**
-     * Once [accountManager] is initialized, queries it to detect abnormal account states.
-     * Call this right after running [FxaAccountManager.initAsync].
-     *
-     * @param accountManager An instance of [FxaAccountManager].
-     * @param initResult A deferred result of initializing [accountManager].
-     * @return A [Unit] deferred, resolved once [initResult] is resolved and state is processed for abnormalities.
-     */
-    fun accountManagerStarted(
-        accountManager: FxaAccountManager
-    ) {
+    override fun onReady(authenticatedAccount: OAuthAccount?) {
         check(!accountManagerConfigured) { "accountManagerStarted called twice" }
         accountManagerConfigured = true
 
@@ -110,7 +100,7 @@ class AccountAbnormalities(
         // account. This works because our account state is persisted in the application's
         // directory, same as SharedPreferences. If user clears application data, both the
         // fxa state and our flag will be removed.
-        val hasAccountNow = accountManager.authenticatedAccount() != null
+        val hasAccountNow = authenticatedAccount != null
         if (hadAccountPrior && !hasAccountNow) {
             prefs.edit().putBoolean(KEY_HAS_ACCOUNT, false).apply()
 
