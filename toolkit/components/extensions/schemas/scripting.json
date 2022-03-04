@@ -135,7 +135,7 @@
           "ids": {
             "type": "array",
             "optional": true,
-            "description": "The IDs of specific scripts to retrieve with <code>getRegisteredContentScripts()</code>.",
+            "description": "The IDs of specific scripts to retrieve with <code>getRegisteredContentScripts()</code> or to unregister with <code>unregisterContentScripts()</code>.",
             "items": { "type": "string" }
           }
         }
@@ -287,6 +287,26 @@
                 "items": { "$ref": "RegisteredContentScript" }
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "unregisterContentScripts",
+        "type": "function",
+        "description": "Unregisters one or more content scripts for this extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "filter",
+            "$ref": "ContentScriptFilter",
+            "optional": true,
+            "description": "If specified, only unregisters dynamic content scripts which match the filter. Otherwise, all of the extension's dynamic content scripts are unregistered."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked upon completion of the unregistration.",
+            "parameters": []
           }
         ]
       }
