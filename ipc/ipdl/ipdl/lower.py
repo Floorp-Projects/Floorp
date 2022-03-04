@@ -163,10 +163,6 @@ def _backstagePass():
     return ExprCall(ExprVar("mozilla::ipc::PrivateIPDLInterface"))
 
 
-def _iterType(ptr):
-    return Type("PickleIterator", ptr=ptr)
-
-
 def _deleteId():
     return ExprVar("Msg___delete____ID")
 
@@ -1952,8 +1948,8 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
 
 class _ParamTraits:
     var = ExprVar("aVar")
-    msgvar = ExprVar("aMsg")
-    itervar = ExprVar("aIter")
+    writervar = ExprVar("aWriter")
+    readervar = ExprVar("aReader")
     actor = ExprVar("aActor")
 
     @classmethod
@@ -1977,23 +1973,23 @@ class _ParamTraits:
         )
 
     @classmethod
-    def writeSentinel(cls, msgvar, sentinelKey):
+    def writeSentinel(cls, writervar, sentinelKey):
         return [
             Whitespace("// Sentinel = " + repr(sentinelKey) + "\n", indent=True),
             StmtExpr(
                 ExprCall(
-                    ExprSelect(msgvar, "->", "WriteSentinel"),
+                    ExprSelect(writervar, "->", "WriteSentinel"),
                     args=[ExprLiteral.Int(hashfunc(sentinelKey))],
                 )
             ),
         ]
 
     @classmethod
-    def readSentinel(cls, msgvar, itervar, sentinelKey, sentinelFail):
+    def readSentinel(cls, readervar, sentinelKey, sentinelFail):
         # Read the sentinel
         read = ExprCall(
-            ExprSelect(msgvar, "->", "ReadSentinel"),
-            args=[itervar, ExprLiteral.Int(hashfunc(sentinelKey))],
+            ExprSelect(readervar, "->", "ReadSentinel"),
+            args=[ExprLiteral.Int(hashfunc(sentinelKey))],
         )
         ifsentinel = StmtIf(ExprNot(read))
         ifsentinel.addifstmts(sentinelFail)
@@ -2004,13 +2000,13 @@ class _ParamTraits:
         ]
 
     @classmethod
-    def write(cls, var, msgvar, actor, ipdltype=None):
+    def write(cls, var, writervar, actor, ipdltype=None):
         if ipdltype and _cxxTypeNeedsMoveForSend(ipdltype):
             var = ExprMove(var)
-        return ExprCall(ExprVar("WriteIPDLParam"), args=[msgvar, actor, var])
+        return ExprCall(ExprVar("WriteIPDLParam"), args=[writervar, actor, var])
 
     @classmethod
-    def checkedWrite(cls, ipdltype, var, msgvar, sentinelKey, actor):
+    def checkedWrite(cls, ipdltype, var, writervar, sentinelKey, actor):
         assert sentinelKey
         block = Block()
 
@@ -2027,10 +2023,10 @@ class _ParamTraits:
 
         block.addstmts(
             [
-                StmtExpr(cls.write(var, msgvar, actor, ipdltype)),
+                StmtExpr(cls.write(var, writervar, actor, ipdltype)),
             ]
         )
-        block.addstmts(cls.writeSentinel(msgvar, sentinelKey))
+        block.addstmts(cls.writeSentinel(writervar, sentinelKey))
         return block
 
     @classmethod
@@ -2046,7 +2042,7 @@ class _ParamTraits:
             [
                 StmtExpr(
                     ExprCall(
-                        ExprSelect(cls.msgvar, "->", "WriteBytes"),
+                        ExprSelect(cls.writervar, "->", "WriteBytes"),
                         args=[
                             ExprAddrOf(
                                 ExprCall(first.getMethod(thisexpr=cls.var, sel="."))
@@ -2057,7 +2053,7 @@ class _ParamTraits:
                 )
             ]
         )
-        block.addstmts(cls.writeSentinel(cls.msgvar, cls.bulkSentinelKey(fields)))
+        block.addstmts(cls.writeSentinel(cls.writervar, cls.bulkSentinelKey(fields)))
 
         return block
 
@@ -2067,9 +2063,8 @@ class _ParamTraits:
         first = fields[0]
 
         readbytes = ExprCall(
-            ExprSelect(cls.msgvar, "->", "ReadBytesInto"),
+            ExprSelect(cls.readervar, "->", "ReadBytesInto"),
             args=[
-                cls.itervar,
                 ExprAddrOf(ExprCall(first.getMethod(thisexpr=cls.var, sel="->"))),
                 ExprLiteral.Int(size * len(fields)),
             ],
@@ -2080,8 +2075,7 @@ class _ParamTraits:
         block.addstmt(ifbad)
         block.addstmts(
             cls.readSentinel(
-                cls.msgvar,
-                cls.itervar,
+                cls.readervar,
                 cls.bulkSentinelKey(fields),
                 errfnSentinel()(errmsg),
             )
@@ -2094,8 +2088,7 @@ class _ParamTraits:
         cls,
         ipdltype,
         var,
-        msgvar,
-        itervar,
+        readervar,
         errfn,
         paramtype,
         sentinelKey,
@@ -2106,9 +2099,7 @@ class _ParamTraits:
 
         # Read the data
         ifbad = StmtIf(
-            ExprNot(
-                ExprCall(ExprVar("ReadIPDLParam"), args=[msgvar, itervar, actor, var])
-            )
+            ExprNot(ExprCall(ExprVar("ReadIPDLParam"), args=[readervar, actor, var]))
         )
         if not isinstance(paramtype, list):
             paramtype = ["Error deserializing " + paramtype]
@@ -2127,7 +2118,7 @@ class _ParamTraits:
             block.addstmt(ifnull)
 
         block.addstmts(
-            cls.readSentinel(msgvar, itervar, sentinelKey, errfnSentinel(*paramtype))
+            cls.readSentinel(readervar, sentinelKey, errfnSentinel(*paramtype))
         )
 
         return block
@@ -2141,8 +2132,7 @@ class _ParamTraits:
         return cls.checkedRead(
             ipdltype,
             var,
-            cls.msgvar,
-            cls.itervar,
+            cls.readervar,
             errfn=errfn,
             paramtype=what,
             sentinelKey=sentinelKey,
@@ -2175,7 +2165,7 @@ class _ParamTraits:
             MethodDecl(
                 "Write",
                 params=[
-                    Decl(Type("IPC::Message", ptr=True), cls.msgvar.name),
+                    Decl(Type("IPC::MessageWriter", ptr=True), cls.writervar.name),
                     Decl(iprotocoltype, cls.actor.name),
                     Decl(intype, cls.var.name),
                 ],
@@ -2191,8 +2181,7 @@ class _ParamTraits:
             MethodDecl(
                 "Read",
                 params=[
-                    Decl(Type("IPC::Message", ptr=True, const=True), cls.msgvar.name),
-                    Decl(_iterType(ptr=True), cls.itervar.name),
+                    Decl(Type("IPC::MessageReader", ptr=True), cls.readervar.name),
                     Decl(iprotocoltype, cls.actor.name),
                     Decl(outtype, cls.var.name),
                 ],
@@ -2241,14 +2230,14 @@ class _ParamTraits:
             """,
             var=cls.var,
             actor=cls.actor,
-            write=cls.write(ExprVar("id"), cls.msgvar, cls.actor),
+            write=cls.write(ExprVar("id"), cls.writervar, cls.actor),
         )
 
         # bool Read(..) impl
         read = StmtCode(
             """
             mozilla::Maybe<mozilla::ipc::IProtocol*> actor =
-                ${actor}->ReadActor(${msgvar}, ${itervar}, true, ${actortype}, ${protocolid});
+                ${actor}->ReadActor(${readervar}, true, ${actortype}, ${protocolid});
             if (actor.isNothing()) {
                 return false;
             }
@@ -2257,8 +2246,7 @@ class _ParamTraits:
             return true;
             """,
             actor=cls.actor,
-            msgvar=cls.msgvar,
-            itervar=cls.itervar,
+            readervar=cls.readervar,
             actortype=ExprLiteral.String(actortype.name()),
             protocolid=_protocolId(actortype),
             var=cls.var,
@@ -2289,7 +2277,7 @@ class _ParamTraits:
                     writefield = cls.checkedWrite(
                         f.ipdltype,
                         get(".", f),
-                        cls.msgvar,
+                        cls.writervar,
                         sentinelKey=f.basename,
                         actor=cls.actor,
                     )
@@ -2349,7 +2337,11 @@ class _ParamTraits:
         write = prelude + [
             StmtDecl(Decl(Type.INT, typevar.name), init=ud.callType(cls.var)),
             cls.checkedWrite(
-                None, typevar, cls.msgvar, sentinelKey=uniontype.name(), actor=cls.actor
+                None,
+                typevar,
+                cls.writervar,
+                sentinelKey=uniontype.name(),
+                actor=cls.actor,
             ),
             Whitespace.NL,
             writeswitch,
@@ -2377,7 +2369,7 @@ class _ParamTraits:
             wstmt = cls.checkedWrite(
                 c.ipdltype,
                 ExprCall(ExprSelect(cls.var, ".", c.getTypeName())),
-                cls.msgvar,
+                cls.writervar,
                 sentinelKey=c.enum(),
                 actor=cls.actor,
             )
@@ -3996,8 +3988,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.msgvar = msgvar
         replyvar = ExprVar("reply__")
         self.replyvar = replyvar
-        itervar = ExprVar("iter__")
-        self.itervar = itervar
         var = ExprVar("v__")
         self.var = var
         # for ctor recv cases, we can't read the actor ID into a PFoo*
@@ -5030,6 +5020,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar
+        writervar = ExprVar("writer__")
         routingId = self.protocol.routingId(fromActor)
         this = ExprVar.THIS
         if md.decl.type.isDtor():
@@ -5040,12 +5031,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(
                     Decl(Type("IPC::Message", ptr=True), msgvar.name),
                     init=ExprCall(ExprVar(md.pqMsgCtorFunc()), args=[routingId]),
-                )
+                ),
+                StmtDecl(
+                    Decl(Type("IPC::MessageWriter"), writervar.name),
+                    initargs=[ExprDeref(msgvar), this],
+                ),
             ]
             + [Whitespace.NL]
             + [
                 _ParamTraits.checkedWrite(
-                    p.ipdltype, p.var(), msgvar, sentinelKey=p.name, actor=this
+                    p.ipdltype,
+                    p.var(),
+                    ExprAddrOf(writervar),
+                    sentinelKey=p.name,
+                    actor=this,
                 )
                 for p in md.params
             ]
@@ -5070,7 +5069,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             _ParamTraits.checkedWrite(
                 p.ipdltype,
                 paramValue(idx),
-                self.replyvar,
+                ExprAddrOf(ExprVar("writer__")),
                 sentinelKey=p.name,
                 actor=ExprVar("self__"),
             )
@@ -5088,6 +5087,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 ${resolvertype} resolver = [resolver__ = std::move(resolver__)](${resolveType} aParam) {
                     resolver__->Resolve([&] (IPC::Message* ${replyvar}, IProtocol* self__) {
+                        IPC::MessageWriter writer__(*${replyvar}, self__);
                         $*{serializeParams}
                         ${logSendingReply}
                     });
@@ -5127,13 +5127,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         ExprCall(ExprVar(md.pqReplyCtorFunc()), args=[routingId]),
                     )
                 ),
+                StmtDecl(
+                    Decl(Type("IPC::MessageWriter"), "writer__"),
+                    initargs=[ExprDeref(replyvar), ExprVar.THIS],
+                ),
                 Whitespace.NL,
             ]
             + [
                 _ParamTraits.checkedWrite(
                     r.ipdltype,
                     r.var(),
-                    replyvar,
+                    ExprAddrOf(ExprVar("writer__")),
                     sentinelKey=r.name,
                     actor=ExprVar.THIS,
                 )
@@ -5155,8 +5159,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def deserializeMessage(self, md, side, errfn, errfnSent):
         msgvar = self.msgvar
-        itervar = self.itervar
         msgexpr = ExprAddrOf(msgvar)
+        readervar = ExprVar("reader__")
         isctor = md.decl.type.isCtor()
         stmts = [
             self.logMessage(md, msgexpr, "Received ", receiving=True),
@@ -5178,8 +5182,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _ParamTraits.checkedRead(
                     None,
                     ExprAddrOf(handlevar),
-                    msgexpr,
-                    ExprAddrOf(self.itervar),
+                    ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % handletype.name,
                     sentinelKey="actor",
@@ -5210,8 +5213,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _ParamTraits.checkedRead(
                     p.ipdltype,
                     ExprAddrOf(p.var()),
-                    msgexpr,
-                    ExprAddrOf(itervar),
+                    ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % p.ipdltype.name(),
                     sentinelKey=p.name,
@@ -5226,13 +5228,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             (
                 [
                     StmtDecl(
-                        Decl(_iterType(ptr=False), self.itervar.name), initargs=[msgvar]
+                        Decl(Type("IPC::MessageReader"), readervar.name),
+                        initargs=[msgvar, ExprVar.THIS],
                     )
                 ]
                 + decls
                 + [Whitespace.NL]
                 + reads
-                + [self.endRead(msgvar, itervar)]
+                + [StmtCode("${reader}.EndRead();\n", reader=readervar)]
             )
         )
 
@@ -5240,7 +5243,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def deserializeAsyncReply(self, md, side, errfn, errfnSent):
         msgvar = self.msgvar
-        itervar = self.itervar
+        readervar = ExprVar("reader__")
         msgexpr = ExprAddrOf(msgvar)
         isctor = md.decl.type.isCtor()
         resolve = ExprVar("resolve__")
@@ -5253,28 +5256,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtCode(
                 """
                 bool resolve__ = false;
-                if (!ReadIPDLParam(${msgexpr}, &${itervar}, this, &resolve__)) {
+                if (!ReadIPDLParam(&${readervar}, this, &resolve__)) {
                     FatalError("Error deserializing bool");
                     return MsgValueError;
                 }
                 """,
-                msgexpr=msgexpr,
-                itervar=itervar,
+                readervar=readervar,
             ),
         ]
         desrej = [
             StmtCode(
                 """
                 ResponseRejectReason reason__{};
-                if (!ReadIPDLParam(${msgexpr}, &${itervar}, this, &reason__)) {
+                if (!ReadIPDLParam(&${readervar}, this, &reason__)) {
                     FatalError("Error deserializing ResponseRejectReason");
                     return MsgValueError;
                 }
+                ${readervar}.EndRead();
                 """,
-                msgexpr=msgexpr,
-                itervar=itervar,
+                readervar=readervar,
             ),
-            self.endRead(msgvar, itervar),
         ]
         prologue = [
             self.logMessage(md, msgexpr, "Received ", receiving=True),
@@ -5286,7 +5287,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             return prologue
 
         prologue.extend(
-            [StmtDecl(Decl(_iterType(ptr=False), itervar.name), initargs=[msgvar])]
+            [
+                StmtDecl(
+                    Decl(Type("IPC::MessageReader"), readervar.name),
+                    initargs=[msgvar, ExprVar.THIS],
+                )
+            ]
             + desresolve
         )
 
@@ -5301,8 +5307,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _ParamTraits.checkedRead(
                     None,
                     ExprAddrOf(handlevar),
-                    msgexpr,
-                    ExprAddrOf(itervar),
+                    ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % handletype.name,
                     sentinelKey="actor",
@@ -5324,8 +5329,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _ParamTraits.checkedRead(
                     p.ipdltype,
                     ExprAddrOf(p.var()),
-                    msgexpr,
-                    ExprAddrOf(itervar),
+                    ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % p.ipdltype.name(),
                     sentinelKey=p.name,
@@ -5334,7 +5338,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 )
                 for p in md.returns[start:]
             ]
-            + [self.endRead(msgvar, itervar)]
+            + [StmtCode("${reader}.EndRead();", reader=readervar)]
         )
 
         return resolve, reason, prologue, desrej, stmts
@@ -5349,7 +5353,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if 0 == len(md.returns):
             return stmts
 
-        itervar = self.itervar
+        readervar = ExprVar("reader__")
         declstmts = []
         if decls:
             declstmts = [
@@ -5360,7 +5364,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             [
                 Whitespace.NL,
                 StmtDecl(
-                    Decl(_iterType(ptr=False), itervar.name), initargs=[self.replyvar]
+                    Decl(Type("IPC::MessageReader"), readervar.name),
+                    initargs=[self.replyvar, ExprVar.THIS],
                 ),
             ]
             + declstmts
@@ -5369,8 +5374,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _ParamTraits.checkedRead(
                     r.ipdltype,
                     r.var(),
-                    ExprAddrOf(self.replyvar),
-                    ExprAddrOf(self.itervar),
+                    ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % r.ipdltype.name(),
                     sentinelKey=r.name,
@@ -5379,7 +5383,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 )
                 for r in md.returns
             ]
-            + [self.endRead(self.replyvar, itervar)]
+            + [StmtCode("${reader}.EndRead();", reader=readervar)]
         )
 
         return stmts
@@ -5628,15 +5632,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             saveIdStmts = []
         return idvar, saveIdStmts
-
-    def endRead(self, msgexpr, iterexpr):
-        return StmtCode(
-            """
-            ${msg}.EndRead(${iter}, ${msg}.type());
-            """,
-            msg=msgexpr,
-            iter=iterexpr,
-        )
 
 
 class _GenerateProtocolParentCode(_GenerateProtocolActorCode):
