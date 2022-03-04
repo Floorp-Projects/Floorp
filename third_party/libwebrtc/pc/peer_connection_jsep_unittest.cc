@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/transport/field_trial_based_config.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_media_engine_defaults.h"
 #include "pc/media_session.h"
@@ -47,9 +48,11 @@ PeerConnectionFactoryDependencies CreatePeerConnectionFactoryDependencies() {
   dependencies.network_thread = rtc::Thread::Current();
   dependencies.signaling_thread = rtc::Thread::Current();
   dependencies.task_queue_factory = CreateDefaultTaskQueueFactory();
+  dependencies.trials = std::make_unique<FieldTrialBasedConfig>();
   cricket::MediaEngineDependencies media_deps;
   media_deps.task_queue_factory = dependencies.task_queue_factory.get();
   media_deps.adm = FakeAudioCaptureModule::Create();
+  media_deps.trials = dependencies.trials.get();
   SetMediaEngineDefaults(&media_deps);
   dependencies.media_engine = cricket::CreateMediaEngine(std::move(media_deps));
   dependencies.call_factory = CreateCallFactory();

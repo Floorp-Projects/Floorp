@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "api/transport/field_trial_based_config.h"
 #include "api/video/video_frame.h"
 #include "call/audio_receive_stream.h"
 #include "call/audio_send_stream.h"
@@ -362,6 +363,10 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
 
   webrtc::Call::Stats GetStats() const override;
 
+  const webrtc::WebRtcKeyValueConfig& trials() const override {
+    return trials_;
+  }
+
   void SignalChannelNetworkState(webrtc::MediaType media,
                                  webrtc::NetworkState state) override;
   void OnAudioTransportOverheadChanged(
@@ -385,6 +390,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
 
   int num_created_send_streams_;
   int num_created_receive_streams_;
+  webrtc::FieldTrialBasedConfig trials_;
 };
 
 }  // namespace cricket

@@ -43,6 +43,7 @@
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/video_decoder_factory.h"
@@ -646,12 +647,14 @@ class PeerConnectionFactoryForTest : public webrtc::PeerConnectionFactory {
     dependencies.network_thread = rtc::Thread::Current();
     dependencies.signaling_thread = rtc::Thread::Current();
     dependencies.task_queue_factory = CreateDefaultTaskQueueFactory();
+    dependencies.trials = std::make_unique<FieldTrialBasedConfig>();
     cricket::MediaEngineDependencies media_deps;
     media_deps.task_queue_factory = dependencies.task_queue_factory.get();
     // Use fake audio device module since we're only testing the interface
     // level, and using a real one could make tests flaky when run in parallel.
     media_deps.adm = FakeAudioCaptureModule::Create();
     SetMediaEngineDefaults(&media_deps);
+    media_deps.trials = dependencies.trials.get();
     dependencies.media_engine =
         cricket::CreateMediaEngine(std::move(media_deps));
     dependencies.call_factory = webrtc::CreateCallFactory();

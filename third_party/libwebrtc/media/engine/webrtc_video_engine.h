@@ -19,6 +19,7 @@
 
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
@@ -97,7 +98,8 @@ class WebRtcVideoEngine : public VideoEngineInterface {
   // and external hardware codecs.
   WebRtcVideoEngine(
       std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory,
-      std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory);
+      std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory,
+      const webrtc::WebRtcKeyValueConfig& trials);
 
   ~WebRtcVideoEngine() override;
 
@@ -119,6 +121,7 @@ class WebRtcVideoEngine : public VideoEngineInterface {
   const std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory_;
   const std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       bitrate_allocator_factory_;
+  const webrtc::WebRtcKeyValueConfig& trials_;
 };
 
 class WebRtcVideoChannel : public VideoMediaChannel,
@@ -550,7 +553,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void FillSendAndReceiveCodecStats(VideoMediaInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
-  rtc::Thread* worker_thread_;
+  rtc::Thread* const worker_thread_;
   rtc::ThreadChecker thread_checker_;
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
@@ -631,7 +634,18 @@ class EncoderStreamFactory
   EncoderStreamFactory(std::string codec_name,
                        int max_qp,
                        bool is_screenshare,
-                       bool conference_mode);
+                       bool conference_mode)
+      : EncoderStreamFactory(codec_name,
+                             max_qp,
+                             is_screenshare,
+                             conference_mode,
+                             nullptr) {}
+
+  EncoderStreamFactory(std::string codec_name,
+                       int max_qp,
+                       bool is_screenshare,
+                       bool conference_mode,
+                       const webrtc::WebRtcKeyValueConfig* trials);
 
  private:
   std::vector<webrtc::VideoStream> CreateEncoderStreams(
@@ -658,6 +672,8 @@ class EncoderStreamFactory
   // Allows a screenshare specific configuration, which enables temporal
   // layering and various settings.
   const bool conference_mode_;
+  const webrtc::FieldTrialBasedConfig fallback_trials_;
+  const webrtc::WebRtcKeyValueConfig& trials_;
 };
 
 }  // namespace cricket
