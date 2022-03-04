@@ -346,6 +346,9 @@ class ThreadRegistration {
   // is on the stack.
   bool mIsOnHeap = false;
 
+  // Only accessed by ThreadRegistry on this thread.
+  bool mIsRegistryLockedSharedOnThisThread = false;
+
   static MOZ_THREAD_LOCAL(ThreadRegistration*) tlsThreadRegistration;
 
   [[nodiscard]] static decltype(tlsThreadRegistration)* GetTLS() {
