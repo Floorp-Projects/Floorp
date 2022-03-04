@@ -37,14 +37,17 @@ const NotifyNew = (now, latest) =>{
 
 window.onload = () =>{
     (async() => {
-        var pref = await browser.aboutConfigPrefs.getPref("floorp.version")
 
         var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.lastest")
-
         var APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp")
+        var pref = null;
 
+    browser.BrowserInfo.getDisplayVersion()
+    .then(data => {
+        pref = data;
+        console.log("Floorp Display version "+ pref)
+})
         console.log("enable.floorp.updater.lastest =" + i)
-        console.log("floorp.verison =" + pref)
         console.log("floorp.update.id =" + APP_ID)
 
             fetch(`${API_END_POINT}?name=${APP_ID}`)

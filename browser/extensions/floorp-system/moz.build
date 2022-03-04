@@ -55,7 +55,9 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["updateAPIs"] += [
     "updateAPIs/aboutConfigPrefs.js",
-    "updateAPIs/aboutConfigPrefs.json"
+    "updateAPIs/aboutConfigPrefs.json",
+    "updateAPIs/BrowserInfo.js",
+    "updateAPIs/BrowserInfo.json",
 ]
 
 
