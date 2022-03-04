@@ -82,6 +82,8 @@ ModuleRecord::ModuleRecord(const nsAString& aResolvedNtPath)
   }
 
   MOZ_ASSERT(XRE_IsParentProcess());
+  AUTO_PROFILER_MARKER_TEXT("ModuleRecord", OTHER, {},
+                            NS_ConvertUTF16toUTF8(aResolvedNtPath));
 
   nsAutoString resolvedDosPath;
   if (!NtPathToDosPath(aResolvedNtPath, resolvedDosPath)) {
