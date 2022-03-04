@@ -4,12 +4,12 @@
 
 "use strict";
 
-var { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
+var { ContextDescriptorType } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
 );
 
 var contextDescriptorAll = {
-  type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+  type: ContextDescriptorType.All,
 };
 
 function createRootMessageHandler(sessionId) {
