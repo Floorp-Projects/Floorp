@@ -198,19 +198,15 @@ nsresult txToFragmentHandlerFactory::createHandlerWith(
 
 class txVariable : public txIGlobalParameter {
  public:
-  explicit txVariable(nsIVariant* aValue) : mValue(aValue) {
-    NS_ASSERTION(aValue, "missing value");
+  explicit txVariable(nsIVariant* aValue, txAExprResult* aTxValue)
+      : mValue(aValue), mTxValue(aTxValue) {
+    NS_ASSERTION(aValue && aTxValue, "missing value");
   }
   explicit txVariable(txAExprResult* aValue) : mTxValue(aValue) {
     NS_ASSERTION(aValue, "missing value");
   }
   nsresult getValue(txAExprResult** aValue) override {
-    NS_ASSERTION(mValue || mTxValue, "variablevalue is null");
-
-    if (!mTxValue) {
-      nsresult rv = Convert(mValue, getter_AddRefs(mTxValue));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    NS_ASSERTION(mTxValue, "variablevalue is null");
 
     *aValue = mTxValue;
     NS_ADDREF(*aValue);
@@ -223,10 +219,10 @@ class txVariable : public txIGlobalParameter {
     return NS_OK;
   }
   nsIVariant* getValue() { return mValue; }
-  void setValue(nsIVariant* aValue) {
-    NS_ASSERTION(aValue, "setting variablevalue to null");
+  void setValue(nsIVariant* aValue, txAExprResult* aTxValue) {
+    NS_ASSERTION(aValue && aTxValue, "setting variablevalue to null");
     mValue = aValue;
-    mTxValue = nullptr;
+    mTxValue = aTxValue;
   }
   void setValue(txAExprResult* aValue) {
     NS_ASSERTION(aValue, "setting variablevalue to null");
@@ -234,14 +230,14 @@ class txVariable : public txIGlobalParameter {
     mTxValue = aValue;
   }
 
+  static nsresult Convert(nsIVariant* aValue, txAExprResult** aResult);
+
   friend void ImplCycleCollectionUnlink(txVariable& aVariable);
   friend void ImplCycleCollectionTraverse(
       nsCycleCollectionTraversalCallback& aCallback, txVariable& aVariable,
       const char* aName, uint32_t aFlags);
 
  private:
-  static nsresult Convert(nsIVariant* aValue, txAExprResult** aResult);
-
   nsCOMPtr<nsIVariant> mValue;
   RefPtr<txAExprResult> mTxValue;
 };
@@ -911,13 +907,17 @@ nsresult txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
   RefPtr<nsAtom> localName = NS_Atomize(aLocalName);
   txExpandedName varName(nsId, localName);
 
+  RefPtr<txAExprResult> txValue;
+  rv = txVariable::Convert(value, getter_AddRefs(txValue));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
   if (var) {
-    var->setValue(value);
+    var->setValue(value, txValue);
     return NS_OK;
   }
 
-  var = new txVariable(value);
+  var = new txVariable(value, txValue);
   return mVariables.add(varName, var);
 }
 
