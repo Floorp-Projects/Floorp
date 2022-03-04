@@ -163,6 +163,14 @@ bool nsStyleDisplay::IsRelativelyOrStickyPositioned(
          !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
+bool nsStyleDisplay::IsRelativelyPositioned(
+    const nsIFrame* aContextFrame) const {
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
+               "unexpected aContextFrame");
+  return IsRelativelyPositionedStyle() &&
+         !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
+}
+
 bool nsStyleDisplay::IsStickyPositioned(const nsIFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
