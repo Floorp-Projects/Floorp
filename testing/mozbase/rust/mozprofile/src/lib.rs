@@ -161,6 +161,23 @@ mod test {
         parse_test(input, expected);
     }
 
+    #[test]
+    fn parse_empty() {
+        let inputs = ["", " ", "\n", "\n \n"];
+        for input in inputs {
+            let expected: BTreeMap<String, Pref> = BTreeMap::new();
+            parse_test(input, expected);
+        }
+    }
+
+    #[test]
+    fn parse_newline() {
+        let inputs = vec!["\na", "\n\nfoo"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
+    }
+
     fn parse_test(input: &str, expected: BTreeMap<String, Pref>) {
         match parse(input.as_bytes()) {
             Ok(ref actual) => {

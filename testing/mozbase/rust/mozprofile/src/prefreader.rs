@@ -259,7 +259,7 @@ impl<'a> PrefTokenizer<'a> {
     }
 
     fn get_char(&mut self) -> Option<char> {
-        if self.pos >= self.data.len() - 1 {
+        if self.pos + 1 >= self.data.len() {
             self.cur = None;
             return None;
         };
@@ -286,11 +286,14 @@ impl<'a> PrefTokenizer<'a> {
             let c = self.data[self.pos] as char;
             if c == '\n' {
                 self.position.line -= 1;
-                let mut col_pos = self.pos - 1;
-                while col_pos > 0 && self.data[col_pos] as char != '\n' {
+                let mut col_pos = self.pos;
+                while col_pos > 0 {
                     col_pos -= 1;
+                    if self.data[col_pos] as char == '\n' {
+                        break;
+                    }
                 }
-                self.position.column = (self.pos - col_pos as usize - 1) as u32;
+                self.position.column = (self.pos - col_pos as usize) as u32;
             } else {
                 self.position.column -= 1;
             }
