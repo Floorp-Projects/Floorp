@@ -2113,9 +2113,21 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
         !profiler_is_locked_on_current_thread()) {
       // The current timestamp must be given to the `IPCMarker` payload.
       [[maybe_unused]] const TimeStamp now = TimeStamp::Now();
-      PROFILER_MARKER("IPC", IPC, MarkerTiming::InstantAt(now), IPCMarker, now,
-                      now, pid, aMessage.seqno(), aMessage.type(), mSide,
-                      aDirection, MessagePhase::Endpoint, aMessage.is_sync());
+      PROFILER_MARKER(
+          "IPC", IPC,
+          mozilla::MarkerOptions(
+              mozilla::MarkerTiming::InstantAt(now),
+              // If the thread is being profiled, add the marker to
+              // the current thread. If the thread is not being
+              // profiled, add the marker to the main thread. It
+              // will appear in the main thread's IPC track. Profiler analysis
+              // UI correlates all the IPC markers from different threads and
+              // generates processed markers.
+              profiler_thread_is_being_profiled_for_markers()
+                  ? mozilla::MarkerThreadId::CurrentThread()
+                  : mozilla::MarkerThreadId::MainThread()),
+          IPCMarker, now, now, pid, aMessage.seqno(), aMessage.type(), mSide,
+          aDirection, MessagePhase::Endpoint, aMessage.is_sync());
     }
   }
 }
