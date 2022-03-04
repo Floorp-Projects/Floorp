@@ -102,7 +102,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
 
         override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
             val color = if (showAsSelected) {
-                R.color.fx_mobile_layer_color_accent_nonopaque
+                R.color.fx_mobile_layer_color_accent_opaque
             } else {
                 R.color.tab_tray_item_background_normal_theme
             }
