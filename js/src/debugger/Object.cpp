@@ -197,7 +197,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool getPropertyMethod();
   bool setPropertyMethod();
   bool getOwnPropertyNamesMethod();
-  bool getOwnPropertiesLengthMethod();
+  bool getOwnPropertyNamesLengthMethod();
   bool getOwnPropertySymbolsMethod();
   bool getOwnPrivatePropertiesMethod();
   bool getOwnPropertyDescriptorMethod();
@@ -783,10 +783,10 @@ bool DebuggerObject::CallData::getOwnPropertyNamesMethod() {
   return true;
 }
 
-bool DebuggerObject::CallData::getOwnPropertiesLengthMethod() {
+bool DebuggerObject::CallData::getOwnPropertyNamesLengthMethod() {
   size_t ownPropertiesLength;
-  if (!DebuggerObject::getOwnPropertiesLength(cx, object,
-                                              &ownPropertiesLength)) {
+  if (!DebuggerObject::getOwnPropertyNamesLength(cx, object,
+                                                 &ownPropertiesLength)) {
     return false;
   }
 
@@ -1508,7 +1508,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_DEBUG_FN("getProperty", getPropertyMethod, 0),
     JS_DEBUG_FN("setProperty", setPropertyMethod, 0),
     JS_DEBUG_FN("getOwnPropertyNames", getOwnPropertyNamesMethod, 0),
-    JS_DEBUG_FN("getOwnPropertiesLength", getOwnPropertiesLengthMethod, 0),
+    JS_DEBUG_FN("getOwnPropertyNamesLength", getOwnPropertyNamesLengthMethod,
+                0),
     JS_DEBUG_FN("getOwnPropertySymbols", getOwnPropertySymbolsMethod, 0),
     JS_DEBUG_FN("getOwnPrivateProperties", getOwnPrivatePropertiesMethod, 0),
     JS_DEBUG_FN("getOwnPropertyDescriptor", getOwnPropertyDescriptorMethod, 1),
@@ -1982,9 +1983,9 @@ bool DebuggerObject::getOwnPropertyNames(JSContext* cx,
 }
 
 /* static */
-bool DebuggerObject::getOwnPropertiesLength(JSContext* cx,
-                                            HandleDebuggerObject object,
-                                            size_t* result) {
+bool DebuggerObject::getOwnPropertyNamesLength(JSContext* cx,
+                                               HandleDebuggerObject object,
+                                               size_t* result) {
   RootedObject referent(cx, object->referent());
 
   RootedIdVector ids(cx);
