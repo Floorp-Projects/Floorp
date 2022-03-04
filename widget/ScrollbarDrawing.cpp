@@ -185,14 +185,22 @@ bool ScrollbarDrawing::DoPaintDefaultScrollbar(
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  if (aFrame->PresContext()->UseOverlayScrollbars() &&
-      !aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER |
-                                           NS_EVENT_STATE_ACTIVE)) {
+  const bool overlay = aFrame->PresContext()->UseOverlayScrollbars();
+  if (overlay && !aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER |
+                                                      NS_EVENT_STATE_ACTIVE)) {
     return true;
   }
-  auto scrollbarColor =
+  const auto color =
       ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
-  ThemeDrawing::FillRect(aPaintData, aRect, scrollbarColor);
+  if (overlay && mKind == Kind::Win11) {
+    LayoutDeviceCoord radius =
+        (aHorizontal ? aRect.height : aRect.width) / 2.0f;
+    ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, aRect, color,
+                                             sRGBColor(), 0, radius / aDpiRatio,
+                                             aDpiRatio);
+  } else {
+    ThemeDrawing::FillRect(aPaintData, aRect, color);
+  }
   return true;
 }
 
