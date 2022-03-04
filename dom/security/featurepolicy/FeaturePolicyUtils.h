@@ -16,7 +16,9 @@ class PickleIterator;
 
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 
 namespace mozilla {
 namespace dom {

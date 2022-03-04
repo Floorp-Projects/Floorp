@@ -30,6 +30,8 @@
 namespace IPC {
 // Needed for blacklisting messages.
 class Message;
+class MessageReader;
+class MessageWriter;
 }  // namespace IPC
 
 namespace mozilla {

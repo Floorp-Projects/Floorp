@@ -32,6 +32,8 @@ struct IPDLParamTraits;
 namespace IPC {
 
 class Message;
+class MessageReader;
+class MessageWriter;
 
 template <>
 struct ParamTraits<Channel::Mode>
