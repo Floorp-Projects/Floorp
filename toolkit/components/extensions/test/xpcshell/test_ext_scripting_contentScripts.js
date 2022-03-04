@@ -193,3 +193,109 @@ add_task(async function test_registerContentScripts_runAt() {
   await contentPage.close();
   await extension.unload();
 });
+
+add_task(async function test_register_and_unregister() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "a-script",
+        js: ["script.js"],
+        matches: ["http://*/*/file_sample.html"],
+      };
+
+      let results = await Promise.allSettled([
+        browser.scripting.registerContentScripts([script]),
+        browser.scripting.unregisterContentScripts(),
+      ]);
+
+      browser.test.assertEq(
+        2,
+        results.filter(result => result.status === "fulfilled").length,
+        "got expected number of fulfilled promises"
+      );
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+
+  // Verify that the registered content scripts on the extension are correct.
+  let contentScripts = Array.from(
+    extension.extension.registeredContentScripts.values()
+  );
+  Assert.equal(0, contentScripts.length, "expected no registered scripts");
+
+  await extension.unload();
+});
+
+add_task(async function test_register_and_unregister_multiple_times() {
+  let extension = makeExtension({
+    async background() {
+      // We use the same script `id` on purpose in this test.
+      let results = await Promise.allSettled([
+        browser.scripting.registerContentScripts([
+          {
+            id: "a-script",
+            js: ["script-1.js"],
+            matches: ["http://*/*/file_sample.html"],
+          },
+        ]),
+        browser.scripting.unregisterContentScripts(),
+        browser.scripting.registerContentScripts([
+          {
+            id: "a-script",
+            js: ["script-2.js"],
+            matches: ["http://*/*/file_sample.html"],
+          },
+        ]),
+        browser.scripting.unregisterContentScripts(),
+        browser.scripting.registerContentScripts([
+          {
+            id: "a-script",
+            js: ["script-3.js"],
+            matches: ["http://*/*/file_sample.html"],
+          },
+        ]),
+      ]);
+
+      browser.test.assertEq(
+        5,
+        results.filter(result => result.status === "fulfilled").length,
+        "got expected number of fulfilled promises"
+      );
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script-1.js": "",
+      "script-2.js": "",
+      "script-3.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+
+  // Verify that the registered content scripts on the extension are correct.
+  let contentScripts = Array.from(
+    extension.extension.registeredContentScripts.values()
+  );
+  Assert.equal(1, contentScripts.length, "expected 1 registered script");
+  Assert.ok(
+    contentScripts[0].jsPaths[0].endsWith("script-3.js"),
+    "got expected js file"
+  );
+
+  await extension.unload();
+});

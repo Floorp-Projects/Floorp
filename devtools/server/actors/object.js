@@ -204,7 +204,7 @@ const proto = {
     }
 
     try {
-      return this.obj.getOwnPropertyNames().length;
+      return this.obj.getOwnPropertiesLength();
     } catch (err) {
       // The above can throw when the debuggee does not subsume the object's
       // compartment, or for some WrappedNatives like Cu.Sandbox.

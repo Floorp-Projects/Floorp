@@ -6068,7 +6068,7 @@ void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
   PSAutoLock lock;
 
   {
-    LockedRegistry lock;
+    RegistryLockExclusive lock{sRegistryMutex};
     MOZ_RELEASE_ASSERT(sRegistryContainer.append(OffThreadRef{aOnThreadRef}));
   }
 
@@ -6120,7 +6120,7 @@ void ThreadRegistry::Unregister(ThreadRegistration::OnThreadRef aOnThreadRef) {
   PSAutoLock psLock;
   locked_unregister_thread(psLock, aOnThreadRef);
 
-  LockedRegistry registryLock;
+  RegistryLockExclusive lock{sRegistryMutex};
   for (OffThreadRef& thread : sRegistryContainer) {
     if (thread.IsPointingAt(*aOnThreadRef.mThreadRegistration)) {
       sRegistryContainer.erase(&thread);

@@ -770,31 +770,157 @@ add_task(async function test_registerContentScripts_twice_with_same_id() {
   await extension.unload();
 });
 
-add_task(async function test_getRegisteredContentScripts_during_a_registration() {
+add_task(async function test_validate_unregisterContentScripts_params() {
   let extension = makeExtension({
     async background() {
-      browser.scripting.registerContentScripts([
+      const TEST_CASES = [
         {
-          id: "a-script",
-          js: ["script.js"],
-          matches: ["*://test1.example.com/*"],
+          title: "unknown id",
+          params: {
+            ids: ["non-existent-id"],
+          },
+          expectedError: `Content script with id "non-existent-id" does not exist.`
         },
+        {
+          title: "invalid id",
+          params: {
+            ids: ["_invalid-id"],
+          },
+          expectedError: "Invalid content script id.",
+        },
+      ];
+
+      for (const { title, params, expectedError } of TEST_CASES) {
+        browser.test.assertRejects(
+          browser.scripting.unregisterContentScripts(params),
+          expectedError,
+          `${title} - got expected error`
+        );
+      }
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no script");
+
+      browser.test.sendMessage("background-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_unregisterContentScripts() {
+  let extension = makeExtension({
+    async background() {
+      const script1 = {
+        id: "script-1",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+      const script2 = {
+        id: "script-2",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      }
+      const script3 = {
+        id: "script-3",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      }
+
+      let res = await browser.scripting.registerContentScripts([
+        script1,
+        script2,
+        script3,
+      ]);
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(3, scripts.length, "expected 3 scripts");
+      browser.test.assertEq(script1.id, scripts[0].id, "expected correct id");
+      browser.test.assertEq(script2.id, scripts[1].id, "expected correct id");
+      browser.test.assertEq(script3.id, scripts[2].id, "expected correct id");
+
+      // No unregistration when unknown IDs are passed along with valid IDs.
+      browser.test.assertRejects(
+        browser.scripting.unregisterContentScripts({
+          ids: [script2.id, "non-existent-id"],
+        }),
+        `Content script with id "non-existent-id" does not exist.`
+      );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(3, scripts.length, "expected 3 scripts");
+
+      // Unregister 1 script.
+      res = await browser.scripting.unregisterContentScripts({
+        ids: [script2.id]
+      });
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(2, scripts.length, "expected 2 scripts");
+      browser.test.assertEq(script1.id, scripts[0].id, "expected correct id");
+      browser.test.assertEq(script3.id, scripts[1].id, "expected correct id");
+
+      // This should unregister all the remaining registered scripts.
+      res = await browser.scripting.unregisterContentScripts();
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_unregisterContentScripts_twice_with_same_id() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "script-to-unregister",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+
+      await browser.scripting.registerContentScripts([script]);
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      const results = await Promise.allSettled([
+        browser.scripting.unregisterContentScripts({ ids: [script.id] }),
+        browser.scripting.unregisterContentScripts({ ids: [script.id] }),
       ]);
 
-      const scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(2, results.length, "got expected length");
       browser.test.assertEq(
-        JSON.stringify([
-          {
-            id: "a-script",
-            allFrames: false,
-            js: ["script.js"],
-            matches: ["*://test1.example.com/*"],
-            runAt: "document_idle",
-          },
-        ]),
-        JSON.stringify(scripts),
-        "expected empty result array"
+        "fulfilled",
+        results[0].status,
+        "expected fulfilled promise"
       );
+      browser.test.assertEq(
+        "rejected",
+        results[1].status,
+        "expected rejected promise"
+      );
+      browser.test.assertEq(
+        `Content script with id "script-to-unregister" does not exist.`,
+        results[1].reason.message,
+        "expected reason"
+      );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected 0 registered script");
 
       browser.test.sendMessage("background-done");
     },

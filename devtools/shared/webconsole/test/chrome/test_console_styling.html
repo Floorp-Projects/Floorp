@@ -38,7 +38,7 @@ function doConsoleCalls(aState)
   expectedConsoleCalls = [
     {
       level: "log",
-      styles: /^$/,
+      styles: undefined,
       arguments: ["%cOne formatter with no styles"],
     },
     {
@@ -111,7 +111,13 @@ function onConsoleAPICall(aState, aPacket)
 
   expectedConsoleCalls.forEach(function(aMessage, aIndex) {
     info("checking received console call #" + aIndex);
-    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+    const expected = expectedConsoleCalls[aIndex];
+    const consoleCall = consoleCalls[aIndex];
+    if (expected.styles == undefined) {
+      delete expected.styles;
+      is(consoleCall.styles, undefined, "No 'styles' property")
+    }
+    checkConsoleAPICall(consoleCall, expected);
   });
 
 
