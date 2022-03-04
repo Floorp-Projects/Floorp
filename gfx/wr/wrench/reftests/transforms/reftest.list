@@ -54,3 +54,4 @@ skip_on(android) == raster-root-scaling-2.yaml raster-root-scaling-2-ref.yaml
 # Make sure we don't panic
 != raster-root-huge-scale.yaml blank.yaml
 != non-inversible-world-rect.yaml blank.yaml
+== nested-local-scale.yaml nested-local-scale-ref.yaml
