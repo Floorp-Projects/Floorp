@@ -558,6 +558,10 @@ MOZ_NEVER_INLINE void LogMessageForProtocol(const char* aTopLevelProtocol,
 
 MOZ_NEVER_INLINE void ProtocolErrorBreakpoint(const char* aMsg);
 
+// IPC::MessageReader and IPC::MessageWriter call this function for FatalError
+// calls which come from serialization/deserialization.
+MOZ_NEVER_INLINE void PickleFatalError(const char* aMsg, IProtocol* aActor);
+
 // The code generator calls this function for errors which come from the
 // methods of protocols.  Doing this saves codesize by making the error
 // cases significantly smaller.
