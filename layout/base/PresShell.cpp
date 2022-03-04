@@ -2623,8 +2623,9 @@ void PresShell::LoadComplete() {
 #ifdef DEBUG
 void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
   // XXXbz due to bug 372769, can't actually assert anything here...
-  return;
-
+  // XXX Since bug 372769 is now fixed, the assertion is being enabled in bug
+  //     1758104.
+#  if 0
   // XXXbz shouldn't need this part; remove it once FrameNeedsReflow
   // handles the root frame correctly.
   if (!aFrame->GetParent()) {
@@ -2647,6 +2648,7 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
   MOZ_ASSERT_UNREACHABLE(
       "Frame has dirty bits set but isn't scheduled to be "
       "reflowed?");
+#  endif
 }
 #endif
 
