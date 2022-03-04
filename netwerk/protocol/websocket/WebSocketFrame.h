@@ -20,6 +20,8 @@ using DOMHighResTimeStamp = double;
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 template <class P>
 struct ParamTraits;
 }  // namespace IPC
