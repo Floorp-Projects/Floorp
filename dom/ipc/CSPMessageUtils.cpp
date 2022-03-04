@@ -23,7 +23,7 @@ void ParamTraits<nsIContentSecurityPolicy*>::Write(
 
   CSPInfo csp;
   mozilla::Unused << NS_WARN_IF(NS_FAILED(CSPToCSPInfo(aParam, &csp)));
-  IPDLParamTraits<CSPInfo>::Write(aWriter, nullptr, csp);
+  WriteParam(aWriter, csp);
 }
 
 bool ParamTraits<nsIContentSecurityPolicy*>::Read(
@@ -39,7 +39,7 @@ bool ParamTraits<nsIContentSecurityPolicy*>::Read(
   }
 
   CSPInfo csp;
-  if (!IPDLParamTraits<CSPInfo>::Read(aReader, nullptr, &csp)) {
+  if (!ReadParam(aReader, &csp)) {
     return false;
   }
 
