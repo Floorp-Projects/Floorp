@@ -4,9 +4,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { waitForInitialNavigationCompleted } = ChromeUtils.import(
-  "chrome://remote/content/shared/Navigate.jsm"
-);
+const {
+  ProgressListener,
+  waitForInitialNavigationCompleted,
+} = ChromeUtils.import("chrome://remote/content/shared/Navigate.jsm");
 
 const CURRENT_URI = Services.io.newURI("http://foo.bar/");
 const REQUESTED_URI = Services.io.newURI("http://foo.cheese/");
@@ -69,6 +70,8 @@ class MockWebProgress {
       Ci.nsIWebProgressListener.STATE_START,
       null
     );
+
+    return new Promise(executeSoon);
   }
 
   sendStopState() {
@@ -82,6 +85,8 @@ class MockWebProgress {
     this.browsingContext.currentURI = this.documentRequest.originalURI;
     this.isLoadingDocument = false;
     this.documentRequest = null;
+
+    return new Promise(executeSoon);
   }
 }
 
@@ -106,8 +111,8 @@ add_test(
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
     const completed = waitForInitialNavigationCompleted(webProgress);
-    webProgress.sendStartState({ isInitial: true });
-    webProgress.sendStopState();
+    await webProgress.sendStartState({ isInitial: true });
+    await webProgress.sendStopState();
     const { currentURI, targetURI } = await completed;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
@@ -130,8 +135,8 @@ add_test(
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
     const completed = waitForInitialNavigationCompleted(webProgress);
-    webProgress.sendStartState({ isInitial: true });
-    webProgress.sendStopState();
+    await webProgress.sendStartState({ isInitial: true });
+    await webProgress.sendStopState();
     const { currentURI, targetURI } = await completed;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
@@ -151,11 +156,11 @@ add_test(
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
 
-    webProgress.sendStartState({ isInitial: true });
+    await webProgress.sendStartState({ isInitial: true });
     ok(webProgress.isLoadingDocument, "Document is loading");
 
     const completed = waitForInitialNavigationCompleted(webProgress);
-    webProgress.sendStopState();
+    await webProgress.sendStopState();
     const { currentURI, targetURI } = await completed;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
@@ -175,8 +180,8 @@ add_test(
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
 
-    webProgress.sendStartState({ isInitial: true });
-    webProgress.sendStopState();
+    await webProgress.sendStartState({ isInitial: true });
+    await webProgress.sendStopState();
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
@@ -204,8 +209,8 @@ add_test(
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
     const completed = waitForInitialNavigationCompleted(webProgress);
-    webProgress.sendStartState({ isInitial: false });
-    webProgress.sendStopState();
+    await webProgress.sendStartState({ isInitial: false });
+    await webProgress.sendStopState();
     const { currentURI, targetURI } = await completed;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
@@ -225,11 +230,11 @@ add_test(
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
 
-    webProgress.sendStartState({ isInitial: false });
+    await webProgress.sendStartState({ isInitial: false });
     ok(webProgress.isLoadingDocument, "Document is loading");
 
     const completed = waitForInitialNavigationCompleted(webProgress);
-    webProgress.sendStopState();
+    await webProgress.sendStopState();
     const { currentURI, targetURI } = await completed;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
@@ -249,8 +254,8 @@ add_test(
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
 
-    webProgress.sendStartState({ isInitial: false });
-    webProgress.sendStopState();
+    await webProgress.sendStartState({ isInitial: false });
+    await webProgress.sendStopState();
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
@@ -274,7 +279,7 @@ add_test(async function test_waitForInitialNavigation_resolveWhenStarted() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
-  webProgress.sendStartState();
+  await webProgress.sendStartState();
   ok(webProgress.isLoadingDocument, "Document is already loading");
 
   const completed = waitForInitialNavigationCompleted(webProgress, {
@@ -300,8 +305,8 @@ add_test(async function test_waitForInitialNavigation_crossOrigin() {
   ok(!webProgress.isLoadingDocument, "Document is not loading");
 
   const completed = waitForInitialNavigationCompleted(webProgress);
-  webProgress.sendStartState({ coop: true });
-  webProgress.sendStopState();
+  await webProgress.sendStartState({ coop: true });
+  await webProgress.sendStopState();
   const { currentURI, targetURI } = await completed;
 
   notEqual(
@@ -316,6 +321,60 @@ add_test(async function test_waitForInitialNavigation_crossOrigin() {
   );
   equal(currentURI.spec, REQUESTED_URI.spec, "Current URI has been set");
   equal(targetURI.spec, REQUESTED_URI.spec, "Original URI has been set");
+
+  run_next_test();
+});
+
+add_test(async function test_ProgressListener_notWaitForExplicitStart() {
+  // Create a webprogress and start it before creating the progress listener.
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+  await webProgress.sendStartState();
+
+  // Create the progress listener for a webprogress already in a navigation.
+  const progressListener = new ProgressListener(webProgress, {
+    waitForExplicitStart: false,
+  });
+  const navigated = progressListener.start();
+
+  // Monitor the progress listener with a flag.
+  let hasNavigated = false;
+  navigated.finally(() => (hasNavigated = true));
+
+  // Send stop state to complete the initial navigation
+  await webProgress.sendStopState();
+  ok(hasNavigated, "Listener has resolved after initial navigation");
+
+  run_next_test();
+});
+
+add_test(async function test_ProgressListener_waitForExplicitStart() {
+  // Create a webprogress and start it before creating the progress listener.
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+  await webProgress.sendStartState();
+
+  // Create the progress listener for a webprogress already in a navigation.
+  const progressListener = new ProgressListener(webProgress, {
+    waitForExplicitStart: true,
+  });
+  const navigated = progressListener.start();
+
+  // Monitor the progress listener with a flag.
+  let hasNavigated = false;
+  navigated.finally(() => (hasNavigated = true));
+
+  // Send stop state to complete the initial navigation
+  await webProgress.sendStopState();
+  ok(!hasNavigated, "Listener has not resolved after initial navigation");
+
+  // Start a new navigation
+  await webProgress.sendStartState();
+  ok(!hasNavigated, "Listener has not resolved after starting new navigation");
+
+  // Finish the new navigation
+  await webProgress.sendStopState();
+  ok(hasNavigated, "Listener resolved after finishing the new navigation");
 
   run_next_test();
 });
