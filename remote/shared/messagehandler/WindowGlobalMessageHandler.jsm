@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  LoadListener: "chrome://remote/content/shared/listeners/LoadListener.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
 });
@@ -25,10 +26,22 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * MessageHandler network.
  */
 class WindowGlobalMessageHandler extends MessageHandler {
+  #loadListener;
+
   constructor() {
     super(...arguments);
 
     this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
+
+    // Setup the LoadListener as early as possible.
+    this.#loadListener = new LoadListener(this._context.window);
+    this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
+    this.#loadListener.startListening();
+  }
+
+  destroy() {
+    this.#loadListener.destroy();
+    super.destroy();
   }
 
   /**
@@ -138,4 +151,13 @@ class WindowGlobalMessageHandler extends MessageHandler {
     //  argument to WindowGlobalMessageHandler).
     return contextDescriptor.type === ContextDescriptorType.All;
   }
+
+  #onDOMContentLoaded = (eventName, data) => {
+    this.emitEvent("window-global-dom-content-loaded", {
+      contextId: this.contextId,
+      documentURI: data.target.documentURI,
+      innerWindowId: this.innerWindowId,
+      readyState: data.target.readyState,
+    });
+  };
 }
