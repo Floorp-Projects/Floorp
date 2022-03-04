@@ -59,11 +59,10 @@ class DataPipeBase {
 };
 
 template <typename T>
-void DataPipeWrite(IPC::Message* aMsg, T* aParam);
+void DataPipeWrite(IPC::MessageWriter* aWriter, T* aParam);
 
 template <typename T>
-bool DataPipeRead(const IPC::Message* aMsg, PickleIterator* aIter,
-                  RefPtr<T>* aResult);
+bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult);
 
 }  // namespace data_pipe_detail
 
@@ -89,10 +88,9 @@ class DataPipeSender final : public nsIAsyncOutputStream,
  private:
   friend nsresult NewDataPipe(uint32_t, DataPipeSender**, DataPipeReceiver**);
   friend void data_pipe_detail::DataPipeWrite<DataPipeSender>(
-      IPC::Message* aMsg, DataPipeSender* aParam);
+      IPC::MessageWriter* aWriter, DataPipeSender* aParam);
   friend bool data_pipe_detail::DataPipeRead<DataPipeSender>(
-      const IPC::Message* aMsg, PickleIterator* aIter,
-      RefPtr<DataPipeSender>* aResult);
+      IPC::MessageReader* aReader, RefPtr<DataPipeSender>* aResult);
 
   explicit DataPipeSender(nsresult aError)
       : data_pipe_detail::DataPipeBase(/* aReceiverSide */ false, aError) {}
@@ -128,10 +126,9 @@ class DataPipeReceiver final : public nsIAsyncInputStream,
  private:
   friend nsresult NewDataPipe(uint32_t, DataPipeSender**, DataPipeReceiver**);
   friend void data_pipe_detail::DataPipeWrite<DataPipeReceiver>(
-      IPC::Message* aMsg, DataPipeReceiver* aParam);
+      IPC::MessageWriter* aWriter, DataPipeReceiver* aParam);
   friend bool data_pipe_detail::DataPipeRead<DataPipeReceiver>(
-      const IPC::Message* aMsg, PickleIterator* aIter,
-      RefPtr<DataPipeReceiver>* aResult);
+      IPC::MessageReader* aReader, RefPtr<DataPipeReceiver>* aResult);
 
   explicit DataPipeReceiver(nsresult aError)
       : data_pipe_detail::DataPipeBase(/* aReceiverSide */ true, aError) {}
@@ -164,15 +161,17 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::ipc::DataPipeSender*> {
-  static void Write(Message* aMsg, mozilla::ipc::DataPipeSender* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
+  static void Write(MessageWriter* aWriter,
+                    mozilla::ipc::DataPipeSender* aParam);
+  static bool Read(MessageReader* aReader,
                    RefPtr<mozilla::ipc::DataPipeSender>* aResult);
 };
 
 template <>
 struct ParamTraits<mozilla::ipc::DataPipeReceiver*> {
-  static void Write(Message* aMsg, mozilla::ipc::DataPipeReceiver* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
+  static void Write(MessageWriter* aWriter,
+                    mozilla::ipc::DataPipeReceiver* aParam);
+  static bool Read(MessageReader* aReader,
                    RefPtr<mozilla::ipc::DataPipeReceiver>* aResult);
 };
 

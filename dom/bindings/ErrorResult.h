@@ -43,6 +43,8 @@
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 template <typename>
 struct ParamTraits;
 }  // namespace IPC
@@ -474,12 +476,11 @@ class TErrorResult {
 
   friend struct IPC::ParamTraits<TErrorResult>;
   friend struct IPC::ParamTraits<ErrorResult>;
-  void SerializeMessage(IPC::Message* aMsg) const;
-  bool DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter);
+  void SerializeMessage(IPC::MessageWriter* aWriter) const;
+  bool DeserializeMessage(IPC::MessageReader* aReader);
 
-  void SerializeDOMExceptionInfo(IPC::Message* aMsg) const;
-  bool DeserializeDOMExceptionInfo(const IPC::Message* aMsg,
-                                   PickleIterator* aIter);
+  void SerializeDOMExceptionInfo(IPC::MessageWriter* aWriter) const;
+  bool DeserializeDOMExceptionInfo(IPC::MessageReader* aReader);
 
   // Helper method that creates a new Message for this TErrorResult,
   // and returns the arguments array from that Message.

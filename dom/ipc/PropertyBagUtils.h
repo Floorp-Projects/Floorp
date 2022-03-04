@@ -20,17 +20,18 @@ namespace ipc {
  */
 template <>
 struct IPDLParamTraits<nsIVariant*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIVariant* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIVariant>* aResult);
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    nsIVariant* aParam);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIVariant>* aResult);
 };
 
 template <>
 struct IPDLParamTraits<nsIPropertyBag2*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsIPropertyBag2* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIPropertyBag2>* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIPropertyBag2>* aResult);
 };
 
 }  // namespace ipc

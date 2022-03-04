@@ -770,6 +770,44 @@ add_task(async function test_registerContentScripts_twice_with_same_id() {
   await extension.unload();
 });
 
+add_task(async function test_getRegisteredContentScripts_during_a_registration() {
+  let extension = makeExtension({
+    async background() {
+      browser.scripting.registerContentScripts([
+        {
+          id: "a-script",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      const scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(
+        JSON.stringify([
+          {
+            id: "a-script",
+            allFrames: false,
+            js: ["script.js"],
+            matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
+          },
+        ]),
+        JSON.stringify(scripts),
+        "expected empty result array"
+      );
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
 add_task(async function test_validate_unregisterContentScripts_params() {
   let extension = makeExtension({
     async background() {

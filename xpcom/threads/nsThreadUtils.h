@@ -1745,7 +1745,9 @@ extern "C" nsresult NS_CreateBackgroundTaskQueue(
 // Predeclaration for logging function below
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 
 class nsTimerImpl;
 

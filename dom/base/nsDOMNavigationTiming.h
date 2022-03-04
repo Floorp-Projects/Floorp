@@ -23,6 +23,8 @@ using DOMHighResTimeStamp = double;
 class PickleIterator;
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 }  // namespace IPC
 namespace mozilla {
 namespace ipc {
@@ -259,10 +261,10 @@ namespace mozilla {
 namespace ipc {
 template <>
 struct IPDLParamTraits<nsDOMNavigationTiming*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsDOMNavigationTiming* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsDOMNavigationTiming>* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsDOMNavigationTiming>* aResult);
 };
 
 }  // namespace ipc

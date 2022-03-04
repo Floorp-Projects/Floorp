@@ -13,7 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm",
-  CONTEXT_DESCRIPTOR_TYPES:
+  ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
@@ -105,7 +105,7 @@ class BrowsingContext extends Module {
           moduleName: "browsingContext",
           category: "event",
           contextDescriptor: {
-            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+            type: ContextDescriptorType.All,
           },
           values: [params.event],
         });
@@ -125,7 +125,7 @@ class BrowsingContext extends Module {
           moduleName: "browsingContext",
           category: "event",
           contextDescriptor: {
-            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+            type: ContextDescriptorType.All,
           },
           values: [params.event],
         });

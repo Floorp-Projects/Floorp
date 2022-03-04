@@ -251,23 +251,24 @@ nsTArray<nsCString>& TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(
 }
 
 template <typename CleanupPolicy>
-void TErrorResult<CleanupPolicy>::SerializeMessage(IPC::Message* aMsg) const {
+void TErrorResult<CleanupPolicy>::SerializeMessage(
+    IPC::MessageWriter* aWriter) const {
   using namespace IPC;
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasMessage);
   MOZ_ASSERT(mExtra.mMessage);
-  WriteParam(aMsg, mExtra.mMessage->mArgs);
-  WriteParam(aMsg, mExtra.mMessage->mErrorNumber);
+  WriteParam(aWriter, mExtra.mMessage->mArgs);
+  WriteParam(aWriter, mExtra.mMessage->mErrorNumber);
 }
 
 template <typename CleanupPolicy>
-bool TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
-                                                     PickleIterator* aIter) {
+bool TErrorResult<CleanupPolicy>::DeserializeMessage(
+    IPC::MessageReader* aReader) {
   using namespace IPC;
   AssertInOwningThread();
   auto readMessage = MakeUnique<Message>();
-  if (!ReadParam(aMsg, aIter, &readMessage->mArgs) ||
-      !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
+  if (!ReadParam(aReader, &readMessage->mArgs) ||
+      !ReadParam(aReader, &readMessage->mErrorNumber)) {
     return false;
   }
   if (!readMessage->HasCorrectNumberOfArguments()) {
@@ -392,23 +393,23 @@ struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
 
 template <typename CleanupPolicy>
 void TErrorResult<CleanupPolicy>::SerializeDOMExceptionInfo(
-    IPC::Message* aMsg) const {
+    IPC::MessageWriter* aWriter) const {
   using namespace IPC;
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
   MOZ_ASSERT(mExtra.mDOMExceptionInfo);
-  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mMessage);
-  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mRv);
+  WriteParam(aWriter, mExtra.mDOMExceptionInfo->mMessage);
+  WriteParam(aWriter, mExtra.mDOMExceptionInfo->mRv);
 }
 
 template <typename CleanupPolicy>
 bool TErrorResult<CleanupPolicy>::DeserializeDOMExceptionInfo(
-    const IPC::Message* aMsg, PickleIterator* aIter) {
+    IPC::MessageReader* aReader) {
   using namespace IPC;
   AssertInOwningThread();
   nsCString message;
   nsresult rv;
-  if (!ReadParam(aMsg, aIter, &message) || !ReadParam(aMsg, aIter, &rv)) {
+  if (!ReadParam(aReader, &message) || !ReadParam(aReader, &rv)) {
     return false;
   }
 

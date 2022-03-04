@@ -285,10 +285,10 @@ namespace ipc {
 // __always make sure to handle null!__
 template <>
 struct IPDLParamTraits<mozilla::dom::BlobImpl*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     mozilla::dom::BlobImpl* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<mozilla::dom::BlobImpl>* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<mozilla::dom::BlobImpl>* aResult);
 };
 }  // namespace ipc
 }  // namespace mozilla

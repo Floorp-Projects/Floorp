@@ -38,15 +38,14 @@ template <>
 struct ParamTraits<mozilla::dom::SeekDetails> {
   typedef mozilla::dom::SeekDetails paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mSeekTime);
-    WriteParam(aMsg, aParam.mFastSeek);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSeekTime);
+    WriteParam(aWriter, aParam.mFastSeek);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mSeekTime) ||
-        !ReadParam(aMsg, aIter, &aResult->mFastSeek)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mSeekTime) ||
+        !ReadParam(aReader, &aResult->mFastSeek)) {
       return false;
     }
     return true;
@@ -57,15 +56,14 @@ template <>
 struct ParamTraits<mozilla::dom::MediaControlAction> {
   typedef mozilla::dom::MediaControlAction paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mKey);
-    WriteParam(aMsg, aParam.mDetails);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mKey);
+    WriteParam(aWriter, aParam.mDetails);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mKey) ||
-        !ReadParam(aMsg, aIter, &aResult->mDetails)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mKey) ||
+        !ReadParam(aReader, &aResult->mDetails)) {
       return false;
     }
     return true;

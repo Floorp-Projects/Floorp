@@ -13,7 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
-  CONTEXT_DESCRIPTOR_TYPES:
+  ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   RootMessageHandler:
@@ -246,8 +246,8 @@ class SessionData {
   }
 
   _isSameContextDescriptor(contextDescriptor1, contextDescriptor2) {
-    if (contextDescriptor1.type === CONTEXT_DESCRIPTOR_TYPES.ALL) {
-      // Ignore the id for type ALL since we made the id optional for this type.
+    if (contextDescriptor1.type === ContextDescriptorType.All) {
+      // Ignore the id for type "all" since we made the id optional for this type.
       return contextDescriptor1.type === contextDescriptor2.type;
     }
 

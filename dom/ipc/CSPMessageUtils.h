@@ -15,8 +15,8 @@ namespace IPC {
 
 template <>
 struct ParamTraits<nsIContentSecurityPolicy*> {
-  static void Write(Message* aMsg, nsIContentSecurityPolicy* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
+  static void Write(MessageWriter* aWriter, nsIContentSecurityPolicy* aParam);
+  static bool Read(MessageReader* aReader,
                    RefPtr<nsIContentSecurityPolicy>* aResult);
 };
 

@@ -14,7 +14,7 @@ namespace mozilla::widget {
 
 class ScrollbarDrawingGTK final : public ScrollbarDrawing {
  public:
-  ScrollbarDrawingGTK() = default;
+  ScrollbarDrawingGTK() : ScrollbarDrawing(Kind::Gtk) {}
   virtual ~ScrollbarDrawingGTK() = default;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,

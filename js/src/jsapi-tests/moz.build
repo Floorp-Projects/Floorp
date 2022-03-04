@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     "testArrayBufferWithUserOwnedContents.cpp",
     "testAtomicOperations.cpp",
     "testAtomizeUtf8NonAsciiLatin1CodePoint.cpp",
+    "testAtomizeWithoutActiveZone.cpp",
     "testBigInt.cpp",
     "testBoundFunction.cpp",
     "testBug604087.cpp",

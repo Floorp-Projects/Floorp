@@ -38,6 +38,8 @@ const char* StringFromIPCMessageType(uint32_t aMessageType);
 
 class Channel;
 class Message;
+class MessageReader;
+class MessageWriter;
 #ifdef FUZZING
 class Faulty;
 #endif

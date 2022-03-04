@@ -616,19 +616,18 @@ nsNSSCertificate::Read(nsIObjectInputStream* aStream) {
   return NS_OK;
 }
 
-void nsNSSCertificate::SerializeToIPC(IPC::Message* aMsg) {
+void nsNSSCertificate::SerializeToIPC(IPC::MessageWriter* aWriter) {
   bool hasCert = !mDER.IsEmpty();
-  WriteParam(aMsg, hasCert);
+  WriteParam(aWriter, hasCert);
 
   if (!hasCert) {
     return;
   }
 
-  WriteParam(aMsg, mDER);
+  WriteParam(aWriter, mDER);
 }
 
-bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
-                                          PickleIterator* aIter) {
+bool nsNSSCertificate::DeserializeFromIPC(IPC::MessageReader* aReader) {
   auto lock = mCert.Lock();
   auto& maybeCert = lock.ref();
   if (!mDER.IsEmpty() || maybeCert.isSome()) {
@@ -636,7 +635,7 @@ bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
   }
 
   bool hasCert = false;
-  if (!ReadParam(aMsg, aIter, &hasCert)) {
+  if (!ReadParam(aReader, &hasCert)) {
     return false;
   }
 
@@ -644,7 +643,7 @@ bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
     return true;
   }
 
-  if (!ReadParam(aMsg, aIter, &mDER)) {
+  if (!ReadParam(aReader, &mDER)) {
     return false;
   }
   return true;
