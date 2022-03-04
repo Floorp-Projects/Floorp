@@ -32,7 +32,9 @@ class nsCOMPtr;
 
 namespace mozilla::ipc {
 class IProtocol;
-}
+template <typename P>
+struct IPDLParamTraits;
+}  // namespace mozilla::ipc
 
 namespace IPC {
 
@@ -290,10 +292,34 @@ static inline void LogParam(const P& p, std::wstring* l) {
   ParamTraits<P>::Log(p, l);
 }
 
+// Temporary fallback class to allow types to declare serialization using the
+// IPDLParamTraits type class. Will be removed once all remaining
+// IPDLParamTraits implementations are gone. (bug 1754009)
+
+template <class P>
+struct ParamTraitsIPDLFallback {
+  template <class R>
+  static auto Write(MessageWriter* writer, R&& p)
+      -> decltype(mozilla::ipc::IPDLParamTraits<P>::Write(writer,
+                                                          writer->GetActor(),
+                                                          std::forward<R>(p))) {
+    mozilla::ipc::IPDLParamTraits<P>::Write(writer, writer->GetActor(),
+                                            std::forward<R>(p));
+  }
+  template <class R>
+  static auto Read(MessageReader* reader, R* r)
+      -> decltype(mozilla::ipc::IPDLParamTraits<P>::Read(reader,
+                                                         reader->GetActor(),
+                                                         r)) {
+    return mozilla::ipc::IPDLParamTraits<P>::Read(reader, reader->GetActor(),
+                                                  r);
+  }
+};
+
 // Fundamental types.
 
 template <class P>
-struct ParamTraitsFundamental {};
+struct ParamTraitsFundamental : ParamTraitsIPDLFallback<P> {};
 
 template <>
 struct ParamTraitsFundamental<bool> {
