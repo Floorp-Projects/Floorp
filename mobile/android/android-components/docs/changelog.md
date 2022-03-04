@@ -11,6 +11,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **concept-sync**
+  * 🌟️️ Add `onReady` method to `AccountObserver`, allowing consumers to know when they can start querying account state.
+
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `fetchProfile` was removed from `FxaAccountManager`.
+
 # 99.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v98.0.0...v99.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/146?closed=1)
@@ -44,6 +50,7 @@ permalink: /changelog/
 
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: `RestoreUseCase` implementation responsible for restoring `RecoverableTab` instances now takes a `TabState` and a `EngineSessionStateStorage` instead (and will read/rehydrate an EngineSessionState prior to restoring).
+
 
 # 98.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...v98.0.0)
