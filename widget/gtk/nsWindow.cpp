@@ -1456,13 +1456,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
 #endif
     if (popup->mPopupContextMenu && !popup->mPopupAnchored) {
       LOG("  popup [%p] is first context menu", popup);
-      static int menuOffsetX =
-          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetHorizontal);
-      static int menuOffsetY =
-          LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetVertical);
       popup->mRelativePopupPosition = popup->mPopupPosition;
-      mRelativePopupOffset.x = menuOffsetX;
-      mRelativePopupOffset.y = menuOffsetY;
     } else if (popup->mPopupAnchored) {
       LOG("  popup [%p] is anchored", popup);
       if (!popup->mPopupMatchesLayout) {
@@ -2175,11 +2169,28 @@ struct ResolvedPopupMargin {
 
 static ResolvedPopupMargin ResolveMargin(nsMenuPopupFrame* aFrame,
                                          int8_t aPopupAlign,
-                                         int8_t aAnchorAlign) {
-  nsMargin margin;
+                                         int8_t aAnchorAlign,
+                                         bool aAnchoredToPoint,
+                                         bool aIsContextMenu) {
+  nsMargin margin = aFrame->GetMargin();
   nsPoint offset;
 
-  aFrame->StyleMargin()->GetMargin(margin);
+  if (aAnchoredToPoint) {
+    // Since GTK doesn't allow us to specify margins itself, when anchored to a
+    // point we can just assume we'll be aligned correctly... This is kind of
+    // annoying but alas.
+    //
+    // This calculation must match the relevant unanchored popup calculation in
+    // nsMenuPopupFrame::SetPopupPosition(), which should itself be the inverse
+    // inverse of nsMenuPopupFrame::MoveTo().
+    if (aIsContextMenu && aFrame->IsDirectionRTL()) {
+      offset.x = -margin.right;
+    } else {
+      offset.x = margin.left;
+    }
+    offset.y = margin.top;
+    return {nsMargin(), offset};
+  }
 
   auto popupSides = SidesForPopupAlignment(aPopupAlign);
   auto anchorSides = SidesForPopupAlignment(aAnchorAlign);
@@ -2232,8 +2243,6 @@ void nsWindow::WaylandPopupMove() {
       mPopupPosition.y);
   LOG("  relative widget popup position [%d, %d]\n", mRelativePopupPosition.x,
       mRelativePopupPosition.y);
-  LOG("  relative widget popup offset [%d, %d]\n", mRelativePopupOffset.x,
-      mRelativePopupOffset.y);
 
   if (mPopupUseMoveToRect) {
     mPopupUseMoveToRect = sGdkWindowMoveToRect && gdkWindow && popupFrame;
@@ -2243,40 +2252,27 @@ void nsWindow::WaylandPopupMove() {
     if (mNeedsShow && mPopupType != ePopupTypeTooltip) {
       // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
       // Tooltips are created as subsurfaces with relative position.
-      LOG("  use gtk_window_move(%d, %d) for hidden widget\n",
-          mPopupPosition.x + mRelativePopupOffset.x,
-          mPopupPosition.y + mRelativePopupOffset.y);
-      gtk_window_move(GTK_WINDOW(mShell),
-                      mPopupPosition.x + mRelativePopupOffset.x,
-                      mPopupPosition.y + mRelativePopupOffset.y);
+      LOG("  use gtk_window_move(%d, %d) for hidden widget\n", mPopupPosition.x,
+          mPopupPosition.y);
+      gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
     } else {
       LOG("  use gtk_window_move(%d, %d) for visible widget\n",
-          mRelativePopupPosition.x + mRelativePopupOffset.x,
-          mRelativePopupPosition.y + mRelativePopupOffset.y);
-      gtk_window_move(GTK_WINDOW(mShell),
-                      mRelativePopupPosition.x + mRelativePopupOffset.x,
-                      mRelativePopupPosition.y + mRelativePopupOffset.y);
-    }
-    if (mRelativePopupOffset.x || mRelativePopupOffset.y) {
-      mBounds.x = (mRelativePopupPosition.x + mRelativePopupOffset.x) *
-                  FractionalScaleFactor();
-      mBounds.y = (mRelativePopupPosition.y + mRelativePopupOffset.y) *
-                  FractionalScaleFactor();
-      LOG("  popup is moved, setting new bounds starts at [%d, %d]\n",
-          mBounds.x, mBounds.y);
-      NotifyWindowMoved(mBounds.x, mBounds.y);
+          mRelativePopupPosition.x, mRelativePopupPosition.y);
+      gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
+                      mRelativePopupPosition.y);
     }
     return;
   }
 
   const bool isTopContextMenu = mPopupContextMenu && !mPopupAnchored;
+  const bool isRTL = IsPopupDirectionRTL();
   int8_t popupAlign(popupFrame->GetPopupAlignment());
   int8_t anchorAlign(popupFrame->GetPopupAnchor());
   if (isTopContextMenu) {
     anchorAlign = POPUPALIGNMENT_BOTTOMRIGHT;
     popupAlign = POPUPALIGNMENT_TOPLEFT;
   }
-  if (IsPopupDirectionRTL()) {
+  if (isRTL) {
     popupAlign = -popupAlign;
     anchorAlign = -anchorAlign;
   }
@@ -2289,10 +2285,8 @@ void nsWindow::WaylandPopupMove() {
   // the layout work here.
   LayoutDeviceIntRect anchorRect;
   ResolvedPopupMargin popupMargin;
-  bool hasAnchorRect;
   {
-    nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
-    hasAnchorRect = anchorRectAppUnits.width != 0;
+    nsRect anchorRectAppUnits = popupFrame->GetUntransformedAnchorRect();
     // This is a somewhat hacky way of applying the popup margin. We don't know
     // if GTK will end up flipping the popup, in which case the offset we
     // compute is just wrong / applied to the wrong side.
@@ -2301,51 +2295,31 @@ void nsWindow::WaylandPopupMove() {
     // the margin, which achieves the same result if the popup is positioned
     // correctly, but doesn't misposition the popup when flipped across the
     // anchor.
-    if (hasAnchorRect) {
-      popupMargin = ResolveMargin(popupFrame, popupAlign, anchorAlign);
-      LOG("  layout popup CSS anchor (%d, %d) %s, margin %s offset %s\n",
-          popupAlign, anchorAlign, ToString(anchorRectAppUnits).c_str(),
-          ToString(popupMargin.mAnchorMargin).c_str(),
-          ToString(popupMargin.mPopupOffset).c_str());
-      anchorRectAppUnits.Inflate(popupMargin.mAnchorMargin);
-      LOG("    after margins %s\n", ToString(anchorRectAppUnits).c_str());
-      if (anchorRect.width < 0) {
-        auto w = -anchorRect.width;
-        anchorRect.width += w + 1;
-        anchorRect.x += w;
-      }
-      anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
-          anchorRectAppUnits, popupFrame->PresContext()->AppUnitsPerDevPixel());
-      LOG("    final %s\n", ToString(anchorRect).c_str());
+    popupMargin = ResolveMargin(popupFrame, popupAlign, anchorAlign,
+                                anchorRectAppUnits.IsEmpty(), isTopContextMenu);
+    LOG("  layout popup CSS anchor (%d, %d) %s, margin %s offset %s\n",
+        popupAlign, anchorAlign, ToString(anchorRectAppUnits).c_str(),
+        ToString(popupMargin.mAnchorMargin).c_str(),
+        ToString(popupMargin.mPopupOffset).c_str());
+    anchorRectAppUnits.Inflate(popupMargin.mAnchorMargin);
+    LOG("    after margins %s\n", ToString(anchorRectAppUnits).c_str());
+    nscoord auPerDev = popupFrame->PresContext()->AppUnitsPerDevPixel();
+    if (anchorRect.width < 0) {
+      auto w = -anchorRect.width;
+      anchorRect.width += w + 1;
+      anchorRect.x += w;
     }
+    anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRectAppUnits,
+                                                            auPerDev);
+    LOG("    final %s\n", ToString(anchorRect).c_str());
   }
 
   // Get gravity and flip type
-  FlipType flipType = FlipType_Default;
-  int8_t position = -1;
   GdkGravity rectAnchor = PopupAlignmentToGdkGravity(anchorAlign);
   GdkGravity menuAnchor = PopupAlignmentToGdkGravity(popupAlign);
-  if (!isTopContextMenu) {
-    flipType = popupFrame->GetFlipType();
-    position = popupFrame->GetAlignmentPosition();
-  }
-
-  if (mRelativePopupOffset.x || mRelativePopupOffset.y) {
-    MOZ_ASSERT(isTopContextMenu);
-    GdkRectangle rect{mRelativePopupPosition.x - mRelativePopupOffset.x,
-                      mRelativePopupPosition.y - mRelativePopupOffset.y,
-                      mRelativePopupOffset.x * 2, mRelativePopupOffset.y * 2};
-
-    anchorRect = GdkRectToDevicePixels(rect);
-    LOG("  Set anchor rect with offset [%d, %d] -> [%d x %d]", anchorRect.x,
-        anchorRect.y, anchorRect.width, anchorRect.height);
-  } else if (!hasAnchorRect) {
-    LOG("  No anchor rect given, use position for anchor [%d, %d]",
-        mRelativePopupPosition.x, mRelativePopupPosition.y);
-    anchorRect =
-        LayoutDeviceIntRect(GdkPointToDevicePixels(mRelativePopupPosition),
-                            LayoutDeviceIntSize(1, 1));
-  } else if (mWaylandPopupPrev->mWaylandToplevel) {
+  FlipType flipType = popupFrame->GetFlipType();
+  int8_t position = popupFrame->GetAlignmentPosition();
+  if (mWaylandPopupPrev->mWaylandToplevel) {
     GdkPoint parent = WaylandGetParentPosition();
     LOG("  subtract parent position [%d, %d]\n", parent.x, parent.y);
     anchorRect.MoveBy(-GdkPointToDevicePixels(parent));
