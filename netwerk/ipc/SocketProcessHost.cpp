@@ -176,12 +176,6 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
 
   attributes.mInitSandbox() = false;
 
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  attributes.mIsReadyForBackgroundProcessing() =
-      dllSvc->IsReadyForBackgroundProcessing();
-#endif
-
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (GetEffectiveSocketProcessSandboxLevel() > 0) {
     auto policy = SandboxBrokerPolicyFactory::GetSocketProcessPolicy(
