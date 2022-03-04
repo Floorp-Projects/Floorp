@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" />
+    <link rel="stylesheet" href="chrome://browser/skin/aboutDoHError.css" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/aboutDoHError.ftl" />
+    <link rel="icon" id="favicon" href="chrome://global/skin/icons/info.svg" />
+    <title data-l10n-id="doh-block-tracking-warning"></title>
+  </head>
+  <body>
+    <main class="container">
+      <div class="title">
+        <h2 data-l10n-id="doh-block-tracking-warning"></h2>
+        <h1 class="title-text" data-l10n-id="doh-block-block-headline"></h1>
+      </div>
+      <p id="insecure-explanation-unavailable" data-l10n-id="doh-block-explanation"></p>
+      <p id="learn-more-container">
+        <a id="learnMoreLink" target="_blank" data-l10n-id="doh-block-link-learn-more"></a>
+      </p>
+
+      <ul id="learn-more-block" hidden="true">
+          <li data-l10n-id="doh-block-details-1"></li>
+          <li data-l10n-id="doh-block-details-2"></li>
+          <li data-l10n-id="doh-block-details-3"></li>
+          <li data-l10n-id="doh-block-details-4"></li>
+      </ul>
+
+      <div class="button-container">
+        <button id="retry" data-l10n-id="doh-block-button-retry"></button>
+        <button id="allowFallback" data-l10n-id="doh-block-button-accept-tracking"></button>
+      </div>
+    </main>
+    <script src="chrome://browser/content/doh/aboutDoHError.js"></script>
+  </body>
+</html>

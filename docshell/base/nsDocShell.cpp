@@ -42,6 +42,7 @@
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -110,6 +111,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentViewer.h"
 #include "nsIController.h"
+#include "nsIDNSService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Document.h"
@@ -3836,6 +3838,24 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError);
   if (isHttpsOnlyError) {
     errorPage.AssignLiteral("httpsonlyerror");
+  }
+
+  // If the channel is in TRR only mode and this is a host error then use
+  // the DoH error page.
+  if ((aError == NS_ERROR_UNKNOWN_HOST ||
+       aError == NS_ERROR_UNKNOWN_PROXY_HOST) &&
+      StaticPrefs::network_trr_show_error_page()) {
+    nsIRequest::TRRMode mode = aFailedChannel ? aFailedChannel->GetTRRMode()
+                                              : nsIRequest::TRR_DEFAULT_MODE;
+    bool trrOnly = mode == nsIRequest::TRR_ONLY_MODE;
+    if (mode == nsIRequest::TRR_DEFAULT_MODE) {
+      trrOnly = Preferences::GetInt("network.trr.mode", 0) ==
+                nsIDNSService::MODE_TRRONLY;
+    }
+
+    if (trrOnly) {
+      errorPage.AssignLiteral("doherror");
+    }
   }
 
   if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
