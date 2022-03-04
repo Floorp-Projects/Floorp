@@ -12,11 +12,10 @@
 
 namespace mozilla::dom {
 
-bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
-                     RemoteDOMEvent* aResult) {
+bool ReadRemoteEvent(IPC::MessageReader* aReader, RemoteDOMEvent* aResult) {
   aResult->mEvent = nullptr;
   nsString type;
-  NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &type), false);
+  NS_ENSURE_TRUE(ReadParam(aReader, &type), false);
 
   aResult->mEvent =
       EventDispatcher::CreateEvent(nullptr, nullptr, nullptr, type);
@@ -24,7 +23,7 @@ bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
   // In a controlled environment, we should always have a valid event.
   bool ret = false;
   if (aResult->mEvent) {
-    ret = aResult->mEvent->Deserialize(aMsg, aIter);
+    ret = aResult->mEvent->Deserialize(aReader);
   }
   MOZ_ASSERT_UNLESS_FUZZING(ret);
 

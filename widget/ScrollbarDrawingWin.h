@@ -13,8 +13,12 @@
 namespace mozilla::widget {
 
 class ScrollbarDrawingWin : public ScrollbarDrawing {
+ protected:
+  explicit ScrollbarDrawingWin(Kind aKind) : ScrollbarDrawing(aKind) {}
+
  public:
-  ScrollbarDrawingWin() = default;
+  ScrollbarDrawingWin() : ScrollbarDrawingWin(Kind::Win10) {}
+
   virtual ~ScrollbarDrawingWin() = default;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,

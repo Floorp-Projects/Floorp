@@ -11,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXT_DESCRIPTOR_TYPES:
+  ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
@@ -124,18 +124,18 @@ class WindowGlobalMessageHandler extends MessageHandler {
     // for instance contain a browserId on top of a type. For instance:
     //
     //  {
-    //     type: CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT
+    //     type: ContextDescriptorType.BrowserElement
     //     id: ${someBrowserId}
     //   }
     //
     // To check if the current WindowGlobalMessageHandler matches this context
     // descriptor, we would run the following additional check:
     //
-    //   contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT &&
+    //   contextDescriptor.type === ContextDescriptorType.BrowserElement &&
     //     contextDescriptor.id === this._context.browserId
     //
     // (reminder: here _context is the BrowsingContext passed as a constructor
     //  argument to WindowGlobalMessageHandler).
-    return contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.ALL;
+    return contextDescriptor.type === ContextDescriptorType.All;
   }
 }

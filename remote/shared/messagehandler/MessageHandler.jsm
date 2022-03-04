@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["CONTEXT_DESCRIPTOR_TYPES", "MessageHandler"];
+const EXPORTED_SYMBOLS = ["ContextDescriptorType", "MessageHandler"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -33,19 +33,23 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * be later expanded to filter on a worker, a webextension, a process etc...
  *
  * @typedef {Object} ContextDescriptor
- * @property {String} type
- *     The type of context, one of CONTEXT_DESCRIPTOR_TYPES
+ * @property {ContextDescriptorType} type
+ *     The type of context
  * @property {String=} id
  *     Unique id of a given context for the provided type.
- *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
- *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
+ *     For ContextDescriptorType.All, id can be ommitted.
+ *     For ContextDescriptorType.TopBrowsingContext, the id should be a
  *     WindowManager UUID created by `getIdForBrowser`.
  */
 
-// Enum of ContextDescriptor types.
-const CONTEXT_DESCRIPTOR_TYPES = {
-  ALL: "all",
-  TOP_BROWSING_CONTEXT: "top-browsing-context",
+/**
+ * Enum of ContextDescriptor types.
+ *
+ * @enum {string}
+ */
+const ContextDescriptorType = {
+  All: "All",
+  TopBrowsingContext: "TopBrowsingContext",
 };
 
 /**

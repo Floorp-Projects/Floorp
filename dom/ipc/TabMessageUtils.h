@@ -20,7 +20,7 @@
 
 namespace mozilla::dom {
 
-bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
+bool ReadRemoteEvent(IPC::MessageReader* aReader,
                      mozilla::dom::RemoteDOMEvent* aResult);
 
 }  // namespace mozilla::dom
@@ -31,13 +31,12 @@ template <>
 struct ParamTraits<mozilla::dom::RemoteDOMEvent> {
   typedef mozilla::dom::RemoteDOMEvent paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aParam.mEvent->Serialize(aMsg, true);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.mEvent->Serialize(aWriter, true);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return mozilla::dom::ReadRemoteEvent(aMsg, aIter, aResult);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return mozilla::dom::ReadRemoteEvent(aReader, aResult);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {}
@@ -65,19 +64,18 @@ template <>
 struct ParamTraits<mozilla::dom::EffectsInfo> {
   typedef mozilla::dom::EffectsInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mVisibleRect);
-    WriteParam(aMsg, aParam.mScaleX);
-    WriteParam(aMsg, aParam.mScaleY);
-    WriteParam(aMsg, aParam.mTransformToAncestorScale);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mVisibleRect);
+    WriteParam(aWriter, aParam.mScaleX);
+    WriteParam(aWriter, aParam.mScaleY);
+    WriteParam(aWriter, aParam.mTransformToAncestorScale);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mVisibleRect) &&
-           ReadParam(aMsg, aIter, &aResult->mScaleX) &&
-           ReadParam(aMsg, aIter, &aResult->mScaleY) &&
-           ReadParam(aMsg, aIter, &aResult->mTransformToAncestorScale);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mVisibleRect) &&
+           ReadParam(aReader, &aResult->mScaleX) &&
+           ReadParam(aReader, &aResult->mScaleY) &&
+           ReadParam(aReader, &aResult->mTransformToAncestorScale);
   }
 };
 
@@ -96,25 +94,24 @@ template <>
 struct ParamTraits<mozilla::ScrollAxis> {
   typedef mozilla::ScrollAxis paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mWhereToScroll);
-    WriteParam(aMsg, aParam.mWhenToScroll);
-    WriteParam(aMsg, aParam.mOnlyIfPerceivedScrollableDirection);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mWhereToScroll);
+    WriteParam(aWriter, aParam.mWhenToScroll);
+    WriteParam(aWriter, aParam.mOnlyIfPerceivedScrollableDirection);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mWhereToScroll)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mWhereToScroll)) {
       return false;
     }
-    if (!ReadParam(aMsg, aIter, &aResult->mWhenToScroll)) {
+    if (!ReadParam(aReader, &aResult->mWhenToScroll)) {
       return false;
     }
 
     // We can't set mOnlyIfPerceivedScrollableDirection directly since it's
     // a bitfield.
     bool value;
-    if (!ReadParam(aMsg, aIter, &value)) {
+    if (!ReadParam(aReader, &value)) {
       return false;
     }
     aResult->mOnlyIfPerceivedScrollableDirection = value;

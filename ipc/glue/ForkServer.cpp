@@ -130,6 +130,14 @@ inline void PrepareFdsRemap(base::LaunchOptions* aOptions,
   }
 }
 
+template <class P>
+static void ReadParamInfallible(IPC::MessageReader* aReader, P* aResult,
+                                const char* aCrashMessage) {
+  if (!IPC::ReadParam(aReader, aResult)) {
+    MOZ_CRASH_UNSAFE(aCrashMessage);
+  }
+}
+
 /**
  * Parse a Message to get a list of arguments and fill a LaunchOptions.
  */
@@ -142,18 +150,16 @@ inline bool ParseForkNewSubprocess(IPC::Message& aMsg,
     return false;
   }
 
-  PickleIterator iter(aMsg);
+  IPC::MessageReader reader(aMsg);
   nsTArray<nsCString> argv_array;
   nsTArray<EnvVar> env_map;
   nsTArray<FdMapping> fds_remap;
 
-  ReadIPDLParamInfallible(&aMsg, &iter, nullptr, &argv_array,
-                          "Error deserializing 'nsCString[]'");
-  ReadIPDLParamInfallible(&aMsg, &iter, nullptr, &env_map,
-                          "Error deserializing 'EnvVar[]'");
-  ReadIPDLParamInfallible(&aMsg, &iter, nullptr, &fds_remap,
-                          "Error deserializing 'FdMapping[]'");
-  aMsg.EndRead(iter, aMsg.type());
+  ReadParamInfallible(&reader, &argv_array,
+                      "Error deserializing 'nsCString[]'");
+  ReadParamInfallible(&reader, &env_map, "Error deserializing 'EnvVar[]'");
+  ReadParamInfallible(&reader, &fds_remap, "Error deserializing 'FdMapping[]'");
+  reader.EndRead();
 
   PrepareArguments(aArgv, argv_array);
   PrepareEnv(aOptions, env_map);
@@ -220,7 +226,8 @@ void ForkServer::OnMessageReceived(IPC::Message&& message) {
   mAppProcBuilder = nullptr;
 
   IPC::Message reply(MSG_ROUTING_CONTROL, Reply_ForkNewSubprocess__ID);
-  WriteIPDLParam(&reply, nullptr, child_pid);
+  IPC::MessageWriter writer(reply);
+  WriteIPDLParam(&writer, nullptr, child_pid);
   mTcver->SendInfallible(reply, "failed to send a reply message");
 
   // Without this, the content processes that is forked later are

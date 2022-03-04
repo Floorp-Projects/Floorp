@@ -30,22 +30,21 @@ struct ParamTraits<mozilla::dom::OwningStringOrStringSequence> {
   // private generated code. So we have to re-create it.
   enum Type { kUninitialized, kString, kStringSequence };
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     if (aParam.IsString()) {
-      aMsg->WriteInt16(kString);
-      WriteParam(aMsg, aParam.GetAsString());
+      aWriter->WriteInt16(kString);
+      WriteParam(aWriter, aParam.GetAsString());
     } else if (aParam.IsStringSequence()) {
-      aMsg->WriteInt16(kStringSequence);
-      WriteParam(aMsg, aParam.GetAsStringSequence());
+      aWriter->WriteInt16(kStringSequence);
+      WriteParam(aWriter, aParam.GetAsStringSequence());
     } else {
-      aMsg->WriteInt16(kUninitialized);
+      aWriter->WriteInt16(kUninitialized);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     int16_t type;
-    if (!aMsg->ReadInt16(aIter, &type)) {
+    if (!aReader->ReadInt16(&type)) {
       return false;
     }
 
@@ -54,9 +53,9 @@ struct ParamTraits<mozilla::dom::OwningStringOrStringSequence> {
         aResult->Uninit();
         return true;
       case kString:
-        return ReadParam(aMsg, aIter, &aResult->SetAsString());
+        return ReadParam(aReader, &aResult->SetAsString());
       case kStringSequence:
-        return ReadParam(aMsg, aIter, &aResult->SetAsStringSequence());
+        return ReadParam(aReader, &aResult->SetAsStringSequence());
     }
 
     return false;

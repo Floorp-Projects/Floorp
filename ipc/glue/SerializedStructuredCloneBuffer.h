@@ -64,18 +64,17 @@ template <>
 struct ParamTraits<JSStructuredCloneData> {
   typedef JSStructuredCloneData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     MOZ_ASSERT(!(aParam.Size() % sizeof(uint64_t)));
-    WriteParam(aMsg, aParam.Size());
+    WriteParam(aWriter, aParam.Size());
     aParam.ForEachDataChunk([&](const char* aData, size_t aSize) {
-      return aMsg->WriteBytes(aData, aSize, sizeof(uint64_t));
+      return aWriter->WriteBytes(aData, aSize, sizeof(uint64_t));
     });
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     size_t length = 0;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
     MOZ_ASSERT(!(length % sizeof(uint64_t)));
@@ -89,7 +88,7 @@ struct ParamTraits<JSStructuredCloneData> {
     // return a borrowed buffer because the out param outlives the
     // IPDL callback.
     if (length &&
-        !aMsg->ExtractBuffers(aIter, length, &buffers, sizeof(uint64_t))) {
+        !aReader->ExtractBuffers(length, &buffers, sizeof(uint64_t))) {
       return false;
     }
 
@@ -111,13 +110,12 @@ template <>
 struct ParamTraits<mozilla::SerializedStructuredCloneBuffer> {
   typedef mozilla::SerializedStructuredCloneBuffer paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.data);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.data);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->data);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->data);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
