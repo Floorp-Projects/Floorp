@@ -804,22 +804,6 @@ JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
   return AtomizeAndCopyChars(cx, chars, length, indexValue);
 }
 
-JSAtom* js::Atomize(JSContext* cx, HashNumber hash, const char* bytes,
-                    size_t length) {
-  const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
-  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
-    return s;
-  }
-
-  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
-    return nullptr;
-  }
-
-  AtomHasher::Lookup lookup(hash, chars, length);
-  return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(cx, chars, length,
-                                                           lookup, Nothing());
-}
-
 template <typename CharT>
 JSAtom* js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length) {
   return AtomizeAndCopyChars(cx, chars, length, Nothing());
