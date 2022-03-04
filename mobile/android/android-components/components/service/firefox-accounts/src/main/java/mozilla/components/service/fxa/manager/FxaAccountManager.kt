@@ -401,7 +401,7 @@ open class FxaAccountManager(
      * @param pairingUrl Optional pairing URL in case a pairing flow is being initiated.
      * @return An authentication url which is to be presented to the user.
      */
-    suspend fun beginAuthentication(pairingUrl: String? = null): String? {
+    suspend fun beginAuthentication(pairingUrl: String? = null): String? = withContext(coroutineContext) {
         // It's possible that at this point authentication is considered to be "in-progress".
         // For example, if user started authentication flow, but cancelled it (closing a custom tab)
         // without finishing.
@@ -428,7 +428,7 @@ open class FxaAccountManager(
         })
         processQueue(event)
         oauthObservers.unregisterObservers()
-        return deferredAuthUrl
+        deferredAuthUrl
     }
 
     /**
@@ -499,7 +499,7 @@ open class FxaAccountManager(
     /**
      * Pumps the state machine until all events are processed and their side-effects resolve.
      */
-    private suspend fun processQueue(event: Event) = withContext(coroutineContext) {
+    private suspend fun processQueue(event: Event) {
         eventQueue.add(event)
         do {
             val toProcess: Event = eventQueue.poll()!!
