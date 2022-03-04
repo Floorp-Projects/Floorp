@@ -736,6 +736,7 @@ const DEFAULT_RTAMO_CONTENT = {
         string_id: "mr1-onboarding-welcome-image-caption"
       }
     },
+    hide_logo: true,
     backdrop: "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
     primary_button: {
       label: {
@@ -842,19 +843,24 @@ class ProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle({
-    imageURL = "chrome://branding/content/about-logo.svg",
-    height = "80px"
-  }) {
-    return {
-      background: imageURL === "" ? null : `url(${imageURL}) no-repeat center / contain`,
-      height
-    };
+  getLogoStyle(content) {
+    if (!content.hide_logo) {
+      const useDefaultLogo = !content.logo;
+      const logoUrl = useDefaultLogo ? "chrome://branding/content/about-logo.svg" : content.logo.imageURL;
+      const logoSize = useDefaultLogo ? "80px" : content.logo.size;
+      return {
+        background: `url('${logoUrl}') top center / ${logoSize} no-repeat`,
+        height: logoSize,
+        padding: `${logoSize} 0 10px`
+      };
+    }
+
+    return {};
   }
 
-  getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen, includeNoodles) {
-    const screenClass = isCornerPosition ? "corner" : `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
-    return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${isLastCenteredScreen ? `dialog-last` : ``} ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
+  getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen) {
+    const screenClass = isCornerPosition ? "" : `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
+    return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${isLastCenteredScreen ? `dialog-last` : ``} ${screenClass}`;
   }
 
   renderContentTiles() {
@@ -910,13 +916,12 @@ class ProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     } = this.props;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoAdvance || isCornerPosition;
-    const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' by checking
+    const hideStepsIndicator = autoAdvance || isCornerPosition; // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
 
-    const screenClassName = this.getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen, includeNoodles);
+    const screenClassName = this.getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen);
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-      className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
+      className: `screen ${this.props.id || ""} ${screenClassName}`,
       role: "dialog",
       pos: content.position || "center",
       tabIndex: "-1",
@@ -939,30 +944,29 @@ class ProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: "attrib-text"
     })) : null) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "section-main"
+      className: `section-main ${includeNoodles ? "with-noodles" : ""}`
     }, content.secondary_button_top ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_4__["SecondaryCTA"], {
       content: content,
       handleAction: this.props.handleAction,
       position: "top"
     }) : null, this.renderNoodles(includeNoodles, isCornerPosition), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `main-content ${hideStepsIndicator ? "no-steps" : ""}`,
-      style: content.background ? {
-        background: content.background
-      } : {}
-    }, content.logo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `brand-logo`,
-      style: this.getLogoStyle(content.logo)
-    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `main-content ${hideStepsIndicator ? "no-steps" : ""}`
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `brand-logo ${content.hide_logo ? "hide" : ""}`,
+      style: this.getLogoStyle(content)
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
       className: `${isTheme ? "rtamo-theme-icon" : ""}`,
       src: this.props.iconURL,
       role: "presentation",
       alt: ""
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    })), content.has_fancy_title ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "confetti"
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "main-content-inner"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `welcome-text ${content.title_style || ""}`
+      className: `welcome-text ${content.has_fancy_title ? "fancy-headings" : ""}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
