@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("MagicNumber")
+
 package org.mozilla.fenix.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -46,6 +48,7 @@ private val darkColorPalette = FirefoxColors(
     layer3 = PhotonColors.DarkGrey30,
     layerAccent = PhotonColors.Violet40,
     layerAccentNonOpaque = PhotonColors.Violet50A32,
+    layerAccentOpaque = Color(0xFF423262),
     scrim = PhotonColors.DarkGrey90A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
@@ -105,6 +108,7 @@ private val lightColorPalette = FirefoxColors(
     layer3 = PhotonColors.LightGrey20,
     layerAccent = PhotonColors.Ink20,
     layerAccentNonOpaque = PhotonColors.Violet70A12,
+    layerAccentOpaque = Color(0xFFEAE4F9),
     scrim = PhotonColors.DarkGrey30A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
@@ -169,6 +173,7 @@ class FirefoxColors(
     layer3: Color,
     layerAccent: Color,
     layerAccentNonOpaque: Color,
+    layerAccentOpaque: Color,
     scrim: Color,
     gradientStart: Color,
     gradientEnd: Color,
@@ -237,6 +242,9 @@ class FirefoxColors(
         private set
     // Selected tab
     var layerAccentNonOpaque by mutableStateOf(layerAccentNonOpaque)
+        private set
+    // Selected tab
+    var layerAccentOpaque by mutableStateOf(layerAccentOpaque)
         private set
     var scrim by mutableStateOf(scrim)
         private set
@@ -403,6 +411,7 @@ class FirefoxColors(
         layer3 = other.layer3
         layerAccent = other.layerAccent
         layerAccentNonOpaque = other.layerAccentNonOpaque
+        layerAccentOpaque = other.layerAccentOpaque
         scrim = other.scrim
         gradientStart = other.gradientStart
         gradientEnd = other.gradientEnd
@@ -462,6 +471,7 @@ class FirefoxColors(
         layer3 = layer3,
         layerAccent = layerAccent,
         layerAccentNonOpaque = layerAccentNonOpaque,
+        layerAccentOpaque = layerAccentOpaque,
         scrim = scrim,
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
