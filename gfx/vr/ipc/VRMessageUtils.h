@@ -41,21 +41,20 @@ template <>
 struct ParamTraits<mozilla::gfx::VRSubmitFrameResultInfo> {
   typedef mozilla::gfx::VRSubmitFrameResultInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBase64Image);
-    WriteParam(aMsg, aParam.mFormat);
-    WriteParam(aMsg, aParam.mWidth);
-    WriteParam(aMsg, aParam.mHeight);
-    WriteParam(aMsg, aParam.mFrameNum);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mBase64Image);
+    WriteParam(aWriter, aParam.mFormat);
+    WriteParam(aWriter, aParam.mWidth);
+    WriteParam(aWriter, aParam.mHeight);
+    WriteParam(aWriter, aParam.mFrameNum);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->mBase64Image)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFormat)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mWidth)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mHeight)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFrameNum))) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &(aResult->mBase64Image)) ||
+        !ReadParam(aReader, &(aResult->mFormat)) ||
+        !ReadParam(aReader, &(aResult->mWidth)) ||
+        !ReadParam(aReader, &(aResult->mHeight)) ||
+        !ReadParam(aReader, &(aResult->mFrameNum))) {
       return false;
     }
 

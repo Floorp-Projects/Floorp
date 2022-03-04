@@ -413,12 +413,12 @@ nsCString DataPipeBase::Describe(DataPipeAutoLock& aLock) {
 }
 
 template <typename T>
-void DataPipeWrite(IPC::Message* aMsg, T* aParam) {
+void DataPipeWrite(IPC::MessageWriter* aWriter, T* aParam) {
   DataPipeAutoLock lock(*aParam->mMutex);
   MOZ_LOG(gDataPipeLog, LogLevel::Debug,
           ("IPC Write: %s", aParam->Describe(lock).get()));
 
-  WriteParam(aMsg, aParam->mStatus);
+  WriteParam(aWriter, aParam->mStatus);
   if (NS_FAILED(aParam->mStatus)) {
     return;
   }
@@ -427,12 +427,12 @@ void DataPipeWrite(IPC::Message* aMsg, T* aParam) {
                      "cannot transfer while processing a segment");
 
   // Serialize relevant parameters to our peer.
-  WriteParam(aMsg, std::move(aParam->mLink->mPort));
-  MOZ_ALWAYS_TRUE(aParam->mLink->mShmem->WriteHandle(aMsg));
-  WriteParam(aMsg, aParam->mLink->mCapacity);
-  WriteParam(aMsg, aParam->mLink->mPeerStatus);
-  WriteParam(aMsg, aParam->mLink->mOffset);
-  WriteParam(aMsg, aParam->mLink->mAvailable);
+  WriteParam(aWriter, std::move(aParam->mLink->mPort));
+  MOZ_ALWAYS_TRUE(aParam->mLink->mShmem->WriteHandle(aWriter));
+  WriteParam(aWriter, aParam->mLink->mCapacity);
+  WriteParam(aWriter, aParam->mLink->mPeerStatus);
+  WriteParam(aWriter, aParam->mLink->mOffset);
+  WriteParam(aWriter, aParam->mLink->mAvailable);
 
   // Mark our peer as closed so we don't try to send to it when closing.
   aParam->mLink->mPeerStatus = NS_ERROR_NOT_INITIALIZED;
@@ -440,10 +440,9 @@ void DataPipeWrite(IPC::Message* aMsg, T* aParam) {
 }
 
 template <typename T>
-bool DataPipeRead(const IPC::Message* aMsg, PickleIterator* aIter,
-                  RefPtr<T>* aResult) {
+bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult) {
   nsresult rv = NS_OK;
-  if (!ReadParam(aMsg, aIter, &rv)) {
+  if (!ReadParam(aReader, &rv)) {
     NS_WARNING("failed to read status!");
     return false;
   }
@@ -460,10 +459,9 @@ bool DataPipeRead(const IPC::Message* aMsg, PickleIterator* aIter,
   nsresult peerStatus = NS_OK;
   uint32_t offset = 0;
   uint32_t available = 0;
-  if (!ReadParam(aMsg, aIter, &port) || !shmem->ReadHandle(aMsg, aIter) ||
-      !ReadParam(aMsg, aIter, &capacity) ||
-      !ReadParam(aMsg, aIter, &peerStatus) ||
-      !ReadParam(aMsg, aIter, &offset) || !ReadParam(aMsg, aIter, &available)) {
+  if (!ReadParam(aReader, &port) || !shmem->ReadHandle(aReader) ||
+      !ReadParam(aReader, &capacity) || !ReadParam(aReader, &peerStatus) ||
+      !ReadParam(aReader, &offset) || !ReadParam(aReader, &available)) {
     NS_WARNING("failed to read fields!");
     return false;
   }
@@ -685,23 +683,21 @@ nsresult NewDataPipe(uint32_t aCapacity, DataPipeSender** aSender,
 }  // namespace mozilla
 
 void IPC::ParamTraits<mozilla::ipc::DataPipeSender*>::Write(
-    Message* aMsg, mozilla::ipc::DataPipeSender* aParam) {
-  mozilla::ipc::data_pipe_detail::DataPipeWrite(aMsg, aParam);
+    MessageWriter* aWriter, mozilla::ipc::DataPipeSender* aParam) {
+  mozilla::ipc::data_pipe_detail::DataPipeWrite(aWriter, aParam);
 }
 
 bool IPC::ParamTraits<mozilla::ipc::DataPipeSender*>::Read(
-    const Message* aMsg, PickleIterator* aIter,
-    RefPtr<mozilla::ipc::DataPipeSender>* aResult) {
-  return mozilla::ipc::data_pipe_detail::DataPipeRead(aMsg, aIter, aResult);
+    MessageReader* aReader, RefPtr<mozilla::ipc::DataPipeSender>* aResult) {
+  return mozilla::ipc::data_pipe_detail::DataPipeRead(aReader, aResult);
 }
 
 void IPC::ParamTraits<mozilla::ipc::DataPipeReceiver*>::Write(
-    Message* aMsg, mozilla::ipc::DataPipeReceiver* aParam) {
-  mozilla::ipc::data_pipe_detail::DataPipeWrite(aMsg, aParam);
+    MessageWriter* aWriter, mozilla::ipc::DataPipeReceiver* aParam) {
+  mozilla::ipc::data_pipe_detail::DataPipeWrite(aWriter, aParam);
 }
 
 bool IPC::ParamTraits<mozilla::ipc::DataPipeReceiver*>::Read(
-    const Message* aMsg, PickleIterator* aIter,
-    RefPtr<mozilla::ipc::DataPipeReceiver>* aResult) {
-  return mozilla::ipc::data_pipe_detail::DataPipeRead(aMsg, aIter, aResult);
+    MessageReader* aReader, RefPtr<mozilla::ipc::DataPipeReceiver>* aResult) {
+  return mozilla::ipc::data_pipe_detail::DataPipeRead(aReader, aResult);
 }

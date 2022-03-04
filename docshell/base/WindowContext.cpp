@@ -577,17 +577,17 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(WindowContext)
 namespace ipc {
 
 void IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Write(
-    IPC::Message* aMsg, IProtocol* aActor,
+    IPC::MessageWriter* aWriter, IProtocol* aActor,
     const dom::MaybeDiscarded<dom::WindowContext>& aParam) {
   uint64_t id = aParam.ContextId();
-  WriteIPDLParam(aMsg, aActor, id);
+  WriteIPDLParam(aWriter, aActor, id);
 }
 
 bool IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     dom::MaybeDiscarded<dom::WindowContext>* aResult) {
   uint64_t id = 0;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+  if (!ReadIPDLParam(aReader, aActor, &id)) {
     return false;
   }
 
@@ -602,24 +602,23 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Read(
 }
 
 void IPDLParamTraits<dom::WindowContext::IPCInitializer>::Write(
-    IPC::Message* aMessage, IProtocol* aActor,
+    IPC::MessageWriter* aWriter, IProtocol* aActor,
     const dom::WindowContext::IPCInitializer& aInit) {
   // Write actor ID parameters.
-  WriteIPDLParam(aMessage, aActor, aInit.mInnerWindowId);
-  WriteIPDLParam(aMessage, aActor, aInit.mOuterWindowId);
-  WriteIPDLParam(aMessage, aActor, aInit.mBrowsingContextId);
-  WriteIPDLParam(aMessage, aActor, aInit.mFields);
+  WriteIPDLParam(aWriter, aActor, aInit.mInnerWindowId);
+  WriteIPDLParam(aWriter, aActor, aInit.mOuterWindowId);
+  WriteIPDLParam(aWriter, aActor, aInit.mBrowsingContextId);
+  WriteIPDLParam(aWriter, aActor, aInit.mFields);
 }
 
 bool IPDLParamTraits<dom::WindowContext::IPCInitializer>::Read(
-    const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     dom::WindowContext::IPCInitializer* aInit) {
   // Read actor ID parameters.
-  return ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mInnerWindowId) &&
-         ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOuterWindowId) &&
-         ReadIPDLParam(aMessage, aIterator, aActor,
-                       &aInit->mBrowsingContextId) &&
-         ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields);
+  return ReadIPDLParam(aReader, aActor, &aInit->mInnerWindowId) &&
+         ReadIPDLParam(aReader, aActor, &aInit->mOuterWindowId) &&
+         ReadIPDLParam(aReader, aActor, &aInit->mBrowsingContextId) &&
+         ReadIPDLParam(aReader, aActor, &aInit->mFields);
 }
 
 template struct IPDLParamTraits<dom::WindowContext::BaseTransaction>;

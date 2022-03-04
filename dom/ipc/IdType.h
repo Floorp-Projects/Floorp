@@ -52,13 +52,12 @@ template <typename T>
 struct ParamTraits<mozilla::dom::IdType<T>> {
   using paramType = mozilla::dom::IdType<T>;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mId);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mId);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mId);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mId);
   }
 };
 

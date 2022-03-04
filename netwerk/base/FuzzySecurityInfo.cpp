@@ -339,12 +339,11 @@ FuzzySecurityInfo::SetEchConfig(const nsACString& aEchConfig) {
 NS_IMETHODIMP
 FuzzySecurityInfo::GetRetryEchConfig(nsACString& aEchConfig) { return NS_OK; }
 
-void FuzzySecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
+void FuzzySecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   MOZ_CRASH("Unused");
 }
 
-bool FuzzySecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
-                                           PickleIterator* aIter) {
+bool FuzzySecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
   MOZ_CRASH("Unused");
   return false;
 }

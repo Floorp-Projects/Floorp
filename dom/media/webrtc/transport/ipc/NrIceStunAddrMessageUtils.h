@@ -20,22 +20,22 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::NrIceStunAddr> {
-  static void Write(Message* aMsg, const mozilla::NrIceStunAddr& aParam) {
+  static void Write(MessageWriter* aWriter,
+                    const mozilla::NrIceStunAddr& aParam) {
 #ifdef MOZ_WEBRTC
     const size_t bufSize = aParam.SerializationBufferSize();
     char* buffer = new char[bufSize];
     aParam.Serialize(buffer, bufSize);
-    aMsg->WriteBytes((void*)buffer, bufSize);
+    aWriter->WriteBytes((void*)buffer, bufSize);
     delete[] buffer;
 #endif
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   mozilla::NrIceStunAddr* aResult) {
+  static bool Read(MessageReader* aReader, mozilla::NrIceStunAddr* aResult) {
 #ifdef MOZ_WEBRTC
     const size_t bufSize = aResult->SerializationBufferSize();
     char* buffer = new char[bufSize];
-    bool result = aMsg->ReadBytesInto(aIter, (void*)buffer, bufSize);
+    bool result = aReader->ReadBytesInto((void*)buffer, bufSize);
 
     if (result) {
       result = result && (NS_OK == aResult->Deserialize(buffer, bufSize));

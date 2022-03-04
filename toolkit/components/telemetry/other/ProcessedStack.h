@@ -93,18 +93,17 @@ template <>
 struct ParamTraits<mozilla::Telemetry::ProcessedStack::Module> {
   typedef mozilla::Telemetry::ProcessedStack::Module paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mName);
-    WriteParam(aMsg, aParam.mBreakpadId);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mName);
+    WriteParam(aWriter, aParam.mBreakpadId);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mName)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mName)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mBreakpadId)) {
+    if (!ReadParam(aReader, &aResult->mBreakpadId)) {
       return false;
     }
 
@@ -116,18 +115,17 @@ template <>
 struct ParamTraits<mozilla::Telemetry::ProcessedStack::Frame> {
   typedef mozilla::Telemetry::ProcessedStack::Frame paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mOffset);
-    WriteParam(aMsg, aParam.mModIndex);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mOffset);
+    WriteParam(aWriter, aParam.mModIndex);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mOffset)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mOffset)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mModIndex)) {
+    if (!ReadParam(aReader, &aResult->mModIndex)) {
       return false;
     }
 
