@@ -11,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXT_DESCRIPTOR_TYPES:
+  ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   isBrowsingContextCompatible:
     "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
@@ -113,11 +113,11 @@ class FrameTransport {
   _getBrowsingContextsForDescriptor(contextDescriptor) {
     const { id, type } = contextDescriptor;
 
-    if (type === CONTEXT_DESCRIPTOR_TYPES.ALL) {
+    if (type === ContextDescriptorType.All) {
       return this._getBrowsingContexts();
     }
 
-    if (type === CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT) {
+    if (type === ContextDescriptorType.TopBrowsingContext) {
       const { browserId } = TabManager.getBrowserById(id);
       return this._getBrowsingContexts({ browserId });
     }
