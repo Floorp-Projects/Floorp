@@ -1685,6 +1685,13 @@ nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetContentThemeDerivedColorSchemeIsDark(bool* aResult) {
+  *aResult =
+      LookAndFeel::ThemeDerivedColorSchemeForContent() == ColorScheme::Dark;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetDrawInTitlebar(bool* aResult) {
   *aResult = LookAndFeel::DrawInTitlebar();
   return NS_OK;
