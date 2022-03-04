@@ -169,6 +169,11 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
     return false;
   }
 
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->StartUntrustedModulesProcessor();
+#endif  // defined(XP_WIN)
+
   return true;
 }
 
@@ -222,12 +227,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInit(
   if (aAttributes.mInitSandbox()) {
     Unused << RecvInitLinuxSandbox(aAttributes.mSandboxBroker());
   }
-
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->StartUntrustedModulesProcessor(
-      aAttributes.mIsReadyForBackgroundProcessing());
-#endif  // defined(XP_WIN)
 
   return IPC_OK();
 }
@@ -739,15 +738,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetUntrustedModulesData(
         aResolver(std::move(aData));
       },
       [aResolver](nsresult aReason) { aResolver(Nothing()); });
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-SocketProcessChild::RecvUnblockUntrustedModulesThread() {
-  if (nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService()) {
-    obs->NotifyObservers(nullptr, "unblock-untrusted-modules-thread", nullptr);
-  }
   return IPC_OK();
 }
 #endif  // defined(XP_WIN)

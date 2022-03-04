@@ -1318,7 +1318,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     // Ensure that DLL Services are running
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->StartUntrustedModulesProcessor(true);
+    dllSvc->StartUntrustedModulesProcessor();
     auto dllServicesDisable =
         MakeScopeExit([&dllSvc]() { dllSvc->DisableFull(); });
 

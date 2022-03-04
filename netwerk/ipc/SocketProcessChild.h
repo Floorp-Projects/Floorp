@@ -160,7 +160,6 @@ class SocketProcessChild final
 #if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
-  mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
  protected:
