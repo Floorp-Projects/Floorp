@@ -45,7 +45,7 @@ private val darkColorPalette = FirefoxColors(
     layer2 = PhotonColors.DarkGrey30,
     layer3 = PhotonColors.DarkGrey30,
     layerAccent = PhotonColors.Violet40,
-    layerNonOpaque = PhotonColors.Violet50A32,
+    layerAccentNonOpaque = PhotonColors.Violet50A32,
     scrim = PhotonColors.DarkGrey90A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
@@ -104,7 +104,7 @@ private val lightColorPalette = FirefoxColors(
     layer2 = PhotonColors.White,
     layer3 = PhotonColors.LightGrey20,
     layerAccent = PhotonColors.Ink20,
-    layerNonOpaque = PhotonColors.Violet70A12,
+    layerAccentNonOpaque = PhotonColors.Violet70A12,
     scrim = PhotonColors.DarkGrey30A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
@@ -168,7 +168,7 @@ class FirefoxColors(
     layer2: Color,
     layer3: Color,
     layerAccent: Color,
-    layerNonOpaque: Color,
+    layerAccentNonOpaque: Color,
     scrim: Color,
     gradientStart: Color,
     gradientEnd: Color,
@@ -236,7 +236,7 @@ class FirefoxColors(
     var layerAccent by mutableStateOf(layerAccent)
         private set
     // Selected tab
-    var layerNonOpaque by mutableStateOf(layerNonOpaque)
+    var layerAccentNonOpaque by mutableStateOf(layerAccentNonOpaque)
         private set
     var scrim by mutableStateOf(scrim)
         private set
@@ -402,7 +402,7 @@ class FirefoxColors(
         layer2 = other.layer2
         layer3 = other.layer3
         layerAccent = other.layerAccent
-        layerNonOpaque = other.layerNonOpaque
+        layerAccentNonOpaque = other.layerAccentNonOpaque
         scrim = other.scrim
         gradientStart = other.gradientStart
         gradientEnd = other.gradientEnd
@@ -461,7 +461,7 @@ class FirefoxColors(
         layer2 = layer2,
         layer3 = layer3,
         layerAccent = layerAccent,
-        layerNonOpaque = layerNonOpaque,
+        layerAccentNonOpaque = layerAccentNonOpaque,
         scrim = scrim,
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
