@@ -234,8 +234,7 @@ class IProtocol : public HasResultCodes {
   virtual void RemoveManagee(int32_t, IProtocol*) = 0;
   virtual void DeallocManagee(int32_t, IProtocol*) = 0;
 
-  Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage,
-                              PickleIterator* aIter, bool aNullable,
+  Maybe<IProtocol*> ReadActor(IPC::MessageReader* aReader, bool aNullable,
                               const char* aActorDescription,
                               int32_t aProtocolTypeId);
 
