@@ -2990,16 +2990,9 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     sharedUASheetAddress = 0;
   }
 
-  bool isReadyForBackgroundProcessing = false;
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  isReadyForBackgroundProcessing = dllSvc->IsReadyForBackgroundProcessing();
-#endif
-
   Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
-      sharedUASheetAddress, std::move(sharedFontListBlocks),
-      isReadyForBackgroundProcessing);
+      sharedUASheetAddress, std::move(sharedFontListBlocks));
 
   ipc::WritableSharedMap* sharedData =
       nsFrameMessageManager::sParentProcessManager->SharedData();

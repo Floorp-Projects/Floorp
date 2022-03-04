@@ -34,8 +34,7 @@ class DllServices final : public glue::DllServices {
   static const char* kTopicDllLoadedMainThread;
   static const char* kTopicDllLoadedNonMainThread;
 
-  void StartUntrustedModulesProcessor(bool aIsReadyForBackgroundProcessing);
-  bool IsReadyForBackgroundProcessing() const;
+  void StartUntrustedModulesProcessor();
 
   RefPtr<UntrustedModulesPromise> GetUntrustedModulesData();
 

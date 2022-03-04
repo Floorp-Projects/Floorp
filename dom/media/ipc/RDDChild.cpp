@@ -59,14 +59,7 @@ bool RDDChild::Init() {
 
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
 
-  bool isReadyForBackgroundProcessing = false;
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  isReadyForBackgroundProcessing = dllSvc->IsReadyForBackgroundProcessing();
-#endif
-
-  SendInit(updates, brokerFd, Telemetry::CanRecordReleaseData(),
-           isReadyForBackgroundProcessing);
+  SendInit(updates, brokerFd, Telemetry::CanRecordReleaseData());
 
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 
