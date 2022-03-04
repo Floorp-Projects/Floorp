@@ -341,26 +341,24 @@ namespace IPC {
 template <>
 struct ParamTraits<gfxSparseBitSet> {
   typedef gfxSparseBitSet paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBlockIndex);
-    WriteParam(aMsg, aParam.mBlocks);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mBlockIndex);
+    WriteParam(aWriter, aParam.mBlocks);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBlockIndex) &&
-           ReadParam(aMsg, aIter, &aResult->mBlocks);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mBlockIndex) &&
+           ReadParam(aReader, &aResult->mBlocks);
   }
 };
 
 template <>
 struct ParamTraits<gfxSparseBitSet::Block> {
   typedef gfxSparseBitSet::Block paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
 };
 }  // namespace IPC

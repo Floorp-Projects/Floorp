@@ -40,13 +40,12 @@ template <>
 struct ParamTraits<mozilla::layers::SharedSurfacesMemoryReport> {
   typedef mozilla::layers::SharedSurfacesMemoryReport paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mSurfaces);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSurfaces);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mSurfaces);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mSurfaces);
   }
 };
 

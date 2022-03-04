@@ -12,7 +12,7 @@
 
 namespace mozilla::ipc {
 
-void IPDLParamTraits<nsIPrincipal*>::Write(IPC::Message* aMsg,
+void IPDLParamTraits<nsIPrincipal*>::Write(IPC::MessageWriter* aWriter,
                                            IProtocol* aActor,
                                            nsIPrincipal* aParam) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
@@ -24,15 +24,14 @@ void IPDLParamTraits<nsIPrincipal*>::Write(IPC::Message* aMsg,
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  WriteIPDLParam(aMsg, aActor, info);
+  WriteIPDLParam(aWriter, aActor, info);
 }
 
-bool IPDLParamTraits<nsIPrincipal*>::Read(const IPC::Message* aMsg,
-                                          PickleIterator* aIter,
+bool IPDLParamTraits<nsIPrincipal*>::Read(IPC::MessageReader* aReader,
                                           IProtocol* aActor,
                                           RefPtr<nsIPrincipal>* aResult) {
   Maybe<PrincipalInfo> info;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &info)) {
+  if (!ReadIPDLParam(aReader, aActor, &info)) {
     return false;
   }
 

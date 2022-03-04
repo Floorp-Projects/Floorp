@@ -21,29 +21,29 @@ static_assert(kDynamicAtomToken >= kAtomsCount,
               "Exceeded supported number of static atoms");
 
 /* static */
-void ParamTraits<nsAtom*>::Write(Message* aMsg, const nsAtom* aParam) {
+void ParamTraits<nsAtom*>::Write(MessageWriter* aWriter, const nsAtom* aParam) {
   MOZ_ASSERT(aParam);
 
   if (aParam->IsStatic()) {
     const nsStaticAtom* atom = aParam->AsStatic();
     uint16_t index = static_cast<uint16_t>(nsGkAtoms::IndexOf(atom));
     MOZ_ASSERT(index < kAtomsCount);
-    WriteParam(aMsg, index);
+    WriteParam(aWriter, index);
     return;
   }
-  WriteParam(aMsg, kDynamicAtomToken);
+  WriteParam(aWriter, kDynamicAtomToken);
   nsDependentAtomString atomStr(aParam);
   // nsDependentAtomString is serialized as its base, nsString, but we
   // can be explicit about it.
   nsString& str = atomStr;
-  WriteParam(aMsg, str);
+  WriteParam(aWriter, str);
 }
 
 /* static */
-bool ParamTraits<nsAtom*>::Read(const Message* aMsg, PickleIterator* aIter,
+bool ParamTraits<nsAtom*>::Read(MessageReader* aReader,
                                 RefPtr<nsAtom>* aResult) {
   uint16_t token;
-  if (!ReadParam(aMsg, aIter, &token)) {
+  if (!ReadParam(aReader, &token)) {
     return false;
   }
   if (token != kDynamicAtomToken) {
@@ -55,7 +55,7 @@ bool ParamTraits<nsAtom*>::Read(const Message* aMsg, PickleIterator* aIter,
   }
 
   nsAutoString str;
-  if (!ReadParam(aMsg, aIter, static_cast<nsString*>(&str))) {
+  if (!ReadParam(aReader, static_cast<nsString*>(&str))) {
     return false;
   }
 

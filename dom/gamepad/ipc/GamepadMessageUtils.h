@@ -47,55 +47,54 @@ template <>
 struct ParamTraits<mozilla::dom::GamepadPoseState> {
   typedef mozilla::dom::GamepadPoseState paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.flags);
-    WriteParam(aMsg, aParam.orientation[0]);
-    WriteParam(aMsg, aParam.orientation[1]);
-    WriteParam(aMsg, aParam.orientation[2]);
-    WriteParam(aMsg, aParam.orientation[3]);
-    WriteParam(aMsg, aParam.position[0]);
-    WriteParam(aMsg, aParam.position[1]);
-    WriteParam(aMsg, aParam.position[2]);
-    WriteParam(aMsg, aParam.angularVelocity[0]);
-    WriteParam(aMsg, aParam.angularVelocity[1]);
-    WriteParam(aMsg, aParam.angularVelocity[2]);
-    WriteParam(aMsg, aParam.angularAcceleration[0]);
-    WriteParam(aMsg, aParam.angularAcceleration[1]);
-    WriteParam(aMsg, aParam.angularAcceleration[2]);
-    WriteParam(aMsg, aParam.linearVelocity[0]);
-    WriteParam(aMsg, aParam.linearVelocity[1]);
-    WriteParam(aMsg, aParam.linearVelocity[2]);
-    WriteParam(aMsg, aParam.linearAcceleration[0]);
-    WriteParam(aMsg, aParam.linearAcceleration[1]);
-    WriteParam(aMsg, aParam.linearAcceleration[2]);
-    WriteParam(aMsg, aParam.isPositionValid);
-    WriteParam(aMsg, aParam.isOrientationValid);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.flags);
+    WriteParam(aWriter, aParam.orientation[0]);
+    WriteParam(aWriter, aParam.orientation[1]);
+    WriteParam(aWriter, aParam.orientation[2]);
+    WriteParam(aWriter, aParam.orientation[3]);
+    WriteParam(aWriter, aParam.position[0]);
+    WriteParam(aWriter, aParam.position[1]);
+    WriteParam(aWriter, aParam.position[2]);
+    WriteParam(aWriter, aParam.angularVelocity[0]);
+    WriteParam(aWriter, aParam.angularVelocity[1]);
+    WriteParam(aWriter, aParam.angularVelocity[2]);
+    WriteParam(aWriter, aParam.angularAcceleration[0]);
+    WriteParam(aWriter, aParam.angularAcceleration[1]);
+    WriteParam(aWriter, aParam.angularAcceleration[2]);
+    WriteParam(aWriter, aParam.linearVelocity[0]);
+    WriteParam(aWriter, aParam.linearVelocity[1]);
+    WriteParam(aWriter, aParam.linearVelocity[2]);
+    WriteParam(aWriter, aParam.linearAcceleration[0]);
+    WriteParam(aWriter, aParam.linearAcceleration[1]);
+    WriteParam(aWriter, aParam.linearAcceleration[2]);
+    WriteParam(aWriter, aParam.isPositionValid);
+    WriteParam(aWriter, aParam.isOrientationValid);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->flags)) ||
-        !ReadParam(aMsg, aIter, &(aResult->orientation[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->orientation[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->orientation[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->orientation[3])) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularVelocity[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularVelocity[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularVelocity[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularAcceleration[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularAcceleration[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->angularAcceleration[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearVelocity[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearVelocity[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearVelocity[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2])) ||
-        !ReadParam(aMsg, aIter, &(aResult->isPositionValid)) ||
-        !ReadParam(aMsg, aIter, &(aResult->isOrientationValid))) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &(aResult->flags)) ||
+        !ReadParam(aReader, &(aResult->orientation[0])) ||
+        !ReadParam(aReader, &(aResult->orientation[1])) ||
+        !ReadParam(aReader, &(aResult->orientation[2])) ||
+        !ReadParam(aReader, &(aResult->orientation[3])) ||
+        !ReadParam(aReader, &(aResult->position[0])) ||
+        !ReadParam(aReader, &(aResult->position[1])) ||
+        !ReadParam(aReader, &(aResult->position[2])) ||
+        !ReadParam(aReader, &(aResult->angularVelocity[0])) ||
+        !ReadParam(aReader, &(aResult->angularVelocity[1])) ||
+        !ReadParam(aReader, &(aResult->angularVelocity[2])) ||
+        !ReadParam(aReader, &(aResult->angularAcceleration[0])) ||
+        !ReadParam(aReader, &(aResult->angularAcceleration[1])) ||
+        !ReadParam(aReader, &(aResult->angularAcceleration[2])) ||
+        !ReadParam(aReader, &(aResult->linearVelocity[0])) ||
+        !ReadParam(aReader, &(aResult->linearVelocity[1])) ||
+        !ReadParam(aReader, &(aResult->linearVelocity[2])) ||
+        !ReadParam(aReader, &(aResult->linearAcceleration[0])) ||
+        !ReadParam(aReader, &(aResult->linearAcceleration[1])) ||
+        !ReadParam(aReader, &(aResult->linearAcceleration[2])) ||
+        !ReadParam(aReader, &(aResult->isPositionValid)) ||
+        !ReadParam(aReader, &(aResult->isOrientationValid))) {
       return false;
     }
     return true;
@@ -106,25 +105,24 @@ template <>
 struct ParamTraits<mozilla::dom::GamepadTouchState> {
   typedef mozilla::dom::GamepadTouchState paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.touchId);
-    WriteParam(aMsg, aParam.surfaceId);
-    WriteParam(aMsg, aParam.position[0]);
-    WriteParam(aMsg, aParam.position[1]);
-    WriteParam(aMsg, aParam.surfaceDimensions[0]);
-    WriteParam(aMsg, aParam.surfaceDimensions[1]);
-    WriteParam(aMsg, aParam.isSurfaceDimensionsValid);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.touchId);
+    WriteParam(aWriter, aParam.surfaceId);
+    WriteParam(aWriter, aParam.position[0]);
+    WriteParam(aWriter, aParam.position[1]);
+    WriteParam(aWriter, aParam.surfaceDimensions[0]);
+    WriteParam(aWriter, aParam.surfaceDimensions[1]);
+    WriteParam(aWriter, aParam.isSurfaceDimensionsValid);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->touchId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceDimensions[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceDimensions[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->isSurfaceDimensionsValid))) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &(aResult->touchId)) ||
+        !ReadParam(aReader, &(aResult->surfaceId)) ||
+        !ReadParam(aReader, &(aResult->position[0])) ||
+        !ReadParam(aReader, &(aResult->position[1])) ||
+        !ReadParam(aReader, &(aResult->surfaceDimensions[0])) ||
+        !ReadParam(aReader, &(aResult->surfaceDimensions[1])) ||
+        !ReadParam(aReader, &(aResult->isSurfaceDimensionsValid))) {
       return false;
     }
     return true;
@@ -141,14 +139,13 @@ struct ParamTraits<mozilla::dom::GamepadHandleKind>
 template <>
 struct ParamTraits<mozilla::dom::GamepadHandle> {
   typedef mozilla::dom::GamepadHandle paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
-    WriteParam(aMsg, aParam.mKind);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
+    WriteParam(aWriter, aParam.mKind);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aParam) {
-    return ReadParam(aMsg, aIter, &aParam->mValue) &&
-           ReadParam(aMsg, aIter, &aParam->mKind);
+  static bool Read(MessageReader* aReader, paramType* aParam) {
+    return ReadParam(aReader, &aParam->mValue) &&
+           ReadParam(aReader, &aParam->mKind);
   }
 };
 

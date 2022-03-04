@@ -32,27 +32,23 @@ mozilla::Logger& operator<<(mozilla::Logger& log, const Name& name) {
 }  // namespace mojo
 
 void IPC::ParamTraits<mojo::core::ports::PortName>::Write(
-    Message* aMsg, const paramType& aParam) {
-  WriteParam(aMsg, aParam.v1);
-  WriteParam(aMsg, aParam.v2);
+    MessageWriter* aWriter, const paramType& aParam) {
+  WriteParam(aWriter, aParam.v1);
+  WriteParam(aWriter, aParam.v2);
 }
 
-bool IPC::ParamTraits<mojo::core::ports::PortName>::Read(const Message* aMsg,
-                                                         PickleIterator* aIter,
+bool IPC::ParamTraits<mojo::core::ports::PortName>::Read(MessageReader* aReader,
                                                          paramType* aResult) {
-  return ReadParam(aMsg, aIter, &aResult->v1) &&
-         ReadParam(aMsg, aIter, &aResult->v2);
+  return ReadParam(aReader, &aResult->v1) && ReadParam(aReader, &aResult->v2);
 }
 
 void IPC::ParamTraits<mojo::core::ports::NodeName>::Write(
-    Message* aMsg, const paramType& aParam) {
-  WriteParam(aMsg, aParam.v1);
-  WriteParam(aMsg, aParam.v2);
+    MessageWriter* aWriter, const paramType& aParam) {
+  WriteParam(aWriter, aParam.v1);
+  WriteParam(aWriter, aParam.v2);
 }
 
-bool IPC::ParamTraits<mojo::core::ports::NodeName>::Read(const Message* aMsg,
-                                                         PickleIterator* aIter,
+bool IPC::ParamTraits<mojo::core::ports::NodeName>::Read(MessageReader* aReader,
                                                          paramType* aResult) {
-  return ReadParam(aMsg, aIter, &aResult->v1) &&
-         ReadParam(aMsg, aIter, &aResult->v2);
+  return ReadParam(aReader, &aResult->v1) && ReadParam(aReader, &aResult->v2);
 }

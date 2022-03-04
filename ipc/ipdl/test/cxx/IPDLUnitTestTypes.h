@@ -25,17 +25,17 @@ namespace IPC {
 template <>
 struct ParamTraits<mozilla::_ipdltest::DirtyRect> {
   typedef mozilla::_ipdltest::DirtyRect paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.x);
-    WriteParam(aMsg, aParam.y);
-    WriteParam(aMsg, aParam.w);
-    WriteParam(aMsg, aParam.h);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.x);
+    WriteParam(aWriter, aParam.y);
+    WriteParam(aWriter, aParam.w);
+    WriteParam(aWriter, aParam.h);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->x) &&
-            ReadParam(aMsg, aIter, &aResult->y) &&
-            ReadParam(aMsg, aIter, &aResult->w) &&
-            ReadParam(aMsg, aIter, &aResult->h));
+  static bool Read(MessageReader* aReader, void** aIter, paramType* aResult) {
+    return (ReadParam(aReader, aIter, &aResult->x) &&
+            ReadParam(aReader, aIter, &aResult->y) &&
+            ReadParam(aReader, aIter, &aResult->w) &&
+            ReadParam(aReader, aIter, &aResult->h));
   }
 };
 }  // namespace IPC

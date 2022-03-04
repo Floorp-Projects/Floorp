@@ -10,23 +10,22 @@
 namespace IPC {
 
 void ParamTraits<nsITransportSecurityInfo*>::Write(
-    Message* aMsg, nsITransportSecurityInfo* aParam) {
+    MessageWriter* aWriter, nsITransportSecurityInfo* aParam) {
   bool nonNull = !!aParam;
-  WriteParam(aMsg, nonNull);
+  WriteParam(aWriter, nonNull);
   if (!nonNull) {
     return;
   }
 
-  aParam->SerializeToIPC(aMsg);
+  aParam->SerializeToIPC(aWriter);
 }
 
 bool ParamTraits<nsITransportSecurityInfo*>::Read(
-    const Message* aMsg, PickleIterator* aIter,
-    RefPtr<nsITransportSecurityInfo>* aResult) {
+    MessageReader* aReader, RefPtr<nsITransportSecurityInfo>* aResult) {
   *aResult = nullptr;
 
   bool nonNull = false;
-  if (!ReadParam(aMsg, aIter, &nonNull)) {
+  if (!ReadParam(aReader, &nonNull)) {
     return false;
   }
 
@@ -36,7 +35,7 @@ bool ParamTraits<nsITransportSecurityInfo*>::Read(
 
   RefPtr<nsITransportSecurityInfo> info =
       new mozilla::psm::TransportSecurityInfo();
-  if (!info->DeserializeFromIPC(aMsg, aIter)) {
+  if (!info->DeserializeFromIPC(aReader)) {
     return false;
   }
 
@@ -44,22 +43,23 @@ bool ParamTraits<nsITransportSecurityInfo*>::Read(
   return true;
 }
 
-void ParamTraits<nsIX509Cert*>::Write(Message* aMsg, nsIX509Cert* aParam) {
+void ParamTraits<nsIX509Cert*>::Write(MessageWriter* aWriter,
+                                      nsIX509Cert* aParam) {
   bool nonNull = !!aParam;
-  WriteParam(aMsg, nonNull);
+  WriteParam(aWriter, nonNull);
   if (!nonNull) {
     return;
   }
 
-  aParam->SerializeToIPC(aMsg);
+  aParam->SerializeToIPC(aWriter);
 }
 
-bool ParamTraits<nsIX509Cert*>::Read(const Message* aMsg, PickleIterator* aIter,
+bool ParamTraits<nsIX509Cert*>::Read(MessageReader* aReader,
                                      RefPtr<nsIX509Cert>* aResult) {
   *aResult = nullptr;
 
   bool nonNull = false;
-  if (!ReadParam(aMsg, aIter, &nonNull)) {
+  if (!ReadParam(aReader, &nonNull)) {
     return false;
   }
 
@@ -68,7 +68,7 @@ bool ParamTraits<nsIX509Cert*>::Read(const Message* aMsg, PickleIterator* aIter,
   }
 
   RefPtr<nsIX509Cert> cert = new nsNSSCertificate();
-  if (!cert->DeserializeFromIPC(aMsg, aIter)) {
+  if (!cert->DeserializeFromIPC(aReader)) {
     return false;
   }
 

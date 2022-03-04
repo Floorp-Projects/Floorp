@@ -38,29 +38,28 @@ void ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
   mClientArea->SetRect(aX, aY, aWidth, aHeight);
 }
 
-void ScrollAreaEvent::Serialize(IPC::Message* aMsg,
+void ScrollAreaEvent::Serialize(IPC::MessageWriter* aWriter,
                                 bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, u"scrollareaevent"_ns);
+    IPC::WriteParam(aWriter, u"scrollareaevent"_ns);
   }
 
-  Event::Serialize(aMsg, false);
+  Event::Serialize(aWriter, false);
 
-  IPC::WriteParam(aMsg, X());
-  IPC::WriteParam(aMsg, Y());
-  IPC::WriteParam(aMsg, Width());
-  IPC::WriteParam(aMsg, Height());
+  IPC::WriteParam(aWriter, X());
+  IPC::WriteParam(aWriter, Y());
+  IPC::WriteParam(aWriter, Width());
+  IPC::WriteParam(aWriter, Height());
 }
 
-bool ScrollAreaEvent::Deserialize(const IPC::Message* aMsg,
-                                  PickleIterator* aIter) {
-  NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
+bool ScrollAreaEvent::Deserialize(IPC::MessageReader* aReader) {
+  NS_ENSURE_TRUE(Event::Deserialize(aReader), false);
 
   float x, y, width, height;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &x), false);
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &y), false);
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &width), false);
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &height), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &x), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &y), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &width), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &height), false);
   mClientArea->SetRect(x, y, width, height);
 
   return true;

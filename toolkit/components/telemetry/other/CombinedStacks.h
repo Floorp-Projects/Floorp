@@ -74,28 +74,27 @@ template <>
 struct ParamTraits<mozilla::Telemetry::CombinedStacks> {
   typedef mozilla::Telemetry::CombinedStacks paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mModules);
-    WriteParam(aMsg, aParam.mStacks);
-    WriteParam(aMsg, aParam.mNextIndex);
-    WriteParam(aMsg, aParam.mMaxStacksCount);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mModules);
+    WriteParam(aWriter, aParam.mStacks);
+    WriteParam(aWriter, aParam.mNextIndex);
+    WriteParam(aWriter, aParam.mMaxStacksCount);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mModules)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mStacks)) {
+    if (!ReadParam(aReader, &aResult->mStacks)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mNextIndex)) {
+    if (!ReadParam(aReader, &aResult->mNextIndex)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mMaxStacksCount)) {
+    if (!ReadParam(aReader, &aResult->mMaxStacksCount)) {
       return false;
     }
 
