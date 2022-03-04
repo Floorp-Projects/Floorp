@@ -4742,7 +4742,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     for (const FlexLine& line : flr.mLines) {
       for (const FlexItem& item : line.Items()) {
         const nsIFrame* f = item.Frame();
-        if (MOZ_UNLIKELY(f->IsRelativelyPositioned())) {
+        if (MOZ_UNLIKELY(f->IsRelativelyOrStickyPositioned())) {
           const nsRect marginRect = f->GetMarginRectRelativeToSelf();
           itemMarginBoxes =
               itemMarginBoxes.Union(marginRect + f->GetNormalPosition());
@@ -5558,8 +5558,8 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
 
   // If item is relpos, look up its offsets (cached from prev reflow)
   LogicalMargin logicalOffsets(outerWM);
-  if (StylePositionProperty::Relative ==
-      aItem.Frame()->StyleDisplay()->mPosition) {
+  // Bug 1758020: Should we call IsRelativelyOrStickyPositionedStyle()?
+  if (aItem.Frame()->StyleDisplay()->IsRelativelyPositionedStyle()) {
     nsMargin* cachedOffsets =
         aItem.Frame()->GetProperty(nsIFrame::ComputedOffsetProperty());
     MOZ_ASSERT(cachedOffsets,
