@@ -345,12 +345,12 @@ void IProtocol::SetId(int32_t aId) {
   mId = aId;
 }
 
-Maybe<IProtocol*> IProtocol::ReadActor(const IPC::Message* aMessage,
-                                       PickleIterator* aIter, bool aNullable,
+Maybe<IProtocol*> IProtocol::ReadActor(IPC::MessageReader* aReader,
+                                       bool aNullable,
                                        const char* aActorDescription,
                                        int32_t aProtocolTypeId) {
   int32_t id;
-  if (!IPC::ReadParam(aMessage, aIter, &id)) {
+  if (!IPC::ReadParam(aReader, &id)) {
     ActorIdReadError(aActorDescription);
     return Nothing();
   }
@@ -741,11 +741,11 @@ bool IToplevelProtocol::ShmemCreated(const Message& aMsg) {
 
 bool IToplevelProtocol::ShmemDestroyed(const Message& aMsg) {
   Shmem::id_t id;
-  PickleIterator iter = PickleIterator(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &id)) {
+  MessageReader reader(aMsg);
+  if (!IPC::ReadParam(&reader, &id)) {
     return false;
   }
-  aMsg.EndRead(iter);
+  reader.EndRead();
 
   Shmem::SharedMemory* rawmem = LookupSharedMemory(id);
   if (rawmem) {
@@ -778,7 +778,8 @@ void IPDLResolverInner::ResolveOrReject(
     return;
   }
 
-  WriteIPDLParam(reply.get(), actor, aResolve);
+  IPC::MessageWriter writer(*reply, actor);
+  WriteIPDLParam(&writer, actor, aResolve);
   aWrite(reply.get(), actor);
 
   actor->ChannelSend(reply.release());
@@ -803,8 +804,9 @@ IPDLResolverInner::~IPDLResolverInner() {
             mReply->name())
             .get());
     ResolveOrReject(false, [](IPC::Message* aMessage, IProtocol* aActor) {
+      IPC::MessageWriter writer(*aMessage, aActor);
       ResponseRejectReason reason = ResponseRejectReason::ResolverDestroyed;
-      WriteIPDLParam(aMessage, aActor, reason);
+      WriteIPDLParam(&writer, aActor, reason);
     });
   }
 }

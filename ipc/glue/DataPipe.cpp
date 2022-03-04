@@ -126,7 +126,8 @@ class DataPipeLink : public NodeController::PortObserver {
                            port = mPort.Port(), aBytes]() mutable {
       auto message = MakeUnique<IPC::Message>(
           MSG_ROUTING_NONE, DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE);
-      WriteParam(message.get(), aBytes);
+      IPC::MessageWriter writer(*message);
+      WriteParam(&writer, aBytes);
       controller->SendUserMessage(port, std::move(message));
     });
   }
@@ -144,7 +145,8 @@ class DataPipeLink : public NodeController::PortObserver {
       if (aSendClosed) {
         auto message = MakeUnique<IPC::Message>(MSG_ROUTING_NONE,
                                                 DATA_PIPE_CLOSED_MESSAGE_TYPE);
-        WriteParam(message.get(), aStatus);
+        IPC::MessageWriter writer(*message);
+        WriteParam(&writer, aStatus);
         port.Controller()->SendUserMessage(port.Port(), std::move(message));
       }
       // The `ScopedPort` being destroyed with this action will close it,
@@ -194,11 +196,11 @@ void DataPipeLink::OnPortStatusChanged() {
       return;  // no more messages
     }
 
-    PickleIterator iter(*message);
+    IPC::MessageReader reader(*message);
     switch (message->type()) {
       case DATA_PIPE_CLOSED_MESSAGE_TYPE: {
         nsresult status = NS_OK;
-        if (!ReadParam(message.get(), &iter, &status)) {
+        if (!ReadParam(&reader, &status)) {
           NS_WARNING("Unable to parse nsresult error from peer");
           status = NS_ERROR_UNEXPECTED;
         }
@@ -210,7 +212,7 @@ void DataPipeLink::OnPortStatusChanged() {
       }
       case DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE: {
         uint32_t consumed = 0;
-        if (!ReadParam(message.get(), &iter, &consumed)) {
+        if (!ReadParam(&reader, &consumed)) {
           NS_WARNING("Unable to parse bytes consumed from peer");
           SetPeerError(lock, NS_ERROR_UNEXPECTED);
           return;
