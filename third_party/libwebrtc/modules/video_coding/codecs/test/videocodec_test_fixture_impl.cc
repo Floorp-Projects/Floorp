@@ -22,6 +22,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
@@ -61,10 +62,11 @@ const int kMaxFramerateFps = 30;
 const int kMaxQp = 56;
 
 void ConfigureSimulcast(VideoCodec* codec_settings) {
+  FieldTrialBasedConfig trials;
   const std::vector<webrtc::VideoStream> streams = cricket::GetSimulcastConfig(
       /*min_layer=*/1, codec_settings->numberOfSimulcastStreams,
       codec_settings->width, codec_settings->height, kBitratePriority, kMaxQp,
-      /* is_screenshare = */ false, true);
+      /* is_screenshare = */ false, true, trials);
 
   for (size_t i = 0; i < streams.size(); ++i) {
     SpatialLayer* ss = &codec_settings->simulcastStream[i];

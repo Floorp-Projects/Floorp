@@ -93,6 +93,7 @@ rtc_library("network_emulation_pc_unittest") {
     "../../api:simulated_network_api",
     "../../api/rtc_event_log:rtc_event_log_factory",
     "../../api/task_queue:default_task_queue_factory",
+    "../../api/transport:field_trial_based_config",
     "../../call:simulated_network",
     "../../media:rtc_audio_video",
     "../../media:rtc_media_engine_defaults",

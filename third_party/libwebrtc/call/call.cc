@@ -260,6 +260,8 @@ class Call final : public webrtc::Call,
 
   Stats GetStats() const override;
 
+  const WebRtcKeyValueConfig& trials() const override;
+
   // Implements PacketReceiver.
   DeliveryStatus DeliverPacket(MediaType media_type,
                                rtc::CopyOnWriteBuffer packet,
@@ -1112,6 +1114,10 @@ Call::Stats Call::GetStats() const {
   stats.max_padding_bitrate_bps = configured_max_padding_bitrate_bps_;
 
   return stats;
+}
+
+const WebRtcKeyValueConfig& Call::trials() const {
+  return *config_.trials;
 }
 
 void Call::SignalChannelNetworkState(MediaType media, NetworkState state) {

@@ -21,6 +21,7 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/transport/network_control.h"
+#include "api/transport/webrtc_key_value_config.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "rtc_base/network.h"
@@ -52,6 +53,8 @@ struct PeerConnectionFactoryComponents {
   // PeerConnectionFactory.
   std::unique_ptr<VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<VideoDecoderFactory> video_decoder_factory;
+
+  std::unique_ptr<WebRtcKeyValueConfig> trials;
 };
 
 // Contains most parts from PeerConnectionDependencies. Also all fields are

@@ -55,6 +55,7 @@ if (!build_with_chromium && !build_with_mozilla) {
       "audio:audio_mixer_api",
       "audio_codecs:audio_codecs_api",
       "task_queue:default_task_queue_factory",
+      "transport:field_trial_based_config",
       "video_codecs:video_codecs_api",
     ]
   }
