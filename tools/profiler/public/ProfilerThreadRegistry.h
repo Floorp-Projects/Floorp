@@ -15,10 +15,8 @@ namespace mozilla::profiler {
 
 class ThreadRegistry {
  private:
-  using RegistryMutex = baseprofiler::detail::BaseProfilerSharedMutex;
-  using RegistryLockExclusive =
-      baseprofiler::detail::BaseProfilerAutoLockExclusive;
-  using RegistryLockShared = baseprofiler::detail::BaseProfilerAutoLockShared;
+  using RegistryMutex = baseprofiler::detail::BaseProfilerMutex;
+  using RegistryLock = baseprofiler::detail::BaseProfilerAutoLock;
 
  public:
   // Aliases to data accessors (removing the ThreadRegistration prefix).
@@ -207,7 +205,7 @@ class ThreadRegistry {
     ThreadRegistration* mThreadRegistration;
   };
 
-  // Lock the registry non-exclusively and allow iteration. E.g.:
+  // Lock the registry and allow iteration. E.g.:
   // `for (OffThreadRef thread : LockedRegistry{}) { ... }`
   // Do *not* export copies/references, as they could become dangling.
   // Locking order: Profiler, ThreadRegistry, ThreadRegistration.
@@ -215,28 +213,12 @@ class ThreadRegistry {
    public:
     LockedRegistry()
         : mRegistryLock([]() -> RegistryMutex& {
-            MOZ_ASSERT(!IsRegistryMutexLockedOnCurrentThread(),
-                       "Recursive locking detected");
             // In DEBUG builds, *before* we attempt to lock sRegistryMutex, we
             // want to check that the ThreadRegistration mutex is *not* locked
             // on this thread, to avoid inversion deadlocks.
             MOZ_ASSERT(!ThreadRegistration::IsDataMutexLockedOnCurrentThread());
             return sRegistryMutex;
-          }()) {
-      ThreadRegistration::WithOnThreadRef(
-          [](ThreadRegistration::OnThreadRef aOnThreadRef) {
-            aOnThreadRef.mThreadRegistration
-                ->mIsRegistryLockedSharedOnThisThread = true;
-          });
-    }
-
-    ~LockedRegistry() {
-      ThreadRegistration::WithOnThreadRef(
-          [](ThreadRegistration::OnThreadRef aOnThreadRef) {
-            aOnThreadRef.mThreadRegistration
-                ->mIsRegistryLockedSharedOnThisThread = false;
-          });
-    }
+          }()) {}
 
     [[nodiscard]] const OffThreadRef* begin() const {
       return sRegistryContainer.begin();
@@ -248,7 +230,7 @@ class ThreadRegistry {
     [[nodiscard]] OffThreadRef* end() { return sRegistryContainer.end(); }
 
    private:
-    RegistryLockShared mRegistryLock;
+    RegistryLock mRegistryLock;
   };
 
   // Call `F(OffThreadRef)` for the given aThreadId.
@@ -292,13 +274,7 @@ class ThreadRegistry {
   }
 
   [[nodiscard]] static bool IsRegistryMutexLockedOnCurrentThread() {
-    return sRegistryMutex.IsLockedExclusiveOnCurrentThread() ||
-           ThreadRegistration::WithOnThreadRefOr(
-               [](ThreadRegistration::OnThreadRef aOnThreadRef) {
-                 return aOnThreadRef.mThreadRegistration
-                     ->mIsRegistryLockedSharedOnThisThread;
-               },
-               false);
+    return sRegistryMutex.IsLockedOnCurrentThread();
   }
 
  private:
