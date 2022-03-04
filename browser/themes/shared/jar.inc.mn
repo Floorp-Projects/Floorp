@@ -18,6 +18,7 @@
   skin/classic/browser/offlineSupportPages.css                 (../shared/offlineSupportPages.css)
   skin/classic/browser/searchbar.css                           (../shared/searchbar.css)
   skin/classic/browser/setDesktopBackground.css                (../shared/setDesktopBackground.css)
+  skin/classic/browser/webRTC-indicator.css                    (../shared/webRTC-indicator.css)
   skin/classic/browser/addons/addon-install-blocked.svg        (../shared/addons/addon-install-blocked.svg)
   skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
   skin/classic/browser/addons/addon-install-error.svg          (../shared/addons/addon-install-error.svg)
