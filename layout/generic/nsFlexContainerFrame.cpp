@@ -4742,7 +4742,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     for (const FlexLine& line : flr.mLines) {
       for (const FlexItem& item : line.Items()) {
         const nsIFrame* f = item.Frame();
-        if (MOZ_UNLIKELY(f->IsRelativelyPositioned())) {
+        if (MOZ_UNLIKELY(f->IsRelativelyOrStickyPositioned())) {
           const nsRect marginRect = f->GetMarginRectRelativeToSelf();
           itemMarginBoxes =
               itemMarginBoxes.Union(marginRect + f->GetNormalPosition());

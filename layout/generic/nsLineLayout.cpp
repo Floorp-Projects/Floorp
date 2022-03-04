@@ -219,9 +219,9 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
     // Ruby text container won't be reflowed via ReflowFrame, hence the
     // relative positioning information should be recorded here.
     MOZ_ASSERT(mBaseLineLayout != this);
-    pfd->mRelativePos =
-        mLineContainerRI.mStyleDisplay->IsRelativelyPositionedStyle();
-    if (pfd->mRelativePos) {
+    pfd->mIsRelativelyOrStickyPos =
+        mLineContainerRI.mStyleDisplay->IsRelativelyOrStickyPositionedStyle();
+    if (pfd->mIsRelativelyOrStickyPos) {
       MOZ_ASSERT(mLineContainerRI.GetWritingMode() == pfd->mWritingMode,
                  "mLineContainerRI.frame == frame, "
                  "hence they should have identical writing mode");
@@ -618,7 +618,7 @@ nsLineLayout::PerFrameData* nsLineLayout::NewPerFrameData(nsIFrame* aFrame) {
   pfd->mFrame = aFrame;
 
   // all flags default to false
-  pfd->mRelativePos = false;
+  pfd->mIsRelativelyOrStickyPos = false;
   pfd->mIsTextFrame = false;
   pfd->mIsNonEmptyTextFrame = false;
   pfd->mIsNonWhitespaceTextFrame = false;
@@ -822,9 +822,9 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
     }
     pfd->mMargin = reflowInput.ComputedLogicalMargin(lineWM);
     pfd->mBorderPadding = reflowInput.ComputedLogicalBorderPadding(lineWM);
-    pfd->mRelativePos =
-        reflowInput.mStyleDisplay->IsRelativelyPositionedStyle();
-    if (pfd->mRelativePos) {
+    pfd->mIsRelativelyOrStickyPos =
+        reflowInput.mStyleDisplay->IsRelativelyOrStickyPositionedStyle();
+    if (pfd->mIsRelativelyOrStickyPos) {
       pfd->mOffsets = reflowInput.ComputedLogicalOffsets(frameWM);
     }
 
@@ -3200,7 +3200,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
 
 // This method applies any relative positioning to the given frame.
 void nsLineLayout::ApplyRelativePositioning(PerFrameData* aPFD) {
-  if (!aPFD->mRelativePos) {
+  if (!aPFD->mIsRelativelyOrStickyPos) {
     return;
   }
 

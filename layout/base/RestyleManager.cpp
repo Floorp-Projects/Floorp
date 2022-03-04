@@ -741,7 +741,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   aFrame->SchedulePaint();
 
   // For relative positioning, we can simply update the frame rect
-  if (display->IsRelativelyPositionedStyle()) {
+  if (display->IsRelativelyOrStickyPositionedStyle()) {
     if (aFrame->IsGridItem()) {
       // A grid item's CB is its grid area, not the parent frame content area
       // as is assumed below.
