@@ -33,7 +33,6 @@ import {
   hasSourceActor,
   getSourceActor,
   getSourceActors,
-  getAllThreadsBySource,
   getBreakableLinesForSourceActors,
 } from "../selectors/source-actors";
 import { getAllThreads } from "../selectors/threads";
@@ -288,12 +287,13 @@ const queryAllDisplayedSources = makeShallowQuery({
         (!resource.isExtension ||
           chromeAndExtensionsEnabled ||
           debuggeeIsWebExtension),
+      thread: resource.thread,
     })
   ),
   reduce: items =>
-    items.reduce((acc, { id, displayed }) => {
+    items.reduce((acc, { id, displayed, thread }) => {
       if (displayed) {
-        acc.push(id);
+        acc.push({ id, thread });
       }
       return acc;
     }, []),
@@ -310,23 +310,14 @@ function getAllDisplayedSources(state) {
 }
 
 const getDisplayedSourceIDs = createSelector(
-  getAllThreadsBySource,
   getAllDisplayedSources,
-  (threadsBySource, displayedSources) => {
+  displayedSources => {
     const sourceIDsByThread = {};
-
-    for (const sourceId of displayedSources) {
-      const threads =
-        threadsBySource[sourceId] ||
-        threadsBySource[originalToGeneratedId(sourceId)] ||
-        [];
-
-      for (const thread of threads) {
-        if (!sourceIDsByThread[thread]) {
-          sourceIDsByThread[thread] = new Set();
-        }
-        sourceIDsByThread[thread].add(sourceId);
+    for (const { id, thread } of displayedSources) {
+      if (!sourceIDsByThread[thread]) {
+        sourceIDsByThread[thread] = new Set();
       }
+      sourceIDsByThread[thread].add(id);
     }
     return sourceIDsByThread;
   }

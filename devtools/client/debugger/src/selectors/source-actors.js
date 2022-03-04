@@ -56,26 +56,6 @@ export function getSourceActorsForThread(state, ids) {
   return sources;
 }
 
-const queryThreadsBySourceObject = makeReduceAllQuery(
-  actor => ({ thread: actor.thread, source: actor.source }),
-  actors =>
-    actors.reduce((acc, { source, thread }) => {
-      let sourceThreads = acc[source];
-      if (!sourceThreads) {
-        sourceThreads = [];
-        acc[source] = sourceThreads;
-      }
-
-      sourceThreads.push(thread);
-      return acc;
-    }, {})
-);
-
-// Used by threads selectors
-export function getAllThreadsBySource(state) {
-  return queryThreadsBySourceObject(state.sourceActors);
-}
-
 export function getSourceActorBreakableLines(state, id) {
   const { breakableLines } = getResource(state.sourceActors, id);
 
