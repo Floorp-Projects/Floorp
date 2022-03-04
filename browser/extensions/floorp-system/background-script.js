@@ -25,7 +25,7 @@ const Notify = (url, now, latest) =>{
     return null;
 };
 
-const NotifyNew = (url, now, latest) =>{
+const NotifyNew = (now, latest) =>{
     const msg = browser.i18n;
     browser.notifications.create({
         "type": "basic",
@@ -38,9 +38,9 @@ const NotifyNew = (url, now, latest) =>{
 
 window.onload = () =>{
     (async() => {
-        var pref = await browser.aboutConfigPrefs.getPref("floorp.verison")
-        var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater")
-        console.log("enable.floorp.updater =" + i)
+        var pref = await browser.aboutConfigPrefs.getPref("floorp.version")
+        var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.lastest")
+        console.log("enable.floorp.updater.lastest =" + i)
         console.log("floorp.verison =" + pref)
 
             fetch(`${API_END_POINT}?name=${APP_ID}`)
@@ -49,14 +49,17 @@ window.onload = () =>{
                     return res.json()
                 }
             }).then(data =>{
-                if(data.build != pref){
+
+               if(data.build != pref){
                     Notify(data.file, pref, data.build);
                     console.log("notificationTitle");
                 }
-                else if(data.build = pref){
+
+                else if(data.build = pref && i!=false){
                     NotifyNew();
                     console.log("notificationTitle-last");
                 }
+
             }).then(e =>{
                 return e;
              });
