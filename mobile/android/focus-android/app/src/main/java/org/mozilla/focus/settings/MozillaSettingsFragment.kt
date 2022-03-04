@@ -88,10 +88,12 @@ class MozillaSettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
-        ProTips.tipsSettingChanged.record(
-            ProTips.TipsSettingChangedExtra(sharedPreferences.all[key] as Boolean)
-        )
+        if (isAdded && key == requireContext().getString(R.string.pref_key_homescreen_tips)) {
+            TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+            ProTips.tipsSettingChanged.record(
+                ProTips.TipsSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+            )
+        }
     }
 
     companion object {
