@@ -15,7 +15,7 @@ namespace mozilla::widget {
 
 class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
  public:
-  ScrollbarDrawingCocoa() = default;
+  ScrollbarDrawingCocoa() : ScrollbarDrawing(Kind::Cocoa) {}
   virtual ~ScrollbarDrawingCocoa() = default;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,

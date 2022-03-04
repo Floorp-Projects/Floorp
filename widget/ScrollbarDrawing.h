@@ -28,8 +28,16 @@ class ScrollbarDrawing {
   using Overlay = nsITheme::Overlay;
   using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
 
+  enum class Kind : uint8_t {
+    Android,
+    Cocoa,
+    Gtk,
+    Win10,
+    Win11,
+  };
+
  public:
-  ScrollbarDrawing() = default;
+  explicit ScrollbarDrawing(Kind aKind) : mKind(aKind) {}
   virtual ~ScrollbarDrawing() = default;
 
   static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
@@ -96,16 +104,16 @@ class ScrollbarDrawing {
                                const EventStates& aElementState,
                                const EventStates& aDocumentState, const Colors&,
                                const DPIRatio&);
-  virtual bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              const DPIRatio&);
-  virtual bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              const DPIRatio&);
+  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&, bool aHorizontal,
+                      nsIFrame*, const ComputedStyle&,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, const Colors&,
+                      const DPIRatio&);
+  bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
+                      bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, const Colors&,
+                      const DPIRatio&);
 
   virtual bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
                                    bool aHorizontal, nsIFrame*,
@@ -148,6 +156,9 @@ class ScrollbarDrawing {
   uint32_t GetVerticalScrollbarWidth() const { return mVerticalScrollbarWidth; }
 
  protected:
+  // For some kind of style differences a full virtual method is overkill, so we
+  // store the kind here so we can branch on it if necessary.
+  Kind mKind;
   uint32_t mHorizontalScrollbarHeight = 0;
   uint32_t mVerticalScrollbarWidth = 0;
 };
