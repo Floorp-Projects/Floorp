@@ -1440,7 +1440,7 @@ class FxaAccountManagerTest {
 
         `when`(mockAccount.getProfile(ignoreCache = true)).thenReturn(profile)
         assertNull(manager.accountProfile())
-        assertEquals(profile, manager.fetchProfile())
+        assertEquals(profile, manager.refreshProfile(true))
 
         verify(accountObserver, times(1)).onProfileUpdated(profile)
         verify(accountObserver, never()).onAuthenticated(any(), any())

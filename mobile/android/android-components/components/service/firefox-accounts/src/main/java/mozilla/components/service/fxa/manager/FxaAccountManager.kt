@@ -384,14 +384,8 @@ open class FxaAccountManager(
         else -> null
     }
 
-    /**
-     * Fetches an up-to-date [Profile] if account is in an authenticated state.
-     */
-    suspend fun fetchProfile(): Profile? {
-        return refreshProfile(true)
-    }
-
-    private suspend fun refreshProfile(ignoreCache: Boolean): Profile? {
+    @VisibleForTesting
+    internal suspend fun refreshProfile(ignoreCache: Boolean): Profile? {
         return authenticatedAccount()?.getProfile(ignoreCache = ignoreCache)?.let { newProfile ->
             profile = newProfile
             notifyObservers {
