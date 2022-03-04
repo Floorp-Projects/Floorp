@@ -100,6 +100,8 @@ namespace IPC {
 template <typename T>
 struct ParamTraits;
 class Message;
+class MessageReader;
+class MessageWriter;
 
 template <>
 struct ParamTraits<mojo::core::ports::PortName> {

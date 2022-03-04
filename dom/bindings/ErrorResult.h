@@ -43,6 +43,8 @@
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 template <typename>
 struct ParamTraits;
 }  // namespace IPC
