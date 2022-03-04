@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.isMultiTabsEnabled
 
 /**
  * If the tabs feature is disabled then this middleware will look at incoming [TabListAction.AddTabAction]
@@ -22,16 +23,14 @@ import org.mozilla.focus.ext.components
  * a single tab with a merged state.
  */
 class MergeTabsMiddleware(
-    context: Context
+    private val context: Context
 ) : Middleware<BrowserState, BrowserAction> {
-    private val hasTabs by lazy { context.components.experimentalFeatures.tabs.isMultiTab }
-
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        if (hasTabs || action !is TabListAction.AddTabAction) {
+        if (this.context.components.experiments.isMultiTabsEnabled || action !is TabListAction.AddTabAction) {
             // If the feature flag for tabs is enabled then we can just let the reducer create a
             // new tab.
             next(action)
