@@ -1,11 +1,3 @@
-'use strict';
-browser.browserAction.onClicked.addListener(tab => {
-	browser.sessions.getRecentlyClosed(sessionInfos => {
-				for (let i = 0; i < sessionInfos.length; i++) {
-			let sessionInfo = sessionInfos[i];
-			if (sessionInfo.tab && sessionInfo.tab.windowId === tab.windowId) {
-				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
-
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
 const Notify = (url, now, latest) =>{
@@ -38,9 +30,8 @@ const NotifyNew = (now, latest) =>{
 window.onload = () =>{
     (async() => {
 
-        var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.latest")
+        var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.lastest")
         var APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp")
-        var u = await browser.aboutConfigPrefs.getPref("enable.floorp.update")
         var pref = null;
 
     browser.BrowserInfo.getDisplayVersion()
@@ -48,7 +39,7 @@ window.onload = () =>{
         pref = data;
         console.log("Floorp Display version "+ pref)
 })
-        console.log("enable.floorp.updater.letest =" + i)
+        console.log("enable.floorp.updater.lastest =" + i)
         console.log("floorp.update.id =" + APP_ID)
 
             fetch(`${API_END_POINT}?name=${APP_ID}`)
@@ -57,15 +48,13 @@ window.onload = () =>{
                     return res.json()
                 }
             }).then(data =>{
-                if(u == false){
-                    console.log("return false stop.");
-                }
-                else if(data.build != pref){
+
+               if(data.build != pref){
                     Notify(data.file, pref, data.build);
                     console.log("notificationTitle");
                 }
 
-                else if(data.build = pref && i!=false){
+                else if(data.build = pref){
                     NotifyNew();
                     console.log("notificationTitle-last");
                 }
@@ -75,15 +64,3 @@ window.onload = () =>{
              });
         })();
     };
-
-    function initializePageAction(tab) {
-        if (typeof tab.url != 'undefined' && tab.url.length ) {
-            browser.pageAction.show(tab.id);
-        }
-    }
-    var gettingAllTabs = browser.tabs.query({});
-    gettingAllTabs.then((tabs) => {
-        for (let tab of tabs) {
-            initializePageAction(tab);
-        }
-    });

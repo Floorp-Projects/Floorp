@@ -12,6 +12,7 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "background-script.js",
     "manifest.json",
     "test.html",
+    "update.js",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
