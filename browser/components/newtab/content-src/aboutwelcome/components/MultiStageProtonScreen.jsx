@@ -51,29 +51,33 @@ export class ProtonScreen extends React.PureComponent {
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle({
-    imageURL = "chrome://branding/content/about-logo.svg",
-    height = "80px",
-  }) {
-    return {
-      background:
-        imageURL === "" ? null : `url(${imageURL}) no-repeat center / contain`,
-      height,
-    };
+  getLogoStyle(content) {
+    if (!content.hide_logo) {
+      const useDefaultLogo = !content.logo;
+      const logoUrl = useDefaultLogo
+        ? "chrome://branding/content/about-logo.svg"
+        : content.logo.imageURL;
+      const logoSize = useDefaultLogo ? "80px" : content.logo.size;
+      return {
+        background: `url('${logoUrl}') top center / ${logoSize} no-repeat`,
+        height: logoSize,
+        padding: `${logoSize} 0 10px`,
+      };
+    }
+    return {};
   }
 
   getScreenClassName(
     isCornerPosition,
     isFirstCenteredScreen,
-    isLastCenteredScreen,
-    includeNoodles
+    isLastCenteredScreen
   ) {
     const screenClass = isCornerPosition
-      ? "corner"
+      ? ""
       : `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${
       isLastCenteredScreen ? `dialog-last` : ``
-    } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
+    } ${screenClass}`;
   }
 
   renderContentTiles() {
@@ -139,22 +143,17 @@ export class ProtonScreen extends React.PureComponent {
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
     const hideStepsIndicator = autoAdvance || isCornerPosition;
-    const textColorClass = content.text_color
-      ? `${content.text_color}-text`
-      : "";
     // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
     const screenClassName = this.getScreenClassName(
       isCornerPosition,
       isFirstCenteredScreen,
-      isLastCenteredScreen,
-      includeNoodles
+      isLastCenteredScreen
     );
 
     return (
       <main
-        className={`screen ${this.props.id ||
-          ""} ${screenClassName} ${textColorClass}`}
+        className={`screen ${this.props.id || ""} ${screenClassName}`}
         role="dialog"
         pos={content.position || "center"}
         tabIndex="-1"
@@ -179,7 +178,7 @@ export class ProtonScreen extends React.PureComponent {
             ) : null}
           </div>
         ) : null}
-        <div className="section-main">
+        <div className={`section-main ${includeNoodles ? "with-noodles" : ""}`}>
           {content.secondary_button_top ? (
             <SecondaryCTA
               content={content}
@@ -190,14 +189,11 @@ export class ProtonScreen extends React.PureComponent {
           {this.renderNoodles(includeNoodles, isCornerPosition)}
           <div
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
-            style={content.background ? { background: content.background } : {}}
           >
-            {content.logo ? (
-              <div
-                className={`brand-logo`}
-                style={this.getLogoStyle(content.logo)}
-              />
-            ) : null}
+            <div
+              className={`brand-logo ${content.hide_logo ? "hide" : ""}`}
+              style={this.getLogoStyle(content)}
+            />
             <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
               <img
                 className={`${isTheme ? "rtamo-theme-icon" : ""}`}
@@ -206,8 +202,13 @@ export class ProtonScreen extends React.PureComponent {
                 alt=""
               />
             </div>
+            {content.has_fancy_title ? <div className="confetti" /> : null}
             <div className="main-content-inner">
-              <div className={`welcome-text ${content.title_style || ""}`}>
+              <div
+                className={`welcome-text ${
+                  content.has_fancy_title ? "fancy-headings" : ""
+                }`}
+              >
                 <Localized text={content.title}>
                   <h1 id="mainContentHeader" />
                 </Localized>
