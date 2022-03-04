@@ -354,71 +354,71 @@ bool WebRenderScrollData::RepopulateMap() {
 namespace IPC {
 
 void ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Write(
-    Message* aMsg, const paramType& aParam) {
-  WriteParam(aMsg, aParam.mDescendantCount);
-  WriteParam(aMsg, aParam.mScrollIds);
-  WriteParam(aMsg, aParam.mAncestorTransform);
-  WriteParam(aMsg, aParam.mAncestorTransformId);
-  WriteParam(aMsg, aParam.mTransform);
-  WriteParam(aMsg, aParam.mTransformIsPerspective);
-  WriteParam(aMsg, aParam.mResolution);
-  WriteParam(aMsg, aParam.mVisibleRegion);
-  WriteParam(aMsg, aParam.mRemoteDocumentSize);
-  WriteParam(aMsg, aParam.mReferentId);
-  WriteParam(aMsg, aParam.mEventRegionsOverride);
-  WriteParam(aMsg, aParam.mScrollbarData);
-  WriteParam(aMsg, aParam.mScrollbarAnimationId);
-  WriteParam(aMsg, aParam.mFixedPositionAnimationId);
-  WriteParam(aMsg, aParam.mFixedPositionSides);
-  WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
-  WriteParam(aMsg, aParam.mStickyPosScrollContainerId);
-  WriteParam(aMsg, aParam.mStickyScrollRangeOuter);
-  WriteParam(aMsg, aParam.mStickyScrollRangeInner);
-  WriteParam(aMsg, aParam.mStickyPositionAnimationId);
-  WriteParam(aMsg, aParam.mZoomAnimationId);
-  WriteParam(aMsg, aParam.mAsyncZoomContainerId);
+    MessageWriter* aWriter, const paramType& aParam) {
+  WriteParam(aWriter, aParam.mDescendantCount);
+  WriteParam(aWriter, aParam.mScrollIds);
+  WriteParam(aWriter, aParam.mAncestorTransform);
+  WriteParam(aWriter, aParam.mAncestorTransformId);
+  WriteParam(aWriter, aParam.mTransform);
+  WriteParam(aWriter, aParam.mTransformIsPerspective);
+  WriteParam(aWriter, aParam.mResolution);
+  WriteParam(aWriter, aParam.mVisibleRegion);
+  WriteParam(aWriter, aParam.mRemoteDocumentSize);
+  WriteParam(aWriter, aParam.mReferentId);
+  WriteParam(aWriter, aParam.mEventRegionsOverride);
+  WriteParam(aWriter, aParam.mScrollbarData);
+  WriteParam(aWriter, aParam.mScrollbarAnimationId);
+  WriteParam(aWriter, aParam.mFixedPositionAnimationId);
+  WriteParam(aWriter, aParam.mFixedPositionSides);
+  WriteParam(aWriter, aParam.mFixedPosScrollContainerId);
+  WriteParam(aWriter, aParam.mStickyPosScrollContainerId);
+  WriteParam(aWriter, aParam.mStickyScrollRangeOuter);
+  WriteParam(aWriter, aParam.mStickyScrollRangeInner);
+  WriteParam(aWriter, aParam.mStickyPositionAnimationId);
+  WriteParam(aWriter, aParam.mZoomAnimationId);
+  WriteParam(aWriter, aParam.mAsyncZoomContainerId);
 }
 
 bool ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Read(
-    const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
-  return ReadParam(aMsg, aIter, &aResult->mDescendantCount) &&
-         ReadParam(aMsg, aIter, &aResult->mScrollIds) &&
-         ReadParam(aMsg, aIter, &aResult->mAncestorTransform) &&
-         ReadParam(aMsg, aIter, &aResult->mAncestorTransformId) &&
-         ReadParam(aMsg, aIter, &aResult->mTransform) &&
-         ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
-         ReadParam(aMsg, aIter, &aResult->mResolution) &&
-         ReadParam(aMsg, aIter, &aResult->mVisibleRegion) &&
-         ReadParam(aMsg, aIter, &aResult->mRemoteDocumentSize) &&
-         ReadParam(aMsg, aIter, &aResult->mReferentId) &&
-         ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride) &&
-         ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
-         ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId) &&
-         ReadParam(aMsg, aIter, &aResult->mFixedPositionAnimationId) &&
-         ReadParam(aMsg, aIter, &aResult->mFixedPositionSides) &&
-         ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
-         ReadParam(aMsg, aIter, &aResult->mStickyPosScrollContainerId) &&
-         ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeOuter) &&
-         ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeInner) &&
-         ReadParam(aMsg, aIter, &aResult->mStickyPositionAnimationId) &&
-         ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
-         ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
+    MessageReader* aReader, paramType* aResult) {
+  return ReadParam(aReader, &aResult->mDescendantCount) &&
+         ReadParam(aReader, &aResult->mScrollIds) &&
+         ReadParam(aReader, &aResult->mAncestorTransform) &&
+         ReadParam(aReader, &aResult->mAncestorTransformId) &&
+         ReadParam(aReader, &aResult->mTransform) &&
+         ReadParam(aReader, &aResult->mTransformIsPerspective) &&
+         ReadParam(aReader, &aResult->mResolution) &&
+         ReadParam(aReader, &aResult->mVisibleRegion) &&
+         ReadParam(aReader, &aResult->mRemoteDocumentSize) &&
+         ReadParam(aReader, &aResult->mReferentId) &&
+         ReadParam(aReader, &aResult->mEventRegionsOverride) &&
+         ReadParam(aReader, &aResult->mScrollbarData) &&
+         ReadParam(aReader, &aResult->mScrollbarAnimationId) &&
+         ReadParam(aReader, &aResult->mFixedPositionAnimationId) &&
+         ReadParam(aReader, &aResult->mFixedPositionSides) &&
+         ReadParam(aReader, &aResult->mFixedPosScrollContainerId) &&
+         ReadParam(aReader, &aResult->mStickyPosScrollContainerId) &&
+         ReadParam(aReader, &aResult->mStickyScrollRangeOuter) &&
+         ReadParam(aReader, &aResult->mStickyScrollRangeInner) &&
+         ReadParam(aReader, &aResult->mStickyPositionAnimationId) &&
+         ReadParam(aReader, &aResult->mZoomAnimationId) &&
+         ReadParam(aReader, &aResult->mAsyncZoomContainerId);
 }
 
 void ParamTraits<mozilla::layers::WebRenderScrollData>::Write(
-    Message* aMsg, const paramType& aParam) {
-  WriteParam(aMsg, aParam.mScrollMetadatas);
-  WriteParam(aMsg, aParam.mLayerScrollData);
-  WriteParam(aMsg, aParam.mIsFirstPaint);
-  WriteParam(aMsg, aParam.mPaintSequenceNumber);
+    MessageWriter* aWriter, const paramType& aParam) {
+  WriteParam(aWriter, aParam.mScrollMetadatas);
+  WriteParam(aWriter, aParam.mLayerScrollData);
+  WriteParam(aWriter, aParam.mIsFirstPaint);
+  WriteParam(aWriter, aParam.mPaintSequenceNumber);
 }
 
 bool ParamTraits<mozilla::layers::WebRenderScrollData>::Read(
-    const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
-  return ReadParam(aMsg, aIter, &aResult->mScrollMetadatas) &&
-         ReadParam(aMsg, aIter, &aResult->mLayerScrollData) &&
-         ReadParam(aMsg, aIter, &aResult->mIsFirstPaint) &&
-         ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber) &&
+    MessageReader* aReader, paramType* aResult) {
+  return ReadParam(aReader, &aResult->mScrollMetadatas) &&
+         ReadParam(aReader, &aResult->mLayerScrollData) &&
+         ReadParam(aReader, &aResult->mIsFirstPaint) &&
+         ReadParam(aReader, &aResult->mPaintSequenceNumber) &&
          aResult->RepopulateMap();
 }
 

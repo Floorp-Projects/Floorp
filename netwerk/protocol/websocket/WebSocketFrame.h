@@ -20,6 +20,8 @@ using DOMHighResTimeStamp = double;
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 template <class P>
 struct ParamTraits;
 }  // namespace IPC
@@ -41,8 +43,8 @@ class WebSocketFrameData final {
   ~WebSocketFrameData();
 
   // For IPC serialization
-  void WriteIPCParams(IPC::Message* aMessage) const;
-  bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
+  void WriteIPCParams(IPC::MessageWriter* aWriter) const;
+  bool ReadIPCParams(IPC::MessageReader* aReader);
 
   DOMHighResTimeStamp mTimeStamp{0};
 
@@ -85,13 +87,12 @@ template <>
 struct ParamTraits<mozilla::net::WebSocketFrameData> {
   using paramType = mozilla::net::WebSocketFrameData;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aParam.WriteIPCParams(aMsg);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.WriteIPCParams(aWriter);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aResult->ReadIPCParams(aMsg, aIter);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aResult->ReadIPCParams(aReader);
   }
 };
 

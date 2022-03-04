@@ -296,20 +296,20 @@ namespace ipc {
 template <>
 struct IPDLParamTraits<RemoteVideoData> {
   typedef RemoteVideoData paramType;
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     paramType&& aVar) {
-    WriteIPDLParam(aMsg, aActor, std::move(aVar.mBase));
-    WriteIPDLParam(aMsg, aActor, std::move(aVar.mDisplay));
-    WriteIPDLParam(aMsg, aActor, std::move(aVar.mImage));
-    aMsg->WriteBytes(&aVar.mFrameID, 4);
+    WriteIPDLParam(aWriter, aActor, std::move(aVar.mBase));
+    WriteIPDLParam(aWriter, aActor, std::move(aVar.mDisplay));
+    WriteIPDLParam(aWriter, aActor, std::move(aVar.mImage));
+    aWriter->WriteBytes(&aVar.mFrameID, 4);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   mozilla::ipc::IProtocol* aActor, paramType* aVar) {
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aVar->mBase) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mDisplay) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &aVar->mImage) ||
-        !aMsg->ReadBytesInto(aIter, &aVar->mFrameID, 4)) {
+  static bool Read(IPC::MessageReader* aReader, mozilla::ipc::IProtocol* aActor,
+                   paramType* aVar) {
+    if (!ReadIPDLParam(aReader, aActor, &aVar->mBase) ||
+        !ReadIPDLParam(aReader, aActor, &aVar->mDisplay) ||
+        !ReadIPDLParam(aReader, aActor, &aVar->mImage) ||
+        !aReader->ReadBytesInto(&aVar->mFrameID, 4)) {
       return false;
     }
     return true;
@@ -319,15 +319,15 @@ struct IPDLParamTraits<RemoteVideoData> {
 template <>
 struct IPDLParamTraits<ArrayOfRemoteVideoData*> {
   typedef ArrayOfRemoteVideoData paramType;
-  static void Write(IPC::Message* aMsg, mozilla::ipc::IProtocol* aActor,
-                    paramType* aVar) {
-    WriteIPDLParam(aMsg, aActor, std::move(aVar->mArray));
+  static void Write(IPC::MessageWriter* aWriter,
+                    mozilla::ipc::IProtocol* aActor, paramType* aVar) {
+    WriteIPDLParam(aWriter, aActor, std::move(aVar->mArray));
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar) {
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   RefPtr<paramType>* aVar) {
     nsTArray<RemoteVideoData> array;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &array)) {
+    if (!ReadIPDLParam(aReader, aActor, &array)) {
       return false;
     }
     auto results = MakeRefPtr<ArrayOfRemoteVideoData>(std::move(array));
@@ -341,51 +341,51 @@ struct IPDLParamTraits<RemoteArrayOfByteBuffer> {
   typedef RemoteArrayOfByteBuffer paramType;
   // We do not want to move the RemoteArrayOfByteBuffer as we want to recycle
   // the shmem it contains for another time.
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     const paramType& aVar);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, paramType* aVar);
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   paramType* aVar);
 };
 
 template <>
 struct IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData> {
   typedef ArrayOfRemoteMediaRawData::RemoteMediaRawData paramType;
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     const paramType& aVar);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, paramType* aVar);
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   paramType* aVar);
 };
 
 template <>
 struct IPDLParamTraits<ArrayOfRemoteMediaRawData*> {
   typedef ArrayOfRemoteMediaRawData paramType;
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     paramType* aVar);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar);
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   RefPtr<paramType>* aVar);
 };
 
 template <>
 struct IPDLParamTraits<ArrayOfRemoteAudioData::RemoteAudioData> {
   typedef ArrayOfRemoteAudioData::RemoteAudioData paramType;
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     const paramType& aVar);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, paramType* aVar);
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   paramType* aVar);
 };
 
 template <>
 struct IPDLParamTraits<ArrayOfRemoteAudioData*> {
   typedef ArrayOfRemoteAudioData paramType;
-  static void Write(IPC::Message* aMsg, ipc::IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
                     paramType* aVar);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   ipc::IProtocol* aActor, RefPtr<paramType>* aVar);
+  static bool Read(IPC::MessageReader* aReader, ipc::IProtocol* aActor,
+                   RefPtr<paramType>* aVar);
 };
 }  // namespace ipc
 

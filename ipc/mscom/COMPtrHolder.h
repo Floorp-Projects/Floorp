@@ -124,7 +124,7 @@ template <typename Interface, const IID& _IID>
 struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>> {
   typedef mozilla::mscom::COMPtrHolder<Interface, _IID> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
 #if defined(MOZ_SANDBOX)
     static const bool sIsStreamPreservationNeeded =
         XRE_IsParentProcess() &&
@@ -144,9 +144,9 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>> {
     int bufLen;
     const BYTE* buf = proxyStream.GetBuffer(bufLen);
     MOZ_ASSERT(buf || !bufLen);
-    aMsg->WriteInt(bufLen);
+    aWriter->WriteInt(bufLen);
     if (bufLen) {
-      aMsg->WriteBytes(reinterpret_cast<const char*>(buf), bufLen);
+      aWriter->WriteBytes(reinterpret_cast<const char*>(buf), bufLen);
     }
 
 #if defined(MOZ_SANDBOX)
@@ -163,17 +163,16 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>> {
 #endif  // defined(MOZ_SANDBOX)
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     int length;
-    if (!aMsg->ReadLength(aIter, &length)) {
+    if (!aReader->ReadLength(&length)) {
       return false;
     }
 
     mozilla::UniquePtr<BYTE[]> buf;
     if (length) {
       buf = mozilla::MakeUnique<BYTE[]>(length);
-      if (!aMsg->ReadBytesInto(aIter, buf.get(), length)) {
+      if (!aReader->ReadBytesInto(buf.get(), length)) {
         return false;
       }
     }

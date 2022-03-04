@@ -26,17 +26,15 @@ template <class ParamType>
 struct OriginAttributesParamTraits {
   typedef ParamType paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     nsAutoCString suffix;
     aParam.CreateSuffix(suffix);
-    WriteParam(aMsg, suffix);
+    WriteParam(aWriter, suffix);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsAutoCString suffix;
-    return ReadParam(aMsg, aIter, &suffix) &&
-           aResult->PopulateFromSuffix(suffix);
+    return ReadParam(aReader, &suffix) && aResult->PopulateFromSuffix(suffix);
   }
 };
 }  // namespace detail

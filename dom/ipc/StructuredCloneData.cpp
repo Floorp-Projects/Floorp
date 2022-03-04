@@ -379,15 +379,14 @@ void StructuredCloneData::StealFromClonedMessageDataForBackgroundChild(
   UnpackClonedMessageData<StealMemory, Child>(aClonedData, *this);
 }
 
-void StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const {
-  WriteParam(aMsg, Data());
+void StructuredCloneData::WriteIPCParams(IPC::MessageWriter* aWriter) const {
+  WriteParam(aWriter, Data());
 }
 
-bool StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
-                                        PickleIterator* aIter) {
+bool StructuredCloneData::ReadIPCParams(IPC::MessageReader* aReader) {
   MOZ_ASSERT(!mInitialized);
   JSStructuredCloneData data(JS::StructuredCloneScope::DifferentProcess);
-  if (!ReadParam(aMsg, aIter, &data)) {
+  if (!ReadParam(aReader, &data)) {
     return false;
   }
   mSharedData = new SharedJSAllocatedData(std::move(data));

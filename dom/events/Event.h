@@ -33,6 +33,8 @@ class nsPresContext;
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 }  // namespace IPC
 
 namespace mozilla {
@@ -142,8 +144,9 @@ class Event : public nsISupports, public nsWrapperCache {
   const WidgetEvent* WidgetEventPtr() const {
     return const_cast<Event*>(this)->WidgetEventPtr();
   }
-  virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
-  virtual bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter);
+  virtual void Serialize(IPC::MessageWriter* aWriter,
+                         bool aSerializeInterfaceType);
+  virtual bool Deserialize(IPC::MessageReader* aReader);
   void SetOwner(EventTarget* aOwner);
   void StopCrossProcessForwarding();
   void SetTrusted(bool aTrusted);

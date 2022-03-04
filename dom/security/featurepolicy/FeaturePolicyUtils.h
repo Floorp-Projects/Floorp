@@ -16,7 +16,9 @@ class PickleIterator;
 
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 
 namespace mozilla {
 namespace dom {
@@ -78,10 +80,9 @@ struct IPDLParamTraits;
 
 template <>
 struct IPDLParamTraits<mozilla::dom::FeaturePolicy*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     mozilla::dom::FeaturePolicy* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    RefPtr<mozilla::dom::FeaturePolicy>* aResult);
 };
 }  // namespace ipc

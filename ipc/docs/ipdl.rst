@@ -113,7 +113,7 @@ already known to the IPDL system.  Primitive types, and a bunch of Mozilla
 types, have predefined ``ParamTraits`` (`here
 <https://searchfox.org/mozilla-central/source/ipc/glue/IPCMessageUtils.h>`__
 and `here
-<https://searchfox.org/mozilla-central/source/ipc/glue/IPDLParamTraits.h>`__).
+<https://searchfox.org/mozilla-central/source/ipc/glue/IPCMessageUtilsSpecializations.h>`__).
 
 .. note::
     Among other things, client code that uses the generated code must include
@@ -785,24 +785,24 @@ from ``MyDataTypes.h``:
         template<>
         struct ParamTraits<mozilla::myns::MyData> {
             typedef mozilla::myns::MyData paramType;
-            static void Write(Message* m, const paramType& in);
-            static bool Read(const Message* m, PickleIterator* iter, paramType* out);
+            static void Write(MessageWriter* m, const paramType& in);
+            static bool Read(MessageReader* m, paramType* out);
         };
 
         // [MoveOnly] type
         template<>
         struct ParamTraits<mozilla::myns::MyOtherData> {
             typedef mozilla::myns::MyOtherData paramType;
-            static void Write(Message* m, const paramType& in);
-            static bool Read(const Message* m, PickleIterator* iter, paramType* out);
+            static void Write(MessageWriter* m, const paramType& in);
+            static bool Read(MessageReader* m, paramType* out);
         };
 
         // [RefCounted] type
         template<>
-        struct ParamTraits<mozilla::myns::MyUnusedData> {
+        struct ParamTraits<mozilla::myns::MyUnusedData*> {
             typedef mozilla::myns::MyUnusedData paramType;
-            static void Write(Message* m, paramType* in);
-            static bool Read(const Message* m, PickleIterator* iter, RefPtr<paramType>* out);
+            static void Write(MessageWriter* m, paramType* in);
+            static bool Read(MessageReader* m, RefPtr<paramType>* out);
         };
     }
 
@@ -828,23 +828,22 @@ These are straight-forward implementations of the ``ParamTraits`` methods for
 
 .. code-block:: c++
 
-    /* static */ void IPC::ParamTraits<MyData>::Write(Message* m, const paramType& in) {
+    /* static */ void IPC::ParamTraits<MyData>::Write(MessageWriter* m, const paramType& in) {
         WriteParam(m, in.s);
         m->WriteBytes(in.bytes, sizeof(in.bytes));
     }
-    /* static */ bool IPC::ParamTraits<MyData>::Read(const Message* m, PickleIterator* iter, paramType* out) {
-        return ReadParam(m, iter, &out->s) &&
-               m->ReadBytesInto(iter, out->bytes, sizeof(out->bytes));
+    /* static */ bool IPC::ParamTraits<MyData>::Read(MessageReader* m, paramType* out) {
+        return ReadParam(m, &out->s) &&
+               m->ReadBytesInto(out->bytes, sizeof(out->bytes));
     }
 
 ``WriteParam`` and ``ReadParam`` call the ``ParamTraits`` for the data you pass
 them, determined using the type of the object as supplied.  ``WriteBytes`` and
-``ReadBytesInto`` work on raw, contiguous bytes as expected.  ``Message`` and
-``PickleIterator`` are IPDL internal objects; ``Message`` hold the
-incoming/outgoing message as a stream of bytes and the ``PickleIterator``
-records our current spot in the stream.  It is *very* rare for client code to
-use them in a manner different than this.  Their advanced use is beyond the
-scope of this document.
+``ReadBytesInto`` work on raw, contiguous bytes as expected.  ``MessageWriter``
+and ``MessageReader`` are IPDL internal objects which hold the incoming/outgoing
+message as a stream of bytes and the current spot in the stream.  It is *very*
+rare for client code to need to create or manipulate these obejcts. Their
+advanced use is beyond the scope of this document.
 
 .. important::
     Potential failures in ``Read`` include everyday C++ failures like
@@ -863,40 +862,12 @@ scope of this document.
     done in the message handler.  Such cases are a good use of the ``Tainted``
     annotation.  See `Actors and Messages in C++`_ for more.
 
-``IPC::ParamTraits<T>`` is a convenience class used by ``IPDLParamTraits<T>``
-`here
-<https://searchfox.org/mozilla-central/rev/855814f769ac55bbb6a00e2170a6a876ab4cff3a/ipc/glue/IPDLParamTraits.h#23-49>`__.
-You can choose to specialize ``mozilla::ipc::IPDLParamTraits<T>`` instead of
-``IPC::ParamTraits<T>`` if you need the actor object itself during
-serialization or deserialization.  The only difference between the two is that
-``IPDLParamTraits<T>`` methods are given the actor.  So we could have written
-serialization for ``MyData`` this way:
-
-.. code-block:: c++
-
-    namespace mozilla::ipc {
-        // Basic type
-        template<>
-        struct IPDLParamTraits<mozilla::myns::MyData> {
-            typedef mozilla::myns::MyData paramType;
-            static void Write(Message* m, IProtocol* aActor, const paramType& in);
-            static bool Read(const Message* m, PickleIterator* iter, IProtocol* aActor, paramType* out);
-        };
-
-        /* static */ void IPDLParamTraits<mozilla::myns::MyData>::Write(
-                Message* m, IProtocol* aActor, const paramType& in) {
-            WriteParam(m, in.s);
-            m->WriteBytes(in.bytes, sizeof(in.bytes));
-        }
-        /* static */ bool IPDLParamTraits<mozilla::myns::MyData>::Read(
-                const Message* m, PickleIterator* iter, IProtocol* aActor, paramType* out) {
-            return ReadParam(m, iter, &out->s) &&
-                   m->ReadBytesInto(iter, out->bytes, sizeof(out->bytes));
-        }
-    }
-
-We didn't do this because we didn't need the ``IProtocol`` for our case.  It is
-rare that the actor is useful in serialization.
+.. note::
+    In the past, it was required to specialize ``mozilla::ipc::IPDLParamTraits<T>``
+    instead of ``IPC::ParamTraits<T>`` if you needed the actor object itself during
+    serialization or deserialization. These days the actor can be fetched using
+    ``IPC::Message{Reader,Writer}::GetActor()`` in ``IPC::ParamTraits``, so that
+    trait should be used for all new serializations.
 
 A special case worth mentioning is that of enums.  Enums are a common source of
 security holes since code is rarely safe with enum values that are not valid.

@@ -3010,12 +3010,14 @@ JS_PUBLIC_API JSString* JS_AtomizeAndPinStringN(JSContext* cx, const char* s,
                                                 size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  JSAtom* atom = Atomize(cx, s, length);
+
+  JSAtom* atom = cx->zone() ? Atomize(cx, s, length)
+                            : AtomizeWithoutActiveZone(cx, s, length);
   if (!atom || !PinAtom(cx, atom)) {
     return nullptr;
   }
 
-  MOZ_ASSERT_IF(atom, JS_StringHasBeenPinned(cx, atom));
+  MOZ_ASSERT(JS_StringHasBeenPinned(cx, atom));
   return atom;
 }
 

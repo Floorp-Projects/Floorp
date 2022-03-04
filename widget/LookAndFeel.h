@@ -390,6 +390,7 @@ class LookAndFeel {
 
   enum class ChromeColorSchemeSetting { Light, Dark, System };
   static ChromeColorSchemeSetting ColorSchemeSettingForChrome();
+  static ColorScheme ThemeDerivedColorSchemeForContent();
 
   static ColorScheme ColorSchemeForChrome() {
     MOZ_ASSERT(sColorSchemeInitialized);

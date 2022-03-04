@@ -41,8 +41,8 @@ extern JSAtom* Atomize(
     JSContext* cx, const char* bytes, size_t length,
     const mozilla::Maybe<uint32_t>& indexValue = mozilla::Nothing());
 
-extern JSAtom* Atomize(JSContext* cx, HashNumber hash, const char* bytes,
-                       size_t length);
+extern JSAtom* AtomizeWithoutActiveZone(JSContext* cx, const char* bytes,
+                                        size_t length);
 
 template <typename CharT>
 extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length);

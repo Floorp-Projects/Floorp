@@ -20,11 +20,11 @@ namespace ipc {
 
 template <>
 struct IPDLParamTraits<nsIAlertNotification*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsIAlertNotification* aParam) {
     bool isNull = !aParam;
     if (isNull) {
-      WriteIPDLParam(aMsg, aActor, isNull);
+      WriteIPDLParam(aWriter, aActor, isNull);
       return;
     }
 
@@ -52,31 +52,31 @@ struct IPDLParamTraits<nsIAlertNotification*> {
         NS_WARN_IF(NS_FAILED(aParam->GetVibrate(vibrate)))) {
       // Write a `null` object if any getter returns an error. Otherwise, the
       // receiver will try to deserialize an incomplete object and crash.
-      WriteIPDLParam(aMsg, aActor, /* isNull */ true);
+      WriteIPDLParam(aWriter, aActor, /* isNull */ true);
       return;
     }
 
-    WriteIPDLParam(aMsg, aActor, isNull);
-    WriteIPDLParam(aMsg, aActor, name);
-    WriteIPDLParam(aMsg, aActor, imageURL);
-    WriteIPDLParam(aMsg, aActor, title);
-    WriteIPDLParam(aMsg, aActor, text);
-    WriteIPDLParam(aMsg, aActor, textClickable);
-    WriteIPDLParam(aMsg, aActor, cookie);
-    WriteIPDLParam(aMsg, aActor, dir);
-    WriteIPDLParam(aMsg, aActor, lang);
-    WriteIPDLParam(aMsg, aActor, data);
-    WriteIPDLParam(aMsg, aActor, IPC::Principal(principal));
-    WriteIPDLParam(aMsg, aActor, inPrivateBrowsing);
-    WriteIPDLParam(aMsg, aActor, requireInteraction);
-    WriteIPDLParam(aMsg, aActor, silent);
-    WriteIPDLParam(aMsg, aActor, vibrate);
+    WriteIPDLParam(aWriter, aActor, isNull);
+    WriteIPDLParam(aWriter, aActor, name);
+    WriteIPDLParam(aWriter, aActor, imageURL);
+    WriteIPDLParam(aWriter, aActor, title);
+    WriteIPDLParam(aWriter, aActor, text);
+    WriteIPDLParam(aWriter, aActor, textClickable);
+    WriteIPDLParam(aWriter, aActor, cookie);
+    WriteIPDLParam(aWriter, aActor, dir);
+    WriteIPDLParam(aWriter, aActor, lang);
+    WriteIPDLParam(aWriter, aActor, data);
+    WriteIPDLParam(aWriter, aActor, IPC::Principal(principal));
+    WriteIPDLParam(aWriter, aActor, inPrivateBrowsing);
+    WriteIPDLParam(aWriter, aActor, requireInteraction);
+    WriteIPDLParam(aWriter, aActor, silent);
+    WriteIPDLParam(aWriter, aActor, vibrate);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIAlertNotification>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIAlertNotification>* aResult) {
     bool isNull;
-    NS_ENSURE_TRUE(ReadIPDLParam(aMsg, aIter, aActor, &isNull), false);
+    NS_ENSURE_TRUE(ReadIPDLParam(aReader, aActor, &isNull), false);
     if (isNull) {
       *aResult = nullptr;
       return true;
@@ -87,20 +87,20 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     IPC::Principal principal;
     nsTArray<uint32_t> vibrate;
 
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &name) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &imageURL) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &title) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &text) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &textClickable) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &cookie) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &dir) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &lang) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &principal) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &inPrivateBrowsing) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &requireInteraction) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &silent) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &vibrate)) {
+    if (!ReadIPDLParam(aReader, aActor, &name) ||
+        !ReadIPDLParam(aReader, aActor, &imageURL) ||
+        !ReadIPDLParam(aReader, aActor, &title) ||
+        !ReadIPDLParam(aReader, aActor, &text) ||
+        !ReadIPDLParam(aReader, aActor, &textClickable) ||
+        !ReadIPDLParam(aReader, aActor, &cookie) ||
+        !ReadIPDLParam(aReader, aActor, &dir) ||
+        !ReadIPDLParam(aReader, aActor, &lang) ||
+        !ReadIPDLParam(aReader, aActor, &data) ||
+        !ReadIPDLParam(aReader, aActor, &principal) ||
+        !ReadIPDLParam(aReader, aActor, &inPrivateBrowsing) ||
+        !ReadIPDLParam(aReader, aActor, &requireInteraction) ||
+        !ReadIPDLParam(aReader, aActor, &silent) ||
+        !ReadIPDLParam(aReader, aActor, &vibrate)) {
       return false;
     }
 

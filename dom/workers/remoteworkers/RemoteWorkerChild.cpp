@@ -936,10 +936,14 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
 
     auto lock = aOwner->mState.Lock();
 
-    MOZ_ASSERT(lock->is<Running>() || IsTerminationOp());
-
     if (IsTerminationOp()) {
       aOwner->CloseWorkerOnMainThread(lock.ref());
+      return;
+    }
+
+    MOZ_ASSERT(lock->is<Running>());
+    if (!lock->is<Running>()) {
+      aOwner->ErrorPropagationDispatch(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
 

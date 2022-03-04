@@ -18,10 +18,10 @@ namespace ipc {
 
 template <>
 struct IPDLParamTraits<nsDocShellLoadState*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsDocShellLoadState* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsDocShellLoadState>* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsDocShellLoadState>* aResult);
 };
 
 }  // namespace ipc
