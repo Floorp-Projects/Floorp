@@ -105,9 +105,8 @@ class DebuggerObject : public NativeObject {
   [[nodiscard]] static bool getOwnPropertyNames(JSContext* cx,
                                                 HandleDebuggerObject object,
                                                 MutableHandleIdVector result);
-  [[nodiscard]] static bool getOwnPropertiesLength(JSContext* cx,
-                                                   HandleDebuggerObject object,
-                                                   size_t* result);
+  [[nodiscard]] static bool getOwnPropertyNamesLength(
+      JSContext* cx, HandleDebuggerObject object, size_t* result);
   [[nodiscard]] static bool getOwnPropertySymbols(JSContext* cx,
                                                   HandleDebuggerObject object,
                                                   MutableHandleIdVector result);
