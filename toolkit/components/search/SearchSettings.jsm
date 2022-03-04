@@ -221,7 +221,10 @@ class SearchSettings {
         await PathUtils.getProfileDir(),
         SETTINGS_FILENAME
       );
-      await IOUtils.writeJSON(path, settings, { compress: true });
+      await IOUtils.writeJSON(path, settings, {
+        compress: true,
+        tmpPath: path + ".tmp",
+      });
       logConsole.debug("_write: settings file written to disk.");
       Services.obs.notifyObservers(
         null,

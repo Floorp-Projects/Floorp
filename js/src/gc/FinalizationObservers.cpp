@@ -352,7 +352,15 @@ bool FinalizationObservers::addWeakRefTarget(HandleObject target,
 }
 
 void GCRuntime::nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef) {
-  FinalizationObservers* observers = wrapper->zone()->finalizationObservers();
+  // WeakRef wrappers can exist independently of the ones we create for the
+  // weakRefMap so don't assume |wrapper| is in the same zone as the WeakRef
+  // target.
+  JSObject* target = weakRef->target();
+  if (!target) {
+    return;
+  }
+
+  FinalizationObservers* observers = target->zone()->finalizationObservers();
   if (observers) {
     observers->unregisterWeakRefWrapper(wrapper, weakRef);
   }

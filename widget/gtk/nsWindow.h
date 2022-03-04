@@ -787,9 +787,6 @@ class nsWindow final : public nsBaseWidget {
   // mRelativePopupPosition is popup position calculated against parent window.
   GdkPoint mRelativePopupPosition{};
 
-  // mRelativePopupOffset is used by context menus.
-  GdkPoint mRelativePopupOffset{};
-
   // Toplevel window (first element) of linked list of Wayland popups. It's null
   // if we're the toplevel.
   RefPtr<nsWindow> mWaylandToplevel;
