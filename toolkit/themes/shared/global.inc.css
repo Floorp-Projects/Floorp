@@ -18,6 +18,7 @@
   --focus-outline-width: 2px;
   --focus-outline-color: -moz-accent-color;
   --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  --focus-outline-inset: calc(-1 * var(--focus-outline-width));
   --focus-outline-offset: 2px;
 
   --arrowpanel-background: Field;

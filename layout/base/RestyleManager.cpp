@@ -741,7 +741,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   aFrame->SchedulePaint();
 
   // For relative positioning, we can simply update the frame rect
-  if (display->IsRelativelyPositionedStyle()) {
+  if (display->IsRelativelyOrStickyPositionedStyle()) {
     if (aFrame->IsGridItem()) {
       // A grid item's CB is its grid area, not the parent frame content area
       // as is assumed below.
@@ -766,7 +766,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         ssc->PositionContinuations(firstContinuation);
       }
     } else {
-      MOZ_ASSERT(StylePositionProperty::Relative == display->mPosition,
+      MOZ_ASSERT(display->IsRelativelyPositionedStyle(),
                  "Unexpected type of positioning");
       for (nsIFrame* cont = aFrame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
