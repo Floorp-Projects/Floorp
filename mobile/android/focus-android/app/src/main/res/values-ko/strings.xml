@@ -895,4 +895,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">탭 닫기</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">이 사이트가 당신을 추적하는 것 같습니다. 사이트 설정에서 방패를 클릭하여 추적자를 차단하세요. </string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">팝업 닫기</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">보호되고 있습니다!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">이러한 기본 설정은 강력한 보호 기능을 제공합니다. 하지만 특정 요구 사항에 맞게 설정을 쉽게 수정할 수도 있습니다.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">닫기</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">휴지통 버튼을 눌러 이 세션에서 개인 데이터, 브라우징 히스토리 등을 삭제하세요. 시도해 보세요!</string>
+
 </resources>

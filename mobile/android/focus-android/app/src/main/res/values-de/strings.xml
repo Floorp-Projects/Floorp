@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Willkommen bei %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Privates Surfen der nächsten Stufe, wann immer Sie es wünschen</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Wo Inkognito auf Unsichtbar trifft</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s ist ein datenschutzfreundlicher Browser mit integriertem, extra starken Tracking- und Cookie-Schutz.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Surfen, als wäre es nie passiert</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Ein Fingertipp löscht Ihre Surf-Chronik und Ihre Cookies – und verhindert, dass Werbung Sie verfolgt.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privatsphäre, die zu jeder Situation passt</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Wenn sich Ihre Surf-Anforderungen ändern, können Sie Ihre Datenschutzeinstellungen ganz einfach nach oben oder unten anpassen.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Lossurfen</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Stärken Sie Ihre Privatsphäre</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Privates Surfen auf einer höheren Stufe. Blockieren Sie Werbung und andere Inhalte, die Sie über Websites hinweg verfolgen können und Seitenladezeiten verlängern.</string>

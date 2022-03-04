@@ -897,4 +897,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">タブを閉じる</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">このサイトがあなたを追跡しようとしていたようです。サイト設定とトラッカーブロックの統計は盾アイコンをクリックしてください。</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ポップアップを閉じる</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">保護されています</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">これらの既定の設定は強力な保護を提供します。必要に応じて、簡単に設定を調整できます。</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">閉じる</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">ごみ箱ボタンをタップするだけで、このセッションから個人データやブラウジング履歴などを削除できます。お試しください。</string>
+
 </resources>

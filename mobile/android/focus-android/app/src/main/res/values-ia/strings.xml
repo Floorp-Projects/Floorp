@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Benvenite a %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Navigation anonyme de nivello superior quando tu lo vole illo</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Ubi le incognito incontra le invisibile</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s es un navigator de maxime discretion con protection de traciamento e de cookies extra-forte, integrate.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Naviga como il eveniva jammais</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Confidentialitate que vade ben pro ulle situation</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Si tu navigation besonia de cambios, illos es facile pro altiar o abassar tu parametros de confidentialitate.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Comenciar a navigar</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Reinfortia tu confidentialitate</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Porta le navigation private al nivello superior. Bloca publicitates e altere contentos que pote traciar te per le sitos e relentar le tempore de carga del paginas.</string>
@@ -899,4 +928,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Clauder scheda</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Pare que iste sito ha tentate de traciar te. Clicca le escudo pro le statistica de parametros de sito e blocada del traciatores.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Clauder message emergente</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Tu es protegite!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Iste parametros predefinite offere forte protection. Ma il es facile adjustar le parametros pro satisfacer tu specific besonios.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Ignorar</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Libera te de tu datos personal, chronologia de navigation e altero ancora de iste session, toccante le button immunditia. Prova lo!</string>
+
 </resources>
