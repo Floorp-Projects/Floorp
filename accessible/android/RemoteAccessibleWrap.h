@@ -37,8 +37,6 @@ class RemoteAccessibleWrap : public AccessibleWrap {
 
   virtual ENameValueFlag Name(nsString& aName) const override;
 
-  virtual void Description(nsString& aDescription) const;
-
   virtual void Value(nsString& aValue) const override;
 
   virtual uint64_t State() override;
