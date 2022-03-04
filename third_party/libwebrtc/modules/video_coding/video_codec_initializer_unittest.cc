@@ -364,24 +364,66 @@ TEST_F(VideoCodecInitializerTest, Vp9DeactivateLayers) {
   config_.simulcast_layers[1].active = true;
   config_.simulcast_layers[2].active = true;
   EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 3);
   EXPECT_TRUE(codec_out_.spatialLayers[0].active);
   EXPECT_TRUE(codec_out_.spatialLayers[1].active);
   EXPECT_TRUE(codec_out_.spatialLayers[2].active);
 
   // Deactivate top layer.
+  config_.simulcast_layers[0].active = true;
+  config_.simulcast_layers[1].active = true;
   config_.simulcast_layers[2].active = false;
   EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 3);
   EXPECT_TRUE(codec_out_.spatialLayers[0].active);
   EXPECT_TRUE(codec_out_.spatialLayers[1].active);
   EXPECT_FALSE(codec_out_.spatialLayers[2].active);
 
   // Deactivate middle layer.
-  config_.simulcast_layers[2].active = true;
+  config_.simulcast_layers[0].active = true;
   config_.simulcast_layers[1].active = false;
+  config_.simulcast_layers[2].active = true;
   EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 3);
   EXPECT_TRUE(codec_out_.spatialLayers[0].active);
   EXPECT_FALSE(codec_out_.spatialLayers[1].active);
   EXPECT_TRUE(codec_out_.spatialLayers[2].active);
+
+  // Deactivate first layer.
+  config_.simulcast_layers[0].active = false;
+  config_.simulcast_layers[1].active = true;
+  config_.simulcast_layers[2].active = true;
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 2);
+  EXPECT_TRUE(codec_out_.spatialLayers[0].active);
+  EXPECT_TRUE(codec_out_.spatialLayers[1].active);
+
+  // HD singlecast.
+  config_.simulcast_layers[0].active = false;
+  config_.simulcast_layers[1].active = false;
+  config_.simulcast_layers[2].active = true;
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 1);
+  EXPECT_TRUE(codec_out_.spatialLayers[0].active);
+
+  // VGA singlecast.
+  config_.simulcast_layers[0].active = false;
+  config_.simulcast_layers[1].active = true;
+  config_.simulcast_layers[2].active = false;
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 2);
+  EXPECT_TRUE(codec_out_.spatialLayers[0].active);
+  EXPECT_FALSE(codec_out_.spatialLayers[1].active);
+
+  // QVGA singlecast.
+  config_.simulcast_layers[0].active = true;
+  config_.simulcast_layers[1].active = false;
+  config_.simulcast_layers[2].active = false;
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(codec_out_.VP9()->numberOfSpatialLayers, 3);
+  EXPECT_TRUE(codec_out_.spatialLayers[0].active);
+  EXPECT_FALSE(codec_out_.spatialLayers[1].active);
+  EXPECT_FALSE(codec_out_.spatialLayers[2].active);
 }
 
 }  // namespace webrtc

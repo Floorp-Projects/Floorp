@@ -210,7 +210,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
         for (size_t spatial_idx = first_active_layer;
              spatial_idx < config.simulcast_layers.size() &&
-             spatial_idx < spatial_layers.size();
+             spatial_idx < spatial_layers.size() + first_active_layer;
              ++spatial_idx) {
           spatial_layers[spatial_idx - first_active_layer].active =
               config.simulcast_layers[spatial_idx].active;
