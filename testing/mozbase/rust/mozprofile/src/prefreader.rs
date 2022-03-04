@@ -436,8 +436,10 @@ impl<'a> PrefTokenizer<'a> {
                 if !(PrefTokenizer::is_space(c) || separators.contains(c) || c == '/') {
                     matched = false;
                 }
+                self.unget_char();
             }
-            self.unget_char();
+            // Otherwise the token was followed by EOF. That's a valid match, but
+            // will presumably cause a parse error later.
         }
 
         matched
