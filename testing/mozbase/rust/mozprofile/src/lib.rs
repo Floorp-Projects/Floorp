@@ -128,7 +128,9 @@ mod test {
                 }
                 (&PrefToken::Int(data_e, _), &PrefToken::Int(data_a, _)) => data_e == data_a,
                 (&PrefToken::Bool(data_e, _), &PrefToken::Bool(data_a, _)) => data_e == data_a,
-                (&PrefToken::Error(data_e, _), &PrefToken::Error(data_a, _)) => data_e == data_a,
+                (&PrefToken::Error(ref data_e, _), &PrefToken::Error(ref data_a, _)) => {
+                    *data_e == *data_a
+                }
                 (_, _) => false,
             };
             if !success {
@@ -173,6 +175,14 @@ mod test {
     #[test]
     fn parse_newline() {
         let inputs = vec!["\na", "\n\nfoo"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
+    }
+
+    #[test]
+    fn parse_minus() {
+        let inputs = ["pref(-", "user_pref(\"example.pref.int\", -);"];
         for input in inputs {
             assert!(parse(input.as_bytes()).is_err());
         }
