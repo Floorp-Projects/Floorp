@@ -32,6 +32,7 @@
 #include "nsIURIMutator.h"
 #include "mozilla/StaticPrefs_permissions.h"
 #include "nsIURIMutator.h"
+#include "nsMixedContentBlocker.h"
 #include "prnetdb.h"
 #include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
@@ -1114,6 +1115,13 @@ nsIPrincipal* BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
     return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI);
   }
   return this;
+}
+
+bool BasePrincipal::IsLoopbackHost() {
+  nsAutoCString host;
+  nsresult rv = GetHost(host);
+  NS_ENSURE_SUCCESS(rv, false);
+  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host);
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
