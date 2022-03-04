@@ -39,35 +39,30 @@ function doConsoleCalls(aState)
     {
       level: "log",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: ["foobarBaz-log", { type: "undefined" }],
     },
     {
       level: "info",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: ["foobarBaz-info", { type: "null" }],
     },
     {
       level: "warn",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
     },
     {
       level: "debug",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: [{ type: "null" }],
     },
     {
       level: "trace",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       stacktrace: [
         {
@@ -83,7 +78,6 @@ function doConsoleCalls(aState)
     {
       level: "dir",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: [
         {
@@ -101,7 +95,6 @@ function doConsoleCalls(aState)
     {
       level: "log",
       filename: /test_consoleapi/,
-      functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: [
         "foo",

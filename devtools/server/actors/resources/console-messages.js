@@ -7,7 +7,6 @@
 const {
   TYPES: { CONSOLE_MESSAGE },
 } = require("devtools/server/actors/resources/index");
-const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
 const Targets = require("devtools/server/actors/targets/index");
 
 const consoleAPIListenerModule = isWorker
@@ -210,18 +209,39 @@ function getConsoleTableMessageItems(targetActor, result) {
  *         The object that can be sent to the remote client.
  */
 function prepareConsoleMessageForRemote(targetActor, message) {
-  const result = WebConsoleUtils.cloneObject(message);
+  const result = {
+    arguments: message.arguments
+      ? message.arguments.map(obj => {
+          const dbgObj = makeDebuggeeValue(targetActor, obj);
+          return createValueGripForTarget(targetActor, dbgObj);
+        })
+      : [],
+    chromeContext: message.chromeContext,
+    columnNumber: message.columnNumber,
+    filename: message.filename,
+    level: message.level,
+    lineNumber: message.lineNumber,
+    timeStamp: message.timeStamp,
+    sourceId: getActorIdForInternalSourceId(targetActor, message.sourceId),
+    category: message.category || "webdev",
+    innerWindowID: message.innerID,
+  };
 
-  result.workerType = WebConsoleUtils.getWorkerType(result) || "none";
-  result.sourceId = getActorIdForInternalSourceId(targetActor, result.sourceId);
+  // This can be a hot path when loading lots of messages, and it only make sense to
+  // include the following properties in the message when they have a meaningful value.
+  // Otherwise we simply don't include them so we save cycles in JSActor communication.
+  if (message.counter) {
+    result.counter = message.counter;
+  }
+  if (message.private) {
+    result.private = message.private;
+  }
+  if (message.prefix) {
+    result.prefix = message.prefix;
+  }
 
-  delete result.wrappedJSObject;
-  delete result.ID;
-  delete result.innerID;
-  delete result.consoleID;
-
-  if (result.stacktrace) {
-    result.stacktrace = result.stacktrace.map(frame => {
+  if (message.stacktrace) {
+    result.stacktrace = message.stacktrace.map(frame => {
       return {
         ...frame,
         sourceId: getActorIdForInternalSourceId(targetActor, frame.sourceId),
@@ -229,16 +249,17 @@ function prepareConsoleMessageForRemote(targetActor, message) {
     });
   }
 
-  result.arguments = (message.arguments || []).map(obj => {
-    const dbgObj = makeDebuggeeValue(targetActor, obj);
-    return createValueGripForTarget(targetActor, dbgObj);
-  });
+  if (message.styles && message.styles.length > 0) {
+    result.styles = message.styles.map(string => {
+      return createValueGripForTarget(targetActor, string);
+    });
+  }
 
-  result.styles = (message.styles || []).map(string => {
-    return createValueGripForTarget(targetActor, string);
-  });
+  if (message.timer) {
+    result.timer = message.timer;
+  }
 
-  if (result.level === "table") {
+  if (message.level === "table") {
     const tableItems = getConsoleTableMessageItems(targetActor, result);
     if (tableItems) {
       result.arguments[0].ownProperties = tableItems;
@@ -248,9 +269,6 @@ function prepareConsoleMessageForRemote(targetActor, message) {
     // Only return the 2 first params.
     result.arguments = result.arguments.slice(0, 2);
   }
-
-  result.category = message.category || "webdev";
-  result.innerWindowID = message.innerID;
 
   return result;
 }
