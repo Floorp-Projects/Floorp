@@ -116,6 +116,17 @@ class MessageHandlerRegistry extends EventEmitter {
   }
 
   /**
+   * Retrieve all MessageHandler instances held in this registry, for all
+   * session IDs.
+   *
+   * @return {Iterable.<MessageHandler>}
+   *     Iterator of MessageHandler instances
+   */
+  getAllMessageHandlers() {
+    return this._messageHandlersMap.values();
+  }
+
+  /**
    * Retrieve an existing MessageHandler instance matching the provided session
    * id. Returns null if no MessageHandler was found.
    *
