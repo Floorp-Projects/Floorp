@@ -32,15 +32,13 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
   static_assert(std::is_same_v<T, JSAtom> || std::is_same_v<T, JS::Symbol>,
                 "Should only be called with JSAtom* or JS::Symbol* argument");
 
+  MOZ_ASSERT(cx->isMainThreadContext());
+  MOZ_ASSERT(cx->zone());
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+
   MOZ_ASSERT(thing);
   js::gc::TenuredCell* cell = &thing->asTenured();
   MOZ_ASSERT(cell->zoneFromAnyThread()->isAtomsZone());
-
-  // The embedding is allowed to atomize during initialization.
-  if (!cx->zone()) {
-    return true;
-  }
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   // This doesn't check for pinned atoms since that might require taking a
   // lock. This is not required for correctness.
@@ -59,13 +57,11 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
     cx->zone()->markedAtoms().setBit(bit);
   }
 
-  if (!cx->isHelperThreadContext()) {
-    // Trigger a read barrier on the atom, in case there is an incremental
-    // GC in progress. This is necessary if the atom is being marked
-    // because a reference to it was obtained from another zone which is
-    // not being collected by the incremental GC.
-    ReadBarrier(thing);
-  }
+  // Trigger a read barrier on the atom, in case there is an incremental
+  // GC in progress. This is necessary if the atom is being marked
+  // because a reference to it was obtained from another zone which is
+  // not being collected by the incremental GC.
+  ReadBarrier(thing);
 
   // Children of the thing also need to be marked in the context's zone.
   // We don't have a JSTracer for this so manually handle the cases in which
