@@ -2049,18 +2049,38 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         The object that can be sent to the remote client.
    */
   prepareConsoleMessageForRemote: function(message, useObjectGlobal = true) {
-    const result = WebConsoleUtils.cloneObject(message);
+    const result = {
+      arguments: message.arguments
+        ? message.arguments.map(obj => {
+            const dbgObj = this.makeDebuggeeValue(obj, useObjectGlobal);
+            return this.createValueGrip(dbgObj);
+          })
+        : [],
+      chromeContext: message.chromeContext,
+      columnNumber: message.columnNumber,
+      filename: message.filename,
+      level: message.level,
+      lineNumber: message.lineNumber,
+      timeStamp: message.timeStamp,
+      sourceId: this.getActorIdForInternalSourceId(message.sourceId),
+      category: message.category || "webdev",
+      innerWindowID: message.innerID,
+    };
 
-    result.workerType = WebConsoleUtils.getWorkerType(result) || "none";
-    result.sourceId = this.getActorIdForInternalSourceId(result.sourceId);
+    // It only make sense to include the following properties in the message when they have
+    // a meaningful value. Otherwise we simply don't include them so we save cycles in JSActor communication.
+    if (message.counter) {
+      result.counter = message.counter;
+    }
+    if (message.private) {
+      result.private = message.private;
+    }
+    if (message.prefix) {
+      result.prefix = message.prefix;
+    }
 
-    delete result.wrappedJSObject;
-    delete result.ID;
-    delete result.innerID;
-    delete result.consoleID;
-
-    if (result.stacktrace) {
-      result.stacktrace = result.stacktrace.map(frame => {
+    if (message.stacktrace) {
+      result.stacktrace = message.stacktrace.map(frame => {
         return {
           ...frame,
           sourceId: this.getActorIdForInternalSourceId(frame.sourceId),
@@ -2068,16 +2088,17 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       });
     }
 
-    result.arguments = (message.arguments || []).map(obj => {
-      const dbgObj = this.makeDebuggeeValue(obj, useObjectGlobal);
-      return this.createValueGrip(dbgObj);
-    });
+    if (message.styles && message.styles.length > 0) {
+      result.styles = message.styles.map(string => {
+        return this.createValueGrip(string);
+      });
+    }
 
-    result.styles = (message.styles || []).map(string => {
-      return this.createValueGrip(string);
-    });
+    if (message.timer) {
+      result.timer = message.timer;
+    }
 
-    if (result.level === "table") {
+    if (message.level === "table") {
       const tableItems = this._getConsoleTableMessageItems(result);
       if (tableItems) {
         result.arguments[0].ownProperties = tableItems;
@@ -2087,9 +2108,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       // Only return the 2 first params.
       result.arguments = result.arguments.slice(0, 2);
     }
-
-    result.category = message.category || "webdev";
-    result.innerWindowID = message.innerID;
 
     return result;
   },
