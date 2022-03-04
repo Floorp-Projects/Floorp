@@ -188,6 +188,14 @@ mod test {
         }
     }
 
+    #[test]
+    fn parse_boolean_eof() {
+        let inputs = vec!["pref(true", "pref(false", "pref(false,", "pref(false)"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
+    }
+
     fn parse_test(input: &str, expected: BTreeMap<String, Pref>) {
         match parse(input.as_bytes()) {
             Ok(ref actual) => {
