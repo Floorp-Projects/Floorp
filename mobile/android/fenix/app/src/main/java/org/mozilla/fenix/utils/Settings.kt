@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.lifecycle.LifecycleOwner
+import mozilla.components.concept.engine.Engine.HttpsOnlyMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
@@ -505,6 +506,21 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var shouldFollowDeviceTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_follow_device_theme),
+        default = false
+    )
+
+    var shouldUseHttpsOnly by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_https_only),
+        default = false
+    )
+
+    var shouldUseHttpsOnlyInAllTabs by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_https_only_in_all_tabs),
+        default = true
+    )
+
+    var shouldUseHttpsOnlyInPrivateTabsOnly by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_https_only_in_private_tabs),
         default = false
     )
 
@@ -1287,4 +1303,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_home_blocklist),
         default = setOf()
     )
+
+    /**
+     * Get the current mode for how https-only is enabled.
+     */
+    fun getHttpsOnlyMode(): HttpsOnlyMode {
+        return if (!shouldUseHttpsOnly) {
+            HttpsOnlyMode.DISABLED
+        } else if (shouldUseHttpsOnlyInPrivateTabsOnly) {
+            HttpsOnlyMode.ENABLED_PRIVATE_ONLY
+        } else {
+            HttpsOnlyMode.ENABLED
+        }
+    }
 }

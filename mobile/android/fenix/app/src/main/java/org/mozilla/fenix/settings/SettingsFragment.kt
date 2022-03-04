@@ -259,6 +259,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_private_browsing) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToPrivateBrowsingFragment()
             }
+            resources.getString(R.string.pref_key_https_only_settings) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToHttpsOnlyFragment()
+            }
             resources.getString(R.string.pref_key_accessibility) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
             }
@@ -467,6 +470,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         setupAmoCollectionOverridePreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
+        setupHttpsOnlyPreferences()
     }
 
     /**
@@ -601,6 +605,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         FXA_SYNC_OVERRIDE_EXIT_DELAY
                     )
                 }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupHttpsOnlyPreferences() {
+        val httpsOnlyPreference =
+            requirePreference<Preference>(R.string.pref_key_https_only_settings)
+        httpsOnlyPreference.summary = context?.let {
+            if (it.settings().shouldUseHttpsOnly) {
+                getString(R.string.preferences_https_only_on)
+            } else {
+                getString(R.string.preferences_https_only_off)
+            }
         }
     }
 

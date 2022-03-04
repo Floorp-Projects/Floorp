@@ -6,6 +6,9 @@ package org.mozilla.fenix.utils
 
 import io.mockk.every
 import io.mockk.spyk
+import mozilla.components.concept.engine.Engine.HttpsOnlyMode.DISABLED
+import mozilla.components.concept.engine.Engine.HttpsOnlyMode.ENABLED
+import mozilla.components.concept.engine.Engine.HttpsOnlyMode.ENABLED_PRIVATE_ONLY
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
@@ -799,5 +802,62 @@ class SettingsTest {
         every { settings.hasInactiveTabsAutoCloseDialogBeenDismissed } returns false
 
         assertTrue(settings.shouldShowInactiveTabsAutoCloseDialog(20))
+    }
+
+    @Test
+    fun `GIVEN Https-only mode is disabled THEN the engine mode is HttpsOnlyMode#DISABLED`() {
+        settings.shouldUseHttpsOnly = false
+
+        val result = settings.getHttpsOnlyMode()
+
+        assertEquals(DISABLED, result)
+    }
+
+    @Test
+    fun `GIVEN Https-only mode is enabled THEN the engine mode is HttpsOnlyMode#ENABLED`() {
+        settings.shouldUseHttpsOnly = true
+
+        val result = settings.getHttpsOnlyMode()
+
+        assertEquals(ENABLED, result)
+    }
+
+    @Test
+    fun `GIVEN Https-only mode is enabled for all tabs THEN the engine mode is HttpsOnlyMode#ENABLED`() {
+        settings.apply {
+            shouldUseHttpsOnly = true
+            shouldUseHttpsOnlyInAllTabs = true
+        }
+
+        val result = settings.getHttpsOnlyMode()
+
+        assertEquals(ENABLED, result)
+    }
+
+    @Test
+    fun `GIVEN Https-only mode is enabled for only private tabs THEN the engine mode is HttpsOnlyMode#ENABLED_PRIVATE_ONLY`() {
+        settings.apply {
+            shouldUseHttpsOnly = true
+            shouldUseHttpsOnlyInPrivateTabsOnly = true
+        }
+
+        val result = settings.getHttpsOnlyMode()
+
+        assertEquals(ENABLED_PRIVATE_ONLY, result)
+    }
+
+    @Test
+    fun `GIVEN unset user preferences THEN https-only is disabled`() {
+        assertFalse(settings.shouldUseHttpsOnly)
+    }
+
+    @Test
+    fun `GIVEN unset user preferences THEN https-only is enabled for all tabs`() {
+        assertTrue(settings.shouldUseHttpsOnlyInAllTabs)
+    }
+
+    @Test
+    fun `GIVEN unset user preferences THEN https-only is disabled for private tabs`() {
+        assertFalse(settings.shouldUseHttpsOnlyInPrivateTabsOnly)
     }
 }

@@ -141,6 +141,12 @@
     <string name="pref_key_recent_tabs" translatable="false">pref_key_recent_tabs</string>
     <string name="pref_key_recent_bookmarks" translatable="false">pref_key_recent_bookmarks</string>
 
+    <!-- HTTPS Only Settings -->
+    <string name="pref_key_https_only_settings" translatable="false">pref_key_https_only_settings</string>
+    <string name="pref_key_https_only" translatable="false">pref_key_https_only</string>
+    <string name="pref_key_https_only_in_all_tabs" translatable="false">pref_key_https_only_in_all_tabs</string>
+    <string name="pref_key_https_only_in_private_tabs" translatable="false">pref_key_https_only_in_private_tabs</string>
+
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>

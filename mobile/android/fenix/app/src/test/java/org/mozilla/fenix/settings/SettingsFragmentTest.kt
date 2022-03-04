@@ -13,6 +13,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -25,6 +26,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
@@ -37,6 +39,7 @@ class SettingsFragmentTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val settingsFragment = SettingsFragment()
 
     @Before
     fun setup() {
@@ -53,6 +56,11 @@ class SettingsFragmentTest {
         every { Config.channel } returns ReleaseChannel.Nightly
 
         FxNimbus.api = NimbusDisabled(testContext)
+
+        val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
+        activity.supportFragmentManager.beginTransaction()
+            .add(settingsFragment, "test")
+            .commitNow()
     }
 
     @Test
@@ -109,5 +117,33 @@ class SettingsFragmentTest {
         every { settings.amoCollectionOverrideConfigured() } returns true
         settingsFragment.setupAmoCollectionOverridePreference(settings)
         assertTrue(preferenceAmoCollectionOverride.isVisible)
+    }
+
+    @Test
+    fun `GIVEN the HttpsOnly is enabled THEN set the appropriate preference summary`() {
+        val httpsOnlyPreference = settingsFragment.findPreference<Preference>(
+            settingsFragment.getPreferenceKey(R.string.pref_key_https_only_settings)
+        )!!
+        every { testContext.settings().shouldUseHttpsOnly } returns true
+        assertTrue(httpsOnlyPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.preferences_https_only_on)
+
+        settingsFragment.setupHttpsOnlyPreferences()
+
+        assertEquals(summary, httpsOnlyPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the HttpsOnly is disabled THEN set the appropriate preference summary`() {
+        val httpsOnlyPreference = settingsFragment.findPreference<Preference>(
+            settingsFragment.getPreferenceKey(R.string.pref_key_https_only_settings)
+        )!!
+        every { testContext.settings().shouldUseHttpsOnly } returns false
+        assertTrue(httpsOnlyPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.preferences_https_only_off)
+
+        settingsFragment.setupHttpsOnlyPreferences()
+
+        assertEquals(summary, httpsOnlyPreference.summary)
     }
 }
