@@ -4766,10 +4766,9 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     AdjustedTarget tempTarget(this, bounds.IsEmpty() ? nullptr : &bounds);
     if (!tempTarget) {
-      gfxDevCrash(LogReason::InvalidDrawTarget)
-          << "Invalid adjusted target in Canvas2D "
-          << gfx::hexa((DrawTarget*)mTarget) << ", " << NeedToDrawShadow()
-          << NeedToApplyFilter();
+      gfxWarning() << "Invalid adjusted target in Canvas2D "
+                   << gfx::hexa((DrawTarget*)mTarget) << ", "
+                   << NeedToDrawShadow() << NeedToApplyFilter();
       return;
     }
 

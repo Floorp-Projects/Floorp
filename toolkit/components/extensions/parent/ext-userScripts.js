@@ -127,13 +127,13 @@ this.userScripts = class extends ExtensionAPI {
 
           const scriptOptions = userScript.serialize();
 
+          extension.registeredContentScripts.set(scriptId, scriptOptions);
+          extension.updateContentScripts();
+
           await extension.broadcast("Extension:RegisterContentScripts", {
             id: extension.id,
             scripts: [{ scriptId, options: scriptOptions }],
           });
-
-          extension.registeredContentScripts.set(scriptId, scriptOptions);
-          extension.updateContentScripts();
 
           return scriptId;
         },

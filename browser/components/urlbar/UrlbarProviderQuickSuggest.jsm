@@ -268,10 +268,37 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     this._addedResultInLastQuery = true;
 
-    // Record the Nimbus "exposure" event. Note that `recordExposureEvent` will
-    // make sure only one event gets recorded even it is called multiple times
-    // in the same browser session. However, it's an expensive call regardless,
-    // so do it only once per browser session and do it on idle.
+    // The user triggered a suggestion. Per spec, the Nimbus exposure event
+    // should be recorded now, subject to the following logic:
+    //
+    // If the user is in a best match experiment:
+    //   Record if the suggestion is itself a best match and either of the
+    //   following are true:
+    //   * The best match feature is enabled (i.e., the user is in a treatment
+    //     branch), and the user has not disabled best match
+    //   * The best match feature is disabled (i.e., the user is in the control
+    //     branch)
+    // Else:
+    //   Record the event
+    if (
+      !UrlbarPrefs.get("isBestMatchExperiment") ||
+      (suggestion.is_best_match &&
+        (!UrlbarPrefs.get("bestMatchEnabled") ||
+          UrlbarPrefs.get("suggest.bestmatch")))
+    ) {
+      this._ensureExposureEventRecorded();
+    }
+  }
+
+  /**
+   * Records the Nimbus exposure event if it hasn't already been recorded during
+   * the app session. This method actually queues the recording on idle because
+   * it's potentially an expensive operation.
+   */
+  _ensureExposureEventRecorded() {
+    // `recordExposureEvent()` makes sure only one event is recorded per app
+    // session even if it's called many times, but since it may be expensive, we
+    // also keep `_recordedExposureEvent`.
     if (!this._recordedExposureEvent) {
       this._recordedExposureEvent = true;
       Services.tm.idleDispatchToMainThread(() =>

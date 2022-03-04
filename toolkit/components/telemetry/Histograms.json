@@ -13551,26 +13551,26 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "110",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145, 1570634, 1606206, 1685399, 1714303],
+    "bug_numbers": [1293145, 1570634, 1606206, 1685399, 1714303, 1754647],
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "110",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668, 1570634, 1606206, 1685399]
+    "bug_numbers": [1289668, 1570634, 1606206, 1685399, 1754648]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["content"],
@@ -13595,18 +13595,6 @@
     "high": 10000,
     "n_buckets": 100,
     "bug_numbers": [1294349, 1570634, 1606206, 1689267]
-  },
-  "VIDEO_VP9_BENCHMARK_FPS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozill.com", "bryce@mozilla.com"],
-    "expires_in_version": "100",
-    "bug_numbers": [1230265, 1570634, 1606206, 1689267],
-    "kind": "linear",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "720p VP9 decode benchmark measurement in frames per second",
-    "releaseChannelCollection": "opt-out"
   },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
@@ -14160,30 +14148,6 @@
     "kind": "flag",
     "description": "Tracks situations when the user opts for auto-detecting the language of a page"
   },
-  "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed.",
-    "bug_numbers": [1714303]
-  },
-  "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1714303],
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
-  },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -14701,17 +14665,6 @@
     "keyed": true,
     "description": "OpenGL compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
     "bug_numbers": [1002846]
-  },
-  "WEBVTT_TRACK_KINDS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "enumerated",
-    "n_values": 10,
-    "bug_numbers": [1280644, 1570634, 1606206, 1689267],
-    "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
-    "releaseChannelCollection": "opt-out"
   },
   "BLINK_FILESYSTEM_USED": {
     "record_in_processes": ["main", "content"],

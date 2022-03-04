@@ -523,11 +523,13 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // thread.
       // TODO: On Linux Wayland, the vsync thread is currently the main thread,
       // and yet we still dispatch the runnable. Do we need to?
+      bool useVsyncPriority = mozilla::BrowserTabsRemoteAutostart();
       nsCOMPtr<nsIRunnable> vsyncEvent = new PrioritizableRunnable(
           NS_NewRunnableFunction(
               "VsyncRefreshDriverTimer::NotifyVsyncOnMainThread",
               [self = RefPtr{this}]() { self->NotifyVsyncOnMainThread(); }),
-          nsIRunnablePriority::PRIORITY_VSYNC);
+          useVsyncPriority ? nsIRunnablePriority::PRIORITY_VSYNC
+                           : nsIRunnablePriority::PRIORITY_NORMAL);
       NS_DispatchToMainThread(vsyncEvent);
       return true;
     }

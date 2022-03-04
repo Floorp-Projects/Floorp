@@ -122,7 +122,7 @@ def add_command_arguments(config, tasks):
                 "type": "directory",
             }
         ]
-        task["release-artifacts"] = release_artifacts
+        task.setdefault("attributes", {})["release_artifacts"] = release_artifacts
         task["label"] = config.kind
 
         yield task

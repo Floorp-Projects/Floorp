@@ -67,7 +67,7 @@ describe("Boolean", () => {
 
 describe("Negative Zero", () => {
   const stubNegativeZeroGrip = stubs.get("NegZeroGrip");
-  const stubNegativeZeroValue = stubs.get("NegZeroValue");
+  const stubNegativeZeroValue = -0;
 
   it("correctly selects Number Rep for negative zero grip", () => {
     expect(getRep(stubNegativeZeroGrip)).toBe(Number.rep);
@@ -121,12 +121,11 @@ describe("Zero", () => {
 });
 
 describe("Unsafe Int", () => {
-  const stub = stubs.get("UnsafeInt");
-
   it("renders with expected test content for a long number", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub,
+        // eslint-disable-next-line no-loss-of-precision
+        object: 900719925474099122,
         shouldRenderTooltip: true,
       })
     );

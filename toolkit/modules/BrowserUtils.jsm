@@ -81,6 +81,7 @@ var BrowserUtils = {
     return (
       mimeType.startsWith("text/") ||
       mimeType.endsWith("+xml") ||
+      mimeType.endsWith("+json") ||
       mimeType == "application/x-javascript" ||
       mimeType == "application/javascript" ||
       mimeType == "application/json" ||

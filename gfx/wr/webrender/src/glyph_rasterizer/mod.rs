@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontInstanceFlags, FontSize, BaseFontInstance};
-use api::{FontKey, FontRenderMode, FontTemplate};
-use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
+use api::{FontInstanceData, FontInstanceFlags, FontInstanceKey};
+use api::{FontInstanceOptions, FontInstancePlatformOptions};
+use api::{FontKey, FontRenderMode, FontSize, FontTemplate, FontVariation};
+use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics, IdNamespace};
 use api::channel::crossbeam::{unbounded, Receiver, Sender};
 use api::units::*;
 use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
@@ -29,7 +30,7 @@ use std::cell::Cell;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::Deref;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub static GLYPH_FLASHING: AtomicBool = AtomicBool::new(false);
@@ -471,6 +472,141 @@ impl<'a> From<&'a LayoutToWorldTransform> for FontTransform {
 // Some platforms (i.e. Windows) may have trouble rasterizing glyphs above this size.
 // Ensure glyph sizes are reasonably limited to avoid that scenario.
 pub const FONT_SIZE_LIMIT: f32 = 320.0;
+
+/// Immutable description of a font instance's shared state.
+///
+/// `BaseFontInstance` can be identified by a `FontInstanceKey` to avoid hashing it.
+#[derive(Clone, PartialEq, Eq, Debug, Ord, PartialOrd, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BaseFontInstance {
+    ///
+    pub instance_key: FontInstanceKey,
+    ///
+    pub font_key: FontKey,
+    ///
+    pub size: FontSize,
+    ///
+    pub bg_color: ColorU,
+    ///
+    pub render_mode: FontRenderMode,
+    ///
+    pub flags: FontInstanceFlags,
+    ///
+    pub synthetic_italics: SyntheticItalics,
+    ///
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
+    pub platform_options: Option<FontInstancePlatformOptions>,
+    ///
+    pub variations: Vec<FontVariation>,
+}
+
+pub type FontInstanceMap = FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>;
+/// A map of font instance data accessed concurrently from multiple threads.
+#[derive(Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub struct SharedFontInstanceMap {
+    map: Arc<RwLock<FontInstanceMap>>,
+}
+
+impl SharedFontInstanceMap {
+    /// Creates an empty shared map.
+    pub fn new() -> Self {
+        SharedFontInstanceMap {
+            map: Arc::new(RwLock::new(FastHashMap::default()))
+        }
+    }
+
+    /// Acquires a write lock on the shared map.
+    pub fn lock(&mut self) -> Option<RwLockReadGuard<FontInstanceMap>> {
+        self.map.read().ok()
+    }
+
+    ///
+    pub fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
+        match self.map.read().unwrap().get(&key) {
+            Some(instance) => Some(FontInstanceData {
+                font_key: instance.font_key,
+                size: instance.size.into(),
+                options: Some(FontInstanceOptions {
+                  render_mode: instance.render_mode,
+                  flags: instance.flags,
+                  bg_color: instance.bg_color,
+                  synthetic_italics: instance.synthetic_italics,
+                }),
+                platform_options: instance.platform_options,
+                variations: instance.variations.clone(),
+            }),
+            None => None,
+        }
+    }
+
+    /// Replace the shared map with the provided map.
+    pub fn set(&mut self, map: FontInstanceMap) {
+        *self.map.write().unwrap() = map;
+    }
+
+    ///
+    pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
+        let instance_map = self.map.read().unwrap();
+        instance_map.get(&instance_key).map(|instance| { Arc::clone(instance) })
+    }
+
+    ///
+    pub fn add_font_instance(
+        &mut self,
+        instance_key: FontInstanceKey,
+        font_key: FontKey,
+        size: f32,
+        options: Option<FontInstanceOptions>,
+        platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
+    ) {
+        let FontInstanceOptions {
+            render_mode,
+            flags,
+            bg_color,
+            synthetic_italics,
+            ..
+        } = options.unwrap_or_default();
+
+        let instance = Arc::new(BaseFontInstance {
+            instance_key,
+            font_key,
+            size: size.into(),
+            bg_color,
+            render_mode,
+            flags,
+            synthetic_italics,
+            platform_options,
+            variations,
+        });
+
+        self.map
+            .write()
+            .unwrap()
+            .insert(instance_key, instance);
+    }
+
+    ///
+    pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
+        self.map.write().unwrap().remove(&instance_key);
+    }
+
+    ///
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) {
+        self.map
+            .write()
+            .unwrap()
+            .retain(|key, _| key.0 != namespace);
+    }
+
+    ///
+    pub fn clone_map(&self) -> FontInstanceMap {
+        self.map.read().unwrap().clone()
+    }
+}
 
 /// A mutable font instance description.
 ///
