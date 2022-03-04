@@ -138,7 +138,7 @@
     <string name="mozac_browser_errorpages_corrupted_content_title">Sbagliu di cuntenutu alteratu</string>
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
-      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu abbentatu.</p>
+      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu scupertu.</p>
       <ul>
         <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
       </ul>
@@ -147,7 +147,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">U cuntenutu s’hè lampatu</string>
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
-      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu abbentatu.</p>
+      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu scupertu.</p>
       <ul>
         <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
       </ul>
