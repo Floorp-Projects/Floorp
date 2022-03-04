@@ -3087,7 +3087,6 @@ bool XPCJSRuntime::InitializeStrings(JSContext* cx) {
         return false;
       }
       mStrIDs[i] = PropertyKey::fromPinnedString(str);
-      mStrJSVals[i].setString(str);
     }
 
     if (!mozilla::dom::DefineStaticJSVals(cx)) {
