@@ -15,8 +15,11 @@ namespace mozilla::widget {
 
 class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
  public:
-  ScrollbarDrawingWin11() = default;
+  ScrollbarDrawingWin11() : ScrollbarDrawingWin(Kind::Win11) {}
   virtual ~ScrollbarDrawingWin11() = default;
+
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                            StyleAppearance aAppearance,
@@ -29,8 +32,6 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
                                        const EventStates& aElementState,
                                        const EventStates& aDocumentState,
                                        const Colors&) override;
-
-  static bool UseOverlayStyle(nsPresContext*);
 
   // Returned colors are button, arrow.
   std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
