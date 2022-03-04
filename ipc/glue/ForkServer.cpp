@@ -130,6 +130,14 @@ inline void PrepareFdsRemap(base::LaunchOptions* aOptions,
   }
 }
 
+template <class P>
+static void ReadParamInfallible(IPC::MessageReader* aReader, P* aResult,
+                                const char* aCrashMessage) {
+  if (!IPC::ReadParam(aReader, aResult)) {
+    MOZ_CRASH_UNSAFE(aCrashMessage);
+  }
+}
+
 /**
  * Parse a Message to get a list of arguments and fill a LaunchOptions.
  */
@@ -147,12 +155,10 @@ inline bool ParseForkNewSubprocess(IPC::Message& aMsg,
   nsTArray<EnvVar> env_map;
   nsTArray<FdMapping> fds_remap;
 
-  ReadIPDLParamInfallible(&reader, nullptr, &argv_array,
-                          "Error deserializing 'nsCString[]'");
-  ReadIPDLParamInfallible(&reader, nullptr, &env_map,
-                          "Error deserializing 'EnvVar[]'");
-  ReadIPDLParamInfallible(&reader, nullptr, &fds_remap,
-                          "Error deserializing 'FdMapping[]'");
+  ReadParamInfallible(&reader, &argv_array,
+                      "Error deserializing 'nsCString[]'");
+  ReadParamInfallible(&reader, &env_map, "Error deserializing 'EnvVar[]'");
+  ReadParamInfallible(&reader, &fds_remap, "Error deserializing 'FdMapping[]'");
   reader.EndRead();
 
   PrepareArguments(aArgv, argv_array);

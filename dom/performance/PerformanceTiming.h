@@ -555,10 +555,9 @@ struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
 };
 
 template <>
-struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
-  using paramType = nsCOMPtr<nsIServerTiming>;
+struct IPDLParamTraits<nsIServerTiming*> {
   static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    const paramType& aParam) {
+                    nsIServerTiming* aParam) {
     nsAutoCString name;
     Unused << aParam->GetName(name);
     double duration = 0;
@@ -571,7 +570,7 @@ struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
   }
 
   static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                   paramType* aResult) {
+                   RefPtr<nsIServerTiming>* aResult) {
     nsAutoCString name;
     double duration;
     nsAutoCString description;
@@ -589,7 +588,7 @@ struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
     timing->SetName(name);
     timing->SetDuration(duration);
     timing->SetDescription(description);
-    *aResult = timing;
+    *aResult = timing.forget();
     return true;
   }
 };
