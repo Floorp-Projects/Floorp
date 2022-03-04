@@ -5,20 +5,29 @@
 import os
 import signal
 import re
+import sys
 
-from buildconfig import substs
 from mozboot.util import get_tools_dir
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
 
 CLANG_FORMAT_NOT_FOUND = """
-Could not find clang-format! Install clang-format with:
-
-    $ ./mach bootstrap
-
-And make sure that it is in the PATH
+Could not find clang-format! It should've been installed automatically - \
+please report a bug here:
+https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=Lint%20and%20Formatting
 """.strip()
+
+
+def setup(root, mach_command_context, **lintargs):
+    if get_clang_format_binary():
+        return 0
+
+    from mozbuild.code_analysis.mach_commands import get_clang_tools
+
+    rc, _ = get_clang_tools(mach_command_context)
+    if rc:
+        return 1
 
 
 def parse_issues(config, output, paths, log):
@@ -81,7 +90,15 @@ def get_clang_format_binary():
 
     clang_tools_path = os.path.join(get_tools_dir(), "clang-tools")
     bin_path = os.path.join(clang_tools_path, "clang-tidy", "bin")
-    return os.path.join(bin_path, "clang-format" + substs.get("HOST_BIN_SUFFIX", ""))
+    binary = os.path.join(bin_path, "clang-format")
+
+    if sys.platform.startswith("win"):
+        binary += ".exe"
+
+    if not os.path.isfile(binary):
+        return None
+
+    return binary
 
 
 def is_ignored_path(ignored_dir_re, topsrcdir, f):
