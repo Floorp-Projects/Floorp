@@ -724,6 +724,63 @@ class QSTestUtils {
       await unenrollUpdatePromise;
     };
   }
+
+  /**
+   * Clears the Nimbus exposure event.
+   */
+  async clearExposureEvent() {
+    // Exposure event recording is queued to the idle thread, so wait for idle
+    // before we start so any events from previous tasks will have been recorded
+    // and won't interfere with this task.
+    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
+
+    Services.telemetry.clearEvents();
+    NimbusFeatures.urlbar._didSendExposureEvent = false;
+    UrlbarProviderQuickSuggest._recordedExposureEvent = false;
+  }
+
+  /**
+   * Asserts the Nimbus exposure event is recorded or not as expected.
+   *
+   * @param {boolean} expectedRecorded
+   *   Whether the event is expected to be recorded.
+   * @param {string} [branchSlug]
+   *   If the event is expected to be recorded, then this should be the name of
+   *   the experiment branch for which it was recorded.
+   */
+  async assertExposureEvent(expectedRecorded) {
+    this.Assert.equal(
+      UrlbarProviderQuickSuggest._recordedExposureEvent,
+      expectedRecorded,
+      "_recordedExposureEvent is correct"
+    );
+
+    let filter = {
+      category: "normandy",
+      method: "expose",
+      object: "nimbus_experiment",
+    };
+
+    let expectedEvents = [];
+    if (expectedRecorded) {
+      expectedEvents.push({
+        ...filter,
+        extra: {
+          branchSlug: "control",
+          featureId: "urlbar",
+        },
+      });
+    }
+
+    // The event recording is queued to the idle thread when the search starts,
+    // so likewise queue the assert to idle instead of doing it immediately.
+    await new Promise(resolve => {
+      Services.tm.idleDispatchToMainThread(() => {
+        TelemetryTestUtils.assertEvents(expectedEvents, filter);
+        resolve();
+      });
+    });
+  }
 }
 
 var QuickSuggestTestUtils = new QSTestUtils();

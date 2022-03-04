@@ -249,8 +249,8 @@ appmenu-help-more-troubleshooting-info =
     .accesskey = t
 appmenu-help-report-site-issue =
     .label = Report site issue…
-appmenu-help-feedback-page =
-    .label = Submit feedback…
+appmenu-help-share-ideas =
+    .label = Share ideas and feedback…
     .accesskey = S
 
 ## appmenu-help-enter-troubleshoot-mode and appmenu-help-exit-troubleshoot-mode

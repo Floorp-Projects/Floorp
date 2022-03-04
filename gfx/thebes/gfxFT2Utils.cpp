@@ -40,7 +40,8 @@ uint32_t gfxFT2LockedFace::GetGlyph(uint32_t aCharCode) {
 #else
   uint32_t gid = FT_Get_Char_Index(mFace, aCharCode);
 #endif
-  if (!gid && mFace->charmap->encoding == FT_ENCODING_MS_SYMBOL) {
+  if (!gid && mFace->charmap &&
+      mFace->charmap->encoding == FT_ENCODING_MS_SYMBOL) {
     if (auto pua = gfxFontUtils::MapLegacySymbolFontCharToPUA(aCharCode)) {
       gid = FT_Get_Char_Index(mFace, pua);
     }

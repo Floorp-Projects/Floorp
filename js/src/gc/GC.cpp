@@ -3093,8 +3093,8 @@ static bool ShouldPauseMutatorWhileWaiting(const SliceBudget& budget,
          budgetWasIncreased;
 }
 
-void GCRuntime::incrementalSlice(SliceBudget& budget,
-                                 JS::GCReason reason, bool budgetWasIncreased) {
+void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
+                                 bool budgetWasIncreased) {
   MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
 
   AutoSetThreadIsPerformingGC performingGC;
