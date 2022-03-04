@@ -10,13 +10,13 @@ interface nsIX509Cert;
 
 %{ C++
 namespace IPC {
-  class Message;
+class MessageWriter;
+class MessageReader;
 }
-class PickleIterator;
 %}
 
-[ptr] native IpcMessagePtr(IPC::Message);
-[ptr] native PickleIteratorPtr(PickleIterator);
+[ptr] native IpcMessageWriterPtr(IPC::MessageWriter);
+[ptr] native IpcMessageReaderPtr(IPC::MessageReader);
 
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
@@ -86,10 +86,10 @@ interface nsITransportSecurityInfo : nsISupports {
     readonly attribute boolean isExtendedValidation;
 
     [notxpcom, noscript]
-    void SerializeToIPC(in IpcMessagePtr aMsg);
+    void SerializeToIPC(in IpcMessageWriterPtr aWriter);
 
     [notxpcom, noscript]
-    bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
+    bool DeserializeFromIPC(in IpcMessageReaderPtr aReader);
 
     /* negotiatedNPN is '' if no NPN list was provided by the client,
      * or if the server did not select any protocol choice from that

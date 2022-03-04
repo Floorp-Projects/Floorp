@@ -221,7 +221,8 @@ TEST(DataPipe, SerializeReader)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   IPC::Message msg(MSG_ROUTING_NONE, 0);
-  WriteParam(&msg, reader);
+  IPC::MessageWriter msgWriter(msg);
+  IPC::WriteParam(&msgWriter, reader);
 
   uint64_t available = 0;
   rv = reader->Available(&available);
@@ -235,8 +236,8 @@ TEST(DataPipe, SerializeReader)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   RefPtr<DataPipeReceiver> reader2;
-  PickleIterator iter(msg);
-  ASSERT_TRUE(ReadParam(&msg, &iter, &reader2));
+  IPC::MessageReader msgReader(msg);
+  ASSERT_TRUE(IPC::ReadParam(&msgReader, &reader2));
   ASSERT_TRUE(reader2);
 
   rv = reader2->Available(&available);

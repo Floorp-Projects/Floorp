@@ -73,9 +73,10 @@ bool ForkServiceChild::SendForkNewSubprocess(
   mRecvPid = -1;
   IPC::Message msg(MSG_ROUTING_CONTROL, Msg_ForkNewSubprocess__ID);
 
-  WriteIPDLParam(&msg, nullptr, aArgv);
-  WriteIPDLParam(&msg, nullptr, aEnvMap);
-  WriteIPDLParam(&msg, nullptr, aFdsRemap);
+  IPC::MessageWriter writer(msg);
+  WriteIPDLParam(&writer, nullptr, aArgv);
+  WriteIPDLParam(&writer, nullptr, aEnvMap);
+  WriteIPDLParam(&writer, nullptr, aFdsRemap);
   if (!mTcver->Send(msg)) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
@@ -103,12 +104,12 @@ void ForkServiceChild::OnMessageReceived(IPC::Message&& message) {
             ("unknown reply type %d", message.type()));
     return;
   }
-  PickleIterator iter__(message);
+  IPC::MessageReader reader(message);
 
-  if (!ReadIPDLParam(&message, &iter__, nullptr, &mRecvPid)) {
+  if (!ReadIPDLParam(&reader, nullptr, &mRecvPid)) {
     MOZ_CRASH("Error deserializing 'pid_t'");
   }
-  message.EndRead(iter__, message.type());
+  reader.EndRead();
 }
 
 void ForkServiceChild::OnError() {
