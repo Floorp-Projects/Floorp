@@ -34,6 +34,9 @@ namespace mozilla::ipc {
 class IProtocol;
 template <typename P>
 struct IPDLParamTraits;
+
+// Implemented in ProtocolUtils.cpp
+MOZ_NEVER_INLINE void PickleFatalError(const char* aMsg, IProtocol* aActor);
 }  // namespace mozilla::ipc
 
 namespace IPC {
@@ -104,6 +107,10 @@ class MOZ_STACK_CLASS MessageWriter final {
     return message_.WriteMachSendRight(std::move(port));
   }
 #endif
+
+  void FatalError(const char* aErrorMsg) const {
+    mozilla::ipc::PickleFatalError(aErrorMsg, actor_);
+  }
 
  private:
   Message& message_;
@@ -191,6 +198,10 @@ class MOZ_STACK_CLASS MessageReader final {
     return message_.ConsumeMachSendRight(&iter_, port);
   }
 #endif
+
+  void FatalError(const char* aErrorMsg) const {
+    mozilla::ipc::PickleFatalError(aErrorMsg, actor_);
+  }
 
  private:
   const Message& message_;
