@@ -60,7 +60,7 @@ add_task(async function test_sessionData() {
     stringDataItem,
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     "value-1"
   );
 
@@ -79,7 +79,7 @@ add_task(async function test_sessionData() {
     numberDataItem,
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     12
   );
 
@@ -98,7 +98,7 @@ add_task(async function test_sessionData() {
     boolDataItem,
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     true
   );
 
@@ -115,14 +115,14 @@ add_task(async function test_sessionData() {
     snapshot[0],
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     "value-1"
   );
   checkSessionDataItem(
     snapshot[1],
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     true
   );
 
@@ -149,7 +149,7 @@ add_task(async function test_sessionData() {
     snapshot[0],
     "fakemodule",
     "testCategory",
-    CONTEXT_DESCRIPTOR_TYPES.ALL,
+    ContextDescriptorType.All,
     "value-2"
   );
 
@@ -177,7 +177,7 @@ add_task(async function test_sessionDataRootOnlyModule() {
     moduleName: "rootOnly",
     category: "session_data_root_only",
     contextDescriptor: {
-      type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+      type: ContextDescriptorType.All,
     },
     values: [true],
   });
