@@ -834,6 +834,8 @@
     <string name="bookmark_deletion_multiple_snackbar_message_3">Deleting selected folders</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">UNDO</string>
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Enter search terms</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->

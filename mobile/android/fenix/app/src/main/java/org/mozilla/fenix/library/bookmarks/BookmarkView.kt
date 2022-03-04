@@ -97,6 +97,11 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      */
     fun onRequestSync()
+
+    /**
+     * Handles when search is tapped
+     */
+    fun onSearch()
 }
 
 class BookmarkView(

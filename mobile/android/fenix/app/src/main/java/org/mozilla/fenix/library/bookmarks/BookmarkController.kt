@@ -25,6 +25,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateSafe
 
 /**
  * [BookmarkFragment] controller.
@@ -47,6 +48,7 @@ interface BookmarkController {
     fun handleBookmarkFolderDeletion(nodes: Set<BookmarkNode>)
     fun handleRequestSync()
     fun handleBackPressed()
+    fun handleSearch()
 }
 
 @Suppress("TooManyFunctions")
@@ -182,6 +184,12 @@ class DefaultBookmarkController(
                 handleBookmarkExpand(parent)
             }
         }
+    }
+
+    override fun handleSearch() {
+        val directions =
+            BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkSearchDialogFragment()
+        navController.navigateSafe(R.id.bookmarkFragment, directions)
     }
 
     private fun openInNewTabAndShow(

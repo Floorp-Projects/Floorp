@@ -42,6 +42,10 @@ class BookmarkFragmentInteractor(
         bookmarksController.handleAllBookmarksDeselected()
     }
 
+    override fun onSearch() {
+        bookmarksController.handleSearch()
+    }
+
     /**
      * Copies the URL of the given BookmarkNode into the copy and paste buffer.
      */

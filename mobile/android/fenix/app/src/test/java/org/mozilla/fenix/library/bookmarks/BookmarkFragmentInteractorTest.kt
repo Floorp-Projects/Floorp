@@ -206,4 +206,13 @@ class BookmarkFragmentInteractorTest {
             bookmarkController.handleRequestSync()
         }
     }
+
+    @Test
+    fun `WHEN onSearch is called THEN call controller handleSearch`() {
+        interactor.onSearch()
+
+        verify {
+            bookmarkController.handleSearch()
+        }
+    }
 }

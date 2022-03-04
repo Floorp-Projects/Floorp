@@ -465,6 +465,18 @@ class BookmarkControllerTest {
         }
     }
 
+    @Test
+    fun `WHEN onSearch is called with BookmarkFragment THEN navigate to BookmarkSearchDialogFragment`() {
+        val controller = createController()
+
+        controller.handleSearch()
+        verify {
+            navController.navigate(
+                BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkSearchDialogFragment()
+            )
+        }
+    }
+
     @Suppress("LongParameterList")
     private fun createController(
         loadBookmarkNode: suspend (String) -> BookmarkNode? = { _ -> null },
