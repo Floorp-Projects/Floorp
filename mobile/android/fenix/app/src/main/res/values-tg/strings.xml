@@ -1529,11 +1529,15 @@
     <string name="credit_cards_menu_delete_card">Нест кардани корт</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Нест кардани корт</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин корти қарзиро нест намоед?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Нест кардан</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Нигоҳ доштан</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Нигоҳ доштан</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Бекор кардан</string>
 
     <!-- Title of the "Saved cards" screen -->
@@ -1708,6 +1712,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ягон варақаи кушодашуда нест</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Баркушодани гурӯҳи варақаҳои ҳамоҳангшуда</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Печондани гурӯҳи варақаҳои ҳамоҳангшуда</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ба ҳудуди шумораи сомонаҳои беҳтарин расид</string>
@@ -1757,22 +1766,22 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Барои беҳтар кардани Firefox кумак кунед</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Барои беҳтар кардани Firefox кумак кунед</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">Чаро шумо варақаҳои ғайрифаъолро хомӯш кардед?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Чаро шумо варақаҳои ғайрифаъолро хомӯш кардед?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Ман намефаҳмам, ки он чӣ гуна кор мекунад</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ман намефаҳмам, ки он чӣ гуна кор мекунад</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Ман мехоҳам, ки варақаҳои куҳнаро худам тоза намоям</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Ман мехоҳам, ки варақаҳои куҳнаро худам тоза намоям</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">Муҳлати дуҳафтаина хеле дароз аст</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Муҳлати дуҳафтаина хеле дароз аст</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">Муҳлати дуҳафтаина хеле кутоҳ аст</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Муҳлати дуҳафтаина хеле кутоҳ аст</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Фиристодан</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Фиристодан</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Пӯшидааст</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Пӯшидааст</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Пайванҳоеро, танзим кунед, ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери Firefox ба таври худкор кушода шаванд.</string>

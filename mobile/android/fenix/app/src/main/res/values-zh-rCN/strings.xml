@@ -449,7 +449,7 @@
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">点按徽标即可更换壁纸</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">点按 Firefox 主页徽标即可更换壁纸</string>
+    <string name="wallpaper_tap_to_change_switch_label_1">点按 Firefox 主页徽标以更换壁纸</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">不必离开主页即可更换壁纸。</string>
 
