@@ -133,7 +133,7 @@ notification[type="critical"] > hbox > .messageImage {
 
 .messageCloseButton:focus-visible > .toolbarbutton-icon {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
   border-radius: var(--toolbarbutton-border-radius, 4px);
 }
 

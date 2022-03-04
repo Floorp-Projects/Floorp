@@ -963,6 +963,7 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
 
   const auto& surfSize = res.surfSize;
   const webgl::RaiiShmem shmem{child, res.shmem.ref()};
+  if (!shmem) return nullptr;
   const auto& shmemBytes = shmem.ByteRange();
   if (!surfSize.x) return nullptr;  // Zero means failure.
 
@@ -1061,7 +1062,7 @@ RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
 
     const auto desc = webgl::ReadPixelsDesc{{0, 0}, size};
     const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
-    DoReadPixels(desc, range);
+    if (!DoReadPixels(desc, range)) return nullptr;
 
     const auto begin = range.begin().get();
 
@@ -3209,6 +3210,10 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     return;
   }
   const webgl::RaiiShmem shmem{child, rawShmem};
+  if (!shmem) {
+    EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "Failed to map in sub data buffer.");
+    return;
+  }
 
   const auto shmemView = shmem.ByteRange();
   MOZ_RELEASE_ASSERT(shmemView.length() == 1 + destView.length());
@@ -4752,18 +4757,20 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                           {format, type},
                                           state.mPixelPackState};
   const auto range = Range<uint8_t>(bytes, byteLen);
-  DoReadPixels(desc, range);
+  if (!DoReadPixels(desc, range)) {
+    return;
+  }
 }
 
-void ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
+bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
                                       const Range<uint8_t> dest) const {
   const auto notLost =
       mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return;
+  if (!notLost) return false;
   const auto& inProcess = notLost->inProcess;
   if (inProcess) {
     inProcess->ReadPixelsInto(desc, dest);
-    return;
+    return true;
   }
   const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
@@ -4771,16 +4778,21 @@ void ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   if (!child->SendReadPixels(desc, dest.length(), &res)) {
     res = {};
   }
-  if (!res.byteStride) return;
+  if (!res.byteStride) return false;
   const auto& byteStride = res.byteStride;
   const auto& subrect = res.subrect;
   const webgl::RaiiShmem shmem{child, res.shmem};
+  if (!shmem) {
+    EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "Failed to map in back buffer.");
+    return false;
+  }
+
   const auto& shmemBytes = shmem.ByteRange();
 
   uint8_t bpp;
   if (!GetBytesPerPixel(desc.pi, &bpp)) {
     MOZ_ASSERT(false);
-    return;
+    return false;
   }
 
   const auto& packing = desc.packState;
@@ -4805,6 +4817,8 @@ void ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
     }
     Memcpy(destItr, srcItr, xByteSize);
   }
+
+  return true;
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(

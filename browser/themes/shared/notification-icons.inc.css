@@ -24,10 +24,16 @@
   fill: currentColor;
 }
 
-.blocked-permission-icon:focus-visible,
 .notification-anchor-icon:focus-visible {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--urlbar-icon-padding) - var(--focus-outline-width));
+  outline-offset: var(--focus-outline-inset);
+  border-radius: var(--urlbar-icon-border-radius);
+}
+
+.blocked-permission-icon:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--urlbar-icon-padding) + var(--focus-outline-inset));
+  border-radius: 1px;
 }
 
 /* This class can be used alone or in combination with the class defining the
@@ -276,7 +282,7 @@
  * more aesthetically pleasing way.
  */
 #blocked-permissions-container > .popup-icon {
-  transform: translateY(2px);
+  transform: translateY(1px);
 }
 
 #permission-popup-menulist,

@@ -99,7 +99,7 @@
 .keyboard-focused-tab > .tab-stack > .tab-background,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
   outline: var(--focus-outline);
-  outline-offset: -2px;
+  outline-offset: var(--focus-outline-inset);
 }
 
 /* The selected tab should appear above the border between the tabs toolbar and

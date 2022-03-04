@@ -1229,7 +1229,7 @@ panelview .toolbarbutton-1 {
   panelview .toolbaritem-combined-buttons > toolbarbutton
 ):focus-visible {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
 }
 
 /* hover styles for not-disabled, not-active buttons */
