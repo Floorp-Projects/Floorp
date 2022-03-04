@@ -766,7 +766,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         ssc->PositionContinuations(firstContinuation);
       }
     } else {
-      MOZ_ASSERT(StylePositionProperty::Relative == display->mPosition,
+      MOZ_ASSERT(display->IsRelativelyPositionedStyle(),
                  "Unexpected type of positioning");
       for (nsIFrame* cont = aFrame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
