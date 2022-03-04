@@ -876,7 +876,7 @@ LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
 void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
                                            const nsMargin& aComputedOffsets,
                                            nsPoint* aPosition) {
-  if (!aFrame->IsRelativelyPositioned()) {
+  if (!aFrame->IsRelativelyOrStickyPositioned()) {
     NS_ASSERTION(!aFrame->HasProperty(nsIFrame::NormalPositionProperty()),
                  "We assume that changing the 'position' property causes "
                  "frame reconstruction.  If that ever changes, this code "
@@ -2226,7 +2226,7 @@ void ReflowInput::InitConstraints(
     // above. (If the element is sticky positioned, we need to wait
     // until the scroll container knows its size, so we compute offsets
     // from StickyScrollContainer::UpdatePositions.)
-    if (mStyleDisplay->IsRelativelyPositioned(mFrame) &&
+    if (mStyleDisplay->IsRelativelyOrStickyPositioned(mFrame) &&
         StylePositionProperty::Relative == mStyleDisplay->mPosition) {
       const LogicalMargin offsets =
           ComputeRelativeOffsets(cbwm, mFrame, cbSize.ConvertTo(cbwm, wm));
