@@ -815,6 +815,34 @@ template JSAtom* js::AtomizeChars(JSContext* cx, const Latin1Char* chars,
 template JSAtom* js::AtomizeChars(JSContext* cx, const char16_t* chars,
                                   size_t length);
 
+JSAtom* js::AtomizeWithoutActiveZone(JSContext* cx, const char* bytes,
+                                     size_t length) {
+  // This is used to implement JS_AtomizeAndPinString{N} when called without an
+  // active zone. This simplifies the normal atomization code because it can
+  // assume a non-null cx->zone().
+
+  MOZ_ASSERT(!cx->zone());
+  MOZ_ASSERT(cx->permanentAtomsPopulated());
+
+  const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
+
+  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
+    return s;
+  }
+
+  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
+    return nullptr;
+  }
+
+  AtomHasher::Lookup lookup(chars, length);
+  if (AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup)) {
+    return pp->get();
+  }
+
+  return cx->atoms().atomizeAndCopyCharsNonStaticValidLength(cx, chars, length,
+                                                             Nothing(), lookup);
+}
+
 /* |chars| must not point into an inline or short string. */
 template <typename CharT>
 JSAtom* js::AtomizeCharsNonStaticValidLength(JSContext* cx, HashNumber hash,
