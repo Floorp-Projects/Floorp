@@ -23,6 +23,7 @@
 
 //Floorpアップデートの最新版である旨の通知を許可
 pref("enable.floorp.updater.lastest", true);
+pref("update.id.floorp", "floorp");
 
 //バージョン指定
 pref("floorp.version", "8.5.9");

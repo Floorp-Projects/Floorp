@@ -6,7 +6,6 @@ browser.browserAction.onClicked.addListener(tab => {
 			if (sessionInfo.tab && sessionInfo.tab.windowId === tab.windowId) {
 				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
 
-const APP_ID = "floorp"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
 const Notify = (url, now, latest) =>{
@@ -39,9 +38,14 @@ const NotifyNew = (now, latest) =>{
 window.onload = () =>{
     (async() => {
         var pref = await browser.aboutConfigPrefs.getPref("floorp.version")
+
         var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.lastest")
+
+        var APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp")
+
         console.log("enable.floorp.updater.lastest =" + i)
         console.log("floorp.verison =" + pref)
+        console.log("floorp.update.id =" + APP_ID)
 
             fetch(`${API_END_POINT}?name=${APP_ID}`)
             .then(res =>{
