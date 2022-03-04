@@ -1062,8 +1062,7 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
       ranTest = 0;
       EXPECT_FALSE(TRy::IsRegistryMutexLockedOnCurrentThread());
       for (TRy::OffThreadRef offThreadRef : TRy::LockedRegistry{}) {
-        EXPECT_TRUE(TRy::IsRegistryMutexLockedOnCurrentThread() ||
-                    !TR::IsRegistered());
+        EXPECT_TRUE(TRy::IsRegistryMutexLockedOnCurrentThread());
         if (offThreadRef.UnlockedConstReaderCRef().Info().ThreadId() ==
             testThreadId) {
           TestOffThreadRef(offThreadRef);
@@ -1077,8 +1076,7 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
         ranTest = 0;
         EXPECT_FALSE(TRy::IsRegistryMutexLockedOnCurrentThread());
         TRy::LockedRegistry lockedRegistry{};
-        EXPECT_TRUE(TRy::IsRegistryMutexLockedOnCurrentThread() ||
-                    !TR::IsRegistered());
+        EXPECT_TRUE(TRy::IsRegistryMutexLockedOnCurrentThread());
         for (TRy::OffThreadRef offThreadRef : lockedRegistry) {
           if (offThreadRef.UnlockedConstReaderCRef().Info().ThreadId() ==
               testThreadId) {
