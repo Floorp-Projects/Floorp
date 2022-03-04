@@ -313,6 +313,7 @@ impl PictureChainBuilder {
         let instance = create_prim_instance(
             pic_index,
             Some(composite_mode).into(),
+            self.raster_space,
             ClipChainId::NONE,
             interners,
         );
@@ -359,6 +360,7 @@ impl PictureChainBuilder {
                 create_prim_instance(
                     pic_index,
                     None.into(),
+                    self.raster_space,
                     clip_chain_id,
                     interners,
                 )
@@ -1897,12 +1899,15 @@ impl<'a> SceneBuilder<'a> {
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
-        let new_space = match requested_raster_space {
-            RasterSpace::Local(_) => requested_raster_space,
-            RasterSpace::Screen => match self.raster_space_stack.last() {
-                Some(RasterSpace::Local(scale)) => RasterSpace::Local(*scale),
-                Some(RasterSpace::Screen) | None => requested_raster_space,
-            }
+        let new_space = match (self.raster_space_stack.last(), requested_raster_space) {
+            // If no parent space, just use the requested space
+            (None, _) => requested_raster_space,
+            // If screen, use the parent
+            (Some(parent_space), RasterSpace::Screen) => *parent_space,
+            // If currently screen, select the requested
+            (Some(RasterSpace::Screen), space) => space,
+            // If both local, take the maximum scale
+            (Some(RasterSpace::Local(parent_scale)), RasterSpace::Local(scale)) => RasterSpace::Local(parent_scale.max(scale)),
         };
         self.raster_space_stack.push(new_space);
 
@@ -2185,6 +2190,7 @@ impl<'a> SceneBuilder<'a> {
                 let instance = create_prim_instance(
                     pic_index,
                     composite_mode.into(),
+                    stacking_context.raster_space,
                     ClipChainId::NONE,
                     &mut self.interners,
                 );
@@ -2226,6 +2232,7 @@ impl<'a> SceneBuilder<'a> {
                     let instance = create_prim_instance(
                         pic_index,
                         composite_mode.into(),
+                        stacking_context.raster_space,
                         ClipChainId::NONE,
                         &mut self.interners,
                     );
@@ -2326,6 +2333,7 @@ impl<'a> SceneBuilder<'a> {
             let instance = create_prim_instance(
                 pic_index,
                 PictureCompositeKey::Identity,
+                stacking_context.raster_space,
                 ClipChainId::NONE,
                 &mut self.interners,
             );
@@ -2803,6 +2811,7 @@ impl<'a> SceneBuilder<'a> {
                         assert!(!blur_filter.is_noop());
                         let composite_mode = Some(PictureCompositeMode::Filter(blur_filter));
                         let composite_mode_key = composite_mode.clone().into();
+                        let raster_space = RasterSpace::Screen;
 
                         // Create the primitive to draw the shadow picture into the scene.
                         let shadow_pic_index = PictureIndex(self.prim_store.pictures
@@ -2814,12 +2823,12 @@ impl<'a> SceneBuilder<'a> {
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                                 prim_list,
                                 pending_shadow.spatial_node_index,
-                                RasterSpace::Screen,
+                                raster_space,
                             ))
                         );
 
                         let shadow_pic_key = PictureKey::new(
-                            Picture { composite_mode_key },
+                            Picture { composite_mode_key, raster_space },
                         );
 
                         let shadow_prim_data_handle = self.interners
@@ -3517,6 +3526,7 @@ impl<'a> SceneBuilder<'a> {
             instance = create_prim_instance(
                 backdrop_pic_index,
                 composite_mode.into(),
+                stacking_context.raster_space,
                 clip_chain_id,
                 &mut self.interners,
             );
@@ -3891,6 +3901,7 @@ impl FlattenedStackingContext {
         let prim_instance = create_prim_instance(
             pic_index,
             composite_mode.into(),
+            self.raster_space,
             self.clip_chain_id,
             interners,
         );
@@ -3960,11 +3971,15 @@ impl From<PendingPrimitive<TextRun>> for ShadowItem {
 fn create_prim_instance(
     pic_index: PictureIndex,
     composite_mode_key: PictureCompositeKey,
+    raster_space: RasterSpace,
     clip_chain_id: ClipChainId,
     interners: &mut Interners,
 ) -> PrimitiveInstance {
     let pic_key = PictureKey::new(
-        Picture { composite_mode_key },
+        Picture {
+            composite_mode_key,
+            raster_space,
+        },
     );
 
     let data_handle = interners

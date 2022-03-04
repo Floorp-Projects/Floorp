@@ -18,7 +18,7 @@ import {
   getHasSiblingOfSameName,
   getBreakpointsForSource,
   getContext,
-  getThreadForSource,
+  getThread,
 } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
@@ -78,7 +78,7 @@ const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
   hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   breakpointsForSource: getBreakpointsForSource(state, source.id),
-  thread: getThreadForSource(state, source.id),
+  thread: getThread(state, source.thread),
 });
 
 export default connect(mapStateToProps, {

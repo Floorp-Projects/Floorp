@@ -83,6 +83,9 @@ using mozilla::FilePreferences::kPathSeparator;
 #ifndef ERROR_DEVICE_HARDWARE_ERROR
 #  define ERROR_DEVICE_HARDWARE_ERROR 483L
 #endif
+#ifndef ERROR_CONTENT_BLOCKED
+#  define ERROR_CONTENT_BLOCKED 1296L
+#endif
 
 namespace {
 

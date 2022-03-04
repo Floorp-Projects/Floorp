@@ -127,6 +127,12 @@ const makeInternalContentScript = details => {
   };
 };
 
+const ensureValidScriptId = id => {
+  if (!id.length || id.startsWith("_")) {
+    throw new ExtensionError("Invalid content script id.");
+  }
+};
+
 this.scripting = class extends ExtensionAPI {
   constructor(extension) {
     super(extension);
@@ -180,9 +186,7 @@ this.scripting = class extends ExtensionAPI {
           const scriptsToRegister = new Map();
 
           for (const script of scripts) {
-            if (!script.id.length || script.id.startsWith("_")) {
-              throw new ExtensionError("Invalid content script id.");
-            }
+            ensureValidScriptId(script.id);
 
             if (scriptIdsMap.has(script.id)) {
               throw new ExtensionError(
@@ -249,6 +253,48 @@ this.scripting = class extends ExtensionAPI {
                 runAt: options.runAt,
               };
             });
+        },
+
+        unregisterContentScripts: async details => {
+          // Map<string, number>
+          const scriptIdsMap = gScriptIdsMap.get(extension);
+
+          let ids = [];
+
+          if (details?.ids) {
+            for (const id of details.ids) {
+              ensureValidScriptId(id);
+
+              if (!scriptIdsMap.has(id)) {
+                throw new ExtensionError(
+                  `Content script with id "${id}" does not exist.`
+                );
+              }
+            }
+
+            ids = details.ids;
+          } else {
+            ids = Array.from(scriptIdsMap.keys());
+          }
+
+          if (ids.length === 0) {
+            return;
+          }
+
+          const scriptIds = [];
+          for (const id of ids) {
+            const scriptId = scriptIdsMap.get(id);
+
+            extension.registeredContentScripts.delete(scriptId);
+            scriptIdsMap.delete(id);
+            scriptIds.push(scriptId);
+          }
+          extension.updateContentScripts();
+
+          await extension.broadcast("Extension:UnregisterContentScripts", {
+            id: extension.id,
+            scriptIds,
+          });
         },
       },
     };

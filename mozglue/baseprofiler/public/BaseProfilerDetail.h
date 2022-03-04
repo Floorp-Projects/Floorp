@@ -12,6 +12,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
+#include "mozilla/PlatformRWLock.h"
 #include "mozilla/BaseProfilerUtils.h"
 
 namespace mozilla {
@@ -181,6 +182,96 @@ class MOZ_RAII BaseProfilerMaybeAutoLock {
 
  private:
   BaseProfilerMaybeMutex& mMaybeMutex;
+};
+
+class BaseProfilerSharedMutex : public ::mozilla::detail::RWLockImpl {
+ public:
+#ifdef DEBUG
+  ~BaseProfilerSharedMutex() {
+    MOZ_ASSERT(!BaseProfilerThreadId::FromNumber(mOwningThreadId).IsSpecified(),
+               "BaseProfilerMutex should have been unlocked when destroyed");
+  }
+#endif  // DEBUG
+
+  [[nodiscard]] bool IsLockedExclusiveOnCurrentThread() const {
+    return BaseProfilerThreadId::FromNumber(mOwningThreadId) ==
+           baseprofiler::profiler_current_thread_id();
+  }
+
+  void LockExclusive() {
+    const BaseProfilerThreadId tid = baseprofiler::profiler_current_thread_id();
+    MOZ_ASSERT(tid.IsSpecified());
+    MOZ_ASSERT(!IsLockedExclusiveOnCurrentThread(), "Recursive locking");
+    ::mozilla::detail::RWLockImpl::writeLock();
+    MOZ_ASSERT(!BaseProfilerThreadId::FromNumber(mOwningThreadId).IsSpecified(),
+               "Not unlocked properly");
+    mOwningThreadId = tid.ToNumber();
+  }
+
+  void UnlockExclusive() {
+    MOZ_ASSERT(IsLockedExclusiveOnCurrentThread(),
+               "Unlocking when not locked here");
+    // We're still holding the mutex here, so it's safe to just reset
+    // `mOwningThreadId`.
+    mOwningThreadId = BaseProfilerThreadId{}.ToNumber();
+    writeUnlock();
+  }
+
+  void LockShared() { readLock(); }
+
+  void UnlockShared() { readUnlock(); }
+
+ private:
+  // Thread currently owning the exclusive lock, or 0.
+  // Atomic because it may be read at any time independent of the mutex.
+  // Relaxed because threads only need to know if they own it already, so:
+  // - If it's their id, only *they* wrote that value with a locked mutex.
+  // - If it's different from their thread id it doesn't matter what other
+  //   number it is (0 or another id) and that it can change again at any time.
+  Atomic<typename BaseProfilerThreadId::NumberType, MemoryOrdering::Relaxed>
+      mOwningThreadId;
+};
+
+// RAII class to lock a shared mutex exclusively.
+class MOZ_RAII BaseProfilerAutoLockExclusive {
+ public:
+  explicit BaseProfilerAutoLockExclusive(BaseProfilerSharedMutex& aSharedMutex)
+      : mSharedMutex(aSharedMutex) {
+    mSharedMutex.LockExclusive();
+  }
+
+  BaseProfilerAutoLockExclusive(const BaseProfilerAutoLockExclusive&) = delete;
+  BaseProfilerAutoLockExclusive& operator=(
+      const BaseProfilerAutoLockExclusive&) = delete;
+  BaseProfilerAutoLockExclusive(BaseProfilerAutoLockExclusive&&) = delete;
+  BaseProfilerAutoLockExclusive& operator=(BaseProfilerAutoLockExclusive&&) =
+      delete;
+
+  ~BaseProfilerAutoLockExclusive() { mSharedMutex.UnlockExclusive(); }
+
+ private:
+  BaseProfilerSharedMutex& mSharedMutex;
+};
+
+// RAII class to lock a shared mutex non-exclusively, other
+// BaseProfilerAutoLockShared's may happen in other threads.
+class MOZ_RAII BaseProfilerAutoLockShared {
+ public:
+  explicit BaseProfilerAutoLockShared(BaseProfilerSharedMutex& aSharedMutex)
+      : mSharedMutex(aSharedMutex) {
+    mSharedMutex.LockShared();
+  }
+
+  BaseProfilerAutoLockShared(const BaseProfilerAutoLockShared&) = delete;
+  BaseProfilerAutoLockShared& operator=(const BaseProfilerAutoLockShared&) =
+      delete;
+  BaseProfilerAutoLockShared(BaseProfilerAutoLockShared&&) = delete;
+  BaseProfilerAutoLockShared& operator=(BaseProfilerAutoLockShared&&) = delete;
+
+  ~BaseProfilerAutoLockShared() { mSharedMutex.UnlockShared(); }
+
+ private:
+  BaseProfilerSharedMutex& mSharedMutex;
 };
 
 }  // namespace detail
