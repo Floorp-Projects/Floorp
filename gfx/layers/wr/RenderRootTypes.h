@@ -51,20 +51,22 @@ template <>
 struct IPDLParamTraits<mozilla::layers::DisplayListData> {
   typedef mozilla::layers::DisplayListData paramType;
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    paramType&& aParam);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   paramType* aResult);
 };
 
 template <>
 struct IPDLParamTraits<mozilla::layers::TransactionData> {
   typedef mozilla::layers::TransactionData paramType;
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    paramType&& aParam);
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   paramType* aResult);
 };
 
 }  // namespace ipc

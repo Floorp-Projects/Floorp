@@ -17,20 +17,19 @@
 template <>
 struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   using paramType = mozilla::ipc::NodeChannel::Introduction;
-  static void Write(Message* aMsg, paramType&& aParam) {
-    WriteParam(aMsg, aParam.mName);
-    WriteParam(aMsg, std::move(aParam.mHandle));
-    WriteParam(aMsg, aParam.mMode);
-    WriteParam(aMsg, aParam.mMyPid);
-    WriteParam(aMsg, aParam.mOtherPid);
+  static void Write(MessageWriter* aWriter, paramType&& aParam) {
+    WriteParam(aWriter, aParam.mName);
+    WriteParam(aWriter, std::move(aParam.mHandle));
+    WriteParam(aWriter, aParam.mMode);
+    WriteParam(aWriter, aParam.mMyPid);
+    WriteParam(aWriter, aParam.mOtherPid);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mName) &&
-           ReadParam(aMsg, aIter, &aResult->mHandle) &&
-           ReadParam(aMsg, aIter, &aResult->mMode) &&
-           ReadParam(aMsg, aIter, &aResult->mMyPid) &&
-           ReadParam(aMsg, aIter, &aResult->mOtherPid);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mName) &&
+           ReadParam(aReader, &aResult->mHandle) &&
+           ReadParam(aReader, &aResult->mMode) &&
+           ReadParam(aReader, &aResult->mMyPid) &&
+           ReadParam(aReader, &aResult->mOtherPid);
   }
 };
 

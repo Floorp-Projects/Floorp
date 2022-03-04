@@ -15,9 +15,8 @@ namespace IPC {
 
 template <>
 struct ParamTraits<nsIReferrerInfo*> {
-  static void Write(Message* aMsg, nsIReferrerInfo* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIReferrerInfo>* aResult);
+  static void Write(MessageWriter* aWriter, nsIReferrerInfo* aParam);
+  static bool Read(MessageReader* aReader, RefPtr<nsIReferrerInfo>* aResult);
 };
 
 }  // namespace IPC

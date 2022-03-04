@@ -54,25 +54,24 @@ ScopedPort& ScopedPort::operator=(ScopedPort&& aOther) {
 
 }  // namespace mozilla::ipc
 
-void IPC::ParamTraits<mozilla::ipc::ScopedPort>::Write(Message* aMsg,
+void IPC::ParamTraits<mozilla::ipc::ScopedPort>::Write(MessageWriter* aWriter,
                                                        paramType&& aParam) {
-  aMsg->WriteBool(aParam.IsValid());
+  aWriter->WriteBool(aParam.IsValid());
   if (!aParam.IsValid()) {
     return;
   }
-  aMsg->WritePort(std::move(aParam));
+  aWriter->WritePort(std::move(aParam));
 }
 
-bool IPC::ParamTraits<mozilla::ipc::ScopedPort>::Read(const Message* aMsg,
-                                                      PickleIterator* aIter,
+bool IPC::ParamTraits<mozilla::ipc::ScopedPort>::Read(MessageReader* aReader,
                                                       paramType* aResult) {
   bool isValid = false;
-  if (!aMsg->ReadBool(aIter, &isValid)) {
+  if (!aReader->ReadBool(&isValid)) {
     return false;
   }
   if (!isValid) {
     *aResult = {};
     return true;
   }
-  return aMsg->ConsumePort(aIter, aResult);
+  return aReader->ConsumePort(aResult);
 }

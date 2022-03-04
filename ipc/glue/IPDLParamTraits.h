@@ -37,14 +37,14 @@ struct IPDLParamTraits {
   // ParamTraits. Types which want to use the actor parameter must specialize
   // IPDLParamTraits.
   template <typename R>
-  static inline void Write(IPC::Message* aMsg, IProtocol*, R&& aParam) {
-    IPC::ParamTraits<P>::Write(aMsg, std::forward<R>(aParam));
+  static inline void Write(IPC::MessageWriter* aWriter, IProtocol*,
+                           R&& aParam) {
+    IPC::ParamTraits<P>::Write(aWriter, std::forward<R>(aParam));
   }
 
   template <typename R>
-  static inline bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                          IProtocol*, R* aResult) {
-    return IPC::ParamTraits<P>::Read(aMsg, aIter, aResult);
+  static inline bool Read(IPC::MessageReader* aReader, IProtocol*, R* aResult) {
+    return IPC::ParamTraits<P>::Read(aReader, aResult);
   }
 };
 
@@ -59,49 +59,47 @@ struct IPDLParamTraits {
 // more information.
 //
 template <typename P>
-static MOZ_NEVER_INLINE void WriteIPDLParam(IPC::Message* aMsg,
+static MOZ_NEVER_INLINE void WriteIPDLParam(IPC::MessageWriter* aWriter,
                                             IProtocol* aActor, P&& aParam) {
-  IPDLParamTraits<std::decay_t<P>>::Write(aMsg, aActor,
+  IPDLParamTraits<std::decay_t<P>>::Write(aWriter, aActor,
                                           std::forward<P>(aParam));
 }
 
 template <typename P>
-static MOZ_NEVER_INLINE bool ReadIPDLParam(const IPC::Message* aMsg,
-                                           PickleIterator* aIter,
+static MOZ_NEVER_INLINE bool ReadIPDLParam(IPC::MessageReader* aReader,
                                            IProtocol* aActor, P* aResult) {
-  return IPDLParamTraits<P>::Read(aMsg, aIter, aActor, aResult);
+  return IPDLParamTraits<P>::Read(aReader, aActor, aResult);
 }
 
 template <typename P>
 static MOZ_NEVER_INLINE bool ReadIPDLParamInfallible(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
-    P* aResult, const char* aCrashMessage) {
-  bool ok = ReadIPDLParam(aMsg, aIter, aActor, aResult);
+    IPC::MessageReader* aReader, IProtocol* aActor, P* aResult,
+    const char* aCrashMessage) {
+  bool ok = ReadIPDLParam(aReader, aActor, aResult);
   if (!ok) {
     MOZ_CRASH_UNSAFE(aCrashMessage);
   }
   return ok;
 }
 
-constexpr void WriteIPDLParamList(IPC::Message*, IProtocol*) {}
+constexpr void WriteIPDLParamList(IPC::MessageWriter*, IProtocol*) {}
 
 template <typename P, typename... Ps>
-static void WriteIPDLParamList(IPC::Message* aMsg, IProtocol* aActor,
+static void WriteIPDLParamList(IPC::MessageWriter* aWriter, IProtocol* aActor,
                                P&& aParam, Ps&&... aParams) {
-  WriteIPDLParam(aMsg, aActor, std::forward<P>(aParam));
-  WriteIPDLParamList(aMsg, aActor, std::forward<Ps>(aParams)...);
+  WriteIPDLParam(aWriter, aActor, std::forward<P>(aParam));
+  WriteIPDLParamList(aWriter, aActor, std::forward<Ps>(aParams)...);
 }
 
-constexpr bool ReadIPDLParamList(const IPC::Message*, PickleIterator*,
-                                 IProtocol*) {
+constexpr bool ReadIPDLParamList(IPC::MessageReader*, IProtocol*) {
   return true;
 }
 
 template <typename P, typename... Ps>
-static bool ReadIPDLParamList(const IPC::Message* aMsg, PickleIterator* aIter,
-                              IProtocol* aActor, P* aResult, Ps*... aResults) {
-  return ReadIPDLParam(aMsg, aIter, aActor, aResult) &&
-         ReadIPDLParamList(aMsg, aIter, aActor, aResults...);
+static bool ReadIPDLParamList(IPC::MessageReader* aReader, IProtocol* aActor,
+                              P* aResult, Ps*... aResults) {
+  return ReadIPDLParam(aReader, aActor, aResult) &&
+         ReadIPDLParamList(aReader, aActor, aResults...);
 }
 
 // When being passed `RefPtr<T>` or `nsCOMPtr<T>`, forward to a specialization
@@ -113,28 +111,28 @@ static bool ReadIPDLParamList(const IPC::Message* aMsg, PickleIterator* aIter,
 // deserializing into `nsCOMPtr<T>`.
 template <typename T>
 struct IPDLParamTraits<RefPtr<T>> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const RefPtr<T>& aParam) {
-    IPDLParamTraits<T*>::Write(aMsg, aActor, aParam.get());
+    IPDLParamTraits<T*>::Write(aWriter, aActor, aParam.get());
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<T>* aResult) {
-    return IPDLParamTraits<T*>::Read(aMsg, aIter, aActor, aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<T>* aResult) {
+    return IPDLParamTraits<T*>::Read(aReader, aActor, aResult);
   }
 };
 
 template <typename T>
 struct IPDLParamTraits<nsCOMPtr<T>> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const nsCOMPtr<T>& aParam) {
-    IPDLParamTraits<T*>::Write(aMsg, aActor, aParam.get());
+    IPDLParamTraits<T*>::Write(aWriter, aActor, aParam.get());
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, nsCOMPtr<T>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   nsCOMPtr<T>* aResult) {
     RefPtr<T> refptr;
-    if (!IPDLParamTraits<T*>::Read(aMsg, aIter, aActor, &refptr)) {
+    if (!IPDLParamTraits<T*>::Read(aReader, aActor, &refptr)) {
       return false;
     }
     *aResult = refptr.forget();
@@ -151,32 +149,33 @@ struct IPDLParamTraits<nsTArray<T>> {
   // forwarding reference as occasionally these types appear inside of IPDL
   // arrays.
   template <typename U>
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, U&& aParam) {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    U&& aParam) {
     uint32_t length = aParam.Length();
-    WriteIPDLParam(aMsg, aActor, length);
+    WriteIPDLParam(aWriter, aActor, length);
 
     if (sUseWriteBytes) {
       auto pickledLength = CheckedInt<int>(length) * sizeof(T);
       MOZ_RELEASE_ASSERT(pickledLength.isValid());
-      aMsg->WriteBytes(aParam.Elements(), pickledLength.value());
+      aWriter->WriteBytes(aParam.Elements(), pickledLength.value());
     } else {
-      WriteValues(aMsg, aActor, std::forward<U>(aParam));
+      WriteValues(aWriter, aActor, std::forward<U>(aParam));
     }
   }
 
   // This method uses infallible allocation so that an OOM failure will
   // show up as an OOM crash rather than an IPC FatalError.
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, nsTArray<T>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   nsTArray<T>* aResult) {
     uint32_t length;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &length)) {
+    if (!ReadIPDLParam(aReader, aActor, &length)) {
       return false;
     }
 
     if (sUseWriteBytes) {
       auto pickledLength = CheckedInt<int>(length) * sizeof(T);
       if (!pickledLength.isValid() ||
-          !aMsg->HasBytesAvailable(aIter, pickledLength.value())) {
+          !aReader->HasBytesAvailable(pickledLength.value())) {
         return false;
       }
 
@@ -185,15 +184,15 @@ struct IPDLParamTraits<nsTArray<T>> {
       // Perhaps we should consider using an API which doesn't initialize the
       // elements?
       T* elements = aResult->AppendElements(length);
-      return aMsg->ReadBytesInto(aIter, elements, pickledLength.value());
+      return aReader->ReadBytesInto(elements, pickledLength.value());
     }
 
     // Each ReadIPDLParam<E> may read more than 1 byte each; this is an attempt
     // to minimally validate that the length isn't much larger than what's
-    // actually available in aMsg. We cannot use |pickledLength|, like in the
+    // actually available in aReader. We cannot use |pickledLength|, like in the
     // codepath above, because ReadIPDLParam can read variable amounts of data
-    // from aMsg.
-    if (!aMsg->HasBytesAvailable(aIter, length)) {
+    // from aReader.
+    if (!aReader->HasBytesAvailable(length)) {
       return false;
     }
 
@@ -201,7 +200,7 @@ struct IPDLParamTraits<nsTArray<T>> {
 
     for (uint32_t index = 0; index < length; index++) {
       T* element = aResult->AppendElement();
-      if (!ReadIPDLParam(aMsg, aIter, aActor, element)) {
+      if (!ReadIPDLParam(aReader, aActor, element)) {
         return false;
       }
     }
@@ -210,18 +209,18 @@ struct IPDLParamTraits<nsTArray<T>> {
 
  private:
   // Length has already been written. Const overload.
-  static void WriteValues(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteValues(IPC::MessageWriter* aWriter, IProtocol* aActor,
                           const nsTArray<T>& aParam) {
     for (auto& elt : aParam) {
-      WriteIPDLParam(aMsg, aActor, elt);
+      WriteIPDLParam(aWriter, aActor, elt);
     }
   }
 
   // Length has already been written. Rvalue overload.
-  static void WriteValues(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteValues(IPC::MessageWriter* aWriter, IProtocol* aActor,
                           nsTArray<T>&& aParam) {
     for (auto& elt : aParam) {
-      WriteIPDLParam(aMsg, aActor, std::move(elt));
+      WriteIPDLParam(aWriter, aActor, std::move(elt));
     }
 
     // As we just moved all of our values out, let's clean up after ourselves &
@@ -247,35 +246,36 @@ template <typename T>
 struct IPDLParamTraits<Maybe<T>> {
   typedef Maybe<T> paramType;
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const Maybe<T>& aParam) {
     bool isSome = aParam.isSome();
-    WriteIPDLParam(aMsg, aActor, isSome);
+    WriteIPDLParam(aWriter, aActor, isSome);
 
     if (isSome) {
-      WriteIPDLParam(aMsg, aActor, aParam.ref());
+      WriteIPDLParam(aWriter, aActor, aParam.ref());
     }
   }
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, Maybe<T>&& aParam) {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    Maybe<T>&& aParam) {
     bool isSome = aParam.isSome();
-    WriteIPDLParam(aMsg, aActor, isSome);
+    WriteIPDLParam(aWriter, aActor, isSome);
 
     if (isSome) {
-      WriteIPDLParam(aMsg, aActor, std::move(aParam.ref()));
+      WriteIPDLParam(aWriter, aActor, std::move(aParam.ref()));
     }
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, Maybe<T>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   Maybe<T>* aResult) {
     bool isSome;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &isSome)) {
+    if (!ReadIPDLParam(aReader, aActor, &isSome)) {
       return false;
     }
 
     if (isSome) {
       aResult->emplace();
-      if (!ReadIPDLParam(aMsg, aIter, aActor, aResult->ptr())) {
+      if (!ReadIPDLParam(aReader, aActor, aResult->ptr())) {
         return false;
       }
     } else {
@@ -290,19 +290,20 @@ struct IPDLParamTraits<UniquePtr<T>> {
   typedef UniquePtr<T> paramType;
 
   template <typename U>
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, U&& aParam) {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    U&& aParam) {
     bool isNull = aParam == nullptr;
-    WriteIPDLParam(aMsg, aActor, isNull);
+    WriteIPDLParam(aWriter, aActor, isNull);
 
     if (!isNull) {
-      WriteValue(aMsg, aActor, std::forward<U>(aParam));
+      WriteValue(aWriter, aActor, std::forward<U>(aParam));
     }
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, UniquePtr<T>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   UniquePtr<T>* aResult) {
     bool isNull = true;
-    if (!ReadParam(aMsg, aIter, &isNull)) {
+    if (!ReadParam(aReader, &isNull)) {
       return false;
     }
 
@@ -310,7 +311,7 @@ struct IPDLParamTraits<UniquePtr<T>> {
       aResult->reset();
     } else {
       *aResult = MakeUnique<T>();
-      if (!ReadIPDLParam(aMsg, aIter, aActor, aResult->get())) {
+      if (!ReadIPDLParam(aReader, aActor, aResult->get())) {
         return false;
       }
     }
@@ -319,15 +320,15 @@ struct IPDLParamTraits<UniquePtr<T>> {
 
  private:
   // If we have an rvalue, clear out our passed-in parameter.
-  static void WriteValue(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteValue(IPC::MessageWriter* aWriter, IProtocol* aActor,
                          UniquePtr<T>&& aParam) {
-    WriteIPDLParam(aMsg, aActor, std::move(*aParam.get()));
+    WriteIPDLParam(aWriter, aActor, std::move(*aParam.get()));
     aParam = nullptr;
   }
 
-  static void WriteValue(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteValue(IPC::MessageWriter* aWriter, IProtocol* aActor,
                          const UniquePtr<T>& aParam) {
-    WriteIPDLParam(aMsg, aActor, *aParam.get());
+    WriteIPDLParam(aWriter, aActor, *aParam.get());
   }
 };
 
@@ -336,36 +337,36 @@ struct IPDLParamTraits<Tuple<Ts...>> {
   typedef Tuple<Ts...> paramType;
 
   template <typename U>
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, U&& aParam) {
-    WriteInternal(aMsg, aActor, std::forward<U>(aParam),
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    U&& aParam) {
+    WriteInternal(aWriter, aActor, std::forward<U>(aParam),
                   std::index_sequence_for<Ts...>{});
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, Tuple<Ts...>* aResult) {
-    return ReadInternal(aMsg, aIter, aActor, *aResult,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   Tuple<Ts...>* aResult) {
+    return ReadInternal(aReader, aActor, *aResult,
                         std::index_sequence_for<Ts...>{});
   }
 
  private:
   template <size_t... Is>
-  static void WriteInternal(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteInternal(IPC::MessageWriter* aWriter, IProtocol* aActor,
                             const Tuple<Ts...>& aParam,
                             std::index_sequence<Is...>) {
-    WriteIPDLParamList(aMsg, aActor, Get<Is>(aParam)...);
+    WriteIPDLParamList(aWriter, aActor, Get<Is>(aParam)...);
   }
 
   template <size_t... Is>
-  static void WriteInternal(IPC::Message* aMsg, IProtocol* aActor,
+  static void WriteInternal(IPC::MessageWriter* aWriter, IProtocol* aActor,
                             Tuple<Ts...>&& aParam, std::index_sequence<Is...>) {
-    WriteIPDLParamList(aMsg, aActor, std::move(Get<Is>(aParam))...);
+    WriteIPDLParamList(aWriter, aActor, std::move(Get<Is>(aParam))...);
   }
 
   template <size_t... Is>
-  static bool ReadInternal(const IPC::Message* aMsg, PickleIterator* aIter,
-                           IProtocol* aActor, Tuple<Ts...>& aResult,
-                           std::index_sequence<Is...>) {
-    return ReadIPDLParamList(aMsg, aIter, aActor, &Get<Is>(aResult)...);
+  static bool ReadInternal(IPC::MessageReader* aReader, IProtocol* aActor,
+                           Tuple<Ts...>& aResult, std::index_sequence<Is...>) {
+    return ReadIPDLParamList(aReader, aActor, &Get<Is>(aResult)...);
   }
 };
 
@@ -374,17 +375,19 @@ struct IPDLParamTraits<mozilla::Variant<Ts...>> {
   typedef mozilla::Variant<Ts...> paramType;
   using Tag = typename mozilla::detail::VariantTag<Ts...>::Type;
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const paramType& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.tag);
-    aParam.match(
-        [aMsg, aActor](const auto& t) { WriteIPDLParam(aMsg, aActor, t); });
+    WriteIPDLParam(aWriter, aActor, aParam.tag);
+    aParam.match([aWriter, aActor](const auto& t) {
+      WriteIPDLParam(aWriter, aActor, t);
+    });
   }
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.tag);
-    aParam.match([aMsg, aActor](auto& t) {
-      WriteIPDLParam(aMsg, aActor, std::move(t));
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    paramType&& aParam) {
+    WriteIPDLParam(aWriter, aActor, aParam.tag);
+    aParam.match([aWriter, aActor](auto& t) {
+      WriteIPDLParam(aWriter, aActor, std::move(t));
     });
   }
 
@@ -395,8 +398,8 @@ struct IPDLParamTraits<mozilla::Variant<Ts...>> {
   struct VariantReader {
     using Next = VariantReader<N - 1>;
 
-    static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                     IProtocol* aActor, Tag aTag, paramType* aResult) {
+    static bool Read(IPC::MessageReader* aReader, IProtocol* aActor, Tag aTag,
+                     paramType* aResult) {
       // Since the VariantReader specializations start at N , we need to
       // subtract one to look at N - 1, the first valid tag.  This means our
       // comparisons are off by 1.  If we get to N = 0 then we have failed to
@@ -407,10 +410,10 @@ struct IPDLParamTraits<mozilla::Variant<Ts...>> {
         // Default construct our field within the result outparameter and
         // directly deserialize into the variant. Note that this means that
         // every type in Ts needs to be default constructible.
-        return ReadIPDLParam(aMsg, aIter, aActor,
+        return ReadIPDLParam(aReader, aActor,
                              &aResult->template emplace<N - 1>());
       }
-      return Next::Read(aMsg, aIter, aActor, aTag, aResult);
+      return Next::Read(aReader, aActor, aTag, aResult);
     }
 
   };  // VariantReader<N>
@@ -420,21 +423,20 @@ struct IPDLParamTraits<mozilla::Variant<Ts...>> {
   // a matching tag.
   template <typename dummy>
   struct VariantReader<0, dummy> {
-    static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                     IProtocol* aActor, Tag aTag, paramType* aResult) {
+    static bool Read(IPC::MessageReader* aReader, IProtocol* aActor, Tag aTag,
+                     paramType* aResult) {
       return false;
     }
   };
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   paramType* aResult) {
     Tag tag;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &tag)) {
+    if (!ReadIPDLParam(aReader, aActor, &tag)) {
       return false;
     }
 
-    return VariantReader<sizeof...(Ts)>::Read(aMsg, aIter, aActor, tag,
-                                              aResult);
+    return VariantReader<sizeof...(Ts)>::Read(aReader, aActor, tag, aResult);
   }
 };
 

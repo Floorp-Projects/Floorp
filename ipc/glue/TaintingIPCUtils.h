@@ -19,19 +19,19 @@ namespace ipc {
 
 template <typename T>
 struct IPDLParamTraits<mozilla::Tainted<T>> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const mozilla::Tainted<T>& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mValue);
+    WriteIPDLParam(aWriter, aActor, aParam.mValue);
   }
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     mozilla::Tainted<T>&& aParam) {
-    WriteIPDLParam(aMsg, aActor, std::move(aParam.mValue));
+    WriteIPDLParam(aWriter, aActor, std::move(aParam.mValue));
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, mozilla::Tainted<T>* aResult) {
-    return ReadIPDLParam(aMsg, aIter, aActor, &(aResult->mValue));
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   mozilla::Tainted<T>* aResult) {
+    return ReadIPDLParam(aReader, aActor, &(aResult->mValue));
   }
 };
 

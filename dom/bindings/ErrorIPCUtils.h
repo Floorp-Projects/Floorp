@@ -26,7 +26,7 @@ template <>
 struct ParamTraits<mozilla::ErrorResult> {
   typedef mozilla::ErrorResult paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     // It should be the case that mMightHaveUnreportedJSException can only be
     // true when we're expecting a JS exception.  We cannot send such messages
     // over the IPC channel since there is no sane way of transferring the JS
@@ -42,43 +42,42 @@ struct ParamTraits<mozilla::ErrorResult> {
           "Cannot encode an ErrorResult representing a Javascript exception");
     }
 
-    WriteParam(aMsg, aParam.mResult);
-    WriteParam(aMsg, aParam.IsErrorWithMessage());
-    WriteParam(aMsg, aParam.IsDOMException());
+    WriteParam(aWriter, aParam.mResult);
+    WriteParam(aWriter, aParam.IsErrorWithMessage());
+    WriteParam(aWriter, aParam.IsDOMException());
     if (aParam.IsErrorWithMessage()) {
-      aParam.SerializeMessage(aMsg);
+      aParam.SerializeMessage(aWriter);
     } else if (aParam.IsDOMException()) {
-      aParam.SerializeDOMExceptionInfo(aMsg);
+      aParam.SerializeDOMExceptionInfo(aWriter);
     }
   }
 
-  static void Write(Message* aMsg, paramType&& aParam) {
-    Write(aMsg, static_cast<const paramType&>(aParam));
+  static void Write(MessageWriter* aWriter, paramType&& aParam) {
+    Write(aWriter, static_cast<const paramType&>(aParam));
     aParam.SuppressException();
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     paramType readValue;
-    if (!ReadParam(aMsg, aIter, &readValue.mResult)) {
+    if (!ReadParam(aReader, &readValue.mResult)) {
       return false;
     }
     bool hasMessage = false;
-    if (!ReadParam(aMsg, aIter, &hasMessage)) {
+    if (!ReadParam(aReader, &hasMessage)) {
       return false;
     }
     bool hasDOMExceptionInfo = false;
-    if (!ReadParam(aMsg, aIter, &hasDOMExceptionInfo)) {
+    if (!ReadParam(aReader, &hasDOMExceptionInfo)) {
       return false;
     }
     if (hasMessage && hasDOMExceptionInfo) {
       // Shouldn't have both!
       return false;
     }
-    if (hasMessage && !readValue.DeserializeMessage(aMsg, aIter)) {
+    if (hasMessage && !readValue.DeserializeMessage(aReader)) {
       return false;
     } else if (hasDOMExceptionInfo &&
-               !readValue.DeserializeDOMExceptionInfo(aMsg, aIter)) {
+               !readValue.DeserializeDOMExceptionInfo(aReader)) {
       return false;
     }
     *aResult = std::move(readValue);
@@ -90,16 +89,15 @@ template <>
 struct ParamTraits<mozilla::CopyableErrorResult> {
   typedef mozilla::CopyableErrorResult paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    ParamTraits<mozilla::ErrorResult>::Write(aMsg, aParam);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    ParamTraits<mozilla::ErrorResult>::Write(aWriter, aParam);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     // We can't cast *aResult to ErrorResult&, so cheat and just cast
     // to ErrorResult*.
     return ParamTraits<mozilla::ErrorResult>::Read(
-        aMsg, aIter, reinterpret_cast<mozilla::ErrorResult*>(aResult));
+        aReader, reinterpret_cast<mozilla::ErrorResult*>(aResult));
   }
 };
 

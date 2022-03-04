@@ -77,23 +77,22 @@ template <>
 struct ParamTraits<nsACString> {
   typedef nsACString paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     bool isVoid = aParam.IsVoid();
-    aMsg->WriteBool(isVoid);
+    aWriter->WriteBool(isVoid);
 
     if (isVoid)
       // represents a nullptr pointer
       return;
 
     uint32_t length = aParam.Length();
-    WriteParam(aMsg, length);
-    aMsg->WriteBytes(aParam.BeginReading(), length);
+    WriteParam(aWriter, length);
+    aWriter->WriteBytes(aParam.BeginReading(), length);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     bool isVoid;
-    if (!aMsg->ReadBool(aIter, &isVoid)) return false;
+    if (!aReader->ReadBool(&isVoid)) return false;
 
     if (isVoid) {
       aResult->SetIsVoid(true);
@@ -101,15 +100,15 @@ struct ParamTraits<nsACString> {
     }
 
     uint32_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
-    if (!aMsg->HasBytesAvailable(aIter, length)) {
+    if (!aReader->HasBytesAvailable(length)) {
       return false;
     }
     aResult->SetLength(length);
 
-    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), length);
+    return aReader->ReadBytesInto(aResult->BeginWriting(), length);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -124,23 +123,22 @@ template <>
 struct ParamTraits<nsAString> {
   typedef nsAString paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     bool isVoid = aParam.IsVoid();
-    aMsg->WriteBool(isVoid);
+    aWriter->WriteBool(isVoid);
 
     if (isVoid)
       // represents a nullptr pointer
       return;
 
     uint32_t length = aParam.Length();
-    WriteParam(aMsg, length);
-    aMsg->WriteBytes(aParam.BeginReading(), length * sizeof(char16_t));
+    WriteParam(aWriter, length);
+    aWriter->WriteBytes(aParam.BeginReading(), length * sizeof(char16_t));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     bool isVoid;
-    if (!aMsg->ReadBool(aIter, &isVoid)) return false;
+    if (!aReader->ReadBool(&isVoid)) return false;
 
     if (isVoid) {
       aResult->SetIsVoid(true);
@@ -148,21 +146,20 @@ struct ParamTraits<nsAString> {
     }
 
     uint32_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
 
     mozilla::CheckedInt<uint32_t> byteLength =
         mozilla::CheckedInt<uint32_t>(length) * sizeof(char16_t);
     if (!byteLength.isValid() ||
-        !aMsg->HasBytesAvailable(aIter, byteLength.value())) {
+        !aReader->HasBytesAvailable(byteLength.value())) {
       return false;
     }
 
     aResult->SetLength(length);
 
-    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(),
-                               byteLength.value());
+    return aReader->ReadBytesInto(aResult->BeginWriting(), byteLength.value());
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -236,24 +233,23 @@ template <>
 struct ParamTraits<nsTHashSet<uint64_t>> {
   typedef nsTHashSet<uint64_t> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     uint32_t count = aParam.Count();
-    WriteParam(aMsg, count);
+    WriteParam(aWriter, count);
     for (const auto& key : aParam) {
-      WriteParam(aMsg, key);
+      WriteParam(aWriter, key);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
+    if (!ReadParam(aReader, &count)) {
       return false;
     }
     paramType table(count);
     for (uint32_t i = 0; i < count; ++i) {
       uint64_t key;
-      if (!ReadParam(aMsg, aIter, &key)) {
+      if (!ReadParam(aReader, &key)) {
         return false;
       }
       table.Insert(key);
@@ -285,28 +281,27 @@ struct ParamTraits<nsTArray<E>> {
   static const bool sUseWriteBytes =
       (std::is_integral_v<E> || std::is_floating_point_v<E>);
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     uint32_t length = aParam.Length();
-    WriteParam(aMsg, length);
+    WriteParam(aWriter, length);
 
     if (sUseWriteBytes) {
       int pickledLength = 0;
       MOZ_RELEASE_ASSERT(ByteLengthIsValid(length, sizeof(E), &pickledLength));
-      aMsg->WriteBytes(aParam.Elements(), pickledLength);
+      aWriter->WriteBytes(aParam.Elements(), pickledLength);
     } else {
       const E* elems = aParam.Elements();
       for (uint32_t index = 0; index < length; index++) {
-        WriteParam(aMsg, elems[index]);
+        WriteParam(aWriter, elems[index]);
       }
     }
   }
 
   // This method uses infallible allocation so that an OOM failure will
   // show up as an OOM crash rather than an IPC FatalError.
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
 
@@ -317,12 +312,12 @@ struct ParamTraits<nsTArray<E>> {
       }
 
       E* elements = aResult->AppendElements(length);
-      return aMsg->ReadBytesInto(aIter, elements, pickledLength);
+      return aReader->ReadBytesInto(elements, pickledLength);
     } else {
       // Each ReadParam<E> may read more than 1 byte each; this is an attempt
       // to minimally validate that the length isn't much larger than what's
-      // actually available in aMsg.
-      if (!aMsg->HasBytesAvailable(aIter, length)) {
+      // actually available in aReader.
+      if (!aReader->HasBytesAvailable(length)) {
         return false;
       }
 
@@ -330,7 +325,7 @@ struct ParamTraits<nsTArray<E>> {
 
       for (uint32_t index = 0; index < length; index++) {
         E* element = aResult->AppendElement();
-        if (!ReadParam(aMsg, aIter, element)) {
+        if (!ReadParam(aReader, element)) {
           return false;
         }
       }
@@ -355,15 +350,14 @@ template <typename E>
 struct ParamTraits<FallibleTArray<E>> {
   typedef FallibleTArray<E> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<const nsTArray<E>&>(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, static_cast<const nsTArray<E>&>(aParam));
   }
 
   // Deserialize the array infallibly, but return a FallibleTArray.
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsTArray<E> temp;
-    if (!ReadParam(aMsg, aIter, &temp)) return false;
+    if (!ReadParam(aReader, &temp)) return false;
 
     *aResult = std::move(temp);
     return true;
@@ -398,26 +392,25 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
   static const bool sUseWriteBytes =
       (std::is_integral_v<E> || std::is_floating_point_v<E>);
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     uint32_t length = aParam.length();
-    WriteParam(aMsg, length);
+    WriteParam(aWriter, length);
 
     if (sUseWriteBytes) {
       int pickledLength = 0;
       MOZ_RELEASE_ASSERT(ByteLengthIsValid(length, sizeof(E), &pickledLength));
-      aMsg->WriteBytes(aParam.begin(), pickledLength);
+      aWriter->WriteBytes(aParam.begin(), pickledLength);
       return;
     }
 
     for (const E& elem : aParam) {
-      WriteParam(aMsg, elem);
+      WriteParam(aWriter, elem);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
 
@@ -433,13 +426,13 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
       }
 
       E* elements = aResult->begin();
-      return aMsg->ReadBytesInto(aIter, elements, pickledLength);
+      return aReader->ReadBytesInto(elements, pickledLength);
     }
 
     // Each ReadParam<E> may read more than 1 byte each; this is an attempt
     // to minimally validate that the length isn't much larger than what's
-    // actually available in aMsg.
-    if (!aMsg->HasBytesAvailable(aIter, length)) {
+    // actually available in aReader.
+    if (!aReader->HasBytesAvailable(length)) {
       return false;
     }
 
@@ -449,7 +442,7 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
     }
 
     for (uint32_t index = 0; index < length; ++index) {
-      if (!ReadParam(aMsg, aIter, &((*aResult)[index]))) {
+      if (!ReadParam(aReader, &((*aResult)[index]))) {
         return false;
       }
     }
@@ -479,26 +472,25 @@ struct ParamTraits<std::vector<E>> {
   static const bool sUseWriteBytes =
       (std::is_integral_v<E> || std::is_floating_point_v<E>);
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     uint32_t length = aParam.size();
-    WriteParam(aMsg, length);
+    WriteParam(aWriter, length);
 
     if (sUseWriteBytes) {
       int pickledLength = 0;
       MOZ_RELEASE_ASSERT(ByteLengthIsValid(length, sizeof(E), &pickledLength));
-      aMsg->WriteBytes(aParam.data(), pickledLength);
+      aWriter->WriteBytes(aParam.data(), pickledLength);
       return;
     }
 
     for (const E& elem : aParam) {
-      WriteParam(aMsg, elem);
+      WriteParam(aWriter, elem);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
+    if (!ReadParam(aReader, &length)) {
       return false;
     }
 
@@ -511,20 +503,20 @@ struct ParamTraits<std::vector<E>> {
       aResult->resize(length);
 
       E* elements = aResult->data();
-      return aMsg->ReadBytesInto(aIter, elements, pickledLength);
+      return aReader->ReadBytesInto(elements, pickledLength);
     }
 
     // Each ReadParam<E> may read more than 1 byte each; this is an attempt
     // to minimally validate that the length isn't much larger than what's
-    // actually available in aMsg.
-    if (!aMsg->HasBytesAvailable(aIter, length)) {
+    // actually available in aReader.
+    if (!aReader->HasBytesAvailable(length)) {
       return false;
     }
 
     aResult->resize(length);
 
     for (uint32_t index = 0; index < length; ++index) {
-      if (!ReadParam(aMsg, aIter, &((*aResult)[index]))) {
+      if (!ReadParam(aReader, &((*aResult)[index]))) {
         return false;
       }
     }
@@ -546,25 +538,24 @@ template <typename K, typename V>
 struct ParamTraits<std::unordered_map<K, V>> final {
   using T = std::unordered_map<K, V>;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.size());
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.size());
     for (const auto& pair : in) {
-      WriteParam(msg, pair.first);
-      WriteParam(msg, pair.second);
+      WriteParam(writer, pair.first);
+      WriteParam(writer, pair.second);
     }
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
+  static bool Read(MessageReader* const reader, T* const out) {
     size_t size = 0;
-    if (!ReadParam(msg, itr, &size)) return false;
+    if (!ReadParam(reader, &size)) return false;
     T map;
     map.reserve(size);
     for (const auto i : mozilla::IntegerRange(size)) {
       std::pair<K, V> pair;
       mozilla::Unused << i;
-      if (!ReadParam(msg, itr, &(pair.first)) ||
-          !ReadParam(msg, itr, &(pair.second))) {
+      if (!ReadParam(reader, &(pair.first)) ||
+          !ReadParam(reader, &(pair.second))) {
         return false;
       }
       map.insert(std::move(pair));
@@ -578,13 +569,12 @@ template <>
 struct ParamTraits<float> {
   typedef float paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(paramType));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(paramType));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -601,24 +591,23 @@ template <>
 struct ParamTraits<nsID> {
   typedef nsID paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.m0);
-    WriteParam(aMsg, aParam.m1);
-    WriteParam(aMsg, aParam.m2);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.m0);
+    WriteParam(aWriter, aParam.m1);
+    WriteParam(aWriter, aParam.m2);
     for (unsigned int i = 0; i < mozilla::ArrayLength(aParam.m3); i++) {
-      WriteParam(aMsg, aParam.m3[i]);
+      WriteParam(aWriter, aParam.m3[i]);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->m0)) ||
-        !ReadParam(aMsg, aIter, &(aResult->m1)) ||
-        !ReadParam(aMsg, aIter, &(aResult->m2)))
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &(aResult->m0)) ||
+        !ReadParam(aReader, &(aResult->m1)) ||
+        !ReadParam(aReader, &(aResult->m2)))
       return false;
 
     for (unsigned int i = 0; i < mozilla::ArrayLength(aResult->m3); i++)
-      if (!ReadParam(aMsg, aIter, &(aResult->m3[i]))) return false;
+      if (!ReadParam(aReader, &(aResult->m3[i]))) return false;
 
     return true;
   }
@@ -642,24 +631,22 @@ struct ParamTraits<nsContentPolicyType>
 template <>
 struct ParamTraits<mozilla::TimeDuration> {
   typedef mozilla::TimeDuration paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mValue);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mValue);
   };
 };
 
 template <>
 struct ParamTraits<mozilla::TimeStamp> {
   typedef mozilla::TimeStamp paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mValue);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mValue);
   };
 };
 
@@ -668,18 +655,17 @@ struct ParamTraits<mozilla::TimeStamp> {
 template <>
 struct ParamTraits<mozilla::TimeStampValue> {
   typedef mozilla::TimeStampValue paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mGTC);
-    WriteParam(aMsg, aParam.mQPC);
-    WriteParam(aMsg, aParam.mIsNull);
-    WriteParam(aMsg, aParam.mHasQPC);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mGTC);
+    WriteParam(aWriter, aParam.mQPC);
+    WriteParam(aWriter, aParam.mIsNull);
+    WriteParam(aWriter, aParam.mHasQPC);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mGTC) &&
-            ReadParam(aMsg, aIter, &aResult->mQPC) &&
-            ReadParam(aMsg, aIter, &aResult->mIsNull) &&
-            ReadParam(aMsg, aIter, &aResult->mHasQPC));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return (ReadParam(aReader, &aResult->mGTC) &&
+            ReadParam(aReader, &aResult->mQPC) &&
+            ReadParam(aReader, &aResult->mIsNull) &&
+            ReadParam(aReader, &aResult->mHasQPC));
   }
 };
 
@@ -689,13 +675,12 @@ template <>
 struct ParamTraits<mozilla::dom::ipc::StructuredCloneData> {
   typedef mozilla::dom::ipc::StructuredCloneData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aParam.WriteIPCParams(aMsg);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.WriteIPCParams(aWriter);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aResult->ReadIPCParams(aMsg, aIter);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aResult->ReadIPCParams(aReader);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -707,24 +692,23 @@ template <class T>
 struct ParamTraits<mozilla::Maybe<T>> {
   typedef mozilla::Maybe<T> paramType;
 
-  static void Write(Message* msg, const paramType& param) {
+  static void Write(MessageWriter* writer, const paramType& param) {
     if (param.isSome()) {
-      WriteParam(msg, true);
-      WriteParam(msg, param.value());
+      WriteParam(writer, true);
+      WriteParam(writer, param.value());
     } else {
-      WriteParam(msg, false);
+      WriteParam(writer, false);
     }
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter,
-                   paramType* result) {
+  static bool Read(MessageReader* reader, paramType* result) {
     bool isSome;
-    if (!ReadParam(msg, iter, &isSome)) {
+    if (!ReadParam(reader, &isSome)) {
       return false;
     }
     if (isSome) {
       T tmp;
-      if (!ReadParam(msg, iter, &tmp)) {
+      if (!ReadParam(reader, &tmp)) {
         return false;
       }
       *result = mozilla::Some(std::move(tmp));
@@ -740,16 +724,15 @@ struct ParamTraits<mozilla::EnumSet<T, U>> {
   typedef mozilla::EnumSet<T, U> paramType;
   typedef U serializedType;
 
-  static void Write(Message* msg, const paramType& param) {
+  static void Write(MessageWriter* writer, const paramType& param) {
     MOZ_RELEASE_ASSERT(IsLegalValue(param.serialize()));
-    WriteParam(msg, param.serialize());
+    WriteParam(writer, param.serialize());
   }
 
-  static bool Read(const Message* msg, PickleIterator* iter,
-                   paramType* result) {
+  static bool Read(MessageReader* reader, paramType* result) {
     serializedType tmp;
 
-    if (ReadParam(msg, iter, &tmp)) {
+    if (ReadParam(reader, &tmp)) {
       if (IsLegalValue(tmp)) {
         result->deserialize(tmp);
         return true;
@@ -781,9 +764,9 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
   typedef mozilla::Variant<Ts...> paramType;
   using Tag = typename mozilla::detail::VariantTag<Ts...>::Type;
 
-  static void Write(Message* msg, const paramType& param) {
-    WriteParam(msg, param.tag);
-    param.match([msg](const auto& t) { WriteParam(msg, t); });
+  static void Write(MessageWriter* writer, const paramType& param) {
+    WriteParam(writer, param.tag);
+    param.match([writer](const auto& t) { WriteParam(writer, t); });
   }
 
   // Because VariantReader is a nested struct, we need the dummy template
@@ -793,8 +776,7 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
   struct VariantReader {
     using Next = VariantReader<N - 1>;
 
-    static bool Read(const Message* msg, PickleIterator* iter, Tag tag,
-                     paramType* result) {
+    static bool Read(MessageReader* reader, Tag tag, paramType* result) {
       // Since the VariantReader specializations start at N , we need to
       // subtract one to look at N - 1, the first valid tag.  This means our
       // comparisons are off by 1.  If we get to N = 0 then we have failed to
@@ -805,9 +787,9 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
         // Default construct our field within the result outparameter and
         // directly deserialize into the variant. Note that this means that
         // every type in Ts needs to be default constructible
-        return ReadParam(msg, iter, &result->template emplace<N - 1>());
+        return ReadParam(reader, &result->template emplace<N - 1>());
       } else {
-        return Next::Read(msg, iter, tag, result);
+        return Next::Read(reader, tag, result);
       }
     }
 
@@ -818,17 +800,15 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
   // a matching tag.
   template <typename dummy>
   struct VariantReader<0, dummy> {
-    static bool Read(const Message* msg, PickleIterator* iter, Tag tag,
-                     paramType* result) {
+    static bool Read(MessageReader* reader, Tag tag, paramType* result) {
       return false;
     }
   };
 
-  static bool Read(const Message* msg, PickleIterator* iter,
-                   paramType* result) {
+  static bool Read(MessageReader* reader, paramType* result) {
     Tag tag;
-    if (ReadParam(msg, iter, &tag)) {
-      return VariantReader<sizeof...(Ts)>::Read(msg, iter, tag, result);
+    if (ReadParam(reader, &tag)) {
+      return VariantReader<sizeof...(Ts)>::Read(reader, tag, result);
     }
     return false;
   }
@@ -838,28 +818,27 @@ template <typename T>
 struct ParamTraits<mozilla::dom::Optional<T>> {
   typedef mozilla::dom::Optional<T> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     if (aParam.WasPassed()) {
-      WriteParam(aMsg, true);
-      WriteParam(aMsg, aParam.Value());
+      WriteParam(aWriter, true);
+      WriteParam(aWriter, aParam.Value());
       return;
     }
 
-    WriteParam(aMsg, false);
+    WriteParam(aWriter, false);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     bool wasPassed = false;
 
-    if (!ReadParam(aMsg, aIter, &wasPassed)) {
+    if (!ReadParam(aReader, &wasPassed)) {
       return false;
     }
 
     aResult->Reset();
 
     if (wasPassed) {
-      if (!ReadParam(aMsg, aIter, &aResult->Construct())) {
+      if (!ReadParam(aReader, &aResult->Construct())) {
         return false;
       }
     }
@@ -872,9 +851,8 @@ template <>
 struct ParamTraits<nsAtom*> {
   typedef nsAtom paramType;
 
-  static void Write(Message* aMsg, const paramType* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<paramType>* aResult);
+  static void Write(MessageWriter* aWriter, const paramType* aParam);
+  static bool Read(MessageReader* aReader, RefPtr<paramType>* aResult);
 };
 
 struct CrossOriginOpenerPolicyValidator {
@@ -930,16 +908,15 @@ template <size_t N, typename Word>
 struct ParamTraits<mozilla::BitSet<N, Word>> {
   typedef mozilla::BitSet<N, Word> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     for (Word word : aParam.Storage()) {
-      WriteParam(aMsg, word);
+      WriteParam(aWriter, word);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     for (Word& word : aResult->Storage()) {
-      if (!ReadParam(aMsg, aIter, &word)) {
+      if (!ReadParam(aReader, &word)) {
         return false;
       }
     }
@@ -951,19 +928,18 @@ template <typename T>
 struct ParamTraits<mozilla::UniquePtr<T>> {
   typedef mozilla::UniquePtr<T> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     bool isNull = aParam == nullptr;
-    WriteParam(aMsg, isNull);
+    WriteParam(aWriter, isNull);
 
     if (!isNull) {
-      WriteParam(aMsg, *aParam.get());
+      WriteParam(aWriter, *aParam.get());
     }
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(IPC::MessageReader* aReader, paramType* aResult) {
     bool isNull = true;
-    if (!ReadParam(aMsg, aIter, &isNull)) {
+    if (!ReadParam(aReader, &isNull)) {
       return false;
     }
 
@@ -971,7 +947,7 @@ struct ParamTraits<mozilla::UniquePtr<T>> {
       aResult->reset();
     } else {
       *aResult = mozilla::MakeUnique<T>();
-      if (!ReadParam(aMsg, aIter, aResult->get())) {
+      if (!ReadParam(aReader, aResult->get())) {
         return false;
       }
     }
