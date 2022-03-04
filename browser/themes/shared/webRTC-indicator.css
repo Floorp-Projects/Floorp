@@ -260,3 +260,87 @@ xul|menu {
 #webRTC-sharingScreen-menu > menupopup {
   list-style-image: none; /* don't inherit into menu items */
 }
+
+@media (-moz-platform: macos) {
+  /**
+   * On macOS, the ordering of the drag indicator and window controls is reversed
+   * to be more native. We re-order all items including their separators so that
+   * the markup and separator hiding and showing logic in the shared CSS file
+   * doesn't need to be macOS-specific.
+   */
+  #window-controls {
+    order: 1;
+  }
+
+  #display-share + .separator {
+    order: 2;
+  }
+
+  #display-share {
+    order: 3;
+  }
+
+  #device-share + .separator {
+    order: 4;
+  }
+
+  #device-share {
+    order: 5;
+  }
+
+  #drag-indicator {
+    order: 6;
+  }
+
+  /**
+   * The minimize button on macOS should be circular, and the icon should be
+   * centered. The asset we have for the minimize icon puts it along the bottom,
+   * so we manually offset it here.
+   */
+  #minimize {
+    background-position: center -5px;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 1000px;
+  }
+}
+
+@media (-moz-platform: windows) {
+  @media (-moz-windows-default-theme: 0) {
+    :root {
+      --indicator-background-color: -moz-Dialog;
+      --indicator-color: -moz-DialogText;
+      --indicator-border-color: InactiveBorder;
+      --indicator-item-separator: 1px solid ThreeDShadow;
+      --indicator-stop-button-background-color: hsla(0,0%,70%,.2);
+      --indicator-stop-button-hover-background-color: hsla(0,0%,70%,.4);
+      --indicator-stop-button-color: inherit;
+      --minimize-button-background-color: hsla(0,0%,70%,.2);
+      --minimize-button-hover-background-color: hsla(0,0%,70%,.4);
+      --minimize-button-active-background-color: hsla(0,0%,70%,.6);
+      --control-icon-unchecked-hover-background-color: hsla(0,0%,70%,.2);
+      --control-icon-unchecked-active-background-color: hsla(0,0%,70%,.6);
+      --control-icon-checked-background-color: SelectedItem;
+      --control-icon-checked-icon-fill: SelectedItemText;
+      --control-icon-checked-hover-background-color: hsla(0,0%,70%,.2);
+      --control-icon-checked-active-background-color: hsla(0,0%,70%,.6);
+    }
+
+    #minimize,
+    .stop-button {
+      border: 1px outset ThreeDLightShadow;
+    }
+  }
+
+  #webRTC-sharingCamera-menu {
+    list-style-image: url("chrome://browser/skin/notification-icons/camera.png");
+  }
+
+  #webRTC-sharingMicrophone-menu {
+    list-style-image: url("chrome://browser/skin/notification-icons/microphone.png");
+  }
+
+  #webRTC-sharingScreen-menu {
+    list-style-image: url("chrome://browser/skin/notification-icons/screen.png");
+  }
+}
