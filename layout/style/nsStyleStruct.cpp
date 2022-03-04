@@ -2420,8 +2420,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     }
     // We start or stop being a containing block for abspos descendants. This
     // also causes painting to change, as we'd become a pseudo-stacking context.
-    if (IsRelativelyPositionedStyle() !=
-        aNewData.IsRelativelyPositionedStyle()) {
+    if (IsRelativelyOrStickyPositionedStyle() !=
+        aNewData.IsRelativelyOrStickyPositionedStyle()) {
       hint |= nsChangeHint_UpdateContainingBlock | nsChangeHint_RepaintFrame;
     }
     if (IsPositionForcingStackingContext() !=

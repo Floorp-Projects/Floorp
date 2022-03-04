@@ -1479,7 +1479,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            mozilla::StylePositionProperty::Fixed == mPosition;
   }
 
-  bool IsRelativelyPositionedStyle() const {
+  bool IsRelativelyOrStickyPositionedStyle() const {
     return mozilla::StylePositionProperty::Relative == mPosition ||
            mozilla::StylePositionProperty::Sticky == mPosition;
   }
@@ -1609,7 +1609,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   inline bool IsInlineOutside(const nsIFrame* aContextFrame) const;
   inline mozilla::StyleDisplay GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
-  inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
+  inline bool IsRelativelyOrStickyPositioned(
+      const nsIFrame* aContextFrame) const;
   inline bool IsStickyPositioned(const nsIFrame* aContextFrame) const;
   inline bool IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const;
 

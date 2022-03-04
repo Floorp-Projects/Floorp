@@ -155,11 +155,11 @@ bool nsStyleDisplay::IsAbsPosContainingBlock(
          !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
-bool nsStyleDisplay::IsRelativelyPositioned(
+bool nsStyleDisplay::IsRelativelyOrStickyPositioned(
     const nsIFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
-  return IsRelativelyPositionedStyle() &&
+  return IsRelativelyOrStickyPositionedStyle() &&
          !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 

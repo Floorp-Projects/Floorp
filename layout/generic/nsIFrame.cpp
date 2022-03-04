@@ -1295,8 +1295,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
 
     if (disp->mPosition != oldDisp->mPosition) {
-      if (!disp->IsRelativelyPositionedStyle() &&
-          oldDisp->IsRelativelyPositionedStyle()) {
+      if (!disp->IsRelativelyOrStickyPositionedStyle() &&
+          oldDisp->IsRelativelyOrStickyPositionedStyle()) {
         RemoveProperty(NormalPositionProperty());
       }
 
@@ -7628,7 +7628,7 @@ void nsIFrame::MovePositionBy(const nsPoint& aTranslation) {
   nsPoint position = GetNormalPosition() + aTranslation;
 
   const nsMargin* computedOffsets = nullptr;
-  if (IsRelativelyPositioned()) {
+  if (IsRelativelyOrStickyPositioned()) {
     computedOffsets = GetProperty(nsIFrame::ComputedOffsetProperty());
   }
   ReflowInput::ApplyRelativePositioning(

@@ -417,7 +417,7 @@ class nsLineLayout {
     mozilla::JustificationAssignment mJustificationAssignment;
 
     // PerFrameData flags
-    bool mRelativePos : 1;
+    bool mIsRelativelyOrStickyPos : 1;
     bool mIsTextFrame : 1;
     bool mIsNonEmptyTextFrame : 1;
     bool mIsNonWhitespaceTextFrame : 1;

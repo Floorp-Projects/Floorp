@@ -4534,7 +4534,7 @@ class nsIFrame : public nsQueryFrame {
   inline bool IsFloating() const;
   inline bool IsAbsPosContainingBlock() const;
   inline bool IsFixedPosContainingBlock() const;
-  inline bool IsRelativelyPositioned() const;
+  inline bool IsRelativelyOrStickyPositioned() const;
   inline bool IsStickyPositioned() const;
   inline bool IsAbsolutelyPositioned(
       const nsStyleDisplay* aStyleDisplay = nullptr) const;
