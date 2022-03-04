@@ -30,7 +30,171 @@ class RefPtr;
 template <typename T>
 class nsCOMPtr;
 
+namespace mozilla::ipc {
+class IProtocol;
+}
+
 namespace IPC {
+
+/**
+ * Context used to serialize into an IPC::Message. Provides relevant context
+ * used when serializing.
+ */
+class MOZ_STACK_CLASS MessageWriter final {
+ public:
+  explicit MessageWriter(Message& message,
+                         mozilla::ipc::IProtocol* actor = nullptr)
+      : message_(message), actor_(actor) {}
+
+  MessageWriter(const MessageWriter&) = delete;
+  MessageWriter& operator=(const MessageWriter&) = delete;
+
+  mozilla::ipc::IProtocol* GetActor() const { return actor_; }
+
+#define FORWARD_WRITE(name, type) \
+  bool Write##name(const type& result) { return message_.Write##name(result); }
+
+  FORWARD_WRITE(Bool, bool)
+  FORWARD_WRITE(Int16, int16_t)
+  FORWARD_WRITE(UInt16, uint16_t)
+  FORWARD_WRITE(Int, int)
+  FORWARD_WRITE(Long, long)
+  FORWARD_WRITE(ULong, unsigned long)
+  FORWARD_WRITE(Int32, int32_t)
+  FORWARD_WRITE(UInt32, uint32_t)
+  FORWARD_WRITE(Int64, int64_t)
+  FORWARD_WRITE(UInt64, uint64_t)
+  FORWARD_WRITE(Double, double)
+  FORWARD_WRITE(IntPtr, intptr_t)
+  FORWARD_WRITE(UnsignedChar, unsigned char)
+  FORWARD_WRITE(String, std::string)
+  FORWARD_WRITE(WString, std::wstring)
+
+#undef FORWARD_WRITE
+
+  bool WriteData(const char* data, uint32_t length) {
+    return message_.WriteData(data, length);
+  }
+
+  bool WriteBytes(const void* data, uint32_t data_len,
+                  uint32_t alignment = sizeof(uint32_t)) {
+    return message_.WriteBytes(data, data_len, alignment);
+  }
+
+  bool WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity) {
+    return message_.WriteBytesZeroCopy(data, data_len, capacity);
+  }
+
+  bool WriteSentinel(uint32_t sentinel) {
+    return message_.WriteSentinel(sentinel);
+  }
+
+  bool WriteFileHandle(mozilla::UniqueFileHandle handle) {
+    return message_.WriteFileHandle(std::move(handle));
+  }
+
+  void WritePort(mozilla::ipc::ScopedPort port) {
+    message_.WritePort(std::move(port));
+  }
+
+#if defined(OS_MACOSX)
+  bool WriteMachSendRight(mozilla::UniqueMachSendRight port) {
+    return message_.WriteMachSendRight(std::move(port));
+  }
+#endif
+
+ private:
+  Message& message_;
+  mozilla::ipc::IProtocol* actor_;
+};
+
+/**
+ * Context used to read data from an IPC::Message. Provides relevant context
+ * used when deserializing and tracks iteration.
+ */
+class MOZ_STACK_CLASS MessageReader final {
+ public:
+  explicit MessageReader(const Message& message,
+                         mozilla::ipc::IProtocol* actor = nullptr)
+      : message_(message), iter_(message), actor_(actor) {}
+
+  MessageReader(const MessageReader&) = delete;
+  MessageReader& operator=(const MessageReader&) = delete;
+
+  mozilla::ipc::IProtocol* GetActor() const { return actor_; }
+
+#define FORWARD_READ(name, type)                \
+  [[nodiscard]] bool Read##name(type* result) { \
+    return message_.Read##name(&iter_, result); \
+  }
+
+  FORWARD_READ(Bool, bool)
+  FORWARD_READ(Int16, int16_t)
+  FORWARD_READ(UInt16, uint16_t)
+  FORWARD_READ(Short, short)
+  FORWARD_READ(Int, int)
+  FORWARD_READ(Long, long)
+  FORWARD_READ(ULong, unsigned long)
+  FORWARD_READ(Int32, int32_t)
+  FORWARD_READ(UInt32, uint32_t)
+  FORWARD_READ(Int64, int64_t)
+  FORWARD_READ(UInt64, uint64_t)
+  FORWARD_READ(Double, double)
+  FORWARD_READ(IntPtr, intptr_t)
+  FORWARD_READ(UnsignedChar, unsigned char)
+  FORWARD_READ(String, std::string)
+  FORWARD_READ(WString, std::wstring)
+
+  // Special version of ReadInt() which rejects negative values
+  FORWARD_READ(Length, int);
+
+#undef FORWARD_READ
+
+  [[nodiscard]] bool ReadBytesInto(void* data, uint32_t length) {
+    return message_.ReadBytesInto(&iter_, data, length);
+  }
+
+  [[nodiscard]] bool ExtractBuffers(
+      size_t length, mozilla::BufferList<InfallibleAllocPolicy>* buffers,
+      uint32_t alignment = sizeof(uint32_t)) {
+    return message_.ExtractBuffers(&iter_, length, buffers, alignment);
+  }
+
+  [[nodiscard]] bool IgnoreBytes(uint32_t length) {
+    return message_.IgnoreBytes(&iter_, length);
+  }
+
+  [[nodiscard]] bool ReadSentinel(uint32_t sentinel) {
+    return message_.ReadSentinel(&iter_, sentinel);
+  }
+
+  bool IgnoreSentinel() { return message_.IgnoreSentinel(&iter_); }
+
+  bool HasBytesAvailable(uint32_t len) {
+    return message_.HasBytesAvailable(&iter_, len);
+  }
+
+  void EndRead() { message_.EndRead(iter_, message_.type()); }
+
+  [[nodiscard]] bool ConsumeFileHandle(mozilla::UniqueFileHandle* handle) {
+    return message_.ConsumeFileHandle(&iter_, handle);
+  }
+
+  [[nodiscard]] bool ConsumePort(mozilla::ipc::ScopedPort* port) {
+    return message_.ConsumePort(&iter_, port);
+  }
+
+#if defined(OS_MACOSX)
+  [[nodiscard]] bool ConsumeMachSendRight(mozilla::UniqueMachSendRight* port) {
+    return message_.ConsumeMachSendRight(&iter_, port);
+  }
+#endif
+
+ private:
+  const Message& message_;
+  PickleIterator iter_;
+  mozilla::ipc::IProtocol* actor_;
+};
 
 //-----------------------------------------------------------------------------
 // An iterator class for reading the fields contained within a Message.
