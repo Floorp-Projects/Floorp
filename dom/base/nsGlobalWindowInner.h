@@ -1520,7 +1520,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
-  // The number of unload and beforeunload even listeners registered on this
+  // The number of unload and beforeunload event listeners registered on this
   // window.
   uint64_t mUnloadOrBeforeUnloadListenerCount = 0;
 

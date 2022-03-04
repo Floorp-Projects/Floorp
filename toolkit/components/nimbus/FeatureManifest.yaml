@@ -30,13 +30,17 @@ urlbar:
   description: The Address Bar
   hasExposure: true
   exposureDescription: >-
-    Exposure is sent once per browsing session after the first urlbar query is
-    made.
+    The timing of the exposure event depends on the experiment, but generally
+    the event is recorded once per app session when the user first encounters
+    the UI of the experiment in which they're enrolled.
   variables:
     bestMatchEnabled:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.enabled
       description: Gate for the best match feature. If false, the best match preferences UI and best match suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn best match suggestions on or off.
+    isBestMatchExperiment:
+      type: boolean
+      description: Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If false, the event will be recorded when the user first triggers any type of Suggest suggestion.
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants

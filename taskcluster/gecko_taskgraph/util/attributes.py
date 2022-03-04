@@ -172,3 +172,10 @@ def is_try(params):
     `mach try fuzzy`.
     """
     return "try" in params["project"] or params["try_mode"] == "try_select"
+
+
+def task_name(task):
+    if task.label.startswith(task.kind + "-"):
+        return task.label[len(task.kind) + 1 :]
+    else:
+        raise AttributeError(f"Task {task.label} does not have a name.")

@@ -481,6 +481,9 @@ def make_job_description(config, jobs):
             repackage_config=repackage_config,
             locale=locale,
         )
+        attributes["release_artifacts"] = [
+            artifact["name"] for artifact in worker["artifacts"]
+        ]
 
         task = {
             "label": job["label"],
@@ -507,7 +510,6 @@ def make_job_description(config, jobs):
                 project=config.params["project"],
                 existing_fetch=job.get("fetches"),
             ),
-            "release-artifacts": [artifact["name"] for artifact in worker["artifacts"]],
         }
 
         if build_platform.startswith("macosx"):

@@ -222,6 +222,7 @@ var ClientIDImpl = {
   async getClientID() {
     if (!this._clientID) {
       let { clientID } = await this._loadClientID();
+      Glean.legacyTelemetry.clientId.set(clientID);
       return clientID;
     }
 
@@ -321,6 +322,9 @@ var ClientIDImpl = {
   async removeClientID() {
     this._log.trace("removeClientID");
 
+    // We can't clear the client_id in Glean, but we can make it the canary.
+    Glean.legacyTelemetry.clientId.set(CANARY_CLIENT_ID);
+
     // Wait for the removal.
     // Asynchronous calls to getClientID will also be blocked on this.
     this._removeClientIdTask = this._doRemoveClientID();
@@ -345,6 +349,7 @@ var ClientIDImpl = {
     }
 
     this._clientID = id;
+    Glean.legacyTelemetry.clientId.set(id);
 
     this._clientIDHash = null;
     Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);
