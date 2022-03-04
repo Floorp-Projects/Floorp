@@ -14,6 +14,13 @@ EXTRA_JS_MODULES += [
     "TRRPerformance.jsm",
 ]
 
+FINAL_TARGET_FILES.actors += [
+    "AboutDoHErrorChild.jsm",
+    "AboutDoHErrorParent.jsm",
+]
+
+JAR_MANIFESTS += ["jar.mn"]
+
 TESTING_JS_MODULES += [
     "DoHTestUtils.jsm",
 ]
