@@ -15,7 +15,6 @@
 
 #include "absl/types/optional.h"
 #include "modules/audio_processing/agc2/agc2_common.h"
-#include "modules/audio_processing/agc2/vad_with_level.h"
 
 namespace webrtc {
 
@@ -24,19 +23,19 @@ class ApmDataDumper;
 class SaturationProtector {
  public:
   explicit SaturationProtector(ApmDataDumper* apm_data_dumper);
-
   SaturationProtector(ApmDataDumper* apm_data_dumper,
+                      float initial_saturation_margin_db,
                       float extra_saturation_margin_db);
 
-  // Updates the margin estimate. This method should be called whenever a frame
-  // is reliably classified as 'speech'.
-  void UpdateMargin(const VadWithLevel::LevelAndProbability& vad_data,
-                    float last_speech_level_estimate);
+  void Reset();
+
+  // Updates the margin by analyzing the estimated speech level
+  // `speech_level_dbfs` and the peak power `speech_peak_dbfs` for an observed
+  // frame which is reliably classified as "speech".
+  void UpdateMargin(float speech_peak_dbfs, float speech_level_dbfs);
 
   // Returns latest computed margin.
-  float LastMargin() const;
-
-  void Reset();
+  float GetMarginDb() const;
 
   void DebugDumpEstimate() const;
 
@@ -57,25 +56,17 @@ class SaturationProtector {
     int size_ = 0;
   };
 
-  // Computes a delayed envelope of peaks.
-  class PeakEnveloper {
-   public:
-    PeakEnveloper();
-    void Reset();
-    void Process(float frame_peak_dbfs);
-    float Query() const;
-
-   private:
-    size_t speech_time_in_estimate_ms_;
-    float current_superframe_peak_dbfs_;
-    RingBuffer peak_delay_buffer_;
-  };
+  float GetDelayedPeakDbfs() const;
 
   ApmDataDumper* apm_data_dumper_;
-  PeakEnveloper peak_enveloper_;
-
+  // Parameters.
+  const float initial_saturation_margin_db_;
   const float extra_saturation_margin_db_;
-  float last_margin_;
+  // State.
+  float margin_db_;
+  RingBuffer peak_delay_buffer_;
+  float max_peaks_dbfs_;
+  int time_since_push_ms_;
 };
 
 }  // namespace webrtc

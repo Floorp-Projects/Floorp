@@ -32,7 +32,9 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     float extra_saturation_margin_db)
     : level_estimator_(level_estimator),
       use_saturation_protector_(use_saturation_protector),
-      saturation_protector_(apm_data_dumper, extra_saturation_margin_db),
+      saturation_protector_(apm_data_dumper,
+                            GetInitialSaturationMarginDb(),
+                            extra_saturation_margin_db),
       apm_data_dumper_(apm_data_dumper) {}
 
 void AdaptiveModeLevelEstimator::UpdateEstimation(
@@ -77,7 +79,7 @@ void AdaptiveModeLevelEstimator::UpdateEstimation(
   last_estimate_with_offset_dbfs_ = estimate_numerator_ / estimate_denominator_;
 
   if (use_saturation_protector_) {
-    saturation_protector_.UpdateMargin(vad_data,
+    saturation_protector_.UpdateMargin(vad_data.speech_peak_dbfs,
                                        last_estimate_with_offset_dbfs_);
     DebugDumpEstimate();
   }
@@ -86,7 +88,7 @@ void AdaptiveModeLevelEstimator::UpdateEstimation(
 float AdaptiveModeLevelEstimator::LatestLevelEstimate() const {
   return rtc::SafeClamp<float>(
       last_estimate_with_offset_dbfs_ +
-          (use_saturation_protector_ ? saturation_protector_.LastMargin()
+          (use_saturation_protector_ ? saturation_protector_.GetMarginDb()
                                      : 0.f),
       -90.f, 30.f);
 }

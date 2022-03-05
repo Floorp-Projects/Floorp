@@ -19,14 +19,14 @@
 namespace webrtc {
 namespace {
 float RunOnConstantLevel(int num_iterations,
-                         VadWithLevel::LevelAndProbability vad_data,
-                         float estimated_level_dbfs,
+                         float speech_peak_dbfs,
+                         float speech_level_dbfs,
                          SaturationProtector* saturation_protector) {
-  float last_margin = saturation_protector->LastMargin();
+  float last_margin = saturation_protector->GetMarginDb();
   float max_difference = 0.f;
   for (int i = 0; i < num_iterations; ++i) {
-    saturation_protector->UpdateMargin(vad_data, estimated_level_dbfs);
-    const float new_margin = saturation_protector->LastMargin();
+    saturation_protector->UpdateMargin(speech_peak_dbfs, speech_level_dbfs);
+    const float new_margin = saturation_protector->GetMarginDb();
     max_difference =
         std::max(max_difference, std::abs(new_margin - last_margin));
     last_margin = new_margin;
@@ -39,10 +39,9 @@ float RunOnConstantLevel(int num_iterations,
 TEST(AutomaticGainController2SaturationProtector, ProtectorShouldNotCrash) {
   ApmDataDumper apm_data_dumper(0);
   SaturationProtector saturation_protector(&apm_data_dumper);
-  VadWithLevel::LevelAndProbability vad_data(1.f, -20.f, -10.f);
-
-  saturation_protector.UpdateMargin(vad_data, -20.f);
-  static_cast<void>(saturation_protector.LastMargin());
+  saturation_protector.UpdateMargin(/*speech_peak_dbfs=*/-10.f,
+                                    /*speech_level_dbfs=*/-20.f);
+  static_cast<void>(saturation_protector.GetMarginDb());
   saturation_protector.DebugDumpEstimate();
 }
 
@@ -59,12 +58,11 @@ TEST(AutomaticGainController2SaturationProtector,
   const float kMaxDifference =
       0.5 * std::abs(GetInitialSaturationMarginDb() - kCrestFactor);
 
-  static_cast<void>(RunOnConstantLevel(
-      2000, VadWithLevel::LevelAndProbability(1.f, -90.f, kPeakLevel),
-      kSpeechLevel, &saturation_protector));
+  static_cast<void>(RunOnConstantLevel(2000, kPeakLevel, kSpeechLevel,
+                                       &saturation_protector));
 
   EXPECT_NEAR(
-      saturation_protector.LastMargin() - GetExtraSaturationMarginOffsetDb(),
+      saturation_protector.GetMarginDb() - GetExtraSaturationMarginOffsetDb(),
       kCrestFactor, kMaxDifference);
 }
 
@@ -80,14 +78,11 @@ TEST(AutomaticGainController2SaturationProtector, ProtectorChangesSlowly) {
 
   constexpr int kNumIterations = 1000;
   float max_difference = RunOnConstantLevel(
-      kNumIterations, VadWithLevel::LevelAndProbability(1.f, -90.f, kPeakLevel),
-      kSpeechLevel, &saturation_protector);
+      kNumIterations, kPeakLevel, kSpeechLevel, &saturation_protector);
 
   max_difference =
-      std::max(RunOnConstantLevel(
-                   kNumIterations,
-                   VadWithLevel::LevelAndProbability(1.f, -90.f, kPeakLevel),
-                   kOtherSpeechLevel, &saturation_protector),
+      std::max(RunOnConstantLevel(kNumIterations, kPeakLevel, kOtherSpeechLevel,
+                                  &saturation_protector),
                max_difference);
 
   constexpr float kMaxChangeSpeedDbPerSecond = 0.5;  // 1 db / 2 seconds.
@@ -108,29 +103,22 @@ TEST(AutomaticGainController2SaturationProtector,
   // First run on initial level.
   float max_difference = RunOnConstantLevel(
       kDelayIterations,
-      VadWithLevel::LevelAndProbability(
-          1.f, -90.f, kInitialSpeechLevelDbfs + GetInitialSaturationMarginDb()),
+      kInitialSpeechLevelDbfs + GetInitialSaturationMarginDb(),
       kInitialSpeechLevelDbfs, &saturation_protector);
 
   // Then peak changes, but not RMS.
-  max_difference =
-      std::max(RunOnConstantLevel(
-                   kDelayIterations,
-                   VadWithLevel::LevelAndProbability(
-                       1.f, -90.f,
-                       kLaterSpeechLevelDbfs + GetInitialSaturationMarginDb()),
-                   kInitialSpeechLevelDbfs, &saturation_protector),
-               max_difference);
+  max_difference = std::max(
+      RunOnConstantLevel(kDelayIterations,
+                         kLaterSpeechLevelDbfs + GetInitialSaturationMarginDb(),
+                         kInitialSpeechLevelDbfs, &saturation_protector),
+      max_difference);
 
   // Then both change.
-  max_difference =
-      std::max(RunOnConstantLevel(
-                   kDelayIterations,
-                   VadWithLevel::LevelAndProbability(
-                       1.f, -90.f,
-                       kLaterSpeechLevelDbfs + GetInitialSaturationMarginDb()),
-                   kLaterSpeechLevelDbfs, &saturation_protector),
-               max_difference);
+  max_difference = std::max(
+      RunOnConstantLevel(kDelayIterations,
+                         kLaterSpeechLevelDbfs + GetInitialSaturationMarginDb(),
+                         kLaterSpeechLevelDbfs, &saturation_protector),
+      max_difference);
 
   // The saturation protector expects that the RMS changes roughly
   // 'kFullBufferSizeMs' after peaks change. This is to account for
@@ -138,7 +126,7 @@ TEST(AutomaticGainController2SaturationProtector,
   // above is 'normal' and 'expected', and shouldn't influence the
   // margin by much.
 
-  const float total_difference = std::abs(saturation_protector.LastMargin() -
+  const float total_difference = std::abs(saturation_protector.GetMarginDb() -
                                           GetExtraSaturationMarginOffsetDb() -
                                           GetInitialSaturationMarginDb());
 
