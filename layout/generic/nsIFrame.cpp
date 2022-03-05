@@ -7706,6 +7706,18 @@ OverflowAreas nsIFrame::GetOverflowAreasRelativeToParent() const {
   return GetOverflowAreas() + mRect.TopLeft();
 }
 
+OverflowAreas nsIFrame::GetActualAndNormalOverflowAreasRelativeToParent()
+    const {
+  if (MOZ_LIKELY(!IsRelativelyOrStickyPositioned())) {
+    return GetOverflowAreasRelativeToParent();
+  }
+
+  const OverflowAreas overflows = GetOverflowAreas();
+  OverflowAreas actualAndNormalOverflows = overflows + GetPosition();
+  actualAndNormalOverflows.UnionWith(overflows + GetNormalPosition());
+  return actualAndNormalOverflows;
+}
+
 nsRect nsIFrame::ScrollableOverflowRectRelativeToParent() const {
   return ScrollableOverflowRect() + mRect.TopLeft();
 }
