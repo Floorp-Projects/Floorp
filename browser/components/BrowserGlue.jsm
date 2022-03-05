@@ -2766,6 +2766,16 @@ BrowserGlue.prototype = {
         },
       },
 
+      {
+        condition: AppConstants.platform == "win",
+        task: () => {
+          Services.obs.notifyObservers(
+            null,
+            "unblock-untrusted-modules-thread"
+          );
+        },
+      },
+
       // WebDriver components (Remote Agent and Marionette) need to be
       // initialized as very last step.
       {
