@@ -2116,14 +2116,31 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
   const auto& cached = mFcSubstituteCache.LookupOrInsertWith(cacheKey, [&] {
     // It wasn't in the cache, so we need to ask fontconfig...
     const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
-    FcChar8* sentinelFirstFamily = nullptr;
+    const FcChar8* terminator = nullptr;
     RefPtr<FcPattern> sentinelSubst = dont_AddRef(FcPatternCreate());
     FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
     if (!lang.IsEmpty()) {
       FcPatternAddString(sentinelSubst, FC_LANG, ToFcChar8Ptr(lang.get()));
     }
     FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
-    FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sentinelFirstFamily);
+
+    // If the sentinel name is still present, we'll use that as the terminator
+    // for the family names we collect; this means that if fontconfig prepends
+    // additional family names (e.g. an emoji font, or lang-specific preferred
+    // font) to all patterns, it won't simply mask all actual requested names.
+    // If the sentinel has been deleted/replaced altogether, then we'll take
+    // the first substitute name as the new terminator.
+    FcChar8* substName;
+    for (int i = 0; FcPatternGetString(sentinelSubst, FC_FAMILY, i,
+                                       &substName) == FcResultMatch;
+         i++) {
+      if (FcStrCmp(substName, kSentinelName) == 0) {
+        terminator = kSentinelName;
+        break;
+      } else if (!terminator) {
+        terminator = substName;
+      }
+    }
 
     // substitutions for font, -moz-sentinel pattern
     RefPtr<FcPattern> fontWithSentinel = dont_AddRef(FcPatternCreate());
@@ -2135,14 +2152,12 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
     }
     FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
-    // Add all font family matches until reaching the sentinel.
+    // Add all font family matches until reaching the terminator.
     AutoTArray<FamilyAndGeneric, 10> cachedFamilies;
-    FcChar8* substName = nullptr;
     for (int i = 0; FcPatternGetString(fontWithSentinel, FC_FAMILY, i,
                                        &substName) == FcResultMatch;
          i++) {
-      if (sentinelFirstFamily &&
-          FcStrCmp(substName, sentinelFirstFamily) == 0) {
+      if (terminator && FcStrCmp(substName, terminator) == 0) {
         break;
       }
       gfxPlatformFontList::FindAndAddFamilies(
