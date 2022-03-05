@@ -10,13 +10,13 @@ import("../../webrtc.gni")
 
 rtc_library("emulated_network") {
   visibility = [
-    "../../api:create_network_emulation_manager",
     ":*",
+    "../../api:create_network_emulation_manager",
   ]
   if (rtc_include_tests) {
     visibility += [
-      "../scenario:*",
       "../peer_scenario:*",
+      "../scenario:*",
     ]
   }
   testonly = true
@@ -39,6 +39,7 @@ rtc_library("emulated_network") {
     "../../api:network_emulation_manager_api",
     "../../api:simulated_network_api",
     "../../api:time_controller",
+    "../../api/numerics",
     "../../api/units:data_rate",
     "../../api/units:data_size",
     "../../api/units:time_delta",
@@ -114,6 +115,7 @@ rtc_library("cross_traffic_unittest") {
   deps = [
     ":emulated_network",
     "../:test_support",
+    "../../api:network_emulation_manager_api",
     "../../api:simulated_network_api",
     "../../call:simulated_network",
     "../../rtc_base",

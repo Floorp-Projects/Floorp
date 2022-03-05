@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "api/test/network_emulation/network_emulation_interfaces.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
@@ -95,8 +96,12 @@ class StatsBasedNetworkQualityMetricsReporter
                     const std::string& network_label,
                     const double value,
                     const std::string& unit) const;
+  void ReportResult(const std::string& metric_name,
+                    const std::string& network_label,
+                    const SamplesStatsCounter& value,
+                    const std::string& unit) const;
   std::string GetTestCaseName(absl::string_view network_label) const;
-  void LogNetworkLayerStats(absl::string_view peer_name,
+  void LogNetworkLayerStats(const std::string& peer_name,
                             const NetworkLayerStats& stats) const;
 
   NetworkLayerStatsCollector collector_;

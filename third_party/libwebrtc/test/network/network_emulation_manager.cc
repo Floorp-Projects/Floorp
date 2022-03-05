@@ -98,8 +98,8 @@ EmulatedEndpoint* NetworkEmulationManagerImpl::CreateEndpoint(
   bool res = used_ip_addresses_.insert(*ip).second;
   RTC_CHECK(res) << "IP=" << ip->ToString() << " already in use";
   auto node = std::make_unique<EmulatedEndpointImpl>(
-      next_node_id_++, *ip, config.start_as_enabled, config.type, &task_queue_,
-      clock_);
+      next_node_id_++, *ip, config.stats_gathering_mode,
+      config.start_as_enabled, config.type, &task_queue_, clock_);
   EmulatedEndpoint* out = node.get();
   endpoints_.push_back(std::move(node));
   return out;

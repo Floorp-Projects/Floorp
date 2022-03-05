@@ -250,6 +250,16 @@ void StatsBasedNetworkQualityMetricsReporter::ReportResult(
                     /*important=*/false);
 }
 
+void StatsBasedNetworkQualityMetricsReporter::ReportResult(
+    const std::string& metric_name,
+    const std::string& network_label,
+    const SamplesStatsCounter& value,
+    const std::string& unit) const {
+  test::PrintResult(metric_name, /*modifier=*/"",
+                    GetTestCaseName(network_label), value, unit,
+                    /*important=*/false);
+}
+
 std::string StatsBasedNetworkQualityMetricsReporter::GetTestCaseName(
     absl::string_view network_label) const {
   rtc::StringBuilder builder;
@@ -258,7 +268,7 @@ std::string StatsBasedNetworkQualityMetricsReporter::GetTestCaseName(
 }
 
 void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
-    absl::string_view peer_name,
+    const std::string& peer_name,
     const NetworkLayerStats& stats) const {
   DataRate average_send_rate = stats.stats->PacketsSent() >= 2
                                    ? stats.stats->AverageSendRate()
@@ -273,6 +283,19 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
   for (size_t i = 0; i < local_ips.size(); ++i) {
     log << "  " << local_ips[i].ToString() << "\n";
   }
+  if (!stats.stats->SentPacketsSizeCounter().IsEmpty()) {
+    ReportResult("sent_packets_size", peer_name,
+                 stats.stats->SentPacketsSizeCounter(), "sizeInBytes");
+  }
+  if (!stats.stats->ReceivedPacketsSizeCounter().IsEmpty()) {
+    ReportResult("received_packets_size", peer_name,
+                 stats.stats->ReceivedPacketsSizeCounter(), "sizeInBytes");
+  }
+  if (!stats.stats->DroppedPacketsSizeCounter().IsEmpty()) {
+    ReportResult("dropped_packets_size", peer_name,
+                 stats.stats->DroppedPacketsSizeCounter(), "sizeInBytes");
+  }
+
   log << "Send statistic:\n"
       << "  packets: " << stats.stats->PacketsSent()
       << " bytes: " << stats.stats->BytesSent().bytes()
@@ -289,6 +312,11 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
         << " bytes: " << entry.second->BytesSent().bytes()
         << " avg_rate (bytes/sec): " << source_average_send_rate.bytes_per_sec()
         << " avg_rate (bps): " << source_average_send_rate.bps() << "\n";
+    if (!entry.second->SentPacketsSizeCounter().IsEmpty()) {
+      ReportResult("sent_packets_size",
+                   peer_name + "/" + entry.first.ToString(),
+                   stats.stats->SentPacketsSizeCounter(), "sizeInBytes");
+    }
   }
 
   log << "Receive statistic:\n"
@@ -309,6 +337,16 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
         << " avg_rate (bytes/sec): "
         << source_average_receive_rate.bytes_per_sec()
         << " avg_rate (bps): " << source_average_receive_rate.bps() << "\n";
+    if (!entry.second->ReceivedPacketsSizeCounter().IsEmpty()) {
+      ReportResult("received_packets_size",
+                   peer_name + "/" + entry.first.ToString(),
+                   stats.stats->ReceivedPacketsSizeCounter(), "sizeInBytes");
+    }
+    if (!entry.second->DroppedPacketsSizeCounter().IsEmpty()) {
+      ReportResult("dropped_packets_size",
+                   peer_name + "/" + entry.first.ToString(),
+                   stats.stats->DroppedPacketsSizeCounter(), "sizeInBytes");
+    }
   }
 
   RTC_LOG(INFO) << log.str();
