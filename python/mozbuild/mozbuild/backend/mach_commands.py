@@ -219,7 +219,7 @@ def setup_vscode(command_context, vscode_cmd):
             {},
             "Unable to locate clangd in {}.".format(clang_tidy_bin),
         )
-        rc = _get_clang_tools(command_context, clang_tools_path)
+        rc = get_clang_tools(command_context, clang_tools_path)
 
         if rc != 0:
             return rc
@@ -336,7 +336,7 @@ def setup_vscode(command_context, vscode_cmd):
     return 0
 
 
-def _get_clang_tools(command_context, clang_tools_path):
+def get_clang_tools(command_context, clang_tools_path):
 
     import shutil
 

@@ -37,10 +37,15 @@ using GetModulesTrustIpcPromise =
 
 class UntrustedModulesProcessor final : public nsIObserver {
  public:
-  static RefPtr<UntrustedModulesProcessor> Create();
+  static RefPtr<UntrustedModulesProcessor> Create(
+      bool aIsReadyForBackgroundProcessing);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
+
+  // Called to check if the parent process is ready when a child process
+  // is spanwed
+  bool IsReadyForBackgroundProcessing() const;
 
   // Called by DLL Services to explicitly begin shutting down
   void Disable();
@@ -65,7 +70,7 @@ class UntrustedModulesProcessor final : public nsIObserver {
 
  private:
   ~UntrustedModulesProcessor() = default;
-  UntrustedModulesProcessor();
+  explicit UntrustedModulesProcessor(bool aIsReadyForBackgroundProcessing);
 
   static bool IsSupportedProcessType();
 
@@ -141,8 +146,10 @@ class UntrustedModulesProcessor final : public nsIObserver {
   // This member must only be touched on mThread
   UntrustedModulesData mProcessedModuleLoads;
 
+  enum class Status { StartingUp, Allowed, ShuttingDown };
+
   // This member may be touched by any thread
-  Atomic<bool> mAllowProcessing;
+  Atomic<Status> mStatus;
 
   // Cache all module records, including ones trusted and ones loaded in
   // child processes, in the browser process to avoid evaluating the same

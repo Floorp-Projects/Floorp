@@ -8,6 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -105,15 +106,16 @@ MIDIPermissionRequest::Run() {
     return NS_OK;
   }
 
-  // If the add-on is not installed, auto-deny.
-  if (!nsContentUtils::HasSitePerm(mPrincipal, kPermName)) {
+  // If the add-on is not installed, auto-deny (except for localhost).
+  if (!nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
+      !BasePrincipal::Cast(mPrincipal)->IsLoopbackHost()) {
     Cancel();
     return NS_OK;
   }
 
-  // We can only get here if the add-on is installed, but the user has
-  // subsequently changed the permission from ALLOW to ASK. In that unusual
-  // case, throw up a prompt.
+  // We can only get here for localhost, or if the add-on is installed, but the
+  // user has subsequently changed the permission from ALLOW to ASK. In that
+  // unusual case, throw up a prompt.
   if (NS_FAILED(nsContentPermissionUtils::AskPermission(this, mWindow))) {
     Cancel();
     return NS_ERROR_FAILURE;
