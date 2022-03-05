@@ -207,15 +207,22 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
           /* aSupportsExternalCompositing */ true);
       break;
     }
-    case gfx::SurfaceFormat::NV12:
-    case gfx::SurfaceFormat::P010: {
+    case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-          GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
-                                                  : wr::ColorDepth::Color10,
-          wr::ToWrYuvColorSpace(GetYUVColorSpace()),
+          wr::ColorDepth::Color8, wr::ToWrYuvColorSpace(GetYUVColorSpace()),
+          wr::ToWrColorRange(GetColorRange()), aFilter, preferCompositorSurface,
+          /* aSupportsExternalCompositing */ true);
+      break;
+    }
+    case gfx::SurfaceFormat::P010: {
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      aBuilder.PushP010Image(
+          aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
+          wr::ColorDepth::Color10, wr::ToWrYuvColorSpace(GetYUVColorSpace()),
           wr::ToWrColorRange(GetColorRange()), aFilter, preferCompositorSurface,
           /* aSupportsExternalCompositing */ true);
       break;
