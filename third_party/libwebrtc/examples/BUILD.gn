@@ -188,7 +188,6 @@ if (is_android) {
       "androidapp/res/values/strings.xml",
       "androidapp/res/xml/preferences.xml",
     ]
-    create_srcjar = false
 
     # Needed for Bazel converter.
     custom_package = "org.appspot.apprtc"

@@ -68,7 +68,6 @@ if (is_android) {
   android_resources("resources") {
     testonly = true
     custom_package = "org.webrtc.examples.androidnativeapi"
-    create_srcjar = false
     sources = [
       "res/layout/activity_main.xml",
       "res/values/strings.xml",

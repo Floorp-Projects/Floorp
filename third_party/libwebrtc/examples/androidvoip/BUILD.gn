@@ -76,7 +76,6 @@ if (is_android) {
   android_resources("resources") {
     testonly = true
     custom_package = "org.webrtc.examples.androidvoip"
-    create_srcjar = false
     sources = [
       "res/layout/activity_main.xml",
       "res/values/colors.xml",
