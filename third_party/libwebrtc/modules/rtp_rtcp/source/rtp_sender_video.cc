@@ -36,6 +36,7 @@
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
 
@@ -115,6 +116,19 @@ bool IsNoopDelay(const VideoPlayoutDelay& delay) {
   return delay.min_ms == -1 && delay.max_ms == -1;
 }
 
+absl::optional<VideoPlayoutDelay> LoadVideoPlayoutDelayOverride(
+    const WebRtcKeyValueConfig* key_value_config) {
+  RTC_DCHECK(key_value_config);
+  FieldTrialOptional<int> playout_delay_min_ms("min_ms", absl::nullopt);
+  FieldTrialOptional<int> playout_delay_max_ms("max_ms", absl::nullopt);
+  ParseFieldTrial({&playout_delay_max_ms, &playout_delay_min_ms},
+                  key_value_config->Lookup("WebRTC-ForceSendPlayoutDelay"));
+  return playout_delay_max_ms && playout_delay_min_ms
+             ? absl::make_optional<VideoPlayoutDelay>(*playout_delay_min_ms,
+                                                      *playout_delay_max_ms)
+             : absl::nullopt;
+}
+
 }  // namespace
 
 RTPSenderVideo::RTPSenderVideo(const Config& config)
@@ -128,6 +142,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
       transmit_color_space_next_frame_(false),
       current_playout_delay_{-1, -1},
       playout_delay_pending_(false),
+      forced_playout_delay_(LoadVideoPlayoutDelayOverride(config.field_trials)),
       red_payload_type_(config.red_payload_type),
       fec_generator_(config.fec_generator),
       fec_type_(config.fec_type),
@@ -791,11 +806,12 @@ bool RTPSenderVideo::UpdateConditionalRetransmit(
 
 void RTPSenderVideo::MaybeUpdateCurrentPlayoutDelay(
     const RTPVideoHeader& header) {
-  if (IsNoopDelay(header.playout_delay)) {
+  VideoPlayoutDelay requested_delay =
+      forced_playout_delay_.value_or(header.playout_delay);
+
+  if (IsNoopDelay(requested_delay)) {
     return;
   }
-
-  VideoPlayoutDelay requested_delay = header.playout_delay;
 
   if (requested_delay.min_ms > PlayoutDelayLimits::kMaxMs ||
       requested_delay.max_ms > PlayoutDelayLimits::kMaxMs) {
