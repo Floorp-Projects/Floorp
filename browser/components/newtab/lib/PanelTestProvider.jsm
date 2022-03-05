@@ -282,7 +282,7 @@ const MESSAGES = () => [
           label: {
             string_id: "spotlight-total-cookie-protection-body",
           },
-          size: "20px",
+          size: "18px",
         },
         primary: {
           label: {
@@ -328,7 +328,7 @@ const MESSAGES = () => [
           label: {
             string_id: "spotlight-better-internet-header",
           },
-          size: "24px",
+          size: "22px",
         },
         text: {
           label: {
@@ -379,13 +379,13 @@ const MESSAGES = () => [
           label: {
             string_id: "spotlight-peace-mind-header",
           },
-          size: "24px",
+          size: "22px",
         },
         text: {
           label: {
             string_id: "spotlight-peace-mind-body",
           },
-          size: "16px",
+          size: "15px",
         },
         primary: {
           label: {
