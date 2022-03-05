@@ -5,8 +5,9 @@
 #include shared
 
 #define YUV_FORMAT_NV12             0
-#define YUV_FORMAT_PLANAR           1
-#define YUV_FORMAT_INTERLEAVED      2
+#define YUV_FORMAT_P010             1
+#define YUV_FORMAT_PLANAR           2
+#define YUV_FORMAT_INTERLEAVED      3
 
 //#define YUV_PRECISION mediump
 #define YUV_PRECISION
@@ -76,35 +77,45 @@ struct YuvColorMatrixInfo {
 
 // -
 
-vec4 yuv_channel_zero_one_identity(int bit_depth) {
+vec4 yuv_channel_zero_one_identity(int bit_depth, int format) {
     int channel_depth = 8;
     if (bit_depth > 8) {
-        // For >8bpc, we get the low bits, not the high bits:
-        // 10bpc(1.0): 0b0000_0011_1111_1111
-        channel_depth = 16;
+        if (format == YUV_FORMAT_P010) {
+            // This is an msb format.
+            channel_depth = min(bit_depth, 16);
+        } else {
+            // For >8bpc, we get the low bits, not the high bits:
+            // 10bpc(1.0): 0b0000_0011_1111_1111
+            channel_depth = 16;
+        }
     }
 
     float all_ones_normalized = float((1 << bit_depth) - 1) / float((1 << channel_depth) - 1);
     return vec4(0.0, 0.0, all_ones_normalized, all_ones_normalized);
 }
 
-vec4 yuv_channel_zero_one_narrow_range(int bit_depth) {
+vec4 yuv_channel_zero_one_narrow_range(int bit_depth, int format) {
     // Note: 512/1023 != 128/255
     ivec4 zero_one_ints = ivec4(16, 128, 235, 240) << (bit_depth - 8);
 
     int channel_depth = 8;
     if (bit_depth > 8) {
-        // For >8bpc, we get the low bits, not the high bits:
-        // 10bpc(1.0): 0b0000_0011_1111_1111
-        channel_depth = 16;
+        if (format == YUV_FORMAT_P010) {
+            // This is an msb format.
+            channel_depth = min(bit_depth, 16);
+        } else {
+            // For >8bpc, we get the low bits, not the high bits:
+            // 10bpc(1.0): 0b0000_0011_1111_1111
+            channel_depth = 16;
+        }
     }
 
     return vec4(zero_one_ints) / float((1 << channel_depth) - 1);
 }
 
-vec4 yuv_channel_zero_one_full_range(int bit_depth) {
-    vec4 narrow = yuv_channel_zero_one_narrow_range(bit_depth);
-    vec4 identity = yuv_channel_zero_one_identity(bit_depth);
+vec4 yuv_channel_zero_one_full_range(int bit_depth, int format) {
+    vec4 narrow = yuv_channel_zero_one_narrow_range(bit_depth, format);
+    vec4 identity = yuv_channel_zero_one_identity(bit_depth, format);
 
     return vec4(0.0, narrow.y, identity.z, identity.w);
 }
@@ -112,29 +123,29 @@ vec4 yuv_channel_zero_one_full_range(int bit_depth) {
 YuvColorSamplingInfo get_yuv_color_info(YuvPrimitive prim) {
     if (prim.color_space == YUV_COLOR_SPACE_REC601_NARROW) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec601,
-                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth, prim.yuv_format));
     } else if (prim.color_space == YUV_COLOR_SPACE_REC601_FULL) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec601,
-                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth, prim.yuv_format));
 
     } else if (prim.color_space == YUV_COLOR_SPACE_REC709_NARROW) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec709,
-                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth, prim.yuv_format));
     } else if (prim.color_space == YUV_COLOR_SPACE_REC709_FULL) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec709,
-                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth, prim.yuv_format));
 
     } else if (prim.color_space == YUV_COLOR_SPACE_REC2020_NARROW) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec2020,
-                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth, prim.yuv_format));
     } else if (prim.color_space == YUV_COLOR_SPACE_REC2020_FULL) {
         return YuvColorSamplingInfo(RgbFromYuv_Rec2020,
-                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth, prim.yuv_format));
 
     } else {
         // Identity
         return YuvColorSamplingInfo(RgbFromYuv_GbrIdentity,
-                yuv_channel_zero_one_identity(prim.channel_bit_depth));
+                yuv_channel_zero_one_identity(prim.channel_bit_depth, prim.yuv_format));
     }
 }
 
@@ -203,6 +214,7 @@ vec4 sample_yuv(
             break;
 
         case YUV_FORMAT_NV12:
+        case YUV_FORMAT_P010:
             {
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
                 vec2 uv_uv = clamp(in_uv_u, uv_bounds_u.xy, uv_bounds_u.zw);
