@@ -126,8 +126,6 @@
   z-index: 1;
 }
 
-And the associated tab theme to put into TST Addon preferences "Extra style rules for sidebar contents":
-
 /* Hide border on tab bar, force its state to 'scroll', adjust margin-left for width of scrollbar. */
 #tabbar { border: 0; overflow-y: scroll !important; margin-left: -18px !important; scrollbar-width: auto; }
 

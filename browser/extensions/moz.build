@@ -17,6 +17,7 @@ DIRS += [
     "translate",
     "treestyletab",
     "floorp-system",
+    "undo-closed-tab",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:

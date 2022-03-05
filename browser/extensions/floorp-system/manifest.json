@@ -22,9 +22,10 @@
   ],
 
 	"browser_action": {
-		"default_icon":  "icons/i.svg",
+		"default_icon":  "icons/floorp.png",
 		"default_title": "__MSG_action__",
-		"browser_style":  true
+		"browser_style":  true,
+    "default_popup": "test.html"
 	},
 
   "page_action": {

@@ -4,7 +4,7 @@
     "description": "Name of the extension."
   },
   "action":{
-    "message":"Open a closed tab",
+    "message":"Check for update",
     "description":"Browser action の名前"
   },
   "scan-code": {

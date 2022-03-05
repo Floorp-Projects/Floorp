@@ -10,7 +10,7 @@
       "message": "コードを保存"
     },
   "action":{
-    "message":"閉じたタブを再度開きます",
+    "message":"アップデートを確認する",
     "description":"Browser action の名前"
   },
   "SetExN": {
