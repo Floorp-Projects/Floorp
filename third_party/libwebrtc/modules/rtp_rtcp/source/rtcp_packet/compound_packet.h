@@ -28,13 +28,6 @@ class CompoundPacket : public RtcpPacket {
 
   void Append(std::unique_ptr<RtcpPacket> packet);
 
-  // Fallback for call-sites that have not yet migrated to passing a unique_ptr.
-  // TODO(bugs.webrtc.org/11925): Remove when all usage is gone.
-  template <typename T>
-  void Append(T* packet) {
-    Append(std::make_unique<T>(*packet));
-  }
-
   // Size of this packet in bytes (i.e. total size of nested packets).
   size_t BlockLength() const override;
   // Returns true if all calls to Create succeeded.
