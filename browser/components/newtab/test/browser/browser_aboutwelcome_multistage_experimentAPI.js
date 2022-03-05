@@ -215,6 +215,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       id: "AW_STEP3",
       order: 2,
       content: {
+        logo: {},
         title: "Step 3",
         primary_button: {
           label: "Next",
