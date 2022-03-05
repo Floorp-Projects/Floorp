@@ -461,38 +461,44 @@ TEST(FrameEncodeMetadataWriterTest, CopiesPacketInfos) {
 
 TEST(FrameEncodeMetadataWriterTest, DoesNotRewriteBitstreamWithoutCodecInfo) {
   uint8_t buffer[] = {1, 2, 3};
-  EncodedImage image(buffer, sizeof(buffer), sizeof(buffer));
+  auto image_buffer = EncodedImageBuffer::Create(buffer, sizeof(buffer));
+  EncodedImage image;
+  image.SetEncodedData(image_buffer);
 
   FakeEncodedImageCallback sink;
   FrameEncodeMetadataWriter encode_metadata_writer(&sink);
   encode_metadata_writer.UpdateBitstream(nullptr, &image);
-  EXPECT_EQ(image.data(), buffer);
+  EXPECT_EQ(image.GetEncodedData(), image_buffer);
   EXPECT_EQ(image.size(), sizeof(buffer));
 }
 
 TEST(FrameEncodeMetadataWriterTest, DoesNotRewriteVp8Bitstream) {
   uint8_t buffer[] = {1, 2, 3};
-  EncodedImage image(buffer, sizeof(buffer), sizeof(buffer));
+  auto image_buffer = EncodedImageBuffer::Create(buffer, sizeof(buffer));
+  EncodedImage image;
+  image.SetEncodedData(image_buffer);
   CodecSpecificInfo codec_specific_info;
   codec_specific_info.codecType = kVideoCodecVP8;
 
   FakeEncodedImageCallback sink;
   FrameEncodeMetadataWriter encode_metadata_writer(&sink);
   encode_metadata_writer.UpdateBitstream(&codec_specific_info, &image);
-  EXPECT_EQ(image.data(), buffer);
+  EXPECT_EQ(image.GetEncodedData(), image_buffer);
   EXPECT_EQ(image.size(), sizeof(buffer));
 }
 
 TEST(FrameEncodeMetadataWriterTest, RewritesH264BitstreamWithNonOptimalSps) {
-  uint8_t original_sps[] = {0,    0,    0,    1,    H264::NaluType::kSps,
-                            0x00, 0x00, 0x03, 0x03, 0xF4,
-                            0x05, 0x03, 0xC7, 0xC0};
+  const uint8_t kOriginalSps[] = {0,    0,    0,    1,    H264::NaluType::kSps,
+                                  0x00, 0x00, 0x03, 0x03, 0xF4,
+                                  0x05, 0x03, 0xC7, 0xC0};
   const uint8_t kRewrittenSps[] = {0,    0,    0,    1,    H264::NaluType::kSps,
                                    0x00, 0x00, 0x03, 0x03, 0xF4,
                                    0x05, 0x03, 0xC7, 0xE0, 0x1B,
                                    0x41, 0x10, 0x8D, 0x00};
 
-  EncodedImage image(original_sps, sizeof(original_sps), sizeof(original_sps));
+  EncodedImage image;
+  image.SetEncodedData(
+      EncodedImageBuffer::Create(kOriginalSps, sizeof(kOriginalSps)));
   image._frameType = VideoFrameType::kVideoFrameKey;
 
   CodecSpecificInfo codec_specific_info;
