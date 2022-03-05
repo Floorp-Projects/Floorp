@@ -1537,7 +1537,6 @@ int VP9EncoderImpl::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
     encoded_image_._frameType = VideoFrameType::kVideoFrameKey;
     force_key_frame_ = false;
   }
-  RTC_DCHECK_LE(encoded_image_.size(), encoded_image_.capacity());
 
   codec_specific_ = {};
   absl::optional<int> spatial_index;
