@@ -46,6 +46,13 @@ class EmulatedRoute;
 
 struct EmulatedEndpointConfig {
   enum class IpAddressFamily { kIpv4, kIpv6 };
+  enum class StatsGatheringMode {
+    // Gather main network stats counters.
+    kDefault,
+    // kDefault + also gather per packet statistics. In this mode more memory
+    // will be used.
+    kDebug
+  };
 
   IpAddressFamily generated_ip_family = IpAddressFamily::kIpv4;
   // If specified will be used as IP address for endpoint node. Must be unique
@@ -56,6 +63,7 @@ struct EmulatedEndpointConfig {
   bool start_as_enabled = true;
   // Network type which will be used to represent endpoint to WebRTC.
   rtc::AdapterType type = rtc::AdapterType::ADAPTER_TYPE_UNKNOWN;
+  StatsGatheringMode stats_gathering_mode = StatsGatheringMode::kDefault;
 };
 
 
