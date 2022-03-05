@@ -36,6 +36,11 @@ using NSAppearanceName = NSString*;
 - (BOOL)launchAndReturnError:(NSError**)error NS_AVAILABLE_MAC(10_13);
 @end
 
+enum : OSType {
+  kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+  kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+};
+
 #endif
 
 #if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14

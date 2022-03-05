@@ -79,7 +79,7 @@ void brush_vs(
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
         write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, f, TEX_SIZE_YUV(sColor2), vUv_V, vUvBounds_V);
-    } else if (vFormat.x == YUV_FORMAT_NV12) {
+    } else if (vFormat.x == YUV_FORMAT_NV12 || vFormat.x == YUV_FORMAT_P010) {
         ImageSource res_y = fetch_image_source(prim_user_data.x);
         ImageSource res_u = fetch_image_source(prim_user_data.y);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
@@ -125,7 +125,7 @@ void swgl_drawSpanRGBA8() {
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
                                     vRescaleFactor);
-    } else if (vFormat.x == YUV_FORMAT_NV12) {
+    } else if (vFormat.x == YUV_FORMAT_NV12 || vFormat.x == YUV_FORMAT_P010) {
         swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
                                     sColor1, vUv_U, vUvBounds_U,
                                     vYcbcrBias,

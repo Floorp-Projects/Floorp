@@ -416,6 +416,7 @@ nsWindow::nsWindow()
       mPopupUseMoveToRect(false),
       mPreferredPopupRectFlushed(false),
       mWaitingForMoveToRectCallback(false),
+      mUpdatedByMoveToRectCallback(false),
       mConfiguredClearColor(false),
       mGotNonBlankPaint(false) {
   mWindowType = eWindowType_child;
@@ -1815,7 +1816,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         popup, popup->mPopupMatchesLayout, popup->mPopupAnchored,
         popup->mWaylandPopupPrev->mWaylandToplevel == nullptr, useMoveToRect);
 
-    popup->mPopupUseMoveToRect = useMoveToRect;
+    popup->mPopupUseMoveToRect = useMoveToRect && !mUpdatedByMoveToRectCallback;
     popup->WaylandPopupMove();
     popup->mPopupChanged = false;
     popup = popup->mWaylandPopupNext;
@@ -1898,31 +1899,13 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
       popupFrame->SetPopupPosition(nullptr, true, false);
     }
   }
-
   if (needsPositionUpdate) {
-    // See Bug 1735095
-    // Font scale causes rounding errors which we can't handle by move-to-rect.
-    // The font scale should not be used, but let's handle it somehow to
-    // avoid endless move calls.
-    if (StaticPrefs::layout_css_devPixelsPerPx() > 0 ||
-        gfxPlatformGtk::GetFontScaleFactor() != 1) {
-      bool roundingError = (abs(newBounds.x - mBounds.x) < 2 &&
-                            abs(newBounds.y - mBounds.y) < 2);
-      if (roundingError) {
-        // Keep the window where it is.
-        GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
-        LOG("  apply rounding error workaround, move to %d, %d", topLeft.x,
-            topLeft.y);
-        gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
-        return;
-      }
-    }
-
     LOG("  needPositionUpdate, new bounds [%d, %d]", newBounds.x, newBounds.y);
     mBounds.x = newBounds.x;
     mBounds.y = newBounds.y;
     NotifyWindowMoved(mBounds.x, mBounds.y);
   }
+  mUpdatedByMoveToRectCallback = true;
 }
 
 static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
@@ -2101,6 +2084,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
     }
   }
 
+  auto clearUpdateFlag =
+      MakeScopeExit([&] { mUpdatedByMoveToRectCallback = false; });
+
   if (!aMove && WaylandPopupFitsParentWindow(rect)) {
     // Popup position has not been changed and its position/size fits
     // parent window so no need to reposition the window.
@@ -2247,6 +2233,8 @@ void nsWindow::WaylandPopupMove() {
   if (mPopupUseMoveToRect) {
     mPopupUseMoveToRect = sGdkWindowMoveToRect && gdkWindow && popupFrame;
   }
+
+  LOG(" popup use move to rect %d\n", mPopupUseMoveToRect);
 
   if (!mPopupUseMoveToRect) {
     if (mNeedsShow && mPopupType != ePopupTypeTooltip) {
@@ -5948,6 +5936,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
       LOG("  moving to %d x %d", rect.x, rect.y);
       gtk_window_move(GTK_WINDOW(mShell), rect.x, rect.y);
     }
+    mUpdatedByMoveToRectCallback = false;
     return;
   }
 
@@ -8093,7 +8082,8 @@ static nsresult initialize_prefs(void) {
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
   gTransparentWindows =
       Preferences::GetBool("widget.transparent-windows", true);
-  gUseMoveToRect = Preferences::GetBool("widget.use-move-to-rect", true);
+  gUseMoveToRect =
+      Preferences::GetBool("widget.wayland.use-move-to-rect", true);
 
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
