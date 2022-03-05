@@ -8093,7 +8093,8 @@ static nsresult initialize_prefs(void) {
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
   gTransparentWindows =
       Preferences::GetBool("widget.transparent-windows", true);
-  gUseMoveToRect = Preferences::GetBool("widget.use-move-to-rect", true);
+  gUseMoveToRect =
+      Preferences::GetBool("widget.wayland.use-move-to-rect", true);
 
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
