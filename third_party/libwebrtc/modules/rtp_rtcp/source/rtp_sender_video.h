@@ -190,6 +190,9 @@ class RTPSenderVideo {
   // Flag indicating if we need to propagate |current_playout_delay_| in order
   // to guarantee it gets delivered.
   bool playout_delay_pending_;
+  // Set by the field trial WebRTC-ForceSendPlayoutDelay to override the playout
+  // delay of outgoing video frames.
+  const absl::optional<VideoPlayoutDelay> forced_playout_delay_;
 
   // Should never be held when calling out of this class.
   Mutex mutex_;
