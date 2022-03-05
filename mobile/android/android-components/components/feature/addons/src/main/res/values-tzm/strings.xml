@@ -20,6 +20,8 @@
     <string name="mozac_feature_addons_permissions_downloads_open_description">Rẓem afaylu ittwagmen ɣer wallal-nnek</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Imgayen</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">Tizmilin</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Tisɣal</string>
     <!-- This is button that remove (uninstall an add-on). -->
