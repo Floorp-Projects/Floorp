@@ -211,9 +211,9 @@ class TextDrawTarget : public DrawTarget {
         wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
     glyphOptions.flags = mWRGlyphFlags;
 
-    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont, color, *mSc,
-                                     mBoundsRect, ClipRect(), mBackfaceVisible,
-                                     &glyphOptions);
+    mManager->WrBridge()->PushGlyphs(mBuilder, *mResources, glyphs, aFont,
+                                     color, *mSc, mBoundsRect, ClipRect(),
+                                     mBackfaceVisible, &glyphOptions);
   }
 
   void PushClipRect(const Rect& aRect) override {
