@@ -580,6 +580,13 @@ child:
      * to pull data from content processes.
      */
     async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+    /**
+    * This method is used to notifty a child process to start
+    * processing module loading events in UntrustedModulesProcessor.
+    * This should be called when the parent process has gone idle.
+    */
+    async UnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
     /**
@@ -750,7 +757,8 @@ child:
                                     SystemFontList systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,
                                     uintptr_t sharedUASheetAddress,
-                                    SharedMemoryHandle[] sharedFontListBlocks);
+                                    SharedMemoryHandle[] sharedFontListBlocks,
+                                    bool aIsStartingUp);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();

@@ -138,7 +138,7 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvInit(
 #if defined(XP_WIN)
   if (aCanRecordReleaseTelemetry) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->StartUntrustedModulesProcessor();
+    dllSvc->StartUntrustedModulesProcessor(false);
   }
 #endif  // defined(XP_WIN)
   return IPC_OK();
