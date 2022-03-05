@@ -357,10 +357,6 @@ TEST_F(PeerConnectionJsepTest, SetRemoteOfferDoesNotReuseStoppedTransceiver) {
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
   auto transceivers = callee->pc()->GetTransceivers();
-  ASSERT_EQ(2u, transceivers.size());
-  // The stopped transceiver is removed in SetLocalDescription(answer)
-  ASSERT_TRUE(callee->SetLocalDescription(callee->CreateAnswer()));
-  transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(1u, transceivers.size());
   EXPECT_EQ(caller->pc()->GetTransceivers()[0]->mid(), transceivers[0]->mid());
   EXPECT_FALSE(transceivers[0]->stopped());
@@ -565,9 +561,6 @@ TEST_F(PeerConnectionJsepTest,
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
   auto transceivers = callee->pc()->GetTransceivers();
-  EXPECT_EQ(1u, transceivers.size());
-  ASSERT_TRUE(callee->SetLocalDescription(callee->CreateAnswer()));
-  transceivers = callee->pc()->GetTransceivers();
   EXPECT_EQ(0u, transceivers.size());
 }
 
@@ -603,15 +596,15 @@ TEST_F(PeerConnectionJsepTest,
   auto callee = CreatePeerConnection();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  std::string first_mid = *first_transceiver->mid();
   ASSERT_EQ(1u, callee->pc()->GetTransceivers().size());
   callee->pc()->GetTransceivers()[0]->StopInternal();
-  ASSERT_EQ(1u, callee->pc()->GetTransceivers().size());
+  ASSERT_EQ(0u, callee->pc()->GetTransceivers().size());
   ASSERT_TRUE(
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
   EXPECT_TRUE(first_transceiver->stopped());
-  // First transceivers are dissociated on caller side.
-  ASSERT_EQ(absl::nullopt, first_transceiver->mid());
+  // First transceivers aren't dissociated yet on caller side.
+  ASSERT_NE(absl::nullopt, first_transceiver->mid());
+  std::string first_mid = *first_transceiver->mid();
   // They are disassociated on callee side.
   ASSERT_EQ(0u, callee->pc()->GetTransceivers().size());
 

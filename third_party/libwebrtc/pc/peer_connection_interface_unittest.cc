@@ -2671,8 +2671,8 @@ TEST_P(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
     EXPECT_EQ(1u, pc_->local_streams()->count());
     EXPECT_EQ(1u, pc_->remote_streams()->count());
   } else {
-    // Verify that the RtpTransceivers are still returned.
-    EXPECT_EQ(2u, pc_->GetTransceivers().size());
+    // Verify that the RtpTransceivers are no longer returned.
+    EXPECT_EQ(0u, pc_->GetTransceivers().size());
   }
 
   auto audio_receiver = GetFirstReceiverOfType(cricket::MEDIA_TYPE_AUDIO);
