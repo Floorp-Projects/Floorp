@@ -41,6 +41,10 @@
   padding: 0 6px;
 }
 
+#viewGroup:focus-visible > radio[focused="true"] > .radio-label-box {
+  outline: var(--default-focusring);
+}
+
 #generalTab {
   -moz-image-region: rect(0px, 32px, 32px, 0px)
 }
