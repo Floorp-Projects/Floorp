@@ -19,22 +19,34 @@ namespace webrtc {
 
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     ApmDataDumper* apm_data_dumper)
-    : level_estimator_(
-          AudioProcessing::Config::GainController2::LevelEstimator::kRms),
-      use_saturation_protector_(true),
-      saturation_protector_(apm_data_dumper),
-      apm_data_dumper_(apm_data_dumper) {}
+    : AdaptiveModeLevelEstimator(
+          apm_data_dumper,
+          AudioProcessing::Config::GainController2::LevelEstimator::kRms,
+          /*use_saturation_protector=*/true,
+          GetInitialSaturationMarginDb(),
+          GetExtraSaturationMarginOffsetDb()) {}
 
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     ApmDataDumper* apm_data_dumper,
     AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
     bool use_saturation_protector,
     float extra_saturation_margin_db)
+    : AdaptiveModeLevelEstimator(apm_data_dumper,
+                                 level_estimator,
+                                 use_saturation_protector,
+                                 GetInitialSaturationMarginDb(),
+                                 extra_saturation_margin_db) {}
+
+AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
+    ApmDataDumper* apm_data_dumper,
+    AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
+    bool use_saturation_protector,
+    float initial_saturation_margin_db,
+    float extra_saturation_margin_db)
     : level_estimator_(level_estimator),
       use_saturation_protector_(use_saturation_protector),
-      saturation_protector_(apm_data_dumper,
-                            GetInitialSaturationMarginDb(),
-                            extra_saturation_margin_db),
+      extra_saturation_margin_db_(extra_saturation_margin_db),
+      saturation_protector_(apm_data_dumper, initial_saturation_margin_db),
       apm_data_dumper_(apm_data_dumper) {}
 
 void AdaptiveModeLevelEstimator::UpdateEstimation(
@@ -88,7 +100,8 @@ void AdaptiveModeLevelEstimator::UpdateEstimation(
 float AdaptiveModeLevelEstimator::LatestLevelEstimate() const {
   return rtc::SafeClamp<float>(
       last_estimate_with_offset_dbfs_ +
-          (use_saturation_protector_ ? saturation_protector_.GetMarginDb()
+          (use_saturation_protector_ ? (saturation_protector_.margin_db() +
+                                        extra_saturation_margin_db_)
                                      : 0.f),
       -90.f, 30.f);
 }

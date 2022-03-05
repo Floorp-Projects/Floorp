@@ -13,7 +13,7 @@
 
 #include <stddef.h>
 
-#include "modules/audio_processing/agc2/agc2_common.h"  // kFullBufferSizeMs...
+#include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/agc2/saturation_protector.h"
 #include "modules/audio_processing/agc2/vad_with_level.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -24,10 +24,21 @@ class ApmDataDumper;
 class AdaptiveModeLevelEstimator {
  public:
   explicit AdaptiveModeLevelEstimator(ApmDataDumper* apm_data_dumper);
+  AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
+  AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
+      delete;
+  // Deprecated ctor.
   AdaptiveModeLevelEstimator(
       ApmDataDumper* apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
       bool use_saturation_protector,
+      float extra_saturation_margin_db);
+  // TODO(crbug.com/webrtc/7494): Replace ctor above with the one below.
+  AdaptiveModeLevelEstimator(
+      ApmDataDumper* apm_data_dumper,
+      AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
+      bool use_saturation_protector,
+      float initial_saturation_margin_db,
       float extra_saturation_margin_db);
   void UpdateEstimation(const VadWithLevel::LevelAndProbability& vad_data);
   float LatestLevelEstimate() const;
@@ -42,6 +53,7 @@ class AdaptiveModeLevelEstimator {
   const AudioProcessing::Config::GainController2::LevelEstimator
       level_estimator_;
   const bool use_saturation_protector_;
+  const float extra_saturation_margin_db_;
   size_t buffer_size_ms_ = 0;
   float last_estimate_with_offset_dbfs_ = kInitialSpeechLevelEstimateDbfs;
   float estimate_numerator_ = 0.f;
