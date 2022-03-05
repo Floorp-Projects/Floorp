@@ -450,6 +450,9 @@ class PeerConnection : public PeerConnectionInternal,
       std::unique_ptr<SessionDescriptionInterface> desc,
       rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer);
 
+  // Helper function to remove stopped transceivers.
+  void RemoveStoppedTransceivers() RTC_RUN_ON(signaling_thread());
+
   void CreateAudioReceiver(MediaStreamInterface* stream,
                            const RtpSenderInfo& remote_sender_info)
       RTC_RUN_ON(signaling_thread());
