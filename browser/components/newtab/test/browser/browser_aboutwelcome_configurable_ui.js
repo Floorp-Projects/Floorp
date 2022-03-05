@@ -72,16 +72,16 @@ add_task(async function test_aboutwelcome_with_customized_logo() {
   const TEST_LOGO_URL = "chrome://branding/content/icon64.png";
   const TEST_LOGO_CONTENT = makeTestContent("TEST_LOGO_STEP", {
     logo: {
-      size: "50px",
+      height: "50px",
       imageURL: TEST_LOGO_URL,
     },
   });
   const TEST_LOGO_JSON = JSON.stringify([TEST_LOGO_CONTENT]);
   let browser = await openAboutWelcome(TEST_LOGO_JSON);
-  const LOGO_SIZE = TEST_LOGO_CONTENT.content.logo.size;
-  const EXPECTED_LOGO_STYLE = `background: rgba(0, 0, 0, 0) url("${TEST_LOGO_URL}") no-repeat scroll center top / ${LOGO_SIZE}; height: ${LOGO_SIZE}; padding: ${LOGO_SIZE} 0px 10px;`;
+  const LOGO_HEIGHT = TEST_LOGO_CONTENT.content.logo.height;
+  const EXPECTED_LOGO_STYLE = `background: rgba(0, 0, 0, 0) url("${TEST_LOGO_URL}") no-repeat scroll center center / contain; height: ${LOGO_HEIGHT}`;
   const DEFAULT_LOGO_STYLE =
-    'background: rgba(0, 0, 0, 0) url("chrome://branding/content/about-logo.svg") no-repeat scroll center top / 80px; height: 80px; padding: 80px 0px 10px;';
+    'background: rgba(0, 0, 0, 0) url("chrome://branding/content/about-logo.svg")';
 
   await test_screen_content(
     browser,
