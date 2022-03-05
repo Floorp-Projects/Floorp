@@ -61,16 +61,13 @@ static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
   params.isHorizontal = aIsHorizontal;
   params.isOnDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
                               nsNativeTheme::IsDarkBackground(aFrame);
-  // Don't use custom scrollbars for overlay scrollbars since they are
-  // generally good enough for use cases of custom scrollbars.
-  if (!params.isOverlay) {
-    const nsStyleUI* ui = aStyle.StyleUI();
-    if (ui->HasCustomScrollbars()) {
-      const auto& colors = ui->mScrollbarColor.AsColors();
-      params.isCustom = true;
-      params.trackColor = colors.track.CalcColor(aStyle);
-      params.faceColor = colors.thumb.CalcColor(aStyle);
-    }
+
+  const nsStyleUI* ui = aStyle.StyleUI();
+  if (ui->HasCustomScrollbars()) {
+    const auto& colors = ui->mScrollbarColor.AsColors();
+    params.isCustom = true;
+    params.trackColor = colors.track.CalcColor(aStyle);
+    params.faceColor = colors.thumb.CalcColor(aStyle);
   }
 
   return params;
