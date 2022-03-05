@@ -109,8 +109,8 @@ checkbox:not([native]):focus-visible > .checkbox-check {
 
   /* ..... focused state ..... */
 
-  checkbox[native]:-moz-focusring > .checkbox-label-box {
-    outline: var(--default-focusring);
+  checkbox[native]:focus-visible > .checkbox-label-box {
+    outline: var(--focus-outline);
   }
 
   /* ..... disabled state ..... */
@@ -190,10 +190,10 @@ checkbox:not([native]):focus-visible > .checkbox-check {
 
   /* ..... focused state ..... */
 
-  checkbox[native]:-moz-focusring > .checkbox-label-box {
+  checkbox[native]:focus-visible > .checkbox-label-box {
     /* Native theming should take care of this but it appears to be broken with
        some Gtk themes. Bug 1312169. */
-    outline: var(--default-focusring);
+    outline: var(--focus-outline);
   }
 
   /* ..... disabled state ..... */
