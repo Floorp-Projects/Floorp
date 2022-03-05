@@ -328,7 +328,7 @@ def check(
     command_context.activate_virtualenv()
     command_context.log_manager.enable_unstructured()
 
-    rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+    rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
     if rc != 0:
         return rc
 
@@ -691,7 +691,7 @@ def autotest(
         # Ensure that clang-tidy is present
         rc = not os.path.exists(clang_paths._clang_tidy_path)
     else:
-        rc, clang_paths = _get_clang_tools(
+        rc, clang_paths = get_clang_tools(
             command_context, force=force_download, verbose=verbose
         )
 
@@ -1030,7 +1030,7 @@ def install(
     verbose=False,
 ):
     command_context._set_log_level(verbose)
-    rc, _ = _get_clang_tools(
+    rc, _ = get_clang_tools(
         command_context,
         force=force,
         skip_cache=skip_cache,
@@ -1047,7 +1047,7 @@ def install(
 )
 def clear_cache(command_context, verbose=False):
     command_context._set_log_level(verbose)
-    rc, _ = _get_clang_tools(
+    rc, _ = get_clang_tools(
         command_context,
         force=True,
         download_if_needed=True,
@@ -1070,7 +1070,7 @@ def clear_cache(command_context, verbose=False):
 )
 def print_checks(command_context, verbose=False):
     command_context._set_log_level(verbose)
-    rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+    rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
 
     if rc != 0:
         return rc
@@ -1247,7 +1247,7 @@ def clang_format(
         if not _is_version_eligible(command_context, clang_paths):
             return 1
     else:
-        rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+        rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
         if rc != 0:
             return rc
 
@@ -1561,7 +1561,7 @@ def _do_clang_tools_exist(clang_paths):
     )
 
 
-def _get_clang_tools(
+def get_clang_tools(
     command_context,
     force=False,
     skip_cache=False,
@@ -1586,7 +1586,7 @@ def _get_clang_tools(
         # The directory exists, perhaps it's corrupted?  Delete it
         # and start from scratch.
         shutil.rmtree(clang_paths._clang_tools_path)
-        return _get_clang_tools(
+        return get_clang_tools(
             command_context,
             force=force,
             skip_cache=skip_cache,

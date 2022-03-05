@@ -353,7 +353,7 @@ BOOL CALLBACK UntrustedModulesFixture::InitialModuleLoadOnce(PINIT_ONCE, void*,
   }
 
   RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->StartUntrustedModulesProcessor();
+  dllSvc->StartUntrustedModulesProcessor(true);
 
   for (int i = 0; i < kLoadCountAfterDllServices; ++i) {
     for (const auto& mod : kTestModules) {

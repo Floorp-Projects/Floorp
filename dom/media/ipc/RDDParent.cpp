@@ -124,7 +124,8 @@ void CGSShutdownServerConnections();
 
 mozilla::ipc::IPCResult RDDParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd,
-    const bool& aCanRecordReleaseTelemetry) {
+    const bool& aCanRecordReleaseTelemetry,
+    const bool& aIsReadyForBackgroundProcessing) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -151,7 +152,7 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 #if defined(XP_WIN)
   if (aCanRecordReleaseTelemetry) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->StartUntrustedModulesProcessor();
+    dllSvc->StartUntrustedModulesProcessor(aIsReadyForBackgroundProcessing);
   }
 #endif  // defined(XP_WIN)
   return IPC_OK();
@@ -245,6 +246,14 @@ mozilla::ipc::IPCResult RDDParent::RecvGetUntrustedModulesData(
         aResolver(std::move(aData));
       },
       [aResolver](nsresult aReason) { aResolver(Nothing()); });
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDParent::RecvUnblockUntrustedModulesThread() {
+  if (nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService()) {
+    obs->NotifyObservers(nullptr, "unblock-untrusted-modules-thread", nullptr);
+  }
   return IPC_OK();
 }
 #endif  // defined(XP_WIN)

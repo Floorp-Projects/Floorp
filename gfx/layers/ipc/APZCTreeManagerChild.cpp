@@ -12,6 +12,9 @@
 #include "mozilla/layers/APZInputBridgeChild.h"     // for APZInputBridgeChild
 #include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
 #include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/jni/Utils.h"  // for DispatchToGeckoPriorityQueue
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -149,7 +152,21 @@ mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
   dom::BrowserParent* tab =
       dom::BrowserParent::GetBrowserParentFromLayersId(aGuid.mLayersId);
   if (tab) {
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android, touch events are dispatched from the UI thread to the main
+    // thread using the Android priority queue. It is possible that this tap has
+    // made it to the GPU process and back before they have been processed. We
+    // must therefore dispatch this message to the same queue, otherwise the tab
+    // may receive the tap event before the touch events that synthesized it.
+    mozilla::jni::DispatchToGeckoPriorityQueue(
+        NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
+                          ScrollableLayerGuid, uint64_t>(
+            "dom::BrowserParent::SendHandleTap", tab,
+            &dom::BrowserParent::SendHandleTap, aType, aPoint, aModifiers,
+            aGuid, aInputBlockId));
+#else
     tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
+#endif
   }
   return IPC_OK();
 }

@@ -11,9 +11,13 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Likely.h"
 #include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/net/SocketProcessParent.h"
+#include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
+#include "mozilla/RDDProcessManager.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -106,12 +110,14 @@ bool UntrustedModulesProcessor::IsSupportedProcessType() {
 }
 
 /* static */
-RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create() {
+RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create(
+    bool aIsReadyForBackgroundProcessing) {
   if (!IsSupportedProcessType()) {
     return nullptr;
   }
 
-  RefPtr<UntrustedModulesProcessor> result(new UntrustedModulesProcessor());
+  RefPtr<UntrustedModulesProcessor> result(
+      new UntrustedModulesProcessor(aIsReadyForBackgroundProcessing));
   return result.forget();
 }
 
@@ -119,14 +125,16 @@ NS_IMPL_ISUPPORTS(UntrustedModulesProcessor, nsIObserver)
 
 static const uint32_t kThreadTimeoutMS = 120000;  // 2 minutes
 
-UntrustedModulesProcessor::UntrustedModulesProcessor()
+UntrustedModulesProcessor::UntrustedModulesProcessor(
+    bool aIsReadyForBackgroundProcessing)
     : mThread(new LazyIdleThread(kThreadTimeoutMS, "Untrusted Modules"_ns,
                                  LazyIdleThread::ManualShutdown)),
       mUnprocessedMutex(
           "mozilla::UntrustedModulesProcessor::mUnprocessedMutex"),
       mModuleCacheMutex(
           "mozilla::UntrustedModulesProcessor::mModuleCacheMutex"),
-      mAllowProcessing(true) {
+      mStatus(aIsReadyForBackgroundProcessing ? Status::Allowed
+                                              : Status::StartingUp) {
   AddObservers();
 }
 
@@ -134,9 +142,14 @@ void UntrustedModulesProcessor::AddObservers() {
   nsCOMPtr<nsIObserverService> obsServ(services::GetObserverService());
   obsServ->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
   obsServ->AddObserver(this, "xpcom-shutdown-threads", false);
+  obsServ->AddObserver(this, "unblock-untrusted-modules-thread", false);
   if (XRE_IsContentProcess()) {
     obsServ->AddObserver(this, "content-child-will-shutdown", false);
   }
+}
+
+bool UntrustedModulesProcessor::IsReadyForBackgroundProcessing() const {
+  return mStatus == Status::Allowed;
 }
 
 void UntrustedModulesProcessor::Disable() {
@@ -144,7 +157,7 @@ void UntrustedModulesProcessor::Disable() {
   BackgroundPriorityRegion::Clear(mThread);
 
   // No more background processing allowed beyond this point
-  if (!mAllowProcessing.exchange(false)) {
+  if (mStatus.exchange(Status::ShuttingDown) != Status::Allowed) {
     return;
   }
 
@@ -171,6 +184,37 @@ NS_IMETHODIMP UntrustedModulesProcessor::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
+  if (!strcmp(aTopic, "unblock-untrusted-modules-thread")) {
+    nsCOMPtr<nsIObserverService> obs(services::GetObserverService());
+    obs->RemoveObserver(this, "unblock-untrusted-modules-thread");
+
+    mStatus.compareExchange(Status::StartingUp, Status::Allowed);
+
+    if (!IsReadyForBackgroundProcessing()) {
+      // If we're shutting down, stop here.
+      return NS_OK;
+    }
+
+    if (XRE_IsParentProcess()) {
+      // Propagate notification to child processes
+      nsTArray<dom::ContentParent*> contentProcesses;
+      dom::ContentParent::GetAll(contentProcesses);
+      for (auto* proc : contentProcesses) {
+        Unused << proc->SendUnblockUntrustedModulesThread();
+      }
+      if (auto* proc = net::SocketProcessParent::GetSingleton()) {
+        Unused << proc->SendUnblockUntrustedModulesThread();
+      }
+      if (auto* rddMgr = RDDProcessManager::Get()) {
+        if (auto* proc = rddMgr->GetRDDChild()) {
+          Unused << proc->SendUnblockUntrustedModulesThread();
+        }
+      }
+    }
+
+    return NS_OK;
+  }
+
   MOZ_ASSERT_UNREACHABLE("Not reachable");
 
   return NS_OK;
@@ -180,6 +224,7 @@ void UntrustedModulesProcessor::RemoveObservers() {
   nsCOMPtr<nsIObserverService> obsServ(services::GetObserverService());
   obsServ->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
   obsServ->RemoveObserver(this, "xpcom-shutdown-threads");
+  obsServ->RemoveObserver(this, "unblock-untrusted-modules-thread");
   if (XRE_IsContentProcess()) {
     obsServ->RemoveObserver(this, "content-child-will-shutdown");
   }
@@ -204,7 +249,7 @@ void UntrustedModulesProcessor::ScheduleNonEmptyQueueProcessing(
     return;
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -241,7 +286,7 @@ void UntrustedModulesProcessor::CancelScheduledProcessing(
 void UntrustedModulesProcessor::DispatchBackgroundProcessing() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -254,7 +299,7 @@ void UntrustedModulesProcessor::DispatchBackgroundProcessing() {
 
 void UntrustedModulesProcessor::Enqueue(
     glue::EnhancedModuleLoadInfo&& aModLoadInfo) {
-  if (!mAllowProcessing) {
+  if (mStatus == Status::ShuttingDown) {
     return;
   }
 
@@ -272,7 +317,7 @@ void UntrustedModulesProcessor::Enqueue(
 }
 
 void UntrustedModulesProcessor::Enqueue(ModuleLoadInfoVec&& aEvents) {
-  if (!mAllowProcessing) {
+  if (mStatus == Status::ShuttingDown) {
     return;
   }
 
@@ -315,7 +360,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrust(
     ModulePaths&& aModPaths, bool aRunAtNormalPriority) {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return ModulesTrustPromise::CreateAndReject(
         NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
   }
@@ -403,7 +448,7 @@ UntrustedModulesProcessor::GetProcessedDataInternalChildProcess() {
                             self = std::move(self), source,
                             whenProcessed = std::move(whenProcessed)]() {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!self->mAllowProcessing) {
+    if (!self->IsReadyForBackgroundProcessing()) {
       // We can't do any more work, just reject all the things
       whenProcessed->Then(
           GetMainThreadSerialEventTarget(), source,
@@ -442,13 +487,13 @@ UntrustedModulesProcessor::GetProcessedDataInternalChildProcess() {
 }
 
 void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueue() {
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
   BackgroundPriorityRegion bgRgn;
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -502,7 +547,7 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
                             self = std::move(self), source,
                             whenProcessed = std::move(whenProcessed)]() {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!self->mAllowProcessing) {
+    if (!self->IsReadyForBackgroundProcessing()) {
       // We can't do any more work, just no-op
       whenProcessed->Then(
           GetMainThreadSerialEventTarget(), source,
@@ -514,7 +559,7 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
     whenProcessed->Then(
         evtTarget, source,
         [self = std::move(self)](Maybe<ModulesMapResultWithLoads>&& aResult) {
-          if (aResult.isNothing() || !self->mAllowProcessing) {
+          if (aResult.isNothing() || !self->IsReadyForBackgroundProcessing()) {
             // Nothing to do
             return;
           }
@@ -565,9 +610,9 @@ UntrustedModulesProcessor::ExtractLoadingEventsToProcess(size_t aMaxLength) {
   return loadsToProcess;
 }
 
-// This function contains multiple |mAllowProcessing| checks so that we can
-// quickly bail out at the first sign of shutdown. This may be important when
-// the current thread is running under background priority.
+// This function contains multiple IsReadyForBackgroundProcessing() checks so
+// that we can quickly bail out at the first sign of shutdown. This may be
+// important when the current thread is running under background priority.
 void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   AssertRunningOnLazyIdleThread();
   if (!XRE_IsParentProcess()) {
@@ -577,7 +622,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
 
   LoadsVec loadsToProcess =
       ExtractLoadingEventsToProcess(UntrustedModulesData::kMaxEvents);
-  if (!mAllowProcessing || loadsToProcess.empty()) {
+  if (!IsReadyForBackgroundProcessing() || loadsToProcess.empty()) {
     return;
   }
 
@@ -595,7 +640,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   uint32_t trustTestFailures = 0;
 
   for (glue::EnhancedModuleLoadInfo& entry : loadsToProcess) {
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return;
     }
 
@@ -608,7 +653,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
       continue;
     }
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return;
     }
 
@@ -623,7 +668,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
       continue;
     }
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return;
     }
 
@@ -639,14 +684,14 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     mProcessedModuleLoads.mModules.LookupOrInsert(
         event.mModule->mResolvedNtName, event.mModule);
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return;
     }
 
     Telemetry::ProcessedStack processedStack =
         stackProcessor.GetStackAndModules(backtrace);
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return;
     }
 
@@ -661,7 +706,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     return;
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -741,7 +786,7 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
     return GetModulesTrustPromise::CreateAndResolve(Nothing(), __func__);
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return GetModulesTrustPromise::CreateAndReject(
         NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
   }
@@ -750,7 +795,7 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
 
   // Build a set of modules to be processed by the parent
   for (glue::EnhancedModuleLoadInfo& entry : loadsToProcess) {
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return GetModulesTrustPromise::CreateAndReject(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     }
@@ -758,7 +803,7 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
     moduleNtPathSet.PutEntry(entry.mNtLoadInfo.mSectionName.AsString());
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return GetModulesTrustPromise::CreateAndReject(
         NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
   }
@@ -771,7 +816,7 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
 
   ModulePaths moduleNtPaths(std::move(moduleNtPathSet));
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return GetModulesTrustPromise::CreateAndReject(
         NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
   }
@@ -787,7 +832,7 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
   RefPtr<GetModulesTrustPromise::Private> p(
       new GetModulesTrustPromise::Private(__func__));
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     p->Reject(NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     return p;
   }
@@ -815,7 +860,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
   MOZ_ASSERT(!XRE_IsParentProcess());
   AssertRunningOnLazyIdleThread();
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -837,7 +882,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
     return;
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -850,7 +895,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
 
   if (!modules.IsEmpty()) {
     for (auto&& item : loads) {
-      if (!mAllowProcessing) {
+      if (!IsReadyForBackgroundProcessing()) {
         return;
       }
 
@@ -860,7 +905,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
         continue;
       }
 
-      if (!mAllowProcessing) {
+      if (!IsReadyForBackgroundProcessing()) {
         return;
       }
 
@@ -868,7 +913,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
           std::move(item.mNtLoadInfo.mBacktrace);
       ProcessedModuleLoadEvent event(std::move(item), std::move(module));
 
-      if (!mAllowProcessing) {
+      if (!IsReadyForBackgroundProcessing()) {
         return;
       }
 
@@ -879,7 +924,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
         continue;
       }
 
-      if (!mAllowProcessing) {
+      if (!IsReadyForBackgroundProcessing()) {
         return;
       }
 
@@ -890,7 +935,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
         continue;
       }
 
-      if (!mAllowProcessing) {
+      if (!IsReadyForBackgroundProcessing()) {
         return;
       }
 
@@ -909,7 +954,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
     return;
   }
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return;
   }
 
@@ -931,7 +976,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
   MOZ_ASSERT(XRE_IsParentProcess());
   AssertRunningOnLazyIdleThread();
 
-  if (!mAllowProcessing) {
+  if (!IsReadyForBackgroundProcessing()) {
     return ModulesTrustPromise::CreateAndReject(
         NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
   }
@@ -965,7 +1010,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
 
   for (auto& resolvedNtPath :
        aModPaths.mModuleNtPaths.as<ModulePaths::VecType>()) {
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return ModulesTrustPromise::CreateAndReject(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     }
@@ -982,7 +1027,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
       continue;
     }
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return ModulesTrustPromise::CreateAndReject(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     }
@@ -993,7 +1038,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
       continue;
     }
 
-    if (!mAllowProcessing) {
+    if (!IsReadyForBackgroundProcessing()) {
       return ModulesTrustPromise::CreateAndReject(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     }

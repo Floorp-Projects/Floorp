@@ -69,6 +69,10 @@ ENameValueFlag RemoteAccessibleWrap::Name(nsString& aName) const {
   return eNameOK;
 }
 
+void RemoteAccessibleWrap::Description(nsString& aDescription) const {
+  Proxy()->Description(aDescription);
+}
+
 void RemoteAccessibleWrap::Value(nsString& aValue) const {
   Proxy()->Value(aValue);
 }

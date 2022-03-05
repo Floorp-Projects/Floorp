@@ -289,6 +289,8 @@ class BasePrincipal : public nsJSPrincipals {
 
   virtual nsresult GetSiteIdentifier(SiteIdentifier& aSite) = 0;
 
+  bool IsLoopbackHost();
+
  protected:
   BasePrincipal(PrincipalKind aKind, const nsACString& aOriginNoSuffix,
                 const OriginAttributes& aOriginAttributes);
