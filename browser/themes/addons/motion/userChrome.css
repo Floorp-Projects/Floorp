@@ -125,6 +125,19 @@
   margin-right: calc((20em - 3.65em) * -1) !important;
   z-index: 1;
 }
+/*Allow vertical tabs to be used on the right side as well.*/
+#sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover {
+  margin-right: 0 !important;
+}
+/*Countermeasure for issue where page width changes when vertical tabs are moved to the right.*/
+#sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] ~ vbox {
+  transition: all 100ms !important;
+}
+#sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover ~ vbox {
+  transition: all 200ms !important;
+  transition-delay: 0.2s !important;
+  margin-right: calc(-20em + 3.65em) !important;
+}
 
 And the associated tab theme to put into TST Addon preferences "Extra style rules for sidebar contents":
 
