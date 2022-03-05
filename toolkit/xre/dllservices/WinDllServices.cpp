@@ -59,10 +59,15 @@ DllServices* DllServices::Get() {
 
 DllServices::~DllServices() { DisableFull(); }
 
-void DllServices::StartUntrustedModulesProcessor() {
+void DllServices::StartUntrustedModulesProcessor(bool aIsStartingUp) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mUntrustedModulesProcessor);
-  mUntrustedModulesProcessor = UntrustedModulesProcessor::Create();
+  mUntrustedModulesProcessor = UntrustedModulesProcessor::Create(aIsStartingUp);
+}
+
+bool DllServices::IsReadyForBackgroundProcessing() const {
+  return mUntrustedModulesProcessor &&
+         mUntrustedModulesProcessor->IsReadyForBackgroundProcessing();
 }
 
 RefPtr<UntrustedModulesPromise> DllServices::GetUntrustedModulesData() {

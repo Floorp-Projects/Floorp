@@ -322,6 +322,7 @@ def run(
     list_linters=False,
     num_procs=None,
     virtualenv_manager=None,
+    setupargs=None,
     **lintargs
 ):
     from mozlint import LintRoller, formatters
@@ -346,7 +347,7 @@ def run(
         )
         return 0
 
-    lint = LintRoller(**lintargs)
+    lint = LintRoller(setupargs=setupargs or {}, **lintargs)
     linters_info = find_linters(lintargs["config_paths"], linters)
 
     result = None

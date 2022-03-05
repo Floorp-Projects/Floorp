@@ -124,7 +124,8 @@ class ContentChild final : public PContentChild,
             bool aIsForBrowser);
 
   void InitXPCOM(XPCOMInitData&& aXPCOMInit,
-                 const mozilla::dom::ipc::StructuredCloneData& aInitialData);
+                 const mozilla::dom::ipc::StructuredCloneData& aInitialData,
+                 bool aIsReadyForBackgroundProcessing);
 
   void InitSharedUASheets(Maybe<base::SharedMemoryHandle>&& aHandle,
                           uintptr_t aAddress);
@@ -538,6 +539,7 @@ class ContentChild final : public PContentChild,
 #if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
@@ -545,7 +547,8 @@ class ContentChild final : public PContentChild,
       FullLookAndFeel&& aLookAndFeelData, SystemFontList&& aFontList,
       Maybe<base::SharedMemoryHandle>&& aSharedUASheetHandle,
       const uintptr_t& aSharedUASheetAddress,
-      nsTArray<base::SharedMemoryHandle>&& aSharedFontListBlocks);
+      nsTArray<base::SharedMemoryHandle>&& aSharedFontListBlocks,
+      const bool& aIsReadyForBackgroundProcessing);
 
   mozilla::ipc::IPCResult RecvProvideAnonymousTemporaryFile(
       const uint64_t& aID, const FileDescOrError& aFD);

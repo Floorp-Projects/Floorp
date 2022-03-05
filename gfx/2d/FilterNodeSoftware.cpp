@@ -618,19 +618,15 @@ already_AddRefed<DataSourceSurface> FilterNodeSoftware::GetOutput(
   IntRect requestedRect;
   RefPtr<DataSourceSurface> cachedOutput;
 
-  // Lock the cache and retrieve a cached surface if we have one and it can
+  // Retrieve a cached surface if we have one and it can
   // satisfy this request, or else request a rect we will compute and cache
-  {
-    MutexAutoLock lock(mCacheMutex);
-
-    if (!mCachedRect.Contains(aRect)) {
-      RequestRect(aRect);
-      requestedRect = mRequestedRect;
-    } else {
-      MOZ_ASSERT(mCachedOutput, "cached rect but no cached output?");
-      cachedRect = mCachedRect;
-      cachedOutput = mCachedOutput;
-    }
+  if (!mCachedRect.Contains(aRect)) {
+    RequestRect(aRect);
+    requestedRect = mRequestedRect;
+  } else {
+    MOZ_ASSERT(mCachedOutput, "cached rect but no cached output?");
+    cachedRect = mCachedRect;
+    cachedOutput = mCachedOutput;
   }
 
   if (!cachedOutput) {
@@ -638,8 +634,6 @@ already_AddRefed<DataSourceSurface> FilterNodeSoftware::GetOutput(
     cachedOutput = Render(requestedRect);
 
     // Update the cache for future requests
-    MutexAutoLock lock(mCacheMutex);
-
     mCachedOutput = cachedOutput;
     if (!mCachedOutput) {
       mCachedRect = IntRect();
@@ -710,6 +704,7 @@ void FilterNodeSoftware::RequestInputRect(uint32_t aInputEnumIndex,
   }
   RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
   MOZ_ASSERT(filter, "missing input");
+
   filter->RequestRect(filter->GetOutputRectInRect(aRect));
 }
 
@@ -896,7 +891,6 @@ void FilterNodeSoftware::FilterInvalidated(FilterNodeSoftware* aFilter) {
 }
 
 void FilterNodeSoftware::Invalidate() {
-  MutexAutoLock lock(mCacheMutex);
   mCachedOutput = nullptr;
   mCachedRect = IntRect();
   for (std::vector<FilterInvalidationListener*>::iterator it =
@@ -906,8 +900,7 @@ void FilterNodeSoftware::Invalidate() {
   }
 }
 
-FilterNodeSoftware::FilterNodeSoftware()
-    : mCacheMutex("FilterNodeSoftware::mCacheMutex") {}
+FilterNodeSoftware::FilterNodeSoftware() {}
 
 FilterNodeSoftware::~FilterNodeSoftware() {
   MOZ_ASSERT(
