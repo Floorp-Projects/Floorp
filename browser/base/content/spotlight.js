@@ -16,11 +16,20 @@ function cloneTemplate(id) {
   return document.getElementById(id).content.cloneNode(true);
 }
 
+function addStylesheet(href) {
+  const link = document.head.appendChild(document.createElement("link"));
+  link.rel = "stylesheet";
+  link.href = href;
+}
+
 /**
  * Render content based on Spotlight-specific templates.
  */
 async function renderSpotlight(ready) {
   const { template, logo = {}, body, extra = {} } = CONFIG;
+
+  // Add Spotlight styles
+  addStylesheet("chrome://browser/skin/spotlight.css");
 
   // Apply desired message template.
   const clone = cloneTemplate(template);
@@ -124,9 +133,10 @@ function renderMultistage(ready) {
   };
 
   // Update styling to be compatible with about:welcome.
-  const link = document.head.appendChild(document.createElement("link"));
-  link.rel = "stylesheet";
-  link.href = "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css";
+  addStylesheet(
+    "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
+  );
+
   document.body.classList.add("onboardingContainer");
   document.body.id = "root";
 
