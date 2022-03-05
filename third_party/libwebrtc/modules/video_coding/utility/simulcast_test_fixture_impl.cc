@@ -83,7 +83,7 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
       if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
         // TODO(nisse): Why not size() ?
         encoded_key_frame_.SetEncodedData(
-            EncodedImageBuffer::Create(encoded_image.capacity()));
+            EncodedImageBuffer::Create(encoded_image.size()));
         encoded_key_frame_.set_size(encoded_image.size());
         encoded_key_frame_._frameType = VideoFrameType::kVideoFrameKey;
         encoded_key_frame_._completeFrame = encoded_image._completeFrame;
@@ -91,7 +91,7 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
                encoded_image.size());
       } else {
         encoded_frame_.SetEncodedData(
-            EncodedImageBuffer::Create(encoded_image.capacity()));
+            EncodedImageBuffer::Create(encoded_image.size()));
         encoded_frame_.set_size(encoded_image.size());
         memcpy(encoded_frame_.data(), encoded_image.data(),
                encoded_image.size());
@@ -873,9 +873,8 @@ void SimulcastTestFixtureImpl::TestDecodeWidthHeightSet() {
             EXPECT_EQ(encoded_image._frameType, VideoFrameType::kVideoFrameKey);
 
             size_t index = encoded_image.SpatialIndex().value_or(0);
-            // TODO(nisse): Why not size()
             encoded_frame[index].SetEncodedData(
-                EncodedImageBuffer::Create(encoded_image.capacity()));
+                EncodedImageBuffer::Create(encoded_image.size()));
             encoded_frame[index].set_size(encoded_image.size());
             encoded_frame[index]._frameType = encoded_image._frameType;
             encoded_frame[index]._completeFrame = encoded_image._completeFrame;

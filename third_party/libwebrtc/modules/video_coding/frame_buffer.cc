@@ -98,17 +98,16 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
     }
   }
 
-  // add safety margin because STAP-A packets can cause it to expand by
-  // ~two bytes per NAL
+  size_t oldSize = encoded_image_buffer_ ? encoded_image_buffer_->size() : 0;
   uint32_t requiredSizeBytes =
       size() + packet.sizeBytes +
       (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
-  if (requiredSizeBytes > capacity()) {
+  if (requiredSizeBytes > oldSize) {
     const uint8_t* prevBuffer = data();
     const uint32_t increments =
         requiredSizeBytes / kBufferIncStepSizeBytes +
         (requiredSizeBytes % kBufferIncStepSizeBytes > 0);
-    const uint32_t newSize = capacity() + increments * kBufferIncStepSizeBytes;
+    const uint32_t newSize = oldSize + increments * kBufferIncStepSizeBytes;
     if (newSize > kMaxJBFrameSizeBytes) {
       RTC_LOG(LS_ERROR) << "Failed to insert packet due to frame being too "
                            "big.";
