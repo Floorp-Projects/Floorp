@@ -68,7 +68,6 @@ export const DEFAULT_RTAMO_CONTENT = {
         string_id: "mr1-onboarding-welcome-image-caption",
       },
     },
-    hide_logo: true,
     backdrop:
       "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
     primary_button: {
