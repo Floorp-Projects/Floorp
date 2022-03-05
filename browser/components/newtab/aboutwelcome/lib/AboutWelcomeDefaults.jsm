@@ -28,7 +28,6 @@ const DEFAULT_WELCOME_CONTENT = {
       order: 0,
       content: {
         position: "corner",
-        logo: {},
         title: {
           string_id: "mr1-onboarding-pin-header",
         },
@@ -76,7 +75,6 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_SET_DEFAULT",
       order: 1,
       content: {
-        logo: {},
         title: {
           string_id: "mr1-onboarding-default-header",
         },
@@ -107,7 +105,6 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_LANGUAGE_MISMATCH",
       order: 2,
       content: {
-        logo: {},
         title: { string_id: "onboarding-live-language-header" },
         subtitle: { string_id: "onboarding-live-language-subtitle" },
         has_noodles: true,
@@ -136,7 +133,6 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_IMPORT_SETTINGS",
       order: 3,
       content: {
-        logo: {},
         title: {
           string_id: "mr1-onboarding-import-header",
         },
@@ -169,7 +165,6 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_CHOOSE_THEME",
       order: 4,
       content: {
-        logo: {},
         title: {
           string_id: "mr1-onboarding-theme-header",
         },
