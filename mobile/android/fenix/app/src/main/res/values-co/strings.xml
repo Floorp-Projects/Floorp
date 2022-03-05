@@ -249,7 +249,7 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Permette e sugestioni di ricerca in e sessioni private ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s manderà tuttu ciò chì vò scriverete in a barra di ricerca à u vostru mutore di ricerca predefinitu.</string>
+    <string name="search_suggestions_onboarding_text">%s manderà tuttu ciò chì vò stampittate in a barra di ricerca à u vostru mutore di ricerca predefinitu.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Sapene di più</string>
 
@@ -1549,7 +1549,7 @@
     <string name="credit_cards_saved_cards">Carte arregistrate</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Ci vole à scrive un numeru accettevule di carta bancaria</string>
+    <string name="credit_cards_number_validation_error_message">Ci vole à stampittà un numeru accettevule di carta bancaria</string>
 
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Ci vole à riempie stu campu</string>
@@ -1595,9 +1595,9 @@
     <string name="search_add_custom_engine_form_description">Detaglii di u mutore di ricerca persunalizatu</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Stampittate u nome di u mutore di ricerca</string>
+    <string name="search_add_custom_engine_error_empty_name">Stampittà u nome di u mutore di ricerca</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Stampittate una catena di ricerca</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Stampittà una catena di ricerca</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Verificate chì a catena di ricerca seguiteghji u furmatu di l’esempiu</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
@@ -1811,7 +1811,7 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Storie chì fanu riflette</string>
+    <string name="pocket_stories_header_1">Storie chì facenu riflette</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Storie da l’articulu</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

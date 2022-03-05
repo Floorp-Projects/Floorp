@@ -47,6 +47,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Knop Alle bewarre blêdwizers toane</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Fuortsmite</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s is makke troch Mozilla.</string>
 
@@ -70,7 +73,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Jo kinne Firefox ynstelle om keppelingen automatysk yn apps te iepenjen.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Jo kinne Firefox ynstelle om keppelingen automatysk yn apps te iepenjen.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Jo kinne %1$s ynstelle om keppelingen automatysk yn apps te iepenjen.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Nei ynstellingen</string>
     <!-- Text for the negative action button -->
@@ -98,7 +103,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Automatysk slute nei in moanne?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox kin ljepblêden dy’t jo de ôfrûne moanne net besjoen hawwe slute.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox kin ljepblêden dy’t jo de ôfrûne moanne net besjoen hawwe slute.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s kin ljepblêden dy\'t jo de ôfrûne moanne net besjoen hawwe slute.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Slute</string>
 
@@ -129,6 +137,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d websites</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Fuortsmite</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -172,7 +184,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Ynstallearje</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Syngronisearre ljepblêden</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Syngronisearre ljepblêden</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Opnij syngronisearje</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -248,11 +260,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Wat is der nij yn Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Wat is der nij yn Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Wat is der nij yn %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">It is no ienfâldiger fierder te gean wêr’t jo bleaun wiene.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Personalisearre Firefox-startside</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Personalisearre Firefox-startside</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Personalisearre %1$s-startside</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Spring nei jo iepen ljepblêden, blêdwizers en navigaasjeskiednis.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -269,7 +285,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">In nij Firefox-ljepblêd iepenje</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">In nij Firefox-ljepblêd iepenje</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">In nij %1$s-ljepblêd iepenje</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Sykje</string>
     <!-- Text preview for larger sized widgets -->
@@ -418,9 +436,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Werjaan</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tik op it logo om de eftergrûn te wizigjen</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tik op it logo om de eftergrûn te wizigjen</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Wizigje jo eftergrûn troch op it Firefox-startsidelogo te tikken</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Troch ôfbyldingen rinne en se bywurkje sûnder de startside te ferlitten.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Troch ôfbyldingen rinne en se bywurkje sûnder de startside te ferlitten.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -642,7 +662,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktyf</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox kin sa no en dan ûndersiken ynstallearje en útfiere.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox kin sa no en dan ûndersiken ynstallearje en útfiere.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s kin sa no en dan ûndersiken ynstallearje en útfiere.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Mear ynfo</string>
     <!-- Dialog message shown after removing a study -->
@@ -727,7 +749,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Fier sykterm yn</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Fier sykterm yn</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Fier syktermen yn</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Skiednis wiskje</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -1139,9 +1163,12 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Wolkom by %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Syngronisearje Firefox tusken apparaten</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Syngronisearje Firefox tusken apparaten</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Syngronisearje %1$s tusken apparaten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Bring blêdwizers, skiednis en wachtwurden nei Firefox op dit apparaat.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Bring blêdwizers, skiednis en wachtwurden nei %1$s op dit apparaat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Registrearje</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1149,7 +1176,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Privacy dy’t altyd oan stiet</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standert (standert)</string>
     <!-- text for standard blocking option button description -->
@@ -1489,11 +1518,15 @@
     <string name="credit_cards_menu_delete_card">Kaart fuortsmite</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kaart fuortsmite</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Binne jo wis dat jo dizze creditcard fuortsmite wolle?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Fuortsmite</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Bewarje</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Bewarje</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Annulearje</string>
 
     <!-- Title of the "Saved cards" screen -->
@@ -1660,7 +1693,9 @@
     <string name="synced_tabs_enable_tab_syncing">Skeakelje it syngronisearjen fan ljepblêden yn.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Jo hawwe gjin ljepblêden iepene yn Firefox op jo oare apparaten.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Jo hawwe gjin ljepblêden iepene yn Firefox op jo oare apparaten.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Jo hawwe gjin ljepblêden iepene yn %1$s op jo oare apparaten.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Besjoch in list mei ljepblêden fan jo oare apparaten.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1668,6 +1703,11 @@
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Gjin iepen ljepblêden</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Groep syngronisearre ljepblêden útklappe</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Groep syngronisearre ljepblêden ynklappe</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
@@ -1718,22 +1758,22 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Help Firefox te ferbetterjen</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Help Firefox te ferbetterjen</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">Wêrom hawwe jo ynaktive ljepblêden útskeakele?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Wêrom hawwe jo ynaktive ljepblêden útskeakele?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Ik begryp net hoe’t it wurket</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ik begryp net hoe’t it wurket</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Ik wol graach sels âlde ljepblêden opromje</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Ik wol graach sels âlde ljepblêden opromje</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">De perioade fan twa wiken is te lang</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">De perioade fan twa wiken is te lang</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">De perioade fan twa wiken is te koart</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">De perioade fan twa wiken is te koart</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Ferstjoere</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Ferstjoere</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Slute</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Slute</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Keppelingen fan websites, e-mail en berjochten automatysk yn Firefox iepenje.</string>
