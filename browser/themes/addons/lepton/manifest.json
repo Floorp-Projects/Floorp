@@ -12,7 +12,11 @@
   "icons": {"32": "icon.svg"},
 
   "theme": {
-  },
+    "colors": {
+        "frame": "rgba(222, 225, 230, 1)",
+        "frame_inactive": "rgba(231, 234, 237, 1)"
+    }
+},
 
   "dark_theme": {
     "colors": {
