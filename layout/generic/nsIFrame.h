@@ -3563,8 +3563,6 @@ class nsIFrame : public nsQueryFrame {
     return GetOverflowRect(mozilla::OverflowType::Scrollable);
   }
 
-  nsRect GetOverflowRect(mozilla::OverflowType aType) const;
-
   mozilla::OverflowAreas GetOverflowAreas() const;
 
   /**
@@ -3583,6 +3581,17 @@ class nsIFrame : public nsQueryFrame {
    * frame's coordinate system
    */
   mozilla::OverflowAreas GetOverflowAreasRelativeToParent() const;
+
+  /**
+   * Same as GetOverflowAreasRelativeToParent(), except that it also unions in
+   * the normal position overflow area if this frame is relatively or sticky
+   * positioned.
+   *
+   * @return the overflow area relative to the parent frame, in the parent
+   * frame's coordinate system
+   */
+  mozilla::OverflowAreas GetActualAndNormalOverflowAreasRelativeToParent()
+      const;
 
   /**
    * Same as ScrollableOverflowRect, except relative to the parent
@@ -5355,6 +5364,8 @@ class nsIFrame : public nsQueryFrame {
                                           bool aIsKeyboardSelect);
 
  private:
+  nsRect GetOverflowRect(mozilla::OverflowType aType) const;
+
   // Get a pointer to the overflow areas property attached to the frame.
   mozilla::OverflowAreas* GetOverflowAreasProperty() const {
     MOZ_ASSERT(mOverflow.mType == OverflowStorageType::Large);

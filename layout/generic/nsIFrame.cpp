@@ -7676,7 +7676,7 @@ nsRect nsIFrame::GetOverflowRect(OverflowType aType) const {
     return InkOverflowFromDeltas();
   }
 
-  return nsRect(nsPoint(0, 0), GetSize());
+  return GetRectRelativeToSelf();
 }
 
 OverflowAreas nsIFrame::GetOverflowAreas() const {
@@ -7692,43 +7692,54 @@ OverflowAreas nsIFrame::GetOverflowAreas() const {
 
 OverflowAreas nsIFrame::GetOverflowAreasRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows) {
-      return OverflowAreas(preTransformOverflows->InkOverflow(),
-                           preTransformOverflows->ScrollableOverflow());
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
+      return *preTransformOverflows;
     }
   }
-  return OverflowAreas(InkOverflowRect(), ScrollableOverflowRect());
+  return GetOverflowAreas();
 }
 
 OverflowAreas nsIFrame::GetOverflowAreasRelativeToParent() const {
-  return GetOverflowAreas() + mRect.TopLeft();
+  return GetOverflowAreas() + GetPosition();
+}
+
+OverflowAreas nsIFrame::GetActualAndNormalOverflowAreasRelativeToParent()
+    const {
+  if (MOZ_LIKELY(!IsRelativelyOrStickyPositioned())) {
+    return GetOverflowAreasRelativeToParent();
+  }
+
+  const OverflowAreas overflows = GetOverflowAreas();
+  OverflowAreas actualAndNormalOverflows = overflows + GetPosition();
+  actualAndNormalOverflows.UnionWith(overflows + GetNormalPosition());
+  return actualAndNormalOverflows;
 }
 
 nsRect nsIFrame::ScrollableOverflowRectRelativeToParent() const {
-  return ScrollableOverflowRect() + mRect.TopLeft();
+  return ScrollableOverflowRect() + GetPosition();
 }
 
 nsRect nsIFrame::InkOverflowRectRelativeToParent() const {
-  return InkOverflowRect() + mRect.TopLeft();
+  return InkOverflowRect() + GetPosition();
 }
 
 nsRect nsIFrame::ScrollableOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows)
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
       return preTransformOverflows->ScrollableOverflow();
+    }
   }
   return ScrollableOverflowRect();
 }
 
 nsRect nsIFrame::InkOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows) return preTransformOverflows->InkOverflow();
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
+      return preTransformOverflows->InkOverflow();
+    }
   }
   return InkOverflowRect();
 }
@@ -11424,7 +11435,7 @@ nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
     area = ScrollableOverflowRect();
   } else {
-    area = nsRect(nsPoint(0, 0), GetSize());
+    area = GetRectRelativeToSelf();
   }
 
   if (!area.IsEmpty()) {

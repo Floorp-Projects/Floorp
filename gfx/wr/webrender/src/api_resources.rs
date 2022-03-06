@@ -131,6 +131,7 @@ impl ApiResources {
                     }
                 }
                 ResourceUpdate::AddFontInstance(ref instance) => {
+                    assert!(self.fonts.templates.contains_key(&instance.font_key));
                     // TODO(nical): Don't clone these.
                     self.fonts.instances.add_font_instance(
                         instance.key,
