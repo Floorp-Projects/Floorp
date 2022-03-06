@@ -14,7 +14,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.CollectionTabListRowBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.utils.view.ViewHolder
 
 class CollectionCreationTabListAdapter(

@@ -18,7 +18,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.getDefaultCollectionNumber
-import org.mozilla.fenix.home.Tab
 
 interface CollectionCreationController {
 

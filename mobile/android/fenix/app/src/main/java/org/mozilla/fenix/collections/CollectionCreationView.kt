@@ -25,7 +25,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentCollectionCreationBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.home.Tab
 
 class CollectionCreationView(
     private val container: ViewGroup,

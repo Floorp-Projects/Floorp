@@ -22,7 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.Tab
 
 @RunWith(FenixRobolectricTestRunner::class)
 class CollectionCreationBottomBarViewTest {

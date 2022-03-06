@@ -7,7 +7,6 @@
 package org.mozilla.fenix.collections
 
 import mozilla.components.feature.tab.collections.TabCollection
-import org.mozilla.fenix.home.Tab
 
 interface CollectionCreationInteractor {
 

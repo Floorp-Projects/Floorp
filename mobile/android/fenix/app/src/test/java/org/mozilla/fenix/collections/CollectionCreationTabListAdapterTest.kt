@@ -23,7 +23,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.CollectionTabListRowBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.Tab
 
 @RunWith(FenixRobolectricTestRunner::class)
 class CollectionCreationTabListAdapterTest {

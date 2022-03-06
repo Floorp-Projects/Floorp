@@ -5,7 +5,6 @@
 package org.mozilla.fenix.collections
 
 import androidx.recyclerview.widget.DiffUtil
-import org.mozilla.fenix.home.Tab
 
 /**
  * Diff callback for comparing tab lists with selected state.

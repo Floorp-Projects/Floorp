@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home
 
-import android.graphics.Bitmap
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
@@ -36,15 +35,6 @@ class HomeFragmentStore(
     middlewares: List<Middleware<HomeFragmentState, HomeFragmentAction>> = emptyList()
 ) : Store<HomeFragmentState, HomeFragmentAction>(
     initialState, ::homeFragmentStateReducer, middlewares
-)
-
-data class Tab(
-    val sessionId: String,
-    val url: String,
-    val hostname: String,
-    val title: String,
-    val selected: Boolean? = null,
-    val icon: Bitmap? = null
 )
 
 /**

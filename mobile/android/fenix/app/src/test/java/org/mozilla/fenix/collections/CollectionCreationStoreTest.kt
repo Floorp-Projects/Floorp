@@ -20,7 +20,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.Tab
 
 private const val URL_MOZILLA = "www.mozilla.org"
 private const val SESSION_ID_MOZILLA = "0"

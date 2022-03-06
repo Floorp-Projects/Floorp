@@ -14,7 +14,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.description
 import org.mozilla.fenix.databinding.CollectionsListItemBinding
 import org.mozilla.fenix.ext.getIconColor
-import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.utils.view.ViewHolder
 
 class SaveCollectionListAdapter(
