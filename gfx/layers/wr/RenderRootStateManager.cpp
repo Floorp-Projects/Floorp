@@ -197,12 +197,12 @@ void RenderRootStateManager::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
 }
 
 Maybe<wr::FontInstanceKey> RenderRootStateManager::GetFontKeyForScaledFont(
-    gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue* aResources) {
+    gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue& aResources) {
   return WrBridge()->GetFontKeyForScaledFont(aScaledFont, aResources);
 }
 
 Maybe<wr::FontKey> RenderRootStateManager::GetFontKeyForUnscaledFont(
-    gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue* aResources) {
+    gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue& aResources) {
   return WrBridge()->GetFontKeyForUnscaledFont(aUnscaledFont, aResources);
 }
 

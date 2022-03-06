@@ -65,11 +65,9 @@ class RenderRootStateManager {
   /// It is used for recycling TextureClient.
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
   Maybe<wr::FontInstanceKey> GetFontKeyForScaledFont(
-      gfx::ScaledFont* aScaledFont,
-      wr::IpcResourceUpdateQueue* aResources = nullptr);
+      gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue& aResources);
   Maybe<wr::FontKey> GetFontKeyForUnscaledFont(
-      gfx::UnscaledFont* aUnscaledFont,
-      wr::IpcResourceUpdateQueue* aResources = nullptr);
+      gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue& aResources);
 
   void FlushAsyncResourceUpdates();
 

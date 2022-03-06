@@ -564,7 +564,8 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
       continue;
     }
     for (nsIFrame* child : list) {
-      aOverflowAreas.UnionWith(child->GetOverflowAreasRelativeToParent());
+      aOverflowAreas.UnionWith(
+          child->GetActualAndNormalOverflowAreasRelativeToParent());
     }
   }
 }
