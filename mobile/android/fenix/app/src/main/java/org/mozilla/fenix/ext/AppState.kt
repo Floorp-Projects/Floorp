@@ -6,7 +6,7 @@ package org.mozilla.fenix.ext
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
-import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -20,7 +20,7 @@ import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
  *
  * @return a list of [PocketRecommendedStory]es from the currently selected categories.
  */
-fun HomeFragmentState.getFilteredStories(
+fun AppState.getFilteredStories(
     neededStoriesCount: Int
 ): List<PocketRecommendedStory> {
     if (pocketStoriesCategoriesSelections.isEmpty()) {
@@ -99,15 +99,15 @@ internal fun getFilteredStoriesCount(
  * Get the [SearchGroup] shown in the "Jump back in" section.
  * May be null if no search group is shown.
  */
-internal val HomeFragmentState.recentSearchGroup: SearchGroup?
+internal val AppState.recentSearchGroup: SearchGroup?
     get() = recentTabs.find { it is SearchGroup } as SearchGroup?
 
 /**
- * Filter a [HomeFragmentState] by the blocklist.
+ * Filter a [AppState] by the blocklist.
  *
  * @param blocklistHandler The handler that will filter the state.
  */
-fun HomeFragmentState.filterState(blocklistHandler: BlocklistHandler): HomeFragmentState =
+fun AppState.filterState(blocklistHandler: BlocklistHandler): AppState =
     with(blocklistHandler) {
         copy(
             recentBookmarks = recentBookmarks.filteredByBlocklist(),
