@@ -565,8 +565,7 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
   data.mCbCrStride = data.mCbCrSize.Width() * bytesPerChannel;
 
   // Setting other attributes
-  data.mPicSize =
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
+  data.mPicSize = gfx::IntSize{aCodecContext->width, aCodecContext->height};
   const gfx::IntRect picture =
       aInfo.ScaledImageRect(data.mPicSize.Width(), data.mPicSize.Height());
   data.mPicX = picture.x;
