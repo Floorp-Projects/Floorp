@@ -5,15 +5,25 @@
 package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.mockk
-import io.mockk.verify
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.Event
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class RemoveTabUseCaseWrapperTest {
 
     val metricController = mockk<MetricController>(relaxed = true)
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun `WHEN invoked with no source name THEN metrics with unknown source, use case and callback are triggered`() {
@@ -21,11 +31,16 @@ class RemoveTabUseCaseWrapperTest {
         val onRemove: (String) -> Unit = { tabId ->
             actualTabId = tabId
         }
-        val wrapper = RemoveTabUseCaseWrapper(metricController, onRemove)
+        val wrapper = RemoveTabUseCaseWrapper(onRemove)
+
+        assertFalse(TabsTray.closedExistingTab.testHasValue())
 
         wrapper("123")
 
-        verify { metricController.track(Event.ClosedExistingTab("unknown")) }
+        assertTrue(TabsTray.closedExistingTab.testHasValue())
+        val snapshot = TabsTray.closedExistingTab.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("unknown", snapshot.single().extra?.getValue("source"))
         assertEquals("123", actualTabId)
     }
 
@@ -35,11 +50,16 @@ class RemoveTabUseCaseWrapperTest {
         val onRemove: (String) -> Unit = { tabId ->
             actualTabId = tabId
         }
-        val wrapper = RemoveTabUseCaseWrapper(metricController, onRemove)
+        val wrapper = RemoveTabUseCaseWrapper(onRemove)
+
+        assertFalse(TabsTray.closedExistingTab.testHasValue())
 
         wrapper("123", "Test")
 
-        verify { metricController.track(Event.ClosedExistingTab("Test")) }
+        assertTrue(TabsTray.closedExistingTab.testHasValue())
+        val snapshot = TabsTray.closedExistingTab.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("Test", snapshot.single().extra?.getValue("source"))
         assertEquals("123", actualTabId)
     }
 }

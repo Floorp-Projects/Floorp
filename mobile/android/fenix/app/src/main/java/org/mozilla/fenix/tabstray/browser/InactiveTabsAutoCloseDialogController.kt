@@ -9,7 +9,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
 
@@ -18,7 +17,6 @@ class InactiveTabsAutoCloseDialogController(
     private val settings: Settings,
     private val tabFilter: (TabSessionState) -> Boolean,
     private val tray: TabsTray,
-    private val metrics: MetricController
 ) {
     /**
      * Dismiss the auto-close dialog.
@@ -26,7 +24,7 @@ class InactiveTabsAutoCloseDialogController(
     fun close() {
         markDialogAsShown()
         refreshInactiveTabsSection()
-        org.mozilla.fenix.GleanMetrics.TabsTray.autoCloseSeen.record(NoExtras())
+        TabsTrayMetrics.autoCloseSeen.record(NoExtras())
 
         TabsTrayMetrics.autoCloseDimissed.record(NoExtras())
     }

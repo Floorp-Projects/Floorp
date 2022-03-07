@@ -14,22 +14,33 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
+import mozilla.components.service.glean.testing.GleanTestRule
+import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import mozilla.components.browser.state.state.createTab as createTabState
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Settings
 
+@RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class InactiveTabsControllerTest {
 
     private val metrics: MetricController = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val appStore = AppStore()
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun `WHEN expanded THEN notify filtered card`() {
@@ -44,7 +55,7 @@ class InactiveTabsControllerTest {
         val tray: TabsTray = mockk(relaxed = true)
         val tabsSlot = slot<List<TabSessionState>>()
         val controller =
-            InactiveTabsController(store, appStore, tray, mockk(relaxed = true), settings)
+            InactiveTabsController(store, appStore, tray, settings)
 
         controller.updateCardExpansion(true)
 
@@ -60,24 +71,32 @@ class InactiveTabsControllerTest {
     fun `WHEN expanded THEN track telemetry event`() {
         val store = TabsTrayStore()
         val controller = InactiveTabsController(
-            store, appStore, mockk(relaxed = true), metrics, settings
+            store, appStore, mockk(relaxed = true), settings
         )
+
+        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
+        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
 
         controller.updateCardExpansion(true)
 
-        verify { metrics.track(Event.TabsTrayInactiveTabsExpanded) }
+        assertTrue(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
+        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
     }
 
     @Test
     fun `WHEN collapsed THEN track telemetry event`() {
         val store = TabsTrayStore()
         val controller = InactiveTabsController(
-            store, appStore, mockk(relaxed = true), metrics, settings
+            store, appStore, mockk(relaxed = true), settings
         )
+
+        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
+        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
 
         controller.updateCardExpansion(false)
 
-        verify { metrics.track(Event.TabsTrayInactiveTabsCollapsed) }
+        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
+        assertTrue(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
     }
 
     @Test
@@ -85,15 +104,17 @@ class InactiveTabsControllerTest {
         val store = TabsTrayStore()
         val controller = spyk(
             InactiveTabsController(
-                store, appStore, mockk(relaxed = true), metrics, settings
+                store, appStore, mockk(relaxed = true), settings
             )
         )
 
         every { controller.refreshInactiveTabsSection() } just Runs
 
+        assertFalse(TabsTrayMetrics.autoCloseDimissed.testHasValue())
+
         controller.close()
 
-        verify { metrics.track(Event.TabsTrayAutoCloseDialogDismissed) }
+        assertTrue(TabsTrayMetrics.autoCloseDimissed.testHasValue())
         verify { settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true }
         verify { controller.refreshInactiveTabsSection() }
     }
@@ -104,13 +125,16 @@ class InactiveTabsControllerTest {
         val store = BrowserStore()
         val tray: TabsTray = mockk(relaxed = true)
         val controller =
-            spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray, metrics))
+            spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray))
 
         every { controller.refreshInactiveTabsSection() } just Runs
 
+        assertFalse(TabsTrayMetrics.autoCloseTurnOnClicked.testHasValue())
+
         controller.enableAutoClosed()
 
-        verify { metrics.track(Event.TabsTrayAutoCloseDialogTurnOnClicked) }
+        assertTrue(TabsTrayMetrics.autoCloseTurnOnClicked.testHasValue())
+
         verify { settings.closeTabsAfterOneMonth = true }
         verify { settings.closeTabsAfterOneWeek = false }
         verify { settings.closeTabsAfterOneDay = false }

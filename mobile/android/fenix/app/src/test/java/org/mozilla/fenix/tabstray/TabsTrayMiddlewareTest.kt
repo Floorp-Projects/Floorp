@@ -13,11 +13,13 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -68,10 +70,15 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN inactive tabs are updated THEN report the count of inactive tabs`() {
+
+        assertFalse(TabsTray.hasInactiveTabs.testHasValue())
+        assertFalse(Metrics.inactiveTabsCount.testHasValue())
+
         store.dispatch(TabsTrayAction.UpdateInactiveTabs(emptyList()))
         store.waitUntilIdle()
-        verify { metrics.track(Event.TabsTrayHasInactiveTabs(0)) }
-        verify { metrics.track(Event.InactiveTabsCountUpdate(0)) }
+        assertTrue(TabsTray.hasInactiveTabs.testHasValue())
+        assertTrue(Metrics.inactiveTabsCount.testHasValue())
+        assertEquals(0, Metrics.inactiveTabsCount.testGetValue())
     }
 
     @Test
@@ -93,6 +100,8 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN multi select mode from menu is entered THEN relevant metrics are collected`() {
+        assertFalse(TabsTray.enterMultiselectMode.testHasValue())
+
         store.dispatch(TabsTrayAction.EnterSelectMode)
         store.waitUntilIdle()
 

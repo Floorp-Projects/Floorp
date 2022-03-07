@@ -28,6 +28,7 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -77,6 +78,9 @@ class NavigationInteractorTest {
     @Test
     fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         var dismissTabTrayInvoked = false
+
+        assertFalse(TabsTray.closed.testHasValue())
+
         createInteractor(
             dismissTabTray = {
                 dismissTabTrayInvoked = true
@@ -84,9 +88,7 @@ class NavigationInteractorTest {
         ).onTabTrayDismissed()
 
         assertTrue(dismissTabTrayInvoked)
-        verify {
-            metrics.track(Event.TabsTrayClosed)
-        }
+        assertTrue(TabsTray.closed.testHasValue())
     }
 
     @Test
@@ -190,8 +192,11 @@ class NavigationInteractorTest {
         mockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
 
         every { any<CollectionsDialog>().show(any()) } answers { }
+        assertFalse(TabsTray.saveToCollection.testHasValue())
+
         createInteractor().onSaveToCollections(listOf(testTab))
-        verify(exactly = 1) { metrics.track(Event.TabsTraySaveToCollectionPressed) }
+
+        assertTrue(TabsTray.saveToCollection.testHasValue())
 
         unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
     }

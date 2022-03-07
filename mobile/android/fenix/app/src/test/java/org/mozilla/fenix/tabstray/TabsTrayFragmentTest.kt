@@ -31,17 +31,19 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.ComponentTabstrayFabBinding
@@ -66,6 +68,9 @@ class TabsTrayFragmentTest {
 
     @get:Rule
     val mockkRule = MockkRetryTestRule()
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setup() {
@@ -246,10 +251,12 @@ class TabsTrayFragmentTest {
             }
             every { fragment.getTrayMenu(any(), any(), any(), any(), any()) } returns menuBuilder
 
+            assertFalse(TabsTray.menuOpened.testHasValue())
+
             fragment.setupMenu(navigationInteractor)
             tabsTrayBinding.tabTrayOverflow.performClick()
 
-            verify { metrics.track(Event.TabsTrayMenuOpened) }
+            assertTrue(TabsTray.menuOpened.testHasValue())
             verify { menuBuilder.build() }
             verify { menu.showWithTheme(tabsTrayBinding.tabTrayOverflow) }
         } finally {
