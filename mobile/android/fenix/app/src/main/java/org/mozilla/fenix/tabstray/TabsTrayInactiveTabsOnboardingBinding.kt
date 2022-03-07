@@ -25,12 +25,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.infobanner.InfoBanner
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.OnboardingInactiveTabsCfrBinding
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.utils.Settings
 
@@ -69,7 +69,6 @@ class TabsTrayInactiveTabsOnboardingBinding(
         if (this::inactiveTabsDialog.isInitialized) return
 
         val context: Context = context
-        val metrics = context.components.analytics.metrics
         val anchorPosition = IntArray(2)
         val popupBinding = OnboardingInactiveTabsCfrBinding.inflate(LayoutInflater.from(context))
         inactiveTabsDialog = Dialog(context)
@@ -83,14 +82,14 @@ class TabsTrayInactiveTabsOnboardingBinding(
         popupBinding.closeInfoBanner.setOnClickListener {
             inactiveTabsDialog.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
-            metrics.track(Event.TabsTrayInactiveTabsCFRDismissed)
+            TabsTray.inactiveTabsCfrDismissed.record(NoExtras())
         }
 
         popupBinding.bannerInfoMessage.setOnClickListener {
             inactiveTabsDialog.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
             navigationInteractor.onTabSettingsClicked()
-            metrics.track(Event.TabsTrayInactiveTabsCFRGotoSettings)
+            TabsTray.inactiveTabsCfrSettings.record(NoExtras())
         }
 
         val messageText = context.getString(R.string.tab_tray_inactive_onboarding_message)
@@ -120,6 +119,6 @@ class TabsTrayInactiveTabsOnboardingBinding(
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
         inactiveTabsDialog.show()
-        metrics.track(Event.TabsTrayInactiveTabsCFRIsVisible)
+        TabsTray.inactiveTabsCfrVisible.record(NoExtras())
     }
 }

@@ -15,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -190,7 +191,7 @@ class DefaultTabsTrayController(
                     dismissTabsTrayAndNavigateHome(tabId)
                 }
             }
-            metrics.track(Event.ClosedExistingTab(source ?: "unknown"))
+            TabsTray.closedExistingTab.record(TabsTray.ClosedExistingTabExtra(source ?: "unknown"))
         }
     }
 
@@ -263,13 +264,11 @@ class DefaultTabsTrayController(
 
     @VisibleForTesting
     internal fun sendNewTabEvent(isPrivateModeSelected: Boolean) {
-        val eventToSend = if (isPrivateModeSelected) {
-            Event.NewPrivateTabTapped
+        if (isPrivateModeSelected) {
+            TabsTray.newPrivateTabTapped.record(NoExtras())
         } else {
-            Event.NewTabTapped
+            TabsTray.newTabTapped.record(NoExtras())
         }
-
-        metrics.track(eventToSend)
     }
 
     @VisibleForTesting
@@ -279,7 +278,7 @@ class DefaultTabsTrayController(
     }
 
     override fun handleDeleteAllInactiveTabs() {
-        metrics.track(Event.TabsTrayCloseAllInactiveTabs)
+        TabsTray.closeAllInactiveTabs.record(NoExtras())
         browserStore.state.potentialInactiveTabs.map { it.id }.let {
             tabsUseCases.removeTabs(it)
         }

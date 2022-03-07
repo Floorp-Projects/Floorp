@@ -10,7 +10,6 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.TabsTrayAction
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.TabsTrayController
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
@@ -58,11 +57,10 @@ class DefaultBrowserTrayInteractor(
     private val trayInteractor: TabsTrayInteractor,
     private val controller: TabsTrayController,
     private val selectTab: TabsUseCases.SelectTabUseCase,
-    private val metrics: MetricController
 ) : BrowserTrayInteractor {
 
     private val selectTabWrapper by lazy {
-        SelectTabUseCaseWrapper(metrics, selectTab) {
+        SelectTabUseCaseWrapper(selectTab) {
             trayInteractor.onBrowserTabSelected()
         }
     }

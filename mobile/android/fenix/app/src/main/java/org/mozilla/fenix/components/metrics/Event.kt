@@ -21,7 +21,6 @@ import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
-import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -201,41 +200,6 @@ sealed class Event {
     object LoginDialogPromptCancelled : Event()
     object LoginDialogPromptSave : Event()
     object LoginDialogPromptNeverSave : Event()
-
-    // Tab tray
-    object TabsTrayOpened : Event()
-    object TabsTrayClosed : Event()
-    data class OpenedExistingTab(val source: String) : Event() {
-        override val extras = mapOf(TabsTray.openedExistingTabKeys.source to source)
-    }
-    data class ClosedExistingTab(val source: String) : Event() {
-        override val extras = mapOf(TabsTray.closedExistingTabKeys.source to source)
-    }
-    object TabsTrayPrivateModeTapped : Event()
-    object TabsTrayNormalModeTapped : Event()
-    object TabsTraySyncedModeTapped : Event()
-    object NewTabTapped : Event()
-    object NewPrivateTabTapped : Event()
-    object TabsTrayMenuOpened : Event()
-    object TabsTraySaveToCollectionPressed : Event()
-    object TabsTrayShareAllTabsPressed : Event()
-    object TabsTrayCloseAllTabsPressed : Event()
-    object TabsTrayInactiveTabsExpanded : Event()
-    object TabsTrayInactiveTabsCollapsed : Event()
-    object TabsTrayAutoCloseDialogSeen : Event()
-    object TabsTrayAutoCloseDialogTurnOnClicked : Event()
-    object TabsTrayAutoCloseDialogDismissed : Event()
-    data class TabsTrayHasInactiveTabs(val count: Int) : Event() {
-        override val extras = mapOf(TabsTray.hasInactiveTabsKeys.inactiveTabsCount to count.toString())
-    }
-    object TabsTrayCloseAllInactiveTabs : Event()
-    data class TabsTrayCloseInactiveTab(val amountClosed: Int = 1) : Event()
-    object TabsTrayOpenInactiveTab : Event()
-    object TabsTrayInactiveTabsCFRGotoSettings : Event()
-    object TabsTrayInactiveTabsCFRDismissed : Event()
-    object TabsTrayInactiveTabsCFRIsVisible : Event()
-
-    data class InactiveTabsCountUpdate(val count: Int) : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()

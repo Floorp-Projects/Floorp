@@ -15,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
@@ -118,7 +119,7 @@ class DefaultNavigationInteractor(
 ) : NavigationInteractor {
 
     override fun onTabTrayDismissed() {
-        metrics.track(Event.TabsTrayClosed)
+        TabsTray.closed.record(NoExtras())
         dismissTabTray()
     }
 
@@ -199,7 +200,7 @@ class DefaultNavigationInteractor(
     override fun onSaveToCollections(tabs: Collection<TabSessionState>) {
         TabsTray.selectedTabsToCollection.record(TabsTray.SelectedTabsToCollectionExtra(tabCount = tabs.size))
 
-        metrics.track(Event.TabsTraySaveToCollectionPressed)
+        TabsTray.saveToCollection.record(NoExtras())
         tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
         CollectionsDialog(

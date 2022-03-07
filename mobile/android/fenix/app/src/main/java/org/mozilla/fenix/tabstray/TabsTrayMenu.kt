@@ -11,9 +11,9 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.tabstray.ext.isNormalModeSelected
 import org.mozilla.fenix.tabstray.ext.isPrivateModeSelected
 import org.mozilla.fenix.tabstray.ext.isSyncedModeSelected
@@ -63,7 +63,7 @@ class TabsTrayMenu(
                 context.getString(R.string.tab_tray_menu_item_share),
                 textColorResource = R.color.fx_mobile_text_color_primary
             ) {
-                context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
+                TabsTray.shareAllTabs.record(NoExtras())
                 onItemTapped.invoke(Item.ShareAllTabs)
             }.apply { visible = shouldShowSelectOrShare },
 
@@ -92,7 +92,7 @@ class TabsTrayMenu(
                 context.getString(R.string.tab_tray_menu_item_close),
                 textColorResource = R.color.fx_mobile_text_color_primary
             ) {
-                context.components.analytics.metrics.track(Event.TabsTrayCloseAllTabsPressed)
+                TabsTray.closeAllTabs.record(NoExtras())
                 onItemTapped.invoke(Item.CloseAllTabs)
             }.apply { visible = { checkOpenTabs } }
         )

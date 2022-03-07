@@ -3418,6 +3418,7 @@ tabs_tray:
       source:
         description: |
           From which app feature was an existing tab opened.
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
@@ -3444,6 +3445,7 @@ tabs_tray:
       source:
         description: |
           From which app feature was an existing tab closed.
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
@@ -3695,6 +3697,7 @@ tabs_tray:
       inactive_tabs_count:
         description:
           The number of inactive tabs the user currently has.
+        type: quantity
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/21903
     data_reviews:

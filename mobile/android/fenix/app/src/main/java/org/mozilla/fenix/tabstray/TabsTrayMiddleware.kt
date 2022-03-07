@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -34,8 +35,9 @@ class TabsTrayMiddleware(
             is TabsTrayAction.UpdateInactiveTabs -> {
                 if (shouldReportInactiveTabMetrics) {
                     shouldReportInactiveTabMetrics = false
-                    metrics.track(Event.InactiveTabsCountUpdate(action.tabs.size))
-                    metrics.track(Event.TabsTrayHasInactiveTabs(action.tabs.size))
+
+                    TabsTray.hasInactiveTabs.record(TabsTray.HasInactiveTabsExtra(action.tabs.size))
+                    Metrics.inactiveTabsCount.set(action.tabs.size.toLong())
                 }
             }
             is TabsTrayAction.UpdateTabPartitions -> {

@@ -5,16 +5,14 @@
 package org.mozilla.fenix.tabstray.browser
 
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.GleanMetrics.TabsTray
 
 class SelectTabUseCaseWrapper(
-    private val metrics: MetricController,
     private val selectTab: TabsUseCases.SelectTabUseCase,
     private val onSelect: (String) -> Unit
 ) : TabsUseCases.SelectTabUseCase {
     operator fun invoke(tabId: String, source: String? = null) {
-        metrics.track(Event.OpenedExistingTab(source ?: "unknown"))
+        TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
         selectTab(tabId)
         onSelect(tabId)
     }
@@ -25,11 +23,10 @@ class SelectTabUseCaseWrapper(
 }
 
 class RemoveTabUseCaseWrapper(
-    private val metrics: MetricController,
     private val onRemove: (String) -> Unit,
 ) : TabsUseCases.RemoveTabUseCase {
     operator fun invoke(tabId: String, source: String? = null) {
-        metrics.track(Event.ClosedExistingTab(source ?: "unknown"))
+        TabsTray.closedExistingTab.record(TabsTray.ClosedExistingTabExtra(source ?: "unknown"))
         onRemove(tabId)
     }
 

@@ -30,12 +30,13 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.ComponentTabstrayFabBinding
 import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
@@ -174,7 +175,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             fabButtonBinding.newTabButton.accessibilityTraversalAfter =
                 tabsTrayBinding.tabLayout.id
         }
-        requireComponents.analytics.metrics.track(Event.TabsTrayOpened)
+        TabsTray.opened.record(NoExtras())
 
         navigationInteractor =
             DefaultNavigationInteractor(
@@ -218,7 +219,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             tabsTrayInteractor,
             tabsTrayController,
             requireComponents.useCases.tabsUseCases.selectTab,
-            requireComponents.analytics.metrics
         )
 
         setupMenu(navigationInteractor)
@@ -231,7 +231,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         )
 
         setupBackgroundDismissalListener {
-            requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
+            TabsTray.closed.record(NoExtras())
             dismissAllowingStateLoss()
         }
 
@@ -283,7 +283,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 interactor = tabsTrayInteractor,
                 browsingModeManager = activity.browsingModeManager,
                 tabsTrayStore = tabsTrayStore,
-                metrics = requireComponents.analytics.metrics
             ),
             owner = this,
             view = view
@@ -489,7 +488,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     internal fun setupMenu(navigationInteractor: NavigationInteractor) {
         tabsTrayBinding.tabTrayOverflow.setOnClickListener { anchor ->
 
-            requireComponents.analytics.metrics.track(Event.TabsTrayMenuOpened)
+            TabsTray.menuOpened.record(NoExtras())
 
             val menu = getTrayMenu(
                 context = requireContext(),

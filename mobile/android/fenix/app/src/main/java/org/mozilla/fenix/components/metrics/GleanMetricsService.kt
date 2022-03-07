@@ -52,7 +52,6 @@ import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
-import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -647,87 +646,6 @@ private val Event.wrapper: EventWrapper<*>?
             { Onboarding.prefToggledToolbarPositionKeys.valueOf(it) }
         )
 
-        is Event.TabsTrayOpened -> EventWrapper<NoExtraKeys>(
-            { TabsTray.opened.record(it) }
-        )
-        is Event.TabsTrayClosed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.closed.record(it) }
-        )
-        is Event.OpenedExistingTab -> EventWrapper(
-            { TabsTray.openedExistingTab.record(it) },
-            { TabsTray.openedExistingTabKeys.valueOf(it) }
-        )
-        is Event.ClosedExistingTab -> EventWrapper(
-            { TabsTray.closedExistingTab.record(it) },
-            { TabsTray.closedExistingTabKeys.valueOf(it) }
-        )
-        is Event.TabsTrayPrivateModeTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTray.privateModeTapped.record(it) }
-        )
-        is Event.TabsTrayNormalModeTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTray.normalModeTapped.record(it) }
-        )
-        is Event.TabsTraySyncedModeTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTray.syncedModeTapped.record(it) }
-        )
-        is Event.NewTabTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTray.newTabTapped.record(it) }
-        )
-        is Event.NewPrivateTabTapped -> EventWrapper<NoExtraKeys>(
-            { TabsTray.newPrivateTabTapped.record(it) }
-        )
-        is Event.TabsTrayMenuOpened -> EventWrapper<NoExtraKeys>(
-            { TabsTray.menuOpened.record(it) }
-        )
-        is Event.TabsTraySaveToCollectionPressed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.saveToCollection.record(it) }
-        )
-        is Event.TabsTrayShareAllTabsPressed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.shareAllTabs.record(it) }
-        )
-        is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.closeAllTabs.record(it) }
-        )
-        is Event.TabsTrayInactiveTabsExpanded -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsExpanded.record(it) }
-        )
-        is Event.TabsTrayInactiveTabsCollapsed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsCollapsed.record(it) }
-        )
-        is Event.TabsTrayAutoCloseDialogDismissed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.autoCloseDimissed.record(it) }
-        )
-        is Event.TabsTrayAutoCloseDialogSeen -> EventWrapper<NoExtraKeys>(
-            { TabsTray.autoCloseSeen.record(it) }
-        )
-        is Event.TabsTrayAutoCloseDialogTurnOnClicked -> EventWrapper<NoExtraKeys>(
-            { TabsTray.autoCloseTurnOnClicked.record(it) }
-        )
-        is Event.TabsTrayHasInactiveTabs -> EventWrapper(
-            { TabsTray.hasInactiveTabs.record(it) },
-            { TabsTray.hasInactiveTabsKeys.valueOf(it) }
-        )
-        is Event.TabsTrayCloseAllInactiveTabs -> EventWrapper<NoExtraKeys>(
-            { TabsTray.closeAllInactiveTabs.record(it) }
-        )
-        is Event.TabsTrayCloseInactiveTab -> EventWrapper<NoExtraKeys>(
-            { TabsTray.closeInactiveTab.add(amountClosed) }
-        )
-        is Event.TabsTrayOpenInactiveTab -> EventWrapper<NoExtraKeys>(
-            { TabsTray.openInactiveTab.add() }
-        )
-        is Event.InactiveTabsCountUpdate -> EventWrapper<NoExtraKeys>(
-            { Metrics.inactiveTabsCount.set(this.count.toLong()) },
-        )
-        is Event.TabsTrayInactiveTabsCFRGotoSettings -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsCfrSettings.record(it) }
-        )
-        is Event.TabsTrayInactiveTabsCFRDismissed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsCfrDismissed.record(it) }
-        )
-        is Event.TabsTrayInactiveTabsCFRIsVisible -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsCfrVisible.record(it) }
-        )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )
