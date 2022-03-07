@@ -51,6 +51,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Показать все добавленные закладки</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Удалить</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s разработан Mozilla.</string>
 
@@ -72,7 +75,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Вы можете настроить Firefox на автоматическое открытие ссылок в приложениях.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Вы можете настроить Firefox на автоматическое открытие ссылок в приложениях.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Вы можете настроить %1$s на автоматическое открытие ссылок в приложениях.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Перейти в настройки</string>
 
@@ -102,7 +107,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Автоматически закрывать через месяц?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox может закрывать вкладки, к которым вы не обращались за последний месяц.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox может закрывать вкладки, к которым вы не обращались за последний месяц.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s может закрывать вкладки, к которым вы не обращались за последний месяц.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Закрыть</string>
 
@@ -133,6 +141,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">Сайтов: %d</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Удалить</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -255,11 +267,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Что нового в Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Что нового в Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Что нового в %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Теперь легче продолжить с того места, где вы остановились.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Настраиваемая домашняя страница Firefox</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Настраиваемая домашняя страница Firefox</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Настраиваемая домашняя страница %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Переходите к открытым вкладкам, закладкам и истории просмотра.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -277,7 +293,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Открыть новую вкладку Firefox</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Открыть новую вкладку Firefox</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Открыть новую вкладку %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Поиск</string>
     <!-- Text preview for larger sized widgets -->
@@ -656,7 +674,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Активно</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox может время от времени устанавливать и проводить исследования.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox может время от времени устанавливать и проводить исследования.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s может время от времени устанавливать и проводить исследования.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Узнать больше</string>
     <!-- Dialog message shown after removing a study -->
@@ -1179,9 +1199,12 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Добро пожаловать в %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Синхронизация Firefox между устройствами</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Синхронизация Firefox между устройствами</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Синхронизация %1$s между устройствами</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Перенесите закладки, историю и пароли в Firefox на этом устройстве.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Перенесите закладки, историю и пароли в %1$s на этом устройстве.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Зарегистрироваться</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1189,7 +1212,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Постоянная приватность</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (по умолчанию)</string>
     <!-- text for standard blocking option button description -->
@@ -1526,11 +1551,15 @@
     <string name="credit_cards_menu_delete_card">Удалить карту</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Удалить карту</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Вы уверены, что хотите удалить эту банковскую карту?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Удалить</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Сохранить</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Сохранить</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Отмена</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Сохранённые карты</string>
@@ -1693,7 +1722,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Пожалуйста, включите синхронизацию вкладок.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">На ваших других устройствах в Firefox не открыто ни одной вкладки.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">На ваших других устройствах в Firefox не открыто ни одной вкладки.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">На ваших других устройствах в %1$s не открыто ни одной вкладки.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Просмотрите список вкладок с других устройств.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1701,6 +1732,11 @@
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Нет открытых вкладок</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Развернуть группу синхронизированных вкладок</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Свернуть группу синхронизированных вкладок</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
@@ -1751,22 +1787,22 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Помогите улучшить Firefox</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Помогите улучшить Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">Почему вы отключили неактивные вкладки?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Почему вы отключили неактивные вкладки?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Я не понимаю как это работает</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Я не понимаю как это работает</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Я хочу сам вычищать старые вкладки</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Я хочу сам вычищать старые вкладки</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">Слишком большое время неактивности</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Слишком большое время неактивности</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">Слишком малое время неактивности</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Слишком малое время неактивности</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Отправить</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Отправить</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Закрыть</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Закрыть</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Настройте автоматическое открытие ссылок с веб-сайтов, из электронных писем и сообщений в Firefox.</string>

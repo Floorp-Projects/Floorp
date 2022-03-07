@@ -1558,11 +1558,15 @@
     <string name="credit_cards_menu_delete_card">Eliminar tarjeta</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Eliminar tarjeta</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">¿Seguro que quieres eliminar esta tarjeta de crédito?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Eliminar</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Guardar</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Guardar</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Cancelar</string>
 
     <!-- Title of the "Saved cards" screen -->
@@ -1740,6 +1744,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">No hay pestañas abiertas</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Expandir grupo de pestañas sincronizadas</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Ocultar grupo de pestañas sincronizadas</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Límite de sitios frecuentes alcanzado</string>
@@ -1788,23 +1797,23 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Ayuda a mejorar Firefox</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Ayuda a mejorar Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">¿Por qué has desactivado las pestañas inactivas?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">¿Por qué has desactivado las pestañas inactivas?</string>
 
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">No entiendo cómo funciona</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">No entiendo cómo funciona</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Me gusta limpiar las pestañas viejas yo mismo</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Me gusta limpiar las pestañas viejas yo mismo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">El período de dos semanas es demasiado largo</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">El período de dos semanas es demasiado largo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">El período de dos semanas es demasiado corto</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">El período de dos semanas es demasiado corto</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Enviar</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Enviar</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Cerrar</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Cerrar</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Configura enlaces de sitios web, correos electrónicos y mensajes para que se abran automáticamente en Firefox.</string>
