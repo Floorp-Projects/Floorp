@@ -1,6 +1,40 @@
 {
   "data": [
     {
+      "url": "https://www.wikipedia.org/",
+      "order": 0,
+      "title": "Wikipedia",
+      "schema": 1646585618139,
+      "include_regions": [
+        "RU",
+        "BY",
+        "KZ",
+        "UA",
+        "UZ",
+        "TR"
+      ],
+      "id": "060ad5fe-40c3-490c-92bc-1ba5fc14a451",
+      "last_modified": 1646597012924
+    },
+    {
+      "url": "https://www.wikipedia.org/",
+      "order": 30,
+      "title": "Wikipedia",
+      "schema": 1646445825860,
+      "exclude_regions": [
+        "GB",
+        "CN",
+        "RU",
+        "BY",
+        "KZ",
+        "UA",
+        "UZ",
+        "TR"
+      ],
+      "id": "c109ad2c-eae5-4b47-bac7-ac2eb9eb9aab",
+      "last_modified": 1646597012919
+    },
+    {
       "url": "https://www.ebay.fr/?mkevt=1&mkcid=2&mkrid=709-162318-301183-6&keyword=conducive&crlp=318455056FR%YYYYMMDDHH%&MT_ID=562786&device=Computers&cmpgn=218623",
       "order": 0,
       "title": "eBay",
@@ -31,117 +65,6 @@
       "send_attribution_request": true,
       "id": "fc1ecd88-b91c-423b-a9eb-fbf65545ca76",
       "last_modified": 1625844592281
-    },
-    {
-      "url": "https://yandex.com/?clid=2453500",
-      "order": 0,
-      "title": "Yandex",
-      "schema": 1624656907165,
-      "include_locales": [
-        "en-US",
-        "en-CA",
-        "en-GB"
-      ],
-      "include_regions": [
-        "RU",
-        "BY",
-        "KZ",
-        "TR"
-      ],
-      "sponsored_position": 1,
-      "include_experiments": [
-        "yandex-2021-1"
-      ],
-      "id": "91e008f0-3de8-4444-bbcc-859074315c08",
-      "last_modified": 1624657519691
-    },
-    {
-      "url": "https://yandex.ru/?clid=2453500",
-      "order": 0,
-      "title": "Яндекс",
-      "schema": 1624392813076,
-      "include_locales": [
-        "ru"
-      ],
-      "include_regions": [
-        "RU",
-        "BY",
-        "KZ",
-        "TR"
-      ],
-      "sponsored_position": 1,
-      "include_experiments": [
-        "yandex-2021-1"
-      ],
-      "send_attribution_request": false,
-      "id": "f16abe55-30be-4d53-b1ac-7ba1e16d17c6",
-      "last_modified": 1624657519687
-    },
-    {
-      "url": "https://yandex.by/?clid=2453500",
-      "order": 0,
-      "title": "Яндекс",
-      "schema": 1624656772350,
-      "include_locales": [
-        "be"
-      ],
-      "include_regions": [
-        "BY",
-        "RU",
-        "KZ",
-        "TR"
-      ],
-      "sponsored_position": 1,
-      "include_experiments": [
-        "yandex-2021-1"
-      ],
-      "send_attribution_request": false,
-      "id": "dbb0749e-1556-420f-8f3e-2e9d5b5efbee",
-      "last_modified": 1624657519683
-    },
-    {
-      "url": "https://yandex.kz/?clid=2453500",
-      "order": 0,
-      "title": "Яндекс",
-      "schema": 1624656814111,
-      "include_locales": [
-        "kk"
-      ],
-      "include_regions": [
-        "KZ",
-        "RU",
-        "BY",
-        "TR"
-      ],
-      "sponsored_position": 1,
-      "include_experiments": [
-        "yandex-2021-1"
-      ],
-      "send_attribution_request": false,
-      "id": "5863a53d-e0c3-4053-8332-1edf7f5b7797",
-      "last_modified": 1624657519679
-    },
-    {
-      "url": "https://yandex.com.tr/?clid=2453500",
-      "order": 0,
-      "title": "Yandex",
-      "schema": 1624656851535,
-      "include_locales": [
-        "tr"
-      ],
-      "include_regions": [
-        "TR",
-        "RU",
-        "BY",
-        "KZ"
-      ],
-      "sponsored_position": 1,
-      "include_experiments": [
-        "yandex-2021-1"
-      ],
-      "send_attribution_request": false,
-      "id": "dbbcd85e-6db4-44d5-9cc1-abad1fe1e557",
-      "last_modified": 1624657519676
     },
     {
       "url": "https://www.amazon.ca/?tag=admpdesktopca-20&ref=pd_sl_a317866944CA%YYYYMMDDHH%",
@@ -285,25 +208,6 @@
       "send_attribution_request": true,
       "id": "3413f2c2-7612-46ec-98b7-e529114e7240",
       "last_modified": 1619451115271
-    },
-    {
-      "url": "https://yandex.ru/",
-      "order": 0,
-      "title": "Yandex",
-      "schema": 1618500265732,
-      "include_regions": [
-        "BY",
-        "KZ",
-        "RU",
-        "TR"
-      ],
-      "search_shortcut": true,
-      "exclude_experiments": [
-        "yandex-2021-1"
-      ],
-      "include_experiments": [],
-      "id": "49e408ae-41c9-400c-9d9a-b871e0ef8db4",
-      "last_modified": 1619451115264
     },
     {
       "url": "https://www.amazon.fr/",
@@ -729,26 +633,6 @@
       "last_modified": 1599146777426
     },
     {
-      "url": "https://vk.com/",
-      "order": 5,
-      "schema": 1599056213323,
-      "include_regions": [
-        "RU"
-      ],
-      "id": "ac72a188-802a-447b-9a79-0a4835136240",
-      "last_modified": 1599146777420
-    },
-    {
-      "url": "https://ok.ru/",
-      "order": 11,
-      "schema": 1599056214142,
-      "include_regions": [
-        "RU"
-      ],
-      "id": "2db41cb5-c87b-4fef-9583-d2d3d85fa182",
-      "last_modified": 1599146777416
-    },
-    {
       "url": "https://www.avito.ru/",
       "order": 12,
       "schema": 1599056215077,
@@ -815,18 +699,6 @@
       ],
       "id": "19045f47-6dde-43a8-9511-3fc0c4555a09",
       "last_modified": 1599146777365
-    },
-    {
-      "url": "https://www.wikipedia.org/",
-      "order": 30,
-      "title": "Wikipedia",
-      "schema": 1599056608910,
-      "exclude_regions": [
-        "GB",
-        "CN"
-      ],
-      "id": "c109ad2c-eae5-4b47-bac7-ac2eb9eb9aab",
-      "last_modified": 1599146777355
     },
     {
       "url": "https://www.bbc.co.uk/",
