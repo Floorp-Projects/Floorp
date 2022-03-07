@@ -5,10 +5,10 @@
 package mozilla.components.feature.media.middleware
 
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
-import android.content.pm.ResolveInfo
+import android.content.IntentFilter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
@@ -30,7 +30,14 @@ class RecordingDevicesMiddlewareTest {
     fun setup() {
         // Prepare the PackageManager to answer getLaunchIntentForPackage call.
         val applicationManager = Shadows.shadowOf(testContext.packageManager)
-        applicationManager.addResolveInfoForIntent(mockedLaunchIntent, mockedResolveInfo)
+
+        val activityComponent = ComponentName(testContext.packageName, "Test")
+        applicationManager.addActivityIfNotPresent(activityComponent)
+
+        applicationManager.addIntentFilterForActivity(
+            activityComponent,
+            IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_INFO) }
+        )
     }
 
     @Test
@@ -112,18 +119,4 @@ class RecordingDevicesMiddlewareTest {
 
         assertEquals(0, notificationManager.size())
     }
-
-    private val mockedLaunchIntent
-        get() = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_INFO)
-            setPackage(testContext.packageName)
-        }
-
-    private val mockedResolveInfo
-        get() = ResolveInfo().apply {
-            activityInfo = ActivityInfo().apply {
-                packageName = testContext.packageName
-                name = "Name"
-            }
-        }
 }
