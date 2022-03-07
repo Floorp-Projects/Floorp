@@ -3,13 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.cfr
 
+import androidx.core.net.toUri
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.focus.Components
+import org.mozilla.focus.ext.truncatedHost
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.ERASE_CFR_LIMIT
 import org.mozilla.focus.utils.Features
@@ -36,9 +39,15 @@ class CfrMiddleware(private val components: Components) : Middleware<BrowserStat
             }
         }
 
-        if (shouldShowCfrForTrackingProtection(action = action)) {
+        if (shouldShowCfrForTrackingProtection(action = action, browserState = context.state)) {
             components.appStore.dispatch(AppAction.ShowTrackingProtectionCfrChange(true))
         }
+    }
+
+    private fun isMozillaUrl(browserState: BrowserState): Boolean {
+        return browserState.findTabOrCustomTabOrSelectedTab(
+            browserState.selectedTabId
+        )?.content?.url?.toUri()?.truncatedHost()?.substringBefore(".") == ("mozilla")
     }
 
     private fun isActionSecure(action: BrowserAction) = (
@@ -47,9 +56,11 @@ class CfrMiddleware(private val components: Components) : Middleware<BrowserStat
         )
 
     private fun shouldShowCfrForTrackingProtection(
-        action: BrowserAction
+        action: BrowserAction,
+        browserState: BrowserState
     ) = (
         isActionSecure(action = action) &&
+            !isMozillaUrl(browserState = browserState) &&
             Features.IS_TRACKING_PROTECTION_CFR_ENABLED &&
             components.settings.shouldShowCfrForTrackingProtection &&
             !components.appStore.state.showEraseTabsCfr
