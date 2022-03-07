@@ -30,6 +30,13 @@
     <div id="displayInput"></div>
 </section>
 
+<p>Calendar Form</p>
+<section>
+    <input type="date" id="calendar">
+    <button onclick="printDate()" id="submitDate"> Submit date </button>
+    <div id="displayDate"></div>
+</section>
+
 <script>
     function printOption() {
       let dropDown = document.querySelector("#dropDown");
@@ -45,6 +52,15 @@
       let displayInput = document.querySelector("#displayInput");
 
       displayInput.innerHTML = "You entered: " + textInput.value;
+    }
+  </script>
+
+<script>
+    function printDate() {
+      let calendar = document.querySelector("#calendar");
+      let displayDate = document.querySelector("#displayDate");
+
+      displayDate.innerHTML = "Selected date is: " + calendar.value;
     }
   </script>
 </html>

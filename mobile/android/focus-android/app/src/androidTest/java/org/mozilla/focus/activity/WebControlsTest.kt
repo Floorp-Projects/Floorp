@@ -128,4 +128,21 @@ class WebControlsTest {
             verifyPageContent("You entered: Copy")
         }
     }
+
+    @SmokeTest
+    @Test
+    fun verifyCalendarFormTest() {
+        webServer.enqueue(createMockResponseFromAsset("htmlControls.html"))
+        val htmlControlsPage = webServer.url("htmlControls.html").toString()
+
+        searchScreen {
+        }.loadPage(htmlControlsPage) {
+            progressBar.waitUntilGone(waitingTime)
+            clickCalendarForm()
+            selectDate()
+            clickFormViewButton("OK")
+            clickSubmitDateButton()
+            verifySelectedDate()
+        }
+    }
 }

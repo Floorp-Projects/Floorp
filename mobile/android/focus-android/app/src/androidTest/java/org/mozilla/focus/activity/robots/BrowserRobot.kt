@@ -28,6 +28,7 @@ import org.mozilla.focus.helpers.TestHelper.progressBar
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
+import java.time.LocalDate
 
 class BrowserRobot {
 
@@ -165,6 +166,52 @@ class BrowserRobot {
             .waitForExists(waitingTime)
         mDevice.findObject(UiSelector().textContains("Drop-down Form")).waitForExists(waitingTime)
         dropDownForm.click()
+    }
+
+    fun clickCalendarForm() {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            .waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains("Calendar Form")).waitForExists(waitingTime)
+        calendarForm.click()
+        mDevice.waitForIdle(waitingTime)
+    }
+
+    fun selectDate() {
+        mDevice.findObject(UiSelector().resourceId("android:id/month_view")).waitForExists(waitingTime)
+
+        val monthViewerCurrentDay =
+            mDevice.findObject(
+                UiSelector()
+                    .textContains("$currentDay")
+                    .descriptionContains("$currentDay $currentMonth $currentYear")
+            )
+
+        monthViewerCurrentDay.click()
+    }
+
+    fun clickFormViewButton(button: String) {
+        val clockAndCalendarButton = mDevice.findObject(UiSelector().textContains(button))
+        clockAndCalendarButton.click()
+    }
+
+    fun clickSubmitDateButton() {
+        submitDateButton.waitForExists(waitingTime)
+        submitDateButton.click()
+    }
+
+    fun verifySelectedDate() {
+        mDevice.findObject(
+            UiSelector()
+                .textContains("Submit date")
+                .resourceId("submitDate")
+        ).waitForExists(waitingTime)
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected date is: $currentDate")
+            ).waitForExists(waitingTime)
+        )
     }
 
     fun clickAndWriteTextInInputBox(text: String) {
@@ -435,6 +482,11 @@ private val openLinksInAppsCancelButton = mDevice.findObject(UiSelector().textCo
 
 private val openLinksInAppsOpenButton = mDevice.findObject(UiSelector().textContains("OPEN"))
 
+private val currentDate = LocalDate.now()
+private val currentDay = currentDate.dayOfMonth
+private val currentMonth = currentDate.month
+private val currentYear = currentDate.year
+
 private val dropDownForm =
     mDevice.findObject(
         UiSelector()
@@ -462,4 +514,19 @@ private val submitTextInputButton =
         UiSelector()
             .textContains("Submit input")
             .resourceId("submitInput")
+    )
+
+private val calendarForm =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("calendar")
+            .className("android.widget.Spinner")
+            .packageName("$packageName")
+    )
+
+val submitDateButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains("Submit date")
+            .resourceId("submitDate")
     )
