@@ -154,14 +154,6 @@ class DummyAudioProcessing : public AudioProcessing {
     return Config();
   }
 };
-
-class NoTrialsConfig : public WebRtcKeyValueConfig {
- public:
-  NoTrialsConfig() = default;
-  std::string Lookup(absl::string_view key) const override {
-    return std::string();
-  }
-};
 }  // namespace
 
 namespace mozilla {
