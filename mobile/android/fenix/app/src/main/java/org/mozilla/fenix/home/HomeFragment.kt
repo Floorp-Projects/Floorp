@@ -64,7 +64,6 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
@@ -82,10 +81,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.appstate.AppAction
@@ -93,25 +90,18 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
-import org.mozilla.fenix.datastore.pocketStoriesSelectedCategoriesDataStore
-import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.filterState
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.sort
-import org.mozilla.fenix.home.blocklist.BlocklistHandler
-import org.mozilla.fenix.home.blocklist.BlocklistMiddleware
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksFeature
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 import org.mozilla.fenix.home.recenttabs.controller.DefaultRecentTabsController
 import org.mozilla.fenix.home.recentvisits.RecentVisitsFeature
@@ -173,7 +163,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private lateinit var homeFragmentStore: HomeFragmentStore
     private var _sessionControlInteractor: SessionControlInteractor? = null
     private val sessionControlInteractor: SessionControlInteractor
         get() = _sessionControlInteractor!!
@@ -235,34 +224,6 @@ class HomeFragment : Fragment() {
             browsingModeManager,
             ::dispatchModeChanges
         )
-
-        val blocklistHandler = BlocklistHandler(components.settings)
-        homeFragmentStore = StoreProvider.get(this) {
-            HomeFragmentStore(
-                initialState = HomeFragmentState(
-                    collections = components.core.tabCollectionStorage.cachedTabCollections,
-                    expandedCollections = emptySet(),
-                    mode = currentMode.getCurrentMode(),
-                    topSites = getTopSites(components),
-                    recentBookmarks = emptyList(),
-                    showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
-                    showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard(),
-                    // Provide an initial state for recent tabs to prevent re-rendering on the home screen.
-                    //  This will otherwise cause a visual jump as the section gets rendered from no state
-                    //  to some state.
-                    recentTabs = getRecentTabs(components),
-                    recentHistory = emptyList()
-                ).run { filterState(blocklistHandler) },
-                middlewares = listOf(
-                    BlocklistMiddleware(blocklistHandler),
-                    PocketUpdatesMiddleware(
-                        lifecycleScope,
-                        requireComponents.core.pocketStoriesService,
-                        requireContext().pocketStoriesSelectedCategoriesDataStore
-                    )
-                )
-            )
-        }
 
         lifecycleScope.launch(IO) {
             if (requireContext().settings().showPocketRecommendationsFeature) {
@@ -684,22 +645,6 @@ class HomeFragment : Fragment() {
         subscribeToTabCollections()
 
         val context = requireContext()
-        val components = context.components
-
-        homeFragmentStore.dispatch(
-            HomeFragmentAction.Change(
-                collections = components.core.tabCollectionStorage.cachedTabCollections,
-                mode = currentMode.getCurrentMode(),
-                topSites = getTopSites(components),
-                showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
-                // Provide an initial state for recent tabs to prevent re-rendering on the home screen.
-                //  This will otherwise cause a visual jump as the section gets rendered from no state
-                //  to some state.
-                recentTabs = getRecentTabs(components),
-                recentBookmarks = emptyList(),
-                recentHistory = emptyList()
-            )
-        )
 
         requireComponents.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             // By the time this code runs, we may not be attached to a context or have a view lifecycle owner.
@@ -1192,22 +1137,6 @@ class HomeFragment : Fragment() {
         // The add_tabs_to_collections_button is added at runtime. We need to search for it in the same way.
         sessionControlView?.view?.findViewById<MaterialButton>(R.id.add_tabs_to_collections_button)
             ?.isVisible = tabCount > 0
-    }
-
-    private fun getTopSites(components: Components): List<TopSite> {
-        return if (components.settings.showTopSitesFeature) {
-            components.core.topSitesStorage.cachedTopSites.sort()
-        } else {
-            emptyList()
-        }
-    }
-
-    private fun getRecentTabs(components: Components): List<RecentTab> {
-        return if (components.settings.showRecentTabsFeature) {
-            components.core.store.state.asRecentTabs()
-        } else {
-            emptyList()
-        }
     }
 
     private fun displayWallpaperIfEnabled() {
