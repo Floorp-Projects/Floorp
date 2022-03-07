@@ -11,14 +11,14 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import kotlin.random.Random
 
-class HomeFragmentStateTest {
+class AppStateTest {
     private val otherStoriesCategory =
         PocketRecommendedStoriesCategory("other", getFakePocketStories(3, "other"))
     private val anotherStoriesCategory =
@@ -30,55 +30,55 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN no category is selected WHEN getFilteredStories is called THEN only Pocket stories from the default category are returned`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(
                 otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory
             )
         )
 
-        var result = homeState.getFilteredStories(2)
+        var result = state.getFilteredStories(2)
         assertNull(result.firstOrNull { it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME })
 
-        result = homeState.getFilteredStories(5)
+        result = state.getFilteredStories(5)
         assertNull(result.firstOrNull { it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME })
     }
 
     @Test
     fun `GIVEN no category is selected WHEN getFilteredStories is called THEN no more than the indicated number of stories are returned`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(
                 otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory
             )
         )
 
         // Asking for fewer than available
-        var result = homeState.getFilteredStories(2)
+        var result = state.getFilteredStories(2)
         assertEquals(2, result.size)
 
         // Asking for more than available
-        result = homeState.getFilteredStories(5)
+        result = state.getFilteredStories(5)
         assertEquals(3, result.size)
     }
 
     @Test
     fun `GIVEN a category is selected WHEN getFilteredStories is called for fewer than in the category THEN only stories from that category are returned`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name))
         )
 
-        var result = homeState.getFilteredStories(2)
+        var result = state.getFilteredStories(2)
         assertEquals(2, result.size)
         assertNull(result.firstOrNull { it.category != otherStoriesCategory.name })
 
-        result = homeState.getFilteredStories(3)
+        result = state.getFilteredStories(3)
         assertEquals(3, result.size)
         assertNull(result.firstOrNull { it.category != otherStoriesCategory.name })
     }
 
     @Test
     fun `GIVEN two categories are selected WHEN getFilteredStories is called for fewer than in both THEN only stories from those categories are returned`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(
                 PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name),
@@ -86,7 +86,7 @@ class HomeFragmentStateTest {
             )
         )
 
-        var result = homeState.getFilteredStories(2)
+        var result = state.getFilteredStories(2)
         assertEquals(2, result.size)
         assertNull(
             result.firstOrNull {
@@ -94,7 +94,7 @@ class HomeFragmentStateTest {
             }
         )
 
-        result = homeState.getFilteredStories(6)
+        result = state.getFilteredStories(6)
         assertEquals(6, result.size)
         assertNull(
             result.firstOrNull {
@@ -105,7 +105,7 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN two categories are selected WHEN getFilteredStories is called for an odd number of stories THEN there are more by one stories from the newest category`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(
                 PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name, selectionTimestamp = 0),
@@ -113,7 +113,7 @@ class HomeFragmentStateTest {
             )
         )
 
-        val result = homeState.getFilteredStories(5)
+        val result = state.getFilteredStories(5)
 
         assertEquals(5, result.size)
         assertEquals(2, result.filter { it.category == otherStoriesCategory.name }.size)
@@ -242,7 +242,7 @@ class HomeFragmentStateTest {
             )
         }
 
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(firstCategory, secondCategory),
             pocketStoriesCategoriesSelections = listOf(
                 PocketRecommendedStoriesSelectedCategory(firstCategory.name, selectionTimestamp = 0),
@@ -250,7 +250,7 @@ class HomeFragmentStateTest {
             )
         )
 
-        val result = homeState.getFilteredStories(6)
+        val result = state.getFilteredStories(6)
 
         assertEquals(6, result.size)
         assertSame(secondCategory.stories[2], result.first())
@@ -263,7 +263,7 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN old selections of categories which do not exist anymore WHEN getFilteredStories is called THEN ignore not found selections`() {
-        val homeState = HomeFragmentState(
+        val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(
                 PocketRecommendedStoriesSelectedCategory("unexistent"),
@@ -271,7 +271,7 @@ class HomeFragmentStateTest {
             )
         )
 
-        val result = homeState.getFilteredStories(6)
+        val result = state.getFilteredStories(6)
 
         assertEquals(3, result.size)
         assertNull(result.firstOrNull { it.category != anotherStoriesCategory.name })
@@ -281,7 +281,7 @@ class HomeFragmentStateTest {
     fun `GIVEN recentTabs contains a SearchGroup WHEN recentSearchGroup is called THEN return the group`() {
         val searchGroup: RecentTab.SearchGroup = mockk()
         val normalTab: RecentTab.Tab = mockk()
-        val state = HomeFragmentState(recentTabs = listOf(normalTab, searchGroup))
+        val state = AppState(recentTabs = listOf(normalTab, searchGroup))
 
         assertEquals(searchGroup, state.recentSearchGroup)
     }
@@ -290,7 +290,7 @@ class HomeFragmentStateTest {
     fun `GIVEN recentTabs does not contains SearchGroup WHEN recentSearchGroup is called THEN return null`() {
         val normalTab1: RecentTab.Tab = mockk()
         val normalTab2: RecentTab.Tab = mockk()
-        val state = HomeFragmentState(recentTabs = listOf(normalTab1, normalTab2))
+        val state = AppState(recentTabs = listOf(normalTab1, normalTab2))
 
         assertNull(state.recentSearchGroup)
     }
