@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">¡Bienvenido a %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Navegación privada de siguiente nivel cuando quieras</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Donde el incógnito se encuentra con lo invisible</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s es un navegador que prioriza la privacidad con seguimiento extrafuerte y protección de cookies integrada.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Navegá como si nunca hubiera pasado</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Si tus necesidades de navegación cambian, es fácil escalar la configuración de privacidad a mayor o menor.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Empezar a navegar</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Lleve la navegación privada al siguiente nivel. Bloquee publicidades y otro contenido que puede rastrearlo en todos los sitios y lentificar los tiempos de carga de las páginas.</string>

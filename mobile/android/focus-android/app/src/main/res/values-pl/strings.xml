@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Witamy w przeglądarce %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Prywatne przeglądanie na wyższym poziomie, kiedy tylko chcesz</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Gdzie incognito znaczy niewidzialność</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s to przeglądarka stawiająca prywatność na pierwszym miejscu, mająca wbudowaną supersilną ochronę ciasteczek i przed śledzeniem.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Przeglądaj bez żadnego śladu</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Prywatność pasująca do każdej sytuacji</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Jeśli potrzebujesz przeglądać inaczej, łatwo możesz zwiększyć lub zmniejszyć ustawienia prywatności.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Zacznij przeglądać Internet</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Przejdź na wyższy poziom prywatności. Blokuj reklamy i inne elementy mogące Cię śledzić między stronami i wydłużające wczytywanie się stron.</string>

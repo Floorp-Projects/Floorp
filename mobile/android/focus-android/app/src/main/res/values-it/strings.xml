@@ -492,7 +492,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Benvenuto in %1$s.</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Un livello superiore di navigazione anonima, ogni volta che vuoi</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Più invisibile che in incognito</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s è un browser sviluppato per la privacy, con protezione integrata dal tracciamento e dai cookie della massima efficacia.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Naviga come non hai mai fatto</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacy che si adatta a qualsiasi situazione</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Se hai bisogno di adattare la tua navigazione, è semplice aumentare o diminuire il livello di protezione della privacy.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Inizia a navigare</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Potenzia la tua privacy</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Porta la navigazione anonima al livello superiore. Blocca pubblicità e altri contenuti che cercano di seguirti attraverso siti diversi e rallentano il caricamento delle pagine.</string>

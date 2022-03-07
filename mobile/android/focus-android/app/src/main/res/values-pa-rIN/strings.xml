@@ -486,7 +486,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਨਵਾਂ ਪੜਾਅ, ਜਿਸ ਦੀ ਤੁਸੀਂ ਆਸ ਕਰਦੇ ਹੋ</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">ਜਿੱਥੇ ਅਣਪਛਾਤਾ ਅਦਿੱਖ ਬਣ ਜਾਂਦਾ ਹੈ</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s ਬਹੁਤ ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਤੇ ਕੂਕੀਜ਼ ਸੁਰੱਖਿਆ ਨਾਲ ਲੈੱਸ ਪਰਦੇਦਾਰੀ ਪ੍ਰਧਾਨ ਬਰਾਊਜ਼ਰ ਹੈ।</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">ਇੰਝ ਬਰਾਊਜ਼ ਕਰੋ, ਜਿਵੇਂ ਕਦੇ ਕੀਤੀ ਹੀ ਨਾ ਹੋਵੇ</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">ਆਪਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਤੇ ਕੂਕੀਜ਼ ਨੂੰ ਇੱਕ ਛੋਹ ਨਾਲ ਮਿਟਾਓ — ਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਰਹੇ ਇਸ਼ਤਿਹਾਰਾਂ ਨੂੰ ਰੋਕ ਦਿੰਦੀ ਹੈ।</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">ਕਿਸੇ ਵੀ ਹਾਲਤ ਵਿੱਚ ਫਿੱਟ ਆਉਣ ਵਾਲੀ ਪਰਦੇਦਾਦਰੀ</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">ਜੇ ਤੁਹਾਡੀਆਂ ਬਰਾਊਜ਼ ਕਰਨ ਦੀਆਂ ਲੋੜ ਬਦਲ ਜਾਣ ਤਾਂ ਤੁਹਾਡੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਨੂੰ ਵਧਾਉਣਾ ਜਾਂ ਘਟਾਉਣਾ ਸੌਖਾ ਹੈ।</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">ਬਰਾਊਜ਼ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਨੂੰ ਅਗਲੇ ਪੱਧਰ ਤੇ ਲੈ ਜਾਓ। ਇਸ਼ਤਿਹਾਰ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ, ਜੋ ਕਿ ਤੁਹਾਨੂੰ ਸਾਈਟਾਂ ਉੱਤੇ ਟਰੈਕ ਕਰ ਅਤੇ ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਨੂੰ ਹੌਲੀ ਕਰ ਸਕਦੀ ਹੈ, ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
@@ -896,4 +925,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ਟੈਬ ਬੰਦ ਕਰੋ</string>
-</resources>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">ਜਾਪਦਾ ਹੈ ਕਿ ਇਹ ਸਾਈਟ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰ ਰਹੀ ਹੈ। ਸਾਈਟ ਸੈਟਿੰਗਾਂ ਲਈ ਢਾਲ ਉੱਤੇ ਕਲਿੱਕ ਕਰੋ ਤੇ ਪਾਬੰਦੀ ਲਾਣ ਅੰਕੜਿਆਂ ਨੂੰ ਟਰੈਕ ਕਰੋ।</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ਪੋਪ-ਅੱਪ ਬੰਦ ਕਰੋ</string>
+
+    </resources>

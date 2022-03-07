@@ -489,7 +489,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s өніміне қош келдіңіз!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Қажет кезде келесі деңгейлі жекелік шолу</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Жекелік шолудың келесі деңгейіне өтіңіз. Сайттар арасында сізді бақылайтын және парақтардың жүктелу уақытын арттыратын жарнама және басқа құраманы блоктаңыз.</string>

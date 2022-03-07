@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Üdvözli a %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Magasabb szintű privát böngészés, amikor csak akarja</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Ahol az inkognitó találkozik a láthatatlannal</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">A %s egy olyan böngésző, amely az adatvédelmet helyezi előtérbe, rendkívül erős beépített nyomkövetés elleni és sütivédelemmel.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Böngésszen úgy, mintha meg sem történt volna</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Adatvédelem minden helyzethez</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Ha a böngészési igényei megváltoznak, könnyen szigorúbbra vagy megengedőbbre állíthatja az adatvédelmi beállításait.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Böngészés megkezdése</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Emelje a privát böngészést a következő szintre. Blokkolja a hirdetéseket, és más tartalmakat, amelyek követhetik az oldalak között, és lelassíthatják a betöltési sebességet.</string>

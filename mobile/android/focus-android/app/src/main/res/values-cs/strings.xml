@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -452,7 +452,7 @@
     <string name="external_app_prompt_no_app_title">Najít aplikaci, která může otevřít odkaz</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
          the app store installed on the device (usually that's Google Play). -->
-    <string name="external_app_prompt_no_app">Žádná z aplikací na vašem zařízení není schopná otevřít tento odkaz. Můžete opustit aplikaci %1$s a najít vhodnou aplikaci v %2$s.</string>
+    <string name="external_app_prompt_no_app">Žádná z aplikací na vašem zařízení není schopná otevřít tento odkaz. Můžete opustit aplikaci %1$s a najít vhodnou aplikaci v obchodu %2$s.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">Opustit režim anonymního prohlížení?</string>
 
@@ -490,7 +490,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Vítá vás %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Vyšší úroveň soukromého prohlížení kdykoliv potřebujete</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Plášť neviditelnosti a soukromí</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s je prohlížeč zaměřený na soukromí s vestavěnou extra silnou ochranou cookies proti sledování.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Prohlížejte bez obav</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Jediné klepnutí vymaže historii vašeho prohlížení včetně cookies, čímž váš ochrání před sledujícími reklamami.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Soukromí pro každou situaci</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Úroveň ochrany soukromí během prohlížení si můžete nastavit podle potřeby.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Začněte prohlížet</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Anonymní prohlížení dostalo nový rozměr. Blokuje reklamy a další obsah, který vás sleduje napříč stránkami a zpomaluje načítání.</string>
@@ -795,7 +824,9 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <string name="preference_https_only_title">Režim „pouze HTTPS“</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Automaticky navazovat bezpečné spojení k webovým serverů pomocí protokolu HTTPS. Díky HTTPS je navštěvovaná stránka přenášena zabezpečeně pomocí šifrování.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Automaticky navazovat bezpečné spojení k webovým serverů pomocí protokolu HTTPS. Díky HTTPS je navštěvovaná stránka přenášena zabezpečeně pomocí šifrování.</string>
+
+    <string name="preference_https_only_summary3">Pro zvýšení zabezpečení se automaticky pokusí připojit k webům pomocí šifrovacího protokolu HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Výjimky</string>
@@ -893,4 +924,22 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zavřít panel</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Vypadá to, že se vás tento server pokusil sledovat. Klepněte na ikonu štítu pro zobrazení nastavení a statistik blokování.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Zavřít vyskakovací okno</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Jste chráněni!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Tato výchozí nastavení poskytují silnou ochranu. Můžete je ale jednoduše nastavit podle vlastních potřeb.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Zavřít</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Klepnutím na tlačítko koše zahodíte historii prohlížení a další data z této relace. Zkuste to!</string>
+
 </resources>

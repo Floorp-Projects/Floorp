@@ -491,7 +491,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s’a hoş geldiniz!</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Gezinmeye başlayın</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Gizli gezintiyi daha da geliştirdik. Gezdiğiniz siteleri takip eden ve sayfaların yüklenmesini yavaşlatan reklamları ve diğer içerikleri engelleyebilirsiniz.</string>

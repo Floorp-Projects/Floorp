@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">歡迎使用 %1$s！</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">您會想要的下一代隱私瀏覽模式</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">當無痕模式遇上隱形模式</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s 是隱私優先的瀏覽器，當中內建了超強大的反追蹤與 Cookie 保護功能。</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">讓瀏覽紀錄彷彿沒發生過</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">符合任何情境的隱私保護機制</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">若需要調整隱私保護，很簡單就能放鬆或者變嚴格。</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">開始上網</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>

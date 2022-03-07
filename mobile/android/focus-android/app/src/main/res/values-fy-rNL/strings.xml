@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Wolkom bij %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Avansearre priveenavigaasje wannear’t jo dat wolle</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Wêr ynkognito ûnsichtber moetet</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s is in browser dy’t privacy foarop stelt, mei ynboude ekstra sterke beskerming tsjin folgjen en cookies.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Sneup as oft it nea bard is</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Mei ien tik wurde jo navigaasjeskiednis en cookies wiske en wurdt foarkommen dat advertinsjes jo folgje.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacy foar elke situaasje</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">As de manier wêrop jo sneupe wizige wurde moat, kinne jo jo privacy-ynstellingen ienfâldich op- of ôfskeale.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Begjinne mei browse</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Bring priveenavigaasje nei in heger nivo. Blokkearje advertinsjes en oare ynhâld dy’t jo op websites folgje kinne en laadtiden fan siden ferlingje.</string>
@@ -898,4 +927,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Ljepblêd slute</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">It liket derop dat dizze website jo probearre te folgjen. Klik op it skyld foar website-ynstellingen en trackerblokkearringsstatistiken.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Pop-up slute</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Jo binne beskerme!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Dizze standertynstellingen biede in sterke beskerming. Mar it is ienfâldich om de ynstellingen oan jo spesifike behoeften oan te passen.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Slute</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Smyt jo persoanlike gegevens, navigaasjeskiednis en mear út dizze sesje troch op de jiskefetknop te tikken. Probearje it ris!</string>
+
 </resources>

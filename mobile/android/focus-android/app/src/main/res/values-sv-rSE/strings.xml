@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Välkommen till %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Privat surfning på nästa nivå när du vill</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Där inkognito möter osynligt</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s är en webbläsare som prioriterar integriteten med extra starkt inbyggt skydd mot spårning och kakor.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Surfa som om det aldrig hänt</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Sekretess som passar alla situationer</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Om dina surfbehov ändras är det enkelt att skala upp eller ner dina sekretessinställningar.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Börja surfa</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Stärk din integritet</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Ta privat surfning till nästa nivå. Blockera annonser och annat innehåll som kan spåra dig på webbplatser och slöa ner laddningen av webbsidor.</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -19,6 +19,8 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Sto\'i ña ntsinu.</string>
+
+    <string name="feedback_erase2">Stoo ña ntsinu</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Stoi ña ntsinu ña ntsika nu xikua.</string>
@@ -136,6 +138,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Tu\'un tsa %1$s, ña chinhe\'e yo</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Protección de rastreo aumentada</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Tutu web</string>
 
@@ -144,6 +149,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Ntií</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Navegador xina, tu un</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
@@ -253,9 +261,13 @@
     <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
     <string name="preference_privacy_category_cookies">Kasi cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ti tsavu</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Kasi cookies ña inka nivi</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Bloquear cookies de sitios cruzados</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Va´a</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -456,7 +468,11 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Ni kitsau yoo %1$s!</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
@@ -645,7 +661,7 @@
     <string name="open_new_tab_snackbar">Sama</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Kitsaà Ntukú</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Kitsaà Ntukú</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Excepciones</string>
@@ -703,4 +719,12 @@
     <string name="preference_light_theme">Yaa</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Ntyai</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Kasi popup</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">¡A yee vaa!</string>
+
     </resources>

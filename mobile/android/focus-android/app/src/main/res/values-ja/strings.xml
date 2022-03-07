@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s へようこそ！</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">ユーザーに寄り添う先進のプライベートブラウジング</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">匿名と不可視が出会う場所</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s は非常に強力な追跡防止と Cookie 保護が組み込まれたプライバシーファーストのブラウザーです。</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">何事もなかったかのようなブラウジング</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">どんな状況でも適合するプライバシー機能</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">ブラウジングの変更が必要な時は、簡単にプライバシーレベルの設定を上げたり下げたりできます。</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">ブラウジングを開始</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">プライベートブラウジングを次のレベルへと進めましょう。サイトを越えてあなたを追跡したり、ページの読み込みを遅くしたりする可能性のある広告その他のコンテンツを自動的にブロック。</string>

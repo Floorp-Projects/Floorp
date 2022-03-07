@@ -490,7 +490,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">¡Te damos la bienvenida a %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Navegación privada de un nivel superior cuando quieras</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Donde el incógnito se encuentra con lo invisible</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s es un navegador que prioriza la privacidad con protección extrafuerte integrada contra rastreadores y cookies.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Navega como nunca lo has hecho</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Si necesitas cambiar tu navegación, es fácil aumentar o reducir el nivel de protección de tu privacidad.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Empezar a navegar</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Potencia tu privacidad</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Lleva la navegación privada al siguiente nivel. Bloquea anuncios y otros contenidos que puedan rastrearte a través de los sitios y ralentizar la carga de las páginas.</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -164,6 +164,9 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">सर्वोच्च साइट्स खातिर</string>
 
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">साइटों ले आपने जोड़ि‍यै</string>
+
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">साइटों के प्रबंध करियै</string>
 
@@ -181,6 +184,9 @@
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">पसंदीदा URL जोड़ि‍यै</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">अपना सँ पूर्ण खातिर लिंक जोड़ि‍यै</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">कुकीज़ आरु साइट डेटा</string>
@@ -237,6 +243,9 @@
     <string name="preference_privacy_block_content_summary2">सक्षम करै सऽ कुछ पृष्ठ के व्यवहार अप्रत्याशित हुए सकै छै</string>
     <string name="preference_privacy_category_cookies">कुकीज ब्लौक करियै</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">नै, धन्यवाद</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">खाली 3र्ड पार्टी ट्रैकर कूकीज ब्लौक करियै</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">खाली 3र्ड पार्टी कूकीज ब्लौक करियै</string>
 
@@ -435,7 +444,11 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">स्वागत छै %1$s!</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">अपन गोपनीयता के बढ़ैइयै</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">निजी ब्राउज़िंग के अगिला स्तर धरि लिअ. विज्ञापन आरू आन सामग्री के ब्लॉक करू जे अहाँक सभ साइट के ट्रैक करि सकै छै आरू पृष्ठ लोड समय के बढ़ाए दै छै.</string>
@@ -509,6 +522,11 @@
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
     <string name="your_rights_content2"><![CDATA[%1$s <a href="%2$s">मोज़िला सार्वजनिक लाइसेंस</a> आरू आन मुक्त स्रोत लाइसेंस केरो नियम के अंतर्गत अहाँ के उपलब्ध करैलो जाए छै.]]></string>
 
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s लेली अतिरिक्त स्रोत कोड अनेक आन निशुल्क आरू मुक्त स्रोत <a href="%2$s">लाइसेन्स</a> केरो अंतर्गत उपलब्ध छै.]]></string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">यूजरनाम</string>
     <string name="gv_prompt_password_hint">पासवर्ड</string>
@@ -559,8 +577,14 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">विकसित करल गेल</string>
 
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">बेसी जानकारी</string>
+
     <!-- Title of the remove studies button -->
     <string name="studies_remove">हटैइयै</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">पूरा भेल</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi के द्वारा रिमोट डीबगिंग</string>
@@ -635,6 +659,9 @@
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">नया टैब खुलल</string>
 
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">बदलियै</string>
+
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string moz:removedIn="97" name="preference_category_safe_browsing">सुरक्षित ब्राउजिंग</string>
 
@@ -666,10 +693,19 @@
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">नाम बदलियै</string>
 
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">थीम</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">हल्का</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">गहरा</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">टैव बंद करियै</string>
-</resources>
+
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">रद्द करियै</string>
+
+    </resources>

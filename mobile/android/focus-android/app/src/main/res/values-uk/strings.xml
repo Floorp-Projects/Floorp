@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Вітаємо в %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Приватний перегляд вищого рівня у будь-який час</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Де зустрічаються режими інкогніто з невидимим</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s — це браузер, який насамперед забезпечує приватність із вбудованим надзвичайно надійним захистом від елементів стеження і кук.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Переглядайте інтернет як ніколи раніше</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Приватність, яка підходить для будь-якої ситуації</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Якщо потрібно змінити налаштування приватності перегляду, їх можна легко посилити або послабити.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Розпочати перегляд</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Прокачайте вашу приватність</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Перейдіть на вищий рівень приватного перегляду. Блокуйте рекламу та інший вміст, що може стежити за вами на сайтах і сповільнювати завантаження сторінок.</string>

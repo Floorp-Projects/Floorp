@@ -495,6 +495,31 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">欢迎使用 %1$s！</string>
 
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">符合您需求的下一代隐私浏览体验</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">无痕模式遇上隐形模式</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s 是一款隐私优先的浏览器，内置超强的跟踪和 Cookie 保护功能。</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">浏览无痕迹</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">适合任何场景的隐私保护机制</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">若您的浏览需求有变，也可很容易地收紧或放松隐私设置。</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">开始浏览</string>
+
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
     <!-- First run tour (Default browser): Text. -->

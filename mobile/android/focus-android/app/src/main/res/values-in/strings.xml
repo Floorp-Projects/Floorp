@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Selamat datang di %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Penjelajahan pribadi tingkat lanjut di saat Anda menginginkannya</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Menyamar sekaligus tak terlihat</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s adalah peramban utama dengan perlindungan pelacakan dan perlindungan kuki bawaan ekstra kuat.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Menjelajah seperti ini tidak pernah terjadi</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privasi yang sesuai dengan situasi apapun</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Jika penjelajahan Anda perlu diubah, mudah untuk menaikkan atau menurunkan pengaturan privasi Anda.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Mulai menjelajah</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Bawa penjelajahan pribadi ke tingkat berikutnya. Blokir iklan dan konten lainnya yang dapat melacak Anda di seluruh situs dan memperlambat waktu buka halaman.</string>

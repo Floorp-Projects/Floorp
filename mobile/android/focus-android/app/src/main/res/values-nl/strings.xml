@@ -492,7 +492,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Welkom bij %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Geavanceerde privénavigatie wanneer u dat wilt</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Waar incognito onzichtbaar ontmoet</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s is een browser die privacy voorop stelt, met ingebouwde extra sterke bescherming tegen volgen en cookies.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Surf alsof het nooit is gebeurd</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacy voor elke situatie</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Als de manier waarop u surft moet worden gewijzigd, kunt u uw privacyinstellingen eenvoudig op- of afschalen.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Beginnen met browsen</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Vergroot uw privacy</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Breng privénavigatie naar een hoger niveau. Blokkeer advertenties en andere inhoud die u op websites kunnen volgen en laadtijden van pagina’s verlengen.</string>

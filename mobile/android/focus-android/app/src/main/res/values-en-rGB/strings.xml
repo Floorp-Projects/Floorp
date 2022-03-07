@@ -464,6 +464,35 @@
 
     <string name="error_hostLookup_title">Server not found</string>
 
+    <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Welcome to %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Next-level private browsing when you want it</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Where incognito meets invisible</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Browse like it never happened</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">One tap erases your browsing history and cookies — and stops ads from following your around.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacy that fits any situation</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">If your browsing needs change, it’s easy to scale your privacy settings up or down.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Start browsing</string>
+
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
     <!-- First run tour (Default browser): Text. -->

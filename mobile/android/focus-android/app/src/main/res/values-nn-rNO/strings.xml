@@ -493,7 +493,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Velkomen til %1$s!</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Start nettlesinga</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Ta privat nettlesing til neste nivå. Blokker annonsar og anna innhald som kan spora deg på tvers av nettstadar og som kan gjera nedlasting av nettsider tregare.</string>
@@ -904,4 +911,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Lat att fane</string>
-</resources>
+
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Avvis</string>
+
+    </resources>

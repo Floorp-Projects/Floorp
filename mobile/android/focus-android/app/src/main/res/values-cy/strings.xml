@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Croeso i %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Pori preifat y lefel nesaf pan fyddwch ei eisiau</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Lle mae cuddio yn cyfarfod anweledig</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">Mae %s yn borwr preifatrwydd-yn-gyntaf gyda diogelwch cryf iawn rhag tracio a chwcis yn rhan annatod ohono.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Pori fel nad yw wedi digwydd erioed</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Mae un tap yn dileu eich hanes pori a’ch cwcis - ac yn atal hysbysebion rhag eich dilyn o le i le.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Preifatrwydd sy’n gweddu i bob sefyllfa</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Os bydd eich anghenion pori yn newid, mae’n hawdd codi neu ostwng eich gosodiadau preifatrwydd.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Cychwyn pori</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Cymrwch bori preifat i\'r lefel nesaf. Rhwystrwch hysbysebion a chynnwys arall sy\'n gallu\'ch tracio ar draws wefannau ac arafu amserau llwytho tudalennau.</string>
