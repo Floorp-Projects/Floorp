@@ -18,6 +18,9 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStoriesService
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Test
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories.SelectedPocketStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -31,15 +34,15 @@ class PocketUpdatesMiddlewareTest {
         val story3 = story1.copy("title3", "url3")
         val coroutineScope = TestCoroutineScope()
         val pocketService: PocketStoriesService = mockk(relaxed = true)
-        val pocketMiddleware = PocketUpdatesMiddleware(coroutineScope, pocketService, mockk())
-        val homeStore = HomeFragmentStore(
-            HomeFragmentState(
+        val pocketMiddleware = PocketUpdatesMiddleware(pocketService, mockk(), coroutineScope)
+        val appstore = AppStore(
+            AppState(
                 pocketStories = listOf(story1, story2, story3)
             ),
             listOf(pocketMiddleware)
         )
 
-        homeStore.dispatch(HomeFragmentAction.PocketStoriesShown(listOf(story2))).joinBlocking()
+        appstore.dispatch(AppAction.PocketStoriesShown(listOf(story2))).joinBlocking()
 
         coVerify { pocketService.updateStoriesTimesShown(listOf(story2.copy(timesShown = 1))) }
     }
@@ -73,21 +76,21 @@ class PocketUpdatesMiddlewareTest {
                 every { data } returns flowOf(persistedSelectedCategories)
             } as DataStore<SelectedPocketStoriesCategories>
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
-        val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
-        val homeStore = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, TestCoroutineScope())
+        val appStore = spyk(
+            AppStore(
+                AppState(
                     pocketStoriesCategories = currentCategories
                 ),
                 listOf(pocketMiddleware)
             )
         )
 
-        homeStore.dispatch(HomeFragmentAction.PocketStoriesCategoriesChange(currentCategories)).joinBlocking()
+        appStore.dispatch(AppAction.PocketStoriesCategoriesChange(currentCategories)).joinBlocking()
 
         verify {
-            homeStore.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesSelectionsChange(
+            appStore.dispatch(
+                AppAction.PocketStoriesCategoriesSelectionsChange(
                     storiesCategories = currentCategories,
                     categoriesSelected = listOf(
                         PocketRecommendedStoriesSelectedCategory("testCategory", 123)
@@ -105,17 +108,17 @@ class PocketUpdatesMiddlewareTest {
         val dataStore: DataStore<SelectedPocketStoriesCategories> =
             mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) as
                 DataStore<SelectedPocketStoriesCategories>
-        val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
-        val homeStore = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, TestCoroutineScope())
+        val appStore = spyk(
+            AppStore(
+                AppState(
                     pocketStoriesCategories = listOf(categ1, categ2)
                 ),
                 listOf(pocketMiddleware)
             )
         )
 
-        homeStore.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(categ2.name)).joinBlocking()
+        appStore.dispatch(AppAction.SelectPocketStoriesCategory(categ2.name)).joinBlocking()
 
         // Seems like the most we can test is that an update was made.
         coVerify { dataStore.updateData(any()) }
@@ -129,17 +132,17 @@ class PocketUpdatesMiddlewareTest {
         val dataStore: DataStore<SelectedPocketStoriesCategories> =
             mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) as
                 DataStore<SelectedPocketStoriesCategories>
-        val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
-        val homeStore = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+        val pocketMiddleware = PocketUpdatesMiddleware(mockk(), dataStore, TestCoroutineScope())
+        val appStore = spyk(
+            AppStore(
+                AppState(
                     pocketStoriesCategories = listOf(categ1, categ2)
                 ),
                 listOf(pocketMiddleware)
             )
         )
 
-        homeStore.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(categ2.name)).joinBlocking()
+        appStore.dispatch(AppAction.DeselectPocketStoriesCategory(categ2.name)).joinBlocking()
 
         // Seems like the most we can test is that an update was made.
         coVerify { dataStore.updateData(any()) }
@@ -173,20 +176,20 @@ class PocketUpdatesMiddlewareTest {
                 every { data } returns flowOf(persistedSelectedCategories)
             } as DataStore<SelectedPocketStoriesCategories>
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
-        val homeStore = spyk(
-            HomeFragmentStore(HomeFragmentState())
+        val appStore = spyk(
+            AppStore(AppState())
         )
 
         restoreSelectedCategories(
             coroutineScope = TestCoroutineScope(),
             currentCategories = currentCategories,
-            store = homeStore,
+            store = appStore,
             selectedPocketCategoriesDataStore = dataStore
         )
 
         coVerify {
-            homeStore.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesSelectionsChange(
+            appStore.dispatch(
+                AppAction.PocketStoriesCategoriesSelectionsChange(
                     storiesCategories = currentCategories,
                     categoriesSelected = listOf(
                         PocketRecommendedStoriesSelectedCategory("testCategory", 123)

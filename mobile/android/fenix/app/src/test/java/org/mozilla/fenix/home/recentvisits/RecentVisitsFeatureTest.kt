@@ -28,9 +28,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItemInternal.HistoryGroupInternal
@@ -43,8 +43,8 @@ class RecentVisitsFeatureTest {
     private lateinit var historyHightlightsStorage: PlacesHistoryStorage
     private lateinit var historyMetadataStorage: HistoryMetadataStorage
 
-    private val middleware = CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>()
-    private val homeStore = HomeFragmentStore(middlewares = listOf(middleware))
+    private val middleware = CaptureActionsMiddleware<AppState, AppAction>()
+    private val appStore = AppStore(middlewares = listOf(middleware))
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -85,7 +85,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(listOf(recentHistoryGroup, recentHistoryHighlight), it.recentHistory)
             }
         }
@@ -164,7 +164,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(listOf(expectedHistoryGroup), it.recentHistory)
             }
         }
@@ -221,7 +221,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(listOf(expectedHistoryGroup1, expectedHistoryGroup2), it.recentHistory)
             }
         }
@@ -278,7 +278,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(listOf(expectedHistoryGroup2, expectedHistoryGroup1), it.recentHistory)
             }
         }
@@ -295,7 +295,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(
                     // The 9 most recent groups.
                     expectedRecentHistoryGroups,
@@ -316,7 +316,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(
                     expectedRecentHighlights,
                     it.recentHistory
@@ -344,7 +344,7 @@ class RecentVisitsFeatureTest {
 
             startRecentVisitsFeature()
 
-            middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+            middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
                 assertEquals(expectedItems, it.recentHistory)
             }
         }
@@ -377,21 +377,21 @@ class RecentVisitsFeatureTest {
 
         startRecentVisitsFeature()
 
-        middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+        middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
             assertEquals(expectedItems, it.recentHistory)
         }
     }
 
     @Test
     fun `GIVEN a list of history highlights and groups WHEN updateState is called THEN emit RecentHistoryChange`() {
-        val feature = spyk(RecentVisitsFeature(homeStore, mockk(), mockk(), mockk(), mockk(), false))
+        val feature = spyk(RecentVisitsFeature(appStore, mockk(), mockk(), mockk(), mockk(), false))
         val expected = List<RecentHistoryHighlight>(1) { mockk() }
         every { feature.getCombinedHistory(any(), any()) } returns expected
 
         feature.updateState(emptyList(), emptyList())
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        middleware.assertLastAction(HomeFragmentAction.RecentHistoryChange::class) {
+        middleware.assertLastAction(AppAction.RecentHistoryChange::class) {
             assertEquals(expected, it.recentHistory)
         }
     }
@@ -641,7 +641,7 @@ class RecentVisitsFeatureTest {
 
     private fun startRecentVisitsFeature() {
         val feature = RecentVisitsFeature(
-            homeStore,
+            appStore,
             historyMetadataStorage,
             lazy { historyHightlightsStorage },
             CoroutineScope(testDispatcher),
@@ -649,12 +649,12 @@ class RecentVisitsFeatureTest {
             false
         )
 
-        assertEquals(emptyList<RecentHistoryGroup>(), homeStore.state.recentHistory)
+        assertEquals(emptyList<RecentHistoryGroup>(), appStore.state.recentHistory)
 
         feature.start()
 
         testDispatcher.advanceUntilIdle()
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
         coVerify {
             historyMetadataStorage.getHistoryMetadataSince(any())

@@ -13,9 +13,9 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.utils.Settings
@@ -30,13 +30,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf()
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -56,13 +56,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://www.github.org/".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -82,13 +82,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://github.com/mozilla-mobile/fenix".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -108,13 +108,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://www.mozilla.org/".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -136,13 +136,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf(blockedUrl.stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -171,13 +171,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf(blockedUrl.stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -194,7 +194,7 @@ class BlocklistMiddlewareTest {
 
     @Test
     fun `WHEN remove action intercepted THEN hashed url added to blocklist and Change action dispatched`() {
-        val captureMiddleware = CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>()
+        val captureMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
         val removedUrl = "https://www.mozilla.org/"
         val removedBookmark = RecentBookmark(url = removedUrl)
 
@@ -202,16 +202,16 @@ class BlocklistMiddlewareTest {
         every { mockSettings.homescreenBlocklist } returns setOf() andThen setOf(removedUrl.stripAndHash())
         every { mockSettings.homescreenBlocklist = capture(updateSlot) } returns Unit
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(recentBookmarks = listOf(removedBookmark)),
+        val store = AppStore(
+            AppState(recentBookmarks = listOf(removedBookmark)),
             middlewares = listOf(middleware, captureMiddleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.RemoveRecentBookmark(removedBookmark)
+            AppAction.RemoveRecentBookmark(removedBookmark)
         ).joinBlocking()
 
-        val capturedAction = captureMiddleware.findFirstAction(HomeFragmentAction.Change::class)
+        val capturedAction = captureMiddleware.findFirstAction(AppAction.Change::class)
         assertEquals(emptyList<RecentBookmark>(), capturedAction.recentBookmarks)
         assertEquals(setOf(removedUrl.stripAndHash()), updateSlot.captured)
     }
@@ -223,13 +223,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://$host".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -250,13 +250,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf(host.stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,
@@ -277,13 +277,13 @@ class BlocklistMiddlewareTest {
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://$host".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
-        val store = HomeFragmentStore(
-            HomeFragmentState(),
+        val store = AppStore(
+            AppState(),
             middlewares = listOf(middleware)
         )
 
         store.dispatch(
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 topSites = store.state.topSites,
                 mode = store.state.mode,
                 collections = store.state.collections,

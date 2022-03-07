@@ -33,15 +33,17 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.home.HomeFragmentAction.RecentTabsChange
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
 
 class RecentTabsListFeatureTest {
 
-    private lateinit var homeStore: HomeFragmentStore
-    private lateinit var middleware: CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>
+    private lateinit var appStore: AppStore
+    private lateinit var middleware: CaptureActionsMiddleware<AppState, AppAction>
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
@@ -50,7 +52,7 @@ class RecentTabsListFeatureTest {
     @Before
     fun setup() {
         middleware = CaptureActionsMiddleware()
-        homeStore = HomeFragmentStore(middlewares = listOf(middleware))
+        appStore = AppStore(middlewares = listOf(middleware))
     }
 
     @After
@@ -61,17 +63,17 @@ class RecentTabsListFeatureTest {
     @Test
     fun `GIVEN no selected, last active or in progress media tab WHEN the feature starts THEN dispatch an empty list`() {
         val browserStore = BrowserStore()
-        val homeStore = HomeFragmentStore()
+        val appStore = AppStore()
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(0, homeStore.state.recentTabs.size)
+        assertEquals(0, appStore.state.recentTabs.size)
     }
 
     @Test
@@ -86,14 +88,14 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(1, appStore.state.recentTabs.size)
     }
 
     @Test
@@ -111,14 +113,14 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(1, appStore.state.recentTabs.size)
     }
 
     @Ignore("Disabled until we want to enable this feature. See #21670.")
@@ -137,17 +139,17 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(selectedTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
-        assertTrue(homeStore.state.recentTabs[1] is RecentTab.Tab)
-        assertEquals(mediaTab, (homeStore.state.recentTabs[1] as RecentTab.Tab).state)
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(selectedTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertTrue(appStore.state.recentTabs[1] is RecentTab.Tab)
+        assertEquals(mediaTab, (appStore.state.recentTabs[1] as RecentTab.Tab).state)
     }
 
     @Ignore("Disabled until we want to enable this feature. See #21670.")
@@ -165,15 +167,15 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(selectedMediaTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(selectedMediaTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -195,24 +197,24 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab1, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
 
         browserStore.dispatch(TabListAction.SelectTabAction(tab2.id)).joinBlocking()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(tab2, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab2, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
     @Ignore("Disabled until we want to enable this feature. See #21670.")
@@ -235,34 +237,34 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
-        homeStore.waitUntilIdle()
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(initialMediaTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        appStore.waitUntilIdle()
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(initialMediaTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
 
         browserStore.dispatch(
             MediaSessionAction.UpdateMediaPlaybackStateAction("2", MediaSession.PlaybackState.PLAYING)
         ).joinBlocking()
-        homeStore.waitUntilIdle()
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(initialMediaTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        appStore.waitUntilIdle()
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(initialMediaTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
         // UpdateMediaPlaybackStateAction would set the current timestamp as the new value for lastMediaAccess
         val updatedLastMediaAccess =
-            (homeStore.state.recentTabs[1] as RecentTab.Tab).state.lastMediaAccessState.lastMediaAccess
+            (appStore.state.recentTabs[1] as RecentTab.Tab).state.lastMediaAccessState.lastMediaAccess
         assertTrue("expected lastMediaAccess ($updatedLastMediaAccess) > 100", updatedLastMediaAccess > 100)
         assertEquals(
             "http://mozilla.org",
-            (homeStore.state.recentTabs[1] as RecentTab.Tab).state.lastMediaAccessState.lastMediaUrl
+            (appStore.state.recentTabs[1] as RecentTab.Tab).state.lastMediaAccessState.lastMediaUrl
         )
         // Check that the media tab is updated ignoring just the lastMediaAccess property.
         assertEquals(
             newMediaTab,
-            (homeStore.state.recentTabs[1] as RecentTab.Tab).state.copy(
+            (appStore.state.recentTabs[1] as RecentTab.Tab).state.copy(
                 lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 100)
             )
         )
@@ -294,25 +296,25 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(selectedNormalTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(selectedNormalTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
 
         browserStore.dispatch(TabListAction.SelectTabAction(privateTab.id)).joinBlocking()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
         // If the selected tab is a private tab the feature should show the last accessed normal tab.
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(lastAccessedNormalTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(lastAccessedNormalTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -330,14 +332,14 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        middleware.assertLastAction(RecentTabsChange::class) {
+        middleware.assertLastAction(AppAction.RecentTabsChange::class) {
             val tab = it.recentTabs.first() as RecentTab.Tab
             assertTrue(tab.state.content.title.isEmpty())
             assertNull(tab.state.content.icon)
@@ -345,9 +347,9 @@ class RecentTabsListFeatureTest {
 
         browserStore.dispatch(UpdateTitleAction("1", "test")).joinBlocking()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        middleware.assertLastAction(RecentTabsChange::class) {
+        middleware.assertLastAction(AppAction.RecentTabsChange::class) {
             val tab = it.recentTabs.first() as RecentTab.Tab
             assertEquals("test", tab.state.content.title)
             assertNull(tab.state.content.icon)
@@ -356,9 +358,9 @@ class RecentTabsListFeatureTest {
         browserStore.dispatch(UpdateIconAction("1", "https://www.mozilla.org", mockk()))
             .joinBlocking()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        middleware.assertLastAction(RecentTabsChange::class) {
+        middleware.assertLastAction(AppAction.RecentTabsChange::class) {
             val tab = it.recentTabs.first() as RecentTab.Tab
             assertEquals("test", tab.state.content.title)
             assertNotNull(tab.state.content.icon)
@@ -375,16 +377,16 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
         browserStore.dispatch(TabListAction.RemoveTabsAction(listOf("1"))).joinBlocking()
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(selectedTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(selectedTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -419,15 +421,15 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        val searchGroup = (homeStore.state.recentTabs[0] as RecentTab.SearchGroup)
+        assertEquals(1, appStore.state.recentTabs.size)
+        val searchGroup = (appStore.state.recentTabs[0] as RecentTab.SearchGroup)
         assertEquals(searchGroup.searchTerm, "Test search term")
         assertEquals(searchGroup.tabId, "1")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
@@ -468,17 +470,17 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(tab3, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
-        val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab3, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
+        val searchGroup = (appStore.state.recentTabs[1] as RecentTab.SearchGroup)
         assertEquals(searchGroup.searchTerm, "Test search term")
         assertEquals(searchGroup.tabId, "1")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
@@ -510,16 +512,16 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(1, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+        assertEquals(1, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab1, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -558,17 +560,17 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
 
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
-        val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab1, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
+        val searchGroup = (appStore.state.recentTabs[1] as RecentTab.SearchGroup)
         assertEquals(searchGroup.searchTerm, "test search term")
         assertEquals(searchGroup.tabId, "2")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
@@ -611,16 +613,16 @@ class RecentTabsListFeatureTest {
         )
         val feature = RecentTabsListFeature(
             browserStore = browserStore,
-            homeStore = homeStore
+            appStore = appStore
         )
 
         feature.start()
-        homeStore.waitUntilIdle()
+        appStore.waitUntilIdle()
 
-        assertEquals(2, homeStore.state.recentTabs.size)
-        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
-        assertEquals(selectedTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
-        val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
+        assertEquals(2, appStore.state.recentTabs.size)
+        assertTrue(appStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(selectedTab, (appStore.state.recentTabs[0] as RecentTab.Tab).state)
+        val searchGroup = (appStore.state.recentTabs[1] as RecentTab.SearchGroup)
         assertEquals(searchGroup.searchTerm, "test search term")
         assertEquals(searchGroup.tabId, "44")
         assertEquals(searchGroup.url, "https://www.mozilla.org")

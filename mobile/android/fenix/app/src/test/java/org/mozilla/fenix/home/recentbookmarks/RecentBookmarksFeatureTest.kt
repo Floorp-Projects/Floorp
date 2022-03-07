@@ -18,16 +18,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentBookmarksFeatureTest {
 
-    private val middleware = CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>()
-    private val homeStore = HomeFragmentStore(middlewares = listOf(middleware))
+    private val middleware = CaptureActionsMiddleware<AppState, AppAction>()
+    private val appStore = AppStore(middlewares = listOf(middleware))
     private val bookmarksUseCases: BookmarksUseCase = mockk(relaxed = true)
     private val bookmark = RecentBookmark(
         title = null,
@@ -48,24 +48,24 @@ class RecentBookmarksFeatureTest {
     fun `GIVEN no recent bookmarks WHEN feature starts THEN fetch bookmarks and notify store`() =
         testDispatcher.runBlockingTest {
             val feature = RecentBookmarksFeature(
-                homeStore,
+                appStore,
                 bookmarksUseCases,
                 CoroutineScope(testDispatcher),
                 testDispatcher
             )
 
-            assertEquals(emptyList<BookmarkNode>(), homeStore.state.recentBookmarks)
+            assertEquals(emptyList<BookmarkNode>(), appStore.state.recentBookmarks)
 
             feature.start()
 
             testDispatcher.advanceUntilIdle()
-            homeStore.waitUntilIdle()
+            appStore.waitUntilIdle()
 
             coVerify {
                 bookmarksUseCases.retrieveRecentBookmarks()
             }
 
-            middleware.assertLastAction(HomeFragmentAction.RecentBookmarksChange::class) {
+            middleware.assertLastAction(AppAction.RecentBookmarksChange::class) {
                 assertEquals(listOf(bookmark), it.recentBookmarks)
             }
         }

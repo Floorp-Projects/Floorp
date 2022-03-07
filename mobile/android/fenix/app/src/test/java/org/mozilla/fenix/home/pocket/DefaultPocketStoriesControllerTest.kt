@@ -15,11 +15,11 @@ import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
 
 class DefaultPocketStoriesControllerTest {
     val metrics: MetricController = mockk(relaxed = true)
@@ -30,8 +30,8 @@ class DefaultPocketStoriesControllerTest {
         val category2 = PocketRecommendedStoriesCategory("cat2", emptyList())
         val selections = listOf(PocketRecommendedStoriesSelectedCategory(category2.name))
         val store = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+            AppStore(
+                AppState(
                     pocketStoriesCategories = listOf(category1, category2),
                     pocketStoriesCategoriesSelections = selections
                 )
@@ -40,8 +40,8 @@ class DefaultPocketStoriesControllerTest {
         val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
 
         controller.handleCategoryClick(category2)
-        verify(exactly = 0) { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(category2.name)) }
-        verify { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(category2.name)) }
+        verify(exactly = 0) { store.dispatch(AppAction.SelectPocketStoriesCategory(category2.name)) }
+        verify { store.dispatch(AppAction.DeselectPocketStoriesCategory(category2.name)) }
         verify { metrics.track(Event.PocketHomeRecsCategoryClicked(category2.name, 1, false)) }
     }
 
@@ -57,8 +57,8 @@ class DefaultPocketStoriesControllerTest {
         val category7 = PocketRecommendedStoriesSelectedCategory(name = "cat7", selectionTimestamp = 890)
         val newSelectedCategory = PocketRecommendedStoriesSelectedCategory(name = "newSelectedCategory", selectionTimestamp = 654321)
         val store = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+            AppStore(
+                AppState(
                     pocketStoriesCategoriesSelections = listOf(
                         category1, category2, category3, category4, category5, category6, category7, oldestSelectedCategory
                     )
@@ -69,8 +69,8 @@ class DefaultPocketStoriesControllerTest {
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategory.name))
 
-        verify { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
-        verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
+        verify { store.dispatch(AppAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
+        verify { store.dispatch(AppAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
         verify { metrics.track(Event.PocketHomeRecsCategoryClicked(newSelectedCategory.name, 8, true)) }
     }
 
@@ -84,8 +84,8 @@ class DefaultPocketStoriesControllerTest {
         val category5 = PocketRecommendedStoriesSelectedCategory(name = "cat5", selectionTimestamp = 555)
         val category6 = PocketRecommendedStoriesSelectedCategory(name = "cat6", selectionTimestamp = 678)
         val store = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
+            AppStore(
+                AppState(
                     pocketStoriesCategoriesSelections = listOf(
                         category1, category2, category3, category4, category5, category6, oldestSelectedCategory
                     )
@@ -97,20 +97,20 @@ class DefaultPocketStoriesControllerTest {
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategoryName))
 
-        verify(exactly = 0) { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
-        verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(newSelectedCategoryName)) }
+        verify(exactly = 0) { store.dispatch(AppAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
+        verify { store.dispatch(AppAction.SelectPocketStoriesCategory(newSelectedCategoryName)) }
         verify { metrics.track(Event.PocketHomeRecsCategoryClicked(newSelectedCategoryName, 7, true)) }
     }
 
     @Test
     fun `WHEN new stories are shown THEN update the State and record telemetry`() {
-        val store = spyk(HomeFragmentStore())
+        val store = spyk(AppStore())
         val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
         val storiesShown: List<PocketRecommendedStory> = mockk()
 
         controller.handleStoriesShown(storiesShown)
 
-        verify { store.dispatch(HomeFragmentAction.PocketStoriesShown(storiesShown)) }
+        verify { store.dispatch(AppAction.PocketStoriesShown(storiesShown)) }
         verify { metrics.track(Event.PocketHomeRecsShown) }
     }
 

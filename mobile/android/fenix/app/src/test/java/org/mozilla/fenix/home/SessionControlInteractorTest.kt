@@ -13,6 +13,7 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -265,9 +266,9 @@ class SessionControlInteractorTest {
 
     @Test
     fun reportSessionMetrics() {
-        val homeFragmentState: HomeFragmentState = mockk(relaxed = true)
-        every { homeFragmentState.recentBookmarks } returns emptyList()
-        interactor.reportSessionMetrics(homeFragmentState)
-        verify { controller.handleReportSessionMetrics(homeFragmentState) }
+        val appState: AppState = mockk(relaxed = true)
+        every { appState.recentBookmarks } returns emptyList()
+        interactor.reportSessionMetrics(appState)
+        verify { controller.handleReportSessionMetrics(appState) }
     }
 }

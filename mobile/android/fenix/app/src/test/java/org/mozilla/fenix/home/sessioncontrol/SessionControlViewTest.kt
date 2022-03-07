@@ -17,9 +17,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
@@ -35,7 +35,7 @@ class SessionControlViewTest {
 
         every { settings.hasShownHomeOnboardingDialog } returns false
 
-        val state = HomeFragmentState(recentBookmarks = recentBookmarks)
+        val state = AppState(recentBookmarks = recentBookmarks)
 
         assertTrue(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -47,7 +47,7 @@ class SessionControlViewTest {
 
         every { settings.hasShownHomeOnboardingDialog } returns false
 
-        val state = HomeFragmentState(recentTabs = recentTabs)
+        val state = AppState(recentTabs = recentTabs)
 
         assertTrue(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -59,7 +59,7 @@ class SessionControlViewTest {
 
         every { settings.hasShownHomeOnboardingDialog } returns false
 
-        val state = HomeFragmentState(recentHistory = historyMetadata)
+        val state = AppState(recentHistory = historyMetadata)
 
         assertTrue(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -71,7 +71,7 @@ class SessionControlViewTest {
 
         every { settings.hasShownHomeOnboardingDialog } returns false
 
-        val state = HomeFragmentState(pocketStories = pocketArticles)
+        val state = AppState(pocketStories = pocketArticles)
 
         assertTrue(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -83,7 +83,7 @@ class SessionControlViewTest {
 
         every { settings.hasShownHomeOnboardingDialog } returns true
 
-        val state = HomeFragmentState(pocketStories = pocketArticles)
+        val state = AppState(pocketStories = pocketArticles)
 
         assertFalse(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -101,7 +101,7 @@ class SessionControlViewTest {
         )
         val recentTabs = listOf<RecentTab>(mockk(relaxed = true))
 
-        val state = HomeFragmentState(recentTabs = recentTabs)
+        val state = AppState(recentTabs = recentTabs)
 
         controller.update(state)
 
@@ -122,7 +122,7 @@ class SessionControlViewTest {
             interactor
         )
 
-        val state = HomeFragmentState()
+        val state = AppState()
 
         controller.update(state)
 

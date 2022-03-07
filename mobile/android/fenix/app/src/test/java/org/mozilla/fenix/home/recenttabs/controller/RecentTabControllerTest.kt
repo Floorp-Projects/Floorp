@@ -22,9 +22,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.home.HomeFragmentStore
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentTabControllerTest {
@@ -35,7 +35,7 @@ class RecentTabControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
-    private val homeStore: HomeFragmentStore = mockk()
+    private val appStore: AppStore = mockk()
 
     private lateinit var store: BrowserStore
 
@@ -52,7 +52,7 @@ class RecentTabControllerTest {
                 navController = navController,
                 metrics = metrics,
                 store = store,
-                homeStore = homeStore,
+                appStore = appStore,
             )
         )
         every { navController.navigateUp() } returns true
