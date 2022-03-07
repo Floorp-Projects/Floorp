@@ -10,6 +10,7 @@ import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
@@ -21,12 +22,15 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.EspressoHelper.hasCousin
 import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.getStringResource
+import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 
 class SettingsPrivacyMenuRobot {
 
@@ -38,11 +42,47 @@ class SettingsPrivacyMenuRobot {
         otherContentTrackersBlockSwitch().check(matches(isDisplayed()))
         blockWebFontsSwitch().check(matches(isDisplayed()))
         blockJavaScriptSwitch().check(matches(isDisplayed()))
-        blockCookiesMenu().check(matches(isDisplayed()))
+        cookiesAndSiteDataSection().check(matches(isDisplayed()))
+        blockCookies().check(matches(isDisplayed()))
+        blockCookiesDefaultOption().check(matches(isDisplayed()))
+        sitePermissions().check(matches(isDisplayed()))
         useFingerprintSwitch().check(matches(isDisplayed()))
         stealthModeSwitch().check(matches(isDisplayed()))
         safeBrowsingSwitch().check(matches(isDisplayed()))
         sendDataSwitch().check(matches(isDisplayed()))
+    }
+
+    fun verifyCookiesAndSiteDataSection() {
+        privacySettingsList.waitForExists(waitingTime)
+        cookiesAndSiteDataSection().check(matches(isDisplayed()))
+        blockCookies().check(matches(isDisplayed()))
+        blockCookiesDefaultOption().check(matches(isDisplayed()))
+        sitePermissions().check(matches(isDisplayed()))
+    }
+
+    fun verifyBlockCookiesPrompt() {
+        assertTrue(blockCookiesPromptHeading.waitForExists(waitingTimeShort))
+        assertTrue(blockCookiesYesPleaseOption.waitForExists(waitingTimeShort))
+        assertTrue(block3rdPartyCookiesOnlyOption.waitForExists(waitingTimeShort))
+        assertTrue(block3rdPartyTrackerCookiesOnlyOption.waitForExists(waitingTimeShort))
+        assertTrue(blockCrossSiteCookiesOption.waitForExists(waitingTimeShort))
+        assertTrue(noThanksOption.waitForExists(waitingTimeShort))
+        assertTrue(cancelBlockCookiesPrompt.waitForExists(waitingTimeShort))
+    }
+
+    fun verifySitePermissionsSection() {
+        privacySettingsList.waitForExists(waitingTime)
+        autoplayOption().check(matches(isDisplayed()))
+        autoplayDefaultOption().check(matches(isDisplayed()))
+    }
+
+    fun verifyAutoplaySection() {
+        privacySettingsList.waitForExists(waitingTime)
+        autoplayAllowAudioAndVideoOption().check(matches(isDisplayed()))
+        autoplayBlockAudioOnlyOption().check(matches(isDisplayed()))
+        recommendedDescription().check(matches(isDisplayed()))
+        assertBlockAudioOnlyIsChecked()
+        blockAudioAndVideoOption().check(matches(isDisplayed()))
     }
 
     fun verifyBlockAdTrackersEnabled(enabled: Boolean) {
@@ -165,6 +205,17 @@ class SettingsPrivacyMenuRobot {
 
     fun clickOtherContentTrackersBlockSwitch() = otherContentTrackersBlockSwitch().perform(click())
 
+    fun clickBlockCookies() = blockCookies().perform(click())
+
+    fun clickCancelBlockCookiesPrompt() {
+        cancelBlockCookiesPrompt.click()
+        mDevice.waitForIdle(waitingTimeShort)
+    }
+
+    fun clickSitePermissionsButton() = sitePermissions().perform(click())
+
+    fun clickAutoPlayOption() = autoplayOption().perform(click())
+
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
 
     fun verifyExceptionsListDisabled() {
@@ -239,10 +290,28 @@ private fun blockJavaScriptSwitch(): ViewInteraction {
     return onView(withText("Block JavaScript"))
 }
 
-private fun blockCookiesMenu(): ViewInteraction {
+private fun cookiesAndSiteDataSection(): ViewInteraction {
     privacySettingsList
-        .scrollTextIntoView("Block cookies")
-    return onView(withText("Block cookies"))
+        .scrollTextIntoView("Cookies and Site Data")
+    return onView(withText(R.string.preference_category_cookies))
+}
+
+private fun blockCookies(): ViewInteraction {
+    privacySettingsList
+        .scrollTextIntoView("Cookies and Site Data")
+    return onView(withText(R.string.preference_privacy_category_cookies))
+}
+
+private fun blockCookiesDefaultOption(): ViewInteraction {
+    privacySettingsList
+        .scrollTextIntoView("Cookies and Site Data")
+    return onView(withText(R.string.preference_privacy_should_block_cookies_cross_site_option))
+}
+
+private fun sitePermissions(): ViewInteraction {
+    privacySettingsList
+        .scrollTextIntoView("Cookies and Site Data")
+    return onView(withText(R.string.preference_site_permissions))
 }
 
 private fun useFingerprintSwitch(): ViewInteraction {
@@ -274,3 +343,66 @@ private fun exceptionsList(): ViewInteraction {
     privacySettingsList.scrollTextIntoView(exceptionsTitle)
     return onView(withText(exceptionsTitle))
 }
+
+private fun autoplayOption() = onView(withText(R.string.preference_autoplay))
+
+private fun autoplayDefaultOption() = onView(withText(R.string.preference_block_autoplay_audio_only))
+
+private fun autoplayAllowAudioAndVideoOption() = onView(withText(R.string.preference_allow_audio_video_autoplay))
+
+private fun autoplayBlockAudioOnlyOption() = onView(withText(R.string.preference_block_autoplay_audio_only))
+
+private fun recommendedDescription() = onView(withText(R.string.preference_block_autoplay_audio_only_summary))
+
+private fun blockAudioAndVideoOption() = onView(withText(R.string.preference_block_autoplay_audio_video))
+
+private fun assertBlockAudioOnlyIsChecked() =
+    onView(
+        allOf(
+            withId(R.id.radio_button),
+            hasSibling(withText(R.string.preference_block_autoplay_audio_only))
+        )
+    ).check(matches(isChecked()))
+
+private val blockCookiesPromptHeading =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/alertTitle")
+            .textContains(getStringResource(R.string.preference_block_cookies_title))
+    )
+
+private val blockCookiesYesPleaseOption =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2))
+    )
+
+private val block3rdPartyCookiesOnlyOption =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2))
+    )
+
+private val block3rdPartyTrackerCookiesOnlyOption =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option))
+    )
+
+private val blockCrossSiteCookiesOption =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_cross_site_option))
+    )
+
+private val noThanksOption =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_no_option2))
+    )
+
+private val cancelBlockCookiesPrompt =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.action_cancel))
+    )
