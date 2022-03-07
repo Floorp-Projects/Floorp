@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home
+package org.mozilla.fenix.components
 
 import android.content.Context
 import io.mockk.every
@@ -22,8 +22,13 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
+import org.mozilla.fenix.home.CurrentMode
+import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
@@ -34,14 +39,14 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
-class HomeFragmentStoreTest {
+class AppStoreTest {
     private lateinit var context: Context
     private lateinit var accountManager: FxaAccountManager
     private lateinit var onboarding: FenixOnboarding
     private lateinit var browsingModeManager: BrowsingModeManager
     private lateinit var currentMode: CurrentMode
-    private lateinit var homeFragmentState: HomeFragmentState
-    private lateinit var homeFragmentStore: HomeFragmentStore
+    private lateinit var appState: AppState
+    private lateinit var appStore: AppStore
 
     @Before
     fun setup() {
@@ -60,7 +65,7 @@ class HomeFragmentStoreTest {
             browsingModeManager
         ) {}
 
-        homeFragmentState = HomeFragmentState(
+        appState = AppState(
             collections = emptyList(),
             expandedCollections = emptySet(),
             mode = currentMode.getCurrentMode(),
@@ -70,150 +75,150 @@ class HomeFragmentStoreTest {
             recentTabs = emptyList()
         )
 
-        homeFragmentStore = HomeFragmentStore(homeFragmentState)
+        appStore = AppStore(appState)
     }
 
     @Test
-    fun `Test toggling the mode in HomeFragmentStore`() = runBlocking {
+    fun `Test toggling the mode in AppStore`() = runBlocking {
         // Verify that the default mode and tab states of the HomeFragment are correct.
-        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
+        assertEquals(Mode.Normal, appStore.state.mode)
 
-        // Change the HomeFragmentStore to Private mode.
-        homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(Mode.Private)).join()
-        assertEquals(Mode.Private, homeFragmentStore.state.mode)
+        // Change the AppStore to Private mode.
+        appStore.dispatch(AppAction.ModeChange(Mode.Private)).join()
+        assertEquals(Mode.Private, appStore.state.mode)
 
-        // Change the HomeFragmentStore back to Normal mode.
-        homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(Mode.Normal)).join()
-        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
+        // Change the AppStore back to Normal mode.
+        appStore.dispatch(AppAction.ModeChange(Mode.Normal)).join()
+        assertEquals(Mode.Normal, appStore.state.mode)
     }
 
     @Test
-    fun `Test changing the collections in HomeFragmentStore`() = runBlocking {
-        assertEquals(0, homeFragmentStore.state.collections.size)
+    fun `Test changing the collections in AppStore`() = runBlocking {
+        assertEquals(0, appStore.state.collections.size)
 
-        // Add 2 TabCollections to the HomeFragmentStore.
+        // Add 2 TabCollections to the AppStore.
         val tabCollections: List<TabCollection> = listOf(mockk(), mockk())
-        homeFragmentStore.dispatch(HomeFragmentAction.CollectionsChange(tabCollections)).join()
+        appStore.dispatch(AppAction.CollectionsChange(tabCollections)).join()
 
-        assertEquals(tabCollections, homeFragmentStore.state.collections)
+        assertEquals(tabCollections, appStore.state.collections)
     }
 
     @Test
-    fun `Test changing the top sites in HomeFragmentStore`() = runBlocking {
-        assertEquals(0, homeFragmentStore.state.topSites.size)
+    fun `Test changing the top sites in AppStore`() = runBlocking {
+        assertEquals(0, appStore.state.topSites.size)
 
-        // Add 2 TopSites to the HomeFragmentStore.
+        // Add 2 TopSites to the AppStore.
         val topSites: List<TopSite> = listOf(mockk(), mockk())
-        homeFragmentStore.dispatch(HomeFragmentAction.TopSitesChange(topSites)).join()
+        appStore.dispatch(AppAction.TopSitesChange(topSites)).join()
 
-        assertEquals(topSites, homeFragmentStore.state.topSites)
+        assertEquals(topSites, appStore.state.topSites)
     }
 
     @Test
-    fun `Test changing the recent tabs in HomeFragmentStore`() = runBlocking {
+    fun `Test changing the recent tabs in AppStore`() = runBlocking {
         val group1 = RecentHistoryGroup(title = "title1")
         val group2 = RecentHistoryGroup(title = "title2")
         val group3 = RecentHistoryGroup(title = "title3")
         val highlight = RecentHistoryHighlight(title = group2.title, "")
-        homeFragmentStore = HomeFragmentStore(
-            HomeFragmentState(
+        appStore = AppStore(
+            AppState(
                 recentHistory = listOf(group1, group2, group3, highlight)
             )
         )
-        assertEquals(0, homeFragmentStore.state.recentTabs.size)
+        assertEquals(0, appStore.state.recentTabs.size)
 
-        // Add 2 RecentTabs to the HomeFragmentStore
+        // Add 2 RecentTabs to the AppStore
         // A new SearchGroup already shown in history should hide the HistoryGroup.
         val recentTab1: RecentTab.Tab = mockk()
         val recentTab2 = RecentTab.SearchGroup(group2.title, "tabId", "url", null, 2)
         val recentTabs: List<RecentTab> = listOf(recentTab1, recentTab2)
-        homeFragmentStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabs)).join()
+        appStore.dispatch(AppAction.RecentTabsChange(recentTabs)).join()
 
-        assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
-        assertEquals(listOf(group1, group3, highlight), homeFragmentStore.state.recentHistory)
+        assertEquals(recentTabs, appStore.state.recentTabs)
+        assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
     }
 
     @Test
-    fun `Test changing the history metadata in HomeFragmentStore`() = runBlocking {
-        assertEquals(0, homeFragmentStore.state.recentHistory.size)
+    fun `Test changing the history metadata in AppStore`() = runBlocking {
+        assertEquals(0, appStore.state.recentHistory.size)
 
         val historyMetadata: List<RecentHistoryGroup> = listOf(mockk(), mockk())
-        homeFragmentStore.dispatch(HomeFragmentAction.RecentHistoryChange(historyMetadata)).join()
+        appStore.dispatch(AppAction.RecentHistoryChange(historyMetadata)).join()
 
-        assertEquals(historyMetadata, homeFragmentStore.state.recentHistory)
+        assertEquals(historyMetadata, appStore.state.recentHistory)
     }
 
     @Test
-    fun `Test removing a history highlight from HomeFragmentStore`() = runBlocking {
+    fun `Test removing a history highlight from AppStore`() = runBlocking {
         val g1 = RecentHistoryGroup(title = "group One")
         val g2 = RecentHistoryGroup(title = "grup two")
         val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
         val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
-        val recentHistoryState = HomeFragmentState(
+        val recentHistoryState = AppState(
             recentHistory = listOf(g1, g2, h1, h2)
         )
-        homeFragmentStore = HomeFragmentStore(recentHistoryState)
+        appStore = AppStore(recentHistoryState)
 
-        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight("invalid")).join()
-        assertEquals(recentHistoryState, homeFragmentStore.state)
+        appStore.dispatch(AppAction.RemoveRecentHistoryHighlight("invalid")).join()
+        assertEquals(recentHistoryState, appStore.state)
 
-        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight(h1.title)).join()
-        assertEquals(recentHistoryState, homeFragmentStore.state)
+        appStore.dispatch(AppAction.RemoveRecentHistoryHighlight(h1.title)).join()
+        assertEquals(recentHistoryState, appStore.state)
 
-        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight(h1.url)).join()
+        appStore.dispatch(AppAction.RemoveRecentHistoryHighlight(h1.url)).join()
         assertEquals(
             recentHistoryState.copy(recentHistory = listOf(g1, g2, h2)),
-            homeFragmentStore.state
+            appStore.state
         )
     }
 
     @Test
-    fun `Test disbanding search group in HomeFragmentStore`() = runBlocking {
+    fun `Test disbanding search group in AppStore`() = runBlocking {
         val g1 = RecentHistoryGroup(title = "test One")
         val g2 = RecentHistoryGroup(title = "test two")
         val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
         val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
         val recentHistory: List<RecentlyVisitedItem> = listOf(g1, g2, h1, h2)
-        homeFragmentStore.dispatch(HomeFragmentAction.RecentHistoryChange(recentHistory)).join()
-        assertEquals(recentHistory, homeFragmentStore.state.recentHistory)
+        appStore.dispatch(AppAction.RecentHistoryChange(recentHistory)).join()
+        assertEquals(recentHistory, appStore.state.recentHistory)
 
-        homeFragmentStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction("Test one")).join()
-        assertEquals(listOf(g2, h1, h2), homeFragmentStore.state.recentHistory)
+        appStore.dispatch(AppAction.DisbandSearchGroupAction("Test one")).join()
+        assertEquals(listOf(g2, h1, h2), appStore.state.recentHistory)
     }
 
     @Test
     fun `Test changing hiding collections placeholder`() = runBlocking {
-        assertTrue(homeFragmentStore.state.showCollectionPlaceholder)
+        assertTrue(appStore.state.showCollectionPlaceholder)
 
-        homeFragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder).join()
+        appStore.dispatch(AppAction.RemoveCollectionsPlaceholder).join()
 
-        assertFalse(homeFragmentStore.state.showCollectionPlaceholder)
+        assertFalse(appStore.state.showCollectionPlaceholder)
     }
 
     @Test
-    fun `Test changing the expanded collections in HomeFragmentStore`() = runBlocking {
+    fun `Test changing the expanded collections in AppStore`() = runBlocking {
         val collection: TabCollection = mockk<TabCollection>().apply {
             every { id } returns 0
         }
 
         // Expand the given collection.
-        homeFragmentStore.dispatch(HomeFragmentAction.CollectionsChange(listOf(collection))).join()
-        homeFragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)).join()
+        appStore.dispatch(AppAction.CollectionsChange(listOf(collection))).join()
+        appStore.dispatch(AppAction.CollectionExpanded(collection, true)).join()
 
-        assertTrue(homeFragmentStore.state.expandedCollections.contains(collection.id))
-        assertEquals(1, homeFragmentStore.state.expandedCollections.size)
+        assertTrue(appStore.state.expandedCollections.contains(collection.id))
+        assertEquals(1, appStore.state.expandedCollections.size)
     }
 
     @Test
-    fun `Test changing the collections, mode, recent tabs and bookmarks, history metadata and top sites in the HomeFragmentStore`() =
+    fun `Test changing the collections, mode, recent tabs and bookmarks, history metadata and top sites in the AppStore`() =
         runBlocking {
             // Verify that the default state of the HomeFragment is correct.
-            assertEquals(0, homeFragmentStore.state.collections.size)
-            assertEquals(0, homeFragmentStore.state.topSites.size)
-            assertEquals(0, homeFragmentStore.state.recentTabs.size)
-            assertEquals(0, homeFragmentStore.state.recentBookmarks.size)
-            assertEquals(0, homeFragmentStore.state.recentHistory.size)
-            assertEquals(Mode.Normal, homeFragmentStore.state.mode)
+            assertEquals(0, appStore.state.collections.size)
+            assertEquals(0, appStore.state.topSites.size)
+            assertEquals(0, appStore.state.recentTabs.size)
+            assertEquals(0, appStore.state.recentBookmarks.size)
+            assertEquals(0, appStore.state.recentHistory.size)
+            assertEquals(Mode.Normal, appStore.state.mode)
 
             val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
             val collections: List<TabCollection> = listOf(mockk())
@@ -226,8 +231,8 @@ class HomeFragmentStoreTest {
             val highlight = RecentHistoryHighlight(group2.title, "")
             val recentHistory: List<RecentlyVisitedItem> = listOf(group1, group2, group3, highlight)
 
-            homeFragmentStore.dispatch(
-                HomeFragmentAction.Change(
+            appStore.dispatch(
+                AppAction.Change(
                     collections = collections,
                     mode = Mode.Private,
                     topSites = topSites,
@@ -238,12 +243,12 @@ class HomeFragmentStoreTest {
                 )
             ).join()
 
-            assertEquals(collections, homeFragmentStore.state.collections)
-            assertEquals(topSites, homeFragmentStore.state.topSites)
-            assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
-            assertEquals(recentBookmarks, homeFragmentStore.state.recentBookmarks)
-            assertEquals(listOf(group1, group3, highlight), homeFragmentStore.state.recentHistory)
-            assertEquals(Mode.Private, homeFragmentStore.state.mode)
+            assertEquals(collections, appStore.state.collections)
+            assertEquals(topSites, appStore.state.topSites)
+            assertEquals(recentTabs, appStore.state.recentTabs)
+            assertEquals(recentBookmarks, appStore.state.recentBookmarks)
+            assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
+            assertEquals(Mode.Private, appStore.state.mode)
         }
 
     @Test
@@ -251,8 +256,8 @@ class HomeFragmentStoreTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val filteredStories = listOf(mockk<PocketRecommendedStory>())
-        homeFragmentStore = HomeFragmentStore(
-            HomeFragmentState(
+        appStore = AppStore(
+            AppState(
                 pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory),
                 pocketStoriesCategoriesSelections = listOf(
                     PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name),
@@ -260,18 +265,18 @@ class HomeFragmentStoreTest {
             )
         )
 
-        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
-            every { any<HomeFragmentState>().getFilteredStories(any()) } returns filteredStories
+        mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
+            every { any<AppState>().getFilteredStories(any()) } returns filteredStories
 
-            homeFragmentStore.dispatch(HomeFragmentAction.SelectPocketStoriesCategory("another")).join()
+            appStore.dispatch(AppAction.SelectPocketStoriesCategory("another")).join()
 
-            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
         }
 
-        val selectedCategories = homeFragmentStore.state.pocketStoriesCategoriesSelections
+        val selectedCategories = appStore.state.pocketStoriesCategoriesSelections
         assertEquals(2, selectedCategories.size)
         assertTrue(otherStoriesCategory.name === selectedCategories[0].name)
-        assertSame(filteredStories, homeFragmentStore.state.pocketStories)
+        assertSame(filteredStories, appStore.state.pocketStories)
     }
 
     @Test
@@ -279,8 +284,8 @@ class HomeFragmentStoreTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val filteredStories = listOf(mockk<PocketRecommendedStory>())
-        homeFragmentStore = HomeFragmentStore(
-            HomeFragmentState(
+        appStore = AppStore(
+            AppState(
                 pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory),
                 pocketStoriesCategoriesSelections = listOf(
                     PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name),
@@ -289,67 +294,67 @@ class HomeFragmentStoreTest {
             )
         )
 
-        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
-            every { any<HomeFragmentState>().getFilteredStories(any()) } returns filteredStories
+        mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
+            every { any<AppState>().getFilteredStories(any()) } returns filteredStories
 
-            homeFragmentStore.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory("other")).join()
+            appStore.dispatch(AppAction.DeselectPocketStoriesCategory("other")).join()
 
-            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
         }
 
-        val selectedCategories = homeFragmentStore.state.pocketStoriesCategoriesSelections
+        val selectedCategories = appStore.state.pocketStoriesCategoriesSelections
         assertEquals(1, selectedCategories.size)
         assertTrue(anotherStoriesCategory.name === selectedCategories[0].name)
-        assertSame(filteredStories, homeFragmentStore.state.pocketStories)
+        assertSame(filteredStories, appStore.state.pocketStories)
     }
 
     @Test
     fun `Test updating the list of Pocket recommended stories`() = runBlocking {
         val story1 = PocketRecommendedStory("title1", "url", "imageUrl", "publisher", "category", 1, 1)
         val story2 = story1.copy("title2")
-        homeFragmentStore = HomeFragmentStore(HomeFragmentState())
+        appStore = AppStore(AppState())
 
-        homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(listOf(story1, story2)))
+        appStore.dispatch(AppAction.PocketStoriesChange(listOf(story1, story2)))
             .join()
-        assertTrue(homeFragmentStore.state.pocketStories.containsAll(listOf(story1, story2)))
+        assertTrue(appStore.state.pocketStories.containsAll(listOf(story1, story2)))
 
         val updatedStories = listOf(story2.copy("title3"))
-        homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(updatedStories)).join()
-        assertTrue(updatedStories.containsAll(homeFragmentStore.state.pocketStories))
+        appStore.dispatch(AppAction.PocketStoriesChange(updatedStories)).join()
+        assertTrue(updatedStories.containsAll(appStore.state.pocketStories))
     }
 
     @Test
     fun `Test updating the list of Pocket recommendations categories`() = runBlocking {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
-        homeFragmentStore = HomeFragmentStore(HomeFragmentState())
+        appStore = AppStore(AppState())
 
-        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
+        mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
             val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<HomeFragmentState>().getFilteredStories(any()) } returns firstFilteredStories
+            every { any<AppState>().getFilteredStories(any()) } returns firstFilteredStories
 
-            homeFragmentStore.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesChange(listOf(otherStoriesCategory, anotherStoriesCategory))
+            appStore.dispatch(
+                AppAction.PocketStoriesCategoriesChange(listOf(otherStoriesCategory, anotherStoriesCategory))
             ).join()
-            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
             assertTrue(
-                homeFragmentStore.state.pocketStoriesCategories.containsAll(
+                appStore.state.pocketStoriesCategories.containsAll(
                     listOf(otherStoriesCategory, anotherStoriesCategory)
                 )
             )
-            assertSame(firstFilteredStories, homeFragmentStore.state.pocketStories)
+            assertSame(firstFilteredStories, appStore.state.pocketStories)
 
             val updatedCategories = listOf(PocketRecommendedStoriesCategory("yetAnother"))
             val secondFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<HomeFragmentState>().getFilteredStories(any()) } returns secondFilteredStories
-            homeFragmentStore.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesChange(
+            every { any<AppState>().getFilteredStories(any()) } returns secondFilteredStories
+            appStore.dispatch(
+                AppAction.PocketStoriesCategoriesChange(
                     updatedCategories
                 )
             ).join()
-            verify(exactly = 2) { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
-            assertTrue(updatedCategories.containsAll(homeFragmentStore.state.pocketStoriesCategories))
-            assertSame(secondFilteredStories, homeFragmentStore.state.pocketStories)
+            verify(exactly = 2) { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            assertTrue(updatedCategories.containsAll(appStore.state.pocketStoriesCategories))
+            assertSame(secondFilteredStories, appStore.state.pocketStories)
         }
     }
 
@@ -358,28 +363,28 @@ class HomeFragmentStoreTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val selectedCategory = PocketRecommendedStoriesSelectedCategory("selected")
-        homeFragmentStore = HomeFragmentStore(HomeFragmentState())
+        appStore = AppStore(AppState())
 
-        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
+        mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
             val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<HomeFragmentState>().getFilteredStories(any()) } returns firstFilteredStories
+            every { any<AppState>().getFilteredStories(any()) } returns firstFilteredStories
 
-            homeFragmentStore.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesSelectionsChange(
+            appStore.dispatch(
+                AppAction.PocketStoriesCategoriesSelectionsChange(
                     storiesCategories = listOf(otherStoriesCategory, anotherStoriesCategory),
                     categoriesSelected = listOf(selectedCategory)
                 )
             ).join()
-            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
             assertTrue(
-                homeFragmentStore.state.pocketStoriesCategories.containsAll(
+                appStore.state.pocketStoriesCategories.containsAll(
                     listOf(otherStoriesCategory, anotherStoriesCategory)
                 )
             )
             assertTrue(
-                homeFragmentStore.state.pocketStoriesCategoriesSelections.containsAll(listOf(selectedCategory))
+                appStore.state.pocketStoriesCategoriesSelections.containsAll(listOf(selectedCategory))
             )
-            assertSame(firstFilteredStories, homeFragmentStore.state.pocketStories)
+            assertSame(firstFilteredStories, appStore.state.pocketStories)
         }
     }
 
