@@ -9,7 +9,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketStoriesInteractor
@@ -44,7 +44,7 @@ interface TabSessionInteractor {
      *
      * * @param state The state the homepage from which to report desired metrics.
      */
-    fun reportSessionMetrics(state: HomeFragmentState)
+    fun reportSessionMetrics(state: AppState)
 }
 
 /**
@@ -444,7 +444,7 @@ class SessionControlInteractor(
         pocketStoriesController.handleDiscoverMoreClicked(link)
     }
 
-    override fun reportSessionMetrics(state: HomeFragmentState) {
+    override fun reportSessionMetrics(state: AppState) {
         controller.handleReportSessionMetrics(state)
     }
 }

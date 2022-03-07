@@ -36,7 +36,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
@@ -46,10 +49,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS
@@ -200,7 +200,7 @@ interface SessionControlController {
     /**
      * @see [SessionControlInteractor.reportSessionMetrics]
      */
-    fun handleReportSessionMetrics(state: HomeFragmentState)
+    fun handleReportSessionMetrics(state: AppState)
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -215,7 +215,7 @@ class DefaultSessionControlController(
     private val restoreUseCase: TabsUseCases.RestoreUseCase,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
-    private val fragmentStore: HomeFragmentStore,
+    private val appStore: AppStore,
     private val navController: NavController,
     private val viewLifecycleScope: CoroutineScope,
     private val hideOnboarding: () -> Unit,
@@ -521,7 +521,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
-        fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, expand))
+        appStore.dispatch(AppAction.CollectionExpanded(collection, expand))
     }
 
     private fun showTabTrayCollectionCreation() {
@@ -561,7 +561,7 @@ class DefaultSessionControlController(
 
     override fun handleRemoveCollectionsPlaceholder() {
         settings.showCollectionsPlaceholderOnHome = false
-        fragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder)
+        appStore.dispatch(AppAction.RemoveCollectionsPlaceholder)
     }
 
     private fun showShareFragment(shareSubject: String, data: List<ShareData>) {
@@ -613,7 +613,7 @@ class DefaultSessionControlController(
 
     override fun handleCloseExperimentCard() {
         settings.userDismissedExperimentCard = true
-        fragmentStore.dispatch(HomeFragmentAction.RemoveSetDefaultBrowserCard)
+        appStore.dispatch(AppAction.RemoveSetDefaultBrowserCard)
     }
 
     override fun handlePrivateModeButtonClicked(
@@ -625,8 +625,8 @@ class DefaultSessionControlController(
         }
 
         if (userHasBeenOnboarded) {
-            fragmentStore.dispatch(
-                HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            appStore.dispatch(
+                AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
             )
 
             if (navController.currentDestination?.id == R.id.searchDialogFragment) {
@@ -639,7 +639,7 @@ class DefaultSessionControlController(
         }
     }
 
-    override fun handleReportSessionMetrics(state: HomeFragmentState) {
+    override fun handleReportSessionMetrics(state: AppState) {
         with(metrics) {
             track(
                 if (state.recentTabs.isEmpty()) Event.RecentTabsSectionIsNotVisible

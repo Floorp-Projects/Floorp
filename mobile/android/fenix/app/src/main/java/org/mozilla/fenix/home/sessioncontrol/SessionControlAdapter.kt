@@ -16,9 +16,9 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.ui.widgets.WidgetSiteItemView
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.home.BottomSpacerViewHolder
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
 import org.mozilla.fenix.home.pocket.PocketCategoriesViewHolder
 import org.mozilla.fenix.home.pocket.PocketRecommendationsHeaderViewHolder
@@ -198,7 +198,7 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 
 @Suppress("LongParameterList")
 class SessionControlAdapter(
-    private val store: HomeFragmentStore,
+    private val store: AppStore,
     private val interactor: SessionControlInteractor,
     private val viewLifecycleOwner: LifecycleOwner,
     private val components: Components
@@ -216,13 +216,11 @@ class SessionControlAdapter(
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
-                store = store,
                 interactor = interactor
             )
             PocketCategoriesViewHolder.LAYOUT_ID -> return PocketCategoriesViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
-                store = store,
                 interactor = interactor
             )
             PocketRecommendationsHeaderViewHolder.LAYOUT_ID -> return PocketRecommendationsHeaderViewHolder(
@@ -233,20 +231,17 @@ class SessionControlAdapter(
             RecentBookmarksViewHolder.LAYOUT_ID -> return RecentBookmarksViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner,
-                store = store,
                 interactor = interactor,
                 metrics = components.analytics.metrics
             )
             RecentTabViewHolder.LAYOUT_ID -> return RecentTabViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner,
-                store = store,
                 interactor = interactor
             )
             RecentlyVisitedViewHolder.LAYOUT_ID -> return RecentlyVisitedViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner,
-                store = store,
                 interactor = interactor,
                 metrics = components.analytics.metrics
             )

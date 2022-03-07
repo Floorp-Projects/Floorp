@@ -14,12 +14,11 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentAction.RemoveRecentHistoryHighlight
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.library.history.toHistoryMetadata
@@ -68,7 +67,7 @@ interface RecentVisitsController {
  */
 class DefaultRecentVisitsController(
     private val store: BrowserStore,
-    private val homeStore: HomeFragmentStore,
+    private val appStore: AppStore,
     private val selectOrAddTabUseCase: SelectOrAddUseCase,
     private val navController: NavController,
     private val storage: HistoryMetadataStorage,
@@ -111,7 +110,7 @@ class DefaultRecentVisitsController(
         // First, dispatch actions that will clean up search groups in the two stores that have
         // metadata-related state.
         store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = groupTitle))
-        homeStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction(searchTerm = groupTitle))
+        appStore.dispatch(AppAction.DisbandSearchGroupAction(searchTerm = groupTitle))
         // Then, perform the expensive IO work of removing search groups from storage.
         scope.launch {
             storage.deleteHistoryMetadata(groupTitle)
@@ -136,7 +135,7 @@ class DefaultRecentVisitsController(
      * @param highlightUrl The title of the [RecentHistoryHighlight] to be removed.
      */
     override fun handleRemoveRecentHistoryHighlight(highlightUrl: String) {
-        homeStore.dispatch(RemoveRecentHistoryHighlight(highlightUrl))
+        appStore.dispatch(AppAction.RemoveRecentHistoryHighlight(highlightUrl))
         scope.launch {
             storage.deleteHistoryMetadataForUrl(highlightUrl)
         }

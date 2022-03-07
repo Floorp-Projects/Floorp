@@ -14,18 +14,18 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.asRecentTabs
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentStore
 
 /**
- * View-bound feature that dispatches recent tab changes to the [HomeFragmentStore] when the
+ * View-bound feature that dispatches recent tab changes to the [AppStore] when the
  * [BrowserStore] is updated.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentTabsListFeature(
     browserStore: BrowserStore,
-    private val homeStore: HomeFragmentStore
+    private val appStore: AppStore
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
@@ -35,7 +35,7 @@ class RecentTabsListFeature(
             .map { it.asRecentTabs() }
             .ifChanged()
             .collect {
-                homeStore.dispatch(HomeFragmentAction.RecentTabsChange(it))
+                appStore.dispatch(AppAction.RecentTabsChange(it))
             }
     }
 }

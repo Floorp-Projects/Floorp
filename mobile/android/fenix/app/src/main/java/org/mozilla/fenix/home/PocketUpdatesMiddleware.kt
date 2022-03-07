@@ -7,6 +7,7 @@ package org.mozilla.fenix.home
 import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Action
@@ -15,32 +16,35 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStoriesService
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories.SelectedPocketStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 
 /**
- * [HomeFragmentStore] middleware reacting in response to Pocket related [Action]s.
+ * [AppStore] middleware reacting in response to Pocket related [Action]s.
  *
- * @param coroutineScope [CoroutineScope] used for long running operations like disk IO.
  * @param pocketStoriesService [PocketStoriesService] used for updating details about the Pocket recommended stories.
  * @param selectedPocketCategoriesDataStore [DataStore] used for reading or persisting details about the
  * currently selected Pocket recommended stories categories.
+ * @param coroutineScope [CoroutineScope] used for long running operations like disk IO.
  */
 class PocketUpdatesMiddleware(
-    private val coroutineScope: CoroutineScope,
     private val pocketStoriesService: PocketStoriesService,
-    private val selectedPocketCategoriesDataStore: DataStore<SelectedPocketStoriesCategories>
-) : Middleware<HomeFragmentState, HomeFragmentAction> {
+    private val selectedPocketCategoriesDataStore: DataStore<SelectedPocketStoriesCategories>,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+) : Middleware<AppState, AppAction> {
     override fun invoke(
-        context: MiddlewareContext<HomeFragmentState, HomeFragmentAction>,
-        next: (HomeFragmentAction) -> Unit,
-        action: HomeFragmentAction
+        context: MiddlewareContext<AppState, AppAction>,
+        next: (AppAction) -> Unit,
+        action: AppAction
     ) {
         // Pre process actions
         when (action) {
-            is HomeFragmentAction.PocketStoriesCategoriesChange -> {
+            is AppAction.PocketStoriesCategoriesChange -> {
                 // Intercept the original action which would only update categories and
                 // dispatch a new action which also updates which categories are selected by the user
                 // from previous locally persisted data.
@@ -60,7 +64,7 @@ class PocketUpdatesMiddleware(
 
         // Post process actions
         when (action) {
-            is HomeFragmentAction.PocketStoriesShown -> {
+            is AppAction.PocketStoriesShown -> {
                 persistStories(
                     coroutineScope = coroutineScope,
                     pocketStoriesService = pocketStoriesService,
@@ -69,8 +73,8 @@ class PocketUpdatesMiddleware(
                     }
                 )
             }
-            is HomeFragmentAction.SelectPocketStoriesCategory,
-            is HomeFragmentAction.DeselectPocketStoriesCategory -> {
+            is AppAction.SelectPocketStoriesCategory,
+            is AppAction.DeselectPocketStoriesCategory -> {
                 persistSelectedCategories(
                     coroutineScope = coroutineScope,
                     currentCategoriesSelections = context.state.pocketStoriesCategoriesSelections,
@@ -135,7 +139,7 @@ internal fun persistSelectedCategories(
 
 /**
  * Combines [currentCategories] with the locally persisted data about previously selected categories
- * and emits a new [HomeFragmentAction.PocketStoriesCategoriesSelectionsChange] to update these in store.
+ * and emits a new [AppAction.PocketStoriesCategoriesSelectionsChange] to update these in store.
  *
  * @param coroutineScope [CoroutineScope] used for reading the locally persisted data.
  * @param currentCategories Stories categories currently available
@@ -147,13 +151,13 @@ internal fun persistSelectedCategories(
 internal fun restoreSelectedCategories(
     coroutineScope: CoroutineScope,
     currentCategories: List<PocketRecommendedStoriesCategory>,
-    store: Store<HomeFragmentState, HomeFragmentAction>,
+    store: Store<AppState, AppAction>,
     selectedPocketCategoriesDataStore: DataStore<SelectedPocketStoriesCategories>
 ) {
     coroutineScope.launch {
         selectedPocketCategoriesDataStore.data.collect { persistedSelectedCategories ->
             store.dispatch(
-                HomeFragmentAction.PocketStoriesCategoriesSelectionsChange(
+                AppAction.PocketStoriesCategoriesSelectionsChange(
                     currentCategories,
                     persistedSelectedCategories.valuesList.map {
                         PocketRecommendedStoriesSelectedCategory(

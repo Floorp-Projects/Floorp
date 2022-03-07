@@ -10,12 +10,12 @@ import androidx.navigation.NavController
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.inProgressMediaTab
-import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 
@@ -56,7 +56,7 @@ class DefaultRecentTabsController(
     private val navController: NavController,
     private val metrics: MetricController,
     private val store: BrowserStore,
-    private val homeStore: HomeFragmentStore,
+    private val appStore: AppStore,
 ) : RecentTabController {
 
     override fun handleRecentTabClicked(tabId: String) {
@@ -86,7 +86,7 @@ class DefaultRecentTabsController(
     }
 
     override fun handleRecentTabRemoved(tab: RecentTab.Tab) {
-        homeStore.dispatch(HomeFragmentAction.RemoveRecentTab(tab))
+        appStore.dispatch(AppAction.RemoveRecentTab(tab))
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

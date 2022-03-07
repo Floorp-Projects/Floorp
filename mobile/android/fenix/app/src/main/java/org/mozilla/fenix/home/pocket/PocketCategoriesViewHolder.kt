@@ -21,25 +21,24 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.theme.FirefoxTheme
 
 internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 
 /**
- * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStoriesCategory]s from [HomeFragmentStore].
+ * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStoriesCategory]s from
+ * [AppStore].
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param store [HomeFragmentStore] containing the list of Pocket stories categories to be displayed.
  * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketCategoriesViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val store: HomeFragmentStore,
     private val interactor: PocketStoriesInteractor
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
@@ -49,9 +48,9 @@ class PocketCategoriesViewHolder(
             composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
         composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
 
-        val categories = store
+        val categories = components.appStore
             .observeAsComposableState { state -> state.pocketStoriesCategories }.value
-        val categoriesSelections = store
+        val categoriesSelections = components.appStore
             .observeAsComposableState { state -> state.pocketStoriesCategoriesSelections }.value
 
         Column {

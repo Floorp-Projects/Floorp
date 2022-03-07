@@ -26,25 +26,23 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.string
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.theme.FirefoxTheme
 
 internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
 
 /**
- * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStory]s from [HomeFragmentStore].
+ * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStory]s from [AppStore].
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param store [HomeFragmentStore] containing the list of Pocket stories to be displayed.
  * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketStoriesViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val store: HomeFragmentStore,
     private val interactor: PocketStoriesInteractor
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
@@ -56,7 +54,7 @@ class PocketStoriesViewHolder(
     override fun Content() {
         val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
 
-        val stories = store
+        val stories = components.appStore
             .observeAsComposableState { state -> state.pocketStories }.value
 
         LaunchedEffect(stories) {

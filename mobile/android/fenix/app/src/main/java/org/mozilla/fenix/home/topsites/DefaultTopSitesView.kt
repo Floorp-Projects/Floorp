@@ -6,19 +6,19 @@ package org.mozilla.fenix.home.topsites
 
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.view.TopSitesView
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.sort
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.utils.Settings
 
 class DefaultTopSitesView(
-    val store: HomeFragmentStore,
+    val store: AppStore,
     val settings: Settings
 ) : TopSitesView {
 
     override fun displayTopSites(topSites: List<TopSite>) {
         store.dispatch(
-            HomeFragmentAction.TopSitesChange(
+            AppAction.TopSitesChange(
                 if (!settings.showContileFeature) {
                     topSites
                 } else {

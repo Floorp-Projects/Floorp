@@ -6,8 +6,8 @@ package org.mozilla.fenix.home.blocklist
 
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 
 /**
@@ -18,46 +18,46 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
  */
 class BlocklistMiddleware(
     private val blocklistHandler: BlocklistHandler
-) : Middleware<HomeFragmentState, HomeFragmentAction> {
+) : Middleware<AppState, AppAction> {
 
     /**
      * Will filter "Change" actions using the blocklist and use "Remove" actions to update
      * the blocklist.
      */
     override fun invoke(
-        context: MiddlewareContext<HomeFragmentState, HomeFragmentAction>,
-        next: (HomeFragmentAction) -> Unit,
-        action: HomeFragmentAction
+        context: MiddlewareContext<AppState, AppAction>,
+        next: (AppAction) -> Unit,
+        action: AppAction
     ) {
         next(getUpdatedAction(context.state, action))
     }
 
     private fun getUpdatedAction(
-        state: HomeFragmentState,
-        action: HomeFragmentAction
+        state: AppState,
+        action: AppAction
     ) = with(blocklistHandler) {
         when (action) {
-            is HomeFragmentAction.Change -> {
+            is AppAction.Change -> {
                 action.copy(
                     recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
                     recentTabs = action.recentTabs.filteredByBlocklist(),
                     recentHistory = action.recentHistory.filteredByBlocklist()
                 )
             }
-            is HomeFragmentAction.RecentTabsChange -> {
+            is AppAction.RecentTabsChange -> {
                 action.copy(
                     recentTabs = action.recentTabs.filteredByBlocklist()
                 )
             }
-            is HomeFragmentAction.RecentBookmarksChange -> {
+            is AppAction.RecentBookmarksChange -> {
                 action.copy(
                     recentBookmarks = action.recentBookmarks.filteredByBlocklist()
                 )
             }
-            is HomeFragmentAction.RecentHistoryChange -> {
+            is AppAction.RecentHistoryChange -> {
                 action.copy(recentHistory = action.recentHistory.filteredByBlocklist())
             }
-            is HomeFragmentAction.RemoveRecentTab -> {
+            is AppAction.RemoveRecentTab -> {
                 if (action.recentTab is RecentTab.Tab) {
                     addUrlToBlocklist(action.recentTab.state.content.url)
                     state.toActionFilteringAllState(this)
@@ -65,13 +65,13 @@ class BlocklistMiddleware(
                     action
                 }
             }
-            is HomeFragmentAction.RemoveRecentBookmark -> {
+            is AppAction.RemoveRecentBookmark -> {
                 action.recentBookmark.url?.let { url ->
                     addUrlToBlocklist(url)
                     state.toActionFilteringAllState(this)
                 } ?: action
             }
-            is HomeFragmentAction.RemoveRecentHistoryHighlight -> {
+            is AppAction.RemoveRecentHistoryHighlight -> {
                 addUrlToBlocklist(action.highlightUrl)
                 state.toActionFilteringAllState(this)
             }
@@ -83,9 +83,9 @@ class BlocklistMiddleware(
     // relevant parts that contain it.
     // This is a candidate for refactoring once context receivers lands in Kotlin 1.6.20
     // https://blog.jetbrains.com/kotlin/2022/02/kotlin-1-6-20-m1-released/#prototype-of-context-receivers-for-kotlin-jvm
-    private fun HomeFragmentState.toActionFilteringAllState(blocklistHandler: BlocklistHandler) =
+    private fun AppState.toActionFilteringAllState(blocklistHandler: BlocklistHandler) =
         with(blocklistHandler) {
-            HomeFragmentAction.Change(
+            AppAction.Change(
                 recentTabs = recentTabs.filteredByBlocklist(),
                 recentBookmarks = recentBookmarks.filteredByBlocklist(),
                 recentHistory = recentHistory.filteredByBlocklist(),

@@ -13,10 +13,10 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -148,7 +148,7 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     return items
 }
 
-private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
+private fun AppState.toAdapterList(): List<AdapterItem> = when (mode) {
     is Mode.Normal -> normalModeAdapterItems(
         topSites,
         collections,
@@ -165,7 +165,7 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
 }
 
 @VisibleForTesting
-internal fun HomeFragmentState.shouldShowHomeOnboardingDialog(settings: Settings): Boolean {
+internal fun AppState.shouldShowHomeOnboardingDialog(settings: Settings): Boolean {
     val isAnySectionsVisible = recentTabs.isNotEmpty() || recentBookmarks.isNotEmpty() ||
         recentHistory.isNotEmpty() || pocketStories.isNotEmpty()
     return isAnySectionsVisible && !settings.hasShownHomeOnboardingDialog
@@ -177,7 +177,7 @@ private fun collectionTabItems(collection: TabCollection) =
     }
 
 class SessionControlView(
-    store: HomeFragmentStore,
+    store: AppStore,
     val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
     internal val interactor: SessionControlInteractor
@@ -212,7 +212,7 @@ class SessionControlView(
         }
     }
 
-    fun update(state: HomeFragmentState, shouldReportMetrics: Boolean = false) {
+    fun update(state: AppState, shouldReportMetrics: Boolean = false) {
         if (state.shouldShowHomeOnboardingDialog(view.context.settings())) {
             interactor.showOnboardingDialog()
         }
