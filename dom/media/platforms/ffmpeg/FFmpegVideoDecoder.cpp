@@ -39,6 +39,9 @@
 #  define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
+#if LIBAVCODEC_VERSION_MAJOR > 58
+#  define AV_PIX_FMT_VAAPI_VLD AV_PIX_FMT_VAAPI
+#endif
 #include "mozilla/PodOperations.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
@@ -765,6 +768,14 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
 }
 #endif
 
+static int64_t GetFramePts(AVFrame* aFrame) {
+#if LIBAVCODEC_VERSION_MAJOR > 58
+  return aFrame->pts;
+#else
+  return aFrame->pkt_pts;
+#endif
+}
+
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame,
     MediaDataDecoder::DecodedData& aResults) {
@@ -830,7 +841,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
     if (IsHardwareAccelerated()) {
-      rv = CreateImageVAAPI(mFrame->pkt_pos, mFrame->pkt_pts,
+      rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
                             mFrame->pkt_duration, aResults);
       // If VA-API playback failed, just quit. Decoder is going to be restarted
       // without VA-API.
@@ -843,8 +854,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     } else
 #  endif
     {
-      rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts, mFrame->pkt_duration,
-                       aResults);
+      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame),
+                       mFrame->pkt_duration, aResults);
     }
     if (NS_FAILED(rv)) {
       return rv;
@@ -878,9 +889,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       "DoDecodeFrame:decode_video: rv=%d decoded=%d "
       "(Input: pts(%" PRId64 ") dts(%" PRId64 ") Output: pts(%" PRId64
       ") "
-      "opaque(%" PRId64 ") pkt_pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
+      "opaque(%" PRId64 ") pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
       bytesConsumed, decoded, packet.pts, packet.dts, mFrame->pts,
-      mFrame->reordered_opaque, mFrame->pkt_pts, mFrame->pkt_dts);
+      mFrame->reordered_opaque, mFrame->pts, mFrame->pkt_dts);
 
   if (bytesConsumed < 0) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -895,7 +906,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   }
 
   // If we've decoded a frame then we need to output it
-  int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
+  int64_t pts =
+      mPtsContext.GuessCorrectPts(GetFramePts(mFrame), mFrame->pkt_dts);
   // Retrieve duration from dts.
   // We use the first entry found matching this dts (this is done to
   // handle damaged file with multiple frames with the same dts)
