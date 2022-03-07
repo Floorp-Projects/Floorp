@@ -443,7 +443,7 @@ private fun assertWelcomeHeader() =
 
 private fun assertStartSyncHeader() {
     scrollToElementByText(STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER)
-    onView(allOf(withText("Sync $appName between devices")))
+    onView(allOf(withText(R.string.onboarding_account_sign_in_header_1)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 private fun assertAccountsSignInButton() =

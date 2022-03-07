@@ -372,10 +372,7 @@ private fun SyncedTabsErrorPreview() {
     FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             SyncedTabsErrorItem(
-                errorText = stringResource(
-                    R.string.synced_tabs_no_tabs_2,
-                    stringResource(R.string.app_name)
-                ),
+                errorText = stringResource(R.string.synced_tabs_no_tabs),
                 errorButton = SyncedTabsListItem.ErrorButton(
                     buttonText = stringResource(R.string.synced_tabs_sign_in_button)
                 ) {

@@ -29,7 +29,7 @@ class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(vie
         val context = itemView.context
         val appName = context.getString(R.string.app_name)
         binding.headerText.text =
-            context.getString(R.string.onboarding_account_sign_in_header_2, appName)
+            context.getString(R.string.onboarding_account_sign_in_header_1)
         binding.descriptionText.text =
             context.getString(R.string.onboarding_manual_sign_in_description_2, appName)
     }

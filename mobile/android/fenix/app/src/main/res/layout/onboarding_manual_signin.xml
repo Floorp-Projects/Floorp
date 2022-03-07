@@ -33,7 +33,7 @@
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
         app:layout_constraintBottom_toBottomOf="@id/avatar_icon"
         android:layout_marginStart="52dp"
-        tools:text="@string/onboarding_account_sign_in_header_2" />
+        tools:text="@string/onboarding_account_sign_in_header_1" />
 
     <TextView
         android:id="@+id/description_text"

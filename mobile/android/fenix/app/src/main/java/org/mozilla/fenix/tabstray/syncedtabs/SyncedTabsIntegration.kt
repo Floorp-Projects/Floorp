@@ -116,10 +116,7 @@ class SyncedTabsIntegration(
 
         SyncedTabsView.ErrorType.NO_TABS_AVAILABLE ->
             SyncedTabsListItem.Error(
-                errorText = context.getString(
-                    R.string.synced_tabs_no_tabs_2,
-                    context.getString(R.string.app_name)
-                ),
+                errorText = context.getString(R.string.synced_tabs_no_tabs),
             )
 
         SyncedTabsView.ErrorType.SYNC_UNAVAILABLE ->
