@@ -26,7 +26,8 @@ data class FocusColors(
     val toolbarColor: Color,
     val privacySecuritySettingsToolTip: Color,
     val secondaryBackground: Color = PhotonColors.Ink20A48,
-    val onboardingButtonBackground: Color = PhotonColors.Ink20
+    val onboardingButtonBackground: Color = PhotonColors.Ink20,
+    val onboardingKeyFeatureImageTint: Color = PhotonColors.Ink50
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

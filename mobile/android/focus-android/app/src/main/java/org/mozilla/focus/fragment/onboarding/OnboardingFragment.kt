@@ -31,6 +31,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -66,7 +67,7 @@ class OnboardingFragment : Fragment() {
         onboardingInteractor = OnboardingInteractor(requireComponents.appStore)
         return ComposeView(requireContext()).apply {
             setContent {
-                FocusTheme {
+                FocusTheme(darkTheme = false) {
                     OnboardingContent(onboardingInteractor)
                 }
             }
@@ -157,6 +158,7 @@ class OnboardingFragment : Fragment() {
             val (image, title, description) = createRefs()
             Image(
                 painter = painterResource(iconId),
+                colorFilter = ColorFilter.tint(color = focusColors.onboardingKeyFeatureImageTint),
                 contentDescription = getString(R.string.app_name),
                 modifier = Modifier.constrainAs(image) { top.linkTo(parent.top) }
             )
