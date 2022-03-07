@@ -241,14 +241,6 @@ class LoopbackTransport : public MediaTransportHandler {
   RefPtr<MediaTransportHandler> peer_;
 };
 
-class NoTrialsConfig : public webrtc::WebRtcKeyValueConfig {
- public:
-  NoTrialsConfig() = default;
-  std::string Lookup(absl::string_view key) const override {
-    return std::string();
-  }
-};
-
 class TestAgent {
  public:
   explicit TestAgent(const RefPtr<SharedWebrtcState>& aSharedState)
@@ -453,7 +445,7 @@ class MediaPipelineTest : public ::testing::Test {
             AbstractThread::MainThread(), CreateAudioStateConfig(),
             already_AddRefed(
                 webrtc::CreateBuiltinAudioDecoderFactory().release()),
-            WrapUnique(new NoTrialsConfig()))),
+            WrapUnique(new webrtc::NoTrialsConfig()))),
         p1_(shared_state_),
         p2_(shared_state_) {}
 

@@ -21,6 +21,15 @@ namespace webrtc {
 class AudioDecoderFactory;
 class SharedModuleThread;
 class WebRtcKeyValueConfig;
+
+// Used for testing in mediapipeline_unittest.cpp, MockCall.h
+class NoTrialsConfig : public WebRtcKeyValueConfig {
+  public:
+    NoTrialsConfig() = default;
+    std::string Lookup(absl::string_view key) const override {
+      return std::string();
+    }
+};
 }  // namespace webrtc
 
 namespace mozilla {

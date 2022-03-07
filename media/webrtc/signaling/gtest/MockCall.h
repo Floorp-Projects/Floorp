@@ -255,6 +255,10 @@ class MockCall : public webrtc::Call {
         width, height, *mVideoSendEncoderConfig);
   }
 
+  virtual const webrtc::WebRtcKeyValueConfig& trials() const override {
+    return mUnusedConfig;
+  }
+
   virtual ~MockCall(){};
 
   const RefPtr<MockCallWrapper> mCallWrapper;
@@ -264,6 +268,7 @@ class MockCall : public webrtc::Call {
   mozilla::Maybe<webrtc::VideoSendStream::Config> mVideoSendConfig;
   mozilla::Maybe<webrtc::VideoEncoderConfig> mVideoSendEncoderConfig;
   webrtc::Call::Stats mStats;
+  webrtc::NoTrialsConfig mUnusedConfig;
 };
 
 class MockCallWrapper : public mozilla::WebrtcCallWrapper {
