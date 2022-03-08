@@ -13,12 +13,11 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.trackingprotection.TrackingProtectionMode
@@ -106,20 +105,10 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val radio = requirePreference<RadioButtonInfoPreference>(mode.preferenceKey)
         radio.contentDescription = getString(mode.contentDescriptionRes)
 
-        val metrics = requireComponents.analytics.metrics
         radio.onClickListener {
             updateCustomOptionsVisibility()
             updateTrackingProtectionPolicy()
-            when (mode) {
-                TrackingProtectionMode.STANDARD ->
-                    Event.TrackingProtectionSettingChanged.Setting.STANDARD
-                TrackingProtectionMode.STRICT ->
-                    Event.TrackingProtectionSettingChanged.Setting.STRICT
-                TrackingProtectionMode.CUSTOM ->
-                    Event.TrackingProtectionSettingChanged.Setting.CUSTOM
-            }.let { setting ->
-                metrics.track(Event.TrackingProtectionSettingChanged(setting))
-            }
+            TrackingProtection.etpSettingChanged.record(TrackingProtection.EtpSettingChangedExtra(mode.name))
         }
 
         radio.onInfoClickListener {

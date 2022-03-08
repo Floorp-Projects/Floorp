@@ -54,7 +54,6 @@ import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.ext.components
@@ -455,25 +454,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.NotificationMediaPause -> EventWrapper<NoExtraKeys>(
             { MediaNotification.pause.record(it) }
         )
-        is Event.TrackingProtectionTrackerList -> EventWrapper<NoExtraKeys>(
-            { TrackingProtection.etpTrackerList.record(it) }
-        )
-        is Event.TrackingProtectionIconPressed -> EventWrapper<NoExtraKeys>(
-            { TrackingProtection.etpShield.record(it) }
-        )
-        is Event.TrackingProtectionSettingsPanel -> EventWrapper<NoExtraKeys>(
-            { TrackingProtection.panelSettings.record(it) }
-        )
-        is Event.TrackingProtectionSettings -> EventWrapper<NoExtraKeys>(
-            { TrackingProtection.etpSettings.record(it) }
-        )
-        is Event.TrackingProtectionException -> EventWrapper<NoExtraKeys>(
-            { TrackingProtection.exceptionAdded.record(it) }
-        )
-        is Event.TrackingProtectionSettingChanged -> EventWrapper(
-            { TrackingProtection.etpSettingChanged.record(it) },
-            { TrackingProtection.etpSettingChangedKeys.valueOf(it) }
-        )
+
         is Event.OpenedLink -> EventWrapper(
             { Events.openedLink.record(it) },
             { Events.openedLinkKeys.valueOf(it) }

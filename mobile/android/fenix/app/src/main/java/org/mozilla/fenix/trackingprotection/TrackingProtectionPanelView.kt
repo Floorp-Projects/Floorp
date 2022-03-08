@@ -20,11 +20,11 @@ import androidx.core.view.isVisible
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTrackingProtectionPanelBinding
 import org.mozilla.fenix.ext.addUnderline
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
@@ -258,7 +258,7 @@ class TrackingProtectionPanelView(
 
     override fun onClick(v: View) {
         val category = getCategory(v) ?: return
-        v.context.metrics.track(Event.TrackingProtectionTrackerList)
+        TrackingProtection.etpTrackerList.record(NoExtras())
         shouldFocusAccessibilityView = true
         interactor.openDetails(category, categoryBlocked = !isLoaded(v))
     }

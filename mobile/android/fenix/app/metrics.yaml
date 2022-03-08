@@ -4394,6 +4394,7 @@ tracking_protection:
     extra_keys:
       etp_setting:
         description: "The new setting for ETP: strict, standard, custom"
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5312
       - https://github.com/mozilla-mobile/fenix/issues/11063

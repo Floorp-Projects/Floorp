@@ -23,7 +23,6 @@ import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.name
 import java.util.Locale
@@ -141,11 +140,6 @@ sealed class Event {
     object TopSiteContilePrivacy : Event()
     object GoogleTopSiteRemoved : Event()
     object BaiduTopSiteRemoved : Event()
-    object TrackingProtectionTrackerList : Event()
-    object TrackingProtectionIconPressed : Event()
-    object TrackingProtectionSettingsPanel : Event()
-    object TrackingProtectionSettings : Event()
-    object TrackingProtectionException : Event()
     object OpenLogins : Event()
     object OpenOneLogin : Event()
     object CopyLogin : Event()
@@ -404,13 +398,6 @@ sealed class Event {
 
         override val extras: Map<Events.openedLinkKeys, String>?
             get() = hashMapOf(Events.openedLinkKeys.mode to mode.name)
-    }
-
-    data class TrackingProtectionSettingChanged(val setting: Setting) : Event() {
-        enum class Setting { STRICT, STANDARD, CUSTOM }
-
-        override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
-            get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
     }
 
     data class SaveLoginsSettingChanged(val setting: Setting) : Event() {

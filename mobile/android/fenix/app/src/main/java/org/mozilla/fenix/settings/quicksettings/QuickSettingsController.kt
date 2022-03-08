@@ -17,11 +17,11 @@ import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.getOrigin
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -194,7 +194,7 @@ class DefaultQuickSettingsController(
             if (isEnabled) {
                 trackingProtectionUseCases.removeException(session.id)
             } else {
-                context.metrics.track(Event.TrackingProtectionException)
+                TrackingProtection.exceptionAdded.record(NoExtras())
                 trackingProtectionUseCases.addException(session.id)
             }
 

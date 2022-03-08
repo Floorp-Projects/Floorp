@@ -36,13 +36,13 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentTrackingProtectionBinding
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.settings.SupportUtils
@@ -143,7 +143,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     }
 
     private fun openTrackingProtectionSettings() {
-        requireContext().metrics.track(Event.TrackingProtectionSettingsPanel)
+        TrackingProtection.panelSettings.record(NoExtras())
         nav(
             R.id.trackingProtectionPanelDialogFragment,
             TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment()
