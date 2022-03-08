@@ -12,7 +12,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Subprocess"];
+// SubprocessImpl is exported for tests.
+var EXPORTED_SYMBOLS = ["Subprocess", "SubprocessImpl"];
 
 /* exported Subprocess */
 
