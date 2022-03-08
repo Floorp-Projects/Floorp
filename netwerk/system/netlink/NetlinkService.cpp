@@ -10,7 +10,6 @@
 #include <poll.h>
 #include <linux/rtnetlink.h>
 
-#include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "NetlinkService.h"
@@ -24,6 +23,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/FunctionTypeTraits.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"

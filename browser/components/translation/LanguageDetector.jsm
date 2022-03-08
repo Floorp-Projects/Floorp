@@ -4,30 +4,31 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["LanguageDetector"];
+// workerManager is exported for tests.
+var EXPORTED_SYMBOLS = ["LanguageDetector", "workerManager"];
 
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 
-// Since Emscripten can handle heap growth, but not heap shrinkage, we
-// need to refresh the worker after we've processed a particularly large
-// string in order to prevent unnecessary resident memory growth.
-//
-// These values define the cut-off string length and the idle timeout
-// (in milliseconds) before destroying a worker. Once a string of the
-// maximum size has been processed, the worker is marked for
-// destruction, and is terminated as soon as it has been idle for the
-// given timeout.
-//
-// 1.5MB. This is the approximate string length that forces heap growth
-// for a 2MB heap.
-var LARGE_STRING = 1.5 * 1024 * 1024;
-var IDLE_TIMEOUT = 10 * 1000;
-
 const WORKER_URL = "resource:///modules/translation/cld-worker.js";
 
 var workerManager = {
+  // Since Emscripten can handle heap growth, but not heap shrinkage, we
+  // need to refresh the worker after we've processed a particularly large
+  // string in order to prevent unnecessary resident memory growth.
+  //
+  // These values define the cut-off string length and the idle timeout
+  // (in milliseconds) before destroying a worker. Once a string of the
+  // maximum size has been processed, the worker is marked for
+  // destruction, and is terminated as soon as it has been idle for the
+  // given timeout.
+  //
+  // 1.5MB. This is the approximate string length that forces heap growth
+  // for a 2MB heap.
+  LARGE_STRING: 1.5 * 1024 * 1024,
+  IDLE_TIMEOUT: 10 * 1000,
+
   detectionQueue: [],
 
   detectLanguage(aParams) {
@@ -44,7 +45,10 @@ var workerManager = {
         // Determine if our input was large enough to trigger heap growth,
         // or if we're already waiting to destroy the worker when it's
         // idle. If so, schedule termination after the idle timeout.
-        if (aParams.text.length >= LARGE_STRING || this._idleTimeout != null) {
+        if (
+          aParams.text.length >= this.LARGE_STRING ||
+          this._idleTimeout != null
+        ) {
           this.flushWorker();
         }
 
@@ -82,7 +86,10 @@ var workerManager = {
       clearTimeout(this._idleTimeout);
     }
 
-    this._idleTimeout = setTimeout(this._flushWorker.bind(this), IDLE_TIMEOUT);
+    this._idleTimeout = setTimeout(
+      this._flushWorker.bind(this),
+      this.IDLE_TIMEOUT
+    );
   },
 
   // Immediately terminate the worker, as long as there no pending

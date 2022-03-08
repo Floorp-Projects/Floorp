@@ -17,9 +17,9 @@
 //
 // Unit test compact language detector, CLD2
 //
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 // Test strings.
+/* eslint-disable no-unused-vars */
 const kTeststr_en =
   "confiscation of goods is assigned as the penalty part most of the courts " +
   "consist of members and when it is necessary to bring public cases before a " +
@@ -448,6 +448,7 @@ const kTeststr_fr_en_Latn =
 // This can be used to cross-check the build date of the main quadgram table
 const kTeststr_version =
   "qpdbmrmxyzptlkuuddlrlrbas las les qpdbmrmxyzptlkuuddlrlrbas el la qpdbmrmxyzptlkuuddlrlrbas";
+/* eslint-enable no-unused-vars */
 
 const kTestPairs = [
   // A simple case to begin
@@ -567,11 +568,9 @@ const kTestPairs = [
 ];
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-let detectorModule = ChromeUtils.import(
-  "resource:///modules/translation/LanguageDetector.jsm",
-  null
+let { LanguageDetector, workerManager } = ChromeUtils.import(
+  "resource:///modules/translation/LanguageDetector.jsm"
 );
-const LanguageDetector = detectorModule.LanguageDetector;
 
 function check_result(result, langCode, expected) {
   equal(result.language, langCode, "Expected language code");
@@ -637,11 +636,11 @@ add_task(async function test_worker_flush() {
 
   // Set shorter timeouts and lower string lengths to make things easier
   // on the test infrastructure.
-  detectorModule.LARGE_STRING = test_string.length - 1;
-  detectorModule.IDLE_TIMEOUT = 1000;
+  workerManager.LARGE_STRING = test_string.length - 1;
+  workerManager.IDLE_TIMEOUT = 1000;
 
   equal(
-    detectorModule.workerManager._idleTimeout,
+    workerManager._idleTimeout,
     null,
     "Should have no idle timeout to start with"
   );
@@ -652,36 +651,26 @@ add_task(async function test_worker_flush() {
   check_result(result, test_item[0], test_item[3]);
 
   // We should have an idle timeout after processing the string.
-  ok(
-    detectorModule.workerManager._idleTimeout != null,
-    "Should have an idle timeout"
-  );
-  ok(
-    detectorModule.workerManager._worker != null,
-    "Should have a worker instance"
-  );
-  ok(
-    detectorModule.workerManager._workerReadyPromise != null,
-    "Should have a worker promise"
-  );
+  ok(workerManager._idleTimeout != null, "Should have an idle timeout");
+  ok(workerManager._worker != null, "Should have a worker instance");
+  ok(workerManager._workerReadyPromise != null, "Should have a worker promise");
 
   // Wait for the idle timeout to elapse.
-  await new Promise(resolve =>
-    setTimeout(resolve, detectorModule.IDLE_TIMEOUT)
-  );
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, workerManager.IDLE_TIMEOUT));
 
   equal(
-    detectorModule.workerManager._idleTimeout,
+    workerManager._idleTimeout,
     null,
     "Should have no idle timeout after it has elapsed"
   );
   equal(
-    detectorModule.workerManager._worker,
+    workerManager._worker,
     null,
     "Should have no worker instance after idle timeout"
   );
   equal(
-    detectorModule.workerManager._workerReadyPromise,
+    workerManager._workerReadyPromise,
     null,
     "Should have no worker promise after idle timeout"
   );

@@ -6,11 +6,11 @@
 
 #include "mozilla/mscom/MainThreadInvoker.h"
 
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ProfilerThreadState.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"

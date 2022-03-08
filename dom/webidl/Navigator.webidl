@@ -307,6 +307,12 @@ partial interface Navigator {
   readonly attribute Clipboard clipboard;
 };
 
+// Used for testing of origin trials.
+partial interface Navigator {
+  [Trial="TestTrial"]
+  readonly attribute boolean testTrialGatedAttribute;
+};
+
 // https://wicg.github.io/web-share/#navigator-interface
 partial interface Navigator {
   [SecureContext, Throws, Func="Navigator::HasShareSupport"]

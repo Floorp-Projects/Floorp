@@ -9,9 +9,10 @@
 #include "base/logging.h"
 #include "base/message_loop.h"
 #include "base/scoped_nsautorelease_pool.h"
-#include "GeckoProfiler.h"
 
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerThreadSleep.h"
 
 namespace base {
 

@@ -16,8 +16,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 // Windowless browsers can create documents that rely on XUL Custom Elements:
-// eslint-disable-next-line mozilla/reject-chromeutils-import-params
-ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
+ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");
 
 // Need to import ActorManagerParent.jsm so that the actors are initialized before
 // running extension XPCShell tests.

@@ -26,7 +26,7 @@
 #  include "mozilla/UniquePtr.h"
 
 #  if defined(MOZILLA_INTERNAL_API)
-#    include "GeckoProfiler.h"
+#    include "mozilla/ProfilerThreadSleep.h"
 #  endif  // MOZILLA_INTERNAL_API
 
 #endif  // ifdef DEBUG

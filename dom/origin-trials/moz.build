@@ -17,6 +17,8 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         inputs=["ffi"],
     )
 
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+
 EXPORTS.mozilla += [
     "OriginTrials.h",
 ]

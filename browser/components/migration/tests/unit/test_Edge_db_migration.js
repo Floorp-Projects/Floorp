@@ -1,16 +1,14 @@
 "use strict";
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-let eseBackStage = ChromeUtils.import(
-  "resource:///modules/ESEDBReader.jsm",
-  null
-);
-let ESE = eseBackStage.ESE;
-let KERNEL = eseBackStage.KERNEL;
-let gLibs = eseBackStage.gLibs;
-let COLUMN_TYPES = eseBackStage.COLUMN_TYPES;
-let declareESEFunction = eseBackStage.declareESEFunction;
-let loadLibraries = eseBackStage.loadLibraries;
+const {
+  ESE,
+  KERNEL,
+  gLibs,
+  COLUMN_TYPES,
+  declareESEFunction,
+  loadLibraries,
+} = ChromeUtils.import("resource:///modules/ESEDBReader.jsm");
 
 let gESEInstanceCounter = 1;
 

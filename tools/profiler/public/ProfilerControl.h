@@ -10,6 +10,8 @@
 #ifndef ProfilerControl_h
 #define ProfilerControl_h
 
+#include "mozilla/BaseProfilerRAIIMacro.h"
+
 // Everything in here is also safe to include unconditionally, and only defines
 // empty macros if MOZ_GECKO_PROFILER is unset.
 // If your file only uses particular APIs (e.g., only markers), please consider
@@ -45,11 +47,6 @@ static inline void profiler_shutdown(
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/Vector.h"
-
-// Macros used by the AUTO_PROFILER_* macros below.
-#  define PROFILERCTRL_RAII_PASTE(id, line) id##line
-#  define PROFILERCTRL_RAII_EXPAND(id, line) PROFILERCTRL_RAII_PASTE(id, line)
-#  define PROFILERCTRL_RAII PROFILERCTRL_RAII_EXPAND(raiiObject, __LINE__)
 
 //---------------------------------------------------------------------------
 // Start and stop the profiler
@@ -88,9 +85,9 @@ void profiler_init(void* stackTop);
 void profiler_init_threadmanager();
 
 // Call this as early as possible
-#  define AUTO_PROFILER_INIT mozilla::AutoProfilerInit PROFILERCTRL_RAII
+#  define AUTO_PROFILER_INIT mozilla::AutoProfilerInit PROFILER_RAII
 // Call this after the nsThreadManager is Init()ed
-#  define AUTO_PROFILER_INIT2 mozilla::AutoProfilerInit2 PROFILERCTRL_RAII
+#  define AUTO_PROFILER_INIT2 mozilla::AutoProfilerInit2 PROFILER_RAII
 
 // Clean up the profiler module, stopping it if required. This function may
 // also save a shutdown profile if requested. No profiler calls should happen

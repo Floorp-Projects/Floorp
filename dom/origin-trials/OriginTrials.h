@@ -12,6 +12,8 @@
 #include "nsStringFwd.h"
 
 class nsIPrincipal;
+struct JSContext;
+class JSObject;
 
 namespace mozilla {
 
@@ -33,6 +35,9 @@ class OriginTrials final {
   bool IsEnabled(OriginTrial aTrial) const {
     return mEnabledTrials.contains(aTrial);
   }
+
+  // Checks whether a given origin trial is enabled for a given call.
+  static bool IsEnabled(JSContext*, JSObject*, OriginTrial);
 
  private:
   EnumSet<OriginTrial> mEnabledTrials;

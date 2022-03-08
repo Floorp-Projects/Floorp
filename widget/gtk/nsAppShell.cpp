@@ -16,9 +16,10 @@
 #include "prenv.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Hal.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
-#include "GeckoProfiler.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
 #  include <dbus/dbus-glib-lowlevel.h>
