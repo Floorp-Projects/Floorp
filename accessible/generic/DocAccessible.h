@@ -387,18 +387,9 @@ class DocAccessible : public HyperTextAccessibleWrap,
   /**
    * Notify the document that a DOM node has been scrolled. document will
    * dispatch throttled accessibility events for scrolling, and a scroll-end
-   * event. This function also queues a cache update for ScrollPosition.
+   * event.
    */
   void HandleScroll(nsINode* aTarget);
-
-  /**
-   * Retrieves the scroll frame (if it exists) for the given accessible
-   * and returns its scroll position and scroll range. If the given
-   * accessible is `this`, return the scroll position and range of
-   * the root scroll frame. Return values have been scaled by the
-   * PresShell's resolution.
-   */
-  std::pair<nsPoint, nsRect> ComputeScrollData(LocalAccessible* aAcc);
 
  protected:
   virtual ~DocAccessible();
