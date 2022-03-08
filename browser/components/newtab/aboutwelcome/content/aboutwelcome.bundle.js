@@ -830,6 +830,7 @@ const MultiStageProtonScreen = props => {
     isLastCenteredScreen: props.isLastCenteredScreen,
     autoAdvance: props.autoAdvance,
     isRtamo: props.isRtamo,
+    addonName: props.addonName,
     isTheme: props.isTheme,
     iconURL: props.iconURL,
     messageId: props.messageId,
