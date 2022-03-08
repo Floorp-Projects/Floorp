@@ -23,6 +23,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
+#include "mozilla/layers/D3D11TextureIMFSampleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureForwarder.h"
@@ -566,6 +567,10 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   HRESULT CopyToImage(IMFSample* aVideoSample, const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
+  HRESULT WrapTextureWithImage(IMFSample* aVideoSample,
+                               const gfx::IntRect& aRegion,
+                               layers::Image** aOutImage) override;
+
   HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
                             ID3D11Texture2D** aOutTexture) override;
 
@@ -595,6 +600,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
   RefPtr<MFTDecoder> mTransform;
   RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
+  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<ID3D11VideoDecoder> mDecoder;
   RefPtr<layers::SyncObjectClient> mSyncObject;
   GUID mDecoderGUID;
@@ -662,6 +668,7 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   } else {
     mTextureClientAllocator = new D3D11RecycleAllocator(
         aKnowsCompositor, mDevice, gfx::SurfaceFormat::NV12);
+    mKnowsCompositor = aKnowsCompositor;
     if (StaticPrefs::media_wmf_use_sync_texture_AtStartup()) {
       // We use a syncobject to avoid the cost of the mutex lock when
       // compositing, and because it allows color conversion ocurring directly
@@ -952,6 +959,40 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   return S_OK;
 }
 
+HRESULT D3D11DXVA2Manager::WrapTextureWithImage(IMFSample* aVideoSample,
+                                                const gfx::IntRect& aRegion,
+                                                layers::Image** aOutImage) {
+  NS_ENSURE_TRUE(aVideoSample, E_POINTER);
+  NS_ENSURE_TRUE(aOutImage, E_POINTER);
+
+  RefPtr<IMFMediaBuffer> buffer;
+  HRESULT hr = aVideoSample->GetBufferByIndex(0, getter_AddRefs(buffer));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  RefPtr<IMFDXGIBuffer> dxgiBuf;
+  hr = buffer->QueryInterface((IMFDXGIBuffer**)getter_AddRefs(dxgiBuf));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  RefPtr<ID3D11Texture2D> texture;
+  hr = dxgiBuf->GetResource(__uuidof(ID3D11Texture2D), getter_AddRefs(texture));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  D3D11_TEXTURE2D_DESC desc;
+  texture->GetDesc(&desc);
+
+  UINT arrayIndex;
+  dxgiBuf->GetSubresourceIndex(&arrayIndex);
+
+  RefPtr<D3D11TextureIMFSampleImage> image = new D3D11TextureIMFSampleImage(
+      aVideoSample, texture, arrayIndex, gfx::IntSize(mWidth, mHeight), aRegion,
+      mYUVColorSpace, mColorRange);
+  image->AllocateTextureClient(mKnowsCompositor);
+
+  image.forget(aOutImage);
+
+  return S_OK;
+}
+
 HRESULT
 D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
                                      ID3D11Texture2D** aOutTexture) {
@@ -1026,6 +1067,7 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
   }
 
   desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
   hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && texture, E_FAIL);
