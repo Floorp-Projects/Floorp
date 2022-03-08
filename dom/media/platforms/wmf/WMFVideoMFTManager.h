@@ -93,6 +93,8 @@ class WMFVideoMFTManager : public MFTManager {
   bool mDXVAEnabled;
   bool mUseHwAccel;
 
+  bool mNoCopyNV12Texture;
+
   nsCString mDXVAFailureReason;
 
   enum StreamType { Unknown, H264, VP8, VP9 };

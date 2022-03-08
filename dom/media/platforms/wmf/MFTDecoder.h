@@ -41,8 +41,11 @@ class MFTDecoder final {
       std::function<HRESULT(IMFMediaType*)>&& aCallback =
           [](IMFMediaType* aOutput) { return S_OK; });
 
-  // Returns the MFT's IMFAttributes object.
+  // Returns the MFT's global IMFAttributes object.
   already_AddRefed<IMFAttributes> GetAttributes();
+
+  // Returns the MFT's IMFAttributes object for an output stream.
+  already_AddRefed<IMFAttributes> GetOutputStreamAttributes();
 
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.

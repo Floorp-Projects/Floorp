@@ -27,6 +27,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -68,6 +69,29 @@ extern const GUID CLSID_WebmMfVpxDec = {
     0xc9a4,
     0x4c6e,
     {0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00}};
+
+#if _WIN32_WINNT < _WIN32_WINNT_WIN8
+const GUID MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT = {
+    0x851745d5,
+    0xc3d6,
+    0x476d,
+    {0x95, 0x27, 0x49, 0x8e, 0xf2, 0xd1, 0xd, 0x18}};
+const GUID MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT_PROGRESSIVE = {
+    0xf5523a5,
+    0x1cb2,
+    0x47c5,
+    {0xa5, 0x50, 0x2e, 0xeb, 0x84, 0xb4, 0xd1, 0x4a}};
+const GUID MF_SA_D3D11_BINDFLAGS = {
+    0xeacf97ad,
+    0x065c,
+    0x4408,
+    {0xbe, 0xe3, 0xfd, 0xcb, 0xfd, 0x12, 0x8b, 0xe2}};
+const GUID MF_SA_D3D11_SHARED_WITHOUT_MUTEX = {
+    0x39dbd44d,
+    0x2e44,
+    0x4931,
+    {0xa4, 0xc8, 0x35, 0x2d, 0x3d, 0xc4, 0x21, 0x15}};
+#endif
 
 namespace mozilla {
 
@@ -123,6 +147,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
       mDXVAEnabled(aDXVAEnabled &&
                    !aOptions.contains(
                        CreateDecoderParams::Option::HardwareDecoderNotAllowed)),
+      mNoCopyNV12Texture(false),
       mFramerate(aFramerate),
       mLowLatency(aOptions.contains(CreateDecoderParams::Option::LowLatency))
 // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
@@ -307,6 +332,21 @@ MediaResult WMFVideoMFTManager::InitInternal() {
         LOG("Couldn't enable Low Latency Mode");
       }
     }
+
+    if (StaticPrefs::media_wmf_no_copy_nv12_textures() && mDXVA2Manager &&
+        mDXVA2Manager->IsD3D11() && XRE_IsGPUProcess()) {
+      mNoCopyNV12Texture = true;
+      const int kOutputBufferSize = 10;
+
+      // Each picture buffer can store a sample, plus one in
+      // pending_output_samples_. The decoder adds this number to the number of
+      // reference pictures it expects to need and uses that to determine the
+      // array size of the output texture.
+      const int kMaxOutputSamples = kOutputBufferSize + 1;
+      attr->SetUINT32(MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT_PROGRESSIVE,
+                      kMaxOutputSamples);
+      attr->SetUINT32(MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT, kMaxOutputSamples);
+    }
   }
 
   if (useDxva) {
@@ -438,6 +478,18 @@ WMFVideoMFTManager::SetDecoderMediaTypes() {
   GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
   hr = outputType->SetGUID(MF_MT_SUBTYPE, outputSubType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  if (mNoCopyNV12Texture) {
+    RefPtr<IMFAttributes> attr(mDecoder->GetOutputStreamAttributes());
+    if (attr) {
+      hr = attr->SetUINT32(MF_SA_D3D11_SHARED_WITHOUT_MUTEX, TRUE);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      hr = attr->SetUINT32(MF_SA_D3D11_BINDFLAGS,
+                           D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DECODER);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    }
+  }
 
   return mDecoder->SetMediaTypes(inputType, outputType);
 }
@@ -685,9 +737,14 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   gfx::IntRect pictureRegion =
       mVideoInfo.ScaledImageRect(mImageSize.width, mImageSize.height);
   RefPtr<Image> image;
-  hr =
-      mDXVA2Manager->CopyToImage(aSample, pictureRegion, getter_AddRefs(image));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (mNoCopyNV12Texture) {
+    hr = mDXVA2Manager->WrapTextureWithImage(aSample, pictureRegion,
+                                             getter_AddRefs(image));
+  } else {
+    hr = mDXVA2Manager->CopyToImage(aSample, pictureRegion,
+                                    getter_AddRefs(image));
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  }
   NS_ENSURE_TRUE(image, E_FAIL);
 
   TimeUnit pts = GetSampleTime(aSample);
