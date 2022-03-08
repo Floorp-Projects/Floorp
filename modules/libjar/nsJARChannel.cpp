@@ -42,19 +42,16 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 //-----------------------------------------------------------------------------
 
-//
-// set MOZ_LOG=nsJarProtocol:5
-//
-static LazyLogModule gJarProtocolLog("nsJarProtocol");
-
 // Ignore any LOG macro that we inherit from arbitrary headers. (We define our
 // own LOG macro below.)
 #ifdef LOG
 #  undef LOG
 #endif
-#ifdef LOG_ENABLED
-#  undef LOG_ENABLED
-#endif
+
+//
+// set NSPR_LOG_MODULES=nsJarProtocol:5
+//
+static LazyLogModule gJarProtocolLog("nsJarProtocol");
 
 #define LOG(args) MOZ_LOG(gJarProtocolLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gJarProtocolLog, mozilla::LogLevel::Debug)
