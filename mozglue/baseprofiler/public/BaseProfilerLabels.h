@@ -28,16 +28,12 @@
 
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Maybe.h"
+#  include "mozilla/BaseProfilerRAIIMacro.h"
 #  include "mozilla/BaseProfilerState.h"
 #  include "mozilla/ThreadLocal.h"
 
 #  include <stdint.h>
 #  include <string>
-
-// Macros used by the AUTO_PROFILER_* macros.
-#  define BASE_PROFILER_RAII_PASTE(id, line) id##line
-#  define BASE_PROFILER_RAII_EXPAND(id, line) BASE_PROFILER_RAII_PASTE(id, line)
-#  define BASE_PROFILER_RAII BASE_PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 namespace mozilla::baseprofiler {
 
@@ -51,9 +47,9 @@ namespace mozilla::baseprofiler {
 //
 // Use AUTO_BASE_PROFILER_LABEL_DYNAMIC_* if you want to add additional /
 // dynamic information to the label stack frame.
-#  define AUTO_BASE_PROFILER_LABEL(label, categoryPair)            \
-    ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII( \
-        label, nullptr,                                            \
+#  define AUTO_BASE_PROFILER_LABEL(label, categoryPair)       \
+    ::mozilla::baseprofiler::AutoProfilerLabel PROFILER_RAII( \
+        label, nullptr,                                       \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair)
 
 // Similar to AUTO_BASE_PROFILER_LABEL, but with only one argument: the category
@@ -62,7 +58,7 @@ namespace mozilla::baseprofiler {
 // AUTO_BASE_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_LayerBuilding) which would
 // otherwise just repeat the string.
 #  define AUTO_BASE_PROFILER_LABEL_CATEGORY_PAIR(categoryPair)         \
-    ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII(     \
+    ::mozilla::baseprofiler::AutoProfilerLabel PROFILER_RAII(          \
         "", nullptr,                                                   \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,  \
         uint32_t(::mozilla::baseprofiler::ProfilingStackFrame::Flags:: \
@@ -89,7 +85,7 @@ namespace mozilla::baseprofiler {
 // Consequently, AUTO_BASE_PROFILER_LABEL frames take up considerably less space
 // in the profile buffer than AUTO_BASE_PROFILER_LABEL_DYNAMIC_* frames.
 #  define AUTO_BASE_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr) \
-    ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII(         \
+    ::mozilla::baseprofiler::AutoProfilerLabel PROFILER_RAII(              \
         label, cStr,                                                       \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair)
 
@@ -115,9 +111,9 @@ namespace mozilla::baseprofiler {
 // overhead in the range of nanoseconds is noticeable. It avoids overhead from
 // the TLS lookup because it can get the ProfilingStack from the JS context, and
 // avoids almost all overhead in the case where the profiler is disabled.
-#  define AUTO_BASE_PROFILER_LABEL_FAST(label, categoryPair, ctx)  \
-    ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII( \
-        ctx, label, nullptr,                                       \
+#  define AUTO_BASE_PROFILER_LABEL_FAST(label, categoryPair, ctx) \
+    ::mozilla::baseprofiler::AutoProfilerLabel PROFILER_RAII(     \
+        ctx, label, nullptr,                                      \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair)
 
 // Similar to AUTO_BASE_PROFILER_LABEL_FAST, but also takes an extra string and
@@ -125,7 +121,7 @@ namespace mozilla::baseprofiler {
 // ProfilingStackFrame::Flags enum.
 #  define AUTO_BASE_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString,     \
                                                 categoryPair, ctx, flags) \
-    ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII(        \
+    ::mozilla::baseprofiler::AutoProfilerLabel PROFILER_RAII(             \
         ctx, label, dynamicString,                                        \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, flags)
 

@@ -105,6 +105,7 @@ static inline void profiler_thread_wake() {}
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
+#  include "mozilla/BaseProfilerRAIIMacro.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/ThreadLocal.h"
@@ -130,11 +131,6 @@ class SpliceableJSONWriter;
 }  // namespace baseprofiler
 }  // namespace mozilla
 class nsIURI;
-
-// Macros used by the AUTO_PROFILER_* macros below.
-#  define PROFILER_RAII_PASTE(id, line) id##line
-#  define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
-#  define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 //---------------------------------------------------------------------------
 // Give information to the profiler
