@@ -4628,10 +4628,6 @@ bool BaselineCodeGen<Handler>::emit_Try() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Finally() {
-  // JSOp::Finally has a def count of 2, but these values are already on the
-  // stack (they're pushed by JSOp::Gosub). Update the compiler's stack state.
-  frame.incStackDepth(2);
-
   // To match the interpreter, emit an interrupt check at the start of the
   // finally block.
   return emitInterruptCheck();

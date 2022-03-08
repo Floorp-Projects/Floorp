@@ -2693,18 +2693,14 @@
      */ \
     MACRO(Gosub, gosub, NULL, 5, 2, 0, JOF_JUMP) \
     /*
-     * No-op instruction that marks the start of a `finally` block. This has a
-     * def count of 2, but the values are already on the stack (they're
-     * actually left on the stack by `JSOp::Gosub`).
-     *
-     * These two values must not be used except by `JSOp::Retsub`.
+     * No-op instruction that marks the start of a `finally` block.
      *
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands:
-     *   Stack: => false, resumeIndex
+     *   Stack: =>
      */ \
-    MACRO(Finally, finally, NULL, 1, 0, 2, JOF_BYTE) \
+    MACRO(Finally, finally, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Jump back to the next instruction, or rethrow an exception, at the end
      * of a `finally` block. See `JSOp::Gosub` for the explanation.
