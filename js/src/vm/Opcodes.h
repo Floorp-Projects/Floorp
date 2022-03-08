@@ -159,8 +159,6 @@
  *     The formula above is correct for the next instruction. The jump target
  *     has a stack depth that is 1 less.
  *
- * -   See `JSOp::Gosub` for another special case.
- *
  * -   The `JSOp::JumpTarget` instruction immediately following a `JSTRY_CATCH`
  *     or `JSTRY_FINALLY` span has the same stack depth as the `JSOp::Try`
  *     instruction that precedes the span.
@@ -2632,7 +2630,7 @@
     /*
      * Push `resumeIndex`.
      *
-     * This value must be used only by `JSOp::Gosub`, `JSOp::Finally`, and `JSOp::Retsub`.
+     * This value must be used only by `JSOp::Retsub`.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2640,58 +2638,6 @@
      *   Stack: => resumeIndex
      */ \
     MACRO(ResumeIndex, resume_index, NULL, 4, 0, 1, JOF_RESUMEINDEX) \
-    /*
-     * Jump to the start of a `finally` block.
-     *
-     * `JSOp::Gosub` is unusual: if the finally block finishes normally, it will
-     * reach the `JSOp::Retsub` instruction at the end, and control then
-     * "returns" to the `JSOp::Gosub` and picks up at the next instruction, like
-     * a function call but within a single script and stack frame. (It's named
-     * after the thing in BASIC.)
-     *
-     * We need this because a `try` block can terminate in several different
-     * ways: control can flow off the end, return, throw an exception, `break`
-     * with or without a label, or `continue`. Exceptions are handled
-     * separately; but all those success paths are written as bytecode, and
-     * each one needs to run the `finally` block before continuing with
-     * whatever they were doing. They use `JSOp::Gosub` for this. It is thus
-     * normal for multiple `Gosub` instructions in a script to target the same
-     * `finally` block.
-     *
-     * Rules: `forwardOffset` must be positive and must target a
-     * `JSOp::JumpTarget` instruction followed by `JSOp::Finally`. The
-     * instruction immediately following `JSOp::Gosub` in the script must be a
-     * `JSOp::JumpTarget` instruction, and `resumeIndex` must be the index into
-     * `script->resumeOffsets()` that points to that instruction.
-     *
-     * Note: This op doesn't actually push or pop any values. Its use count of
-     * 2 is a lie to make the stack depth math work for this very odd control
-     * flow instruction.
-     *
-     * `JSOp::Gosub` is considered to have two "successors": the target of
-     * `offset`, which is the actual next instruction to run; and the
-     * instruction immediately following `JSOp::Gosub`, even though it won't run
-     * until later. We define the successor graph this way in order to support
-     * knowing the stack depth at that instruction without first reading the
-     * whole `finally` block.
-     *
-     * The stack depth at that instruction is, as it happens, the current stack
-     * depth minus 2. So this instruction gets nuses == 2.
-     *
-     * Unfortunately there is a price to be paid in horribleness. When
-     * `JSOp::Gosub` runs, it leaves two values on the stack that the stack
-     * depth math doesn't know about. It jumps to the finally block, where
-     * `JSOp::Finally` again does nothing to the stack, but with a bogus def
-     * count of 2, restoring balance to the accounting. If `JSOp::Retsub` is
-     * reached, it pops the two values (for real this time) and control
-     * resumes at the instruction that follows JSOp::Gosub in memory.
-     *
-     *   Category: Control flow
-     *   Type: Exceptions
-     *   Operands: int32_t forwardOffset
-     *   Stack: false, resumeIndex =>
-     */ \
-    MACRO(Gosub, gosub, NULL, 5, 2, 0, JOF_JUMP) \
     /*
      * No-op instruction that marks the start of a `finally` block.
      *
@@ -3598,13 +3544,14 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
+  MACRO(234)                                   \
   MACRO(235)                                   \
   MACRO(236)                                   \
   MACRO(237)                                   \
