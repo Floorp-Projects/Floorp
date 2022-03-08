@@ -875,8 +875,6 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
 
   // This happens only on simulate device reset.
   if (aReason == LOCAL_GL_NO_ERROR) {
-    MOZ_ASSERT(XRE_IsGPUProcess());
-
     if (!mHandlingDeviceReset) {
       mHandlingDeviceReset = true;
 
@@ -885,9 +883,19 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
       for (const auto& entry : mRenderTextures) {
         entry.second->ClearCachedResources();
       }
-      // Simulate DeviceReset does not need to notify the device reset to
-      // GPUProcessManager. It is already done by
-      // GPUProcessManager::SimulateDeviceReset().
+
+      // All RenderCompositors will be destroyed by the GPUProcessManager in
+      // either OnRemoteProcessDeviceReset via the GPUChild, or
+      // OnInProcessDeviceReset here directly.
+      if (XRE_IsGPUProcess()) {
+        gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+      } else {
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "gfx::GPUProcessManager::OnInProcessDeviceReset", []() -> void {
+              gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(
+                  /* aTrackThreshold */ false);
+            }));
+      }
     }
     return;
   }

@@ -75,7 +75,7 @@ class GPUParent final : public PGPUParent {
   mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
       Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvGetDeviceStatus(GPUDeviceData* aOutStatus);
-  mozilla::ipc::IPCResult RecvSimulateDeviceReset(GPUDeviceData* aOutStatus);
+  mozilla::ipc::IPCResult RecvSimulateDeviceReset();
   mozilla::ipc::IPCResult RecvAddLayerTreeIdMapping(
       const LayerTreeIdMapping& aMapping);
   mozilla::ipc::IPCResult RecvRemoveLayerTreeIdMapping(
