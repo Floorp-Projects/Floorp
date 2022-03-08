@@ -2873,6 +2873,18 @@
   value: true
   mirror: always
 
+# Whether origin trials are enabled.
+- name: dom.origin-trials.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Whether we use the test key to verify tokens.
+- name: dom.origin-trials.test-key.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for Window.paintWorklet enabled?
 - name: dom.paintWorklet.enabled
   type: bool
