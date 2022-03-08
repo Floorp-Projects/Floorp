@@ -156,6 +156,8 @@ object Deps {
     const val mozilla_ui_tabcounter = "org.mozilla.components:ui-tabcounter:${Versions.mozilla_android_components}"
 
     const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${Versions.mozilla_android_components}"
+    const val lib_crash_sentry_legacy =
+        "org.mozilla.components:lib-crash-sentry-legacy:${Versions.mozilla_android_components}"
     const val mozilla_lib_push_firebase = "org.mozilla.components:lib-push-firebase:${Versions.mozilla_android_components}"
     const val mozilla_lib_dataprotect = "org.mozilla.components:lib-dataprotect:${Versions.mozilla_android_components}"
     const val mozilla_lib_state = "org.mozilla.components:lib-state:${Versions.mozilla_android_components}"

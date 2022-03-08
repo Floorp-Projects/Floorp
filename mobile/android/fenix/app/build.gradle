@@ -539,6 +539,7 @@ dependencies {
     implementation Deps.mozilla_ui_tabcounter
 
     implementation Deps.mozilla_lib_crash
+    implementation Deps.lib_crash_sentry_legacy
     implementation Deps.mozilla_lib_push_firebase
     implementation Deps.mozilla_lib_state
     implementation Deps.mozilla_lib_dataprotect
