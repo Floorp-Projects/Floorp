@@ -3966,9 +3966,10 @@ nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
   nsresult rv;
 
   // Open Jar file to get related attributes of target file.
-  RefPtr<nsZipArchive> zip = nsZipArchive::OpenArchive(aJarFile);
-  if (!zip) {
-    return NS_ERROR_FAILURE;
+  RefPtr<nsZipArchive> zip = new nsZipArchive();
+  rv = zip->OpenArchive(aJarFile);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   nsZipItem* zipItem = zip->GetItem(aFile.get());
   if (!zipItem) {

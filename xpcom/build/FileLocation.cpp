@@ -151,7 +151,8 @@ nsresult FileLocation::GetData(Data& aData) {
   }
   aData.mZip = mBaseZip;
   if (!aData.mZip) {
-    aData.mZip = nsZipArchive::OpenArchive(mBaseFile);
+    aData.mZip = new nsZipArchive();
+    aData.mZip->OpenArchive(mBaseFile);
   }
   aData.mItem = aData.mZip->GetItem(mPath.get());
   if (aData.mItem) {
