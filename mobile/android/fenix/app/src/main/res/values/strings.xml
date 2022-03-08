@@ -44,8 +44,6 @@
     <string name="recently_saved_show_all">Show all</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Show all saved bookmarks</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description" moz:removedIn="97" tools:ignore="UnusedResources">Show all saved bookmarks button</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Remove</string>
 
@@ -123,8 +121,6 @@
     <string name="recent_tabs_show_all">Show all</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Show all recent tabs button</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description2" moz:removedIn="97" tools:ignore="UnusedResources">Show all recent tabs</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Your search for \"%1$s\"</string>
@@ -144,8 +140,6 @@
     <string name="recently_visited_menu_item_remove">Remove</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Show all past explorations</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description" moz:removedIn="97" tools:ignore="UnusedResources">Show all past explorations button</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
