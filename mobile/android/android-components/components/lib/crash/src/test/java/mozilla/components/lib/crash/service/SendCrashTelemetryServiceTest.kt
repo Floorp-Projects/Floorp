@@ -31,6 +31,7 @@ import org.robolectric.Robolectric
 @RunWith(AndroidJUnit4::class)
 class SendCrashTelemetryServiceTest {
     private var service: SendCrashTelemetryService? = null
+    private val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -38,13 +39,28 @@ class SendCrashTelemetryServiceTest {
 
     @Before
     fun setUp() {
+        intent.component = ComponentName(
+            "org.mozilla.samples.browser",
+            "mozilla.components.lib.crash.handler.CrashHandlerService"
+        )
+        intent.putExtra(
+            "minidumpPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
+        )
+        intent.putExtra("fatal", false)
+        intent.putExtra(
+            "extrasPath",
+            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
+        )
+        intent.putExtra("minidumpSuccess", true)
+        intent.putParcelableArrayListExtra("breadcrumbs", null)
         service = spy(Robolectric.setupService(SendCrashTelemetryService::class.java))
-        service?.startService(Intent())
+        service?.startService(intent)
     }
 
     @After
     fun tearDown() {
-        service?.stopService(Intent())
+        service?.stopService(intent)
         CrashReporter.reset()
     }
 
