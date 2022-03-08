@@ -4,8 +4,14 @@ function assertTestTrialActive(shouldBeActive) {
     shouldBeActive,
     "Should match active status for Navigator.testTrialControlledAttribute"
   );
+  is(
+    !!self.TestTrialInterface,
+    shouldBeActive,
+    "Should match active status for TestTrialInterface"
+  );
+  if (shouldBeActive) {
+    ok(new self.TestTrialInterface(), "Should be able to construct interface");
+  }
   // FIXME(emilio): Add more tests.
-  //  * Stuff hanging off Window or Document (known broken for now, we check
-  //    enabledness too early).
-  //  * Interfaces (unknown status, but probably same because ^).
+  //  * Stuff hanging off Window or Document (bug 1757935).
 }

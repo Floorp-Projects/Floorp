@@ -138,6 +138,7 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "test/TestInterfaceMaplikeObject.h",
         "test/TestInterfaceSetlike.h",
         "test/TestInterfaceSetlikeNode.h",
+        "test/TestTrialInterface.h",
         "test/WrapperCachedNonISupportsTestInterface.h",
     ]
     UNIFIED_SOURCES += [
@@ -150,6 +151,7 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "test/TestInterfaceMaplikeObject.cpp",
         "test/TestInterfaceSetlike.cpp",
         "test/TestInterfaceSetlikeNode.cpp",
+        "test/TestTrialInterface.cpp",
         "test/WrapperCachedNonISupportsTestInterface.cpp",
     ]
 
