@@ -14,7 +14,7 @@ initialisation. Subsequent updates to the configuration are either updates to th
 static dump, or they may be served via remote servers.
 
 The mechanism of delivering the settings dumps to the Search Service is
-`Remote Settings`_
+`the remote settings`_.
 
 Remote settings
 ---------------
@@ -64,7 +64,7 @@ related. As a result several situations may occur:
       - When the WebExtension is delivered, the search engine will then be
         installed and added.
 
-.. _Remote Settings: /services/common/services/RemoteSettings.html
+.. _the remote settings: /services/settings/index.html
 .. _JSON schema: https://json-schema.org/
 .. _stored in mozilla-central: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _Search Configuration Schema: SearchConfigurationSchema.html
