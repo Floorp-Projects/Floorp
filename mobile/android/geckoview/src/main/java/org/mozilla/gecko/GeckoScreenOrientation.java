@@ -9,8 +9,7 @@ import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 
 import android.content.Context;
-import android.graphics.Point;
-import android.os.Build;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
@@ -240,15 +239,9 @@ public class GeckoScreenOrientation {
    * @return Gecko screen orientation.
    */
   private ScreenOrientation getScreenOrientation(final Display aDisplay) {
-    final Point size = new Point();
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      aDisplay.getRealSize(size);
-    } else {
-      size.x = aDisplay.getWidth();
-      size.y = aDisplay.getHeight();
-    }
-
-    final int orientation = size.x >= size.y ? ORIENTATION_LANDSCAPE : ORIENTATION_PORTRAIT;
+    final Rect rect = GeckoAppShell.getScreenSizeIgnoreOverride();
+    final int orientation =
+        rect.width() >= rect.height() ? ORIENTATION_LANDSCAPE : ORIENTATION_PORTRAIT;
     return getScreenOrientation(orientation, aDisplay.getRotation());
   }
 
