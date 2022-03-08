@@ -21,7 +21,7 @@ Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // This will load chrome Custom Elements inside chrome documents:
-ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
+ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");
 
 var gBrowserIsRemote;
 var gHaveCanvasSnapshot = false;
@@ -267,7 +267,7 @@ function setupViewport(contentRootElement) {
 
     // XXX support viewconfig when needed
 }
- 
+
 
 function setupDisplayport(contentRootElement) {
     let promise = content.windowGlobalChild.getActor("ReftestFission").SetupDisplayportRoot();
@@ -950,7 +950,7 @@ async function OnDocumentLoad(uri)
         // Ignore load events for previous documents.
         return;
     }
-    
+
     var currentDoc = content && content.document;
 
     // Collect all editable, spell-checked elements.  It may be the case that
