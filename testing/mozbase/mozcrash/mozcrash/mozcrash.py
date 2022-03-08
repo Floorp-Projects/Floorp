@@ -60,6 +60,7 @@ def check_for_crashes(
     dump_save_path=None,
     test_name=None,
     quiet=False,
+    keep=False,
 ):
     """
     Print a stack trace for minidump files left behind by a crashing program.
@@ -87,6 +88,8 @@ def check_for_crashes(
     If `quiet` is set, no PROCESS-CRASH message will be printed to stdout if a
     crash is detected.
 
+    If `keep` is set, minidump files will not be removed after processing.
+
     Returns number of minidump files found.
     """
 
@@ -105,6 +108,7 @@ def check_for_crashes(
         symbols_path,
         dump_save_path=dump_save_path,
         stackwalk_binary=stackwalk_binary,
+        keep=keep,
     )
 
     crash_count = 0
@@ -225,11 +229,17 @@ class CrashInfo(object):
                              will be used."""
 
     def __init__(
-        self, dump_directory, symbols_path, dump_save_path=None, stackwalk_binary=None
+        self,
+        dump_directory,
+        symbols_path,
+        dump_save_path=None,
+        stackwalk_binary=None,
+        keep=False,
     ):
         self.dump_directory = dump_directory
         self.symbols_path = symbols_path
         self.remove_symbols = False
+        self.keep = keep
 
         if dump_save_path is None:
             dump_save_path = os.environ.get("MINIDUMP_SAVE_PATH", None)
@@ -460,9 +470,9 @@ class CrashInfo(object):
         if self.dump_save_path:
             self._save_dump_file(path, extra)
 
-        if os.path.exists(path):
+        if os.path.exists(path) and not self.keep:
             mozfile.remove(path)
-        if os.path.exists(extra):
+        if os.path.exists(extra) and not self.keep:
             mozfile.remove(extra)
 
         return StackInfo(
@@ -797,6 +807,7 @@ if __name__ == "__main__":
     parser.add_argument("--stackwalk-binary", "-b")
     parser.add_argument("--dump-save-path", "-o")
     parser.add_argument("--test-name", "-n")
+    parser.add_argument("--keep", action="store_true")
     parser.add_argument("dump_directory")
     parser.add_argument("symbols_path")
     args = parser.parse_args()
@@ -807,4 +818,5 @@ if __name__ == "__main__":
         stackwalk_binary=args.stackwalk_binary,
         dump_save_path=args.dump_save_path,
         test_name=args.test_name,
+        keep=args.keep,
     )
