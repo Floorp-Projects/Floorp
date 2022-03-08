@@ -83,15 +83,29 @@ Initialize GeckoView in an Activity
     import org.mozilla.geckoview.GeckoSession;
     import org.mozilla.geckoview.GeckoView;
 
-**2. In that activity's** ``onCreate`` **function, add the following:**
+
+**2. Create a ``static`` member variable to store the ``GeckoRuntime`` instance.**
+
+.. code-block:: java
+
+    private static GeckoRuntime sRuntime;
+
+**3. In that activity's** ``onCreate`` **function, add the following:**
 
 .. code-block:: java
 
     GeckoView view = findViewById(R.id.geckoview);
     GeckoSession session = new GeckoSession();
-    GeckoRuntime runtime = GeckoRuntime.create(this);
 
-    session.open(runtime);
+    // Workaround for Bug 1758212
+    session.setContentDelegate(new GeckoSession.ContentDelegate() {});
+
+    if (sRuntime == null) {
+      // GeckoRuntime can only be initialized once per process
+      sRuntime = GeckoRuntime.create(this);
+    }
+
+    session.open(sRuntime);
     view.setSession(session);
     session.loadUri("about:buildconfig"); // Or any other URL...
 
