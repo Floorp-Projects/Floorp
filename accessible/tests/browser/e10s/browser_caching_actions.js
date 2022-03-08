@@ -22,14 +22,6 @@ const gActionDescrMap = {
   cycle: "Cycle",
 };
 
-const isCacheEnabled = Services.prefs.getBoolPref(
-  "accessibility.cache.enabled",
-  false
-);
-// Some RemoteAccessible methods aren't supported on Windows when the cache is
-// disabled.
-const isWinNoCache = !isCacheEnabled && AppConstants.platform == "win";
-
 async function testActions(browser, docAcc, id, expectedActions, domEvents) {
   const acc = findAccessibleChildByID(docAcc, id);
   is(acc.actionCount, expectedActions.length, "Correct action count");
