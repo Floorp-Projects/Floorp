@@ -34,7 +34,7 @@ class nsJARInputStream final : public nsIInputStream {
   NS_DECL_NSIINPUTSTREAM
 
   // takes ownership of |fd|, even on failure
-  nsresult InitFile(nsJAR* aJar, nsZipItem* item);
+  nsresult InitFile(nsZipHandle* aFd, const uint8_t* aData, nsZipItem* item);
 
   nsresult InitDirectory(nsJAR* aJar, const nsACString& aJarDirSpec,
                          const char* aDir);
