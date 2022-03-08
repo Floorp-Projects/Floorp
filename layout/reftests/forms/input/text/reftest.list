@@ -17,5 +17,3 @@ fuzzy(0-1,0-500) needs-focus == select.html select-ref.html
 != autofill-preview.html autofill-preview-blank.html
 != autofill.html autofill-preview.html
 == autofill-prefilled-value.html autofill-preview.html
-
-== pseudo-class-lock.html pseudo-class-lock-ref.html
