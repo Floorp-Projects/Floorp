@@ -115,7 +115,7 @@ class OnboardingFragment : Fragment() {
                     KeyFeatureCard(
                         iconId = R.drawable.ic_history,
                         titleId = R.string.onboarding_history_title,
-                        descriptionId = R.string.onboarding_history_description
+                        descriptionId = R.string.onboarding_history_description2
                     )
                     KeyFeatureCard(
                         iconId = R.drawable.mozac_ic_settings,
