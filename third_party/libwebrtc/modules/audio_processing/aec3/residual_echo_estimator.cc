@@ -277,7 +277,7 @@ void ResidualEchoEstimator::Estimate(
       NonLinearEstimate(echo_path_gain, X2, R2);
     }
 
-    if (model_reverb_in_nonlinear_mode_ && !aec_state.TransparentMode()) {
+    if (model_reverb_in_nonlinear_mode_ && !aec_state.TransparentModeActive()) {
       AddReverb(ReverbType::kNonLinear, aec_state, render_buffer, R2);
     }
   }
@@ -395,7 +395,7 @@ float ResidualEchoEstimator::GetEchoPathGain(
     const AecState& aec_state,
     bool gain_for_early_reflections) const {
   float gain_amplitude;
-  if (aec_state.TransparentMode()) {
+  if (aec_state.TransparentModeActive()) {
     gain_amplitude = gain_for_early_reflections
                          ? early_reflections_transparent_mode_gain_
                          : late_reflections_transparent_mode_gain_;
