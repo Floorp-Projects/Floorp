@@ -28,7 +28,7 @@
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
     <color name="fx_mobile_action_color_primary">@color/photonInk20</color>
     <!-- Secondary button -->
-    <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey30</color>
+    <color name="fx_mobile_action_color_secondary">@color/photonLightGrey30</color>
     <!-- Filter -->
     <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <!-- Chip -->
@@ -315,7 +315,6 @@
     <color name="ic_launcher_background">#FDFDFD</color>
 
     <!-- Button Colors -->
-    <color name="grey_button_color">@color/photonLightGrey30</color>
     <color name="button_text_color">@color/photonInk20</color>
 
     <!-- Private Browsing Mode Persistent Notification -->
