@@ -1,3 +1,5 @@
+/* import-globals-from ../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
+
 function assertTestTrialActive(shouldBeActive) {
   is(
     !!navigator.testTrialGatedAttribute,
