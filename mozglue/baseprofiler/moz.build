@@ -89,6 +89,7 @@ EXPORTS.mozilla += [
     "public/BaseProfilerMarkersDetail.h",
     "public/BaseProfilerMarkersPrerequisites.h",
     "public/BaseProfilerMarkerTypes.h",
+    "public/BaseProfilerRAIIMacro.h",
     "public/BaseProfilerState.h",
     "public/BaseProfilerUtils.h",
     "public/BlocksRingBuffer.h",

@@ -5,7 +5,6 @@
 
 #include "nsSocketTransportService2.h"
 
-#include "GeckoProfiler.h"
 #include "IOActivityMonitor.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ChaosMode.h"
@@ -14,6 +13,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Services.h"

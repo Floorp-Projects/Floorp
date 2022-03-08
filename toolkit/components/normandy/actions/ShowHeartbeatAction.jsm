@@ -62,6 +62,16 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const HEARTBEAT_THROTTLE = 1 * DAY_IN_MS;
 
 class ShowHeartbeatAction extends BaseAction {
+  static Heartbeat = Heartbeat;
+
+  static overrideHeartbeatForTests(newHeartbeat) {
+    if (newHeartbeat) {
+      this.Heartbeat = newHeartbeat;
+    } else {
+      this.Heartbeat = Heartbeat;
+    }
+  }
+
   get schema() {
     return ActionSchemas["show-heartbeat"];
   }
@@ -90,7 +100,7 @@ class ShowHeartbeatAction extends BaseAction {
       throw new Error("No window to show heartbeat in");
     }
 
-    const heartbeat = new Heartbeat(targetWindow, {
+    const heartbeat = new ShowHeartbeatAction.Heartbeat(targetWindow, {
       surveyId: this.generateSurveyId(recipe),
       message,
       engagementButtonLabel,

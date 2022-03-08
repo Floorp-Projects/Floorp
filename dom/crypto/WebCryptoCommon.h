@@ -27,6 +27,7 @@
 #include "secitem.h"
 #include "secoid.h"
 #include "secoidt.h"
+#include "ScopedNSSTypes.h"
 
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
@@ -128,8 +129,7 @@ const SECItem SEC_OID_DATA_EC_DH = {
     siBuffer, (unsigned char*)id_ecDH,
     static_cast<unsigned int>(mozilla::ArrayLength(id_ecDH))};
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 inline bool ReadBuffer(JSStructuredCloneReader* aReader,
                        CryptoBuffer& aBuffer) {
@@ -273,7 +273,7 @@ inline bool CheckEncodedECParameters(const SECItem* aEcParams) {
   return true;
 }
 
-inline SECItem* CreateECParamsForCurve(const nsString& aNamedCurve,
+inline SECItem* CreateECParamsForCurve(const nsAString& aNamedCurve,
                                        PLArenaPool* aArena) {
   MOZ_ASSERT(aArena);
   SECOidTag curveOIDTag;
@@ -313,7 +313,10 @@ inline SECItem* CreateECParamsForCurve(const nsString& aNamedCurve,
   return params;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+// Implemented in CryptoKey.cpp
+UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
+                                        const nsAString& aNamedCurve);
+
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebCryptoCommon_h

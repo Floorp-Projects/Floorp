@@ -244,11 +244,7 @@ async function checkSavedPromptResponse(
 }
 
 add_task(async function test_checkInit() {
-  let { CloudStorageInternal } = ChromeUtils.import(
-    "resource://gre/modules/CloudStorage.jsm",
-    null
-  );
-  let isInitialized = await CloudStorageInternal.promiseInit;
+  let isInitialized = await CloudStorage.promiseInit;
   Assert.ok(isInitialized, "Providers Metadata successfully initialized");
 });
 

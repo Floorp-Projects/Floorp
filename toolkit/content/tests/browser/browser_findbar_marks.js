@@ -143,13 +143,26 @@ add_task(async function test_findmarks_vertical() {
     "vertical-lr",
     "vertical-rl",
   ]) {
-    await SpecialPowers.spawn(browser, [mode], writingMode => {
-      let document = content.document;
-      document.documentElement.style.writingMode = writingMode;
-    });
+    const maxMarkPos = await SpecialPowers.spawn(
+      browser,
+      [mode],
+      writingMode => {
+        let document = content.document;
+        document.documentElement.style.writingMode = writingMode;
+
+        return content.scrollMaxX - content.scrollMinX;
+      }
+    );
 
     await promiseFindFinished(gBrowser, "tex", true);
-    await getMarks(browser, true, true);
+    const marks = await getMarks(browser, true, true);
+    Assert.equal(marks.length, 3, `marks count with text "tex"`);
+    for (const markPos of marks) {
+      Assert.ok(
+        0 <= markPos <= maxMarkPos,
+        `mark position ${markPos} should be in the range 0 ~ ${maxMarkPos}`
+      );
+    }
   }
 
   endFn();

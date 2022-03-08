@@ -9,7 +9,6 @@
 #include <knownfolders.h>
 #include <winioctl.h>
 
-#include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "nsWindow.h"
@@ -24,6 +23,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/WinHeaderOnlyUtils.h"

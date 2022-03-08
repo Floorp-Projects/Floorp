@@ -2402,13 +2402,20 @@ class MemberCondition:
     secureContext: A bool indicating whether a secure context is required.
     nonExposedGlobals: A set of names of globals.  Can be empty, in which case
                        it's treated the same way as None.
+    trial: The name of the origin trial.
     """
 
     def __init__(
-        self, pref=None, func=None, secureContext=False, nonExposedGlobals=None
+        self,
+        pref=None,
+        func=None,
+        secureContext=False,
+        nonExposedGlobals=None,
+        trial=None,
     ):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
+        assert trial is None or isinstance(trial, str)
         assert isinstance(secureContext, bool)
         assert nonExposedGlobals is None or isinstance(nonExposedGlobals, set)
         self.pref = pref
@@ -2435,12 +2442,18 @@ class MemberCondition:
         else:
             self.nonExposedGlobals = "0"
 
+        if trial:
+            self.trial = "OriginTrial::" + trial
+        else:
+            self.trial = "OriginTrial(0)"
+
     def __eq__(self, other):
         return (
             self.pref == other.pref
             and self.func == other.func
             and self.secureContext == other.secureContext
             and self.nonExposedGlobals == other.nonExposedGlobals
+            and self.trial == other.trial
         )
 
     def __ne__(self, other):
@@ -2452,6 +2465,7 @@ class MemberCondition:
             or self.secureContext
             or self.func != "nullptr"
             or self.nonExposedGlobals != "0"
+            or self.trial != "OriginTrial(0)"
         )
 
 
@@ -2513,11 +2527,19 @@ class PropertyDefiner:
         interface = descriptor.interface
         nonExposureSet = interface.exposureSet - interfaceMember.exposureSet
 
+        trial = PropertyDefiner.getStringAttr(interfaceMember, "Trial")
+        if trial and interface.identifier.name in ["Window", "Document"]:
+            raise TypeError(
+                "[Trial] not yet supported for %s.%s, see bug 1757935"
+                % (interface.identifier.name, interfaceMember.identifier.name)
+            )
+
         return MemberCondition(
             PropertyDefiner.getStringAttr(interfaceMember, "Pref"),
             PropertyDefiner.getStringAttr(interfaceMember, "Func"),
             interfaceMember.getExtendedAttribute("SecureContext") is not None,
             nonExposureSet,
+            trial,
         )
 
     @staticmethod
@@ -2642,7 +2664,7 @@ class PropertyDefiner:
         disablersTemplate = dedent(
             """
             static const PrefableDisablers %s_disablers%d = {
-              %s, %s, %s, %s
+              %s, %s, %s, %s, %s
             };
             """
         )
@@ -2663,6 +2685,7 @@ class PropertyDefiner:
                         len(specs),
                         condition.prefFuncIndex,
                         toStringBool(condition.secureContext),
+                        condition.trial,
                         condition.nonExposedGlobals,
                         condition.func,
                     )
@@ -4094,6 +4117,13 @@ def getRawConditionList(idlobj, cxName, objName, ignoreSecureContext=False):
     if func:
         assert isinstance(func, list) and len(func) == 1
         conditions.append("%s(%s, %s)" % (func[0], cxName, objName))
+    trial = idlobj.getExtendedAttribute("Trial")
+    if trial:
+        assert isinstance(trial, list) and len(trial) == 1
+        conditions.append(
+            "OriginTrials::IsEnabled(%s, %s, OriginTrial::%s)"
+            % (cxName, objName, trial[0])
+        )
     if not ignoreSecureContext and idlobj.getExtendedAttribute("SecureContext"):
         conditions.append(
             "mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)"
@@ -18328,40 +18358,29 @@ class CGBindingRoot(CGThing):
             bindingHeaders[CGHeaders.getDeclarationFilename(enums[0])] = True
             bindingHeaders["jsapi.h"] = True
 
-        # For things that have [UseCounter] or [InstrumentedProps]
-        descriptorsHaveUseCounters = any(
-            m.getExtendedAttribute("UseCounter")
-            for d in descriptors
-            for m in d.interface.members
-        )
-        descriptorsHaveInstrumentedProps = any(
-            d.instrumentedProps for d in descriptors if d.concrete
-        )
-        descriptorsHaveNeedsMissingPropUseCounters = any(
-            d.needsMissingPropUseCounters for d in descriptors if d.concrete
-        )
+        # For things that have [UseCounter] or [InstrumentedProps] or [Trial]
+        for d in descriptors:
+            if d.concrete:
+                if d.instrumentedProps:
+                    bindingHeaders["mozilla/UseCounter.h"] = True
+                if d.needsMissingPropUseCounters:
+                    bindingHeaders[prefHeader(MISSING_PROP_PREF)] = True
+            if d.interface.isSerializable():
+                bindingHeaders["mozilla/dom/StructuredCloneTags.h"] = True
+            if d.wantsXrays:
+                bindingHeaders["mozilla/Atomics.h"] = True
+                bindingHeaders["mozilla/dom/XrayExpandoClass.h"] = True
+                if d.wantsXrayExpandoClass:
+                    bindingHeaders["XrayWrapper.h"] = True
+            for m in d.interface.members:
+                if m.getExtendedAttribute("UseCounter"):
+                    bindingHeaders["mozilla/UseCounter.h"] = True
+                if m.getExtendedAttribute("Trial"):
+                    bindingHeaders["mozilla/OriginTrials.h"] = True
 
-        bindingHeaders["mozilla/UseCounter.h"] = (
-            descriptorsHaveUseCounters or descriptorsHaveInstrumentedProps
-        )
-        # Make sure to not overwrite existing pref header bits!
-        bindingHeaders[prefHeader(MISSING_PROP_PREF)] = (
-            bindingHeaders.get(prefHeader(MISSING_PROP_PREF))
-            or descriptorsHaveNeedsMissingPropUseCounters
-        )
         bindingHeaders["mozilla/dom/SimpleGlobalObject.h"] = any(
             CGDictionary.dictionarySafeToJSONify(d) for d in dictionaries
         )
-        bindingHeaders["XrayWrapper.h"] = any(
-            d.wantsXrays and d.wantsXrayExpandoClass for d in descriptors
-        )
-        bindingHeaders["mozilla/dom/XrayExpandoClass.h"] = any(
-            d.wantsXrays for d in descriptors
-        )
-        bindingHeaders["mozilla/dom/StructuredCloneTags.h"] = any(
-            d.interface.isSerializable() for d in descriptors
-        )
-        bindingHeaders["mozilla/Atomics.h"] = any(d.wantsXrays for d in descriptors)
 
         for ancestor in (findAncestorWithInstrumentedProps(d) for d in descriptors):
             if not ancestor:

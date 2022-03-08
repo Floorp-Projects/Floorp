@@ -127,6 +127,13 @@ var CloudStorage = {
   },
 
   /**
+   * A promise to wait for init to complete, used for tests.
+   */
+  get promiseInit() {
+    return CloudStorageInternal.promiseInit;
+  },
+
+  /**
    * Returns information to allow the consumer to decide whether showing
    * a doorhanger prompt is appropriate. If a preferred provider is set
    * on desktop, user is not prompted again and method returns null.

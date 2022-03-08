@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
@@ -27,6 +28,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.display.DisplayManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -1321,20 +1323,78 @@ public class GeckoAppShell {
     sScreenSizeOverride = size;
   }
 
+  static final ScreenCompat sScreenCompat;
+
+  private interface ScreenCompat {
+    Rect getScreenSize();
+  }
+
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+  private static class JellyBeanScreenCompat implements ScreenCompat {
+    public Rect getScreenSize() {
+      final WindowManager wm =
+          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+      final Display disp = wm.getDefaultDisplay();
+      return new Rect(0, 0, disp.getWidth(), disp.getHeight());
+    }
+  }
+
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+  private static class JellyBeanMR1ScreenCompat implements ScreenCompat {
+    public Rect getScreenSize() {
+      final WindowManager wm =
+          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+      final Display disp = wm.getDefaultDisplay();
+      final Point size = new Point();
+      disp.getRealSize(size);
+      return new Rect(0, 0, size.x, size.y);
+    }
+  }
+
+  @TargetApi(Build.VERSION_CODES.S)
+  private static class AndroidSScreenCompat implements ScreenCompat {
+    @SuppressLint("StaticFieldLeak")
+    private static Context sWindowContext;
+
+    private static Context getWindowContext() {
+      if (sWindowContext == null) {
+        final DisplayManager displayManager =
+            (DisplayManager) getApplicationContext().getSystemService(Context.DISPLAY_SERVICE);
+        final Display display = displayManager.getDisplay(Display.DEFAULT_DISPLAY);
+        sWindowContext =
+            getApplicationContext()
+                .createWindowContext(display, WindowManager.LayoutParams.TYPE_APPLICATION, null);
+      }
+      return sWindowContext;
+    }
+
+    public Rect getScreenSize() {
+      final WindowManager windowManager = getWindowContext().getSystemService(WindowManager.class);
+      return windowManager.getCurrentWindowMetrics().getBounds();
+    }
+  }
+
+  static {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      sScreenCompat = new AndroidSScreenCompat();
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      sScreenCompat = new JellyBeanMR1ScreenCompat();
+    } else {
+      sScreenCompat = new JellyBeanScreenCompat();
+    }
+  }
+
+  /* package */ static Rect getScreenSizeIgnoreOverride() {
+    return sScreenCompat.getScreenSize();
+  }
+
   @WrapForJNI(calledFrom = "gecko")
   private static synchronized Rect getScreenSize() {
     if (sScreenSizeOverride != null) {
       return sScreenSizeOverride;
     }
-    final WindowManager wm =
-        (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-    final Display disp = wm.getDefaultDisplay();
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      return new Rect(0, 0, disp.getWidth(), disp.getHeight());
-    }
-    final Point size = new Point();
-    disp.getRealSize(size);
-    return new Rect(0, 0, size.x, size.y);
+
+    return getScreenSizeIgnoreOverride();
   }
 
   @WrapForJNI(calledFrom = "any")

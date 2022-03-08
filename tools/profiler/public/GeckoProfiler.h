@@ -26,6 +26,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerState.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/ProfilerThreadState.h"
 #include "mozilla/ProgressLogger.h"
 
@@ -41,9 +42,6 @@
 #  define PROFILER_REGISTER_THREAD(name)
 #  define PROFILER_UNREGISTER_THREAD()
 #  define AUTO_PROFILER_REGISTER_THREAD(name)
-
-#  define AUTO_PROFILER_THREAD_SLEEP
-#  define AUTO_PROFILER_THREAD_WAKE
 
 #  define PROFILER_JS_INTERRUPT_CALLBACK()
 
@@ -95,16 +93,13 @@ static inline void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
 static inline void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv) {}
 
-static inline void profiler_thread_sleep() {}
-
-static inline void profiler_thread_wake() {}
-
 #else  // !MOZ_GECKO_PROFILER
 
 #  include "js/ProfilingStack.h"
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
+#  include "mozilla/BaseProfilerRAIIMacro.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/ThreadLocal.h"
@@ -130,11 +125,6 @@ class SpliceableJSONWriter;
 }  // namespace baseprofiler
 }  // namespace mozilla
 class nsIURI;
-
-// Macros used by the AUTO_PROFILER_* macros below.
-#  define PROFILER_RAII_PASTE(id, line) id##line
-#  define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
-#  define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 //---------------------------------------------------------------------------
 // Give information to the profiler
@@ -213,19 +203,6 @@ using PostSamplingCallback = std::function<void(SamplingState)>;
 //   is allowed.
 [[nodiscard]] bool profiler_callback_after_sampling(
     PostSamplingCallback&& aCallback);
-
-// These functions tell the profiler that a thread went to sleep so that we can
-// avoid sampling it while it's sleeping. Calling profiler_thread_sleep()
-// twice without an intervening profiler_thread_wake() is an error. All three
-// functions operate the same whether the profiler is active or inactive.
-void profiler_thread_sleep();
-void profiler_thread_wake();
-
-// Mark a thread as asleep/awake within a scope.
-#  define AUTO_PROFILER_THREAD_SLEEP \
-    mozilla::AutoProfilerThreadSleep PROFILER_RAII
-#  define AUTO_PROFILER_THREAD_WAKE \
-    mozilla::AutoProfilerThreadWake PROFILER_RAII
 
 // Called by the JSRuntime's operation callback. This is used to start profiling
 // on auxiliary threads. Operates the same whether the profiler is active or
@@ -422,37 +399,6 @@ class MOZ_RAII AutoProfilerRegisterThread final {
   AutoProfilerRegisterThread(const AutoProfilerRegisterThread&) = delete;
   AutoProfilerRegisterThread& operator=(const AutoProfilerRegisterThread&) =
       delete;
-};
-
-class MOZ_RAII AutoProfilerThreadSleep {
- public:
-  explicit AutoProfilerThreadSleep() { profiler_thread_sleep(); }
-
-  ~AutoProfilerThreadSleep() { profiler_thread_wake(); }
-
- private:
-};
-
-// Temporarily wake up the profiling of a thread while servicing events such as
-// Asynchronous Procedure Calls (APCs).
-class MOZ_RAII AutoProfilerThreadWake {
- public:
-  explicit AutoProfilerThreadWake()
-      : mIssuedWake(profiler_thread_is_sleeping()) {
-    if (mIssuedWake) {
-      profiler_thread_wake();
-    }
-  }
-
-  ~AutoProfilerThreadWake() {
-    if (mIssuedWake) {
-      MOZ_ASSERT(!profiler_thread_is_sleeping());
-      profiler_thread_sleep();
-    }
-  }
-
- private:
-  bool mIssuedWake;
 };
 
 // Get the MOZ_PROFILER_STARTUP* environment variables that should be
