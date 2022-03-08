@@ -143,10 +143,9 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
       case JSOp::ResumeIndex: {
         // ResumeIndex is used to push a return address for a finally block. If
         // this op is reachable, then so is that return address (with a smaller
-        // stack depth because the resume index and `throwing` will have been
-        // popped.
+        // stack depth because the resume index will have been popped.
         uint32_t resumeOffset = script_->resumeOffsets()[(it.getResumeIndex())];
-        infos_[resumeOffset].init(stackDepth - 2);
+        infos_[resumeOffset].init(stackDepth - 1);
         infos_[resumeOffset].setJumpTarget(normallyReachable);
         break;
       }

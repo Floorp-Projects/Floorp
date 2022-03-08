@@ -4693,28 +4693,14 @@ void BaselineInterpreterCodeGen::jumpToResumeEntry(Register resumeIndex,
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Retsub() {
-  frame.popRegsAndSync(2);
+  frame.popRegsAndSync(1);
 
-  Label isReturn;
-  masm.branchTestBooleanTruthy(/* branchIfTrue = */ false, R0, &isReturn);
-
-  // R0 is |true|. We need to throw R1.
-  prepareVMCall();
-  pushArg(R1);
-
-  using Fn = bool (*)(JSContext*, HandleValue);
-  if (!callVM<Fn, js::ThrowOperation>()) {
-    return false;
-  }
-
-  masm.bind(&isReturn);
-
-  // R0 is |false|. R1 contains the resumeIndex to jump to.
-  Register resumeIndexReg = R1.scratchReg();
-  masm.unboxInt32(R1, resumeIndexReg);
+  // R0 contains the resumeIndex to jump to.
+  Register resumeIndexReg = R0.scratchReg();
+  masm.unboxInt32(R0, resumeIndexReg);
 
   Register scratch1 = R2.scratchReg();
-  Register scratch2 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
   jumpToResumeEntry(resumeIndexReg, scratch1, scratch2);
   return true;
 }

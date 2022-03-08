@@ -945,10 +945,9 @@ bool BytecodeParser::parse() {
       case JSOp::ResumeIndex: {
         // ResumeIndex is used to push a return address for a finally block. If
         // this op is reachable, then so is that return address (with a smaller
-        // stack depth because the resume index and `throwing` will have been
-        // popped.
+        // stack depth because the resume index will have been popped.
         uint32_t resumeOffset = script_->resumeOffsets()[GET_UINT24(pc)];
-        if (!recordBytecode(resumeOffset, offsetStack, stackDepth - 2)) {
+        if (!recordBytecode(resumeOffset, offsetStack, stackDepth - 1)) {
           return false;
         }
         break;
@@ -2116,10 +2115,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         // Used for the values live on entry to the finally block.
         // See TryNoteKind::Finally above.
         if (defIndex == 0) {
-          return write("THROWING");
+          return write("PC");
         }
         MOZ_ASSERT(defIndex == 1);
-        return write("PC");
+        return write("THROWING");
 
       case JSOp::FunctionThis:
       case JSOp::ImplicitThis:
