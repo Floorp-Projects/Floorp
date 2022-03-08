@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/menu-scrolling.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 menu,
@@ -168,5 +170,3 @@ menuseparator {
   margin: 5px 0;
   padding: 1px 0;
 }
-
-%include ../../shared/menu-scrolling.inc.css
