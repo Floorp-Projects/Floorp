@@ -97,7 +97,7 @@ class WebGPUParent final : public PWebGPUParent {
   void MaintainDevices();
   bool ForwardError(RawId aDeviceID, ErrorBuffer& aError);
 
-  const ffi::WGPUGlobal* const mContext;
+  UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
   /// Shmem associated with a mappable buffer has to be owned by one of the
   /// processes. We keep it here for every mappable buffer while the buffer is
