@@ -16,7 +16,7 @@
 
 namespace mozilla::dom {
 
-class ReadableStreamDefaultTeePullAlgorithm;
+class ReadableStreamDefaultTeeSourceAlgorithms;
 
 enum class TeeBranch : bool {
   Branch1,
@@ -113,11 +113,6 @@ struct TeeState : public nsISupports {
     mCloneForBranch2 = aCloneForBranch2;
   }
 
-  void SetPullAlgorithm(ReadableStreamDefaultTeePullAlgorithm* aPullAlgorithm);
-  ReadableStreamDefaultTeePullAlgorithm* PullAlgorithm() {
-    return mPullAlgorithm;
-  }
-
   // Some code is better served by using an enum into various internal slots to
   // avoid duplication: Here we provide alternative accessors for that case.
   ReadableStream* Branch(TeeBranch aBranch) const {
@@ -131,6 +126,9 @@ struct TeeState : public nsISupports {
     }
     SetReadAgainForBranch2(aValue);
   }
+
+  MOZ_CAN_RUN_SCRIPT void PullCallback(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                       ErrorResult& aRv);
 
  private:
   TeeState(ReadableStream* aStream, bool aCloneForBranch2);
@@ -174,9 +172,6 @@ struct TeeState : public nsISupports {
 
   // Implicit:
   bool mCloneForBranch2 = false;
-
-  // Used as part of the recursive ChunkSteps call in the read request
-  RefPtr<ReadableStreamDefaultTeePullAlgorithm> mPullAlgorithm;
 
   virtual ~TeeState() { mozilla::DropJSObjects(this); }
 };
