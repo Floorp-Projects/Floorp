@@ -76,6 +76,7 @@ import mozilla.components.feature.session.PictureInPictureFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.feature.session.ScreenOrientationFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.flowScoped
@@ -192,6 +193,7 @@ abstract class BaseBrowserFragment :
         ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
     private val webAuthnFeature = ViewBoundFeatureWrapper<WebAuthnFeature>()
+    private val screenOrientationFeature = ViewBoundFeatureWrapper<ScreenOrientationFeature>()
     private val biometricPromptFeature = ViewBoundFeatureWrapper<BiometricPromptFeature>()
     private val crashContentIntegration = ViewBoundFeatureWrapper<CrashContentIntegration>()
     private var pipFeature: PictureInPictureFeature? = null
@@ -729,6 +731,15 @@ abstract class BaseBrowserFragment :
                 view = view
             )
         }
+
+        screenOrientationFeature.set(
+            feature = ScreenOrientationFeature(
+                engine = requireComponents.core.engine,
+                activity = requireActivity()
+            ),
+            owner = this,
+            view = view
+        )
 
         context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
             // If the user connects to WIFI while on the BrowserFragment, this will update the
