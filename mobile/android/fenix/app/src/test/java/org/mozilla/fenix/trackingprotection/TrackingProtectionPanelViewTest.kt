@@ -10,13 +10,16 @@ import androidx.core.view.isVisible
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -37,6 +40,9 @@ class TrackingProtectionPanelViewTest {
         mode = TrackingProtectionState.Mode.Normal,
         lastAccessedCategory = ""
     )
+
+    @get:Rule
+    val gleanRule = GleanTestRule(testContext)
 
     @Before
     fun setup() {
@@ -112,7 +118,11 @@ class TrackingProtectionPanelViewTest {
     @Test
     fun testCrossSiteTrackerClick() {
         every { testContext.components.analytics } returns mockk(relaxed = true)
+        assertFalse(TrackingProtection.etpTrackerList.testHasValue())
+
         view.binding.crossSiteTracking.performClick()
+
+        assertTrue(TrackingProtection.etpTrackerList.testHasValue())
         verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true) }
 
         view.binding.crossSiteTrackingLoaded.performClick()

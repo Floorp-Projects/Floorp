@@ -27,18 +27,21 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DE
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
@@ -85,6 +88,9 @@ class DefaultQuickSettingsControllerTest {
     private lateinit var requestPermissions: (Array<String>) -> Unit
 
     private lateinit var controller: DefaultQuickSettingsController
+
+    @get:Rule
+    val gleanRule = GleanTestRule(testContext)
 
     @Before
     fun setUp() {
@@ -332,11 +338,12 @@ class DefaultQuickSettingsControllerTest {
         }
 
         isEnabled = false
+        assertFalse(TrackingProtection.exceptionAdded.testHasValue())
 
         controller.handleTrackingProtectionToggled(isEnabled)
 
+        assertTrue(TrackingProtection.exceptionAdded.testHasValue())
         verify {
-            metrics.track(Event.TrackingProtectionException)
             trackingProtectionUseCases.addException(tab.id)
             sessionUseCases.reload.invoke(tab.id)
             store.dispatch(TrackingProtectionAction.ToggleTrackingProtectionEnabled(isEnabled))
