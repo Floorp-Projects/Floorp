@@ -15,12 +15,9 @@ fn compare(name: &str, orig: &str, copied: &str) {
 }
 
 fn main() {
-    match std::env::var("JS_SMOOSH_DISABLE_OPCODE_CHECK") {
-        Ok(_) => {
-            return;
-        }
-        Err(_) => {}
-    };
+    if std::env::var("JS_SMOOSH_DISABLE_OPCODE_CHECK").is_ok() {
+        return;
+    }
 
     compare(
         "Opcodes.h",
