@@ -19,6 +19,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BaseProfilerRAIIMacro.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfilerThreadRegistration.h"
 #include "mozilla/ThreadLocal.h"
@@ -27,11 +28,6 @@
 #include <stdint.h>
 
 struct JSContext;
-
-// Macros used by the AUTO_PROFILER_* macros below.
-#define PROFILER_RAII_PASTE(id, line) id##line
-#define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
-#define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 // Insert an RAII object in this scope to enter a label stack frame. Any
 // samples collected in this scope will contain this label in their stack.
