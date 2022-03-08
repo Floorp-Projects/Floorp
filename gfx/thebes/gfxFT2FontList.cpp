@@ -307,6 +307,10 @@ static void SetPropertiesFromFace(gfxFontEntry* aFontEntry,
       (style & 2) ? FontSlantStyle::Italic() : FontSlantStyle::Normal());
   aFontEntry->mWeightRange = WeightRange(FontWeight(int(os2weight)));
   aFontEntry->mStretchRange = StretchRange(FontStretch(stretch));
+
+  // For variable fonts, update the style/weight/stretch attributes if the
+  // corresponding variation axes are present.
+  aFontEntry->SetupVariationRanges();
 }
 
 // Used to create the font entry for installed faces on the device,
