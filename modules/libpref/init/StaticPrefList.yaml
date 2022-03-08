@@ -8955,6 +8955,11 @@
     value: true
     mirror: always
 
+-   name: media.wmf.no-copy-nv12-textures
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 -   name: media.wmf.force.allow-p010-format
     type: RelaxedAtomicBool
     value: false
