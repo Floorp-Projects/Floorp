@@ -12,11 +12,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/WebChannel.jsm"
 );
 
-// FxAccountsWebChannel isn't explicitly exported by FxAccountsWebChannel.jsm
-// but we can get it here via a backstage pass.
 var { FxAccountsWebChannel } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsWebChannel.jsm",
-  null
+  "resource://gre/modules/FxAccountsWebChannel.jsm"
 );
 
 const TEST_HTTP_PATH = "http://example.com";

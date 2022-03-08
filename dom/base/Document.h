@@ -3899,6 +3899,8 @@ class Document : public nsINode,
  public:
   bool IsThirdPartyForFlashClassifier();
 
+  const OriginTrials& Trials() const { return mTrials; }
+
  private:
   void DoCacheAllKnownLangPrefs();
   void RecomputeLanguageFromCharset();

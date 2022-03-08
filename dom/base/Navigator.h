@@ -252,6 +252,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   void NotifyVRDisplaysUpdated();
   void NotifyActiveVRDisplaysChanged();
 
+  bool TestTrialGatedAttribute() const { return true; }
+
  private:
   virtual ~Navigator();
 

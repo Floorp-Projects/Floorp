@@ -159,25 +159,21 @@ void WebGPUChild::ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
   aOutput = ConvertTextureFormat(aInput);
 }
 
-static ffi::WGPUClient* initialize() {
+static UniquePtr<ffi::WGPUClient> initialize() {
   ffi::WGPUInfrastructure infra = ffi::wgpu_client_new();
-  return infra.client;
+  return UniquePtr<ffi::WGPUClient>{infra.client};
 }
 
 WebGPUChild::WebGPUChild() : mClient(initialize()) {}
 
-WebGPUChild::~WebGPUChild() {
-  if (mClient) {
-    ffi::wgpu_client_delete(mClient);
-  }
-}
+WebGPUChild::~WebGPUChild() = default;
 
 RefPtr<AdapterPromise> WebGPUChild::InstanceRequestAdapter(
     const dom::GPURequestAdapterOptions& aOptions) {
   const int max_ids = 10;
   RawId ids[max_ids] = {0};
   unsigned long count =
-      ffi::wgpu_client_make_adapter_ids(mClient, ids, max_ids);
+      ffi::wgpu_client_make_adapter_ids(mClient.get(), ids, max_ids);
 
   nsTArray<RawId> sharedIds(count);
   for (unsigned long i = 0; i != count; ++i) {
@@ -281,7 +277,7 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
     }
   }
 
-  RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
+  RawId id = ffi::wgpu_client_make_device_id(mClient.get(), aSelfId);
 
   ByteBuf bb;
   ffi::wgpu_client_serialize_device_descriptor(&desc, ToFFI(&bb));
@@ -308,7 +304,7 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
 
   ByteBuf bb;
   RawId id =
-      ffi::wgpu_client_create_buffer(mClient, aSelfId, &desc, ToFFI(&bb));
+      ffi::wgpu_client_create_buffer(mClient.get(), aSelfId, &desc, ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -343,8 +339,8 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   desc.usage = aDesc.mUsage;
 
   ByteBuf bb;
-  RawId id =
-      ffi::wgpu_client_create_texture(mClient, aSelfId, &desc, ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_texture(mClient.get(), aSelfId, &desc,
+                                             ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -382,8 +378,8 @@ RawId WebGPUChild::TextureCreateView(
       aDesc.mArrayLayerCount.WasPassed() ? aDesc.mArrayLayerCount.Value() : 0;
 
   ByteBuf bb;
-  RawId id =
-      ffi::wgpu_client_create_texture_view(mClient, aSelfId, &desc, ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_texture_view(mClient.get(), aSelfId, &desc,
+                                                  ToFFI(&bb));
   if (!SendTextureAction(aSelfId, aDeviceId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -415,8 +411,8 @@ RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
   }
 
   ByteBuf bb;
-  RawId id =
-      ffi::wgpu_client_create_sampler(mClient, aSelfId, &desc, ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_sampler(mClient.get(), aSelfId, &desc,
+                                             ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -433,8 +429,8 @@ RawId WebGPUChild::DeviceCreateCommandEncoder(
   }
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_command_encoder(mClient, aSelfId, &desc,
-                                                     ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_command_encoder(mClient.get(), aSelfId,
+                                                     &desc, ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -466,7 +462,7 @@ RawId WebGPUChild::RenderBundleEncoderFinish(
 
   ipc::ByteBuf bb;
   RawId id = ffi::wgpu_client_create_render_bundle(
-      mClient, &aEncoder, aDeviceId, &desc, ToFFI(&bb));
+      mClient.get(), &aEncoder, aDeviceId, &desc, ToFFI(&bb));
 
   if (!SendDeviceAction(aDeviceId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
@@ -580,8 +576,8 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
   desc.entries_length = entries.Length();
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_bind_group_layout(mClient, aSelfId, &desc,
-                                                       ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_bind_group_layout(mClient.get(), aSelfId,
+                                                       &desc, ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -606,8 +602,8 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
   desc.bind_group_layouts_length = bindGroupLayouts.Length();
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_pipeline_layout(mClient, aSelfId, &desc,
-                                                     ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_pipeline_layout(mClient.get(), aSelfId,
+                                                     &desc, ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -646,8 +642,8 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   desc.entries_length = entries.Length();
 
   ByteBuf bb;
-  RawId id =
-      ffi::wgpu_client_create_bind_group(mClient, aSelfId, &desc, ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_bind_group(mClient.get(), aSelfId, &desc,
+                                                ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -662,8 +658,8 @@ RawId WebGPUChild::DeviceCreateShaderModule(
   desc.code_length = aDesc.mCode.Length();
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_shader_module(mClient, aSelfId, &desc,
-                                                   ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_shader_module(mClient.get(), aSelfId,
+                                                   &desc, ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -688,7 +684,7 @@ RawId WebGPUChild::DeviceCreateComputePipelineImpl(
 
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_compute_pipeline(
-      mClient, aContext->mParentId, &desc, ToFFI(aByteBuf),
+      mClient.get(), aContext->mParentId, &desc, ToFFI(aByteBuf),
       &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
@@ -888,7 +884,7 @@ RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
 
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_render_pipeline(
-      mClient, aContext->mParentId, &desc, ToFFI(aByteBuf),
+      mClient.get(), aContext->mParentId, &desc, ToFFI(aByteBuf),
       &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
@@ -955,7 +951,7 @@ ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(
 
 ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
   const auto* byteBuf = ToFFI(&aByteBuf);
-  ffi::wgpu_client_drop_action(mClient, byteBuf);
+  ffi::wgpu_client_drop_action(mClient.get(), byteBuf);
   return IPC_OK();
 }
 
@@ -965,7 +961,8 @@ void WebGPUChild::DeviceCreateSwapChain(
   RawId queueId = aSelfId;  // TODO: multiple queues
   nsTArray<RawId> bufferIds(maxBufferCount);
   for (size_t i = 0; i < maxBufferCount; ++i) {
-    bufferIds.AppendElement(ffi::wgpu_client_make_buffer_id(mClient, aSelfId));
+    bufferIds.AppendElement(
+        ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId));
   }
   SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aHandle);
 }
@@ -974,7 +971,7 @@ void WebGPUChild::SwapChainPresent(const layers::CompositableHandle& aHandle,
                                    RawId aTextureId) {
   // Hack: the function expects `DeviceId`, but it only uses it for `backend()`
   // selection.
-  RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient, aTextureId);
+  RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient.get(), aTextureId);
   SendSwapChainPresent(aHandle, aTextureId, encoderId);
 }
 
@@ -990,7 +987,7 @@ void WebGPUChild::UnregisterDevice(RawId aId) {
 }
 
 void WebGPUChild::FreeUnregisteredInParentDevice(RawId aId) {
-  ffi::wgpu_client_kill_device_id(mClient, aId);
+  ffi::wgpu_client_kill_device_id(mClient.get(), aId);
   mDeviceMap.erase(aId);
 }
 

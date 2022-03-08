@@ -126,7 +126,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
       const dom::GPURenderPipelineDescriptor& aDesc,
       ipc::ByteBuf* const aByteBuf);
 
-  ffi::WGPUClient* const mClient;
+  UniquePtr<ffi::WGPUClient> const mClient;
   std::unordered_map<RawId, WeakPtr<Device>> mDeviceMap;
 
  public:

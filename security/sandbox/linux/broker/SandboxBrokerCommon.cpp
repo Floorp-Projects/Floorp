@@ -11,7 +11,7 @@
 // This file is built both within libxul and as a separate libmozsandbox
 // library. We can only use profiler annotations within libxul.
 #ifdef MOZILLA_INTERNAL_API
-#  include "GeckoProfiler.h"
+#  include "mozilla/ProfilerThreadSleep.h"
 #else
 #  define AUTO_PROFILER_THREAD_SLEEP
 #endif
