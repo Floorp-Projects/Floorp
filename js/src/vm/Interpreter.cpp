@@ -4105,26 +4105,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 #endif
 
     CASE(Retsub) {
-      /* Pop [exception or hole, retsub pc-index]. */
-      Value rval, lval;
-      POP_COPY_TO(rval);
-      POP_COPY_TO(lval);
-      MOZ_ASSERT(lval.isBoolean());
-      if (lval.toBoolean()) {
-        /*
-         * Exception was pending during finally, throw it *before* we adjust
-         * pc, because pc indexes into script->trynotes.  This turns out not
-         * to be necessary, but it seems clearer.  And it points out a FIXME:
-         * 350509, due to Igor Bukanov.
-         */
-        ReservedRooted<Value> v(&rootValue0, rval);
-        cx->setPendingException(v, ShouldCaptureStack::Maybe);
-        goto error;
-      }
+      Value resumeIndex;
+      POP_COPY_TO(resumeIndex);
+      MOZ_ASSERT(resumeIndex.toInt32() >= 0);
 
-      MOZ_ASSERT(rval.toInt32() >= 0);
-
-      uint32_t offset = script->resumeOffsets()[rval.toInt32()];
+      uint32_t offset = script->resumeOffsets()[resumeIndex.toInt32()];
       REGS.pc = script->offsetToPC(offset);
       ADVANCE_AND_DISPATCH(0);
     }
@@ -4586,7 +4571,7 @@ error:
 
     case FinallyContinuation: {
       /*
-       * Push (true, exception) pair for finally to indicate that [retsub]
+       * Push (exception, true) pair for finally to indicate that [retsub]
        * should rethrow the exception.
        */
       ReservedRooted<Value> exception(&rootValue0);
@@ -4594,8 +4579,8 @@ error:
         interpReturnOK = false;
         goto return_continuation;
       }
-      PUSH_BOOLEAN(true);
       PUSH_COPY(exception);
+      PUSH_BOOLEAN(true);
       cx->clearPendingException();
     }
       ADVANCE_AND_DISPATCH(0);

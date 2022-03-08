@@ -2632,6 +2632,9 @@
      *
      * This value must be used only by `JSOp::Retsub`.
      *
+     * The stack depth when retsub resumes at the given offset must
+     * agree with any other paths to that offset.
+     *
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands: uint24_t resumeIndex
@@ -2648,21 +2651,19 @@
      */ \
     MACRO(Finally, finally, NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Jump back to the next instruction, or rethrow an exception, at the end
-     * of a `finally` block. See `JSOp::Gosub` for the explanation.
+     * Jump to the instruction at the offset given by
+     * `script->resumeOffsets(resumeIndex)`, in bytes from the start of the
+     * current script's bytecode.
      *
-     * If `throwing` is true, throw `v`. Otherwise, `v` must be a resume index;
-     * jump to the corresponding offset within the script.
-     *
-     * The two values popped must be the ones notionally pushed by
-     * `JSOp::Finally`.
+     * This is used at the end of finally blocks to jump to the correct
+     * continuation.
      *
      *   Category: Control flow
      *   Type: Exceptions
      *   Operands:
-     *   Stack: throwing, v =>
+     *   Stack: resumeIndex =>
      */ \
-    MACRO(Retsub, retsub, NULL, 1, 2, 0, JOF_BYTE) \
+    MACRO(Retsub, retsub, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
