@@ -1,12 +1,22 @@
 "use strict";
 
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
-ChromeUtils.import("resource://normandy/actions/ShowHeartbeatAction.jsm", this);
-ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Storage.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
-ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
+);
+const { ShowHeartbeatAction } = ChromeUtils.import(
+  "resource://normandy/actions/ShowHeartbeatAction.jsm"
+);
+const { ClientEnvironment } = ChromeUtils.import(
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
+const { Heartbeat } = ChromeUtils.import(
+  "resource://normandy/lib/Heartbeat.jsm"
+);
+const { Storage } = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
+const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
+);
 
 const HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -50,15 +60,10 @@ class MockEventEmitter {
 function withStubbedHeartbeat() {
   return function(testFunction) {
     return async function wrappedTestFunction(args) {
-      const backstage = ChromeUtils.import(
-        "resource://normandy/actions/ShowHeartbeatAction.jsm",
-        null
-      );
-      const originalHeartbeat = backstage.Heartbeat;
       const heartbeatInstanceStub = new MockHeartbeat();
       const heartbeatClassStub = sinon.stub();
       heartbeatClassStub.returns(heartbeatInstanceStub);
-      backstage.Heartbeat = heartbeatClassStub;
+      ShowHeartbeatAction.overrideHeartbeatForTests(heartbeatClassStub);
 
       try {
         await testFunction({
@@ -67,7 +72,7 @@ function withStubbedHeartbeat() {
           heartbeatInstanceStub,
         });
       } finally {
-        backstage.Heartbeat = originalHeartbeat;
+        ShowHeartbeatAction.overrideHeartbeatForTests();
       }
     };
   };
