@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Opera",
+      "schema": 1646381478384,
+      "status": "nightly",
+      "version": "86",
+      "browserid": "opera",
+      "id": "5a4e3909-1ac1-4a78-a10d-70a59240f673",
+      "last_modified": 1646392425340
+    },
+    {
+      "name": "Opera",
+      "schema": 1646381477291,
+      "status": "beta",
+      "version": "85",
+      "browserid": "opera",
+      "id": "1997a792-cfa4-44ac-bd48-3865034530c7",
+      "last_modified": 1646392425335
+    },
+    {
+      "name": "Opera",
+      "schema": 1646381476206,
+      "status": "current",
+      "version": "84",
+      "browserid": "opera",
+      "id": "f7b88440-7a99-434c-a265-de4fde85e787",
+      "last_modified": 1646392425332
+    },
+    {
       "name": "Chrome",
       "schema": 1645203694428,
       "status": "current",
@@ -161,33 +188,6 @@
       "browserid": "nodejs",
       "id": "59d45343-21f4-4fb9-9103-4d8fbc04aed3",
       "last_modified": 1645448267555
-    },
-    {
-      "name": "Opera",
-      "schema": 1645203750497,
-      "status": "current",
-      "version": "83",
-      "browserid": "opera",
-      "id": "1aa94175-3ec1-42f4-a700-24401b9603f6",
-      "last_modified": 1645448267550
-    },
-    {
-      "name": "Opera",
-      "schema": 1645203751559,
-      "status": "beta",
-      "version": "84",
-      "browserid": "opera",
-      "id": "f7b88440-7a99-434c-a265-de4fde85e787",
-      "last_modified": 1645448267545
-    },
-    {
-      "name": "Opera",
-      "schema": 1645203752731,
-      "status": "nightly",
-      "version": "85",
-      "browserid": "opera",
-      "id": "1997a792-cfa4-44ac-bd48-3865034530c7",
-      "last_modified": 1645448267540
     },
     {
       "name": "Safari",
