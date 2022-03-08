@@ -72,11 +72,11 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     MOZ_ASSERT(frameContent && frameContent->IsElement());
   }
 
-  EventStates flags = frameContent->AsElement()->State();
+  EventStates flags = frameContent->AsElement()->StyleState();
   nsNumberControlFrame* numberControlFrame =
       nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
   if (numberControlFrame &&
-      numberControlFrame->GetContent()->AsElement()->State().HasState(
+      numberControlFrame->GetContent()->AsElement()->StyleState().HasState(
           NS_EVENT_STATE_DISABLED)) {
     flags |= NS_EVENT_STATE_DISABLED;
   }
