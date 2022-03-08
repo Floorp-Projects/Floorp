@@ -783,7 +783,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
         TryFinallyControl& finallyControl = control->as<TryFinallyControl>();
         if (finallyControl.emittingSubroutine()) {
           /*
-           * There's a [exception or hole, retsub pc-index] pair and the
+           * There's a [resume-index-or-exception, throwing] pair and the
            * possible return value on the stack that we need to pop.
            */
           npops += 3;
@@ -5052,8 +5052,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
 [[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump) {
   // Emit the following:
   //
-  //     False
   //     ResumeIndex <resumeIndex>
+  //     False
   //     Goto <target>
   //   resumeOffset:
   //     JumpTarget
@@ -5061,12 +5061,12 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
   // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
   // setting the frame's ICEntry when resuming at resumeOffset.
 
-  if (!emit1(JSOp::False)) {
+  BytecodeOffset off;
+  if (!emitN(JSOp::ResumeIndex, 3, &off)) {
     return false;
   }
 
-  BytecodeOffset off;
-  if (!emitN(JSOp::ResumeIndex, 3, &off)) {
+  if (!emit1(JSOp::False)) {
     return false;
   }
 

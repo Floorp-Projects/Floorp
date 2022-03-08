@@ -242,8 +242,8 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //FNH:1
   //LF:10
   //LH:9
-  //BRF:2
-  //BRH:1
+  //BRF:4
+  //BRH:2
 });
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
