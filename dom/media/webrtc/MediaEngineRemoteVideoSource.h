@@ -34,7 +34,7 @@
 #include "NullTransport.h"
 
 // WebRTC includes
-#include "common_video/include/i420_buffer_pool.h"
+#include "common_video/include/video_frame_buffer_pool.h"
 #include "modules/video_capture/video_capture_defines.h"
 
 namespace webrtc {
@@ -173,7 +173,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   // A buffer pool used to manage the temporary buffer used when rescaling
   // incoming images. Cameras IPC thread only.
-  webrtc::I420BufferPool mRescalingBufferPool;
+  webrtc::VideoFrameBufferPool mRescalingBufferPool;
 
   // The intrinsic size of the latest captured image, so we can feed black
   // images of the same size while stopped.

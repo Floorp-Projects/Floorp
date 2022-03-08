@@ -1463,7 +1463,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   } else {
     // Adapted I420 frame.
     rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer =
-        mBufferPool.CreateBuffer(adaptedWidth, adaptedHeight);
+        mBufferPool.CreateI420Buffer(adaptedWidth, adaptedHeight);
     if (!i420Buffer) {
       CSFLogWarn(LOGTAG, "Creating a buffer for scaling failed, pool is empty");
       return kMediaConduitNoError;

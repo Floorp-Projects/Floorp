@@ -18,7 +18,7 @@
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
 #include "api/video/video_frame.h"
-#include "common_video/include/i420_buffer_pool.h"
+#include "common_video/include/video_frame_buffer_pool.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/keep_ref_until_done.h"
 
@@ -308,7 +308,7 @@ class VideoFrameConverter {
     if (aFrame.mForceBlack) {
       // Send a black image.
       rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-          mBufferPool.CreateBuffer(aFrame.mSize.width, aFrame.mSize.height);
+          mBufferPool.CreateI420Buffer(aFrame.mSize.width, aFrame.mSize.height);
       if (!buffer) {
         MOZ_DIAGNOSTIC_ASSERT(false,
                               "Buffers not leaving scope except for "
@@ -363,7 +363,7 @@ class VideoFrameConverter {
     }
 
     rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-        mBufferPool.CreateBuffer(aFrame.mSize.width, aFrame.mSize.height);
+        mBufferPool.CreateI420Buffer(aFrame.mSize.width, aFrame.mSize.height);
     if (!buffer) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ++mFramesDropped;
@@ -409,7 +409,7 @@ class VideoFrameConverter {
 
   // Accessed only from mTaskQueue.
   MediaEventListener mPacingListener;
-  webrtc::I420BufferPool mBufferPool;
+  webrtc::VideoFrameBufferPool mBufferPool;
   FrameToProcess mLastFrameQueuedForProcessing;
   Maybe<FrameConverted> mLastFrameConverted;
   bool mActive = false;
