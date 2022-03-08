@@ -10,6 +10,12 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
+#include "xpcpublic.h"
+#include "jsapi.h"
+#include "js/Wrapper.h"
+#include "nsGlobalWindowInner.h"
+#include "mozilla/dom/Document.h"
 
 namespace mozilla {
 
@@ -60,6 +66,24 @@ void OriginTrials::UpdateFromToken(const nsAString& aBase64EncodedToken,
   }
   OriginTrial trial = result.AsOk().trial;
   mEnabledTrials += trial;
+}
+
+bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
+                             OriginTrial aTrial) {
+  if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
+    return true;
+  }
+  if (NS_IsMainThread()) {
+    if (auto* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject))) {
+      if (dom::Document* doc = win->GetExtantDoc()) {
+        return doc->Trials().IsEnabled(aTrial);
+      }
+    }
+    return false;
+  }
+  // TODO(emilio): Worker support.
+  MOZ_ASSERT_UNREACHABLE("Not implemented yet");
+  return false;
 }
 
 }  // namespace mozilla
