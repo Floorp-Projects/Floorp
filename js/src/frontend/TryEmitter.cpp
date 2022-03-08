@@ -61,9 +61,9 @@ bool TryEmitter::emitTryEnd() {
   MOZ_ASSERT(state_ == State::Try);
   MOZ_ASSERT(depth_ == bce_->bytecodeSection().stackDepth());
 
-  // Gosub to finally, if present.
+  // Jump to finally, if present.
   if (hasFinally() && controlInfo_) {
-    if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
+    if (!bce_->emitJumpToFinally(&controlInfo_->finallyJumps_)) {
       return false;
     }
   }
@@ -118,9 +118,9 @@ bool TryEmitter::emitCatchEnd() {
     return true;
   }
 
-  // gosub <finally>, if required.
+  // Jump to <finally>, if required.
   if (hasFinally()) {
-    if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
+    if (!bce_->emitJumpToFinally(&controlInfo_->finallyJumps_)) {
       return false;
     }
     MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
@@ -164,14 +164,19 @@ bool TryEmitter::emitFinally(
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
+  // Upon entry to the finally, there are two additional values on the stack:
+  // a boolean value to indicate whether we're throwing an exception, and
+  // either that exception (if we're throwing) or a resume index to which we
+  // will return (if we're not throwing).
+  bce_->bytecodeSection().setStackDepth(depth_ + 2);
+
   if (!bce_->emitJumpTarget(&finallyStart_)) {
     return false;
   }
 
   if (controlInfo_) {
-    // Fix up the gosubs that might have been emitted before non-local
-    // jumps to the finally code.
-    bce_->patchJumpsToTarget(controlInfo_->gosubs, finallyStart_);
+    // Fix up the jumps to the finally code.
+    bce_->patchJumpsToTarget(controlInfo_->finallyJumps_, finallyStart_);
 
     // Indicate that we're emitting a subroutine body.
     controlInfo_->setEmittingSubroutine();

@@ -75,7 +75,7 @@ class MOZ_STACK_CLASS TryEmitter {
   //
   //     try_body...
   //
-  //     JSOp::Gosub finally
+  //     JSOp::Goto finally
   //     JSOp::JumpTarget
   //   jumpToEnd:
   //     JSOp::Goto end:
@@ -87,7 +87,7 @@ class MOZ_STACK_CLASS TryEmitter {
   //
   //     catch_body...
   //
-  //     JSOp::Gosub finally
+  //     JSOp::Goto finally
   //     JSOp::JumpTarget
   //     JSOp::Goto end
   //
@@ -114,10 +114,10 @@ class MOZ_STACK_CLASS TryEmitter {
   Kind kind_;
   ControlKind controlKind_;
 
-  // Track jumps-over-catches and gosubs-to-finally for later fixup.
+  // Tracks jumps to the finally block for later fixup.
   //
   // When a finally block is active, non-local jumps (including
-  // jumps-over-catches) result in a Gosub being written into the bytecode
+  // jumps-over-catches) result in a goto being written into the bytecode
   // stream and fixed-up later.
   //
   // For non-syntactic try-catch-finally, all that handling is skipped.
