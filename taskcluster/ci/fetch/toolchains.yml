@@ -425,7 +425,7 @@ rust-minidump:
     fetch:
         type: git
         repo: https://github.com/luser/rust-minidump/
-        revision: 664dcd1d8ba8c227220f8b83927095880bd68a5f
+        revision: b6f69022333493a5981c6d639f36509a9d99faf5
 
 fix-stacks:
     description: fix-stacks source code
