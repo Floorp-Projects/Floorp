@@ -5,6 +5,7 @@
 "use strict";
 
 /* import-globals-from ../mochitest/common.js */
+/* import-globals-from ../mochitest/layout.js */
 /* import-globals-from ../mochitest/promisified-events.js */
 
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
@@ -14,7 +15,7 @@
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
             DEFAULT_IFRAME_ID, DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
             matchContentDoc, currentContentDoc, getContentDPR,
-            waitForImageMap, getContentBoundsForDOMElm, untilCacheIs, untilCacheOk */
+            waitForImageMap, getContentBoundsForDOMElm, untilCacheIs, untilCacheOk, testBoundsInContent, waitForContentPaint */
 
 const CURRENT_FILE_DIR = "/browser/accessible/tests/browser/";
 
@@ -859,4 +860,55 @@ function untilCacheIs(retrievalFunc, expected, message) {
     (a, b, _unusedMessage) => Object.is(a, b),
     () => [retrievalFunc(), expected, message]
   ).then(([got, exp, msg]) => is(got, exp, msg));
+}
+
+async function waitForContentPaint(browser) {
+  await SpecialPowers.spawn(browser, [], () => {
+    return new Promise(function(r) {
+      content.requestAnimationFrame(() => content.setTimeout(r));
+    });
+  });
+}
+
+async function testBoundsInContent(iframeDocAcc, id, browser) {
+  const acc = findAccessibleChildByID(iframeDocAcc, id);
+  const x = {};
+  const y = {};
+  const width = {};
+  const height = {};
+  acc.getBounds(x, y, width, height);
+
+  await invokeContentTask(
+    browser,
+    [id, x.value, y.value, width.value, height.value],
+    (_id, _x, _y, _width, _height) => {
+      const { Layout: LayoutUtils } = ChromeUtils.import(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+      );
+
+      let [
+        expectedX,
+        expectedY,
+        expectedWidth,
+        expectedHeight,
+      ] = LayoutUtils.getBoundsForDOMElm(_id, content.document);
+
+      ok(
+        _x >= expectedX - 5 || _x <= expectedX + 5,
+        "Got " + _x + ", accurate x for " + _id
+      );
+      ok(
+        _y >= expectedY - 5 || _y <= expectedY + 5,
+        "Got " + _y + ", accurate y for " + _id
+      );
+      ok(
+        _width >= expectedWidth - 5 || _width <= expectedWidth + 5,
+        "Got " + _width + ", accurate width for " + _id
+      );
+      ok(
+        _height >= expectedHeight - 5 || _height <= expectedHeight + 5,
+        "Got " + _height + ", accurate height for " + _id
+      );
+    }
+  );
 }
