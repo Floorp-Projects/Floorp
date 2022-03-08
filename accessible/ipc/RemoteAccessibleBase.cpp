@@ -342,26 +342,6 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
 }
 
 template <class Derived>
-void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
-  Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::scrollPosition);
-
-  if (!maybeScrollPosition || maybeScrollPosition->Length() != 2) {
-    return;
-  }
-  // Our retrieved value is in app units, so we don't need to do any
-  // unit conversion here.
-  const nsTArray<int32_t>& scrollPosition = *maybeScrollPosition;
-
-  // Scroll position is an inverse representation of scroll offset (since the
-  // further the scroll bar moves down the page, the further the page content
-  // moves up/closer to the origin).
-  nsPoint scrollOffset(-scrollPosition[0], -scrollPosition[1]);
-
-  aBounds.MoveBy(scrollOffset.x, scrollOffset.y);
-}
-
-template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
@@ -374,8 +354,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
       dom::BrowserParent* bp = cbc->GetBrowserParent();
       nsPresContext* presContext =
           bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-
-      ApplyScrollOffset(bounds);
 
       Unused << ApplyTransform(bounds);
 
@@ -431,12 +409,8 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             bounds.ScaleRoundOut(res.valueOr(1.0f));
           }
 
-          // Apply scroll offset, if applicable
-          remoteAcc->ApplyScrollOffset(remoteBounds);
-
-          // Regardless of whether this is a doc, we should offset `bounds`
-          // by the bounds retrieved here. This is how we build screen
-          // coordinates from relative coordinates.
+          // We should offset `bounds` by the bounds retrieved above.
+          // This is how we build screen coordinates from relative coordinates.
           bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
           Unused << remoteAcc->ApplyTransform(bounds);
         }
