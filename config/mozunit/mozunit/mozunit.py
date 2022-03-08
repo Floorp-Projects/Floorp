@@ -317,6 +317,7 @@ def main(*args, **kwargs):
                 "-c",
                 os.path.join(here, "pytest.ini"),
                 "-vv",
+                "--tb=short",
                 "-p",
                 "mozlog.pytest_mozlog.plugin",
                 "-p",
