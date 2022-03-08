@@ -1,8 +1,7 @@
 "use strict";
 
-var session = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm",
-  null
+const { TelemetrySession } = ChromeUtils.import(
+  "resource://gre/modules/TelemetrySession.jsm"
 );
 
 const DUMMY_PAGE_DATA_URI = `data:text/html,
@@ -57,7 +56,7 @@ add_task(async function test_memory_distribution() {
     Services.obs.addObserver(obs, "gather-memory-telemetry-finished");
   });
 
-  session.TelemetrySession.getPayload();
+  TelemetrySession.getPayload();
 
   await finishedGathering;
 
