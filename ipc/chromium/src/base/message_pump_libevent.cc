@@ -18,7 +18,8 @@
 #include "base/time.h"
 #include "nsDependentSubstring.h"
 #include "event.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/UniquePtr.h"
 
 // This macro checks that the _EVENT_SIZEOF_* constants defined in

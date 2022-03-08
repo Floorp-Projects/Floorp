@@ -36,9 +36,9 @@
 #include "base/string_util.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "prenv.h"
-#include "GeckoProfiler.h"
 
 namespace base {
 
