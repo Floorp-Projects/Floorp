@@ -302,7 +302,6 @@ static inline bool IsJumpOpcode(JSOp op) { return JOF_OPTYPE(op) == JOF_JUMP; }
 static inline bool BytecodeFallsThrough(JSOp op) {
   // Note:
   // * JSOp::Yield/JSOp::Await is considered to fall through, like JSOp::Call.
-  // * JSOp::Gosub falls through indirectly, after executing a 'finally'.
   switch (op) {
     case JSOp::Goto:
     case JSOp::Default:
