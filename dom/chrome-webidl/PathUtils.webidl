@@ -124,7 +124,7 @@ partial namespace PathUtils {
   /**
    * The local-specific profile directory.
    */
-  [Throws, BinaryName="GetProfileDirAsync"]
+  [Throws, BinaryName="GetLocalProfileDirAsync"]
   Promise<DOMString> getLocalProfileDir();
 
   /**
