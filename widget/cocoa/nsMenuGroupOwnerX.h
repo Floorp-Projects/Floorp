@@ -35,7 +35,8 @@ enum {
   eCommand_ID_ShowAll = 6,
   eCommand_ID_Update = 7,
   eCommand_ID_TouchBar = 8,
-  eCommand_ID_Last = 9
+  eCommand_ID_Account = 9,
+  eCommand_ID_Last = 10
 };
 
 // The menu group owner observes DOM mutations, notifies registered nsChangeObservers, and manages
