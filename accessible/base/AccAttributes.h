@@ -104,6 +104,7 @@ class AccAttributes {
 
   void SetAttribute(nsAtom* aAttrName, AccGroupInfo* aAttrValue) {
     UniquePtr<AccGroupInfo> value(aAttrValue);
+    mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
   }
 
   void SetAttribute(nsAtom* aAttrName, gfx::Matrix4x4&& aAttrValue) {
