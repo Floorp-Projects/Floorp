@@ -13,6 +13,7 @@
 #include "js/Wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/OriginTrials.h"
 #include "mozilla/Likely.h"
 
 #include "mozilla/dom/PrototypeList.h"  // auto-generated
@@ -129,6 +130,15 @@ struct PrefableDisablers {
     if (secureContext && !IsSecureContextOrObjectIsFromSecureContext(cx, obj)) {
       return false;
     }
+    if (trial != OriginTrial(0) &&
+        !OriginTrials::IsEnabled(cx, JS::GetNonCCWObjectGlobal(obj), trial)) {
+      // TODO(emilio): Perhaps reconsider the interaction between [Trial=""] and
+      // [Pref=""].
+      //
+      // In particular, it might be desirable to only check the trial if there
+      // is no pref or the pref is disabled.
+      return false;
+    }
     if (enabledFunc && !enabledFunc(cx, JS::GetNonCCWObjectGlobal(obj))) {
       return false;
     }
@@ -140,6 +150,9 @@ struct PrefableDisablers {
 
   // A boolean indicating whether a Secure Context is required.
   const bool secureContext;
+
+  // An origin trial controlling the feature.
+  const OriginTrial trial;
 
   // Bitmask of global names that we should not be exposed in.
   const uint16_t nonExposedGlobals;

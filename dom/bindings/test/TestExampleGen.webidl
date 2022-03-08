@@ -758,6 +758,12 @@ interface TestExampleInterface {
   void prefable18();
   [Func="TestFuncControlledMember"]
   void prefable19();
+  [Trial="TestTrial"]
+  void prefable20();
+  [Trial="TestTrial"]
+  readonly attribute boolean prefable21;
+  [Trial="TestTrial", Func="TestFuncControlledMember"]
+  readonly attribute boolean prefable22;
 
   // Conditionally exposed methods/attributes involving [SecureContext]
   [SecureContext]
@@ -776,6 +782,10 @@ interface TestExampleInterface {
   void conditionalOnSecureContext7();
   [SecureContext, Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   void conditionalOnSecureContext8();
+  [SecureContext, Trial="TestTrial"]
+  readonly attribute boolean conditionalOnSecureContext9;
+  [SecureContext, Trial="TestTrial"]
+  void conditionalOnSecureContext10();
 
   // Miscellania
   [LegacyLenientThis] attribute long attrWithLenientThis;
