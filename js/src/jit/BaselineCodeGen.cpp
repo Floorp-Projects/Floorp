@@ -4633,14 +4633,6 @@ bool BaselineCodeGen<Handler>::emit_Finally() {
   return emitInterruptCheck();
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_Gosub() {
-  // Jump to the finally block.
-  frame.syncStack(0);
-  emitJump();
-  return true;
-}
-
 static void LoadBaselineScriptResumeEntries(MacroAssembler& masm,
                                             JSScript* script, Register dest,
                                             Register scratch) {
