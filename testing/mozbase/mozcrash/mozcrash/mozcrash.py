@@ -8,7 +8,6 @@ import glob
 import json
 import os
 import re
-import shlex
 import shutil
 import signal
 import six
@@ -43,7 +42,6 @@ StackInfo = namedtuple(
         "extra",
         "reason",
         "java_stack",
-        "command_line",
     ],
 )
 
@@ -62,7 +60,6 @@ def check_for_crashes(
     dump_save_path=None,
     test_name=None,
     quiet=False,
-    keep=False,
 ):
     """
     Print a stack trace for minidump files left behind by a crashing program.
@@ -90,8 +87,6 @@ def check_for_crashes(
     If `quiet` is set, no PROCESS-CRASH message will be printed to stdout if a
     crash is detected.
 
-    If `keep` is set, minidump files will not be removed after processing.
-
     Returns number of minidump files found.
     """
 
@@ -110,7 +105,6 @@ def check_for_crashes(
         symbols_path,
         dump_save_path=dump_save_path,
         stackwalk_binary=stackwalk_binary,
-        keep=keep,
     )
 
     crash_count = 0
@@ -125,10 +119,6 @@ def check_for_crashes(
             stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
             if info.reason:
                 stackwalk_output.append("Mozilla crash reason: %s" % info.reason)
-            if info.command_line:
-                stackwalk_output.append("Command line:")
-                stackwalk_output.append("  " + shlex.join(info.command_line))
-                stackwalk_output.append("")
             if info.stackwalk_stderr:
                 stackwalk_output.append("stderr from minidump_stackwalk:")
                 stackwalk_output.append(info.stackwalk_stderr)
@@ -235,17 +225,11 @@ class CrashInfo(object):
                              will be used."""
 
     def __init__(
-        self,
-        dump_directory,
-        symbols_path,
-        dump_save_path=None,
-        stackwalk_binary=None,
-        keep=False,
+        self, dump_directory, symbols_path, dump_save_path=None, stackwalk_binary=None
     ):
         self.dump_directory = dump_directory
         self.symbols_path = symbols_path
         self.remove_symbols = False
-        self.keep = keep
 
         if dump_save_path is None:
             dump_save_path = os.environ.get("MINIDUMP_SAVE_PATH", None)
@@ -346,7 +330,6 @@ class CrashInfo(object):
         retcode = None
         reason = None
         java_stack = None
-        cmdline = None
         if (
             self.stackwalk_binary
             and os.path.exists(self.stackwalk_binary)
@@ -453,39 +436,6 @@ class CrashInfo(object):
             else:
                 include_stderr = True
 
-            # Temporary mechanism to extract the LinuxCmdLine. Hopefully this will
-            # get added to the JSON output and everything will get switched over
-            # to that (bug 1487410).
-            if rust_minidump:
-                # Older rust minidump-stackwalk did not support --dump. Suppress
-                # stderr and make this do nothing if it returns a nonzero exit.
-                dumper = subprocess.Popen(
-                    [self.stackwalk_binary, "--dump", path],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    universal_newlines=True,
-                )
-                cmdline = []
-                capture = False
-                for line in dumper.stdout:
-                    line = line.rstrip()
-                    if line.startswith("Stream LinuxCmdLine:"):
-                        capture = True
-                    elif capture:
-                        # Each argument is given on a separate line, terminated
-                        # with \0 (the literal string, not the NUL character). A
-                        # blank line ends this stream.
-                        if len(line) > 0 and line.endswith("\\0"):
-                            cmdline.append(line[:-2])
-                        else:
-                            capture = False
-
-                if dumper.wait() != 0:
-                    cmdline = None
-
-            if self.symbols_path:
-                command.append(self.symbols_path)
-
         else:
             if not self.stackwalk_binary:
                 errors.append(
@@ -510,9 +460,9 @@ class CrashInfo(object):
         if self.dump_save_path:
             self._save_dump_file(path, extra)
 
-        if os.path.exists(path) and not self.keep:
+        if os.path.exists(path):
             mozfile.remove(path)
-        if os.path.exists(extra) and not self.keep:
+        if os.path.exists(extra):
             mozfile.remove(extra)
 
         return StackInfo(
@@ -525,7 +475,6 @@ class CrashInfo(object):
             extra,
             reason,
             java_stack,
-            cmdline,
         )
 
     def _parse_extra_file(self, path):
@@ -848,7 +797,6 @@ if __name__ == "__main__":
     parser.add_argument("--stackwalk-binary", "-b")
     parser.add_argument("--dump-save-path", "-o")
     parser.add_argument("--test-name", "-n")
-    parser.add_argument("--keep", action="store_true")
     parser.add_argument("dump_directory")
     parser.add_argument("symbols_path")
     args = parser.parse_args()
@@ -859,5 +807,4 @@ if __name__ == "__main__":
         stackwalk_binary=args.stackwalk_binary,
         dump_save_path=args.dump_save_path,
         test_name=args.test_name,
-        keep=args.keep,
     )
