@@ -818,7 +818,7 @@ partial interface Window {
 // Used to assign marks to appear on the scrollbar when
 // finding on a page.
 partial interface Window {
-  // The marks are values between 0 and scrollMaxX/scrollMaxY.
+  // The marks are values between 0 and scrollMax{X,Y} - scrollMin{X,Y}.
   [ChromeOnly]
   void setScrollMarks(sequence<unsigned long> marks,
                       optional boolean onHorizontalScrollbar = false);
