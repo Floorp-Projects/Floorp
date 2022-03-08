@@ -195,6 +195,42 @@ var tests = [
     });
   },
   name: "test7"
+},
+// Play for a bit, then seek to the end: two ranges when "ended" is received.
+// Load another resource (invalid): no range
+// Load another resource (valid): still no range
+{
+  setup(element) {
+    let index = 1;
+    let seeked = false;
+
+    element.addEventListener('timeupdate', function() {
+      index++;
+      if (index == 2) {
+        is(element.played.length, 1);
+        element.currentTime = element.currentTime + element.duration / 100;
+      }
+      if (seeked) {
+        is(element.played.length, 2, "After seeking, played.length should be 2");
+      }
+    });
+    element.addEventListener('seeked', function() {
+      seeked = true;
+    });
+    element.addEventListener('ended', function() {
+      is(element.played.length, 2, "After ended, played.length should be 2");
+      let src_bck = element.src;
+      element.src = "bogus.duh";
+      is(element.played.length, 0, "After subsequent invalid load, played.length should be 0");
+      element.src = src_bck;
+      is(element.played.length, 0, "After subsequent valid load, played.length should be 0");
+      finish_test(element);
+    });
+    element.addEventListener('loadedmetadata', function() {
+      element.play();
+    });
+  },
+  name: "test8"
 }
 ];
 
