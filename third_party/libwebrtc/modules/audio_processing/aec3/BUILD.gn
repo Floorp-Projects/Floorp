@@ -113,6 +113,8 @@ rtc_library("aec3") {
     "suppression_filter.h",
     "suppression_gain.cc",
     "suppression_gain.h",
+    "transparent_mode.cc",
+    "transparent_mode.h",
   ]
 
   defines = []
