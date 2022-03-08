@@ -9,6 +9,7 @@
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Unused.h"
 
@@ -19,6 +20,18 @@
 #endif
 
 using namespace mozilla;
+
+static LazyLogModule gJarLog("nsJAR");
+
+#ifdef LOG
+#  undef LOG
+#endif
+#ifdef LOG_ENABLED
+#  undef LOG_ENABLED
+#endif
+
+#define LOG(args) MOZ_LOG(gJarLog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(gJarLog, mozilla::LogLevel::Debug)
 
 //----------------------------------------------
 // nsJAR constructor/destructor
@@ -76,6 +89,7 @@ NS_IMETHODIMP
 nsJAR::Open(nsIFile* zipFile) {
   NS_ENSURE_ARG_POINTER(zipFile);
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("Open[%p] %s", this, zipFile->HumanReadablePath().get()));
   if (mZip) return NS_ERROR_FAILURE;  // Already open!
 
   mZipFile = zipFile;
@@ -94,6 +108,7 @@ NS_IMETHODIMP
 nsJAR::OpenInner(nsIZipReader* aZipReader, const nsACString& aZipEntry) {
   nsresult rv;
 
+  LOG(("OpenInner[%p] %s", this, PromiseFlatCString(aZipEntry).get()));
   NS_ENSURE_ARG_POINTER(aZipReader);
 
   nsCOMPtr<nsIFile> zipFile;
@@ -152,6 +167,7 @@ nsJAR::OpenMemory(void* aData, uint32_t aLength) {
 NS_IMETHODIMP
 nsJAR::GetFile(nsIFile** result) {
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("GetFile[%p]", this));
   *result = mZipFile;
   NS_IF_ADDREF(*result);
   return NS_OK;
@@ -160,6 +176,7 @@ nsJAR::GetFile(nsIFile** result) {
 NS_IMETHODIMP
 nsJAR::Close() {
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("Close[%p]", this));
   if (!mZip) {
     return NS_ERROR_FAILURE;  // Never opened or already closed.
   }
@@ -187,6 +204,7 @@ nsJAR::Extract(const nsACString& aEntryName, nsIFile* outFile) {
     return NS_ERROR_FAILURE;
   }
 
+  LOG(("Extract[%p] %s", this, PromiseFlatCString(aEntryName).get()));
   nsZipItem* item = mZip->GetItem(PromiseFlatCString(aEntryName).get());
   NS_ENSURE_TRUE(item, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
@@ -223,6 +241,7 @@ nsJAR::Extract(const nsACString& aEntryName, nsIFile* outFile) {
 NS_IMETHODIMP
 nsJAR::GetEntry(const nsACString& aEntryName, nsIZipEntry** result) {
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("GetEntry[%p] %s", this, PromiseFlatCString(aEntryName).get()));
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
@@ -238,6 +257,7 @@ nsJAR::GetEntry(const nsACString& aEntryName, nsIZipEntry** result) {
 NS_IMETHODIMP
 nsJAR::HasEntry(const nsACString& aEntryName, bool* result) {
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("HasEntry[%p] %s", this, PromiseFlatCString(aEntryName).get()));
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
@@ -250,6 +270,7 @@ nsJAR::FindEntries(const nsACString& aPattern,
                    nsIUTF8StringEnumerator** result) {
   NS_ENSURE_ARG_POINTER(result);
   RecursiveMutexAutoLock lock(mLock);
+  LOG(("FindEntries[%p] %s", this, PromiseFlatCString(aPattern).get()));
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
@@ -280,6 +301,9 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
     return NS_ERROR_FAILURE;
   }
 
+  LOG(("GetInputStreamWithSpec[%p] %s %s", this,
+       PromiseFlatCString(aJarDirSpec).get(),
+       PromiseFlatCString(aEntryName).get()));
   // Watch out for the jar:foo.zip!/ (aDir is empty) top-level special case!
   nsZipItem* item = nullptr;
   const nsCString& entry = PromiseFlatCString(aEntryName);
