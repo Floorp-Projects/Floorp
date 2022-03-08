@@ -14,119 +14,74 @@
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla::dom {
-class WritableStreamDefaultController;
-}
-
 /*
  * See the comment in UnderlyingSourceCallbackHelpers.h!
  *
  * A native implementation of these callbacks is however currently not required.
  */
 namespace mozilla::dom {
-class UnderlyingSinkStartCallbackHelper : public nsISupports {
+
+class WritableStreamDefaultController;
+
+// https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
+class UnderlyingSinkAlgorithms : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(
-      UnderlyingSinkStartCallbackHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UnderlyingSinkAlgorithms)
 
-  UnderlyingSinkStartCallbackHelper(UnderlyingSinkStartCallback* aCallback,
-                                    JS::Handle<JSObject*> aUnderlyingSink)
-      : mUnderlyingSink(aUnderlyingSink), mCallback(aCallback) {
+  UnderlyingSinkAlgorithms(nsIGlobalObject* aGlobal,
+                           JS::HandleObject aUnderlyingSink,
+                           UnderlyingSink& aUnderlyingSinkDict)
+      : mGlobal(aGlobal), mUnderlyingSink(aUnderlyingSink) {
+    // Step 6. (implicit Step 2.)
+    if (aUnderlyingSinkDict.mStart.WasPassed()) {
+      mStartCallback = aUnderlyingSinkDict.mStart.Value();
+    }
+
+    // Step 7. (implicit Step 3.)
+    if (aUnderlyingSinkDict.mWrite.WasPassed()) {
+      mWriteCallback = aUnderlyingSinkDict.mWrite.Value();
+    }
+
+    // Step 8. (implicit Step 4.)
+    if (aUnderlyingSinkDict.mClose.WasPassed()) {
+      mCloseCallback = aUnderlyingSinkDict.mClose.Value();
+    }
+
+    // Step 9. (implicit Step 5.)
+    if (aUnderlyingSinkDict.mAbort.WasPassed()) {
+      mAbortCallback = aUnderlyingSinkDict.mAbort.Value();
+    }
+
     mozilla::HoldJSObjects(this);
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  void StartCallback(JSContext* aCx,
-                     WritableStreamDefaultController& aController,
-                     JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
-
- protected:
-  virtual ~UnderlyingSinkStartCallbackHelper() {
-    mozilla::DropJSObjects(this);
   };
 
- private:
-  JS::Heap<JSObject*> mUnderlyingSink;
-  RefPtr<UnderlyingSinkStartCallback> mCallback;
-};
+  MOZ_CAN_RUN_SCRIPT void StartCallback(
+      JSContext* aCx, WritableStreamDefaultController& aController,
+      JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
-class UnderlyingSinkWriteCallbackHelper : public nsISupports {
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(
-      UnderlyingSinkWriteCallbackHelper)
-
-  explicit UnderlyingSinkWriteCallbackHelper(
-      UnderlyingSinkWriteCallback* aCallback,
-      JS::Handle<JSObject*> aUnderlyingSink)
-      : mUnderlyingSink(aUnderlyingSink), mCallback(aCallback) {
-    MOZ_ASSERT(mCallback);
-    mozilla::HoldJSObjects(this);
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> WriteCallback(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController, ErrorResult& aRv);
 
- protected:
-  virtual ~UnderlyingSinkWriteCallbackHelper() { mozilla::DropJSObjects(this); }
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(JSContext* aCx,
+                                                             ErrorResult& aRv);
 
- private:
-  JS::Heap<JSObject*> mUnderlyingSink;
-  RefPtr<UnderlyingSinkWriteCallback> mCallback;
-};
-
-class UnderlyingSinkCloseCallbackHelper : public nsISupports {
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(
-      UnderlyingSinkCloseCallbackHelper)
-
-  UnderlyingSinkCloseCallbackHelper(UnderlyingSinkCloseCallback* aCallback,
-                                    JS::Handle<JSObject*> aUnderlyingSink)
-      : mUnderlyingSink(aUnderlyingSink), mCallback(aCallback) {
-    MOZ_ASSERT(mCallback);
-    mozilla::HoldJSObjects(this);
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> CloseCallback(JSContext* aCx, ErrorResult& aRv);
-
- protected:
-  virtual ~UnderlyingSinkCloseCallbackHelper() { mozilla::DropJSObjects(this); }
-
- private:
-  JS::Heap<JSObject*> mUnderlyingSink;
-  RefPtr<UnderlyingSinkCloseCallback> mCallback;
-};
-
-// Abstract over the implementation details for the UnderlyinSinkAbortCallback
-class UnderlyingSinkAbortCallbackHelper : public nsISupports {
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(
-      UnderlyingSinkAbortCallbackHelper)
-
-  UnderlyingSinkAbortCallbackHelper(UnderlyingSinkAbortCallback* aCallback,
-                                    JS::Handle<JSObject*> aUnderlyingSink)
-      : mUnderlyingSink(aUnderlyingSink), mCallback(aCallback) {
-    MOZ_ASSERT(mCallback);
-    mozilla::HoldJSObjects(this);
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> AbortCallback(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv);
 
  protected:
-  virtual ~UnderlyingSinkAbortCallbackHelper() { mozilla::DropJSObjects(this); }
+  virtual ~UnderlyingSinkAlgorithms() { mozilla::DropJSObjects(this); };
 
  private:
+  // Virtually const, but are cycle collected
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   JS::Heap<JSObject*> mUnderlyingSink;
-  RefPtr<UnderlyingSinkAbortCallback> mCallback;
+  MOZ_KNOWN_LIVE RefPtr<UnderlyingSinkStartCallback> mStartCallback;
+  MOZ_KNOWN_LIVE RefPtr<UnderlyingSinkWriteCallback> mWriteCallback;
+  MOZ_KNOWN_LIVE RefPtr<UnderlyingSinkCloseCallback> mCloseCallback;
+  MOZ_KNOWN_LIVE RefPtr<UnderlyingSinkAbortCallback> mAbortCallback;
 };
 
 }  // namespace mozilla::dom
