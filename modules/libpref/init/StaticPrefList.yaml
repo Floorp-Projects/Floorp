@@ -9579,7 +9579,11 @@
 # reached. The total size of the ring-buffer is slightly bigger than this.
 - name: media.audio.audiosink.threshold_ms
   type: AtomicFloat
+#if defined(XP_MACOSX) && defined(__aarch64__)
   value: 1000.0
+#else
+  value: 200.0
+#endif
   mirror: always
 
 
