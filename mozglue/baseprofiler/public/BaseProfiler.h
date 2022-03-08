@@ -88,6 +88,7 @@ static inline void profiler_shutdown() {}
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
+#  include "mozilla/BaseProfilerRAIIMacro.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/TimeStamp.h"
@@ -140,7 +141,7 @@ static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_STARTUP_ENTRIES =
 MFBT_API void profiler_init(void* stackTop);
 
 #  define AUTO_BASE_PROFILER_INIT \
-    ::mozilla::baseprofiler::AutoProfilerInit BASE_PROFILER_RAII
+    ::mozilla::baseprofiler::AutoProfilerInit PROFILER_RAII
 
 // Clean up the profiler module, stopping it if required. This function may
 // also save a shutdown profile if requested. No profiler calls should happen
@@ -235,7 +236,7 @@ MFBT_API void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 
 // Register and unregister a thread within a scope.
 #  define AUTO_BASE_PROFILER_REGISTER_THREAD(name) \
-    ::mozilla::baseprofiler::AutoProfilerRegisterThread BASE_PROFILER_RAII(name)
+    ::mozilla::baseprofiler::AutoProfilerRegisterThread PROFILER_RAII(name)
 
 // Pause and resume the profiler. No-ops if the profiler is inactive. While
 // paused the profile will not take any samples and will not record any data
@@ -259,9 +260,9 @@ MFBT_API void profiler_thread_wake();
 
 // Mark a thread as asleep/awake within a scope.
 #  define AUTO_BASE_PROFILER_THREAD_SLEEP \
-    ::mozilla::baseprofiler::AutoProfilerThreadSleep BASE_PROFILER_RAII
+    ::mozilla::baseprofiler::AutoProfilerThreadSleep PROFILER_RAII
 #  define AUTO_BASE_PROFILER_THREAD_WAKE \
-    ::mozilla::baseprofiler::AutoProfilerThreadWake BASE_PROFILER_RAII
+    ::mozilla::baseprofiler::AutoProfilerThreadWake PROFILER_RAII
 
 //---------------------------------------------------------------------------
 // Get information from the profiler
