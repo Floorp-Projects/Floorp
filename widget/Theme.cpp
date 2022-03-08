@@ -1065,10 +1065,12 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     }
   }
 
-  // Don't paint the outline if we're asked not to draw overflow, or if the
-  // author has specified another kind of outline on focus.
-  if (aDrawOverflow == DrawOverflow::No ||
-      !aFrame->StyleOutline()->mOutlineStyle.IsAuto()) {
+  // Paint the outline iff we're asked to draw overflow and we have
+  // outline-style: auto.
+  if (aDrawOverflow == DrawOverflow::Yes &&
+      aFrame->StyleOutline()->mOutlineStyle.IsAuto()) {
+    eventState |= NS_EVENT_STATE_FOCUSRING;
+  } else {
     eventState &= ~NS_EVENT_STATE_FOCUSRING;
   }
 
