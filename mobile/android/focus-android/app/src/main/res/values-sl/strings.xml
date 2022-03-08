@@ -900,12 +900,17 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zapri zavihek</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Videti je, da vam je to spletno mesto poskušalo slediti. Kliknite ščit za nastavitve spletnega mesta in statistiko zavračanja sledilcev.</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Zapri pojavno okno</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Zaščiteni ste!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Te privzete nastavitve nudijo močno zaščito. Preprosto pa jih lahko prilagodite tako, da ustrezajo vašim potrebam.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Zapri</string>
 

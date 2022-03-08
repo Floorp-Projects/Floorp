@@ -492,7 +492,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Bienvenue dans %1$s !</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Navigation privée de haut niveau quand vous voulez</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Plus invisible qu’incognito</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s est un navigateur axé sur la confidentialité avec une protection intégrée contre le pistage et les cookies très efficace.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Naviguez comme si de rien n’était</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez les publicités de suivre votre navigation.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Une confidentialité adaptée à vos besoins</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Si vos besoins de navigation changent, il est facile d’adapter vos paramètres de confidentialité.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Commencer la navigation</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">La navigation privée passe au niveau supérieur. Dites adieu aux publicités et autres traqueurs qui vous espionnent et ralentissent le chargement des pages web.</string>
@@ -899,8 +928,22 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Fermer l’onglet</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Il semble que ce site ait tenté de vous pister. Cliquez sur le bouclier pour accéder aux paramètres du site et aux statistiques de blocage des traqueurs.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Fermer la fenêtre popup</string>
+
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Vous êtes protégé·e !</string>
 
-    </resources>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Ces paramètres par défaut offrent une protection renforcée. Mais il est facile de modifier les paramètres pour répondre à vos besoins spécifiques.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Fermer</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Supprimez les données personnelles, l’historique de navigation et davantage de cette session en appuyant sur le bouton de la corbeille. Essayez !</string>
+
+</resources>

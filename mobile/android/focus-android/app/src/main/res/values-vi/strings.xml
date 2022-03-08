@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Chào mừng bạn đến với %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Duyệt web riêng tư nâng cao khi bạn muốn</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Nơi ẩn danh gặp vô hình</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s là trình duyệt ưu tiên quyền riêng tư với tính năng theo dõi và bảo vệ cookie cực kỳ mạnh mẽ được tích hợp sẵn.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Duyệt như chưa từng xảy ra</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Quyền riêng tư phù hợp với mọi tình huống</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Nếu nhu cầu duyệt web của bạn thay đổi, bạn có thể dễ dàng tăng hoặc giảm cài đặt bảo mật của mình.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Bắt đầu duyệt web</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tăng quyền riêng tư của bạn</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Duyệt web ở chế độ riêng tư để nâng cao bảo mật. Giúp làm giảm thời gian tải trang và chặn các quảng cáo và nội dung mà có thể theo dõi bạn trên các trang web.</string>

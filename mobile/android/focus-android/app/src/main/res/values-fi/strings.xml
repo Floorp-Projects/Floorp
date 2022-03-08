@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Tervetuloa %1$siin!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Seuraavan tason yksityistä selaamista kun sitä haluat</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Kun incognito kohtaa näkymättömyyden</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s on yksityisyyden etusijalle asettava selain, jossa on sisäänrakennettu erittäin vahva seuranta- ja evästesuojaus.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Selaa niin kuin sitä ei koskaan olisi tapahtunut</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Yksi napautus poistaa selaushistoriasi ja evästeet — ja estää mainoksia seuraamasta sinua.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Yksityisyyttä joka sopii kaikkiin tilanteisiin</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Jos selaustarpeesi muuttuvat, tietosuoja-asetuksia on helppoa muuttaa suuntaan tai toiseen.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Aloita selaaminen</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tehosta yksityisyyttäsi</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Vie yksityinen selaus uudelle tasolle. Estä mainoksia ja muuta sisältöä, jotka voivat seurata sinua eri sivustoilla ja hidastaa sivujen latausaikoja.</string>
