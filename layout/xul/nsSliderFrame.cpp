@@ -325,9 +325,9 @@ void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
       markValue = minPos;
     }
 
-    // The values in the marks array range up to the window's scrollMaxX
-    // or scrollMaxY (the same as the slider's maxpos). Scale the values
-    // to fit within the slider's width or height.
+    // The values in the marks array range up to the window's
+    // scrollMax{X,Y} - scrollMin{X,Y} (the same as the slider's maxpos).
+    // Scale the values to fit within the slider's width or height.
     nsRect markRect(refPoint, initialSize);
     if (isHorizontal) {
       markRect.x +=

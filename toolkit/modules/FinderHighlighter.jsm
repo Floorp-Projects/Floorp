@@ -614,8 +614,8 @@ FinderHighlighter.prototype = {
     let onHorizontalScrollbar = !window
       .getComputedStyle(window.document.body || window.document.documentElement)
       .writingMode.startsWith("horizontal");
-    let yStart = window.scrollY;
-    let xStart = window.scrollX;
+    let yStart = window.scrollY - window.scrollMinY;
+    let xStart = window.scrollX - window.scrollMinX;
 
     let hasRanges = false;
     if (window) {
@@ -637,24 +637,27 @@ FinderHighlighter.prototype = {
         }
 
         // No need to calculate the mark positions if there is no visible scrollbar.
-        if (window.scrollMaxY > 0 && !onHorizontalScrollbar) {
+        if (window.scrollMaxY > window.scrollMinY && !onHorizontalScrollbar) {
           // Use the body's scrollHeight if available.
           let scrollHeight =
             window.document.body?.scrollHeight ||
             window.document.documentElement.scrollHeight;
-          let yAdj = window.scrollMaxY / scrollHeight;
+          let yAdj = (window.scrollMaxY - window.scrollMinY) / scrollHeight;
 
           for (let r = 0; r < rangeCount; r++) {
             let rect = findSelection.getRangeAt(r).getBoundingClientRect();
             let yPos = Math.round((yStart + rect.y + rect.height / 2) * yAdj); // use the midpoint
             marks.add(yPos);
           }
-        } else if (window.scrollMaxX > 0 && onHorizontalScrollbar) {
+        } else if (
+          window.scrollMaxX > window.scrollMinX &&
+          onHorizontalScrollbar
+        ) {
           // Use the body's scrollWidth if available.
           let scrollWidth =
             window.document.body?.scrollWidth ||
             window.document.documentElement.scrollWidth;
-          let xAdj = window.scrollMaxX / scrollWidth;
+          let xAdj = (window.scrollMaxX - window.scrollMinX) / scrollWidth;
 
           for (let r = 0; r < rangeCount; r++) {
             let rect = findSelection.getRangeAt(r).getBoundingClientRect();
