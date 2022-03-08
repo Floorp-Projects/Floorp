@@ -990,6 +990,9 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void ConditionalOnSecureContext7();
   void ConditionalOnSecureContext8();
 
+  bool ConditionalOnSecureContext9();
+  void ConditionalOnSecureContext10();
+
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
