@@ -7,11 +7,6 @@
 /* import-globals-from ../../mochitest/attributes.js */
 loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 
-const isCacheEnabled = Services.prefs.getBoolPref(
-  "accessibility.cache.enabled",
-  false
-);
-
 /**
  * select elements
  */
