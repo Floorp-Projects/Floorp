@@ -26,11 +26,9 @@ static const char* sProp[2] = {NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR};
 
 void Omnijar::CleanUpOne(Type aType) {
   if (sReader[aType]) {
-    sReader[aType]->CloseArchive();
     sReader[aType] = nullptr;
   }
   if (sOuterReader[aType]) {
-    sOuterReader[aType]->CloseArchive();
     sOuterReader[aType] = nullptr;
   }
   sPath[aType] = nullptr;
@@ -77,8 +75,8 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
     return;
   }
 
-  RefPtr<nsZipArchive> zipReader = new nsZipArchive();
-  if (NS_FAILED(zipReader->OpenArchive(file))) {
+  RefPtr<nsZipArchive> zipReader = nsZipArchive::OpenArchive(file);
+  if (!zipReader) {
     return;
   }
 
@@ -87,8 +85,8 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
   if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, MOZ_STRINGIFY(OMNIJAR_NAME),
                                      getter_AddRefs(handle)))) {
     outerReader = zipReader;
-    zipReader = new nsZipArchive();
-    if (NS_FAILED(zipReader->OpenArchive(handle))) {
+    zipReader = nsZipArchive::OpenArchive(handle);
+    if (!zipReader) {
       return;
     }
   }
