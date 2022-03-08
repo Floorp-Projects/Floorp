@@ -14,14 +14,11 @@ const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
 
-let sanitizeStorageObject, AutofillRecord, AddressesEngine;
-add_task(async function() {
-  ({
-    sanitizeStorageObject,
-    AutofillRecord,
-    AddressesEngine,
-  } = ChromeUtils.import("resource://autofill/FormAutofillSync.jsm", null));
-});
+const {
+  sanitizeStorageObject,
+  AutofillRecord,
+  AddressesEngine,
+} = ChromeUtils.import("resource://autofill/FormAutofillSync.jsm");
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");
 initTestLogging("Trace");

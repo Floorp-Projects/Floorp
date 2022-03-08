@@ -4,7 +4,16 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ESEDBReader"]; /* exported ESEDBReader */
+var EXPORTED_SYMBOLS = [
+  "ESEDBReader",
+  // The items below are exported for test purposes.
+  "ESE",
+  "KERNEL",
+  "gLibs",
+  "COLUMN_TYPES",
+  "declareESEFunction",
+  "loadLibraries",
+];
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 const { XPCOMUtils } = ChromeUtils.import(

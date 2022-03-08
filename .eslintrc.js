@@ -541,10 +541,6 @@ module.exports = {
     {
       // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
       files: [
-        "browser/base/content/test/sync/browser_fxa_web_channel.js",
-        "browser/components/migration/tests/unit/test_Edge_db_migration.js",
-        "browser/components/translation/test/unit/test_cld2.js",
-        "browser/extensions/formautofill/test/unit/test_sync.js",
         "devtools/client/aboutdebugging/test/browser/browser_aboutdebugging_addons_debug_popup.js",
         "dom/ipc/tests/browser_memory_distribution_telemetry.js",
         "dom/push/test/xpcshell/head.js",
