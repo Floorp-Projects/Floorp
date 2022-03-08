@@ -25,19 +25,17 @@ NS_IMPL_ISUPPORTS(nsJARInputStream, nsIInputStream)
 
 /*----------------------------------------------------------
  * nsJARInputStream implementation
- * Takes ownership of |fd|, even on failure
  *--------------------------------------------------------*/
 
-nsresult nsJARInputStream::InitFile(nsZipHandle* aFd, const uint8_t* aData,
-                                    nsZipItem* aItem) {
+nsresult nsJARInputStream::InitFile(nsJAR* aJar, nsZipItem* item) {
   nsresult rv = NS_OK;
-  MOZ_ASSERT(aFd, "Argument may not be null");
-  MOZ_ASSERT(aItem, "Argument may not be null");
+  MOZ_ASSERT(aJar, "Argument may not be null");
+  MOZ_ASSERT(item, "Argument may not be null");
 
   // Mark it as closed, in case something fails in initialisation
   mMode = MODE_CLOSED;
   //-- prepare for the compression type
-  switch (aItem->Compression()) {
+  switch (item->Compression()) {
     case STORED:
       mMode = MODE_COPY;
       break;
@@ -47,24 +45,23 @@ nsresult nsJARInputStream::InitFile(nsZipHandle* aFd, const uint8_t* aData,
       NS_ENSURE_SUCCESS(rv, rv);
 
       mMode = MODE_INFLATE;
-      mInCrc = aItem->CRC32();
+      mInCrc = item->CRC32();
       mOutCrc = crc32(0L, Z_NULL, 0);
       break;
 
     default:
-      mFd = aFd;
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   // Must keep handle to filepointer and mmap structure as long as we need
   // access to the mmapped data
-  mFd = aFd;
-  mZs.next_in = (Bytef*)aData;
+  mFd = aJar->mZip->GetFD();
+  mZs.next_in = (Bytef*)aJar->mZip->GetData(item);
   if (!mZs.next_in) {
     return NS_ERROR_FILE_CORRUPTED;
   }
-  mZs.avail_in = aItem->Size();
-  mOutSize = aItem->RealSize();
+  mZs.avail_in = item->Size();
+  mOutSize = item->RealSize();
   mZs.total_out = 0;
   return NS_OK;
 }
@@ -80,8 +77,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
 
   // Keep the zipReader for getting the actual zipItems
   mJar = aJar;
-  mJar->mLock.AssertCurrentThreadIn();
-  UniquePtr<nsZipFind> find;
+  nsZipFind* find;
   nsresult rv;
   // We can get aDir's contents as strings via FindEntries
   // with the following pattern (see nsIZipReader.findEntries docs)
@@ -117,7 +113,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
     ++curr;
   }
   nsAutoCString pattern = escDirName + "?*~"_ns + escDirName + "?*/?*"_ns;
-  rv = mJar->mZip->FindInit(pattern.get(), getter_Transfers(find));
+  rv = mJar->mZip->FindInit(pattern.get(), &find);
   if (NS_FAILED(rv)) return rv;
 
   const char* name;
@@ -126,6 +122,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
     // Must copy, to make it zero-terminated
     mArray.AppendElement(nsCString(name, nameLen));
   }
+  delete find;
 
   if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST && NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;  // no error translation
@@ -304,7 +301,6 @@ nsresult nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount,
   uint32_t numRead = CopyDataToBuffer(aBuffer, aCount);
 
   if (aCount > 0) {
-    RecursiveMutexAutoLock lock(mJar->mLock);
     // empty the buffer and start writing directory entry lines to it
     mBuffer.Truncate();
     mCurPos = 0;
