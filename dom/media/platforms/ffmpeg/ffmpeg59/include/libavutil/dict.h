@@ -69,7 +69,7 @@
        av_dict_get(). */
 #define AV_DICT_IGNORE_SUFFIX                                               \
   2 /**< Return first entry in a dictionary whose first part corresponds to \
-       the search key, ignoring the suffix of the found key string. Only                          \
+       the search key, ignoring the suffix of the found key string. Only    \
        relevant in av_dict_get(). */
 #define AV_DICT_DONT_STRDUP_KEY              \
   4 /**< Take ownership of a key that's been \
