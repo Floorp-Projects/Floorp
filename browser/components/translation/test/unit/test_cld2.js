@@ -17,9 +17,9 @@
 //
 // Unit test compact language detector, CLD2
 //
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 // Test strings.
+/* eslint-disable no-unused-vars */
 const kTeststr_en =
   "confiscation of goods is assigned as the penalty part most of the courts " +
   "consist of members and when it is necessary to bring public cases before a " +
@@ -448,6 +448,7 @@ const kTeststr_fr_en_Latn =
 // This can be used to cross-check the build date of the main quadgram table
 const kTeststr_version =
   "qpdbmrmxyzptlkuuddlrlrbas las les qpdbmrmxyzptlkuuddlrlrbas el la qpdbmrmxyzptlkuuddlrlrbas";
+/* eslint-enable no-unused-vars */
 
 const kTestPairs = [
   // A simple case to begin
@@ -655,6 +656,7 @@ add_task(async function test_worker_flush() {
   ok(workerManager._workerReadyPromise != null, "Should have a worker promise");
 
   // Wait for the idle timeout to elapse.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, workerManager.IDLE_TIMEOUT));
 
   equal(
