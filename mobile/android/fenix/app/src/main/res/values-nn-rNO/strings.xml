@@ -1540,6 +1540,8 @@
     <string name="credit_cards_menu_delete_card">Slett kort</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Slett kort</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Er du sikker på at du vil slette dette bankkortet?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Slett</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1716,6 +1718,8 @@
     <string name="synced_tabs_enable_tab_syncing">Slå på fane-synkronisering.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Du har ingen faner opne i Firefox på andre einingar.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Du har ingen faner opne i %1$s på andre einingar.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Vis ei liste over faner frå andre einingar.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1723,6 +1727,11 @@
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ingen opne faner</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Utvid gruppa med synkroniserte faner</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Skjul gruppa med synkroniserte faner</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

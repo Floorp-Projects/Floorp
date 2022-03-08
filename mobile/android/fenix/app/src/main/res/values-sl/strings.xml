@@ -287,6 +287,8 @@
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Odpri nov zavihek v Firefoxu</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Odpri nov zavihek v %1$su</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Iskanje</string>
     <!-- Text preview for larger sized widgets -->
@@ -439,6 +441,8 @@
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tapnite na logotip za spremembo ozadja</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Spremeni ozadje z dotikom logotipa na domači strani Firefoxa</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Listajte med slikami in posodobite ozadje brez zapuščanja domače strani.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
@@ -759,6 +763,8 @@
     <!-- History -->
     <!-- Text for the button to search all history -->
     <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Vnesite iskalni niz</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Vnesite iskalni niz</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Izbriši zgodovino</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -1535,6 +1541,8 @@
     <string name="credit_cards_menu_delete_card">Izbriši kartico</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Izbriši kartico</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Ali ste prepričani, da želite izbrisati to kreditno kartico?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Izbriši</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
