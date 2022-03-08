@@ -10,7 +10,7 @@
 #include "prmon.h"
 
 #if defined(MOZILLA_INTERNAL_API) && !defined(DEBUG)
-#  include "GeckoProfiler.h"
+#  include "mozilla/ProfilerThreadSleep.h"
 #endif  // defined( MOZILLA_INTERNAL_API) && !defined(DEBUG)
 
 #include "mozilla/BlockingResourceBase.h"
