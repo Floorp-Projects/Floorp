@@ -7,7 +7,9 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-var EXPORTED_SYMBOLS = ["SubprocessImpl"];
+// libc is exported for tests. It is imported into this file lower down,
+// from the shared scripts loaded via loadSubScript.
+var EXPORTED_SYMBOLS = ["SubprocessImpl", "libc"];
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
