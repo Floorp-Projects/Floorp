@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import re
+import shlex
 import shutil
 import signal
 import six
@@ -42,6 +43,7 @@ StackInfo = namedtuple(
         "extra",
         "reason",
         "java_stack",
+        "command_line",
     ],
 )
 
@@ -123,6 +125,10 @@ def check_for_crashes(
             stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
             if info.reason:
                 stackwalk_output.append("Mozilla crash reason: %s" % info.reason)
+            if info.command_line:
+                stackwalk_output.append("Command line:")
+                stackwalk_output.append("  " + shlex.join(info.command_line))
+                stackwalk_output.append("")
             if info.stackwalk_stderr:
                 stackwalk_output.append("stderr from minidump_stackwalk:")
                 stackwalk_output.append(info.stackwalk_stderr)
@@ -340,6 +346,7 @@ class CrashInfo(object):
         retcode = None
         reason = None
         java_stack = None
+        cmdline = None
         if (
             self.stackwalk_binary
             and os.path.exists(self.stackwalk_binary)
@@ -446,6 +453,39 @@ class CrashInfo(object):
             else:
                 include_stderr = True
 
+            # Temporary mechanism to extract the LinuxCmdLine. Hopefully this will
+            # get added to the JSON output and everything will get switched over
+            # to that (bug 1487410).
+            if rust_minidump:
+                # Older rust minidump-stackwalk did not support --dump. Suppress
+                # stderr and make this do nothing if it returns a nonzero exit.
+                dumper = subprocess.Popen(
+                    [self.stackwalk_binary, "--dump", path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    universal_newlines=True,
+                )
+                cmdline = []
+                capture = False
+                for line in dumper.stdout:
+                    line = line.rstrip()
+                    if line.startswith("Stream LinuxCmdLine:"):
+                        capture = True
+                    elif capture:
+                        # Each argument is given on a separate line, terminated
+                        # with \0 (the literal string, not the NUL character). A
+                        # blank line ends this stream.
+                        if len(line) > 0 and line.endswith("\\0"):
+                            cmdline.append(line[:-2])
+                        else:
+                            capture = False
+
+                if dumper.wait() != 0:
+                    cmdline = None
+
+            if self.symbols_path:
+                command.append(self.symbols_path)
+
         else:
             if not self.stackwalk_binary:
                 errors.append(
@@ -485,6 +525,7 @@ class CrashInfo(object):
             extra,
             reason,
             java_stack,
+            cmdline,
         )
 
     def _parse_extra_file(self, path):
