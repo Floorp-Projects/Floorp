@@ -130,11 +130,24 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
               (tn.kind() == TryNoteKind::Catch ||
                tn.kind() == TryNoteKind::Finally)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
+            uint32_t targetDepth =
+                tn.kind() == TryNoteKind::Finally ? stackDepth + 2 : stackDepth;
             BytecodeInfo& targetInfo = infos_[catchOrFinallyOffset];
-            targetInfo.init(stackDepth);
+            targetInfo.init(targetDepth);
             targetInfo.setJumpTarget(/* normallyReachable = */ false);
           }
         }
+        break;
+      }
+
+      case JSOp::ResumeIndex: {
+        // ResumeIndex is used to push a return address for a finally block. If
+        // this op is reachable, then so is that return address (with a smaller
+        // stack depth because the resume index and `throwing` will have been
+        // popped.
+        uint32_t resumeOffset = script_->resumeOffsets()[(it.getResumeIndex())];
+        infos_[resumeOffset].init(stackDepth - 2);
+        infos_[resumeOffset].setJumpTarget(normallyReachable);
         break;
       }
 
@@ -144,8 +157,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
 #ifdef DEBUG
       case JSOp::Exception:
-      case JSOp::Finally:
-        // Sanity check: ops only emitted in catch/finally blocks are never
+        // Sanity check: ops only emitted in catch blocks are never
         // normally reachable.
         MOZ_ASSERT(!normallyReachable);
         break;
@@ -184,10 +196,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 #endif
 
       infos_[targetOffset].init(newStackDepth);
-
-      // Gosub's target is a finally-block => not normally reachable.
-      bool targetNormallyReachable = (op != JSOp::Gosub) && normallyReachable;
-      infos_[targetOffset].setJumpTarget(targetNormallyReachable);
+      infos_[targetOffset].setJumpTarget(normallyReachable);
     }
 
     // Handle any fallthrough from this opcode.
@@ -200,10 +209,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
       // Treat the fallthrough of a branch instruction as a jump target.
       if (jump) {
-        // Gosub falls through after executing a finally-block => not normally
-        // reachable.
-        bool nextNormallyReachable = (op != JSOp::Gosub) && normallyReachable;
-        infos_[fallthroughOffset].setJumpTarget(nextNormallyReachable);
+        infos_[fallthroughOffset].setJumpTarget(normallyReachable);
       }
     }
   }
