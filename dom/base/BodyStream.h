@@ -11,6 +11,7 @@
 #include "js/Stream.h"
 #include "mozilla/AlreadyAddRefed.h"
 #ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ByteStreamHelpers.h"
 #  include "mozilla/dom/BindingDeclarations.h"
 #endif
 #include "nsIAsyncInputStream.h"
@@ -37,14 +38,11 @@ class ReadableStream;
 class ReadableStreamController;
 #endif
 
-class BodyStreamUnderlyingSourcePullCallbackHelper;
-class BodyStreamUnderlyingSourceCancelCallbackHelper;
-class BodyStreamUnderlyingSourceErrorCallbackHelper;
+class BodyStreamUnderlyingSourceAlgorithms;
 
 class BodyStreamHolder : public nsISupports {
   friend class BodyStream;
-  friend class BodyStreamUnderlyingSourcePullCallbackHelper;
-  friend class BodyStreamUnderlyingSourceCancelCallbackHelper;
+  friend class BodyStreamUnderlyingSourceAlgorithms;
   friend class BodyStreamUnderlyingSourceErrorCallbackHelper;
 
  public:

@@ -15,6 +15,7 @@
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
+#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -84,11 +85,9 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
-  UnderlyingSourceErrorCallbackHelper* GetErrorAlgorithm() const {
-    return mErrorAlgorithm;
-  }
-  void SetErrorAlgorithm(UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm) {
-    mErrorAlgorithm = aErrorAlgorithm;
+  UnderlyingSourceAlgorithmsBase* GetAlgorithms() const { return mAlgorithms; }
+  void SetErrorAlgorithm(UnderlyingSourceAlgorithmsBase* aAlgorithms) {
+    mAlgorithms = aAlgorithms;
   }
 
   void SetNativeUnderlyingSource(BodyStreamHolder* aUnderlyingSource);
@@ -145,7 +144,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   JS::Heap<JS::Value> mStoredError;
 
   // Optional Callback for erroring a stream.
-  RefPtr<UnderlyingSourceErrorCallbackHelper> mErrorAlgorithm;
+  RefPtr<UnderlyingSourceAlgorithmsBase> mAlgorithms;
 
   // Optional strong reference to an Underlying Source; This
   // exists because NativeUnderlyingSource callbacks don't hold
@@ -195,9 +194,7 @@ bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 
 MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> CreateReadableByteStream(
     JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
-    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm, ErrorResult& aRv);
+    UnderlyingSourceAlgorithmsBase* aAlgorithms, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 
