@@ -72,7 +72,7 @@
     <!-- Action Primary text -->
     <color name="fx_mobile_text_color_action_primary">@color/photonLightGrey05</color>
     <!-- Action Secondary text -->
-    <color name="fx_mobile_text_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_text_color_action_secondary">@color/photonDarkGrey90</color>
     <!-- Action Tertiary text -->
     <color name="fx_mobile_text_color_action_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Action Tertiary Active text -->
@@ -106,7 +106,7 @@
     <!-- Action Primary Icon -->
     <color name="fx_mobile_icon_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Secondary Icon -->
-    <color name="fx_mobile_icon_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_icon_color_action_secondary">@color/photonDarkGrey90</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet50</color>
     <!-- Reader, ETP Shield -->
@@ -313,9 +313,6 @@
 
     <!-- Launcher Icon colors -->
     <color name="ic_launcher_background">#FDFDFD</color>
-
-    <!-- Button Colors -->
-    <color name="button_text_color">@color/photonInk20</color>
 
     <!-- Private Browsing Mode Persistent Notification -->
     <color name="pbm_notification_color">@color/photonViolet70</color>

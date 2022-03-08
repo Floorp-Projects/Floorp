@@ -50,7 +50,7 @@
                 android:maxLines="2"
                 android:lineHeight="24sp"
                 android:text="@string/migration_title"
-                android:textColor="@color/button_text_color"
+                android:textColor="@color/fx_mobile_text_color_action_secondary"
                 android:textSize="@dimen/migration_welcome_title_text_size"
                 android:textAppearance="@style/Header16TextStyle"
                 app:layout_constraintBottom_toTopOf="@+id/migration_description"
