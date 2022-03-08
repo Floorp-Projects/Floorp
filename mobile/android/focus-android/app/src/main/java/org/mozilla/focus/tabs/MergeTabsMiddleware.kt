@@ -57,9 +57,14 @@ class MergeTabsMiddleware(
         // engine session to this tab.
         next(TabListAction.AddTabAction(mergedTab, select = true))
 
-        // Then we can remove the previous tab. We first unlink the engine session to prevent the
-        // middleware from closing the engine session, which is now linked to the new tab.
-        context.dispatch(EngineAction.UnlinkEngineSessionAction(currentTab.id))
+        // If the new tab does not have an engine session we will reuse the engine session of
+        // the current tab so we unlink it first to prevent the engine middleware from closing it.
+        if (newTab.engineState.engineSession == null) {
+            context.dispatch(EngineAction.UnlinkEngineSessionAction(currentTab.id))
+        }
+
+        // If the new tab has an engine session (e.g. when it was opened by a web extension) we will
+        // use the new engine session, close the current tab with its engine session.
         context.dispatch(TabListAction.RemoveTabAction(currentTab.id))
 
         // Now we load the URL in the new tab.
@@ -81,15 +86,23 @@ private fun mergeTabs(
     currentTab: TabSessionState,
     newTab: TabSessionState
 ): TabSessionState {
-    // We want to use the state of the current tab, but give it the ID of the new tab. This will make
-    // sure that code that created the tab can still access it with the ID.
-    return currentTab.copy(
-        newTab.id,
-        engineState = currentTab.engineState.copy(
+    // In case a new tab is being opened by a web extension, the new tab will have its own new engine/gecko session,
+    // which will have to be used
+    val newEngineState = if (newTab.engineState.engineSession != null) {
+        newTab.engineState
+    } else {
+        currentTab.engineState.copy(
             // We are clearing the engine observer, which would update the state of the tab with the
             // old ID. The engine middleware will create a new observer.
             engineObserver = null
         )
+    }
+
+    // We are giving the ID of the new tab. This will make
+    // sure that code that created the tab can still access it with the ID.
+    return currentTab.copy(
+        newTab.id,
+        engineState = newEngineState
     )
 }
 
