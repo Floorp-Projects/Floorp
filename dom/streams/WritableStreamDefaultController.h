@@ -84,25 +84,9 @@ class WritableStreamDefaultController final : public nsISupports,
     mStrategySizeAlgorithm = aStrategySizeAlgorithm;
   }
 
-  UnderlyingSinkWriteCallbackHelper* GetWriteAlgorithm() {
-    return mWriteAlgorithm;
-  }
-  void SetWriteAlgorithm(UnderlyingSinkWriteCallbackHelper* aWriteAlgorithm) {
-    mWriteAlgorithm = aWriteAlgorithm;
-  }
-
-  UnderlyingSinkCloseCallbackHelper* GetCloseAlgorithm() {
-    return mCloseAlgorithm;
-  }
-  void SetCloseAlgorithm(UnderlyingSinkCloseCallbackHelper* aCloseAlgorithm) {
-    mCloseAlgorithm = aCloseAlgorithm;
-  }
-
-  UnderlyingSinkAbortCallbackHelper* GetAbortAlgorithm() {
-    return mAbortAlgorithm;
-  }
-  void SetAbortAlgorithm(UnderlyingSinkAbortCallbackHelper* aAbortAlgorithm) {
-    mAbortAlgorithm = aAbortAlgorithm;
+  UnderlyingSinkAlgorithms* GetAlgorithms() { return mAlgorithms; }
+  void SetAlgorithms(UnderlyingSinkAlgorithms* aAlgorithms) {
+    mAlgorithms = aAlgorithms;
   }
 
   WritableStream* Stream() { return mStream; }
@@ -125,13 +109,9 @@ class WritableStreamDefaultController final : public nsISupports,
   // https://streams.spec.whatwg.org/#writable-stream-default-controller-clear-algorithms
   void ClearAlgorithms() {
     // Step 1. Set controller.[[writeAlgorithm]] to undefined.
-    mWriteAlgorithm = nullptr;
-
     // Step 2. Set controller.[[closeAlgorithm]] to undefined.
-    mCloseAlgorithm = nullptr;
-
     // Step 3. Set controller.[[abortAlgorithm]] to undefined.
-    mAbortAlgorithm = nullptr;
+    mAlgorithms = nullptr;
 
     // Step 4. Set controller.[[strategySizeAlgorithm]] to undefined.
     mStrategySizeAlgorithm = nullptr;
@@ -148,19 +128,14 @@ class WritableStreamDefaultController final : public nsISupports,
   double mStrategyHWM = 0.0;
 
   RefPtr<QueuingStrategySize> mStrategySizeAlgorithm;
-  RefPtr<UnderlyingSinkWriteCallbackHelper> mWriteAlgorithm;
-  RefPtr<UnderlyingSinkCloseCallbackHelper> mCloseAlgorithm;
-  RefPtr<UnderlyingSinkAbortCallbackHelper> mAbortAlgorithm;
+  RefPtr<UnderlyingSinkAlgorithms> mAlgorithms;
   RefPtr<WritableStream> mStream;
 };
 
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
-    UnderlyingSinkStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSinkWriteCallbackHelper* aWriteAlgorithm,
-    UnderlyingSinkCloseCallbackHelper* aCloseAlgorithm,
-    UnderlyingSinkAbortCallbackHelper* aAbortAlgorithm, double aHighWaterMark,
+    UnderlyingSinkAlgorithms* aSinkCallbacks, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
