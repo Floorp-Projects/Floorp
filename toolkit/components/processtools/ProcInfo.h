@@ -45,7 +45,6 @@ enum class ProcType {
   Extension,
   PrivilegedAbout,
   PrivilegedMozilla,
-  WebLargeAllocation,
   WebCOOPCOEP,
   WebServiceWorker,
 // the rest matches GeckoProcessTypes.h

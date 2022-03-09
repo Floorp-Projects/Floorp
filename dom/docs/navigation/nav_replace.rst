@@ -99,8 +99,6 @@ in the following circumstances, though this may change in the future:
 - When switching processes between the parent process, and a content process.
 - When loading an extension document in a toplevel browsing context.
 - When navigating away from a preloaded ``about:newtab`` document.
-- Sometimes, when loading a document with the ``Large-Allocation`` header on
-  32-bit windows.
 - When putting a ``BrowsingContext`` into BFCache for the session history
   in-parent BFCache implementation. This will happen on most toplevel
   navigations without opener relationships when the ``fission.bfcacheInParent``

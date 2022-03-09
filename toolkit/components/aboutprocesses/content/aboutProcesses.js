@@ -468,10 +468,6 @@ var View = {
           fluentName = "about-processes-web-serviceworker";
           fluentArgs.origin = data.origin;
           break;
-        case "webLargeAllocation":
-          fluentName = "about-processes-web-large-allocation-process";
-          fluentArgs.origin = data.origin;
-          break;
         case "file":
           fluentName = "about-processes-file-process";
           break;
@@ -1341,7 +1337,6 @@ var Control = {
       // Web content comes next.
       case "webIsolated":
       case "webServiceWorker":
-      case "webLargeAllocation":
       case "withCoopCoep": {
         if (windows.some(w => w.tab)) {
           return RANK_WEB_TABS;

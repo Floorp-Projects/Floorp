@@ -60,7 +60,6 @@ const SUPPORTED_HEADERS = [
   "If-Range",
   "If-Unmodified-Since",
   "Keep-Alive",
-  "Large-Allocation",
   "Last-Modified",
   "Location",
   "Origin",
