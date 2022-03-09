@@ -158,6 +158,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsNativeAppSupportWin.h"
 
 #include "nsIGfxInfo.h"
@@ -618,6 +619,59 @@ class InitializeVirtualDesktopManagerTask : public Task {
     return true;
   }
 };
+
+static BOOL GetMouseVanishSystemPref(bool aShouldUpdate) {
+  static bool sInitialized = false;
+  static BOOL sMouseVanishSystemPref = FALSE;
+
+  if (!sInitialized || aShouldUpdate) {
+    BOOL ok = ::SystemParametersInfo(SPI_GETMOUSEVANISH, 0,
+                                     &sMouseVanishSystemPref, 0);
+    if (!ok) {
+      // Getting system pref failed so just use user pref.
+      sMouseVanishSystemPref =
+          StaticPrefs::widget_windows_hide_cursor_when_typing();
+    }
+    sInitialized = true;
+  }
+
+  return sMouseVanishSystemPref;
+}
+
+static bool IsMouseVanishKey(WPARAM aVirtKey) {
+  switch (aVirtKey) {
+    case VK_SHIFT:
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+    case VK_CONTROL:
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+    case VK_MENU:
+    case VK_LMENU:
+    case VK_RMENU:
+    case VK_LWIN:
+    case VK_RWIN:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Hide/unhide the cursor if the correct Windows and Firefox settings are set.
+ */
+static void MaybeHideCursor(bool aShouldHide) {
+  static bool sIsHidden = false;
+  bool shouldHide = aShouldHide &&
+                    StaticPrefs::widget_windows_hide_cursor_when_typing() &&
+                    GetMouseVanishSystemPref(false);
+
+  if (shouldHide != sIsHidden) {
+    [[maybe_unused]] int count = ::ShowCursor(aShouldHide ? FALSE : TRUE);
+    MOZ_ASSERT(count == (aShouldHide ? -1 : 0));
+    sIsHidden = shouldHide;
+  }
+}
 
 }  // namespace mozilla
 
@@ -5223,6 +5277,12 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           }
         }
       }
+
+      // SPI_GETMOUSEVANISH sends WM_SETTINGCHANGE when changed but does
+      // not include identifiers in the parameters.  WM_SETTINGCHANGE docs
+      // recommend updating all cached settings when this message is received
+      // anyway.
+      GetMouseVanishSystemPref(true);
     } break;
 
     case WM_DEVICECHANGE: {
@@ -5457,6 +5517,10 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN: {
+      if (IsMouseVanishKey(wParam)) {
+        MaybeHideCursor(true);
+      }
+
       MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
       result = ProcessKeyDownMessage(nativeMsg, nullptr);
       DispatchPendingEvents();
@@ -5472,6 +5536,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MOUSEMOVE: {
+      MaybeHideCursor(false);
+
       LPARAM lParamScreen = lParamToScreen(lParam);
       mSimulatedClientArea = IsSimulatedClientArea(GET_X_LPARAM(lParamScreen),
                                                    GET_Y_LPARAM(lParamScreen));
@@ -5508,6 +5574,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_NCMOUSEMOVE: {
+      MaybeHideCursor(false);
+
       LPARAM lParamClient = lParamToClient(lParam);
       if (IsSimulatedClientArea(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
         if (!sIsInMouseCapture) {
@@ -5534,6 +5602,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_LBUTTONDOWN: {
+      MaybeHideCursor(false);
+
       result =
           DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                              MouseButton::ePrimary, MOUSE_INPUT_SOURCE(),
@@ -5652,6 +5722,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_POINTERDOWN:
     case WM_POINTERUP:
     case WM_POINTERUPDATE:
+      MaybeHideCursor(false);
       result = OnPointerEvents(msg, wParam, lParam);
       if (result) {
         DispatchPendingEvents();
@@ -5670,12 +5741,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_LBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                                   MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDOWN:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5688,12 +5761,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONDOWN:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDown, 0, lParamToClient(lParam), false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5706,6 +5781,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCMBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDoubleClick, 0, lParamToClient(lParam),
                              false, MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
@@ -5713,6 +5789,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_RBUTTONDOWN:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE(),
@@ -5729,6 +5806,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_RBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE());
@@ -5736,6 +5814,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCRBUTTONDOWN:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDown, 0, lParamToClient(lParam), false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE());
@@ -5750,6 +5829,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCRBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, 0, lParamToClient(lParam),
                                   false, MouseButton::eSecondary,
                                   MOUSE_INPUT_SOURCE());
@@ -5766,6 +5846,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_XBUTTONUP:
     case WM_NCXBUTTONDOWN:
     case WM_NCXBUTTONUP:
+      MaybeHideCursor(false);
+
       *aRetValue = TRUE;
       switch (GET_XBUTTON_WPARAM(wParam)) {
         case XBUTTON1:
@@ -5939,10 +6021,13 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     // events are fired. Instead, set either the sJustGotActivate or
     // gJustGotDeactivate flags and activate/deactivate once the focus
     // events arrive.
-    case WM_ACTIVATE:
-      if (mWidgetListener) {
-        int32_t fActive = LOWORD(wParam);
+    case WM_ACTIVATE: {
+      int32_t fActive = LOWORD(wParam);
+      if (!fActive) {
+        MaybeHideCursor(false);
+      }
 
+      if (mWidgetListener) {
         if (WA_INACTIVE == fActive) {
           // when minimizing a window, the deactivation and focus events will
           // be fired in the reverse order. Instead, just deactivate right away.
@@ -5973,7 +6058,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
       }
-      break;
+    } break;
 
     case WM_MOUSEACTIVATE:
       // A popup with a parent owner should not be activated when clicked but
