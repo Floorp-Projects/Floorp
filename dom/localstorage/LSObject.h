@@ -179,6 +179,9 @@ class LSObject final : public Storage {
   void BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aError) override;
 
+  void CheckpointExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                  ErrorResult& aError) override;
+
   void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aError) override;
 
