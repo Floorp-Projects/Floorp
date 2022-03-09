@@ -531,10 +531,6 @@ class LexicalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static LexicalScope* createWithData(
-      JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-      uint32_t firstFrameSlot, HandleScope enclosing);
-
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
       JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
@@ -613,10 +609,6 @@ class ClassBodyScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static ClassBodyScope* createWithData(
-      JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-      uint32_t firstFrameSlot, HandleScope enclosing);
-
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
       JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
@@ -743,11 +735,6 @@ class FunctionScope : public Scope {
       ShapeT envShape);
 
  private:
-  static FunctionScope* createWithData(
-      JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-      bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-      HandleScope enclosing);
-
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
 
   const RuntimeData& data() const {
@@ -810,11 +797,6 @@ class VarScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static VarScope* createWithData(JSContext* cx, ScopeKind kind,
-                                  MutableHandle<UniquePtr<RuntimeData>> data,
-                                  uint32_t firstFrameSlot,
-                                  bool needsEnvironment, HandleScope enclosing);
-
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
       JSContext* cx, ScopeKind kind,
@@ -965,10 +947,6 @@ class EvalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static EvalScope* createWithData(JSContext* cx, ScopeKind kind,
-                                   MutableHandle<UniquePtr<RuntimeData>> data,
-                                   HandleScope enclosing);
-
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
       JSContext* cx, ScopeKind scopeKind,
@@ -1058,10 +1036,6 @@ class ModuleScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static ModuleScope* createWithData(JSContext* cx,
-                                     MutableHandle<UniquePtr<RuntimeData>> data,
-                                     Handle<ModuleObject*> module,
-                                     HandleScope enclosing);
   template <typename AtomT, typename ShapeT>
   static bool prepareForScopeCreation(
       JSContext* cx,
