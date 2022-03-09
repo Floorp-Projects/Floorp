@@ -1635,9 +1635,6 @@ pref("security.insecure_connection_icon.enabled", true);
 // Show degraded UI for http pages in private mode.
 pref("security.insecure_connection_icon.pbmode.enabled", true);
 
-// For secure connections, show gray instead of green lock icon
-pref("security.secure_connection_icon_color_gray", true);
-
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);
 pref("security.insecure_connection_text.pbmode.enabled", false);
