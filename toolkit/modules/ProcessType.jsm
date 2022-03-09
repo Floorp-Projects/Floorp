@@ -28,7 +28,6 @@ const ProcessType = Object.freeze({
     web: "process-type-web",
     webIsolated: "process-type-webisolated",
     webServiceWorker: "process-type-webserviceworker",
-    webLargeAllocation: "process-type-weblargeallocation",
   },
 
   kFallback: "process-type-unknown",

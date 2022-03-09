@@ -618,7 +618,6 @@ enum WebIDLProcType {
  "extension",
  "privilegedabout",
  "privilegedmozilla",
- "webLargeAllocation",
  "withCoopCoep",
  "webServiceWorker",
  "browser",
