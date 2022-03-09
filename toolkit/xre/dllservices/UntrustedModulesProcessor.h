@@ -35,6 +35,22 @@ using ModulesTrustPromise = MozPromise<ModulesMapResult, nsresult, true>;
 using GetModulesTrustIpcPromise =
     MozPromise<Maybe<ModulesMapResult>, ipc::ResponseRejectReason, true>;
 
+struct UnprocessedModuleLoadInfoContainer final
+    : public LinkedListElement<UnprocessedModuleLoadInfoContainer> {
+  glue::EnhancedModuleLoadInfo mInfo;
+
+  template <typename T>
+  explicit UnprocessedModuleLoadInfoContainer(T&& aInfo)
+      : mInfo(std::move(aInfo)) {}
+
+  UnprocessedModuleLoadInfoContainer(
+      const UnprocessedModuleLoadInfoContainer&) = delete;
+  UnprocessedModuleLoadInfoContainer& operator=(
+      const UnprocessedModuleLoadInfoContainer&) = delete;
+};
+using UnprocessedModuleLoads =
+    AutoCleanLinkedList<UnprocessedModuleLoadInfoContainer>;
+
 class UntrustedModulesProcessor final : public nsIObserver {
  public:
   static RefPtr<UntrustedModulesProcessor> Create(
@@ -84,20 +100,18 @@ class UntrustedModulesProcessor final : public nsIObserver {
   void BackgroundProcessModuleLoadQueue();
   void ProcessModuleLoadQueue();
 
-  using LoadsVec = Vector<glue::EnhancedModuleLoadInfo>;
-
   // Extract the loading events from mUnprocessedModuleLoads to process and
   // move to mProcessedModuleLoads.  It's guaranteed that the total length of
   // mProcessedModuleLoads will not exceed |aMaxLength|.
-  LoadsVec ExtractLoadingEventsToProcess(size_t aMaxLength);
+  UnprocessedModuleLoads ExtractLoadingEventsToProcess(size_t aMaxLength);
 
   class ModulesMapResultWithLoads final {
    public:
     ModulesMapResultWithLoads(Maybe<ModulesMapResult>&& aModMapResult,
-                              LoadsVec&& aLoads)
+                              UnprocessedModuleLoads&& aLoads)
         : mModMapResult(std::move(aModMapResult)), mLoads(std::move(aLoads)) {}
     Maybe<ModulesMapResult> mModMapResult;
-    LoadsVec mLoads;
+    UnprocessedModuleLoads mLoads;
   };
 
   using GetModulesTrustPromise =
@@ -140,7 +154,7 @@ class UntrustedModulesProcessor final : public nsIObserver {
   Mutex mModuleCacheMutex;
 
   // The members in this group are protected by mUnprocessedMutex
-  Vector<glue::EnhancedModuleLoadInfo> mUnprocessedModuleLoads;
+  UnprocessedModuleLoads mUnprocessedModuleLoads;
   nsCOMPtr<nsIRunnable> mIdleRunnable;
 
   // This member must only be touched on mThread
