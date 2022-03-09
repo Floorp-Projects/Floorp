@@ -53,10 +53,9 @@ class AccountAbnormalitiesTest {
     @Test
     fun `LogoutWithoutAuth detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
-        val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerStarted(accountManager)
+        accountAbnormalities.onReady(mockk(relaxed = true))
 
         // Logout action must be preceded by auth.
         accountAbnormalities.userRequestedLogout()
@@ -66,10 +65,9 @@ class AccountAbnormalitiesTest {
     @Test
     fun `OverlappingFxaLogoutRequest detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
-        val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerStarted(accountManager)
+        accountAbnormalities.onReady(mockk(relaxed = true))
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
         // So far, so good. A regular logout request while being authenticated.
@@ -84,10 +82,9 @@ class AccountAbnormalitiesTest {
     @Test
     fun `callback logout abnormalities detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
-        val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerStarted(accountManager)
+        accountAbnormalities.onReady(mockk(relaxed = true))
 
         // User didn't request this logout.
         accountAbnormalities.onLoggedOut()
@@ -100,7 +97,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerStarted(accountManager)
+        accountAbnormalities.onReady(null)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
         verify { crashReporter wasNot Called }
@@ -110,7 +107,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities2 = newAccountAbnormalities(crashReporter, this.coroutineContext)
         // mock accountManager doesn't have an account, but we expect it to have one since we
         // were authenticated before our "restart".
-        accountAbnormalities2.accountManagerStarted(accountManager)
+        accountAbnormalities2.onReady(null)
 
         assertCaughtException<AbnormalFxaEvent.MissingExpectedAccountAfterStartup>(crashReporter)
     }
@@ -118,10 +115,9 @@ class AccountAbnormalitiesTest {
     @Test
     fun `logout happy case`() = runBlocking {
         val crashReporter: CrashReporter = mockk()
-        val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = newAccountAbnormalities(crashReporter, coroutineContext)
-        accountAbnormalities.accountManagerStarted(accountManager)
+        accountAbnormalities.onReady(mockk(relaxed = true))
 
         // We saw an auth event, then user requested a logout.
         accountAbnormalities.onAuthenticated(mockk(), mockk())
