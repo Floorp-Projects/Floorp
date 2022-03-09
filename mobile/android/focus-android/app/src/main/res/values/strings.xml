@@ -485,7 +485,7 @@
     <string name="onboarding_history_title">Browse like it never happened</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">One tap erases your browsing history and cookies — and stops ads from following your around.</string>
+    <string name="onboarding_history_description" moz:removedIn="100" tools:ignore="UnusedResources">One tap erases your browsing history and cookies — and stops ads from following your around.</string>
     <string name="onboarding_history_description2">One tap erases your browsing history and cookies — and stops ads from following you around.</string>
 
     <!-- Onboarding: Protection Title -->
