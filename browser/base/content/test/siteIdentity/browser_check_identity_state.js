@@ -18,10 +18,6 @@ function loadNewTab(url) {
   return BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
 }
 
-function getIdentityMode(aWindow = window) {
-  return aWindow.document.getElementById("identity-box").className;
-}
-
 function getConnectionState() {
   // Prevents items that are being lazy loaded causing issues
   document.getElementById("identity-icon-box").click();
@@ -878,33 +874,4 @@ add_task(async function test_pb_mode() {
     [HTTPS_FIRST_PBM_PREF, false],
   ];
   await pbModeTest(prefs, false);
-});
-
-/**
- * Tests that sites opened via the PDF viewer have the correct identity state.
- */
-add_task(async function test_pdf() {
-  const PDF_URI_NOSCHEME =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "example.com"
-    ) + "file_pdf.pdf";
-
-  const PDF_URI_SECURE = "https://" + PDF_URI_NOSCHEME;
-  const PDF_URI_INSECURE = "http://" + PDF_URI_NOSCHEME;
-
-  await BrowserTestUtils.withNewTab(PDF_URI_INSECURE, async () => {
-    is(
-      getIdentityMode(),
-      "notSecure",
-      "Identity should be notSecure for a PDF served via HTTP."
-    );
-  });
-  await BrowserTestUtils.withNewTab(PDF_URI_SECURE, async () => {
-    is(
-      getIdentityMode(),
-      "verifiedDomain",
-      "Identity should be verifiedDomain for a PDF served via HTTPS."
-    );
-  });
 });
