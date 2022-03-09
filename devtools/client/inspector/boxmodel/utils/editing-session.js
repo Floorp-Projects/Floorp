@@ -87,12 +87,11 @@ EditingSession.prototype = {
    * @return {Number} The property index in the rule.
    */
   getPropertyIndex: function(name, rule = this._rules[0]) {
-    const elementStyleRule = this._rules[0];
-    if (!elementStyleRule.declarations.length) {
+    if (!rule.declarations.length) {
       return -1;
     }
 
-    return elementStyleRule.declarations.findIndex(p => p.name === name);
+    return rule.declarations.findIndex(p => p.name === name);
   },
 
   /**
