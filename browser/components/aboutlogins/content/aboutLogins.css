@@ -15,7 +15,7 @@ body {
   --sidebar-width: 320px;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: 1fr;
 }
 
 @media (max-width: 830px) {
