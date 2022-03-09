@@ -16,6 +16,17 @@ browser.jar:
   content/builtin-themes/light                     (light/*.css)
   content/builtin-themes/light/manifest.json       (light/manifest.json)
 
+  content/builtin-themes/lepton                    (lepton/*.svg)
+  content/builtin-themes/lepton/experiment.css     (lepton/experiment.css)
+  content/builtin-themes/lepton/manifest.json      (lepton/manifest.json)
+
+  content/builtin-themes/motion                    (motion/*.svg)
+  content/builtin-themes/motion/experiment.css     (motion/experiment.css)
+  content/builtin-themes/motion/manifest.json      (motion/manifest.json)
+
+  skin/classic/browser/lepton/userChrome.css       (lepton/userChrome.css)
+  skin/classic/browser/motion/userChrome.css       (motion/userChrome.css)
+
   content/builtin-themes/monochromatic/lush/soft                          (monochromatic/lush/soft/*.svg)
   content/builtin-themes/monochromatic/lush/soft/manifest.json            (monochromatic/lush/soft/manifest.json)
   content/builtin-themes/monochromatic/lush/balanced                      (monochromatic/lush/balanced/*.svg)
