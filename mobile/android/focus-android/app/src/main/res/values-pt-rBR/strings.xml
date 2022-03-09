@@ -498,6 +498,9 @@
     <!-- Onboarding: Description -->
     <string name="onboarding_description">Navegação privativa de nível superior quando você quiser</string>
 
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Mais invisível do que incógnito</string>
+
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
     <string name="onboarding_incognito_description">%s é um navegador que prioriza a privacidade, com proteção integrada extra forte contra rastreamento e cookies.</string>
