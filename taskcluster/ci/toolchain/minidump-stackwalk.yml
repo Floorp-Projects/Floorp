@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    description: "minidump_stackwalk toolchain build"
+    description: "minidump-stackwalk toolchain build"
     attributes:
         local-toolchain: true
     worker-type: b-linux
@@ -11,7 +11,7 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-minidump-stackwalk.sh
-        toolchain-artifact: public/build/minidump_stackwalk.tar.zst
+        toolchain-artifact: public/build/minidump-stackwalk.tar.zst
     run-on-projects:
         - trunk
     fetches:

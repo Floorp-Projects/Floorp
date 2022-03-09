@@ -365,7 +365,7 @@ class BaseBootstrapper(object):
 
     def ensure_minidump_stackwalk_packages(self):
         """
-        Install minidump_stackwalk.
+        Install minidump-stackwalk.
         """
         pass
 

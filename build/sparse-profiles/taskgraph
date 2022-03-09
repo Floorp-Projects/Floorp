@@ -74,7 +74,7 @@ path:other-licenses/bsdiff/
 path:other-licenses/nsis/Contrib/CityHash/cityhash/
 path:toolkit/mozapps/update/updater
 
-# for the minidump_stackwalk toolchain task
+# for the minidump-stackwalk toolchain task
 path:toolkit/crashreporter
 path:tools/crashreporter/
 path:mfbt

@@ -239,7 +239,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact("fix-stacks")
 
     def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump_stackwalk")
+        self.install_toolchain_artifact("minidump-stackwalk")
 
     def _update_package_manager(self):
         pass

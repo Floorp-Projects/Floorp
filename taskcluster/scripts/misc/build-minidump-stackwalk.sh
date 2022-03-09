@@ -3,12 +3,11 @@ set -x -e -v
 
 # minidump-stackwalk is just one sub-crate of the rust-minidump project,
 # (but it depends on other subcrates, so we *do* need the whole rust-minidump).
-# We need to specifically tell Cargo to build just this binary, and then extract
-# and rename it (it's officially built with a "-" in its name, but we prefer "_"
-# here, as that was the name of its predecessors).
+# We need to specifically tell Cargo to build just this binary. The rest
+# of this is just making sure all the compiler toolchains are setup and
+# little quirks of cross-compiling a self-contained binary.
 FETCH=rust-minidump
-LOCAL_PROJECT=minidump-stackwalk
-PROJECT=minidump_stackwalk
+PROJECT=minidump-stackwalk
 COMPRESS_EXT=zst
 
 # Needed by osx-cross-linker.
@@ -81,14 +80,13 @@ PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR/$FETCH
 
-cargo build --verbose --release --target "$TARGET" --bin $LOCAL_PROJECT $FEATURES
+cargo build --verbose --release --target "$TARGET" --bin $PROJECT $FEATURES
 
+cd ..
 mkdir $PROJECT
-cp target/$TARGET/release/${LOCAL_PROJECT}${EXE} ${PROJECT}/${PROJECT}${EXE}
+cp $FETCH/target/$TARGET/release/${PROJECT}${EXE} ${PROJECT}/${PROJECT}${EXE}
 tar -acf ${PROJECT}.tar.$COMPRESS_EXT $PROJECT
 mkdir -p $UPLOAD_DIR
 cp ${PROJECT}.tar.$COMPRESS_EXT $UPLOAD_DIR
-
-cd ..
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh
