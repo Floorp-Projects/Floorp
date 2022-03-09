@@ -38,6 +38,16 @@ pub struct Compiler {
     suffix_cache: SuffixCache,
     utf8_seqs: Option<Utf8Sequences>,
     byte_classes: ByteClassSet,
+    // This keeps track of extra bytes allocated while compiling the regex
+    // program. Currently, this corresponds to two things. First is the heap
+    // memory allocated by Unicode character classes ('InstRanges'). Second is
+    // a "fake" amount of memory used by empty sub-expressions, so that enough
+    // empty sub-expressions will ultimately trigger the compiler to bail
+    // because of a size limit restriction. (That empty sub-expressions don't
+    // add to heap memory usage is more-or-less an implementation detail.) In
+    // the second case, if we don't bail, then an excessively large repetition
+    // on an empty sub-expression can result in the compiler using a very large
+    // amount of CPU time.
     extra_inst_bytes: usize,
 }
 
@@ -260,7 +270,7 @@ impl Compiler {
 
         self.check_size()?;
         match *expr.kind() {
-            Empty => Ok(None),
+            Empty => self.c_empty(),
             Literal(hir::Literal::Unicode(c)) => self.c_char(c),
             Literal(hir::Literal::Byte(b)) => {
                 assert!(self.compiled.uses_bytes());
@@ -376,6 +386,19 @@ impl Compiler {
             Alternation(ref es) => self.c_alternate(&**es),
             Repetition(ref rep) => self.c_repeat(rep),
         }
+    }
+
+    fn c_empty(&mut self) -> ResultOrEmpty {
+        // See: https://github.com/rust-lang/regex/security/advisories/GHSA-m5pq-gvj9-9vr8
+        // See: CVE-2022-24713
+        //
+        // Since 'empty' sub-expressions don't increase the size of
+        // the actual compiled object, we "fake" an increase in its
+        // size so that our 'check_size_limit' routine will eventually
+        // stop compilation if there are too many empty sub-expressions
+        // (e.g., via a large repetition).
+        self.extra_inst_bytes += std::mem::size_of::<Inst>();
+        Ok(None)
     }
 
     fn c_capture(&mut self, first_slot: usize, expr: &Hir) -> ResultOrEmpty {
@@ -496,7 +519,7 @@ impl Compiler {
         let mut exprs = exprs.into_iter();
         let Patch { mut hole, entry } = loop {
             match exprs.next() {
-                None => return Ok(None),
+                None => return self.c_empty(),
                 Some(e) => {
                     if let Some(p) = self.c(e)? {
                         break p;

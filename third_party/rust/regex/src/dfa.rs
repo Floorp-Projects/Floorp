@@ -1353,7 +1353,6 @@ impl<'a> Fsm<'a> {
         match self.cache.trans.next(si, self.byte_class(b)) {
             STATE_UNKNOWN => self.exec_byte(qcur, qnext, si, b),
             STATE_QUIT => None,
-            STATE_DEAD => Some(STATE_DEAD),
             nsi => Some(nsi),
         }
     }
@@ -1387,7 +1386,6 @@ impl<'a> Fsm<'a> {
         };
         match self.cache.start_states[flagi] {
             STATE_UNKNOWN => {}
-            STATE_DEAD => return Some(STATE_DEAD),
             si => return Some(si),
         }
         q.clear();

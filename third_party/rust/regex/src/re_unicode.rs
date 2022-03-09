@@ -538,7 +538,7 @@ impl Regex {
         mut rep: R,
     ) -> Cow<'t, str> {
         // If we know that the replacement doesn't have any capture expansions,
-        // then we can fast path. The fast path can make a tremendous
+        // then we can use the fast path. The fast path can make a tremendous
         // difference:
         //
         //   1) We use `find_iter` instead of `captures_iter`. Not asking for
