@@ -42,7 +42,13 @@ async function addGroupTest(shouldRebuild) {
     await DomainGroupBuilder.rebuild(snapshots);
   } else {
     await DomainGroupBuilder.update({
-      addedUrls: new Set(TEST_URLS),
+      addedItems: new Set(
+        TEST_URLS.map(url => {
+          return {
+            url,
+          };
+        })
+      ),
       removedUrls: new Set(),
     });
   }
@@ -76,7 +82,7 @@ async function modifyGroupTest(shouldRebuild) {
     await DomainGroupBuilder.rebuild(snapshots);
   } else {
     await DomainGroupBuilder.update({
-      addedUrls: new Set([TEST_URLS_EXTRA]),
+      addedItems: new Set([{ url: TEST_URLS_EXTRA }]),
       removedUrls: new Set(),
     });
   }
@@ -111,7 +117,7 @@ async function deleteGroupTest(shouldRebuild) {
     await DomainGroupBuilder.rebuild(snapshots);
   } else {
     await DomainGroupBuilder.update({
-      addedUrls: new Set(),
+      addedItems: new Set(),
       removedUrls: new Set([TEST_URLS_EXTRA, ...TEST_URLS]),
     });
   }

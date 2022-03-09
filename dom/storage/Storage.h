@@ -118,6 +118,9 @@ class Storage : public nsISupports, public nsWrapperCache {
   virtual void BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aRv) {}
 
+  virtual void CheckpointExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                          ErrorResult& aRv) {}
+
   virtual void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aRv) {}
 

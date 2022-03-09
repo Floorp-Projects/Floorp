@@ -259,6 +259,7 @@ public final class GeckoRuntime implements Parcelable {
    * @param url validated Url being requested to be opened in a new window.
    * @return SessionID to use for the request.
    */
+  @SuppressLint("WrongThread") // for .isOpen() which is called on the UI thread
   @WrapForJNI(calledFrom = "gecko")
   private static @NonNull GeckoResult<String> serviceWorkerOpenWindow(final @NonNull String url) {
     if (sRuntime != null && sRuntime.mServiceWorkerDelegate != null) {

@@ -190,7 +190,6 @@ static void WeakCollection_trace(JSTracer* trc, JSObject* obj) {
 }
 
 static void WeakCollection_finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->maybeOnHelperThread());
   if (ObjectValueWeakMap* map = obj->as<WeakCollectionObject>().getMap()) {
     fop->delete_(obj, map, MemoryUse::WeakMapObject);
   }

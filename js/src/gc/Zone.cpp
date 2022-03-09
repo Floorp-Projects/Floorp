@@ -139,9 +139,9 @@ void ZoneAllocPolicy::decMemory(size_t nbytes) {
   // Unfortunately we don't have enough context here to know whether we're being
   // called on behalf of the collector so we have to do a TLS lookup to find
   // out.
-  JSContext* cx = TlsContext.get();
+  JSFreeOp* fop = TlsFreeOp.get();
   zone_->decNonGCMemory(this, nbytes, MemoryUse::ZoneAllocPolicy,
-                        cx->defaultFreeOp()->isCollecting());
+                        fop->isCollecting());
 }
 
 JS::Zone::Zone(JSRuntime* rt, Kind kind)

@@ -68,9 +68,16 @@ struct LSSimpleRequestPreloadedParams
   PrincipalInfo storagePrincipalInfo;
 };
 
+struct LSSimpleRequestGetStateParams
+{
+  PrincipalInfo principalInfo;
+  PrincipalInfo storagePrincipalInfo;
+};
+
 union LSSimpleRequestParams
 {
   LSSimpleRequestPreloadedParams;
+  LSSimpleRequestGetStateParams;
 };
 
 /**

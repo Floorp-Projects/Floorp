@@ -24,7 +24,6 @@
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
-#include "gc/MaybeRooted.h"        // MaybeRooted
 #include "gc/Rooting.h"      // HandleScope, HandleShape, MutableHandleShape
 #include "js/GCPolicyAPI.h"  // GCPolicy, IgnoreGCPolicy
 #include "js/HeapAPI.h"      // CellFlagBitsReservedForGC
@@ -336,13 +335,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   template <typename F>
   void applyScopeDataTyped(F&& f);
 
-  template <typename EnvironmentT>
-  static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
-                                       bool needsEnvironment);
-
-  template <typename EnvironmentT>
-  static bool updateEnvShapeIfRequired(JSContext* cx,
-                                       mozilla::Maybe<uint32_t>* envShape,
+  static void updateEnvShapeIfRequired(mozilla::Maybe<uint32_t>* envShape,
                                        bool needsEnvironment);
 
  public:
@@ -448,12 +441,6 @@ inline size_t SizeOfScopeData(uint32_t length) {
 template <typename ScopeT, typename AtomT>
 using AbstractScopeData = typename ScopeT::template AbstractData<AtomT>;
 
-template <typename ScopeT, typename AtomT>
-using MaybeRootedScopeData = std::conditional_t<
-    std::is_same_v<AtomT, JSAtom>,
-    MaybeRooted<UniquePtr<typename ScopeT::RuntimeData>, AllowGC::CanGC>,
-    MaybeRooted<AbstractScopeData<ScopeT, AtomT>*, AllowGC::NoGC>>;
-
 // Binding names are stored from `this+1`.
 // Make sure the class aligns the binding name size.
 template <typename SlotInfo>
@@ -531,16 +518,9 @@ class LexicalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static LexicalScope* createWithData(
-      JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-      uint32_t firstFrameSlot, HandleScope enclosing);
-
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
-      typename MaybeRootedScopeData<LexicalScope, AtomT>::MutableHandleType
-          data,
-      ShapeT envShape);
+  static void prepareForScopeCreation(ScopeKind kind, uint32_t firstFrameSlot,
+                                      LexicalScope::ParserData* data,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
   const RuntimeData& data() const {
@@ -613,16 +593,9 @@ class ClassBodyScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static ClassBodyScope* createWithData(
-      JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-      uint32_t firstFrameSlot, HandleScope enclosing);
-
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
-      typename MaybeRootedScopeData<ClassBodyScope, AtomT>::MutableHandleType
-          data,
-      ShapeT envShape);
+  static void prepareForScopeCreation(ScopeKind kind, uint32_t firstFrameSlot,
+                                      ClassBodyScope::ParserData* data,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
   const RuntimeData& data() const {
@@ -734,20 +707,12 @@ class FunctionScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx,
-      typename MaybeRootedScopeData<FunctionScope, AtomT>::MutableHandleType
-          data,
-      bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-      ShapeT envShape);
+  static void prepareForScopeCreation(FunctionScope::ParserData* data,
+                                      bool hasParameterExprs,
+                                      bool needsEnvironment,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
  private:
-  static FunctionScope* createWithData(
-      JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-      bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-      HandleScope enclosing);
-
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
 
   const RuntimeData& data() const {
@@ -810,16 +775,11 @@ class VarScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static VarScope* createWithData(JSContext* cx, ScopeKind kind,
-                                  MutableHandle<UniquePtr<RuntimeData>> data,
-                                  uint32_t firstFrameSlot,
-                                  bool needsEnvironment, HandleScope enclosing);
-
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx, ScopeKind kind,
-      typename MaybeRootedScopeData<VarScope, AtomT>::MutableHandleType data,
-      uint32_t firstFrameSlot, bool needsEnvironment, ShapeT envShape);
+  static void prepareForScopeCreation(ScopeKind kind,
+                                      VarScope::ParserData* data,
+                                      uint32_t firstFrameSlot,
+                                      bool needsEnvironment,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
 
@@ -881,12 +841,7 @@ class GlobalScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  static GlobalScope* create(JSContext* cx, ScopeKind kind,
-                             Handle<RuntimeData*> data);
-
-  static GlobalScope* createEmpty(JSContext* cx, ScopeKind kind) {
-    return create(cx, kind, nullptr);
-  }
+  static GlobalScope* createEmpty(JSContext* cx, ScopeKind kind);
 
  private:
   static GlobalScope* createWithData(
@@ -965,15 +920,9 @@ class EvalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static EvalScope* createWithData(JSContext* cx, ScopeKind kind,
-                                   MutableHandle<UniquePtr<RuntimeData>> data,
-                                   HandleScope enclosing);
-
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx, ScopeKind scopeKind,
-      typename MaybeRootedScopeData<EvalScope, AtomT>::MutableHandleType data,
-      ShapeT envShape);
+  static void prepareForScopeCreation(ScopeKind scopeKind,
+                                      EvalScope::ParserData* data,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
 
@@ -1058,15 +1007,8 @@ class ModuleScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static ModuleScope* createWithData(JSContext* cx,
-                                     MutableHandle<UniquePtr<RuntimeData>> data,
-                                     Handle<ModuleObject*> module,
-                                     HandleScope enclosing);
-  template <typename AtomT, typename ShapeT>
-  static bool prepareForScopeCreation(
-      JSContext* cx,
-      typename MaybeRootedScopeData<ModuleScope, AtomT>::MutableHandleType data,
-      HandleModuleObject module, ShapeT envShape);
+  static void prepareForScopeCreation(ModuleScope::ParserData* data,
+                                      mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
 
@@ -1765,11 +1707,6 @@ class MutableWrappedPtrOperations<ScopeIter, Wrapper>
 Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               const JSClass* cls, uint32_t numSlots,
                               ObjectFlags objectFlags);
-
-Shape* CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, ObjectFlags objectFlags);

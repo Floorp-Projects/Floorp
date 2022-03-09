@@ -853,7 +853,12 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
     return;
   }
 
-  mVideoSwapChain->Present(0, 0);
+  HRESULT hr;
+  hr = mVideoSwapChain->Present(0, 0);
+  if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
+    gfxCriticalNoteOnce << "video Present failed: " << gfx::hexa(hr);
+  }
+
   mPrevTexture = texture;
 }
 

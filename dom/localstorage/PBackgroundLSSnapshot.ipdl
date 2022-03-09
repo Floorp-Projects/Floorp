@@ -75,6 +75,14 @@ parent:
 
   async AsyncCheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
+  // A synchronous checkpoint. This should only be used by the snapshotting code
+  // to checkpoint an explicit snapshot.
+  sync SyncCheckpoint(LSWriteInfo[] writeInfos);
+
+  // A synchronous checkpoint and notify. This should only be used by the
+  // snapshotting code to checkpoint and notify an explicit snapshot.
+  sync SyncCheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
+
   async AsyncFinish();
 
   // A synchronous finish. This should only be used by the snapshotting code to

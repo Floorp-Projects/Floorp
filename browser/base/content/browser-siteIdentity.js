@@ -151,20 +151,9 @@ var gIdentityHandler = {
     );
   },
 
-  get _isPDFViewer() {
-    return gBrowser.contentPrincipal?.originNoSuffix == "resource://pdf.js";
-  },
-
   get _isPotentiallyTrustworthy() {
-    // For PDF viewer pages (pdf.js) we can't rely on the isSecureContext
-    // field. The backend will return isSecureContext = true, because the
-    // content principal has a resource:// URI. Since we don't check
-    // isSecureContext for PDF viewer pages anymore, otherwise secure
-    // contexts, such as a localhost, will me marked as insecure when showing
-    // PDFs.
     return (
       !this._isBrokenConnection &&
-      !this._isPDFViewer &&
       (this._isSecureContext ||
         gBrowser.selectedBrowser.documentURI?.scheme == "chrome")
     );
@@ -367,16 +356,6 @@ var gIdentityHandler = {
       "dom.security.https_only_mode_pbm"
     );
     return this._httpsOnlyModeEnabledPBM;
-  },
-  get _useGrayLockIcon() {
-    delete this._useGrayLockIcon;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_useGrayLockIcon",
-      "security.secure_connection_icon_color_gray",
-      false
-    );
-    return this._useGrayLockIcon;
   },
 
   /**
@@ -629,6 +608,32 @@ var gIdentityHandler = {
     return result;
   },
 
+  _getIsSecureContext() {
+    if (gBrowser.contentPrincipal?.originNoSuffix != "resource://pdf.js") {
+      return gBrowser.securityUI.isSecureContext;
+    }
+
+    // For PDF viewer pages (pdf.js) we can't rely on the isSecureContext field.
+    // The backend will return isSecureContext = true, because the content
+    // principal has a resource:// URI. Instead use the URI of the selected
+    // browser to perform the isPotentiallyTrustWorthy check.
+
+    let principal;
+    try {
+      principal = Services.scriptSecurityManager.createContentPrincipal(
+        gBrowser.selectedBrowser.documentURI,
+        {}
+      );
+      return principal.isOriginPotentiallyTrustworthy;
+    } catch (error) {
+      Cu.reportError(
+        "Error while computing isPotentiallyTrustWorthy for pdf viewer page: " +
+          error
+      );
+      return false;
+    }
+  },
+
   /**
    * Update the identity user interface for the page currently being displayed.
    *
@@ -649,7 +654,7 @@ var gIdentityHandler = {
     // the documentation of the individual properties for details.
     this.setURI(uri);
     this._secInfo = gBrowser.securityUI.secInfo;
-    this._isSecureContext = gBrowser.securityUI.isSecureContext;
+    this._isSecureContext = this._getIsSecureContext();
 
     // Then, update the user interface with the available data.
     this.refreshIdentityBlock();
@@ -857,13 +862,6 @@ var gIdentityHandler = {
       );
     }
 
-    // Gray lock icon for secure connections if pref set
-    this._updateAttribute(
-      this._identityIcon,
-      "lock-icon-gray",
-      this._useGrayLockIcon
-    );
-
     // Push the appropriate strings out to the UI
     this._identityIcon.setAttribute("tooltiptext", tooltip);
 
@@ -1012,13 +1010,6 @@ var gIdentityHandler = {
     ) {
       ciphers = "weak";
     }
-
-    // Gray lock icon for secure connections if pref set
-    this._updateAttribute(
-      this._identityPopup,
-      "lock-icon-gray",
-      this._useGrayLockIcon
-    );
 
     // If HTTPS-Only Mode is enabled, check the permission status
     const privateBrowsingWindow = PrivateBrowsingUtils.isWindowPrivate(window);

@@ -1177,11 +1177,13 @@ set_define("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
 # ===================================================
 
 
-set_define(
-    "_WASI_EMULATED_PROCESS_CLOCKS",
-    True,
-    when=depends(target)(lambda t: t.os == "WASI"),
-)
+@depends(target.os)
+def is_wasi_target(os):
+    return os == "WASI"
+
+
+set_define("_WASI_EMULATED_PROCESS_CLOCKS", True, when=is_wasi_target)
+set_define("_WASI_EMULATED_GETPID", True, when=is_wasi_target)
 
 # Enable change-array-by-copy
 # ===================================================

@@ -153,18 +153,6 @@ bool RegExpObject::isOriginalFlagGetter(JSNative native, RegExpFlags* mask) {
   return false;
 }
 
-static inline bool IsMarkingTrace(JSTracer* trc) {
-  // Determine whether tracing is happening during normal marking.  We need to
-  // test all the following conditions, since:
-  //
-  //   1. During TraceRuntime, RuntimeHeapIsBusy() is true, but the
-  //      tracer might not be a marking tracer.
-  //   2. When a write barrier executes, isMarkingTracer is true, but
-  //      RuntimeHeapIsBusy() will be false.
-
-  return JS::RuntimeHeapIsCollecting() && trc->isMarkingTracer();
-}
-
 static const ClassSpec RegExpObjectClassSpec = {
     GenericCreateConstructor<js::regexp_construct, 2, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<RegExpObject>,
@@ -556,7 +544,11 @@ RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
-  if (IsMarkingTrace(trc) && trc->runtime()->gc.isShrinkingGC()) {
+  gc::GCRuntime* gc = &trc->runtime()->gc;
+  // Bug 1758095: isIncrementalGCInProgress() also returns true when called from
+  // the collector during a non-incremental GC.
+  if (trc->isMarkingTracer() && gc->isIncrementalGCInProgress() &&
+      gc->isShrinkingGC()) {
     discardJitCode();
   }
 

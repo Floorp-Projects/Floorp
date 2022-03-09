@@ -20,7 +20,8 @@ class MozlintParser(ArgumentParser):
                 "default": None,
                 "help": "Paths to file or directories to lint, like "
                 "'browser/components/loop' or 'mobile/android'. "
-                "Defaults to the current directory if not given.",
+                "If not provided, defaults to the files changed according "
+                "to --outgoing and --workdir.",
             },
         ],
         [

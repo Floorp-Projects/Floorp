@@ -962,7 +962,9 @@ public class WebExtensionController {
     message.callback.sendSuccess(null);
   }
 
-  /* package */ void newTab(final Message message, final WebExtension extension) {
+  /* package */
+  @SuppressLint("WrongThread") // for .isOpen
+  void newTab(final Message message, final WebExtension extension) {
     final GeckoBundle bundle = message.bundle;
 
     final WebExtension.TabDelegate delegate = mListener.getTabDelegate(extension);

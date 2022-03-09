@@ -29,7 +29,6 @@
 #include "jsmath.h"
 
 #include "frontend/CompilationStencil.h"
-#include "gc/FreeOp.h"
 #include "gc/PublicIterators.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -136,7 +135,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       gc(thisFromCtor()),
       gcInitialized(false),
       emptyString(nullptr),
-      defaultFreeOp_(nullptr),
 #if !JS_HAS_INTL_API
       thousandsSeparator(nullptr),
       decimalSeparator(nullptr),
@@ -199,8 +197,6 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes) {
   }
 
   mainContext_ = cx;
-
-  defaultFreeOp_ = cx->defaultFreeOp();
 
   if (!gc.init(maxbytes)) {
     return false;
@@ -565,17 +561,6 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
 }
 #endif
 
-JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime, bool isDefault)
-    : runtime_(maybeRuntime), isDefault(isDefault), isCollecting_(!isDefault) {
-  MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
-}
-
-JSFreeOp::~JSFreeOp() {
-  if (!jitPoisonRanges.empty()) {
-    jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
-  }
-}
-
 GlobalObject* JSRuntime::getIncumbentGlobal(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
 
@@ -792,13 +777,6 @@ bool js::CurrentThreadCanAccessRuntime(const JSRuntime* rt) {
 bool js::CurrentThreadCanAccessZone(Zone* zone) {
   return CurrentThreadCanAccessRuntime(zone->runtime_);
 }
-
-#ifdef DEBUG
-bool js::CurrentThreadIsPerformingGC() {
-  JSContext* cx = TlsContext.get();
-  return cx->defaultFreeOp()->isCollecting();
-}
-#endif
 
 JS_PUBLIC_API void JS::SetJSContextProfilerSampleBufferRangeStart(
     JSContext* cx, uint64_t rangeStart) {

@@ -288,14 +288,14 @@ void js::ForOfPIC::Chain::trace(JSTracer* trc) {
   TraceEdge(trc, &canonicalNextFunc_,
             "ForOfPIC ArrayIterator.prototype.next builtin.");
 
+  JSFreeOp* fop = TlsFreeOp.get();
   if (trc->isMarkingTracer()) {
     // Free all the stubs in the chain.
-    freeAllStubs(trc->runtime()->defaultFreeOp());
+    freeAllStubs(fop);
   }
 }
 
 static void ForOfPIC_finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->maybeOnHelperThread());
   if (ForOfPIC::Chain* chain =
           ForOfPIC::fromJSObject(&obj->as<NativeObject>())) {
     chain->finalize(fop, obj);

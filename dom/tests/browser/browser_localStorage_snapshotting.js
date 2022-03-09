@@ -71,6 +71,12 @@ async function beginExplicitSnapshot(knownTab) {
   });
 }
 
+async function checkpointExplicitSnapshot(knownTab) {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
+    return content.wrappedJSObject.checkpointExplicitSnapshot();
+  });
+}
+
 async function endExplicitSnapshot(knownTab) {
   await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
     return content.wrappedJSObject.endExplicitSnapshot();
@@ -97,6 +103,24 @@ async function verifySnapshotUsage(knownTab, expectedSnapshotUsage) {
     }
   );
   is(snapshotUsage, expectedSnapshotUsage, "Correct snapshot usage");
+}
+
+async function verifyParentState(expectedState) {
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    HELPER_PAGE_ORIGIN
+  );
+
+  let actualState = await Services.domStorageManager.getState(principal);
+
+  for (let [expectedKey, expectedValue] of Object.entries(expectedState)) {
+    ok(actualState.hasOwnProperty(expectedKey), "key present: " + expectedKey);
+    is(actualState[expectedKey], expectedValue, "value correct");
+  }
+  for (let actualKey of Object.keys(actualState)) {
+    if (!expectedState.hasOwnProperty(actualKey)) {
+      ok(false, "actual state has key it shouldn't have: " + actualKey);
+    }
+  }
 }
 
 // We spin up a ton of child processes.
@@ -642,6 +666,87 @@ add_task(async function() {
   await verifyState(writerTab1, {});
   await endExplicitSnapshot(writerTab1);
   await verifyHasSnapshot(writerTab1, false);
+
+  // Clean up.
+  await cleanupTabs(knownTabs);
+
+  clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+});
+
+/**
+ * Verify that datastore in the parent is correctly updated after a checkpoint.
+ */
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Force multiple web and webIsolated content processes so that the
+      // multi-e10s logic works correctly.
+      ["dom.ipc.processCount", 4],
+      ["dom.ipc.processCount.webIsolated", 2],
+      // Enable LocalStorage's testing API so we can explicitly create
+      // snapshots when needed.
+      ["dom.storage.testing", true],
+    ],
+  });
+
+  // Ensure that there is no localstorage data by forcing the origin to be
+  // cleared prior to the start of our test.
+  await clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+
+  // Open tabs.  Don't configure any of them yet.
+  const knownTabs = new KnownTabs();
+  const writerTab1 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer1",
+    knownTabs,
+    true
+  );
+
+  await verifyParentState({});
+
+  // Apply the initial mutation using an explicit snapshot. The explicit
+  // snapshot here ensures that the parent process have received the changes.
+  await beginExplicitSnapshot(writerTab1);
+  await verifyParentState({});
+  await applyMutations(writerTab1, [["key", "something"]]);
+  await verifyParentState({});
+  await endExplicitSnapshot(writerTab1);
+
+  await verifyParentState({ key: "something" });
+
+  // Begin an explicit snapshot in writerTab1, apply the first mutation in
+  // writerTab1 and checkpoint the explicit snapshot.
+  await beginExplicitSnapshot(writerTab1);
+  await verifyParentState({ key: "something" });
+  await applyMutations(writerTab1, [["key", "somethingBigger"]]);
+  await verifyParentState({ key: "something" });
+  await checkpointExplicitSnapshot(writerTab1);
+
+  await verifyParentState({ key: "somethingBigger" });
+
+  // Apply the second mutation in writerTab1 and checkpoint the explicit
+  // snapshot.
+  await applyMutations(writerTab1, [["key", null]]);
+  await verifyParentState({ key: "somethingBigger" });
+  await checkpointExplicitSnapshot(writerTab1);
+
+  await verifyParentState({});
+
+  // Apply the third mutation in writerTab1 and end the explicit snapshot.
+  await applyMutations(writerTab1, [["otherKey", "something"]]);
+  await verifyParentState({});
+  await endExplicitSnapshot(writerTab1);
+
+  await verifyParentState({ otherKey: "something" });
+
+  // Verify the final state, it should match the state after the third mutation
+  // has been applied and "commited". An explicit snapshot is used.
+  await beginExplicitSnapshot(writerTab1);
+  await verifyParentState({ otherKey: "something" });
+  await verifyState(writerTab1, { otherKey: "something" });
+  await endExplicitSnapshot(writerTab1);
+
+  await verifyParentState({ otherKey: "something" });
 
   // Clean up.
   await cleanupTabs(knownTabs);

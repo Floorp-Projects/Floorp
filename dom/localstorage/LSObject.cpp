@@ -835,6 +835,29 @@ void LSObject::BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
   mInExplicitSnapshot = true;
 }
 
+void LSObject::CheckpointExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                          ErrorResult& aError) {
+  AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  if (!mInExplicitSnapshot) {
+    aError.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
+  AssertExplicitSnapshotInvariants(*this);
+
+  nsresult rv = mDatabase->CheckpointExplicitSnapshot();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+}
+
 void LSObject::EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aError) {
   AssertIsOnOwningThread();

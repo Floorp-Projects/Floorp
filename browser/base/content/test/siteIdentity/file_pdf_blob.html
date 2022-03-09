@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+</head>
+<body>
+  <script>
+    let blob = new Blob(["x"], { type: "application/pdf" });
+    let blobURL = URL.createObjectURL(blob);
+
+    let link = document.createElement("a");
+    link.innerText = "PDF blob";
+    link.target = "_blank";
+    link.href = blobURL;
+    document.body.appendChild(link);
+  </script>
+</body>
+</html>

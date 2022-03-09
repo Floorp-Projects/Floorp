@@ -10,6 +10,7 @@ const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/67890";
 const TEST_URL4 = "https://example.com/135246";
 const TEST_URL5 = "https://example.com/531246";
+const TEST_PINNED_URL = "https://example.com/pinned";
 
 async function delete_all_groups() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
@@ -32,7 +33,10 @@ async function addInteractionsAndSnapshots(data) {
       await Snapshots.add({ url: item });
     } else {
       await addInteractions([item]);
-      await Snapshots.add({ url: item.url });
+      await Snapshots.add({
+        url: item.url,
+        userPersisted: item.userPersisted ?? Snapshots.USER_PERSISTED.NO,
+      });
     }
   }
 }
@@ -401,16 +405,44 @@ add_task(async function test_get_snapshots_sortBy() {
 });
 
 add_task(async function test_minimum_size() {
-  let newGroup = { title: "Test Group 2", builder: "domain" };
   let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
-  let groupId = await SnapshotGroups.add(newGroup, urls);
+  let groupId = await SnapshotGroups.add(
+    { title: "Test Group 2", builder: "domain" },
+    urls
+  );
+
+  let pinnedUrls = [];
+  let pinnedGroupId = await SnapshotGroups.add(
+    { title: "Test Pinned", builder: "pinned" },
+    pinnedUrls
+  );
 
   let groups = await SnapshotGroups.query();
   Assert.equal(
     groups.length,
     0,
-    "Should return no groups when they are under the snapshot size limit."
+    "Should not have returned groups under the limit nor fixed groups with no items"
   );
+
+  // The pinned group is a special builder that should always have the group
+  // returned if it exists.
+  pinnedUrls.push(TEST_PINNED_URL);
+  await addInteractionsAndSnapshots([
+    { url: TEST_PINNED_URL, userPersisted: Snapshots.USER_PERSISTED.PINNED },
+  ]);
+  await SnapshotGroups.updateUrls(pinnedGroupId, pinnedUrls);
+
+  groups = await SnapshotGroups.query();
+  Assert.equal(
+    groups.length,
+    1,
+    "Should have returned the pinned group and no other groups under the limit"
+  );
+  assertSnapshotGroup(groups[0], {
+    title: "Test Pinned",
+    builder: "pinned",
+    snapshotCount: 1,
+  });
 
   urls.push(TEST_URL4);
   await SnapshotGroups.updateUrls(groupId, urls);
@@ -418,13 +450,22 @@ add_task(async function test_minimum_size() {
   groups = await SnapshotGroups.query();
   Assert.equal(
     groups.length,
-    1,
-    "Should have returned one group above the snapshot size limit"
+    2,
+    "Should have returned both groups now they are over the limit"
   );
+
+  // Ensure the results are in a consistent order.
+  groups.sort((a, b) => a.title.localeCompare(b.title));
+
   assertSnapshotGroup(groups[0], {
     title: "Test Group 2",
     builder: "domain",
     snapshotCount: 4,
+  });
+  assertSnapshotGroup(groups[1], {
+    title: "Test Pinned",
+    builder: "pinned",
+    snapshotCount: 1,
   });
 });
 

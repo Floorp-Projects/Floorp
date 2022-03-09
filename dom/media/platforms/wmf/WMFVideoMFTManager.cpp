@@ -70,7 +70,7 @@ extern const GUID CLSID_WebmMfVpxDec = {
     0x4c6e,
     {0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00}};
 
-#if _WIN32_WINNT < _WIN32_WINNT_WIN8
+#if !defined(__MINGW32__) && _WIN32_WINNT < _WIN32_WINNT_WIN8
 const GUID MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT = {
     0x851745d5,
     0xc3d6,

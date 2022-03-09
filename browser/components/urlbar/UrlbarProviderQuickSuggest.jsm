@@ -223,11 +223,23 @@ class ProviderQuickSuggest extends UrlbarProvider {
       requestId: suggestion.request_id,
     };
 
-    let isBestMatch =
-      suggestion.is_best_match &&
+    // Determine if the suggestion itself is a best match.
+    let isSuggestionBestMatch = false;
+    if (typeof suggestion._test_is_best_match == "boolean") {
+      isSuggestionBestMatch = suggestion._test_is_best_match;
+    } else if (UrlbarQuickSuggest.config.best_match) {
+      let { best_match } = UrlbarQuickSuggest.config;
+      isSuggestionBestMatch =
+        best_match.min_search_string_length <= searchString.length &&
+        !best_match.blocked_suggestion_ids.includes(suggestion.block_id);
+    }
+
+    // Determine if the urlbar result should be a best match.
+    let isResultBestMatch =
+      isSuggestionBestMatch &&
       UrlbarPrefs.get("bestMatchEnabled") &&
       UrlbarPrefs.get("suggest.bestmatch");
-    if (isBestMatch) {
+    if (isResultBestMatch) {
       // Show the result as a best match. Best match titles don't include the
       // `full_keyword`, and the user's search string is highlighted.
       payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
@@ -247,7 +259,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
 
-    if (isBestMatch) {
+    if (isResultBestMatch) {
       result.isBestMatch = true;
       result.suggestedIndex = 1;
     } else if (
@@ -282,7 +294,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     //   Record the event
     if (
       !UrlbarPrefs.get("isBestMatchExperiment") ||
-      (suggestion.is_best_match &&
+      (isSuggestionBestMatch &&
         (!UrlbarPrefs.get("bestMatchEnabled") ||
           UrlbarPrefs.get("suggest.bestmatch")))
     ) {
