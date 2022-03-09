@@ -334,15 +334,16 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1704653",
+    id: "bug1756054",
     platform: "all",
-    domain: "tsky.in",
-    bug: "1704653",
+    domain: "tataplayrecharge.com",
+    bug: "1756054",
     contentScripts: {
-      matches: ["*://tsky.in/*"],
+      matches: ["*://www.tataplayrecharge.com/*"],
       css: [
         {
-          file: "injections/css/bug1704653-tsky.in-clear-float.css",
+          file:
+            "injections/css/bug1756054-tataplayrecharge.com-clear-float.css",
         },
       ],
     },
@@ -508,20 +509,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1738316",
-    platform: "android",
-    domain: "vuoriclothing.com",
-    bug: "1738316",
-    contentScripts: {
-      matches: ["*://vuoriclothing.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1741234",
     platform: "all",
     domain: "patient.alphalabs.ca",
@@ -531,20 +518,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1740542",
-    platform: "desktop",
-    domain: "tesla.com",
-    bug: "1740542",
-    contentScripts: {
-      matches: ["*://*.tesla.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1740542-tesla.com-footer-links.css",
         },
       ],
     },
@@ -564,20 +537,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1749565",
-    platform: "android",
-    domain: "bonappetit.com",
-    bug: "1749565",
-    contentScripts: {
-      matches: ["*://*.bonappetit.com/recipe/*"],
-      css: [
-        {
-          file: "injections/css/bug1749565-bonappetit.com-grid-width-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1751022",
     platform: "android",
     domain: "chotot.com",
@@ -592,15 +551,16 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1751065",
+    id: "bug1754473",
     platform: "android",
-    domain: "chanel.com",
-    bug: "1751065",
+    domain: "m.intl.taobao.com",
+    bug: "1754473",
     contentScripts: {
-      matches: ["*://*.chanel.com/*"],
-      js: [
+      matches: ["*://m.intl.taobao.com/*"],
+      css: [
         {
-          file: "injections/js/bug1751065-chanel.com-effectiveType-shim.js",
+          file:
+            "injections/css/bug1754473-m.intl.taobao.com-number-arrow-buttons-overlapping-fix.css",
         },
       ],
     },
@@ -616,6 +576,35 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1748455-reddit.com-gallery-image-width-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1756692",
+    platform: "android",
+    domain: "zee5.com",
+    bug: "1756692",
+    contentScripts: {
+      matches: ["*://www.zee5.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1756692-effectiveType-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1756915",
+    platform: "desktop",
+    domain: "efectococuyo.com",
+    bug: "1756915",
+    contentScripts: {
+      matches: ["*://efectococuyo.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1756915-efectococuyo.com-shifted-content-fix.css",
         },
       ],
     },

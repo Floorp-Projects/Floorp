@@ -1,9 +1,0 @@
-/**
- * vuoriclothing.com - Missing product details
- * Bug #1738316 - https://bugzilla.mozilla.org/show_bug.cgi?id=1738316
- * WebCompat issue #90546 - https://webcompat.com/issues/90546
- */
-
-.grid > * {
-  min-width: 0;
-}
