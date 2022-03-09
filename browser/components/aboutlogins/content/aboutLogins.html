@@ -33,16 +33,14 @@
     <link rel="icon" href="chrome://branding/content/icon32.png">
   </head>
   <body>
+    <header>
+      <login-filter></login-filter>
+      <fxaccounts-button hidden></fxaccounts-button>
+      <menu-button></menu-button>
+    </header>
     <login-list></login-list>
-    <section>
-      <header>
-        <login-filter></login-filter>
-        <fxaccounts-button hidden></fxaccounts-button>
-        <menu-button></menu-button>
-      </header>
-      <login-item></login-item>
-      <login-intro></login-intro>
-    </section>
+    <login-item></login-item>
+    <login-intro></login-intro>
     <confirmation-dialog hidden></confirmation-dialog>
     <remove-logins-dialog hidden></remove-logins-dialog>
     <import-summary-dialog hidden></import-summary-dialog>
