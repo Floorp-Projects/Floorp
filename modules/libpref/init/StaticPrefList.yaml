@@ -2742,17 +2742,6 @@
   value: true
   mirror: always
 
-# Whether the Large-Allocation header is enabled.
-- name: dom.largeAllocationHeader.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: dom.largeAllocation.forceEnable
-  type: bool
-  value: false
-  mirror: always
-
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
