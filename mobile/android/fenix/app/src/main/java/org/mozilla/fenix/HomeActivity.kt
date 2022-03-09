@@ -324,8 +324,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             lifecycleScope.launch {
-                // Make sure accountManager is initialized.
-                components.backgroundServices.accountManager.start()
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 components.backgroundServices.accountManager.authenticatedAccount()?.let {
                     components.backgroundServices.accountManager.syncNow(
