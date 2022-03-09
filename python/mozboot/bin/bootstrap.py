@@ -296,7 +296,7 @@ def clone(vcs, no_interactive):
 
 
 def bootstrap(srcdir: Path, application_choice, no_interactive, no_system_changes):
-    args = [sys.executable, str(srcdir / "mach")]
+    args = [sys.executable, "mach"]
 
     if no_interactive:
         # --no-interactive is a global argument, not a command argument,
