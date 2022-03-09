@@ -148,34 +148,6 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                                map, mapLength, objectFlags);
 }
 
-Shape* js::CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags) {
-  Rooted<SharedPropMap*> map(cx);
-  uint32_t mapLength = 0;
-
-  RootedId id(cx);
-  for (; bi; bi++) {
-    BindingLocation loc = bi.location();
-    if (loc.kind() == BindingLocation::Kind::Environment) {
-      JSAtom* name = atomCache.getExistingAtomAt(cx, bi.name());
-      MOZ_ASSERT(name);
-      cx->markAtom(name);
-      id = NameToId(name->asPropertyName());
-      if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
-                               &mapLength, &objectFlags)) {
-        return nullptr;
-      }
-    }
-  }
-
-  uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
-  return SharedShape::getInitialOrPropMapShape(cx, cls, cx->realm(),
-                                               TaggedProto(nullptr), numFixed,
-                                               map, mapLength, objectFlags);
-}
-
 template <class DataT>
 inline size_t SizeOfAllocatedData(DataT* data) {
   return SizeOfScopeData<DataT>(data->length);

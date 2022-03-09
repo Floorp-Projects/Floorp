@@ -1713,11 +1713,6 @@ Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               const JSClass* cls, uint32_t numSlots,
                               ObjectFlags objectFlags);
 
-Shape* CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags);
-
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, ObjectFlags objectFlags);
 
