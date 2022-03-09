@@ -9,12 +9,9 @@ extern crate crossbeam_utils;
 extern crate cstr;
 #[macro_use]
 extern crate log;
-extern crate memmap2;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
-#[macro_use]
-extern crate rental;
 extern crate rkv;
 extern crate rust_cascade;
 extern crate sha2;
@@ -22,8 +19,6 @@ extern crate thin_vec;
 extern crate time;
 #[macro_use]
 extern crate xpcom;
-#[macro_use]
-extern crate malloc_size_of_derive;
 extern crate storage_variant;
 extern crate tempfile;
 
@@ -33,7 +28,6 @@ use wr_malloc_size_of as malloc_size_of;
 use byteorder::{LittleEndian, NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use memmap2::Mmap;
 use moz_task::{create_background_task_queue, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
@@ -132,30 +126,12 @@ impl MallocSizeOf for EnvAndStore {
     }
 }
 
-// In Rust, structs cannot have self references (if a struct gets moved, the compiler has no
-// guarantees that the references are still valid). In our case, since the memmapped data is at a
-// particular place in memory (and that's what we're referencing), we can use the rental crate to
-// create a struct that does reference itself.
-rental! {
-    mod holding {
-        use super::{Cascade, Mmap};
-
-        #[rental]
-        pub struct CRLiteFilter {
-            backing_file: Box<Mmap>,
-            cascade: Box<Cascade<'backing_file>>,
-        }
-    }
-}
-
 /// `SecurityState`
-#[derive(MallocSizeOf)]
 struct SecurityState {
     profile_path: PathBuf,
     env_and_store: Option<EnvAndStore>,
     int_prefs: HashMap<String, u32>,
-    #[ignore_malloc_size_of = "rental crate does not allow impls for rental structs"]
-    crlite_filter: Option<holding::CRLiteFilter>,
+    crlite_filter: Option<Cascade>,
     /// Maps issuer spki hashes to sets of serial numbers.
     crlite_stash: Option<HashMap<Vec<u8>, HashSet<Vec<u8>>>>,
     /// Maps an RFC 6962 LogID to a pair of 64 bit unix timestamps
@@ -529,15 +505,12 @@ impl SecurityState {
         if !path.exists() {
             return Ok(());
         }
-        let filter_file = File::open(path)?;
-        let mmap = unsafe { Mmap::map(&filter_file)? };
-        let crlite_filter = holding::CRLiteFilter::try_new(Box::new(mmap), |mmap| {
-            match Cascade::from_bytes(mmap)? {
-                Some(cascade) => Ok(cascade),
-                None => Err(SecurityStateError::from("invalid CRLite filter")),
-            }
-        })
-        .map_err(|_| SecurityStateError::from("unable to initialize CRLite filter"))?;
+        let mut filter_file = File::open(path)?;
+        let mut filter_bytes = Vec::new();
+        let _ = filter_file.read_to_end(&mut filter_bytes)?;
+        let crlite_filter = *Cascade::from_bytes(filter_bytes)
+            .map_err(|_| SecurityStateError::from("invalid CRLite filter"))?
+            .ok_or(SecurityStateError::from("expecting non-empty filter"))?;
 
         let mut path = get_store_path(&self.profile_path)?;
         path.push("crlite.coverage");
@@ -672,7 +645,7 @@ impl SecurityState {
         lookup_key.extend_from_slice(serial_number);
         debug!("CRLite lookup key: {:?}", lookup_key);
         let result = match &self.crlite_filter {
-            Some(crlite_filter) => crlite_filter.rent(|filter| filter.has(&lookup_key)),
+            Some(crlite_filter) => crlite_filter.has(&lookup_key),
             // This can only happen if the backing file was deleted or if it or our database has
             // become corrupted. In any case, we have no information.
             None => return nsICertStorage::STATE_NOT_COVERED,
@@ -878,6 +851,21 @@ impl SecurityState {
             }
         }
         Ok(())
+    }
+}
+
+impl MallocSizeOf for SecurityState {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.profile_path.size_of(ops)
+            + self.env_and_store.size_of(ops)
+            + self.int_prefs.size_of(ops)
+            + self
+                .crlite_filter
+                .as_ref()
+                .map_or(0, |crlite_filter| crlite_filter.approximate_size_of())
+            + self.crlite_stash.size_of(ops)
+            + self.crlite_coverage.size_of(ops)
+            + self.remaining_ops.size_of(ops)
     }
 }
 

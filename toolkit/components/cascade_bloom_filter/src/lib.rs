@@ -4,8 +4,6 @@
 
 extern crate nserror;
 extern crate nsstring;
-#[macro_use]
-extern crate rental;
 extern crate rust_cascade;
 extern crate thin_vec;
 #[macro_use]
@@ -19,25 +17,11 @@ use thin_vec::ThinVec;
 use xpcom::interfaces::nsICascadeFilter;
 use xpcom::{xpcom_method, RefPtr};
 
-// Cascade does not take ownership of the data, so we must own the data in order to pass its
-// reference to Cascade.
-rental! {
-    mod rentals {
-        use super::Cascade;
-
-        #[rental]
-        pub struct CascadeWithOwnedData {
-            owndata: Box<[u8]>,
-            cascade: Box<Cascade<'owndata>>,
-        }
-    }
-}
-
 #[derive(xpcom)]
 #[xpimplements(nsICascadeFilter)]
 #[refcnt = "nonatomic"]
 pub struct InitCascadeFilter {
-    filter: RefCell<Option<rentals::CascadeWithOwnedData>>,
+    filter: RefCell<Option<Cascade>>,
 }
 
 impl CascadeFilter {
@@ -49,14 +33,9 @@ impl CascadeFilter {
     xpcom_method!(set_filter_data => SetFilterData(data: *const ThinVec<u8>));
 
     fn set_filter_data(&self, data: &ThinVec<u8>) -> Result<(), nsresult> {
-        let filter = rentals::CascadeWithOwnedData::try_new_or_drop(
-            Vec::from(data.as_slice()).into_boxed_slice(),
-            |data| {
-                Cascade::from_bytes(data)
-                    .unwrap_or(None)
-                    .ok_or(NS_ERROR_INVALID_ARG)
-            },
-        )?;
+        let filter = *Cascade::from_bytes(data.to_vec())
+            .unwrap_or(None)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
         self.filter.borrow_mut().replace(filter);
         Ok(())
     }
@@ -66,7 +45,7 @@ impl CascadeFilter {
     fn has(&self, key: &nsACString) -> Result<bool, nsresult> {
         match self.filter.borrow().as_ref() {
             None => Err(NS_ERROR_NOT_INITIALIZED),
-            Some(filter) => Ok(filter.rent(|cascade| cascade.has(&*key))),
+            Some(filter) => Ok(filter.has(&*key)),
         }
     }
 }
