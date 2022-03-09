@@ -611,7 +611,6 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "nsstring",
- "rental",
  "rust_cascade",
  "thin-vec",
  "xpcom",
@@ -632,12 +631,9 @@ dependencies = [
  "crossbeam-utils 0.8.6",
  "cstr",
  "log",
- "malloc_size_of_derive",
- "memmap2 0.3.1",
  "moz_task",
  "nserror",
  "nsstring",
- "rental",
  "rkv",
  "rust_cascade",
  "sha2",
@@ -4431,9 +4427,9 @@ checksum = "8a654c5bda722c699be6b0fe4c0d90de218928da5b724c3e467fc48865c37263"
 
 [[package]]
 name = "rust_cascade"
-version = "0.6.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a5b9bba8f5b985e4923dadd273a987f83669083f3355d65c699e02b9d3d854d"
+checksum = "d09c17a9310f1eb79a67d307adffa7fa1c5943eaadcc21d4fb7f611536d66c4f"
 dependencies = [
  "byteorder",
  "digest",
