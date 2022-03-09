@@ -115,15 +115,20 @@ bool WindowFeatures::ParseBool(const nsCString& aValue) {
     return true;
   }
 
-  // Step 2. If `value` is a case-sensitive match for "yes", then return true.
+  // Step 2. If `value` is "yes", then return true.
   if (aValue == "yes") {
     return true;
   }
 
-  // Steps 3-4.
+  // Step 3. If `value` is "true", then return
+  if (aValue == "true") {
+    return true;
+  }
+
+  // Steps 4-5.
   int32_t parsed = ParseIntegerWithFallback(aValue);
 
-  // Step 5. Return false if `parsed` is 0, and true otherwise.
+  // Step 6. Return false if `parsed` is 0, and true otherwise.
   return parsed != 0;
 }
 
