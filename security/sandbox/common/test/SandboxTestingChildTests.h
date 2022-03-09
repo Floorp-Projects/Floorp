@@ -191,6 +191,14 @@ void RunTestsContent(SandboxTestingChild* child) {
   child->ErrnoTest("clock_gettime_thread"_ns, true,
                    [&] { return clock_gettime(thread, &tthread); });
 
+  // getcpu is allowed
+  // We're using syscall directly because:
+  // - sched_getcpu uses vdso and as a result doesn't go through the sandbox.
+  // - getcpu isn't defined in the header files we're using yet.
+  int c;
+  child->ErrnoTest("getcpu"_ns, true,
+                   [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
+
   // An abstract socket that does not starts with '/', so we don't want it to
   // work.
   // Checking ENETUNREACH should be thrown by SandboxBrokerClient::Connect()
@@ -368,6 +376,14 @@ void RunTestsSocket(SandboxTestingChild* child) {
                        return fd;
                      });
   }
+
+  // getcpu is allowed
+  // We're using syscall directly because:
+  // - sched_getcpu uses vdso and as a result doesn't go through the sandbox.
+  // - getcpu isn't defined in the header files we're using yet.
+  int c;
+  child->ErrnoTest("getcpu"_ns, true,
+                   [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
 #  endif  // XP_LINUX
 
 #else   // XP_UNIX
@@ -417,6 +433,13 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
   });
 
+  // getcpu is allowed
+  // We're using syscall directly because:
+  // - sched_getcpu uses vdso and as a result doesn't go through the sandbox.
+  // - getcpu isn't defined in the header files we're using yet.
+  int c;
+  child->ErrnoTest("getcpu"_ns, true,
+                   [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
