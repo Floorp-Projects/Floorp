@@ -740,8 +740,7 @@ const nsDependentCSubstring RemoteTypePrefix(
 }
 
 bool IsWebRemoteType(const nsACString& aContentProcessType) {
-  // Note: matches webIsolated as well as web (and webLargeAllocation, and
-  // webCOOP+COEP)
+  // Note: matches webIsolated, web, and webCOOP+COEP types.
   return StringBeginsWith(aContentProcessType, DEFAULT_REMOTE_TYPE);
 }
 
@@ -1052,15 +1051,6 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
 
   nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
   uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
-  // We never want to re-use Large-Allocation processes.
-  if (aRemoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
-      contentParents.Length() >= maxContentParents) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("GetNewOrUsedProcess: returning Large Used process"));
-    return GetNewOrUsedLaunchingBrowserProcess(DEFAULT_REMOTE_TYPE, aGroup,
-                                               aPriority,
-                                               /*aPreferUsed =*/false);
-  }
 
   // Let's try and reuse an existing process.
   contentParent = GetUsedBrowserProcess(

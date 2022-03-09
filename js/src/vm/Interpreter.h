@@ -411,7 +411,7 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        * handler. This is possible when the executed bytecode implements
        * break or return from inside a for-in loop.
        *
-       * In this case the emitter generates additional [enditer] and [gosub]
+       * In this case the emitter generates additional [enditer] and [goto]
        * opcodes to close all outstanding iterators and execute the finally
        * blocks. If such an [enditer] throws an exception, its pc can still
        * be inside several nested for-in loops and try-finally statements
@@ -420,7 +420,7 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        *
        * To address this, we make [enditer] always decrease the stack even
        * when its implementation throws an exception. Thus already executed
-       * [enditer] and [gosub] opcodes will have try notes with the stack
+       * [enditer] and [goto] opcodes will have try notes with the stack
        * depth exceeding the current one and this condition is what we use to
        * filter them out.
        */

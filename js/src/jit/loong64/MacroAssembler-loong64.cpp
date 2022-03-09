@@ -5285,8 +5285,7 @@ void MacroAssemblerLOONG64Compat::handleFailureWithHandlerTail(
   jump(a0);
 
   // If we found a finally block, this must be a baseline frame. Push
-  // two values expected by JSOp::Retsub: BooleanValue(true) and the
-  // exception.
+  // two values expected by JSOp::Retsub: the exception and BooleanValue(true).
   bind(&finally);
   ValueOperand exception = ValueOperand(a1);
   loadValue(Address(sp, offsetof(ResumeFromException, exception)), exception);
@@ -5296,8 +5295,8 @@ void MacroAssemblerLOONG64Compat::handleFailureWithHandlerTail(
           BaselineFrameReg);
   loadPtr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
 
-  pushValue(BooleanValue(true));
   pushValue(exception);
+  pushValue(BooleanValue(true));
   jump(a0);
 
   // Only used in debug mode. Return BaselineFrame->returnValue() to the

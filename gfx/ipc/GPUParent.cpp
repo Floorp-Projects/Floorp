@@ -511,17 +511,12 @@ mozilla::ipc::IPCResult GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut) {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvSimulateDeviceReset(
-    GPUDeviceData* aOut) {
+mozilla::ipc::IPCResult GPUParent::RecvSimulateDeviceReset() {
 #if defined(XP_WIN)
   DeviceManagerDx::Get()->ForceDeviceReset(
       ForcedDeviceResetReason::COMPOSITOR_UPDATED);
-  DeviceManagerDx::Get()->MaybeResetAndReacquireDevices();
 #endif
-  if (gfxVars::UseWebRender()) {
-    wr::RenderThread::Get()->SimulateDeviceReset();
-  }
-  RecvGetDeviceStatus(aOut);
+  wr::RenderThread::Get()->SimulateDeviceReset();
   return IPC_OK();
 }
 

@@ -2489,9 +2489,6 @@ pref("dom.ipc.keepProcessesAlive.privilegedabout", 1);
 // Disable support for SVG
 pref("svg.disabled", false);
 
-// Override default dom.ipc.processCount for some remote content process types.
-pref("dom.ipc.processCount.webLargeAllocation", 10);
-
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 

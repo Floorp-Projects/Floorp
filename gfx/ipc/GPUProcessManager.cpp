@@ -37,6 +37,7 @@
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsAppRunner.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -505,13 +506,11 @@ void GPUProcessManager::SimulateDeviceReset() {
   gfxPlatform::GetPlatform()->CompositorUpdated();
 
   if (mProcess) {
-    GPUDeviceData data;
-    if (mGPUChild && mGPUChild->SendSimulateDeviceReset(&data)) {
-      gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
+    if (mGPUChild) {
+      mGPUChild->SendSimulateDeviceReset();
     }
-    OnRemoteProcessDeviceReset(mProcess);
   } else {
-    OnInProcessDeviceReset(/* aTrackThreshold */ false);
+    wr::RenderThread::Get()->SimulateDeviceReset();
   }
 }
 

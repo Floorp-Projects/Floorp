@@ -7,43 +7,56 @@
 #ifndef mozilla_dom_ReadableStreamTee_h
 #define mozilla_dom_ReadableStreamTee_h
 
-#include "mozilla/dom/TeeState.h"
+#include "mozilla/dom/ReadRequest.h"
+#include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom {
+struct TeeState;
+enum class TeeBranch : bool;
+class ReadableStream;
+
 // Implementation of the Pull algorithm steps for ReadableStreamDefaultTee,
 // from
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
 // Step 12.
-class ReadableStreamDefaultTeePullAlgorithm final
-    : public UnderlyingSourcePullCallbackHelper {
-  RefPtr<TeeState> mTeeState;
-
+class ReadableStreamDefaultTeeSourceAlgorithms final
+    : public UnderlyingSourceAlgorithmsBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
-      ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
+      ReadableStreamDefaultTeeSourceAlgorithms, UnderlyingSourceAlgorithmsBase)
 
-  explicit ReadableStreamDefaultTeePullAlgorithm(TeeState* aTeeState)
-      : mTeeState(aTeeState) {}
+  ReadableStreamDefaultTeeSourceAlgorithms(TeeState* aTeeState,
+                                           TeeBranch aBranch)
+      : mTeeState(aTeeState), mBranch(aBranch) {}
 
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> PullCallback(JSContext* aCx,
-                                         nsIGlobalObject* aGlobal,
-                                         ErrorResult& aRv);
-
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> PullCallback(JSContext* aCx,
-                                         ReadableStreamController& aController,
-                                         ErrorResult& aRv) override {
-    nsCOMPtr<nsIGlobalObject> global(aController.GetParentObject());
-    return PullCallback(aCx, global, aRv);
+  MOZ_CAN_RUN_SCRIPT void StartCallback(JSContext* aCx,
+                                        ReadableStreamController& aController,
+                                        JS::MutableHandle<JS::Value> aRetVal,
+                                        ErrorResult& aRv) override {
+    aRetVal.setUndefined();
   }
 
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PullCallback(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) override;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) override;
+
+  void ErrorCallback() override {}
+
  protected:
-  ~ReadableStreamDefaultTeePullAlgorithm() override = default;
+  ~ReadableStreamDefaultTeeSourceAlgorithms() override = default;
+
+ private:
+  // Virtually const, but is cycle collected
+  MOZ_KNOWN_LIVE RefPtr<TeeState> mTeeState;
+  TeeBranch mBranch;
 };
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee

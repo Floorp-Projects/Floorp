@@ -531,9 +531,8 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
   loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
   jmp(Operand(eax));
 
-  // If we found a finally block, this must be a baseline frame. Push
-  // two values expected by JSOp::Retsub: BooleanValue(true) and the
-  // exception.
+  // If we found a finally block, this must be a baseline frame. Push two
+  // values expected by JSOp::Retsub: the exception and BooleanValue(true).
   bind(&finally);
   ValueOperand exception = ValueOperand(ecx, edx);
   loadValue(Address(esp, offsetof(ResumeFromException, exception)), exception);
@@ -542,8 +541,8 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
   loadPtr(Address(esp, offsetof(ResumeFromException, framePointer)), ebp);
   loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
 
-  pushValue(BooleanValue(true));
   pushValue(exception);
+  pushValue(BooleanValue(true));
   jmp(Operand(eax));
 
   // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.

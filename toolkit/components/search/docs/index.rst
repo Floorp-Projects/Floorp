@@ -15,6 +15,9 @@ Definitions
   a default application provided engine or a user selected engine.
 * Default private engine: Same as for the default engine, but this is used by
   default when in private browsing mode.
+* Application default engine: The engine selected by the application as default,
+  in the absence of user settings. In the code, this is referred to as
+  "Original".
 
 Contents
 ========
