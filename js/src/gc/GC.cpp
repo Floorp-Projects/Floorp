@@ -2329,7 +2329,6 @@ void GCRuntime::discardJITCodeForGC() {
       options.resetNurseryAllocSites = resetNurserySites;
       options.resetPretenuredAllocSites = resetPretenuredSites;
       zone->discardJitCode(rt->defaultFreeOp(), options);
-
     } else if (resetNurserySites || resetPretenuredSites) {
       zone->resetAllocSitesAndInvalidate(resetNurserySites,
                                          resetPretenuredSites);
@@ -3253,8 +3252,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         // remove and free dead zones, compartments and realms.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
-        JSFreeOp fop(rt);
-        sweepZones(&fop, destroyingRuntime);
+        sweepZones(rt->defaultFreeOp(), destroyingRuntime);
       }
 
       MOZ_ASSERT(!startedCompacting);
@@ -3308,6 +3306,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   MOZ_ASSERT(safeToYield);
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+  MOZ_ASSERT(!rt->defaultFreeOp()->hasJitCodeToPoison());
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {
