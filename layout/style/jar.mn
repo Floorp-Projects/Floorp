@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-*  res/ua.css                                (res/ua.css)
-*  res/html.css                              (res/html.css)
+   res/ua.css                                (res/ua.css)
+   res/html.css                              (res/html.css)
    res/quirk.css                             (res/quirk.css)
    res/counterstyles.css                     (res/counterstyles.css)
    res/noscript.css                          (res/noscript.css)
    res/noframes.css                          (res/noframes.css)
-*  res/scrollbars.css                        (res/scrollbars.css)
-*  res/forms.css                             (res/forms.css)
+   res/scrollbars.css                        (res/scrollbars.css)
+   res/forms.css                             (res/forms.css)
    res/arrow.gif                             (res/arrow.gif)
    res/arrow-left.gif                        (res/arrow-left.gif)
    res/arrow-right.gif                       (res/arrow-right.gif)
