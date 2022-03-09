@@ -187,8 +187,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // need to take its address.
   uint32_t allocsThisZoneSinceMinorGC_;
 
-  js::ContextData<JSFreeOp> defaultFreeOp_;
-
   // Thread that the JSContext is currently running on, if in use.
   js::ThreadId currentThread_;
 
@@ -304,7 +302,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return *runtime_->wellKnownSymbols;
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
-  JSFreeOp* defaultFreeOp() { return &defaultFreeOp_.ref(); }
+  JSFreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }
   uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
   uintptr_t stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
@@ -541,37 +539,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<int32_t> suppressGC;
 
-  // clang-format off
-  enum class GCUse {
-    // This thread is not running in the garbage collector.
-    None,
-
-    // This thread is currently marking GC things. This thread could be the main
-    // thread or a helper thread doing sweep-marking.
-    Marking,
-
-    // This thread is currently sweeping GC things. This thread could be the
-    // main thread or a helper thread while the main thread is running the
-    // mutator.
-    Sweeping,
-
-    // Whether this thread is currently finalizing GC things. This thread could
-    // be the main thread or a helper thread doing finalization while the main
-    // thread is running the mutator.
-    Finalizing
-  };
-  // clang-format on
-
 #ifdef DEBUG
-  // Which part of the garbage collector this context is running at the moment.
-  js::ContextData<GCUse> gcUse;
-
-  // The specific zone currently being swept, if any.
-  js::ContextData<JS::Zone*> gcSweepZone;
-
-  // Whether this thread is currently manipulating possibly-gray GC things.
-  js::ContextData<size_t> isTouchingGrayThings;
-
   js::ContextData<size_t> noNurseryAllocationCheck;
 
   /*
@@ -1206,67 +1174,6 @@ class MOZ_RAII AutoUnsafeCallWithABI {
 };
 
 namespace gc {
-
-// Set/restore the performing GC flag for the current thread.
-class MOZ_RAII AutoSetThreadIsPerformingGC {
-  JSContext* cx;
-  bool prev;
-
- public:
-  AutoSetThreadIsPerformingGC()
-      : cx(TlsContext.get()), prev(cx->defaultFreeOp()->isCollecting_) {
-    cx->defaultFreeOp()->isCollecting_ = true;
-  }
-
-  ~AutoSetThreadIsPerformingGC() { cx->defaultFreeOp()->isCollecting_ = prev; }
-};
-
-struct MOZ_RAII AutoSetThreadGCUse {
- protected:
-#ifndef DEBUG
-  explicit AutoSetThreadGCUse(JSContext::GCUse use, Zone* sweepZone = nullptr) {
-  }
-#else
-  explicit AutoSetThreadGCUse(JSContext::GCUse use, Zone* sweepZone = nullptr)
-      : cx(TlsContext.get()), prevUse(cx->gcUse), prevZone(cx->gcSweepZone) {
-    MOZ_ASSERT_IF(sweepZone, use == JSContext::GCUse::Sweeping);
-    cx->gcUse = use;
-    cx->gcSweepZone = sweepZone;
-  }
-
-  ~AutoSetThreadGCUse() {
-    cx->gcUse = prevUse;
-    cx->gcSweepZone = prevZone;
-    MOZ_ASSERT_IF(cx->gcUse == JSContext::GCUse::None, !cx->gcSweepZone);
-  }
-
- private:
-  JSContext* cx;
-  JSContext::GCUse prevUse;
-  JS::Zone* prevZone;
-#endif
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC marking.
-struct MOZ_RAII AutoSetThreadIsMarking : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsMarking()
-      : AutoSetThreadGCUse(JSContext::GCUse::Marking) {}
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC sweeping.
-struct MOZ_RAII AutoSetThreadIsSweeping : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsSweeping(Zone* zone = nullptr)
-      : AutoSetThreadGCUse(JSContext::GCUse::Sweeping, zone) {}
-};
-
-// In debug builds, update the context state to indicate that the current thread
-// is being used for GC finalization.
-struct MOZ_RAII AutoSetThreadIsFinalizing : public AutoSetThreadGCUse {
-  explicit AutoSetThreadIsFinalizing()
-      : AutoSetThreadGCUse(JSContext::GCUse::Finalizing) {}
-};
 
 // Note that this class does not suppress buffer allocation/reallocation in the
 // nursery, only Cells themselves.
