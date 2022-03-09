@@ -24,7 +24,6 @@
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
-#include "gc/MaybeRooted.h"        // MaybeRooted
 #include "gc/Rooting.h"      // HandleScope, HandleShape, MutableHandleShape
 #include "js/GCPolicyAPI.h"  // GCPolicy, IgnoreGCPolicy
 #include "js/HeapAPI.h"      // CellFlagBitsReservedForGC
@@ -447,12 +446,6 @@ inline size_t SizeOfScopeData(uint32_t length) {
 //
 template <typename ScopeT, typename AtomT>
 using AbstractScopeData = typename ScopeT::template AbstractData<AtomT>;
-
-template <typename ScopeT, typename AtomT>
-using MaybeRootedScopeData = std::conditional_t<
-    std::is_same_v<AtomT, JSAtom>,
-    MaybeRooted<UniquePtr<typename ScopeT::RuntimeData>, AllowGC::CanGC>,
-    MaybeRooted<AbstractScopeData<ScopeT, AtomT>*, AllowGC::NoGC>>;
 
 // Binding names are stored from `this+1`.
 // Make sure the class aligns the binding name size.
