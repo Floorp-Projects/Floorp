@@ -333,12 +333,6 @@
 
 #identity-popup[connection^=secure] .identity-popup-security-connection {
   background-image: url(chrome://global/skin/icons/security.svg);
-  -moz-context-properties: fill;
-}
-
-#identity-popup[connection^=secure][lock-icon-gray] .identity-popup-security-connection {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
 }
 
 /* Use [isbroken] to make sure we don't show a warning lock on an http page. See Bug 1192162. */

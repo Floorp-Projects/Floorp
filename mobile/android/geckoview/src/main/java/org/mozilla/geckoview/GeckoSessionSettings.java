@@ -641,7 +641,7 @@ public final class GeckoSessionSettings implements Parcelable {
   }
 
   private <T> boolean valueChangedLocked(final Key<T> key, final T value) {
-    if (key.initOnly && mSession != null && mSession.isOpen()) {
+    if (key.initOnly && mSession != null) {
       throw new IllegalStateException("Read-only property");
     } else if (key.values != null && !key.values.contains(value)) {
       throw new IllegalArgumentException("Invalid value");
@@ -652,7 +652,7 @@ public final class GeckoSessionSettings implements Parcelable {
   }
 
   private void dispatchUpdate() {
-    if (mSession != null && mSession.isOpen()) {
+    if (mSession != null) {
       mSession.getEventDispatcher().dispatch("GeckoView:UpdateSettings", toBundle());
     }
   }

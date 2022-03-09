@@ -291,6 +291,22 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
+MOZ_THREAD_LOCAL(JSFreeOp*) js::TlsFreeOp;
+
+JSFreeOp::JSFreeOp(JSRuntime* runtime, bool isMainThread)
+    : runtime_(runtime), isMainThread_(isMainThread) {
+  MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(runtime));
+}
+
+JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+
+void JSFreeOp::poisonJitCode() {
+  if (hasJitCodeToPoison()) {
+    jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
+    jitPoisonRanges.clearAndFree();
+  }
+}
+
 #ifdef DEBUG
 void GCRuntime::verifyAllChunks() {
   AutoLockGC lock(this);
@@ -364,6 +380,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
+      mainThreadFreeOp(rt, true),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
@@ -793,6 +810,11 @@ bool GCRuntime::init(uint32_t maxbytes) {
   MOZ_ASSERT(SystemPageSize());
   Arena::checkLookupTables();
 
+  if (!TlsFreeOp.init()) {
+    return false;
+  }
+  TlsFreeOp.set(&mainThreadFreeOp.ref());
+
   {
     AutoLockGCBgAlloc lock(this);
 
@@ -830,10 +852,9 @@ bool GCRuntime::init(uint32_t maxbytes) {
     return false;
   }
 
-  gcprobes::Init(this);
-
   updateHelperThreadCount();
 
+  gcprobes::Init(this);
   return true;
 }
 
@@ -860,6 +881,7 @@ void GCRuntime::finish() {
 
   // Delete all remaining zones.
   if (rt->gcInitialized) {
+    AutoSetThreadIsPerformingGC performingGC;
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
       AutoSetThreadIsSweeping threadIsSweeping(zone);
       for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -879,6 +901,8 @@ void GCRuntime::finish() {
   FreeChunkPool(fullChunks_.ref());
   FreeChunkPool(availableChunks_.ref());
   FreeChunkPool(emptyChunks_.ref());
+
+  TlsFreeOp.set(nullptr);
 
   gcprobes::Finish(this);
 
@@ -1556,14 +1580,11 @@ bool GCRuntime::maybeTriggerGCAfterMalloc(Zone* zone, const HeapSize& heap,
                                           const HeapThreshold& threshold,
                                           JS::GCReason reason) {
   // Ignore malloc during sweeping, for example when we resize hash tables.
-  if (!CurrentThreadCanAccessRuntime(rt)) {
-    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+  if (heapState() != JS::HeapState::Idle) {
     return false;
   }
 
-  if (rt->heapState() != JS::HeapState::Idle) {
-    return false;
-  }
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
   TriggerResult trigger = checkHeapThreshold(zone, heap, threshold);
   if (!trigger.shouldTrigger) {
@@ -2123,7 +2144,7 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
+      : JS::CallbackTracer(rt, JS::TracerKind::CompartmentCheck,
                            JS::WeakEdgeTraceAction::Skip),
         src(nullptr),
         zone(nullptr),
@@ -2161,9 +2182,7 @@ void CompartmentCheckTracer::onChild(JS::GCCellPtr thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
-    if (!runtime()->mainContextFromOwnThread()->disableCompartmentCheckTracer) {
-      MOZ_ASSERT(comp == compartment || edgeIsInCrossCompartmentMap(thing));
-    }
+    MOZ_ASSERT(comp == compartment || edgeIsInCrossCompartmentMap(thing));
   } else {
     TenuredCell* tenured = &thing.asCell()->asTenured();
     Zone* thingZone = tenured->zoneFromAnyThread();
@@ -2329,7 +2348,6 @@ void GCRuntime::discardJITCodeForGC() {
       options.resetNurseryAllocSites = resetNurserySites;
       options.resetPretenuredAllocSites = resetPretenuredSites;
       zone->discardJitCode(rt->defaultFreeOp(), options);
-
     } else if (resetNurserySites || resetPretenuredSites) {
       zone->resetAllocSitesAndInvalidate(resetNurserySites,
                                          resetPretenuredSites);
@@ -3253,8 +3271,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         // remove and free dead zones, compartments and realms.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
-        JSFreeOp fop(rt);
-        sweepZones(&fop, destroyingRuntime);
+        sweepZones(rt->defaultFreeOp(), destroyingRuntime);
       }
 
       MOZ_ASSERT(!startedCompacting);
@@ -3308,6 +3325,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   MOZ_ASSERT(safeToYield);
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+  MOZ_ASSERT(!rt->defaultFreeOp()->hasJitCodeToPoison());
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {

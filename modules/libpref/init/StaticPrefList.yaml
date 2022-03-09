@@ -5836,12 +5836,12 @@
   # Whether to use a video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-overlay-win
     type: bool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: once
   # Whether to use a yuv video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-yuv-overlay-win
     type: bool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: once
 #endif
 

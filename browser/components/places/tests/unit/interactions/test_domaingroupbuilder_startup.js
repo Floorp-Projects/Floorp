@@ -48,7 +48,9 @@ add_task(async function test_update_correctly_updates_group() {
   await Snapshots.add({ url: TEST_URLS_EXTRA });
 
   await DomainGroupBuilder.update({
-    addedUrls: new Set([TEST_URLS_EXTRA]),
+    addedItems: new Set([
+      { url: TEST_URLS_EXTRA, userPersisted: Snapshots.USER_PERSISTED.NO },
+    ]),
     removedUrls: new Set(),
   });
 

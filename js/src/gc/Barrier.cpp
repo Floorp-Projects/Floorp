@@ -67,36 +67,6 @@ bool CurrentThreadIsIonCompiling() {
   return jcx && jcx->inIonBackend();
 }
 
-bool CurrentThreadIsGCMarking() {
-  JSContext* cx = MaybeGetJSContext();
-  return cx && cx->gcUse == JSContext::GCUse::Marking;
-}
-
-bool CurrentThreadIsGCSweeping() {
-  JSContext* cx = MaybeGetJSContext();
-  return cx && cx->gcUse == JSContext::GCUse::Sweeping;
-}
-
-bool CurrentThreadIsGCFinalizing() {
-  JSContext* cx = MaybeGetJSContext();
-  return cx && cx->gcUse == JSContext::GCUse::Finalizing;
-}
-
-bool CurrentThreadIsTouchingGrayThings() {
-  JSContext* cx = MaybeGetJSContext();
-  return cx && cx->isTouchingGrayThings;
-}
-
-AutoTouchingGrayThings::AutoTouchingGrayThings() {
-  TlsContext.get()->isTouchingGrayThings++;
-}
-
-AutoTouchingGrayThings::~AutoTouchingGrayThings() {
-  JSContext* cx = TlsContext.get();
-  MOZ_ASSERT(cx->isTouchingGrayThings);
-  cx->isTouchingGrayThings--;
-}
-
 #endif  // DEBUG
 
 // Tagged pointer barriers

@@ -15,7 +15,7 @@ stubs.set(`True`, true);
 stubs.set(`False`, false);
 
 stubs.set(`NegZeroGrip`, {
-  type: "-0",
+  "type": "-0"
 });
 
 module.exports = stubs;

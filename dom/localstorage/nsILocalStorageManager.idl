@@ -32,4 +32,7 @@ interface nsILocalStorageManager : nsISupports
 
   [implicit_jscontext]
   Promise isPreloaded(in nsIPrincipal aPrincipal);
+
+  [implicit_jscontext]
+  Promise getState(in nsIPrincipal aPrincipal);
 };

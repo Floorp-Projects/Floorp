@@ -9,7 +9,7 @@
 
 const stubs = new Map();
 stubs.set(`NaN`, {
-  type: "NaN",
+  "type": "NaN"
 });
 
 module.exports = stubs;

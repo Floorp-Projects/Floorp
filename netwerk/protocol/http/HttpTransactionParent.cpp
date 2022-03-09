@@ -34,19 +34,9 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
-
-  if (!::mozilla::ThreadSafeAutoRefCnt::isThreadSafe) {
-    NS_ASSERT_OWNINGTHREAD(HttpTransactionParent);
-  }
-
   nsrefcnt count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "HttpTransactionParent");
-
   if (count == 0) {
-    if (!nsAutoRefCnt::isThreadSafe) {
-      NS_ASSERT_OWNINGTHREAD(HttpTransactionParent);
-    }
-
     mRefCnt = 1; /* stabilize */
     delete (this);
     return 0;

@@ -1744,18 +1744,110 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
   }
 }
 
-using ToValue = bool;
+static void FillArgumentArrayForInterpExit(MacroAssembler& masm,
+                                           unsigned funcImportIndex,
+                                           const FuncType& funcType,
+                                           unsigned argOffset,
+                                           Register scratch) {
+  // This is FrameWithTls::sizeOf() - ShadowStackSpace because the latter is
+  // accounted for by the ABIArgIter.
+  const unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
 
-// Note, when toValue is true then this may destroy the values in incoming
-// argument registers as a result of Spectre mitigation.
-static void FillArgumentArrayForExit(
-    MacroAssembler& masm, Register tls, unsigned funcImportIndex,
-    const FuncType& funcType, unsigned argOffset,
-    unsigned offsetFromFPToCallerStackArgs, Register scratch, Register scratch2,
-    Register scratch3, ToValue toValue, Label* throwLabel) {
+  GenPrintf(DebugChannel::Import, masm, "wasm-import[%u]; arguments ",
+            funcImportIndex);
+
+  ArgTypeVector args(funcType);
+  for (ABIArgIter i(args); !i.done(); i++) {
+    Address dst(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
+
+    MIRType type = i.mirType();
+    MOZ_ASSERT(args.isSyntheticStackResultPointerArg(i.index()) ==
+               (type == MIRType::StackResults));
+    switch (i->kind()) {
+      case ABIArg::GPR:
+        if (type == MIRType::Int32) {
+          GenPrintIsize(DebugChannel::Import, masm, i->gpr());
+          masm.store32(i->gpr(), dst);
+        } else if (type == MIRType::Int64) {
+          GenPrintI64(DebugChannel::Import, masm, i->gpr64());
+          masm.store64(i->gpr64(), dst);
+        } else if (type == MIRType::RefOrNull) {
+          GenPrintPtr(DebugChannel::Import, masm, i->gpr());
+          masm.storePtr(i->gpr(), dst);
+        } else if (type == MIRType::StackResults) {
+          GenPrintPtr(DebugChannel::Import, masm, i->gpr());
+          masm.storePtr(i->gpr(), dst);
+        } else {
+          MOZ_CRASH(
+              "FillArgumentArrayForInterpExit, ABIArg::GPR: unexpected type");
+        }
+        break;
+#ifdef JS_CODEGEN_REGISTER_PAIR
+      case ABIArg::GPR_PAIR:
+        if (type == MIRType::Int64) {
+          GenPrintI64(DebugChannel::Import, masm, i->gpr64());
+          masm.store64(i->gpr64(), dst);
+        } else {
+          MOZ_CRASH("wasm uses hardfp for function calls.");
+        }
+        break;
+#endif
+      case ABIArg::FPU: {
+        FloatRegister srcReg = i->fpu();
+        if (type == MIRType::Double) {
+          GenPrintF64(DebugChannel::Import, masm, srcReg);
+          masm.storeDouble(srcReg, dst);
+        } else if (type == MIRType::Float32) {
+          // Preserve the NaN pattern in the input.
+          GenPrintF32(DebugChannel::Import, masm, srcReg);
+          masm.storeFloat32(srcReg, dst);
+        } else if (type == MIRType::Simd128) {
+          // The value should never escape; the call will be stopped later as
+          // the import is being called.  But we should generate something sane
+          // here for the boxed case since a debugger or the stack walker may
+          // observe something.
+          ScratchDoubleScope dscratch(masm);
+          masm.loadConstantDouble(0, dscratch);
+          GenPrintF64(DebugChannel::Import, masm, dscratch);
+          masm.storeDouble(dscratch, dst);
+        } else {
+          MOZ_CRASH("Unknown MIRType in wasm exit stub");
+        }
+        break;
+      }
+      case ABIArg::Stack: {
+        Address src(FramePointer,
+                    offsetFromFPToCallerStackArgs + i->offsetFromArgBase());
+        if (type == MIRType::Simd128) {
+          // As above.  StackCopy does not know this trick.
+          ScratchDoubleScope dscratch(masm);
+          masm.loadConstantDouble(0, dscratch);
+          GenPrintF64(DebugChannel::Import, masm, dscratch);
+          masm.storeDouble(dscratch, dst);
+        } else {
+          StackCopy(masm, type, scratch, src, dst);
+        }
+        break;
+      }
+      case ABIArg::Uninitialized:
+        MOZ_CRASH("Uninitialized ABIArg kind");
+    }
+  }
+  GenPrintf(DebugChannel::Import, masm, "\n");
+}
+
+// Note, this may destroy the values in incoming argument registers as a result
+// of Spectre mitigation.
+static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register tls,
+                                        unsigned funcImportIndex,
+                                        const FuncType& funcType,
+                                        unsigned argOffset, Register scratch,
+                                        Register scratch2, Label* throwLabel) {
   MOZ_ASSERT(scratch != scratch2);
-  MOZ_ASSERT(scratch != scratch3);
-  MOZ_ASSERT(scratch2 != scratch3);
+
+  // This is FrameWithTls::sizeOf() - ShadowStackSpace because the latter is
+  // accounted for by the ABIArgIter.
+  const unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
 
   // This loop does not root the values that are being constructed in
   // for the arguments. Allocations that are generated by code either
@@ -1774,51 +1866,29 @@ static void FillArgumentArrayForExit(
       case ABIArg::GPR:
         if (type == MIRType::Int32) {
           GenPrintIsize(DebugChannel::Import, masm, i->gpr());
-          if (toValue) {
-            masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dst);
-          } else {
-            masm.store32(i->gpr(), dst);
-          }
+          masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dst);
         } else if (type == MIRType::Int64) {
-          GenPrintI64(DebugChannel::Import, masm, i->gpr64());
-
-          if (toValue) {
-            // FuncType::canHaveJitExit should prevent this.  Also see comments
-            // at GenerateBigIntInitialization.
-            MOZ_CRASH("Should not happen");
-          } else {
-            masm.store64(i->gpr64(), dst);
-          }
+          // FuncType::canHaveJitExit should prevent this.  Also see comments
+          // at GenerateBigIntInitialization.
+          MOZ_CRASH("Should not happen");
         } else if (type == MIRType::RefOrNull) {
-          if (toValue) {
-            // This works also for FuncRef because it is distinguishable from
-            // a boxed AnyRef.
-            masm.movePtr(i->gpr(), scratch2);
-            UnboxAnyrefIntoValue(masm, tls, scratch2, dst, scratch);
-          } else {
-            GenPrintPtr(DebugChannel::Import, masm, i->gpr());
-            masm.storePtr(i->gpr(), dst);
-          }
+          // This works also for FuncRef because it is distinguishable from
+          // a boxed AnyRef.
+          masm.movePtr(i->gpr(), scratch2);
+          UnboxAnyrefIntoValue(masm, tls, scratch2, dst, scratch);
         } else if (type == MIRType::StackResults) {
-          MOZ_ASSERT(!toValue, "Multi-result exit to JIT unimplemented");
-          GenPrintPtr(DebugChannel::Import, masm, i->gpr());
-          masm.storePtr(i->gpr(), dst);
+          MOZ_CRASH("Multi-result exit to JIT unimplemented");
         } else {
-          MOZ_CRASH("FillArgumentArrayForExit, ABIArg::GPR: unexpected type");
+          MOZ_CRASH(
+              "FillArgumentArrayForJitExit, ABIArg::GPR: unexpected type");
         }
         break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
       case ABIArg::GPR_PAIR:
         if (type == MIRType::Int64) {
-          GenPrintI64(DebugChannel::Import, masm, i->gpr64());
-
-          if (toValue) {
-            // FuncType::canHaveJitExit should prevent this.  Also see comments
-            // at GenerateBigIntInitialization.
-            MOZ_CRASH("Should not happen");
-          } else {
-            masm.store64(i->gpr64(), dst);
-          }
+          // FuncType::canHaveJitExit should prevent this.  Also see comments
+          // at GenerateBigIntInitialization.
+          MOZ_CRASH("Should not happen");
         } else {
           MOZ_CRASH("wasm uses hardfp for function calls.");
         }
@@ -1827,30 +1897,19 @@ static void FillArgumentArrayForExit(
       case ABIArg::FPU: {
         FloatRegister srcReg = i->fpu();
         if (type == MIRType::Double) {
-          if (toValue) {
-            // Preserve the NaN pattern in the input.
-            ScratchDoubleScope fpscratch(masm);
-            masm.moveDouble(srcReg, fpscratch);
-            masm.canonicalizeDouble(fpscratch);
-            GenPrintF64(DebugChannel::Import, masm, fpscratch);
-            masm.boxDouble(fpscratch, dst);
-          } else {
-            GenPrintF64(DebugChannel::Import, masm, srcReg);
-            masm.storeDouble(srcReg, dst);
-          }
+          // Preserve the NaN pattern in the input.
+          ScratchDoubleScope fpscratch(masm);
+          masm.moveDouble(srcReg, fpscratch);
+          masm.canonicalizeDouble(fpscratch);
+          GenPrintF64(DebugChannel::Import, masm, fpscratch);
+          masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Float32) {
-          if (toValue) {
-            // JS::Values can't store Float32, so convert to a Double.
-            ScratchDoubleScope fpscratch(masm);
-            masm.convertFloat32ToDouble(srcReg, fpscratch);
-            masm.canonicalizeDouble(fpscratch);
-            GenPrintF64(DebugChannel::Import, masm, fpscratch);
-            masm.boxDouble(fpscratch, dst);
-          } else {
-            // Preserve the NaN pattern in the input.
-            GenPrintF32(DebugChannel::Import, masm, srcReg);
-            masm.storeFloat32(srcReg, dst);
-          }
+          // JS::Values can't store Float32, so convert to a Double.
+          ScratchDoubleScope fpscratch(masm);
+          masm.convertFloat32ToDouble(srcReg, fpscratch);
+          masm.canonicalizeDouble(fpscratch);
+          GenPrintF64(DebugChannel::Import, masm, fpscratch);
+          masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Simd128) {
           // The value should never escape; the call will be stopped later as
           // the import is being called.  But we should generate something sane
@@ -1859,11 +1918,7 @@ static void FillArgumentArrayForExit(
           ScratchDoubleScope dscratch(masm);
           masm.loadConstantDouble(0, dscratch);
           GenPrintF64(DebugChannel::Import, masm, dscratch);
-          if (toValue) {
-            masm.boxDouble(dscratch, dst);
-          } else {
-            masm.storeDouble(dscratch, dst);
-          }
+          masm.boxDouble(dscratch, dst);
         } else {
           MOZ_CRASH("Unknown MIRType in wasm exit stub");
         }
@@ -1872,55 +1927,43 @@ static void FillArgumentArrayForExit(
       case ABIArg::Stack: {
         Address src(FramePointer,
                     offsetFromFPToCallerStackArgs + i->offsetFromArgBase());
-        if (toValue) {
-          if (type == MIRType::Int32) {
-            masm.load32(src, scratch);
-            GenPrintIsize(DebugChannel::Import, masm, scratch);
-            masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
-          } else if (type == MIRType::Int64) {
-            // FuncType::canHaveJitExit should prevent this.  Also see comments
-            // at GenerateBigIntInitialization.
-            MOZ_CRASH("Should not happen");
-          } else if (type == MIRType::RefOrNull) {
-            // This works also for FuncRef because it is distinguishable from a
-            // boxed AnyRef.
-            masm.loadPtr(src, scratch);
-            UnboxAnyrefIntoValue(masm, tls, scratch, dst, scratch2);
-          } else if (IsFloatingPointType(type)) {
-            ScratchDoubleScope dscratch(masm);
-            FloatRegister fscratch = dscratch.asSingle();
-            if (type == MIRType::Float32) {
-              masm.loadFloat32(src, fscratch);
-              masm.convertFloat32ToDouble(fscratch, dscratch);
-            } else {
-              masm.loadDouble(src, dscratch);
-            }
-            masm.canonicalizeDouble(dscratch);
-            GenPrintF64(DebugChannel::Import, masm, dscratch);
-            masm.boxDouble(dscratch, dst);
-          } else if (type == MIRType::Simd128) {
-            // The value should never escape; the call will be stopped later as
-            // the import is being called.  But we should generate something
-            // sane here for the boxed case since a debugger or the stack walker
-            // may observe something.
-            ScratchDoubleScope dscratch(masm);
-            masm.loadConstantDouble(0, dscratch);
-            GenPrintF64(DebugChannel::Import, masm, dscratch);
-            masm.boxDouble(dscratch, dst);
+        if (type == MIRType::Int32) {
+          masm.load32(src, scratch);
+          GenPrintIsize(DebugChannel::Import, masm, scratch);
+          masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
+        } else if (type == MIRType::Int64) {
+          // FuncType::canHaveJitExit should prevent this.  Also see comments
+          // at GenerateBigIntInitialization.
+          MOZ_CRASH("Should not happen");
+        } else if (type == MIRType::RefOrNull) {
+          // This works also for FuncRef because it is distinguishable from a
+          // boxed AnyRef.
+          masm.loadPtr(src, scratch);
+          UnboxAnyrefIntoValue(masm, tls, scratch, dst, scratch2);
+        } else if (IsFloatingPointType(type)) {
+          ScratchDoubleScope dscratch(masm);
+          FloatRegister fscratch = dscratch.asSingle();
+          if (type == MIRType::Float32) {
+            masm.loadFloat32(src, fscratch);
+            masm.convertFloat32ToDouble(fscratch, dscratch);
           } else {
-            MOZ_CRASH(
-                "FillArgumentArrayForExit, ABIArg::Stack: unexpected type");
+            masm.loadDouble(src, dscratch);
           }
+          masm.canonicalizeDouble(dscratch);
+          GenPrintF64(DebugChannel::Import, masm, dscratch);
+          masm.boxDouble(dscratch, dst);
+        } else if (type == MIRType::Simd128) {
+          // The value should never escape; the call will be stopped later as
+          // the import is being called.  But we should generate something
+          // sane here for the boxed case since a debugger or the stack walker
+          // may observe something.
+          ScratchDoubleScope dscratch(masm);
+          masm.loadConstantDouble(0, dscratch);
+          GenPrintF64(DebugChannel::Import, masm, dscratch);
+          masm.boxDouble(dscratch, dst);
         } else {
-          if (type == MIRType::Simd128) {
-            // As above.  StackCopy does not know this trick.
-            ScratchDoubleScope dscratch(masm);
-            masm.loadConstantDouble(0, dscratch);
-            GenPrintF64(DebugChannel::Import, masm, dscratch);
-            masm.storeDouble(dscratch, dst);
-          } else {
-            StackCopy(masm, type, scratch, src, dst);
-          }
+          MOZ_CRASH(
+              "FillArgumentArrayForJitExit, ABIArg::Stack: unexpected type");
         }
         break;
       }
@@ -1964,6 +2007,10 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   Register scratch = ABINonArgReg0;
 
   // Copy our frame's stack arguments to the callee frame's stack argument.
+  //
+  // Note offsetFromFPToCallerStackArgs is sizeof(Frame) because the
+  // WasmABIArgIter accounts for both the ShadowStackSpace and the Tls fields of
+  // FrameWithTls.
   unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
   ArgTypeVector args(fi.funcType());
   for (WasmABIArgIter i(args); !i.done(); i++) {
@@ -2048,10 +2095,18 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   MIRTypeVector invokeArgTypes;
   MOZ_ALWAYS_TRUE(invokeArgTypes.append(typeArray, std::size(typeArray)));
 
-  // At the point of the call, the stack layout shall be (sp grows to the left):
-  //  | stack args | padding | argv[] | padding | retaddr | caller stack args |
-  // The padding between stack args and argv ensures that argv is aligned. The
-  // padding between argv and retaddr ensures that sp is aligned.
+  // At the point of the call, the stack layout is:
+  //
+  //  | stack args | padding | argv[] | padding | retaddr | caller stack | ...
+  //  ^
+  //  +-- sp
+  //
+  // The padding between stack args and argv ensures that argv is aligned on a
+  // Value boundary. The padding between argv and retaddr ensures that sp is
+  // aligned.  The caller stack includes a ShadowStackArea and the tls fields
+  // before the args, see WasmFrame.h.
+  //
+  // The 'double' alignment is correct since the argv[] is a Value array.
   unsigned argOffset =
       AlignBytes(StackArgBytesForNativeABI(invokeArgTypes), sizeof(double));
   // The abiArgCount includes a stack result pointer argument if needed.
@@ -2066,19 +2121,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                        offsets);
 
   // Fill the argument array.
-  //
-  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
-  // The only user of this value is FillArgumentArrayForExit, and it
-  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
-  unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
-  Register scratch2 = ABINonArgReturnReg1;
-  // The scratch3 reg does not need to be non-volatile, but has to be
-  // distinct from scratch & scratch2.
-  Register scratch3 = ABINonVolatileReg;
-  FillArgumentArrayForExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
-                           argOffset, offsetFromFPToCallerStackArgs, scratch,
-                           scratch2, scratch3, ToValue(false), throwLabel);
+  FillArgumentArrayForInterpExit(masm, funcImportIndex, fi.funcType(),
+                                 argOffset, scratch);
 
   // Prepare the arguments for the call to Instance::callImport_*.
   ABIArgMIRTypeIter i(invokeArgTypes);
@@ -2225,8 +2270,12 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
-  // JIT calls use the following stack layout (sp grows to the left):
-  //   | WasmToJSJitFrameLayout | this | arg1..N | saved Tls |
+  // JIT calls use the following stack layout:
+  //
+  //   | WasmToJSJitFrameLayout | this | arg1..N | saved Tls | ...
+  //   ^
+  //   +-- sp
+  //
   // Unlike most ABIs, the JIT ABI requires that sp be JitStackAlignment-
   // aligned *after* pushing the return address.
   static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
@@ -2280,19 +2329,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments.
-  //
-  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
-  // The only user of this value is FillArgumentArrayForExit, and it
-  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
-  const uint32_t offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
-  // The scratch3 reg does not need to be non-volatile, but has to be
-  // distinct from scratch & scratch2.
-  Register scratch3 = ABINonVolatileReg;
-  FillArgumentArrayForExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
-                           argOffset, offsetFromFPToCallerStackArgs, scratch,
-                           scratch2, scratch3, ToValue(true), throwLabel);
+  FillArgumentArrayForJitExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
+                              argOffset, scratch, scratch2, throwLabel);
   argOffset += fi.funcType().args().length() * sizeof(Value);
   MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
 
@@ -2597,6 +2637,9 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   GenerateExitPrologue(masm, framePushed, exitReason, offsets);
 
   // Copy out and convert caller arguments, if needed.
+
+  // This is FrameWithTls::sizeOf() - ShadowStackSpace because the latter is
+  // accounted for by the ABIArgIter.
   unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
   for (ABIArgIter i(args); !i.done(); i++) {

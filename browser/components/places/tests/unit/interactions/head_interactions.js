@@ -104,9 +104,12 @@ async function assertUrlNotification(topic, expected, task) {
       if (arr.length != expected.length) {
         return;
       }
-
-      if (expected.every(url => arr.includes(url))) {
-        seen = true;
+      if (topic == TOPIC_ADDED) {
+        // For the added notification we receive objects including the url
+        // and userPersisted.
+        seen = arr.every(item => expected.includes(item.url));
+      } else {
+        seen = arr.every(url => expected.includes(url));
       }
     } catch (e) {
       Assert.ok(false, e);

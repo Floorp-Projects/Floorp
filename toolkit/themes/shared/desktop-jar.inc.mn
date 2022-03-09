@@ -21,7 +21,7 @@
   skin/classic/global/aboutLicense.css                     (../../shared/aboutLicense.css)
   skin/classic/global/aboutSupport.css                     (../../shared/aboutSupport.css)
   skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
-* skin/classic/global/arrowscrollbox.css                   (../../shared/arrowscrollbox.css)
+  skin/classic/global/arrowscrollbox.css                   (../../shared/arrowscrollbox.css)
   skin/classic/global/checkbox.css                         (../../shared/checkbox.css)
   skin/classic/global/close-icon.css                       (../../shared/close-icon.css)
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)

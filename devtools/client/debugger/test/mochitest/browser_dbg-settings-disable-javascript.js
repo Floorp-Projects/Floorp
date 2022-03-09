@@ -25,7 +25,7 @@ add_task(async function() {
   });
 
   info("Waiting for reload triggered by disabling javascript");
-  await waitForSourceCount(dbg, 0);
+  await waitForSourcesInSourceTree(dbg, [], { noExpand: true });
 
   info("Wait for DevTools to be reloaded");
   await waitForDevToolsReload();

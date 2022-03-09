@@ -567,7 +567,24 @@ void LSSnapshot::MarkDirty() {
   }
 }
 
-nsresult LSSnapshot::End() {
+nsresult LSSnapshot::ExplicitCheckpoint() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mExplicit);
+  MOZ_ASSERT(!mHasPendingStableStateCallback);
+  MOZ_ASSERT(!mHasPendingIdleTimerCallback);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+
+  nsresult rv = Checkpoint(/* aSync */ true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult LSSnapshot::ExplicitEnd() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mExplicit);
@@ -920,7 +937,7 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
   return NS_OK;
 }
 
-nsresult LSSnapshot::Checkpoint() {
+nsresult LSSnapshot::Checkpoint(bool aSync) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
@@ -930,8 +947,13 @@ nsresult LSSnapshot::Checkpoint() {
     MOZ_ASSERT(mWriteAndNotifyInfos);
 
     if (!mWriteAndNotifyInfos->IsEmpty()) {
-      MOZ_ALWAYS_TRUE(
-          mActor->SendAsyncCheckpointAndNotify(*mWriteAndNotifyInfos));
+      if (aSync) {
+        MOZ_ALWAYS_TRUE(
+            mActor->SendSyncCheckpointAndNotify(*mWriteAndNotifyInfos));
+      } else {
+        MOZ_ALWAYS_TRUE(
+            mActor->SendAsyncCheckpointAndNotify(*mWriteAndNotifyInfos));
+      }
 
       mWriteAndNotifyInfos->Clear();
     }
@@ -944,7 +966,11 @@ nsresult LSSnapshot::Checkpoint() {
 
       MOZ_ASSERT(!writeInfos.IsEmpty());
 
-      MOZ_ALWAYS_TRUE(mActor->SendAsyncCheckpoint(writeInfos));
+      if (aSync) {
+        MOZ_ALWAYS_TRUE(mActor->SendSyncCheckpoint(writeInfos));
+      } else {
+        MOZ_ALWAYS_TRUE(mActor->SendAsyncCheckpoint(writeInfos));
+      }
 
       mWriteOptimizer->Reset();
     }
@@ -1035,7 +1061,7 @@ LSSnapshot::Run() {
   if (mDirty || mHasOtherProcessDatabases ||
       !Preferences::GetBool("dom.storage.snapshot_reusing")) {
     MOZ_ALWAYS_SUCCEEDS(Finish());
-  } else if (!mExplicit) {
+  } else {
     MOZ_ASSERT(mIdleTimer);
 
     MOZ_ALWAYS_SUCCEEDS(mIdleTimer->InitWithNamedFuncCallback(

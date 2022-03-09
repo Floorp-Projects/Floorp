@@ -855,7 +855,6 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
 
 /* static */
 void ModuleObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->maybeOnHelperThread());
   ModuleObject* self = &obj->as<ModuleObject>();
   if (self->hasImportBindings()) {
     fop->delete_(obj, &self->importBindings(), MemoryUse::ModuleBindingMap);
