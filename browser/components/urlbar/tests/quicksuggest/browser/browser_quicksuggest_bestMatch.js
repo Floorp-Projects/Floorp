@@ -308,8 +308,8 @@ async function doNimbusExposureTest({
       await UrlbarTestUtils.promisePopupClose(window);
       await QuickSuggestTestUtils.assertExposureEvent(false);
 
-      // Do a search that would have triggered a best match. The exposure event
-      // should be recorded.
+      // Do a search that triggers (or would have triggered) a best match. The
+      // exposure event should be recorded.
       info("Doing second search");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
