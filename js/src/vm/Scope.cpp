@@ -154,35 +154,6 @@ inline size_t SizeOfAllocatedData(DataT* data) {
 }
 
 template <typename ConcreteScope>
-static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
-    JSContext* cx, typename ConcreteScope::RuntimeData* data) {
-  using Data = typename ConcreteScope::RuntimeData;
-
-  // Make sure the binding names are marked in the context's zone, if we are
-  // copying data from another zone.
-  auto names = GetScopeDataTrailingNames(data);
-  for (auto binding : names) {
-    if (JSAtom* name = binding.name()) {
-      cx->markAtom(name);
-    }
-  }
-
-  size_t size = SizeOfAllocatedData(data);
-  void* bytes = cx->pod_malloc<char>(size);
-  if (!bytes) {
-    return nullptr;
-  }
-
-  auto* dataCopy = new (bytes) Data(*data);
-
-  std::uninitialized_copy_n(GetScopeDataTrailingNamesPointer(data),
-                            data->length,
-                            GetScopeDataTrailingNamesPointer(dataCopy));
-
-  return UniquePtr<Data>(dataCopy);
-}
-
-template <typename ConcreteScope>
 static void MarkParserScopeData(JSContext* cx,
                                 typename ConcreteScope::ParserData* data,
                                 frontend::CompilationState& compilationState) {
@@ -659,14 +630,9 @@ void VarScope::prepareForScopeCreation(ScopeKind kind,
   updateEnvShapeIfRequired(envShape, needsEnvironment);
 }
 
-/* static */
-GlobalScope* GlobalScope::create(JSContext* cx, ScopeKind kind,
-                                 Handle<RuntimeData*> dataArg) {
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
+GlobalScope* GlobalScope::createEmpty(JSContext* cx, ScopeKind kind) {
   Rooted<UniquePtr<RuntimeData>> data(
-      cx, dataArg ? CopyScopeData<GlobalScope>(cx, dataArg)
-                  : NewEmptyScopeData<GlobalScope, JSAtom>(cx));
+      cx, NewEmptyScopeData<GlobalScope, JSAtom>(cx));
   if (!data) {
     return nullptr;
   }
