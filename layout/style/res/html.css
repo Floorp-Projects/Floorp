@@ -877,12 +877,14 @@ rtc, rt {
   font-size: 50%;
   -moz-min-font-size-ratio: 50%;
   line-height: 1;
-%ifndef XP_WIN
-  /* The widely-used Windows font Meiryo doesn't work fine with this
-   * setting, so disable this on Windows. We should re-enable it once
-   * Microsoft fixes this issue. See bug 1164279. */
-  font-variant-east-asian: ruby;
-%endif
+}
+@media not(-moz-platform: windows) {
+  rtc, rt {
+    /* The widely-used Windows font Meiryo doesn't work fine with this
+    * setting, so disable this on Windows. We should re-enable it once
+    * Microsoft fixes this issue. See bug 1164279. */
+    font-variant-east-asian: ruby;
+  }
 }
 rtc, rt {
   text-emphasis: none;
