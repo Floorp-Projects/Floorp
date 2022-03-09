@@ -2137,7 +2137,7 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::Callback,
+      : JS::CallbackTracer(rt, JS::TracerKind::CompartmentCheck,
                            JS::WeakEdgeTraceAction::Skip),
         src(nullptr),
         zone(nullptr),
@@ -2175,9 +2175,7 @@ void CompartmentCheckTracer::onChild(JS::GCCellPtr thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
-    if (!runtime()->mainContextFromOwnThread()->disableCompartmentCheckTracer) {
-      MOZ_ASSERT(comp == compartment || edgeIsInCrossCompartmentMap(thing));
-    }
+    MOZ_ASSERT(comp == compartment || edgeIsInCrossCompartmentMap(thing));
   } else {
     TenuredCell* tenured = &thing.asCell()->asTenured();
     Zone* thingZone = tenured->zoneFromAnyThread();
