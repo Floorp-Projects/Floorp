@@ -7,8 +7,6 @@ package org.mozilla.focus.helpers
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.focus.ext.settings
-import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.Features
 
 class FeatureSettingsHelper {
     val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -28,16 +26,11 @@ class FeatureSettingsHelper {
         settings.numberOfTabsOpened = tabsOpened
     }
 
-    fun showNewOnboardingScreen(shouldShow: Boolean) {
-        Features.ONBOARDING = shouldShow
-    }
-
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state
     fun resetAllFeatureFlags() {
         settings.shouldShowCfrForTrackingProtection = shouldShowCfrForTrackingProtection
         settings.numberOfTabsOpened = numberOfTabsOpened
-        Features.ONBOARDING = AppConstants.isDevOrNightlyBuild
     }
 }

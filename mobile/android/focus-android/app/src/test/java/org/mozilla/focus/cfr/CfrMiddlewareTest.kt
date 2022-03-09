@@ -23,10 +23,11 @@ import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.MockitoAnnotations
 import org.mozilla.focus.Components
+import org.mozilla.focus.nimbus.FocusNimbus
+import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
 import org.robolectric.RobolectricTestRunner
 
@@ -36,6 +37,7 @@ class CfrMiddlewareTest {
     private lateinit var browserStore: BrowserStore
     private lateinit var appStore: AppStore
     private lateinit var settings: Settings
+    private lateinit var onboardingExperiment: Onboarding
 
     @Mock
     private lateinit var components: Components
@@ -45,6 +47,7 @@ class CfrMiddlewareTest {
         MockitoAnnotations.openMocks(this)
 
         cfrMiddleware = CfrMiddleware(components)
+        onboardingExperiment = FocusNimbus.features.onboarding.value(testContext)
         browserStore = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(cfrMiddleware)
@@ -63,7 +66,7 @@ class CfrMiddlewareTest {
 
     @Test
     fun `GIVEN erase cfr is enabled and tracking protection cfr is not displayed WHEN AddTabAction is intercepted THEN the numberOfTabsOpened is increased`() {
-        if (Features.IS_ERASE_CFR_ENABLED) {
+        if (onboardingExperiment.isCfrEnabled) {
             browserStore.dispatch(TabListAction.AddTabAction(createTab())).joinBlocking()
 
             assertEquals(1, components.settings.numberOfTabsOpened)
@@ -72,7 +75,7 @@ class CfrMiddlewareTest {
 
     @Test
     fun `GIVEN erase cfr is enabled and tracking protection cfr is not displayed WHEN AddTabAction is intercepted for the third time THEN showEraseTabsCfr is changed to true`() {
-        if (Features.IS_ERASE_CFR_ENABLED) {
+        if (onboardingExperiment.isCfrEnabled) {
             browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 1))).joinBlocking()
             browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 2))).joinBlocking()
             browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 3))).joinBlocking()
@@ -84,7 +87,7 @@ class CfrMiddlewareTest {
 
     @Test
     fun `GIVEN shouldShowCfrForTrackingProtection is true WHEN UpdateSecurityInfoAction is intercepted THEN showTrackingProtectionCfr is changed to true`() {
-        if (Features.IS_TRACKING_PROTECTION_CFR_ENABLED) {
+        if (onboardingExperiment.isCfrEnabled) {
             val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
                 "1",
                 SecurityInfoState(
@@ -102,7 +105,7 @@ class CfrMiddlewareTest {
 
     @Test
     fun `GIVEN insecure tab WHEN UpdateSecurityInfoAction is intercepted THEN showTrackingProtectionCfr is not changed to true`() {
-        if (Features.IS_TRACKING_PROTECTION_CFR_ENABLED) {
+        if (onboardingExperiment.isCfrEnabled) {
             val insecureTab = createTab(isSecure = false)
             val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
                 "1",
@@ -123,7 +126,7 @@ class CfrMiddlewareTest {
 
     @Test
     fun `GIVEN mozilla tab WHEN UpdateSecurityInfoAction is intercepted THEN showTrackingProtectionCfr is not changed to true`() {
-        if (Features.IS_TRACKING_PROTECTION_CFR_ENABLED) {
+        if (onboardingExperiment.isCfrEnabled) {
             val mozillaTab = createTab(url = "https://www.mozilla.org")
             val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
                 "1",

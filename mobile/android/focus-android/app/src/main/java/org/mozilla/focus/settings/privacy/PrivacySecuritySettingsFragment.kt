@@ -17,11 +17,11 @@ import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -42,7 +42,7 @@ class PrivacySecuritySettingsFragment :
         ) {
             preferenceScreen.removePreference(biometricPreference)
         }
-        if (!Features.IS_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN_ENABLED ||
+        if (!FocusNimbus.features.onboarding.value().isCfrEnabled ||
             !requireContext().settings.shouldShowPrivacySecuritySettingsToolTip
         ) {
             preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_tool_tip)))

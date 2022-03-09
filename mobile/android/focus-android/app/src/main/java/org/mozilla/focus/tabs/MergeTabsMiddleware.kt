@@ -30,7 +30,7 @@ class MergeTabsMiddleware(
         action: BrowserAction
     ) {
         if (FocusNimbus.features.tabs.value().isMultiTab || action !is TabListAction.AddTabAction) {
-            // If the feature flag for tabs is enabled then we can just let the reducer create a
+            // If the experiment for tabs is enabled then we can just let the reducer create a
             // new tab.
             next(action)
             return

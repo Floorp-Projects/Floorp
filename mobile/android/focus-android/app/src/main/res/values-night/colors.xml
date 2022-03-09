@@ -16,6 +16,7 @@
 
     <color name="disabled">#66FBFBFE</color>
     <color name="background">@color/colorPrimary</color>
+    <color name="splash_screen_background">@color/photonInk60</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
     <color name="urlBarHintText">@color/photonLightGrey50</color>

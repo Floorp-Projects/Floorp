@@ -1,0 +1,20 @@
+---
+onboarding:
+  description: Nimbus feature name intended to control the onboarding plus all CFRs in the app.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    is-cfr-enabled:
+      type: boolean
+      description: "If `true`, the app will show the cfrs"
+    is-enabled:
+      type: boolean
+      description: "If `true`, the app will show the new onboarding screen"
+tabs:
+  description: Nimbus feature name intended to control the multiple tabs feature in the app.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    is_multi_tab:
+      type: boolean
+      description: "Nimbus variable of [FEATURE_TABS] allowing outside control of whether the multiple tabs feature should be enabled or not."

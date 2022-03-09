@@ -35,7 +35,6 @@ open class MainActivityFirstrunTestRule(
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-        featureSettingsHelper.showNewOnboardingScreen(false)
         updateFirstRun(showFirstRun)
         setLongTapTimeout(3000)
     }

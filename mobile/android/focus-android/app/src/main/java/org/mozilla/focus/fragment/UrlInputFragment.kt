@@ -46,6 +46,7 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.menu.home.HomeMenuItem
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
@@ -353,7 +354,7 @@ class UrlInputFragment :
 
         binding.browserToolbar.editMode()
         setHomeMenu()
-        if (Features.ARE_HOME_PAGE_PRO_TIPS_ENABLED) {
+        if (!FocusNimbus.features.onboarding.value().isCfrEnabled) {
             updateTipsLabel()
         } else {
             binding.homeTips.visibility = View.GONE
@@ -396,7 +397,7 @@ class UrlInputFragment :
         super.onStart()
 
         activity?.let {
-            if (requireContext().settings.shouldShowFirstrun()) return@onStart
+            if (requireContext().settings.isFirstRun()) return@onStart
         }
     }
 

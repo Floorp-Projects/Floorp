@@ -20,6 +20,7 @@ object Versions {
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
         const val lifecycle = "2.2.0"
+        const val splash_screen = "1.0.0-beta01"
     }
 
     object Google {
@@ -64,6 +65,7 @@ object Dependencies {
     const val androidx_preferences = "androidx.preference:preference-ktx:${Versions.AndroidX.preferences}"
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.AndroidX.recyclerview}"
     const val androidx_lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:${Versions.AndroidX.lifecycle}"
+    const val androidx_splash_screen = "androidx.core:core-splashscreen:${Versions.AndroidX.splash_screen}"
 
     const val google_material = "com.google.android.material:material:${Versions.Google.material}"
     const val google_accompanist_insets_ui = "com.google.accompanist:accompanist-insets-ui:${Versions.Google.accompanist}"

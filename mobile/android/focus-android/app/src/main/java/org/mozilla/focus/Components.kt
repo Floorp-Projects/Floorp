@@ -72,7 +72,6 @@ import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
 
@@ -132,7 +131,9 @@ class Components(
     }
 
     val store by lazy {
-        val cfrMiddleware = if (Features.IS_ERASE_CFR_ENABLED || Features.IS_TRACKING_PROTECTION_CFR_ENABLED) {
+        val onboardingFeature = FocusNimbus.features.onboarding
+        val cfrMiddleware = if (onboardingFeature.value(context = context).isCfrEnabled) {
+            onboardingFeature.recordExposure()
             listOf(CfrMiddleware(context.components))
         } else {
             listOf()

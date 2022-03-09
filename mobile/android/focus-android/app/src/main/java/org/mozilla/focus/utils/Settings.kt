@@ -168,6 +168,8 @@ class Settings(
             false
         )
 
+    var experimentsStartFetchingTimestamp: Long? = null
+
     var isExperimentationEnabled: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), !isKlarBuild)
         set(value) {
@@ -237,7 +239,7 @@ class Settings(
             .apply()
     }
 
-    fun shouldShowFirstrun(): Boolean =
+    fun isFirstRun(): Boolean =
         !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
 
     fun shouldUseBiometrics(): Boolean =

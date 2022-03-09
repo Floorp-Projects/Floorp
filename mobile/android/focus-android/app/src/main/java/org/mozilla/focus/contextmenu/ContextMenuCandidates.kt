@@ -22,8 +22,9 @@ object ContextMenuCandidates {
         appLinksUseCases: AppLinksUseCases,
         snackBarParentView: View,
         snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
-    ): List<ContextMenuCandidate> =
-        if (FocusNimbus.features.tabs.value().isMultiTab) {
+    ): List<ContextMenuCandidate> {
+        val multiTabsConfig = FocusNimbus.features.tabs.value()
+        return if (multiTabsConfig.isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenInPrivateTabCandidate(
                     context,
@@ -35,11 +36,15 @@ object ContextMenuCandidates {
         } else {
             emptyList()
         } + listOf(
-            ContextMenuCandidate.createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
+            ContextMenuCandidate.createCopyLinkCandidate(
+                context,
+                snackBarParentView,
+                snackbarDelegate
+            ),
             ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createShareLinkCandidate(context),
             ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases)
-        ) + if (FocusNimbus.features.tabs.value().isMultiTab) {
+        ) + if (multiTabsConfig.isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenImageInNewTabCandidate(
                     context,
@@ -70,4 +75,5 @@ object ContextMenuCandidates {
                 appLinksUseCases
             )
         )
+    }
 }

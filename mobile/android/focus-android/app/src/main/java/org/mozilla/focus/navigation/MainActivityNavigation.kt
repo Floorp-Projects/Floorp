@@ -19,6 +19,7 @@ import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.fragment.about.AboutFragment
 import org.mozilla.focus.fragment.onboarding.OnboardingFragment
 import org.mozilla.focus.locale.screen.LanguageFragment
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
@@ -34,7 +35,6 @@ import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOp
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.privacy.studies.StudiesFragment
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
 
@@ -137,11 +137,14 @@ class MainActivityNavigation(
      * Show first run onboarding.
      */
     fun firstRun() {
-        val onboardingFragment = if (Features.ONBOARDING) {
+        val onboardingFeature = FocusNimbus.features.onboarding
+        val onboardingConfig = onboardingFeature.value()
+        val onboardingFragment = if (onboardingConfig.isEnabled) {
             OnboardingFragment.create()
         } else {
             FirstrunFragment.create()
         }
+        onboardingFeature.recordExposure()
         activity.supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, onboardingFragment, FirstrunFragment.FRAGMENT_TAG)

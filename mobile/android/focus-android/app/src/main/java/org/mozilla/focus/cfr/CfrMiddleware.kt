@@ -13,24 +13,29 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.focus.Components
 import org.mozilla.focus.ext.truncatedHost
+import org.mozilla.focus.nimbus.FocusNimbus
+import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.ERASE_CFR_LIMIT
-import org.mozilla.focus.utils.Features
 
 /**
  * Middleware used to intercept browser store actions in order to decide when should we display a specific CFR
  */
 class CfrMiddleware(private val components: Components) : Middleware<BrowserState, BrowserAction> {
+    private val onboardingFeature = FocusNimbus.features.onboarding
+    private lateinit var onboardingConfig: Onboarding
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
+        onboardingFeature.recordExposure()
+        onboardingConfig = onboardingFeature.value()
         next(action)
 
         if (action is TabListAction.AddTabAction &&
-            Features.IS_ERASE_CFR_ENABLED &&
+            onboardingConfig.isCfrEnabled &&
             !components.appStore.state.showTrackingProtectionCfr
         ) {
             components.settings.numberOfTabsOpened++
@@ -61,7 +66,7 @@ class CfrMiddleware(private val components: Components) : Middleware<BrowserStat
     ) = (
         isActionSecure(action = action) &&
             !isMozillaUrl(browserState = browserState) &&
-            Features.IS_TRACKING_PROTECTION_CFR_ENABLED &&
+            onboardingConfig.isCfrEnabled &&
             components.settings.shouldShowCfrForTrackingProtection &&
             !components.appStore.state.showEraseTabsCfr
         )

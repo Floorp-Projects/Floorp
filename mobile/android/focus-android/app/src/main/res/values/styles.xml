@@ -30,6 +30,12 @@
         <item name="tabCounterTintColor">?primaryText</item>
     </style>
 
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_screen_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+
     <style name="ItemTextAppearance" parent="TextAppearance.AppCompat.Widget.DropDownItem">
         <item name="android:textColor">@color/primaryText</item>
         <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
