@@ -27,8 +27,8 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
     test section. H5 will be used be used for individual tests within each
     suite.
 
-    Usage for verification: ./mach lint -l perfdocs
-    Usage for generation: ./mach lint -l perfdocs --fix
+    Usage for verification: "./mach lint -l perfdocs ."
+    Usage for generation: "./mach lint -l perfdocs --fix ."
 
     For validation, see the Verifier class for a description of how
     it works.

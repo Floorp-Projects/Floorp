@@ -12,7 +12,7 @@ The mozlint integration of PerfDocs can be run using mach:
 
 .. parsed-literal::
 
-    $ mach lint --linter perfdocs
+    $ mach lint --linter perfdocs .
 
 
 Configuration
