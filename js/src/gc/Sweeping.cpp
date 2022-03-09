@@ -1585,8 +1585,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
     AutoLockStoreBuffer lock(&storeBuffer());
-    JSFreeOp fop(rt);
-    callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
+    callFinalizeCallbacks(fop, JSFINALIZE_GROUP_END);
   }
 
   /* Free LIFO blocks on a background thread if possible. */
@@ -2228,7 +2227,9 @@ bool GCRuntime::initSweepActions() {
 IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   AutoMajorGCProfilerEntry s(this);
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
-  JSFreeOp fop(rt);
+
+  JSFreeOp* fop = rt->defaultFreeOp();
+  AutoPoisonFreedJitCode pjc(fop);
 
   // Don't trigger pre-barriers when finalizing.
   AutoDisableBarriers disableBarriers(this);
@@ -2243,13 +2244,13 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   MOZ_ASSERT(initialState <= State::Sweep);
   MOZ_ASSERT_IF(initialState != State::Sweep, marker.isDrained());
   if (initialState == State::Sweep &&
-      markDuringSweeping(&fop, budget) == NotFinished) {
+      markDuringSweeping(fop, budget) == NotFinished) {
     return NotFinished;
   }
 
   // Then continue running sweep actions.
 
-  SweepAction::Args args{this, &fop, budget};
+  SweepAction::Args args{this, fop, budget};
   IncrementalProgress sweepProgress = sweepActions->run(args);
   IncrementalProgress markProgress = joinBackgroundMarkTask();
 
@@ -2289,7 +2290,6 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
   sweepActions->assertFinished();
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
-  JSFreeOp fop(rt);
 
   MOZ_ASSERT_IF(destroyingRuntime, !sweepOnBackgroundThread);
 
@@ -2308,7 +2308,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
     AutoLockStoreBuffer lock(&storeBuffer());
-    callFinalizeCallbacks(&fop, JSFINALIZE_COLLECTION_END);
+    callFinalizeCallbacks(rt->defaultFreeOp(), JSFINALIZE_COLLECTION_END);
 
     if (allCCVisibleZonesWereCollected()) {
       grayBitsValid = true;

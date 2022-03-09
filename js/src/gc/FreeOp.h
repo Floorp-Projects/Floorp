@@ -77,12 +77,10 @@ class JSFreeOp {
   void free_(Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   bool appendJitPoisonRange(const js::jit::JitPoisonRange& range) {
-    // JSFreeOps other than the defaultFreeOp() are constructed on the stack,
-    // and won't hold onto the pointers to free indefinitely.
-    MOZ_ASSERT(!isDefaultFreeOp());
-
     return jitPoisonRanges.append(range);
   }
+  bool hasJitCodeToPoison() const { return !jitPoisonRanges.empty(); }
+  void poisonJitCode();
 
   // Deprecated. Where possible, memory should be tracked against the owning GC
   // thing by calling js::AddCellMemory and the memory freed with delete_()

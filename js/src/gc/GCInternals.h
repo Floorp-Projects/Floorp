@@ -250,6 +250,14 @@ class MOZ_RAII AutoDisableCompartmentCheckTracer {
 #endif
 };
 
+class MOZ_RAII AutoPoisonFreedJitCode {
+  JSFreeOp* const fop;
+
+ public:
+  explicit AutoPoisonFreedJitCode(JSFreeOp* fop) : fop(fop) {}
+  ~AutoPoisonFreedJitCode() { fop->poisonJitCode(); }
+};
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);
