@@ -9,14 +9,13 @@ use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::SpatialTree;
 use crate::clip::ClipStore;
-use crate::composite::CompositeState;
 use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
-use crate::prim_store::{PrimitiveInstance, PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
@@ -94,11 +93,9 @@ pub trait RenderTarget {
         _ctx: &mut RenderTargetContext,
         _gpu_cache: &mut GpuCache,
         _render_tasks: &RenderTaskGraph,
-        _deferred_resolves: &mut Vec<DeferredResolve>,
         _prim_headers: &mut PrimitiveHeaders,
         _transforms: &mut TransformPalette,
         _z_generator: &mut ZBufferIdGenerator,
-        _composite_state: &mut CompositeState,
         _prim_instances: &[PrimitiveInstance],
     ) {
     }
@@ -173,11 +170,9 @@ impl<T: RenderTarget> RenderTargetList<T> {
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskGraph,
-        deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
-        composite_state: &mut CompositeState,
         prim_instances: &[PrimitiveInstance],
     ) {
         if self.targets.is_empty() {
@@ -189,11 +184,9 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 ctx,
                 gpu_cache,
                 render_tasks,
-                deferred_resolves,
                 prim_headers,
                 transforms,
                 z_generator,
-                composite_state,
                 prim_instances,
             );
         }
@@ -254,11 +247,9 @@ impl RenderTarget for ColorRenderTarget {
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskGraph,
-        deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
-        composite_state: &mut CompositeState,
         prim_instances: &[PrimitiveInstance],
     ) {
         profile_scope!("build");
@@ -270,37 +261,12 @@ impl RenderTarget for ColorRenderTarget {
 
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
-                    let pic = &ctx.prim_store.pictures[pic_task.pic_index.0];
-
-                    let raster_spatial_node_index = match pic.raster_config {
-                        Some(ref raster_config) => {
-                            let surface = &ctx.surfaces[raster_config.surface_index.0];
-                            surface.raster_spatial_node_index
-                        }
-                        None => {
-                            // This must be the main framebuffer
-                            ctx.root_spatial_node_index
-                        }
-                    };
-
                     let target_rect = task.get_target_rect();
 
                     let scissor_rect = if pic_task.can_merge {
                         None
                     } else {
                         Some(target_rect)
-                    };
-
-                    // Typical workloads have a single or a few batch builders with a
-                    // large number of batches (regular pictres) and a higher number
-                    // of batch builders with only a single or two batches (for example
-                    // rendering isolated primitives to compute their shadows).
-                    // We can easily guess which category we are in for each picture
-                    // by checking whether it has multiple clusters.
-                    let prealloc_batch_count = if pic.prim_list.clusters.len() > 1 {
-                        128
-                    } else {
-                        0
                     };
 
                     // TODO(gw): The type names of AlphaBatchBuilder and BatchBuilder
@@ -314,39 +280,38 @@ impl RenderTarget for ColorRenderTarget {
                         ctx.batch_lookback_count,
                         *task_id,
                         (*task_id).into(),
-                        None,
-                        prealloc_batch_count,
                     );
 
-                    let mut batch_builder = BatchBuilder::new(
-                        vec![alpha_batch_builder],
-                    );
+                    let mut batch_builder = BatchBuilder::new(alpha_batch_builder);
 
-                    batch_builder.add_pic_to_batch(
-                        pic,
-                        ctx,
-                        gpu_cache,
-                        render_tasks,
-                        deferred_resolves,
-                        prim_headers,
-                        transforms,
-                        raster_spatial_node_index,
-                        pic_task.surface_spatial_node_index,
-                        z_generator,
-                        composite_state,
-                        prim_instances,
-                    );
+                    let cmd_buffer = pic_task.cmd_buffer.as_ref().expect("bug: no cmd buffer set for picture!");
 
-                    let alpha_batch_builders = batch_builder.finalize();
+                    cmd_buffer.iter_prims(&mut |prim_instance_index, spatial_node_index, gpu_address| {
+                        let prim_instance = &prim_instances[prim_instance_index.0 as usize];
 
-                    for batcher in alpha_batch_builders {
-                        batcher.build(
-                            &mut self.alpha_batch_containers,
-                            &mut merged_batches,
-                            target_rect,
-                            scissor_rect,
+                        batch_builder.add_prim_to_batch(
+                            prim_instance,
+                            gpu_address,
+                            spatial_node_index,
+                            ctx,
+                            gpu_cache,
+                            render_tasks,
+                            prim_headers,
+                            transforms,
+                            pic_task.raster_spatial_node_index,
+                            pic_task.surface_spatial_node_index,
+                            z_generator,
                         );
-                    }
+                    });
+
+                    let alpha_batch_builder = batch_builder.finalize();
+
+                    alpha_batch_builder.build(
+                        &mut self.alpha_batch_containers,
+                        &mut merged_batches,
+                        target_rect,
+                        scissor_rect,
+                    );
                 }
                 _ => {
                     unreachable!();
