@@ -48,7 +48,7 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    *
    * @type {Set<string>}
    */
-  #addedUrls = new Set();
+  #addedItems = new Set();
 
   /**
    * The set of urls that have been removed since the last builder update.
@@ -141,13 +141,13 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     } else {
       for (let builder of this.#groupBuilders) {
         await builder.update({
-          addedUrls: this.#addedUrls,
+          addedItems: this.#addedItems,
           removedUrls: this.#removedUrls,
         });
       }
     }
 
-    this.#addedUrls.clear();
+    this.#addedItems.clear();
     this.#removedUrls.clear();
   }
 
@@ -198,12 +198,16 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    * Handles snapshots being added - adds to the internal list and sets the
    * timer.
    *
-   * @param {string[]} urls
-   *   An array of snapshot urls that have been added.
+   * @param {object[]} items
+   *   An array of items that have been added.
+   * @param {string} items.url
+   *   The url of the item.
+   * @param {number} items.userPersisted
+   *   The userPersisted state of the item.
    */
-  #onSnapshotAdded(urls) {
-    for (let url of urls) {
-      this.#addedUrls.add(url);
+  #onSnapshotAdded(items) {
+    for (let item of items) {
+      this.#addedItems.add(item);
     }
     this.#setTimer(this.#addedTimerDelay);
   }

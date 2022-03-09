@@ -378,7 +378,7 @@ const Snapshots = new (class Snapshots {
     if (placeId) {
       await this.#addPageData([{ placeId, url }]);
 
-      this.#notify("places-snapshots-added", [url]);
+      this.#notify("places-snapshots-added", [{ url, userPersisted }]);
     }
   }
 
@@ -656,7 +656,7 @@ const Snapshots = new (class Snapshots {
       LEFT JOIN moz_places_metadata_snapshots_extra e
       ON e.place_id = s.place_id
       WHERE s.place_id IN (
-        SELECT p1.place_id FROM moz_places_metadata p1 JOIN moz_places_metadata p2 USING (referrer_place_id) 
+        SELECT p1.place_id FROM moz_places_metadata p1 JOIN moz_places_metadata p2 USING (referrer_place_id)
         WHERE p2.place_id = :context_place_id AND p1.place_id <> :context_place_id
       )
       GROUP BY s.place_id
@@ -947,7 +947,12 @@ const Snapshots = new (class Snapshots {
       await this.#addPageData(insertedUrls);
       this.#notify(
         "places-snapshots-added",
-        insertedUrls.map(result => result.url)
+        insertedUrls.map(result => {
+          return {
+            url: result.url,
+            userPersisted: this.USER_PERSISTED.NO,
+          };
+        })
       );
     }
   }
