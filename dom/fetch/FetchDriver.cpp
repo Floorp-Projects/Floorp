@@ -825,7 +825,8 @@ nsresult FetchDriver::HttpFetch(
     if (mRequest->GetIntegrity().IsEmpty()) {
       MOZ_ASSERT(!FetchUtil::WasmAltDataType.IsEmpty());
       nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
-      if (cic && StaticPrefs::javascript_options_wasm_caching()) {
+      if (cic && StaticPrefs::javascript_options_wasm_caching() &&
+          !mRequest->SkipWasmCaching()) {
         cic->PreferAlternativeDataType(
             FetchUtil::WasmAltDataType, nsLiteralCString(WASM_CONTENT_TYPE),
             nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::

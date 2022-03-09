@@ -120,6 +120,10 @@ JS_PUBLIC_API JSPrincipals* JS::GetRealmPrincipals(JS::Realm* realm) {
   return realm->principals();
 }
 
+JS_PUBLIC_API bool JS::GetDebuggerObservesWasm(JS::Realm* realm) {
+  return realm->debuggerObservesAsmJS();
+}
+
 JS_PUBLIC_API void JS::SetRealmPrincipals(JS::Realm* realm,
                                           JSPrincipals* principals) {
   // Short circuit if there's no change.
