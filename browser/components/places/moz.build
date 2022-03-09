@@ -23,6 +23,7 @@ EXTRA_JS_MODULES += [
     "DomainGroupBuilder.jsm",
     "Interactions.jsm",
     "InteractionsBlocklist.jsm",
+    "PinnedGroupBuilder.jsm",
     "PlacesUIUtils.jsm",
     "SnapshotGroups.jsm",
     "SnapshotMonitor.jsm",
