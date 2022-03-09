@@ -18,7 +18,6 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
-#include "gc/MaybeRooted.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
@@ -226,26 +225,12 @@ static void MarkParserScopeData(JSContext* cx,
   }
 }
 
-static bool SetEnvironmentShape(JSContext* cx, ParserBindingIter& freshBi,
-                                ParserBindingIter& bi, const JSClass* cls,
-                                uint32_t firstFrameSlot,
-                                ObjectFlags objectFlags,
-                                mozilla::Maybe<uint32_t>* envShape) {
-  envShape->emplace(bi.nextEnvironmentSlot());
-  return true;
-}
-
-template <typename ConcreteScope, typename AtomT, typename EnvironmentT,
-          typename ShapeT>
-static bool PrepareScopeData(
-    JSContext* cx, AbstractBindingIter<AtomT>& bi,
-    typename MaybeRootedScopeData<ConcreteScope, AtomT>::HandleType data,
-    uint32_t firstFrameSlot, ShapeT envShape) {
+template <typename ConcreteScope, typename EnvironmentT>
+static void PrepareScopeData(ParserBindingIter& bi,
+                             typename ConcreteScope::ParserData* data,
+                             uint32_t firstFrameSlot,
+                             mozilla::Maybe<uint32_t>* envShape) {
   const JSClass* cls = &EnvironmentT::class_;
-  constexpr ObjectFlags objectFlags = EnvironmentT::OBJECT_FLAGS;
-
-  // Copy a fresh BindingIter for use below.
-  AbstractBindingIter<AtomT> freshBi(bi);
 
   // Iterate through all bindings. This counts the number of environment
   // slots needed and computes the maximum frame slot.
@@ -255,18 +240,10 @@ static bool PrepareScopeData(
   data->slotInfo.nextFrameSlot =
       bi.canHaveFrameSlots() ? bi.nextFrameSlot() : LOCALNO_LIMIT;
 
-  // Data is not used after this point.  Before this point, gc cannot
-  // occur, so `data` is fine as a raw pointer.
-
   // Make a new environment shape if any environment slots were used.
   if (bi.nextEnvironmentSlot() != JSSLOT_FREE(cls)) {
-    if (!SetEnvironmentShape(cx, freshBi, bi, cls, firstFrameSlot, objectFlags,
-                             envShape)) {
-      return false;
-    }
+    envShape->emplace(bi.nextEnvironmentSlot());
   }
-
-  return true;
 }
 
 template <typename ConcreteScope>
@@ -645,11 +622,8 @@ bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
   ParserBindingIter bi(*data, firstFrameSlot, isNamedLambda);
-  if (!PrepareScopeData<LexicalScope, frontend::TaggedParserAtomIndex,
-                        BlockLexicalEnvironmentObject>(
-          cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
+  PrepareScopeData<LexicalScope, BlockLexicalEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
   return true;
 }
 
@@ -665,9 +639,10 @@ bool ClassBodyScope::prepareForScopeCreation(
   MOZ_ASSERT(kind == ScopeKind::ClassBody);
 
   ParserBindingIter bi(*data, firstFrameSlot);
-  return PrepareScopeData<ClassBodyScope, frontend::TaggedParserAtomIndex,
-                          BlockLexicalEnvironmentObject>(
-      cx, bi, data, firstFrameSlot, envShape);
+  PrepareScopeData<ClassBodyScope, BlockLexicalEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
+
+  return true;
 }
 
 bool FunctionScope::prepareForScopeCreation(
@@ -676,10 +651,8 @@ bool FunctionScope::prepareForScopeCreation(
     mozilla::Maybe<uint32_t>* envShape) {
   uint32_t firstFrameSlot = 0;
   ParserBindingIter bi(*data, hasParameterExprs);
-  if (!PrepareScopeData<FunctionScope, frontend::TaggedParserAtomIndex,
-                        CallObject>(cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
+  PrepareScopeData<FunctionScope, CallObject>(bi, data, firstFrameSlot,
+                                              envShape);
 
   if (hasParameterExprs) {
     data->slotInfo.setHasParameterExprs();
@@ -719,11 +692,8 @@ bool VarScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                        bool needsEnvironment,
                                        mozilla::Maybe<uint32_t>* envShape) {
   ParserBindingIter bi(*data, firstFrameSlot);
-  if (!PrepareScopeData<VarScope, frontend::TaggedParserAtomIndex,
-                        VarEnvironmentObject>(cx, bi, data, firstFrameSlot,
-                                              envShape)) {
-    return false;
-  }
+  PrepareScopeData<VarScope, VarEnvironmentObject>(bi, data, firstFrameSlot,
+                                                   envShape);
 
   // An environment may be needed regardless of existence of any closed over
   // bindings:
@@ -772,11 +742,8 @@ bool EvalScope::prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
   if (scopeKind == ScopeKind::StrictEval) {
     uint32_t firstFrameSlot = 0;
     ParserBindingIter bi(*data, true);
-    if (!PrepareScopeData<EvalScope, frontend::TaggedParserAtomIndex,
-                          VarEnvironmentObject>(cx, bi, data, firstFrameSlot,
-                                                envShape)) {
-      return false;
-    }
+    PrepareScopeData<EvalScope, VarEnvironmentObject>(bi, data, firstFrameSlot,
+                                                      envShape);
   }
 
   return true;
@@ -809,11 +776,8 @@ bool ModuleScope::prepareForScopeCreation(JSContext* cx,
                                           mozilla::Maybe<uint32_t>* envShape) {
   uint32_t firstFrameSlot = 0;
   ParserBindingIter bi(*data);
-  if (!PrepareScopeData<ModuleScope, frontend::TaggedParserAtomIndex,
-                        ModuleEnvironmentObject>(cx, bi, data, firstFrameSlot,
-                                                 envShape)) {
-    return false;
-  }
+  PrepareScopeData<ModuleScope, ModuleEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
 
   // Modules always need an environment object for now.
   bool needsEnvironment = true;
