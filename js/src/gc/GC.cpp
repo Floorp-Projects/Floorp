@@ -291,9 +291,11 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
-JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime)
-    : runtime_(maybeRuntime), isCollecting_(false) {
-  MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
+MOZ_THREAD_LOCAL(JSFreeOp*) js::TlsFreeOp;
+
+JSFreeOp::JSFreeOp(JSRuntime* runtime, bool isMainThread)
+    : runtime_(runtime), isMainThread_(isMainThread) {
+  MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(runtime));
 }
 
 JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
@@ -378,6 +380,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
+      mainThreadFreeOp(rt, true),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
@@ -807,6 +810,11 @@ bool GCRuntime::init(uint32_t maxbytes) {
   MOZ_ASSERT(SystemPageSize());
   Arena::checkLookupTables();
 
+  if (!TlsFreeOp.init()) {
+    return false;
+  }
+  TlsFreeOp.set(&mainThreadFreeOp.ref());
+
   {
     AutoLockGCBgAlloc lock(this);
 
@@ -844,10 +852,9 @@ bool GCRuntime::init(uint32_t maxbytes) {
     return false;
   }
 
-  gcprobes::Init(this);
-
   updateHelperThreadCount();
 
+  gcprobes::Init(this);
   return true;
 }
 
@@ -874,6 +881,7 @@ void GCRuntime::finish() {
 
   // Delete all remaining zones.
   if (rt->gcInitialized) {
+    AutoSetThreadIsPerformingGC performingGC;
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
       AutoSetThreadIsSweeping threadIsSweeping(zone);
       for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -893,6 +901,8 @@ void GCRuntime::finish() {
   FreeChunkPool(fullChunks_.ref());
   FreeChunkPool(availableChunks_.ref());
   FreeChunkPool(emptyChunks_.ref());
+
+  TlsFreeOp.set(nullptr);
 
   gcprobes::Finish(this);
 
