@@ -362,27 +362,12 @@ inline void Scope::initData(
   setHeaderPtr(data.get().release());
 }
 
-template <typename EnvironmentT>
-bool Scope::updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape envShape,
-                                     bool needsEnvironment) {
-  if (!envShape && needsEnvironment) {
-    envShape.set(EmptyEnvironmentShape<EnvironmentT>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <typename EnvironmentT>
-bool Scope::updateEnvShapeIfRequired(JSContext* cx,
-                                     mozilla::Maybe<uint32_t>* envShape,
+void Scope::updateEnvShapeIfRequired(mozilla::Maybe<uint32_t>* envShape,
                                      bool needsEnvironment) {
   if (envShape->isNothing() && needsEnvironment) {
     uint32_t numSlots = 0;
     envShape->emplace(numSlots);
   }
-  return true;
 }
 
 uint32_t Scope::firstFrameSlot() const {
@@ -665,7 +650,9 @@ bool FunctionScope::prepareForScopeCreation(
   //   - Being a derived class constructor
   //   - Being a generator or async function
   // Also see |FunctionBox::needsExtraBodyVarEnvironmentRegardlessOfBindings()|.
-  return updateEnvShapeIfRequired<CallObject>(cx, envShape, needsEnvironment);
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
+
+  return true;
 }
 
 JSScript* FunctionScope::script() const {
@@ -699,8 +686,9 @@ bool VarScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
   // bindings:
   //   - Extensible scopes (i.e., due to direct eval)
   //   - Being a generator
-  return updateEnvShapeIfRequired<VarEnvironmentObject>(cx, envShape,
-                                                        needsEnvironment);
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
+
+  return true;
 }
 
 /* static */
@@ -781,9 +769,9 @@ bool ModuleScope::prepareForScopeCreation(JSContext* cx,
 
   // Modules always need an environment object for now.
   bool needsEnvironment = true;
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
 
-  return updateEnvShapeIfRequired<ModuleEnvironmentObject>(cx, envShape,
-                                                           needsEnvironment);
+  return true;
 }
 
 template <size_t ArrayLength>
