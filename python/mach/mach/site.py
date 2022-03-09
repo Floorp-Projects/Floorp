@@ -524,6 +524,14 @@ class CommandSiteManager:
         first to ensure that the virtualenv doesn't have obsolete references or packages.
         """
         if not self._up_to_date():
+            active_site = MozSiteMetadata.from_runtime()
+            if active_site.site_name == self._site_name:
+                raise Exception(
+                    f'The "{self._site_name}" site is out-of-date, even though it has '
+                    f"already been activated. Was it modified while this Mach process "
+                    f"was running?"
+                )
+
             _create_venv_with_pthfile(
                 self._topsrcdir,
                 self._virtualenv,
