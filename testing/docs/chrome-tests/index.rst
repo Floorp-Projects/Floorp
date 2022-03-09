@@ -4,10 +4,10 @@ Chrome Tests
 .. _DISCLAIMER:
 
 **DISCLAIMER**
-~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 **NOTE: Please use this document as a reference for existing chrome tests as you do not want to create new chrome tests.
-If you're trying to test privileged browser code, write a browser mochitest instead; 
+If you're trying to test privileged browser code, write a browser mochitest instead;
 if you are testing web platform code, use a wpt test, or a "plain" mochitest if you are unable to use a wpt test.**
 
 .. _Introduction:
@@ -18,7 +18,7 @@ Introduction
 A chrome test is similar but not equivalent to a Mochitest running with chrome privileges.
 
 The chrome test suite is an automated testing framework designed to
-allow testing of application chrome windows using JavaScript. 
+allow testing of application chrome windows using JavaScript.
 It allows you to run JavaScript code in the non-electroysis (e10s) content area
 with chrome privileges, instead of directly in the browser window (as browser tests do instead).
 These tests reports results using the same functions as the Mochitest test framework.
