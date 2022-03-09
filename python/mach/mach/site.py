@@ -662,6 +662,25 @@ class CommandSiteManager:
             # When Mach is using the system environment, add it next.
             stdlib_paths = self._metadata.original_python.stdlib_paths()
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
+
+            # When a virtualenv is activated, it implicitly adds some paths to the
+            # sys.path. When this function is run from such an activated virtualenv,
+            # we don't want to include its paths in the pthfile because they'd be
+            # redundant - so, scrub them.
+            # Note that some platforms include just a site's $site-packages-dir to the
+            # sys.path, while other platforms (such as Windows) add the $prefix as well.
+            # We can catch these cases by matching all paths that start with $prefix.
+            prefix_normalized = os.path.normcase(
+                os.path.normpath(self._virtualenv.prefix)
+            )
+            system_sys_path = [
+                p
+                for p in system_sys_path
+                if not os.path.normcase(os.path.normpath(p)).startswith(
+                    prefix_normalized
+                )
+            ]
+
             lines.extend(system_sys_path)
         elif mach_site_packages_source == SitePackagesSource.VENV:
             # When Mach is using its on-disk virtualenv, add its site-packages directory.
@@ -684,34 +703,17 @@ class CommandSiteManager:
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
             lines.extend(system_sys_path)
         elif self._site_packages_source == SitePackagesSource.VENV:
-            # The virtualenv will implicitly include itself to the sys.path, so we
-            # should avoid having our sys.path-retention add it a second time.
-            # Note that some platforms include just a site's $site-packages-dir to the
-            # sys.path, while other platforms (such as Windows) add the $prefix as well.
-            # We can catch these cases by pruning all paths that start with $prefix.
-            prefix_normalized = os.path.normcase(
-                os.path.normpath(self._virtualenv.prefix)
-            )
-            lines = [
-                line
-                for line in lines
-                if not os.path.normcase(os.path.normpath(line)).startswith(
-                    prefix_normalized
-                )
-            ]
+            # Finally, ensure that pip-installed packages are the lowest-priority
+            # source to import from.
             lines.extend(_deprioritize_venv_packages(self._virtualenv))
 
         # De-duplicate
         lines = list(OrderedDict.fromkeys(lines))
 
         # Note that an on-disk virtualenv is always created for commands, even if they
-        # are using the system as their site-packages source. Also note that, in such
-        # a case, we aren't "deprioritizing" the venv_packages. This is because:
-        # * There should be no risk of breakage, since *nothing* should be "pip install"-d
-        #   into the virtualenv, and
-        # * There's nontrivial complexity in purging the virtualenv's site-packages from
-        #   the sys.path after activation, but since it isn't doing any harm in staying,
-        #   we leave it.
+        # are using the system as their site-packages source. This is to support use
+        # cases where a fresh Python process must be created, but it also must have
+        # access to <site>'s 1st- and 3rd-party packages.
         return lines
 
     def _up_to_date(self):
