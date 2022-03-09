@@ -287,6 +287,18 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
+   * Returns the url up until, but not including, any hash mark identified fragments
+   * For example, given  http://www.example.org/foo.html#bar, this function will return http://www.example.org/foo.html
+   * @param {string} url
+   *   The url associated with the snapshot.
+   * @returns {string}
+   *  The url up until, but not including, any fragments
+   */
+  stripFragments(url) {
+    return url.split("#")[0];
+  }
+
+  /**
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
@@ -306,6 +318,9 @@ const Snapshots = new (class Snapshots {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
+
+    url = this.stripFragments(url);
+
     if (!InteractionsBlocklist.canRecordUrl(url)) {
       throw new Error("This url cannot be added to snapshots");
     }
@@ -390,6 +405,7 @@ const Snapshots = new (class Snapshots {
    *   The url of the snapshot to delete.
    */
   async delete(url) {
+    url = this.stripFragments(url);
     await PlacesUtils.withConnectionWrapper("Snapshots: delete", async db => {
       let placeId = (
         await db.executeCached(
@@ -421,6 +437,7 @@ const Snapshots = new (class Snapshots {
    * @returns {?Snapshot}
    */
   async get(url, includeTombstones = false) {
+    url = this.stripFragments(url);
     let db = await PlacesUtils.promiseDBConnection();
     let extraWhereCondition = "";
 
