@@ -18,6 +18,10 @@ function openPermissionPopup() {
   return viewShown;
 }
 
+function getIdentityMode(aWindow = window) {
+  return aWindow.document.getElementById("identity-box").className;
+}
+
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
