@@ -259,8 +259,9 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
    * thread during compacting GC and reading the contents of the thing by
    * IsThingPoisoned would be racy in this case.
    */
-  MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy() && !zone->isGCSweeping() &&
-                    !zone->isGCFinished() && !zone->isGCCompacting(),
+  MOZ_ASSERT_IF(rt->heapState() != JS::HeapState::Idle &&
+                    !zone->isGCSweeping() && !zone->isGCFinished() &&
+                    !zone->isGCCompacting(),
                 !IsThingPoisoned(thing) ||
                     !InFreeList(thing->asTenured().arena(), thing));
 }
