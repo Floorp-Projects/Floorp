@@ -131,6 +131,7 @@ if __name__ == "__main__":
 
         env = os.environ.copy()
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+        env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
         env["XPCOM_DEBUG_BREAK"] = "warn"
         # We disable sandboxing to make writing profiling data actually work
         # Bug 1553850 considers fixing this.
