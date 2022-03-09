@@ -29,7 +29,6 @@
 #include "jsmath.h"
 
 #include "frontend/CompilationStencil.h"
-#include "gc/FreeOp.h"
 #include "gc/PublicIterators.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -564,20 +563,6 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
   sharedIntlData.ref().trace(trc);
 }
 #endif
-
-JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime)
-    : runtime_(maybeRuntime), isCollecting_(false) {
-  MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
-}
-
-JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
-
-void JSFreeOp::poisonJitCode() {
-  if (hasJitCodeToPoison()) {
-    jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
-    jitPoisonRanges.clearAndFree();
-  }
-}
 
 GlobalObject* JSRuntime::getIncumbentGlobal(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
