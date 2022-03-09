@@ -8,6 +8,7 @@
 #define mozilla_dom_ReadableByteStreamController_h
 
 #include <cstddef>
+#include "UnderlyingSourceCallbackHelpers.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -111,19 +112,9 @@ class ReadableByteStreamController final : public ReadableStreamController,
     mCloseRequested = aCloseRequested;
   }
 
-  UnderlyingSourceCancelCallbackHelper* GetCancelAlgorithm() const {
-    return mCancelAlgorithm;
-  }
-  void SetCancelAlgorithm(
-      UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm) {
-    mCancelAlgorithm = aCancelAlgorithm;
-  }
-
-  UnderlyingSourcePullCallbackHelper* GetPullAlgorithm() const {
-    return mPullAlgorithm;
-  }
-  void SetPullAlgorithm(UnderlyingSourcePullCallbackHelper* aPullAlgorithm) {
-    mPullAlgorithm = aPullAlgorithm;
+  UnderlyingSourceAlgorithmsBase* GetAlgorithms() { return mAlgorithms; }
+  void SetAlgorithms(UnderlyingSourceAlgorithmsBase* aAlgorithms) {
+    mAlgorithms = aAlgorithms;
   }
 
   LinkedList<RefPtr<ReadableByteStreamQueueEntry>>& Queue() { return mQueue; }
@@ -167,13 +158,8 @@ class ReadableByteStreamController final : public ReadableStreamController,
   // request, or null if there are no pending requests
   RefPtr<ReadableStreamBYOBRequest> mByobRequest;
 
-  // A promise-returning algorithm, taking one argument (the cancel reason),
-  // which communicates a requested cancelation to the underlying byte source
-  RefPtr<UnderlyingSourceCancelCallbackHelper> mCancelAlgorithm;
-
-  // A promise-returning algorithm that pulls data from the underlying byte
-  // source
-  RefPtr<UnderlyingSourcePullCallbackHelper> mPullAlgorithm;
+  // The algorithms for the underlying byte source
+  RefPtr<UnderlyingSourceAlgorithmsBase> mAlgorithms;
 
   // A list of pull-into descriptors
   LinkedList<RefPtr<PullIntoDescriptor>> mPendingPullIntos;
@@ -373,10 +359,7 @@ MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerClose(
 MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableByteStreamController* aController,
-    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
-    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
-    UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
+    UnderlyingSourceAlgorithmsBase* aAlgorithms, double aHighWaterMark,
     Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerCallPullIfNeeded(
@@ -387,11 +370,6 @@ MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     ErrorResult& aRv);
-
-MOZ_CAN_RUN_SCRIPT void
-SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream,
-    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv);
 
 void ReadableByteStreamControllerClearAlgorithms(
     ReadableByteStreamController* aController);

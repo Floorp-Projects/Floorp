@@ -783,7 +783,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
         TryFinallyControl& finallyControl = control->as<TryFinallyControl>();
         if (finallyControl.emittingSubroutine()) {
           /*
-           * There's a [exception or hole, retsub pc-index] pair and the
+           * There's a [resume-index-or-exception, throwing] pair and the
            * possible return value on the stack that we need to pop.
            */
           npops += 3;
@@ -791,7 +791,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
           if (!flushPops(bce_)) {
             return false;
           }
-          if (!bce_->emitGoSub(&finallyControl.gosubs)) {
+          if (!bce_->emitJumpToFinally(&finallyControl.finallyJumps_)) {
             //      [stack] ...
             return false;
           }
@@ -5018,7 +5018,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
     // debugleaveblock
     // [poplexicalenv]              only if any local aliased
     // if there is a finally block:
-    //   gosub <finally>
+    //   goto <finally>
+    //   [jump target for returning from finally]
     //   goto <after finally>
     if (!tryCatch.emitCatch()) {
       return false;
@@ -5048,30 +5049,34 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
   return true;
 }
 
-[[nodiscard]] bool BytecodeEmitter::emitGoSub(JumpList* jump) {
+[[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump) {
   // Emit the following:
   //
-  //     False
   //     ResumeIndex <resumeIndex>
-  //     Gosub <target>
+  //     False
+  //     Goto <target>
   //   resumeOffset:
   //     JumpTarget
   //
   // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
   // setting the frame's ICEntry when resuming at resumeOffset.
 
-  if (!emit1(JSOp::False)) {
-    return false;
-  }
-
   BytecodeOffset off;
   if (!emitN(JSOp::ResumeIndex, 3, &off)) {
     return false;
   }
 
-  if (!emitJumpNoFallthrough(JSOp::Gosub, jump)) {
+  if (!emit1(JSOp::False)) {
     return false;
   }
+
+  if (!emitJumpNoFallthrough(JSOp::Goto, jump)) {
+    return false;
+  }
+
+  // When we return from the finally, the resume index and throwing
+  // values will have been popped.
+  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() - 2);
 
   uint32_t resumeIndex;
   if (!allocateResumeIndex(bytecodeSection().offset(), &resumeIndex)) {
@@ -6281,7 +6286,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
    * EmitNonLocalJumpFixup may add fixup bytecode to close open try
    * blocks having finally clauses and to exit intermingled let blocks.
    * We can't simply transfer control flow to our caller in that case,
-   * because we must gosub to those finally clauses from inner to outer,
+   * because we must execute those finally clauses from inner to outer,
    * with the correct stack pointer (i.e., after popping any with,
    * for/in, etc., slots nested inside the finally's try).
    *

@@ -92,6 +92,7 @@ class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla
   // We save them here for use in command handling.
   RefPtr<nsIContent> mAboutItemContent;
   RefPtr<nsIContent> mPrefItemContent;
+  RefPtr<nsIContent> mAccountItemContent;
   RefPtr<nsIContent> mQuitItemContent;
 
   // nsChangeObserver

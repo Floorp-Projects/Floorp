@@ -383,38 +383,6 @@ static already_AddRefed<BasePrincipal> GetAboutReaderURLPrincipal(
 }
 
 /**
- * Check if the given load has the `Large-Allocation` header set, and the header
- * is enabled.
- */
-static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
-                                  nsIChannel* aChannel) {
-  if (!StaticPrefs::dom_largeAllocationHeader_enabled() ||
-      aBrowsingContext->UseRemoteSubframes()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    return false;
-  }
-
-  nsAutoCString ignoredHeaderValue;
-  nsresult rv =
-      httpChannel->GetResponseHeader("Large-Allocation"_ns, ignoredHeaderValue);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  // On all platforms other than win32, LargeAllocation is disabled by default,
-  // and has to be force-enabled using `dom.largeAllocation.forceEnable`.
-#if defined(XP_WIN) && defined(_X86_)
-  return true;
-#else
-  return StaticPrefs::dom_largeAllocation_forceEnable();
-#endif
-}
-
-/**
  * Returns `true` if loads for this site should be isolated on a per-site basis.
  * If `aTopBC` is nullptr, this is being called to check if a shared or service
  * worker should be isolated.
@@ -774,30 +742,6 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
   if (aCurrentRemoteType.IsEmpty()) {
     MOZ_ASSERT(!aParentWindow);
     options.mReplaceBrowsingContext = true;
-  }
-
-  // Handle the deprecated Large-Allocation header.
-  if (!aTopBC->UseRemoteSubframes()) {
-    MOZ_ASSERT(!aParentWindow,
-               "subframe switch when `UseRemoteSubframes()` is false?");
-    bool singleToplevel = aTopBC->Group()->Toplevels().Length() == 1;
-    bool isLargeAllocLoad = IsLargeAllocationLoad(aTopBC, aChannel);
-    // If we're starting a large-alloc load and have no opener relationships,
-    // force the load to finish in the large-allocation remote type.
-    if (isLargeAllocLoad && singleToplevel) {
-      options.mRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
-      options.mReplaceBrowsingContext = true;
-      return options;
-    }
-    if (aCurrentRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
-      // If we're doing a non-large-alloc load, we may still need to finish in
-      // the large-allocation remote type if we have opener relationships.
-      if (!singleToplevel) {
-        options.mRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
-        return options;
-      }
-      options.mReplaceBrowsingContext = true;
-    }
   }
 
   nsAutoCString siteOriginNoSuffix;

@@ -10164,9 +10164,7 @@ js::shell::AutoReportException::~AutoReportException() {
     JS_ClearPendingException(cx);
 
     // If possible, use the original error stack as the source of truth, because
-    // finally block handlers may have overwritten the exception stack. See
-    // the |cx->setPendingExceptionAndCaptureStack()| call when executing
-    // |JSOp::RetSub|.
+    // finally block handlers may have overwritten the exception stack.
     RootedObject stack(cx, exnStack.stack());
     if (exnStack.exception().isObject()) {
       RootedObject exception(cx, &exnStack.exception().toObject());

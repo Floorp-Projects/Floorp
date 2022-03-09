@@ -4628,21 +4628,9 @@ bool BaselineCodeGen<Handler>::emit_Try() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Finally() {
-  // JSOp::Finally has a def count of 2, but these values are already on the
-  // stack (they're pushed by JSOp::Gosub). Update the compiler's stack state.
-  frame.incStackDepth(2);
-
   // To match the interpreter, emit an interrupt check at the start of the
   // finally block.
   return emitInterruptCheck();
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_Gosub() {
-  // Jump to the finally block.
-  frame.syncStack(0);
-  emitJump();
-  return true;
 }
 
 static void LoadBaselineScriptResumeEntries(MacroAssembler& masm,
@@ -4705,28 +4693,14 @@ void BaselineInterpreterCodeGen::jumpToResumeEntry(Register resumeIndex,
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Retsub() {
-  frame.popRegsAndSync(2);
+  frame.popRegsAndSync(1);
 
-  Label isReturn;
-  masm.branchTestBooleanTruthy(/* branchIfTrue = */ false, R0, &isReturn);
-
-  // R0 is |true|. We need to throw R1.
-  prepareVMCall();
-  pushArg(R1);
-
-  using Fn = bool (*)(JSContext*, HandleValue);
-  if (!callVM<Fn, js::ThrowOperation>()) {
-    return false;
-  }
-
-  masm.bind(&isReturn);
-
-  // R0 is |false|. R1 contains the resumeIndex to jump to.
-  Register resumeIndexReg = R1.scratchReg();
-  masm.unboxInt32(R1, resumeIndexReg);
+  // R0 contains the resumeIndex to jump to.
+  Register resumeIndexReg = R0.scratchReg();
+  masm.unboxInt32(R0, resumeIndexReg);
 
   Register scratch1 = R2.scratchReg();
-  Register scratch2 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
   jumpToResumeEntry(resumeIndexReg, scratch1, scratch2);
   return true;
 }

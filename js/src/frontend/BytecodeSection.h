@@ -323,7 +323,7 @@ class BytecodeSection {
 
   // ---- Generator ----
 
-  // Certain ops (yield, await, gosub) have an entry in the script's
+  // Certain ops (yield, await, retsub) have an entry in the script's
   // resumeOffsets list. This can be used to map from the op's resumeIndex to
   // the bytecode offset of the next pc. This indirection makes it easy to
   // resume in the JIT (because BaselineScript stores a resumeIndex => native

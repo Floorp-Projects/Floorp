@@ -43,8 +43,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mCancelAlgorithm,
-                                  mPullAlgorithm, mStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mAlgorithms, mStream)
   tmp->ClearPendingPullIntos();
   tmp->ClearQueue();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -52,8 +51,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ReadableByteStreamController,
                                                   ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mCancelAlgorithm,
-                                    mPullAlgorithm, mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mAlgorithms, mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableByteStreamController,
@@ -229,10 +227,8 @@ void ResetQueue(ReadableByteStreamController* aContainer) {
 void ReadableByteStreamControllerClearAlgorithms(
     ReadableByteStreamController* aController) {
   // Step 1. Set controller.[[pullAlgorithm]] to undefined.
-  aController->SetPullAlgorithm(nullptr);
-
   // Step 2. Set controller.[[cancelAlgorithm]] to undefined.
-  aController->SetCancelAlgorithm(nullptr);
+  aController->SetAlgorithms(nullptr);
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-error
@@ -556,12 +552,9 @@ void ReadableByteStreamControllerCallPullIfNeeded(
 
   // Step 6.
   RefPtr<ReadableStreamController> controller(aController);
-  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm(
-      aController->GetPullAlgorithm());
-  RefPtr<Promise> pullPromise =
-      pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *controller, aRv)
-                    : Promise::CreateResolvedWithUndefined(
-                          controller->GetParentObject(), aRv);
+  RefPtr<UnderlyingSourceAlgorithmsBase> algorithms =
+      aController->GetAlgorithms();
+  RefPtr<Promise> pullPromise = algorithms->PullCallback(aCx, *controller, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -1019,12 +1012,8 @@ already_AddRefed<Promise> ReadableByteStreamController::CancelSteps(
 
   // Step 3.
   Optional<JS::Handle<JS::Value>> reason(aCx, aReason);
-  RefPtr<UnderlyingSourceCancelCallbackHelper> cancelAlgorithm(
-      GetCancelAlgorithm());
-  RefPtr<Promise> result =
-      cancelAlgorithm
-          ? cancelAlgorithm->CancelCallback(aCx, reason, aRv)
-          : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
+  RefPtr<UnderlyingSourceAlgorithmsBase> algorithms = mAlgorithms;
+  RefPtr<Promise> result = algorithms->CancelCallback(aCx, reason, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -1927,10 +1916,7 @@ NS_INTERFACE_MAP_END
 void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableByteStreamController* aController,
-    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
-    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
-    UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
+    UnderlyingSourceAlgorithmsBase* aAlgorithms, double aHighWaterMark,
     Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[controller]] is undefined.
   MOZ_ASSERT(!aStream->Controller());
@@ -1962,13 +1948,8 @@ void SetUpReadableByteStreamController(
   aController->SetStrategyHWM(aHighWaterMark);
 
   // Step 9. Set controller.[[pullAlgorithm]] to pullAlgorithm.
-  aController->SetPullAlgorithm(aPullAlgorithm);
-
   // Step 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
-  aController->SetCancelAlgorithm(aCancelAlgorithm);
-
-  // Not Specified.
-  aStream->SetErrorAlgorithm(aErrorAlgorithm);
+  aController->SetAlgorithms(aAlgorithms);
 
   // Step 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
   aController->SetAutoAllocateChunkSize(aAutoAllocateChunkSize);
@@ -1980,17 +1961,11 @@ void SetUpReadableByteStreamController(
   aStream->SetController(aController);
 
   // Step 14. Let startResult be the result of performing startAlgorithm.
-  // Default algorithm returns undefined.
   JS::RootedValue startResult(aCx, JS::UndefinedValue());
-  if (aStartAlgorithm) {
-    // Strong Refs:
-    RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm(aStartAlgorithm);
-    RefPtr<ReadableStreamController> controller(aController);
-
-    startAlgorithm->StartCallback(aCx, *controller, &startResult, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+  RefPtr<ReadableStreamController> controller = aController;
+  aAlgorithms->StartCallback(aCx, *controller, &startResult, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   // Let startPromise be a promise resolved with startResult.
@@ -2011,49 +1986,12 @@ void SetUpReadableByteStreamControllerFromUnderlyingSource(
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     ErrorResult& aRv) {
   // Step 1. Let controller be a new ReadableByteStreamController.
-  RefPtr<ReadableByteStreamController> controller =
-      new ReadableByteStreamController(aStream->GetParentObject());
+  auto controller =
+      MakeRefPtr<ReadableByteStreamController>(aStream->GetParentObject());
 
-  // Step 2. Let startAlgorithm be an algorithm that returns undefined.
-  RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm;
-
-  // Step 3. Let pullAlgorithm be an algorithm that returns a promise resolved
-  // with undefined.
-  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm;
-
-  // Step 4. Let cancelAlgorithm be an algorithm that returns a promise resolved
-  // with undefined.
-  RefPtr<UnderlyingSourceCancelCallbackHelper> cancelAlgorithm;
-
-  // Step 5. If underlyingSourceDict["start"] exists, then set startAlgorithm to
-  // an algorithm which returns the result of invoking
-  // underlyingSourceDict["start"] with argument list « controller » and
-  // callback this value underlyingSource.
-  startAlgorithm =
-      aUnderlyingSourceDict.mStart.WasPassed()
-          ? new UnderlyingSourceStartCallbackHelper(
-                aUnderlyingSourceDict.mStart.Value(), aUnderlyingSource)
-          : nullptr;
-
-  // Step 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to
-  // an algorithm which returns the result of invoking
-  // underlyingSourceDict["pull"] with argument list « controller » and callback
-  // this value underlyingSource.
-  pullAlgorithm =
-      aUnderlyingSourceDict.mPull.WasPassed()
-          ? new IDLUnderlyingSourcePullCallbackHelper(
-                aUnderlyingSourceDict.mPull.Value(), aUnderlyingSource)
-          : nullptr;
-
-  // Step 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm
-  // to an algorithm which takes an argument reason and returns the result of
-  // invoking underlyingSourceDict["cancel"] with argument list « reason » and
-  // callback this value underlyingSource.
-  cancelAlgorithm =
-      aUnderlyingSourceDict.mCancel.WasPassed()
-          ? new IDLUnderlyingSourceCancelCallbackHelper(
-                aUnderlyingSourceDict.mCancel.Value(), aUnderlyingSource)
-          : nullptr;
+  // Step 2 - 7
+  auto algorithms = MakeRefPtr<UnderlyingSourceAlgorithms>(
+      aStream->GetParentObject(), aUnderlyingSource, aUnderlyingSourceDict);
 
   // Step 8. Let autoAllocateChunkSize be
   // underlyingSourceDict["autoAllocateChunkSize"], if it exists, or undefined
@@ -2073,61 +2011,8 @@ void SetUpReadableByteStreamControllerFromUnderlyingSource(
   // Step 10. Perform ? SetUpReadableByteStreamController(stream, controller,
   // startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark,
   // autoAllocateChunkSize).
-  SetUpReadableByteStreamController(aCx, aStream, controller, startAlgorithm,
-                                    pullAlgorithm, cancelAlgorithm,
-                                    nullptr /* aErrorAlgorithm */,
+  SetUpReadableByteStreamController(aCx, aStream, controller, algorithms,
                                     aHighWaterMark, autoAllocateChunkSize, aRv);
-}
-
-// This is gently modelled on the pre-existing
-// SetUpExternalReadableByteStreamController, but specialized to the
-// BodyStreamUnderlyingSource model vs. the External streams of the JS
-// implementation.
-//
-// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source
-void SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream,
-    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
-  // Step 1.
-  RefPtr<ReadableByteStreamController> controller =
-      new ReadableByteStreamController(aStream->GetParentObject());
-
-  // Step 2.
-  RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm;
-
-  // Step 3.
-  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm;
-
-  // Step 4
-  RefPtr<UnderlyingSourceCancelCallbackHelper> cancelAlgorithm;
-
-  // Not Specified
-  RefPtr<UnderlyingSourceErrorCallbackHelper> errorAlgorithm;
-
-  // Step 5. Intentionally skipped: No startAlgorithm for
-  // BodyStreamUnderlyingSources. Step 6.
-  pullAlgorithm =
-      new BodyStreamUnderlyingSourcePullCallbackHelper(aUnderlyingSource);
-
-  // Step 7.
-  cancelAlgorithm =
-      new BodyStreamUnderlyingSourceCancelCallbackHelper(aUnderlyingSource);
-
-  // Not Specified
-  errorAlgorithm =
-      new BodyStreamUnderlyingSourceErrorCallbackHelper(aUnderlyingSource);
-
-  // Step 8
-  Maybe<uint64_t> autoAllocateChunkSize = mozilla::Nothing();
-  // Step 9 (Skipped)
-
-  // Not Specified: Native underlying sources always use 0.0 high water mark.
-  double highWaterMark = 0.0;
-
-  // Step 10.
-  SetUpReadableByteStreamController(
-      aCx, aStream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm,
-      errorAlgorithm, highWaterMark, autoAllocateChunkSize, aRv);
 }
 
 }  // namespace mozilla::dom

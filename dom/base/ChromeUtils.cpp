@@ -870,7 +870,7 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
     PROCTYPE_TO_WEBIDL_CASE(PrivilegedMozilla, Privilegedmozilla);
     PROCTYPE_TO_WEBIDL_CASE(WebCOOPCOEP, WithCoopCoep);
     PROCTYPE_TO_WEBIDL_CASE(WebServiceWorker, WebServiceWorker);
-    PROCTYPE_TO_WEBIDL_CASE(WebLargeAllocation, WebLargeAllocation);
+
 #define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
                            process_bin_type, procinfo_typename,               \
                            webidl_typename, allcaps_name)                     \
@@ -885,6 +885,7 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
 #  undef SKIP_PROCESS_TYPE_FORKSERVER
 #endif  // MOZ_ENABLE_FORKSERVER
 #undef GECKO_PROCESS_TYPE
+
     PROCTYPE_TO_WEBIDL_CASE(Preallocated, Preallocated);
     PROCTYPE_TO_WEBIDL_CASE(Unknown, Unknown);
   }
@@ -1036,8 +1037,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
       type = mozilla::ProcType::PrivilegedAbout;
     } else if (remoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
       type = mozilla::ProcType::PrivilegedMozilla;
-    } else if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
-      type = mozilla::ProcType::WebLargeAllocation;
     } else if (remoteType == PREALLOC_REMOTE_TYPE) {
       type = mozilla::ProcType::Preallocated;
     } else if (StringBeginsWith(remoteType, DEFAULT_REMOTE_TYPE)) {

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<style>
+  body { background: gray; }
+  canvas { border: 2px solid black;}
+</style>
+
+<img id="img"
+     onload="go()"
+     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==">
+<canvas id="canvas"></canvas>
+<script>
+  const ctx = canvas.getContext("2d", { desynchronized: true });
+  const SVG_FILTER = `
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <filter id="posterize">
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="0,1" />
+        <feFuncG type="discrete" tableValues="0,1" />
+        <feFuncB type="discrete" tableValues="0,1" />
+        <feFuncA type="discrete" tableValues="0,1" />
+      </feComponentTransfer>
+    </filter>
+  </svg>`;
+
+  const FILTER1 = `url('data:image/svg+xml;utf8,${SVG_FILTER.replace(/\n/g, "")
+    .replace(/\s+/g, " ")
+    .trim()}#posterize') grayscale(50%) brightness(50%)`;
+  function go() {
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter = FILTER1;
+    ctx.drawImage(img, 0, 0);
+    setTimeout(() => { document.documentElement.removeAttribute("class")}, 0);
+  }
+</script>

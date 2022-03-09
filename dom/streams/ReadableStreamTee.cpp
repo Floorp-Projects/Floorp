@@ -17,6 +17,7 @@
 #include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
+#include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
@@ -24,56 +25,25 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeePullAlgorithm)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ReadableStreamDefaultTeeSourceAlgorithms,
+                                   UnderlyingSourceAlgorithmsBase, mTeeState)
+NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultTeeSourceAlgorithms,
+                         UnderlyingSourceAlgorithmsBase)
+NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultTeeSourceAlgorithms,
+                          UnderlyingSourceAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
+    ReadableStreamDefaultTeeSourceAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultTeePullAlgorithm,
-                         UnderlyingSourcePullCallbackHelper)
-NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultTeePullAlgorithm,
-                          UnderlyingSourcePullCallbackHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeePullAlgorithm)
-NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourcePullCallbackHelper)
-
-already_AddRefed<Promise> ReadableStreamDefaultTeePullAlgorithm::PullCallback(
-    JSContext* aCx, nsIGlobalObject* aGlobal, ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-  // Pull Algorithm Steps:
-
-  // Step 13.1:
-  if (mTeeState->Reading()) {
-    // Step 13.1.1
-    mTeeState->SetReadAgain(true);
-
-    // Step 13.1.2
-    return Promise::CreateResolvedWithUndefined(aGlobal, aRv);
+already_AddRefed<Promise>
+ReadableStreamDefaultTeeSourceAlgorithms::PullCallback(
+    JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
+  mTeeState->PullCallback(aCx, global, aRv);
+  if (!aRv.Failed()) {
+    return Promise::CreateResolvedWithUndefined(global, aRv);
   }
-
-  // Step 13.2:
-  mTeeState->SetReading(true);
-
-  // Step 13.3:
-  RefPtr<ReadRequest> readRequest =
-      new ReadableStreamDefaultTeeReadRequest(mTeeState);
-
-  // Step 13.4:
-  RefPtr<ReadableStreamGenericReader> reader(mTeeState->GetReader());
-  ReadableStreamDefaultReaderRead(aCx, reader, readRequest, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Step 13.5
-  return Promise::CreateResolvedWithUndefined(aGlobal, aRv);
+  return nullptr;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeReadRequest)
@@ -99,7 +69,8 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
   // Step 1.
   class ReadableStreamDefaultTeeReadRequestChunkSteps
       : public MicroTaskRunnable {
-    RefPtr<TeeState> mTeeState;
+    // Virtually const, but is cycle collected
+    MOZ_KNOWN_LIVE RefPtr<TeeState> mTeeState;
     JS::PersistentRooted<JS::Value> mChunk;
 
    public:
@@ -152,16 +123,10 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
 
       // Step 7. If |readAgain| is true, perform |pullAlgorithm|.
       if (mTeeState->ReadAgain()) {
-        RefPtr<ReadableStreamDefaultTeePullAlgorithm> pullAlgorithm(
-            mTeeState->PullAlgorithm());
         IgnoredErrorResult rv;
         nsCOMPtr<nsIGlobalObject> global(
             mTeeState->GetStream()->GetParentObject());
-        // MG:XXX: A future refactoring could rewrite pull callbacks innards to
-        // not produce this promise, which is currently always a promise
-        // resolved with undefined.
-        RefPtr<Promise> ignoredPromise =
-            pullAlgorithm->PullCallback(cx, global, rv);
+        mTeeState->PullCallback(cx, global, rv);
         (void)NS_WARN_IF(rv.Failed());
       }
     }
@@ -274,59 +239,106 @@ MOZ_CAN_RUN_SCRIPT void ByteStreamTeePullAlgorithm(JSContext* aCx,
   // Step {17,18}.6: Return a promise resolved with undefined.
 }
 
-class NativeByteStreamTeePullAlgorithm final
-    : public UnderlyingSourcePullCallbackHelper {
-  // Virtually const, but is cycle collected
-  RefPtr<TeeState> mTeeState;
-  const TeeBranch mBranch;
-
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
+class ByteStreamTeeSourceAlgorithms final
+    : public UnderlyingSourceAlgorithmsBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(NativeByteStreamTeePullAlgorithm,
-                                           UnderlyingSourcePullCallbackHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ByteStreamTeeSourceAlgorithms,
+                                           UnderlyingSourceAlgorithmsBase)
 
-  explicit NativeByteStreamTeePullAlgorithm(TeeState* aTeeState,
-                                            TeeBranch aBranch)
+  ByteStreamTeeSourceAlgorithms(TeeState* aTeeState, TeeBranch aBranch)
       : mTeeState(aTeeState), mBranch(aBranch) {}
 
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> PullCallback(JSContext* aCx,
-                                         ReadableStreamController& aController,
-                                         ErrorResult& aRv) override {
-    RefPtr<Promise> returnPromise = Promise::CreateResolvedWithUndefined(
-        mTeeState->GetStream()->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-
-    ByteStreamTeePullAlgorithm(aCx, mBranch, MOZ_KnownLive(mTeeState), aRv);
-
-    return returnPromise.forget();
+  MOZ_CAN_RUN_SCRIPT void StartCallback(JSContext* aCx,
+                                        ReadableStreamController& aController,
+                                        JS::MutableHandle<JS::Value> aRetVal,
+                                        ErrorResult& aRv) override {
+    // Step 21: Let startAlgorithm be an algorithm that returns undefined.
+    aRetVal.setUndefined();
   }
 
+  // Step 17, 18
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PullCallback(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) override {
+    // Step 1 - 5
+    ByteStreamTeePullAlgorithm(aCx, mBranch, MOZ_KnownLive(mTeeState), aRv);
+
+    // Step 6: Return a promise resolved with undefined.
+    return Promise::CreateResolvedWithUndefined(
+        mTeeState->GetStream()->GetParentObject(), aRv);
+  }
+
+  // Step 19, 20
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) override {
+    // Step 1.
+    mTeeState->SetCanceled(mBranch, true);
+
+    // Step 2.
+    mTeeState->SetReason(mBranch, aReason.Value());
+
+    // Step 3.
+    if (mTeeState->Canceled(otherStream())) {
+      // Step 3.1
+      JS::RootedObject compositeReason(aCx, JS::NewArrayObject(aCx, 2));
+      if (!compositeReason) {
+        aRv.StealExceptionFromJSContext(aCx);
+        return nullptr;
+      }
+
+      JS::RootedValue reason1(aCx, mTeeState->Reason1());
+      if (!JS_SetElement(aCx, compositeReason, 0, reason1)) {
+        aRv.StealExceptionFromJSContext(aCx);
+        return nullptr;
+      }
+
+      JS::RootedValue reason2(aCx, mTeeState->Reason2());
+      if (!JS_SetElement(aCx, compositeReason, 1, reason2)) {
+        aRv.StealExceptionFromJSContext(aCx);
+        return nullptr;
+      }
+
+      // Step 3.2
+      JS::RootedValue compositeReasonValue(aCx,
+                                           JS::ObjectValue(*compositeReason));
+      RefPtr<ReadableStream> stream(mTeeState->GetStream());
+      RefPtr<Promise> cancelResult =
+          ReadableStreamCancel(aCx, stream, compositeReasonValue, aRv);
+      if (aRv.Failed()) {
+        return nullptr;
+      }
+
+      // Step 3.3
+      mTeeState->CancelPromise()->MaybeResolve(cancelResult);
+    }
+
+    // Step 4.
+    return do_AddRef(mTeeState->CancelPromise());
+  };
+
+  void ErrorCallback() override {}
+
  protected:
-  ~NativeByteStreamTeePullAlgorithm() override = default;
+  ~ByteStreamTeeSourceAlgorithms() override = default;
+
+ private:
+  TeeBranch otherStream() { return OtherTeeBranch(mBranch); }
+
+  RefPtr<TeeState> mTeeState;
+  TeeBranch mBranch;
 };
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(NativeByteStreamTeePullAlgorithm)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    NativeByteStreamTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    NativeByteStreamTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(NativeByteStreamTeePullAlgorithm,
-                         UnderlyingSourcePullCallbackHelper)
-NS_IMPL_RELEASE_INHERITED(NativeByteStreamTeePullAlgorithm,
-                          UnderlyingSourcePullCallbackHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NativeByteStreamTeePullAlgorithm)
-NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourcePullCallbackHelper)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ByteStreamTeeSourceAlgorithms,
+                                   UnderlyingSourceAlgorithmsBase, mTeeState)
+NS_IMPL_ADDREF_INHERITED(ByteStreamTeeSourceAlgorithms,
+                         UnderlyingSourceAlgorithmsBase)
+NS_IMPL_RELEASE_INHERITED(ByteStreamTeeSourceAlgorithms,
+                          UnderlyingSourceAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamTeeSourceAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
 struct PullWithDefaultReaderReadRequest final : public ReadRequest {
   RefPtr<TeeState> mTeeState;
@@ -971,97 +983,6 @@ void ForwardReaderError(TeeState* aTeeState,
       new ForwardReaderErrorPromiseHandler(aTeeState, aThisReader));
 }
 
-class ReadableByteStreamTeeCancelAlgorithm final
-    : public UnderlyingSourceCancelCallbackHelper {
-  RefPtr<TeeState> mTeeState;
-  const TeeBranch mBranch;
-
-  TeeBranch otherStream() { return OtherTeeBranch(mBranch); }
-
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ReadableByteStreamTeeCancelAlgorithm,
-                                           UnderlyingSourceCancelCallbackHelper)
-
-  explicit ReadableByteStreamTeeCancelAlgorithm(TeeState* aTeeState,
-                                                TeeBranch aBranch)
-      : mTeeState(aTeeState), mBranch(aBranch) {}
-
-  // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
-  // Steps 19 and 20 both use this class.
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> CancelCallback(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) override {
-    // Step 1.
-    mTeeState->SetCanceled(mBranch, true);
-
-    // Step 2.
-    mTeeState->SetReason(mBranch, aReason.Value());
-
-    // Step 3.
-    if (mTeeState->Canceled(otherStream())) {
-      // Step 3.1
-      JS::RootedObject compositeReason(aCx, JS::NewArrayObject(aCx, 2));
-      if (!compositeReason) {
-        aRv.StealExceptionFromJSContext(aCx);
-        return nullptr;
-      }
-
-      JS::RootedValue reason1(aCx, mTeeState->Reason1());
-      if (!JS_SetElement(aCx, compositeReason, 0, reason1)) {
-        aRv.StealExceptionFromJSContext(aCx);
-        return nullptr;
-      }
-
-      JS::RootedValue reason2(aCx, mTeeState->Reason2());
-      if (!JS_SetElement(aCx, compositeReason, 1, reason2)) {
-        aRv.StealExceptionFromJSContext(aCx);
-        return nullptr;
-      }
-
-      // Step 3.2
-      JS::RootedValue compositeReasonValue(aCx,
-                                           JS::ObjectValue(*compositeReason));
-      RefPtr<ReadableStream> stream(mTeeState->GetStream());
-      RefPtr<Promise> cancelResult =
-          ReadableStreamCancel(aCx, stream, compositeReasonValue, aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-
-      // Step 3.3
-      mTeeState->CancelPromise()->MaybeResolve(cancelResult);
-    }
-
-    // Step 4.
-    return do_AddRef(mTeeState->CancelPromise());
-  }
-
- protected:
-  ~ReadableByteStreamTeeCancelAlgorithm() override = default;
-};
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamTeeCancelAlgorithm)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    ReadableByteStreamTeeCancelAlgorithm, UnderlyingSourceCancelCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    ReadableByteStreamTeeCancelAlgorithm, UnderlyingSourceCancelCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(ReadableByteStreamTeeCancelAlgorithm,
-                         UnderlyingSourceCancelCallbackHelper)
-NS_IMPL_RELEASE_INHERITED(ReadableByteStreamTeeCancelAlgorithm,
-                          UnderlyingSourceCancelCallbackHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableByteStreamTeeCancelAlgorithm)
-NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
-
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
                            nsTArray<RefPtr<ReadableStream>>& aResult,
@@ -1084,23 +1005,19 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   // Step 21. Elided because consumers know how to handle nullptr correctly.
   // Step 22.
   nsCOMPtr<nsIGlobalObject> global = aStream->GetParentObject();
-  RefPtr<UnderlyingSourcePullCallbackHelper> pull1Algorithm =
-      new NativeByteStreamTeePullAlgorithm(teeState, TeeBranch::Branch1);
-  RefPtr<UnderlyingSourceCancelCallbackHelper> cancel1Algorithm =
-      new ReadableByteStreamTeeCancelAlgorithm(teeState, TeeBranch::Branch1);
-  teeState->SetBranch1(CreateReadableByteStream(
-      aCx, global, nullptr, pull1Algorithm, cancel1Algorithm, aRv));
+  auto branch1Algorithms =
+      MakeRefPtr<ByteStreamTeeSourceAlgorithms>(teeState, TeeBranch::Branch1);
+  teeState->SetBranch1(
+      CreateReadableByteStream(aCx, global, branch1Algorithms, aRv));
   if (aRv.Failed()) {
     return;
   }
 
   // Step 23.
-  RefPtr<UnderlyingSourcePullCallbackHelper> pull2Algorithm =
-      new NativeByteStreamTeePullAlgorithm(teeState, TeeBranch::Branch2);
-  RefPtr<UnderlyingSourceCancelCallbackHelper> cancel2Algorithm =
-      new ReadableByteStreamTeeCancelAlgorithm(teeState, TeeBranch::Branch2);
-  teeState->SetBranch2(CreateReadableByteStream(
-      aCx, global, nullptr, pull2Algorithm, cancel2Algorithm, aRv));
+  auto branch2Algorithms =
+      MakeRefPtr<ByteStreamTeeSourceAlgorithms>(teeState, TeeBranch::Branch2);
+  teeState->SetBranch2(
+      CreateReadableByteStream(aCx, global, branch2Algorithms, aRv));
   if (aRv.Failed()) {
     return;
   }

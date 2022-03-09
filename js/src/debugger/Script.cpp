@@ -1591,7 +1591,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::AsyncResolve:
     case JSOp::Finally:
     case JSOp::GetRval:
-    case JSOp::Gosub:
     case JSOp::Retsub:
     case JSOp::ThrowMsg:
     case JSOp::ForceInterpreter:

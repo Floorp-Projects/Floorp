@@ -98,5 +98,5 @@ For example, a url is updated, but the update is performed before the allow list
 is updated.
 
 .. _configuration schema: SearchConfigurationSchema.html
-.. _remote settings: /services/common/services/RemoteSettings.html
+.. _remote settings: /services/settings/index.html
 .. _search-default-override-allowlist bucket: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-default-override-allowlist/records

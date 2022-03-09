@@ -153,7 +153,7 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
     MOZ_ASSERT(script->code() <= pc && pc < end);
     JSOp op = JSOp(*pc);
     bool jump = IsJumpOpcode(op) || op == JSOp::TableSwitch;
-    bool fallsthrough = BytecodeFallsThrough(op) && op != JSOp::Gosub;
+    bool fallsthrough = BytecodeFallsThrough(op);
 
     // If the current script & pc has a hit-count report, then update the
     // current number of hits.

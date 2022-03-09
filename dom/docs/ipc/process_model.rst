@@ -33,7 +33,6 @@ Diagram
                         <TR><TD BORDER="1">Shared Web Content<BR/>(<FONT FACE="monospace">web</FONT>)</TD></TR>
                         <TR><TD BORDER="1">Isolated Web Content<BR/>(<FONT FACE="monospace">webIsolated=$SITE</FONT>)</TD></TR>
                         <TR><TD BORDER="1">COOP+COEP Web Content<BR/>(<FONT FACE="monospace">webCOOP+COEP=$SITE</FONT>)</TD></TR>
-                        <TR><TD BORDER="1">Large Allocation Web Content<BR/>(<FONT FACE="monospace">webLargeAlloc</FONT>)</TD></TR>
                         <TR><TD BORDER="1">ServiceWorker Web Content<BR/>(<FONT FACE="monospace">webServiceWorker</FONT>)</TD></TR>
                     </TABLE>
                 >
@@ -206,25 +205,13 @@ Like Isolated Web Content, these processes are keyed by the site loaded within t
 
     In ``about:processes``, COOP+COEP Web Content processes will be listed with a "cross-origin isolated" note after the PID, like ``https://example.com (12345, cross-origin isolated)``.
 
-Large Allocation Web Content
-""""""""""""""""""""""""""""
-
-:remoteType: ``webLargeAlloc``
-:default count: 10 (``dom.ipc.processCount.webLargeAlloc``)
-:platform: 32-bit Windows only (``dom.largeAllocation.forceEnable``)
-
-Document loads with the non-standard ``Large-Allocation`` header are requesting to be placed into a separate content process such that they can have access to a less-fragmented address space. This was originally designed to enable 32-bit Windows platforms to load and run asm.js and wasm code more easily.
-
-This header is only supported on 32-bit Windows, and will likely be removed in the near future.
-
 ServiceWorker Web Content
 """"""""""""""""""""
 
 :remoteType: ``webServiceWorker=$SITE``
 :default count: 1 per-site using ServiceWorkers
 
-ServiceWorker web content processes are used to host ServiceWorkers on a per-site basis, so that ServiceWorker operations aren't impacted by MainThread event latency when running in the same process as the content for the page.   ServiceWorkers are usually transitory, and will disappear if unused for a short period of time.
-
+ServiceWorker web content processes are used to host ServiceWorkers on a per-site basis, so that ServiceWorker operations aren't impacted by MainThread event latency whenrunning in the same process as the content for the page.   ServiceWorkers are usually transitory, and will disappear if unused for a short period of time.
 
 Gecko Media Plugins (GMP) Process
 ---------------------------------
