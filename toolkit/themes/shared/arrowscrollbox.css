@@ -42,8 +42,8 @@ toolbarbutton > .toolbarbutton-text {
   display: none;
 }
 
-%ifndef XP_MACOSX
-:host(:not([clicktoscroll="true"])) > toolbarbutton {
-  appearance: none;
+@media not (-moz-platform: macos) {
+  :host(:not([clicktoscroll="true"])) > toolbarbutton {
+    appearance: none;
+  }
 }
-%endif
