@@ -4,7 +4,10 @@
 
 "use strict";
 
-// Test keyboard arrow behaviour
+/**
+ * Test keyboard arrow behaviour on the SourceTree with a nested folder
+ * that we manually expand/collapse via arrow keys.
+ */
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sources.html",
@@ -14,8 +17,15 @@ add_task(async function() {
     "long.js"
   );
 
+  // Before clicking on the source label, no source is displayed
+  await waitForSourcesInSourceTree(dbg, [], { noExpand: true });
   await clickElement(dbg, "sourceDirectoryLabel", 3);
-  await assertSourceCount(dbg, 8);
+  // Right after, all sources, but the nested one are displayed
+  await waitForSourcesInSourceTree(
+    dbg,
+    ["doc-sources.html", "simple1.js", "simple2.js", "long.js"],
+    { noExpand: true }
+  );
 
   // Right key on open dir
   await pressKey(dbg, "Right");
@@ -23,12 +33,10 @@ add_task(async function() {
 
   // Right key on closed dir
   await pressKey(dbg, "Right");
-  await assertSourceCount(dbg, 8);
   await assertNodeIsFocused(dbg, 4);
 
   // Left key on a open dir
   await pressKey(dbg, "Left");
-  await assertSourceCount(dbg, 8);
   await assertNodeIsFocused(dbg, 4);
 
   // Down key on a closed dir
@@ -36,11 +44,28 @@ add_task(async function() {
   await assertNodeIsFocused(dbg, 4);
 
   // Right key on a source
+  // We are focused on the nested source and up to this point we still display only the 4 initial sources
+  await waitForSourcesInSourceTree(
+    dbg,
+    ["doc-sources.html", "simple1.js", "simple2.js", "long.js"],
+    { noExpand: true }
+  );
   await pressKey(dbg, "Right");
   await assertNodeIsFocused(dbg, 4);
+  // Now, the nested source is also displayed
+  await waitForSourcesInSourceTree(
+    dbg,
+    [
+      "doc-sources.html",
+      "simple1.js",
+      "simple2.js",
+      "long.js",
+      "nested-source.js",
+    ],
+    { noExpand: true }
+  );
 
   // Down key on a source
-  await waitForSourceCount(dbg, 9);
   await pressKey(dbg, "Down");
   await assertNodeIsFocused(dbg, 5);
 
@@ -58,8 +83,25 @@ add_task(async function() {
   await assertNodeIsFocused(dbg, 4);
 
   // Left key on a closed dir
+  // We are about to close the nested folder, the nested source is about to disappear
+  await waitForSourcesInSourceTree(
+    dbg,
+    [
+      "doc-sources.html",
+      "simple1.js",
+      "simple2.js",
+      "long.js",
+      "nested-source.js",
+    ],
+    { noExpand: true }
+  );
   await pressKey(dbg, "Left");
-  await assertSourceCount(dbg, 8);
+  // And it disappeared
+  await waitForSourcesInSourceTree(
+    dbg,
+    ["doc-sources.html", "simple1.js", "simple2.js", "long.js"],
+    { noExpand: true }
+  );
   await pressKey(dbg, "Left");
   await assertNodeIsFocused(dbg, 3);
 

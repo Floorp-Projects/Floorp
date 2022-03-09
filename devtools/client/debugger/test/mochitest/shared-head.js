@@ -1481,6 +1481,10 @@ const selectors = {
   editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,
   sourceNodes: ".sources-list .tree-node",
+  sourceTreeThreads: '.sources-list .tree-node[aria-level="1"]',
+  sourceTreeThreadsNodes:
+    '.sources-list .tree-node[aria-level="1"] > .node > span:nth-child(1)',
+  sourceTreeFiles: ".sources-list .tree-node[data-expandable=false]",
   threadSourceTree: i => `.threads-list .sources-pane:nth-child(${i})`,
   threadSourceTreeHeader: i =>
     `${selectors.threadSourceTree(i)} .thread-header`,
@@ -1978,18 +1982,44 @@ async function waitForBreakableLine(dbg, source, lineNumber) {
   );
 }
 
-async function waitForSourceCount(dbg, i) {
-  // We are forced to wait until the DOM nodes appear because the
-  // source tree batches its rendering.
-  info(`waiting for ${i} sources`);
+async function expandSourceTree(dbg) {
+  const rootNodes = dbg.win.document.querySelectorAll(
+    selectors.sourceTreeThreadsNodes
+  );
+  for (const rootNode of rootNodes) {
+    await expandAllSourceNodes(dbg, rootNode);
+    await wait(250);
+  }
+}
+
+async function waitForSourceTreeThreadsCount(dbg, i) {
+  info(`waiting for ${i} threads in the source tree`);
   await waitUntil(() => {
-    return findAllElements(dbg, "sourceNodes").length === i;
+    return findAllElements(dbg, "sourceTreeThreads").length === i;
   });
 }
 
-async function assertSourceCount(dbg, count) {
-  await waitForSourceCount(dbg, count);
-  is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
+async function waitForSourcesInSourceTree(
+  dbg,
+  sources,
+  { noExpand = false } = {}
+) {
+  info(`waiting for ${sources.length} files in the source tree`);
+  await waitFor(async () => {
+    if (!noExpand) {
+      await expandSourceTree(dbg);
+    }
+    // Replace some non visible space characters that prevents Array.includes from working correctly
+    const displayedSources = [...findAllElements(dbg, "sourceTreeFiles")].map(
+      e => {
+        return e.textContent.trim().replace(/^[\s\u200b]*/g, "");
+      }
+    );
+    return (
+      displayedSources.length == sources.length &&
+      sources.every(source => displayedSources.includes(source))
+    );
+  });
 }
 
 async function waitForNodeToGainFocus(dbg, index) {
