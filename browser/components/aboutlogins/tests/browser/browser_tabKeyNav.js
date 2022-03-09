@@ -14,7 +14,7 @@ EXPECTED_BREACH = {
   schema: "1541615609018",
 };
 
-add_task(async function setup() {
+add_setup(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -30,6 +30,29 @@ add_task(async function test_tab_key_nav() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
     const EventUtils = ContentTaskUtils.getEventUtils(content);
+    // list [selector, shadow root selector] for each element
+    // in the order we expect them to be navigated.
+    let expectedElementsInOrder = [
+      ["login-filter", "input"],
+      ["fxaccounts-button", "button"],
+      ["menu-button", "button"],
+      ["login-list", "select"],
+      ["login-list", "ol"],
+      ["login-list", "button"],
+      ["login-item", "button.edit-button"],
+      ["login-item", "button.delete-button"],
+      ["login-item", "a.origin-input"],
+      ["login-item", "button.copy-username-button"],
+      ["login-item", "input.reveal-password-checkbox"],
+      ["login-item", "button.copy-password-button"],
+    ];
+
+    let firstElement = content.document
+      .querySelector(expectedElementsInOrder.at(0).at(0))
+      .shadowRoot.querySelector(expectedElementsInOrder.at(0).at(1));
+    let lastElement = content.document
+      .querySelector(expectedElementsInOrder.at(-1).at(0))
+      .shadowRoot.querySelector(expectedElementsInOrder.at(-1).at(1));
 
     async function tab() {
       EventUtils.synthesizeKey("KEY_Tab", {}, content);
@@ -37,63 +60,82 @@ add_task(async function test_tab_key_nav() {
       // The following line can help with focus trap debugging:
       // await new Promise(resolve => content.window.setTimeout(resolve, 100));
     }
+    async function shiftTab() {
+      EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true }, content);
+      await new Promise(resolve => content.requestAnimationFrame(resolve));
+    }
 
     // Getting focused shadow DOM element itself instead of shadowRoot,
     // using recursion for any component-nesting level, as in:
     // document.activeElement.shadowRoot.activeElement.shadowRoot.activeElement
-    function getFocusedEl() {
-      let el = content.document.activeElement;
+    function getFocusedElement() {
+      let element = content.document.activeElement;
       const getShadowRootFocus = e => {
         if (e.shadowRoot) {
           return getShadowRootFocus(e.shadowRoot.activeElement);
         }
         return e;
       };
-      return getShadowRootFocus(el);
+      return getShadowRootFocus(element);
     }
+    // Helper function for getting the DOM element given an entry in the ordered list
+    function getElementFromOrderedArray(combinedSelectors) {
+      let [selector, shadowRootSelector] = combinedSelectors;
+      return content.document
+        .querySelector(selector)
+        .shadowRoot.querySelector(shadowRootSelector);
+    }
+    // Ensure the test starts in a valid state
+    firstElement.focus();
 
-    // We’re making two passes with focused and focusedAgain sets of DOM elements,
-    // rather than just checking we get back to the first focused element,
-    // so we can cover more edge-cases involving issues with focus tree.
-    const focused = new Set();
-    const focusedAgain = new Set();
-
-    // Initializing: some element is supposed to be automatically focused
-    const firstEl = getFocusedEl();
-    focused.add(firstEl);
-
-    // Setting a maximum number of keypresses to escape the loop,
-    // should we fall into a focus trap.
-    // Fixed amount of keypresses also helps assess consistency with keyboard navigation.
-    const maxKeypresses = content.document.getElementsByTagName("*").length * 2;
-    let keypresses = 1;
-
-    while (focusedAgain.size < focused.size && keypresses <= maxKeypresses) {
+    // Assert that we tab navigate correctly
+    for (let expectedSelector of expectedElementsInOrder) {
+      let expectedElement = getElementFromOrderedArray(expectedSelector);
+      let actualElem = getFocusedElement();
+      is(
+        actualElem,
+        expectedElement,
+        "Actual focused element should equal the expected focused element"
+      );
       await tab();
-      keypresses++;
-      let el = getFocusedEl();
-
-      // The following block is needed to get back to document
-      // after tabbing to browser chrome.
-      // This focus trap in browser chrome is a testing artifact we’re fixing below.
-      if (el.tagName === "BODY" && el !== firstEl) {
-        firstEl.focus();
-        await new Promise(resolve => content.requestAnimationFrame(resolve));
-        el = getFocusedEl();
-      }
-
-      if (focused.has(el)) {
-        focusedAgain.add(el);
-      } else {
-        focused.add(el);
-      }
     }
 
-    is(
-      focusedAgain.size,
-      focused.size,
-      "All focusable elements should be kept accessible with TAB key (no focus trap)."
-    );
+    // The following block is needed to get back to document
+    // after tabbing to browser chrome.
+    // This focus trap in browser chrome is a testing artifact we’re fixing below.
+    if (getFocusedElement().tagName === "BODY") {
+      firstElement.focus();
+    }
+
+    // Assert that we tab navigate correctly after looping through chrome elements
+    for (let expectedSelector of expectedElementsInOrder) {
+      let expectedElement = getElementFromOrderedArray(expectedSelector);
+      let actualElement = getFocusedElement();
+      is(
+        actualElement,
+        expectedElement,
+        "Actual focused element should equal the expected focused element"
+      );
+      await tab();
+    }
+    // The following block is needed to get back to document
+    // after tabbing to browser chrome.
+    // This focus trap in browser chrome is a testing artifact we’re fixing below.
+    if (getFocusedElement().tagName === "BODY") {
+      lastElement.focus();
+    }
+
+    // Assert that we shift + tab navigate correctly starting from the last ordered element
+    for (let expectedSelector of expectedElementsInOrder.reverse()) {
+      let expectedElement = getElementFromOrderedArray(expectedSelector);
+      let actualElement = getFocusedElement();
+      is(
+        actualElement,
+        expectedElement,
+        "Actual focused element should equal the expected focused element"
+      );
+      await shiftTab();
+    }
   });
 });
 
@@ -117,22 +159,22 @@ add_task(async function testTabToCreateButton() {
     let createButton = loginList.shadowRoot.querySelector(
       ".create-login-button"
     );
-    let getFocusedEl = () => loginList.shadowRoot.activeElement;
+    let getFocusedElement = () => loginList.shadowRoot.activeElement;
 
-    is(getFocusedEl(), null, "login-list isn't focused");
+    is(getFocusedElement(), null, "login-list isn't focused");
 
     loginSort.focus();
     await waitForAnimationFrame();
-    is(getFocusedEl(), loginSort, "login sort is focused");
+    is(getFocusedElement(), loginSort, "login sort is focused");
 
     await tab();
-    is(getFocusedEl(), loginListbox, "listbox is focused next");
+    is(getFocusedElement(), loginListbox, "listbox is focused next");
 
     await tab();
-    is(getFocusedEl(), createButton, "create button is after");
+    is(getFocusedElement(), createButton, "create button is after");
 
     await tab();
-    is(getFocusedEl(), null, "login-list isn't focused again");
+    is(getFocusedElement(), null, "login-list isn't focused again");
   });
 });
 
@@ -156,17 +198,21 @@ add_task(async function testTabToEditButton() {
 
       let loginList = content.document.querySelector("login-list");
       let loginItem = content.document.querySelector("login-item");
+      let loginFilter = content.document.querySelector("login-filter");
       let createButton = loginList.shadowRoot.querySelector(
         ".create-login-button"
       );
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       let breachAlert = loginItem.shadowRoot.querySelector(".breach-alert");
-      let getFocusedEl = () => {
+      let getFocusedElement = () => {
         if (content.document.activeElement == loginList) {
           return loginList.shadowRoot.activeElement;
         }
         if (content.document.activeElement == loginItem) {
           return loginItem.shadowRoot.activeElement;
+        }
+        if (content.document.activeElement == loginFilter) {
+          return loginFilter.shadowRoot.activeElement;
         }
         ok(
           false,
@@ -198,11 +244,11 @@ add_task(async function testTabToEditButton() {
 
         createButton.focus();
         await waitForAnimationFrame();
-        is(getFocusedEl(), createButton, "create button is focused");
+        is(getFocusedElement(), createButton, "create button is focused");
 
         await tab();
         await waitForAnimationFrame();
-        is(getFocusedEl(), editButton, "edit button is focused");
+        is(getFocusedElement(), editButton, "edit button is focused");
       }
     }
   );
