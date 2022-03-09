@@ -34,7 +34,7 @@ METADATA_FILENAME = "moz_virtualenv_metadata.json"
 # The following virtualenvs *may* be used in a context where they aren't allowed to
 # install pip packages over the network. In such a case, they must access unvendored
 # python packages via the system environment.
-PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS = ("mach", "build")
+PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS = ("mach", "build", "common")
 
 
 class VirtualenvOutOfDateException(Exception):
