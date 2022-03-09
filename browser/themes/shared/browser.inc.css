@@ -19,6 +19,7 @@
 %define urlbarViewFaviconWidth 16px
 %define urlbarViewIconMarginEnd (var(--urlbar-icon-padding) + var(--identity-box-margin-inline))
 
+
 %include ../shared/urlbar/dynamicResults.inc.css
 .toolbarbutton-1:-moz-any(#back-button, #forward-button),
 #context-back,
@@ -38,8 +39,9 @@
 }
 
 .private-browsing-indicator{
-	display: none !important;
+	display: none;
 }
+
 #import-button {
 	margin-right: 10px !important;
 	margin-top: -0.4em !important;

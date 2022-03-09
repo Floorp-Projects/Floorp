@@ -225,7 +225,7 @@ const nsCString& CookieInfo::RawHost() const {
  *****************************************************************************/
 
 const char* PERMITTED_SCHEMES[] = {"http", "chrome", "https", "ws",   "wss",
-                                   "file", "ftp",   "data", "about" , "resource", nullptr};
+                                   "file", "ftp",   "data", "about" , "resource", "moz-extension", nullptr};
 
 // Known schemes that are followed by "://" instead of ":".
 const char* HOST_LOCATOR_SCHEMES[] = {

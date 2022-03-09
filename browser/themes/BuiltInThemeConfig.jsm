@@ -28,14 +28,14 @@ const BuiltInThemeConfig = new Map([
   [
     "floorp-edge@mozilla.org",
     {
-      version: "1.1.0",
+      version: "1.2.0",
       path: "resource://builtin-themes/motion/",
     },
   ],
   [
     "floorp-lepton@mozilla.org",
     {
-      version: "1.1.0",
+      version: "1.2.0",
       path: "resource://builtin-themes/lepton/",
     },
   ],
@@ -106,7 +106,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/lush/soft/",
-    
     },
   ],
   [
@@ -114,7 +113,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/lush/balanced/",
-    
     },
   ],
   [
@@ -122,7 +120,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/lush/bold/",
-    
     },
   ],
   [
@@ -130,7 +127,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/abstract/soft/",
-    
     },
   ],
   [
@@ -138,7 +134,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/abstract/balanced/",
-    
     },
   ],
   [
@@ -146,7 +141,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/abstract/bold/",
-    
     },
   ],
   [
@@ -154,7 +148,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/elemental/soft/",
-    
     },
   ],
   [
@@ -162,7 +155,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/elemental/balanced/",
-    
     },
   ],
   [
@@ -170,7 +162,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/elemental/bold/",
-    
     },
   ],
   [
@@ -178,7 +169,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/cheers/soft/",
-    
     },
   ],
   [
@@ -186,7 +176,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/cheers/balanced/",
-    
     },
   ],
   [
@@ -194,7 +183,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/cheers/bold/",
-    
     },
   ],
   [
@@ -202,7 +190,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/graffiti/soft/",
-    
     },
   ],
   [
@@ -210,7 +197,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/graffiti/balanced/",
-    
     },
   ],
   [
@@ -218,7 +204,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/graffiti/bold/",
-    
     },
   ],
   [
@@ -226,7 +211,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/foto/soft/",
-    
     },
   ],
   [
@@ -234,7 +218,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/foto/balanced/",
-    
     },
   ],
   [
@@ -242,7 +225,6 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.0",
       path: "resource://builtin-themes/monochromatic/foto/bold/",
-    
     },
   ],
 ]);

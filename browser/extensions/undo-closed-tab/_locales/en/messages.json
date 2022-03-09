@@ -1,0 +1,11 @@
+{
+	"name": {
+		"message": "Undo close Tab"
+	},
+	"description": {
+		"message": "Adds Undo Close Button"
+	},
+	"manifest_BA_title": {
+		"message": "Undo close tab"
+    }
+}
