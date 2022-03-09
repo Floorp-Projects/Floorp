@@ -979,6 +979,7 @@ void wasm::PrintText(const char* out) { fprintf(stderr, "%s", out); }
 #endif
 
 void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
+  // See NeedsBuiltinThunk for a classification of the different names here.
   switch (imm) {
     case SymbolicAddress::HandleDebugTrap:
       *abiType = Args_General0;
