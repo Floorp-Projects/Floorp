@@ -17,6 +17,38 @@ class PictureInPictureVideoWrapper {
   pause() {
     this.player.pause();
   }
+
+  setCaptionContainerObserver(video, updateCaptionsFunction) {
+    let container = document.querySelector(".watch-video");
+
+    if (container) {
+      updateCaptionsFunction("");
+      const callback = function(mutationsList, observer) {
+        let textNodeList = container
+          .querySelector(".player-timedtext")
+          ?.querySelectorAll("span");
+        if (!textNodeList || textNodeList.length < 1) {
+          updateCaptionsFunction("");
+          return;
+        }
+
+        updateCaptionsFunction(
+          Array.from(textNodeList, x => x.textContent).join("\n")
+        );
+      };
+
+      // immediately invoke the callback function to add subtitles to the PiP window
+      callback([1], null);
+
+      let captionsObserver = new MutationObserver(callback);
+
+      captionsObserver.observe(container, {
+        attributes: false,
+        childList: true,
+        subtree: true,
+      });
+    }
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
