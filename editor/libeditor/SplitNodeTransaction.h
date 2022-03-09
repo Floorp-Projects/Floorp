@@ -17,6 +17,7 @@
 namespace mozilla {
 
 class HTMLEditor;
+class SplitNodeResult;
 
 template <typename PT, typename CT>
 class EditorDOMPointBase;
@@ -69,6 +70,10 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
  protected:
   virtual ~SplitNodeTransaction() = default;
+
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  DoTransactionInternal(HTMLEditor& aHTMLEditor, nsIContent& aSplittingContent,
+                        nsIContent& aNewContent, uint32_t aSplitOffset);
 
   RefPtr<HTMLEditor> mHTMLEditor;
 
