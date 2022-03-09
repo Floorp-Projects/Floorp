@@ -4,6 +4,8 @@
 
 include protocol PBackground;
 
+include PBackgroundLSSharedTypes;
+
 namespace mozilla {
 namespace dom {
 
@@ -16,6 +18,11 @@ struct LSSimpleRequestPreloadedResponse
   bool preloaded;
 };
 
+struct LSSimpleRequestGetStateResponse
+{
+  LSItemInfo[] itemInfos;
+};
+
 /**
  * Discriminated union which can contain an error code (`nsresult`) or
  * particular simple request response.
@@ -24,6 +31,7 @@ union LSSimpleRequestResponse
 {
   nsresult;
   LSSimpleRequestPreloadedResponse;
+  LSSimpleRequestGetStateResponse;
 };
 
 /**
