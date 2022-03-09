@@ -6077,7 +6077,9 @@ public class GeckoSession {
     }
 
     final ContentDelegate delegate = getContentDelegate();
-    delegate.onPointerIconChange(this, icon);
+    if (delegate != null) {
+      delegate.onPointerIconChange(this, icon);
+    }
   }
 
   /** GeckoSession applications implement this interface to handle media events. */
