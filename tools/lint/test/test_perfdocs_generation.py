@@ -118,7 +118,7 @@ def test_perfdocs_generator_needed_update(logger, structured_logger, perfdocs_sa
         generator.generate_perfdocs()
 
     expected = (
-        "PerfDocs are outdated, run ./mach lint -l perfdocs --fix` to update them."
+        "PerfDocs are outdated, run ./mach lint -l perfdocs --fix .` to update them."
     )
     args, _ = logger.warning.call_args
 
