@@ -531,12 +531,12 @@ class MachFormatter(base.BaseFormatter):
 
             if data.get("stackwalk_returncode", 0) != 0:
                 rv.append(
-                    "minidump_stackwalk exited with return code %d"
+                    "minidump-stackwalk exited with return code %d"
                     % data["stackwalk_returncode"]
                 )
 
             if data.get("stackwalk_stderr"):
-                rv.append("stderr from minidump_stackwalk:")
+                rv.append("stderr from minidump-stackwalk:")
                 rv.append(data["stackwalk_stderr"])
             elif data.get("stackwalk_stdout"):
                 rv.append(data["stackwalk_stdout"])

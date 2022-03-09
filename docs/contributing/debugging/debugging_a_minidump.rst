@@ -8,7 +8,8 @@ Debugging A Minidump
 The
 `minidump <http://msdn.microsoft.com/en-us/library/windows/desktop/ms680369%28v=vs.85%29.aspx>`__
 file format contains data about a crash on Windows. It is used by
-`Breakpad <https://wiki.mozilla.org/Breakpad>`__ and also by various
+`rust-minidump <https://github.com/luser/rust-minidump>`__,
+`Breakpad <https://wiki.mozilla.org/Breakpad>`__, and also by various
 Windows debugging tools. Each minidump includes the following data.
 
 -  Details about the exception which led to the crash.
@@ -27,6 +28,21 @@ Accessing minidumps from crash reports
 Minidumps are not available to everyone. For details on how to gain
 access and where to find minidump files for crash reports, consult the
 :ref:`crash report documentation <Understanding Crash Reports>`
+
+Using rust-minidump's tooling
+-----------------------------------
+
+Most of our crash-reporting infrastructure is based on rust-minidump.
+The primary tool for this is the
+`minidump-stackwalk <https://github.com/luser/rust-minidump/tree/master/minidump-stackwalk>`__
+CLI application, which includes extensive user documentation.
+
+That documentation includes a
+`dedicated section <https://github.com/luser/rust-minidump/tree/master/minidump-stackwalk#analyzing-firefox-minidumps>`__
+on locally analyzing Firefox crashreports and minidumps.
+
+If you're looking for minidump_dump, it's included as part of
+minidump-stackwalk.
 
 Using the MS Visual Studio debugger
 -----------------------------------
@@ -125,11 +141,6 @@ need to build the tool for ARM and run it under QEMU.
 Using other tools to inspect minidump data
 ------------------------------------------
 
-Breakpad includes a tool called ``minidump_dump`` built alongside
-``minidump_stackwalk`` which will verbosely print the contents of a
-minidump. This can sometimes be useful for finding specific information
-that is not exposed on crash-stats.
-
 Ted has a few tools that can be built against an already-built copy of
 Breakpad to do more targeted inspection. All of these tools assume you
 have checked out their source in a directory next to the breakpad
@@ -137,9 +148,9 @@ checkout, and that you have built Breakpad in an objdir named
 ``obj-breakpad`` at the same level.
 
 -  `stackwalk-http <https://hg.mozilla.org/users/tmielczarek_mozilla.com/stackwalk-http/>`__
-   is a version of minidump_stackwalk that can fetch symbols over HTTP,
-   and also has the Mozilla symbol server URL baked in. If you run it
-   like ``stackwalk /path/to/dmp /tmp/syms`` it will print the stack
+   is a version of the breakpad's minidump_stackwalk that can fetch symbols
+   over HTTP, and also has the Mozilla symbol server URL baked in. If you
+   run it like ``stackwalk /path/to/dmp /tmp/syms`` it will print the stack
    trace and save the symbols it downloaded in ``/tmp/syms``. Note that
    symbols are only uploaded to the symbol server for nightly and
    release builds, not per-change builds.
@@ -177,8 +188,8 @@ Getting a stack trace from a crashed B2G process
 #. Build and install
    `google-breakpad <https://code.google.com/p/google-breakpad/>`__.
 #. Use the
-   `minidump_stackwalk <https://code.google.com/p/google-breakpad/wiki/LinuxStarterGuide>`__
-   breakpad tool to get the stack trace.
+   `minidump-stackwalk <https://github.com/luser/rust-minidump/tree/master/minidump-stackwalk>`__
+   tool to get the stack trace.
 
 .. code:: bash
 
@@ -188,4 +199,4 @@ Getting a stack trace from a crashed B2G process
    $ adb pull /data/b2g/mozilla/*.default/minidump/*.dmp .
    $ls *.dmp
    71788789-197e-d769-67167423-4e7aef32.dmp
-   $ minidump_stackwalk 71788789-197e-d769-67167423-4e7aef32.dmp objdir-debug/dist/crashreporter-symbols/
+   $ minidump-stackwalk 71788789-197e-d769-67167423-4e7aef32.dmp objdir-debug/dist/crashreporter-symbols/

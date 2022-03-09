@@ -38,7 +38,7 @@ jobs-from:
     - llvm-symbolizer.yml
     - macos-sdk.yml
     - mingw.yml
-    - minidump_stackwalk.yml
+    - minidump-stackwalk.yml
     - misc.yml
     - nasm.yml
     - node.yml

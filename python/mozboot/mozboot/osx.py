@@ -309,7 +309,7 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         self.install_toolchain_artifact("node")
 
     def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump_stackwalk")
+        self.install_toolchain_artifact("minidump-stackwalk")
 
     def install_homebrew(self):
         print(BREW_INSTALL)
