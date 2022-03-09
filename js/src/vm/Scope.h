@@ -335,13 +335,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   template <typename F>
   void applyScopeDataTyped(F&& f);
 
-  template <typename EnvironmentT>
-  static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
-                                       bool needsEnvironment);
-
-  template <typename EnvironmentT>
-  static bool updateEnvShapeIfRequired(JSContext* cx,
-                                       mozilla::Maybe<uint32_t>* envShape,
+  static void updateEnvShapeIfRequired(mozilla::Maybe<uint32_t>* envShape,
                                        bool needsEnvironment);
 
  public:
