@@ -2825,25 +2825,20 @@ bool EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
 bool IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
                         uint32_t aNonExposedGlobals) {
   MOZ_ASSERT(aNonExposedGlobals, "Why did we get called?");
-  MOZ_ASSERT(
-      (aNonExposedGlobals & ~(GlobalNames::Window | GlobalNames::BackstagePass |
-                              GlobalNames::DedicatedWorkerGlobalScope |
-                              GlobalNames::SharedWorkerGlobalScope |
-                              GlobalNames::ServiceWorkerGlobalScope |
-                              GlobalNames::WorkerDebuggerGlobalScope |
-                              GlobalNames::WorkletGlobalScope |
-                              GlobalNames::AudioWorkletGlobalScope |
-                              GlobalNames::PaintWorkletGlobalScope)) == 0,
-      "Unknown non-exposed global type");
+  MOZ_ASSERT((aNonExposedGlobals &
+              ~(GlobalNames::Window | GlobalNames::DedicatedWorkerGlobalScope |
+                GlobalNames::SharedWorkerGlobalScope |
+                GlobalNames::ServiceWorkerGlobalScope |
+                GlobalNames::WorkerDebuggerGlobalScope |
+                GlobalNames::WorkletGlobalScope |
+                GlobalNames::AudioWorkletGlobalScope |
+                GlobalNames::PaintWorkletGlobalScope)) == 0,
+             "Unknown non-exposed global type");
 
   const char* name = JS::GetClass(aGlobal)->name;
 
-  if ((aNonExposedGlobals & GlobalNames::Window) && !strcmp(name, "Window")) {
-    return true;
-  }
-
-  if ((aNonExposedGlobals & GlobalNames::BackstagePass) &&
-      !strcmp(name, "BackstagePass")) {
+  if ((aNonExposedGlobals & GlobalNames::Window) &&
+      (!strcmp(name, "Window") || !strcmp(name, "BackstagePass"))) {
     return true;
   }
 

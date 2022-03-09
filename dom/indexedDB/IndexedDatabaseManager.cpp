@@ -612,7 +612,7 @@ bool IndexedDatabaseManager::ExperimentalFeaturesEnabled(JSContext* aCx,
   // actually going through IndexedDatabaseManager.
   // See Bug 1198093 comment 14 for detailed explanation.
   MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
-  if (IsNonExposedGlobal(aCx, aGlobal, GlobalNames::BackstagePass)) {
+  if (!strcmp(JS::GetClass(aGlobal)->name, "BackstagePass")) {
     MOZ_ASSERT(NS_IsMainThread());
     static bool featureRetrieved = false;
     if (!featureRetrieved) {
