@@ -53,7 +53,7 @@ pub fn prepare_primitives(
     prim_instances: &mut Vec<PrimitiveInstance>,
 ) {
     profile_scope!("prepare_primitives");
-    for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
+    for cluster in &mut prim_list.clusters {
         if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
             continue;
         }
@@ -73,37 +73,27 @@ pub fn prepare_primitives(
                 VisibilityState::Culled => {
                     continue;
                 }
-                VisibilityState::Coarse { ref filter, vis_flags } => {
-                    // The original coarse state was calculated during the initial visibility pass.
-                    // However, it's possible that the dirty rect has got smaller, if tiles were not
-                    // dirty. Intersecting with the dirty rect here eliminates preparing any primitives
-                    // outside the dirty rect, and reduces the size of any off-screen surface allocations
-                    // for clip masks / render tasks that we make.
-
-                    // Clear the current visibiilty mask, and build a more detailed one based on the dirty rect
-                    // regions below.
-                    let dirty_region = frame_state.current_dirty_region();
-                    let is_in_dirty_region = dirty_region.filters
-                        .iter()
-                        .any(|region_filter| region_filter.matches(filter));
-
-                    if is_in_dirty_region {
-                        prim_instance.vis.state = VisibilityState::Detailed {
-                            filter: *filter,
-                            vis_flags,
-                        }
-                    } else {
+                VisibilityState::Visible { tile_rect, sub_slice_index, .. } => {
+                    if !frame_state.push_prim(
+                        PrimitiveInstanceIndex(prim_instance_index as u32),
+                        cluster.spatial_node_index,
+                        prim_instance.vis.clip_chain.pic_coverage_rect,
+                        tile_rect,
+                        sub_slice_index,
+                        None,
+                    ) {
                         prim_instance.clear_visibility();
                         continue;
                     }
                 }
-                VisibilityState::Detailed { .. } => {
-                    // Was already set to detailed (picture caching disabled or a root element)
+                VisibilityState::PassThrough => {
                 }
-                VisibilityState::PassThrough => {}
             }
 
-            let plane_split_anchor = PlaneSplitAnchor::new(cluster_index, prim_instance_index);
+            let plane_split_anchor = PlaneSplitAnchor::new(
+                cluster.spatial_node_index,
+                PrimitiveInstanceIndex(prim_instance_index as u32),
+            );
 
             if prepare_prim_for_render(
                 store,
@@ -186,6 +176,8 @@ fn prepare_prim_for_render(
                     .restore_context(
                         prim_list,
                         pic_context_for_children,
+                        prim_instances,
+                        frame_context,
                         frame_state,
                     );
             }
@@ -370,14 +362,13 @@ fn prepare_interned_prim_for_render(
             let allow_subpixel = match prim_instance.vis.state {
                 VisibilityState::Culled |
                 VisibilityState::Unset |
-                VisibilityState::Coarse { .. } |
                 VisibilityState::PassThrough => {
                     panic!("bug: invalid visibility state");
                 }
-                VisibilityState::Detailed { ref filter, .. } => {
+                VisibilityState::Visible { sub_slice_index, .. } => {
                     // For now, we only allow subpixel AA on primary sub-slices. In future we
                     // may support other sub-slices if we find content that does this.
-                    if filter.sub_slice_index.is_primary() {
+                    if sub_slice_index.is_primary() {
                         match pic_context.subpixel_mode {
                             SubpixelMode::Allow => true,
                             SubpixelMode::Deny => false,
