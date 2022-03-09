@@ -14,6 +14,7 @@ pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outli
 skip-if(nativeThemePref) != outline-auto-follows-border-radius-non-native.html outline-auto-follows-border-radius-non-native-notref.html
 skip-if(nativeThemePref) == outline-auto-follows-border-radius-non-native-02.html outline-auto-follows-border-radius-non-native.html
 needs-focus skip-if(nativeThemePref) == outline-auto-suppressed-native-widget.html outline-auto-suppressed-native-widget-ref.html
+needs-focus skip-if(nativeThemePref) == outline-auto-explicit-native-widget.html outline-auto-explicit-native-widget-ref.html
 == outline-initial-1a.html outline-initial-1-ref.html
 == outline-initial-1b.html outline-initial-1-ref.html
 == outline-on-table.html outline-on-table-ref.html
