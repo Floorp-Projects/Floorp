@@ -46,14 +46,34 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-// Various tests harness disable non local connections and will crash if any is
-// performed. Note this cannot be replaced by Cu.isInAutomation as some tests
-// are unable to satisfy the other requirements for this flag.
-XPCOMUtils.defineLazyGetter(this, "localConnectionsOnly", () => {
+// Overriding the server URL is normally disabled on Beta and Release channels,
+// except under some conditions.
+XPCOMUtils.defineLazyGetter(this, "allowServerURLOverride", () => {
+  if (!AppConstants.RELEASE_OR_BETA) {
+    // Always allow to override the server URL on Nightly/DevEdition.
+    return true;
+  }
+
+  if (AppConstants.MOZ_APP_NAME === "thunderbird") {
+    // Always allow to override the server URL for Thunderbird.
+    return true;
+  }
+
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
-  return env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS") === "1";
+  if (env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS") === "1") {
+    // Allow to override the server URL if non-local connections are disabled,
+    // usually true when running tests.
+    return true;
+  }
+
+  if (env.get("MOZ_REMOTE_SETTINGS_DEVTOOLS") === "1") {
+    // Allow to override the server URL when using remote settings devtools.
+    return true;
+  }
+
+  return false;
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -68,12 +88,9 @@ function _isUndefined(value) {
 
 var Utils = {
   get SERVER_URL() {
-    const isNotThunderbird = AppConstants.MOZ_APP_NAME != "thunderbird";
-    return AppConstants.RELEASE_OR_BETA &&
-      !localConnectionsOnly &&
-      isNotThunderbird
-      ? "https://firefox.settings.services.mozilla.com/v1"
-      : gServerURL;
+    return allowServerURLOverride
+      ? gServerURL
+      : "https://firefox.settings.services.mozilla.com/v1";
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
