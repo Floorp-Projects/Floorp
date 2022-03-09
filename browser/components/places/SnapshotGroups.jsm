@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
+  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -33,15 +34,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @property {string} id
  *   The group id. The id property is ignored when adding a group.
  * @property {string} title
- *   The title of the group, this may be automatically generated or
- *   user assigned.
+ *   The title of the group assigned by the user. This should be used
+ *   in preference to the translation supplied title in the builderMetadata.
  * @property {boolean} hidden
  *   Whether the group is hidden or not.
  * @property {string} builder
  *   The builder that was used to create the group (e.g. "domain", "pinned").
  * @property {object} builderMetadata
  *   The metadata from the builder for the SnapshotGroup.
- *   This is for use by the builder only and should otherwise be considered opaque.
+ *   This is mostly for use by the builder only and should otherwise be
+ *   considered opaque, the exception to this is for the localisation data.
+ * @property {object} builderMetadata.fluentTitle
+ *   An object to be passed to fluent for generating the title of the group.
+ *   This title should only be used if `title` is not present.
  * @property {string} imageUrl
  *   The image url to use for the group.
  * @property {number} lastAccessed
@@ -233,11 +238,16 @@ const SnapshotGroups = new (class SnapshotGroups {
     let db = await PlacesUtils.promiseDBConnection();
 
     let params = {};
-    let sizeFragment = "";
+    let sizeFragment = [];
     let limitFragment = "";
     if (!skipMinimum) {
-      sizeFragment = "HAVING snapshot_count >= :minGroupSize";
+      sizeFragment.push("HAVING snapshot_count >= :minGroupSize");
       params.minGroupSize = MIN_GROUP_SIZE;
+
+      for (let [i, name] of SnapshotMonitor.skipMinimumSizeBuilders.entries()) {
+        params[`name${i}`] = name;
+        sizeFragment.push(` OR (builder = :name${i} AND snapshot_count >= 1)`);
+      }
     }
     if (limit != -1) {
       params.limit = limit;
@@ -278,7 +288,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
       ${where}
-      GROUP BY g.id ${sizeFragment}
+      GROUP BY g.id ${sizeFragment.join(" ")}
       ORDER BY last_access DESC
       ${limitFragment}
         `,
@@ -445,15 +455,19 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   The id of the group to add the urls to.
    */
   async #prefetchScreenshotForGroup(id) {
-    let url = (
-      await this.getSnapshots({
-        id,
-        start: 0,
-        count: 1,
-        sortBy: "last_interaction_at",
-        sortDescending: false,
-      })
-    )[0].url;
+    let snapshots = await this.getSnapshots({
+      id,
+      start: 0,
+      count: 1,
+      sortBy: "last_interaction_at",
+      sortDescending: false,
+    });
+
+    if (!snapshots.length) {
+      return;
+    }
+
+    let url = snapshots[0].url;
     if (PlacesPreviews.enabled) {
       await PlacesPreviews.update(url);
     } else {

@@ -660,18 +660,19 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
                            : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
     mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
     mVideoRtxSsrc = rtxSsrc;
-  }
 
-  // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
-  // packets (see bug 1405495) we could make this depending on the presence of
-  // MID in the RTP packets instead of relying on the signaling.
-  if (mJsepTransceiver->HasBundleLevel() &&
-      (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
-       !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
-           webrtc::RtpExtension::kMidUri))) {
-    mCallThread->Dispatch(
-        NewRunnableMethod("VideoSessionConduit::DisableSsrcChanges", conduit,
-                          &VideoSessionConduit::DisableSsrcChanges));
+    // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
+    // packets (see bug 1405495) we could make this depending on the presence of
+    // MID in the RTP packets instead of relying on the signaling.
+    // In any case, do not disable SSRC changes if no SSRCs were negotiated
+    if (mJsepTransceiver->HasBundleLevel() &&
+        (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
+         !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
+             webrtc::RtpExtension::kMidUri))) {
+      mCallThread->Dispatch(
+          NewRunnableMethod("VideoSessionConduit::DisableSsrcChanges", conduit,
+                            &VideoSessionConduit::DisableSsrcChanges));
+    }
   }
 
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
@@ -717,18 +718,19 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
     mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
-  }
 
-  // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
-  // packets (see bug 1405495) we could make this depending on the presence of
-  // MID in the RTP packets instead of relying on the signaling.
-  if (mJsepTransceiver->HasBundleLevel() &&
-      (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
-       !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
-           webrtc::RtpExtension::kMidUri))) {
-    mCallThread->Dispatch(
-        NewRunnableMethod("AudioSessionConduit::DisableSsrcChanges", conduit,
-                          &AudioSessionConduit::DisableSsrcChanges));
+    // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
+    // packets (see bug 1405495) we could make this depending on the presence of
+    // MID in the RTP packets instead of relying on the signaling.
+    // In any case, do not disable SSRC changes if no SSRCs were negotiated
+    if (mJsepTransceiver->HasBundleLevel() &&
+        (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
+         !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
+             webrtc::RtpExtension::kMidUri))) {
+      mCallThread->Dispatch(
+          NewRunnableMethod("AudioSessionConduit::DisableSsrcChanges", conduit,
+                            &AudioSessionConduit::DisableSsrcChanges));
+    }
   }
 
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&

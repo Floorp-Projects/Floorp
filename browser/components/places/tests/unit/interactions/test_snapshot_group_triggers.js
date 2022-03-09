@@ -49,7 +49,7 @@ add_task(async function test_idle_daily() {
   );
 });
 
-function assertUpdateCalled({ addedUrls = [], removedUrls = [] }) {
+function assertUpdateCalled({ addedItems = [], removedUrls = [] }) {
   Assert.ok(
     fakeBuilder.rebuild.notCalled,
     "Should not have triggered a rebuild"
@@ -61,8 +61,8 @@ function assertUpdateCalled({ addedUrls = [], removedUrls = [] }) {
   let arg = fakeBuilder.update.args[0][0];
 
   Assert.deepEqual(
-    [...arg.addedUrls.values()],
-    addedUrls,
+    [...arg.addedItems.values()],
+    addedItems,
     "Should have added the expected urls"
   );
   Assert.deepEqual(
@@ -85,7 +85,11 @@ add_task(async function test_add_single_snapshot() {
 
   Assert.less(Date.now() - time, 300);
 
-  assertUpdateCalled({ addedUrls: [TEST_URLS[0]] });
+  assertUpdateCalled({
+    addedItems: [
+      { url: TEST_URLS[0], userPersisted: Snapshots.USER_PERSISTED.NO },
+    ],
+  });
 });
 
 add_task(async function test_add_multiple_snapshot() {
@@ -102,7 +106,12 @@ add_task(async function test_add_multiple_snapshot() {
 
   Assert.less(Date.now() - time, 300);
 
-  assertUpdateCalled({ addedUrls: [TEST_URLS[1], TEST_URLS[2]] });
+  assertUpdateCalled({
+    addedItems: [
+      { url: TEST_URLS[1], userPersisted: Snapshots.USER_PERSISTED.NO },
+      { url: TEST_URLS[2], userPersisted: Snapshots.USER_PERSISTED.NO },
+    ],
+  });
 });
 
 add_task(async function test_remove_snapshots() {
@@ -138,7 +147,10 @@ add_task(async function test_add_and_remove_snapshots() {
   Assert.less(Date.now() - time, 300);
 
   assertUpdateCalled({
-    addedUrls: [TEST_URLS[3], TEST_URLS[4]],
+    addedItems: [
+      { url: TEST_URLS[3], userPersisted: Snapshots.USER_PERSISTED.NO },
+      { url: TEST_URLS[4], userPersisted: Snapshots.USER_PERSISTED.NO },
+    ],
     removedUrls: [TEST_URLS[0]],
   });
 });

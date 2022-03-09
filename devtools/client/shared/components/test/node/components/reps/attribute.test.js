@@ -20,7 +20,7 @@ const { Attribute, Rep } = REPS;
 const stubs = require("devtools/client/shared/components/test/node/stubs/reps/attribute");
 
 describe("Attribute", () => {
-  const stub = stubs.get("Attribute");
+  const stub = stubs.get("Attribute")._grip;
 
   it("Rep correctly selects Attribute Rep", () => {
     expect(getRep(stub)).toBe(Attribute.rep);

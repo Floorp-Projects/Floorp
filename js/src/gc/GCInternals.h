@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
+#include "gc/FreeOp.h"
 #include "gc/GC.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/HelperThreads.h"
@@ -231,23 +232,74 @@ struct MOZ_RAII AutoStopVerifyingBarriers {
 };
 #endif /* JS_GC_ZEAL */
 
-class MOZ_RAII AutoDisableCompartmentCheckTracer {
-#ifdef DEBUG
-  JSContext* cx_;
-  bool prev_;
+class MOZ_RAII AutoPoisonFreedJitCode {
+  JSFreeOp* const fop;
 
  public:
-  AutoDisableCompartmentCheckTracer()
-      : cx_(TlsContext.get()), prev_(cx_->disableCompartmentCheckTracer) {
-    cx_->disableCompartmentCheckTracer = true;
-  }
-  ~AutoDisableCompartmentCheckTracer() {
-    cx_->disableCompartmentCheckTracer = prev_;
-  }
-#else
+  explicit AutoPoisonFreedJitCode(JSFreeOp* fop) : fop(fop) {}
+  ~AutoPoisonFreedJitCode() { fop->poisonJitCode(); }
+};
+
+// Set/restore the performing GC flag for the current thread.
+class MOZ_RAII AutoSetThreadIsPerformingGC {
+  JSFreeOp* fop;
+  bool prev;
+
  public:
-  AutoDisableCompartmentCheckTracer(){};
+  AutoSetThreadIsPerformingGC()
+      : fop(TlsFreeOp.get()), prev(fop->isCollecting_) {
+    fop->isCollecting_ = true;
+  }
+
+  ~AutoSetThreadIsPerformingGC() { fop->isCollecting_ = prev; }
+};
+
+class MOZ_RAII AutoSetThreadGCUse {
+ protected:
+#ifndef DEBUG
+  explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr) {}
+#else
+  explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr)
+      : fop(TlsFreeOp.get()),
+        prevUse(fop->gcUse_),
+        prevZone(fop->gcSweepZone_) {
+    MOZ_ASSERT(fop->isCollecting());
+    MOZ_ASSERT_IF(sweepZone, use == GCUse::Sweeping);
+    fop->gcUse_ = use;
+    fop->gcSweepZone_ = sweepZone;
+  }
+
+  ~AutoSetThreadGCUse() {
+    fop->gcUse_ = prevUse;
+    fop->gcSweepZone_ = prevZone;
+    MOZ_ASSERT_IF(fop->gcUse() == GCUse::None, !fop->gcSweepZone());
+  }
+
+ private:
+  JSFreeOp* fop;
+  GCUse prevUse;
+  JS::Zone* prevZone;
 #endif
+};
+
+// In debug builds, update the context state to indicate that the current thread
+// is being used for GC marking.
+struct MOZ_RAII AutoSetThreadIsMarking : public AutoSetThreadGCUse {
+  explicit AutoSetThreadIsMarking() : AutoSetThreadGCUse(GCUse::Marking) {}
+};
+
+// In debug builds, update the context state to indicate that the current thread
+// is being used for GC sweeping.
+struct MOZ_RAII AutoSetThreadIsSweeping : public AutoSetThreadGCUse {
+  explicit AutoSetThreadIsSweeping(JS::Zone* zone = nullptr)
+      : AutoSetThreadGCUse(GCUse::Sweeping, zone) {}
+};
+
+// In debug builds, update the context state to indicate that the current thread
+// is being used for GC finalization.
+struct MOZ_RAII AutoSetThreadIsFinalizing : public AutoSetThreadGCUse {
+  explicit AutoSetThreadIsFinalizing()
+      : AutoSetThreadGCUse(GCUse::Finalizing) {}
 };
 
 #ifdef JSGC_HASH_TABLE_CHECKS

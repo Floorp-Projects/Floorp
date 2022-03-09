@@ -300,6 +300,21 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   return NS_OK;
 }
 
+nsresult LSDatabase::CheckpointExplicitSnapshot() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_ASSERT(mSnapshot);
+  MOZ_ASSERT(mSnapshot->Explicit());
+
+  nsresult rv = mSnapshot->ExplicitCheckpoint();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult LSDatabase::EndExplicitSnapshot() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mActor);
@@ -307,7 +322,7 @@ nsresult LSDatabase::EndExplicitSnapshot() {
   MOZ_ASSERT(mSnapshot);
   MOZ_ASSERT(mSnapshot->Explicit());
 
-  nsresult rv = mSnapshot->End();
+  nsresult rv = mSnapshot->ExplicitEnd();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -305,7 +305,7 @@ load 455171-3.html
 load 455643-1.xhtml
 load 457375.html
 load 457380-1.html
-asserts(1) asserts-if(Android,0-1) load 459968.html # bug 1067022
+load 459968.html
 load 460910-1.xml
 load 461294-1.html
 load 462968.xhtml
@@ -338,7 +338,7 @@ load 477731-1.html
 load 477928.html
 load 478131-1.html
 load 478170-1.html
-load 478185-1.html
+asserts(1591-3581) load 478185-1.html
 load 478504.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
 load 480345-1.html
@@ -495,7 +495,7 @@ load 790252-2.html
 load 790260-1.html
 test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml
 test-pref(font.size.inflation.minTwips,120) load 794693.html
-asserts(1) asserts-if(Android,0-1) load 798020-1.html
+load 798020-1.html
 load 798235-1.html
 load 799207-1.html
 load 799207-2.html

@@ -177,12 +177,6 @@
   list-style-image: url(chrome://global/skin/icons/security.svg);
 }
 
-#identity-box[pageproxystate="valid"].verifiedDomain #identity-icon:not([lock-icon-gray]),
-#identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon:not([lock-icon-gray]) {
-  fill-opacity: 1;
-  fill: #12BC00;
-}
-
 #identity-box[pageproxystate="valid"].weakCipher #identity-icon,
 #identity-box[pageproxystate="valid"].mixedDisplayContent #identity-icon,
 #identity-box[pageproxystate="valid"].mixedDisplayContentLoadedActiveBlocked #identity-icon,

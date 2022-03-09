@@ -1,0 +1,5 @@
+<!doctype html>
+<input type=text>
+<script>
+  SpecialPowers.wrap(window).InspectorUtils.addPseudoClassLock(document.querySelector("input"), ":disabled", true);
+</script>

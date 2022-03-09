@@ -1414,7 +1414,6 @@ function waitForTitleChange(toolbox) {
  *
  *   const server = createTestHTTPServer();
  *   let url = "http://localhost: " + server.identity.primaryPort + "/path";
- *
  * @returns {HttpServer}
  */
 function createTestHTTPServer() {

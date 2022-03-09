@@ -53,9 +53,6 @@ class ParallelWorker : public GCParallelTask {
   void run(AutoLockHelperThreadState& lock) {
     AutoUnlockHelperThreadState unlock(lock);
 
-    // These checks assert when run in parallel.
-    AutoDisableProxyCheck noProxyCheck;
-
     for (;;) {
       size_t steps = func_(gc, item_);
       budget_.step(std::max(steps, size_t(1)));

@@ -18,7 +18,6 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
-#include "gc/MaybeRooted.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
@@ -149,66 +148,9 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                                map, mapLength, objectFlags);
 }
 
-Shape* js::CreateEnvironmentShape(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags) {
-  Rooted<SharedPropMap*> map(cx);
-  uint32_t mapLength = 0;
-
-  RootedId id(cx);
-  for (; bi; bi++) {
-    BindingLocation loc = bi.location();
-    if (loc.kind() == BindingLocation::Kind::Environment) {
-      JSAtom* name = atomCache.getExistingAtomAt(cx, bi.name());
-      MOZ_ASSERT(name);
-      cx->markAtom(name);
-      id = NameToId(name->asPropertyName());
-      if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
-                               &mapLength, &objectFlags)) {
-        return nullptr;
-      }
-    }
-  }
-
-  uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
-  return SharedShape::getInitialOrPropMapShape(cx, cls, cx->realm(),
-                                               TaggedProto(nullptr), numFixed,
-                                               map, mapLength, objectFlags);
-}
-
 template <class DataT>
 inline size_t SizeOfAllocatedData(DataT* data) {
   return SizeOfScopeData<DataT>(data->length);
-}
-
-template <typename ConcreteScope>
-static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
-    JSContext* cx, typename ConcreteScope::RuntimeData* data) {
-  using Data = typename ConcreteScope::RuntimeData;
-
-  // Make sure the binding names are marked in the context's zone, if we are
-  // copying data from another zone.
-  auto names = GetScopeDataTrailingNames(data);
-  for (auto binding : names) {
-    if (JSAtom* name = binding.name()) {
-      cx->markAtom(name);
-    }
-  }
-
-  size_t size = SizeOfAllocatedData(data);
-  void* bytes = cx->pod_malloc<char>(size);
-  if (!bytes) {
-    return nullptr;
-  }
-
-  auto* dataCopy = new (bytes) Data(*data);
-
-  std::uninitialized_copy_n(GetScopeDataTrailingNamesPointer(data),
-                            data->length,
-                            GetScopeDataTrailingNamesPointer(dataCopy));
-
-  return UniquePtr<Data>(dataCopy);
 }
 
 template <typename ConcreteScope>
@@ -226,36 +168,12 @@ static void MarkParserScopeData(JSContext* cx,
   }
 }
 
-static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
-                                BindingIter& bi, const JSClass* cls,
-                                uint32_t firstFrameSlot,
-                                ObjectFlags objectFlags,
-                                MutableHandleShape envShape) {
-  envShape.set(CreateEnvironmentShape(cx, freshBi, cls,
-                                      bi.nextEnvironmentSlot(), objectFlags));
-  return envShape;
-}
-
-static bool SetEnvironmentShape(JSContext* cx, ParserBindingIter& freshBi,
-                                ParserBindingIter& bi, const JSClass* cls,
-                                uint32_t firstFrameSlot,
-                                ObjectFlags objectFlags,
-                                mozilla::Maybe<uint32_t>* envShape) {
-  envShape->emplace(bi.nextEnvironmentSlot());
-  return true;
-}
-
-template <typename ConcreteScope, typename AtomT, typename EnvironmentT,
-          typename ShapeT>
-static bool PrepareScopeData(
-    JSContext* cx, AbstractBindingIter<AtomT>& bi,
-    typename MaybeRootedScopeData<ConcreteScope, AtomT>::HandleType data,
-    uint32_t firstFrameSlot, ShapeT envShape) {
+template <typename ConcreteScope, typename EnvironmentT>
+static void PrepareScopeData(ParserBindingIter& bi,
+                             typename ConcreteScope::ParserData* data,
+                             uint32_t firstFrameSlot,
+                             mozilla::Maybe<uint32_t>* envShape) {
   const JSClass* cls = &EnvironmentT::class_;
-  constexpr ObjectFlags objectFlags = EnvironmentT::OBJECT_FLAGS;
-
-  // Copy a fresh BindingIter for use below.
-  AbstractBindingIter<AtomT> freshBi(bi);
 
   // Iterate through all bindings. This counts the number of environment
   // slots needed and computes the maximum frame slot.
@@ -265,18 +183,10 @@ static bool PrepareScopeData(
   data->slotInfo.nextFrameSlot =
       bi.canHaveFrameSlots() ? bi.nextFrameSlot() : LOCALNO_LIMIT;
 
-  // Data is not used after this point.  Before this point, gc cannot
-  // occur, so `data` is fine as a raw pointer.
-
   // Make a new environment shape if any environment slots were used.
   if (bi.nextEnvironmentSlot() != JSSLOT_FREE(cls)) {
-    if (!SetEnvironmentShape(cx, freshBi, bi, cls, firstFrameSlot, objectFlags,
-                             envShape)) {
-      return false;
-    }
+    envShape->emplace(bi.nextEnvironmentSlot());
   }
-
-  return true;
 }
 
 template <typename ConcreteScope>
@@ -395,27 +305,12 @@ inline void Scope::initData(
   setHeaderPtr(data.get().release());
 }
 
-template <typename EnvironmentT>
-bool Scope::updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape envShape,
-                                     bool needsEnvironment) {
-  if (!envShape && needsEnvironment) {
-    envShape.set(EmptyEnvironmentShape<EnvironmentT>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <typename EnvironmentT>
-bool Scope::updateEnvShapeIfRequired(JSContext* cx,
-                                     mozilla::Maybe<uint32_t>* envShape,
+void Scope::updateEnvShapeIfRequired(mozilla::Maybe<uint32_t>* envShape,
                                      bool needsEnvironment) {
   if (envShape->isNothing() && needsEnvironment) {
     uint32_t numSlots = 0;
     envShape->emplace(numSlots);
   }
-  return true;
 }
 
 uint32_t Scope::firstFrameSlot() const {
@@ -645,42 +540,19 @@ uint32_t ClassBodyScope::nextFrameSlot(Scope* scope) {
   return NextFrameSlot(scope);
 }
 
-template <typename AtomT, typename ShapeT>
-bool LexicalScope::prepareForScopeCreation(
-    JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
-    typename MaybeRootedScopeData<LexicalScope, AtomT>::MutableHandleType data,
-    ShapeT envShape) {
+/* static */
+void LexicalScope::prepareForScopeCreation(ScopeKind kind,
+                                           uint32_t firstFrameSlot,
+                                           LexicalScope::ParserData* data,
+                                           mozilla::Maybe<uint32_t>* envShape) {
   bool isNamedLambda =
       kind == ScopeKind::NamedLambda || kind == ScopeKind::StrictNamedLambda;
 
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
-  AbstractBindingIter<AtomT> bi(*data, firstFrameSlot, isNamedLambda);
-  if (!PrepareScopeData<LexicalScope, AtomT, BlockLexicalEnvironmentObject>(
-          cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
-  return true;
-}
-
-/* static */
-LexicalScope* LexicalScope::createWithData(
-    JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-    uint32_t firstFrameSlot, HandleScope enclosing) {
-  RootedShape envShape(cx);
-
-  if (!prepareForScopeCreation<JSAtom>(cx, kind, firstFrameSlot, data,
-                                       &envShape)) {
-    return nullptr;
-  }
-
-  auto scope = Scope::create<LexicalScope>(cx, kind, enclosing, envShape, data);
-  if (!scope) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(scope->firstFrameSlot() == firstFrameSlot);
-  return scope;
+  ParserBindingIter bi(*data, firstFrameSlot, isNamedLambda);
+  PrepareScopeData<LexicalScope, BlockLexicalEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
 }
 
 /* static */
@@ -689,65 +561,29 @@ Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), ObjectFlags());
 }
 
-template <typename AtomT, typename ShapeT>
-bool ClassBodyScope::prepareForScopeCreation(
-    JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
-    typename MaybeRootedScopeData<ClassBodyScope, AtomT>::MutableHandleType
-        data,
-    ShapeT envShape) {
+/* static */
+void ClassBodyScope::prepareForScopeCreation(
+    ScopeKind kind, uint32_t firstFrameSlot, ClassBodyScope::ParserData* data,
+    mozilla::Maybe<uint32_t>* envShape) {
   MOZ_ASSERT(kind == ScopeKind::ClassBody);
 
-  AbstractBindingIter<AtomT> bi(*data, firstFrameSlot);
-  return PrepareScopeData<ClassBodyScope, AtomT, BlockLexicalEnvironmentObject>(
-      cx, bi, data, firstFrameSlot, envShape);
+  ParserBindingIter bi(*data, firstFrameSlot);
+  PrepareScopeData<ClassBodyScope, BlockLexicalEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
 }
 
 /* static */
-ClassBodyScope* ClassBodyScope::createWithData(
-    JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
-    uint32_t firstFrameSlot, HandleScope enclosing) {
-  RootedShape envShape(cx);
-
-  if (!prepareForScopeCreation<JSAtom>(cx, kind, firstFrameSlot, data,
-                                       &envShape)) {
-    return nullptr;
-  }
-
-  auto* scope =
-      Scope::create<ClassBodyScope>(cx, kind, enclosing, envShape, data);
-  if (!scope) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(scope->firstFrameSlot() == firstFrameSlot);
-  return scope;
-}
-
-static void SetCanonicalFunction(FunctionScope::RuntimeData& data,
-                                 HandleFunction fun) {
-  data.canonicalFunction.init(fun);
-}
-
-static void SetCanonicalFunction(FunctionScope::ParserData& data,
-                                 HandleFunction fun) {}
-
-template <typename AtomT, typename ShapeT>
-bool FunctionScope::prepareForScopeCreation(
-    JSContext* cx,
-    typename MaybeRootedScopeData<FunctionScope, AtomT>::MutableHandleType data,
-    bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-    ShapeT envShape) {
+void FunctionScope::prepareForScopeCreation(
+    FunctionScope::ParserData* data, bool hasParameterExprs,
+    bool needsEnvironment, mozilla::Maybe<uint32_t>* envShape) {
   uint32_t firstFrameSlot = 0;
-  AbstractBindingIter<AtomT> bi(*data, hasParameterExprs);
-  if (!PrepareScopeData<FunctionScope, AtomT, CallObject>(
-          cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
+  ParserBindingIter bi(*data, hasParameterExprs);
+  PrepareScopeData<FunctionScope, CallObject>(bi, data, firstFrameSlot,
+                                              envShape);
 
   if (hasParameterExprs) {
     data->slotInfo.setHasParameterExprs();
   }
-  SetCanonicalFunction(*data, fun);
 
   // An environment may be needed regardless of existence of any closed over
   // bindings:
@@ -756,26 +592,7 @@ bool FunctionScope::prepareForScopeCreation(
   //   - Being a derived class constructor
   //   - Being a generator or async function
   // Also see |FunctionBox::needsExtraBodyVarEnvironmentRegardlessOfBindings()|.
-  return updateEnvShapeIfRequired<CallObject>(cx, envShape, needsEnvironment);
-}
-
-/* static */
-FunctionScope* FunctionScope::createWithData(
-    JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-    bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
-    HandleScope enclosing) {
-  MOZ_ASSERT(data);
-  MOZ_ASSERT(fun->isTenured());
-
-  RootedShape envShape(cx);
-
-  if (!prepareForScopeCreation<JSAtom>(cx, data, hasParameterExprs,
-                                       needsEnvironment, fun, &envShape)) {
-    return nullptr;
-  }
-
-  return Scope::create<FunctionScope>(cx, ScopeKind::Function, enclosing,
-                                      envShape, data);
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
 }
 
 JSScript* FunctionScope::script() const {
@@ -796,50 +613,26 @@ bool FunctionScope::isSpecialName(JSContext* cx,
          name == frontend::TaggedParserAtomIndex::WellKnown::dotGenerator();
 }
 
-template <typename AtomT, typename ShapeT>
-bool VarScope::prepareForScopeCreation(
-    JSContext* cx, ScopeKind kind,
-    typename MaybeRootedScopeData<VarScope, AtomT>::MutableHandleType data,
-    uint32_t firstFrameSlot, bool needsEnvironment, ShapeT envShape) {
-  AbstractBindingIter<AtomT> bi(*data, firstFrameSlot);
-  if (!PrepareScopeData<VarScope, AtomT, VarEnvironmentObject>(
-          cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
+/* static */
+void VarScope::prepareForScopeCreation(ScopeKind kind,
+                                       VarScope::ParserData* data,
+                                       uint32_t firstFrameSlot,
+                                       bool needsEnvironment,
+                                       mozilla::Maybe<uint32_t>* envShape) {
+  ParserBindingIter bi(*data, firstFrameSlot);
+  PrepareScopeData<VarScope, VarEnvironmentObject>(bi, data, firstFrameSlot,
+                                                   envShape);
 
   // An environment may be needed regardless of existence of any closed over
   // bindings:
   //   - Extensible scopes (i.e., due to direct eval)
   //   - Being a generator
-  return updateEnvShapeIfRequired<VarEnvironmentObject>(cx, envShape,
-                                                        needsEnvironment);
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
 }
 
-/* static */
-VarScope* VarScope::createWithData(JSContext* cx, ScopeKind kind,
-                                   MutableHandle<UniquePtr<RuntimeData>> data,
-                                   uint32_t firstFrameSlot,
-                                   bool needsEnvironment,
-                                   HandleScope enclosing) {
-  MOZ_ASSERT(data);
-
-  RootedShape envShape(cx);
-  if (!prepareForScopeCreation<JSAtom>(cx, kind, data, firstFrameSlot,
-                                       needsEnvironment, &envShape)) {
-    return nullptr;
-  }
-
-  return Scope::create<VarScope>(cx, kind, enclosing, envShape, data);
-}
-
-/* static */
-GlobalScope* GlobalScope::create(JSContext* cx, ScopeKind kind,
-                                 Handle<RuntimeData*> dataArg) {
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
+GlobalScope* GlobalScope::createEmpty(JSContext* cx, ScopeKind kind) {
   Rooted<UniquePtr<RuntimeData>> data(
-      cx, dataArg ? CopyScopeData<GlobalScope>(cx, dataArg)
-                  : NewEmptyScopeData<GlobalScope, JSAtom>(cx));
+      cx, NewEmptyScopeData<GlobalScope, JSAtom>(cx));
   if (!data) {
     return nullptr;
   }
@@ -865,35 +658,16 @@ WithScope* WithScope::create(JSContext* cx, HandleScope enclosing) {
   return static_cast<WithScope*>(scope);
 }
 
-template <typename AtomT, typename ShapeT>
-bool EvalScope::prepareForScopeCreation(
-    JSContext* cx, ScopeKind scopeKind,
-    typename MaybeRootedScopeData<EvalScope, AtomT>::MutableHandleType data,
-    ShapeT envShape) {
+/* static */
+void EvalScope::prepareForScopeCreation(ScopeKind scopeKind,
+                                        EvalScope::ParserData* data,
+                                        mozilla::Maybe<uint32_t>* envShape) {
   if (scopeKind == ScopeKind::StrictEval) {
     uint32_t firstFrameSlot = 0;
-    AbstractBindingIter<AtomT> bi(*data, true);
-    if (!PrepareScopeData<EvalScope, AtomT, VarEnvironmentObject>(
-            cx, bi, data, firstFrameSlot, envShape)) {
-      return false;
-    }
+    ParserBindingIter bi(*data, true);
+    PrepareScopeData<EvalScope, VarEnvironmentObject>(bi, data, firstFrameSlot,
+                                                      envShape);
   }
-
-  return true;
-}
-
-/* static */
-EvalScope* EvalScope::createWithData(JSContext* cx, ScopeKind scopeKind,
-                                     MutableHandle<UniquePtr<RuntimeData>> data,
-                                     HandleScope enclosing) {
-  MOZ_ASSERT(data);
-
-  RootedShape envShape(cx);
-  if (!prepareForScopeCreation<JSAtom>(cx, scopeKind, data, &envShape)) {
-    return nullptr;
-  }
-
-  return Scope::create<EvalScope>(cx, scopeKind, enclosing, envShape, data);
 }
 
 /* static */
@@ -916,50 +690,17 @@ ModuleScope::RuntimeData::RuntimeData(size_t length) {
   PoisonNames(this, length);
 }
 
-static void InitModule(ModuleScope::RuntimeData& data,
-                       HandleModuleObject module) {
-  data.module.init(module);
-}
-
-static void InitModule(ModuleScope::ParserData& data,
-                       HandleModuleObject module) {}
-
 /* static */
-template <typename AtomT, typename ShapeT>
-bool ModuleScope::prepareForScopeCreation(
-    JSContext* cx,
-    typename MaybeRootedScopeData<ModuleScope, AtomT>::MutableHandleType data,
-    HandleModuleObject module, ShapeT envShape) {
+void ModuleScope::prepareForScopeCreation(ModuleScope::ParserData* data,
+                                          mozilla::Maybe<uint32_t>* envShape) {
   uint32_t firstFrameSlot = 0;
-  AbstractBindingIter<AtomT> bi(*data);
-  if (!PrepareScopeData<ModuleScope, AtomT, ModuleEnvironmentObject>(
-          cx, bi, data, firstFrameSlot, envShape)) {
-    return false;
-  }
-
-  InitModule(*data, module);
+  ParserBindingIter bi(*data);
+  PrepareScopeData<ModuleScope, ModuleEnvironmentObject>(
+      bi, data, firstFrameSlot, envShape);
 
   // Modules always need an environment object for now.
   bool needsEnvironment = true;
-
-  return updateEnvShapeIfRequired<ModuleEnvironmentObject>(cx, envShape,
-                                                           needsEnvironment);
-}
-
-/* static */
-ModuleScope* ModuleScope::createWithData(
-    JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
-    HandleModuleObject module, HandleScope enclosing) {
-  MOZ_ASSERT(data);
-  MOZ_ASSERT(enclosing->is<GlobalScope>());
-
-  RootedShape envShape(cx);
-  if (!prepareForScopeCreation<JSAtom>(cx, data, module, &envShape)) {
-    return nullptr;
-  }
-
-  return Scope::create<ModuleScope>(cx, ScopeKind::Module, enclosing, envShape,
-                                    data);
+  updateEnvShapeIfRequired(envShape, needsEnvironment);
 }
 
 template <size_t ArrayLength>
@@ -1679,16 +1420,10 @@ bool ScopeStencil::createForFunctionScope(
     }
   }
 
-  // We do not initialize the canonical function while the data is owned by the
-  // ScopeStencil. It gets set in ScopeStencil::releaseData.
-  RootedFunction fun(cx, nullptr);
-
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!FunctionScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, &data, hasParameterExprs, needsEnvironment, fun, &envShape)) {
-    return false;
-  }
+  FunctionScope::prepareForScopeCreation(data, hasParameterExprs,
+                                         needsEnvironment, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape,
@@ -1713,10 +1448,7 @@ bool ScopeStencil::createForLexicalScope(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!ScopeType::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, kind, firstFrameSlot, &data, &envShape)) {
-    return false;
-  }
+  ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
@@ -1740,10 +1472,7 @@ bool ScopeStencil::createForClassBodyScope(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!ScopeType::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, kind, firstFrameSlot, &data, &envShape)) {
-    return false;
-  }
+  ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
@@ -1766,10 +1495,8 @@ bool ScopeStencil::createForVarScope(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!VarScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, kind, &data, firstFrameSlot, needsEnvironment, &envShape)) {
-    return false;
-  }
+  VarScope::prepareForScopeCreation(kind, data, firstFrameSlot,
+                                    needsEnvironment, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
@@ -1823,10 +1550,7 @@ bool ScopeStencil::createForEvalScope(
 
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!EvalScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, kind, &data, &envShape)) {
-    return false;
-  }
+  EvalScope::prepareForScopeCreation(kind, data, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
@@ -1852,18 +1576,11 @@ bool ScopeStencil::createForModuleScope(
 
   MOZ_ASSERT(enclosing.isNothing());
 
-  // We do not initialize the canonical module while the data is owned by the
-  // ScopeStencil. It gets set in ScopeStencil::releaseData.
-  RootedModuleObject module(cx, nullptr);
-
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!ModuleScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, &data, module, &envShape)) {
-    return false;
-  }
+  ModuleScope::prepareForScopeCreation(data, &envShape);
 
   return appendScopeStencilAndData(cx, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);

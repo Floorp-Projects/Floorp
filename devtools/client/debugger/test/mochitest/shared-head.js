@@ -46,7 +46,11 @@ const {
   resetSchemaVersion,
 } = require("devtools/client/debugger/src/utils/prefs");
 
-const { isGeneratedId } = require("devtools/client/shared/source-map/index");
+const {
+  isGeneratedId,
+  isOriginalId,
+  originalToGeneratedId,
+} = require("devtools/client/shared/source-map/index");
 
 /**
  * Waits for `predicate()` to be true. `state` is the redux app state.
@@ -645,6 +649,28 @@ function findSource(
   return source;
 }
 
+/**
+ * Find the source in specied thread. Useful when there exists
+ * same named sources in different targets (threads)
+ *
+ * @param {Object} dbg
+ * @param {String} filenameOrUrl - The source file name of the full source url
+ * @param {String} threadName - The name of the thread the source belongs to
+ */
+function findSourceInThread(dbg, filenameOrUrl, threadName) {
+  const sources = dbg.selectors.getSourceList();
+  return sources.find(s => {
+    const sourceFileName = s.url
+      ? s.url.substring(s.url.lastIndexOf("/") + 1)
+      : "";
+    if (sourceFileName == filenameOrUrl || s.url == filenameOrUrl) {
+      const thread = dbg.selectors.getThread(s.thread);
+      return thread.name == threadName;
+    }
+    return false;
+  });
+}
+
 function findSourceContent(dbg, url, opts) {
   const source = findSource(dbg, url, opts);
 
@@ -695,11 +721,13 @@ function getThreadContext(dbg) {
  * @param {Object} dbg
  * @param {String} url
  * @param {Number} line
+ * @param {Number} column
  * @return {Promise}
  * @static
  */
 async function selectSource(dbg, url, line, column) {
   const source = findSource(dbg, url);
+
   await dbg.actions.selectLocation(
     getContext(dbg),
     { sourceId: source.id, line, column },
@@ -1453,6 +1481,10 @@ const selectors = {
   editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,
   sourceNodes: ".sources-list .tree-node",
+  sourceTreeThreads: '.sources-list .tree-node[aria-level="1"]',
+  sourceTreeThreadsNodes:
+    '.sources-list .tree-node[aria-level="1"] > .node > span:nth-child(1)',
+  sourceTreeFiles: ".sources-list .tree-node[data-expandable=false]",
   threadSourceTree: i => `.threads-list .sources-pane:nth-child(${i})`,
   threadSourceTreeHeader: i =>
     `${selectors.threadSourceTree(i)} .thread-header`,
@@ -1950,18 +1982,44 @@ async function waitForBreakableLine(dbg, source, lineNumber) {
   );
 }
 
-async function waitForSourceCount(dbg, i) {
-  // We are forced to wait until the DOM nodes appear because the
-  // source tree batches its rendering.
-  info(`waiting for ${i} sources`);
+async function expandSourceTree(dbg) {
+  const rootNodes = dbg.win.document.querySelectorAll(
+    selectors.sourceTreeThreadsNodes
+  );
+  for (const rootNode of rootNodes) {
+    await expandAllSourceNodes(dbg, rootNode);
+    await wait(250);
+  }
+}
+
+async function waitForSourceTreeThreadsCount(dbg, i) {
+  info(`waiting for ${i} threads in the source tree`);
   await waitUntil(() => {
-    return findAllElements(dbg, "sourceNodes").length === i;
+    return findAllElements(dbg, "sourceTreeThreads").length === i;
   });
 }
 
-async function assertSourceCount(dbg, count) {
-  await waitForSourceCount(dbg, count);
-  is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
+async function waitForSourcesInSourceTree(
+  dbg,
+  sources,
+  { noExpand = false } = {}
+) {
+  info(`waiting for ${sources.length} files in the source tree`);
+  await waitFor(async () => {
+    if (!noExpand) {
+      await expandSourceTree(dbg);
+    }
+    // Replace some non visible space characters that prevents Array.includes from working correctly
+    const displayedSources = [...findAllElements(dbg, "sourceTreeFiles")].map(
+      e => {
+        return e.textContent.trim().replace(/^[\s\u200b]*/g, "");
+      }
+    );
+    return (
+      displayedSources.length == sources.length &&
+      sources.every(source => displayedSources.includes(source))
+    );
+  });
 }
 
 async function waitForNodeToGainFocus(dbg, index) {

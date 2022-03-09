@@ -1,0 +1,21 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Top level test page</title>
+    <script src="same-script.js"></script>
+  </head>
+  <body>
+    <iframe src='https://example.org/browser/devtools/client/debugger/test/mochitest/examples/doc_dbg-same-source-distinct-threads-frame.html'></iframe>
+    <script> 
+      // Same script in worker
+      const worker = new Worker("same-script.js");
+      function postMessageToWorker() { 
+        worker.postMessage("");
+      }
+    </script>
+  </body>
+</html>
+

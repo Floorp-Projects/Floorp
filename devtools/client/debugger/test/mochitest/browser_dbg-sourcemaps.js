@@ -22,14 +22,27 @@ add_task(async function() {
     selectors: { getBreakpointCount },
   } = dbg;
 
-  ok(true, "Original sources exist");
-  const bundleSrc = findSource(dbg, "bundle.js");
-
   // Check that the original sources appear in the source tree
+  info("Before opening the page directory, no source are displayed");
+  await waitForSourcesInSourceTree(dbg, [], { noExpand: true });
   await clickElement(dbg, "sourceDirectoryLabel", 4);
-  await assertSourceCount(dbg, 9);
+  info(
+    "After opening the page directory, only all original sources (entry, output, time2, opts). (bundle is still hidden)"
+  );
+  await waitForSourcesInSourceTree(
+    dbg,
+    ["entry.js", "output.js", "times2.js", "opts.js"],
+    { noExpand: true }
+  );
+  info("Expand the page folder and assert that the bundle appears");
+  await clickElement(dbg, "sourceDirectoryLabel", 3);
+  await waitForSourcesInSourceTree(
+    dbg,
+    ["entry.js", "output.js", "times2.js", "opts.js", "bundle.js"],
+    { noExpand: true }
+  );
 
-  await selectSource(dbg, bundleSrc);
+  await selectSource(dbg, "bundle.js");
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 1);
@@ -37,7 +50,6 @@ add_task(async function() {
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 0);
-  is(dbg.selectors.getBreakpointCount(), 0, "No breakpoints exists");
 
   const entrySrc = findSource(dbg, "entry.js");
 
