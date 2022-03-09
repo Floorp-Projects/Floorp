@@ -288,7 +288,7 @@ class DCSurfaceVideo : public DCSurface {
   HANDLE mSwapChainSurfaceHandle;
   gfx::IntSize mSwapChainSize;
   DXGI_FORMAT mSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-  bool mFailedToCreateYuvSwapChain = false;
+  bool mFailedYuvSwapChain = false;
   RefPtr<RenderTextureHost> mPrevTexture;
 };
 

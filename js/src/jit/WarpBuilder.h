@@ -45,7 +45,6 @@ namespace jit {
   _(Resume)                              \
   /* try-finally */                      \
   _(Finally)                             \
-  _(Gosub)                               \
   _(Retsub)                              \
   /* Misc */                             \
   _(DelName)                             \

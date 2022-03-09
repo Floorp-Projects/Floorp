@@ -2742,17 +2742,6 @@
   value: true
   mirror: always
 
-# Whether the Large-Allocation header is enabled.
-- name: dom.largeAllocationHeader.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: dom.largeAllocation.forceEnable
-  type: bool
-  value: false
-  mirror: always
-
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
@@ -6990,7 +6979,7 @@
 
 - name: layers.gpu-process.enabled
   type: bool
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
@@ -8953,6 +8942,11 @@
 -   name: media.wmf.use-nv12-format
     type: RelaxedAtomicBool
     value: true
+    mirror: always
+
+-   name: media.wmf.no-copy-nv12-textures
+    type: RelaxedAtomicBool
+    value: false
     mirror: always
 
 -   name: media.wmf.force.allow-p010-format

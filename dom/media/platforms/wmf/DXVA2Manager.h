@@ -41,6 +41,14 @@ class DXVA2Manager {
                               const gfx::IntRect& aRegion,
                               layers::Image** aOutImage) = 0;
 
+  virtual HRESULT WrapTextureWithImage(IMFSample* aVideoSample,
+                                       const gfx::IntRect& aRegion,
+                                       layers::Image** aOutImage) {
+    // Not implemented!
+    MOZ_CRASH("WrapTextureWithImage not implemented on this manager.");
+    return E_FAIL;
+  }
+
   virtual HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
                                     ID3D11Texture2D** aOutTexture) {
     // Not implemented!

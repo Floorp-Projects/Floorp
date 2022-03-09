@@ -72,6 +72,14 @@ already_AddRefed<IMFAttributes> MFTDecoder::GetAttributes() {
   return attr.forget();
 }
 
+already_AddRefed<IMFAttributes> MFTDecoder::GetOutputStreamAttributes() {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  RefPtr<IMFAttributes> attr;
+  HRESULT hr = mDecoder->GetOutputStreamAttributes(0, getter_AddRefs(attr));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  return attr.forget();
+}
+
 HRESULT
 MFTDecoder::FindDecoderOutputType() {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());

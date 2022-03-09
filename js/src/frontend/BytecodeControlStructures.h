@@ -143,8 +143,8 @@ class TryFinallyControl : public NestableControl {
   bool emittingSubroutine_;
 
  public:
-  // The subroutine when emitting a finally block.
-  JumpList gosubs;
+  // Offset of the last jump to this `finally`.
+  JumpList finallyJumps_;
 
   TryFinallyControl(BytecodeEmitter* bce, StatementKind kind);
 

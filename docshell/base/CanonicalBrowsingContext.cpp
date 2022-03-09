@@ -1928,12 +1928,11 @@ CanonicalBrowsingContext::ChangeRemoteness(
 
   // If we're aiming to end up in a new process of the same type as our old
   // process, and then putting our previous document in the BFCache, try to stay
-  // in the same process to avoid creating new processes unnecessarially.
+  // in the same process to avoid creating new processes unnecessarily.
   RefPtr<ContentParent> existingProcess = GetContentParent();
   if (existingProcess && existingProcess->IsAlive() &&
       aOptions.mReplaceBrowsingContext &&
-      aOptions.mRemoteType == existingProcess->GetRemoteType() &&
-      aOptions.mRemoteType != LARGE_ALLOCATION_REMOTE_TYPE) {
+      aOptions.mRemoteType == existingProcess->GetRemoteType()) {
     change->mContentParent = existingProcess;
     change->mContentParent->AddKeepAlive();
     change->ProcessLaunched();
@@ -2588,12 +2587,6 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   }
 
   if (IsInProcess()) {
-    return false;
-  }
-
-  nsAutoCString remoteType;
-  GetCurrentRemoteType(remoteType, IgnoredErrorResult());
-  if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
     return false;
   }
 

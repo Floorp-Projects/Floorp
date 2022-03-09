@@ -29,15 +29,13 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(WritableStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WritableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mSignal, mStrategySizeAlgorithm,
-                                  mWriteAlgorithm, mCloseAlgorithm,
-                                  mAbortAlgorithm, mStream)
+                                  mAlgorithms, mStream)
   tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WritableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mSignal, mStrategySizeAlgorithm,
-                                    mWriteAlgorithm, mCloseAlgorithm,
-                                    mAbortAlgorithm, mStream)
+                                    mAlgorithms, mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(WritableStreamDefaultController)
@@ -92,12 +90,10 @@ already_AddRefed<Promise> WritableStreamDefaultController::AbortSteps(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1. Let result be the result of performing this.[[abortAlgorithm]],
   // passing reason.
-  RefPtr<UnderlyingSinkAbortCallbackHelper> abortAlgorithm(mAbortAlgorithm);
+  RefPtr<UnderlyingSinkAlgorithms> algorithms = mAlgorithms;
   Optional<JS::Handle<JS::Value>> optionalReason(aCx, aReason);
   RefPtr<Promise> abortPromise =
-      abortAlgorithm
-          ? abortAlgorithm->AbortCallback(aCx, optionalReason, aRv)
-          : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
+      algorithms->AbortCallback(aCx, optionalReason, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -184,10 +180,7 @@ NS_INTERFACE_MAP_END
 void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
-    UnderlyingSinkStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSinkWriteCallbackHelper* aWriteAlgorithm,
-    UnderlyingSinkCloseCallbackHelper* aCloseAlgorithm,
-    UnderlyingSinkAbortCallbackHelper* aAbortAlgorithm, double aHighWaterMark,
+    UnderlyingSinkAlgorithms* aAlgorithms, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
   // Step 1. Assert: stream implements WritableStream.
   // Step 2. Assert: stream.[[controller]] is undefined.
@@ -219,13 +212,9 @@ void SetUpWritableStreamDefaultController(
   aController->SetStrategyHWM(aHighWaterMark);
 
   // Step 10. Set controller.[[writeAlgorithm]] to writeAlgorithm.
-  aController->SetWriteAlgorithm(aWriteAlgorithm);
-
   // Step 11. Set controller.[[closeAlgorithm]] to closeAlgorithm.
-  aController->SetCloseAlgorithm(aCloseAlgorithm);
-
   // Step 12. Set controller.[[abortAlgorithm]] to abortAlgorithm.
-  aController->SetAbortAlgorithm(aAbortAlgorithm);
+  aController->SetAlgorithms(aAlgorithms);
 
   // Step 13. Let backpressure be !
   // WritableStreamDefaultControllerGetBackpressure(controller).
@@ -240,15 +229,10 @@ void SetUpWritableStreamDefaultController(
   // Step 15. Let startResult be the result of performing startAlgorithm. (This
   // may throw an exception.)
   JS::Rooted<JS::Value> startResult(aCx, JS::UndefinedValue());
-  if (aStartAlgorithm) {
-    // Strong Refs:
-    RefPtr<UnderlyingSinkStartCallbackHelper> startAlgorithm(aStartAlgorithm);
-    RefPtr<WritableStreamDefaultController> controller(aController);
-
-    startAlgorithm->StartCallback(aCx, *controller, &startResult, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+  RefPtr<WritableStreamDefaultController> controller(aController);
+  aAlgorithms->StartCallback(aCx, *controller, &startResult, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   // Step 16. Let startPromise be a promise resolved with startResult.
@@ -273,38 +257,13 @@ void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
   RefPtr<WritableStreamDefaultController> controller =
       new WritableStreamDefaultController(aStream->GetParentObject(), *aStream);
 
-  // Step 6. (implicit Step 2.)
-  RefPtr<UnderlyingSinkStartCallbackHelper> startAlgorithm =
-      aUnderlyingSinkDict.mStart.WasPassed()
-          ? new UnderlyingSinkStartCallbackHelper(
-                aUnderlyingSinkDict.mStart.Value(), aUnderlyingSink)
-          : nullptr;
-
-  // Step 7. (implicit Step 3.)
-  RefPtr<UnderlyingSinkWriteCallbackHelper> writeAlgorithm =
-      aUnderlyingSinkDict.mWrite.WasPassed()
-          ? new UnderlyingSinkWriteCallbackHelper(
-                aUnderlyingSinkDict.mWrite.Value(), aUnderlyingSink)
-          : nullptr;
-
-  // Step 8. (implicit Step 4.)
-  RefPtr<UnderlyingSinkCloseCallbackHelper> closeAlgorithm =
-      aUnderlyingSinkDict.mClose.WasPassed()
-          ? new UnderlyingSinkCloseCallbackHelper(
-                aUnderlyingSinkDict.mClose.Value(), aUnderlyingSink)
-          : nullptr;
-
-  // Step 9. (implicit Step 5.)
-  RefPtr<UnderlyingSinkAbortCallbackHelper> abortAlgorithm =
-      aUnderlyingSinkDict.mAbort.WasPassed()
-          ? new UnderlyingSinkAbortCallbackHelper(
-                aUnderlyingSinkDict.mAbort.Value(), aUnderlyingSink)
-          : nullptr;
+  // Step 2 - 9.
+  auto algorithms = MakeRefPtr<UnderlyingSinkAlgorithms>(
+      aStream->GetParentObject(), aUnderlyingSink, aUnderlyingSinkDict);
 
   // Step 10.
-  SetUpWritableStreamDefaultController(
-      aCx, aStream, controller, startAlgorithm, writeAlgorithm, closeAlgorithm,
-      abortAlgorithm, aHighWaterMark, aSizeAlgorithm, aRv);
+  SetUpWritableStreamDefaultController(aCx, aStream, controller, algorithms,
+                                       aHighWaterMark, aSizeAlgorithm, aRv);
 }
 
 // MG:XXX: Probably can find base class between this and
@@ -372,14 +331,8 @@ MOZ_CAN_RUN_SCRIPT static void WritableStreamDefaultControllerProcessClose(
 
   // Step 5. Let sinkClosePromise be the result of performing
   // controller.[[closeAlgorithm]].
-  RefPtr<UnderlyingSinkCloseCallbackHelper> closeAlgorithm(
-      aController->GetCloseAlgorithm());
-
-  RefPtr<Promise> sinkClosePromise =
-      closeAlgorithm ? closeAlgorithm->CloseCallback(aCx, aRv)
-                     : Promise::CreateResolvedWithUndefined(
-                           aController->GetParentObject(), aRv);
-
+  RefPtr<UnderlyingSinkAlgorithms> algorithms = aController->GetAlgorithms();
+  RefPtr<Promise> sinkClosePromise = algorithms->CloseCallback(aCx, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -489,14 +442,9 @@ MOZ_CAN_RUN_SCRIPT static void WritableStreamDefaultControllerProcessWrite(
 
   // Step 3. Let sinkWritePromise be the result of performing
   // controller.[[writeAlgorithm]], passing in chunk.
-  RefPtr<UnderlyingSinkWriteCallbackHelper> writeAlgorithm(
-      aController->GetWriteAlgorithm());
-
+  RefPtr<UnderlyingSinkAlgorithms> algorithms = aController->GetAlgorithms();
   RefPtr<Promise> sinkWritePromise =
-      writeAlgorithm
-          ? writeAlgorithm->WriteCallback(aCx, aChunk, *aController, aRv)
-          : Promise::CreateResolvedWithUndefined(aController->GetParentObject(),
-                                                 aRv);
+      algorithms->WriteCallback(aCx, aChunk, *aController, aRv);
   if (aRv.Failed()) {
     return;
   }

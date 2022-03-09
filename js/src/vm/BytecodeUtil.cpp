@@ -926,12 +926,29 @@ bool BytecodeParser::parse() {
                 return false;
               }
             } else if (tn.kind() == TryNoteKind::Finally) {
-              if (!addJump(catchOffset, stackDepth, offsetStack, pc,
+              // Two additional values will be on the stack at the beginning
+              // of the finally block: the exception/resume index, and the
+              // |throwing| value. For the benefit of the decompiler, point
+              // them at this Try.
+              offsetStack[stackDepth].set(offset, 0);
+              offsetStack[stackDepth + 1].set(offset, 1);
+              if (!addJump(catchOffset, stackDepth + 2, offsetStack, pc,
                            JumpKind::TryFinally)) {
                 return false;
               }
             }
           }
+        }
+        break;
+      }
+
+      case JSOp::ResumeIndex: {
+        // ResumeIndex is used to push a return address for a finally block. If
+        // this op is reachable, then so is that return address (with a smaller
+        // stack depth because the resume index will have been popped.
+        uint32_t resumeOffset = script_->resumeOffsets()[GET_UINT24(pc)];
+        if (!recordBytecode(resumeOffset, offsetStack, stackDepth - 1)) {
+          return false;
         }
         break;
       }
@@ -2094,12 +2111,14 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::Exception:
         return write("EXCEPTION");
 
-      case JSOp::Finally:
+      case JSOp::Try:
+        // Used for the values live on entry to the finally block.
+        // See TryNoteKind::Finally above.
         if (defIndex == 0) {
-          return write("THROWING");
+          return write("PC");
         }
         MOZ_ASSERT(defIndex == 1);
-        return write("PC");
+        return write("THROWING");
 
       case JSOp::FunctionThis:
       case JSOp::ImplicitThis:
