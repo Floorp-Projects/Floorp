@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.jsm",
+  PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
@@ -89,7 +90,7 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     if (this.testGroupBuilders) {
       return this.testGroupBuilders;
     }
-    return [DomainGroupBuilder];
+    return [DomainGroupBuilder, PinnedGroupBuilder];
   }
 
   /**

@@ -33,15 +33,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @property {string} id
  *   The group id. The id property is ignored when adding a group.
  * @property {string} title
- *   The title of the group, this may be automatically generated or
- *   user assigned.
+ *   The title of the group assigned by the user. This should be used
+ *   in preference to the translation supplied title in the builderMetadata.
  * @property {boolean} hidden
  *   Whether the group is hidden or not.
  * @property {string} builder
  *   The builder that was used to create the group (e.g. "domain", "pinned").
  * @property {object} builderMetadata
  *   The metadata from the builder for the SnapshotGroup.
- *   This is for use by the builder only and should otherwise be considered opaque.
+ *   This is mostly for use by the builder only and should otherwise be
+ *   considered opaque, the exception to this is for the localisation data.
+ * @property {object} builderMetadata.fluentTitle
+ *   An object to be passed to fluent for generating the title of the group.
+ *   This title should only be used if `title` is not present.
  * @property {string} imageUrl
  *   The image url to use for the group.
  * @property {number} lastAccessed
@@ -445,15 +449,19 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   The id of the group to add the urls to.
    */
   async #prefetchScreenshotForGroup(id) {
-    let url = (
-      await this.getSnapshots({
-        id,
-        start: 0,
-        count: 1,
-        sortBy: "last_interaction_at",
-        sortDescending: false,
-      })
-    )[0].url;
+    let snapshots = await this.getSnapshots({
+      id,
+      start: 0,
+      count: 1,
+      sortBy: "last_interaction_at",
+      sortDescending: false,
+    });
+
+    if (!snapshots.length) {
+      return;
+    }
+
+    let url = snapshots[0].url;
     if (PlacesPreviews.enabled) {
       await PlacesPreviews.update(url);
     } else {
