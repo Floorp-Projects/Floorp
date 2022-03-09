@@ -58,7 +58,6 @@ class CollectionCreationFragment : DialogFragment() {
                 collectionCreationStore,
                 requireComponents.core.store,
                 ::dismiss,
-                requireComponents.analytics.metrics,
                 requireComponents.core.tabCollectionStorage,
                 scope = lifecycleScope
             )

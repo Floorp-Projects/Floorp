@@ -27,8 +27,10 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -232,7 +234,7 @@ class DefaultSessionControlController(
 ) : SessionControlController {
 
     override fun handleCollectionAddTabTapped(collection: TabCollection) {
-        metrics.track(Event.CollectionAddTabPressed)
+        Collections.addTabButton.record(NoExtras())
         showCollectionCreationFragment(
             step = SaveCollectionStep.SelectTabs,
             selectedTabCollectionId = collection.id
@@ -264,7 +266,7 @@ class DefaultSessionControlController(
             }
         )
 
-        metrics.track(Event.CollectionTabRestored)
+        Collections.tabRestored.record(NoExtras())
     }
 
     override fun handleCollectionOpenTabsTapped(collection: TabCollection) {
@@ -278,7 +280,7 @@ class DefaultSessionControlController(
         )
 
         showTabTray()
-        metrics.track(Event.CollectionAllTabsRestored)
+        Collections.allTabsRestored.record(NoExtras())
     }
 
     override fun handleCollectionRemoveTab(
@@ -286,7 +288,7 @@ class DefaultSessionControlController(
         tab: ComponentTab,
         wasSwiped: Boolean
     ) {
-        metrics.track(Event.CollectionTabRemoved)
+        Collections.tabRemoved.record(NoExtras())
 
         if (collection.tabs.size == 1) {
             removeCollectionWithUndo(collection)
@@ -303,7 +305,7 @@ class DefaultSessionControlController(
             collection.title,
             collection.tabs.map { ShareData(url = it.url, title = it.title) }
         )
-        metrics.track(Event.CollectionShared)
+        Collections.shared.record(NoExtras())
     }
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
@@ -391,7 +393,7 @@ class DefaultSessionControlController(
             step = SaveCollectionStep.RenameCollection,
             selectedTabCollectionId = collection.id
         )
-        metrics.track(Event.CollectionRenamePressed)
+        Collections.renameButton.record(NoExtras())
     }
 
     override fun handleSelectTopSite(topSite: TopSite, position: Int) {

@@ -20,8 +20,9 @@ import androidx.transition.TransitionManager
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentCollectionCreationBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
@@ -109,7 +110,7 @@ class CollectionCreationView(
     }
 
     private fun updateForSelectTabs(state: CollectionCreationState) {
-        container.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
+        Collections.tabSelectOpened.record(NoExtras())
 
         binding.tabList.isClickable = true
 

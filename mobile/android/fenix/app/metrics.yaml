@@ -4095,8 +4095,10 @@ collections:
     extra_keys:
       tabs_open:
         description: "The number of tabs open in the current session"
+        type: string
       tabs_selected:
         description: "The number of tabs added to the collection"
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -4123,8 +4125,10 @@ collections:
     extra_keys:
       tabs_open:
         description: The number of tabs open in the current session
+        type: string
       tabs_selected:
         description: The number of tabs added to the collection
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -4238,6 +4242,7 @@ collections:
         description: |
           A string representing the screen from which the user pressed the save
           button. Currently one of: `browserMenu`, `homeMenu` or `home`
+        type: string
     metadata:
       tags:
         - Collections

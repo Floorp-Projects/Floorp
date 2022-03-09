@@ -11,25 +11,33 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.verifyAll
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
 class DefaultCollectionCreationControllerTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private val testCoroutineScope = TestCoroutineScope()
     private lateinit var state: CollectionCreationState
@@ -37,7 +45,6 @@ class DefaultCollectionCreationControllerTest {
     private var dismissed = false
 
     @MockK(relaxed = true) private lateinit var store: CollectionCreationStore
-    @MockK(relaxUnitFun = true) private lateinit var metrics: MetricController
     @MockK(relaxUnitFun = true) private lateinit var tabCollectionStorage: TabCollectionStorage
     private lateinit var browserStore: BrowserStore
 
@@ -60,7 +67,6 @@ class DefaultCollectionCreationControllerTest {
             dismiss = {
                 dismissed = true
             },
-            metrics,
             tabCollectionStorage,
             testCoroutineScope
         )
@@ -92,7 +98,16 @@ class DefaultCollectionCreationControllerTest {
 
         assertTrue(dismissed)
         coVerify { tabCollectionStorage.createCollection("name", listOf(tab1)) }
-        verify { metrics.track(Event.CollectionSaved(2, 1)) }
+
+        assertTrue(Collections.saved.testHasValue())
+        val recordedEvents = Collections.saved.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("tabs_open"))
+        assertEquals("2", eventExtra["tabs_open"])
+        assertTrue(eventExtra.containsKey("tabs_selected"))
+        assertEquals("1", eventExtra["tabs_selected"])
     }
 
     @Test
@@ -138,9 +153,12 @@ class DefaultCollectionCreationControllerTest {
         advanceUntilIdle()
 
         assertTrue(dismissed)
-        verifyAll {
-            metrics.track(Event.CollectionRenamed)
-        }
+
+        assertTrue(Collections.renamed.testHasValue())
+        val recordedEvents = Collections.renamed.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertNull(recordedEvents.single().extra)
+
         coVerify { tabCollectionStorage.renameCollection(collection, "name") }
     }
 
@@ -186,7 +204,16 @@ class DefaultCollectionCreationControllerTest {
 
         assertTrue(dismissed)
         coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(tab1)) }
-        verify { metrics.track(Event.CollectionTabsAdded(2, 1)) }
+
+        assertTrue(Collections.tabsAdded.testHasValue())
+        val recordedEvents = Collections.tabsAdded.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("tabs_open"))
+        assertEquals("2", eventExtra["tabs_open"])
+        assertTrue(eventExtra.containsKey("tabs_selected"))
+        assertEquals("1", eventExtra["tabs_selected"])
     }
 
     @Test

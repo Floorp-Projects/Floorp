@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
@@ -209,16 +210,24 @@ class DefaultNavigationInteractor(
             onPositiveButtonClick = { id, isNewCollection ->
 
                 // If collection is null, a new one was created.
-                val event = if (isNewCollection) {
-                    Event.CollectionSaved(browserStore.state.normalTabs.size, tabs.size)
+                if (isNewCollection) {
+                    Collections.saved.record(
+                        Collections.SavedExtra(
+                            browserStore.state.normalTabs.size.toString(),
+                            tabs.size.toString()
+                        )
+                    )
                 } else {
-                    Event.CollectionTabsAdded(browserStore.state.normalTabs.size, tabs.size)
+                    Collections.tabsAdded.record(
+                        Collections.TabsAddedExtra(
+                            browserStore.state.normalTabs.size.toString(),
+                            tabs.size.toString()
+                        )
+                    )
                 }
                 id?.apply {
                     showCollectionSnackbar(tabs.size, isNewCollection, id)
                 }
-
-                metrics.track(event)
             },
             onNegativeButtonClick = {}
         ).show(context)

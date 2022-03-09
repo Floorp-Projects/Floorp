@@ -29,7 +29,9 @@ import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -230,7 +232,7 @@ abstract class AbstractBrowserTabViewHolder(
 
         itemView.setOnLongClickListener {
             if (holder.selectedItems.isEmpty()) {
-                metrics.track(Event.CollectionTabLongPressed)
+                Collections.longPress.record(NoExtras())
                 interactor.select(item)
                 true
             } else {

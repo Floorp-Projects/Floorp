@@ -43,16 +43,20 @@ import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -77,6 +81,8 @@ class DefaultBrowserToolbarMenuControllerTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @MockK private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     @RelaxedMockK private lateinit var activity: HomeActivity
@@ -551,11 +557,17 @@ class DefaultBrowserToolbarMenuControllerTest {
                 Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)
             )
         }
-        verify {
-            metrics.track(
-                Event.CollectionSaveButtonPressed(DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER)
-            )
-        }
+
+        assertTrue(Collections.saveButton.testHasValue())
+        val recordedEvents = Collections.saveButton.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("from_screen"))
+        assertEquals(
+            DefaultBrowserToolbarMenuController.TELEMETRY_BROWSER_IDENTIFIER,
+            eventExtra["from_screen"]
+        )
 
         val directions = BrowserFragmentDirections.actionGlobalCollectionCreationFragment(
             saveCollectionStep = SaveCollectionStep.SelectCollection,
@@ -575,13 +587,18 @@ class DefaultBrowserToolbarMenuControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)) }
-        verify {
-            metrics.track(
-                Event.CollectionSaveButtonPressed(
-                    DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER
-                )
-            )
-        }
+
+        assertTrue(Collections.saveButton.testHasValue())
+        val recordedEvents = Collections.saveButton.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("from_screen"))
+        assertEquals(
+            DefaultBrowserToolbarMenuController.TELEMETRY_BROWSER_IDENTIFIER,
+            eventExtra["from_screen"]
+        )
+
         val directions = BrowserFragmentDirections.actionGlobalCollectionCreationFragment(
             saveCollectionStep = SaveCollectionStep.NameCollection,
             tabIds = arrayOf(selectedTab.id),

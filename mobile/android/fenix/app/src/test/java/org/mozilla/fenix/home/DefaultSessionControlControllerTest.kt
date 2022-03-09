@@ -33,7 +33,9 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -42,7 +44,9 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -61,6 +65,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessageController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -68,11 +73,14 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
+@RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val appStore: AppStore = mockk(relaxed = true)
@@ -157,7 +165,11 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionAddTabTapped(collection)
 
-        verify { metrics.track(Event.CollectionAddTabPressed) }
+        assertTrue(Collections.addTabButton.testHasValue())
+        val recordedEvents = Collections.addTabButton.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify {
             navController.navigate(
                 match<NavDirections> {
@@ -206,7 +218,11 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionOpenTabClicked(tab)
 
-        verify { metrics.track(Event.CollectionTabRestored) }
+        assertTrue(Collections.tabRestored.testHasValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://mozilla.org",
@@ -243,7 +259,12 @@ class DefaultSessionControlControllerTest {
         store.dispatch(TabListAction.AddTabAction(restoredTab)).joinBlocking()
 
         createController().handleCollectionOpenTabClicked(tab)
-        verify { metrics.track(Event.CollectionTabRestored) }
+
+        assertTrue(Collections.tabRestored.testHasValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
         verify { selectTabUseCase.selectTab.invoke(restoredTab.id) }
         verify { reloadUrlUseCase.reload.invoke(restoredTab.id) }
@@ -273,7 +294,12 @@ class DefaultSessionControlControllerTest {
         store.dispatch(TabListAction.AddTabAction(restoredTab)).joinBlocking()
 
         createController().handleCollectionOpenTabClicked(tab)
-        verify { metrics.track(Event.CollectionTabRestored) }
+
+        assertTrue(Collections.tabRestored.testHasValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
         verify { selectTabUseCase.selectTab.invoke(restoredTab.id) }
         verify { reloadUrlUseCase.reload.invoke(restoredTab.id) }
@@ -286,7 +312,10 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionOpenTabsTapped(collection)
 
-        verify { metrics.track(Event.CollectionAllTabsRestored) }
+        assertTrue(Collections.allTabsRestored.testHasValue())
+        val recordedEvents = Collections.allTabsRestored.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
     }
 
     @Test
@@ -314,7 +343,10 @@ class DefaultSessionControlControllerTest {
             }
         ).handleCollectionRemoveTab(expectedCollection, tab, false)
 
-        verify { metrics.track(Event.CollectionTabRemoved) }
+        assertTrue(Collections.tabRemoved.testHasValue())
+        val recordedEvents = Collections.tabRemoved.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
 
         assertEquals(expectedCollection, actualCollection)
     }
@@ -324,7 +356,11 @@ class DefaultSessionControlControllerTest {
         val collection: TabCollection = mockk(relaxed = true)
         val tab: ComponentTab = mockk(relaxed = true)
         createController().handleCollectionRemoveTab(collection, tab, false)
-        verify { metrics.track(Event.CollectionTabRemoved) }
+
+        assertTrue(Collections.tabRemoved.testHasValue())
+        val recordedEvents = Collections.tabRemoved.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
     }
 
     @Test
@@ -335,7 +371,11 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionShareTabsClicked(collection)
 
-        verify { metrics.track(Event.CollectionShared) }
+        assertTrue(Collections.shared.testHasValue())
+        val recordedEvents = Collections.shared.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_shareFragment },
@@ -384,7 +424,11 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleRenameCollectionTapped(collection)
 
-        verify { metrics.track(Event.CollectionRenamePressed) }
+        assertTrue(Collections.renameButton.testHasValue())
+        val recordedEvents = Collections.renameButton.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
+
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },

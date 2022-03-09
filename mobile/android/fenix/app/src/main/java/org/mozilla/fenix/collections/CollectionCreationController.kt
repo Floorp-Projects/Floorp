@@ -14,9 +14,9 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.getDefaultCollectionNumber
 
 interface CollectionCreationController {
@@ -67,7 +67,6 @@ fun List<Tab>.toTabSessionStateList(store: BrowserStore): List<TabSessionState> 
  * @param store Store used to hold in-memory collection state.
  * @param browserStore The global `BrowserStore` instance.
  * @param dismiss Callback to dismiss the collection creation dialog.
- * @param metrics Controller that handles telemetry events.
  * @param tabCollectionStorage Storage used to save tab collections to disk.
  * @param scope Coroutine scope to launch coroutines.
  */
@@ -75,7 +74,6 @@ class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,
     private val browserStore: BrowserStore,
     private val dismiss: () -> Unit,
-    private val metrics: MetricController,
     private val tabCollectionStorage: TabCollectionStorage,
     private val scope: CoroutineScope
 ) : CollectionCreationController {
@@ -93,8 +91,11 @@ class DefaultCollectionCreationController(
             tabCollectionStorage.createCollection(name, sessionBundle)
         }
 
-        metrics.track(
-            Event.CollectionSaved(browserStore.state.normalTabs.size, sessionBundle.size)
+        Collections.saved.record(
+            Collections.SavedExtra(
+                browserStore.state.normalTabs.size.toString(),
+                sessionBundle.size.toString()
+            )
         )
     }
 
@@ -103,7 +104,7 @@ class DefaultCollectionCreationController(
         scope.launch {
             tabCollectionStorage.renameCollection(collection, name)
         }
-        metrics.track(Event.CollectionRenamed)
+        Collections.renamed.record(NoExtras())
     }
 
     override fun backPressed(fromStep: SaveCollectionStep) {
@@ -135,8 +136,11 @@ class DefaultCollectionCreationController(
                 .addTabsToCollection(collection, sessionBundle)
         }
 
-        metrics.track(
-            Event.CollectionTabsAdded(browserStore.state.normalTabs.size, sessionBundle.size)
+        Collections.tabsAdded.record(
+            Collections.TabsAddedExtra(
+                browserStore.state.normalTabs.size.toString(),
+                sessionBundle.size.toString()
+            )
         )
     }
 

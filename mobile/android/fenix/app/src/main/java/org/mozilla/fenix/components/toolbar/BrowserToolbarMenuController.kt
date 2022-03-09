@@ -27,6 +27,7 @@ import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -307,8 +308,11 @@ class DefaultBrowserToolbarMenuController(
                 )
             }
             is ToolbarMenu.Item.SaveToCollection -> {
-                metrics
-                    .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
+                Collections.saveButton.record(
+                    Collections.SaveButtonExtra(
+                        TELEMETRY_BROWSER_IDENTIFIER
+                    )
+                )
 
                 currentSession?.let { currentSession ->
                     val directions =
