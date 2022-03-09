@@ -10,7 +10,6 @@
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsRefPtrHashtable.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {
@@ -18,10 +17,11 @@ namespace widget {
 class ToastNotificationHandler;
 
 class ToastNotification final : public nsIAlertsService,
-                                public nsIObserver,
-                                public nsSupportsWeakReference {
+                                public nsIAlertsDoNotDisturb,
+                                public nsIObserver {
  public:
   NS_DECL_NSIALERTSSERVICE
+  NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
 
@@ -40,8 +40,8 @@ class ToastNotification final : public nsIAlertsService,
   virtual ~ToastNotification();
 
   nsRefPtrHashtable<nsStringHashKey, ToastNotificationHandler> mActiveHandlers;
-
   nsCOMPtr<nsIThread> mBackgroundThread;
+  bool mSuppressForScreenSharing = false;
 };
 
 }  // namespace widget

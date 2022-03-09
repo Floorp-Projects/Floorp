@@ -145,6 +145,7 @@ function createExpectedQuickSuggestResult(suggest) {
       qsSuggestion: suggest.keywords[0],
       title: suggest.title,
       url: suggest.url,
+      originalUrl: suggest.url,
       icon: null,
       sponsoredImpressionUrl: suggest.impression_url,
       sponsoredClickUrl: suggest.click_url,

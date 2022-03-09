@@ -206,6 +206,8 @@ class WeakMap
 
   using Base::all;
   using Base::clear;
+  using Base::count;
+  using Base::empty;
   using Base::has;
   using Base::shallowSizeOfExcludingThis;
 
@@ -215,6 +217,7 @@ class WeakMap
   using UnbarrieredKey = typename detail::RemoveBarrier<Key>::Type;
 
   explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
+  explicit WeakMap(JS::Zone* zone, JSObject* memOf = nullptr);
 
   // Add a read barrier to prevent an incorrectly gray value from escaping the
   // weak map. See the UnmarkGrayTracer::onChild comment in gc/Marking.cpp.
@@ -282,6 +285,8 @@ class WeakMap
 
   void trace(JSTracer* trc) override;
 
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
  protected:
   inline void assertMapIsSameZoneWithValue(const Value& v);
 
@@ -330,12 +335,7 @@ class WeakMap
 #endif
 };
 
-class ObjectValueWeakMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
- public:
-  ObjectValueWeakMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
-
-  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-};
+using ObjectValueWeakMap = WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>>;
 
 // Generic weak map for mapping objects to other objects.
 class ObjectWeakMap {

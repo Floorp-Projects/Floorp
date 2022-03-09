@@ -650,7 +650,6 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
   bool shouldPushMask = false;
 
   if (shouldGenerateMask) {
-    Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
 
     // maskFrame can be nullptr even if maskUsage.shouldGenerateMaskLayer is
@@ -662,12 +661,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     if (maskUsage.shouldGenerateMaskLayer && maskFrame) {
       StyleMaskMode maskMode =
           aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
-      SVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
-                                      maskUsage.opacity, maskMode, aImgParams);
-      // We want the mask to be untransformed so use the inverse of the current
-      // transform as the maskTransform to compensate.
-      maskTransform = aContext.CurrentMatrix();
-      maskTransform.Invert();
+      SVGMaskFrame::MaskParams params(aContext.GetDrawTarget(), aFrame,
+                                      aTransform, maskUsage.opacity, maskMode,
+                                      aImgParams);
 
       maskSurface = maskFrame->GetMaskForMaskedFrame(params);
 
@@ -680,13 +676,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     }
 
     if (maskUsage.shouldGenerateClipMaskLayer) {
-      RefPtr<SourceSurface> clipMaskSurface = clipPathFrame->GetClipMask(
-          aContext, aFrame, aTransform, maskSurface, maskTransform);
+      RefPtr<SourceSurface> clipMaskSurface =
+          clipPathFrame->GetClipMask(aContext, aFrame, aTransform, maskSurface);
       if (clipMaskSurface) {
-        // We want the mask to be untransformed so use the inverse of the
-        // current transform as the maskTransform to compensate.
-        maskTransform = aContext.CurrentMatrix();
-        maskTransform.Invert();
         maskSurface = clipMaskSurface;
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
@@ -704,6 +696,10 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     // SVG mask multiply opacity into maskSurface already, so we do not bother
     // to apply opacity again.
     if (shouldPushMask) {
+      // We want the mask to be untransformed so use the inverse of the
+      // current transform as the maskTransform to compensate.
+      Matrix maskTransform = aContext.CurrentMatrix();
+      maskTransform.Invert();
       target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
                                     maskFrame ? 1.0 : maskUsage.opacity,
                                     maskSurface, maskTransform);

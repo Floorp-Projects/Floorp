@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1752863</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+    SimpleTest.waitForExplicitFinish();
+
+    var worker = new Worker("test_bug1752863_worker.js");
+
+    worker.onmessage = function(event) {
+      if (event.data == "DOMException") {
+        ok(true, "Got DOMException");
+      } else if (event.data == "TERMINATE") {
+        ok(false, "Got TERMINATE");
+      } else {
+        ok(false, "Unexpected message: " + event.data);
+      }
+      SimpleTest.finish();
+    }
+
+    worker.postMessage(true);
+
+  </script>
+</head>
+</html>

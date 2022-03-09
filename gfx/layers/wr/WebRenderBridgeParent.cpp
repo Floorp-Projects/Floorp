@@ -25,6 +25,7 @@
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
+#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorAnimationStorage.h"
@@ -585,12 +586,6 @@ bool WebRenderBridgeParent::UpdateResources(
                                          wr::ToDeviceIntRect(op.area()));
         break;
       }
-      case OpUpdateResource::TOpAddPrivateExternalImage: {
-        const auto& op = cmd.get_OpAddPrivateExternalImage();
-        AddPrivateExternalImage(op.externalImageId(), op.key(), op.descriptor(),
-                                aUpdates);
-        break;
-      }
       case OpUpdateResource::TOpAddSharedExternalImage: {
         const auto& op = cmd.get_OpAddSharedExternalImage();
         // gfxCriticalNote is called on error
@@ -608,12 +603,6 @@ bool WebRenderBridgeParent::UpdateResources(
                                          texture, op.isUpdate(), aUpdates)) {
           success = false;
         }
-        break;
-      }
-      case OpUpdateResource::TOpUpdatePrivateExternalImage: {
-        const auto& op = cmd.get_OpUpdatePrivateExternalImage();
-        UpdatePrivateExternalImage(op.externalImageId(), op.key(),
-                                   op.descriptor(), op.dirtyRect(), aUpdates);
         break;
       }
       case OpUpdateResource::TOpUpdateSharedExternalImage: {
@@ -726,32 +715,6 @@ bool WebRenderBridgeParent::UpdateResources(
 
   MOZ_ASSERT(success);
   return success;
-}
-
-void WebRenderBridgeParent::AddPrivateExternalImage(
-    wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc,
-    wr::TransactionBuilder& aResources) {
-  if (!MatchesNamespace(aKey)) {
-    MOZ_ASSERT_UNREACHABLE("Stale private external image key (add)!");
-    return;
-  }
-
-  aResources.AddExternalImage(aKey, aDesc, aExtId,
-                              wr::ExternalImageType::Buffer(), 0);
-}
-
-void WebRenderBridgeParent::UpdatePrivateExternalImage(
-    wr::ExternalImageId aExtId, wr::ImageKey aKey,
-    const wr::ImageDescriptor& aDesc, const ImageIntRect& aDirtyRect,
-    wr::TransactionBuilder& aResources) {
-  if (!MatchesNamespace(aKey)) {
-    MOZ_ASSERT_UNREACHABLE("Stale private external image key (update)!");
-    return;
-  }
-
-  aResources.UpdateExternalImageWithDirtyRect(
-      aKey, aDesc, aExtId, wr::ExternalImageType::Buffer(),
-      wr::ToDeviceIntRect(aDirtyRect), 0);
 }
 
 bool WebRenderBridgeParent::AddSharedExternalImage(
@@ -1513,7 +1476,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
       case WebRenderParentCommand::TOpAddPipelineIdForCompositable: {
         const OpAddPipelineIdForCompositable& op =
             cmd.get_OpAddPipelineIdForCompositable();
-        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.isAsync(),
+        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.owner(),
                                      aTxn, txnForImageBridge);
         break;
       }
@@ -1801,7 +1764,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
 
 void WebRenderBridgeParent::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    const bool& aAsync, wr::TransactionBuilder& aTxn,
+    const CompositableHandleOwner& aOwner, wr::TransactionBuilder& aTxn,
     wr::TransactionBuilder& aTxnForImageBridge) {
   if (mDestroyed) {
     return;
@@ -1811,16 +1774,24 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
              mAsyncCompositables.end());
 
   RefPtr<CompositableHost> host;
-  if (aAsync) {
-    RefPtr<ImageBridgeParent> imageBridge =
-        ImageBridgeParent::GetInstance(OtherPid());
-    if (!imageBridge) {
-      return;
+  switch (aOwner) {
+    case CompositableHandleOwner::WebRenderBridge:
+      host = FindCompositable(aHandle);
+      break;
+    case CompositableHandleOwner::ImageBridge: {
+      RefPtr<ImageBridgeParent> imageBridge =
+          ImageBridgeParent::GetInstance(OtherPid());
+      if (!imageBridge) {
+        return;
+      }
+      host = imageBridge->FindCompositable(aHandle);
+      break;
     }
-    host = imageBridge->FindCompositable(aHandle);
-  } else {
-    host = FindCompositable(aHandle);
+    case CompositableHandleOwner::InProcessManager:
+      host = CompositableInProcessManager::Find(aHandle, OtherPid());
+      break;
   }
+
   if (!host) {
     return;
   }

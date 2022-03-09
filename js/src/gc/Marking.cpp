@@ -541,25 +541,6 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<BaseScript*>(
     JSTracer*, JSObject*, BaseScript**, const char*);
 
-class MOZ_RAII AutoDisableCompartmentCheckTracer {
-#ifdef DEBUG
-  JSContext* cx_;
-  bool prev_;
-
- public:
-  AutoDisableCompartmentCheckTracer()
-      : cx_(TlsContext.get()), prev_(cx_->disableCompartmentCheckTracer) {
-    cx_->disableCompartmentCheckTracer = true;
-  }
-  ~AutoDisableCompartmentCheckTracer() {
-    cx_->disableCompartmentCheckTracer = prev_;
-  }
-#else
- public:
-  AutoDisableCompartmentCheckTracer(){};
-#endif
-};
-
 template <typename T>
 void js::TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
                                            const WriteBarriered<T>* dst,
@@ -610,33 +591,6 @@ template void js::TraceWeakMapKeyEdgeInternal<JSObject>(JSTracer*, Zone*,
 template void js::TraceWeakMapKeyEdgeInternal<BaseScript>(JSTracer*, Zone*,
                                                           BaseScript**,
                                                           const char*);
-
-template <typename T>
-void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
-  AssertRootMarkingPhase(trc);
-  MOZ_ASSERT(thing->isPermanentAndMayBeShared());
-
-  // We have to mark permanent atoms and well-known symbols through a special
-  // method because the default DoMarking implementation automatically skips
-  // them. Fortunately, atoms (permanent and non) cannot refer to other GC
-  // things so they do not need to go through the mark stack and may simply
-  // be marked directly.  Moreover, well-known symbols can refer only to
-  // permanent atoms, so likewise require no subsequent marking.
-  if (trc->isMarkingTracer()) {
-    CheckTracedThing(trc, *ConvertToBase(&thing));
-    AutoClearTracingSource acts(trc);
-    thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
-    return;
-  }
-
-  T* tmp = thing;
-  TraceEdgeInternal(trc, ConvertToBase(&tmp), name);
-  MOZ_ASSERT(tmp == thing);  // We shouldn't move process global roots.
-}
-template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*,
-                                                 const char*);
-template void js::TraceProcessGlobalRoot<JS::Symbol>(JSTracer*, JS::Symbol*,
-                                                     const char*);
 
 static Cell* TraceGenericPointerRootAndType(JSTracer* trc, Cell* thing,
                                             JS::TraceKind kind,
@@ -1364,9 +1318,7 @@ inline void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
     }
 
     MOZ_ASSERT(linearStr->JSString::isLinear());
-    if (linearStr->isPermanentAtom()) {
-      break;
-    }
+    MOZ_ASSERT(!linearStr->isPermanentAtom());
     AssertShouldMarkInZone(linearStr);
     if (!mark(static_cast<JSString*>(linearStr))) {
       break;
@@ -1397,7 +1349,8 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
     JSRope* next = nullptr;
 
     JSString* right = rope->rightChild();
-    if (!right->isPermanentAtom() && mark(right)) {
+    if (mark(right)) {
+      MOZ_ASSERT(!right->isPermanentAtom());
       if (right->isLinear()) {
         eagerlyMarkChildren(&right->asLinear());
       } else {
@@ -1406,7 +1359,8 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
     }
 
     JSString* left = rope->leftChild();
-    if (!left->isPermanentAtom() && mark(left)) {
+    if (mark(left)) {
+      MOZ_ASSERT(!left->isPermanentAtom());
       if (left->isLinear()) {
         eagerlyMarkChildren(&left->asLinear());
       } else {

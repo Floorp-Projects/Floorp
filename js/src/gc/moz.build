@@ -29,7 +29,7 @@ UNIFIED_SOURCES += [
     "AtomMarking.cpp",
     "Barrier.cpp",
     "Compacting.cpp",
-    "FinalizationRegistry.cpp",
+    "FinalizationObservers.cpp",
     "GC.cpp",
     "GCAPI.cpp",
     "GCParallelTask.cpp",

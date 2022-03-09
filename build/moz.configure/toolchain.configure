@@ -2285,7 +2285,7 @@ def frame_pointer_default(optimize, debug, target, msan, asan, ubsan):
         or asan
         or ubsan
         or (target.os == "WINNT" and target.cpu in ("x86", "aarch64"))
-        or (target.os == "OSX" and target.cpu == "aarch64")
+        or target.os == "OSX"
     )
 
 

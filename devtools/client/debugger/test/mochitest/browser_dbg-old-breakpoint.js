@@ -4,6 +4,9 @@
 
 // Test that we show a breakpoint in the UI when there is an old pending
 // breakpoint with an invalid original location.
+
+"use strict";
+
 add_task(async function() {
   clearDebuggerPreferences();
 
@@ -11,37 +14,40 @@ add_task(async function() {
     bp1: {
       location: {
         sourceId: "",
-        sourceUrl: EXAMPLE_URL + "nowhere2.js",
+        sourceUrl: `${EXAMPLE_URL}nowhere2.js`,
         line: 5,
-        column: 0
+        column: 0,
       },
       generatedLocation: {
-        sourceUrl: EXAMPLE_URL + "simple1.js",
+        sourceUrl: `${EXAMPLE_URL}simple1.js`,
         line: 4,
-        column: 0
+        column: 0,
       },
       options: {},
-      disabled: false
+      disabled: false,
     },
     bp2: {
       location: {
         sourceId: "",
-        sourceUrl: EXAMPLE_URL + "nowhere.js",
+        sourceUrl: `${EXAMPLE_URL}nowhere.js`,
         line: 5,
-        column: 0
+        column: 0,
       },
       generatedLocation: {
-        sourceUrl: EXAMPLE_URL + "simple3.js",
+        sourceUrl: `${EXAMPLE_URL}simple3.js`,
         line: 2,
-        column: 0
+        column: 0,
       },
       options: {},
-      disabled: false
+      disabled: false,
     },
   };
   asyncStorage.setItem("debugger.pending-breakpoints", pending);
 
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-scripts.html", "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(
+    `${EXAMPLE_URL}doc-scripts.html`,
+    "jsdebugger"
+  );
   const dbg = createDebuggerContext(toolbox);
   const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
 
@@ -54,7 +60,10 @@ add_task(async function() {
   await onBreakpoint;
 
   ok(true, "paused at unmapped breakpoint");
-  await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) == 2);
+  await waitForState(
+    dbg,
+    state => dbg.selectors.getBreakpointCount(state) == 2
+  );
   ok(true, "unmapped breakpoints shown in UI");
 });
 
@@ -70,28 +79,33 @@ add_task(async function() {
         sourceId: "",
         sourceUrl: "webpack:///entry.js",
         line: 15,
-        column: 0
+        column: 0,
       },
       generatedLocation: {
-        sourceUrl: EXAMPLE_URL + "sourcemaps/bundle.js",
+        sourceUrl: `${EXAMPLE_URL}sourcemaps/bundle.js`,
         line: 47,
-        column: 16
+        column: 16,
       },
       astLocation: {},
       options: {},
-      disabled: false
+      disabled: false,
     },
   };
   asyncStorage.setItem("debugger.pending-breakpoints", pending);
 
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-sourcemaps.html", "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(
+    `${EXAMPLE_URL}doc-sourcemaps.html`,
+    "jsdebugger"
+  );
   const dbg = createDebuggerContext(toolbox);
 
   await waitForState(dbg, state => {
     const bps = dbg.selectors.getBreakpointsList(state);
-    return bps.length == 1
-        && bps[0].location.sourceUrl.includes("entry.js")
-        && bps[0].location.line == 15;
+    return (
+      bps.length == 1 &&
+      bps[0].location.sourceUrl.includes("entry.js") &&
+      bps[0].location.line == 15
+    );
   });
   ok(true, "removed old breakpoint during sync");
   await waitForRequestsToSettle(dbg);

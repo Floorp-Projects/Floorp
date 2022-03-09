@@ -12,7 +12,7 @@ import attr
 
 from taskgraph.transforms.task import taskref_or_string
 from taskgraph.transforms.job import run_job_using
-from taskgraph.util import path
+from taskgraph.util import path, taskcluster
 from taskgraph.util.schema import Schema
 from taskgraph.transforms.job.common import support_vcs_checkout
 from voluptuous import Required, Any, Optional
@@ -115,10 +115,12 @@ def script_url(config, script):
     # want to use the run-task/fetch-content corresponding to the taskgraph
     # version we are running, and otherwise, we aren't going to run the task we
     # generate, so the exact version doesn't matter.
+    # TASK_ID is also set for test-action-callback, so we check for that with
+    # taskcluster.testing.
     # If we checked out the taskgraph code with run-task in the decision task,
     # we can use TASKGRAPH_* to find the right version, which covers the
     # existing use case.
-    if "TASK_ID" in os.environ:
+    if "TASK_ID" in os.environ and not taskcluster.testing:
         if (
             "TASKGRAPH_HEAD_REPOSITORY" not in os.environ
             or "TASKGRAPH_HEAD_REV" not in os.environ

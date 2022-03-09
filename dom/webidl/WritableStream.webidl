@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#ws-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
 //Transferable See Bug 1734240
 Pref="dom.streams.writable_streams.enabled"
 ]

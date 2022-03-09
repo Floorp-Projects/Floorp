@@ -134,6 +134,9 @@ class CanvasRenderer : public RefCounted<CanvasRenderer> {
   std::shared_ptr<BorrowedSourceSurface> BorrowSnapshot(
       bool requireAlphaPremult = true) const;
 
+  virtual bool CopySnapshotTo(gfx::DrawTarget* aDT,
+                              bool aRequireAlphaPremult = true);
+
   void FirePreTransactionCallback() const;
   void FireDidTransactionCallback() const;
 };

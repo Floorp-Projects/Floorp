@@ -19,6 +19,8 @@
 #ifndef wasm_module_types_h
 #define wasm_module_types_h
 
+#include "mozilla/RefPtr.h"
+
 #include "js/AllocPolicy.h"
 #include "js/RefCounted.h"
 #include "js/Utility.h"
@@ -280,51 +282,53 @@ using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 // exception handling proposal and potentially other future proposals.
 
 // The TagOffsetVector represents the offsets in the layout of the
-// data stored in a Wasm exception. For non-reference values, it is
-// an offset in the ArrayBuffer and for reference values it is the
-// offset in the elements of the exception's ArrayObject.
-using TagOffsetVector = Vector<int32_t, 0, SystemAllocPolicy>;
+// data buffer stored in a Wasm exception.
+using TagOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
 
 // Not guarded by #ifdef like TagDesc as this is required for Wasm JS
 // API classes in WasmJS.h.
-struct TagType {
-  ValTypeVector argTypes;
-  TagOffsetVector argOffsets;
-  int32_t bufferSize;
-  int32_t refCount;
+struct TagType : AtomicRefCounted<TagType> {
+  ValTypeVector argTypes_;
+  TagOffsetVector argOffsets_;
+  uint32_t size_;
 
-  TagType() : argTypes(), argOffsets(), bufferSize(0), refCount(0) {}
-  TagType(ValTypeVector&& argTypes, TagOffsetVector&& argOffsets)
-      : argTypes(std::move(argTypes)),
-        argOffsets(std::move(argOffsets)),
-        bufferSize(0),
-        refCount(0) {}
+  TagType() : size_(0) {}
 
-  ResultType resultType() const { return ResultType::Vector(argTypes); }
+  ResultType resultType() const { return ResultType::Vector(argTypes_); }
 
-  [[nodiscard]] bool computeLayout();
+  [[nodiscard]] bool initialize(ValTypeVector&& argTypes);
 
   [[nodiscard]] bool clone(const TagType& src) {
-    MOZ_ASSERT(argTypes.empty());
-    MOZ_ASSERT(argOffsets.empty());
-    if (!argTypes.appendAll(src.argTypes) ||
-        !argOffsets.appendAll(src.argOffsets)) {
+    MOZ_ASSERT(argTypes_.empty() && argOffsets_.empty() && size_ == 0);
+    if (!argTypes_.appendAll(src.argTypes_) ||
+        !argOffsets_.appendAll(src.argOffsets_)) {
       return false;
     }
-    bufferSize = src.bufferSize;
-    refCount = src.refCount;
+    size_ = src.size_;
     return true;
   }
+
+  WASM_DECLARE_SERIALIZABLE(TagType)
 };
+
+using MutableTagType = RefPtr<TagType>;
+using SharedTagType = SerializableRefPtr<const TagType>;
 
 #ifdef ENABLE_WASM_EXCEPTIONS
 struct TagDesc {
   TagKind kind;
-  TagType type;
+  SharedTagType type;
+  uint32_t globalDataOffset;
   bool isExport;
 
-  TagDesc(TagKind kind, TagType&& type, bool isExport = false)
-      : kind(kind), type(std::move(type)), isExport(isExport) {}
+  TagDesc() : globalDataOffset(UINT32_MAX), isExport(false) {}
+  TagDesc(TagKind kind, const SharedTagType& type, bool isExport = false)
+      : kind(kind),
+        type(type),
+        globalDataOffset(UINT32_MAX),
+        isExport(isExport) {}
+
+  WASM_DECLARE_SERIALIZABLE(TagDesc)
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;

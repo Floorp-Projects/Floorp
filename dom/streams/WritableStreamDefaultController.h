@@ -22,8 +22,7 @@
 #include "nsTArray.h"
 #include "nsISupportsBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AbortSignal;
 class WritableStream;
@@ -155,7 +154,7 @@ class WritableStreamDefaultController final : public nsISupports,
   RefPtr<WritableStream> mStream;
 };
 
-MOZ_CAN_RUN_SCRIPT extern void SetUpWritableStreamDefaultController(
+MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
     UnderlyingSinkStartCallbackHelper* aStartAlgorithm,
@@ -164,33 +163,31 @@ MOZ_CAN_RUN_SCRIPT extern void SetUpWritableStreamDefaultController(
     UnderlyingSinkAbortCallbackHelper* aAbortAlgorithm, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void
-SetUpWritableStreamDefaultControllerFromUnderlyingSink(
+MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* aCx, WritableStream* aStream, JS::HandleObject aUnderlyingSink,
     UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerClose(
     JSContext* aCx, WritableStreamDefaultController* aController,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerWrite(
+MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerWrite(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, double chunkSize, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerError(
+MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerError(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerErrorIfNeeded(
+MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerErrorIfNeeded(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern double WritableStreamDefaultControllerGetChunkSize(
+MOZ_CAN_RUN_SCRIPT double WritableStreamDefaultControllerGetChunkSize(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WritableStreamDefaultController_h

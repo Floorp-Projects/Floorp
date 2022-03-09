@@ -26,7 +26,6 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
@@ -488,6 +487,8 @@ class WorkerDebuggerGlobalScope final : public WorkerGlobalScopeBase {
 
   void RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
                              ErrorResult& aRv);
+
+  void ClearConsoleEvents(JSContext* aCx, ErrorResult& aRv);
 
   void SetConsoleEventHandler(JSContext* aCx, AnyCallback* aHandler,
                               ErrorResult& aRv);

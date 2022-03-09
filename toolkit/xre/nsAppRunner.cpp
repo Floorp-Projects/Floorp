@@ -698,6 +698,7 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
   // HasUserValue The Pref functions can only be called on main thread
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::EnsureWin32kInitialized();
+  gfx::gfxVars::Initialize();
 
   if (gSafeMode) {
     return nsIXULRuntime::ContentWin32kLockdownState::DisabledBySafeMode;
@@ -1680,6 +1681,13 @@ NS_IMETHODIMP
 nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
   LookAndFeel::EnsureColorSchemesInitialized();
   *aResult = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetContentThemeDerivedColorSchemeIsDark(bool* aResult) {
+  *aResult =
+      LookAndFeel::ThemeDerivedColorSchemeForContent() == ColorScheme::Dark;
   return NS_OK;
 }
 
@@ -3757,6 +3765,7 @@ bool fire_glxtest_process();
 #endif
 
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 
 // Encapsulates startup and shutdown state for XRE_main
 class XREMain {
@@ -5268,7 +5277,7 @@ nsresult XREMain::XRE_mainRun() {
 
 #if defined(XP_WIN)
   RefPtr<mozilla::DllServices> dllServices(mozilla::DllServices::Get());
-  dllServices->StartUntrustedModulesProcessor();
+  dllServices->StartUntrustedModulesProcessor(false);
   auto dllServicesDisable =
       MakeScopeExit([&dllServices]() { dllServices->DisableFull(); });
 

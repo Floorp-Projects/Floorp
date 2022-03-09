@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: mmxidct.c 17446 2010-09-23 20:06:20Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -284,6 +284,7 @@
   "#end OC_COLUMN_IDCT\n\t" \
 
 static void oc_idct8x8_slow_mmx(ogg_int16_t _y[64],ogg_int16_t _x[64]){
+  int i;
   /*This routine accepts an 8x8 matrix, but in partially transposed form.
     Every 4x4 block is transposed.*/
   __asm__ __volatile__(
@@ -313,18 +314,15 @@ static void oc_idct8x8_slow_mmx(ogg_int16_t _y[64],ogg_int16_t _x[64]){
     :[x]"m"OC_CONST_ARRAY_OPERAND(ogg_int16_t,_x,64),
      [c]"m"OC_CONST_ARRAY_OPERAND(ogg_int16_t,OC_IDCT_CONSTS,128)
   );
-  if(_x!=_y){
-    int i;
-    __asm__ __volatile__("pxor %%mm0,%%mm0\n\t"::);
-    for(i=0;i<4;i++){
-      __asm__ __volatile__(
-        "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
-        "movq %%mm0,"OC_MEM_OFFS(0x08,x)"\n\t"
-        "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
-        "movq %%mm0,"OC_MEM_OFFS(0x18,x)"\n\t"
-        :[x]"=m"OC_ARRAY_OPERAND(ogg_int16_t,_x+16*i,16)
-      );
-    }
+  __asm__ __volatile__("pxor %%mm0,%%mm0\n\t"::);
+  for(i=0;i<4;i++){
+    __asm__ __volatile__(
+      "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
+      "movq %%mm0,"OC_MEM_OFFS(0x08,x)"\n\t"
+      "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
+      "movq %%mm0,"OC_MEM_OFFS(0x18,x)"\n\t"
+      :[x]"=m"OC_ARRAY_OPERAND(ogg_int16_t,_x+16*i,16)
+    );
   }
 }
 
@@ -514,16 +512,14 @@ static void oc_idct8x8_10_mmx(ogg_int16_t _y[64],ogg_int16_t _x[64]){
     :[x]"m"OC_CONST_ARRAY_OPERAND(ogg_int16_t,_x,64),
      [c]"m"OC_CONST_ARRAY_OPERAND(ogg_int16_t,OC_IDCT_CONSTS,128)
   );
-  if(_x!=_y){
-    __asm__ __volatile__(
-      "pxor %%mm0,%%mm0\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x20,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x30,x)"\n\t"
-      :[x]"+m"OC_ARRAY_OPERAND(ogg_int16_t,_x,28)
-    );
-  }
+  __asm__ __volatile__(
+    "pxor %%mm0,%%mm0\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x20,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x30,x)"\n\t"
+    :[x]"+m"OC_ARRAY_OPERAND(ogg_int16_t,_x,28)
+  );
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.

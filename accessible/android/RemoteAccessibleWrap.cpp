@@ -7,6 +7,7 @@
 #include "LocalAccessible-inl.h"
 
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla::a11y;
 
@@ -68,6 +69,10 @@ ENameValueFlag RemoteAccessibleWrap::Name(nsString& aName) const {
   return eNameOK;
 }
 
+void RemoteAccessibleWrap::Description(nsString& aDescription) const {
+  Proxy()->Description(aDescription);
+}
+
 void RemoteAccessibleWrap::Value(nsString& aValue) const {
   Proxy()->Value(aValue);
 }
@@ -110,6 +115,11 @@ bool RemoteAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
 
 void RemoteAccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                                    bool aInclusive) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    AccessibleWrap::PivotTo(aGranularity, aForward, aInclusive);
+    return;
+  }
+
   Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
       Proxy()->ID(), aGranularity, aForward, aInclusive);
 }

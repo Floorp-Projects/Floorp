@@ -3164,9 +3164,43 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
   LWasmParameterI64() : LInstructionHelper(classOpcode) {}
 };
 
+// This is used only with LWasmCall.
+class LWasmCallIndirectAdjunctSafepoint : public LInstructionHelper<0, 0, 0> {
+  CodeOffset offs_;
+  uint32_t framePushedAtStackMapBase_;
+
+ public:
+  LIR_HEADER(WasmCallIndirectAdjunctSafepoint);
+
+  LWasmCallIndirectAdjunctSafepoint()
+      : LInstructionHelper(classOpcode),
+        offs_(0),
+        framePushedAtStackMapBase_(0) {}
+
+  CodeOffset safepointLocation() const {
+    MOZ_ASSERT(offs_.offset() != 0);
+    return offs_;
+  }
+  uint32_t framePushedAtStackMapBase() const {
+    MOZ_ASSERT(offs_.offset() != 0);
+    return framePushedAtStackMapBase_;
+  }
+  void recordSafepointInfo(CodeOffset offs, uint32_t framePushed) {
+    offs_ = offs;
+    framePushedAtStackMapBase_ = framePushed;
+  }
+};
+
+// LWasmCall may be generated into two function calls in the case of
+// call_indirect, one for the fast path and one for the slow path.  In that
+// case, the node carries a pointer to a companion node, the "adjunct
+// safepoint", representing the safepoint for the second of the two calls.  The
+// dual-call construction is only meaningful for wasm because wasm has no
+// invalidation of code; this is not a pattern to be used generally.
 class LWasmCall : public LVariadicInstruction<0, 0> {
   bool needsBoundsCheck_;
   mozilla::Maybe<uint32_t> tableSize_;
+  LWasmCallIndirectAdjunctSafepoint* adjunctSafepoint_;
 
  public:
   LIR_HEADER(WasmCall);
@@ -3175,7 +3209,8 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
             mozilla::Maybe<uint32_t> tableSize = mozilla::Nothing())
       : LVariadicInstruction(classOpcode, numOperands),
         needsBoundsCheck_(needsBoundsCheck),
-        tableSize_(tableSize) {
+        tableSize_(tableSize),
+        adjunctSafepoint_(nullptr) {
     this->setIsCall();
   }
 
@@ -3192,6 +3227,13 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
 
   bool needsBoundsCheck() const { return needsBoundsCheck_; }
   mozilla::Maybe<uint32_t> tableSize() const { return tableSize_; }
+  LWasmCallIndirectAdjunctSafepoint* adjunctSafepoint() const {
+    MOZ_ASSERT(adjunctSafepoint_ != nullptr);
+    return adjunctSafepoint_;
+  }
+  void setAdjunctSafepoint(LWasmCallIndirectAdjunctSafepoint* asp) {
+    adjunctSafepoint_ = asp;
+  }
 };
 
 class LWasmRegisterResult : public LInstructionHelper<1, 0, 0> {
@@ -3955,54 +3997,6 @@ class LWasmStoreLaneSimd128 : public LInstructionHelper<1, 3, 1> {
 };
 
 // End Wasm SIMD
-
-// Wasm Exception Handling
-
-class LWasmExceptionDataPointer : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(WasmExceptionDataPointer);
-
-  explicit LWasmExceptionDataPointer(const LAllocation& exn)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, exn);
-  }
-
-  const LAllocation* exn() { return getOperand(0); }
-  MWasmExceptionDataPointer* mir() const {
-    return mir_->toWasmExceptionDataPointer();
-  }
-};
-
-class LWasmExceptionRefsPointer : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(WasmExceptionRefsPointer);
-
-  LWasmExceptionRefsPointer(const LAllocation& exn, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, exn);
-    setTemp(0, temp);
-  }
-
-  const LAllocation* exn() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-  MWasmExceptionRefsPointer* mir() const {
-    return mir_->toWasmExceptionRefsPointer();
-  }
-};
-
-class LWasmLoadExceptionRefsValue : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(WasmLoadExceptionRefsValue);
-  explicit LWasmLoadExceptionRefsValue(const LAllocation& refsPtr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, refsPtr);
-  }
-
-  const LAllocation* refsPtr() { return getOperand(0); }
-  MWasmLoadExceptionRefsValue* mir() const {
-    return mir_->toWasmLoadExceptionRefsValue();
-  }
-};
 
 // End Wasm Exception Handling
 

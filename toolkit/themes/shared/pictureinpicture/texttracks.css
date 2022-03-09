@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :root {
+    --min-font-size: 14px;
+    --max-font-size: 40px;
+ }
+
+ #texttracks {
+    background-color: black;
+    opacity: 80%;
+    position: absolute;
+    text-align: center;
+    box-sizing: border-box;
+    color: white;
+    margin: 0;
+    display: block;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px;
+    max-width: calc(0.66 * 100vw);
+    bottom: calc(0.066 * 100vh);
+    font-size: clamp(var(--min-font-size), calc(0.066 * 100vh), var(--max-font-size));
+    line-height: clamp(14.4px, calc(0.08 * 100vh), 57.6px);
+    white-space: pre-line;
+    width: max-content;
+    font-family: sans-serif;
+ }
+
+ #texttracks:empty {
+     visibility: hidden;
+ }
+
+@media screen and (max-width: 319px) {
+    #texttracks {
+        display: none;
+    }
+}

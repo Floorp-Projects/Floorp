@@ -63,21 +63,10 @@ struct AnimatedValue final {
 
   explicit AnimatedValue(nscolor aValue) : mValue(AsVariant(aValue)) {}
 
-  void SetTransformForWebRender(const gfx::Matrix4x4& aFrameTransform,
-                                const TransformData& aData) {
-    MOZ_ASSERT(mValue.is<AnimationTransform>());
-    AnimationTransform& previous = mValue.as<AnimationTransform>();
-    previous.mFrameTransform = aFrameTransform;
-    if (previous.mData != aData) {
-      previous.mData = aData;
-    }
-  }
-  void SetTransform(const gfx::Matrix4x4& aTransformInDevSpace,
-                    const gfx::Matrix4x4& aFrameTransform,
+  void SetTransform(const gfx::Matrix4x4& aFrameTransform,
                     const TransformData& aData) {
     MOZ_ASSERT(mValue.is<AnimationTransform>());
     AnimationTransform& previous = mValue.as<AnimationTransform>();
-    previous.mTransformInDevSpace = aTransformInDevSpace;
     previous.mFrameTransform = aFrameTransform;
     if (previous.mData != aData) {
       previous.mData = aData;
@@ -179,18 +168,8 @@ class CompositorAnimationStorage final {
    * NOTE: |aPreviousValue| should be the value for the |aId|.
    */
   void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
-                        const gfx::Matrix4x4& aTransformInDevSpace,
                         const gfx::Matrix4x4& aFrameTransform,
                         const TransformData& aData);
-
-  /**
-   * This is for the WebRender version of above SetAnimatedValue.
-   * In the case of WebRender we don't need to have |aTransformInDevSpace|
-   * separately because it's same as |aFrameTransform|.
-   */
-  void SetAnimatedValueForWebRender(uint64_t aId, AnimatedValue* aPreviousValue,
-                                    const gfx::Matrix4x4& aFrameTransform,
-                                    const TransformData& aData);
 
   /**
    * Similar to above but for opacity.
@@ -203,8 +182,6 @@ class CompositorAnimationStorage final {
    */
   void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
                         nscolor aColor);
-
-  void Clear();
 
  private:
   AnimatedValueTable mAnimatedValues;

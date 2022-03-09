@@ -19,7 +19,7 @@ add_task(async function test_profile_multi_frame_page_info() {
   info(
     "Start the profiler to test the page information with multi frame page."
   );
-  startProfiler();
+  await startProfiler();
 
   info("Open a tab with multi_frame.html in it.");
   // multi_frame.html embeds single_frame.html inside an iframe.
@@ -35,7 +35,7 @@ add_task(async function test_profile_multi_frame_page_info() {
 
     info("Capture the profile data.");
     const profile = await Services.profiler.getProfileDataAsync();
-    Services.profiler.StopProfiler();
+    await Services.profiler.StopProfiler();
 
     let foundPage = 0;
     // We need to find the correct content process for that tab.

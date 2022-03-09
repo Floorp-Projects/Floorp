@@ -32,6 +32,7 @@ fails-if(useDrawSnapshot) == image-svg-inline-sprite-zoom-out-01b.html  image-sv
 fails-if(useDrawSnapshot) == image-zoom-02.svg                          image-zoom-02-ref.svg
 == imported-image-01.svg                      imported-image-ref.svg
 == imported-image-02.svg                      imported-image-ref.svg
+== image-fill-opacity.html                    image-fill-opacity-ref.html
 
 # Tests for <image> with preserveAspectRatio
 == image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg

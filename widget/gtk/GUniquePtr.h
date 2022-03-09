@@ -15,6 +15,7 @@ namespace mozilla {
 
 struct GFreeDeleter {
   constexpr GFreeDeleter() = default;
+  void operator()(GError* aPtr) const { g_error_free(aPtr); }
   void operator()(void* aPtr) const { g_free(aPtr); }
 };
 

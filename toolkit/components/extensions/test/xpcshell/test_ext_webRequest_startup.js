@@ -19,18 +19,17 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-let { promiseShutdownManager } = AddonTestUtils;
+let {
+  promiseShutdownManager,
+  promiseStartupManager,
+  promiseRestartManager,
+} = AddonTestUtils;
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
 Services.prefs.setIntPref("extensions.enabledScopes", scopes);
-
-Services.prefs.setBoolPref(
-  "extensions.webextensions.background-delayed-startup",
-  true
-);
 
 function trackEvents(wrapper) {
   let events = new Map();
@@ -65,7 +64,7 @@ async function testPersistentRequestStartup(extension, events, expect = {}) {
   );
 
   if (!expect.started) {
-    Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+    AddonTestUtils.notifyEarlyStartup();
     await ExtensionParent.browserPaintedPromise;
 
     equal(
@@ -79,17 +78,6 @@ async function testPersistentRequestStartup(extension, events, expect = {}) {
     await extension.awaitMessage("got-request");
     ok(true, "Background page loaded and received webRequest event");
   }
-}
-
-// Every startup in these tests assumes a reset of startup promises.
-function promiseStartupManager() {
-  ExtensionParent._resetStartupPromises();
-  return AddonTestUtils.promiseStartupManager();
-}
-
-function promiseRestartManager() {
-  ExtensionParent._resetStartupPromises();
-  return AddonTestUtils.promiseRestartManager();
 }
 
 // Test that a non-blocking listener does not start the background on
@@ -119,7 +107,7 @@ add_task(async function test_nonblocking() {
   await extension.awaitMessage("ready");
 
   // Restart to get APP_STARTUP, the background should not start
-  await promiseRestartManager();
+  await promiseRestartManager({ lateStartup: false });
   await extension.awaitStartup();
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: false,
@@ -139,7 +127,7 @@ add_task(async function test_nonblocking() {
     request: false,
   });
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  AddonTestUtils.notifyLateStartup();
   await extension.awaitMessage("ready");
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: false,
@@ -191,7 +179,7 @@ add_task(async function test_eventpage_nonblocking() {
   await extension.startup();
 
   // Restart to get APP_STARTUP, the background should not start
-  await promiseRestartManager();
+  await promiseRestartManager({ lateStartup: false });
   await extension.awaitStartup();
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: false,
@@ -207,8 +195,7 @@ add_task(async function test_eventpage_nonblocking() {
 
   await testPersistentRequestStartup(extension, events);
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-  await ExtensionParent.browserStartupPromise;
+  await AddonTestUtils.notifyLateStartup();
   // After late startup, event page listeners should be primed.
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: true,
@@ -268,7 +255,7 @@ add_task(async function test_persistent_blocking() {
     primed: false,
   });
 
-  await promiseRestartManager();
+  await promiseRestartManager({ lateStartup: false });
   await extension.awaitStartup();
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: true,
@@ -287,7 +274,7 @@ add_task(async function test_persistent_blocking() {
     request: false,
   });
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  AddonTestUtils.notifyLateStartup();
 
   await extension.unload();
   await promiseShutdownManager();
@@ -375,7 +362,8 @@ add_task(async function test_persistent_listener_after_sideload_upgrade() {
     request: false,
   });
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  AddonTestUtils.notifyLateStartup();
+
   await extension.unload();
   await promiseShutdownManager();
 });
@@ -511,7 +499,8 @@ add_task(
       request: false,
     });
 
-    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    AddonTestUtils.notifyLateStartup();
+
     await extension.unload();
 
     // remove the builtin addon which will have restarted now.
@@ -653,7 +642,6 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     request: false,
   });
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
   await extension.unload();
   await promiseShutdownManager();
   AddonManager.checkUpdateSecurity = true;
@@ -758,7 +746,7 @@ add_task(async function test_persistent_listener_after_permission_removal() {
   await promiseShutdownManager();
 
   // restarting allows upgrade to proceed
-  await promiseStartupManager();
+  await promiseStartupManager({ lateStartup: false });
   let events = trackEvents(extension);
   await extension.awaitStartup();
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
@@ -784,7 +772,7 @@ add_task(async function test_persistent_listener_after_permission_removal() {
     request: false,
   });
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  AddonTestUtils.notifyLateStartup();
 
   await extension.awaitMessage("loaded");
   ok(true, "Background page loaded");

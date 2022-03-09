@@ -11,6 +11,7 @@
 #include "mozilla/dom/ReadableStreamBYOBReaderBinding.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/ReadIntoRequest.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 
@@ -19,8 +20,7 @@
 #include "mozilla/dom/ReadableStreamBYOBRequest.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ReadableStreamBYOBReader,
                                                 ReadableStreamGenericReader,
@@ -38,8 +38,7 @@ JSObject* ReadableStreamBYOBReader::WrapObject(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-byob-reader
-void SetUpReadableStreamBYOBReader(JSContext* aCx,
-                                   ReadableStreamBYOBReader* reader,
+void SetUpReadableStreamBYOBReader(ReadableStreamBYOBReader* reader,
                                    ReadableStream& stream, ErrorResult& rv) {
   // Step 1. If !IsReadableStreamLocked(stream) is true, throw a TypeError
   // exception.
@@ -56,7 +55,7 @@ void SetUpReadableStreamBYOBReader(JSContext* aCx,
   }
 
   // Step 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
-  ReadableStreamReaderGenericInitialize(aCx, reader, &stream, rv);
+  ReadableStreamReaderGenericInitialize(reader, &stream, rv);
   if (rv.Failed()) {
     return;
   }
@@ -75,7 +74,7 @@ ReadableStreamBYOBReader::Constructor(const GlobalObject& global,
       new ReadableStreamBYOBReader(globalObject);
 
   // Step 1.
-  SetUpReadableStreamBYOBReader(global.Context(), reader, stream, rv);
+  SetUpReadableStreamBYOBReader(reader, stream, rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -107,7 +106,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
       return;
     }
 
-    ReadableStreamBYOBReadResult result;
+    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
     result.mValue.Construct();
     result.mValue.Value().Init(chunk);
     result.mDone.Construct(false);
@@ -122,7 +121,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     //
     // close steps, given chunk:
     // Resolve promise with «[ "value" → chunk, "done" → true ]».
-    ReadableStreamBYOBReadResult result;
+    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
     if (aChunk.isObject()) {
       // We need to wrap this as the chunk could have come from
       // another compartment.
@@ -149,7 +148,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   }
 
  protected:
-  virtual ~Read_ReadIntoRequest() = default;
+  ~Read_ReadIntoRequest() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION(ReadIntoRequest)
@@ -334,13 +333,13 @@ void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
-    JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv) {
+    ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1. Let reader be a new ReadableStreamBYOBReader.
   RefPtr<ReadableStreamBYOBReader> reader =
       new ReadableStreamBYOBReader(aStream->GetParentObject());
 
   // Step 2. Perform ? SetUpReadableStreamBYOBReader(reader, stream).
-  SetUpReadableStreamBYOBReader(aCx, reader, *aStream, aRv);
+  SetUpReadableStreamBYOBReader(reader, *aStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -349,5 +348,4 @@ already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
   return reader.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

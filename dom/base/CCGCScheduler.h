@@ -63,6 +63,7 @@ static const uint32_t kCCPurpleLimit = 200;
 
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
+  MinorGC,        // Run a minor GC (nursery collection)
   WaitToMajorGC,  // We want to start a new major GC
   StartMajorGC,   // The parent says we may begin our major GC
   GCSlice,        // Run a single slice of a major GC
@@ -74,12 +75,24 @@ struct GCRunnerStep {
   JS::GCReason mReason;
 };
 
+// Actions that are output from the CCRunner state machine.
 enum class CCRunnerAction {
+  // Do nothing.
   None,
+
+  // We crossed an eager minor GC threshold in the middle of an incremental CC,
+  // and we have some idle time.
+  MinorGC,
+
+  // Various cleanup actions.
   ForgetSkippable,
   CleanupContentUnbinder,
   CleanupDeferred,
+
+  // Do the actual cycle collection (build the graph etc).
   CycleCollect,
+
+  // All done.
   StopRunning
 };
 
@@ -91,25 +104,38 @@ enum CCRunnerForgetSkippableRemoveChildless {
 };
 
 struct CCRunnerStep {
-  // The action to scheduler is instructing the caller to perform.
+  // The action the scheduler is instructing the caller to perform.
   CCRunnerAction mAction;
 
   // Whether to stop processing actions for this invocation of the timer
   // callback.
   CCRunnerYield mYield;
 
-  // If the action is ForgetSkippable, then whether to remove childless nodes
-  // or not. (ForgetSkippable is the only action requiring a parameter; if
-  // that changes, this will become a union.)
-  CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
+  union ActionData {
+    // If the action is ForgetSkippable, then whether to remove childless nodes
+    // or not.
+    CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
 
-  // If the action is CycleCollect, the reason for the collection.
-  CCReason mCCReason;
+    // If the action is CycleCollect, the reason for the collection.
+    CCReason mCCReason;
+
+    // If the action is MinorGC, the reason for the GC.
+    JS::GCReason mReason;
+
+    MOZ_IMPLICIT ActionData(CCRunnerForgetSkippableRemoveChildless v)
+        : mRemoveChildless(v) {}
+    MOZ_IMPLICIT ActionData(CCReason v) : mCCReason(v) {}
+    MOZ_IMPLICIT ActionData(JS::GCReason v) : mReason(v) {}
+    ActionData() = default;
+  } mParam;
 };
 
 class CCGCScheduler {
  public:
-  CCGCScheduler() : mInterruptRequested(false) {}
+  CCGCScheduler()
+      : mAskParentBeforeMajorGC(XRE_IsContentProcess()),
+        mReadyForMajorGC(!mAskParentBeforeMajorGC),
+        mInterruptRequested(false) {}
 
   static bool CCRunnerFired(TimeStamp aDeadline);
 
@@ -142,6 +168,7 @@ class CCGCScheduler {
   void PokeShrinkingGC();
   void PokeFullGC();
   void MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects);
+  void PokeMinorGC(JS::GCReason aReason);
 
   void UserIsInactive();
   void UserIsActive();
@@ -153,9 +180,12 @@ class CCGCScheduler {
   void KillCCRunner();
   void KillAllTimersAndRunners();
 
-  js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason, int64_t aMillis) {
-    return js::SliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis),
-                           &mInterruptRequested);
+  js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration,
+                                      bool isIdle, bool isExtended) {
+    auto budget = js::SliceBudget(aDuration, &mInterruptRequested);
+    budget.idle = isIdle;
+    budget.extended = isExtended;
+    return budget;
   }
 
   /*
@@ -209,6 +239,12 @@ class CCGCScheduler {
     }
   }
 
+  void SetWantEagerMinorGC(JS::GCReason aReason) {
+    if (mEagerMinorGCReason == JS::GCReason::NO_REASON) {
+      mEagerMinorGCReason = aReason;
+    }
+  }
+
   // Ensure that the current runner does a cycle collection, and trigger a GC
   // after it finishes.
   void EnsureCCThenGC(CCReason aReason) {
@@ -229,13 +265,15 @@ class CCGCScheduler {
   }
 
   // Starting a major GC (incremental or non-incremental).
-  void NoteGCBegin();
+  void NoteGCBegin(JS::GCReason aReason);
 
   // Major GC completed.
   void NoteGCEnd();
 
   // A timer fired, but then decided not to run a GC.
   void NoteWontGC();
+
+  void NoteMinorGCEnd() { mEagerMinorGCReason = JS::GCReason::NO_REASON; }
 
   // This is invoked when we reach the actual cycle collection portion of the
   // overall cycle collection.
@@ -330,8 +368,8 @@ class CCGCScheduler {
                                        TimeStamp aNow,
                                        bool* aPreferShorterSlices) const;
 
-  TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline,
-                                         TimeStamp aNow) const;
+  js::SliceBudget ComputeInterSliceGCBudget(TimeStamp aDeadline,
+                                            TimeStamp aNow);
 
   bool ShouldForgetSkippable(uint32_t aSuspectedCCObjects) const {
     // Only do a forget skippable if there are more than a few new objects
@@ -418,7 +456,13 @@ class CCGCScheduler {
     mCCReason = CCReason::NO_REASON;
   }
 
-  GCRunnerStep GetNextGCRunnerAction() const;
+  bool HasMoreIdleGCRunnerWork() const {
+    return mMajorGCReason != JS::GCReason::NO_REASON ||
+           mEagerMajorGCReason != JS::GCReason::NO_REASON ||
+           mEagerMinorGCReason != JS::GCReason::NO_REASON;
+  }
+
+  GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline) const;
 
   CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
                                uint32_t aSuspectedCCObjects);
@@ -435,12 +479,16 @@ class CCGCScheduler {
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
 
+  // Whether to ask the parent process if now is a good time to GC (false for
+  // the parent process.)
+  const bool mAskParentBeforeMajorGC;
+
   // We've asked the parent process if now is a good time to GC (do not ask
   // again).
   bool mHaveAskedParent = false;
 
   // The parent process is ready for us to do a major GC.
-  bool mReadyForMajorGC = false;
+  bool mReadyForMajorGC;
 
   // Set when the IdleTaskRunner requests the current task be interrupted.
   // Cleared when the GC slice budget has detected the interrupt request.
@@ -486,6 +534,8 @@ class CCGCScheduler {
 
   mozilla::CCReason mCCReason = mozilla::CCReason::NO_REASON;
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
+  JS::GCReason mEagerMajorGCReason = JS::GCReason::NO_REASON;
+  JS::GCReason mEagerMinorGCReason = JS::GCReason::NO_REASON;
 
   bool mIsCompactingOnUserInactive = false;
   bool mIsCollectingCycles = false;

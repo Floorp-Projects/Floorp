@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WritingModes.h"
@@ -223,7 +224,7 @@ NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
 // static
 NativeKeyBindings* NativeKeyBindings::GetInstance(NativeKeyBindingsType aType) {
   switch (aType) {
-    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case NativeKeyBindingsType::SingleLineEditor:
       if (!sInstanceForSingleLineEditor) {
         sInstanceForSingleLineEditor = new NativeKeyBindings();
         sInstanceForSingleLineEditor->Init(aType);
@@ -233,8 +234,8 @@ NativeKeyBindings* NativeKeyBindings::GetInstance(NativeKeyBindingsType aType) {
     default:
       // fallback to multiline editor case in release build
       MOZ_FALLTHROUGH_ASSERT("aType is invalid or not yet implemented");
-    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
-    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+    case NativeKeyBindingsType::MultiLineEditor:
+    case NativeKeyBindingsType::RichTextEditor:
       if (!sInstanceForMultiLineEditor) {
         sInstanceForMultiLineEditor = new NativeKeyBindings();
         sInstanceForMultiLineEditor->Init(aType);
@@ -253,7 +254,7 @@ void NativeKeyBindings::Shutdown() {
 
 void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
   switch (aType) {
-    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case NativeKeyBindingsType::SingleLineEditor:
       mNativeTarget = gtk_entry_new();
       break;
     default:
@@ -344,7 +345,7 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
   if (aCommands.IsEmpty() && this == sInstanceForSingleLineEditor &&
       StaticPrefs::ui_key_use_select_all_in_single_line_editor()) {
     if (NativeKeyBindings* bindingsForMultilineEditor =
-            GetInstance(nsIWidget::NativeKeyBindingsForMultiLineEditor)) {
+            GetInstance(NativeKeyBindingsType::MultiLineEditor)) {
       bindingsForMultilineEditor->GetEditCommands(aEvent, aWritingMode,
                                                   aCommands);
       if (aCommands.Length() == 1u &&
@@ -424,7 +425,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
           break;
         case 'u':
         case 'U':
-          if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor &&
+          if (aType == NativeKeyBindingsType::SingleLineEditor &&
               aEvent.IsControl() && !aEvent.IsShift()) {
             command = sDeleteCommands[GTK_DELETE_PARAGRAPH_ENDS][kBackward];
           }

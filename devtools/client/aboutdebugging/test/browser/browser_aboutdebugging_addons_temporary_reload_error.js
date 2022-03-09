@@ -13,7 +13,7 @@ add_task(async function() {
   const EXTENSION_ID = "test-devtools@mozilla.org";
   const EXTENSION_NAME = "Temporary web extension";
 
-  let addonFile = await installTemporaryExtensionFromXPI(
+  let { xpiFile: addonFile } = await installTemporaryExtensionFromXPI(
     {
       id: EXTENSION_ID,
       name: EXTENSION_NAME,

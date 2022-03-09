@@ -625,14 +625,20 @@ function isBase64(payload) {
 
 /**
  * Checks if the payload is of JSON type.
- * This function also handles JSON with XSSI-escaping characters by skipping them.
+ * This function also handles JSON with XSSI-escaping characters by stripping them
+ * and returning the stripped chars in the strippedChars property
  * This function also handles Base64 encoded JSON.
+ * @returns {Object} shape:
+ *  {Object} json: parsed JSON object
+ *  {Error} error: JSON parsing error
+ *  {string} strippedChars: XSSI stripped chars removed from JSON payload
  */
 function parseJSON(payloadUnclean) {
-  let json, error;
+  let json;
   const jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
   const [, jsonpCallback, jsonp] = payloadUnclean.match(jsonpRegex) || [];
   if (jsonpCallback && jsonp) {
+    let error;
     try {
       json = parseJSON(jsonp).json;
     } catch (err) {
@@ -640,32 +646,9 @@ function parseJSON(payloadUnclean) {
     }
     return { json, error, jsonpCallback };
   }
-  // Start at the first likely JSON character,
-  // so that magic XSSI characters can be avoided
-  const firstSquare = payloadUnclean.indexOf("[");
-  const firstCurly = payloadUnclean.indexOf("{");
-  // This logic finds the first starting square or curly bracket.
-  // However, since Math.min will return -1 even if
-  // the other type of bracket was found and has an index,
-  // if one of the indexes is -1, the max value is returned
-  // (this value may also be -1, but that is checked for later on.)
-  const minFirst = Math.min(firstSquare, firstCurly);
-  let first;
-  if (minFirst === -1) {
-    first = Math.max(firstCurly, firstSquare);
-  } else {
-    first = minFirst;
-  }
-  let payload = "";
-  if (first !== -1) {
-    try {
-      payload = payloadUnclean.substring(first);
-    } catch (err) {
-      error = err;
-    }
-  } else {
-    payload = payloadUnclean;
-  }
+
+  let { payload, strippedChars, error } = removeXSSIString(payloadUnclean);
+
   try {
     json = JSON.parse(payload);
   } catch (err) {
@@ -690,31 +673,47 @@ function parseJSON(payloadUnclean) {
   return {
     json,
     error,
+    strippedChars,
   };
 }
 
 /**
- * This helper function is used for auto-growing the size of
- * a textarea based on text height
- *
- * @param {object} element
- *        The textarea DOM element to update
- * @param {number} maxRows
- *        The maximum number of rows the textarea can have, default is 5
- *  @param {number} lineHeight
- *        The height in pixels of one row of text in the textarea, default is 14
+ * Removes XSSI prevention sequences from JSON payloads
+ * @param {string} payloadUnclean: JSON payload that may or may have a
+ *                                 XSSI prevention sequence
+ * @returns {Object} Shape:
+ *   {string} payload: the JSON witht the XSSI prevention sequence removed
+ *   {string} strippedChars: XSSI string that was removed, null if no XSSI
+ *                           prevention sequence was found
+ *   {Error} error: error attempting to strip XSSI prevention sequence
  */
-function updateTextareaRows(element, maxRows = 5, lineHeight = 14) {
-  const minRows = 1;
-  // We reset the number of the rows in the textarea to make sure
-  // the scrollheight is exactly the height of the text
-  element.rows = minRows;
+function removeXSSIString(payloadUnclean) {
+  // Regex that finds the XSSI protection sequences )]}'\n for(;;); and while(1);
+  const xssiRegex = /(^\)\]\}',?\n)|(^for ?\(;;\);?)|(^while ?\(1\);?)/;
+  let payload, strippedChars, error;
+  const xssiRegexMatch = payloadUnclean.match(xssiRegex);
 
-  const currentRows = Math.ceil(
-    // 8 is the sum of the bottom and top padding of the element
-    (element.scrollHeight - 8) / lineHeight
-  );
-  element.rows = currentRows <= maxRows ? currentRows : maxRows;
+  // Remove XSSI string if there was one found
+  if (xssiRegexMatch?.length > 0) {
+    const xssiLen = xssiRegexMatch[0].length;
+    try {
+      // substring the payload by the length of the XSSI match to remove it
+      // and save the match to report
+      payload = payloadUnclean.substring(xssiLen);
+      strippedChars = xssiRegexMatch[0];
+    } catch (err) {
+      error = err;
+      payload = payloadUnclean;
+    }
+  } else {
+    // if there was no XSSI match just return the raw payload
+    payload = payloadUnclean;
+  }
+  return {
+    payload,
+    strippedChars,
+    error,
+  };
 }
 
 module.exports = {
@@ -747,5 +746,4 @@ module.exports = {
   propertiesEqual,
   ipToLong,
   parseJSON,
-  updateTextareaRows,
 };

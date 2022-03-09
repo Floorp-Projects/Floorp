@@ -639,32 +639,35 @@ void nsBaseDragService::DiscardInternalTransferData() {
 NS_IMETHODIMP
 nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
                                          uint32_t aKeyModifiers) {
-  if (mSourceNode && mSourceDocument && !mSuppressLevel) {
-    RefPtr<PresShell> presShell = mSourceDocument->GetPresShell();
-    if (presShell) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      WidgetDragEvent event(true, aEventMessage, nullptr);
-      event.mFlags.mIsSynthesizedForTests = mSessionIsSynthesizedForTests;
-      event.mInputSource = mInputSource;
-      if (aEventMessage == eDragEnd) {
-        event.mRefPoint = mEndDragPoint;
-        event.mUserCancelled = mUserCancelled;
-      }
-      event.mModifiers = aKeyModifiers;
-      // Send the drag event to APZ, which needs to know about them to be
-      // able to accurately detect the end of a drag gesture.
-      if (nsPresContext* presContext = presShell->GetPresContext()) {
-        if (nsCOMPtr<nsIWidget> widget = presContext->GetRootWidget()) {
-          widget->DispatchEventToAPZOnly(&event);
-        }
-      }
-
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
-      return presShell->HandleDOMEventWithTarget(content, &event, &status);
-    }
+  if (!mSourceNode || !mSourceDocument || mSuppressLevel) {
+    return NS_OK;
+  }
+  RefPtr<PresShell> presShell = mSourceDocument->GetPresShell();
+  if (!presShell) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  RefPtr<nsPresContext> pc = presShell->GetPresContext();
+  nsCOMPtr<nsIWidget> widget = pc ? pc->GetRootWidget() : nullptr;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetDragEvent event(true, aEventMessage, widget);
+  event.mFlags.mIsSynthesizedForTests = mSessionIsSynthesizedForTests;
+  event.mInputSource = mInputSource;
+  if (aEventMessage == eDragEnd) {
+    event.mRefPoint = mEndDragPoint;
+    event.mUserCancelled = mUserCancelled;
+  }
+  event.mModifiers = aKeyModifiers;
+
+  if (widget) {
+    // Send the drag event to APZ, which needs to know about them to be
+    // able to accurately detect the end of a drag gesture.
+    widget->DispatchEventToAPZOnly(&event);
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
+  return presShell->HandleDOMEventWithTarget(content, &event, &status);
 }
 
 /* This is used by Windows and Mac to update the position of a popup being

@@ -4,37 +4,37 @@
 
 // Tests that Step In is cancelled when navigating to another page
 
+"use strict";
+
 add_task(async function() {
-    const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
-    const {
-      selectors: { getIsWaitingOnBreak, getCurrentThread }
-    } = dbg;
+  const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
 
-    async function toggleBlackbox() {
-      await selectSource(dbg, "simple3.js");
-      await clickElement(dbg, "blackbox");
-      await waitForDispatch(dbg.store, "BLACKBOX");
-    }
-
-    // With the debugger stopped at a breakpoint, blackbox the current source and step in
+  async function toggleBlackbox() {
     await selectSource(dbg, "simple3.js");
-    await addBreakpoint(dbg, "simple3.js", 5);
-    invokeInTab("simple");
-    await waitForPaused(dbg, "simple3");
+    await clickElement(dbg, "blackbox");
+    await waitForDispatch(dbg.store, "BLACKBOX");
+  }
 
-    await toggleBlackbox();
-    await dbg.actions.stepIn(getThreadContext(dbg));
+  // With the debugger stopped at a breakpoint, blackbox the current source and step in
+  await selectSource(dbg, "simple3.js");
+  await addBreakpoint(dbg, "simple3.js", 5);
+  invokeInTab("simple");
+  await waitForPaused(dbg, "simple3");
 
-    // We should stop at this breakpoint, rather than the first executed script
-    await selectSource(dbg, "long.js");
-    await addBreakpoint(dbg, "long.js", 1);
+  await toggleBlackbox();
+  await dbg.actions.stepIn(getThreadContext(dbg));
 
-    // Navigation should clear the stepping state
-    const reloaded = reload(dbg);
-    await waitForPaused(dbg);
-    assertPausedAtSourceAndLine(dbg, findSource(dbg, "long.js").id, 1);
+  // We should stop at this breakpoint, rather than the first executed script
+  await selectSource(dbg, "long.js");
+  await addBreakpoint(dbg, "long.js", 1);
 
-    await resume(dbg);
-    await waitForSource(dbg, "simple3.js");
-    await toggleBlackbox();
-  });
+  // Navigation should clear the stepping state
+  const reloaded = reload(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "long.js").id, 1);
+
+  await resume(dbg);
+  await reloaded;
+  await waitForSource(dbg, "simple3.js");
+  await toggleBlackbox();
+});

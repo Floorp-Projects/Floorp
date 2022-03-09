@@ -52,10 +52,10 @@ HWY_NOINLINE void TestAllName() { ForAllTypes(ForPartialVectors<TestName>()); }
 struct TestEqualInteger {
   template <class T>
   HWY_NOINLINE void operator()(T /*t*/) const {
-    HWY_ASSERT(IsEqual(T(0), T(0)));
-    HWY_ASSERT(IsEqual(T(1), T(1)));
-    HWY_ASSERT(IsEqual(T(-1), T(-1)));
-    HWY_ASSERT(IsEqual(LimitsMin<T>(), LimitsMin<T>()));
+    HWY_ASSERT_EQ(T(0), T(0));
+    HWY_ASSERT_EQ(T(1), T(1));
+    HWY_ASSERT_EQ(T(-1), T(-1));
+    HWY_ASSERT_EQ(LimitsMin<T>(), LimitsMin<T>());
 
     HWY_ASSERT(!IsEqual(T(0), T(1)));
     HWY_ASSERT(!IsEqual(T(1), T(0)));

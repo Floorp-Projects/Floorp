@@ -16,6 +16,7 @@
 
 #include "nsAppRunner.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/GeckoArgs.h"
 
@@ -69,7 +70,12 @@ bool ProcessChild::InitPrefs(int aArgc, char* aArgv[]) {
 ProcessChild::~ProcessChild() { gProcessChild = nullptr; }
 
 /* static */
-void ProcessChild::NotifyImpendingShutdown() { sExpectingShutdown = true; }
+void ProcessChild::NotifiedImpendingShutdown() {
+  sExpectingShutdown = true;
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IPCShutdownState,
+      "NotifyImpendingShutdown received."_ns);
+}
 
 /* static */
 bool ProcessChild::ExpectingShutdown() { return sExpectingShutdown; }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared/customizableui/panelUI.inc.css
+@import "chrome://browser/skin/customizableui/panelUI.inc.css";
 
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
@@ -80,14 +80,14 @@ menu.subviewbutton > .menu-right {
   padding: 2px 6px;
 }
 
-.panel-button@buttonStateHover@ {
+.panel-button:not([disabled]):hover {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-.panel-button@buttonStateActive@ {
+.panel-button:not([disabled]):hover:active {
   background-color: var(--panel-item-active-bgcolor);
 }
 
-.panel-button:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
+.panel-button:focus-visible {
+  outline: var(--focus-outline);
 }

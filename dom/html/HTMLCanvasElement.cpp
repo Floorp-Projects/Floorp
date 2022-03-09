@@ -473,9 +473,12 @@ HTMLCanvasElement::HTMLCanvasElement(
       mMaybeModified(false),
       mWriteOnly(false) {}
 
-HTMLCanvasElement::~HTMLCanvasElement() {
+HTMLCanvasElement::~HTMLCanvasElement() { Destroy(); }
+
+void HTMLCanvasElement::Destroy() {
   if (mOffscreenDisplay) {
     mOffscreenDisplay->Destroy();
+    mOffscreenDisplay = nullptr;
   }
 
   if (mContextObserver) {
@@ -486,12 +489,25 @@ HTMLCanvasElement::~HTMLCanvasElement() {
   ResetPrintCallback();
   if (mRequestedFrameRefreshObserver) {
     mRequestedFrameRefreshObserver->DetachFromRefreshDriver();
+    mRequestedFrameRefreshObserver = nullptr;
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
-                                   mCurrentContext, mPrintCallback, mPrintState,
-                                   mOriginalCanvas, mOffscreenCanvas)
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLCanvasElement)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLCanvasElement,
+                                                nsGenericHTMLElement)
+  tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentContext, mPrintCallback, mPrintState,
+                                  mOriginalCanvas, mOffscreenCanvas)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLCanvasElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentContext, mPrintCallback,
+                                    mPrintState, mOriginalCanvas,
+                                    mOffscreenCanvas)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLCanvasElement,
                                                nsGenericHTMLElement)
@@ -578,7 +594,7 @@ void HTMLCanvasElement::HandlePrintCallback(nsPresContext* aPresContext) {
   // Only call the print callback here if 1) we're in a print testing mode or
   // print preview mode, 2) the canvas has a print callback and 3) the callback
   // hasn't already been called. For real printing the callback is handled in
-  // nsSimplePageSequenceFrame::PrePrintNextPage.
+  // nsPageSequenceFrame::PrePrintNextSheet.
   if ((aPresContext->Type() == nsPresContext::eContext_PageLayout ||
        aPresContext->Type() == nsPresContext::eContext_PrintPreview) &&
       !mPrintState && GetMozPrintCallback()) {
@@ -1123,14 +1139,13 @@ nsIntSize HTMLCanvasElement::GetSize() { return GetWidthHeight(); }
 
 bool HTMLCanvasElement::IsWriteOnly() const { return mWriteOnly; }
 
-void HTMLCanvasElement::SetWriteOnly() {
-  mExpandedReader = nullptr;
-  mWriteOnly = true;
-}
-
-void HTMLCanvasElement::SetWriteOnly(nsIPrincipal* aExpandedReader) {
+void HTMLCanvasElement::SetWriteOnly(
+    nsIPrincipal* aExpandedReader /* = nullptr */) {
   mExpandedReader = aExpandedReader;
   mWriteOnly = true;
+  if (mOffscreenCanvas) {
+    mOffscreenCanvas->SetWriteOnly();
+  }
 }
 
 bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) {
@@ -1175,14 +1190,6 @@ void HTMLCanvasElement::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
 
 void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
                                                     uint32_t aHeight) {
-  // We need to keep our placeholder canvas dimensions in sync with the actual
-  // offscreen canvas. It is only a placeholder if we transferred the object to
-  // a worker thread.
-  if (mOffscreenCanvas->IsNeutered()) {
-    mOffscreenCanvas->UpdateNeuteredSize(aWidth, aHeight);
-  }
-
-  // We always need to update the canvas element itself however.
   ErrorResult rv;
   SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, rv);
   MOZ_ASSERT(!rv.Failed());
@@ -1201,18 +1208,13 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
   // an empty transaction which is effectively equivalent.
   CanvasRenderer* renderer = nullptr;
   const auto key = static_cast<uint32_t>(DisplayItemType::TYPE_CANVAS);
-  RefPtr<WebRenderLocalCanvasData> localData =
-      GetWebRenderUserData<WebRenderLocalCanvasData>(frame, key);
   RefPtr<WebRenderCanvasData> data =
       GetWebRenderUserData<WebRenderCanvasData>(frame, key);
   if (data) {
     renderer = data->GetCanvasRenderer();
   }
 
-  if (localData && wr::AsUint64(localData->mImageKey)) {
-    localData->mDirty = true;
-    frame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
-  } else if (renderer) {
+  if (renderer) {
     renderer->SetDirty();
     frame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
   } else {

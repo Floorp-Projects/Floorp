@@ -1080,10 +1080,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 // static
 void nsJSContext::RunIncrementalGCSlice(JS::GCReason aReason,
                                         IsShrinking aShrinking,
-                                        TimeDuration aBudget) {
-  js::SliceBudget budget = sScheduler.CreateGCSliceBudget(
-      aReason, static_cast<int64_t>(aBudget.ToMilliseconds()));
-  GarbageCollectImpl(aReason, aShrinking, budget);
+                                        js::SliceBudget& aBudget) {
+  GarbageCollectImpl(aReason, aShrinking, aBudget);
 }
 
 static void FinishAnyIncrementalGC() {
@@ -1100,9 +1098,8 @@ static void FinishAnyIncrementalGC() {
 }
 
 static void FireForgetSkippable(bool aRemoveChildless, TimeStamp aDeadline) {
-  AUTO_PROFILER_TRACING_MARKER(
-      "CC", aDeadline.IsNull() ? "ForgetSkippable" : "IdleForgetSkippable",
-      GCCC);
+  AUTO_PROFILER_MARKER_TEXT("ForgetSkippable", GCCC, {},
+                            aDeadline.IsNull() ? ""_ns : "(idle)"_ns);
   TimeStamp startTimeStamp = TimeStamp::Now();
   FinishAnyIncrementalGC();
 
@@ -1415,8 +1412,8 @@ void nsJSContext::RunCycleCollectorSlice(CCReason aReason,
     return;
   }
 
-  AUTO_PROFILER_TRACING_MARKER(
-      "CC", aDeadline.IsNull() ? "CCSlice" : "IdleCCSlice", GCCC);
+  AUTO_PROFILER_MARKER_TEXT("CCSlice", GCCC, {},
+                            aDeadline.IsNull() ? ""_ns : "(idle)"_ns);
 
   AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorSlice", GCCC);
 
@@ -1549,9 +1546,15 @@ bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
       case CCRunnerAction::None:
         break;
 
+      case CCRunnerAction::MinorGC:
+        JS::MaybeRunNurseryCollection(CycleCollectedJSRuntime::Get()->Runtime(),
+                                      step.mParam.mReason);
+        sScheduler.NoteMinorGCEnd();
+        break;
+
       case CCRunnerAction::ForgetSkippable:
         // 'Forget skippable' only, then end this invocation.
-        FireForgetSkippable(bool(step.mRemoveChildless), aDeadline);
+        FireForgetSkippable(bool(step.mParam.mRemoveChildless), aDeadline);
         break;
 
       case CCRunnerAction::CleanupContentUnbinder:
@@ -1566,7 +1569,7 @@ bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
 
       case CCRunnerAction::CycleCollect:
         // Cycle collection slice.
-        nsJSContext::RunCycleCollectorSlice(step.mCCReason, aDeadline);
+        nsJSContext::RunCycleCollectorSlice(step.mParam.mCCReason, aDeadline);
         break;
 
       case CCRunnerAction::StopRunning:
@@ -1652,6 +1655,23 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
 }
 
 // static
+void nsJSContext::MaybePokeGC() {
+  if (sShuttingDown) {
+    return;
+  }
+
+  JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
+  JS::GCReason reason = JS::WantEagerMinorGC(rt);
+  if (reason != JS::GCReason::NO_REASON) {
+    MOZ_ASSERT(reason == JS::GCReason::EAGER_NURSERY_COLLECTION);
+    sScheduler.PokeMinorGC(reason);
+  }
+  reason = JS::WantEagerMajorGC(rt);
+  if (reason != JS::GCReason::NO_REASON) {
+    PokeGC(reason, nullptr, 0);
+  }
+}
+
 void nsJSContext::DoLowMemoryGC() {
   if (sShuttingDown) {
     return;
@@ -1694,7 +1714,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
   switch (aProgress) {
     case JS::GC_CYCLE_BEGIN: {
       // Prevent cycle collections and shrinking during incremental GC.
-      sScheduler.NoteGCBegin();
+      sScheduler.NoteGCBegin(aDesc.reason_);
       sCurrentGCStartTime = TimeStamp::Now();
       break;
     }
@@ -1938,7 +1958,8 @@ static bool ConsumeStream(JSContext* aCx, JS::HandleObject aObj,
 
 static js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason,
                                            int64_t aMillis) {
-  return sScheduler.CreateGCSliceBudget(aReason, aMillis);
+  return sScheduler.CreateGCSliceBudget(
+      mozilla::TimeDuration::FromMilliseconds(aMillis), false, false);
 }
 
 void nsJSContext::EnsureStatics() {

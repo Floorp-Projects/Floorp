@@ -40,7 +40,7 @@ TEST(BlendingTest, Crops) {
 }
 
 TEST(BlendingTest, Offset) {
-  const PaddedBytes background_bytes = ReadTestData("jxl/splines.png");
+  const PaddedBytes background_bytes = ReadTestData("jxl/splines.pfm");
   CodecInOut background;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(background_bytes), &background));
   const PaddedBytes foreground_bytes =
@@ -87,7 +87,7 @@ TEST(BlendingTest, Offset) {
   }
 
   const PaddedBytes expected_bytes =
-      ReadTestData("jxl/blending/grayscale_patches_on_splines.png");
+      ReadTestData("jxl/blending/grayscale_patches_on_splines.pfm");
   CodecInOut expected;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(expected_bytes), &expected));
   VerifyRelativeError(*expected.Main().color(), *output.color(), 1. / (2 * 255),

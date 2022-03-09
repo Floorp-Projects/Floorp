@@ -13,7 +13,7 @@ namespace mozilla::widget {
 
 class ScrollbarDrawingAndroid final : public ScrollbarDrawing {
  public:
-  ScrollbarDrawingAndroid() = default;
+  ScrollbarDrawingAndroid() : ScrollbarDrawing(Kind::Android) {}
   virtual ~ScrollbarDrawingAndroid() = default;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,

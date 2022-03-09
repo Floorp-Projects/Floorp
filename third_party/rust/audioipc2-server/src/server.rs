@@ -12,7 +12,7 @@ use audioipc::messages::{
     StreamInitParams, StreamParams,
 };
 use audioipc::shm::SharedMem;
-use audioipc::{ipccore, rpccore, sys};
+use audioipc::{ipccore, rpccore, sys, PlatformHandle};
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
 use std::convert::From;
@@ -47,13 +47,14 @@ impl CubebDeviceCollectionManager {
         server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
         devtype: cubeb::DeviceType,
     ) -> cubeb::Result<()> {
-        let mut servers = self.servers.lock().unwrap();
-        if servers.is_empty() {
-            self.internal_register(context, true)?;
-        }
         server.borrow_mut().devtype.insert(devtype);
+        let mut servers = self.servers.lock().unwrap();
+        let do_register = servers.is_empty();
         if !servers.iter().any(|s| Rc::ptr_eq(s, server)) {
             servers.push(server.clone());
+        }
+        if do_register {
+            self.internal_register(context, true)?;
         }
         Ok(())
     }
@@ -64,11 +65,28 @@ impl CubebDeviceCollectionManager {
         server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
         devtype: cubeb::DeviceType,
     ) -> cubeb::Result<()> {
+        let do_remove = {
+            server.borrow_mut().devtype.remove(devtype);
+            server.borrow().devtype.is_empty()
+        };
         let mut servers = self.servers.lock().unwrap();
-        server.borrow_mut().devtype.remove(devtype);
-        if server.borrow().devtype.is_empty() {
+        if do_remove {
             servers.retain(|s| !Rc::ptr_eq(s, server));
         }
+        if servers.is_empty() {
+            self.internal_register(context, false)?;
+        }
+        Ok(())
+    }
+
+    fn unregister_server(
+        &mut self,
+        context: &cubeb::Context,
+        server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
+    ) -> cubeb::Result<()> {
+        server.borrow_mut().devtype = cubeb::DeviceType::UNKNOWN;
+        let mut servers = self.servers.lock().unwrap();
+        servers.retain(|s| !Rc::ptr_eq(s, server));
         if servers.is_empty() {
             self.internal_register(context, false)?;
         }
@@ -119,6 +137,12 @@ impl CubebDeviceCollectionManager {
     }
 }
 
+impl Drop for CubebDeviceCollectionManager {
+    fn drop(&mut self) {
+        assert!(self.servers.lock().unwrap().is_empty());
+    }
+}
+
 struct DevIdMap {
     devices: Vec<usize>,
 }
@@ -157,8 +181,9 @@ impl DevIdMap {
 }
 
 struct CubebContextState {
-    context: cubeb::Result<cubeb::Context>,
+    // `manager` must be dropped before the `context` is destroyed.
     manager: CubebDeviceCollectionManager,
+    context: cubeb::Result<cubeb::Context>,
 }
 
 thread_local!(static CONTEXT_KEY: RefCell<Option<CubebContextState>> = RefCell::new(None));
@@ -182,11 +207,11 @@ where
         let mut state = k.borrow_mut();
         if state.is_none() {
             *state = Some(CubebContextState {
-                context: cubeb_init_from_context_params(),
                 manager: CubebDeviceCollectionManager::new(),
+                context: cubeb_init_from_context_params(),
             });
         }
-        let CubebContextState { context, manager } = state.as_mut().unwrap();
+        let CubebContextState { manager, context } = state.as_mut().unwrap();
         // Always reattempt to initialize cubeb, OS config may have changed.
         if context.is_err() {
             *context = cubeb_init_from_context_params();
@@ -216,8 +241,12 @@ struct ServerStreamCallbacks {
     output_frame_size: u16,
     /// Shared memory buffer for transporting audio data to/from client
     shm: SharedMem,
-    /// RPC interface to callback server running in client
-    rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
+    /// RPC interface for data_callback (on OS audio thread) to server callback thread
+    data_callback_rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
+    /// RPC interface for state_callback (on any thread) to server callback thread
+    state_callback_rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
+    /// RPC interface for device_change_callback (on any thread) to server callback thread
+    device_change_callback_rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
 }
 
 impl ServerStreamCallbacks {
@@ -239,7 +268,7 @@ impl ServerStreamCallbacks {
         }
 
         let r = self
-            .rpc
+            .data_callback_rpc
             .call(CallbackReq::Data {
                 nframes,
                 input_frame_size: self.input_frame_size as usize,
@@ -272,7 +301,10 @@ impl ServerStreamCallbacks {
 
     fn state_callback(&mut self, state: cubeb::State) {
         trace!("Stream state callback: {:?}", state);
-        let r = self.rpc.call(CallbackReq::State(state.into())).wait();
+        let r = self
+            .state_callback_rpc
+            .call(CallbackReq::State(state.into()))
+            .wait();
         match r {
             Ok(CallbackResp::State) => {}
             _ => {
@@ -283,7 +315,10 @@ impl ServerStreamCallbacks {
 
     fn device_change_callback(&mut self) {
         trace!("Stream device change callback");
-        let r = self.rpc.call(CallbackReq::DeviceChange).wait();
+        let r = self
+            .device_change_callback_rpc
+            .call(CallbackReq::DeviceChange)
+            .wait();
         match r {
             Ok(CallbackResp::DeviceChange) => {}
             _ => {
@@ -310,7 +345,7 @@ fn get_shm_id() -> String {
 struct ServerStream {
     stream: Option<cubeb::Stream>,
     cbs: Box<ServerStreamCallbacks>,
-    shm_setup: Option<rpccore::ProxyResponse<CallbackResp>>,
+    client_pipe: Option<PlatformHandle>,
 }
 
 impl Drop for ServerStream {
@@ -347,6 +382,27 @@ pub struct CubebServer {
     device_collection_change_callbacks: Option<Rc<RefCell<DeviceCollectionChangeCallback>>>,
     devidmap: DevIdMap,
     shm_area_size: usize,
+}
+
+impl Drop for CubebServer {
+    fn drop(&mut self) {
+        if let Some(device_collection_change_callbacks) = &self.device_collection_change_callbacks {
+            debug!("CubebServer: dropped with device_collection_change_callbacks registered");
+            CONTEXT_KEY.with(|k| {
+                let mut state = k.borrow_mut();
+                if let Some(CubebContextState {
+                    manager,
+                    context: Ok(context),
+                }) = state.as_mut()
+                {
+                    let r = manager.unregister_server(context, device_collection_change_callbacks);
+                    if r.is_err() {
+                        debug!("CubebServer: unregister_server failed: {:?}", r);
+                    }
+                }
+            })
+        }
+    }
 }
 
 #[allow(unknown_lints)] // non_send_fields_in_send_ty is Nightly-only as of 2021-11-29.
@@ -688,17 +744,13 @@ impl CubebServer {
             .callback_thread
             .bind_client::<CallbackClient>(server_pipe)?;
 
-        // Send shm configuration to client but don't wait for result; that'll be checked in process_stream_init.
-        let shm_setup = Some(rpc.call(CallbackReq::SharedMem(
-            SerializableHandle::new(shm_handle, self.remote_pid.unwrap()),
-            shm_area_size,
-        )));
-
         let cbs = Box::new(ServerStreamCallbacks {
             input_frame_size,
             output_frame_size,
             shm,
-            rpc,
+            state_callback_rpc: rpc.clone(),
+            device_change_callback_rpc: rpc.clone(),
+            data_callback_rpc: rpc,
         });
 
         let entry = self.streams.vacant_entry();
@@ -707,13 +759,14 @@ impl CubebServer {
 
         entry.insert(ServerStream {
             stream: None,
-            shm_setup,
             cbs,
+            client_pipe: Some(client_pipe),
         });
 
         Ok(ClientMessage::StreamCreated(StreamCreate {
             token: key,
-            platform_handle: SerializableHandle::new(client_pipe, self.remote_pid.unwrap()),
+            shm_handle: SerializableHandle::new(shm_handle, self.remote_pid.unwrap()),
+            shm_area_size,
         }))
     }
 
@@ -748,38 +801,6 @@ impl CubebServer {
         assert!(size_of::<Box<ServerStreamCallbacks>>() == size_of::<usize>());
         let user_ptr = server_stream.cbs.as_ref() as *const ServerStreamCallbacks as *mut c_void;
 
-        // SharedMem setup message should've been processed by client by now.
-        let shm_setup = server_stream
-            .shm_setup
-            .take()
-            .expect("invalid shm_setup state");
-        match shm_setup.wait() {
-            Ok(CallbackResp::SharedMem) => {}
-            Ok(CallbackResp::Error(e)) => {
-                // If the client replied with an error (e.g. client OOM), log error and fail stream init.
-                debug!(
-                    "Shmem setup for stream {:?} failed (raw error {:?})",
-                    stm_tok, e
-                );
-                return Ok(ClientMessage::Error(e));
-            }
-            Ok(r) => {
-                debug!(
-                    "Shmem setup for stream {:?} failed (unexpected response {:?})",
-                    stm_tok, r
-                );
-                return Ok(error(cubeb::Error::error()));
-            }
-            Err(e) => {
-                // If the client errored before responding, log error and fail stream init.
-                debug!(
-                    "Shmem setup for stream {:?} failed (error {:?})",
-                    stm_tok, e
-                );
-                return Err(e.into());
-            }
-        }
-
         let stream = unsafe {
             let stream = context.stream_init(
                 stream_name,
@@ -804,7 +825,14 @@ impl CubebServer {
 
         server_stream.stream = Some(stream);
 
-        Ok(ClientMessage::StreamInitialized)
+        let client_pipe = server_stream
+            .client_pipe
+            .take()
+            .expect("invalid state after StreamCreated");
+        Ok(ClientMessage::StreamInitialized(SerializableHandle::new(
+            client_pipe,
+            self.remote_pid.unwrap(),
+        )))
     }
 }
 

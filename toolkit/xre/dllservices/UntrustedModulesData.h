@@ -12,6 +12,7 @@
 #  include "ipc/IPCMessageUtils.h"
 #  include "mozilla/CombinedStacks.h"
 #  include "mozilla/DebugOnly.h"
+#  include "mozilla/LinkedList.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/TypedEnumBits.h"
@@ -169,7 +170,30 @@ class ModulesMap final
       : nsRefPtrHashtable<nsStringCaseInsensitiveHashKey, ModuleRecord>() {}
 };
 
+struct ProcessedModuleLoadEventContainer final
+    : public LinkedListElement<ProcessedModuleLoadEventContainer> {
+  ProcessedModuleLoadEvent mEvent;
+  ProcessedModuleLoadEventContainer() = default;
+  explicit ProcessedModuleLoadEventContainer(ProcessedModuleLoadEvent&& aEvent)
+      : mEvent(std::move(aEvent)) {}
+
+  ProcessedModuleLoadEventContainer(ProcessedModuleLoadEventContainer&&) =
+      default;
+  ProcessedModuleLoadEventContainer& operator=(
+      ProcessedModuleLoadEventContainer&&) = default;
+  ProcessedModuleLoadEventContainer(const ProcessedModuleLoadEventContainer&) =
+      delete;
+  ProcessedModuleLoadEventContainer& operator=(
+      const ProcessedModuleLoadEventContainer&) = delete;
+};
+using UntrustedModuleLoadingEvents =
+    AutoCleanLinkedList<ProcessedModuleLoadEventContainer>;
+
 class UntrustedModulesData final {
+  // Merge aNewData.mEvents into this->mModules and also
+  // make module entries in aNewData point to items in this->mModules.
+  void MergeModules(UntrustedModulesData& aNewData);
+
  public:
   // Ensure mEvents will never retain more than kMaxEvents events.
   // This constant matches the maximum in Telemetry::CombinedStacks.
@@ -178,6 +202,7 @@ class UntrustedModulesData final {
   UntrustedModulesData()
       : mProcessType(XRE_GetProcessType()),
         mPid(::GetCurrentProcessId()),
+        mNumEvents(0),
         mSanitizationFailures(0),
         mTrustTestFailures(0) {}
 
@@ -188,22 +213,26 @@ class UntrustedModulesData final {
   UntrustedModulesData& operator=(const UntrustedModulesData&) = delete;
 
   explicit operator bool() const {
-    return !mEvents.empty() || mSanitizationFailures || mTrustTestFailures ||
+    return !mEvents.isEmpty() || mSanitizationFailures || mTrustTestFailures ||
            mXULLoadDurationMS.isSome();
   }
 
   void AddNewLoads(const ModulesMap& aModulesMap,
-                   Vector<ProcessedModuleLoadEvent>&& aEvents,
+                   UntrustedModuleLoadingEvents&& aEvents,
                    Vector<Telemetry::ProcessedStack>&& aStacks);
   void Merge(UntrustedModulesData&& aNewData);
-
+  void MergeWithoutStacks(UntrustedModulesData&& aNewData);
   void Swap(UntrustedModulesData& aOther);
+
+  // Drop callstack data and old loading events.
+  void Truncate();
 
   GeckoProcessType mProcessType;
   DWORD mPid;
   TimeDuration mElapsed;
   ModulesMap mModules;
-  Vector<ProcessedModuleLoadEvent> mEvents;
+  uint32_t mNumEvents;
+  UntrustedModuleLoadingEvents mEvents;
   Telemetry::CombinedStacks mStacks;
   Maybe<double> mXULLoadDurationMS;
   uint32_t mSanitizationFailures;
@@ -231,14 +260,13 @@ template <>
 struct ParamTraits<mozilla::ModuleVersion> {
   typedef mozilla::ModuleVersion paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteUInt64(aParam.AsInteger());
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteUInt64(aParam.AsInteger());
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint64_t ver;
-    if (!aMsg->ReadUInt64(aIter, &ver)) {
+    if (!aReader->ReadUInt64(&ver)) {
       return false;
     }
 
@@ -251,21 +279,20 @@ template <>
 struct ParamTraits<mozilla::VendorInfo> {
   typedef mozilla::VendorInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteUInt32(static_cast<uint32_t>(aParam.mSource));
-    WriteParam(aMsg, aParam.mVendor);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteUInt32(static_cast<uint32_t>(aParam.mSource));
+    WriteParam(aWriter, aParam.mVendor);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t source;
-    if (!aMsg->ReadUInt32(aIter, &source)) {
+    if (!aReader->ReadUInt32(&source)) {
       return false;
     }
 
     aResult->mSource = static_cast<mozilla::VendorInfo::Source>(source);
 
-    if (!ReadParam(aMsg, aIter, &aResult->mVendor)) {
+    if (!ReadParam(aReader, &aResult->mVendor)) {
       return false;
     }
 
@@ -277,8 +304,8 @@ template <>
 struct ParamTraits<mozilla::ModuleRecord> {
   typedef mozilla::ModuleRecord paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mResolvedNtName);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mResolvedNtName);
 
     nsAutoString resolvedDosName;
     if (aParam.mResolvedDosName) {
@@ -287,21 +314,20 @@ struct ParamTraits<mozilla::ModuleRecord> {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    WriteParam(aMsg, resolvedDosName);
-    WriteParam(aMsg, aParam.mSanitizedDllName);
-    WriteParam(aMsg, aParam.mVersion);
-    WriteParam(aMsg, aParam.mVendorInfo);
-    aMsg->WriteUInt32(static_cast<uint32_t>(aParam.mTrustFlags));
+    WriteParam(aWriter, resolvedDosName);
+    WriteParam(aWriter, aParam.mSanitizedDllName);
+    WriteParam(aWriter, aParam.mVersion);
+    WriteParam(aWriter, aParam.mVendorInfo);
+    aWriter->WriteUInt32(static_cast<uint32_t>(aParam.mTrustFlags));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mResolvedNtName)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mResolvedNtName)) {
       return false;
     }
 
     nsAutoString resolvedDosName;
-    if (!ReadParam(aMsg, aIter, &resolvedDosName)) {
+    if (!ReadParam(aReader, &resolvedDosName)) {
       return false;
     }
 
@@ -313,20 +339,20 @@ struct ParamTraits<mozilla::ModuleRecord> {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mSanitizedDllName)) {
+    if (!ReadParam(aReader, &aResult->mSanitizedDllName)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mVersion)) {
+    if (!ReadParam(aReader, &aResult->mVersion)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mVendorInfo)) {
+    if (!ReadParam(aReader, &aResult->mVendorInfo)) {
       return false;
     }
 
     uint32_t trustFlags;
-    if (!aMsg->ReadUInt32(aIter, &trustFlags)) {
+    if (!aReader->ReadUInt32(&trustFlags)) {
       return false;
     }
 
@@ -339,31 +365,30 @@ template <>
 struct ParamTraits<mozilla::ModulesMap> {
   typedef mozilla::ModulesMap paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteUInt32(aParam.Count());
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteUInt32(aParam.Count());
 
     for (const auto& entry : aParam) {
       MOZ_RELEASE_ASSERT(entry.GetData());
-      WriteParam(aMsg, entry.GetKey());
-      WriteParam(aMsg, *(entry.GetData()));
+      WriteParam(aWriter, entry.GetKey());
+      WriteParam(aWriter, *(entry.GetData()));
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
+    if (!ReadParam(aReader, &count)) {
       return false;
     }
 
     for (uint32_t current = 0; current < count; ++current) {
       nsAutoString key;
-      if (!ReadParam(aMsg, aIter, &key) || key.IsEmpty()) {
+      if (!ReadParam(aReader, &key) || key.IsEmpty()) {
         return false;
       }
 
       RefPtr<mozilla::ModuleRecord> rec(new mozilla::ModuleRecord());
-      if (!ReadParam(aMsg, aIter, rec.get())) {
+      if (!ReadParam(aReader, rec.get())) {
         return false;
       }
 
@@ -378,16 +403,17 @@ template <>
 struct ParamTraits<mozilla::ModulePaths> {
   typedef mozilla::ModulePaths paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     aParam.mModuleNtPaths.match(
-        [aMsg](const paramType::SetType& aSet) { WriteSet(aMsg, aSet); },
-        [aMsg](const paramType::VecType& aVec) { WriteVector(aMsg, aVec); });
+        [aWriter](const paramType::SetType& aSet) { WriteSet(aWriter, aSet); },
+        [aWriter](const paramType::VecType& aVec) {
+          WriteVector(aWriter, aVec);
+        });
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t len;
-    if (!aMsg->ReadUInt32(aIter, &len)) {
+    if (!aReader->ReadUInt32(&len)) {
       return false;
     }
 
@@ -400,7 +426,7 @@ struct ParamTraits<mozilla::ModulePaths> {
 
     for (uint32_t idx = 0; idx < len; ++idx) {
       nsString str;
-      if (!ReadParam(aMsg, aIter, &str)) {
+      if (!ReadParam(aReader, &str)) {
         return false;
       }
 
@@ -414,18 +440,19 @@ struct ParamTraits<mozilla::ModulePaths> {
 
  private:
   // NB: This function must write out the set in the same format as WriteVector
-  static void WriteSet(Message* aMsg, const paramType::SetType& aSet) {
-    aMsg->WriteUInt32(aSet.Count());
+  static void WriteSet(MessageWriter* aWriter, const paramType::SetType& aSet) {
+    aWriter->WriteUInt32(aSet.Count());
     for (const auto& key : aSet.Keys()) {
-      WriteParam(aMsg, key);
+      WriteParam(aWriter, key);
     }
   }
 
   // NB: This function must write out the vector in the same format as WriteSet
-  static void WriteVector(Message* aMsg, const paramType::VecType& aVec) {
-    aMsg->WriteUInt32(aVec.length());
+  static void WriteVector(MessageWriter* aWriter,
+                          const paramType::VecType& aVec) {
+    aWriter->WriteUInt32(aVec.length());
     for (auto const& item : aVec) {
-      WriteParam(aMsg, item);
+      WriteParam(aWriter, item);
     }
   }
 };
@@ -434,74 +461,71 @@ template <>
 struct ParamTraits<mozilla::UntrustedModulesData> {
   typedef mozilla::UntrustedModulesData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteUInt32(aParam.mProcessType);
-    aMsg->WriteULong(aParam.mPid);
-    WriteParam(aMsg, aParam.mElapsed);
-    WriteParam(aMsg, aParam.mModules);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteUInt32(aParam.mProcessType);
+    aWriter->WriteULong(aParam.mPid);
+    WriteParam(aWriter, aParam.mElapsed);
+    WriteParam(aWriter, aParam.mModules);
 
-    aMsg->WriteUInt32(aParam.mEvents.length());
-    for (auto& evt : aParam.mEvents) {
-      WriteEvent(aMsg, evt);
+    aWriter->WriteUInt32(aParam.mNumEvents);
+    for (auto event : aParam.mEvents) {
+      WriteEvent(aWriter, event->mEvent);
     }
 
-    WriteParam(aMsg, aParam.mStacks);
-    WriteParam(aMsg, aParam.mXULLoadDurationMS);
-    aMsg->WriteUInt32(aParam.mSanitizationFailures);
-    aMsg->WriteUInt32(aParam.mTrustTestFailures);
+    WriteParam(aWriter, aParam.mStacks);
+    WriteParam(aWriter, aParam.mXULLoadDurationMS);
+    aWriter->WriteUInt32(aParam.mSanitizationFailures);
+    aWriter->WriteUInt32(aParam.mTrustTestFailures);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t processType;
-    if (!aMsg->ReadUInt32(aIter, &processType)) {
+    if (!aReader->ReadUInt32(&processType)) {
       return false;
     }
 
     aResult->mProcessType = static_cast<GeckoProcessType>(processType);
 
-    if (!aMsg->ReadULong(aIter, &aResult->mPid)) {
+    if (!aReader->ReadULong(&aResult->mPid)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mElapsed)) {
+    if (!ReadParam(aReader, &aResult->mElapsed)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
+    if (!ReadParam(aReader, &aResult->mModules)) {
       return false;
     }
 
     // We read mEvents manually so that we can use ReadEvent defined below.
-    uint32_t eventsLen;
-    if (!ReadParam(aMsg, aIter, &eventsLen)) {
+    if (!ReadParam(aReader, &aResult->mNumEvents)) {
       return false;
     }
 
-    if (!aResult->mEvents.resize(eventsLen)) {
-      return false;
-    }
-
-    for (uint32_t curEventIdx = 0; curEventIdx < eventsLen; ++curEventIdx) {
-      if (!ReadEvent(aMsg, aIter, &(aResult->mEvents[curEventIdx]),
-                     aResult->mModules)) {
+    for (uint32_t curEventIdx = 0; curEventIdx < aResult->mNumEvents;
+         ++curEventIdx) {
+      auto newEvent =
+          mozilla::MakeUnique<mozilla::ProcessedModuleLoadEventContainer>();
+      if (!ReadEvent(aReader, &newEvent->mEvent, aResult->mModules)) {
         return false;
       }
+      aResult->mEvents.insertBack(newEvent.release());
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mStacks)) {
+    if (!ReadParam(aReader, &aResult->mStacks)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mXULLoadDurationMS)) {
+    if (!ReadParam(aReader, &aResult->mXULLoadDurationMS)) {
       return false;
     }
 
-    if (!aMsg->ReadUInt32(aIter, &aResult->mSanitizationFailures)) {
+    if (!aReader->ReadUInt32(&aResult->mSanitizationFailures)) {
       return false;
     }
 
-    if (!aMsg->ReadUInt32(aIter, &aResult->mTrustTestFailures)) {
+    if (!aReader->ReadUInt32(&aResult->mTrustTestFailures)) {
       return false;
     }
 
@@ -512,46 +536,46 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
   // Because ProcessedModuleLoadEvent depends on a hash table from
   // UntrustedModulesData, we do its serialization as part of this
   // specialization.
-  static void WriteEvent(Message* aMsg,
+  static void WriteEvent(MessageWriter* aWriter,
                          const mozilla::ProcessedModuleLoadEvent& aParam) {
-    aMsg->WriteUInt64(aParam.mProcessUptimeMS);
-    WriteParam(aMsg, aParam.mLoadDurationMS);
-    aMsg->WriteULong(aParam.mThreadId);
-    WriteParam(aMsg, aParam.mThreadName);
-    WriteParam(aMsg, aParam.mRequestedDllName);
-    WriteParam(aMsg, aParam.mBaseAddress);
-    WriteParam(aMsg, aParam.mIsDependent);
-    WriteParam(aMsg, aParam.mLoadStatus);
+    aWriter->WriteUInt64(aParam.mProcessUptimeMS);
+    WriteParam(aWriter, aParam.mLoadDurationMS);
+    aWriter->WriteULong(aParam.mThreadId);
+    WriteParam(aWriter, aParam.mThreadName);
+    WriteParam(aWriter, aParam.mRequestedDllName);
+    WriteParam(aWriter, aParam.mBaseAddress);
+    WriteParam(aWriter, aParam.mIsDependent);
+    WriteParam(aWriter, aParam.mLoadStatus);
 
     // We don't write the ModuleRecord directly; we write its key into the
     // UntrustedModulesData::mModules hash table.
     MOZ_ASSERT(aParam.mModule && !aParam.mModule->mResolvedNtName.IsEmpty());
-    WriteParam(aMsg, aParam.mModule->mResolvedNtName);
+    WriteParam(aWriter, aParam.mModule->mResolvedNtName);
   }
 
   // Because ProcessedModuleLoadEvent depends on a hash table from
   // UntrustedModulesData, we do its deserialization as part of this
   // specialization.
-  static bool ReadEvent(const Message* aMsg, PickleIterator* aIter,
+  static bool ReadEvent(MessageReader* aReader,
                         mozilla::ProcessedModuleLoadEvent* aResult,
                         const mozilla::ModulesMap& aModulesMap) {
-    if (!aMsg->ReadUInt64(aIter, &aResult->mProcessUptimeMS)) {
+    if (!aReader->ReadUInt64(&aResult->mProcessUptimeMS)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mLoadDurationMS)) {
+    if (!ReadParam(aReader, &aResult->mLoadDurationMS)) {
       return false;
     }
 
-    if (!aMsg->ReadULong(aIter, &aResult->mThreadId)) {
+    if (!aReader->ReadULong(&aResult->mThreadId)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mThreadName)) {
+    if (!ReadParam(aReader, &aResult->mThreadName)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mRequestedDllName)) {
+    if (!ReadParam(aReader, &aResult->mRequestedDllName)) {
       return false;
     }
 
@@ -559,20 +583,20 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     // mRequestedDllName unsanitized, so now is a good time to sanitize it.
     aResult->SanitizeRequestedDllName();
 
-    if (!ReadParam(aMsg, aIter, &aResult->mBaseAddress)) {
+    if (!ReadParam(aReader, &aResult->mBaseAddress)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mIsDependent)) {
+    if (!ReadParam(aReader, &aResult->mIsDependent)) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &aResult->mLoadStatus)) {
+    if (!ReadParam(aReader, &aResult->mLoadStatus)) {
       return false;
     }
 
     nsAutoString resolvedNtName;
-    if (!ReadParam(aMsg, aIter, &resolvedNtName)) {
+    if (!ReadParam(aReader, &resolvedNtName)) {
       return false;
     }
 
@@ -590,18 +614,17 @@ template <>
 struct ParamTraits<mozilla::ModulesMapResult> {
   typedef mozilla::ModulesMapResult paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mModules);
-    aMsg->WriteUInt32(aParam.mTrustTestFailures);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mModules);
+    aWriter->WriteUInt32(aParam.mTrustTestFailures);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mModules)) {
       return false;
     }
 
-    if (!aMsg->ReadUInt32(aIter, &aResult->mTrustTestFailures)) {
+    if (!aReader->ReadUInt32(&aResult->mTrustTestFailures)) {
       return false;
     }
 

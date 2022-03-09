@@ -18,6 +18,9 @@ function getFirefoxExecutableFilename() {
   if (AppConstants.platform === "win") {
     return AppConstants.MOZ_APP_NAME + ".exe";
   }
+  if (AppConstants.platform == "linux") {
+    return AppConstants.MOZ_APP_NAME + "-bin";
+  }
   return AppConstants.MOZ_APP_NAME;
 }
 
@@ -37,7 +40,7 @@ var BackgroundTasksTestUtils = {
 
   async do_backgroundtask(
     task,
-    options = { extraArgs: [], extraEnv: {}, stdoutLines: null }
+    options = { extraArgs: [], extraEnv: {}, onStdoutLine: null }
   ) {
     options = Object.assign({}, options);
     options.extraArgs = options.extraArgs || [];
@@ -65,8 +68,6 @@ var BackgroundTasksTestUtils = {
       args,
       extraEnv: options.extraEnv,
     });
-    // We must assemble all of the string fragments from stdout.
-    let stdoutChunks = [];
     let proc = await Subprocess.call({
       command,
       arguments: args,
@@ -76,10 +77,31 @@ var BackgroundTasksTestUtils = {
     }).then(p => {
       p.stdin.close();
       const dumpPipe = async pipe => {
+        // We must assemble all of the string fragments from stdout.
+        let leftover = "";
         let data = await pipe.readString();
         while (data) {
-          stdoutChunks.push(data);
+          data = leftover + data;
+          // When the string is empty and the separator is not empty,
+          // split() returns an array containing one empty string,
+          // rather than an empty array, i.e., we always have
+          // `lines.length > 0`.
+          let lines = data.split(/\r\n|\r|\n/);
+          for (let line of lines.slice(0, -1)) {
+            dump(`${p.pid}> ${line}\n`);
+            if (options.onStdoutLine) {
+              options.onStdoutLine(line, p);
+            }
+          }
+          leftover = lines[lines.length - 1];
           data = await pipe.readString();
+        }
+
+        if (leftover.length) {
+          dump(`${p.pid}> ${leftover}\n`);
+          if (options.onStdoutLine) {
+            options.onStdoutLine(leftover, p);
+          }
         }
       };
       dumpPipe(p.stdout);
@@ -88,14 +110,6 @@ var BackgroundTasksTestUtils = {
     });
 
     let { exitCode } = await proc.wait();
-
-    let stdout = stdoutChunks.join("");
-    for (let line of stdout.split(/\r\n|\r|\n/).slice(0, -1)) {
-      dump("> " + line + "\n");
-      if (options.stdoutLines !== null && options.stdoutLines !== undefined) {
-        options.stdoutLines.push(line);
-      }
-    }
 
     return exitCode;
   },

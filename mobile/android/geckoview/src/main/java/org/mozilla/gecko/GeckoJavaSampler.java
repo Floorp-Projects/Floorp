@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.util.Queue;
@@ -17,26 +18,46 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
-// Bug 1618560: Currently we only profile the Android UI thread. Ideally we should
-// be able to profile multiple threads.
+/**
+ * Takes samples and adds markers for Java threads for the Gecko profiler.
+ *
+ * <p>This class is thread safe because it uses synchronized on accesses to its mutable state. One
+ * exception is {@link #isProfilerActive()}: see the javadoc for details.
+ *
+ * <p>Bug 1618560: Currently we only profile the Android UI thread. Ideally we should be able to
+ * profile multiple threads.
+ */
 public class GeckoJavaSampler {
   private static final String LOGTAG = "GeckoJavaSampler";
+
+  @GuardedBy("GeckoJavaSampler.class")
   private static SamplingRunnable sSamplingRunnable;
+
+  @GuardedBy("GeckoJavaSampler.class")
   private static ScheduledExecutorService sSamplingScheduler;
-  private static ScheduledFuture<?> sSamplingFuture;
+
+  // See isProfilerActive for details on the AtomicReference.
+  @GuardedBy("GeckoJavaSampler.class")
+  private static AtomicReference<ScheduledFuture<?>> sSamplingFuture = new AtomicReference<>();
+
   private static final MarkerStorage sMarkerStorage = new MarkerStorage();
 
   /**
    * Returns true if profiler is running and unpaused at the moment which means it's allowed to add
    * a marker.
+   *
+   * <p>Thread policy: we want this method to be inexpensive (i.e. non-blocking) because we want to
+   * be able to use it in performance-sensitive code. That's why we rely on an AtomicReference. If
+   * this requirement didn't exist, the AtomicReference could be removed because the class thread
+   * policy is to call synchronized on mutable state access.
    */
   public static boolean isProfilerActive() {
-    // sSamplingRunnable is present if profiler is running and sSamplingFuture
-    // present if profiler is not paused.
-    return sSamplingRunnable != null && sSamplingFuture != null;
+    // This value will only be present if the profiler is started and not paused.
+    return sSamplingFuture.get() != null;
   }
 
   // Use the same timer primitive as the profiler
@@ -59,53 +80,67 @@ public class GeckoJavaSampler {
     return getProfilerTime();
   }
 
+  /**
+   * A data container for a profiler sample. This class is effectively immutable (i.e. technically
+   * mutable but never mutated after construction) so is thread safe *if it is safely published*
+   * (see Java Concurrency in Practice, 2nd Ed., Section 3.5.3 for safe publication idioms).
+   */
   private static class Sample {
-    public Frame[] mFrames;
-    public double mTime;
-    public long mJavaTime; // non-zero if Android system time is used
+    public final Frame[] mFrames;
+    public final double mTime;
+    public final long mJavaTime; // non-zero if Android system time is used
 
     public Sample(final StackTraceElement[] aStack) {
       mFrames = new Frame[aStack.length];
-      if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-        mTime = getProfilerTime();
-      }
-      if (mTime == 0.0d) {
-        // getProfilerTime is not available yet; either libs are not loaded,
-        // or profiling hasn't started on the Gecko side yet
-        mJavaTime = SystemClock.elapsedRealtime();
-      }
+      mTime = GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+      // if mTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+      // or profiling hasn't started on the Gecko side yet
+      mJavaTime = mTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
+
       for (int i = 0; i < aStack.length; i++) {
-        mFrames[aStack.length - 1 - i] = new Frame();
-        mFrames[aStack.length - 1 - i].methodName = aStack[i].getMethodName();
-        mFrames[aStack.length - 1 - i].className = aStack[i].getClassName();
+        mFrames[aStack.length - 1 - i] =
+            new Frame(aStack[i].getMethodName(), aStack[i].getClassName());
       }
     }
   }
 
+  /**
+   * A container for the metadata around a call in a stack. This class is thread safe by being
+   * immutable.
+   */
   private static class Frame {
-    public String methodName;
-    public String className;
+    public final String methodName;
+    public final String className;
+
+    private Frame(final String methodName, final String className) {
+      this.methodName = methodName;
+      this.className = className;
+    }
   }
 
+  /**
+   * A data container for metadata around a marker. This class is thread safe by being immutable.
+   */
   private static class Marker extends JNIObject {
     /** Name of the marker */
-    private String mMarkerName;
+    private final String mMarkerName;
     /** Either start time for the duration markers or time for a point-in-time markers. */
-    private double mTime;
+    private final double mTime;
     /**
      * A fallback field of {@link #mTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
-    private long mJavaTime;
+    private final long mJavaTime;
     /** End time for the duration markers. It's zero for point-in-time markers. */
-    private double mEndTime;
+    private final double mEndTime;
     /**
      * A fallback field of {@link #mEndTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
-    private long mEndJavaTime;
+    private final long mEndJavaTime;
     /** A nullable additional information field for the marker. */
-    private @Nullable String mText;
+    private @Nullable final String mText;
 
     /**
      * Constructor for the Marker class. It initializes different kinds of markers depending on the
@@ -136,37 +171,40 @@ public class GeckoJavaSampler {
         @Nullable final String aText) {
       mMarkerName = aMarkerName;
       mText = aText;
+
       if (aStartTime != null) {
         // Start time is provided. This is an interval marker.
         mTime = aStartTime;
+        mJavaTime = 0;
         if (aEndTime != null) {
           // End time is also provided.
           mEndTime = aEndTime;
+          mEndJavaTime = 0;
         } else {
           // End time is not provided. Get the profiler time now and use it.
-          if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-            mEndTime = getProfilerTime();
-          }
-          if (mEndTime == 0.0d) {
-            // getProfilerTime is not available yet; either libs are not loaded,
-            // or profiling hasn't started on the Gecko side yet
-            mEndJavaTime = SystemClock.elapsedRealtime();
-          }
+          mEndTime =
+              GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+          // if mEndTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+          // or profiling hasn't started on the Gecko side yet
+          mEndJavaTime = mEndTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
         }
+
       } else {
         // Start time is not provided. This is point-in-time marker.
+        mEndTime = 0;
+        mEndJavaTime = 0;
+
         if (aEndTime != null) {
           // End time is also provided. Use that to point the time.
           mTime = aEndTime;
+          mJavaTime = 0;
         } else {
-          if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-            mTime = getProfilerTime();
-          }
-          if (mTime == 0.0d) {
-            // getProfilerTime is not available yet; either libs are not loaded,
-            // or profiling hasn't started on the Gecko side yet
-            mJavaTime = SystemClock.elapsedRealtime();
-          }
+          mTime = GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
+
+          // if mTime == 0, getProfilerTime is not available yet; either libs are not loaded,
+          // or profiling hasn't started on the Gecko side yet
+          mJavaTime = mTime == 0.0d ? SystemClock.elapsedRealtime() : 0;
         }
       }
     }
@@ -216,15 +254,24 @@ public class GeckoJavaSampler {
     sMarkerStorage.addMarker(aMarkerName, aStartTime, aEndTime, aText);
   }
 
+  /**
+   * A routine to store profiler samples. This class is thread safe because it synchronizes access
+   * to its mutable state.
+   */
   private static class SamplingRunnable implements Runnable {
     // Sampling interval that is used by start and unpause
     public final int mInterval;
     private final int mSampleCount;
 
+    @GuardedBy("GeckoJavaSampler.class")
     private boolean mBufferOverflowed = false;
 
-    private Thread mMainThread;
-    private Sample[] mSamples;
+    private final Thread mMainThread;
+
+    @GuardedBy("GeckoJavaSampler.class")
+    private final Sample[] mSamples;
+
+    @GuardedBy("GeckoJavaSampler.class")
     private int mSamplePos;
 
     public SamplingRunnable(final int aInterval, final int aSampleCount) {
@@ -260,25 +307,36 @@ public class GeckoJavaSampler {
     }
 
     private Sample getSample(final int aSampleId) {
-      if (aSampleId >= mSampleCount) {
-        // Return early because there is no more sample left.
-        return null;
-      }
+      synchronized (GeckoJavaSampler.class) {
+        if (aSampleId >= mSampleCount) {
+          // Return early because there is no more sample left.
+          return null;
+        }
 
-      int samplePos = aSampleId;
-      if (mBufferOverflowed) {
-        // This is a circular buffer and the buffer is overflowed. Start
-        // of the buffer is mSamplePos now. Calculate the real index.
-        samplePos = (samplePos + mSamplePos) % mSampleCount;
-      }
+        int samplePos = aSampleId;
+        if (mBufferOverflowed) {
+          // This is a circular buffer and the buffer is overflowed. Start
+          // of the buffer is mSamplePos now. Calculate the real index.
+          samplePos = (samplePos + mSamplePos) % mSampleCount;
+        }
 
-      // Since the array elements are initialized to null, it will return
-      // null whenever we access to an element that's not been written yet.
-      // We want it to return null in that case, so it's okay.
-      return mSamples[samplePos];
+        // Since the array elements are initialized to null, it will return
+        // null whenever we access to an element that's not been written yet.
+        // We want it to return null in that case, so it's okay.
+        return mSamples[samplePos];
+      }
     }
   }
 
+  /**
+   * Returns the sample with the given sample ID.
+   *
+   * <p>Thread safety code smell: this method call is synchronized but this class returns a
+   * reference to an effectively immutable object so that the reference is accessible after
+   * synchronization ends. It's unclear if this is thread safe. However, this is safe with the
+   * current callers (because they are all synchronized and don't leak the Sample) so we don't
+   * investigate it further.
+   */
   private static synchronized Sample getSample(final int aSampleId) {
     return sSamplingRunnable.getSample(aSampleId);
   }
@@ -313,7 +371,21 @@ public class GeckoJavaSampler {
     return null;
   }
 
+  /**
+   * A start/stop-aware container for storing profiler markers.
+   *
+   * <p>This class is thread safe: see {@link #mMarkers} for the threading policy. Start/stop are
+   * guaranteed to execute in the order they are called but other methods do not have such ordering
+   * guarantees.
+   */
   private static class MarkerStorage {
+    /**
+     * The underlying storage for the markers. This field maintains thread safety without using
+     * synchronized everywhere by:
+     * <li>- using volatile to allow non-blocking reads
+     * <li>- leveraging a thread safe collection when accessing the underlying data
+     * <li>- looping until success for compound read-write operations
+     */
     private volatile Queue<Marker> mMarkers;
 
     MarkerStorage() {}
@@ -380,7 +452,8 @@ public class GeckoJavaSampler {
         return;
       }
 
-      if (sSamplingFuture != null && !sSamplingFuture.isDone()) {
+      final ScheduledFuture<?> future = sSamplingFuture.get();
+      if (future != null && !future.isDone()) {
         return;
       }
 
@@ -390,29 +463,29 @@ public class GeckoJavaSampler {
       sSamplingRunnable = new SamplingRunnable(aInterval, limitedEntryCount);
       sMarkerStorage.start(limitedEntryCount);
       sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
-      sSamplingFuture =
+      sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
-              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
+              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS));
     }
   }
 
   @WrapForJNI
   public static void pauseSampling() {
     synchronized (GeckoJavaSampler.class) {
-      sSamplingFuture.cancel(false /* mayInterruptIfRunning */);
-      sSamplingFuture = null;
+      final ScheduledFuture<?> future = sSamplingFuture.getAndSet(null);
+      future.cancel(false /* mayInterruptIfRunning */);
     }
   }
 
   @WrapForJNI
   public static void unpauseSampling() {
     synchronized (GeckoJavaSampler.class) {
-      if (sSamplingFuture != null) {
+      if (sSamplingFuture.get() != null) {
         return;
       }
-      sSamplingFuture =
+      sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
-              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
+              sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS));
     }
   }
 
@@ -433,7 +506,7 @@ public class GeckoJavaSampler {
       }
       sSamplingScheduler = null;
       sSamplingRunnable = null;
-      sSamplingFuture = null;
+      sSamplingFuture.set(null);
       sMarkerStorage.stop();
     }
   }

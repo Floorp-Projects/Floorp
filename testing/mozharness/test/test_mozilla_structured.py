@@ -46,9 +46,9 @@ class TestStructuredOutputParser(unittest.TestCase):
             return_code=TBPL_SUCCESS, success_codes=[TBPL_SUCCESS]
         )
         tbpl_status, worst_log_level, joined_summary = result
-        self.assertEquals(tbpl_status, TBPL_SUCCESS)
-        self.assertEquals(worst_log_level, INFO)
-        self.assertEquals(joined_summary, success_summary)
+        self.assertEqual(tbpl_status, TBPL_SUCCESS)
+        self.assertEqual(worst_log_level, INFO)
+        self.assertEqual(joined_summary, success_summary)
 
     def test_evaluate_parser_failure(self):
         self.parser.handler.unexpected_statuses = {"FAIL": 2}
@@ -63,6 +63,6 @@ class TestStructuredOutputParser(unittest.TestCase):
             return_code=TBPL_SUCCESS, success_codes=[TBPL_SUCCESS]
         )
         tbpl_status, worst_log_level, joined_summary = result
-        self.assertEquals(tbpl_status, TBPL_WARNING)
-        self.assertEquals(worst_log_level, WARNING)
-        self.assertEquals(joined_summary, failure_summary)
+        self.assertEqual(tbpl_status, TBPL_WARNING)
+        self.assertEqual(worst_log_level, WARNING)
+        self.assertEqual(joined_summary, failure_summary)

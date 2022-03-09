@@ -757,11 +757,11 @@ class TestTypedNamedTuple(unittest.TestCase):
         FooBar = TypedNamedTuple("FooBar", [("foo", six.text_type), ("bar", int)])
 
         t = FooBar(foo="foo", bar=2)
-        self.assertEquals(type(t), FooBar)
-        self.assertEquals(t.foo, "foo")
-        self.assertEquals(t.bar, 2)
-        self.assertEquals(t[0], "foo")
-        self.assertEquals(t[1], 2)
+        self.assertEqual(type(t), FooBar)
+        self.assertEqual(t.foo, "foo")
+        self.assertEqual(t.bar, 2)
+        self.assertEqual(t[0], "foo")
+        self.assertEqual(t[1], 2)
 
         FooBar("foo", 2)
 
@@ -774,7 +774,7 @@ class TestTypedNamedTuple(unittest.TestCase):
         # arguments.
         t1 = ("foo", 3)
         t2 = FooBar(t1)
-        self.assertEquals(type(t2), FooBar)
+        self.assertEqual(type(t2), FooBar)
         self.assertEqual(FooBar(t1), FooBar("foo", 3))
 
 
@@ -797,15 +797,6 @@ class TestGroupUnifiedFiles(unittest.TestCase):
         expected_amounts = [5, 5, 5, 5, 5, 1]
         for i, amount in enumerate(expected_amounts):
             check_mapping(i, amount)
-
-    def test_unsorted_files(self):
-        unsorted_files = ["a%d.cpp" % i for i in range(11)]
-        sorted_files = sorted(unsorted_files)
-        mapping = list(group_unified_files(unsorted_files, "Unified", "cpp", 5))
-
-        self.assertEqual(mapping[0][1], sorted_files[0:5])
-        self.assertEqual(mapping[1][1], sorted_files[5:10])
-        self.assertEqual(mapping[2][1], sorted_files[10:])
 
 
 class TestMisc(unittest.TestCase):
@@ -841,17 +832,17 @@ class TestEnumString(unittest.TestCase):
         CompilerType = EnumString.subclass("gcc", "clang", "clang-cl")
 
         type = CompilerType("gcc")
-        self.assertEquals(type, "gcc")
-        self.assertNotEquals(type, "clang")
-        self.assertNotEquals(type, "clang-cl")
+        self.assertEqual(type, "gcc")
+        self.assertNotEqual(type, "clang")
+        self.assertNotEqual(type, "clang-cl")
         self.assertIn(type, ("gcc", "clang-cl"))
         self.assertNotIn(type, ("clang", "clang-cl"))
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertEquals(type, "foo")
+            self.assertEqual(type, "foo")
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertNotEquals(type, "foo")
+            self.assertNotEqual(type, "foo")
 
         with self.assertRaises(EnumStringComparisonError):
             self.assertIn(type, ("foo", "gcc"))

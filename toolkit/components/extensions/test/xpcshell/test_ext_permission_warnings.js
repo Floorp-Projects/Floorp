@@ -668,26 +668,28 @@ add_task(async function update_unprivileged_with_mozillaAddons() {
 });
 
 // Tests that invalid permission warning for privileged permissions requested
-// without the privilged signature are emitted by the Extension class instance
-// but not for the ExtensionData instances (on which the signature is not
-// available and the warning would be emitted even for the ones signed correctly).
+// are not emitted for privileged extensions, only for unprivileged extensions.
 add_task(
   async function test_invalid_permission_warning_on_privileged_permission() {
     await AddonTestUtils.promiseStartupManager();
+
+    const MANIFEST_WARNINGS = [
+      "Reading manifest: Invalid extension permission: mozillaAddons",
+      "Reading manifest: Invalid extension permission: resource://x/",
+      "Reading manifest: Invalid extension permission: about:reader*",
+    ];
 
     async function testInvalidPermissionWarning({ isPrivileged }) {
       let id = isPrivileged
         ? "privileged-addon@mochi.test"
         : "nonprivileged-addon@mochi.test";
 
-      let expectedWarnings = isPrivileged
-        ? []
-        : ["Reading manifest: Invalid extension permission: mozillaAddons"];
+      let expectedWarnings = isPrivileged ? [] : MANIFEST_WARNINGS;
 
       const ext = ExtensionTestUtils.loadExtension({
         useAddonManager: "permanent",
         manifest: {
-          permissions: ["mozillaAddons"],
+          permissions: ["mozillaAddons", "resource://x/", "about:reader*"],
           applications: { gecko: { id } },
         },
         background() {},
@@ -711,28 +713,67 @@ add_task(
     // ExtensionData instance created below).
     let generatedExt = ExtensionTestCommon.generate({
       manifest: {
-        permissions: ["mozillaAddons"],
+        permissions: ["mozillaAddons", "resource://x/", "about:reader*"],
         applications: { gecko: { id: "extension-data@mochi.test" } },
       },
     });
 
     // Verify that XPIInstall.jsm will not collect the warning for the
     // privileged permission as expected.
-    const extData = new ExtensionData(generatedExt.rootURI);
-    await extData.loadManifest();
+    async function getWarningsFromExtensionData({ isPrivileged }) {
+      let extData;
+      if (typeof isPrivileged == "function") {
+        // isPrivileged expected to be computed asynchronously.
+        extData = await ExtensionData.constructAsync({
+          rootURI: generatedExt.rootURI,
+          checkPrivileged: isPrivileged,
+        });
+      } else {
+        extData = new ExtensionData(generatedExt.rootURI, isPrivileged);
+      }
+      await extData.loadManifest();
+
+      // This assertion is just meant to prevent the test to pass if there were
+      // no warnings because some errors prevented the warnings to be
+      // collected).
+      Assert.deepEqual(
+        extData.errors,
+        [],
+        "No errors collected by the ExtensionData instance"
+      );
+      return extData.warnings;
+    }
+
     Assert.deepEqual(
-      extData.warnings,
-      [],
-      "No warnings for mozillaAddons permission collected for the ExtensionData instance"
+      await getWarningsFromExtensionData({ isPrivileged: undefined }),
+      MANIFEST_WARNINGS,
+      "Got warnings about privileged permissions by default"
     );
 
-    // This assertion is just meant to prevent the test to pass if there were no warnings
-    // because some errors prevented the warnings to be collected).
     Assert.deepEqual(
-      extData.errors,
-      [],
-      "No errors collected by the ExtensionData instance"
+      await getWarningsFromExtensionData({ isPrivileged: false }),
+      MANIFEST_WARNINGS,
+      "Got warnings about privileged permissions for non-privileged extensions"
     );
+
+    Assert.deepEqual(
+      await getWarningsFromExtensionData({ isPrivileged: true }),
+      [],
+      "No warnings about privileged permissions on privileged extensions"
+    );
+
+    Assert.deepEqual(
+      await getWarningsFromExtensionData({ isPrivileged: async () => false }),
+      MANIFEST_WARNINGS,
+      "Got warnings about privileged permissions for non-privileged extensions (async)"
+    );
+
+    Assert.deepEqual(
+      await getWarningsFromExtensionData({ isPrivileged: async () => true }),
+      [],
+      "No warnings about privileged permissions on privileged extensions (async)"
+    );
+
     // Cleanup the generated xpi file.
     await generatedExt.cleanupGeneratedFile();
 

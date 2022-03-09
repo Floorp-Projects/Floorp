@@ -82,6 +82,30 @@ int nr_ice_media_stream_create(nr_ice_ctx *ctx,const char *label,const char *ufr
     stream->obsolete = 0;
     stream->r2l_user = 0;
     stream->l2r_user = 0;
+    stream->flags = ctx->flags;
+    if(ctx->stun_server_ct_cfg) {
+      if(!(stream->stun_servers=RCALLOC(sizeof(nr_ice_stun_server)*(ctx->stun_server_ct_cfg))))
+        ABORT(R_NO_MEMORY);
+
+      memcpy(stream->stun_servers,ctx->stun_servers_cfg,sizeof(nr_ice_stun_server)*(ctx->stun_server_ct_cfg));
+      stream->stun_server_ct = ctx->stun_server_ct_cfg;
+    }
+
+    if(ctx->turn_server_ct_cfg) {
+      if(!(stream->turn_servers=RCALLOC(sizeof(nr_ice_turn_server)*(ctx->turn_server_ct_cfg))))
+        ABORT(R_NO_MEMORY);
+
+      for(int i = 0; i < ctx->turn_server_ct_cfg; ++i) {
+        nr_ice_turn_server *dst = &stream->turn_servers[i];
+        nr_ice_turn_server *src = &ctx->turn_servers_cfg[i];
+        memcpy(&dst->turn_server, &src->turn_server, sizeof(nr_ice_stun_server));
+        dst->username = r_strdup(src->username);
+        r_data_create(&dst->password, src->password->data, src->password->len);
+      }
+      stream->turn_server_ct = ctx->turn_server_ct_cfg;
+    }
+
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): flags %d",stream->label,stream->flags);
     *streamp=stream;
 
     _status=0;
@@ -123,6 +147,13 @@ int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp)
     RFREE(stream->l2r_user);
     r_data_zfree(&stream->r2l_pass);
     r_data_zfree(&stream->l2r_pass);
+
+    RFREE(stream->stun_servers);
+    for (int i = 0; i < stream->turn_server_ct; i++) {
+        RFREE(stream->turn_servers[i].username);
+        r_data_destroy(&stream->turn_servers[i].password);
+    }
+    RFREE(stream->turn_servers);
 
     if(stream->timer)
       NR_async_timer_cancel(stream->timer);
@@ -1032,8 +1063,6 @@ void nr_ice_media_stream_role_change(nr_ice_media_stream *stream)
     /* Changing role causes candidate pair priority to change, which requires
      * re-sorting the check list. */
     nr_ice_cand_pair_head old_checklist;
-
-    assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
 
     /* Move check_list to old_checklist (not POD, have to do the hard way) */
     TAILQ_INIT(&old_checklist);

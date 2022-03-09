@@ -53,14 +53,16 @@
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer.h"
+#include "lib/jxl/render_pipeline/stage_blending.h"
 #include "lib/jxl/render_pipeline/stage_chroma_upsampling.h"
 #include "lib/jxl/render_pipeline/stage_epf.h"
 #include "lib/jxl/render_pipeline/stage_gaborish.h"
 #include "lib/jxl/render_pipeline/stage_noise.h"
 #include "lib/jxl/render_pipeline/stage_patches.h"
 #include "lib/jxl/render_pipeline/stage_splines.h"
+#include "lib/jxl/render_pipeline/stage_spot.h"
 #include "lib/jxl/render_pipeline/stage_upsampling.h"
-#include "lib/jxl/render_pipeline/stage_write_to_ib.h"
+#include "lib/jxl/render_pipeline/stage_write.h"
 #include "lib/jxl/render_pipeline/stage_xyb.h"
 #include "lib/jxl/render_pipeline/stage_ycbcr.h"
 #include "lib/jxl/sanitizers.h"
@@ -543,6 +545,8 @@ Status FrameDecoder::ProcessACGlobal(BitReader* br) {
   if (frame_header_.encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(dec_state_->shared_storage.matrices.Decode(
         br, &modular_frame_decoder_));
+    JXL_RETURN_IF_ERROR(dec_state_->shared_storage.matrices.EnsureComputed(
+        dec_state_->used_acs));
 
     size_t num_histo_bits =
         CeilLog2Nonzero(dec_state_->shared->frame_dim.num_groups);
@@ -730,13 +734,13 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
   return true;
 }
 
-void FrameDecoder::PreparePipeline() {
+Status FrameDecoder::PreparePipeline() {
   size_t num_c = 3 + frame_header_.nonserialized_metadata->m.num_extra_channels;
   if ((frame_header_.flags & FrameHeader::kNoise) != 0) {
     num_c += 3;
   }
 
-  RenderPipeline::Builder builder(num_c, frame_header_.passes.num_passes);
+  RenderPipeline::Builder builder(num_c);
 
   if (use_slow_rendering_pipeline_) {
     builder.UseSimpleImplementation();
@@ -833,36 +837,76 @@ void FrameDecoder::PreparePipeline() {
         GetWriteToImageBundleStage(&dec_state_->frame_storage_for_referencing));
   }
 
-  if (frame_header_.color_transform == ColorTransform::kYCbCr) {
-    builder.AddStage(GetYCbCrStage());
-  } else if (frame_header_.color_transform == ColorTransform::kXYB) {
-    builder.AddStage(GetXYBStage(dec_state_->output_encoding_info));
-  }  // Nothing to do for kNone.
-
-  if (ImageBlender::NeedsBlending(dec_state_)) {
-    JXL_ABORT("Not implemented: blending");
+  bool has_alpha = false;
+  size_t alpha_c = 0;
+  for (size_t i = 0; i < decoded_->metadata()->extra_channel_info.size(); i++) {
+    if (decoded_->metadata()->extra_channel_info[i].type ==
+        ExtraChannel::kAlpha) {
+      has_alpha = true;
+      alpha_c = 3 + i;
+      break;
+    }
   }
 
-  if (frame_header_.CanBeReferenced() &&
-      !frame_header_.save_before_color_transform) {
-    builder.AddStage(
-        GetWriteToImageBundleStage(&dec_state_->frame_storage_for_referencing));
-  }
+  // TODO(veluca): double-check when blending/no coalescing is enabled.
+  size_t width = coalescing_ ? frame_header_.nonserialized_metadata->xsize()
+                             : frame_dim_.xsize_upsampled;
+  size_t height = coalescing_ ? frame_header_.nonserialized_metadata->ysize()
+                              : frame_dim_.ysize_upsampled;
 
-  if (render_spotcolors_ &&
-      frame_header_.nonserialized_metadata->m.Find(ExtraChannel::kSpotColor)) {
-    JXL_ABORT("Not implemented: rendering spot colors");
-  }
-  if (dec_state_->pixel_callback) {
-    JXL_ABORT("Not implemented: pixel callback");
-  } else if (dec_state_->fast_xyb_srgb8_conversion) {
-    JXL_ABORT("Not implemented: fast xyb->srgb conversion");
-  } else if (dec_state_->rgb_output) {
-    JXL_ABORT("Not implemented: u8 output");
+  if (dec_state_->fast_xyb_srgb8_conversion) {
+    JXL_ASSERT(!ImageBlender::NeedsBlending(dec_state_));
+    JXL_ASSERT(!frame_header_.CanBeReferenced() ||
+               frame_header_.save_before_color_transform);
+    JXL_ASSERT(!render_spotcolors_);
+    builder.AddStage(GetFastXYBTosRGB8Stage(
+        dec_state_->rgb_output, dec_state_->rgb_stride, width, height,
+        dec_state_->rgb_output_is_rgba, has_alpha, alpha_c));
   } else {
-    builder.AddStage(GetWriteToImageBundleStage(decoded_));
+    if (frame_header_.color_transform == ColorTransform::kYCbCr) {
+      builder.AddStage(GetYCbCrStage());
+    } else if (frame_header_.color_transform == ColorTransform::kXYB) {
+      builder.AddStage(GetXYBStage(dec_state_->output_encoding_info));
+    }  // Nothing to do for kNone.
+
+    if (ImageBlender::NeedsBlending(dec_state_)) {
+      builder.AddStage(GetBlendingStage(
+          dec_state_, dec_state_->output_encoding_info.color_encoding));
+    }
+
+    if (frame_header_.CanBeReferenced() &&
+        !frame_header_.save_before_color_transform) {
+      builder.AddStage(GetWriteToImageBundleStage(
+          &dec_state_->frame_storage_for_referencing));
+    }
+
+    if (render_spotcolors_ && frame_header_.nonserialized_metadata->m.Find(
+                                  ExtraChannel::kSpotColor)) {
+      for (size_t i = 0; i < decoded_->metadata()->extra_channel_info.size();
+           i++) {
+        // Don't use Find() because there may be multiple spot color channels.
+        const ExtraChannelInfo& eci =
+            decoded_->metadata()->extra_channel_info[i];
+        if (eci.type == ExtraChannel::kSpotColor) {
+          builder.AddStage(GetSpotColorStage(3 + i, eci.spot_color));
+        }
+      }
+    }
+
+    if (dec_state_->pixel_callback) {
+      builder.AddStage(GetWriteToPixelCallbackStage(
+          dec_state_->pixel_callback, width, height,
+          dec_state_->rgb_output_is_rgba, has_alpha, alpha_c));
+    } else if (dec_state_->rgb_output) {
+      builder.AddStage(GetWriteToU8Stage(
+          dec_state_->rgb_output, dec_state_->rgb_stride, width, height,
+          dec_state_->rgb_output_is_rgba, has_alpha, alpha_c));
+    } else {
+      builder.AddStage(GetWriteToImageBundleStage(decoded_));
+    }
   }
   dec_state_->render_pipeline = std::move(builder).Finalize(frame_dim_);
+  return dec_state_->render_pipeline->IsInitialized();
 }
 
 void FrameDecoder::MarkSections(const SectionInfo* sections, size_t num,
@@ -971,7 +1015,7 @@ Status FrameDecoder::ProcessSections(const SectionInfo* sections, size_t num,
   if (*std::min_element(decoded_dc_groups_.begin(), decoded_dc_groups_.end()) &&
       !finalized_dc_) {
     if (use_slow_rendering_pipeline_) {
-      PreparePipeline();
+      JXL_RETURN_IF_ERROR(PreparePipeline());
     }
     FinalizeDC();
     JXL_RETURN_IF_ERROR(AllocateOutput());
@@ -1297,13 +1341,6 @@ Status FrameDecoder::FinalizeFrame() {
       const ExtraChannelInfo& eci = decoded_->metadata()->extra_channel_info[i];
       if (eci.type == ExtraChannel::kOptional) {
         continue;
-      }
-      if (eci.type == ExtraChannel::kUnknown ||
-          (int(ExtraChannel::kReserved0) <= int(eci.type) &&
-           int(eci.type) <= int(ExtraChannel::kReserved7))) {
-        return JXL_FAILURE(
-            "Unknown extra channel (bits %u, shift %u, name '%s')\n",
-            eci.bit_depth.bits_per_sample, eci.dim_shift, eci.name.c_str());
       }
       if (eci.type == ExtraChannel::kSpotColor) {
         float scale = eci.spot_color[3];

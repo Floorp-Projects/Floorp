@@ -185,8 +185,9 @@ interface mozIStorageAsyncConnection : nsISupports {
   /**
    * Causes any pending database operation to abort and return at the first
    * opportunity.
-   * This can only be used on read-only connections that don't implement
-   * the mozIStorageConnection interface.
+   * @note this cannot be used on mozIStorageConnection unless the connection is
+   *       explicitly marked as `interruptible`. For more details, please
+   *       refer to CONNECTION_INTERRUPTIBLE in mozIStorageService.
    * @note operations that are nearly complete may still be able to complete.
    * @throws if used on an unsupported connection type, or a closed connection.
    */

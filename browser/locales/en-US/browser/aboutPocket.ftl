@@ -38,8 +38,9 @@ pocket-panel-signup-tagline = Save articles and videos from { -brand-product-nam
 pocket-panel-signup-tagline-story-one = Click the { -pocket-brand-name } Button to save any article, video or page from { -brand-product-name }.
 pocket-panel-signup-tagline-story-two = View in { -pocket-brand-name } on any device, any time.
 
-pocket-panel-signup-cta-a = Your save button for the internet.
+pocket-panel-signup-cta-a-fix = Your save button for the internet
 pocket-panel-signup-cta-b = Click the { -pocket-brand-name } button to save articles, videos, and links. View your list on any device, any time.
+pocket-panel-signup-cta-b-short = Click the { -pocket-brand-name } button to save articles, videos, and links.
 pocket-panel-signup-cta-c = View your list on any device, any time.
 
 ## about:pocket-home panel
@@ -52,6 +53,7 @@ pocket-panel-home-discover-more = Discover More
 pocket-panel-home-explore-more = Explore
 
 pocket-panel-home-most-recent-saves = Here are your most recent saves:
+pocket-panel-home-most-recent-saves-loading = Recent saves loading…
 pocket-panel-home-new-user-cta = Click the { -pocket-brand-name } button to save articles, videos, and links.
 pocket-panel-home-new-user-message = See your recent saves here.
 

@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker,Worklet),
+[Exposed=*,
 //Transferable See Bug 1734240
 ]
 interface ReadableStream {
@@ -13,11 +13,11 @@ interface ReadableStream {
   [Throws]
   ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
 
-  // Bug 1734243
-  // ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
+  [Pref="dom.streams.transform_streams.enabled", Throws]
+  ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
 
-  // Bug 1734241
-  // Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
+  [Pref="dom.streams.pipeTo.enabled", Throws]
+  Promise<void> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
 
   [Throws]
   sequence<ReadableStream> tee();
@@ -30,4 +30,16 @@ enum ReadableStreamReaderMode { "byob" };
 
 dictionary ReadableStreamGetReaderOptions {
   ReadableStreamReaderMode mode;
+};
+
+dictionary ReadableWritablePair {
+  required ReadableStream readable;
+  required WritableStream writable;
+};
+
+dictionary StreamPipeOptions {
+  boolean preventClose = false;
+  boolean preventAbort = false;
+  boolean preventCancel = false;
+  AbortSignal signal;
 };

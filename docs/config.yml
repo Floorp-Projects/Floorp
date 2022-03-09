@@ -47,6 +47,7 @@ categories:
         - testing/ci-configs
         - testing/marionette
         - testing/geckodriver
+        - testing/test-verification
         - testing/xpcshell
         - web-platform
         - gtest

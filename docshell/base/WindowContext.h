@@ -353,20 +353,18 @@ extern template class syncedcontext::Transaction<WindowContext>;
 namespace ipc {
 template <>
 struct IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const dom::MaybeDiscarded<dom::WindowContext>& aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    dom::MaybeDiscarded<dom::WindowContext>* aResult);
 };
 
 template <>
 struct IPDLParamTraits<dom::WindowContext::IPCInitializer> {
-  static void Write(IPC::Message* aMessage, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const dom::WindowContext::IPCInitializer& aInitializer);
 
-  static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    dom::WindowContext::IPCInitializer* aInitializer);
 };
 }  // namespace ipc

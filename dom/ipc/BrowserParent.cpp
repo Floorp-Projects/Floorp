@@ -47,6 +47,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Preferences.h"
@@ -939,8 +940,10 @@ void BrowserParent::InitRendering() {
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(widget);
 
-  Unused << SendDynamicToolbarMaxHeightChanged(
-      widget->GetDynamicToolbarMaxHeight());
+  if (GetBrowsingContext()->IsTopContent()) {
+    Unused << SendDynamicToolbarMaxHeightChanged(
+        widget->GetDynamicToolbarMaxHeight());
+  }
 #endif
 }
 
@@ -1741,12 +1744,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   MOZ_ASSERT(aCommands);
   MOZ_ASSERT(aCommands->IsEmpty());
 
-  nsIWidget::NativeKeyBindingsType keyBindingsType =
-      static_cast<nsIWidget::NativeKeyBindingsType>(aType);
+  NativeKeyBindingsType keyBindingsType =
+      static_cast<NativeKeyBindingsType>(aType);
   switch (keyBindingsType) {
-    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
-    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
-    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+    case NativeKeyBindingsType::SingleLineEditor:
+    case NativeKeyBindingsType::MultiLineEditor:
+    case NativeKeyBindingsType::RichTextEditor:
       break;
     default:
       return IPC_FAIL(this, "Invalid aType value");
@@ -1767,7 +1770,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   Maybe<WritingMode> writingMode;
   if (RefPtr<widget::TextEventDispatcher> dispatcher =
           widget->GetTextEventDispatcher()) {
-    writingMode = dispatcher->MaybeWritingModeAtSelection();
+    writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
   }
   if (localEvent.InitEditCommandsFor(keyBindingsType, writingMode)) {
     *aCommands = localEvent.EditCommandsConstRef(keyBindingsType).Clone();
@@ -2008,16 +2011,24 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   //       you also need to update
   //       TextEventDispatcher::DispatchKeyboardEventInternal().
   if (aEvent.mMessage == eKeyPress) {
-    // XXX Should we do this only when input context indicates an editor having
-    //     focus and the key event won't cause inputting text?
-    Maybe<WritingMode> writingMode;
-    if (aEvent.mWidget) {
-      if (RefPtr<widget::TextEventDispatcher> dispatcher =
-              aEvent.mWidget->GetTextEventDispatcher()) {
-        writingMode = dispatcher->MaybeWritingModeAtSelection();
+    // If current input context is editable, the edit commands are initialized
+    // by TextEventDispatcher::DispatchKeyboardEventInternal().  Otherwise,
+    // we need to do it here (they are not necessary for the parent process,
+    // therefore, we need to do it here for saving the runtime cost).
+    if (!aEvent.AreAllEditCommandsInitialized()) {
+      // XXX Is it good thing that the keypress event will be handled in an
+      //     editor even though the user pressed the key combination before the
+      //     focus change has not been completed in the parent process yet or
+      //     focus change will happen?  If no, we can stop doing this.
+      Maybe<WritingMode> writingMode;
+      if (aEvent.mWidget) {
+        if (RefPtr<widget::TextEventDispatcher> dispatcher =
+                aEvent.mWidget->GetTextEventDispatcher()) {
+          writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+        }
       }
+      aEvent.InitAllEditCommands(writingMode);
     }
-    aEvent.InitAllEditCommands(writingMode);
   } else {
     aEvent.PreventNativeKeyBindings();
   }

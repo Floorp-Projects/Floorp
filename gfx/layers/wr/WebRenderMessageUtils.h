@@ -21,16 +21,15 @@ template <>
 struct ParamTraits<mozilla::wr::ByteBuffer> {
   typedef mozilla::wr::ByteBuffer paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mLength);
-    aMsg->WriteBytes(aParam.mData, aParam.mLength);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mLength);
+    aWriter->WriteBytes(aParam.mData, aParam.mLength);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     size_t length;
-    return ReadParam(aMsg, aIter, &length) && aResult->Allocate(length) &&
-           aMsg->ReadBytesInto(aIter, aResult->mData, length);
+    return ReadParam(aReader, &length) && aResult->Allocate(length) &&
+           aReader->ReadBytesInto(aResult->mData, length);
   }
 };
 
@@ -38,21 +37,20 @@ template <>
 struct ParamTraits<mozilla::wr::ImageDescriptor> {
   typedef mozilla::wr::ImageDescriptor paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.format);
-    WriteParam(aMsg, aParam.width);
-    WriteParam(aMsg, aParam.height);
-    WriteParam(aMsg, aParam.stride);
-    WriteParam(aMsg, aParam.opacity);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.format);
+    WriteParam(aWriter, aParam.width);
+    WriteParam(aWriter, aParam.height);
+    WriteParam(aWriter, aParam.stride);
+    WriteParam(aWriter, aParam.opacity);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->format) &&
-           ReadParam(aMsg, aIter, &aResult->width) &&
-           ReadParam(aMsg, aIter, &aResult->height) &&
-           ReadParam(aMsg, aIter, &aResult->stride) &&
-           ReadParam(aMsg, aIter, &aResult->opacity);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->format) &&
+           ReadParam(aReader, &aResult->width) &&
+           ReadParam(aReader, &aResult->height) &&
+           ReadParam(aReader, &aResult->stride) &&
+           ReadParam(aReader, &aResult->opacity);
   }
 };
 

@@ -56,7 +56,7 @@ class DebuggerEnvironment : public NativeObject {
 
   [[nodiscard]] static bool getNames(JSContext* cx,
                                      HandleDebuggerEnvironment environment,
-                                     MutableHandle<IdVector> result);
+                                     MutableHandleIdVector result);
   [[nodiscard]] static bool find(JSContext* cx,
                                  HandleDebuggerEnvironment environment,
                                  HandleId id,

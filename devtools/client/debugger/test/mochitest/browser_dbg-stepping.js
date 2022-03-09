@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // This test can be really slow on debug platforms
 requestLongerTimeout(5);
 
 add_task(async function test() {
-  const dbg = await initDebugger("big-sourcemap.html", "big-sourcemap");
+  const dbg = await initDebugger("big-sourcemap.html", "bundle.js");
   invokeInTab("hitDebugStatement");
   await waitForPaused(dbg, "bundle.js");
 

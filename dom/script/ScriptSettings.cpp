@@ -7,7 +7,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include <utility>
-#include "LoadedScript.h"
 #include "MainThreadUtils.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
@@ -21,6 +20,8 @@
 #include "js/Warnings.h"
 #include "js/Wrapper.h"
 #include "js/friend/ErrorMessages.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
@@ -33,7 +34,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -55,15 +55,12 @@ JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
   // NOTE: The result of this is only used by DevTools for matching sources, so
   // it is safe to silently ignore any errors and return nullptr for them.
 
-  LoadedScript* script = static_cast<LoadedScript*>(aPrivateValue.toPrivate());
-
-  if (!script->GetFetchOptions()) {
-    return nullptr;
-  }
+  JS::loader::LoadedScript* script =
+      static_cast<JS::loader::LoadedScript*>(aPrivateValue.toPrivate());
 
   JS::Rooted<JS::Value> elementValue(aCx);
   {
-    nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
+    nsCOMPtr<Element> domElement = script->GetScriptElement();
     if (!domElement) {
       return nullptr;
     }

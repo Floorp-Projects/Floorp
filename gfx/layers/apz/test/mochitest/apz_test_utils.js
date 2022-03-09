@@ -1242,3 +1242,17 @@ async function cancelScrollAnimation(aElement, aWindow = window) {
   aElement.style.display = originalStyle;
   await aWindow.promiseApzFlushedRepaints();
 }
+
+function collectSampledScrollOffsets(aElement) {
+  let data = SpecialPowers.DOMWindowUtils.getCompositorAPZTestData();
+  let sampledResults = data.sampledResults;
+
+  const layersId = SpecialPowers.DOMWindowUtils.getLayersId();
+  const scrollId = SpecialPowers.DOMWindowUtils.getViewId(aElement);
+
+  return sampledResults.filter(
+    result =>
+      SpecialPowers.wrap(result).layersId == layersId &&
+      SpecialPowers.wrap(result).scrollId == scrollId
+  );
+}

@@ -447,12 +447,6 @@ bool nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent) {
   return false;
 }
 
-bool nsNativeTheme::IsRegularMenuItem(nsIFrame* aFrame) {
-  nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
-  return !(menuFrame &&
-           (menuFrame->IsOnMenuBar() || menuFrame->IsParentMenuList()));
-}
-
 bool nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
                                                    uint32_t aMinimumFrameRate) {
   NS_ASSERTION(aContent, "Null pointer!");

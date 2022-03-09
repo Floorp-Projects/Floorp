@@ -109,6 +109,9 @@ this.VideoControlsWidget = class {
     this.impl.onPrefChange(prefName, prefValue);
   }
 
+  // If you change this, also change SEEK_TIME_SECS in PictureInPictureChild.jsm
+  static SEEK_TIME_SECS = 5;
+
   static isPictureInPictureVideo(someVideo) {
     return someVideo.isCloningElementVisually;
   }
@@ -907,6 +910,7 @@ this.VideoControlsImplWidget = class {
               case this.textTrackList:
                 const index = +aEvent.originalTarget.getAttribute("index");
                 this.changeTextTrack(index);
+                this.closedCaptionButton.focus();
                 break;
               case this.videocontrols:
                 // Prevent any click event within media controls from dispatching through to video.
@@ -1452,7 +1456,7 @@ this.VideoControlsImplWidget = class {
           }
 
           this.startFadeOut(this.controlBar, false);
-          this.textTrackListContainer.hidden = true;
+          this.hideClosedCaptionMenu();
           this.window.clearTimeout(this._showControlsTimeout);
           this._controlsHiddenByTimeout = false;
         }
@@ -1843,7 +1847,7 @@ this.VideoControlsImplWidget = class {
             oldval -
             (this.video.duration || this.maxCurrentTimeSeen / 1000) / 10;
         } else {
-          newval = oldval - 15;
+          newval = oldval - VideoControlsWidget.SEEK_TIME_SECS;
         }
         this.video.currentTime = Math.max(0, newval);
       },
@@ -1855,7 +1859,7 @@ this.VideoControlsImplWidget = class {
         if (tenPercent) {
           newval = oldval + maxtime / 10;
         } else {
-          newval = oldval + 15;
+          newval = oldval + VideoControlsWidget.SEEK_TIME_SECS;
         }
         this.video.currentTime = Math.min(newval, maxtime);
       },
@@ -1916,6 +1920,8 @@ this.VideoControlsImplWidget = class {
             case "ArrowDown" /* Volume decrease */:
               if (allTabbable && target == this.scrubber) {
                 this.keyboardSeekBack(/* tenPercent */ false);
+              } else if (target.classList.contains("textTrackItem")) {
+                target.nextSibling?.focus();
               } else {
                 this.keyboardVolumeDecrease();
               }
@@ -1923,6 +1929,8 @@ this.VideoControlsImplWidget = class {
             case "ArrowUp" /* Volume increase */:
               if (allTabbable && target == this.scrubber) {
                 this.keyboardSeekForward(/* tenPercent */ false);
+              } else if (target.classList.contains("textTrackItem")) {
+                target.previousSibling?.focus();
               } else {
                 this.keyboardVolumeIncrease();
               }
@@ -1933,7 +1941,7 @@ this.VideoControlsImplWidget = class {
             case "accel-ArrowUp" /* Unmute */:
               this.video.muted = false;
               break;
-            case "ArrowLeft" /* Seek back 15 seconds */:
+            case "ArrowLeft" /* Seek back 5 seconds */:
               if (allTabbable && target == this.volumeControl) {
                 this.keyboardVolumeDecrease();
               } else {
@@ -1943,7 +1951,7 @@ this.VideoControlsImplWidget = class {
             case "accel-ArrowLeft" /* Seek back 10% */:
               this.keyboardSeekBack(/* tenPercent */ true);
               break;
-            case "ArrowRight" /* Seek forward 15 seconds */:
+            case "ArrowRight" /* Seek forward 5 seconds */:
               if (allTabbable && target == this.volumeControl) {
                 this.keyboardVolumeIncrease();
               } else {
@@ -1960,6 +1968,15 @@ this.VideoControlsImplWidget = class {
               if (this.video.currentTime != this.video.duration) {
                 this.video.currentTime =
                   this.video.duration || this.maxCurrentTimeSeen / 1000;
+              }
+              break;
+            case "Escape" /* Escape */:
+              if (
+                target.classList.contains("textTrackItem") &&
+                !this.textTrackListContainer.hidden
+              ) {
+                this.toggleClosedCaption();
+                this.closedCaptionButton.focus();
               }
               break;
             default:
@@ -2053,9 +2070,9 @@ this.VideoControlsImplWidget = class {
           const idx = +tti.getAttribute("index");
 
           if (idx == this.currentTextTrackIndex) {
-            tti.setAttribute("on", "true");
+            tti.setAttribute("aria-checked", "true");
           } else {
-            tti.removeAttribute("on");
+            tti.setAttribute("aria-checked", "false");
           }
         }
 
@@ -2087,6 +2104,7 @@ this.VideoControlsImplWidget = class {
 
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);
+        ttBtn.setAttribute("role", "menuitemradio");
 
         if (tt.mode === "showing" && tt.index) {
           this.changeTextTrack(tt.index);
@@ -2108,7 +2126,7 @@ this.VideoControlsImplWidget = class {
       },
 
       onControlBarAnimationFinished() {
-        this.textTrackListContainer.hidden = true;
+        this.hideClosedCaptionMenu();
         this.video.dispatchEvent(
           new this.window.CustomEvent("controlbarchange")
         );
@@ -2121,17 +2139,28 @@ this.VideoControlsImplWidget = class {
         );
       },
 
+      hideClosedCaptionMenu() {
+        this.textTrackListContainer.hidden = true;
+        this.closedCaptionButton.setAttribute("aria-expanded", "false");
+      },
+
+      showClosedCaptionMenu() {
+        this.textTrackListContainer.hidden = false;
+        this.closedCaptionButton.setAttribute("aria-expanded", "true");
+      },
+
       toggleClosedCaption() {
         if (this.textTrackListContainer.hidden) {
-          this.textTrackListContainer.hidden = false;
+          this.showClosedCaptionMenu();
           if (this.prefs["media.videocontrols.keyboard-tab-to-all-controls"]) {
             // If we're about to hide the controls after focus, prevent that, as
             // that will dismiss the CC menu before the user can use it.
+            this.textTrackList.firstChild.focus();
             this.window.clearTimeout(this._hideControlsTimeout);
             this._hideControlsTimeout = 0;
           }
         } else {
-          this.textTrackListContainer.hidden = true;
+          this.hideClosedCaptionMenu();
           // If the CC menu was shown via the keyboard, we may have prevented
           // the controls from hiding. We can now hide them.
           if (
@@ -2201,6 +2230,16 @@ this.VideoControlsImplWidget = class {
         }
 
         this.setClosedCaptionButtonState();
+        // Hide the Closed Caption menu when the user moves focus
+        this.hideClosedCaptionMenu = this.hideClosedCaptionMenu.bind(this);
+        this.closedCaptionButton.addEventListener(
+          "focus",
+          this.hideClosedCaptionMenu
+        );
+        this.fullscreenButton.addEventListener(
+          "focus",
+          this.hideClosedCaptionMenu
+        );
       },
 
       log(msg) {
@@ -2787,7 +2826,7 @@ this.VideoControlsImplWidget = class {
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
             <div class="controlsSpacerStack">
               <div id="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
-              <button id="clickToPlay" class="clickToPlay" hidden="true"></button>
+              <button id="clickToPlay" class="clickToPlay" aria-label="&playButton.playLabel;" hidden="true"></button>
             </div>
 
             <button id="pictureInPictureToggle" class="pip-wrapper" position="left" hidden="true">
@@ -2840,15 +2879,16 @@ this.VideoControlsImplWidget = class {
               </div>
               <button id="castingButton" class="button castingButton"
                       aria-label="&castingButton.castingLabel;"/>
-              <button id="closedCaptionButton" class="button closedCaptionButton"
+              <button id="closedCaptionButton" class="button closedCaptionButton" aria-controls="textTrackList"
+                      aria-haspopup="menu" aria-expanded="false" data-l10n-id="videocontrols-closed-caption-button"/>
+              <div id="textTrackListContainer" class="textTrackListContainer" hidden="true" role="presentation">
+                <div id="textTrackList" role="menu" class="textTrackList" offlabel="&closedCaption.off;"
                       data-l10n-id="videocontrols-closed-caption-button"/>
+              </div>
               <button id="fullscreenButton"
                       class="button fullscreenButton"
                       enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
                       exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
-            </div>
-            <div id="textTrackListContainer" class="textTrackListContainer" hidden="true">
-              <div id="textTrackList" class="textTrackList" offlabel="&closedCaption.off;"></div>
             </div>
           </div>
         </div>

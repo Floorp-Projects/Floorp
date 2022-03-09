@@ -3143,6 +3143,12 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
       ARMFPRegister(scratch.encoding(), vixl::VectorFormat::kFormat8B));
 }
 
+void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
+                                        Register pointer) {
+  Add(ARMRegister(pointer, 64), ARMRegister(pointer, 64),
+      Operand(ARMRegister(indexTemp32, 64), vixl::LSL, shift));
+}
+
 //}}} check_macroassembler_style
 
 }  // namespace jit

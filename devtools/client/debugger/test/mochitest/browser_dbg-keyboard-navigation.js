@@ -4,11 +4,13 @@
 
 // Tests that keyboard navigation into and out of debugger code editor
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
-  let doc = dbg.win.document;
+"use strict";
 
-  await selectSource(dbg, "simple2");
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
+  const doc = dbg.win.document;
+
+  await selectSource(dbg, "simple2.js");
 
   await waitForElementWithSelector(dbg, ".CodeMirror");
   findElementWithSelector(dbg, ".CodeMirror").focus();

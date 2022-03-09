@@ -39,6 +39,7 @@
 #include "nsString.h"
 #include "nsTPromiseFlatString.h"
 #include "nscore.h"
+#include "prenv.h"
 
 #if !defined(DEBUG) && !defined(MOZ_ENABLE_JS_DUMP)
 #  include "mozilla/StaticPrefs_browser.h"
@@ -248,6 +249,11 @@ void nsJSUtils::ResetTimeZone() { JS::ResetTimeZone(); }
 
 /* static */
 bool nsJSUtils::DumpEnabled() {
+#ifdef FUZZING
+  static bool mozFuzzDebug = !!PR_GetEnv("MOZ_FUZZ_DEBUG");
+  return mozFuzzDebug;
+#endif
+
 #if defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP)
   return true;
 #else

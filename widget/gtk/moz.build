@@ -31,7 +31,11 @@ EXPORTS += [
     "nsImageToPixbuf.h",
 ]
 
-EXPORTS.mozilla += ["WidgetUtilsGtk.h"]
+EXPORTS.mozilla += [
+    "GRefPtr.h",
+    "GUniquePtr.h",
+    "WidgetUtilsGtk.h",
+]
 
 EXPORTS.mozilla.widget += [
     "WindowSurface.h",
@@ -47,6 +51,8 @@ UNIFIED_SOURCES += [
     "MozContainer.cpp",
     "MPRISServiceHandler.cpp",
     "NativeKeyBindings.cpp",
+    "NativeMenuGtk.cpp",
+    "NativeMenuSupport.cpp",
     "nsApplicationChooser.cpp",
     "nsAppShell.cpp",
     "nsBidiKeyboard.cpp",
@@ -88,6 +94,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
         "nsWaylandDisplay.cpp",
+        "VAAPIUtils.cpp",
         "WaylandBuffer.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
@@ -96,7 +103,14 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
+        "VAAPIUtils.h",
         "WaylandBuffer.h",
+    ]
+    LOCAL_INCLUDES += [
+        "/media/mozva",
+    ]
+    USE_LIBS += [
+        "mozva",
     ]
 
 if CONFIG["MOZ_X11"]:

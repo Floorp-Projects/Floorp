@@ -126,6 +126,11 @@ struct APZEventResult {
     return mHandledResult;
   }
 
+  bool WillHaveDelayedResult() const {
+    return GetStatus() != nsEventStatus_eConsumeNoDefault &&
+           !GetHandledResult();
+  }
+
  private:
   /**
    * A status flag indicated how APZ handled the event.
@@ -184,6 +189,9 @@ struct APZEventResult {
  */
 class APZInputBridge {
  public:
+  using InputBlockCallback = std::function<void(
+      uint64_t aInputBlockId, const APZHandledResult& aHandledResult)>;
+
   /**
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
@@ -196,10 +204,14 @@ class APZInputBridge {
    * by the caller if it wants to do this.
    *
    * @param aEvent input event object; is modified in-place
+   * @param aCallback an optional callback to be invoked when the input block is
+   * ready for handling,
    * @return The result of processing the event. Refer to the documentation of
    * APZEventResult and its field.
    */
-  virtual APZEventResult ReceiveInputEvent(InputData& aEvent) = 0;
+  virtual APZEventResult ReceiveInputEvent(
+      InputData& aEvent,
+      InputBlockCallback&& aCallback = InputBlockCallback()) = 0;
 
   /**
    * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
@@ -217,7 +229,9 @@ class APZInputBridge {
    *
    * See documentation for other ReceiveInputEvent above.
    */
-  APZEventResult ReceiveInputEvent(WidgetInputEvent& aEvent);
+  APZEventResult ReceiveInputEvent(
+      WidgetInputEvent& aEvent,
+      InputBlockCallback&& aCallback = InputBlockCallback());
 
   // Returns the kind of wheel event action, if any, that will be (or was)
   // performed by APZ. If this returns true, the event must not perform a

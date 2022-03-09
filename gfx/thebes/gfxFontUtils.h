@@ -341,26 +341,24 @@ namespace IPC {
 template <>
 struct ParamTraits<gfxSparseBitSet> {
   typedef gfxSparseBitSet paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBlockIndex);
-    WriteParam(aMsg, aParam.mBlocks);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mBlockIndex);
+    WriteParam(aWriter, aParam.mBlocks);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBlockIndex) &&
-           ReadParam(aMsg, aIter, &aResult->mBlocks);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mBlockIndex) &&
+           ReadParam(aReader, &aResult->mBlocks);
   }
 };
 
 template <>
 struct ParamTraits<gfxSparseBitSet::Block> {
   typedef gfxSparseBitSet::Block paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
 };
 }  // namespace IPC
@@ -980,7 +978,8 @@ class gfxFontUtils {
                                             gfxSparseBitSet& aCharacterMap);
 
   static nsresult ReadCMAPTableFormat4(const uint8_t* aBuf, uint32_t aLength,
-                                       gfxSparseBitSet& aCharacterMap);
+                                       gfxSparseBitSet& aCharacterMap,
+                                       bool aIsSymbolFont);
 
   static nsresult ReadCMAPTableFormat14(const uint8_t* aBuf, uint32_t aLength,
                                         mozilla::UniquePtr<uint8_t[]>& aTable);
@@ -988,7 +987,8 @@ class gfxFontUtils {
   static uint32_t FindPreferredSubtable(const uint8_t* aBuf,
                                         uint32_t aBufLength,
                                         uint32_t* aTableOffset,
-                                        uint32_t* aUVSTableOffset);
+                                        uint32_t* aUVSTableOffset,
+                                        bool* aIsSymbolFont);
 
   static nsresult ReadCMAP(const uint8_t* aBuf, uint32_t aBufLength,
                            gfxSparseBitSet& aCharacterMap,
@@ -1014,6 +1014,12 @@ class gfxFontUtils {
 
   static uint32_t MapCharToGlyph(const uint8_t* aCmapBuf, uint32_t aBufLength,
                                  uint32_t aUnicode, uint32_t aVarSelector = 0);
+
+  // For legacy MS Symbol fonts, we try mapping 8-bit character codes to the
+  // Private Use range at U+F0xx used by the cmaps in these fonts.
+  static MOZ_ALWAYS_INLINE uint32_t MapLegacySymbolFontCharToPUA(uint32_t aCh) {
+    return aCh >= 0x20 && aCh <= 0xff ? 0xf000 + aCh : 0;
+  }
 
 #ifdef XP_WIN
   // determine whether a font (which has already been sanitized, so is known

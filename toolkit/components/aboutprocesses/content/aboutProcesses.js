@@ -1102,11 +1102,15 @@ var Control = {
         if (!event.target.classList.contains("clickable")) {
           return;
         }
+        // Linux has conventions opposite to Windows and macOS on the direction of arrows
+        // when sorting.
+        const platformIsLinux = AppConstants.platform == "linux";
+        const ascArrow = platformIsLinux ? "arrow-up" : "arrow-down";
+        const descArrow = platformIsLinux ? "arrow-down" : "arrow-up";
 
         if (this._sortColumn) {
           const td = document.getElementById(this._sortColumn);
-          td.classList.remove("asc");
-          td.classList.remove("desc");
+          td.classList.remove(ascArrow, descArrow);
         }
 
         const columnId = event.target.id;
@@ -1118,13 +1122,8 @@ var Control = {
           this._sortAscendent = true;
         }
 
-        if (this._sortAscendent) {
-          event.target.classList.remove("desc");
-          event.target.classList.add("asc");
-        } else {
-          event.target.classList.remove("asc");
-          event.target.classList.add("desc");
-        }
+        event.target.classList.toggle(ascArrow, this._sortAscendent);
+        event.target.classList.toggle(descArrow, !this._sortAscendent);
 
         await this._updateDisplay(true);
       });

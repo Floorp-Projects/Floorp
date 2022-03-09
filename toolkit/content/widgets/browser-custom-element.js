@@ -1265,8 +1265,8 @@
 
     startScroll({
       scrolldir,
-      screenX,
-      screenY,
+      screenXDevPx,
+      screenYDevPx,
       scrollId,
       presShellId,
       browsingContext,
@@ -1288,12 +1288,16 @@
         this._autoScrollPopup.style.margin = -POPUP_SIZE / 2 + "px";
       }
 
+      // In desktop pixels.
+      let screenXDesktopPx = screenXDevPx / window.desktopToDeviceScale;
+      let screenYDesktopPx = screenYDevPx / window.desktopToDeviceScale;
+
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
         Ci.nsIScreenManager
       );
       let screen = screenManager.screenForRect(
-        screenX * window.devicePixelRatio,
-        screenY * window.devicePixelRatio,
+        screenXDesktopPx,
+        screenYDesktopPx,
         1,
         1
       );
@@ -1316,30 +1320,39 @@
       this._autoScrollPopup.setAttribute("scrolldir", scrolldir);
       this._autoScrollPopup.addEventListener("popuphidden", this, true);
 
-      // Sanitize screenX/screenY for available screen size with half the size
-      // of the popup removed. The popup uses negative margins to center on the
-      // coordinates we pass. Unfortunately `window.screen.availLeft` can be negative
-      // on Windows in multi-monitor setups, so we use nsIScreenManager instead:
-      let left = {},
-        top = {},
-        width = {},
-        height = {};
-      screen.GetAvailRect(left, top, width, height);
+      // In CSS pixels
+      let popupX;
+      let popupY;
+      {
+        let cssToDesktopScale =
+          window.devicePixelRatio / window.desktopToDeviceScale;
 
-      // We need to get screen CSS-pixel (rather than display-pixel) coordinates.
-      // With 175% DPI, the actual ratio of display pixels to CSS pixels is
-      // 1.7647 because of rounding inside gecko. Unfortunately defaultCSSScaleFactor
-      // returns the original 1.75 dpi factor. While window.devicePixelRatio would
-      // get us the correct ratio, if the window is split between 2 screens,
-      // window.devicePixelRatio isn't guaranteed to match the screen we're
-      // autoscrolling on. So instead we do the same math as Gecko.
-      const scaleFactor = 60 / Math.round(60 / screen.defaultCSSScaleFactor);
-      let minX = left.value / scaleFactor + 0.5 * POPUP_SIZE;
-      let maxX = (left.value + width.value) / scaleFactor - 0.5 * POPUP_SIZE;
-      let minY = top.value / scaleFactor + 0.5 * POPUP_SIZE;
-      let maxY = (top.value + height.value) / scaleFactor - 0.5 * POPUP_SIZE;
-      let popupX = Math.max(minX, Math.min(maxX, screenX));
-      let popupY = Math.max(minY, Math.min(maxY, screenY));
+        // Sanitize screenX/screenY for available screen size with half the size
+        // of the popup removed. The popup uses negative margins to center on the
+        // coordinates we pass. Use desktop pixels to deal correctly with
+        // multi-monitor / multi-dpi scenarios.
+        let left = {},
+          top = {},
+          width = {},
+          height = {};
+        screen.GetAvailRectDisplayPix(left, top, width, height);
+
+        let popupSizeDesktopPx = POPUP_SIZE * cssToDesktopScale;
+        let minX = left.value + 0.5 * popupSizeDesktopPx;
+        let maxX = left.value + width.value - 0.5 * popupSizeDesktopPx;
+        let minY = top.value + 0.5 * popupSizeDesktopPx;
+        let maxY = top.value + height.value - 0.5 * popupSizeDesktopPx;
+
+        popupX =
+          Math.max(minX, Math.min(maxX, screenXDesktopPx)) / cssToDesktopScale;
+        popupY =
+          Math.max(minY, Math.min(maxY, screenYDesktopPx)) / cssToDesktopScale;
+      }
+
+      // In CSS pixels.
+      let screenX = screenXDevPx / window.devicePixelRatio;
+      let screenY = screenYDevPx / window.devicePixelRatio;
+
       this._autoScrollPopup.openPopupAtScreen(popupX, popupY);
       this._ignoreMouseEvents = true;
       this._startX = screenX;

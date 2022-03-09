@@ -12,8 +12,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MouseEvent : public UIEvent {
  public:
@@ -34,14 +33,31 @@ class MouseEvent : public UIEvent {
     return Button() + 1;
   }
 
-  int32_t ScreenX(CallerType aCallerType);
-  int32_t ScreenY(CallerType aCallerType);
-  int32_t PageX() const;
-  int32_t PageY() const;
-  int32_t ClientX();
-  int32_t ClientY();
-  int32_t OffsetX();
-  int32_t OffsetY();
+  already_AddRefed<nsIScreen> GetScreen();
+
+  // In CSS coords.
+  CSSIntPoint ScreenPoint(CallerType) const;
+  int32_t ScreenX(CallerType aCallerType) const {
+    return ScreenPoint(aCallerType).x;
+  }
+  int32_t ScreenY(CallerType aCallerType) const {
+    return ScreenPoint(aCallerType).y;
+  }
+  LayoutDeviceIntPoint ScreenPointLayoutDevicePix() const;
+  DesktopIntPoint ScreenPointDesktopPix() const;
+
+  CSSIntPoint PagePoint() const;
+  int32_t PageX() const { return PagePoint().x; }
+  int32_t PageY() const { return PagePoint().y; }
+
+  CSSIntPoint ClientPoint() const;
+  int32_t ClientX() const { return ClientPoint().x; }
+  int32_t ClientY() const { return ClientPoint().y; }
+
+  CSSIntPoint OffsetPoint() const;
+  int32_t OffsetX() const { return OffsetPoint().x; }
+  int32_t OffsetY() const { return OffsetPoint().y; }
+
   bool CtrlKey();
   bool ShiftKey();
   bool AltKey();
@@ -90,8 +106,7 @@ class MouseEvent : public UIEvent {
                       const nsAString& aModifiersList);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::MouseEvent> NS_NewDOMMouseEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

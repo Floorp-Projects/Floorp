@@ -1,0 +1,978 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.*ContentScripts()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+const MOCHITEST_HOST_PERMISSIONS = [
+  "*://mochi.test/",
+  "*://mochi.xorigin-test/",
+  "*://test1.example.com/",
+];
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [
+        ...MOCHITEST_HOST_PERMISSIONS,
+        // Used in `file_contains_iframe.html`
+        "*://example.org/",
+      ],
+      ...manifestProps,
+    },
+    ...otherProps,
+  });
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_validate_registerContentScripts_params() {
+  let extension = makeExtension({
+    async background() {
+      const TEST_CASES = [
+        {
+          title: "no js",
+          params: [
+            {
+              id: "script",
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: "js must be specified.",
+        },
+        {
+          title: "empty js",
+          params: [
+            {
+              id: "script",
+              js: [],
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: "js must be specified.",
+        },
+        {
+          title: "no matches",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+            },
+          ],
+          expectedError: "matches must be specified.",
+        },
+        {
+          title: "empty matches",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: [],
+            },
+          ],
+          expectedError: "matches must be specified.",
+        },
+        {
+          title: "one empty match",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: [""],
+            },
+          ],
+          expectedError: "Invalid url pattern: ",
+        },
+        {
+          title: "invalid match",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "invalid match and valid match",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*", "not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "one empty value in excludeMatches",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+              excludeMatches: [""],
+            },
+          ],
+          expectedError: "Invalid url pattern: ",
+        },
+        {
+          title: "invalid value in excludeMatches",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+              excludeMatches: ["not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "duplicate IDs",
+          params: [
+            {
+              id: "script-1",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+            },
+            {
+              id: "script-1",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: `Attempt to register content script with id "script-1" more than once.`,
+        },
+        {
+          title: "empty id",
+          params: [
+            {
+              id: "",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: "Invalid content script id.",
+        },
+        {
+          title: "id starting with _",
+          params: [
+            {
+              id: "_foo",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: "Invalid content script id.",
+        },
+      ];
+
+      for (const { title, params, expectedError } of TEST_CASES) {
+        await browser.test.assertRejects(
+          browser.scripting.registerContentScripts(params),
+          expectedError,
+          `${title} - got expected error`
+        );
+      }
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_registerContentScripts_with_already_registered_id() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "script-1",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+
+      await browser.scripting.registerContentScripts([script]);
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      await browser.test.assertRejects(
+        browser.scripting.registerContentScripts([script]),
+        `Content script with id "${script.id}" is already registered.`,
+        "got expected error"
+      );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_validate_getRegisteredContentScripts_params() {
+  let extension = makeExtension({
+    async background() {
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      scripts = await browser.scripting.getRegisteredContentScripts({
+        ids: ["non-existent-id"]
+      });
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      browser.test.notifyPass("test-finished");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_getRegisteredContentScripts() {
+  let extension = makeExtension({
+    async background() {
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      const aScript = {
+        id: "a-script",
+        js: ["script.js"],
+        matches: ["<all_urls>"],
+      };
+
+      await browser.scripting.registerContentScripts([aScript]);
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+      browser.test.assertEq(aScript.id, scripts[0].id, "expected correct id");
+
+      // This should return no registered scripts.
+      scripts = await browser.scripting.getRegisteredContentScripts({ ids: [] });
+      browser.test.assertEq(0, scripts.length, "expected 0 registered script");
+
+      // Verify that invalid IDs are omitted but valid IDs are used to return
+      // registered scripts.
+      scripts = await browser.scripting.getRegisteredContentScripts({
+        ids: ["non-existent-id", aScript.id]
+      });
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+      browser.test.assertEq(aScript.id, scripts[0].id, "expected correct id");
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
+add_task(async function test_registerContentScripts_js() {
+  let extension = makeExtension({
+    async background() {
+      const TEST_CASES = [
+        // This should have no effect but it should not throw.
+        {
+          title: "no script",
+          params: [],
+        },
+        {
+          title: "one script",
+          params: [
+            {
+              id: "script-1",
+              js: ["script-1.js"],
+              matches: ["*://test1.example.com/*"],
+            }
+          ],
+        },
+        {
+          title: "one script in all frames",
+          params: [
+            {
+              id: "script-2",
+              js: ["script-2.js"],
+              matches: [
+                "*://test1.example.com/*",
+                "*://example.org/*",
+              ],
+              allFrames: true,
+            }
+          ],
+        },
+        {
+          title: "one script in all frames with excludeMatches set",
+          params: [
+            {
+              id: "script-3",
+              js: ["script-3.js"],
+              matches: [
+                "*://test1.example.com/*",
+                "*://example.org/*",
+              ],
+              allFrames: true,
+              excludeMatches: ["*://test1.example.com/*"],
+            }
+          ],
+        },
+        {
+          title: "one script, two js paths",
+          params: [
+            {
+              id: "script-4",
+              js: ["script-4-1.js", "script-4-2.js"],
+              matches: ["*://test1.example.com/*"],
+            }
+          ],
+        },
+        {
+          title: "empty excludeMatches",
+          params: [
+            {
+              id: "script-5",
+              // This path should be normalized.
+              js: ["/script-5.js"],
+              matches: ["*://test1.example.com/*"],
+              excludeMatches: [],
+            }
+          ],
+        },
+      ];
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
+
+      for (const { title, params } of TEST_CASES) {
+        const res = await browser.scripting.registerContentScripts(params);
+        browser.test.assertEq(
+          undefined,
+          res,
+          `${title} - expected no result`
+        );
+
+        const script = await browser.scripting.getRegisteredContentScripts({
+          ids: params.map(param => param.id)
+        });
+        browser.test.assertEq(
+          params.length,
+          script.length,
+          `${title} - got the expected number of registered scripts`
+        );
+      }
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(
+        // A test case declared above does not contain any script to register.
+        TEST_CASES.length - 1,
+        scripts.length,
+        "got the expected number of registered scripts"
+      );
+      browser.test.assertEq(
+        JSON.stringify([
+          {
+            id: "script-1",
+            allFrames: false,
+            js: ["script-1.js"],
+            matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
+          },
+          {
+            id: "script-2",
+            allFrames: true,
+            js: ["script-2.js"],
+            matches: [
+              "*://test1.example.com/*",
+              "*://example.org/*",
+            ],
+            runAt: "document_idle",
+          },
+          {
+            id: "script-3",
+            allFrames: true,
+            excludeMatches: ["*://test1.example.com/*"],
+            js: ["script-3.js"],
+            matches: [
+              "*://test1.example.com/*",
+              "*://example.org/*",
+            ],
+            runAt: "document_idle",
+          },
+          {
+            id: "script-4",
+            allFrames: false,
+            js: ["script-4-1.js", "script-4-2.js"],
+            matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
+          },
+          {
+            id: "script-5",
+            allFrames: false,
+            excludeMatches: [],
+            js: ["script-5.js"],
+            matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
+          },
+        ]),
+        JSON.stringify(scripts),
+        "got expected scripts"
+      );
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script-1.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-1.js", value: document.title }
+        );
+      },
+      "script-2.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-2.js", value: document.title }
+        );
+      },
+      "script-3.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-3.js", value: document.title }
+        );
+      },
+      "script-4-1.js": () => {
+        // We inject this script (first) as well as the one defined right
+        // after. The order should be respected, which is why we define a
+        // property here and check it in the second script.
+        window.SCRIPT_4_INJECTED = "SCRIPT_4_INJECTED";
+      },
+      "script-4-2.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-4-2.js", value: window.SCRIPT_4_INJECTED }
+        );
+        delete window.SCRIPT_4_INJECTED;
+      },
+      "script-5.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          { file: "script-5.js", value: document.title }
+        );
+      },
+    },
+  });
+
+  let scriptsRan = 0;
+  let results = [];
+  let completePromise = new Promise(resolve => {
+    extension.onMessage("script-ran", result => {
+      results.push(result);
+      scriptsRan++;
+
+      // The value below should be updated when TEST_CASES above is changed.
+      if (scriptsRan === 6) {
+        resolve();
+      }
+    });
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  // Load a page that will trigger the content scripts previously registered.
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  // Wait for all content scripts to be executed.
+  await completePromise;
+
+  // Verify that the scripts have been executed correctly. We sort the results
+  // to compare them against expected values.
+  results.sort((a, b) => {
+    return a.file.localeCompare(b.file) || a.value.localeCompare(b.value);
+  });
+  ok(
+    JSON.stringify([
+      { file: "script-1.js", value: "file contains iframe" },
+      // script-2.js should be injected in two frames
+      { file: "script-2.js", value: "file contains iframe" },
+      { file: "script-2.js", value: "file contains img" },
+      { file: "script-3.js", value: "file contains img" },
+      // script-4-1.js will add a prop to the `window` object, which should be
+      // read by `script-4-2.js`.
+      { file: "script-4-2.js", value: "SCRIPT_4_INJECTED" },
+      { file: "script-5.js", value: "file contains iframe" },
+    ]) === JSON.stringify(results),
+    "got expected script results" + JSON.stringify(results)
+  );
+
+  await AppTestDelegate.removeTab(window, tab);
+  await extension.unload();
+});
+
+add_task(async function test_registerContentScripts_are_not_unregistered() {
+  let extension = makeExtension({
+    files: {
+      "background.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></head>
+          <body>
+            <script src="background.js"><\/script>
+          </body>
+        </html>
+      `,
+      "background.js": async () => {
+        await browser.scripting.registerContentScripts([
+          {
+            id: "a-script",
+            js: ["script.js"],
+            matches: ["*://test1.example.com/*"],
+          },
+        ]);
+
+        browser.test.sendMessage("background-executed");
+      },
+      "script.js": () => {
+        browser.test.sendMessage("script-executed");
+      },
+    },
+  });
+
+  await extension.startup();
+
+  // Load the background page that registers a content script.
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    `moz-extension://${extension.uuid}/background.html`,
+    true
+  );
+  await extension.awaitMessage("background-executed");
+  await AppTestDelegate.removeTab(window, tab);
+
+  // Load a page that will trigger the content scripts previously registered.
+  tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  await extension.awaitMessage("script-executed");
+
+  await AppTestDelegate.removeTab(window, tab);
+  await extension.unload();
+});
+
+add_task(async function test_scripts_dont_run_after_shutdown() {
+  let extension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script-that-should-not-run",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.fail("this script should not be executed.");
+      },
+    },
+  });
+  // We use a second extension to wait enough time to confirm that the script
+  // registered in the previous extension has not been executed at all, in case
+  // the tab closes before the scheduled content script has had a chance to
+  // run.
+  let anotherExtension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "this-script-should-run",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.sendMessage("script-ran");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await anotherExtension.startup();
+  await anotherExtension.awaitMessage("background-ready");
+
+  await extension.unload();
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+  await anotherExtension.awaitMessage("script-ran");
+  await AppTestDelegate.removeTab(window, tab);
+
+  await anotherExtension.unload();
+});
+
+add_task(async function test_registerContentScripts_with_wrong_matches() {
+  let extension = makeExtension({
+    async background() {
+      // Register a content script that should not be injected in this test
+      // case because the `matches` values don't match the host permissions.
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script-that-should-not-run",
+          js: ["script.js"],
+          matches: ["*://mozilla.org/*"],
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.fail("this script should not be executed.");
+      },
+    },
+  });
+  // We use a second extension to wait enough time to confirm that the script
+  // registered in the previous extension has not been executed at all, in case
+  // the tab closes before the scheduled content script has had a chance to
+  // run.
+  let anotherExtension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "this-script-should-run",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.sendMessage("script-ran");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await anotherExtension.startup();
+  await anotherExtension.awaitMessage("background-ready");
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+  await anotherExtension.awaitMessage("script-ran");
+  await AppTestDelegate.removeTab(window, tab);
+
+  await extension.unload();
+  await anotherExtension.unload();
+});
+
+add_task(async function test_registerContentScripts_twice_with_same_id() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "script-that-should-not-run",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+
+      const results = await Promise.allSettled([
+        browser.scripting.registerContentScripts([script]),
+        browser.scripting.registerContentScripts([script]),
+      ]);
+
+      browser.test.assertEq(2, results.length, "got expected length");
+      browser.test.assertEq(
+        "fulfilled",
+        results[0].status,
+        "expected fulfilled promise"
+      );
+      browser.test.assertEq(
+        "rejected",
+        results[1].status,
+        "expected rejected promise"
+      );
+      browser.test.assertEq(
+        `Content script with id "script-that-should-not-run" is already registered.`,
+        results[1].reason.message,
+        "expected reason"
+      );
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_getRegisteredContentScripts_during_a_registration() {
+  let extension = makeExtension({
+    async background() {
+      browser.scripting.registerContentScripts([
+        {
+          id: "a-script",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+        },
+      ]);
+
+      const scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(
+        JSON.stringify([
+          {
+            id: "a-script",
+            allFrames: false,
+            js: ["script.js"],
+            matches: ["*://test1.example.com/*"],
+            runAt: "document_idle",
+          },
+        ]),
+        JSON.stringify(scripts),
+        "expected empty result array"
+      );
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_validate_unregisterContentScripts_params() {
+  let extension = makeExtension({
+    async background() {
+      const TEST_CASES = [
+        {
+          title: "unknown id",
+          params: {
+            ids: ["non-existent-id"],
+          },
+          expectedError: `Content script with id "non-existent-id" does not exist.`
+        },
+        {
+          title: "invalid id",
+          params: {
+            ids: ["_invalid-id"],
+          },
+          expectedError: "Invalid content script id.",
+        },
+      ];
+
+      for (const { title, params, expectedError } of TEST_CASES) {
+        browser.test.assertRejects(
+          browser.scripting.unregisterContentScripts(params),
+          expectedError,
+          `${title} - got expected error`
+        );
+      }
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no script");
+
+      browser.test.sendMessage("background-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_unregisterContentScripts() {
+  let extension = makeExtension({
+    async background() {
+      const script1 = {
+        id: "script-1",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+      const script2 = {
+        id: "script-2",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      }
+      const script3 = {
+        id: "script-3",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      }
+
+      let res = await browser.scripting.registerContentScripts([
+        script1,
+        script2,
+        script3,
+      ]);
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(3, scripts.length, "expected 3 scripts");
+      browser.test.assertEq(script1.id, scripts[0].id, "expected correct id");
+      browser.test.assertEq(script2.id, scripts[1].id, "expected correct id");
+      browser.test.assertEq(script3.id, scripts[2].id, "expected correct id");
+
+      // No unregistration when unknown IDs are passed along with valid IDs.
+      browser.test.assertRejects(
+        browser.scripting.unregisterContentScripts({
+          ids: [script2.id, "non-existent-id"],
+        }),
+        `Content script with id "non-existent-id" does not exist.`
+      );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(3, scripts.length, "expected 3 scripts");
+
+      // Unregister 1 script.
+      res = await browser.scripting.unregisterContentScripts({
+        ids: [script2.id]
+      });
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(2, scripts.length, "expected 2 scripts");
+      browser.test.assertEq(script1.id, scripts[0].id, "expected correct id");
+      browser.test.assertEq(script3.id, scripts[1].id, "expected correct id");
+
+      // This should unregister all the remaining registered scripts.
+      res = await browser.scripting.unregisterContentScripts();
+      browser.test.assertEq(undefined, res, "expected no result");
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_unregisterContentScripts_twice_with_same_id() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "script-to-unregister",
+        js: ["script.js"],
+        matches: ["*://test1.example.com/*"],
+      };
+
+      await browser.scripting.registerContentScripts([script]);
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      const results = await Promise.allSettled([
+        browser.scripting.unregisterContentScripts({ ids: [script.id] }),
+        browser.scripting.unregisterContentScripts({ ids: [script.id] }),
+      ]);
+
+      browser.test.assertEq(2, results.length, "got expected length");
+      browser.test.assertEq(
+        "fulfilled",
+        results[0].status,
+        "expected fulfilled promise"
+      );
+      browser.test.assertEq(
+        "rejected",
+        results[1].status,
+        "expected rejected promise"
+      );
+      browser.test.assertEq(
+        `Content script with id "script-to-unregister" does not exist.`,
+        results[1].reason.message,
+        "expected reason"
+      );
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected 0 registered script");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

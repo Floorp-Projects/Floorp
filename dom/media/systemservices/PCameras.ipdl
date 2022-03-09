@@ -48,6 +48,7 @@ struct VideoFrameProperties
   int vStride;
 };
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PCameras
 {
   manager PBackground;

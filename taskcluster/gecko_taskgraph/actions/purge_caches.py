@@ -5,9 +5,9 @@
 
 import logging
 
-from gecko_taskgraph.util.taskcluster import purge_cache
+from taskgraph.util.taskcluster import get_task_definition, purge_cache
+
 from .registry import register_callback_action
-from gecko_taskgraph.util import taskcluster
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
     context=[{"worker-implementation": "docker-worker"}],
 )
 def purge_caches_action(parameters, graph_config, input, task_group_id, task_id):
-    task = taskcluster.get_task_definition(task_id)
+    task = get_task_definition(task_id)
     if task["payload"].get("cache"):
         for cache in task["payload"]["cache"]:
             purge_cache(

@@ -52,7 +52,7 @@ bool ForOfIterator::init(HandleValue iterable,
   MOZ_ASSERT(index == NOT_ARRAY);
 
   RootedValue callee(cx);
-  RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+  RootedId iteratorId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
   if (!GetProperty(cx, iterableObj, iterable, iteratorId, &callee)) {
     return false;
   }

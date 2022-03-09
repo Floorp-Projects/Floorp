@@ -340,6 +340,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_TIMEOUT_EXTERNAL"] = FAILURE(85)
     # An error related to HTTPS-only mode
     errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
+    # A WebSocket connection is failed.
+    errors["NS_ERROR_WEBSOCKET_CONNECTION_REFUSED"] = FAILURE(87)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??
@@ -1148,6 +1150,7 @@ with modules["DOM_MEDIA"]:
     errors["NS_ERROR_DOM_MEDIA_CDM_ERR"] = FAILURE(13)
     errors["NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER"] = FAILURE(14)
     errors["NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER"] = FAILURE(15)
+    errors["NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR"] = FAILURE(16)
 
     # Internal platform-related errors
     errors["NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR"] = FAILURE(101)

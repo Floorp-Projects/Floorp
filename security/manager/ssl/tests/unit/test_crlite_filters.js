@@ -15,10 +15,7 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const {
-  CRLiteFiltersClient,
-  IntermediatePreloadsClient,
-} = RemoteSecuritySettings.init();
+const { CRLiteFiltersClient } = RemoteSecuritySettings.init();
 
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
@@ -26,6 +23,11 @@ const INTERMEDIATES_ENABLED_PREF =
   "security.remote_settings.intermediates.enabled";
 const INTERMEDIATES_DL_PER_POLL_PREF =
   "security.remote_settings.intermediates.downloads_per_poll";
+
+// crlite_enrollment_id.py test_crlite_filters/issuer.pem
+const ISSUER_PEM_UID = "UbH9/ZAnjuqf79Xhah1mFOWo6ZvgQCgsdheWfjvVUM8=";
+// crlite_enrollment_id.py test_crlite_filters/no-sct-issuer.pem
+const NO_SCT_ISSUER_PEM_UID = "Myn7EasO1QikOtNmo/UZdh6snCAw0BOY6wgU8OsUeeY=";
 
 function getHashCommon(aStr, useBase64) {
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
@@ -98,6 +100,8 @@ async function syncAndDownload(filters, clear = true) {
       parent: filter.type == "diff" ? filter.parent : undefined,
       id: filter.id,
       coverage: filter.type == "full" ? filter.coverage : undefined,
+      enrolledIssuers:
+        filter.type == "full" ? filter.enrolledIssuers : undefined,
     };
 
     await localDB.create(record);
@@ -357,20 +361,11 @@ add_task(async function test_crlite_filters_multiple_days() {
   );
 });
 
-function getCRLiteEnrollmentRecordFor(nsCert) {
-  let { subjectString, spkiHashString } = getSubjectAndSPKIHash(nsCert);
-  return {
-    subjectDN: btoa(subjectString),
-    pubKeyHash: spkiHashString,
-    crlite_enrolled: true,
-  };
-}
-
-add_task(async function test_crlite_filters_and_check_revocation() {
+add_task(async function test_crlite_confirm_revocations_mode() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
   Services.prefs.setIntPref(
     "security.pki.crlite_mode",
-    CRLiteModeEnforcePrefValue
+    CRLiteModeConfirmRevocationsValue
   );
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
@@ -381,20 +376,6 @@ add_task(async function test_crlite_filters_and_check_revocation() {
   let noSCTCertIssuer = constructCertFromFile(
     "test_crlite_filters/no-sct-issuer.pem"
   );
-
-  let crliteEnrollmentRecords = [
-    getCRLiteEnrollmentRecordFor(issuerCert),
-    getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
-  ];
-
-  await IntermediatePreloadsClient.onSync({
-    data: {
-      current: crliteEnrollmentRecords,
-      created: crliteEnrollmentRecords,
-      updated: [],
-      deleted: [],
-    },
-  });
 
   let result = await syncAndDownload([
     {
@@ -413,6 +394,96 @@ add_task(async function test_crlite_filters_and_check_revocation() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
+    },
+  ]);
+  equal(
+    result,
+    "finished;2020-10-17T00:00:00Z-full",
+    "CRLite filter download should have run"
+  );
+
+  // The CRLite result should be enforced for this certificate and
+  // OCSP should not be consulted.
+  let validCert = constructCertFromFile("test_crlite_filters/valid.pem");
+  await checkCertErrorGenericAtTime(
+    certdb,
+    validCert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "vpn.worldofspeed.org",
+    0
+  );
+
+  // OCSP should be consulted for this certificate, but OCSP is disabled by
+  // Ci.nsIX509CertDB.FLAG_LOCAL_ONLY so this will return Success.
+  let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "us-datarecovery.com",
+    Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+  );
+
+  // Switch back to enforcement to confirm that it was the security.pki.crlite_mode
+  // that caused us to return Success for revokedCert.
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeEnforcePrefValue
+  );
+
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "us-datarecovery.com",
+    0
+  );
+});
+
+add_task(async function test_crlite_filters_and_check_revocation() {
+  Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeEnforcePrefValue
+  );
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
+  let noSCTCertIssuer = constructCertFromFile(
+    "test_crlite_filters/no-sct-issuer.pem"
+  );
+
+  let result = await syncAndDownload([
+    {
+      timestamp: "2020-10-17T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+        {
+          logID: "pLkJkLQYWBSHuxOizGdwCjw1mAT5G9+443fNDsgN3BA=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
   ]);
   equal(
@@ -621,6 +692,7 @@ add_task(async function test_crlite_filters_and_check_revocation() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
   ]);
   equal(
@@ -655,6 +727,7 @@ add_task(async function test_crlite_filters_avoid_reprocessing_filters() {
           maxTimestamp: 9999999999999,
         },
       ],
+      enrolledIssuers: [ISSUER_PEM_UID, NO_SCT_ISSUER_PEM_UID],
     },
     {
       timestamp: "2019-01-01T06:00:00Z",

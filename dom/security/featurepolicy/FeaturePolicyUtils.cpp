@@ -242,15 +242,15 @@ void FeaturePolicyUtils::ReportViolation(Document* aDocument,
 }  // namespace dom
 
 namespace ipc {
-void IPDLParamTraits<dom::FeaturePolicy*>::Write(IPC::Message* aMsg,
+void IPDLParamTraits<dom::FeaturePolicy*>::Write(IPC::MessageWriter* aWriter,
                                                  IProtocol* aActor,
                                                  dom::FeaturePolicy* aParam) {
   if (!aParam) {
-    WriteIPDLParam(aMsg, aActor, false);
+    WriteIPDLParam(aWriter, aActor, false);
     return;
   }
 
-  WriteIPDLParam(aMsg, aActor, true);
+  WriteIPDLParam(aWriter, aActor, true);
 
   dom::FeaturePolicyInfo info;
   info.defaultOrigin() = aParam->DefaultOrigin();
@@ -263,15 +263,15 @@ void IPDLParamTraits<dom::FeaturePolicy*>::Write(IPC::Message* aMsg,
   info.attributeEnabledFeatureNames() =
       aParam->AttributeEnabledFeatureNames().Clone();
 
-  WriteIPDLParam(aMsg, aActor, info);
+  WriteIPDLParam(aWriter, aActor, info);
 }
 
 bool IPDLParamTraits<dom::FeaturePolicy*>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     RefPtr<dom::FeaturePolicy>* aResult) {
   *aResult = nullptr;
   bool notnull = false;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &notnull)) {
+  if (!ReadIPDLParam(aReader, aActor, &notnull)) {
     return false;
   }
 
@@ -280,7 +280,7 @@ bool IPDLParamTraits<dom::FeaturePolicy*>::Read(
   }
 
   dom::FeaturePolicyInfo info;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &info)) {
+  if (!ReadIPDLParam(aReader, aActor, &info)) {
     return false;
   }
 

@@ -3,8 +3,14 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that breakpoints at worker startup are hit when using windowless workers.
+
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-windowless-workers-early-breakpoint.html", "simple-worker.js");
+  const dbg = await initDebugger(
+    "doc-windowless-workers-early-breakpoint.html",
+    "simple-worker.js"
+  );
 
   const workerSource = findSource(dbg, "simple-worker.js");
 

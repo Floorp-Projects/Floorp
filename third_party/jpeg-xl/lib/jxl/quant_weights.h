@@ -363,26 +363,7 @@ class DequantMatrices {
                     sizeof(kQuantTable) / sizeof *kQuantTable,
                 "Update this array when adding or removing AC strategies.");
 
-  DequantMatrices() {
-    encodings_.resize(size_t(QuantTable::kNum), QuantEncoding::Library(0));
-    size_t pos = 0;
-    size_t offsets[kNum * 3];
-    for (size_t i = 0; i < size_t(QuantTable::kNum); i++) {
-      encodings_[i] = QuantEncoding::Library(0);
-      size_t num = required_size_[i] * kDCTBlockSize;
-      for (size_t c = 0; c < 3; c++) {
-        offsets[3 * i + c] = pos + c * num;
-      }
-      pos += 3 * num;
-    }
-    for (size_t i = 0; i < AcStrategy::kNumValidStrategies; i++) {
-      for (size_t c = 0; c < 3; c++) {
-        table_offsets_[i * 3 + c] = offsets[kQuantTable[i] * 3 + c];
-      }
-    }
-    // Default quantization tables need to be valid.
-    JXL_CHECK(Compute());
-  }
+  DequantMatrices();
 
   static const QuantEncoding* Library();
 
@@ -393,20 +374,17 @@ class DequantMatrices {
   // .cc file.
   static const DequantLibraryInternal LibraryInit();
 
-  JXL_INLINE size_t MatrixOffset(size_t quant_kind, size_t c) const {
-    JXL_DASSERT(quant_kind < AcStrategy::kNumValidStrategies);
-    return table_offsets_[quant_kind * 3 + c];
-  }
-
   // Returns aligned memory.
   JXL_INLINE const float* Matrix(size_t quant_kind, size_t c) const {
     JXL_DASSERT(quant_kind < AcStrategy::kNumValidStrategies);
-    return &table_[MatrixOffset(quant_kind, c)];
+    JXL_DASSERT((1 << quant_kind) & computed_mask_);
+    return &table_[table_offsets_[quant_kind * 3 + c]];
   }
 
   JXL_INLINE const float* InvMatrix(size_t quant_kind, size_t c) const {
     JXL_DASSERT(quant_kind < AcStrategy::kNumValidStrategies);
-    return &inv_table_[MatrixOffset(quant_kind, c)];
+    JXL_DASSERT((1 << quant_kind) & computed_mask_);
+    return &inv_table_[table_offsets_[quant_kind * 3 + c]];
   }
 
   // DC quants are used in modular mode for XYB multipliers.
@@ -418,6 +396,7 @@ class DequantMatrices {
   // For encoder.
   void SetEncodings(const std::vector<QuantEncoding>& encodings) {
     encodings_ = encodings;
+    computed_mask_ = 0;
   }
 
   // For encoder.
@@ -444,9 +423,9 @@ class DequantMatrices {
   static_assert(kNum == sizeof(required_size_y) / sizeof(*required_size_y),
                 "Update this array when adding or removing quant tables.");
 
- private:
-  Status Compute();
+  Status EnsureComputed(uint32_t kind_mask);
 
+ private:
   static constexpr size_t required_size_[] = {
       1, 1, 1, 1, 4, 16, 2, 4, 8, 1, 1, 64, 32, 256, 128, 1024, 512};
   static_assert(kNum == sizeof(required_size_) / sizeof(*required_size_),
@@ -454,6 +433,7 @@ class DequantMatrices {
   static constexpr size_t kTotalTableSize =
       ArraySum(required_size_) * kDCTBlockSize * 3;
 
+  uint32_t computed_mask_ = 0;
   // kTotalTableSize entries followed by kTotalTableSize for inv_table
   hwy::AlignedFreeUniquePtr<float[]> table_storage_;
   const float* table_;

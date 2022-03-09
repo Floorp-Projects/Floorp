@@ -244,14 +244,14 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
             mInputProcessing->ApplyConfig(mTrack->GraphImpl(),
                                           mAudioProcessingConfig);
             {
-              TRACE("SetPassThrough")
-              mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
-                                               mPassThrough);
-            }
-            {
               TRACE("SetRequestedInputChannelCount");
               mInputProcessing->SetRequestedInputChannelCount(
                   mTrack->GraphImpl(), mRequestedInputChannelCount);
+            }
+            {
+              TRACE("SetPassThrough")
+              mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
+                                               mPassThrough);
             }
           }
         };
@@ -418,6 +418,8 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  ApplySettings(mCurrentPrefs);
+
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack,
                  principal = mPrincipal] {
@@ -429,8 +431,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
             track, inputProcessing, StartStopMessage::Start));
         track->ConnectDeviceInput(deviceID, inputProcessing, principal);
       }));
-
-  ApplySettings(mCurrentPrefs);
 
   MOZ_ASSERT(mState != kReleased);
   mState = kStarted;
@@ -456,10 +456,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
           return;
         }
 
-        track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            track, inputProcessing, StartStopMessage::Stop));
         MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
         track->DisconnectDeviceInput();
+        track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+            track, inputProcessing, StartStopMessage::Stop));
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
@@ -751,9 +751,8 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
                                              size_t aFrames, TrackRate aRate,
                                              uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  MOZ_ASSERT(mEnabled);
 
-  if (PassThrough(aGraph)) {
+  if (!mEnabled || PassThrough(aGraph)) {
     return;
   }
 
@@ -1430,3 +1429,8 @@ void MediaEngineWebRTCAudioCaptureSource::GetSettings(
 }
 
 }  // namespace mozilla
+
+// Don't allow our macros to leak into other cpps in our unified build unit.
+#undef MAX_CHANNELS
+#undef MONO
+#undef MAX_SAMPLING_FREQ

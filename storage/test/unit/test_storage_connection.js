@@ -371,7 +371,7 @@ add_task(async function test_open_async() {
   await standardAsyncTest(openAsyncDatabase(getTestDB(), null), "default");
   await standardAsyncTest(openAsyncDatabase(getTestDB()), "no optional arg");
   await standardAsyncTest(
-    openAsyncDatabase(getTestDB(), { shared: false, growthIncrement: 54 }),
+    openAsyncDatabase(getTestDB(), { shared: false, interruptible: true }),
     "non-default options"
   );
   await standardAsyncTest(
@@ -385,52 +385,25 @@ add_task(async function test_open_async() {
     true
   );
 
-  info("Testing async opening with bogus options 0");
+  info("Testing async opening with readonly option");
+  const impliedReadOnlyOption = { ignoreLockingMode: true };
+
   let raised = false;
-  let adb = null;
-
+  let adb = await openAsyncDatabase(getTestDB(), impliedReadOnlyOption);
+  let stmt = adb.createAsyncStatement("CREATE TABLE test(name TEXT)");
   try {
-    adb = await openAsyncDatabase("memory", {
-      shared: false,
-      growthIncrement: 54,
-    });
-  } catch (ex) {
+    await executeAsync(stmt); // This should throw
+  } catch (e) {
     raised = true;
   } finally {
+    if (stmt) {
+      stmt.finalize();
+    }
     if (adb) {
       await asyncClose(adb);
     }
   }
-  Assert.ok(raised);
 
-  info("Testing async opening with bogus options 1");
-  raised = false;
-  adb = null;
-  try {
-    adb = await openAsyncDatabase(getTestDB(), { shared: "forty-two" });
-  } catch (ex) {
-    raised = true;
-  } finally {
-    if (adb) {
-      await asyncClose(adb);
-    }
-  }
-  Assert.ok(raised);
-
-  info("Testing async opening with bogus options 2");
-  raised = false;
-  adb = null;
-  try {
-    adb = await openAsyncDatabase(getTestDB(), {
-      growthIncrement: "forty-two",
-    });
-  } catch (ex) {
-    raised = true;
-  } finally {
-    if (adb) {
-      await asyncClose(adb);
-    }
-  }
   Assert.ok(raised);
 });
 

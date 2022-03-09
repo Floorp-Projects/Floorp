@@ -123,9 +123,6 @@ void OffscreenCanvasRenderingContext2D::OnShutdown() {
 
 void OffscreenCanvasRenderingContext2D::Commit(ErrorResult& aRv) {
   if (!mOffscreenCanvas->IsTransferredFromElement()) {
-    aRv.ThrowInvalidStateError(
-        "Cannot commit on an OffscreenCanvas that is not transferred from an "
-        "HTMLCanvasElement.");
     return;
   }
 

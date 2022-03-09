@@ -28,6 +28,10 @@ var gEditItemOverlay = {
   transactionPromises: null,
   _staticFoldersListBuilt: false,
   _didChangeFolder: false,
+  // Tracks bookmark properties changes in the dialog, allowing external consumers
+  // to either confirm or discard them.
+  _bookmarkState: null,
+  _allTags: null,
 
   _paneInfo: null,
   _setPaneInfo(aInitInfo) {
@@ -223,6 +227,11 @@ var gEditItemOverlay = {
       }
     }
   },
+  async _initAllTags() {
+    this._allTags = new Map();
+    let fetchedTags = await PlacesUtils.bookmarks.fetchTags();
+    fetchedTags.map(tag => this._allTags.set(tag.name.toLowerCase(), tag.name));
+  },
 
   /**
    * Initialize the panel.
@@ -241,7 +250,7 @@ var gEditItemOverlay = {
    *   List of rows to be hidden regardless of the item edited. Possible values:
    *   "title", "location", "keyword", "folderPicker".
    */
-  initPanel(aInfo) {
+  async initPanel(aInfo) {
     if (typeof aInfo != "object" || aInfo === null) {
       throw new Error("aInfo must be an object.");
     }
@@ -316,7 +325,7 @@ var gEditItemOverlay = {
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
-      this._initKeywordField().catch(Cu.reportError);
+      await this._initKeywordField().catch(Cu.reportError);
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -332,7 +341,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentGuid).catch(Cu.reportError);
+      await this._initFolderMenuList(parentGuid).catch(Cu.reportError);
     }
 
     // Selection count.
@@ -344,6 +353,9 @@ var gEditItemOverlay = {
         uris.length,
         [uris.length]
       );
+    }
+    if (this._paneInfo.isBookmark) {
+      this._initAllTags().catch(Cu.reportError);
     }
 
     let focusElement = () => {
@@ -375,6 +387,7 @@ var gEditItemOverlay = {
     } else {
       focusElement();
     }
+    this._bookmarkState = this.makeNewStateObject();
   },
 
   /**
@@ -565,6 +578,8 @@ var gEditItemOverlay = {
     this._firstEditedField = "";
     this._didChangeFolder = false;
     this.transactionPromises = [];
+    this._bookmarkState = null;
+    this._allTags = null;
   },
 
   get selectedFolderGuid() {
@@ -572,6 +587,20 @@ var gEditItemOverlay = {
       this._folderMenuList.selectedItem &&
       this._folderMenuList.selectedItem.folderGuid
     );
+  },
+
+  makeNewStateObject() {
+    if (this._paneInfo.isItem || this._paneInfo.isTag) {
+      let tags = "";
+      let keyword = "";
+
+      if (this._paneInfo.isBookmark) {
+        tags = this._element("tagsField").value;
+        keyword = this._element("keywordField").value;
+      }
+      return new PlacesUIUtils.BookmarkState(this._paneInfo, tags, keyword);
+    }
+    return null;
   },
 
   onTagsFieldChange() {
@@ -605,65 +634,27 @@ var gEditItemOverlay = {
 
     // Optimize the trivial cases (which are actually the most common).
     if (!inputTags.length && !aCurrentTags.length) {
-      return { newTags: [], removedTags: [] };
+      return (inputTags = []);
     }
     if (!inputTags.length) {
-      return { newTags: [], removedTags: aCurrentTags };
+      return (inputTags = aCurrentTags);
     }
-    if (!aCurrentTags.length) {
-      return { newTags: inputTags, removedTags: [] };
-    }
-
-    // Do not remove tags that may be reinserted with a different
-    // case, since the tagging service may handle those more efficiently.
-    let lcInputTags = inputTags.map(t => t.toLowerCase());
-    let removedTags = aCurrentTags.filter(
-      t => !lcInputTags.includes(t.toLowerCase())
-    );
-    let newTags = inputTags.filter(t => !aCurrentTags.includes(t));
-    return { removedTags, newTags };
+    return inputTags;
   },
 
   // Adds and removes tags for one or more uris.
   _setTagsFromTagsInputField(aCurrentTags, aURIs) {
-    let { removedTags, newTags } = this._getTagsChanges(aCurrentTags);
-    if (removedTags.length + newTags.length == 0) {
+    let inputTags = this._getTagsChanges(aCurrentTags);
+    if (!inputTags) {
       return false;
     }
-
-    let setTags = async () => {
-      let promises = [];
-      if (removedTags.length) {
-        let promise = PlacesTransactions.Untag({
-          urls: aURIs,
-          tags: removedTags,
-        })
-          .transact()
-          .catch(Cu.reportError);
-        this.transactionPromises.push(promise);
-        promises.push(promise);
-      }
-      if (newTags.length) {
-        let promise = PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
-          .transact()
-          .catch(Cu.reportError);
-        this.transactionPromises.push(promise);
-        promises.push(promise);
-      }
-      // Don't use Promise.all because we want these to be executed in order.
-      for (let promise of promises) {
-        await promise;
-      }
-    };
-
+    inputTags.map(tag => this._allTags.set(tag.toLowerCase(), tag));
+    let setTags = () => this._bookmarkState._tagsChanged(inputTags);
     // Only in the library info-pane it's safe (and necessary) to batch these.
     // TODO bug 1093030: cleanup this mess when the bookmarksProperties dialog
     // and star UI code don't "run a batch in the background".
-    if (window.document.documentElement.id == "places") {
-      PlacesTransactions.batch(setTags);
-    } else {
-      setTags();
-    }
+
+    setTags();
     return true;
   },
 
@@ -673,7 +664,7 @@ var gEditItemOverlay = {
       : [this._paneInfo.uri];
     let currentTags = this._paneInfo.bulkTagging
       ? await this._getCommonTags()
-      : PlacesUtils.tagging.getTagsForURI(uris[0]);
+      : this._bookmarkState._originalState.tags;
     let anyChanges = this._setTagsFromTagsInputField(currentTags, uris);
     if (!anyChanges) {
       return false;
@@ -683,11 +674,12 @@ var gEditItemOverlay = {
     if (!this._paneInfo) {
       return false;
     }
+    await this._rebuildTagsSelectorList();
 
     // Ensure the tagsField is in sync, clean it up from empty tags
     currentTags = this._paneInfo.bulkTagging
       ? this._getCommonTags()
-      : PlacesUtils.tagging.getTagsForURI(this._paneInfo.uri);
+      : this._bookmarkState._newState.tags;
     this._initTextField(this._tagsField, currentTags.join(", "), false);
     return true;
   },
@@ -732,24 +724,16 @@ var gEditItemOverlay = {
       // Get all the bookmarks for the old tag, tag them with the new tag, and
       // untag them from the old tag.
       let oldTag = this._paneInfo.tag;
-      this._paneInfo.tag = tag;
+      this._bookmarkState.tag = tag;
       let title = this._paneInfo.title;
       if (title == oldTag) {
-        this._paneInfo.title = tag;
+        this._bookmarkState.title = tag;
       }
-      let promise = PlacesTransactions.RenameTag({ oldTag, tag }).transact();
-      this.transactionPromises.push(promise.catch(Cu.reportError));
-      await promise;
+      this._bookmarkState._tagChanged(tag);
       return;
     }
-
     this._mayUpdateFirstEditField("namePicker");
-    let promise = PlacesTransactions.EditTitle({
-      guid: this._paneInfo.itemGuid,
-      title: this._namePicker.value,
-    }).transact();
-    this.transactionPromises.push(promise.catch(Cu.reportError));
-    await promise;
+    this._bookmarkState._titleChanged(this._namePicker.value);
   },
 
   onLocationFieldChange() {
@@ -769,29 +753,14 @@ var gEditItemOverlay = {
     if (this._paneInfo.uri.equals(newURI)) {
       return;
     }
-
-    let guid = this._paneInfo.itemGuid;
-    this.transactionPromises.push(
-      PlacesTransactions.EditUrl({ guid, url: newURI })
-        .transact()
-        .catch(Cu.reportError)
-    );
+    this._bookmarkState._locationChanged(newURI.spec);
   },
 
   onKeywordFieldChange() {
     if (this.readOnly || !this._paneInfo.isBookmark) {
       return;
     }
-
-    let oldKeyword = this._keyword;
-    let keyword = (this._keyword = this._keywordField.value);
-    let postData = this._paneInfo.postData;
-    let guid = this._paneInfo.itemGuid;
-    this.transactionPromises.push(
-      PlacesTransactions.EditKeyword({ guid, keyword, postData, oldKeyword })
-        .transact()
-        .catch(Cu.reportError)
-    );
+    this._bookmarkState._keywordChanged(this._keywordField.value);
   },
 
   toggleFolderTreeVisibility() {
@@ -881,8 +850,8 @@ var gEditItemOverlay = {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible
       let item = this._getFolderMenuItem(
-        this._paneInfo.parentGuid,
-        this._paneInfo.title
+        this._bookmarkState._originalState.parentGuid,
+        this._bookmarkState._originalState.title
       );
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
@@ -894,15 +863,10 @@ var gEditItemOverlay = {
     // Move the item
     let containerGuid = this._folderMenuList.selectedItem.folderGuid;
     if (
-      this._paneInfo.parentGuid != containerGuid &&
-      this._paneInfo.itemGuid != containerGuid
+      this._bookmarkState._originalState.parentGuid != containerGuid &&
+      this._bookmarkState._originalState.title != containerGuid
     ) {
-      let promise = PlacesTransactions.Move({
-        guid: this._paneInfo.itemGuid,
-        newParentGuid: containerGuid,
-      }).transact();
-      this.transactionPromises.push(promise.catch(Cu.reportError));
-      await promise;
+      this._bookmarkState._parentGuidChanged(containerGuid);
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
       if (containerGuid == PlacesUtils.bookmarks.toolbarGuid) {
@@ -991,10 +955,12 @@ var gEditItemOverlay = {
     }
 
     let tagsInField = this._getTagsArrayFromTagsInputField();
-    let allTags = await PlacesUtils.bookmarks.fetchTags();
+
     let fragment = document.createDocumentFragment();
-    for (let i = 0; i < allTags.length; i++) {
-      let tag = allTags[i].name;
+    let sortedTags = [...this._allTags.values()].sort();
+
+    for (let i = 0; i < sortedTags.length; i++) {
+      let tag = sortedTags[i];
       let elt = document.createXULElement("richlistitem");
       elt.appendChild(document.createXULElement("image"));
       let label = document.createXULElement("label");

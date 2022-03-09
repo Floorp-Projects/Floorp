@@ -1086,6 +1086,7 @@ class UrlbarView {
     item.className = "urlbarView-row";
     item.setAttribute("role", "option");
     item._elements = new Map();
+    item._buttons = new Map();
     return item;
   }
 
@@ -1148,7 +1149,13 @@ class UrlbarView {
     item._content.appendChild(url);
     item._elements.set("url", url);
 
-    this._maybeCreateRowHelpButton(item, result);
+    // Usually we create all child elements for the row regardless of whether
+    // the specific result will use them, but we don't expect the vast majority
+    // of results to have help URLs, so as an optimization, only create the help
+    // button if the result will use it.
+    if (result.payload.helpUrl) {
+      this._addRowButton(item, "help", result.payload.helpL10nId);
+    }
   }
 
   _createRowContentForTip(item) {
@@ -1179,7 +1186,7 @@ class UrlbarView {
     item._elements.set("tipButton", tipButton);
 
     let helpIcon = this._createElement("span");
-    helpIcon.className = "urlbarView-help";
+    helpIcon.classList.add("urlbarView-button", "urlbarView-button-help");
     helpIcon.setAttribute("role", "button");
     helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
     item._elements.set("helpButton", helpIcon);
@@ -1278,46 +1285,38 @@ class UrlbarView {
     body.appendChild(bottom);
     item._elements.set("bottom", bottom);
 
-    this._maybeCreateRowHelpButton(item, result);
+    if (UrlbarPrefs.get("bestMatch.blockingEnabled")) {
+      this._addRowButton(item, "block", "firefox-suggest-urlbar-block");
+    }
+    if (result.payload.helpUrl) {
+      this._addRowButton(item, "help", result.payload.helpL10nId);
+    }
   }
 
-  _maybeCreateRowHelpButton(item, result) {
-    // Usually we create all child elements for the row regardless of whether
-    // the specific result will use them, but we don't expect the vast majority
-    // of results to have help URLs, so as an optimization, only create the help
-    // button if the result will use it.
-    if (!result.payload.helpUrl) {
-      return;
+  _addRowButton(item, name, l10nID) {
+    if (!item._buttons.size) {
+      // If the content is marked as selectable, the screen reader will not be
+      // able to read the text directly child of the "urlbarView-row". As the
+      // group label is shown as pseudo element of urlbarView-row now, it isn't
+      // readable. To avoid it, we add an element for aria-label explictly,
+      // and set group label that should be read into it in _updateIndices().
+      const groupAriaLabel = this._createElement("span");
+      groupAriaLabel.className = "urlbarView-group-aria-label";
+      item._content.insertBefore(groupAriaLabel, item._content.firstChild);
+      item._elements.set("groupAriaLabel", groupAriaLabel);
+
+      item._content.setAttribute("role", "option");
+      item._content.setAttribute("selectable", "true");
     }
 
-    let helpButton = this._createElement("span");
-    helpButton.className = "urlbarView-help";
-    helpButton.setAttribute("role", "button");
-    if (result.payload.helpL10nId) {
-      helpButton.setAttribute("data-l10n-id", result.payload.helpL10nId);
+    let button = this._createElement("span");
+    button.classList.add("urlbarView-button", "urlbarView-button-" + name);
+    button.setAttribute("role", "button");
+    if (l10nID) {
+      button.setAttribute("data-l10n-id", l10nID);
     }
-    item.appendChild(helpButton);
-    item._elements.set("helpButton", helpButton);
-    item._content.setAttribute("selectable", "true");
-
-    // If the content is marked as selectable, the screen reader will not be
-    // able to read the text directly child of the "urlbarView-row". As the
-    // group label is shown as pseudo element of urlbarView-row now, it isn't
-    // readable. To avoid it, we add an element for aria-label explictly,
-    // and set group label that should be read into it in _updateIndices().
-    const groupAriaLabel = this._createElement("span");
-    groupAriaLabel.className = "urlbarView-group-aria-label";
-    item._content.insertBefore(groupAriaLabel, item._content.firstChild);
-    item._elements.set("groupAriaLabel", groupAriaLabel);
-
-    // Remove role=option on the row and set it on row-inner since the latter
-    // is the selectable logical row element when the help button is present.
-    // Since row-inner is not a child of the role=listbox element (the row
-    // container, this._rows), screen readers will not automatically recognize
-    // it as a listbox option.  To compensate, set role=presentation on the
-    // row so that screen readers ignore it.
-    item.setAttribute("role", "presentation");
-    item._content.setAttribute("role", "option");
+    item._buttons.set(name, button);
+    item.appendChild(button);
   }
 
   _updateRow(item, result) {
@@ -1337,13 +1336,14 @@ class UrlbarView {
         result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         oldResult.dynamicType != result.dynamicType) ||
       oldResult.isBestMatch != result.isBestMatch ||
-      !!result.payload.helpUrl != item._elements.has("helpButton");
+      !!result.payload.helpUrl != item._buttons.has("help");
 
     if (needsNewContent) {
       while (item.lastChild) {
         item.lastChild.remove();
       }
       item._elements.clear();
+      item._buttons.clear();
       item._content = this._createElement("span");
       item._content.className = "urlbarView-row-inner";
       item.appendChild(item._content);
@@ -1589,13 +1589,7 @@ class UrlbarView {
       title.removeAttribute("dir");
     }
 
-    if (item._elements.has("helpButton")) {
-      item.setAttribute("has-help", "true");
-      let helpButton = item._elements.get("helpButton");
-      helpButton.id = item.id + "-help";
-    } else {
-      item.removeAttribute("has-help");
-    }
+    this._updateRowForButtons(item);
   }
 
   _iconForResult(result, iconUrlOverride = null) {
@@ -1751,12 +1745,28 @@ class UrlbarView {
       this._removeElementL10n(bottom);
     }
 
-    let helpButton = item._elements.get("helpButton");
-    if (helpButton) {
-      helpButton.id = item.id + "-help";
-      item.toggleAttribute("has-help", true);
+    this._updateRowForButtons(item);
+  }
+
+  _updateRowForButtons(item) {
+    if (item._buttons.size) {
+      item.setAttribute("has-buttons", "true");
+      item.style.setProperty("--button-count", item._buttons.size);
+      for (let [name, button] of item._buttons) {
+        button.id = `${item.id}-button-${name}`;
+      }
+
+      // When the row has buttons we set role=option on row-inner since the
+      // latter is the selectable logical row element when buttons are present.
+      // Since row-inner is not a child of the role=listbox element (the row
+      // container, this._rows), screen readers will not automatically recognize
+      // it as a listbox option. To compensate, set role=presentation on the row
+      // so that screen readers ignore it.
+      item.setAttribute("role", "presentation");
     } else {
-      item.removeAttribute("has-help");
+      item.removeAttribute("has-buttons");
+      item.style.removeProperty("--button-count");
+      item.setAttribute("role", "option");
     }
   }
 
@@ -1948,12 +1958,14 @@ class UrlbarView {
 
     let result = element?.closest(".urlbarView-row")?.result;
     if (updateInput) {
-      this.input.setValueFromResult({
-        result,
-        urlOverride: element?.classList?.contains("urlbarView-help")
-          ? result.payload.helpUrl
-          : null,
-      });
+      let urlOverride = null;
+      if (element?.classList?.contains("urlbarView-button-help")) {
+        urlOverride = result.payload.helpUrl;
+      } else if (element?.classList?.contains("urlbarView-button")) {
+        // Clear the input when a button is selected.
+        urlOverride = "";
+      }
+      this.input.setValueFromResult({ result, urlOverride });
     } else {
       this.input.setResultForCurrentValue(result);
     }
@@ -2284,12 +2296,18 @@ class UrlbarView {
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
-      if (UrlbarPrefs.get("bestMatchEnabled")) {
+      if (
+        UrlbarPrefs.get("bestMatchEnabled") &&
+        UrlbarPrefs.get("suggest.bestmatch")
+      ) {
         idArgs.push({ id: "urlbar-group-best-match" });
       }
     }
 
-    if (UrlbarPrefs.get("quickSuggestEnabled")) {
+    if (
+      UrlbarPrefs.get("quickSuggestEnabled") &&
+      UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+    ) {
       idArgs.push({ id: "urlbar-result-action-sponsored" });
     }
 

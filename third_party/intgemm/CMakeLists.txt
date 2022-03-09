@@ -84,6 +84,11 @@ if (WORMHOLE)
   target_compile_definitions(intgemm PUBLIC INTGEMM_WORMHOLE)
 endif()
 
+option(INTGEMM_CPUID_ENVIRONMENT "Allow INTGEMM_CPUID environment variable to downgrade CPU model, which is mainly for testing." ON)
+if (INTGEMM_CPUID_ENVIRONMENT)
+  target_compile_definitions(intgemm PRIVATE INTGEMM_CPUID_ENVIRONMENT)
+endif()
+
 if(INTGEMM_DONT_BUILD_TESTS)
   return()
 endif()

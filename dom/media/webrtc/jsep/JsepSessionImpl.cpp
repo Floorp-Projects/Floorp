@@ -130,6 +130,11 @@ nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
 
 nsresult JsepSessionImpl::SetBundlePolicy(JsepBundlePolicy policy) {
   mLastError.clear();
+
+  if (mBundlePolicy == policy) {
+    return NS_OK;
+  }
+
   if (mCurrentLocalDescription) {
     JSEP_SET_ERROR(
         "Changing the bundle policy is only supported before the "

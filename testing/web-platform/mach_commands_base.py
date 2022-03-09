@@ -8,9 +8,8 @@ import sys
 def create_parser_wpt():
     from wptrunner import wptcommandline
 
-    result = wptcommandline.create_parser(
-        ["firefox", "firefox_android", "chrome", "edge", "servo"]
-    )
+    result = wptcommandline.create_parser()
+
     result.add_argument(
         "--no-install",
         action="store_true",
@@ -54,10 +53,9 @@ class WebPlatformTestsRunner(object):
             from wptrunner import wptcommandline
 
             kwargs = wptcommandline.check_args(self.setup.kwargs_common(kwargs))
-        elif kwargs["product"] in ("chrome", "edge", "servo"):
-            kwargs = self.setup.kwargs_wptrun(kwargs)
         else:
-            raise ValueError("Unknown product %s" % kwargs["product"])
+            kwargs = self.setup.kwargs_wptrun(kwargs)
+
         result = wptrunner.start(**kwargs)
         return int(result)
 

@@ -20,7 +20,7 @@ void ThemeDrawing::FillRect(WebRenderBackendData& aWrData,
                             const sRGBColor& aColor) {
   const bool kBackfaceIsVisible = true;
   auto dest = wr::ToLayoutRect(aRect);
-  aWrData.mBuilder.PushRect(dest, dest, kBackfaceIsVisible,
+  aWrData.mBuilder.PushRect(dest, dest, kBackfaceIsVisible, false,
                             wr::ToColorF(ToDeviceColor(aColor)));
 }
 
@@ -79,7 +79,7 @@ void ThemeDrawing::PaintRoundedRectWithRadius(
       return wr::ToLayoutRect(bg);
     }();
     if (radius == 0.0f) {
-      aWrData.mBuilder.PushRect(backgroundRect, clip, kBackfaceIsVisible,
+      aWrData.mBuilder.PushRect(backgroundRect, clip, kBackfaceIsVisible, false,
                                 backgroundColor);
     } else {
       // NOTE(emilio): This follows DisplayListBuilder::PushRoundedRect and

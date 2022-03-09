@@ -127,9 +127,20 @@ struct hmtxvmtx
     T *table_prime = c->serializer->start_embed <T> ();
     if (unlikely (!table_prime)) return_trace (false);
 
-    accelerator_t _mtx;
-    _mtx.init (c->plan->source);
-    unsigned num_advances = _mtx.num_advances_for_subset (c->plan);
+    accelerator_t _mtx (c->plan->source);
+    unsigned num_advances;
+    {
+      /* Determine num_advances to encode. */
+      auto& plan = c->plan;
+      num_advances = plan->num_output_glyphs ();
+      hb_codepoint_t old_gid = 0;
+      unsigned int last_advance = plan->old_gid_for_new_gid (num_advances - 1, &old_gid) ? _mtx.get_advance (old_gid) : 0;
+      while (num_advances > 1 &&
+	     last_advance == (plan->old_gid_for_new_gid (num_advances - 2, &old_gid) ? _mtx.get_advance (old_gid) : 0))
+      {
+	num_advances--;
+      }
+    }
 
     auto it =
     + hb_range (c->plan->num_output_glyphs ())
@@ -143,8 +154,6 @@ struct hmtxvmtx
     ;
 
     table_prime->serialize (c->serializer, it, num_advances);
-
-    _mtx.fini ();
 
     if (unlikely (c->serializer->in_error ()))
       return_trace (false);
@@ -160,12 +169,19 @@ struct hmtxvmtx
   {
     friend struct hmtxvmtx;
 
-    void init (hb_face_t *face,
-	       unsigned int default_advance_ = 0)
+    accelerator_t (hb_face_t *face,
+		   unsigned int default_advance_ = 0)
     {
       default_advance = default_advance_ ? default_advance_ : hb_face_get_upem (face);
 
-      num_advances = T::is_horizontal ? face->table.hhea->numberOfLongMetrics : face->table.vhea->numberOfLongMetrics;
+      num_advances = T::is_horizontal ?
+		     face->table.hhea->numberOfLongMetrics :
+#ifndef HB_NO_VERTICAL
+		     face->table.vhea->numberOfLongMetrics
+#else
+		     0
+#endif
+		     ;
 
       table = hb_sanitize_context_t ().reference_table<hmtxvmtx> (face, T::tableTag);
 
@@ -186,8 +202,7 @@ struct hmtxvmtx
 
       var_table = hb_sanitize_context_t ().reference_table<HVARVVAR> (face, T::variationsTag);
     }
-
-    void fini ()
+    ~accelerator_t ()
     {
       table.destroy ();
       var_table.destroy ();
@@ -256,32 +271,6 @@ struct hmtxvmtx
 #endif
     }
 
-    unsigned int num_advances_for_subset (const hb_subset_plan_t *plan) const
-    {
-      unsigned int num_advances = plan->num_output_glyphs ();
-      unsigned int last_advance = _advance_for_new_gid (plan,
-							num_advances - 1);
-      while (num_advances > 1 &&
-	     last_advance == _advance_for_new_gid (plan,
-						   num_advances - 2))
-      {
-	num_advances--;
-      }
-
-      return num_advances;
-    }
-
-    private:
-    unsigned int _advance_for_new_gid (const hb_subset_plan_t *plan,
-				       hb_codepoint_t new_gid) const
-    {
-      hb_codepoint_t old_gid;
-      if (!plan->old_gid_for_new_gid (new_gid, &old_gid))
-	return 0;
-
-      return get_advance (old_gid);
-    }
-
     protected:
     unsigned int num_metrics;
     unsigned int num_advances;
@@ -331,8 +320,12 @@ struct vmtx : hmtxvmtx<vmtx, vhea> {
   static constexpr bool is_horizontal = false;
 };
 
-struct hmtx_accelerator_t : hmtx::accelerator_t {};
-struct vmtx_accelerator_t : vmtx::accelerator_t {};
+struct hmtx_accelerator_t : hmtx::accelerator_t {
+  hmtx_accelerator_t (hb_face_t *face) : hmtx::accelerator_t (face) {}
+};
+struct vmtx_accelerator_t : vmtx::accelerator_t {
+  vmtx_accelerator_t (hb_face_t *face) : vmtx::accelerator_t (face) {}
+};
 
 } /* namespace OT */
 

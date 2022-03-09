@@ -2,13 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 
+// Assume that head.js was ran and imported shared-head.js
+/* import-globals-from shared-head.js */
+
 "use strict";
 
-/* import-globals-from ../../shared/test/shared-head.js */
-/* import-globals-from ../../debugger/test/mochitest/helpers.js */
-/* import-globals-from ../../debugger/test/mochitest/helpers/context.js */
+/* import-globals-from ../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this
 );
 

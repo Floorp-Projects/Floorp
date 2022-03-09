@@ -20,6 +20,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/luminance.h"
+#include "lib/jxl/size_constraints.h"
 
 namespace jxl {
 
@@ -32,14 +33,6 @@ struct CodecInterval {
   // Defaults for temp.
   float min = 0.0f;
   float width = 1.0f;
-};
-
-struct SizeConstraints {
-  // Upper limit on pixel dimensions/area, enforced by VerifyDimensions
-  // (called from decoders). Fuzzers set smaller values to limit memory use.
-  uint32_t dec_max_xsize = 0xFFFFFFFFu;
-  uint32_t dec_max_ysize = 0xFFFFFFFFu;
-  uint64_t dec_max_pixels = 0xFFFFFFFFu;  // Might be up to ~0ull
 };
 
 template <typename T,

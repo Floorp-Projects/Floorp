@@ -976,7 +976,7 @@ MOZ_ALWAYS_INLINE bool MaybeWrapValue(JSContext* cx,
       return JS_WrapValue(cx, rval);
     }
     MOZ_ASSERT(rval.isSymbol());
-    JS_MarkCrossZoneId(cx, SYMBOL_TO_JSID(rval.toSymbol()));
+    JS_MarkCrossZoneId(cx, JS::PropertyKey::Symbol(rval.toSymbol()));
   }
   return true;
 }

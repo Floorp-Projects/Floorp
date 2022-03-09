@@ -5170,9 +5170,9 @@ INIT_XMM ssse3
     mova         [esp+0x40], m2
     mova         [esp+0x50], m3
     MC_8TAP_SCALED_H   0x20, 0x140, 0 ; 0-1
-    MC_8TAP_SCALED_H   0x20, 0x160   ; 2-3
-    MC_8TAP_SCALED_H   0x20, 0x180   ; 4-5
-    MC_8TAP_SCALED_H   0x20, 0x1a0   ; 6-7
+    MC_8TAP_SCALED_H   0x20, 0x160    ; 2-3
+    MC_8TAP_SCALED_H   0x20, 0x180    ; 4-5
+    MC_8TAP_SCALED_H   0x20, 0x1a0    ; 6-7
     mova                 m5, [esp+0x180]
     mova                 m6, [esp+0x190]
     mova                 m7, [esp+0x1a0]
@@ -5201,9 +5201,6 @@ INIT_XMM ssse3
 .vloop:
     mov                  r0, r0m
     mov                  r5, [esp+0x1f4]
- %ifidn %1, put
-    mov                 dsd, dsm
- %endif
     and                 myd, 0x3ff
     mov                 mym, myd
     xor                  r3, r3
@@ -5244,13 +5241,10 @@ INIT_XMM ssse3
 %ifidn %1, put
     packuswb             m4, m4
     movq             [dstq], m4
-    add                dstq, dsq
+    add                dstq, dsm
 %else
     mova             [tmpq], m4
     add                tmpq, tmp_stridem
-%endif
-%if ARCH_X86_32
-    mov                 r0m, r0
 %endif
     dec                  hd
     jz .hloop_prep
@@ -5329,6 +5323,7 @@ INIT_XMM ssse3
     mova         [rsp+0x70], m7
     mova         [rsp+0x80], m4
 %else
+    mov                 r0m, r0
     mov                 myd, mym
     mov                  r3, r3m
     add                 myd, dym
@@ -5745,7 +5740,7 @@ INIT_XMM ssse3
     movu                 m1, [srcq+ssq*0]
     movu                 m2, [srcq+ssq*1]
     movu                 m3, [srcq+ssq*2]
-    lea                srcq, [srcq+ss3q ]
+    add                srcq, ss3q
     punpcklqdq           m6, m6
     SWAP                 m4, m7
     pand                 m7, m11, m8
@@ -6723,7 +6718,7 @@ INIT_XMM ssse3
     movu                 m1, [srcq+ssq*0]
     movu                 m2, [srcq+ssq*2]
     movu                 m3, [srcq+ssq*1]
-    lea                srcq, [srcq+ss3q ]
+    add                srcq, ss3q
     punpcklqdq           m6, m6
     SWAP                 m4, m7
     pand                 m7, m11, m8
@@ -6734,7 +6729,7 @@ INIT_XMM ssse3
     movu                 m0, [srcq+ssq*0]
     movu                 m7, [srcq+ssq*1]
     movu                 m6, [srcq+ssq*2]
-    lea                srcq, [srcq+ss3q ]
+    add                srcq, ss3q
     pshufb               m1, m14
     pshufb               m2, m14
     pshufb               m3, m14
@@ -9409,7 +9404,7 @@ cglobal resize_8bpc, 0, 6, 8, 3 * 16, dst, dst_stride, src, src_stride, \
     pshufd               m5, m5, q0000
 
 %if ARCH_X86_64
-    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, picptr
+    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x
     LEA                  r7, $$
 %define base r7-$$
 %else

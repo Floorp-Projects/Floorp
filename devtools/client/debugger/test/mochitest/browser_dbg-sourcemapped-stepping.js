@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Tests for stepping through Babel's compile output.
 requestLongerTimeout(4);
 
@@ -38,7 +40,6 @@ async function breakpointSteps(dbg, target, fixture, { line, column }, steps) {
 async function runSteps(dbg, source, steps) {
   const {
     selectors: { getVisibleSelectedFrame },
-    getState
   } = dbg;
 
   for (const [i, [type, position]] of steps.entries()) {
@@ -76,7 +77,7 @@ function testStepOverForOf(dbg) {
       ["stepOver", { line: 6, column: 2 }],
       ["stepOver", { line: 7, column: 4 }],
       ["stepOver", { line: 6, column: 2 }],
-      ["stepOver", { line: 10, column: 2 }]
+      ["stepOver", { line: 10, column: 2 }],
     ]
   );
 }
@@ -97,7 +98,7 @@ function testStepOverForOfArray(dbg) {
       ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 6, column: 4 }],
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 9, column: 2 }]
+      ["stepOver", { line: 9, column: 2 }],
     ]
   );
 }
@@ -113,7 +114,7 @@ function testStepOveForOfClosure(dbg) {
     [
       ["stepOver", { line: 8, column: 20 }],
       ["stepOver", { line: 8, column: 2 }],
-      ["stepOver", { line: 12, column: 2 }]
+      ["stepOver", { line: 12, column: 2 }],
     ]
   );
 }
@@ -133,7 +134,7 @@ function testStepOverForOfArrayClosure(dbg) {
       ["stepOver", { line: 5, column: 2 }],
       ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 9, column: 2 }]
+      ["stepOver", { line: 9, column: 2 }],
     ]
   );
 }
@@ -144,7 +145,10 @@ function testStepOverFunctionParams(dbg) {
     "webpack3-babel6",
     "step-over-function-params",
     { line: 6, column: 2 },
-    [["stepOver", { line: 7, column: 2 }], ["stepIn", { line: 2, column: 2 }]]
+    [
+      ["stepOver", { line: 7, column: 2 }],
+      ["stepIn", { line: 2, column: 2 }],
+    ]
   );
 }
 

@@ -242,7 +242,10 @@ async function test_jumplist() {
     Ci.nsIWinTaskbar
   );
 
-  var builder = taskbar.createJumpListBuilder();
+  // Since we're only testing the general functionality of the JumpListBuilder
+  // et. al, we can just test the non-private browsing version.
+  // (The only difference between the two at this level is the App User Model ID.)
+  var builder = taskbar.createJumpListBuilder(false);
 
   Assert.notEqual(builder, null);
 

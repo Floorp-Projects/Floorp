@@ -53,10 +53,10 @@ class RemoteImageHolder final {
 
 template <>
 struct ipc::IPDLParamTraits<RemoteImageHolder> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     RemoteImageHolder&& aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RemoteImageHolder* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RemoteImageHolder* aResult);
 };
 
 }  // namespace mozilla

@@ -1,0 +1,15 @@
+WEBVTT
+
+Test file with multiple active cues and VTTCue.line as an integer
+
+1
+00:00:00.000 --> 00:00:01.000 line:2
+track 4 - cue 1 - integer line
+
+2
+00:00:00.000 --> 00:00:01.000 line:3
+track 4 - cue 2 - integer line
+
+3
+00:00:00.000 --> 00:00:01.000 line:1
+track 4 - cue 3 - integer line

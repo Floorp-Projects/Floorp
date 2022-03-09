@@ -2,18 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
   await pushPref("devtools.debugger.features.column-breakpoints", true);
 
-  await selectSource(dbg, "simple2");
-  await waitForSelectedSource(dbg, "simple2");
+  await selectSource(dbg, "simple2.js");
+  await waitForSelectedSource(dbg, "simple2.js");
 
   info("Set condition `1`");
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForCondition(dbg, 1);
 
-  let bp = findBreakpoint(dbg, "simple2", 5);
+  let bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
   await assertConditionBreakpoint(dbg, 5);
 
@@ -21,7 +23,7 @@ add_task(async function() {
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForCondition(dbg, 12);
 
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
   await assertConditionBreakpoint(dbg, 5);
 
@@ -34,7 +36,7 @@ add_task(async function() {
   pressKey(dbg, "Enter");
   await waitForCondition(dbg, 12);
 
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, "12", "Hit 'Enter' doesn't add a new line");
 
   info("Hit 'Alt+Enter' when the cursor is in the conditional statement");
@@ -47,12 +49,12 @@ add_task(async function() {
   pressKey(dbg, "Enter");
   await waitForCondition(dbg, "1\n2");
 
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, "1\n2", "Hit 'Alt+Enter' adds a new line");
 
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg.store, "REMOVE_BREAKPOINT");
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp, undefined, "breakpoint was removed");
   await assertNoBreakpoint(dbg, 5);
 
@@ -62,7 +64,7 @@ add_task(async function() {
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForCondition(dbg, 1);
 
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
   await assertConditionBreakpoint(dbg, 5);
 
@@ -83,8 +85,8 @@ add_task(async function() {
   await waitForContextMenu(dbg);
   info('select "remove condition"');
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
-  await waitForBreakpointWithoutCondition(dbg, "simple2", 5);
-  bp = findBreakpoint(dbg, "simple2", 5);
+  await waitForBreakpointWithoutCondition(dbg, "simple2.js", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.condition, null, "breakpoint condition removed");
 
   info('Add "log point"');
@@ -92,11 +94,11 @@ add_task(async function() {
   await waitForLog(dbg, 44);
   await assertLogBreakpoint(dbg, 5);
 
-  bp = findBreakpoint(dbg, "simple2", 5);
+  bp = findBreakpoint(dbg, "simple2.js", 5);
   is(bp.options.logValue, "44", "breakpoint condition removed");
 
   await altClickElement(dbg, "gutter", 6);
-  bp = await waitForBreakpoint(dbg, "simple2", 6);
+  bp = await waitForBreakpoint(dbg, "simple2.js", 6);
   is(bp.options.logValue, "displayName", "logPoint has default value");
 
   info("Double click the logpoint in secondary pane");

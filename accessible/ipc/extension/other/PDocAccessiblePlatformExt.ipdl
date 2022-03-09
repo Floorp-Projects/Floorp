@@ -9,6 +9,7 @@ include protocol PDocAccessible;
 namespace mozilla {
 namespace a11y {
 
+[ManualDealloc]
 protocol PDocAccessiblePlatformExt {
   manager PDocAccessible;
 

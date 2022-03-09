@@ -919,16 +919,18 @@ public final class GeckoRuntime implements Parcelable {
           final OrientationController.OrientationDelegate delegate =
               getOrientationController().getDelegate();
           if (delegate == null) {
-            res.complete(false);
-          } else {
-            final GeckoResult<AllowOrDeny> response =
-                delegate.onOrientationLock(toAndroidOrientation(aOrientation));
-            if (response == null) {
-              res.complete(false);
-            } else {
-              res.completeFrom(response.map(v -> v == AllowOrDeny.ALLOW));
-            }
+            // Delegate is not set
+            res.completeExceptionally(new Exception("Not supported"));
+            return;
           }
+          final GeckoResult<AllowOrDeny> response =
+              delegate.onOrientationLock(toAndroidOrientation(aOrientation));
+          if (response == null) {
+            // Delegate is default. So lock orientation is not implemented
+            res.completeExceptionally(new Exception("Not supported"));
+            return;
+          }
+          res.completeFrom(response.map(v -> v == AllowOrDeny.ALLOW));
         });
     return res;
   }

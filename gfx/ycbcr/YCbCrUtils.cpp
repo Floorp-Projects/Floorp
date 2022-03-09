@@ -17,16 +17,40 @@ namespace gfx {
 
 // clang-format off
 
+IntSize GetCroppedCbCrSize(const IntSize& aYSize,
+                           const IntSize& aCbCrSize,
+                           const IntSize& aDisplaySize) {
+  // The supplied ySize and cbcrSize are dimensions that may be padded for
+  // alignment. display holds the intended cropped display size of the data.
+  // The ySize can simply be limited by the display size. The cbcrSize must
+  // be cropped by checking if the uncropped size is approximately half, and
+  // then halving the cropped ySize since the uncropped sizes may be padded
+  // inconsistently.
+  IntSize croppedCbCrSize = Min(aDisplaySize, aCbCrSize);
+  if (aCbCrSize.height < aYSize.height &&
+      aCbCrSize.height >= aYSize.height / 2) {
+    croppedCbCrSize.width = (aDisplaySize.width + 1) / 2;
+    croppedCbCrSize.height = (aDisplaySize.height + 1) / 2;
+  } else if (aCbCrSize.width < aYSize.width &&
+             aCbCrSize.width >= aYSize.width / 2) {
+    croppedCbCrSize.width = (aDisplaySize.width + 1) / 2;
+  }
+  return croppedCbCrSize;
+}
+
+static YUVType GetYUVType(const layers::PlanarYCbCrData& aData) {
+  IntSize croppedCbCrSize =
+      GetCroppedCbCrSize(aData.mYSize, aData.mCbCrSize, aData.mPicSize);
+  return TypeFromSize(aData.mPicSize.width, aData.mPicSize.height,
+                      croppedCbCrSize.width, croppedCbCrSize.height);
+}
+
 void
 GetYCbCrToRGBDestFormatAndSize(const layers::PlanarYCbCrData& aData,
                                SurfaceFormat& aSuggestedFormat,
                                IntSize& aSuggestedSize)
 {
-  YUVType yuvtype =
-    TypeFromSize(aData.mYSize.width,
-                 aData.mYSize.height,
-                 aData.mCbCrSize.width,
-                 aData.mCbCrSize.height);
+  YUVType yuvtype = GetYUVType(aData);
 
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
@@ -109,12 +133,7 @@ ConvertYCbCrToRGBInternal(const layers::PlanarYCbCrData& aData,
 {
   // ConvertYCbCrToRGB et al. assume the chroma planes are rounded up if the
   // luma plane is odd sized. Monochrome images have 0-sized CbCr planes
-  MOZ_ASSERT(aData.mCbCrSize.width == aData.mYSize.width ||
-             aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1 ||
-             aData.mCbCrSize.width == 0);
-  MOZ_ASSERT(aData.mCbCrSize.height == aData.mYSize.height ||
-             aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1 ||
-             aData.mCbCrSize.height == 0);
+  YUVType yuvtype = GetYUVType(aData);
 
   // Used if converting to 8 bits YUV.
   UniquePtr<uint8_t[]> yChannel;
@@ -184,12 +203,6 @@ ConvertYCbCrToRGBInternal(const layers::PlanarYCbCrData& aData,
                             bitDepth);
     }
   }
-
-  YUVType yuvtype =
-    TypeFromSize(srcData.mYSize.width,
-                 srcData.mYSize.height,
-                 srcData.mCbCrSize.width,
-                 srcData.mCbCrSize.height);
 
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (aDestSize != srcData.mPicSize) {

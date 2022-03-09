@@ -30,7 +30,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Unused.h"
 #include "nsIContentPolicy.h"
-#include "nsIWindowsUIUtils.h"
+#include "WindowsUIUtils.h"
 #include "nsContentUtils.h"
 
 #include "mozilla/Logging.h"
@@ -946,7 +946,7 @@ static const wchar_t* GetNSWindowPropName() {
 }
 
 /* static */
-bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget) {
+bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindow* aWidget) {
   if (!aWidget) {
     ::RemovePropW(aWnd, GetNSWindowPropName());
     return true;
@@ -955,8 +955,8 @@ bool WinUtils::SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget) {
 }
 
 /* static */
-nsWindowBase* WinUtils::GetNSWindowBasePtr(HWND aWnd) {
-  return static_cast<nsWindowBase*>(::GetPropW(aWnd, GetNSWindowPropName()));
+nsWindow* WinUtils::GetNSWindowBasePtr(HWND aWnd) {
+  return static_cast<nsWindow*>(::GetPropW(aWnd, GetNSWindowPropName()));
 }
 
 /* static */
@@ -1858,17 +1858,6 @@ WinUtils::GetPowerPlatformRole() {
   return power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
 }
 
-static bool IsWindows10TabletMode() {
-  nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-      do_GetService("@mozilla.org/windows-ui-utils;1"));
-  if (NS_WARN_IF(!uiUtils)) {
-    return false;
-  }
-  bool isInTabletMode = false;
-  uiUtils->GetInTabletMode(&isInTabletMode);
-  return isInTabletMode;
-}
-
 static bool CallGetAutoRotationState(AR_STATE* aRotationState) {
   typedef BOOL(WINAPI * GetAutoRotationStateFunc)(PAR_STATE pState);
   static GetAutoRotationStateFunc get_auto_rotation_state_func =
@@ -1891,7 +1880,7 @@ static bool IsTabletDevice() {
     return false;
   }
 
-  if (IsWindows10TabletMode()) {
+  if (WindowsUIUtils::GetInTabletMode()) {
     return true;
   }
 
@@ -2324,6 +2313,59 @@ void WinUtils::EnableWindowOcclusion(const bool aEnable) {
   }
   ::EnumWindows(EnumUpdateWindowOcclusionProc,
                 reinterpret_cast<LPARAM>(&aEnable));
+}
+
+void WinUtils::GetDisplayOrientation(const char16ptr_t aName,
+                                     hal::ScreenOrientation& aOrientation,
+                                     uint16_t& aAngle) {
+  aOrientation = hal::ScreenOrientation::None;
+  aAngle = 0;
+
+  DEVMODEW mode = {.dmSize = sizeof(DEVMODEW)};
+  if (!EnumDisplaySettingsW(aName, ENUM_CURRENT_SETTINGS, &mode)) {
+    return;
+  }
+  MOZ_ASSERT(mode.dmFields & DM_DISPLAYORIENTATION);
+
+  // conver to default/natural size
+  if (mode.dmDisplayOrientation == DMDO_90 ||
+      mode.dmDisplayOrientation == DMDO_270) {
+    DWORD temp = mode.dmPelsHeight;
+    mode.dmPelsHeight = mode.dmPelsWidth;
+    mode.dmPelsWidth = temp;
+  }
+
+  bool defaultIsLandscape = mode.dmPelsWidth >= mode.dmPelsHeight;
+  switch (mode.dmDisplayOrientation) {
+    case DMDO_DEFAULT:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::LandscapePrimary
+                         : hal::ScreenOrientation::PortraitPrimary;
+      aAngle = 0;
+      break;
+    case DMDO_90:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::PortraitPrimary
+                         : hal::ScreenOrientation::LandscapeSecondary;
+      aAngle = 270;
+      break;
+    case DMDO_180:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::LandscapeSecondary
+                         : hal::ScreenOrientation::PortraitSecondary;
+      aAngle = 180;
+      break;
+    case DMDO_270:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::PortraitSecondary
+                         : hal::ScreenOrientation::LandscapePrimary;
+      aAngle = 90;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected angle");
+      break;
+  }
+  return;
 }
 
 }  // namespace widget

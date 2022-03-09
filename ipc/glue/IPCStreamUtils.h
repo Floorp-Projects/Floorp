@@ -208,10 +208,10 @@ class HoldIPCStream final : public AutoIPCStream {
 
 template <>
 struct IPDLParamTraits<nsIInputStream*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     nsIInputStream* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIInputStream>* aResult);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIInputStream>* aResult);
 };
 
 }  // namespace ipc

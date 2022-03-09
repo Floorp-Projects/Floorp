@@ -15,12 +15,16 @@ include protocol PFileDescriptorSet; //FIXME: bug #792908
 include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
 
+include "mozilla/net/WebSocketChannelParent.h";
+include "mozilla/net/WebSocketChannelChild.h";
+
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 [RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace net {
 
+[ManualDealloc, ChildImpl="WebSocketChannelChild", ParentImpl="WebSocketChannelParent"]
 async protocol PWebSocket
 {
   manager PNecko;

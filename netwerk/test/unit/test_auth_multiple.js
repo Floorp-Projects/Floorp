@@ -362,7 +362,7 @@ function auth_handler(metadata, response) {
 }
 
 let httpserv;
-function setup() {
+add_setup(() => {
   Services.prefs.setBoolPref("network.auth.force-generic-ntlm", true);
   Services.prefs.setBoolPref("network.auth.force-generic-ntlm-v1", true);
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
@@ -380,8 +380,7 @@ function setup() {
 
     await httpserv.stop();
   });
-}
-setup();
+});
 
 add_task(async function test_ntlm_first() {
   Services.prefs.setBoolPref(

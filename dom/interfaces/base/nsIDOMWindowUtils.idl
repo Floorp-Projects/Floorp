@@ -1155,15 +1155,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute Node nodeObservedByIMEContentObserver;
 
   /**
-   * Get the number of screen pixels per CSS pixel.
-   *
-   * This is the same as window.devicePixelRatio, except it bypasses
-   * the fingerprinting resistance efforts that window.devicePixelRatio
-   * does (which is fine as this is only exposed to browser internals).
-   */
-  readonly attribute float screenPixelsPerCSSPixel;
-
-  /**
    * Get the number of screen pixels per CSS pixel,
    * not taking into account any override of the device pixel scale
    * that's imposed by Responsive Design Mode.
@@ -1997,6 +1988,14 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long long framesReflowed;
 
   /**
+   * Indicates whether the current frame's refresh driver has a pending tick,
+   * as reported by nsRefreshDriver::HasPendingTick.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute bool refreshDriverHasPendingTick;
+
+  /**
    * Controls the amount of chrome that should be visible on each side of
    * the window. Works like the chromemargin xul:window attribute.
    * This should only be used with non-XUL windows.
@@ -2005,6 +2004,14 @@ interface nsIDOMWindowUtils : nsISupports {
                        in int32_t aRight,
                        in int32_t aBottom,
                        in int32_t aLeft);
+
+  /**
+   * Controls the amount of space on each edge of the window that can be
+   * dragged to resize the window in that direction.
+   *
+   * @param aResizeMargin  In CSS pixels, will apply to all four window sides.
+   */
+  void setResizeMargin(in int32_t aResizeMargin);
 
   /**
    * Returns a JSObject which contains a list of frame uniformities

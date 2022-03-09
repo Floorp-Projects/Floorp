@@ -66,8 +66,10 @@ TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
   PanGesture(PanGestureInput::PANGESTURE_END, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 0), mcc->Time());
 
-  // After lifting the fingers, the velocity should still be positive.
-  EXPECT_GT(apzc->GetVelocityVector().y, 3.0);
+  // After lifting the fingers, the velocity should be zero and a smooth
+  // animation should have been triggered for scroll snap.
+  EXPECT_EQ(apzc->GetVelocityVector().y, 0);
+  apzc->AssertStateIsSmoothMsdScroll();
 
   mcc->AdvanceByMillis(5);
 

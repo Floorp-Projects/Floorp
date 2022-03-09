@@ -1,4 +1,3 @@
 {
-    "stages": "1",
-    "pgo": false
+    "stages": "1"
 }

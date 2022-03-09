@@ -48,7 +48,6 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
   if (maskArea.IsEmpty()) {
     return nullptr;
   }
-  gfxContext* context = aParams.ctx;
   // Get the clip extents in device space:
   // Minimizing the mask surface extents (using both the current clip extents
   // and maskArea) is important for performance.
@@ -68,11 +67,11 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
 
   RefPtr<DrawTarget> maskDT;
   if (maskType == StyleMaskType::Luminance) {
-    maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
-        maskSurfaceRect, SurfaceFormat::B8G8R8A8);
+    maskDT = aParams.dt->CreateClippedDrawTarget(maskSurfaceRect,
+                                                 SurfaceFormat::B8G8R8A8);
   } else {
-    maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
-        maskSurfaceRect, SurfaceFormat::A8);
+    maskDT =
+        aParams.dt->CreateClippedDrawTarget(maskSurfaceRect, SurfaceFormat::A8);
   }
 
   if (!maskDT || !maskDT->IsValid()) {

@@ -164,3 +164,15 @@ spotlight-total-cookie-protection-body = Total Cookie Protection stops trackers 
 spotlight-total-cookie-protection-expanded = { -brand-short-name } builds a fence around cookies, limiting them to the site you’re on so trackers can’t use them to follow you. With early access, you’ll help optimize this feature so we can keep building a better web for everyone.
 spotlight-total-cookie-protection-primary-button = Turn on Total Cookie Protection
 spotlight-total-cookie-protection-secondary-button = Not now
+
+## Emotive Continuous Onboarding
+
+spotlight-better-internet-header = A better internet starts with you
+spotlight-better-internet-body = When you use { -brand-short-name}, you’re voting for an open and accessible internet that’s better for everyone.
+spotlight-peace-mind-header = We’ve got you covered
+spotlight-peace-mind-body = Every month, { -brand-short-name } blocks an average of over 3,000 trackers per user. Because nothing, especially privacy nuisances like trackers, should stand between you and the good internet.
+spotlight-pin-primary-button = { PLATFORM() ->
+    [macos] Keep in Dock
+   *[other] Pin to taskbar
+}
+spotlight-pin-secondary-button = Not now

@@ -1146,6 +1146,16 @@ endfunc
         vmla.s16        \d,  \s2,  d0[2]
         vmla.s16        \d,  \s3,  d0[3]
 .endm
+.macro mul_mla_8_0 d0, s0, s1, s2, s3, s4, s5, s6, s7
+        vmul.s16        \d0, \s0,  d0[0]
+        vmla.s16        \d0, \s1,  d0[1]
+        vmla.s16        \d0, \s2,  d0[2]
+        vmla.s16        \d0, \s3,  d0[3]
+        vmla.s16        \d0, \s4,  d1[0]
+        vmla.s16        \d0, \s5,  d1[1]
+        vmla.s16        \d0, \s6,  d1[2]
+        vmla.s16        \d0, \s7,  d1[3]
+.endm
 .macro mul_mla_8_1 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8
         vmul.s16        \d0, \s0, d0[0]
         vmla.s16        \d0, \s1, d0[1]
@@ -1181,24 +1191,6 @@ endfunc
         vmla.s16        \d1, \s7, d1[1]
         vmla.s16        \d1, \s8, d1[2]
         vmla.s16        \d1, \s9, d1[3]
-.endm
-.macro mul_mla_8_4 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11
-        vmul.s16        \d0, \s0,  d0[0]
-        vmla.s16        \d0, \s1,  d0[1]
-        vmla.s16        \d0, \s2,  d0[2]
-        vmla.s16        \d0, \s3,  d0[3]
-        vmla.s16        \d0, \s4,  d1[0]
-        vmla.s16        \d0, \s5,  d1[1]
-        vmla.s16        \d0, \s6,  d1[2]
-        vmla.s16        \d0, \s7,  d1[3]
-        vmul.s16        \d1, \s4,  d0[0]
-        vmla.s16        \d1, \s5,  d0[1]
-        vmla.s16        \d1, \s6,  d0[2]
-        vmla.s16        \d1, \s7,  d0[3]
-        vmla.s16        \d1, \s8,  d1[0]
-        vmla.s16        \d1, \s9,  d1[1]
-        vmla.s16        \d1, \s10, d1[2]
-        vmla.s16        \d1, \s11, d1[3]
 .endm
 .macro vqrshrun_s16 shift, q0, d0, q1, d1, q2, d2, q3, d3
         vqrshrun.s16    \d0, \q0, #\shift
@@ -1623,7 +1615,7 @@ L(\type\()_8tap_v_tbl):
         st_16           \d_strd, d6, 4
         pop             {r4-r11,pc}
 
-28:     // 2x8, 2x16 v
+28:     // 2x6, 2x8, 2x12, 2x16 v
         vpush           {q4-q7}
         vld1.8          {d0}, [\my, :64]
         sub             \sr2,  \src,  \s_strd, lsl #1
@@ -1642,34 +1634,37 @@ L(\type\()_8tap_v_tbl):
         vmov            d7,  d10
         vmov            d9,  d12
 216:
-        subs            \h,  \h,  #8
+        subs            \h,  \h,  #4
         load_16         \sr2, \src, \s_strd, d16, d18, d20, d22
-        load_16         \sr2, \src, \s_strd, d24, d26, d28, d30
         interleave_1_16 d14, d16, d18, d20, d22
-        interleave_1_16 d22, d24, d26, d28, d30
         vmovl_u8        q7,  d14, q8,  d16, q9,  d18, q10, d20
-        vmovl_u8        q11, d22, q12, d24, q13, d26, q14, d28
         vmov            d11, d14
         vmov            d13, d16
         vmov            d15, d18
         vmov            d17, d20
-        vmov            d19, d22
-        vmov            d21, d24
-        vmov            d23, d26
-        vmov            d25, d28
-        mul_mla_8_4     q1,  q2,  q1,  q2,  q3,  q4,  q5,  q6,  q7,  q8,  q9,  q10, q11, q12
-        vqrshrun_s16    6,   q1,  d2,  q2,  d4
+        mul_mla_8_0     q1,  q1,  q2,  q3,  q4,  q5,  q6,  q7, q8
+        vqrshrun_s16    6,   q1,  d2
         st_16           \d_strd, d2, 4
-        st_16           \d_strd, d4, 4
         ble             0f
-        vmov            q1,  q9
-        vmov            q2,  q10
-        vmov            q3,  q11
-        vmov            q4,  q12
-        vmov            q5,  q13
-        vmov            q6,  q14
-        vmov            d14, d30
+        cmp             \h,  #2
+        vmov            q1,  q5
+        vmov            q2,  q6
+        vmov            q3,  q7
+        vmov            q4,  q8
+        vmov            q5,  q9
+        vmov            q6,  q10
+        vmov            d14, d22
+        beq             26f
         b               216b
+26:
+        load_16         \sr2, \src, \s_strd, d16, d18
+        interleave_1_16 d14, d16, d18
+        vmovl_u8        q7,  d14, q8,  d16
+        vmov            d11, d14
+        vmov            d13, d16
+        mul_mla_8_0     d2,  d2,  d4,  d6,  d8,  d10, d12, d14, d16
+        vqrshrun_s16    6,   q1,  d2
+        st_16           \d_strd, d2, 2
 0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
@@ -1703,7 +1698,7 @@ L(\type\()_8tap_v_tbl):
 0:
         pop             {r4-r11,pc}
 
-480:    // 4x8, 4x16 v
+480:    // 4x6, 4x8, 4x12, 4x16 v
         vpush           {q4}
         vld1.8          {d0}, [\my, :64]
         sub             \sr2, \src, \s_strd, lsl #1
@@ -1726,12 +1721,19 @@ L(\type\()_8tap_v_tbl):
         mul_mla_8_2     q1,  q2,  q1,  q2,  q3,  q4,  q8,  q9,  q10, q11, q12, q13
         shift_store_4   \type, \d_strd, q1,  d2,  d3,  q2,  d4,  d5
         ble             0f
-        subs            \h,  \h,  #4
-        load_32         \sr2,  \src, \s_strd, d30, d2,  d4,  d6
-        interleave_1_32 d28, d30, d2,  d4,  d6
-        vmovl_u8        q14, d28, q15, d30, q1,  d2,  q2,  d4
-        mul_mla_8_2     q8,  q9,  q8,  q9,  q10, q11, q12, q13, q14, q15, q1,  q2
-        shift_store_4   \type, \d_strd, q8,  d16, d17, q9,  d18, d19
+        load_32         \sr2,  \src, \s_strd, d30, d2
+        subs            \h,  \h,  #2
+        interleave_1_32 d28, d30, d2
+        vmovl_u8        q14, d28, q15, d30
+        mul_mla_8_0     q8,  q8,  q9,  q10, q11, q12, q13, q14, q15
+        shift_store_4   \type, \d_strd, q8,  d16, d17
+        ble             0f
+        load_32         \sr2,  \src, \s_strd, d4,  d6
+        subs            \h,  \h,  #2
+        interleave_1_32 d2,  d4,  d6
+        vmovl_u8        q1,  d2,  q2,  d4
+        mul_mla_8_0     q9,  q10, q11, q12, q13, q14, q15, q1,  q2
+        shift_store_4   \type, \d_strd, q9,  d18, d19
         ble             0f
         subs            \h,  \h,  #4
         load_32         \sr2, \src, \s_strd, d8,  d16, d18, d20
@@ -2643,6 +2645,7 @@ L(\type\()_bilin_v_tbl):
         // 2x2 v
         vld1.16         {d16[]}, [\src], \s_strd
         bgt             24f
+22:
         vld1.16         {d17[]}, [\sr2], \s_strd
         vld1.16         {d18[]}, [\src], \s_strd
         vext.8          d16, d16, d17, #6
@@ -2653,11 +2656,12 @@ L(\type\()_bilin_v_tbl):
         vst1.16         {d4[0]}, [\dst, :16]
         vst1.16         {d4[1]}, [\ds2, :16]
         pop             {r4-r11,pc}
-24:     // 2x4, 2x8, ... v
+24:     // 2x4, 2x6, 2x8, ... v
         vld1.16         {d17[]}, [\sr2], \s_strd
         vld1.16         {d18[]}, [\src], \s_strd
         vld1.16         {d19[]}, [\sr2], \s_strd
         vld1.16         {d20[]}, [\src], \s_strd
+        sub             \h,  \h,  #4
         vext.8          d16, d16, d17, #6
         vext.8          d17, d17, d18, #6
         vext.8          d18, d18, d19, #6
@@ -2666,14 +2670,15 @@ L(\type\()_bilin_v_tbl):
         vtrn.32         d17, d19
         vmull.u8        q2,  d16, d2
         vmlal.u8        q2,  d17, d3
-        subs            \h,  \h,  #4
+        cmp             \h,  #2
         vqrshrn.u16     d4,  q2,  #4
         vst1.16         {d4[0]}, [\dst, :16], \d_strd
         vst1.16         {d4[1]}, [\ds2, :16], \d_strd
         vst1.16         {d4[2]}, [\dst, :16], \d_strd
         vst1.16         {d4[3]}, [\ds2, :16], \d_strd
-        ble             0f
+        blt             0f
         vmov            d16, d20
+        beq             22b
         b               24b
 0:
         pop             {r4-r11,pc}

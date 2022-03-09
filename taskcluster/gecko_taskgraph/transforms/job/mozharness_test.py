@@ -7,9 +7,9 @@ import json
 import os
 import re
 
+from taskgraph.util.taskcluster import get_artifact_url
 from voluptuous import Extra, Optional, Required
 
-from gecko_taskgraph.util.taskcluster import get_artifact_url
 from gecko_taskgraph.transforms.job import (
     configure_taskdesc_for_run,
     run_job_using,

@@ -55,7 +55,7 @@ fuzzy-if(Android,0-4,0-248) == radial-zero-length-1c.html radial-zero-length-1-r
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1d.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1e.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1f.html radial-zero-length-1-ref.html
-fuzzy(0-1,0-25) == radial-premul.html radial-premul-ref.html
+fuzzy(0-1,0-40) == radial-premul.html radial-premul-ref.html
 == repeated-final-stop-1.html repeated-final-stop-1-ref.html
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html

@@ -1306,6 +1306,10 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   } else {
     RefPtr<layers::Image> data = aImageBitmap.mData;
     surface = data->GetAsSourceSurface();
+    if (NS_WARN_IF(!surface)) {
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
 
     if (aCropRect.isSome()) {
       // get new crop rect relative to original uncropped surface
@@ -1736,13 +1740,25 @@ bool ImageBitmap::WriteStructuredClone(
   }
 
   RefPtr<SourceSurface> surface = aImageBitmap->mData->GetAsSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    return false;
+  }
+
   RefPtr<DataSourceSurface> snapshot = surface->GetDataSurface();
+  if (NS_WARN_IF(!snapshot)) {
+    return false;
+  }
+
   RefPtr<DataSourceSurface> dstDataSurface;
   {
     // DataSourceSurfaceD2D1::GetStride() will call EnsureMapped implicitly and
     // won't Unmap after exiting function. So instead calling GetStride()
     // directly, using ScopedMap to get stride.
     DataSourceSurface::ScopedMap map(snapshot, DataSourceSurface::READ);
+    if (NS_WARN_IF(!map.IsMapped())) {
+      return false;
+    }
+
     dstDataSurface = Factory::CreateDataSourceSurfaceWithStride(
         snapshot->GetSize(), snapshot->GetFormat(), map.GetStride(), true);
   }
@@ -1769,6 +1785,10 @@ size_t ImageBitmap::GetAllocatedSize() const {
   }
 
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    return 0;
+  }
+
   const int bytesPerPixel = BytesPerPixel(surface->GetFormat());
   return surface->GetSize().height * surface->GetSize().width * bytesPerPixel;
 }

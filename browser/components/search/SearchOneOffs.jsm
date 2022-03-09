@@ -474,7 +474,7 @@ class SearchOneOffs {
       // This is likely because the clientWidth getter rounds the value, but
       // the panel's border width is not an integer.
       // As a workaround, decrement the width if the scale is not an integer.
-      let scale = this.window.windowUtils.screenPixelsPerCSSPixel;
+      let scale = this.window.devicePixelRatio;
       if (Math.floor(scale) != scale) {
         --buttonsWidth;
       }

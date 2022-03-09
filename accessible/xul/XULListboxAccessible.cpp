@@ -47,17 +47,10 @@ uint64_t XULColumnItemAccessible::NativeState() const {
   return states::READONLY;
 }
 
-uint8_t XULColumnItemAccessible::ActionCount() const { return 1; }
+bool XULColumnItemAccessible::HasPrimaryAction() const { return true; }
 
 void XULColumnItemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) aName.AssignLiteral("click");
-}
-
-bool XULColumnItemAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click) return false;
-
-  DoCommand();
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -124,9 +124,12 @@ aboutprivatebrowsing:
     record_in_processes: ["content"]
     description: >
       This is recorded when a user clicks a link on the private browsing newtab.
-    bug_numbers: [1709344]
-    notification_emails: ["dmosedale@mozilla.com", "omc@mozilla.com"]
-    expiry_version: "100"
+    bug_numbers: [1709344, 1754635]
+    notification_emails:
+      - "dmosedale@mozilla.com"
+      - "barret@mozilla.com"
+      - "omc@mozilla.com"
+    expiry_version: "106"
     products:
       - "firefox"
 
@@ -454,7 +457,7 @@ downloads:
     description: >
       Sent when a content type is handed off the external helper app service for handling because it cannot
       be displayed directly.
-    bug_numbers: [1736864]
+    bug_numbers: [1736864, 1754636]
     extra_keys:
       reason: The value "attachment", "sniffed" or "other"
       type: The value "pdf", "octetstream" or "other"
@@ -464,7 +467,7 @@ downloads:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    expiry_version: "100"
+    expiry_version: "103"
 
 form_autocomplete:
   show:
@@ -1104,12 +1107,12 @@ pwmgr:
       updates to the doorhanger may change whether a login is actually saved or updated, but will
       not impact the sent object.
     objects: ["save", "update"]
-    bug_numbers: [1650929, 1650941, 1678200, 1714252]
-    expiry_version: "100"
+    bug_numbers: [1650929, 1650941, 1678200, 1714252, 1754637]
+    expiry_version: "112"
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: [main]
-    notification_emails: ["srudie@mozilla.com", "passwords-dev@mozilla.org"]
+    notification_emails: ["passwords-dev@mozilla.org"]
     extra_keys:
       did_edit_un: >
         Whether or not the saved/updated username was modified by the user typing into the
@@ -2549,6 +2552,37 @@ pictureinpicture:
       - 1730039
     expiry_version: "never"
     release_channel_collection: opt-out
+  saw_toggle:
+    objects: ["toggle"]
+    description: >
+      Recorded when the Picture-in-Picture toggle is shown
+    extra_keys:
+      firstTime: If the user has used Picture-in-Picture before
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: ["main", "content"]
+    bug_numbers:
+      - 1749585
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  opened_method:
+    objects: ["method"]
+    description: >
+      Records the method for opening the Picture-in-Picture window.
+    extra_keys:
+      method: Will be "toggle" or "contextMenu"
+      firstTimeToggle: If the user has used Picture-in-Picture before
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: ["main", "content"]
+    bug_numbers:
+      - 1749585
+    expiry_version: "never"
+    release_channel_collection: opt-out
 
 pictureinpicture.settings:
   enable:
@@ -2979,11 +3013,11 @@ installation:
       silent: '(optional, present if object is "full") Whether this was a silent install'
       from_msi: '(optional, present if object is "full") Whether this was an MSI install'
       default_path: '(optional, present if object is "full") Whether the default path was used'
-    bug_numbers: [1660198, 1725295, 1743465]
+    bug_numbers: [1660198, 1725295, 1743465, 1754638]
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
       - rtestard@mozilla.com
-    expiry_version: "100"
+    expiry_version: never
 
 contextservices.quicksuggest:
   data_collect_toggled:
@@ -3129,3 +3163,23 @@ privacy_segmentation:
       - rtestard@mozilla.com
     expiry_version: "106"
     products: ["firefox"]
+
+synced_tabs:
+  click:
+    objects: [
+      "fxa_avatar_menu",
+      "fxa_app_menu",
+      "synced_tabs_sidebar",
+      ]
+    methods: ["click"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: Record how users access and use synced tabs component
+    bug_numbers: [1756252]
+    notification_emails: ["sync-dev@mozilla.org"]
+    expiry_version: "never"
+    extra_keys:
+      tab_pos: position of the tab clicked
+      filter: was there a filter enabled

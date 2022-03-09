@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  window.addEventListener("message", async (evt) => {
+    try {
+      await navigator.requestMIDIAccess({sysex: evt.data});
+      parent.postMessage("succeeded", "*");
+    } catch (ex) {
+      parent.postMessage("failed", "*");
+    }
+  });
+</script>
+<body></body>
+</html>

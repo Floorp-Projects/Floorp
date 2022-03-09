@@ -397,7 +397,27 @@ body {
 
 hr {
   margin: 12px -8px;
-  color: #F0F0F4;
+  background-color: #F0F0F4;
+  height: 1px;
+  border: none;
+}
+
+.header_large {
+  margin: 12px 0 8px;
+  font-size: 1.15em;
+  line-height: 1.53em;
+}
+
+.header_medium {
+  margin: 12px 0 8px;
+  font-size: 1em;
+  line-height: 1.23em;
+}
+
+p {
+  margin: 8px 0;
+  font-size: 0.84em;
+  line-height: 1.07em;
 }
 
 .stp_panel_container {
@@ -2002,11 +2022,13 @@ button {
   text-decoration: none;
   background-color: #ECECEE;
 }
-.stp_article_list .stp_article_list_thumb {
+.stp_article_list .stp_article_list_thumb,
+.stp_article_list .stp_article_list_thumb_placeholder {
   width: 40px;
   height: 40px;
   border-radius: 4px;
   margin-inline-end: 8px;
+  background-color: #ECECEE;
 }
 .stp_article_list .stp_article_list_header {
   font-style: normal;
@@ -2014,7 +2036,7 @@ button {
   font-size: 0.85em;
   line-height: 1.27em;
   color: #15141A;
-  margin: 4px 0px;
+  margin: 0 0 4px;
 }
 .stp_article_list .stp_article_list_publisher {
   font-style: normal;
@@ -2022,7 +2044,7 @@ button {
   font-size: 0.85em;
   line-height: 1.27em;
   color: #52525E;
-  margin: 4px 0px;
+  margin: 4px 0 0;
 }
 
 .stp_header {
@@ -2043,7 +2065,7 @@ button {
 .stp_button {
   cursor: pointer;
   display: inline-block;
-  margin: 8px 0px;
+  margin: 0;
 }
 .stp_button.stp_button_text {
   color: #0060DF;
@@ -2057,11 +2079,11 @@ button {
   background: #0060DF;
   border-radius: 4px;
   color: #FBFBFE;
-  font-size: 0.77em;
+  font-size: 0.85em;
   font-style: normal;
   font-weight: 600;
   justify-content: center;
-  line-height: 1.2em;
+  line-height: 1.27em;
   padding: 6px 12px;
 }
 .stp_button.stp_button_secondary {
@@ -2073,7 +2095,44 @@ button {
   font-style: normal;
   font-weight: 600;
   line-height: 1.27em;
-  padding: 7px 14px;
+  padding: 6px 12px;
+}
+
+.stp_button_wide .stp_button {
+  display: block;
+  margin: 12px 0;
+  text-align: center;
+  padding: 8px 12px;
+}
+.stp_button_wide .stp_button.stp_button_primary {
+  font-size: 1em;
+  line-height: 1.22em;
+}
+.stp_button_wide .stp_button.stp_button_secondary {
+  font-size: 0.85em;
+  line-height: 1.07em;
+}
+
+.stp_button_wide .stp_button {
+  display: block;
+  margin: 12px 0;
+  text-align: center;
+}
+
+body.stp_signup_body {
+  overflow: hidden;
+}
+
+.stp_panel_signup .stp_signup_content_wrapper {
+  margin: 12px 0 20px;
+}
+.stp_panel_signup .stp_signup_img_rainbow_reader {
+  background: url(../img/rainbow-reader.svg) bottom center no-repeat;
+  background-size: contain;
+  height: 72px;
+  width: 82px;
+  float: inline-end;
+  margin-inline-start: 16px;
 }
 
 /*# sourceMappingURL=main.compiled.css.map */

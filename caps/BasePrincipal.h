@@ -161,8 +161,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD IsThirdPartyPrincipal(nsIPrincipal* uri, bool* aRes) override;
   NS_IMETHOD IsThirdPartyChannel(nsIChannel* aChannel, bool* aRes) override;
   NS_IMETHOD GetIsOriginPotentiallyTrustworthy(bool* aResult) override;
-  NS_IMETHOD IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin,
-                          bool* aRes) override;
+  NS_IMETHOD IsSameOrigin(nsIURI* aURI, bool* aRes) override;
   NS_IMETHOD GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
                                   const OriginAttributes& aOriginAttributes,
                                   nsACString& _retval) override;
@@ -289,6 +288,8 @@ class BasePrincipal : public nsJSPrincipals {
   uint32_t GetOriginSuffixHash() const { return mOriginSuffix->hash(); }
 
   virtual nsresult GetSiteIdentifier(SiteIdentifier& aSite) = 0;
+
+  bool IsLoopbackHost();
 
  protected:
   BasePrincipal(PrincipalKind aKind, const nsACString& aOriginNoSuffix,

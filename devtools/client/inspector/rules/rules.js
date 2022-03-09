@@ -141,6 +141,10 @@ function CssRuleView(inspector, document, store) {
   // Allow tests to override debouncing behavior, as this can cause intermittents.
   this.debounce = debounce;
 
+  // Variable used to stop the propagation of mouse events to children
+  // when we are updating a value by dragging the mouse and we then release it
+  this.childHasDragged = false;
+
   this._outputParser = new OutputParser(document, this.cssProperties);
 
   this._onAddRule = this._onAddRule.bind(this);
@@ -389,6 +393,11 @@ CssRuleView.prototype = {
    * @param {MouseEvent|UIEvent} event
    */
   handleEvent(event) {
+    if (this.childHasDragged) {
+      this.childHasDragged = false;
+      event.stopPropagation();
+      return;
+    }
     switch (event.type) {
       case "click":
         this.handleClickEvent(event);

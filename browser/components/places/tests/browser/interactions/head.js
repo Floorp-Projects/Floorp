@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   60
 );
 
-add_task(async function global_setup() {
+add_setup(async function global_setup() {
   // Disable idle management because it interacts with our code, causing
   // unexpected intermittent failures, we'll fake idle notifications when
   // we need to test it.
@@ -73,7 +73,7 @@ async function assertDatabaseValues(expected) {
     expected.length,
     "Found the expected number of entries"
   );
-  for (let i = 0; i < expected.length; i++) {
+  for (let i = 0; i < Math.min(expected.length, interactions.length); i++) {
     let actual = interactions[i];
     Assert.equal(
       actual.url,

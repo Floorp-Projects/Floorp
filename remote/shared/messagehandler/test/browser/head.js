@@ -4,12 +4,12 @@
 
 "use strict";
 
-var { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
+var { ContextDescriptorType } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
 );
 
 var contextDescriptorAll = {
-  type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+  type: ContextDescriptorType.All,
 };
 
 function createRootMessageHandler(sessionId) {
@@ -112,4 +112,67 @@ function createTestMarkupWithFrames() {
   return `https://example.org/document-builder.sjs?html=${encodeURI(
     TEST_URI_MARKUP
   )}`;
+}
+
+/**
+ * Install a sidebar extension.
+ *
+ * @return {Object}
+ *     Return value with two properties:
+ *     - extension: test wrapper as returned by SpecialPowers.loadExtension.
+ *       Make sure to explicitly call extension.unload() before the end of the test.
+ *     - sidebarBrowser: the browser element containing the extension sidebar.
+ */
+async function installSidebarExtension() {
+  info("Load the test extension");
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      sidebar_action: {
+        default_panel: "sidebar.html",
+      },
+    },
+    useAddonManager: "temporary",
+
+    files: {
+      "sidebar.html": `
+        <!DOCTYPE html>
+        <html>
+          Test extension
+          <script src="sidebar.js"></script>
+        </html>
+      `,
+      "sidebar.js": function() {
+        const { browser } = this;
+        browser.test.sendMessage("sidebar-loaded", {
+          bcId: SpecialPowers.wrap(window).browsingContext.id,
+        });
+      },
+      "tab.html": `
+        <!DOCTYPE html>
+        <html>
+          Test extension (tab)
+          <script src="tab.js"></script>
+        </html>
+      `,
+      "tab.js": function() {
+        const { browser } = this;
+        browser.test.sendMessage("tab-loaded", {
+          bcId: SpecialPowers.wrap(window).browsingContext.id,
+        });
+      },
+    },
+  });
+
+  info("Wait for the extension to start");
+  await extension.startup();
+
+  info("Wait for the extension browsing context");
+  const { bcId } = await extension.awaitMessage("sidebar-loaded");
+  const sidebarBrowser = BrowsingContext.get(bcId).top.embedderElement;
+  ok(sidebarBrowser, "Got a browser element for the extension sidebar");
+
+  return {
+    extension,
+    sidebarBrowser,
+  };
 }

@@ -89,7 +89,8 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
 
-  // The current preferences for the APM's various processing stages.
+  // The current preferences that will be forwarded to mAudioProcessingConfig
+  // below.
   MediaEnginePrefs mCurrentPrefs;
 
   // The AudioProcessingTrack used to inteface with the MediaTrackGraph. Set in
@@ -179,8 +180,7 @@ class AudioInputProcessing : public AudioDataListener {
   // mAudioProcessing. Not used if the processing is bypassed.
   Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
   // The number of channels asked for by content, after clamping to the range of
-  // legal channel count for this particular device. This is the number of
-  // channels of the input buffer passed as parameter in NotifyInputData.
+  // legal channel count for this particular device.
   uint32_t mRequestedInputChannelCount;
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into

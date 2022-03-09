@@ -1774,6 +1774,91 @@ TEST_F(APZCOverscrollTesterMock,
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTesterMock, RetriggeredOverscrollAnimationVelocity) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  // Setup two nested vertical scrollable frames.
+  const char* treeShape = "x(x)";
+  nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
+                                      nsIntRegion(IntRect(0, 0, 100, 50))};
+  CreateScrollData(treeShape, layerVisibleRegion);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                            CSSRect(0, 0, 100, 200));
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
+                            CSSRect(0, 0, 100, 200));
+
+  SetScrollHandoff(layers[1], root);
+
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
+  UpdateHitTestingTree();
+  rootApzc = ApzcOf(root);
+  rootApzc->GetFrameMetrics().SetIsRootContent(true);
+
+  ScreenIntPoint panPoint(50, 20);
+  // A vertical upward pan gesture on the child scroller which should be handed
+  // off the root APZC.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, panPoint,
+             ScreenPoint(0, -2), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, panPoint,
+             ScreenPoint(0, 0), mcc->Time());
+
+  // The root APZC should be overscrolled and the child APZC should not be.
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_FALSE(ApzcOf(layers[1])->IsOverscrolled());
+
+  mcc->AdvanceByMillis(10);
+
+  // Make sure the root APZC is still overscrolled and there's an overscroll
+  // animation.
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrollAnimationRunning());
+
+  // And make sure the overscroll animation's velocity is a certain amount in
+  // the upward direction.
+  EXPECT_LT(rootApzc->GetVelocityVector().y, 0);
+
+  // Start a new downward pan gesture on the child scroller which
+  // should be handled by the child APZC now.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, panPoint,
+             ScreenPoint(0, 2), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  // The new pan-start gesture stops the overscroll animation at this moment.
+  EXPECT_TRUE(!rootApzc->IsOverscrollAnimationRunning());
+
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  // There's no overscroll animation yet even if the root APZC is still
+  // overscrolled.
+  EXPECT_TRUE(!rootApzc->IsOverscrollAnimationRunning());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, panPoint,
+             ScreenPoint(0, 10), mcc->Time());
+
+  // Now an overscroll animation should have been triggered by the pan-end
+  // gesture.
+  EXPECT_TRUE(rootApzc->IsOverscrollAnimationRunning());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  // And the newly created overscroll animation's positions should never exceed
+  // 0.
+  while (SampleAnimationsOnce()) {
+    EXPECT_LE(rootApzc->GetOverscrollAmount().y, 0);
+  }
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
 TEST_F(APZCOverscrollTesterMock, OverscrollIntoPreventDefault) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 

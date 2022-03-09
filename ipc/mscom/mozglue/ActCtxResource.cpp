@@ -195,23 +195,43 @@ static HMODULE GetContainingModuleHandle() {
   return thisModule;
 }
 
+static uint16_t sActCtxResourceId = 0;
+
+/* static */
+void ActCtxResource::SetAccessibilityResourceId(uint16_t aResourceId) {
+  sActCtxResourceId = aResourceId;
+}
+
+/* static */
+uint16_t ActCtxResource::GetAccessibilityResourceId() {
+  return sActCtxResourceId;
+}
+
+static void EnsureAccessibilityResourceId() {
+  if (!sActCtxResourceId) {
+#if defined(HAVE_64BIT_BUILD)
+    // The manifest for 64-bit Windows is embedded with resource ID 64.
+    sActCtxResourceId = 64;
+#else
+    // The manifest for 32-bit Windows is embedded with resource ID 32.
+    // Beginning with Windows 10 Creators Update, 32-bit builds always use the
+    // 64-bit manifest. Older builds of Windows may or may not require the
+    // 64-bit manifest: UseIAccessibleProxyStub() determines the course of
+    // action.
+    if (mozilla::IsWin10CreatorsUpdateOrLater() || UseIAccessibleProxyStub()) {
+      sActCtxResourceId = 64;
+    } else {
+      sActCtxResourceId = 32;
+    }
+#endif  // defined(HAVE_64BIT_BUILD)
+  }
+}
+
 ActCtxResource ActCtxResource::GetAccessibilityResource() {
   ActCtxResource result = {};
   result.mModule = GetContainingModuleHandle();
-#if defined(HAVE_64BIT_BUILD)
-  // The manifest for 64-bit Windows is embedded with resource ID 64.
-  result.mId = 64;
-#else
-  // The manifest for 32-bit Windows is embedded with resource ID 32.
-  // Beginning with Windows 10 Creators Update, 32-bit builds always use the
-  // 64-bit manifest. Older builds of Windows may or may not require the 64-bit
-  // manifest: UseIAccessibleProxyStub() determines the course of action.
-  if (mozilla::IsWin10CreatorsUpdateOrLater() || UseIAccessibleProxyStub()) {
-    result.mId = 64;
-  } else {
-    result.mId = 32;
-  }
-#endif  // defined(HAVE_64BIT_BUILD)
+  EnsureAccessibilityResourceId();
+  result.mId = GetAccessibilityResourceId();
   return result;
 }
 

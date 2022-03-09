@@ -1196,16 +1196,11 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
   }
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                sandbox::MITIGATION_DLL_SEARCH_ORDER;
+                sandbox::MITIGATION_DLL_SEARCH_ORDER |
+                sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
 
   if (exceptionModules.isNothing()) {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-  }
-
-  // TODO: MITIGATION_DYNAMIC_CODE_DISABLE will be always added to mitigations
-  // in bug 1734470.
-  if (!StaticPrefs::network_proxy_parse_pac_on_socket_process()) {
-    mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
   }
 
   result = mPolicy->SetDelayedProcessMitigations(mitigations);

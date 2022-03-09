@@ -776,7 +776,7 @@ void ZeroFillImage(Image3<T>* image) {
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < image->ysize(); ++y) {
       T* JXL_RESTRICT row = image->PlaneRow(c, y);
-      memset(row, 0, image->xsize() * sizeof(T));
+      if (image->xsize() != 0) memset(row, 0, image->xsize() * sizeof(T));
     }
   }
 }

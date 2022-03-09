@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmpaddedFrame.h"
+
 #include "mozilla/dom/MathMLElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextUtils.h"
+#include "nsLayoutUtils.h"
 #include <algorithm>
 
 using namespace mozilla;

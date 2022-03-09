@@ -652,7 +652,11 @@
   <checkbox id="useSmoothScrolling"
             data-l10n-id="browsing-use-smooth-scrolling"
             preference="general.smoothScroll"/>
-
+#ifdef MOZ_WIDGET_GTK
+  <checkbox id="useOverlayScrollbars"
+            data-l10n-id="browsing-gtk-use-non-overlay-scrollbars"
+            preference="widget.gtk.overlay-scrollbars.enabled"/>
+#endif
 #ifdef XP_WIN
   <checkbox id="useOnScreenKeyboard"
             hidden="true"

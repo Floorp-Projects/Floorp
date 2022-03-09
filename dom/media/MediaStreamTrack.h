@@ -29,7 +29,6 @@ class MediaTrackGraphImpl;
 class MediaTrackListener;
 class DirectMediaTrackListener;
 class PeerConnectionImpl;
-class PeerConnectionMedia;
 class PeerIdentity;
 class ProcessedMediaTrack;
 class RemoteSourceStreamInfo;
@@ -404,7 +403,6 @@ class MediaStreamTrackConsumer : public SupportsWeakPtr {
 class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
   // PeerConnection and friends need to know our owning DOMStream and track id.
   friend class mozilla::PeerConnectionImpl;
-  friend class mozilla::PeerConnectionMedia;
   friend class mozilla::SourceStreamInfo;
   friend class mozilla::RemoteSourceStreamInfo;
 

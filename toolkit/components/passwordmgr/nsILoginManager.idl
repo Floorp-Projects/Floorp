@@ -217,7 +217,7 @@ interface nsILoginManager : nsISupports {
    * Search for logins matching the specified criteria, as with
    * findLogins(). This interface only returns the number of matching
    * logins (and not the logins themselves), which allows a caller to
-   * check for logins without causing the user to be prompted for a master
+   * check for logins without causing the user to be prompted for a primary
    * password to decrypt the logins.
    *
    * @param aOrigin
@@ -269,8 +269,8 @@ interface nsILoginManager : nsISupports {
    * respect to the sync servers.
    *
    * Returns null if the data doesn't exist or if the data can't be
-   * decrypted (including if the master-password prompt is cancelled). This is
-   * OK for Sync as it can't even begin syncing if the master-password is
+   * decrypted (including if the primary-password prompt is cancelled). This is
+   * OK for Sync as it can't even begin syncing if the primary-password is
    * locked as the sync encrytion keys are stored in this login manager.
    */
   Promise getSyncID();
@@ -279,7 +279,7 @@ interface nsILoginManager : nsISupports {
    * Sets the "sync id" used by Sync to know whether the store is current with
    * respect to the sync servers. May be set to null.
    *
-   * Throws if the data can't be encrypted (including if the master-password
+   * Throws if the data can't be encrypted (including if the primary-password
    * prompt is cancelled)
    */
   Promise setSyncID(in AString syncID);
@@ -303,12 +303,12 @@ interface nsILoginManager : nsISupports {
   Promise ensureCurrentSyncID(in AString newSyncID);
 
  /**
-  * True when a master password prompt is being displayed.
+  * True when a primary password prompt is being displayed.
   */
   readonly attribute boolean uiBusy;
 
  /**
-  * True when the master password has already been entered, and so a caller
+  * True when the primary password has already been entered, and so a caller
   * can ask for decrypted logins without triggering a prompt.
   */
   readonly attribute boolean isLoggedIn;

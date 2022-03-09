@@ -8,6 +8,7 @@
 #include <gif_lib.h>
 #include <string.h>
 
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -32,8 +33,12 @@ struct PackedRgba {
   uint8_t r, g, b, a;
 };
 
-// Gif does not support partial transparency, so this considers anything non-0
-// as opaque.
+struct PackedRgb {
+  uint8_t r, g, b;
+};
+
+// Gif does not support partial transparency, so this considers any nonzero
+// alpha channel value as opaque.
 bool AllOpaque(const PackedImage& color) {
   for (size_t y = 0; y < color.ysize; ++y) {
     const PackedRgba* const JXL_RESTRICT row =
@@ -45,6 +50,21 @@ bool AllOpaque(const PackedImage& color) {
     }
   }
   return true;
+}
+
+void ensure_have_alpha(PackedFrame* frame) {
+  if (!frame->extra_channels.empty()) return;
+  const JxlPixelFormat alpha_format{
+      /*num_channels=*/1u,
+      /*data_type=*/JXL_TYPE_UINT8,
+      /*endianness=*/JXL_NATIVE_ENDIAN,
+      /*align=*/0,
+  };
+  frame->extra_channels.emplace_back(frame->color.xsize, frame->color.ysize,
+                                     alpha_format);
+  // We need to set opaque-by-default.
+  std::fill_n(static_cast<uint8_t*>(frame->extra_channels[0].pixels()),
+              frame->color.xsize * frame->color.ysize, 255u);
 }
 
 }  // namespace
@@ -138,8 +158,21 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
 
   ppf->info.num_color_channels = 3;
 
-  const JxlPixelFormat format{
+  // Pixel format for the 'canvas' onto which we paint
+  // the (potentially individually cropped) GIF frames
+  // of an animation.
+  const JxlPixelFormat canvas_format{
       /*num_channels=*/4u,
+      /*data_type=*/JXL_TYPE_UINT8,
+      /*endianness=*/JXL_NATIVE_ENDIAN,
+      /*align=*/0,
+  };
+
+  // Pixel format for the JXL PackedFrame that goes into the
+  // PackedPixelFile. Here, we use 3 color channels, and provide
+  // the alpha channel as an extra_channel wherever it is used.
+  const JxlPixelFormat packed_frame_format{
+      /*num_channels=*/3u,
       /*data_type=*/JXL_TYPE_UINT8,
       /*endianness=*/JXL_NATIVE_ENDIAN,
       /*align=*/0,
@@ -154,14 +187,13 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
   }
   const PackedRgba background_rgba{background_color.Red, background_color.Green,
                                    background_color.Blue, 0};
-  PackedFrame canvas(gif->SWidth, gif->SHeight, format);
+  PackedFrame canvas(gif->SWidth, gif->SHeight, canvas_format);
   std::fill_n(static_cast<PackedRgba*>(canvas.color.pixels()),
               canvas.color.xsize * canvas.color.ysize, background_rgba);
   Rect canvas_rect{0, 0, canvas.color.xsize, canvas.color.ysize};
 
   Rect previous_rect_if_restore_to_background;
 
-  bool has_alpha = false;
   bool replace = true;
   bool last_base_was_none = true;
   for (int i = 0; i < gif->ImageCount; ++i) {
@@ -199,8 +231,22 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
     }
 
     // Allocates the frame buffer.
-    ppf->frames.emplace_back(total_rect.xsize(), total_rect.ysize(), format);
-    auto* frame = &ppf->frames.back();
+    ppf->frames.emplace_back(total_rect.xsize(), total_rect.ysize(),
+                             packed_frame_format);
+    PackedFrame* frame = &ppf->frames.back();
+
+    // We cannot tell right from the start whether there will be a
+    // need for an alpha channel. This is discovered only as soon as
+    // we see a transparent pixel. We hence initialize alpha lazily.
+    auto set_pixel_alpha = [&frame](size_t x, size_t y, uint8_t a) {
+      // If we do not have an alpha-channel and a==255 (fully opaque),
+      // we can skip setting this pixel-value and rely on
+      // "no alpha channel = no transparency".
+      if (a == 255 && !frame->extra_channels.empty()) return;
+      ensure_have_alpha(frame);
+      static_cast<uint8_t*>(
+          frame->extra_channels[0].pixels())[y * frame->color.xsize + x] = a;
+    };
 
     const ColorMapObject* const color_map =
         image.ImageDesc.ColorMap ? image.ImageDesc.ColorMap : gif->SColorMap;
@@ -214,8 +260,8 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
 
     if (ppf->info.have_animation) {
       frame->frame_info.duration = gcb.DelayTime;
-      frame->x0 = image_rect.x0();
-      frame->y0 = image_rect.y0();
+      frame->x0 = total_rect.x0();
+      frame->y0 = total_rect.y0();
       if (last_base_was_none) {
         replace = true;
       }
@@ -270,23 +316,26 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
       }
     }
     const PackedImage& sub_frame_image = frame->color;
-    bool blend_alpha = false;
     if (replace) {
       // Copy from the new canvas image to the subframe
       for (size_t y = 0; y < total_rect.ysize(); ++y) {
         const PackedRgba* row_in =
             static_cast<const PackedRgba*>(new_canvas_image.pixels()) +
             (y + total_rect.y0()) * new_canvas_image.xsize + total_rect.x0();
-        PackedRgba* row_out =
-            static_cast<PackedRgba*>(sub_frame_image.pixels()) +
-            y * sub_frame_image.xsize;
-        memcpy(row_out, row_in, sub_frame_image.xsize * sizeof(PackedRgba));
+        PackedRgb* row_out = static_cast<PackedRgb*>(sub_frame_image.pixels()) +
+                             y * sub_frame_image.xsize;
+        for (size_t x = 0; x < sub_frame_image.xsize; ++x) {
+          row_out[x].r = row_in[x].r;
+          row_out[x].g = row_in[x].g;
+          row_out[x].b = row_in[x].b;
+          set_pixel_alpha(x, y, row_in[x].a);
+        }
       }
     } else {
       for (size_t y = 0, byte_index = 0; y < image_rect.ysize(); ++y) {
         // Assumes format.align == 0
-        PackedRgba* row = static_cast<PackedRgba*>(sub_frame_image.pixels()) +
-                          y * sub_frame_image.xsize;
+        PackedRgb* row = static_cast<PackedRgb*>(sub_frame_image.pixels()) +
+                         y * sub_frame_image.xsize;
         for (size_t x = 0; x < image_rect.xsize(); ++x, ++byte_index) {
           const GifByteType byte = image.RasterBits[byte_index];
           if (byte > color_map->ColorCount) {
@@ -296,22 +345,19 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
             row[x].r = 0;
             row[x].g = 0;
             row[x].b = 0;
-            row[x].a = 0;
-            blend_alpha =
-                true;  // need to use alpha channel if BlendMode blend is used
+            set_pixel_alpha(x, y, 0);
             continue;
           }
           GifColorType color = color_map->Colors[byte];
           row[x].r = color.Red;
           row[x].g = color.Green;
           row[x].b = color.Blue;
-          row[x].a = 255;
+          set_pixel_alpha(x, y, 255);
         }
       }
     }
 
-    if (!has_alpha && (!AllOpaque(sub_frame_image) || blend_alpha)) {
-      has_alpha = true;
+    if (!frame->extra_channels.empty()) {
       ppf->info.alpha_bits = 8;
     }
 
@@ -335,7 +381,20 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
                     canvas.color.xsize * canvas.color.ysize, background_rgba);
     }
   }
-
+  // Finally, if any frame has an alpha-channel, every frame will need
+  // to have an alpha-channel.
+  bool seen_alpha = false;
+  for (const PackedFrame& frame : ppf->frames) {
+    if (!frame.extra_channels.empty()) {
+      seen_alpha = true;
+      break;
+    }
+  }
+  if (seen_alpha) {
+    for (PackedFrame& frame : ppf->frames) {
+      ensure_have_alpha(&frame);
+    }
+  }
   return true;
 }
 

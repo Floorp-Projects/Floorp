@@ -30,6 +30,11 @@
   padding: 0;
 }
 
+.network-monitor .headers-panel-container #block-button.devtools-button {
+  height: 19px;
+  padding: 0 2px 1px;
+}
+
 .network-monitor .headers-panel-container .devtools-button:not(:hover) {
   background-color: transparent;
 }

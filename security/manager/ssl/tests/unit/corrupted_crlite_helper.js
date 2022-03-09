@@ -8,7 +8,7 @@
 //
 // Usage:
 //   Define nsILocalFile variables for the `crlite.filter`, `crlite.coverage`,
-//   and `data.safe.bin` files that should be copied to the new profile, and
+//   and `crlite.enrollment` files that should be copied to the new profile, and
 //   then load this file. The variables should be called `filter`, `coverage`,
 //   and `enrollment`, respectively. To omit a file, leave the corresponding
 //   variable `undefined`.
@@ -16,7 +16,7 @@
 // Example:
 //   let filter = do_get_file("some_test_dir/crlite.filter");
 //   let coverage = undefined;
-//   let enrollment = do_get_file("some_test_dir/data.safe.bin");
+//   let enrollment = do_get_file("some_test_dir/crlite.enrollment");
 //   load("./corrupted_crlite_helper.js");
 //
 // Note:
@@ -40,7 +40,7 @@ add_task(async function test_crlite_corrupted() {
     coverage.copyTo(securityStateDirectory, "crlite.coverage");
   }
   if (enrollment != undefined) {
-    enrollment.copyTo(securityStateDirectory, "data.safe.bin");
+    enrollment.copyTo(securityStateDirectory, "crlite.enrollment");
   }
   if (filter != undefined) {
     filter.copyTo(securityStateDirectory, "crlite.filter");
@@ -55,7 +55,7 @@ add_task(async function test_crlite_corrupted() {
   );
 
   // This certificate is revoked according to `test_crlite_filters/20201017-0-filter`.
-  // Its issuer is enrolled according to `test_crlite_preexisting/data.safe.bin`,
+  // Its issuer is enrolled according to `test_crlite_preexisting/crlite.enrollment`,
   // and it is covered according to `test_crlite_preexisting/crlite.coverage`.
   let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
 
@@ -78,20 +78,7 @@ add_task(async function test_crlite_corrupted() {
     Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
   );
 
-  // The attempted revocation check should have at least partially initialized
-  // CRLite. We should have a database (an empty one is created if
-  // `data.safe.bin` is corrupted). But we should not have a filter or a stash.
-  let hasDB = await new Promise(resolve => {
-    certStorage.hasPriorData(
-      Ci.nsICertStorage.DATA_TYPE_CRLITE,
-      (rv, result) => {
-        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-        resolve(result);
-      }
-    );
-  });
-  Assert.equal(hasDB, true, "CRLite should have a database");
-
+  // We should not have a filter or a stash.
   let hasFilter = await new Promise(resolve => {
     certStorage.hasPriorData(
       Ci.nsICertStorage.DATA_TYPE_CRLITE_FILTER_FULL,

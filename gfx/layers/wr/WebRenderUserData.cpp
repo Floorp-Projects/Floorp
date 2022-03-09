@@ -27,7 +27,7 @@ namespace layers {
 
 void WebRenderBackgroundData::AddWebRenderCommands(
     wr::DisplayListBuilder& aBuilder) {
-  aBuilder.PushRect(mBounds, mBounds, true, mColor);
+  aBuilder.PushRect(mBounds, mBounds, true, true, mColor);
 }
 
 /* static */
@@ -210,8 +210,9 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
     // Alloc async image pipeline id.
     mPipelineId =
         Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
-    WrBridge()->AddPipelineIdForAsyncCompositable(
-        mPipelineId.ref(), aContainer->GetAsyncContainerHandle());
+    WrBridge()->AddPipelineIdForCompositable(
+        mPipelineId.ref(), aContainer->GetAsyncContainerHandle(),
+        CompositableHandleOwner::ImageBridge);
     mContainer = aContainer;
   }
   MOZ_ASSERT(!mImageClient);
@@ -286,6 +287,61 @@ bool WebRenderImageProviderData::Invalidate(ImageProviderId aProviderId) const {
   nsresult rv =
       mProvider->UpdateKey(mManager, mManager->AsyncResourceUpdates(), key);
   return NS_SUCCEEDED(rv) && mKey.ref() == key;
+}
+
+WebRenderInProcessImageData::WebRenderInProcessImageData(
+    RenderRootStateManager* aManager, nsDisplayItem* aItem)
+    : WebRenderUserData(aManager, aItem) {}
+
+WebRenderInProcessImageData::WebRenderInProcessImageData(
+    RenderRootStateManager* aManager, uint32_t aDisplayItemKey,
+    nsIFrame* aFrame)
+    : WebRenderUserData(aManager, aDisplayItemKey, aFrame) {}
+
+WebRenderInProcessImageData::~WebRenderInProcessImageData() {
+  if (mPipelineId) {
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
+  }
+}
+
+void WebRenderInProcessImageData::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    const CompositableHandle& aHandle, const StackingContextHelper& aSc,
+    const LayoutDeviceRect& aBounds, const LayoutDeviceRect& aSCBounds,
+    VideoInfo::Rotation aRotation, const wr::ImageRendering& aFilter,
+    const wr::MixBlendMode& aMixBlendMode, bool aIsBackfaceVisible) {
+  MOZ_ASSERT(aHandle);
+
+  if (mPipelineId.isSome() && !(mHandle == aHandle)) {
+    // In this case, we need to remove the existed pipeline and create new one
+    // because the CompositableHandle has changed.
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mPipelineId.reset();
+  }
+
+  if (!mPipelineId) {
+    // Alloc in process image pipeline id.
+    mPipelineId =
+        Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
+    WrBridge()->AddPipelineIdForCompositable(
+        mPipelineId.ref(), aHandle, CompositableHandleOwner::InProcessManager);
+    mHandle = aHandle;
+  }
+
+  // Push IFrame for in process image pipeline.
+  //
+  // We don't push a stacking context for this in process image pipeline here.
+  // Instead, we do it inside the iframe that hosts the image. As a result,
+  // a bunch of the calculations normally done as part of that stacking
+  // context need to be done manually and pushed over to the parent side,
+  // where it will be done when we build the display list for the iframe.
+  // That happens in AsyncImagePipelineManager.
+  wr::LayoutRect r = wr::ToLayoutRect(aBounds);
+  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
+                      /*ignoreMissingPipelines*/ false);
+
+  WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(
+      mPipelineId.value(), aSCBounds, aRotation, aFilter, aMixBlendMode));
 }
 
 WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
@@ -392,30 +448,6 @@ ImageContainer* WebRenderCanvasData::GetImageContainer() {
 }
 
 void WebRenderCanvasData::ClearImageContainer() { mContainer = nullptr; }
-
-WebRenderLocalCanvasData::WebRenderLocalCanvasData(
-    RenderRootStateManager* aManager, nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
-
-WebRenderLocalCanvasData::~WebRenderLocalCanvasData() = default;
-
-void WebRenderLocalCanvasData::RequestFrameReadback() {
-  if (mGpuBridge) {
-    mGpuBridge->SwapChainPresent(mExternalImageId, mGpuTextureId);
-  }
-}
-
-void WebRenderLocalCanvasData::RefreshExternalImage() {
-  if (!mDirty) {
-    return;
-  }
-
-  const ImageIntRect dirtyRect(0, 0, mDescriptor.width, mDescriptor.height);
-  // Update the WR external image, forcing the composition of a new frame.
-  mManager->AsyncResourceUpdates().UpdatePrivateExternalImage(
-      mExternalImageId, mImageKey, mDescriptor, dirtyRect);
-  mDirty = false;
-}
 
 WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,
                                          nsDisplayItem* aItem)

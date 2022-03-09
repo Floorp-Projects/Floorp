@@ -80,7 +80,6 @@
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
 #include "nsIChannel.h"
 #include "nsIConsoleService.h"

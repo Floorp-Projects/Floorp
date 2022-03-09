@@ -100,14 +100,18 @@ void GroupBorderAssigner::GroupDone(size_t group_id, size_t padding,
   // of border of this group (on the other side), end of border of next group.
   size_t xpos[4] = {
       block_rect.x0() == 0 ? 0 : block_rect.x0() * kBlockDim - padx,
-      block_rect.x0() == 0 ? 0 : block_rect.x0() * kBlockDim + padx,
+      block_rect.x0() == 0 ? 0
+                           : std::min(frame_dim_.xsize_padded,
+                                      block_rect.x0() * kBlockDim + padx),
       is_last_group_x ? frame_dim_.xsize_padded : x1 * kBlockDim - padx,
-      is_last_group_x ? frame_dim_.xsize_padded : x1 * kBlockDim + padx};
+      std::min(frame_dim_.xsize_padded, x1 * kBlockDim + padx)};
   size_t ypos[4] = {
       block_rect.y0() == 0 ? 0 : block_rect.y0() * kBlockDim - pady,
-      block_rect.y0() == 0 ? 0 : block_rect.y0() * kBlockDim + pady,
+      block_rect.y0() == 0 ? 0
+                           : std::min(frame_dim_.ysize_padded,
+                                      block_rect.y0() * kBlockDim + pady),
       is_last_group_y ? frame_dim_.ysize_padded : y1 * kBlockDim - pady,
-      is_last_group_y ? frame_dim_.ysize_padded : y1 * kBlockDim + pady};
+      std::min(frame_dim_.ysize_padded, y1 * kBlockDim + pady)};
 
   *num_to_finalize = 0;
   auto append_rect = [&](size_t x0, size_t x1, size_t y0, size_t y1) {

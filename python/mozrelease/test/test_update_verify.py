@@ -52,7 +52,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.to_build_id = "999"
         uvc2.to_display_version = "99.0 Zeta 9"
         uvc2.to_app_version = "99.0"
-        self.assertEquals(self.uvc, uvc2)
+        self.assertEqual(self.uvc, uvc2)
 
     def testNe(self):
         self.uvc.product = "foo"
@@ -86,7 +86,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             mar_channel_IDs="firefox-mozilla-booyah",
             platform="bar",
         )
-        self.assertEquals(self.uvc.releases, releases)
+        self.assertEqual(self.uvc.releases, releases)
 
     def testAddReleasesWithDifferentPlatforms(self):
         releases = [
@@ -137,7 +137,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             mar_channel_IDs="firefox-mozilla-booyah",
             platform="WINNT_x86-msvc-x86",
         )
-        self.assertEquals(self.uvc.releases, releases)
+        self.assertEqual(self.uvc.releases, releases)
 
     def testRead(self):
         ftp_server_from = "stage.mozilla.org/firefox"
@@ -188,7 +188,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         )
 
         self.uvc.read(self.config)
-        self.assertEquals(self.uvc, uvc2)
+        self.assertEqual(self.uvc, uvc2)
 
     def testWrite(self):
         ftp_server_from = "stage.mozilla.org/firefox"
@@ -239,7 +239,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
 
         self.uvc.write(self.tmpfile)
         self.tmpfile.close()
-        self.assertEquals(open(self.config).read(), open(self.tmpfilename).read())
+        self.assertEqual(open(self.config).read(), open(self.tmpfilename).read())
 
     def testReadInvalidKey(self):
         invalidLine = 'foo="bar"'
@@ -287,7 +287,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             from_path=None,
         )
         chunkedConfig = self.uvc.getChunk(chunks=3, thisChunk=1)
-        self.assertEquals(chunkedConfig, uvc2)
+        self.assertEqual(chunkedConfig, uvc2)
 
     def testGetChunkWithPathWithSpaces(self):
         self.uvc.product = "Firefox"
@@ -326,13 +326,13 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             from_path="/firefox/Firefox 4.0 Beta 1.exe",
         )
         chunkedConfig = self.uvc.getChunk(chunks=2, thisChunk=1)
-        self.assertEquals(chunkedConfig, uvc2)
+        self.assertEqual(chunkedConfig, uvc2)
 
     def testAddLocaleToRelease(self):
         from_path = "/firefox/4.0rc1.tar.bz2"
         self.uvc.read(self.config)
         self.uvc.addLocaleToRelease("888", "he", from_path)
-        self.assertEquals(
+        self.assertEqual(
             self.uvc.getRelease("888", from_path)["locales"],
             ["af", "de", "en-US", "he", "ja", "zh-TW"],
         )
@@ -341,7 +341,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         from_path = None
         self.uvc.read(self.config)
         self.uvc.addLocaleToRelease("777", "he", from_path)
-        self.assertEquals(
+        self.assertEqual(
             self.uvc.getRelease("777", from_path)["locales"],
             ["de", "he", "ja", "zh-TW"],
         )
@@ -352,7 +352,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
 
     def testGetReleaseNonexistenceRelease(self):
         self.uvc.read(self.config)
-        self.assertEquals(self.uvc.getRelease("123", None), {})
+        self.assertEqual(self.uvc.getRelease("123", None), {})
 
     def testGetFullReleaseTests(self):
         ftp_server_from = "stage.mozilla.org/firefox"
@@ -387,7 +387,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             ftp_server_from=ftp_server_from,
             ftp_server_to=ftp_server_to,
         )
-        self.assertEquals(self.uvc.getFullReleaseTests(), uvc2.releases)
+        self.assertEqual(self.uvc.getFullReleaseTests(), uvc2.releases)
 
     def testGetQuickReleaseTests(self):
         ftp_server_from = "stage.mozilla.org/firefox"
@@ -421,7 +421,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
             ftp_server_from=ftp_server_from,
             ftp_server_to=ftp_server_to,
         )
-        self.assertEquals(self.uvc.getQuickReleaseTests(), uvc2.releases)
+        self.assertEqual(self.uvc.getQuickReleaseTests(), uvc2.releases)
 
 
 if __name__ == "__main__":

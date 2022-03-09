@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/TestUtils.jsm"
 );
 
-// Test that create in about:logins asks for master password
+// Test that create in about:logins asks for primary password
 add_task(async function test_policy_admin() {
   await setupPolicyEngineWithJson({
     policies: {

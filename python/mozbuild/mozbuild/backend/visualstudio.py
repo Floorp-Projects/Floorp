@@ -21,7 +21,6 @@ from mozpack.files import FileFinder
 from .common import CommonBackend
 from ..frontend.data import (
     Defines,
-    GeneratedSources,
     HostProgram,
     HostSources,
     Library,
@@ -103,9 +102,6 @@ class VisualStudioBackend(CommonBackend):
         elif isinstance(obj, HostSources):
             self._add_sources(reldir, obj)
 
-        elif isinstance(obj, GeneratedSources):
-            self._add_sources(reldir, obj)
-
         elif isinstance(obj, UnifiedSources):
             # XXX we should be letting CommonBackend.consume_object call this
             # for us instead.
@@ -162,7 +158,7 @@ class VisualStudioBackend(CommonBackend):
                 basename,
                 target,
                 build_command=command,
-                clean_command="$(SolutionDir)\\mach.bat build clean",
+                clean_command="$(SolutionDir)\\mach.bat clobber",
             )
 
             projects[basename] = (project_id, basename, target)

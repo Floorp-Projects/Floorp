@@ -9,6 +9,7 @@
 
 #include <type_traits>
 
+#include "gc/FinalizationObservers.h"
 #include "gc/FreeOp.h"
 #include "gc/GCLock.h"
 #include "gc/Policy.h"
@@ -173,8 +174,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       externalStringCache_(this),
       functionToStringCache_(this),
       shapeZone_(this, this),
-      finalizationRegistries_(this, this),
-      finalizationRecordMap_(this, this),
+      finalizationObservers_(this),
       jitZone_(this, nullptr),
       gcScheduled_(false),
       gcScheduledSaved_(false),
@@ -182,7 +182,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       keepPropMapTables_(this, false),
       wasCollected_(false),
       listNext_(NotOnList),
-      weakRefMap_(this, this),
       keptObjects(this, this) {
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
@@ -198,6 +197,7 @@ Zone::~Zone() {
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
   DebugAPI::deleteDebugScriptMap(debugScriptMap);
+  js_delete(finalizationObservers_.ref().release());
 
   MOZ_ASSERT(gcWeakMapList().isEmpty());
 
@@ -760,6 +760,20 @@ JS_PUBLIC_API void JS::shadow::RegisterWeakCache(
   zone->registerWeakCache(cachep);
 }
 
+void Zone::traceRootsInMajorGC(JSTracer* trc) {
+  if (trc->isMarkingTracer() && !isGCMarking()) {
+    return;
+  }
+
+  // Trace zone script-table roots. See comment below for justification re:
+  // calling this only during major (non-nursery) collections.
+  traceScriptTableRoots(trc);
+
+  if (FinalizationObservers* observers = finalizationObservers()) {
+    observers->traceRoots(trc);
+  }
+}
+
 void Zone::traceScriptTableRoots(JSTracer* trc) {
   static_assert(std::is_convertible_v<BaseScript*, gc::TenuredCell*>,
                 "BaseScript must not be nursery-allocated for script-table "
@@ -768,9 +782,7 @@ void Zone::traceScriptTableRoots(JSTracer* trc) {
   // Performance optimization: the script-table keys are JSScripts, which
   // cannot be in the nursery, so we can skip this tracing if we are only in a
   // minor collection. We static-assert this fact above.
-  if (JS::RuntimeHeapIsMinorCollecting()) {
-    return;
-  }
+  MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
 
   // N.B.: the script-table keys are weak *except* in an exceptional case: when
   // then --dump-bytecode command line option or the PCCount JSFriend API is
@@ -904,7 +916,9 @@ void Zone::clearScriptLCov(Realm* realm) {
 
 void Zone::clearRootsForShutdownGC() {
   // Finalization callbacks are not called if we're shutting down.
-  finalizationRecordMap().clear();
+  if (finalizationObservers()) {
+    finalizationObservers()->clearRecords();
+  }
 
   clearKeptObjects();
 }
@@ -922,3 +936,12 @@ bool Zone::keepDuringJob(HandleObject target) {
 }
 
 void Zone::clearKeptObjects() { keptObjects.ref().clear(); }
+
+bool Zone::ensureFinalizationObservers() {
+  if (finalizationObservers_.ref()) {
+    return true;
+  }
+
+  finalizationObservers_ = js::MakeUnique<FinalizationObservers>(this);
+  return bool(finalizationObservers_.ref());
+}

@@ -24,7 +24,7 @@ namespace ipc {
 // one instance of this protocol, with the UtilityProcessParent living on the main thread
 // of the Utility process and the UtilityProcessChild living on the main thread of the UI
 // process.
-[RefCounted, NeedsOtherPid] protocol PUtilityProcess
+[NeedsOtherPid] protocol PUtilityProcess
 {
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -35,6 +35,8 @@ parent:
   // Buffer contains bincoded Rust structs.
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FOGData(ByteBuf buf);
+
+  async InitCompleted();
 
 child:
   async Init(FileDescriptor? sandboxBroker, bool canRecordReleaseTelemetry);

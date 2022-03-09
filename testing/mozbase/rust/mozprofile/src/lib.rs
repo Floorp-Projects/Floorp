@@ -128,7 +128,9 @@ mod test {
                 }
                 (&PrefToken::Int(data_e, _), &PrefToken::Int(data_a, _)) => data_e == data_a,
                 (&PrefToken::Bool(data_e, _), &PrefToken::Bool(data_a, _)) => data_e == data_a,
-                (&PrefToken::Error(data_e, _), &PrefToken::Error(data_a, _)) => data_e == data_a,
+                (&PrefToken::Error(ref data_e, _), &PrefToken::Error(ref data_a, _)) => {
+                    *data_e == *data_a
+                }
                 (_, _) => false,
             };
             if !success {
@@ -159,6 +161,39 @@ mod test {
         expected.insert("example\\pref\"string".into(), Pref::new("val ue"));
 
         parse_test(input, expected);
+    }
+
+    #[test]
+    fn parse_empty() {
+        let inputs = ["", " ", "\n", "\n \n"];
+        for input in inputs {
+            let expected: BTreeMap<String, Pref> = BTreeMap::new();
+            parse_test(input, expected);
+        }
+    }
+
+    #[test]
+    fn parse_newline() {
+        let inputs = vec!["\na", "\n\nfoo"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
+    }
+
+    #[test]
+    fn parse_minus() {
+        let inputs = ["pref(-", "user_pref(\"example.pref.int\", -);"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
+    }
+
+    #[test]
+    fn parse_boolean_eof() {
+        let inputs = vec!["pref(true", "pref(false", "pref(false,", "pref(false)"];
+        for input in inputs {
+            assert!(parse(input.as_bytes()).is_err());
+        }
     }
 
     fn parse_test(input: &str, expected: BTreeMap<String, Pref>) {

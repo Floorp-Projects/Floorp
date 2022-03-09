@@ -1971,8 +1971,8 @@ nsresult nsDataObj ::ExtractShortcutTitle(nsString& outTitle) {
 // BuildPlatformHTML
 //
 // Munge our HTML data to win32's CF_HTML spec. Basically, put the requisite
-// header information on it. This will null terminate |outPlatformHTML|. See
-//  http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
+// header information on it. This will null-terminate |outPlatformHTML|. See
+//  https://docs.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format
 // for details.
 //
 // We assume that |inOurHTML| is already a fragment (ie, doesn't have <HTML>
@@ -1982,15 +1982,7 @@ nsresult nsDataObj ::ExtractShortcutTitle(nsString& outTitle) {
 nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
                                        char** outPlatformHTML) {
   *outPlatformHTML = nullptr;
-
   nsDependentCString inHTMLString(inOurHTML);
-  const char* const numPlaceholder = "00000000";
-  const char* const startHTMLPrefix = "Version:0.9\r\nStartHTML:";
-  const char* const endHTMLPrefix = "\r\nEndHTML:";
-  const char* const startFragPrefix = "\r\nStartFragment:";
-  const char* const endFragPrefix = "\r\nEndFragment:";
-  const char* const startSourceURLPrefix = "\r\nSourceURL:";
-  const char* const endFragTrailer = "\r\n";
 
   // Do we already have mSourceURL from a drag?
   if (mSourceURL.IsEmpty()) {
@@ -2000,60 +1992,84 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
     AppendUTF16toUTF8(url, mSourceURL);
   }
 
-  const int32_t kSourceURLLength = mSourceURL.Length();
-  const int32_t kNumberLength = strlen(numPlaceholder);
+  constexpr auto kStartHTMLPrefix = "Version:0.9\r\nStartHTML:"_ns;
+  constexpr auto kEndHTMLPrefix = "\r\nEndHTML:"_ns;
+  constexpr auto kStartFragPrefix = "\r\nStartFragment:"_ns;
+  constexpr auto kEndFragPrefix = "\r\nEndFragment:"_ns;
+  constexpr auto kStartSourceURLPrefix = "\r\nSourceURL:"_ns;
+  constexpr auto kEndFragTrailer = "\r\n"_ns;
 
-  const int32_t kTotalHeaderLen =
-      strlen(startHTMLPrefix) + strlen(endHTMLPrefix) +
-      strlen(startFragPrefix) + strlen(endFragPrefix) + strlen(endFragTrailer) +
-      (kSourceURLLength > 0 ? strlen(startSourceURLPrefix) : 0) +
-      kSourceURLLength + (4 * kNumberLength);
+  // The CF_HTML's size is embedded in the fragment, in such a way that the
+  // number of digits in the size is part of the size itself. While it _is_
+  // technically possible to compute the size of the size-field precisely -- by
+  // trial and error, if nothing else -- it's simpler to just fix it at eight
+  // characters and zero-pad it. (Zero-padding is explicitly permitted by the
+  // format definition.)
+  //
+  // Of course, while a maximum size of (10**9 - 1) bytes would probably have
+  // covered all possible use-cases in 2001, it's somewhat more likely to happen
+  // nowadays. Bug 1754803 covers extending this code to handle gigabyte-sized
+  // copies.
+  constexpr size_t kNumberLength = 8;
 
-  constexpr auto htmlHeaderString = "<html><body>\r\n"_ns;
+  const size_t sourceURLLength = mSourceURL.Length();
 
-  constexpr auto fragmentHeaderString = "<!--StartFragment-->"_ns;
+  constexpr size_t kFixedHeaderLen =
+      kStartHTMLPrefix.Length() + kEndHTMLPrefix.Length() +
+      kStartFragPrefix.Length() + kEndFragPrefix.Length() +
+      kEndFragTrailer.Length() + (4 * kNumberLength);
 
-  nsDependentCString trailingString(
+  const size_t totalHeaderLen =
+      kFixedHeaderLen + (sourceURLLength > 0
+                             ? kStartSourceURLPrefix.Length() + sourceURLLength
+                             : 0);
+
+  constexpr auto kHeaderString = "<html><body>\r\n<!--StartFragment-->"_ns;
+  constexpr auto kTrailingString =
       "<!--EndFragment-->\r\n"
       "</body>\r\n"
-      "</html>");
+      "</html>"_ns;
 
   // calculate the offsets
-  int32_t startHTMLOffset = kTotalHeaderLen;
-  int32_t startFragOffset = startHTMLOffset + htmlHeaderString.Length() +
-                            fragmentHeaderString.Length();
+  size_t startHTMLOffset = totalHeaderLen;
+  size_t startFragOffset = startHTMLOffset + kHeaderString.Length();
 
-  int32_t endFragOffset = startFragOffset + inHTMLString.Length();
-
-  int32_t endHTMLOffset = endFragOffset + trailingString.Length();
+  size_t endFragOffset = startFragOffset + inHTMLString.Length();
+  size_t endHTMLOffset = endFragOffset + kTrailingString.Length();
 
   // now build the final version
   nsCString clipboardString;
   clipboardString.SetCapacity(endHTMLOffset);
 
-  clipboardString.Append(startHTMLPrefix);
-  clipboardString.Append(nsPrintfCString("%08u", startHTMLOffset));
+  // These implicitly must match kNumberLength, above.
+  clipboardString.Append(kStartHTMLPrefix);
+  clipboardString.AppendPrintf("%08u", startHTMLOffset);
 
-  clipboardString.Append(endHTMLPrefix);
-  clipboardString.Append(nsPrintfCString("%08u", endHTMLOffset));
+  clipboardString.Append(kEndHTMLPrefix);
+  clipboardString.AppendPrintf("%08u", endHTMLOffset);
 
-  clipboardString.Append(startFragPrefix);
-  clipboardString.Append(nsPrintfCString("%08u", startFragOffset));
+  clipboardString.Append(kStartFragPrefix);
+  clipboardString.AppendPrintf("%08u", startFragOffset);
 
-  clipboardString.Append(endFragPrefix);
-  clipboardString.Append(nsPrintfCString("%08u", endFragOffset));
+  clipboardString.Append(kEndFragPrefix);
+  clipboardString.AppendPrintf("%08u", endFragOffset);
 
-  if (kSourceURLLength > 0) {
-    clipboardString.Append(startSourceURLPrefix);
+  if (sourceURLLength > 0) {
+    clipboardString.Append(kStartSourceURLPrefix);
     clipboardString.Append(mSourceURL);
   }
 
-  clipboardString.Append(endFragTrailer);
+  clipboardString.Append(kEndFragTrailer);
 
-  clipboardString.Append(htmlHeaderString);
-  clipboardString.Append(fragmentHeaderString);
+  // Assert that the positional values were correct as we pass by their
+  // corresponding positions.
+  MOZ_ASSERT(clipboardString.Length() == startHTMLOffset);
+  clipboardString.Append(kHeaderString);
+  MOZ_ASSERT(clipboardString.Length() == startFragOffset);
   clipboardString.Append(inHTMLString);
-  clipboardString.Append(trailingString);
+  MOZ_ASSERT(clipboardString.Length() == endFragOffset);
+  clipboardString.Append(kTrailingString);
+  MOZ_ASSERT(clipboardString.Length() == endHTMLOffset);
 
   *outPlatformHTML = ToNewCString(clipboardString, mozilla::fallible);
   if (!*outPlatformHTML) return NS_ERROR_OUT_OF_MEMORY;

@@ -2492,6 +2492,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     // Standard builtins used by self-hosting.
     JS_INLINABLE_FN("std_Array", array_construct, 1, 0, Array),
+    JS_FN("std_Array_includes", array_includes, 1, 0),
+    JS_FN("std_Array_indexOf", array_indexOf, 1, 0),
+    JS_FN("std_Array_lastIndexOf", array_lastIndexOf, 1, 0),
     JS_INLINABLE_FN("std_Array_pop", array_pop, 0, 0, ArrayPop),
     JS_INLINABLE_FN("std_Array_push", array_push, 1, 0, ArrayPush),
     JS_FN("std_BigInt_valueOf", BigIntObject::valueOf, 0, 0),

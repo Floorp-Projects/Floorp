@@ -417,7 +417,7 @@ function handleRequest(req, res) {
       // DNS response header is 12 bytes, we check for this minimum length
       // at the start of decoding so this is the simplest way to force
       // a decode error.
-      return "<12bytes";
+      return "\xFF\xFF\xFF\xFF";
     }
 
     function responseData() {
@@ -521,10 +521,11 @@ function handleRequest(req, res) {
           }
         });
       } else {
-        resp.setHeader("Content-Length", buffer.length);
+        const output = Buffer.from(buffer, "utf-8");
+        resp.setHeader("Content-Length", output.length);
         try {
           resp.writeHead(200);
-          resp.write(buffer);
+          resp.write(output);
           resp.end("");
         } catch (e) {
           // connection was closed by the time we started writing.

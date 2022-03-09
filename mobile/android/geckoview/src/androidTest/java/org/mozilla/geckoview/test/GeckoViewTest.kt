@@ -50,11 +50,14 @@ class GeckoViewTest {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun setSessionOnOpenThrows() {
+    @Test
+    fun setSessionOnOpenDoesNotThrow() {
         activityRule.scenario.onActivity {
             assertThat("Session is open", it.view.session!!.isOpen, equalTo(true))
-            it.view.setSession(GeckoSession())
+            val newSession = GeckoSession()
+            it.view.setSession(newSession)
+            assertThat("The new session should be correctly set.",
+                it.view.session, equalTo(newSession))
         }
     }
 

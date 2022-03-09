@@ -272,7 +272,13 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return tabDescriptorActors;
   },
 
-  getTab: async function({ outerWindowID, tabId }) {
+  /**
+   * Return the tab descriptor actor for the tab identified by one of the IDs
+   * passed as argument.
+   *
+   * See BrowserTabList.prototype.getTab for the definition of these IDs.
+   */
+  getTab: async function({ browserId, outerWindowID, tabId }) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
       throw {
@@ -289,7 +295,11 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     let descriptorActor;
     try {
-      descriptorActor = await tabList.getTab({ outerWindowID, tabId });
+      descriptorActor = await tabList.getTab({
+        browserId,
+        outerWindowID,
+        tabId,
+      });
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client
@@ -508,33 +518,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       }
     }
     return null;
-  },
-
-  _getParentProcessDescriptor() {
-    if (!this._processDescriptorActorPool) {
-      this._processDescriptorActorPool = new Pool(
-        this.conn,
-        "process-descriptors"
-      );
-      const options = { id: 0, parent: true };
-      const descriptor = new ProcessDescriptorActor(this.conn, options);
-      this._processDescriptorActorPool.manage(descriptor);
-      return descriptor;
-    }
-    for (const descriptor of this._processDescriptorActorPool.poolChildren()) {
-      if (descriptor.isParent) {
-        return descriptor;
-      }
-    }
-    return null;
-  },
-
-  _isParentBrowsingContext(id) {
-    // TODO: We may stop making the parent process codepath so special
-    const window = Services.wm.getMostRecentWindow(
-      DevToolsServer.chromeWindowType
-    );
-    return id == window.docShell.browsingContext.id;
   },
 
   /**

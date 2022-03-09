@@ -127,9 +127,9 @@ class Parser {
     }
 
     size_t numpixels = header->xsize * header->ysize;
-    size_t bytes_per_pixel = header->bits_per_sample <= 8
-                                 ? 1
-                                 : header->bits_per_sample <= 16 ? 2 : 4;
+    size_t bytes_per_pixel = header->bits_per_sample <= 8    ? 1
+                             : header->bits_per_sample <= 16 ? 2
+                                                             : 4;
     if (pos_ + numpixels * bytes_per_pixel > end_) {
       return JXL_FAILURE("PGX: data too small");
     }

@@ -7,9 +7,9 @@ import json
 import os
 
 from taskgraph.parameters import Parameters
+from taskgraph.util.taskcluster import get_artifact
 
 from gecko_taskgraph.actions.registry import register_callback_action
-from gecko_taskgraph.util.taskcluster import get_artifact
 from gecko_taskgraph.util.taskgraph import (
     find_decision_task,
     find_existing_tasks_from_previous_kinds,

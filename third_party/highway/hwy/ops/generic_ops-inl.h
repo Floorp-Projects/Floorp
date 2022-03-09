@@ -19,14 +19,14 @@ HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
-// The lane type of a vector type, e.g. float for Vec<Simd<float, 4>>.
+// The lane type of a vector type, e.g. float for Vec<ScalableTag<float>>.
 template <class V>
 using LaneType = decltype(GetLane(V()));
 
-// Vector type, e.g. Vec128<float> for Simd<float, 4>. Useful as the return type
-// of functions that do not take a vector argument, or as an argument type if
-// the function only has a template argument for D, or for explicit type names
-// instead of auto. This may be a built-in type.
+// Vector type, e.g. Vec128<float> for CappedTag<float, 4>. Useful as the return
+// type of functions that do not take a vector argument, or as an argument type
+// if the function only has a template argument for D, or for explicit type
+// names instead of auto. This may be a built-in type.
 template <class D>
 using Vec = decltype(Zero(D()));
 
@@ -51,12 +51,6 @@ HWY_API V CombineShiftRightLanes(D d, const V hi, const V lo) {
   constexpr size_t kBytes = kLanes * sizeof(LaneType<V>);
   static_assert(kBytes < 16, "Shift count is per-block");
   return CombineShiftRightBytes<kBytes>(d, hi, lo);
-}
-
-// DEPRECATED
-template <size_t kLanes, class V>
-HWY_API V CombineShiftRightLanes(const V hi, const V lo) {
-  return CombineShiftRightLanes<kLanes>(DFromV<V>(), hi, lo);
 }
 
 #endif
@@ -208,6 +202,15 @@ HWY_API V AESRound(V state, const V round_key) {
   return state;
 }
 
+template <class V>  // u8
+HWY_API V AESLastRound(V state, const V round_key) {
+  // LIke AESRound, but without MixColumns.
+  state = detail::SubBytes(state);
+  state = detail::ShiftRows(state);
+  state = Xor(state, round_key);  // AddRoundKey
+  return state;
+}
+
 // Constant-time implementation inspired by
 // https://www.bearssl.org/constanttime.html, but about half the cost because we
 // use 64x64 multiplies and 128-bit XORs.
@@ -278,23 +281,47 @@ HWY_API V CLMulUpper(V a, V b) {
 #define HWY_NATIVE_POPCNT
 #endif
 
-template <typename V, HWY_IF_LANES_ARE(uint8_t, V)>
+#if HWY_TARGET == HWY_RVV
+#define HWY_MIN_POW2_FOR_128 1
+#else
+// All other targets except HWY_SCALAR (which is excluded by HWY_IF_GE128_D)
+// guarantee 128 bits anyway.
+#define HWY_MIN_POW2_FOR_128 0
+#endif
+
+// This algorithm requires vectors to be at least 16 bytes, which is the case
+// for LMUL >= 2. If not, use the fallback below.
+template <typename V, HWY_IF_LANES_ARE(uint8_t, V), HWY_IF_GE128_D(DFromV<V>),
+          HWY_IF_POW2_GE(DFromV<V>, HWY_MIN_POW2_FOR_128)>
 HWY_API V PopulationCount(V v) {
-  constexpr DFromV<V> d;
+  const DFromV<V> d;
   HWY_ALIGN constexpr uint8_t kLookup[16] = {
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
   };
-  auto lo = And(v, Set(d, 0xF));
-  auto hi = ShiftRight<4>(v);
-  auto lookup = LoadDup128(Simd<uint8_t, HWY_MAX(16, MaxLanes(d))>(), kLookup);
+  const auto lo = And(v, Set(d, 0xF));
+  const auto hi = ShiftRight<4>(v);
+  const auto lookup = LoadDup128(d, kLookup);
   return Add(TableLookupBytes(lookup, hi), TableLookupBytes(lookup, lo));
 }
+
+// RVV has a specialization that avoids the Set().
+#if HWY_TARGET != HWY_RVV
+// Slower fallback for capped vectors.
+template <typename V, HWY_IF_LANES_ARE(uint8_t, V), HWY_IF_LT128_D(DFromV<V>)>
+HWY_API V PopulationCount(V v) {
+  const DFromV<V> d;
+  // See https://arxiv.org/pdf/1611.07612.pdf, Figure 3
+  v = Sub(v, And(ShiftRight<1>(v), Set(d, 0x55)));
+  v = Add(And(ShiftRight<2>(v), Set(d, 0x33)), And(v, Set(d, 0x33)));
+  return And(Add(v, ShiftRight<4>(v)), Set(d, 0x0F));
+}
+#endif  // HWY_TARGET != HWY_RVV
 
 template <typename V, HWY_IF_LANES_ARE(uint16_t, V)>
 HWY_API V PopulationCount(V v) {
   const DFromV<V> d;
-  Repartition<uint8_t, decltype(d)> d8;
-  auto vals = BitCast(d, PopulationCount(BitCast(d8, v)));
+  const Repartition<uint8_t, decltype(d)> d8;
+  const auto vals = BitCast(d, PopulationCount(BitCast(d8, v)));
   return Add(ShiftRight<8>(vals), And(vals, Set(d, 0xFF)));
 }
 
@@ -306,7 +333,7 @@ HWY_API V PopulationCount(V v) {
   return Add(ShiftRight<16>(vals), And(vals, Set(d, 0xFF)));
 }
 
-#if HWY_CAP_INTEGER64
+#if HWY_HAVE_INTEGER64
 template <typename V, HWY_IF_LANES_ARE(uint64_t, V)>
 HWY_API V PopulationCount(V v) {
   const DFromV<V> d;

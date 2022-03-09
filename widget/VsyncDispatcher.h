@@ -6,7 +6,7 @@
 #ifndef mozilla_widget_VsyncDispatcher_h
 #define mozilla_widget_VsyncDispatcher_h
 
-#include "mozilla/Mutex.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -69,7 +69,12 @@ class CompositorVsyncDispatcher final {
   bool mDidShutdown;
 };
 
-// Dispatch vsync event to ipc actor parent and chrome RefreshTimer.
+// Dispatch vsync events to various observers. This is used by:
+//  - Parent process refresh driver timers
+//  - IPC for content process refresh driver timers (VsyncParent <->
+//  VsyncMainChild)
+//  - IPC for content process worker requestAnimationFrame (VsyncParent <->
+//  VsyncWorkerChild)
 class RefreshTimerVsyncDispatcher final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefreshTimerVsyncDispatcher)
 
@@ -81,16 +86,13 @@ class RefreshTimerVsyncDispatcher final {
 
   void MoveToDisplay(gfx::VsyncSource::Display* aDisplay);
 
-  // Set chrome process's RefreshTimer to this dispatcher.
-  // This function can be called from any thread.
-  void SetParentRefreshTimer(VsyncObserver* aVsyncObserver);
+  // Add a vsync observer to this dispatcher. This is a no-op if the observer is
+  // already registered. Can be called from any thread.
+  void AddVsyncObserver(VsyncObserver* aVsyncObserver);
 
-  // Add or remove the content process' RefreshTimer to this dispatcher. This
-  // will be a no-op for AddChildRefreshTimer() if the observer is already
-  // registered.
-  // These functions can be called from any thread.
-  void AddChildRefreshTimer(VsyncObserver* aVsyncObserver);
-  void RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver);
+  // Remove a vsync observer from this dispatcher. This is a no-op if the
+  // observer is not registered. Can be called from any thread.
+  void RemoveVsyncObserver(VsyncObserver* aVsyncObserver);
 
  private:
   virtual ~RefreshTimerVsyncDispatcher();
@@ -101,9 +103,7 @@ class RefreshTimerVsyncDispatcher final {
   // it of our vsync requirement. The display holds a RefPtr to us, so we can't
   // hold a RefPtr back without causing a cyclic dependency.
   gfx::VsyncSource::Display* mDisplay;
-  Mutex mRefreshTimersLock;
-  RefPtr<VsyncObserver> mParentRefreshTimer;
-  nsTArray<RefPtr<VsyncObserver>> mChildRefreshTimers;
+  DataMutex<nsTArray<RefPtr<VsyncObserver>>> mVsyncObservers;
 };
 
 }  // namespace mozilla

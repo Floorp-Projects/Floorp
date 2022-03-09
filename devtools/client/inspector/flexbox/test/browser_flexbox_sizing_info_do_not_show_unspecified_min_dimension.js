@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "doc_flexbox_unauthored_min_dimension.html";
 
 async function checkFlexItemCSSProperty(inspector, store, doc, selector) {
   info("Select the container's flex item sizing info.");
-  const onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
+  const onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
   await selectNode(selector, inspector);
   await onUpdate;
 

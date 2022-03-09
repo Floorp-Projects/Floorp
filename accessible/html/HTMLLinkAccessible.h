@@ -26,9 +26,8 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
   virtual uint64_t NativeInteractiveState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() const override;
+  virtual bool HasPrimaryAction() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
 
   // HyperLinkAccessible
   virtual bool IsLink() const override;

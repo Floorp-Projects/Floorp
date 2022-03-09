@@ -19,11 +19,13 @@ if(POLICY CMP0083)
   cmake_policy(SET CMP0083 NEW)
 endif()
 
-project(hwy VERSION 0.15.0)  # Keep in sync with highway.h version
+project(hwy VERSION 0.16.0)  # Keep in sync with highway.h version
 
-set(CMAKE_CXX_STANDARD 11)
+# Directly define the ABI version from the cmake project() version values:
+set(LIBRARY_VERSION "${hwy_VERSION}")
+set(LIBRARY_SOVERSION ${hwy_VERSION_MAJOR})
+
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 # Enabled PIE binaries by default if supported.
 include(CheckPIESupported OPTIONAL RESULT_VARIABLE CHECK_PIE_SUPPORTED)
@@ -40,13 +42,14 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-set(HWY_CMAKE_ARM7 OFF CACHE BOOL "Set copts for ARMv7 with NEON?")
+set(HWY_CMAKE_ARM7 OFF CACHE BOOL "Set copts for ARMv7 with NEON (requires vfpv4)?")
 
 # Unconditionally adding -Werror risks breaking the build when new warnings
 # arise due to compiler/platform changes. Enable this in CI/tests.
 set(HWY_WARNINGS_ARE_ERRORS OFF CACHE BOOL "Add -Werror flag?")
 
-set(HWY_EXAMPLES_TESTS_INSTALL ON CACHE BOOL "Build examples, tests, install?")
+set(HWY_ENABLE_EXAMPLES ON CACHE BOOL "Build examples")
+set(HWY_ENABLE_INSTALL ON CACHE BOOL "Install library")
 
 include(CheckCXXSourceCompiles)
 check_cxx_source_compiles(
@@ -64,7 +67,32 @@ set(HWY_CONTRIB_SOURCES
     hwy/contrib/image/image.cc
     hwy/contrib/image/image.h
     hwy/contrib/math/math-inl.h
-    hwy/contrib/sort/sort-inl.h
+    hwy/contrib/sort/disabled_targets.h
+    hwy/contrib/sort/shared-inl.h
+    hwy/contrib/sort/sorting_networks-inl.h
+    hwy/contrib/sort/traits-inl.h
+    hwy/contrib/sort/traits128-inl.h
+    hwy/contrib/sort/vqsort-inl.h
+    hwy/contrib/sort/vqsort.cc
+    hwy/contrib/sort/vqsort.h
+    hwy/contrib/sort/vqsort_128a.cc
+    hwy/contrib/sort/vqsort_128d.cc
+    hwy/contrib/sort/vqsort_f32a.cc
+    hwy/contrib/sort/vqsort_f32d.cc
+    hwy/contrib/sort/vqsort_f64a.cc
+    hwy/contrib/sort/vqsort_f64d.cc
+    hwy/contrib/sort/vqsort_i16a.cc
+    hwy/contrib/sort/vqsort_i16d.cc
+    hwy/contrib/sort/vqsort_i32a.cc
+    hwy/contrib/sort/vqsort_i32d.cc
+    hwy/contrib/sort/vqsort_i64a.cc
+    hwy/contrib/sort/vqsort_i64d.cc
+    hwy/contrib/sort/vqsort_u16a.cc
+    hwy/contrib/sort/vqsort_u16d.cc
+    hwy/contrib/sort/vqsort_u32a.cc
+    hwy/contrib/sort/vqsort_u32d.cc
+    hwy/contrib/sort/vqsort_u64a.cc
+    hwy/contrib/sort/vqsort_u64d.cc
 )
 
 set(HWY_SOURCES
@@ -76,6 +104,7 @@ set(HWY_SOURCES
     hwy/detect_targets.h  # private
     hwy/foreach_target.h
     hwy/highway.h
+    hwy/highway_export.h
     hwy/nanobenchmark.cc
     hwy/nanobenchmark.h
     hwy/ops/arm_neon-inl.h
@@ -192,20 +221,59 @@ else()
 
 endif()  # !MSVC
 
-add_library(hwy STATIC ${HWY_SOURCES})
+# By default prefer STATIC build (legacy behavior)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(HWY_FORCE_STATIC_LIBS "Ignore BUILD_SHARED_LIBS" OFF)
+# only expose shared/static options to advanced users:
+mark_as_advanced(BUILD_SHARED_LIBS)
+mark_as_advanced(HWY_FORCE_STATIC_LIBS)
+# Define visibility settings globally:
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
+# Copy-cat "add_library" logic + add override.
+set(HWY_LIBRARY_TYPE "SHARED")
+if (NOT BUILD_SHARED_LIBS OR HWY_FORCE_STATIC_LIBS)
+  set(HWY_LIBRARY_TYPE "STATIC")
+endif()
+
+# This preprocessor define will drive the build, also used in the *.pc files:
+if("${HWY_LIBRARY_TYPE}" STREQUAL "SHARED")
+  set(DLLEXPORT_TO_DEFINE "HWY_SHARED_DEFINE")
+else()
+  set(DLLEXPORT_TO_DEFINE "HWY_STATIC_DEFINE")
+endif()
+
+add_library(hwy ${HWY_LIBRARY_TYPE} ${HWY_SOURCES})
+target_compile_definitions(hwy PUBLIC "${DLLEXPORT_TO_DEFINE}")
 target_compile_options(hwy PRIVATE ${HWY_FLAGS})
 set_property(TARGET hwy PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(hwy PROPERTIES VERSION ${LIBRARY_VERSION} SOVERSION ${LIBRARY_SOVERSION})
 target_include_directories(hwy PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_compile_features(hwy PUBLIC cxx_std_11)
+set_target_properties(hwy PROPERTIES
+  LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/hwy/hwy.version)
+# not supported by MSVC/Clang, safe to skip (we use DLLEXPORT annotations)
+if(UNIX AND NOT APPLE)
+  set_property(TARGET hwy APPEND_STRING PROPERTY
+    LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/hwy/hwy.version")
+endif()
 
-add_library(hwy_contrib STATIC ${HWY_CONTRIB_SOURCES})
+add_library(hwy_contrib ${HWY_LIBRARY_TYPE} ${HWY_CONTRIB_SOURCES})
+target_link_libraries(hwy_contrib hwy)
 target_compile_options(hwy_contrib PRIVATE ${HWY_FLAGS})
 set_property(TARGET hwy_contrib PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(hwy_contrib PROPERTIES VERSION ${LIBRARY_VERSION} SOVERSION ${LIBRARY_SOVERSION})
 target_include_directories(hwy_contrib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_compile_features(hwy_contrib PUBLIC cxx_std_11)
 
-add_library(hwy_test STATIC ${HWY_TEST_SOURCES})
+add_library(hwy_test ${HWY_LIBRARY_TYPE} ${HWY_TEST_SOURCES})
+target_link_libraries(hwy_test hwy)
 target_compile_options(hwy_test PRIVATE ${HWY_FLAGS})
 set_property(TARGET hwy_test PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(hwy_test PROPERTIES VERSION ${LIBRARY_VERSION} SOVERSION ${LIBRARY_SOVERSION})
 target_include_directories(hwy_test PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_compile_features(hwy_test PUBLIC cxx_std_11)
 
 # -------------------------------------------------------- hwy_list_targets
 # Generate a tool to print the compiled-in targets as defined by the current
@@ -219,17 +287,22 @@ target_include_directories(hwy_list_targets PRIVATE
 # Naked target also not always could be run (due to the lack of '.\' prefix)
 # Thus effective command to run should contain the full path
 # and emulator prefix (if any).
+if (NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_EMULATOR)
 add_custom_command(TARGET hwy_list_targets POST_BUILD
     COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:hwy_list_targets> || (exit 0))
+endif()
 
 # --------------------------------------------------------
 # Allow skipping the following sections for projects that do not need them:
 # tests, examples, benchmarks and installation.
-if (HWY_EXAMPLES_TESTS_INSTALL)
 
 # -------------------------------------------------------- install library
+if (HWY_ENABLE_INSTALL)
+
 install(TARGETS hwy
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 # Install all the headers keeping the relative path to the current directory
 # when installing them.
 foreach (source ${HWY_SOURCES})
@@ -241,7 +314,9 @@ foreach (source ${HWY_SOURCES})
 endforeach()
 
 install(TARGETS hwy_contrib
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 # Install all the headers keeping the relative path to the current directory
 # when installing them.
 foreach (source ${HWY_CONTRIB_SOURCES})
@@ -253,7 +328,9 @@ foreach (source ${HWY_CONTRIB_SOURCES})
 endforeach()
 
 install(TARGETS hwy_test
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 # Install all the headers keeping the relative path to the current directory
 # when installing them.
 foreach (source ${HWY_TEST_SOURCES})
@@ -272,7 +349,9 @@ foreach (pc libhwy.pc libhwy-contrib.pc libhwy-test.pc)
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endforeach()
 
+endif() # HWY_ENABLE_INSTALL
 # -------------------------------------------------------- Examples
+if (HWY_ENABLE_EXAMPLES)
 
 # Avoids mismatch between GTest's static CRT and our dynamic.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -280,7 +359,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Programming exercise with integrated benchmark
 add_executable(hwy_benchmark hwy/examples/benchmark.cc)
 target_sources(hwy_benchmark PRIVATE
-    hwy/nanobenchmark.cc
     hwy/nanobenchmark.h)
 # Try adding either -DHWY_COMPILE_ONLY_SCALAR or -DHWY_COMPILE_ONLY_STATIC to
 # observe the difference in targets printed.
@@ -289,6 +367,7 @@ target_link_libraries(hwy_benchmark hwy)
 set_target_properties(hwy_benchmark
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples/")
 
+endif() # HWY_ENABLE_EXAMPLES
 # -------------------------------------------------------- Tests
 
 include(CTest)
@@ -352,9 +431,11 @@ set(HWY_TEST_FILES
   hwy/tests/compare_test.cc
   hwy/tests/convert_test.cc
   hwy/tests/crypto_test.cc
+  hwy/tests/demote_test.cc
   hwy/tests/logical_test.cc
   hwy/tests/mask_test.cc
   hwy/tests/memory_test.cc
+  hwy/tests/shift_test.cc
   hwy/tests/swizzle_test.cc
   hwy/tests/test_util_test.cc
 )
@@ -377,7 +458,7 @@ foreach (TESTFILE IN LISTS HWY_TEST_FILES)
     target_link_libraries(${TESTNAME} hwy hwy_contrib hwy_test gtest gtest_main)
   endif()
   # Output test targets in the test directory.
-  set_target_properties(${TESTNAME} PROPERTIES PREFIX "tests/")
+  set_target_properties(${TESTNAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tests")
 
   if (HWY_EMSCRIPTEN)
     set_target_properties(${TESTNAME} PROPERTIES LINK_FLAGS "-s SINGLE_FILE=1")
@@ -394,5 +475,3 @@ endforeach ()
 target_sources(skeleton_test PRIVATE hwy/examples/skeleton.cc)
 
 endif() # BUILD_TESTING
-
-endif() # HWY_EXAMPLES_TESTS_INSTALL

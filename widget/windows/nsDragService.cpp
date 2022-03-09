@@ -21,6 +21,7 @@
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsDataObjCollection.h"
 
 #include "nsArrayUtils.h"
@@ -216,36 +217,22 @@ nsresult nsDragService::InvokeDragSessionImpl(
   return StartInvokingDragSession(itemToDrag, aActionType);
 }
 
-static bool LayoutDevicePointToCSSPoint(const LayoutDevicePoint& aDevPos,
-                                        CSSPoint& aCSSPos) {
-  nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenMgr) {
-    return false;
+static HWND GetSourceWindow(dom::Document* aSourceDocument) {
+  if (!aSourceDocument) {
+    return nullptr;
   }
 
-  nsCOMPtr<nsIScreen> screen;
-  screenMgr->ScreenForRect(NSToIntRound(aDevPos.x), NSToIntRound(aDevPos.y), 1,
-                           1, getter_AddRefs(screen));
-  if (!screen) {
-    return false;
+  auto* pc = aSourceDocument->GetPresContext();
+  if (!pc) {
+    return nullptr;
   }
 
-  int32_t w, h;  // unused
-  LayoutDeviceIntPoint screenOriginDev;
-  screen->GetRect(&screenOriginDev.x, &screenOriginDev.y, &w, &h);
+  nsCOMPtr<nsIWidget> widget = pc->GetRootWidget();
+  if (!widget) {
+    return nullptr;
+  }
 
-  double scale;
-  screen->GetDefaultCSSScaleFactor(&scale);
-  LayoutDeviceToCSSScale devToCSSScale =
-      CSSToLayoutDeviceScale(scale).Inverse();
-
-  // Desktop pixels and CSS pixels share the same screen origin.
-  CSSIntPoint screenOriginCSS;
-  screen->GetRectDisplayPix(&screenOriginCSS.x, &screenOriginCSS.y, &w, &h);
-
-  aCSSPos = (aDevPos - screenOriginDev) * devToCSSScale + screenOriginCSS;
-  return true;
+  return (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
 }
 
 //-------------------------------------------------------------------------
@@ -320,21 +307,15 @@ nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
   // Note that we must convert this from device pixels back to Windows logical
   // pixels (bug 818927).
   DWORD pos = ::GetMessagePos();
-  CSSPoint cssPos;
-  if (!LayoutDevicePointToCSSPoint(
-          LayoutDevicePoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos)), cssPos)) {
-    // fallback to the simple scaling
-    POINT pt = {GET_X_LPARAM(pos), GET_Y_LPARAM(pos)};
-    HMONITOR monitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
-    double dpiScale = widget::WinUtils::LogToPhysFactor(monitor);
-    cssPos.x = GET_X_LPARAM(pos) / dpiScale;
-    cssPos.y = GET_Y_LPARAM(pos) / dpiScale;
+  POINT cpos;
+  cpos.x = GET_X_LPARAM(pos);
+  cpos.y = GET_Y_LPARAM(pos);
+  if (auto wnd = GetSourceWindow(mSourceDocument)) {
+    // Convert from screen to client coordinates like nsWindow::InitEvent does.
+    ::ScreenToClient(wnd, &cpos);
   }
-  // We have to abuse SetDragEndPoint to pass CSS pixels because
-  // Event::GetScreenCoords will not convert pixels for dragend events
-  // until bug 1224754 is fixed.
-  SetDragEndPoint(
-      LayoutDeviceIntPoint(NSToIntRound(cssPos.x), NSToIntRound(cssPos.y)));
+  SetDragEndPoint(LayoutDeviceIntPoint(cpos.x, cpos.y));
+
   ModifierKeyState modifierKeyState;
   EndDragSession(true, modifierKeyState.GetModifiers());
 

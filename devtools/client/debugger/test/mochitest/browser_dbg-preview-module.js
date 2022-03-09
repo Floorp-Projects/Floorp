@@ -4,6 +4,9 @@
 
 // Test hovering in a script that is paused on load
 // and doesn't have functions.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
 
@@ -18,8 +21,11 @@ add_task(async function() {
       line: 1,
       column: 6,
       expression: "obj",
-      fields: [["foo", "1"], ["bar", "2"]]
-    }
+      fields: [
+        ["foo", "1"],
+        ["bar", "2"],
+      ],
+    },
   ]);
 
   await assertPreviewTooltip(dbg, 2, 7, { result: "3", expression: "func" });

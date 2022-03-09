@@ -548,7 +548,7 @@ Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
   return *mOptionalValue;
 }
 
-void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
+void IPDLParamTraits<nsIInputStream*>::Write(IPC::MessageWriter* aWriter,
                                              IProtocol* aActor,
                                              nsIInputStream* aParam) {
   auto autoStream = MakeRefPtr<HoldIPCStream>(/* aDelayedStart */ true);
@@ -598,7 +598,7 @@ void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
   }
   MOZ_RELEASE_ASSERT(ok, "Failed to serialize nsIInputStream");
 
-  WriteIPDLParam(aMsg, aActor, autoStream->TakeOptionalValue());
+  WriteIPDLParam(aWriter, aActor, autoStream->TakeOptionalValue());
 
   // Dispatch the autoStream to an async runnable, so that we guarantee it
   // outlives this callstack, and doesn't shut down any actors we created
@@ -607,12 +607,11 @@ void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
                   NS_GetCurrentThread(), autoStream.forget(), true);
 }
 
-bool IPDLParamTraits<nsIInputStream*>::Read(const IPC::Message* aMsg,
-                                            PickleIterator* aIter,
+bool IPDLParamTraits<nsIInputStream*>::Read(IPC::MessageReader* aReader,
                                             IProtocol* aActor,
                                             RefPtr<nsIInputStream>* aResult) {
   mozilla::Maybe<mozilla::ipc::IPCStream> ipcStream;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {
+  if (!ReadIPDLParam(aReader, aActor, &ipcStream)) {
     return false;
   }
 

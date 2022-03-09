@@ -362,8 +362,15 @@ extern JS_PUBLIC_API bool GetPromiseIsHandled(JS::HandleObject promise);
  * |promise.[[PromiseIsHandled]]| to true and removes it from the list of
  * unhandled rejected promises.
  */
-extern JS_PUBLIC_API void SetSettledPromiseIsHandled(JSContext* cx,
+extern JS_PUBLIC_API bool SetSettledPromiseIsHandled(JSContext* cx,
                                                      JS::HandleObject promise);
+
+/*
+ * Given a promise (settled or not), sets |promise.[[PromiseIsHandled]]| to true
+ * and removes it from the list of unhandled rejected promises if it's settled.
+ */
+[[nodiscard]] extern JS_PUBLIC_API bool SetAnyPromiseIsHandled(
+    JSContext* cx, JS::HandleObject promise);
 
 /**
  * Returns a js::SavedFrame linked list of the stack that lead to the given

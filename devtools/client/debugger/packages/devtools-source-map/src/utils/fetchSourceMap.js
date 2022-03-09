@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { networkRequest } = require("devtools-utils");
+const { networkRequest } = require("./network-request");
+
 const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
 const { WasmRemap } = require("./wasmRemap");
 const { convertToJSON } = require("devtools-wasm-dwarf");

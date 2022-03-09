@@ -33,6 +33,10 @@ use std::sync::Arc;
 use dwrote;
 
 #[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
+#[cfg(target_os = "macos")]
 use foreign_types::ForeignType;
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -782,7 +786,19 @@ impl Moz2dBlobImageHandler {
 
         #[cfg(target_os = "macos")]
         fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
-            unsafe { AddNativeFontHandle(key, handle.0.as_ptr() as *mut c_void, 0) };
+            let font = match CGFont::from_name(&CFString::new(&handle.name)) {
+                Ok(font) => font,
+                Err(_) => {
+                    // If for some reason we failed to load a font descriptor, then our
+                    // only options are to either abort or substitute a fallback font.
+                    // It is preferable to use a fallback font instead so that rendering
+                    // can at least still proceed in some fashion without erroring.
+                    // Lucida Grande is the fallback font in Gecko, so use that here.
+                    CGFont::from_name(&CFString::from_static_string("Lucida Grande"))
+                        .expect("Failed reading font descriptor and could not load fallback font")
+                },
+            };
+            unsafe { AddNativeFontHandle(key, font.as_ptr() as *mut c_void, 0) };
         }
 
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]

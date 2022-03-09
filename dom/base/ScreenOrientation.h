@@ -20,9 +20,7 @@ namespace dom {
 
 class Promise;
 
-class ScreenOrientation final
-    : public DOMEventTargetHelper,
-      public mozilla::hal::ScreenConfigurationObserver {
+class ScreenOrientation final : public DOMEventTargetHelper {
   // nsScreen has deprecated API that shares implementation.
   friend class ::nsScreen;
 
@@ -32,6 +30,9 @@ class ScreenOrientation final
                                            mozilla::DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(change)
+
+  // Called when the orientation may have changed.
+  void MaybeChanged();
 
   ScreenOrientation(nsPIDOMWindowInner* aWindow, nsScreen* aScreen);
 
@@ -49,10 +50,8 @@ class ScreenOrientation final
   OrientationType GetType(CallerType aCallerType, ErrorResult& aRv) const;
   uint16_t GetAngle(CallerType aCallerType, ErrorResult& aRv) const;
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
-  void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   static void UpdateActiveOrientationLock(hal::ScreenOrientation aOrientation);
   static void AbortInProcessOrientationPromises(
@@ -75,12 +74,13 @@ class ScreenOrientation final
 
   // This method calls into the HAL to lock the device and sets
   // up listeners for full screen change.
-  RefPtr<MozPromise<bool, bool, false>> LockDeviceOrientation(
+  RefPtr<GenericNonExclusivePromise> LockDeviceOrientation(
       hal::ScreenOrientation aOrientation, bool aIsFullscreen);
 
   // This method calls in to the HAL to unlock the device and removes
   // full screen change listener.
   void UnlockDeviceOrientation();
+  void CleanupFullscreenListener();
 
   // This method performs the same function as |Lock| except it takes
   // a hal::ScreenOrientation argument instead of an OrientationType.
@@ -103,6 +103,12 @@ class ScreenOrientation final
   RefPtr<VisibleEventListener> mVisibleListener;
   OrientationType mType;
   uint16_t mAngle;
+  // Whether we've tried to call into hal to lock the device orientation. This
+  // is needed because you don't want calling UnlockDeviceOrientation() during
+  // shutdown to initialize PHal if it hasn't been initialized earlier. Also,
+  // makes sense (there's no reason destroying a ScreenOrientation object from a
+  // different window should remove the orientation lock).
+  bool mTriedToLockDeviceOrientation = false;
 };
 
 }  // namespace dom

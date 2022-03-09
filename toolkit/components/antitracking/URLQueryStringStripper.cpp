@@ -126,6 +126,9 @@ bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {
   nsAutoCString baseDomain;
   nsresult rv =
       nsEffectiveTLDService::GetInstance()->GetBaseDomain(aURI, 0, baseDomain);
+  if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+    return false;
+  }
   NS_ENSURE_SUCCESS(rv, false);
 
   return mAllowList.Contains(baseDomain);

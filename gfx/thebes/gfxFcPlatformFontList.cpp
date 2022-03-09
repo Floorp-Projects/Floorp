@@ -19,6 +19,8 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsGkAtoms.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsUnicodeProperties.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -32,6 +34,8 @@
 
 #include <cairo-ft.h>
 #include <fontconfig/fcfreetype.h>
+#include <fontconfig/fontconfig.h>
+#include <harfbuzz/hb.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -251,6 +255,21 @@ static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
   }
 }
 
+void gfxFontconfigFontEntry::GetUserFontFeatures(FcPattern* aPattern) {
+  int fontFeaturesNum = 0;
+  char* s;
+  hb_feature_t tmpFeature;
+  while (FcResultMatch == FcPatternGetString(aPattern, "fontfeatures",
+                                             fontFeaturesNum, (FcChar8**)&s)) {
+    bool ret = hb_feature_from_string(s, -1, &tmpFeature);
+    if (ret) {
+      mFeatureSettings.AppendElement(
+          (gfxFontFeature){tmpFeature.tag, tmpFeature.value});
+    }
+    fontFeaturesNum++;
+  }
+}
+
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                FcPattern* aFontPattern,
                                                bool aIgnoreFcCharmap)
@@ -260,6 +279,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
       mIgnoreFcCharmap(aIgnoreFcCharmap),
       mHasVariationsInitialized(false) {
   GetFontProperties(aFontPattern, &mWeightRange, &mStretchRange, &mStyleRange);
+  GetUserFontFeatures(mFontPattern);
 }
 
 gfxFontEntry* gfxFontconfigFontEntry::Clone() const {
@@ -351,6 +371,8 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
   // is called, at which point we'll look to see whether a 'cmap' is
   // actually present in the font.
   mIgnoreFcCharmap = true;
+
+  GetUserFontFeatures(mFontPattern);
 }
 
 typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
@@ -2082,52 +2104,72 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
   // Nimbus Sans L as alternatives for Helvetica.
 
   // Because the FcConfigSubstitute call is quite expensive, we cache the
-  // actual font families found via this process. So check the cache first:
-  if (auto cachedFamilies = mFcSubstituteCache.Lookup(familyName)) {
-    if (cachedFamilies->IsEmpty()) {
-      return false;
+  // actual font families found via this process. We include the language (if
+  // any) as part of the cache key because fontconfig may have lang-specific
+  // rules that specify different substitutions.
+  nsAutoCString lang;
+  GetSampleLangForGroup(aLanguage, lang);
+  nsAutoCString cacheKey(lang);
+  ToLowerCase(cacheKey);
+  cacheKey.Append(':');
+  cacheKey.Append(familyName);
+  const auto& cached = mFcSubstituteCache.LookupOrInsertWith(cacheKey, [&] {
+    // It wasn't in the cache, so we need to ask fontconfig...
+    const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
+    const FcChar8* terminator = nullptr;
+    RefPtr<FcPattern> sentinelSubst = dont_AddRef(FcPatternCreate());
+    FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
+    if (!lang.IsEmpty()) {
+      FcPatternAddString(sentinelSubst, FC_LANG, ToFcChar8Ptr(lang.get()));
     }
-    aOutput->AppendElements(*cachedFamilies);
-    return true;
-  }
+    FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
 
-  // It wasn't in the cache, so we need to ask fontconfig...
-  const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
-  FcChar8* sentinelFirstFamily = nullptr;
-  RefPtr<FcPattern> sentinelSubst = dont_AddRef(FcPatternCreate());
-  FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
-  FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
-  FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sentinelFirstFamily);
-
-  // substitutions for font, -moz-sentinel pattern
-  RefPtr<FcPattern> fontWithSentinel = dont_AddRef(FcPatternCreate());
-  FcPatternAddString(fontWithSentinel, FC_FAMILY,
-                     ToFcChar8Ptr(familyName.get()));
-  FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
-  FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
-
-  // Add all font family matches until reaching the sentinel.
-  AutoTArray<FamilyAndGeneric, 10> cachedFamilies;
-  FcChar8* substName = nullptr;
-  for (int i = 0; FcPatternGetString(fontWithSentinel, FC_FAMILY, i,
-                                     &substName) == FcResultMatch;
-       i++) {
-    if (sentinelFirstFamily && FcStrCmp(substName, sentinelFirstFamily) == 0) {
-      break;
+    // If the sentinel name is still present, we'll use that as the terminator
+    // for the family names we collect; this means that if fontconfig prepends
+    // additional family names (e.g. an emoji font, or lang-specific preferred
+    // font) to all patterns, it won't simply mask all actual requested names.
+    // If the sentinel has been deleted/replaced altogether, then we'll take
+    // the first substitute name as the new terminator.
+    FcChar8* substName;
+    for (int i = 0; FcPatternGetString(sentinelSubst, FC_FAMILY, i,
+                                       &substName) == FcResultMatch;
+         i++) {
+      if (FcStrCmp(substName, kSentinelName) == 0) {
+        terminator = kSentinelName;
+        break;
+      } else if (!terminator) {
+        terminator = substName;
+      }
     }
-    gfxPlatformFontList::FindAndAddFamilies(
-        aPresContext, aGeneric, nsDependentCString(ToCharPtr(substName)),
-        &cachedFamilies, aFlags, aStyle, aLanguage);
-  }
 
-  // Cache the resulting list, so we don't have to do this again.
-  const auto& insertedCachedFamilies =
-      mFcSubstituteCache.InsertOrUpdate(familyName, std::move(cachedFamilies));
+    // substitutions for font, -moz-sentinel pattern
+    RefPtr<FcPattern> fontWithSentinel = dont_AddRef(FcPatternCreate());
+    FcPatternAddString(fontWithSentinel, FC_FAMILY,
+                       ToFcChar8Ptr(familyName.get()));
+    FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
+    if (!lang.IsEmpty()) {
+      FcPatternAddString(sentinelSubst, FC_LANG, ToFcChar8Ptr(lang.get()));
+    }
+    FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
-  if (insertedCachedFamilies.IsEmpty()) {
+    // Add all font family matches until reaching the terminator.
+    AutoTArray<FamilyAndGeneric, 10> cachedFamilies;
+    for (int i = 0; FcPatternGetString(fontWithSentinel, FC_FAMILY, i,
+                                       &substName) == FcResultMatch;
+         i++) {
+      if (terminator && FcStrCmp(substName, terminator) == 0) {
+        break;
+      }
+      gfxPlatformFontList::FindAndAddFamilies(
+          aPresContext, aGeneric, nsDependentCString(ToCharPtr(substName)),
+          &cachedFamilies, aFlags, aStyle, aLanguage);
+    }
+    return cachedFamilies;
+  });
+  if (cached.IsEmpty()) {
     return false;
   }
-  aOutput->AppendElements(insertedCachedFamilies);
+  aOutput->AppendElements(cached);
   return true;
 }
 

@@ -9,6 +9,7 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/Hal.h"
+#include "gfxConfig.h"
 #include "nsExceptionHandler.h"
 #include "nsIScreen.h"
 #include "nsWindow.h"
@@ -32,7 +33,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/java/GeckoAppShellNatives.h"
@@ -65,7 +65,6 @@
 #include "GeckoEditableSupport.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
-#include "GeckoScreenOrientation.h"
 #include "GeckoSystemStateListener.h"
 #include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
@@ -75,7 +74,6 @@
 #include "Telemetry.h"
 #include "WebExecutorSupport.h"
 #include "Base64UtilsSupport.h"
-#include "WebAuthnTokenManager.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #  define EVLOG(args...) ALOG(args)
@@ -326,12 +324,12 @@ class GeckoAppShellSupport final
 
   static bool IsParentProcess() { return XRE_IsParentProcess(); }
 
-  static jni::Object::LocalRef EnsureGpuProcessReady() {
+  static jni::Object::LocalRef IsGpuProcessEnabled() {
     java::GeckoResult::GlobalRef result = java::GeckoResult::New();
 
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "GeckoAppShellSupport::EnsureGpuProcessReady", [result]() {
-          result->Complete(gfx::GPUProcessManager::Get()->EnsureGPUReady()
+        "GeckoAppShellSupport::IsGpuProcessEnabled", [result]() {
+          result->Complete(gfx::gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS)
                                ? java::sdk::Boolean::TRUE()
                                : java::sdk::Boolean::FALSE());
         }));
@@ -429,7 +427,6 @@ nsAppShell::nsAppShell()
     mozilla::GeckoBatteryManager::Init();
     mozilla::GeckoNetworkManager::Init();
     mozilla::GeckoProcessManager::Init();
-    mozilla::GeckoScreenOrientation::Init();
     mozilla::GeckoSystemStateListener::Init();
     mozilla::widget::Telemetry::Init();
     mozilla::widget::ImageDecoderSupport::Init();
@@ -437,7 +434,6 @@ nsAppShell::nsAppShell()
     mozilla::widget::Base64UtilsSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
-    mozilla::WebAuthnTokenManager::Init();
     mozilla::widget::GeckoTelemetryDelegate::Init();
 
     java::GeckoThread::SetState(java::GeckoThread::State::JNI_READY());

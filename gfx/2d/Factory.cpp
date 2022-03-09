@@ -929,9 +929,10 @@ void Factory::D2DCleanup() {
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForDWriteFont(
     IDWriteFontFace* aFontFace, const gfxFontStyle* aStyle,
     const RefPtr<UnscaledFont>& aUnscaledFont, float aSize,
-    bool aUseEmbeddedBitmap, bool aGDIForced) {
+    bool aUseEmbeddedBitmap, bool aUseMultistrikeBold, bool aGDIForced) {
   return MakeAndAddRef<ScaledFontDWrite>(
-      aFontFace, aUnscaledFont, aSize, aUseEmbeddedBitmap, aGDIForced, aStyle);
+      aFontFace, aUnscaledFont, aSize, aUseEmbeddedBitmap, aUseMultistrikeBold,
+      aGDIForced, aStyle);
 }
 
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForGDIFont(

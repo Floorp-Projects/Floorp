@@ -113,13 +113,6 @@ class gfxContext final {
   void NewPath();
 
   /**
-   * Closes the path, i.e. connects the last drawn point to the first one.
-   *
-   * Filling a path will implicitly close it.
-   */
-  void ClosePath();
-
-  /**
    * Returns the current path.
    */
   already_AddRefed<Path> GetPath();
@@ -128,25 +121,6 @@ class gfxContext final {
    * Sets the given path as the current path.
    */
   void SetPath(Path* path);
-
-  /**
-   * Moves the pen to a new point without drawing a line.
-   */
-  void MoveTo(const gfxPoint& pt);
-
-  /**
-   * Draws a line from the current point to pt.
-   *
-   * @see MoveTo
-   */
-  void LineTo(const gfxPoint& pt);
-
-  // path helpers
-  /**
-   * Draws a line from start to end.
-   */
-  void Line(const gfxPoint& start,
-            const gfxPoint& end);  // XXX snapToPixels option?
 
   /**
    * Draws the rectangle given by rect.

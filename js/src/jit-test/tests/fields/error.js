@@ -21,20 +21,6 @@ source = `class C {
 }`;
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
-// The following stop being syntax errors if private fields are
-// enabled.
-if (!getRealmConfiguration()['privateFields']) {
-  source = `class C {
-    #x;
-  }`;
-  assertErrorMessage(() => Function(source), SyntaxError, /./);
-
-  source = `class C {
-    #y = 2;
-   }`;
-  assertErrorMessage(() => Function(source), SyntaxError, /./);
-}
-
 source = `class C {
     #["h" + "i"];
 }`;

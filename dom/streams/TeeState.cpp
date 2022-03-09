@@ -14,40 +14,19 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TeeState)
+using ::ImplCycleCollectionUnlink;
+
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(TeeState,
+                                         (mStream, mReader, mBranch1, mBranch2,
+                                          mCancelPromise, mPullAlgorithm),
+                                         (mReason1, mReason2))
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TeeState)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TeeState)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TeeState)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TeeState)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBranch1)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBranch2)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCancelPromise)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPullAlgorithm)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TeeState)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBranch1)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBranch2)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelPromise)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPullAlgorithm)
-  tmp->mReason1.setNull();
-  tmp->mReason2.setNull();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(TeeState)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReason1)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReason2)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-TeeState::TeeState(JSContext* aCx, ReadableStream* aStream,
-                   bool aCloneForBranch2)
+TeeState::TeeState(ReadableStream* aStream, bool aCloneForBranch2)
     : mStream(aStream),
       mReason1(JS::NullValue()),
       mReason2(JS::NullValue()),
@@ -57,14 +36,13 @@ TeeState::TeeState(JSContext* aCx, ReadableStream* aStream,
                      "cloneForBranch2 path is not implemented.");
 }
 
-already_AddRefed<TeeState> TeeState::Create(JSContext* aCx,
-                                            ReadableStream* aStream,
+already_AddRefed<TeeState> TeeState::Create(ReadableStream* aStream,
                                             bool aCloneForBranch2,
                                             ErrorResult& aRv) {
-  RefPtr<TeeState> teeState = new TeeState(aCx, aStream, aCloneForBranch2);
+  RefPtr<TeeState> teeState = new TeeState(aStream, aCloneForBranch2);
 
   RefPtr<ReadableStreamDefaultReader> reader =
-      AcquireReadableStreamDefaultReader(aCx, teeState->GetStream(), aRv);
+      AcquireReadableStreamDefaultReader(teeState->GetStream(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

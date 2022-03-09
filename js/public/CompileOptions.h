@@ -77,22 +77,9 @@ enum class AsmJSOption : uint8_t {
   _(OnDemandOnly)                                                              \
                                                                                \
   /*                                                                           \
-   * Delazifiy functions in a depth first traversal of the functions. (not     \
-   * implemented yet)                                                          \
+   * Delazifiy functions in a depth first traversal of the functions.          \
    */                                                                          \
   _(ConcurrentDepthFirst)                                                      \
-                                                                               \
-  /*                                                                           \
-   * Delazify functions in a breath first traversal of the code. (not          \
-   * implemented yet)                                                          \
-   */                                                                          \
-  _(ConcurrentBreathFirst)                                                     \
-                                                                               \
-  /*                                                                           \
-   * Delazify functions based on the frequency of names across all scripts     \
-   * pending for delazifications. (not implemented yet)                        \
-   */                                                                          \
-  _(ConcurrentMostFrequentNameFirst)                                           \
                                                                                \
   /*                                                                           \
    * Parse everything eagerly, from the first parse.                           \
@@ -185,10 +172,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool allowHTMLComments = true;
   bool nonSyntacticScope = false;
 
-  bool privateClassFields = false;
-  bool privateClassMethods = false;
   bool topLevelAwait = true;
-  bool classStaticBlocks = false;
   bool useFdlibmForSinCosTan = false;
 
   bool importAssertions = false;

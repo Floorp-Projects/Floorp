@@ -58,11 +58,14 @@ browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.
 # See https://github.com/firefox-devtools/debugger/blob/master/package.json#L24
+devtools/client/debugger/bin/
 devtools/client/debugger/configs/
 devtools/client/debugger/dist/
 devtools/client/debugger/images/
-devtools/client/debugger/test/
+devtools/client/debugger/packages/
+devtools/client/debugger/test/mochitest/examples/
 devtools/client/debugger/index.html
+devtools/client/debugger/webpack.config.js
 
 # Ignore devtools preferences files
 devtools/client/preferences/
@@ -71,6 +74,7 @@ devtools/client/preferences/
 devtools/shared/css/generated/properties-db.js
 devtools/client/webconsole/test/node/fixtures/stubs/*.js
 !devtools/client/webconsole/test/node/fixtures/stubs/index.js
+devtools/client/shared/components/test/node/stubs/reps/*.js
 
 # Ignore devtools files testing sourcemaps / code style
 devtools/client/framework/test/code_*

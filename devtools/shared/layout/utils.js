@@ -833,8 +833,15 @@ function getAbsoluteScrollOffsetsForNode(node) {
 }
 exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;
 
-function isIframe(node) {
-  return ChromeUtils.getClassName(node) == "HTMLIFrameElement";
+/**
+ * Check if the provided node is a <frame> or <iframe> element.
+ *
+ * @param {DOMNode} node
+ * @returns {Boolean}
+ */
+function isFrame(node) {
+  const className = ChromeUtils.getClassName(node);
+  return className == "HTMLIFrameElement" || className == "HTMLFrameElement";
 }
 
 /**
@@ -864,7 +871,7 @@ exports.isRemoteBrowserElement = isRemoteBrowserElement;
  * @return {Boolean}
  */
 function isRemoteFrame(node) {
-  if (isIframe(node)) {
+  if (isFrame(node)) {
     return node.frameLoader?.isRemoteFrame;
   }
 
@@ -889,7 +896,7 @@ function isFrameWithChildTarget(targetActor, node) {
     return false;
   }
 
-  return isRemoteFrame(node) || (isIframe(node) && targetActor.ignoreSubFrames);
+  return isRemoteFrame(node) || (isFrame(node) && targetActor.ignoreSubFrames);
 }
 
 exports.isFrameWithChildTarget = isFrameWithChildTarget;
@@ -901,7 +908,7 @@ exports.isFrameWithChildTarget = isFrameWithChildTarget;
  * @returns {Boolean}
  */
 function isFrameBlockedByCSP(node) {
-  if (!isIframe(node)) {
+  if (!isFrame(node)) {
     return false;
   }
 

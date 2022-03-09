@@ -9,11 +9,8 @@
 
 #include <utility>
 
-#include "nsCaseTreatment.h"
-#include "nsRect.h"
 #include "nsTArray.h"
 
-class nsIVariant;
 class nsRange;
 
 namespace mozilla {
@@ -22,19 +19,22 @@ class Selection;
 }  // namespace dom
 namespace a11y {
 
+class Accessible;
 class LocalAccessible;
-class HyperTextAccessible;
 
 /**
- * A text point (hyper text + offset), represents a boundary of text range.
+ * A text point (HyperText + offset), represents a boundary of text range.
+ * In new code, This should only be used when you explicitly need to deal with
+ * HyperText containers and offsets, including embedded objects; e.g. for
+ * IAccessible2 and ATK. Otherwise, use TextLeafPoint instead.
  */
 struct TextPoint final {
-  TextPoint(HyperTextAccessible* aContainer, int32_t aOffset)
+  TextPoint(Accessible* aContainer, int32_t aOffset)
       : mContainer(aContainer), mOffset(aOffset) {}
   TextPoint(const TextPoint& aPoint)
       : mContainer(aPoint.mContainer), mOffset(aPoint.mOffset) {}
 
-  HyperTextAccessible* mContainer;
+  Accessible* mContainer;
   int32_t mOffset;
 
   bool operator==(const TextPoint& aPoint) const {
@@ -44,12 +44,15 @@ struct TextPoint final {
 };
 
 /**
- * Represents a text range within the text control or document.
+ * Represents a HyperText range within the text control or document.
+ * In new code, This should only be used when you explicitly need to deal with
+ * HyperText containers and offsets, including embedded objects; e.g. for
+ * IAccessible2 and ATK. Otherwise, use TextLeafRange instead.
  */
 class TextRange final {
  public:
-  TextRange(HyperTextAccessible* aRoot, HyperTextAccessible* aStartContainer,
-            int32_t aStartOffset, HyperTextAccessible* aEndContainer,
+  TextRange(Accessible* aRoot, Accessible* aStartContainer,
+            int32_t aStartOffset, Accessible* aEndContainer,
             int32_t aEndOffset);
   TextRange() : mStartOffset{0}, mEndOffset{0} {}
   TextRange(TextRange&& aRange)
@@ -68,9 +71,10 @@ class TextRange final {
     return *this;
   }
 
-  HyperTextAccessible* StartContainer() const { return mStartContainer; }
+  Accessible* Root() { return mRoot; }
+  Accessible* StartContainer() const { return mStartContainer; }
   int32_t StartOffset() const { return mStartOffset; }
-  HyperTextAccessible* EndContainer() const { return mEndContainer; }
+  Accessible* EndContainer() const { return mEndContainer; }
   int32_t EndOffset() const { return mEndOffset; }
 
   bool operator==(const TextRange& aRange) const {
@@ -88,13 +92,13 @@ class TextRange final {
   /**
    * Return a container containing both start and end points.
    */
-  LocalAccessible* Container() const;
+  Accessible* Container() const;
 
   /**
    * Return a list of embedded objects enclosed by the text range (includes
    * partially overlapped objects).
    */
-  void EmbeddedChildren(nsTArray<LocalAccessible*>* aChildren) const;
+  void EmbeddedChildren(nsTArray<Accessible*>* aChildren) const;
 
   /**
    * Return text enclosed by the range.
@@ -102,100 +106,11 @@ class TextRange final {
   void Text(nsAString& aText) const;
 
   /**
-   * Return list of bounding rects of the text range by lines.
-   */
-  void Bounds(nsTArray<nsIntRect> aRects) const;
-
-  enum ETextUnit { eFormat, eWord, eLine, eParagraph, ePage, eDocument };
-
-  /**
-   * Move the range or its points on specified amount of given units.
-   */
-  void Move(ETextUnit aUnit, int32_t aCount) {
-    MoveEnd(aUnit, aCount);
-    MoveStart(aUnit, aCount);
-  }
-  void MoveStart(ETextUnit aUnit, int32_t aCount) {
-    MoveInternal(aUnit, aCount, *mStartContainer, mStartOffset, mEndContainer,
-                 mEndOffset);
-  }
-  void MoveEnd(ETextUnit aUnit, int32_t aCount) {
-    MoveInternal(aUnit, aCount, *mEndContainer, mEndOffset);
-  }
-
-  /**
-   * Move the range points to the closest unit boundaries.
-   */
-  void Normalize(ETextUnit aUnit);
-
-  /**
    * Crops the range if it overlaps the given accessible element boundaries,
    * returns true if the range was cropped successfully.
    */
-  bool Crop(LocalAccessible* aContainer);
+  bool Crop(Accessible* aContainer);
 
-  enum EDirection { eBackward, eForward };
-
-  /**
-   * Return range enclosing the found text.
-   */
-  void FindText(const nsAString& aText, EDirection aDirection,
-                nsCaseTreatment aCaseSensitive, TextRange* aFoundRange) const;
-
-  enum EAttr {
-    eAnimationStyleAttr,
-    eAnnotationObjectsAttr,
-    eAnnotationTypesAttr,
-    eBackgroundColorAttr,
-    eBulletStyleAttr,
-    eCapStyleAttr,
-    eCaretBidiModeAttr,
-    eCaretPositionAttr,
-    eCultureAttr,
-    eFontNameAttr,
-    eFontSizeAttr,
-    eFontWeightAttr,
-    eForegroundColorAttr,
-    eHorizontalTextAlignmentAttr,
-    eIndentationFirstLineAttr,
-    eIndentationLeadingAttr,
-    eIndentationTrailingAttr,
-    eIsActiveAttr,
-    eIsHiddenAttr,
-    eIsItalicAttr,
-    eIsReadOnlyAttr,
-    eIsSubscriptAttr,
-    eIsSuperscriptAttr,
-    eLinkAttr,
-    eMarginBottomAttr,
-    eMarginLeadingAttr,
-    eMarginTopAttr,
-    eMarginTrailingAttr,
-    eOutlineStylesAttr,
-    eOverlineColorAttr,
-    eOverlineStyleAttr,
-    eSelectionActiveEndAttr,
-    eStrikethroughColorAttr,
-    eStrikethroughStyleAttr,
-    eStyleIdAttr,
-    eStyleNameAttr,
-    eTabsAttr,
-    eTextFlowDirectionsAttr,
-    eUnderlineColorAttr,
-    eUnderlineStyleAttr
-  };
-
-  /**
-   * Return range enclosing text having requested attribute.
-   */
-  void FindAttr(EAttr aAttr, nsIVariant* aValue, EDirection aDirection,
-                TextRange* aFoundRange) const;
-
-  /**
-   * Add/remove the text range from selection.
-   */
-  void AddToSelection() const;
-  void RemoveFromSelection() const;
   MOZ_CAN_RUN_SCRIPT bool SetSelectionAt(int32_t aSelectionNum) const;
 
   /**
@@ -223,11 +138,11 @@ class TextRange final {
    */
   bool IsValid() const { return mRoot; }
 
-  void SetStartPoint(HyperTextAccessible* aContainer, int32_t aOffset) {
+  void SetStartPoint(Accessible* aContainer, int32_t aOffset) {
     mStartContainer = aContainer;
     mStartOffset = aOffset;
   }
-  void SetEndPoint(HyperTextAccessible* aContainer, int32_t aOffset) {
+  void SetEndPoint(Accessible* aContainer, int32_t aOffset) {
     mStartContainer = aContainer;
     mStartOffset = aOffset;
   }
@@ -242,9 +157,8 @@ class TextRange final {
   friend class HyperTextAccessible;
   friend class xpcAccessibleTextRange;
 
-  void Set(HyperTextAccessible* aRoot, HyperTextAccessible* aStartContainer,
-           int32_t aStartOffset, HyperTextAccessible* aEndContainer,
-           int32_t aEndOffset);
+  void Set(Accessible* aRoot, Accessible* aStartContainer, int32_t aStartOffset,
+           Accessible* aEndContainer, int32_t aEndOffset);
 
   /**
    * Text() method helper.
@@ -253,27 +167,21 @@ class TextRange final {
    * @param  aStartIntlOffset [in] start offset if current node is a text node
    * @return                   true if calculation is not finished yet
    */
-  bool TextInternal(nsAString& aText, LocalAccessible* aCurrent,
+  bool TextInternal(nsAString& aText, Accessible* aCurrent,
                     uint32_t aStartIntlOffset) const;
-
-  void MoveInternal(ETextUnit aUnit, int32_t aCount,
-                    HyperTextAccessible& aContainer, int32_t aOffset,
-                    HyperTextAccessible* aStopContainer = nullptr,
-                    int32_t aStopOffset = 0);
 
   /**
    * A helper method returning a common parent for two given accessible
    * elements.
    */
-  LocalAccessible* CommonParent(LocalAccessible* aAcc1, LocalAccessible* aAcc2,
-                                nsTArray<LocalAccessible*>* aParents1,
-                                uint32_t* aPos1,
-                                nsTArray<LocalAccessible*>* aParents2,
-                                uint32_t* aPos2) const;
+  Accessible* CommonParent(Accessible* aAcc1, Accessible* aAcc2,
+                           nsTArray<Accessible*>* aParents1, uint32_t* aPos1,
+                           nsTArray<Accessible*>* aParents2,
+                           uint32_t* aPos2) const;
 
-  RefPtr<HyperTextAccessible> mRoot;
-  RefPtr<HyperTextAccessible> mStartContainer;
-  RefPtr<HyperTextAccessible> mEndContainer;
+  Accessible* mRoot;
+  Accessible* mStartContainer;
+  Accessible* mEndContainer;
   int32_t mStartOffset;
   int32_t mEndOffset;
 };

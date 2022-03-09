@@ -710,6 +710,44 @@ def packager_format(value):
 
 set_config("MOZ_PACKAGER_FORMAT", packager_format)
 
+# The packager minifies two different types of files: non-JS (mostly property
+# files for l10n), and JS.  Setting MOZ_PACKAGER_MINIFY only minifies the
+# former.  Firefox doesn't yet minify JS, due to concerns about debuggability.
+#
+# Also, the JS minification setup really only works correctly on Android:
+# we need extra setup to use the newly-built shell for Linux and Windows,
+# and cross-compilation for macOS requires some extra care.
+
+
+@depends(target_is_android, "--enable-debug", milestone.is_nightly)
+def enable_minify_default(is_android, debug, is_nightly):
+    if is_android and not debug and not is_nightly:
+        return ("properties", "js")
+    return ("properties",)
+
+
+option(
+    name="--enable-minify",
+    help="Select types of files to minify during packaging.",
+    nargs="*",
+    choices=("properties", "js"),
+    default=enable_minify_default,
+)
+
+
+@depends("--enable-minify")
+def enable_minify(value):
+    if "js" in value and "properties" not in value:
+        die("--enable-minify=js requires --enable-minify=properties.")
+    return namespace(
+        properties="properties" in value,
+        js="js" in value,
+    )
+
+
+set_config("MOZ_PACKAGER_MINIFY", True, when=enable_minify.properties)
+set_config("MOZ_PACKAGER_MINIFY_JS", True, when=enable_minify.js)
+
 
 @depends(host, build_project)
 def jar_maker_format(host, build_project):
@@ -929,12 +967,6 @@ def webspeech_test_backend(value):
 
 set_config("MOZ_WEBSPEECH_TEST_BACKEND", webspeech_test_backend)
 set_define("MOZ_WEBSPEECH_TEST_BACKEND", webspeech_test_backend)
-
-# Enable IPDL's "expensive" unit tests
-# ==============================================================
-option("--enable-ipdl-tests", help="Enable expensive IPDL tests")
-
-set_config("MOZ_IPDL_TESTS", depends_if("--enable-ipdl-tests")(lambda _: True))
 
 # Graphics
 # ==============================================================
@@ -2608,8 +2640,8 @@ wine = check_prog(
 # DOM Streams
 # ==============================================================
 option(
-    "--enable-dom-streams",
-    help="Enable the DOM Streams prototype",
+    "--disable-dom-streams",
+    help="Disable DOM Streams (use JS Streams)",
 )
 
 set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")

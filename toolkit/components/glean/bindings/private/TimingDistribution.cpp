@@ -18,39 +18,53 @@
 #include "nsString.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 
+// Called from within FOG's Rust impl.
+extern "C" NS_EXPORT void GIFFT_TimingDistributionStart(
+    uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
+  auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
+  if (mirrorId) {
+    auto lock = mozilla::glean::GetTimerIdToStartsLock();
+    (void)NS_WARN_IF(lock.ref()->Remove(aTimerId));
+    lock.ref()->InsertOrUpdate(aTimerId, mozilla::TimeStamp::Now());
+  }
+}
+
+// Called from within FOG's Rust impl.
+extern "C" NS_EXPORT void GIFFT_TimingDistributionStopAndAccumulate(
+    uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
+  auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
+  if (mirrorId) {
+    auto lock = mozilla::glean::GetTimerIdToStartsLock();
+    auto optStart = lock.ref()->Extract(aTimerId);
+    if (!NS_WARN_IF(!optStart)) {
+      AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
+    }
+  }
+}
+
+// Called from within FOG's Rust impl.
+extern "C" NS_EXPORT void GIFFT_TimingDistributionCancel(
+    uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
+  auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
+  if (mirrorId) {
+    auto lock = mozilla::glean::GetTimerIdToStartsLock();
+    (void)NS_WARN_IF(!lock.ref()->Remove(aTimerId));
+  }
+}
+
 namespace mozilla::glean {
 
 namespace impl {
 
 TimerId TimingDistributionMetric::Start() const {
-  TimerId id = fog_timing_distribution_start(mId);
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(lock.ref()->Remove(id));
-    lock.ref()->InsertOrUpdate(id, TimeStamp::Now());
-  }
-  return id;
+  return fog_timing_distribution_start(mId);
 }
 
 void TimingDistributionMetric::StopAndAccumulate(const TimerId&& aId) const {
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    auto optStart = lock.ref()->Extract(aId);
-    if (!NS_WARN_IF(!optStart)) {
-      AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
-    }
-  }
   fog_timing_distribution_stop_and_accumulate(mId, aId);
 }
 
 void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(!lock.ref()->Remove(aId));
-  }
   fog_timing_distribution_cancel(mId, aId);
 }
 

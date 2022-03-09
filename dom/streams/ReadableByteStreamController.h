@@ -20,7 +20,6 @@
 #include "mozilla/dom/ReadableStreamBYOBRequest.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Nullable.h"
@@ -49,7 +48,7 @@ class ReadableByteStreamController final : public ReadableStreamController,
   explicit ReadableByteStreamController(nsIGlobalObject* aGlobal);
 
  protected:
-  ~ReadableByteStreamController();
+  ~ReadableByteStreamController() override;
 
  public:
   bool IsDefault() override { return false; }
@@ -73,12 +72,11 @@ class ReadableByteStreamController final : public ReadableStreamController,
   void Error(JSContext* aCx, JS::Handle<JS::Value> aErrorValue,
              ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelSteps(
       JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
-                                            ReadRequest* aReadRequest,
-                                            ErrorResult& aRv) override;
-  virtual void ReleaseSteps() override;
+  MOZ_CAN_RUN_SCRIPT void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
+                                    ErrorResult& aRv) override;
+  void ReleaseSteps() override;
 
   // Internal Slot Accessors
   Maybe<uint64_t> AutoAllocateChunkSize() { return mAutoAllocateChunkSize; }
@@ -338,41 +336,41 @@ struct PullIntoDescriptor final
   ~PullIntoDescriptor() = default;
 };
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespond(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerRespond(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespondInternal(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerRespondInternal(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespondWithNewView(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerRespondWithNewView(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aView, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerPullInto(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
     ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerError(
+void ReadableByteStreamControllerError(
     ReadableByteStreamController* aController, JS::HandleValue aValue,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerEnqueue(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aChunk, ErrorResult& aRv);
 
-extern already_AddRefed<ReadableStreamBYOBRequest>
+already_AddRefed<ReadableStreamBYOBRequest>
 ReadableByteStreamControllerGetBYOBRequest(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerClose(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerClose(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void SetUpReadableByteStreamController(
+MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableByteStreamController* aController,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
@@ -381,7 +379,7 @@ MOZ_CAN_RUN_SCRIPT extern void SetUpReadableByteStreamController(
     UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
     Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerCallPullIfNeeded(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerCallPullIfNeeded(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 

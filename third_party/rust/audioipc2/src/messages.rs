@@ -188,7 +188,8 @@ fn opt_str(v: Option<Vec<u8>>) -> *mut c_char {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StreamCreate {
     pub token: usize,
-    pub platform_handle: SerializableHandle,
+    pub shm_handle: SerializableHandle,
+    pub shm_area_size: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -246,7 +247,7 @@ pub enum ClientMessage {
     ContextRegisteredDeviceCollectionChanged,
 
     StreamCreated(StreamCreate),
-    StreamInitialized,
+    StreamInitialized(SerializableHandle),
     StreamDestroyed,
 
     StreamStarted,
@@ -274,7 +275,6 @@ pub enum CallbackReq {
     },
     State(ffi::cubeb_state),
     DeviceChange,
-    SharedMem(SerializableHandle, usize),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -282,7 +282,6 @@ pub enum CallbackResp {
     Data(isize),
     State,
     DeviceChange,
-    SharedMem,
     Error(c_int),
 }
 
@@ -425,6 +424,7 @@ pub trait AssociateHandleForMessage {
 
     // Update the item's handle with the received value, making it a valid owned handle.
     // Called on the receiving side after deserialization.
+    // Implementations must only call `F` for message types expecting a handle.
     #[cfg(unix)]
     fn receive_owned_message_handle<F>(&mut self, _: F)
     where
@@ -443,13 +443,22 @@ impl AssociateHandleForMessage for ClientMessage {
         unsafe {
             match *self {
                 ClientMessage::StreamCreated(ref mut data) => {
-                    let handle = data.platform_handle.take_handle_for_send();
-                    data.platform_handle =
+                    let handle = data.shm_handle.take_handle_for_send();
+                    data.shm_handle =
                         SerializableHandle::new_serializable_value(f(handle.0, handle.1)?);
                     trace!(
                         "StreamCreated handle: {:?} remote_handle: {:?}",
                         handle,
-                        data.platform_handle
+                        data.shm_handle
+                    );
+                }
+                ClientMessage::StreamInitialized(ref mut data) => {
+                    let handle = data.take_handle_for_send();
+                    *data = SerializableHandle::new_serializable_value(f(handle.0, handle.1)?);
+                    trace!(
+                        "StreamInitialized handle: {:?} remote_handle: {:?}",
+                        handle,
+                        data
                     );
                 }
                 ClientMessage::ContextSetupDeviceCollectionCallback(ref mut data) => {
@@ -475,7 +484,10 @@ impl AssociateHandleForMessage for ClientMessage {
     {
         match *self {
             ClientMessage::StreamCreated(ref mut data) => {
-                data.platform_handle = SerializableHandle::new_owned(f());
+                data.shm_handle = SerializableHandle::new_owned(f());
+            }
+            ClientMessage::StreamInitialized(ref mut data) => {
+                *data = SerializableHandle::new_owned(f());
             }
             ClientMessage::ContextSetupDeviceCollectionCallback(ref mut data) => {
                 data.platform_handle = SerializableHandle::new_owned(f());
@@ -488,32 +500,7 @@ impl AssociateHandleForMessage for ClientMessage {
 impl AssociateHandleForMessage for DeviceCollectionReq {}
 impl AssociateHandleForMessage for DeviceCollectionResp {}
 
-impl AssociateHandleForMessage for CallbackReq {
-    fn prepare_send_message_handle<F>(&mut self, f: F) -> io::Result<()>
-    where
-        F: FnOnce(PlatformHandleType, u32) -> io::Result<PlatformHandleType>,
-    {
-        unsafe {
-            if let CallbackReq::SharedMem(ref mut data, _) = *self {
-                let handle = data.take_handle_for_send();
-                *data = SerializableHandle::new_serializable_value(f(handle.0, handle.1)?);
-                trace!("SharedMem handle: {:?} remote_handle: {:?}", handle, data);
-            }
-        }
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    fn receive_owned_message_handle<F>(&mut self, f: F)
-    where
-        F: FnOnce() -> PlatformHandleType,
-    {
-        if let CallbackReq::SharedMem(ref mut data, _) = *self {
-            *data = SerializableHandle::new_owned(f());
-        }
-    }
-}
-
+impl AssociateHandleForMessage for CallbackReq {}
 impl AssociateHandleForMessage for CallbackResp {}
 
 #[cfg(test)]

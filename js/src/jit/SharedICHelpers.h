@@ -17,6 +17,8 @@
 #  include "jit/arm64/SharedICHelpers-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 #  include "jit/mips-shared/SharedICHelpers-mips-shared.h"
+#elif defined(JS_CODEGEN_LOONG64)
+#  include "jit/loong64/SharedICHelpers-loong64.h"
 #elif defined(JS_CODEGEN_NONE)
 #  include "jit/none/SharedICHelpers-none.h"
 #else

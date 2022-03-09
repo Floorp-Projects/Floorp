@@ -2301,20 +2301,12 @@ struct mat2 {
   const vec2& operator[](int index) const { return data[index]; }
   mat2() = default;
 
-  IMPLICIT mat2(Float a) {
-    data[0] = vec2(a);
-    data[1] = vec2(a);
-  }
+  IMPLICIT constexpr mat2(Float a) : data{vec2(a), vec2(a)} {}
 
-  mat2(vec2 a, vec2 b) {
-    data[0] = a;
-    data[1] = b;
-  }
+  constexpr mat2(vec2 a, vec2 b) : data{a, b} {}
   IMPLICIT mat2(const mat4& mat);
-  IMPLICIT constexpr mat2(mat2_scalar s) {
-    data[0] = vec2(s.data[0]);
-    data[1] = vec2(s.data[1]);
-  }
+  IMPLICIT constexpr mat2(mat2_scalar s)
+      : data{vec2(s.data[0]), vec2(s.data[1])} {}
 
   friend vec2 operator*(mat2 m, vec2 v) {
     vec2 u;
@@ -2404,30 +2396,19 @@ struct mat3 {
   vec3& operator[](int index) { return data[index]; }
   const vec3& operator[](int index) const { return data[index]; }
   mat3() = default;
-  mat3(vec3 a, vec3 b, vec3 c) {
-    data[0] = a;
-    data[1] = b;
-    data[2] = c;
-  }
+  constexpr mat3(vec3 a, vec3 b, vec3 c) : data{a, b, c} {}
 
-  IMPLICIT constexpr mat3(mat3_scalar s) {
-    data[0] = vec3(s.data[0]);
-    data[1] = vec3(s.data[1]);
-    data[2] = vec3(s.data[2]);
-  }
-  constexpr mat3(mat3_scalar s0, mat3_scalar s1, mat3_scalar s2,
-                 mat3_scalar s3) {
-    data[0] = vec3(s0.data[0], s1.data[0], s2.data[0], s3.data[0]);
-    data[1] = vec3(s0.data[1], s1.data[1], s2.data[1], s3.data[1]);
-    data[2] = vec3(s0.data[2], s1.data[2], s2.data[2], s3.data[2]);
-  }
+  IMPLICIT constexpr mat3(mat3_scalar s)
+      : data{vec3(s.data[0]), vec3(s.data[1]), vec3(s.data[2])} {}
+
+  constexpr mat3(mat3_scalar s0, mat3_scalar s1, mat3_scalar s2, mat3_scalar s3)
+      : data{vec3(s0.data[0], s1.data[0], s2.data[0], s3.data[0]),
+             vec3(s0.data[1], s1.data[1], s2.data[1], s3.data[1]),
+             vec3(s0.data[2], s1.data[2], s2.data[2], s3.data[2])} {}
 
   constexpr mat3(Float d1, Float d2, Float d3, Float d4, Float d5, Float d6,
-                 Float d7, Float d8, Float d9) {
-    data[0] = vec3(d1, d2, d3);
-    data[1] = vec3(d4, d5, d6);
-    data[2] = vec3(d7, d8, d9);
-  }
+                 Float d7, Float d8, Float d9)
+      : data{vec3(d1, d2, d3), vec3(d4, d5, d6), vec3(d7, d8, d9)} {}
 
   IMPLICIT mat3(const mat4& mat);
 
@@ -2597,19 +2578,11 @@ struct mat4 {
   vec4 data[4];
 
   mat4() = default;
-  IMPLICIT constexpr mat4(mat4_scalar s) {
-    data[0] = vec4(s.data[0]);
-    data[1] = vec4(s.data[1]);
-    data[2] = vec4(s.data[2]);
-    data[3] = vec4(s.data[3]);
-  }
+  IMPLICIT constexpr mat4(mat4_scalar s)
+      : data{vec4(s.data[0]), vec4(s.data[1]), vec4(s.data[2]),
+             vec4(s.data[3])} {}
 
-  mat4(vec4 a, vec4 b, vec4 c, vec4 d) {
-    data[0] = a;
-    data[1] = b;
-    data[2] = c;
-    data[3] = d;
-  }
+  constexpr mat4(vec4 a, vec4 b, vec4 c, vec4 d) : data{a, b, c, d} {}
 
   vec4& operator[](int index) { return data[index]; }
   const vec4& operator[](int index) const { return data[index]; }

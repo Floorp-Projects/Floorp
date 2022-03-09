@@ -93,6 +93,11 @@ def run_setup(config):
     if "setup" not in config:
         return
 
+    if config["name"] == "clang-format":
+        # Skip the setup for the clang-format linter, as it requires a Mach context
+        # (which we may not have if pytest is invoked directly).
+        return
+
     log = logging.LoggerAdapter(
         logger, {"lintname": config.get("name"), "pid": os.getpid()}
     )

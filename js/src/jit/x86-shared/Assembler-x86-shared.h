@@ -4504,6 +4504,12 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vblendvpd(FloatRegister mask, FloatRegister src1, FloatRegister src0,
+                 FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    masm.vblendvpd_rr(mask.encoding(), src1.encoding(), src0.encoding(),
+                      dest.encoding());
+  }
   void vmovsldup(FloatRegister src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE3());
     masm.vmovsldup_rr(src.encoding(), dest.encoding());

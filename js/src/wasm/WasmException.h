@@ -19,33 +19,8 @@
 #ifndef wasm_exception_h
 #define wasm_exception_h
 
-#include "js/Class.h"  // JSClassOps, ClassSpec
-#include "js/RefCounted.h"
-#include "js/TypeDecls.h"
-#include "vm/JSObject.h"
-#include "vm/NativeObject.h"  // NativeObject
-
 namespace js {
 namespace wasm {
-
-// Exception tags are used to uniquely identify exceptions. They are stored
-// in a vector in Instances and used by both WebAssembly.Tag for import
-// and export, and by WebAssembly.Exception for thrown exceptions.
-//
-// Since an exception tag is a (trivial) substructure of AtomicRefCounted, the
-// RefPtr SharedTag can have many instances/modules referencing a single
-// constant exception tag.
-//
-// It is possible that other proposals will start using tags as well, in which
-// case it may be worth generalizing this representation for other kinds of
-// tags.
-
-struct ExceptionTag : AtomicRefCounted<ExceptionTag> {
-  ExceptionTag() = default;
-};
-using SharedExceptionTag = RefPtr<ExceptionTag>;
-using SharedExceptionTagVector =
-    Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
 
 static const uint32_t CatchAllIndex = UINT32_MAX;
 static_assert(CatchAllIndex > MaxTags);

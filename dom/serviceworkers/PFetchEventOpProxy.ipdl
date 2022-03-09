@@ -10,7 +10,7 @@ include FetchTypes;
 namespace mozilla {
 namespace dom {
 
-[RefCounted] protocol PFetchEventOpProxy {
+protocol PFetchEventOpProxy {
   manager PRemoteWorker;
 
  parent:
@@ -23,7 +23,7 @@ namespace dom {
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
 
  child:
-  async PreloadResponse(ParentToChildInternalResponse aResponse);
+  async PreloadResponse(ParentToChildResponseWithTiming aResponse);
 };
 
 }  // namespace dom

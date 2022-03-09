@@ -22,7 +22,11 @@ from enum import Enum
 from mozdevice import ADBHost, ADBDeviceFactory
 from six.moves import input, urllib
 
-EMULATOR_HOME_DIR = os.path.join(os.path.expanduser("~"), ".mozbuild", "android-device")
+MOZBUILD_PATH = os.environ.get(
+    "MOZBUILD_STATE_PATH", os.path.expanduser(os.path.join("~", ".mozbuild"))
+)
+
+EMULATOR_HOME_DIR = os.path.join(MOZBUILD_PATH, "android-device")
 
 EMULATOR_AUTH_FILE = os.path.join(
     os.path.expanduser("~"), ".emulator_console_auth_token"
@@ -917,11 +921,8 @@ def _find_sdk_exe(substs, exe, tools):
 
     if not found:
         # Can exe be found in the default bootstrap location?
-        mozbuild_path = os.environ.get(
-            "MOZBUILD_STATE_PATH", os.path.expanduser(os.path.join("~", ".mozbuild"))
-        )
         for subdir in subdirs:
-            exe_path = os.path.join(mozbuild_path, "android-sdk-linux", subdir, exe)
+            exe_path = os.path.join(MOZBUILD_PATH, "android-sdk-linux", subdir, exe)
             if os.path.exists(exe_path):
                 found = True
                 break

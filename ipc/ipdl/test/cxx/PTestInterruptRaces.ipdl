@@ -1,6 +1,9 @@
+include "mozilla/_ipdltest/TestInterruptRaces.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestInterruptRacesChild", ParentImpl="TestInterruptRacesParent"]
 intr protocol PTestInterruptRaces {
 both:
     [LegacyIntr] intr Race() returns (bool hasReply);

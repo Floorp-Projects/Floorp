@@ -72,11 +72,6 @@ class Opcode {
     static_assert(size_t(SimdOp::Limit) <= 0xFFFFFF, "fits");
     MOZ_ASSERT(size_t(op) < size_t(SimdOp::Limit));
   }
-  MOZ_IMPLICIT Opcode(IntrinsicOp op)
-      : bits_((uint32_t(op) << 8) | uint32_t(Op::IntrinsicPrefix)) {
-    static_assert(size_t(IntrinsicOp::Limit) <= 0xFFFFFF, "fits");
-    MOZ_ASSERT(size_t(op) < size_t(IntrinsicOp::Limit));
-  }
 
   bool isOp() const { return bits_ < uint32_t(Op::FirstPrefix); }
   bool isMisc() const { return (bits_ & 255) == uint32_t(Op::MiscPrefix); }

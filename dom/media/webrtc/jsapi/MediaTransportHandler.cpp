@@ -43,7 +43,6 @@
 
 #include "nsISocketTransportService.h"
 #include "nsDNSService2.h"
-#include "nsNetUtil.h"  // NS_CheckPortSafety
 
 #include <string>
 #include <vector>
@@ -78,8 +77,9 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void EnterPrivateMode() override;
   void ExitPrivateMode() override;
 
-  nsresult CreateIceCtx(const std::string& aName,
-                        const nsTArray<dom::RTCIceServer>& aIceServers,
+  void CreateIceCtx(const std::string& aName) override;
+
+  nsresult SetIceConfig(const nsTArray<dom::RTCIceServer>& aIceServers,
                         dom::RTCIceTransportPolicy aIcePolicy) override;
 
   // We will probably be able to move the proxy lookup stuff into
@@ -179,8 +179,11 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<NrIceResolver> mDNSResolver;
   std::map<std::string, Transport> mTransports;
   bool mObfuscateHostAddresses = false;
+  bool mTurnDisabled = false;
   uint32_t mMinDtlsVersion = 0;
   uint32_t mMaxDtlsVersion = 0;
+  bool mForceNoHost = false;
+  Maybe<NrIceCtx::NatSimulatorConfig> mNatConfig;
 
   std::set<std::string> mSignaledAddresses;
 
@@ -286,11 +289,7 @@ static NrIceCtx::Policy toNrIcePolicy(dom::RTCIceTransportPolicy aPolicy) {
     case dom::RTCIceTransportPolicy::Relay:
       return NrIceCtx::ICE_POLICY_RELAY;
     case dom::RTCIceTransportPolicy::All:
-      if (Preferences::GetBool("media.peerconnection.ice.no_host", false)) {
-        return NrIceCtx::ICE_POLICY_NO_HOST;
-      } else {
-        return NrIceCtx::ICE_POLICY_ALL;
-      }
+      return NrIceCtx::ICE_POLICY_ALL;
     default:
       MOZ_CRASH();
   }
@@ -531,17 +530,7 @@ static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
   return Nothing();
 }
 
-nsresult MediaTransportHandlerSTS::CreateIceCtx(
-    const std::string& aName, const nsTArray<dom::RTCIceServer>& aIceServers,
-    dom::RTCIceTransportPolicy aIcePolicy) {
-  // We rely on getting an error when this happens, so do it up front.
-  std::vector<NrIceStunServer> stunServers;
-  std::vector<NrIceTurnServer> turnServers;
-  nsresult rv = ConvertIceServers(aIceServers, &stunServers, &turnServers);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
+void MediaTransportHandlerSTS::CreateIceCtx(const std::string& aName) {
   mInitPromise = InvokeAsync(
       GetMainThreadSerialEventTarget(), __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -575,7 +564,7 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
         }
 
         // Give us a way to globally turn off TURN support
-        bool turnDisabled =
+        mTurnDisabled =
             Preferences::GetBool("media.peerconnection.turn.disable", false);
         // We are reading these here, because when we setup the DTLS transport
         // we are on the wrong thread to read prefs
@@ -583,10 +572,9 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
             Preferences::GetUint("media.peerconnection.dtls.version.min");
         mMaxDtlsVersion =
             Preferences::GetUint("media.peerconnection.dtls.version.max");
-
-        NrIceCtx::Config config;
-        config.mPolicy = toNrIcePolicy(aIcePolicy);
-        config.mNatSimulatorConfig = GetNatConfig();
+        mForceNoHost =
+            Preferences::GetBool("media.peerconnection.ice.no_host", false);
+        mNatConfig = GetNatConfig();
 
         MOZ_RELEASE_ASSERT(STSShutdownHandler::Instance());
         STSShutdownHandler::Instance()->Register(this);
@@ -594,7 +582,7 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
         return InvokeAsync(
             mStsThread, __func__,
             [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
-              mIceCtx = NrIceCtx::Create(aName, config);
+              mIceCtx = NrIceCtx::Create(aName);
               if (!mIceCtx) {
                 return InitPromise::CreateAndReject("NrIceCtx::Create failed",
                                                     __func__);
@@ -605,27 +593,8 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
               mIceCtx->SignalConnectionStateChange.connect(
                   this, &MediaTransportHandlerSTS::OnConnectionStateChange);
 
-              nsresult rv;
-
-              if (NS_FAILED(rv = mIceCtx->SetStunServers(stunServers))) {
-                CSFLogError(LOGTAG, "%s: Failed to set stun servers",
-                            __FUNCTION__);
-                return InitPromise::CreateAndReject(
-                    "Failed to set stun servers", __func__);
-              }
-              if (!turnDisabled) {
-                if (NS_FAILED(rv = mIceCtx->SetTurnServers(turnServers))) {
-                  CSFLogError(LOGTAG, "%s: Failed to set turn servers",
-                              __FUNCTION__);
-                  return InitPromise::CreateAndReject(
-                      "Failed to set turn servers", __func__);
-                }
-              } else if (!turnServers.empty()) {
-                CSFLogError(LOGTAG, "%s: Setting turn servers disabled",
-                            __FUNCTION__);
-              }
-
               mDNSResolver = new NrIceResolver;
+              nsresult rv;
               if (NS_FAILED(rv = mDNSResolver->Init())) {
                 CSFLogError(LOGTAG, "%s: Failed to initialize dns resolver",
                             __FUNCTION__);
@@ -644,6 +613,53 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
               return InitPromise::CreateAndResolve(true, __func__);
             });
       });
+}
+
+nsresult MediaTransportHandlerSTS::SetIceConfig(
+    const nsTArray<dom::RTCIceServer>& aIceServers,
+    dom::RTCIceTransportPolicy aIcePolicy) {
+  // We rely on getting an error when this happens, so do it up front.
+  std::vector<NrIceStunServer> stunServers;
+  std::vector<NrIceTurnServer> turnServers;
+  nsresult rv = ConvertIceServers(aIceServers, &stunServers, &turnServers);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mInitPromise->Then(
+      mStsThread, __func__,
+      [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          CSFLogError(LOGTAG, "%s: mIceCtx is null", __FUNCTION__);
+          return;
+        }
+        NrIceCtx::Config config;
+        config.mPolicy = toNrIcePolicy(aIcePolicy);
+        if (config.mPolicy == NrIceCtx::ICE_POLICY_ALL && mForceNoHost) {
+          config.mPolicy = NrIceCtx::ICE_POLICY_NO_HOST;
+        }
+        config.mNatSimulatorConfig = mNatConfig;
+
+        nsresult rv;
+
+        if (NS_FAILED(rv = mIceCtx->SetStunServers(stunServers))) {
+          CSFLogError(LOGTAG, "%s: Failed to set stun servers", __FUNCTION__);
+          return;
+        }
+        if (!mTurnDisabled) {
+          if (NS_FAILED(rv = mIceCtx->SetTurnServers(turnServers))) {
+            CSFLogError(LOGTAG, "%s: Failed to set turn servers", __FUNCTION__);
+            return;
+          }
+        } else if (!turnServers.empty()) {
+          CSFLogError(LOGTAG, "%s: Setting turn servers disabled",
+                      __FUNCTION__);
+        }
+        if (NS_FAILED(rv = mIceCtx->SetIceConfig(config))) {
+          CSFLogError(LOGTAG, "%s: Failed to set config", __FUNCTION__);
+        }
+      });
+
   return NS_OK;
 }
 

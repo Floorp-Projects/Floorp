@@ -876,7 +876,7 @@ LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
 void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
                                            const nsMargin& aComputedOffsets,
                                            nsPoint* aPosition) {
-  if (!aFrame->IsRelativelyPositioned()) {
+  if (!aFrame->IsRelativelyOrStickyPositioned()) {
     NS_ASSERTION(!aFrame->HasProperty(nsIFrame::NormalPositionProperty()),
                  "We assume that changing the 'position' property causes "
                  "frame reconstruction.  If that ever changes, this code "
@@ -2141,7 +2141,7 @@ void ReflowInput::InitConstraints(
     ComputedMinISize() = ComputedMinBSize() = 0;
     ComputedMaxBSize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
   } else {
-    // Get the containing block reflow input
+    // Get the containing block's reflow input
     const ReflowInput* cbri = mCBReflowInput;
     MOZ_ASSERT(cbri, "no containing block");
     MOZ_ASSERT(mFrame->GetParent());
@@ -2187,7 +2187,7 @@ void ReflowInput::InitConstraints(
         // such as images.  See bug 54119.  The else clause "blockSizeUnit =
         // eStyleUnit_Auto;" used to be called exclusively.
         if (mFlags.mIsReplaced && mStyleDisplay->IsInlineOutsideStyle()) {
-          // Get the containing block reflow input
+          // Get the containing block's reflow input
           NS_ASSERTION(nullptr != cbri, "no containing block");
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
@@ -2226,8 +2226,7 @@ void ReflowInput::InitConstraints(
     // above. (If the element is sticky positioned, we need to wait
     // until the scroll container knows its size, so we compute offsets
     // from StickyScrollContainer::UpdatePositions.)
-    if (mStyleDisplay->IsRelativelyPositioned(mFrame) &&
-        StylePositionProperty::Relative == mStyleDisplay->mPosition) {
+    if (mStyleDisplay->IsRelativelyPositioned(mFrame)) {
       const LogicalMargin offsets =
           ComputeRelativeOffsets(cbwm, mFrame, cbSize.ConvertTo(cbwm, wm));
       SetComputedLogicalOffsets(cbwm, offsets);

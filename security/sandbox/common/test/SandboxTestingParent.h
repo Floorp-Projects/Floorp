@@ -32,6 +32,9 @@ class SandboxTestingParent : public PSandboxTestingParent {
                                                 const nsCString& resultMessage);
   mozilla::ipc::IPCResult RecvTestCompleted();
 
+  mozilla::ipc::IPCResult RecvGetSpecialDirectory(
+      const nsCString& aSpecialDirName, nsString* aDirPath);
+
  private:
   explicit SandboxTestingParent(SandboxTestingThread* aThread,
                                 Endpoint<PSandboxTestingParent>&& aParentEnd);

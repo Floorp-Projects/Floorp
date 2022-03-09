@@ -11,18 +11,18 @@
 
 namespace mozilla::ipc {
 
-void IPDLParamTraits<nsDocShellLoadState*>::Write(IPC::Message* aMsg,
+void IPDLParamTraits<nsDocShellLoadState*>::Write(IPC::MessageWriter* aWriter,
                                                   IProtocol* aActor,
                                                   nsDocShellLoadState* aParam) {
   MOZ_RELEASE_ASSERT(aParam);
-  WriteIPDLParam(aMsg, aActor, aParam->Serialize());
+  WriteIPDLParam(aWriter, aActor, aParam->Serialize());
 }
 
 bool IPDLParamTraits<nsDocShellLoadState*>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     RefPtr<nsDocShellLoadState>* aResult) {
   dom::DocShellLoadStateInit loadState;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &loadState)) {
+  if (!ReadIPDLParam(aReader, aActor, &loadState)) {
     return false;
   }
 

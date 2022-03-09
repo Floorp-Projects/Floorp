@@ -151,7 +151,6 @@ static const char sIntPrefs[][43] = {
     "ui.IMESelectedConvertedTextUnderlineStyle",
     "ui.SpellCheckerUnderlineStyle",
     "ui.menuBarDrag",
-    "ui.operatingSystemVersionIdentifier",
     "ui.scrollbarButtonAutoRepeatBehavior",
     "ui.tooltipDelay",
     "ui.swipeAnimationEnabled",
@@ -376,10 +375,14 @@ void nsXPLookAndFeel::Shutdown() {
   widget::Theme::Shutdown();
 }
 
-static void IntPrefChanged() {
-  // Int prefs can't change our system colors or fonts.
-  LookAndFeel::NotifyChangedAllWindows(
-      widget::ThemeChangeKind::MediaQueriesOnly);
+static void IntPrefChanged(const nsACString& aPref) {
+  // Most Int prefs can't change our system colors or fonts, but
+  // ui.systemUsesDarkTheme can, since it affects the effective color-scheme
+  // (affecting system colors).
+  auto changeKind = aPref.EqualsLiteral("ui.systemUsesDarkTheme")
+                        ? widget::ThemeChangeKind::Style
+                        : widget::ThemeChangeKind::MediaQueriesOnly;
+  LookAndFeel::NotifyChangedAllWindows(changeKind);
 }
 
 static void FloatPrefChanged() {
@@ -398,7 +401,7 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   nsDependentCString prefName(aPref);
   for (const char* pref : sIntPrefs) {
     if (prefName.Equals(pref)) {
-      IntPrefChanged();
+      IntPrefChanged(prefName);
       return;
     }
   }
@@ -427,11 +430,13 @@ static constexpr struct {
     {"browser.display.windows.native_menus"_ns},
     {"browser.proton.places-tooltip.enabled"_ns},
     {"layout.css.prefers-color-scheme.content-override"_ns},
+    // Affects media queries and scrollbar sizes, so gotta relayout.
+    {"widget.gtk.overlay-scrollbars.enabled"_ns,
+     widget::ThemeChangeKind::StyleAndLayout},
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
-    {"layout.css.color-scheme.content-override"_ns},
 };
 
 // Read values from the user's preferences.
@@ -1154,6 +1159,17 @@ auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
   }
 }
 
+ColorScheme LookAndFeel::ThemeDerivedColorSchemeForContent() {
+  switch (StaticPrefs::browser_theme_content_theme()) {
+    case 0:  // Dark
+      return ColorScheme::Dark;
+    case 1:  // Light
+      return ColorScheme::Light;
+    default:
+      return ColorSchemeForChrome();
+  }
+}
+
 void LookAndFeel::RecomputeColorSchemes() {
   sColorSchemeInitialized = true;
 
@@ -1181,14 +1197,7 @@ void LookAndFeel::RecomputeColorSchemes() {
         break;  // Use the browser theme.
     }
 
-    switch (StaticPrefs::browser_theme_content_theme()) {
-      case 0:  // Dark
-        return ColorScheme::Dark;
-      case 1:  // Light
-        return ColorScheme::Light;
-      default:
-        return ColorSchemeForChrome();
-    }
+    return ThemeDerivedColorSchemeForContent();
   }();
 }
 

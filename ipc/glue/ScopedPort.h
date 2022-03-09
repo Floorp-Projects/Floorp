@@ -70,9 +70,8 @@ template <>
 struct ParamTraits<mozilla::ipc::ScopedPort> {
   using paramType = mozilla::ipc::ScopedPort;
 
-  static void Write(Message* aMsg, paramType&& aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult);
+  static void Write(MessageWriter* aWriter, paramType&& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
 }  // namespace IPC

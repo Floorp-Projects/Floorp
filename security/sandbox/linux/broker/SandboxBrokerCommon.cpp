@@ -8,6 +8,14 @@
 
 #include "mozilla/Assertions.h"
 
+// This file is built both within libxul and as a separate libmozsandbox
+// library. We can only use profiler annotations within libxul.
+#ifdef MOZILLA_INTERNAL_API
+#  include "GeckoProfiler.h"
+#else
+#  define AUTO_PROFILER_THREAD_SLEEP
+#endif
+
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -66,6 +74,7 @@ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
     // accidentally leaking a copy of the child's response socket to a
     // new child process.  (The child won't be able to exec, so this
     // doesn't matter as much for that direction.)
+    AUTO_PROFILER_THREAD_SLEEP;
     rv = recvmsg(aFd, &msg, MSG_CMSG_CLOEXEC);
   } while (rv < 0 && errno == EINTR);
 

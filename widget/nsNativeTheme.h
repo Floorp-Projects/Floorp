@@ -139,9 +139,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   // menupopup:
   bool IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent);
 
-  // True if it's not a menubar item or menulist item
-  bool IsRegularMenuItem(nsIFrame* aFrame);
-
   static bool CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom);
   static int32_t CheckIntAttr(nsIFrame* aFrame, nsAtom* aAtom,
                               int32_t defaultValue);
@@ -158,10 +155,10 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
 
   bool IsRangeHorizontal(nsIFrame* aFrame);
 
-  static bool IsDarkBackground(nsIFrame* aFrame);
+  static bool IsDarkBackground(nsIFrame*);
   static bool IsDarkColor(nscolor aColor);
 
-  static bool IsWidgetScrollbarPart(mozilla::StyleAppearance aAppearance);
+  static bool IsWidgetScrollbarPart(mozilla::StyleAppearance);
 
  private:
   uint32_t mAnimatedContentTimeout;

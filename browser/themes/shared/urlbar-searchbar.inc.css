@@ -85,7 +85,7 @@
 #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
 #searchbar:focus-within {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
   /* We used --focus-outline above to inherit its width and style properties,
      but we still want to use the theme's border-color.
      --toolbar-field-focus-border-color is set equal to --focus-outline-color
@@ -410,9 +410,9 @@
   color: var(--urlbar-box-hover-text-color);
 }
 
-.urlbar-page-action:-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: -2px;
+.urlbar-page-action:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 #urlbar-go-button,
@@ -619,9 +619,9 @@
   animation-duration: 250ms;
 }
 
-#urlbar-zoom-button:-moz-focusring {
+#urlbar-zoom-button:focus-visible {
   outline: var(--toolbarbutton-focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
 }
 
 #urlbar-zoom-button > .toolbarbutton-text {

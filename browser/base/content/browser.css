@@ -54,8 +54,8 @@ body {
    with the ruleset above. We must set background properties on :root and not
    #navigator-toolbox on Windows 7/8 due to a WebRender bug that hides the
    minimize/maximize/close buttons. */
-@media not (-moz-os-version: windows-win7) {
-  @media not (-moz-os-version: windows-win8) {
+@media not (-moz-platform: windows-win7) {
+  @media not (-moz-platform: windows-win8) {
     #navigator-toolbox:-moz-lwtheme {
       background-color: var(--lwt-accent-color);
     }
@@ -74,8 +74,8 @@ body {
   }
 }
 /* TODO bug 1695280: Remove this block. */
-@media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
+@media (-moz-platform: windows-win7),
+       (-moz-platform: windows-win8) {
   :root:-moz-lwtheme {
     background-color: var(--lwt-accent-color);
     background-image: var(--lwt-additional-images);
@@ -215,14 +215,6 @@ panelview[mainview] > .panel-header {
   display: none;
 }
 
-%ifdef NIGHTLY_BUILD
-@supports -moz-bool-pref("browser.tabs.hideThrobber") {
-  .tab-throbber {
-    display: none !important;
-  }
-}
-%endif
-
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
   position: absolute !important;
   display: block;
@@ -341,10 +333,6 @@ toolbar[customizing] #whats-new-menu-button {
   visibility: hidden;
 }
 %endif
-
-#titlebar {
-  -moz-window-dragging: drag;
-}
 
 :root[tabsintitlebar] .titlebar-buttonbox {
   position: relative;
@@ -1642,6 +1630,10 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 #window-modal-dialog.showToolbar::backdrop {
   background: linear-gradient(transparent, rgba(28, 27, 34, 0.45) 50%);
+}
+
+#window-modal-dialog.noShadow .dialogBox {
+  box-shadow: none;
 }
 
 /* For the window-modal dialog, the background is supplied by the HTML dialog

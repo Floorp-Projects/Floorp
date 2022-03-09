@@ -1,0 +1,18 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_OriginTrials_h
+#error "Don't include this file directly, include mozilla/OriginTrials.h instead"
+#endif
+"""
+include_guard = "mozilla_OriginTrials_ffi_h"
+include_version = true
+language = "C++"
+namespaces = ["mozilla", "origin_trials_ffi"]
+includes = ["mozilla/Assertions.h"]
+
+[enum]
+derive_helper_methods = true
+derive_const_casts = true
+cast_assert_name = "MOZ_DIAGNOSTIC_ASSERT"

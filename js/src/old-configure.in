@@ -671,6 +671,11 @@ case $target in
     ;;
 esac
 
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
+AC_CHECK_FUNCS(dladdr)
+CFLAGS="$_SAVE_CFLAGS"
+
 if test ! "$GNU_CXX"; then
     AC_CHECK_LIB(C, demangle)
 fi

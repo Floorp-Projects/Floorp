@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,12 +8,15 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
 
+using mozilla::AutoCleanLinkedList;
 using mozilla::LinkedList;
 using mozilla::LinkedListElement;
 
 struct SomeClass : public LinkedListElement<SomeClass> {
   unsigned int mValue;
   explicit SomeClass(int aValue = 0) : mValue(aValue) {}
+  SomeClass(SomeClass&&) = default;
+  SomeClass& operator=(SomeClass&&) = default;
   void incr() { ++mValue; }
 };
 
@@ -173,6 +177,70 @@ static void TestList() {
   }
 }
 
+static void TestExtendLists() {
+  AutoCleanLinkedList<SomeClass> list1, list2;
+
+  constexpr unsigned int N = 5;
+  for (unsigned int i = 0; i < N; ++i) {
+    list1.insertBack(new SomeClass(static_cast<int>(i)));
+
+    AutoCleanLinkedList<SomeClass> singleItemList;
+    singleItemList.insertFront(new SomeClass(static_cast<int>(i + N)));
+    list2.extendBack(std::move(singleItemList));
+  }
+  // list1 = { 0, 1, 2, 3, 4 }
+  // list2 = { 5, 6, 7, 8, 9 }
+
+  list1.extendBack(AutoCleanLinkedList<SomeClass>());
+  list1.extendBack(std::move(list2));
+
+  // Make sure the line above has properly emptied |list2|.
+  MOZ_RELEASE_ASSERT(list2.isEmpty());  // NOLINT(bugprone-use-after-move)
+
+  size_t i = 0;
+  for (SomeClass* x : list1) {
+    MOZ_RELEASE_ASSERT(x->mValue == i++);
+  }
+  MOZ_RELEASE_ASSERT(i == N * 2);
+}
+
+void TestSplice() {
+  AutoCleanLinkedList<SomeClass> list1, list2;
+  for (unsigned int i = 1; i <= 5; ++i) {
+    list1.insertBack(new SomeClass(static_cast<int>(i)));
+
+    AutoCleanLinkedList<SomeClass> singleItemList;
+    singleItemList.insertFront(new SomeClass(static_cast<int>(i * 10)));
+    list2.extendBack(std::move(singleItemList));
+  }
+  // list1 = { 1, 2, 3, 4, 5 }
+  // list2 = { 10, 20, 30, 40, 50 }
+
+  list1.splice(2, list2, 0, 5);
+
+  MOZ_RELEASE_ASSERT(list2.isEmpty());
+  unsigned int kExpected1[]{1, 2, 10, 20, 30, 40, 50, 3, 4, 5};
+  CheckListValues(list1, kExpected1);
+
+  // Since aSourceLen=100 exceeds list1's end, the function transfers
+  // three items [3, 4, 5].
+  list2.splice(0, list1, 7, 100);
+
+  unsigned int kExpected2[]{1, 2, 10, 20, 30, 40, 50};
+  unsigned int kExpected3[]{3, 4, 5};
+  CheckListValues(list1, kExpected2);
+  CheckListValues(list2, kExpected3);
+
+  // Since aDestinationPos=100 exceeds list2's end, the function transfers
+  // items to list2's end.
+  list2.splice(100, list1, 1, 1);
+
+  unsigned int kExpected4[]{1, 10, 20, 30, 40, 50};
+  unsigned int kExpected5[]{3, 4, 5, 2};
+  CheckListValues(list1, kExpected4);
+  CheckListValues(list2, kExpected5);
+}
+
 static void TestMove() {
   auto MakeSomeClass = [](unsigned int aValue) -> SomeClass {
     return SomeClass(aValue);
@@ -321,6 +389,8 @@ static void TestRefPtrList() {
 
 int main() {
   TestList();
+  TestExtendLists();
+  TestSplice();
   TestPrivate();
   TestMove();
   TestRemoveAndGet();

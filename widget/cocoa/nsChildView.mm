@@ -17,6 +17,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SwipeTracker.h"
 #include "mozilla/TextEventDispatcher.h"
@@ -1572,7 +1573,7 @@ bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeybo
   Maybe<WritingMode> writingMode;
   if (aEvent.NeedsToRemapNavigationKey()) {
     if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
-      writingMode = dispatcher->MaybeWritingModeAtSelection();
+      writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
     }
   }
 
@@ -3246,19 +3247,6 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
       panEvent.SetLineOrPageDeltas(lineOrPageDelta.x, lineOrPageDelta.y);
     }
 
-    if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
-      // Check if there's a momentum start event in the event queue, so that we
-      // can annotate this event.
-      NSEvent* nextWheelEvent = [NSApp nextEventMatchingMask:NSEventMaskScrollWheel
-                                                   untilDate:[NSDate distantPast]
-                                                      inMode:NSDefaultRunLoopMode
-                                                     dequeue:NO];
-      if (nextWheelEvent &&
-          PanGestureTypeForEvent(nextWheelEvent) == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
-        panEvent.mFollowedByMomentum = true;
-      }
-    }
-
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent] &&
                            SwipeTracker::CanTriggerSwipe(panEvent);
     ;
@@ -4281,14 +4269,16 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   }
 
   if (mDragService) {
-    // set the dragend point from the current mouse location
     RefPtr<nsDragService> dragService = static_cast<nsDragService*>(mDragService);
-    FlipCocoaScreenCoordinate(aPoint);
-    dragService->SetDragEndPoint(gfx::IntPoint::Round(aPoint.x, aPoint.y));
 
+    // Set the dragend point from the current mouse location
+    // FIXME(emilio): Weird that we wouldn't use aPoint instead? Seems to work
+    // locally as well...
+    // NSPoint pnt = aPoint;
     NSPoint pnt = [NSEvent mouseLocation];
+    NSPoint locationInWindow = nsCocoaUtils::ConvertPointFromScreen([self window], pnt);
     FlipCocoaScreenCoordinate(pnt);
-    dragService->SetDragEndPoint(gfx::IntPoint::Round(pnt.x, pnt.y));
+    dragService->SetDragEndPoint([self convertWindowCoordinates:locationInWindow]);
 
     // XXX: dropEffect should be updated per |aOperation|.
     // As things stand though, |aOperation| isn't well handled within "our"

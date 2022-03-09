@@ -24,6 +24,7 @@ namespace dom {
  * key "foo" to have value "bar" when it already has value "bar" will never
  * result in a "storage" event.
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PBackgroundLSObserver
 {
   manager PBackground;

@@ -41,8 +41,34 @@ using mozilla::ipc::UtilityProcessManager;
 using mozilla::ipc::UtilityProcessParent;
 using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 
-namespace mozilla {
-namespace glean {
+namespace geckoprofiler::markers {
+
+using namespace mozilla;
+
+struct ProcessingTimeMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("ProcessingTime");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int64_t aDiffMs,
+                                   const ProfilerString8View& aType) {
+    aWriter.IntProperty("time", aDiffMs);
+    aWriter.StringProperty("label", aType);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("time", "Recorded Time", MS::Format::Milliseconds);
+    schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.label}: {marker.data.time}");
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
+
+namespace mozilla::glean {
 
 void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
@@ -54,7 +80,9 @@ void RecordPowerMetrics() {
   }
 
   uint64_t gpuTime, newGpuTime = 0;
-  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime)) &&
+  // Avoid loading gdi32.dll for the Socket process where the GPU is never used.
+  if (!XRE_IsSocketProcess() &&
+      NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime)) &&
       gpuTime > previousGpuTime) {
     newGpuTime = gpuTime - previousGpuTime;
   }
@@ -114,7 +142,11 @@ void RecordPowerMetrics() {
     if (newCpuTime < std::numeric_limits<int32_t>::max()) {
       power::total_cpu_time_ms.Add(nNewCpuTime);
       power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
+    } else {
+      power::cpu_time_bogus_values.Add(1);
     }
+    PROFILER_MARKER("CPU Time", OTHER, {}, ProcessingTimeMarker, nNewCpuTime,
+                    type);
     previousCpuTime += newCpuTime;
   }
 
@@ -123,7 +155,11 @@ void RecordPowerMetrics() {
     if (newGpuTime < std::numeric_limits<int32_t>::max()) {
       power::total_gpu_time_ms.Add(nNewGpuTime);
       power::gpu_time_per_process_type_ms.Get(type).Add(nNewGpuTime);
+    } else {
+      power::gpu_time_bogus_values.Add(1);
     }
+    PROFILER_MARKER("GPU Time", OTHER, {}, ProcessingTimeMarker, nNewGpuTime,
+                    type);
     previousGpuTime += newGpuTime;
   }
 }
@@ -185,17 +221,15 @@ void FlushAllChildData(
     promises.EmplaceBack(socketParent->SendFlushFOGData());
   }
 
-#if !defined(XP_WIN) || !defined(_ARM64_)
   {
-    RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
-        gmp::GeckoMediaPluginServiceParent::GetSingleton());
+    RefPtr<mozilla::gmp::GeckoMediaPluginServiceParent> gmps(
+        mozilla::gmp::GeckoMediaPluginServiceParent::GetSingleton());
     // There can be multiple Gecko Media Plugin processes, but iterating
     // through them requires locking a mutex and the IPCs need to be sent
     // from a different thread, so it's better to let the
     // GeckoMediaPluginServiceParent code do it for us.
     gmps->SendFlushFOGData(promises);
   }
-#endif
 
   if (RefPtr<UtilityProcessManager> utilityManager =
           UtilityProcessManager::GetSingleton()) {
@@ -252,7 +286,7 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       mozilla::dom::ContentChild::GetSingleton()->SendFOGData(std::move(buf));
       break;
     case GeckoProcessType_GMPlugin: {
-      gmp::SendFOGData(std::move(buf));
+      mozilla::gmp::SendFOGData(std::move(buf));
     } break;
     case GeckoProcessType_GPU:
       Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
@@ -299,8 +333,8 @@ void TestTriggerMetrics(uint32_t aProcessType,
                         const RefPtr<dom::Promise>& promise) {
   switch (aProcessType) {
     case nsIXULRuntime::PROCESS_TYPE_GMPLUGIN: {
-      RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
-          gmp::GeckoMediaPluginServiceParent::GetSingleton());
+      RefPtr<mozilla::gmp::GeckoMediaPluginServiceParent> gmps(
+          mozilla::gmp::GeckoMediaPluginServiceParent::GetSingleton());
       gmps->TestTriggerMetrics()->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise]() { promise->MaybeResolveWithUndefined(); },
@@ -341,5 +375,4 @@ void TestTriggerMetrics(uint32_t aProcessType,
   }
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

@@ -2,8 +2,8 @@
 alabaster==0.7.12
 Babel==2.8.0
 backports-abc==0.5
-boto3==1.15.6
-botocore==1.18.6
+boto3==1.16.63
+botocore==1.19.63
 certifi==2020.6.20
 chardet==3.0.4
 colorama==0.4.4
@@ -44,7 +44,7 @@ singledispatch==3.4.0.3
 six==1.15.0
 snowballstemmer==2.0.0
 Sphinx==4.3.2
-sphinx-copybutton==0.4.0
+sphinx-copybutton==0.5.0
 sphinx-js==3.0.1
 sphinx-markdown-tables==0.0.15
 sphinx-panels==0.6.0

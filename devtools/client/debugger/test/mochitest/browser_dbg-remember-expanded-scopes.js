@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Ignore strange errors when shutting down.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/No such actor/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/connection just closed/);
@@ -34,6 +36,6 @@ function findNode(dbg, text) {
 }
 
 async function toggleNode(dbg, text) {
-  const node = await waitUntilPredicate(() => findNode(dbg, text));
+  const node = await waitFor(() => findNode(dbg, text));
   return toggleObjectInspectorNode(node);
 }

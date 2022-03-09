@@ -44,10 +44,6 @@ class ContentDelegateChild extends GeckoViewActorChild {
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
-    if (!this.isContentWindow) {
-      // This not a GeckoView-controlled window
-      return;
-    }
 
     switch (aEvent.type) {
       case "contextmenu": {
@@ -93,6 +89,9 @@ class ContentDelegateChild extends GeckoViewActorChild {
         if (uri || isImage || isMedia) {
           const msg = {
             type: "GeckoView:ContextMenu",
+            // We don't have full zoom on Android, so using CSS coordinates
+            // here is fine, since the CSS coordinate spaces match between the
+            // child and parent processes.
             screenX: aEvent.screenX,
             screenY: aEvent.screenY,
             baseUri: (baseUri && baseUri.displaySpec) || null,

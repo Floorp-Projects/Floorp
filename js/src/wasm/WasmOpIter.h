@@ -662,7 +662,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    uint32_t* laneIndex, Value* input);
 #endif
 
-  [[nodiscard]] bool readIntrinsic(const Intrinsic& intrinsic,
+  [[nodiscard]] bool readIntrinsic(const Intrinsic** intrinsic,
                                    ValueVector* params);
 
   // At a location where readOp is allowed, peek at the next opcode
@@ -1600,7 +1600,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
     block.switchToCatch();
   }
 
-  return push(env_.tags[*tagIndex].type.resultType());
+  return push(env_.tags[*tagIndex].type->resultType());
 }
 
 template <typename Policy>
@@ -1674,7 +1674,7 @@ inline bool OpIter<Policy>::readThrow(uint32_t* tagIndex,
     return fail("tag index out of range");
   }
 
-  if (!popWithType(env_.tags[*tagIndex].type.resultType(), argValues)) {
+  if (!popWithType(env_.tags[*tagIndex].type->resultType(), argValues)) {
     return false;
   }
 
@@ -3471,13 +3471,25 @@ inline bool OpIter<Policy>::readStoreLane(uint32_t byteSize,
 #endif  // ENABLE_WASM_SIMD
 
 template <typename Policy>
-inline bool OpIter<Policy>::readIntrinsic(const Intrinsic& intrinsic,
+inline bool OpIter<Policy>::readIntrinsic(const Intrinsic** intrinsic,
                                           ValueVector* params) {
   MOZ_ASSERT(Classify(op_) == OpKind::Intrinsic);
+
+  uint32_t id;
+  if (!d_.readVarU32(&id)) {
+    return false;
+  }
+
+  if (id >= uint32_t(IntrinsicId::Limit)) {
+    return fail("intrinsic index out of range");
+  }
+
+  *intrinsic = &Intrinsic::getFromId(IntrinsicId(id));
+
   if (!env_.usesMemory()) {
     return fail("can't touch memory without memory");
   }
-  return popWithTypes(intrinsic.params, params);
+  return popWithTypes((*intrinsic)->params, params);
 }
 
 }  // namespace wasm

@@ -171,11 +171,6 @@ void gfxContext::NewPath() {
   mTransformChanged = false;
 }
 
-void gfxContext::ClosePath() {
-  EnsurePathBuilder();
-  mPathBuilder->Close();
-}
-
 already_AddRefed<Path> gfxContext::GetPath() {
   EnsurePath();
   RefPtr<Path> path(mPath);
@@ -215,22 +210,6 @@ void gfxContext::Fill(const Pattern& aPattern) {
     EnsurePath();
     mDT->Fill(mPath, aPattern, DrawOptions(1.0f, op, state.aaMode));
   }
-}
-
-void gfxContext::MoveTo(const gfxPoint& pt) {
-  EnsurePathBuilder();
-  mPathBuilder->MoveTo(ToPoint(pt));
-}
-
-void gfxContext::LineTo(const gfxPoint& pt) {
-  EnsurePathBuilder();
-  mPathBuilder->LineTo(ToPoint(pt));
-}
-
-void gfxContext::Line(const gfxPoint& start, const gfxPoint& end) {
-  EnsurePathBuilder();
-  mPathBuilder->MoveTo(ToPoint(start));
-  mPathBuilder->LineTo(ToPoint(end));
 }
 
 // XXX snapToPixels is only valid when snapping for filled

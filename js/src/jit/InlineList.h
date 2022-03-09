@@ -146,7 +146,7 @@ class InlineForwardListIterator {
 
   using Node = InlineForwardListNode<T>;
 
-  explicit InlineForwardListIterator<T>(const InlineForwardList<T>* owner)
+  explicit InlineForwardListIterator(const InlineForwardList<T>* owner)
       : prev(const_cast<Node*>(static_cast<const Node*>(owner))),
         iter(owner ? owner->next : nullptr)
 #ifdef DEBUG
@@ -157,7 +157,7 @@ class InlineForwardListIterator {
   {
   }
 
-  InlineForwardListIterator<T>(const InlineForwardList<T>* owner, Node* node)
+  InlineForwardListIterator(const InlineForwardList<T>* owner, Node* node)
       : prev(nullptr),
         iter(node)
 #ifdef DEBUG
@@ -559,7 +559,7 @@ class InlineSpaghettiStackIterator {
 
   using Node = InlineSpaghettiStackNode<T>;
 
-  explicit InlineSpaghettiStackIterator<T>(const InlineSpaghettiStack<T>* owner)
+  explicit InlineSpaghettiStackIterator(const InlineSpaghettiStack<T>* owner)
       : iter(owner ? static_cast<Node*>(owner->next) : nullptr) {}
 
  public:

@@ -157,21 +157,6 @@ nsresult nsXREDirProvider::Initialize(
   mAppProvider = aAppProvider;
   mXULAppDir = aXULAppDir;
   mGREDir = aGREDir;
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  // The GRE directory can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(mGREDir)) {
-    NS_WARNING("Failed to resolve GRE Dir.");
-  }
-  // If the mXULAppDir is different it lives below the mGREDir. To avoid
-  // confusion resolve that as well even though we don't need it for sandbox
-  // rules. Some tests rely on this for example.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
-          mXULAppDir)) {
-    NS_WARNING("Failed to resolve XUL App Dir.");
-  }
-#endif
   nsCOMPtr<nsIFile> binaryPath;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(binaryPath));
   if (NS_FAILED(rv)) return rv;
@@ -231,15 +216,6 @@ nsresult nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir) {
 
   mProfileDir = aDir;
   mProfileLocalDir = aLocalDir;
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  // The profile directory can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
-          mProfileDir)) {
-    NS_WARNING("Failed to resolve Profile Dir.");
-  }
-#endif
   return NS_OK;
 }
 
@@ -651,16 +627,6 @@ nsresult nsXREDirProvider::LoadContentProcessTempDir() {
       return rv;
     }
   }
-
-#  if defined(XP_WIN)
-  // The content temp dir can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
-          mContentTempDir)) {
-    NS_WARNING("Failed to resolve Content Temp Dir.");
-  }
-#  endif
 
   return NS_OK;
 }
@@ -1463,14 +1429,6 @@ nsresult nsXREDirProvider::GetSysUserExtensionsDirectory(nsIFile** aFile) {
 
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
-
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  // This is used in sandbox rules, so we need to make sure it doesn't contain
-  // any junction points or symlinks or the sandbox will reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(localDir)) {
-    NS_WARNING("Failed to resolve sys user extensions directory.");
-  }
-#endif
 
   localDir.forget(aFile);
   return NS_OK;

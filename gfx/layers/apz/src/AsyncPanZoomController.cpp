@@ -2732,7 +2732,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   // gesture block.
   overscrollHandoffChain->SnapBackOverscrolledApzcForMomentum(
       this, GetVelocityVector());
-  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomemtum
+  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomentum
   // triggers an overscroll animation, do not reset the state in such case.
   if (mState != OVERSCROLL_ANIMATION) {
     SetState(NOTHING);
@@ -2754,10 +2754,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   }
 
   RequestContentRepaint();
-
-  if (!aEvent.mFollowedByMomentum) {
-    ScrollSnap();
-  }
+  ScrollSnapToDestination();
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -2766,17 +2763,11 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumStart(
     const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-momentumstart in state %d\n", this, mState);
 
-  if (mState == SMOOTHMSD_SCROLL) {
-    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
-    CancelAnimation();
-  }
-
-  if (mState == OVERSCROLL_ANIMATION) {
+  if (mState == SMOOTHMSD_SCROLL || mState == OVERSCROLL_ANIMATION) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
   SetState(PAN_MOMENTUM);
-  ScrollSnapToDestination();
 
   // Call into OnPan in order to process any delta included in this event.
   OnPan(aEvent, FingersOnTouchpad::No);
@@ -4388,11 +4379,13 @@ bool AsyncPanZoomController::UpdateAnimation(
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
 
-  // Bump the scroll generation before we call RequestContentRepaint below
-  // so that the RequestContentRepaint call will surely use the new
-  // generation.
-  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+  if (needComposite || mAnimation) {
+    // Bump the scroll generation before we call RequestContentRepaint below
+    // so that the RequestContentRepaint call will surely use the new
+    // generation.
+    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+      mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+    }
   }
 
   if (mAnimation) {
@@ -6008,8 +6001,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   }
 
   CSSPoint startPosition = Metrics().GetVisualScrollOffset();
-  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::LINES, predictedDelta,
-                                        startPosition)) {
+  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::DEVICE_PIXELS,
+                                        predictedDelta, startPosition)) {
     APZC_LOG(
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "

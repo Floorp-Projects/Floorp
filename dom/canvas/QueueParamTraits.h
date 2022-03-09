@@ -300,7 +300,7 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
     if (!view.WriteParam(in.imageTarget) || !view.WriteParam(in.size) ||
         !view.WriteParam(in.srcAlphaType) || !view.WriteParam(in.unpacking) ||
         !view.WriteParam(in.cpuData) || !view.WriteParam(in.pboOffset) ||
-        !view.WriteParam(in.imageSize) ||
+        !view.WriteParam(in.structuredSrcSize) ||
         !view.WriteParam(in.applyUnpackTransforms) ||
         !view.WriteParam(isDataSurf)) {
       return false;
@@ -334,7 +334,8 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
     if (!view.ReadParam(&out->imageTarget) || !view.ReadParam(&out->size) ||
         !view.ReadParam(&out->srcAlphaType) ||
         !view.ReadParam(&out->unpacking) || !view.ReadParam(&out->cpuData) ||
-        !view.ReadParam(&out->pboOffset) || !view.ReadParam(&out->imageSize) ||
+        !view.ReadParam(&out->pboOffset) ||
+        !view.ReadParam(&out->structuredSrcSize) ||
         !view.ReadParam(&out->applyUnpackTransforms) ||
         !view.ReadParam(&isDataSurf)) {
       return false;

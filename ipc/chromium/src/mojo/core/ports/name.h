@@ -100,21 +100,21 @@ namespace IPC {
 template <typename T>
 struct ParamTraits;
 class Message;
+class MessageReader;
+class MessageWriter;
 
 template <>
 struct ParamTraits<mojo::core::ports::PortName> {
   using paramType = mojo::core::ports::PortName;
-  static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult);
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
 template <>
 struct ParamTraits<mojo::core::ports::NodeName> {
   using paramType = mojo::core::ports::NodeName;
-  static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult);
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
 }  // namespace IPC

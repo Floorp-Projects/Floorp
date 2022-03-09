@@ -6,9 +6,9 @@
 import json
 import logging
 
+from taskgraph.util.parameterization import resolve_task_references
+from taskgraph.util.taskcluster import get_task_definition
 
-from ..util import taskcluster
-from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
 from .util import create_task_from_def, fetch_graph_and_labels
 
@@ -118,7 +118,7 @@ def basic_custom_retrigger_action_basic(
 
 
 def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task_id):
-    task = taskcluster.get_task_definition(task_id)
+    task = get_task_definition(task_id)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config
     )
@@ -180,4 +180,6 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
 
     logging.info("New task definition: %s", new_task_definition)
 
-    create_task_from_def(new_task_definition, parameters["level"])
+    create_task_from_def(
+        new_task_definition, parameters["level"], action_tag="retrigger-custom-task"
+    )

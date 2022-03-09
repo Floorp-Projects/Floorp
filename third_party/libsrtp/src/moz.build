@@ -4,12 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# we don't use mbedtls
+
 UNIFIED_SOURCES += [
     'crypto/cipher/aes_gcm_nss.c',
     'crypto/cipher/aes_icm_nss.c',
     'crypto/cipher/cipher.c',
+    'crypto/cipher/cipher_test_cases.c',
     'crypto/cipher/null_cipher.c',
     'crypto/hash/auth.c',
+    'crypto/hash/auth_test_cases.c',
     'crypto/hash/hmac.c',
     'crypto/hash/null_auth.c',
     'crypto/hash/sha1.c',
@@ -18,11 +22,9 @@ UNIFIED_SOURCES += [
     'crypto/kernel/err.c',
     'crypto/kernel/key.c',
     'crypto/math/datatypes.c',
-    'crypto/math/stat.c',
     'crypto/replay/rdb.c',
     'crypto/replay/rdbx.c',
     'crypto/replay/ut_sim.c',
-    'srtp/ekt.c',
     'srtp/srtp.c',
 ]
 

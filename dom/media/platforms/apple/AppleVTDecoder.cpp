@@ -45,10 +45,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                       ? *aConfig.mColorSpace
                       : DefaultColorSpace({mPictureWidth, mPictureHeight})),
       mColorRange(aConfig.mColorRange),
-#if defined(MAC_OS_VERSION_10_13) && \
-    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_10_13
       mColorDepth(aConfig.mColorDepth),
-#endif
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
                   : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9
                                                          : StreamType::Unknown),
@@ -430,20 +427,27 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
 #ifndef MOZ_WIDGET_UIKIT
+    // Set pixel buffer properties on aImage before we extract its surface.
+    // This ensures that we can use defined enums to set values instead
+    // of later setting magic CFSTR values on the surface itself.
+    if (mColorSpace == gfx::YUVColorSpace::BT601) {
+      CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
+                            kCVImageBufferYCbCrMatrix_ITU_R_601_4,
+                            kCVAttachmentMode_ShouldPropagate);
+    } else if (mColorSpace == gfx::YUVColorSpace::BT2020) {
+      CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
+                            kCVImageBufferYCbCrMatrix_ITU_R_2020,
+                            kCVAttachmentMode_ShouldPropagate);
+    } else {
+      CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
+                            kCVImageBufferYCbCrMatrix_ITU_R_709_2,
+                            kCVAttachmentMode_ShouldPropagate);
+    }
+
     CFTypeRefPtr<IOSurfaceRef> surface =
         CFTypeRefPtr<IOSurfaceRef>::WrapUnderGetRule(
             CVPixelBufferGetIOSurface(aImage));
     MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
-
-    // Setup the correct YCbCr conversion matrix on the IOSurface, in case we
-    // pass this directly to CoreAnimation.
-    if (mColorSpace == gfx::YUVColorSpace::BT601) {
-      IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                        CFSTR("ITU_R_601_4"));
-    } else {
-      IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                        CFSTR("ITU_R_709_2"));
-    }
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(std::move(surface));
     macSurface->SetYUVColorSpace(mColorSpace);
@@ -541,6 +545,9 @@ MediaResult AppleVTDecoder::InitializeSession() {
     LOG("AppleVTDecoder: maybe hardware accelerated decoding "
         "(VTSessionCopyProperty query failed)");
   }
+  if (isUsingHW) {
+    CFRelease(isUsingHW);
+  }
 
   return NS_OK;
 }
@@ -611,13 +618,14 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
 
 #ifndef MOZ_WIDGET_UIKIT
   // Output format type:
+
 #  if !defined(MAC_OS_VERSION_10_13) || \
       MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-  SInt32 PixelFormatTypeValue =
-      mColorRange == gfx::ColorRange::FULL
-          ? kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
-          : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-#  else
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#  endif
   bool is10Bit = (gfx::BitDepthForColorDepth(mColorDepth) == 10);
   SInt32 PixelFormatTypeValue =
       mColorRange == gfx::ColorRange::FULL
@@ -625,7 +633,6 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
                      : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
           : (is10Bit ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
                      : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
-#  endif
   AutoCFRelease<CFNumberRef> PixelFormatTypeNumber = CFNumberCreate(
       kCFAllocatorDefault, kCFNumberSInt32Type, &PixelFormatTypeValue);
   // Construct IOSurface Properties

@@ -60,6 +60,9 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
 gfx::IntRect RectFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
+Maybe<gfx::IntSize> YSizeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
+
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 
@@ -96,6 +99,8 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                         const gfx::IntSize& aDestSize,
                                         unsigned char* aDestBuffer,
                                         int32_t aStride);
+
+gfx::IntSize GetCroppedCbCrSize(const YCbCrDescriptor& aDescriptor);
 
 }  // namespace ImageDataSerializer
 

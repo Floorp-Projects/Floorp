@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that adjacent scopes are merged together as expected.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-merge-scopes.html");
 
@@ -25,7 +28,16 @@ add_task(async function() {
   // When there is a function body, function lexical, and inner lexical scope,
   // the first two are merged together.
   await toggleScopeNode(dbg, 4);
-  expectLabels(dbg, ["Block", "<this>", "z", "third", "arguments", "v", "x", "y"]);
+  expectLabels(dbg, [
+    "Block",
+    "<this>",
+    "z",
+    "third",
+    "arguments",
+    "v",
+    "x",
+    "y",
+  ]);
 });
 
 function getLabel(dbg, index) {
@@ -34,6 +46,10 @@ function getLabel(dbg, index) {
 
 function expectLabels(dbg, array) {
   for (let i = 0; i < array.length; i++) {
-    is(getLabel(dbg, i + 1), array[i], `Correct label ${array[i]} for index ${i + 1}`);
+    is(
+      getLabel(dbg, i + 1),
+      array[i],
+      `Correct label ${array[i]} for index ${i + 1}`
+    );
   }
 }

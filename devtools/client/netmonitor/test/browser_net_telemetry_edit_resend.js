@@ -9,6 +9,18 @@ const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
  * Test the edit_resend telemetry event.
  */
 add_task(async function() {
+  if (
+    Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend",
+      true
+    )
+  ) {
+    ok(
+      true,
+      "Skip this test when pref is true, because this panel won't be default when that is the case."
+    );
+    return;
+  }
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
@@ -55,5 +67,5 @@ add_task(async function() {
     }
   );
 
-  return teardown(monitor);
+  await teardown(monitor);
 });

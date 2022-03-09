@@ -259,8 +259,7 @@ already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
         do_CreateInstance(NS_ARRAY_CONTRACTID);
     uint32_t len = ranges.Length();
     for (uint32_t idx = 0; idx < len; idx++) {
-      xpcRanges->AppendElement(
-          new xpcAccessibleTextRange(std::move(ranges[idx])));
+      xpcRanges->AppendElement(new xpcAccessibleTextRange(ranges[idx]));
     }
 
     xpEvent = new xpcAccTextSelectionChangeEvent(

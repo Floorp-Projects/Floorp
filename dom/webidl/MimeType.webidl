@@ -6,8 +6,8 @@
 
 [Exposed=Window]
 interface MimeType {
-  readonly attribute DOMString description;
-  readonly attribute Plugin? enabledPlugin;
-  readonly attribute DOMString suffixes;
   readonly attribute DOMString type;
+  readonly attribute DOMString description;
+  readonly attribute DOMString suffixes;
+  readonly attribute Plugin enabledPlugin;
 };

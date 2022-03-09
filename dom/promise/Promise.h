@@ -182,7 +182,12 @@ class Promise : public SupportsWeakPtr {
 
   // Mark a settled promise as already handled so that rejections will not
   // be reported as unhandled.
-  void SetSettledPromiseIsHandled();
+  bool SetSettledPromiseIsHandled();
+
+  // Mark a promise as handled so that rejections will not be reported as
+  // unhandled. Consider using SetSettledPromiseIsHandled if this promise is
+  // expected to be settled.
+  [[nodiscard]] bool SetAnyPromiseIsHandled();
 
   // WebIDL
 

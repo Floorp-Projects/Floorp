@@ -13,7 +13,6 @@
 class nsIPrintSettingsService;
 class nsIWebProgressListener;
 class nsPIDOMWindowOuter;
-class PPrintSettingsDialogParent;
 
 namespace mozilla {
 namespace layout {
@@ -26,19 +25,6 @@ namespace embedding {
 class PrintingParent final : public PPrintingParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(PrintingParent)
-
-  mozilla::ipc::IPCResult RecvShowPrintDialog(
-      PPrintSettingsDialogParent* aDialog, PBrowserParent* aParent,
-      const PrintData& aData) final;
-
-  mozilla::ipc::IPCResult RecvSavePrintSettings(
-      const PrintData& data, const bool& usePrinterNamePrefix,
-      const uint32_t& flags, nsresult* rv) final;
-
-  PPrintSettingsDialogParent* AllocPPrintSettingsDialogParent() final;
-
-  bool DeallocPPrintSettingsDialogParent(
-      PPrintSettingsDialogParent* aActor) final;
 
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
@@ -63,11 +49,6 @@ class PrintingParent final : public PPrintingParent {
 
  private:
   ~PrintingParent() final;
-
-  nsPIDOMWindowOuter* DOMWindowFromBrowserParent(PBrowserParent* parent);
-
-  nsresult ShowPrintDialog(PBrowserParent* parent, const PrintData& data,
-                           PrintData* result);
 
   nsCOMPtr<nsIPrintSettingsService> mPrintSettingsSvc;
 };

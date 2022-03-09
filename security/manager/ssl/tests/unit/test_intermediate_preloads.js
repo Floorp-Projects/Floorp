@@ -299,15 +299,6 @@ add_task(async function test_preload_basic() {
   let intermediateDERBytes = atob(pemToBase64(intermediateBytes));
   let intermediateCert = new X509.Certificate();
   intermediateCert.parse(stringToArray(intermediateDERBytes));
-  let crliteStateBefore = certStorage.getCRLiteState(
-    intermediateCert.tbsCertificate.subject._der._bytes,
-    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
-  );
-  equal(
-    crliteStateBefore,
-    Ci.nsICertStorage.STATE_UNSET,
-    "crlite state should be unset before"
-  );
 
   const result = await syncAndDownload(["int.pem", "int2.pem"]);
   equal(result, "success", "Preloading update should have run");
@@ -365,16 +356,6 @@ add_task(async function test_preload_basic() {
       updated: [],
     },
   });
-
-  let crliteStateAfter = certStorage.getCRLiteState(
-    intermediateCert.tbsCertificate.subject._der._bytes,
-    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes
-  );
-  equal(
-    crliteStateAfter,
-    Ci.nsICertStorage.STATE_ENFORCE,
-    "crlite state should be set after"
-  );
 
   // check that ee cert 2 does not verify - since we don't know the issuer of
   // this certificate

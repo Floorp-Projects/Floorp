@@ -6,7 +6,7 @@ include protocol PCache;
 include protocol PCacheStreamControl;
 include protocol PChildToParentStream;
 include IPCStream;
-include ChannelInfo;
+include IPCChannelInfo;
 include PBackgroundSharedTypes;
 
 include "mozilla/dom/cache/IPCUtils.h";

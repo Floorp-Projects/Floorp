@@ -440,15 +440,10 @@ nsRect XULTreeGridCellAccessible::BoundsInAppUnits() const {
                 presContext->CSSPixelsToAppUnits(bounds.Height()));
 }
 
-uint8_t XULTreeGridCellAccessible::ActionCount() const {
-  if (mColumn->Cycler()) return 1;
-
-  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX &&
-      IsEditable()) {
-    return 1;
-  }
-
-  return 0;
+bool XULTreeGridCellAccessible::HasPrimaryAction() const {
+  return mColumn->Cycler() ||
+         (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX &&
+          IsEditable());
 }
 
 void XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -471,23 +466,6 @@ void XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
       aName.AssignLiteral("check");
     }
   }
-}
-
-bool XULTreeGridCellAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click) return false;
-
-  if (mColumn->Cycler()) {
-    DoCommand();
-    return true;
-  }
-
-  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX &&
-      IsEditable()) {
-    DoCommand();
-    return true;
-  }
-
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -59,7 +59,7 @@ add_task(async function() {
   let onTrackChange;
 
   for (const { value, add, remove } of VALUE_CHANGE_ITERATIONS) {
-    onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+    onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
 
     info(`Change the CSS declaration value to ${value}`);
     await setProperty(ruleView, prop, value);

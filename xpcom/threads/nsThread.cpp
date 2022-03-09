@@ -259,8 +259,10 @@ static void SetThreadAffinity(unsigned int cpu) {
   // "no affinity" so let's pretend each CPU has its own tag `cpu+1`.
   thread_affinity_policy_data_t policy;
   policy.affinity_tag = cpu + 1;
-  MOZ_ALWAYS_TRUE(thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY,
-                                    &policy.affinity_tag, 1) == KERN_SUCCESS);
+  kern_return_t kr = thread_policy_set(
+      mach_thread_self(), THREAD_AFFINITY_POLICY, &policy.affinity_tag, 1);
+  // Setting the thread affinity is not supported on ARM.
+  MOZ_ALWAYS_TRUE(kr == KERN_SUCCESS || kr == KERN_NOT_SUPPORTED);
 #elif defined(XP_WIN)
   MOZ_ALWAYS_TRUE(SetThreadIdealProcessor(GetCurrentThread(), cpu) !=
                   (DWORD)-1);

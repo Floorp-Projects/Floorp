@@ -4,6 +4,8 @@
 
 // Test that properties with the same value objec be expanded. See Bug 1617210.
 
+"use strict";
+
 const httpServer = createTestHTTPServer();
 httpServer.registerContentType("html", "text/html");
 httpServer.registerContentType("js", "application/javascript");
@@ -47,7 +49,7 @@ add_task(async function() {
 
   const ready = Promise.all([
     waitForPaused(dbg),
-    waitForLoadedSource(dbg, "test"),
+    waitForLoadedSource(dbg, "test.js"),
   ]);
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
@@ -187,8 +189,4 @@ function checkScopesLabels(dbg, expected, { startIndex = 0 } = {}) {
 
   const format = arr => `\n${arr.join("\n")}\n`;
   is(format(labels), format(lines), "got expected scope labels");
-}
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
 }

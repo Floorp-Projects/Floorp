@@ -210,7 +210,7 @@ LoginManagerAuthPromptFactory.prototype = {
       return;
     }
 
-    this.log("Waiting for master password UI");
+    this.log("Waiting for primary password UI");
 
     this._uiBusyPromise = new Promise();
     await this._uiBusyPromise;
@@ -219,7 +219,7 @@ LoginManagerAuthPromptFactory.prototype = {
   async _doAsyncPrompt(prompt, hashKey) {
     this._setPendingPrompt(prompt, hashKey);
 
-    // UI might be busy due to the master password dialog. Wait for it to close.
+    // UI might be busy due to the primary password dialog. Wait for it to close.
     await this._waitForLoginsUI(prompt);
 
     let ok = false;

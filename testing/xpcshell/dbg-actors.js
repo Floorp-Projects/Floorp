@@ -42,15 +42,8 @@ exports.createRootActor = createRootActor;
 /**
  * A "stub" TabList implementation that provides no tabs.
  */
-
-function XPCSTTabList(connection) {
-  BrowserTabList.call(this, connection);
+class XPCSTTabList extends BrowserTabList {
+  getList() {
+    return Promise.resolve([]);
+  }
 }
-
-XPCSTTabList.prototype = Object.create(BrowserTabList.prototype);
-
-XPCSTTabList.prototype.constructor = XPCSTTabList;
-
-XPCSTTabList.prototype.getList = function() {
-  return Promise.resolve([]);
-};

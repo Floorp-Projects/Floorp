@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
+import { useLanguageSwitcher } from "./LanguageSwitcher";
 import {
   BASE_PARAMS,
   addUtmParams,
@@ -15,10 +16,12 @@ import {
 const TRANSITION_OUT_TIME = 1000;
 
 export const MultiStageAboutWelcome = props => {
+  let { screens } = props;
+
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
     // Send impression ping when respective screen first renders
-    props.screens.forEach((screen, order) => {
+    screens.forEach((screen, order) => {
       if (index === order) {
         AboutWelcomeUtils.sendImpressionTelemetry(
           `${props.message_id}_${order}_${screen.id}`
@@ -37,7 +40,7 @@ export const MultiStageAboutWelcome = props => {
     // or last screen index if a user navigates by pressing back
     // button from about:home
     const handler = ({ state }) =>
-      setScreenIndex(Math.min(state, props.screens.length - 1));
+      setScreenIndex(Math.min(state, screens.length - 1));
 
     // Handle page load, e.g., going back to about:welcome from about:home
     handler(window.history);
@@ -81,14 +84,11 @@ export const MultiStageAboutWelcome = props => {
     // Actually move forwards after all transitions finish.
     setTimeout(
       () => {
-        if (index < props.screens.length - 1) {
+        if (index < screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
         } else {
-          AboutWelcomeUtils.handleUserAction({
-            type: "OPEN_ABOUT_PAGE",
-            data: { args: "home", where: "current" },
-          });
+          window.AWFinish();
         }
       },
       props.transitions ? TRANSITION_OUT_TIME : 0
@@ -139,22 +139,44 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable, region]);
 
+  const centeredScreens = props.screens.filter(
+    s => s.content.position !== "corner"
+  );
+
+  const {
+    negotiatedLanguage,
+    langPackInstallPhase,
+    languageFilteredScreens,
+  } = useLanguageSwitcher(
+    props.appAndSystemLocaleInfo,
+    screens,
+    index,
+    setScreenIndex
+  );
+
+  screens = languageFilteredScreens;
+
   return (
     <React.Fragment>
       <div
         className={`outer-wrapper onboardingContainer proton transition-${transition}`}
-        style={{
-          backgroundImage: `url(${props.background_url})`,
-        }}
+        style={props.backdrop ? { background: props.backdrop } : {}}
       >
-        {props.screens.map((screen, order) => {
+        {screens.map((screen, order) => {
+          const isFirstCenteredScreen =
+            screen.content.position !== "corner" &&
+            screen.order === centeredScreens[0].order;
+          const isLastCenteredScreen =
+            screen.content.position !== "corner" &&
+            screen.order === centeredScreens[centeredScreens.length - 1].order;
           return index === order ? (
             <WelcomeScreen
               key={screen.id + order}
               id={screen.id}
-              totalNumberOfScreens={props.screens.length}
+              totalNumberOfScreens={screens.length}
+              isFirstCenteredScreen={isFirstCenteredScreen}
+              isLastCenteredScreen={isLastCenteredScreen}
               order={order}
-              autoClose={screen.autoClose}
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
@@ -164,6 +186,9 @@ export const MultiStageAboutWelcome = props => {
               activeTheme={activeTheme}
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
+              autoAdvance={screen.auto_advance}
+              negotiatedLanguage={negotiatedLanguage}
+              langPackInstallPhase={langPackInstallPhase}
             />
           ) : null;
         })}
@@ -240,13 +265,15 @@ export class WelcomeScreen extends React.PureComponent {
 
   async handleAction(event) {
     let { props } = this;
-
+    let { value } = event.currentTarget;
     let targetContent =
-      props.content[event.currentTarget.value] || props.content.tiles;
+      props.content[value] ||
+      props.content.tiles ||
+      props.content.languageSwitcher;
+
     if (!(targetContent && targetContent.action)) {
       return;
     }
-
     // Send telemetry before waiting on actions
     AboutWelcomeUtils.sendActionTelemetry(
       props.messageId,
@@ -288,10 +315,16 @@ export class WelcomeScreen extends React.PureComponent {
         content={this.props.content}
         id={this.props.id}
         order={this.props.order}
-        autoClose={this.props.autoClose}
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
+        appAndSystemLocaleInfo={this.props.appAndSystemLocaleInfo}
+        negotiatedLanguage={this.props.negotiatedLanguage}
+        langPackInstallPhase={this.props.langPackInstallPhase}
         handleAction={this.handleAction}
+        messageId={this.props.messageId}
+        isFirstCenteredScreen={this.props.isFirstCenteredScreen}
+        isLastCenteredScreen={this.props.isLastCenteredScreen}
+        autoAdvance={this.props.autoAdvance}
       />
     );
   }

@@ -6,6 +6,7 @@
 #include "SocketProcessHost.h"
 
 #include "SocketProcessParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/ProcessUtils.h"
 #include "nsAppRunner.h"
@@ -24,6 +25,10 @@
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
+#endif
+
+#if defined(XP_WIN)
+#  include "mozilla/WinDllServices.h"
 #endif
 
 using namespace mozilla::ipc;
@@ -63,7 +68,8 @@ bool SocketProcessHost::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  SharedPreferenceSerializer prefSerializer;
+  SharedPreferenceSerializer prefSerializer(
+      mozilla::dom::ContentParent::ShouldSyncPreference);
   if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }
@@ -173,6 +179,12 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting connectivity?");
 
   attributes.mInitSandbox() = false;
+
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  attributes.mIsReadyForBackgroundProcessing() =
+      dllSvc->IsReadyForBackgroundProcessing();
+#endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (GetEffectiveSocketProcessSandboxLevel() > 0) {

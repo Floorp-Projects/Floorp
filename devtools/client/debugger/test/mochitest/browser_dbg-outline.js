@@ -4,14 +4,13 @@
 
 // Tests that clicking a function in outline panel, the editor highlights the correct location.
 // Tests that outline panel can sort functions alphabetically.
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1");
-  const {
-    selectors: { getSelectedSource },
-    getState,
-  } = dbg;
 
-  await selectSource(dbg, "simple1", 1);
+"use strict";
+
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
+
+  await selectSource(dbg, "simple1.js", 1);
 
   findElementWithSelector(dbg, ".outline-tab").click();
 
@@ -34,7 +33,7 @@ add_task(async function() {
   info("Click an item in outline panel");
   const item = getNthItem(dbg, 3);
   item.click();
-  assertHighlightLocation(dbg, "simple1", 15);
+  assertHighlightLocation(dbg, "simple1.js", 15);
   ok(
     item.parentNode.classList.contains("focused"),
     "The clicked item li is focused"

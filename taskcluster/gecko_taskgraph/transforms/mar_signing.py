@@ -82,7 +82,7 @@ def generate_complete_artifacts(job, kind):
     upstream_artifacts = []
     if kind not in SIGNING_FORMATS:
         kind = "default"
-    for artifact in job.release_artifacts:
+    for artifact in job.attributes["release_artifacts"]:
         basename = os.path.basename(artifact)
         if basename in SIGNING_FORMATS[kind]:
             upstream_artifacts.append(

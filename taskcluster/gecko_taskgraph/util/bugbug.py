@@ -10,8 +10,8 @@ import time
 
 import requests
 from mozbuild.util import memoize
+from taskgraph.util.taskcluster import requests_retry_session
 
-from gecko_taskgraph.util.taskcluster import requests_retry_session
 from gecko_taskgraph import create
 
 try:

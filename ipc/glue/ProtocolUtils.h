@@ -34,9 +34,6 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTHashSet.h"
 
-// XXX Things that could be replaced by a forward header
-#include "mozilla/ipc/Transport.h"  // for Transport
-
 // XXX Things that could be moved to ProtocolUtils.cpp
 #include "base/process_util.h"  // for CloseProcessHandle
 #include "prenv.h"              // for PR_GetEnv
@@ -58,6 +55,10 @@ namespace {
 // protocol 0.  Oops!  We can get away with this until protocol 0
 // starts approaching its 65,536th message.
 enum {
+  // Message types used by DataPipe
+  DATA_PIPE_CLOSED_MESSAGE_TYPE = kuint16max - 18,
+  DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE = kuint16max - 17,
+
   // Message types used by NodeChannel
   ACCEPT_INVITE_MESSAGE_TYPE = kuint16max - 16,
   REQUEST_INTRODUCTION_MESSAGE_TYPE = kuint16max - 15,
@@ -233,8 +234,7 @@ class IProtocol : public HasResultCodes {
   virtual void RemoveManagee(int32_t, IProtocol*) = 0;
   virtual void DeallocManagee(int32_t, IProtocol*) = 0;
 
-  Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage,
-                              PickleIterator* aIter, bool aNullable,
+  Maybe<IProtocol*> ReadActor(IPC::MessageReader* aReader, bool aNullable,
                               const char* aActorDescription,
                               int32_t aProtocolTypeId);
 
@@ -417,7 +417,7 @@ class IToplevelProtocol : public IProtocol {
 
   bool Open(ScopedPort aPort, base::ProcessId aOtherPid);
 
-  bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
+  bool Open(IToplevelProtocol* aTarget, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   // Open a toplevel actor such that both ends of the actor's channel are on
@@ -426,7 +426,7 @@ class IToplevelProtocol : public IProtocol {
   //
   // WARNING: Attempting to send a sync or intr message on the same thread
   // will crash.
-  bool OpenOnSameThread(MessageChannel* aChannel,
+  bool OpenOnSameThread(IToplevelProtocol* aTarget,
                         mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   /**
@@ -557,6 +557,10 @@ MOZ_NEVER_INLINE void LogMessageForProtocol(const char* aTopLevelProtocol,
                                             MessageDirection aDirection);
 
 MOZ_NEVER_INLINE void ProtocolErrorBreakpoint(const char* aMsg);
+
+// IPC::MessageReader and IPC::MessageWriter call this function for FatalError
+// calls which come from serialization/deserialization.
+MOZ_NEVER_INLINE void PickleFatalError(const char* aMsg, IProtocol* aActor);
 
 // The code generator calls this function for errors which come from the
 // methods of protocols.  Doing this saves codesize by making the error

@@ -999,7 +999,7 @@ bool DCSurfaceVideo::CallVideoProcessorBlt(RenderTextureHost* aTexture) {
 
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputDesc = {};
   inputDesc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
-  inputDesc.Texture2D.ArraySlice = 0;
+  inputDesc.Texture2D.ArraySlice = texture->ArrayIndex();
 
   RefPtr<ID3D11VideoProcessorInputView> inputView;
   hr = videoDevice->CreateVideoProcessorInputView(

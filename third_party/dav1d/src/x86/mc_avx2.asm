@@ -5046,11 +5046,11 @@ cglobal resize_8bpc, 6, 12, 16, dst, dst_stride, src, src_stride, \
     vpbroadcastd         m8, mx0m
     vpbroadcastd         m6, src_wm
 
-    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, picptr
+    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x
     LEA                  r7, $$
 %define base r7-$$
 
-    vpbroadcastd         m3, [base+pw_m256]
+    vpbroadcastd        xm3, [base+pw_m256]
     vpbroadcastd         m7, [base+pd_63]
     vbroadcasti128      m15, [base+pb_8x0_8x8]
     pmaddwd              m2, m5, [base+rescale_mul] ; dx*[0,1,2,3,4,5,6,7]

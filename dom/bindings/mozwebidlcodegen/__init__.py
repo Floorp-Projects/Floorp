@@ -151,6 +151,7 @@ class WebIDLCodegenManager(LoggingMixin):
 
     # Global parser derived declaration files.
     GLOBAL_DECLARE_FILES = {
+        "BindingNames.h",
         "GeneratedAtomList.h",
         "GeneratedEventList.h",
         "PrototypeList.h",
@@ -166,6 +167,7 @@ class WebIDLCodegenManager(LoggingMixin):
 
     # Global parser derived definition files.
     GLOBAL_DEFINE_FILES = {
+        "BindingNames.cpp",
         "RegisterBindings.cpp",
         "RegisterWorkerBindings.cpp",
         "RegisterWorkerDebuggerBindings.cpp",

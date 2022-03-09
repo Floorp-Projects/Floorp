@@ -16,14 +16,14 @@ class nsLineBox;
 class nsPresContext;
 class nsReflowStatus;
 namespace mozilla {
-class BlockReflowInput;
+class BlockReflowState;
 }  // namespace mozilla
 
 /**
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
 class nsBlockReflowContext {
-  using BlockReflowInput = mozilla::BlockReflowInput;
+  using BlockReflowState = mozilla::BlockReflowState;
   using ReflowInput = mozilla::ReflowInput;
   using ReflowOutput = mozilla::ReflowOutput;
 
@@ -36,7 +36,7 @@ class nsBlockReflowContext {
                    nsCollapsingMargin& aPrevMargin, nscoord aClearance,
                    bool aIsAdjacentWithBStart, nsLineBox* aLine,
                    ReflowInput& aReflowInput, nsReflowStatus& aReflowStatus,
-                   BlockReflowInput& aState);
+                   BlockReflowState& aState);
 
   bool PlaceBlock(const ReflowInput& aReflowInput, bool aForceFit,
                   nsLineBox* aLine,

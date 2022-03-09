@@ -10,6 +10,7 @@ use crate::{
 use wgc::{gfx_select, id};
 
 use std::{error::Error, os::raw::c_char, ptr, slice};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 #[repr(C)]
 pub struct ErrorBuffer {
@@ -142,6 +143,8 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
     *byte_buf = ByteBuf::from_vec(data);
 }
 
+static TRACE_IDX: AtomicU32 = AtomicU32::new(0);
+
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_server_adapter_request_device(
     global: &Global,
@@ -151,7 +154,16 @@ pub unsafe extern "C" fn wgpu_server_adapter_request_device(
     mut error_buf: ErrorBuffer,
 ) {
     let desc: wgc::device::DeviceDescriptor = bincode::deserialize(byte_buf.as_slice()).unwrap();
-    let trace_string = std::env::var("WGPU_TRACE").ok();
+    let trace_string = std::env::var("WGPU_TRACE").ok().map(|s| {
+        let idx = TRACE_IDX.fetch_add(1, Ordering::Relaxed);
+        let path = format!("{}/{}/", s, idx);
+
+        if std::fs::create_dir_all(&path).is_err() {
+            log::warn!("Failed to create directory {:?} for wgpu recording.", path);
+        }
+
+        path
+    });
     let trace_path = trace_string
         .as_ref()
         .map(|string| std::path::Path::new(string.as_str()));

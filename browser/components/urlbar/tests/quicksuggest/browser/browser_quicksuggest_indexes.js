@@ -6,12 +6,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
-});
-
 const SUGGESTIONS_FIRST_PREF = "browser.urlbar.showSearchSuggestionsFirst";
 const SUGGESTIONS_PREF = "browser.urlbar.suggest.searches";
 

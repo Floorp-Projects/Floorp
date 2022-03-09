@@ -451,7 +451,7 @@ load 656130-2.html
 load 660416.html
 load 665853.html
 load 667025.html
-load 673770.html
+asserts(3-9) load 673770.html # nested multicols and bogus sizes, e.g. Init: bad caller: height WAS 2147478130
 load 679933-1.html
 load 681489-1.html
 load 682649-1.html
@@ -508,7 +508,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-asserts-if(winWidget,4-26) load 812893.html # bug 1581653
+asserts-if(winWidget,4-42) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
@@ -531,7 +531,7 @@ asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) loa
 load 847211-1.html
 load 849603.html
 load 849987.html
-asserts(0-12) load 850931.html # bug 569193
+asserts(34-46) load 850931.html # nested multicols, inner multicol has column-width 1 app unit ...
 load 851396-1.html
 load 854263-1.html
 load 862185.html
@@ -728,7 +728,7 @@ load 1542441.html
 load 1544060-1.html
 load 1544060-2.html
 pref(layout.css.grid-template-subgrid-value.enabled,true) load 1553824.html
-load 1554824.html
+asserts(26-34) load 1554824.html # extreme sizes, column-width: 0em
 load 1555142.html
 load 1560349.html
 load 1560397.html
@@ -791,6 +791,8 @@ HTTP load 1677518-1.html
 load 1679794.html
 load 1680406.html
 load 1681788.html
+pref(layout.css.grid-item-baxis-measurement.enabled,true) load 1682686-1.html
+pref(layout.css.grid-item-baxis-measurement.enabled,true) load 1682686-2.html
 HTTP load 1682882.html
 load 1683126.html
 load 1697262-1.html

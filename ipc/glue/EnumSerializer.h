@@ -20,7 +20,9 @@ class PickleIterator;
 
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 
 #ifdef _MSC_VER
 #  pragma warning(disable : 4800)
@@ -51,19 +53,18 @@ struct EnumSerializer {
   typedef typename mozilla::UnsignedStdintTypeForSize<sizeof(paramType)>::Type
       uintParamType;
 
-  static void Write(Message* aMsg, const paramType& aValue) {
+  static void Write(MessageWriter* aWriter, const paramType& aValue) {
     // XXX This assertion is somewhat meaningless at least for E that don't have
     // a fixed underlying type: if aValue weren't a legal value, we would
     // already have UB where this function is called.
     MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(
         static_cast<std::underlying_type_t<paramType>>(aValue)));
-    WriteParam(aMsg, uintParamType(aValue));
+    WriteParam(aWriter, uintParamType(aValue));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uintParamType value;
-    if (!ReadParam(aMsg, aIter, &value)) {
+    if (!ReadParam(aReader, &value)) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
       return false;

@@ -26,9 +26,6 @@ PRODUCTION_TASKCLUSTER_ROOT_URL = "https://taskcluster.net"
 # the maximum number of parallel Taskcluster API calls to make
 CONCURRENCY = 50
 
-# the maximum number of parallel Taskcluster API calls to make
-CONCURRENCY = 50
-
 
 @memoize
 def get_root_url(use_proxy):
@@ -39,7 +36,7 @@ def get_root_url(use_proxy):
     is not set."""
     if use_proxy:
         try:
-            return os.environ["TASKCLUSTER_PROXY_URL"]
+            return liburls.normalize_root_url(os.environ["TASKCLUSTER_PROXY_URL"])
         except KeyError:
             if "TASK_ID" not in os.environ:
                 raise RuntimeError(
@@ -55,40 +52,61 @@ def get_root_url(use_proxy):
             )
         else:
             logger.debug("Using default TASKCLUSTER_ROOT_URL (Firefox CI production)")
-            return PRODUCTION_TASKCLUSTER_ROOT_URL
+            return liburls.normalize_root_url(PRODUCTION_TASKCLUSTER_ROOT_URL)
     logger.debug(
         "Running in Taskcluster instance {}{}".format(
             os.environ["TASKCLUSTER_ROOT_URL"],
             " with taskcluster-proxy" if "TASKCLUSTER_PROXY_URL" in os.environ else "",
         )
     )
-    return os.environ["TASKCLUSTER_ROOT_URL"]
+    return liburls.normalize_root_url(os.environ["TASKCLUSTER_ROOT_URL"])
 
 
-@memoize
-def get_session():
-    session = requests.Session()
-
-    retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+def requests_retry_session(
+    retries,
+    backoff_factor=0.1,
+    status_forcelist=(500, 502, 503, 504),
+    concurrency=CONCURRENCY,
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
 
     # Default HTTPAdapter uses 10 connections. Mount custom adapter to increase
     # that limit. Connections are established as needed, so using a large value
     # should not negatively impact performance.
     http_adapter = requests.adapters.HTTPAdapter(
-        pool_connections=CONCURRENCY, pool_maxsize=CONCURRENCY, max_retries=retry
+        pool_connections=concurrency,
+        pool_maxsize=concurrency,
+        max_retries=retry,
     )
-    session.mount("https://", http_adapter)
     session.mount("http://", http_adapter)
+    session.mount("https://", http_adapter)
 
     return session
 
 
-def _do_request(url, force_get=False, **kwargs):
+@memoize
+def get_session():
+    return requests_retry_session(retries=5)
+
+
+def _do_request(url, method=None, **kwargs):
+    if method is None:
+        method = "post" if kwargs else "get"
+
     session = get_session()
-    if kwargs and not force_get:
-        response = session.post(url, **kwargs)
-    else:
-        response = session.get(url, stream=True, **kwargs)
+    if method == "get":
+        kwargs["stream"] = True
+
+    response = getattr(session, method)(url, **kwargs)
+
     if response.status_code >= 400:
         # Consume content before raise_for_status, so that the connection can be
         # reused.
@@ -304,7 +322,7 @@ def list_task_group_incomplete_tasks(task_group_id):
             "v1",
             f"task-group/{task_group_id}/list",
         )
-        resp = _do_request(url, force_get=True, params=params).json()
+        resp = _do_request(url, method="get", params=params).json()
         for task in [t["status"] for t in resp["tasks"]]:
             if task["state"] in ["running", "pending", "unscheduled"]:
                 yield task["taskId"]

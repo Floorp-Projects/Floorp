@@ -1861,7 +1861,6 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   // so link to the GdkEvent (which will vanish soon after return from the
   // event callback) to give plugins access to hardware_keycode and state.
   // (An XEvent would be nice but the GdkEvent is good enough.)
-  aKeyEvent.mPluginEvent.Copy(*aGdkKeyEvent);
   aKeyEvent.mTime = aGdkKeyEvent->time;
   aKeyEvent.mNativeKeyEvent = static_cast<void*>(aGdkKeyEvent);
   aKeyEvent.mIsRepeat =

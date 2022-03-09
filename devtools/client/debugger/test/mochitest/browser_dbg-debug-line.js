@@ -4,6 +4,9 @@
 
 // Test ensures zombie debug lines do not persist
 // https://github.com/firefox-devtools/debugger/issues/7755
+
+"use strict";
+
 add_task(async function() {
   // Load test files
   const dbg = await initDebugger("doc-sources.html");

@@ -212,9 +212,9 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    *
    * @param [optional] object filter
    *        A dictionary object with following optional attributes:
-   *         - outerWindowID: used to match tabs in parent process
-   *         - tabId: used to match tabs in child processes
-   *         - tab: a reference to xul:tab element
+   *         - browserId: use to match any tab (should become the new way to identify any remote tab)
+   *         - outerWindowID: used to match tabs in parent process (obsolete, use browserId)
+   *         - tab: a reference to xul:tab element (used for local tab debugging)
    *         - isWebExtension: an optional boolean to flag TabDescriptors
    *        If nothing is specified, returns the actor for the currently
    *        selected tab.
@@ -222,20 +222,14 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   async getTab(filter) {
     const packet = {};
     if (filter) {
-      if (typeof filter.outerWindowID == "number") {
+      if (typeof filter.browserId == "number") {
+        packet.browserId = filter.browserId;
+      } else if (typeof filter.outerWindowID == "number") {
+        // @backward-compat { version 99 } The branch related to outerWindowID can be removed once 100 is released
         packet.outerWindowID = filter.outerWindowID;
-      } else if (typeof filter.tabId == "number") {
-        packet.tabId = filter.tabId;
       } else if ("tab" in filter) {
         const browser = filter.tab.linkedBrowser;
-        if (browser.frameLoader.remoteTab) {
-          // Tabs in child process
-          packet.tabId = browser.frameLoader.remoteTab.tabId;
-        } else {
-          // <xul:browser> or <iframe mozbrowser> tabs in parent process
-          packet.outerWindowID =
-            browser.browsingContext.currentWindowGlobal.outerWindowId;
-        }
+        packet.browserId = browser.browserId;
       } else {
         // Throw if a filter object have been passed but without
         // any clearly idenfified filter.

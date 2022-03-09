@@ -16,6 +16,7 @@
 #include "nsWrapperCache.h"
 #include "Performance.h"
 #include "nsITimedChannel.h"
+#include "mozilla/dom/PerformanceTimingTypes.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
@@ -44,6 +45,10 @@ class PerformanceTimingData final {
 
   PerformanceTimingData(nsITimedChannel* aChannel, nsIHttpChannel* aHttpChannel,
                         DOMHighResTimeStamp aZeroTime);
+
+  explicit PerformanceTimingData(const IPCPerformanceTimingData& aIPCData);
+
+  IPCPerformanceTimingData ToIPC();
 
   void SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
                                     nsITimedChannel* aChannel);
@@ -423,127 +428,126 @@ namespace ipc {
 template <>
 struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
   using paramType = mozilla::dom::PerformanceTimingData;
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const paramType& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mServerTiming);
-    WriteIPDLParam(aMsg, aActor, aParam.mNextHopProtocol);
-    WriteIPDLParam(aMsg, aActor, aParam.mAsyncOpen);
-    WriteIPDLParam(aMsg, aActor, aParam.mRedirectStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mRedirectEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mDomainLookupStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mDomainLookupEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mConnectStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mSecureConnectionStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mConnectEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mRequestStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mResponseStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mCacheReadStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mResponseEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mCacheReadEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mWorkerStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mWorkerRequestStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mWorkerResponseEnd);
-    WriteIPDLParam(aMsg, aActor, aParam.mZeroTime);
-    WriteIPDLParam(aMsg, aActor, aParam.mFetchStart);
-    WriteIPDLParam(aMsg, aActor, aParam.mEncodedBodySize);
-    WriteIPDLParam(aMsg, aActor, aParam.mTransferSize);
-    WriteIPDLParam(aMsg, aActor, aParam.mDecodedBodySize);
-    WriteIPDLParam(aMsg, aActor, aParam.mRedirectCount);
-    WriteIPDLParam(aMsg, aActor, aParam.mAllRedirectsSameOrigin);
-    WriteIPDLParam(aMsg, aActor, aParam.mAllRedirectsPassTAO);
-    WriteIPDLParam(aMsg, aActor, aParam.mSecureConnection);
-    WriteIPDLParam(aMsg, aActor, aParam.mTimingAllowed);
-    WriteIPDLParam(aMsg, aActor, aParam.mInitialized);
+    WriteIPDLParam(aWriter, aActor, aParam.mServerTiming);
+    WriteIPDLParam(aWriter, aActor, aParam.mNextHopProtocol);
+    WriteIPDLParam(aWriter, aActor, aParam.mAsyncOpen);
+    WriteIPDLParam(aWriter, aActor, aParam.mRedirectStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mRedirectEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mDomainLookupStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mDomainLookupEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mConnectStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mSecureConnectionStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mConnectEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mRequestStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mResponseStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mCacheReadStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mResponseEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mCacheReadEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mWorkerStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mWorkerRequestStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mWorkerResponseEnd);
+    WriteIPDLParam(aWriter, aActor, aParam.mZeroTime);
+    WriteIPDLParam(aWriter, aActor, aParam.mFetchStart);
+    WriteIPDLParam(aWriter, aActor, aParam.mEncodedBodySize);
+    WriteIPDLParam(aWriter, aActor, aParam.mTransferSize);
+    WriteIPDLParam(aWriter, aActor, aParam.mDecodedBodySize);
+    WriteIPDLParam(aWriter, aActor, aParam.mRedirectCount);
+    WriteIPDLParam(aWriter, aActor, aParam.mAllRedirectsSameOrigin);
+    WriteIPDLParam(aWriter, aActor, aParam.mAllRedirectsPassTAO);
+    WriteIPDLParam(aWriter, aActor, aParam.mSecureConnection);
+    WriteIPDLParam(aWriter, aActor, aParam.mTimingAllowed);
+    WriteIPDLParam(aWriter, aActor, aParam.mInitialized);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult) {
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mServerTiming)) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   paramType* aResult) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mServerTiming)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mNextHopProtocol)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mNextHopProtocol)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mAsyncOpen)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mAsyncOpen)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mRedirectStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mRedirectEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDomainLookupStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mDomainLookupStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDomainLookupEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mDomainLookupEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mConnectStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mConnectStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSecureConnectionStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mSecureConnectionStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mConnectEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mConnectEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRequestStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mRequestStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResponseStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mResponseStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCacheReadStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mCacheReadStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResponseEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mResponseEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCacheReadEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mCacheReadEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mWorkerStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerRequestStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mWorkerRequestStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerResponseEnd)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mWorkerResponseEnd)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mZeroTime)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mZeroTime)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mFetchStart)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mFetchStart)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEncodedBodySize)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mEncodedBodySize)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTransferSize)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mTransferSize)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDecodedBodySize)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mDecodedBodySize)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectCount)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mRedirectCount)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor,
-                       &aResult->mAllRedirectsSameOrigin)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mAllRedirectsSameOrigin)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mAllRedirectsPassTAO)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mAllRedirectsPassTAO)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSecureConnection)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mSecureConnection)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTimingAllowed)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mTimingAllowed)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mInitialized)) {
+    if (!ReadIPDLParam(aReader, aActor, &aResult->mInitialized)) {
       return false;
     }
     return true;
@@ -551,33 +555,32 @@ struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
 };
 
 template <>
-struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
-  using paramType = nsCOMPtr<nsIServerTiming>;
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const paramType& aParam) {
+struct IPDLParamTraits<nsIServerTiming*> {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    nsIServerTiming* aParam) {
     nsAutoCString name;
     Unused << aParam->GetName(name);
     double duration = 0;
     Unused << aParam->GetDuration(&duration);
     nsAutoCString description;
     Unused << aParam->GetDescription(description);
-    WriteIPDLParam(aMsg, aActor, name);
-    WriteIPDLParam(aMsg, aActor, duration);
-    WriteIPDLParam(aMsg, aActor, description);
+    WriteIPDLParam(aWriter, aActor, name);
+    WriteIPDLParam(aWriter, aActor, duration);
+    WriteIPDLParam(aWriter, aActor, description);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIServerTiming>* aResult) {
     nsAutoCString name;
     double duration;
     nsAutoCString description;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &name)) {
+    if (!ReadIPDLParam(aReader, aActor, &name)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &duration)) {
+    if (!ReadIPDLParam(aReader, aActor, &duration)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &description)) {
+    if (!ReadIPDLParam(aReader, aActor, &description)) {
       return false;
     }
 
@@ -585,7 +588,7 @@ struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
     timing->SetName(name);
     timing->SetDuration(duration);
     timing->SetDescription(description);
-    *aResult = timing;
+    *aResult = timing.forget();
     return true;
   }
 };

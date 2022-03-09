@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabObserver: "chrome://remote/content/cdp/observers/TargetObserver.jsm",
   TabTarget: "chrome://remote/content/cdp/targets/TabTarget.jsm",
 });
@@ -46,18 +47,28 @@ class TargetList {
     if (this.tabObserver) {
       throw new Error("Targets is already watching for new tabs");
     }
+
     this.tabObserver = new TabObserver({ registerExisting: true });
+
+    // Handle creation of tab targets for opened tabs.
     this.tabObserver.on("open", async (eventName, tab) => {
       const target = new TabTarget(this, tab.linkedBrowser);
       this.registerTarget(target);
     });
+
+    // Handle removal of tab targets when tabs are closed.
     this.tabObserver.on("close", (eventName, tab) => {
       const browser = tab.linkedBrowser;
-      // Ignore the browsers that haven't had time to initialize.
-      if (!browser.browsingContext) {
+
+      // Ignore unloaded tabs.
+      if (browser.browserId === 0) {
         return;
       }
-      const target = this.getByBrowsingContext(browser.browsingContext.id);
+
+      const id = TabManager.getIdForBrowser(browser);
+      const target = Array.from(this._targets.values()).find(
+        target => target.id == id
+      );
       if (target) {
         this.destroyTarget(target);
       }
@@ -123,25 +134,6 @@ class TargetList {
    */
   getById(id) {
     return this._targets.get(id);
-  }
-
-  /**
-   * Get Target instance by browsing context id
-   *
-   * @param {number} id
-   *     browsing context id
-   *
-   * @return {Target}
-   */
-  getByBrowsingContext(id) {
-    let rv;
-    for (const target of this._targets.values()) {
-      if (target.browsingContext && target.browsingContext.id === id) {
-        rv = target;
-        break;
-      }
-    }
-    return rv;
   }
 
   /**

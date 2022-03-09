@@ -63,7 +63,7 @@ async function installTemporaryExtension(pathOrFile, name, document) {
       }
 
       Management.off("startup", listener);
-      done();
+      done(extension);
     });
   });
 
@@ -71,7 +71,7 @@ async function installTemporaryExtension(pathOrFile, name, document) {
   document.querySelector(".qa-temporary-extension-install-button").click();
 
   info("Wait for addon to be installed");
-  await onAddonInstalled;
+  return onAddonInstalled;
 }
 /* exported installTemporaryExtension */
 
@@ -134,11 +134,15 @@ function updateTemporaryXPI(xpiData, existingXPI) {
  */
 async function installTemporaryExtensionFromXPI(xpiData, document) {
   const xpiFile = createTemporaryXPI(xpiData);
-  await installTemporaryExtension(xpiFile, xpiData.name, document);
+  const extension = await installTemporaryExtension(
+    xpiFile,
+    xpiData.name,
+    document
+  );
 
   info("Wait until the addon debug target appears");
   await waitUntil(() => findDebugTargetByText(xpiData.name, document));
-  return xpiFile;
+  return { extension, xpiFile };
 }
 /* exported installTemporaryExtensionFromXPI */
 

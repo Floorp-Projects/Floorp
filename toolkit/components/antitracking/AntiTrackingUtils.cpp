@@ -340,11 +340,6 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::NoStoragePermission;
   }
 
-  nsAutoCString targetOrigin;
-  if (NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin))) {
-    return nsILoadInfo::NoStoragePermission;
-  }
-
   nsCOMPtr<nsIURI> trackingURI;
   rv = aChannel->GetURI(getter_AddRefs(trackingURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -357,14 +352,21 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::NoStoragePermission;
   }
 
+  if (IsThirdPartyChannel(aChannel)) {
+    nsAutoCString targetOrigin;
+    if (NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin))) {
+      return nsILoadInfo::NoStoragePermission;
+    }
+
+    if (PartitioningExceptionList::Check(targetOrigin, trackingOrigin)) {
+      return nsILoadInfo::StoragePermissionAllowListed;
+    }
+  }
+
   nsAutoCString type;
   AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
 
   uint32_t unusedReason = 0;
-
-  if (PartitioningExceptionList::Check(targetOrigin, trackingOrigin)) {
-    return nsILoadInfo::StoragePermissionAllowListed;
-  }
 
   if (AntiTrackingUtils::CheckStoragePermission(targetPrincipal, type,
                                                 NS_UsePrivateBrowsing(aChannel),
@@ -742,12 +744,12 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
 
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
+  AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(aChannel);
+
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   Unused << loadInfo->SetStoragePermission(
       AntiTrackingUtils::GetStoragePermissionStateInParent(aChannel));
-
-  AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(aChannel);
 
   // We only update the IsOnContentBlockingAllowList flag and the partition key
   // for the top-level http channel.

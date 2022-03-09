@@ -49,6 +49,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsTHashMap.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1586,6 +1587,14 @@ static nsresult pref_SetPref(const nsCString& aPrefName, PrefType aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    printf(
+        "pref_SetPref: Attempt to write pref %s after XPCOMShutdownThreads "
+        "started.\n",
+        aPrefName.get());
+    if (nsContentUtils::IsInitialized()) {
+      xpc_DumpJSStack(true, true, false);
+    }
+    MOZ_ASSERT(false, "Late preference writes should be avoided.");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
@@ -2481,6 +2490,16 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal) {
 
   const PrefName& pref = GetPrefName(aPrefName);
   *aRetVal = Preferences::HasUserValue(pref.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefBranch::PrefHasDefaultValue(const char* aPrefName, bool* aRetVal) {
+  NS_ENSURE_ARG_POINTER(aRetVal);
+  NS_ENSURE_ARG(aPrefName);
+
+  const PrefName& pref = GetPrefName(aPrefName);
+  *aRetVal = Preferences::HasDefaultValue(pref.get());
   return NS_OK;
 }
 
@@ -3527,14 +3546,17 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
                   nsISupportsWeakReference)
 
 /* static */
-void Preferences::SerializePreferences(nsCString& aStr) {
+void Preferences::SerializePreferences(
+    nsCString& aStr,
+    const std::function<bool(const char*)>& aShouldSerializeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
 
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
-    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
+    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues() &&
+        aShouldSerializeFn(pref->Name())) {
       pref->SerializeAndAppend(aStr);
     }
   }
@@ -4997,6 +5019,14 @@ bool Preferences::HasUserValue(const char* aPrefName) {
 
   Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
   return pref.isSome() && pref->HasUserValue();
+}
+
+/* static */
+bool Preferences::HasDefaultValue(const char* aPrefName) {
+  NS_ENSURE_TRUE(InitStaticMembers(), false);
+
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() && pref->HasDefaultValue();
 }
 
 /* static */

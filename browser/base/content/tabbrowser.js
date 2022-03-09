@@ -49,14 +49,14 @@
       this.tabContainer.init();
       this._setupInitialBrowserAndTab();
 
-      if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
-        this.tabpanels.style.backgroundColor = "-moz-default-background-color";
-      } else if (
+      if (
         Services.prefs.getIntPref("browser.display.document_color_use") == 2
       ) {
-        this.tabpanels.style.backgroundColor = Services.prefs.getCharPref(
-          "browser.display.background_color"
-        );
+        this.tabpanels.style.backgroundColor = Services.prefs.getBoolPref(
+          "browser.display.use_system_colors"
+        )
+          ? "canvas"
+          : Services.prefs.getCharPref("browser.display.background_color");
       }
 
       this._setFindbarData();
@@ -1997,6 +1997,9 @@
         // process so the browser can no longer be considered to be
         // crashed.
         tab.removeAttribute("crashed");
+        // we call updatetabIndicatorAttr here, rather than _tabAttrModified, so as
+        // to be consistent with how "crashed" attribute changes are handled elsewhere
+        this.tabContainer.updateTabIndicatorAttr(tab);
       } else {
         aBrowser.sendMessageToActor(
           "Browser:AppTab",
@@ -5343,6 +5346,11 @@
         return;
       }
 
+      // Skip if chrome code has cancelled this:
+      if (aEvent.defaultPreventedByChrome) {
+        return;
+      }
+
       // Don't check if the event was already consumed because tab
       // navigation should always work for better user experience.
 
@@ -5432,6 +5440,11 @@
 
       // Skip this only if something has explicitly cancelled it.
       if (aEvent.defaultCancelled) {
+        return;
+      }
+
+      // Skip if chrome code has cancelled this:
+      if (aEvent.defaultPreventedByChrome) {
         return;
       }
 
@@ -6208,6 +6221,7 @@
             // process so the browser can no longer be considered to be
             // crashed.
             tab.removeAttribute("crashed");
+            gBrowser.tabContainer.updateTabIndicatorAttr(tab);
           } else {
             browser.sendMessageToActor(
               "Browser:AppTab",
@@ -6491,6 +6505,7 @@
           delete this.mBrowser.initialPageLoadedFromUserAction;
           // If the browser is loading it must not be crashed anymore
           this.mTab.removeAttribute("crashed");
+          gBrowser.tabContainer.updateTabIndicatorAttr(this.mTab);
         }
 
         if (this._shouldShowProgress(aRequest)) {

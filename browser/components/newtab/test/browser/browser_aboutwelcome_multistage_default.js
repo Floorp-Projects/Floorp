@@ -7,6 +7,7 @@ const TEST_PROTON_CONTENT = [
     id: "AW_STEP1",
     order: 0,
     content: {
+      position: "corner",
       title: "Step 1",
       primary_button: {
         label: "Next",
@@ -24,6 +25,7 @@ const TEST_PROTON_CONTENT = [
           data: { entrypoint: "test" },
         },
       },
+      has_noodles: true,
       help_text: {
         text: "Here's some sample help text",
       },
@@ -43,6 +45,7 @@ const TEST_PROTON_CONTENT = [
       secondary_button: {
         label: "link",
       },
+      has_noodles: true,
     },
   },
   {
@@ -80,12 +83,13 @@ const TEST_PROTON_CONTENT = [
           data: { source: "chrome" },
         },
       },
+      has_noodles: true,
     },
   },
   {
     id: "AW_STEP4",
     order: 3,
-    autoClose: true,
+    auto_advance: "primary_button",
     content: {
       title: "Step 4",
       primary_button: {
@@ -97,6 +101,7 @@ const TEST_PROTON_CONTENT = [
       secondary_button: {
         label: "link",
       },
+      has_noodles: true,
     },
   },
 ];

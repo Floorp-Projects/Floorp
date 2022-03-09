@@ -54,7 +54,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
-  // Whether best match results are enabled.
+  // Whether best match results can be blocked.
+  ["bestMatch.blockingEnabled", false],
+
+  // Whether the best match feature is enabled.
   ["bestMatch.enabled", true],
 
   // Whether using `ctrl` when hitting return/enter in the URL bar
@@ -182,6 +185,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
+  // When `bestMatch.enabled` is true, this controls whether results will
+  // include best matches.
+  ["suggest.bestmatch", true],
+
   // Whether results will include the user's bookmarks.
   ["suggest.bookmark", true],
 
@@ -212,6 +219,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
+
+  // JSON'ed array of blocked quick suggest URL digests.
+  ["quickSuggest.blockedDigests", ""],
 
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.
@@ -316,6 +326,13 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
   ["ui.popup.disable_autohide", false],
 ]);
+
+// Default values for Nimbus urlbar variables that do not have fallback prefs.
+// Variables with fallback prefs do not need to be defined here because their
+// defaults are the values of their fallbacks.
+const NIMBUS_DEFAULTS = {
+  isBestMatchExperiment: false,
+};
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
 // in mozIPlacesAutoComplete.
@@ -1167,7 +1184,9 @@ class Preferences {
 
   get _nimbus() {
     if (!this.__nimbus) {
-      this.__nimbus = NimbusFeatures.urlbar.getAllVariables();
+      this.__nimbus = NimbusFeatures.urlbar.getAllVariables({
+        defaultValues: NIMBUS_DEFAULTS,
+      });
     }
     return this.__nimbus;
   }

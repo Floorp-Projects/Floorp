@@ -23,7 +23,8 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-[RefCounted] protocol PHttpChannel
+[ChildImpl=virtual, ParentImpl=virtual]
+protocol PHttpChannel
 {
   manager PNecko;
 

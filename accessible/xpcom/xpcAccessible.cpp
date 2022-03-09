@@ -282,11 +282,7 @@ xpcAccessible::GetValue(nsAString& aValue) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   nsAutoString value;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->Value(value);
-  } else {
-    Intl()->Value(value);
-  }
+  IntlGeneric()->Value(value);
 
   aValue.Assign(value);
 
@@ -614,15 +610,14 @@ NS_IMETHODIMP
 xpcAccessible::SetSelected(bool aSelect) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
+  if (IntlGeneric()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->SetSelected(aSelect);
-#endif
-  } else {
-    Intl()->SetSelected(aSelect);
   }
+#endif
+
+  IntlGeneric()->SetSelected(aSelect);
 
   return NS_OK;
 }
@@ -631,15 +626,14 @@ NS_IMETHODIMP
 xpcAccessible::TakeSelection() {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
+  if (IntlGeneric()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->TakeSelection();
-#endif
-  } else {
-    Intl()->TakeSelection();
   }
+#endif
+
+  IntlGeneric()->TakeSelection();
 
   return NS_OK;
 }

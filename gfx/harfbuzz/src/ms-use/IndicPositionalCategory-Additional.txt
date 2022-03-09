@@ -2,7 +2,7 @@
 # Not derivable
 # Initial version based on Unicode 7.0 by Andrew Glass 2014-03-17
 # Updated for Unicode 10.0 by Andrew Glass 2017-07-25
-# Ammended for Unicode 10.0 by Andrew Glass 2018-09-21
+# Amended for Unicode 10.0 by Andrew Glass 2018-09-21
 # Updated for L2/19-083    by Andrew Glass 2019-05-06
 # Updated for Unicode 12.1 by Andrew Glass 2019-05-30
 # Updated for Unicode 13.0 by Andrew Glass 2020-07-28
@@ -58,16 +58,16 @@ AA35          ; Top     # Mn       CHAM CONSONANT SIGN
 # Indic_Positional_Category=Bottom
 0859..085B    ; Bottom # Mn   [3] MANDAIC AFFRICATION MARK..MANDAIC GEMINATION MARK
 18A9          ; Bottom # Mn       MONGOLIAN LETTER ALI GALI DAGALGA
-10AE5         ; Bottom # Mn       MANICHAEAN ABBREVIATION MARK ABOVE  # Overriden, ccc controls order
+10AE5         ; Bottom # Mn       MANICHAEAN ABBREVIATION MARK ABOVE  # Overridden, ccc controls order
 10AE6         ; Bottom # Mn       MANICHAEAN ABBREVIATION MARK BELOW
 10F46..10F47  ; Bottom # Mn   [2] SOGDIAN COMBINING DOT BELOW..SOGDIAN COMBINING TWO DOTS BELOW
-10F48..10F4A  ; Bottom # Mn   [3] SOGDIAN COMBINING DOT ABOVE..SOGDIAN COMBINING CURVE ABOVE     # Overriden, ccc controls order
+10F48..10F4A  ; Bottom # Mn   [3] SOGDIAN COMBINING DOT ABOVE..SOGDIAN COMBINING CURVE ABOVE     # Overridden, ccc controls order
 10F4B         ; Bottom # Mn       SOGDIAN COMBINING CURVE BELOW
-10F4C         ; Bottom # Mn       SOGDIAN COMBINING HOOK ABOVE        # Overriden, ccc controls order
+10F4C         ; Bottom # Mn       SOGDIAN COMBINING HOOK ABOVE        # Overridden, ccc controls order
 10F4D..10F50  ; Bottom # Mn   [4] SOGDIAN COMBINING HOOK BELOW..SOGDIAN COMBINING STROKE BELOW
-10F82         ; Bottom # Mn       OLD UYGHUR COMBINING DOT ABOVE      # Overriden, ccc controls order
+10F82         ; Bottom # Mn       OLD UYGHUR COMBINING DOT ABOVE      # Overridden, ccc controls order
 10F83         ; Bottom # Mn       OLD UYGHUR COMBINING DOT BELOW
-10F84         ; Bottom # Mn       OLD UYGHUR COMBINING TWO DOTS ABOVE # Overriden, ccc controls order
+10F84         ; Bottom # Mn       OLD UYGHUR COMBINING TWO DOTS ABOVE # Overridden, ccc controls order
 10F85         ; Bottom # Mn       OLD UYGHUR COMBINING TWO DOTS BELOW
 16F4F         ; Bottom # Mn       MIAO SIGN CONSONANT MODIFIER BAR
 16F51..16F87  ; Bottom # Mc  [55] MIAO SIGN ASPIRATION..MIAO VOWEL SIGN UI

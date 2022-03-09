@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIWinTaskbar.h"
 #include "WinTaskbar.h"
 #include "TaskbarPreview.h"
 #include <nsITaskbarPreviewController.h>
@@ -203,14 +204,8 @@ WinTaskbar::~WinTaskbar() {
 }
 
 // static
-bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
-  // If an ID has already been set then use that.
-  PWSTR id;
-  if (SUCCEEDED(GetCurrentProcessExplicitAppUserModelID(&id))) {
-    aDefaultGroupId.Assign(id);
-    CoTaskMemFree(id);
-  }
-
+bool WinTaskbar::GenerateAppUserModelID(nsAString& aAppUserModelId,
+                                        bool aPrivateBrowsing) {
   // If marked as such in prefs, use a hash of the profile path for the id
   // instead of the install path hash setup by the installer.
   bool useProfile = Preferences::GetBool("taskbar.grouping.useprofile", false);
@@ -225,7 +220,7 @@ bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
         nsAutoString id;
         id.AppendInt(HashString(path));
         if (!id.IsEmpty()) {
-          aDefaultGroupId.Assign(id);
+          aAppUserModelId.Assign(id);
           return true;
         }
       }
@@ -257,10 +252,10 @@ bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
       wchar_t buf[256];
       if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, regKey.get(), path, buf,
                                    sizeof buf)) {
-        aDefaultGroupId.Assign(buf);
+        aAppUserModelId.Assign(buf);
       } else if (WinUtils::GetRegistryKey(HKEY_CURRENT_USER, regKey.get(), path,
                                           buf, sizeof buf)) {
-        aDefaultGroupId.Assign(buf);
+        aAppUserModelId.Assign(buf);
       }
     }
   }
@@ -268,16 +263,41 @@ bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
   // If we haven't found an ID yet then use the install hash. In xpcshell tests
   // the directory provider may not have been initialized so bypass in this
   // case.
-  if (aDefaultGroupId.IsEmpty() && gDirServiceProvider) {
-    gDirServiceProvider->GetInstallHash(aDefaultGroupId);
+  if (aAppUserModelId.IsEmpty() && gDirServiceProvider) {
+    gDirServiceProvider->GetInstallHash(aAppUserModelId);
   }
 
-  return !aDefaultGroupId.IsEmpty();
+  if (aPrivateBrowsing) {
+    aAppUserModelId.AppendLiteral(";PrivateBrowsingAUMID");
+  }
+
+  return !aAppUserModelId.IsEmpty();
+}
+
+// static
+bool WinTaskbar::GetAppUserModelID(nsAString& aAppUserModelId,
+                                   bool aPrivateBrowsing) {
+  // If an ID has already been set then use that.
+  PWSTR id;
+  if (SUCCEEDED(GetCurrentProcessExplicitAppUserModelID(&id))) {
+    aAppUserModelId.Assign(id);
+    CoTaskMemFree(id);
+  }
+
+  return GenerateAppUserModelID(aAppUserModelId, aPrivateBrowsing);
 }
 
 NS_IMETHODIMP
 WinTaskbar::GetDefaultGroupId(nsAString& aDefaultGroupId) {
   if (!GetAppUserModelID(aDefaultGroupId)) return NS_ERROR_UNEXPECTED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinTaskbar::GetDefaultPrivateGroupId(nsAString& aDefaultPrivateGroupId) {
+  if (!GetAppUserModelID(aDefaultPrivateGroupId, true))
+    return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
 }
@@ -387,7 +407,8 @@ WinTaskbar::GetOverlayIconController(
 }
 
 NS_IMETHODIMP
-WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder** aJumpListBuilder) {
+WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
+                                  nsIJumpListBuilder** aJumpListBuilder) {
   nsresult rv;
 
   if (JumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
@@ -397,6 +418,10 @@ WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder** aJumpListBuilder) {
   if (NS_FAILED(rv)) return NS_ERROR_UNEXPECTED;
 
   NS_IF_ADDREF(*aJumpListBuilder = builder);
+
+  nsAutoString aumid;
+  GenerateAppUserModelID(aumid, aPrivateBrowsing);
+  builder->SetAppUserModelID(aumid);
 
   return NS_OK;
 }

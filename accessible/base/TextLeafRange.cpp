@@ -6,6 +6,7 @@
 
 #include "TextLeafRange.h"
 
+#include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -203,6 +204,47 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
  */
 enum WordBreakClass { eWbcSpace = 0, eWbcPunct, eWbcOther };
 
+static WordBreakClass GetWordBreakClass(char16_t aChar) {
+  // Based on IsSelectionInlineWhitespace and IsSelectionNewline in
+  // layout/generic/nsTextFrame.cpp.
+  const char16_t kCharNbsp = 0xA0;
+  switch (aChar) {
+    case ' ':
+    case kCharNbsp:
+    case '\t':
+    case '\f':
+    case '\n':
+    case '\r':
+      return eWbcSpace;
+    default:
+      break;
+  }
+  // Based on ClusterIterator::IsPunctuation in
+  // layout/generic/nsTextFrame.cpp.
+  uint8_t cat = unicode::GetGeneralCategory(aChar);
+  switch (cat) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+      if (aChar == '_' &&
+          !StaticPrefs::layout_word_select_stop_at_underscore()) {
+        return eWbcOther;
+      }
+      [[fallthrough]];
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
+      return eWbcPunct;
+    default:
+      break;
+  }
+  return eWbcOther;
+}
+
 /**
  * Words can cross Accessibles. To work out whether we're at the start of a
  * word, we might have to check the previous leaf. This class handles querying
@@ -213,7 +255,7 @@ class PrevWordBreakClassWalker {
   PrevWordBreakClassWalker(Accessible* aAcc, const nsAString& aText,
                            int32_t aOffset)
       : mAcc(aAcc), mText(aText), mOffset(aOffset) {
-    mClass = GetClass(mText.CharAt(mOffset));
+    mClass = GetWordBreakClass(mText.CharAt(mOffset));
   }
 
   WordBreakClass CurClass() { return mClass; }
@@ -223,7 +265,7 @@ class PrevWordBreakClassWalker {
       if (!PrevChar()) {
         return Nothing();
       }
-      WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+      WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
       if (curClass != mClass) {
         mClass = curClass;
         return Some(curClass);
@@ -238,7 +280,7 @@ class PrevWordBreakClassWalker {
       // There are no characters before us.
       return true;
     }
-    WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+    WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
     // We wanted to peek at the previous character, not really move to it.
     ++mOffset;
     return curClass != mClass;
@@ -262,47 +304,6 @@ class PrevWordBreakClassWalker {
     mAcc->AppendTextTo(mText);
     mOffset = static_cast<int32_t>(mText.Length()) - 1;
     return true;
-  }
-
-  WordBreakClass GetClass(char16_t aChar) {
-    // Based on IsSelectionInlineWhitespace and IsSelectionNewline in
-    // layout/generic/nsTextFrame.cpp.
-    const char16_t kCharNbsp = 0xA0;
-    switch (aChar) {
-      case ' ':
-      case kCharNbsp:
-      case '\t':
-      case '\f':
-      case '\n':
-      case '\r':
-        return eWbcSpace;
-      default:
-        break;
-    }
-    // Based on ClusterIterator::IsPunctuation in
-    // layout/generic/nsTextFrame.cpp.
-    uint8_t cat = unicode::GetGeneralCategory(aChar);
-    switch (cat) {
-      case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
-        if (aChar == '_' &&
-            !StaticPrefs::layout_word_select_stop_at_underscore()) {
-          return eWbcOther;
-        }
-        [[fallthrough]];
-      case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
-      case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
-      case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
-      case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
-      case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
-      case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
-      case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
-      case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
-      case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
-        return eWbcPunct;
-      default:
-        break;
-    }
-    return eWbcOther;
   }
 
   Accessible* mAcc;
@@ -354,6 +355,22 @@ static bool IsAcceptableWordStart(Accessible* aAcc, const nsAutoString& aText,
   return true;
 }
 
+class BlockRule : public PivotRule {
+ public:
+  virtual uint16_t Match(Accessible* aAcc) override {
+    if (RefPtr<nsAtom>(aAcc->DisplayStyle()) == nsGkAtoms::block ||
+        aAcc->IsHTMLListItem() ||
+        // XXX Bullets are inline-block, but the old local implementation treats
+        // them as block because IsBlockFrame() returns true. Semantically,
+        // they shouldn't be treated as blocks, so this should be removed once
+        // we only have a single implementation to deal with.
+        (aAcc->IsText() && aAcc->Role() == roles::LISTITEM_MARKER)) {
+      return nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+    return nsIAccessibleTraversalRule::FILTER_IGNORE;
+  }
+};
+
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
@@ -374,39 +391,7 @@ bool TextLeafPoint::operator<(const TextLeafPoint& aPoint) const {
   if (mAcc == aPoint.mAcc) {
     return mOffset < aPoint.mOffset;
   }
-
-  // Build the chain of parents.
-  Accessible* thisP = mAcc;
-  Accessible* otherP = aPoint.mAcc;
-  AutoTArray<Accessible*, 30> thisParents, otherParents;
-  do {
-    thisParents.AppendElement(thisP);
-    thisP = thisP->Parent();
-  } while (thisP);
-  do {
-    otherParents.AppendElement(otherP);
-    otherP = otherP->Parent();
-  } while (otherP);
-
-  // Find where the parent chain differs.
-  uint32_t thisPos = thisParents.Length(), otherPos = otherParents.Length();
-  for (uint32_t len = std::min(thisPos, otherPos); len > 0; --len) {
-    Accessible* thisChild = thisParents.ElementAt(--thisPos);
-    Accessible* otherChild = otherParents.ElementAt(--otherPos);
-    if (thisChild != otherChild) {
-      return thisChild->IndexInParent() < otherChild->IndexInParent();
-    }
-  }
-
-  // If the ancestries are the same length (both thisPos and otherPos are 0),
-  // we should have returned by now.
-  MOZ_ASSERT(thisPos != 0 || otherPos != 0);
-  // At this point, one of the ancestries is a superset of the other, so one of
-  // thisPos or otherPos should be 0.
-  MOZ_ASSERT(thisPos != otherPos);
-  // If the other Accessible is deeper than this one (otherPos > 0), this
-  // Accessible comes before the other.
-  return otherPos > 0;
+  return mAcc->IsBefore(aPoint.mAcc);
 }
 
 bool TextLeafPoint::IsEmptyLastLine() const {
@@ -422,6 +407,12 @@ bool TextLeafPoint::IsEmptyLastLine() const {
   nsAutoString text;
   mAcc->AppendTextTo(text, mOffset - 1, 1);
   return text.CharAt(0) == '\n';
+}
+
+char16_t TextLeafPoint::GetChar() const {
+  nsAutoString text;
+  mAcc->AppendTextTo(text, mOffset, 1);
+  return text.CharAt(0);
 }
 
 TextLeafPoint TextLeafPoint::FindPrevLineStartSameLocalAcc(
@@ -735,13 +726,22 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           bool aIncludeOrigin) const {
   if (IsCaret()) {
     if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR) {
-      // The caret is at the end of the line. Return no character.
-      return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+      if (IsCaretAtEndOfLine()) {
+        // The caret is at the end of the line. Return no character.
+        return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+      }
     }
     return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
                                          aIncludeOrigin);
   }
-  if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END) {
+    return FindLineEnd(aDirection, aIncludeOrigin);
+  }
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END) {
+    return FindWordEnd(aDirection, aIncludeOrigin);
+  }
+  if ((aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START ||
+       aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
     // walk into the previous line. For example, this can happen if the caret
@@ -766,7 +766,7 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
             // We've moved to the next leaf. That means we've set the offset
             // to 0, so we're already at the next character.
             boundary = searchFrom;
-          } else if (searchFrom.mOffset <
+          } else if (searchFrom.mOffset + 1 <
                      static_cast<int32_t>(
                          nsAccUtils::TextLength(searchFrom.mAcc))) {
             boundary.mAcc = searchFrom.mAcc;
@@ -783,6 +783,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
         break;
       case nsIAccessibleText::BOUNDARY_LINE_START:
         boundary = searchFrom.FindLineStartSameAcc(aDirection, includeOrigin);
+        break;
+      case nsIAccessibleText::BOUNDARY_PARAGRAPH:
+        boundary = searchFrom.FindParagraphSameAcc(aDirection, includeOrigin);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE();
@@ -813,6 +816,176 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
     includeOrigin = true;
   }
   MOZ_ASSERT_UNREACHABLE();
+  return TextLeafPoint();
+}
+
+TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
+                                         bool aIncludeOrigin) const {
+  if (aDirection == eDirPrevious && IsEmptyLastLine()) {
+    // If we're at an empty line at the end of an Accessible,  we don't want to
+    // walk into the previous line. For example, this can happen if the caret
+    // is positioned on an empty line at the end of a textarea.
+    // Because we want the line end, we must walk back to the line feed
+    // character.
+    return FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+  }
+  if (aIncludeOrigin && IsLineFeedChar()) {
+    return *this;
+  }
+  if (aDirection == eDirPrevious && !aIncludeOrigin) {
+    // If there is a line feed immediately before us, return that.
+    TextLeafPoint prevChar =
+        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    if (prevChar.IsLineFeedChar()) {
+      return prevChar;
+    }
+  }
+  TextLeafPoint searchFrom = *this;
+  if (aDirection == eDirNext && (IsLineFeedChar() || IsEmptyLastLine())) {
+    // If we search for the next line start from a line feed, we'll get the
+    // character immediately following the line feed. We actually want the
+    // next line start after that. Skip the line feed.
+    searchFrom = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext);
+  }
+  TextLeafPoint lineStart = searchFrom.FindBoundary(
+      nsIAccessibleText::BOUNDARY_LINE_START, aDirection, aIncludeOrigin);
+  // If there is a line feed before this line start (at the end of the previous
+  // line), we must return that.
+  TextLeafPoint prevChar = lineStart.FindBoundary(
+      nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+  if (prevChar && prevChar.IsLineFeedChar()) {
+    return prevChar;
+  }
+  return lineStart;
+}
+
+bool TextLeafPoint::IsSpace() const {
+  return GetWordBreakClass(GetChar()) == eWbcSpace;
+}
+
+TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
+                                         bool aIncludeOrigin) const {
+  char16_t origChar = GetChar();
+  const bool origIsSpace = GetWordBreakClass(origChar) == eWbcSpace;
+  bool prevIsSpace = false;
+  if (aDirection == eDirPrevious || (aIncludeOrigin && origIsSpace) ||
+      !origChar) {
+    TextLeafPoint prev =
+        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+    if (aDirection == eDirPrevious && prev == *this) {
+      return *this;  // Can't go any further.
+    }
+    prevIsSpace = prev.IsSpace();
+    if (aIncludeOrigin && origIsSpace && !prevIsSpace) {
+      // The origin is space, but the previous character is not. This means
+      // we're at the end of a word.
+      return *this;
+    }
+  }
+  TextLeafPoint boundary = *this;
+  if (aDirection == eDirPrevious && !prevIsSpace) {
+    // If there isn't space immediately before us, first find the start of the
+    // previous word.
+    boundary = FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
+                            eDirPrevious, aIncludeOrigin);
+  } else if (aDirection == eDirNext &&
+             (origIsSpace || (!origChar && prevIsSpace))) {
+    // We're within the space at the end of the word. Skip over the space. We
+    // can do that by searching for the next word start.
+    boundary =
+        FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START, eDirNext, false);
+    if (boundary.IsSpace()) {
+      // The next word starts with a space. This can happen if there is a space
+      // after or at the start of a block element.
+      return boundary;
+    }
+  }
+  if (aDirection == eDirNext) {
+    boundary = boundary.FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
+                                     eDirNext, aIncludeOrigin);
+  }
+  // At this point, boundary is either the start of a word or at a space. A
+  // word ends at the beginning of consecutive space. Therefore, skip back to
+  // the start of any space before us.
+  TextLeafPoint prev = boundary;
+  for (;;) {
+    prev = prev.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    if (prev == boundary) {
+      break;  // Can't go any further.
+    }
+    if (!prev.IsSpace()) {
+      break;
+    }
+    boundary = prev;
+  }
+  return boundary;
+}
+
+TextLeafPoint TextLeafPoint::FindParagraphSameAcc(nsDirection aDirection,
+                                                  bool aIncludeOrigin) const {
+  if (mAcc->IsTextLeaf() &&
+      // We don't want to copy strings unnecessarily. See below for the context
+      // of these individual conditions.
+      ((aIncludeOrigin && mOffset > 0) || aDirection == eDirNext ||
+       mOffset >= 2)) {
+    // If there is a line feed, a new paragraph begins after it.
+    nsAutoString text;
+    mAcc->AppendTextTo(text);
+    if (aIncludeOrigin && mOffset > 0 && text.CharAt(mOffset - 1) == '\n') {
+      return TextLeafPoint(mAcc, mOffset);
+    }
+    int32_t lfOffset = -1;
+    if (aDirection == eDirNext) {
+      lfOffset = text.FindChar('\n', mOffset);
+    } else if (mOffset >= 2) {
+      // A line feed at mOffset - 1 means the origin begins a new paragraph,
+      // but we already handled aIncludeOrigin above. Therefore, we search from
+      // mOffset - 2.
+      lfOffset = text.RFindChar('\n', mOffset - 2);
+    }
+    if (lfOffset != -1 && lfOffset + 1 < static_cast<int32_t>(text.Length())) {
+      return TextLeafPoint(mAcc, lfOffset + 1);
+    }
+  }
+
+  // Check whether this Accessible begins a paragraph.
+  if ((!aIncludeOrigin && mOffset == 0) ||
+      (aDirection == eDirNext && mOffset > 0)) {
+    // The caller isn't interested in whether this Accessible begins a
+    // paragraph.
+    return TextLeafPoint();
+  }
+  Accessible* prevLeaf = PrevLeaf(mAcc);
+  BlockRule blockRule;
+  Pivot pivot(DocumentFor(mAcc));
+  Accessible* prevBlock = pivot.Prev(mAcc, blockRule);
+  // Check if we're the first leaf after a block element.
+  if (prevBlock &&
+      // If there's no previous leaf, we must be the first leaf after the block.
+      (!prevLeaf ||
+       // A block can be a leaf; e.g. an empty div or paragraph.
+       prevBlock == prevLeaf ||
+       // If we aren't inside the block, the block must be before us. This
+       // check is important because a block causes a paragraph break both
+       // before and after it.
+       !prevBlock->IsAncestorOf(mAcc) ||
+       // If we are inside the block and the previous leaf isn't, we must be
+       // the first leaf in the block.
+       !prevBlock->IsAncestorOf(prevLeaf))) {
+    return TextLeafPoint(mAcc, 0);
+  }
+  if (!prevLeaf || prevLeaf->IsHTMLBr()) {
+    // We're the first leaf after a line break or the start of the document.
+    return TextLeafPoint(mAcc, 0);
+  }
+  if (prevLeaf->IsTextLeaf()) {
+    // There's a text leaf before us. Check if it ends with a line feed.
+    nsAutoString text;
+    prevLeaf->AppendTextTo(text, nsAccUtils::TextLength(prevLeaf) - 1, 1);
+    if (text.CharAt(0) == '\n') {
+      return TextLeafPoint(mAcc, 0);
+    }
+  }
   return TextLeafPoint();
 }
 
@@ -899,7 +1072,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
                  : point.GetTextAttributesLocalAcc(aIncludeDefaults);
-    if (!attrs->Equal(lastAttrs)) {
+    if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       return *this;
     }
   }
@@ -914,7 +1087,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     RefPtr<const AccAttributes> attrs =
         isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
                  : point.GetTextAttributesLocalAcc(aIncludeDefaults);
-    if (!attrs->Equal(lastAttrs)) {
+    if (attrs && lastAttrs && !attrs->Equal(lastAttrs)) {
       // The attributes change here. If we're moving forward, we want to
       // return this point. If we're moving backward, we've now moved before
       // the start of the attrs run containing the origin, so return the last

@@ -433,3 +433,40 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
        `c5 f1 eb 05 ${RIPRADDR}  vporx ${RIPR}, %xmm1, %xmm0`],
       ['v128.xor', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 ef 05 ${RIPRADDR}  vpxorx ${RIPR}, %xmm1, %xmm0`]]);
+
+// Shift by constant encodings
+codegenTestX64_v128xLITERAL_v128_avxhack(
+     [['i8x16.shl', '(i32.const 2)', `
+c5 f1 fc c1               vpaddb %xmm1, %xmm1, %xmm0
+66 0f fc c0               paddb %xmm0, %xmm0`],
+      ['i8x16.shl', '(i32.const 4)', `
+c5 f1 db 05 ${RIPRADDR}   vpandx ${RIPR}, %xmm1, %xmm0
+66 0f 71 f0 04            psllw \\$0x04, %xmm0`],
+      ['i16x8.shl', '(i32.const 1)',
+       'c5 f9 71 f1 01            vpsllw \\$0x01, %xmm1, %xmm0'],
+      ['i16x8.shr_s', '(i32.const 3)',
+       'c5 f9 71 e1 03            vpsraw \\$0x03, %xmm1, %xmm0'],
+      ['i16x8.shr_u', '(i32.const 2)',
+       'c5 f9 71 d1 02            vpsrlw \\$0x02, %xmm1, %xmm0'], 
+      ['i32x4.shl', '(i32.const 5)',
+       'c5 f9 72 f1 05            vpslld \\$0x05, %xmm1, %xmm0'],
+      ['i32x4.shr_s', '(i32.const 2)',
+       'c5 f9 72 e1 02            vpsrad \\$0x02, %xmm1, %xmm0'],
+      ['i32x4.shr_u', '(i32.const 5)',
+       'c5 f9 72 d1 05            vpsrld \\$0x05, %xmm1, %xmm0'],
+      ['i64x2.shr_s', '(i32.const 7)', `
+c5 79 70 f9 f5            vpshufd \\$0xF5, %xmm1, %xmm15
+66 41 0f 72 e7 1f         psrad \\$0x1F, %xmm15
+c4 c1 71 ef c7            vpxor %xmm15, %xmm1, %xmm0
+66 0f 73 d0 07            psrlq \\$0x07, %xmm0
+66 41 0f ef c7            pxor %xmm15, %xmm0`]]);
+
+// vpblendvp optimization when bitselect follows comparison.
+codegenTestX64_adhoc(
+     `(module
+         (func (export "f") (param v128) (param v128) (param v128) (param v128) (result v128)
+           (v128.bitselect (local.get 2) (local.get 3)
+              (i32x4.eq (local.get 0) (local.get 1)))))`,
+         'f', `
+66 0f 76 c1               pcmpeqd %xmm1, %xmm0
+c4 e3 61 4c c2 00         vpblendvb %xmm0, %xmm2, %xmm3, %xmm0`);

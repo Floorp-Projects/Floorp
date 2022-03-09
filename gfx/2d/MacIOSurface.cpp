@@ -404,10 +404,21 @@ already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   switch (GetPixelFormat()) {
     case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
     case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
       return SurfaceFormat::NV12;
+    case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+      return SurfaceFormat::P010;
     case kCVPixelFormatType_422YpCbCr8_yuvs:
     case kCVPixelFormatType_422YpCbCr8FullRange:
       return SurfaceFormat::YUV422;
@@ -439,6 +450,14 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
 CGLError MacIOSurface::CGLTexImageIOSurface2D(
     mozilla::gl::GLContext* aGL, CGLContextObj ctx, size_t plane,
     mozilla::gfx::SurfaceFormat* aOutReadFormat) {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   MOZ_ASSERT(plane >= 0);
   bool isCompatibilityProfile = aGL->IsCompatibilityProfile();
   OSType pixelFormat = GetPixelFormat();
@@ -464,6 +483,25 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
     type = LOCAL_GL_UNSIGNED_BYTE;
     if (aOutReadFormat) {
       *aOutReadFormat = mozilla::gfx::SurfaceFormat::NV12;
+    }
+  } else if (pixelFormat == kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange ||
+             pixelFormat == kCVPixelFormatType_420YpCbCr10BiPlanarFullRange) {
+    MOZ_ASSERT(GetPlaneCount() == 2);
+    MOZ_ASSERT(plane < 2);
+
+    // The LOCAL_GL_LUMINANCE and LOCAL_GL_LUMINANCE_ALPHA are the deprecated
+    // format. So, use LOCAL_GL_RED and LOCAL_GL_RB if we use core profile.
+    // https://www.khronos.org/opengl/wiki/Image_Format#Legacy_Image_Formats
+    if (plane == 0) {
+      internalFormat = format =
+          (isCompatibilityProfile) ? (LOCAL_GL_LUMINANCE) : (LOCAL_GL_RED);
+    } else {
+      internalFormat = format =
+          (isCompatibilityProfile) ? (LOCAL_GL_LUMINANCE_ALPHA) : (LOCAL_GL_RG);
+    }
+    type = LOCAL_GL_UNSIGNED_SHORT;
+    if (aOutReadFormat) {
+      *aOutReadFormat = mozilla::gfx::SurfaceFormat::P010;
     }
   } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8_yuvs ||
              pixelFormat == kCVPixelFormatType_422YpCbCr8FullRange) {

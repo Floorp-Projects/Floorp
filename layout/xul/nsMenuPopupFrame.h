@@ -172,12 +172,12 @@ class nsMenuPopupFrame final : public nsBoxFrame,
    */
   ConsumeOutsideClicksResult ConsumeOutsideClicks();
 
-  virtual bool IsContextMenu() override { return mIsContextMenu; }
+  bool IsContextMenu() override { return mIsContextMenu; }
 
-  virtual bool MenuClosed() override { return true; }
+  bool MenuClosed() override { return true; }
 
-  virtual void LockMenuUntilClosed(bool aLock) override;
-  virtual bool IsMenuLocked() override { return mIsMenuLocked; }
+  void LockMenuUntilClosed(bool aLock) override;
+  bool IsMenuLocked() override { return mIsMenuLocked; }
 
   nsIWidget* GetWidget();
 
@@ -246,7 +246,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
     return IsOpen() || mPopupState == ePopupPositioning ||
            mPopupState == ePopupShowing;
   }
-  bool IsNativeMenu() { return mIsNativeMenu; }
+  bool IsNativeMenu() const { return mIsNativeMenu; }
 
   // Return true if the popup is for a menulist.
   bool IsMenuList();
@@ -445,15 +445,13 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   //   aAnchorEnd - the right or bottom edge of the anchor rectangle
   //   aMarginBegin - the left or top margin of the popup
   //   aMarginEnd - the right or bottom margin of the popup
-  //   aOffsetForContextMenu - the additional offset to add for context menus
   //   aFlip - how to flip or resize the popup when there isn't space
   //   aFlipSide - pointer to where current flip mode is stored
   nscoord FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
                        nscoord aScreenBegin, nscoord aScreenEnd,
                        nscoord aAnchorBegin, nscoord aAnchorEnd,
                        nscoord aMarginBegin, nscoord aMarginEnd,
-                       nscoord aOffsetForContextMenu, FlipStyle aFlip,
-                       bool aIsOnEnd, bool* aFlipSide);
+                       FlipStyle aFlip, bool aIsOnEnd, bool* aFlipSide);
 
   // check if the popup can fit into the available space by "sliding" (i.e.,
   // by having the anchor arrow slide along one axis and only resizing if that
@@ -520,11 +518,17 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // strict popup windows hierarchy.
   nsIWidget* GetParentMenuWidget();
 
+  // Returns the effective margin for this popup. This is the CSS margin plus
+  // the context-menu shift, if needed.
+  nsMargin GetMargin() const;
+
   // These are used by Wayland backend.
-  nsRect GetAnchorRect() { return mAnchorRect; }
-  int GetPopupAlignment() { return mPopupAlignment; }
-  int GetPopupAnchor() { return mPopupAnchor; }
-  FlipType GetFlipType() { return mFlip; }
+  const nsRect& GetUntransformedAnchorRect() const {
+    return mUntransformedAnchorRect;
+  }
+  int GetPopupAlignment() const { return mPopupAlignment; }
+  int GetPopupAnchor() const { return mPopupAnchor; }
+  FlipType GetFlipType() const { return mFlip; }
 
   void WidgetPositionOrSizeDidChange();
 
@@ -559,9 +563,14 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   int32_t mXPos;
   int32_t mYPos;
   nsRect mScreenRect;
-  // Used for store rectangle which the popup is going to be anchored to,
-  // we need that for Wayland
-  nsRect mAnchorRect;
+  // Used for store rectangle which the popup is going to be anchored to, we
+  // need that for Wayland. It's important that this rect is unflipped, and
+  // without margins applied, as GTK is what takes care of determining how to
+  // flip etc. on Wayland.
+  nsRect mUntransformedAnchorRect;
+  // Store SizedToPopup attribute for MoveTo call to avoid
+  // unwanted popup resize there.
+  bool mSizedToPopup = false;
 
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
@@ -585,34 +594,26 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   struct ReflowCallbackData {
     ReflowCallbackData()
-        : mPosted(false),
-          mAnchor(nullptr),
-          mSizedToPopup(false),
-          mIsOpenChanged(false) {}
-    void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup,
-                    bool aIsOpenChanged) {
+        : mPosted(false), mAnchor(nullptr), mIsOpenChanged(false) {}
+    void MarkPosted(nsIFrame* aAnchor, bool aIsOpenChanged) {
       mPosted = true;
       mAnchor = aAnchor;
-      mSizedToPopup = aSizedToPopup;
       mIsOpenChanged = aIsOpenChanged;
     }
     void Clear() {
       mPosted = false;
       mAnchor = nullptr;
-      mSizedToPopup = false;
       mIsOpenChanged = false;
     }
     bool mPosted;
     nsIFrame* mAnchor;
-    bool mSizedToPopup;
     bool mIsOpenChanged;
   };
   ReflowCallbackData mReflowCallbackData;
 
   bool mIsOpenChanged;  // true if the open state changed since the last layout
-  bool mIsContextMenu;  // true for context menus
-  // true if we need to offset the popup to ensure it's not under the mouse
-  bool mAdjustOffsetForContextMenu;
+  bool mIsContextMenu = false;  // true for context menus and their submenus.
+  bool mIsTopLevelContextMenu = false;  // true for the topmost context menu.
 
   bool mMenuCanOverlapOSBar;  // can we appear over the taskbar/menubar?
   bool mShouldAutoPosition;   // Should SetPopupPosition be allowed to auto

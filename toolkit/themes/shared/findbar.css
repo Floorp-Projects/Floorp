@@ -75,8 +75,8 @@ html|input.findbar-textbox:-moz-lwtheme {
 
 html|input.findbar-textbox:focus {
   border-color: transparent;
-  outline: 2px solid color-mix(in srgb, var(--focus-outline-color, -moz-accent-color) 50%, transparent);
-  outline-offset: -2px;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
@@ -89,9 +89,8 @@ html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
 }
 
 html|input.findbar-textbox[status="notfound"] {
-  border-color: transparent;
-  outline: 2px solid var(--input-error-border-color, #E22850);
-  outline-offset: -2px;
+  background-color: rgba(226,40,80,.3);
+  color: inherit;
 }
 
 html|input.findbar-textbox[flash="true"] {

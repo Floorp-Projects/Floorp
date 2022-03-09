@@ -74,8 +74,9 @@ void TextAttrsMgr::GetAttributes(AccAttributes* aAttributes,
   }
 
   nsIFrame* rootFrame = mHyperTextAcc->GetFrame();
-  MOZ_ASSERT(rootFrame, "No frame for accessible!");
-  if (!rootFrame) return;
+  if (!rootFrame) {
+    return;
+  }
 
   nsIContent *offsetNode = nullptr, *offsetElm = nullptr;
   nsIFrame* frame = nullptr;
@@ -556,10 +557,9 @@ FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
 
   // When there doesn't exist a bold font in the family and so the rendering of
   // a non-bold font face is changed so that the user sees what looks like a
-  // bold font, i.e. synthetic bolding is used. IsSyntheticBold method is only
-  // needed on Mac, but it is "safe" to use on all platforms.  (For non-Mac
-  // platforms it always return false.)
-  if (font->IsSyntheticBold()) {
+  // bold font, i.e. synthetic bolding is used. (Simply returns false on any
+  // platforms that don't use the multi-strike synthetic bolding.)
+  if (font->ApplySyntheticBold()) {
     return FontWeight::Bold();
   }
 

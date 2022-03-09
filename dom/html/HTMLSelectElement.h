@@ -322,8 +322,8 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    */
   bool IsCombobox() const { return !Multiple() && Size() <= 1; }
 
-  bool OpenInParentProcess();
-  void SetOpenInParentProcess(bool aVal);
+  bool OpenInParentProcess() const { return mIsOpenInParentProcess; }
+  void SetOpenInParentProcess(bool aVal) { mIsOpenInParentProcess = aVal; }
 
   void GetPreviewValue(nsAString& aValue) { aValue = mPreviewValue; }
   void SetPreviewValue(const nsAString& aValue);
@@ -486,33 +486,36 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   nsContentUtils::AutocompleteAttrState mAutocompleteInfoState;
   /** false if the parser is in the middle of adding children. */
-  bool mIsDoneAddingChildren;
+  bool mIsDoneAddingChildren : 1;
   /** true if our disabled state has changed from the default **/
-  bool mDisabledChanged;
+  bool mDisabledChanged : 1;
   /** true if child nodes are being added or removed.
    *  Used by SafeOptionListMutation.
    */
-  bool mMutating;
+  bool mMutating : 1;
   /**
    * True if DoneAddingChildren will get called but shouldn't restore state.
    */
-  bool mInhibitStateRestoration;
+  bool mInhibitStateRestoration : 1;
   /**
    * True if the selection has changed since the element's creation.
    */
-  bool mSelectionHasChanged;
+  bool mSelectionHasChanged : 1;
   /**
    * True if the default selected option has been set.
    */
-  bool mDefaultSelectionSet;
+  bool mDefaultSelectionSet : 1;
   /**
    * True if :-moz-ui-invalid can be shown.
    */
-  bool mCanShowInvalidUI;
+  bool mCanShowInvalidUI : 1;
   /**
    * True if :-moz-ui-valid can be shown.
    */
-  bool mCanShowValidUI;
+  bool mCanShowValidUI : 1;
+
+  /** True if we're open in the parent process */
+  bool mIsOpenInParentProcess : 1;
 
   /** The number of non-options as children of the select */
   uint32_t mNonOptionChildren;

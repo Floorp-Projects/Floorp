@@ -7,10 +7,9 @@
 #include "TraversalRule.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/a11y/Accessible.h"
 
 #include "Role.h"
-#include "LocalAccessible.h"
-#include "LocalAccessible-inl.h"
 #include "HTMLListAccessible.h"
 #include "SessionAccessibility.h"
 #include "nsAccUtils.h"
@@ -26,25 +25,23 @@ TraversalRule::TraversalRule(int32_t aGranularity)
     : mGranularity(aGranularity) {}
 
 uint16_t TraversalRule::Match(Accessible* aAcc) {
-  MOZ_ASSERT(
-      aAcc && aAcc->IsLocal(),
-      "Should only receive local accessibles when processing on android.");
+  MOZ_ASSERT(aAcc);
 
-  LocalAccessible* aAccessible = aAcc->AsLocal();
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
-  if (nsAccUtils::MustPrune(aAccessible)) {
+  if (nsAccUtils::MustPrune(aAcc)) {
     result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }
 
-  uint64_t state = aAccessible->State();
+  uint64_t state = aAcc->State();
 
   if ((state & states::INVISIBLE) != 0) {
     return result;
   }
 
-  if ((state & states::OPAQUE1) == 0) {
-    nsIFrame* frame = aAccessible->GetFrame();
+  // Bug 1733268: Support OPAQUE1/opacity remotely
+  if (aAcc->IsLocal() && (state & states::OPAQUE1) == 0) {
+    nsIFrame* frame = aAcc->AsLocal()->GetFrame();
     if (frame && frame->StyleEffects()->mOpacity == 0.0f) {
       return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }
@@ -52,43 +49,40 @@ uint16_t TraversalRule::Match(Accessible* aAcc) {
 
   switch (mGranularity) {
     case java::SessionAccessibility::HTML_GRANULARITY_LINK:
-      result |= LinkMatch(aAccessible);
+      result |= LinkMatch(aAcc);
       break;
     case java::SessionAccessibility::HTML_GRANULARITY_CONTROL:
-      result |= ControlMatch(aAccessible);
+      result |= ControlMatch(aAcc);
       break;
     case java::SessionAccessibility::HTML_GRANULARITY_SECTION:
-      result |= SectionMatch(aAccessible);
+      result |= SectionMatch(aAcc);
       break;
     case java::SessionAccessibility::HTML_GRANULARITY_HEADING:
-      result |= HeadingMatch(aAccessible);
+      result |= HeadingMatch(aAcc);
       break;
     case java::SessionAccessibility::HTML_GRANULARITY_LANDMARK:
-      result |= LandmarkMatch(aAccessible);
+      result |= LandmarkMatch(aAcc);
       break;
     default:
-      result |= DefaultMatch(aAccessible);
+      result |= DefaultMatch(aAcc);
       break;
   }
 
   return result;
 }
 
-bool TraversalRule::IsSingleLineage(LocalAccessible* aAccessible) {
-  LocalAccessible* child = aAccessible;
+bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
+  Accessible* child = aAccessible;
   while (child) {
     switch (child->ChildCount()) {
       case 0:
         return true;
       case 1:
-        child = child->LocalFirstChild();
+        child = child->FirstChild();
         break;
       case 2:
-        if (LocalAccessible* bullet =
-                child->LocalParent()->IsHTMLListItem()
-                    ? child->LocalParent()->AsHTMLListItem()->Bullet()
-                    : nullptr) {
-          child = bullet->LocalNextSibling();
+        if (IsListItemBullet(child->FirstChild())) {
+          child = child->LastChild();
         } else {
           return false;
         }
@@ -101,15 +95,13 @@ bool TraversalRule::IsSingleLineage(LocalAccessible* aAccessible) {
   return true;
 }
 
-bool TraversalRule::IsListItemBullet(const LocalAccessible* aAccessible) {
-  LocalAccessible* parent = aAccessible->LocalParent();
-  return parent && parent->IsHTMLListItem() &&
-         parent->AsHTMLListItem()->Bullet() == aAccessible;
+bool TraversalRule::IsListItemBullet(const Accessible* aAccessible) {
+  return aAccessible->Role() == roles::LISTITEM_MARKER;
 }
 
-bool TraversalRule::IsFlatSubtree(const LocalAccessible* aAccessible) {
-  for (auto child = aAccessible->LocalFirstChild(); child;
-       child = child->LocalNextSibling()) {
+bool TraversalRule::IsFlatSubtree(const Accessible* aAccessible) {
+  for (auto child = aAccessible->FirstChild(); child;
+       child = child->NextSibling()) {
     roles::Role role = child->Role();
     if (role == roles::TEXT_LEAF || role == roles::STATICTEXT) {
       continue;
@@ -123,14 +115,14 @@ bool TraversalRule::IsFlatSubtree(const LocalAccessible* aAccessible) {
   return true;
 }
 
-bool TraversalRule::HasName(const LocalAccessible* aAccessible) {
+bool TraversalRule::HasName(const Accessible* aAccessible) {
   nsAutoString name;
   aAccessible->Name(name);
   name.CompressWhitespace();
   return !name.IsEmpty();
 }
 
-uint16_t TraversalRule::LinkMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::LinkMatch(Accessible* aAccessible) {
   if (aAccessible->Role() == roles::LINK &&
       (aAccessible->State() & states::LINKED) != 0) {
     return nsIAccessibleTraversalRule::FILTER_MATCH |
@@ -140,7 +132,7 @@ uint16_t TraversalRule::LinkMatch(LocalAccessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::HeadingMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::HeadingMatch(Accessible* aAccessible) {
   if (aAccessible->Role() == roles::HEADING && aAccessible->ChildCount()) {
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
@@ -148,7 +140,7 @@ uint16_t TraversalRule::HeadingMatch(LocalAccessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::SectionMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::SectionMatch(Accessible* aAccessible) {
   roles::Role role = aAccessible->Role();
   if (role == roles::HEADING || role == roles::LANDMARK ||
       aAccessible->LandmarkRole()) {
@@ -158,7 +150,7 @@ uint16_t TraversalRule::SectionMatch(LocalAccessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::LandmarkMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::LandmarkMatch(Accessible* aAccessible) {
   if (aAccessible->LandmarkRole()) {
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
@@ -166,7 +158,7 @@ uint16_t TraversalRule::LandmarkMatch(LocalAccessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::ControlMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::ControlMatch(Accessible* aAccessible) {
   switch (aAccessible->Role()) {
     case roles::PUSHBUTTON:
     case roles::SPINBUTTON:
@@ -190,7 +182,7 @@ uint16_t TraversalRule::ControlMatch(LocalAccessible* aAccessible) {
     case roles::LINK:
       return LinkMatch(aAccessible);
     case roles::EDITCOMBOBOX:
-      if (aAccessible->NativeState() & states::EDITABLE) {
+      if (aAccessible->State() & states::EDITABLE) {
         // Only match ARIA 1.0 comboboxes; i.e. where the combobox itself is
         // editable. If it's a 1.1 combobox, the combobox is just a container;
         // we want to stop on the textbox inside it, not the container.
@@ -205,14 +197,14 @@ uint16_t TraversalRule::ControlMatch(LocalAccessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::DefaultMatch(LocalAccessible* aAccessible) {
+uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
   switch (aAccessible->Role()) {
     case roles::COMBOBOX:
       // We don't want to ignore the subtree because this is often
       // where the list box hangs out.
       return nsIAccessibleTraversalRule::FILTER_MATCH;
     case roles::EDITCOMBOBOX:
-      if (aAccessible->NativeState() & states::EDITABLE) {
+      if (aAccessible->State() & states::EDITABLE) {
         // Only match ARIA 1.0 comboboxes; i.e. where the combobox itself is
         // editable. If it's a 1.1 combobox, the combobox is just a container;
         // we want to stop on the textbox inside it.

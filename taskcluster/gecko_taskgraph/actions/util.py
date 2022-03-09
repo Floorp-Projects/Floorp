@@ -14,21 +14,21 @@ import jsone
 import requests
 from requests.exceptions import HTTPError
 from slugid import nice as slugid
+from taskgraph.util.taskcluster import (
+    find_task_id,
+    get_artifact,
+    get_session,
+    get_task_definition,
+    list_tasks,
+    parse_time,
+    CONCURRENCY,
+)
 
 from gecko_taskgraph import create
 from gecko_taskgraph.decision import read_artifact, write_artifact, rename_artifact
 from gecko_taskgraph.taskgraph import TaskGraph
 from gecko_taskgraph.optimize import optimize_task_graph
-from gecko_taskgraph.util.taskcluster import (
-    find_task_id,
-    get_artifact,
-    get_task_definition,
-    get_session,
-    list_tasks,
-    parse_time,
-    trigger_hook,
-    CONCURRENCY,
-)
+from gecko_taskgraph.util.taskcluster import trigger_hook
 from gecko_taskgraph.util.taskgraph import find_decision_task
 
 logger = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ def fetch_graph_and_labels(parameters, graph_config):
     return (decision_task_id, full_task_graph, label_to_taskid)
 
 
-def create_task_from_def(task_def, level):
+def create_task_from_def(task_def, level, action_tag=None):
     """Create a new task from a definition rather than from a label
     that is already in the full-task-graph. The task definition will
     have {relative-datestamp': '..'} rendered just like in a decision task.
@@ -246,11 +246,18 @@ def create_task_from_def(task_def, level):
     label = task_def["metadata"]["name"]
     task_id = slugid()
     session = get_session()
+    if action_tag:
+        task_def.setdefault("tags", {}).setdefault("action", action_tag)
     create.create_task(session, task_id, label, task_def)
 
 
 def update_parent(task, graph):
     task.task.setdefault("extra", {})["parent"] = os.environ.get("TASK_ID", "")
+    return task
+
+
+def update_action_tag(task, graph, action_tag):
+    task.task.setdefault("tags", {}).setdefault("action", action_tag)
     return task
 
 
@@ -269,6 +276,7 @@ def create_tasks(
     decision_task_id,
     suffix="",
     modifier=lambda t: t,
+    action_tag=None,
 ):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
@@ -301,6 +309,8 @@ def create_tasks(
         {l: modifier(full_task_graph[l]) for l in target_graph.nodes}, target_graph
     )
     target_task_graph.for_each_task(update_parent)
+    if action_tag:
+        target_task_graph.for_each_task(update_action_tag, action_tag)
     if decision_task_id and decision_task_id != os.environ.get("TASK_ID"):
         target_task_graph.for_each_task(update_dependencies)
     optimized_task_graph, label_to_taskid = optimize_task_graph(

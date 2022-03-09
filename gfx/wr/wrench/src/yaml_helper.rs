@@ -132,7 +132,8 @@ define_string_enum!(
         Hue = "hue",
         Saturation = "saturation",
         Color = "color",
-        Luminosity = "luminosity"
+        Luminosity = "luminosity",
+        PlusLighter = "plus-lighter"
     ]
 );
 

@@ -134,11 +134,6 @@ void WeakMapBase::restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps) {
   }
 }
 
-size_t ObjectValueWeakMap::sizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) {
-  return mallocSizeOf(this) + shallowSizeOfExcludingThis(mallocSizeOf);
-}
-
 ObjectWeakMap::ObjectWeakMap(JSContext* cx) : map(cx, nullptr) {}
 
 JSObject* ObjectWeakMap::lookup(const JSObject* obj) {

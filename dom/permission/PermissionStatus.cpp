@@ -111,6 +111,10 @@ already_AddRefed<nsIPrincipal> PermissionStatus::GetPrincipal() const {
 }
 
 void PermissionStatus::PermissionChanged() {
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  if (NS_WARN_IF(!window) || !window->IsFullyActive()) {
+    return;
+  }
   auto oldState = mState;
   UpdateState();
   if (mState != oldState) {

@@ -75,10 +75,14 @@ extern JS_PUBLIC_API JSString* JS_AtomizeStringN(JSContext* cx, const char* s,
 
 extern JS_PUBLIC_API JSString* JS_AtomizeString(JSContext* cx, const char* s);
 
+// Note: unlike the non-pinning JS_Atomize* functions, this can be called
+// without entering a realm/zone.
 extern JS_PUBLIC_API JSString* JS_AtomizeAndPinStringN(JSContext* cx,
                                                        const char* s,
                                                        size_t length);
 
+// Note: unlike the non-pinning JS_Atomize* functions, this can be called
+// without entering a realm/zone.
 extern JS_PUBLIC_API JSString* JS_AtomizeAndPinString(JSContext* cx,
                                                       const char* s);
 
@@ -202,11 +206,6 @@ extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
 
 extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
                                                            JSString* str);
-
-static MOZ_ALWAYS_INLINE JSLinearString* JSID_TO_LINEAR_STRING(jsid id) {
-  MOZ_ASSERT(JSID_IS_STRING(id));
-  return reinterpret_cast<JSLinearString*>(JSID_TO_STRING(id));
-}
 
 static MOZ_ALWAYS_INLINE JSLinearString* JS_ASSERT_STRING_IS_LINEAR(
     JSString* str) {

@@ -121,6 +121,39 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return (aRawValue * GHZ_PER_MHZ + (GHZ_PER_MHZ / 2u)) / cycleTimeFrequencyMHz;
 }
 
+static inline uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
+  // FILETIME values are 100-nanoseconds units, converting
+  ULARGE_INTEGER usec = {{aFileTime.dwLowDateTime, aFileTime.dwHighDateTime}};
+  return usec.QuadPart * 100;
+}
+
+namespace mozilla::profiler {
+bool GetCpuTimeSinceThreadStartInNs(
+    uint64_t* aResult, const mozilla::profiler::PlatformData& aPlatformData) {
+  const HANDLE profiledThread = aPlatformData.ProfiledThread();
+  int frequencyInMHz = GetCycleTimeFrequencyMHz();
+  if (frequencyInMHz) {
+    uint64_t cpuCycleCount;
+    if (!QueryThreadCycleTime(profiledThread, &cpuCycleCount)) {
+      return false;
+    }
+
+    constexpr uint64_t USEC_PER_NSEC = 1000L;
+    *aResult = cpuCycleCount * USEC_PER_NSEC / frequencyInMHz;
+    return true;
+  }
+
+  FILETIME createTime, exitTime, kernelTime, userTime;
+  if (!GetThreadTimes(profiledThread, &createTime, &exitTime, &kernelTime,
+                      &userTime)) {
+    return false;
+  }
+
+  *aResult = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+  return true;
+}
+}  // namespace mozilla::profiler
+
 static RunningTimes GetProcessRunningTimesDiff(
     PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
   AUTO_PROFILER_STATS(GetProcessRunningTimes);

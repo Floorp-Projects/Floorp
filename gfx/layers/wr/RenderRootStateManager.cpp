@@ -181,13 +181,10 @@ void RenderRootStateManager::UpdateResources(
     wr::IpcResourceUpdateQueue& aResources) {
   WrBridge()->UpdateResources(aResources);
 }
-void RenderRootStateManager::AddPipelineIdForAsyncCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  WrBridge()->AddPipelineIdForAsyncCompositable(aPipelineId, aHandle);
-}
 void RenderRootStateManager::AddPipelineIdForCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle);
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
+    CompositableHandleOwner aOwner) {
+  WrBridge()->AddPipelineIdForCompositable(aPipelineId, aHandle, aOwner);
 }
 void RenderRootStateManager::RemovePipelineIdForCompositable(
     const wr::PipelineId& aPipelineId) {
@@ -200,12 +197,12 @@ void RenderRootStateManager::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
 }
 
 Maybe<wr::FontInstanceKey> RenderRootStateManager::GetFontKeyForScaledFont(
-    gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue* aResources) {
+    gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue& aResources) {
   return WrBridge()->GetFontKeyForScaledFont(aScaledFont, aResources);
 }
 
 Maybe<wr::FontKey> RenderRootStateManager::GetFontKeyForUnscaledFont(
-    gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue* aResources) {
+    gfx::UnscaledFont* aUnscaledFont, wr::IpcResourceUpdateQueue& aResources) {
   return WrBridge()->GetFontKeyForUnscaledFont(aUnscaledFont, aResources);
 }
 

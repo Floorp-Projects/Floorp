@@ -422,12 +422,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         if (IsAsmJSModule(fun)) {
           return abort(AbortReason::Disable, "asm.js module function lambda");
         }
-
-        if (!AddOpSnapshot<WarpLambda>(alloc_, opSnapshots, offset,
-                                       fun->baseScript(), fun->flags(),
-                                       fun->nargs())) {
-          return abort(AbortReason::Alloc);
-        }
         break;
       }
 

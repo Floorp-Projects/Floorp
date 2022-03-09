@@ -367,6 +367,19 @@ impl AndroidOptions {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum ProfileType {
+    Path(Profile),
+    Named,
+    Temporary,
+}
+
+impl Default for ProfileType {
+    fn default() -> Self {
+        ProfileType::Temporary
+    }
+}
+
 /// Rust representation of `moz:firefoxOptions`.
 ///
 /// Calling `FirefoxOptions::from_capabilities(binary, capabilities)` causes
@@ -376,7 +389,7 @@ impl AndroidOptions {
 #[derive(Default, Debug)]
 pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
-    pub profile: Option<Profile>,
+    pub profile: ProfileType,
     pub args: Option<Vec<String>>,
     pub env: Option<Vec<(String, String)>>,
     pub log: LogOptions,
@@ -419,27 +432,36 @@ impl FirefoxOptions {
             rv.env = FirefoxOptions::load_env(options)?;
             rv.log = FirefoxOptions::load_log(options)?;
             rv.prefs = FirefoxOptions::load_prefs(options)?;
-            rv.profile = FirefoxOptions::load_profile(options)?;
+            if let Some(profile) = FirefoxOptions::load_profile(options)? {
+                rv.profile = ProfileType::Path(profile);
+            }
         }
 
         if let Some(args) = rv.args.as_ref() {
             let os_args = parse_args(args.iter().map(OsString::from).collect::<Vec<_>>().iter());
             if let Some(path) = get_arg_value(os_args.iter(), Arg::Profile) {
-                if rv.profile.is_some() {
+                if let ProfileType::Path(_) = rv.profile {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Can't provide both a --profile argument and a profile",
                     ));
                 }
                 let path_buf = PathBuf::from(path);
-                rv.profile = Some(Profile::new_from_path(&path_buf)?);
+                rv.profile = ProfileType::Path(Profile::new_from_path(&path_buf)?);
             }
 
-            if get_arg_value(os_args.iter(), Arg::NamedProfile).is_some() && rv.profile.is_some() {
-                return Err(WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    "Can't provide both a -P argument and a profile",
-                ));
+            if get_arg_value(os_args.iter(), Arg::NamedProfile).is_some() {
+                if let ProfileType::Path(_) = rv.profile {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "Can't provide both a -P argument and a profile",
+                    ));
+                }
+                // See bug 1757720
+                warn!("Firefox was configured to use a named profile (`-P <name>`). \
+                       Support for named profiles will be removed in a future geckodriver release. \
+                       Please instead use the `--profile <path>` Firefox argument to start with an existing profile");
+                rv.profile = ProfileType::Named;
             }
         }
 
@@ -913,7 +935,7 @@ mod tests {
             assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
-            assert!(false, "CLI arguments for Firefox not found");
+            panic!("CLI arguments for Firefox not found");
         }
     }
 
@@ -957,7 +979,7 @@ mod tests {
             assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
-            assert!(false, "CLI arguments for Firefox not found");
+            panic!("CLI arguments for Firefox not found");
         }
 
         assert!(opts
@@ -1233,7 +1255,10 @@ mod tests {
         firefox_opts.insert("profile".into(), encoded_profile);
 
         let opts = make_options(firefox_opts, None).expect("valid firefox options");
-        let mut profile = opts.profile.expect("valid firefox profile");
+        let mut profile = match opts.profile {
+            ProfileType::Path(profile) => profile,
+            _ => panic!("Expected ProfileType::Path"),
+        };
         let prefs = profile.user_prefs().expect("valid preferences");
 
         println!("{:#?}", prefs.prefs);
@@ -1249,7 +1274,26 @@ mod tests {
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("args".into(), json!(["--profile", "foo"]));
 
-        make_options(firefox_opts, None).expect("Valid args");
+        let options = make_options(firefox_opts, None).expect("Valid args");
+        assert!(matches!(options.profile, ProfileType::Path(_)));
+    }
+
+    #[test]
+    fn fx_options_args_named_profile() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("args".into(), json!(["-P", "foo"]));
+
+        let options = make_options(firefox_opts, None).expect("Valid args");
+        assert!(matches!(options.profile, ProfileType::Named));
+    }
+
+    #[test]
+    fn fx_options_args_no_profile() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("args".into(), json!(["--headless"]));
+
+        let options = make_options(firefox_opts, None).expect("Valid args");
+        assert!(matches!(options.profile, ProfileType::Temporary));
     }
 
     #[test]

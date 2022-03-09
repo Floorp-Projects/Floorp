@@ -11,8 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXT_DESCRIPTOR_TYPES:
+  ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  LoadListener: "chrome://remote/content/shared/listeners/LoadListener.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
 });
@@ -25,10 +26,22 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * MessageHandler network.
  */
 class WindowGlobalMessageHandler extends MessageHandler {
+  #loadListener;
+
   constructor() {
     super(...arguments);
 
     this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
+
+    // Setup the LoadListener as early as possible.
+    this.#loadListener = new LoadListener(this._context.window);
+    this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
+    this.#loadListener.startListening();
+  }
+
+  destroy() {
+    this.#loadListener.destroy();
+    super.destroy();
   }
 
   /**
@@ -124,18 +137,27 @@ class WindowGlobalMessageHandler extends MessageHandler {
     // for instance contain a browserId on top of a type. For instance:
     //
     //  {
-    //     type: CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT
+    //     type: ContextDescriptorType.BrowserElement
     //     id: ${someBrowserId}
     //   }
     //
     // To check if the current WindowGlobalMessageHandler matches this context
     // descriptor, we would run the following additional check:
     //
-    //   contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT &&
+    //   contextDescriptor.type === ContextDescriptorType.BrowserElement &&
     //     contextDescriptor.id === this._context.browserId
     //
     // (reminder: here _context is the BrowsingContext passed as a constructor
     //  argument to WindowGlobalMessageHandler).
-    return contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.ALL;
+    return contextDescriptor.type === ContextDescriptorType.All;
   }
+
+  #onDOMContentLoaded = (eventName, data) => {
+    this.emitEvent("window-global-dom-content-loaded", {
+      contextId: this.contextId,
+      documentURI: data.target.documentURI,
+      innerWindowId: this.innerWindowId,
+      readyState: data.target.readyState,
+    });
+  };
 }

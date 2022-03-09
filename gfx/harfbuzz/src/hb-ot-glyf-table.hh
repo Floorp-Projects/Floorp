@@ -93,22 +93,16 @@ struct glyf
   template<typename Iterator,
 	   hb_requires (hb_is_source_of (Iterator, unsigned int))>
   static bool
-  _add_loca_and_head (hb_subset_plan_t * plan, Iterator padded_offsets)
+  _add_loca_and_head (hb_subset_plan_t * plan, Iterator padded_offsets, bool use_short_loca)
   {
-    unsigned max_offset =
-    + padded_offsets
-    | hb_reduce (hb_add, 0)
-    ;
     unsigned num_offsets = padded_offsets.len () + 1;
-    bool use_short_loca = max_offset < 0x1FFFF;
     unsigned entry_size = use_short_loca ? 2 : 4;
     char *loca_prime_data = (char *) hb_calloc (entry_size, num_offsets);
 
     if (unlikely (!loca_prime_data)) return false;
 
-    DEBUG_MSG (SUBSET, nullptr, "loca entry_size %d num_offsets %d "
-				"max_offset %d size %d",
-	       entry_size, num_offsets, max_offset, entry_size * num_offsets);
+    DEBUG_MSG (SUBSET, nullptr, "loca entry_size %d num_offsets %d size %d",
+	       entry_size, num_offsets, entry_size * num_offsets);
 
     if (use_short_loca)
       _write_loca (padded_offsets, 1, hb_array ((HBUINT16 *) loca_prime_data, num_offsets));
@@ -151,11 +145,12 @@ struct glyf
   template <typename Iterator>
   bool serialize (hb_serialize_context_t *c,
 		  Iterator it,
+                  bool use_short_loca,
 		  const hb_subset_plan_t *plan)
   {
     TRACE_SERIALIZE (this);
     unsigned init_len = c->length ();
-    for (const auto &_ : it) _.serialize (c, plan);
+    for (const auto &_ : it) _.serialize (c, use_short_loca, plan);
 
     /* As a special case when all glyph in the font are empty, add a zero byte
      * to the table, so that OTS doesn’t reject it, and to make the table work
@@ -183,16 +178,28 @@ struct glyf
     hb_vector_t<SubsetGlyph> glyphs;
     _populate_subset_glyphs (c->plan, &glyphs);
 
-    glyf_prime->serialize (c->serializer, hb_iter (glyphs), c->plan);
-
     auto padded_offsets =
     + hb_iter (glyphs)
     | hb_map (&SubsetGlyph::padded_size)
     ;
 
+    unsigned max_offset = + padded_offsets | hb_reduce (hb_add, 0);
+    bool use_short_loca = max_offset < 0x1FFFF;
+
+
+    glyf_prime->serialize (c->serializer, hb_iter (glyphs), use_short_loca, c->plan);
+    if (!use_short_loca) {
+      padded_offsets =
+          + hb_iter (glyphs)
+          | hb_map (&SubsetGlyph::length)
+          ;
+    }
+
+
     if (unlikely (c->serializer->in_error ())) return_trace (false);
     return_trace (c->serializer->check_success (_add_loca_and_head (c->plan,
-								    padded_offsets)));
+								    padded_offsets,
+                                                                    use_short_loca)));
   }
 
   template <typename SubsetGlyph>
@@ -200,8 +207,7 @@ struct glyf
   _populate_subset_glyphs (const hb_subset_plan_t   *plan,
 			   hb_vector_t<SubsetGlyph> *glyphs /* OUT */) const
   {
-    OT::glyf::accelerator_t glyf;
-    glyf.init (plan->source);
+    OT::glyf::accelerator_t glyf (plan->source);
 
     + hb_range (plan->num_output_glyphs ())
     | hb_map ([&] (hb_codepoint_t new_gid)
@@ -226,8 +232,6 @@ struct glyf
 	      })
     | hb_sink (glyphs)
     ;
-
-    glyf.fini ();
   }
 
   static bool
@@ -588,7 +592,7 @@ struct glyf
         if (unlikely (!header.numberOfContours)) return;
 
         unsigned flags_offset = length (instructions_length ());
-        if (unlikely (length (flags_offset + 1) > bytes.length)) return;
+        if (unlikely (flags_offset + 1 > bytes.length)) return;
 
 	HBUINT8 &first_flag = (HBUINT8 &) StructAtOffset<HBUINT16> (&bytes, flags_offset);
         first_flag = (uint8_t) first_flag | FLAG_OVERLAP_SIMPLE;
@@ -792,10 +796,23 @@ struct glyf
       hb_array_t<contour_point_t> phantoms = points.sub_array (points.length - PHANTOM_COUNT, PHANTOM_COUNT);
       {
 	for (unsigned i = 0; i < PHANTOM_COUNT; ++i) phantoms[i].init ();
-	int h_delta = (int) header->xMin - glyf_accelerator.hmtx->get_side_bearing (gid);
-	int v_orig  = (int) header->yMax + glyf_accelerator.vmtx->get_side_bearing (gid);
+	int h_delta = (int) header->xMin -
+		      glyf_accelerator.hmtx->get_side_bearing (gid);
+	int v_orig  = (int) header->yMax +
+#ifndef HB_NO_VERTICAL
+		      glyf_accelerator.vmtx->get_side_bearing (gid)
+#else
+		      0
+#endif
+		      ;
 	unsigned h_adv = glyf_accelerator.hmtx->get_advance (gid);
-	unsigned v_adv = glyf_accelerator.vmtx->get_advance (gid);
+	unsigned v_adv =
+#ifndef HB_NO_VERTICAL
+			 glyf_accelerator.vmtx->get_advance (gid)
+#else
+			 - font->face->get_upem ()
+#endif
+			 ;
 	phantoms[PHANTOM_LEFT].x = h_delta;
 	phantoms[PHANTOM_RIGHT].x = h_adv + h_delta;
 	phantoms[PHANTOM_TOP].y = v_orig;
@@ -900,7 +917,7 @@ struct glyf
 
   struct accelerator_t
   {
-    void init (hb_face_t *face_)
+    accelerator_t (hb_face_t *face)
     {
       short_offset = false;
       num_glyphs = 0;
@@ -910,8 +927,9 @@ struct glyf
       gvar = nullptr;
 #endif
       hmtx = nullptr;
+#ifndef HB_NO_VERTICAL
       vmtx = nullptr;
-      face = face_;
+#endif
       const OT::head &head = *face->table.head;
       if (head.indexToLocFormat > 1 || head.glyphDataFormat > 0)
 	/* Unknown format.  Leave num_glyphs=0, that takes care of disabling us. */
@@ -924,13 +942,14 @@ struct glyf
       gvar = face->table.gvar;
 #endif
       hmtx = face->table.hmtx;
+#ifndef HB_NO_VERTICAL
       vmtx = face->table.vmtx;
+#endif
 
       num_glyphs = hb_max (1u, loca_table.get_length () / (short_offset ? 2 : 4)) - 1;
       num_glyphs = hb_min (num_glyphs, face->get_num_glyphs ());
     }
-
-    void fini ()
+    ~accelerator_t ()
     {
       loca_table.destroy ();
       glyf_table.destroy ();
@@ -1037,7 +1056,11 @@ struct glyf
 	success = get_points (font, gid, points_aggregator_t (font, nullptr, phantoms));
 
       if (unlikely (!success))
-	return is_vertical ? vmtx->get_advance (gid) : hmtx->get_advance (gid);
+	return
+#ifndef HB_NO_VERTICAL
+	  is_vertical ? vmtx->get_advance (gid) :
+#endif
+	  hmtx->get_advance (gid);
 
       float result = is_vertical
 		   ? phantoms[PHANTOM_TOP].y - phantoms[PHANTOM_BOTTOM].y
@@ -1053,7 +1076,11 @@ struct glyf
 
       contour_point_t phantoms[PHANTOM_COUNT];
       if (unlikely (!get_points (font, gid, points_aggregator_t (font, &extents, phantoms))))
-	return is_vertical ? vmtx->get_side_bearing (gid) : hmtx->get_side_bearing (gid);
+	return
+#ifndef HB_NO_VERTICAL
+	  is_vertical ? vmtx->get_side_bearing (gid) :
+#endif
+	  hmtx->get_side_bearing (gid);
 
       return is_vertical
 	   ? ceilf (phantoms[PHANTOM_TOP].y) - extents.y_bearing
@@ -1250,14 +1277,15 @@ struct glyf
     const gvar_accelerator_t *gvar;
 #endif
     const hmtx_accelerator_t *hmtx;
+#ifndef HB_NO_VERTICAL
     const vmtx_accelerator_t *vmtx;
+#endif
 
     private:
     bool short_offset;
     unsigned int num_glyphs;
     hb_blob_ptr_t<loca> loca_table;
     hb_blob_ptr_t<glyf> glyf_table;
-    hb_face_t *face;
   };
 
   struct SubsetGlyph
@@ -1269,13 +1297,14 @@ struct glyf
     hb_bytes_t dest_end;    /* region of source_glyph to copy second */
 
     bool serialize (hb_serialize_context_t *c,
+                    bool use_short_loca,
 		    const hb_subset_plan_t *plan) const
     {
       TRACE_SERIALIZE (this);
 
       hb_bytes_t dest_glyph = dest_start.copy (c);
       dest_glyph = hb_bytes_t (&dest_glyph, dest_glyph.length + dest_end.copy (c).length);
-      unsigned int pad_length = padding ();
+      unsigned int pad_length = use_short_loca ? padding () : 0;
       DEBUG_MSG (SUBSET, nullptr, "serialize %d byte glyph, width %d pad %d", dest_glyph.length, dest_glyph.length + pad_length, pad_length);
 
       HBUINT8 pad;
@@ -1323,7 +1352,10 @@ struct glyf
 			 * defining it _MIN instead. */
 };
 
-struct glyf_accelerator_t : glyf::accelerator_t {};
+struct glyf_accelerator_t : glyf::accelerator_t {
+  glyf_accelerator_t (hb_face_t *face) : glyf::accelerator_t (face) {}
+};
+
 
 } /* namespace OT */
 

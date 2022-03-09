@@ -55,6 +55,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   form() {
     const form = {
       actor: this.actorID,
+      browserId: this._browser.browserId,
       browsingContextID:
         this._browser && this._browser.browsingContext
           ? this._browser.browsingContext.id

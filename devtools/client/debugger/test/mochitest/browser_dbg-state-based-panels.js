@@ -4,8 +4,10 @@
 
 // Tests that breakpoint panels open when their relevant breakpoint is hit
 
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1");
+  const dbg = await initDebugger("doc-sources.html", "simple1.js");
 
   clickElementWithSelector(dbg, ".breakpoints-pane h2");
 
@@ -29,5 +31,5 @@ add_task(async function() {
 });
 
 function getPaneElements(dbg) {
-  return findElementWithSelector(dbg, '.breakpoints-pane').childNodes;
+  return findElementWithSelector(dbg, ".breakpoints-pane").childNodes;
 }

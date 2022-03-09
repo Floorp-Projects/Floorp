@@ -6,6 +6,7 @@
 import os
 import platform
 import subprocess
+import shutil
 import six
 import sys
 from distutils.spawn import find_executable
@@ -14,6 +15,9 @@ from distutils.version import StrictVersion
 from mozbuild.base import MozbuildObject
 from mach.util import get_state_dir
 from mozterm import Terminal
+
+import mozfile
+from mozboot.util import http_download_and_save
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
@@ -32,9 +36,32 @@ build = MozbuildObject.from_environment(cwd=here)
 
 PREVIEW_SCRIPT = os.path.join(build.topsrcdir, "tools/tryselect/selectors/preview.py")
 
-FZF_NOT_FOUND = """
-Could not find the `fzf` binary.
+FZF_MIN_VERSION = "0.20.0"
+FZF_CURRENT_VERSION = "0.29.0"
 
+# It would make more sense to have the full filename be the key; but that makes
+# the line too long and ./mach lint and black can't agree about what to about that.
+# You can get these from the github release, e.g.
+#          https://github.com/junegunn/fzf/releases/download/0.24.1/fzf_0.24.1_checksums.txt
+# However the darwin releases may not be included, so double check you have everything
+FZF_CHECKSUMS = {
+    "linux_armv5.tar.gz": "61d3c2aa77b977ba694836fd1134da9272bd97ee490ececaf87959b985820111",
+    "linux_armv6.tar.gz": "db6b30fcbbd99ac4cf7e3ff6c5db1d3c0afcbe37d10ec3961bdc43e8c4f2e4f9",
+    "linux_armv7.tar.gz": "ed86f0e91e41d2cea7960a78e3eb175dc2a5fc1510380c195d0c3559bfdc701c",
+    "linux_arm64.tar.gz": "47988d8b68905541cbc26587db3ed1cfa8bc3aa8da535120abb4229b988f259e",
+    "linux_amd64.tar.gz": "0106f458b933be65edb0e8f0edb9a16291a79167836fd26a77ff5496269b5e9a",
+    "windows_armv5.zip": "08eaac45b3600d82608d292c23e7312696e7e11b6278b292feba25e8eb91c712",
+    "windows_armv6.zip": "8b6618726a9d591a45120fddebc29f4164e01ce6639ed9aa8fc79ab03eefcfed",
+    "windows_armv7.zip": "c167117b4c08f4f098446291115871ce5f14a8a8b22f0ca70e1b4342452ab5d7",
+    "windows_arm64.zip": "0cda7bf68850a3e867224a05949612405e63a4421d52396c1a6c9427d4304d72",
+    "windows_amd64.zip": "f0797ceee089017108c80b09086c71b8eec43d4af11ce939b78b1d5cfd202540",
+    "darwin_arm64.zip": "2571b4d381f1fc691e7603bbc8113a67116da2404751ebb844818d512dd62b4b",
+    "darwin_amd64.zip": "bc541e8ae0feb94efa96424bfe0b944f746db04e22f5cccfe00709925839a57f",
+    "openbsd_amd64.tar.gz": "b62343827ff83949c09d5e2c8ca0c1198d05f733c9a779ec37edd840541ccdab",
+    "freebsd_amd64.tar.gz": "f0367f2321c070d103589c7c7eb6a771bc7520820337a6c2fbb75be37ff783a9",
+}
+
+FZF_INSTALL_MANUALLY = """
 The `mach try fuzzy` command depends on fzf. Please install it following the
 appropriate instructions for your platform:
 
@@ -46,34 +73,58 @@ editor integrations, download the appropriate binary and put it on your $PATH:
     https://github.com/junegunn/fzf/releases
 """.lstrip()
 
-FZF_VERSION_FAILED = """
-Could not obtain the 'fzf' version.
+FZF_COULD_NOT_DETERMINE_PLATFORM = (
+    """
+Could not automatically obtain the `fzf` binary because we could not determine
+your Operating System.
 
-The 'mach try fuzzy' command depends on fzf, and requires version > 0.20.0
-for some of the features. Please install it following the appropriate
-instructions for your platform:
-
-    https://github.com/junegunn/fzf#installation
-
-Only the binary is required, if you do not wish to install the shell and
-editor integrations, download the appropriate binary and put it on your $PATH:
-
-    https://github.com/junegunn/fzf/releases
 """.lstrip()
+    + FZF_INSTALL_MANUALLY
+)
 
-FZF_INSTALL_FAILED = """
+FZF_COULD_NOT_DETERMINE_MACHINE = (
+    """
+Could not automatically obtain the `fzf` binary because we could not determine
+your machine type.  It's reported as '%s' and we don't handle that case; but fzf
+may still be available as a prebuilt binary.
+
+""".lstrip()
+    + FZF_INSTALL_MANUALLY
+)
+
+FZF_NOT_SUPPORTED_X86 = (
+    """
+We don't believe that a prebuilt binary for `fzf` if available on %s, but we
+could be wrong.
+
+""".lstrip()
+    + FZF_INSTALL_MANUALLY
+)
+
+FZF_NOT_FOUND = (
+    """
+Could not find the `fzf` binary.
+
+""".lstrip()
+    + FZF_INSTALL_MANUALLY
+)
+
+FZF_VERSION_FAILED = (
+    """
+Could not obtain the 'fzf' version; we require version > 0.20.0 for some of
+the features.
+
+""".lstrip()
+    + FZF_INSTALL_MANUALLY
+)
+
+FZF_INSTALL_FAILED = (
+    """
 Failed to install fzf.
 
-Please install fzf manually following the appropriate instructions for your
-platform:
-
-    https://github.com/junegunn/fzf#installation
-
-Only the binary is required, if you do not wish to install the shell and
-editor integrations, download the appropriate binary and put it on your $PATH:
-
-    https://github.com/junegunn/fzf/releases
 """.lstrip()
+    + FZF_INSTALL_MANUALLY
+)
 
 FZF_HEADER = """
 For more shortcuts, see {t.italic_white}mach help try fuzzy{t.normal} and {t.italic_white}man fzf
@@ -190,18 +241,92 @@ def run_cmd(cmd, cwd=None):
     return subprocess.call(cmd, cwd=cwd, shell=True if is_win else False)
 
 
-def run_fzf_install_script(fzf_path):
-    if platform.system() == "Windows":
-        cmd = ["bash", "-c", "./install --bin"]
-    else:
-        cmd = ["./install", "--bin"]
+def get_fzf_platform():
+    if platform.machine() in ["i386", "i686"]:
+        print(FZF_NOT_SUPPORTED_X86 % platform.machine())
+        sys.exit(1)
 
-    if run_cmd(cmd, cwd=fzf_path):
-        print(FZF_INSTALL_FAILED)
+    if platform.system().lower() == "windows":
+        if platform.machine().lower() in ["x86_64", "amd64"]:
+            return "windows_amd64.zip"
+        elif platform.machine().lower() == "arm64":
+            return "windows_arm64.zip"
+        else:
+            print(FZF_COULD_NOT_DETERMINE_MACHINE % platform.machine())
+            sys.exit(1)
+    elif platform.system().lower() == "darwin":
+        if platform.machine().lower() in ["x86_64", "amd64"]:
+            return "darwin_amd64.zip"
+        elif platform.machine().lower() == "arm64":
+            return "darwin_arm64.zip"
+        else:
+            print(FZF_COULD_NOT_DETERMINE_MACHINE % platform.machine())
+            sys.exit(1)
+    elif platform.system().lower() == "linux":
+        if platform.machine().lower() in ["x86_64", "amd64"]:
+            return "linux_amd64.tar.gz"
+        elif platform.machine().lower() == "arm64":
+            return "linux_arm64.tar.gz"
+        else:
+            print(FZF_COULD_NOT_DETERMINE_MACHINE % platform.machine())
+            sys.exit(1)
+    else:
+        print(FZF_COULD_NOT_DETERMINE_PLATFORM)
         sys.exit(1)
 
 
-def should_force_fzf_update(fzf_bin):
+def get_fzf_state_dir():
+    return os.path.join(get_state_dir(), "fzf")
+
+
+def get_fzf_filename():
+    return "fzf-%s-%s" % (FZF_CURRENT_VERSION, get_fzf_platform())
+
+
+def get_fzf_download_link():
+    return "https://github.com/junegunn/fzf/releases/download/%s/%s" % (
+        FZF_CURRENT_VERSION,
+        get_fzf_filename(),
+    )
+
+
+def clean_up_state_dir():
+    """
+    We used to have a checkout of fzf that we would update.
+    Now we only download the bin and cpin the hash; so if
+    we find the old git checkout, wipe it
+    """
+
+    fzf_path = os.path.join(get_state_dir(), "fzf")
+    git_path = os.path.join(fzf_path, ".git")
+    if os.path.isdir(git_path):
+        shutil.rmtree(fzf_path, ignore_errors=True)
+
+    # Also delete any existing fzf binary
+    fzf_bin = find_executable("fzf", fzf_path)
+    if fzf_bin:
+        mozfile.remove(fzf_bin)
+
+    # Make sure the state dir is present
+    if not os.path.isdir(fzf_path):
+        os.makedirs(fzf_path)
+
+
+def download_and_install_fzf():
+    clean_up_state_dir()
+    download_link = get_fzf_download_link()
+    download_file = get_fzf_filename()
+    download_destination_path = get_fzf_state_dir()
+    download_destination_file = os.path.join(download_destination_path, download_file)
+    http_download_and_save(
+        download_link, download_destination_file, FZF_CHECKSUMS[get_fzf_platform()]
+    )
+
+    mozfile.extract(download_destination_file, download_destination_path)
+    mozfile.remove(download_destination_file)
+
+
+def get_fzf_version(fzf_bin):
     cmd = [fzf_bin, "--version"]
     try:
         fzf_version = subprocess.check_output(cmd)
@@ -212,78 +337,76 @@ def should_force_fzf_update(fzf_bin):
     # Some fzf versions have extra, e.g 0.18.0 (ff95134)
     fzf_version = six.ensure_text(fzf_version.split()[0])
 
+    return fzf_version
+
+
+def should_force_fzf_update(fzf_bin):
+    fzf_version = get_fzf_version(fzf_bin)
+
     # 0.20.0 introduced passing selections through a temporary file,
     # which is good for large ctrl-a actions.
-    if StrictVersion(fzf_version) < StrictVersion("0.20.0"):
-        print("fzf version is old, forcing update.")
+    if StrictVersion(fzf_version) < StrictVersion(FZF_MIN_VERSION):
+        print("fzf version is old, you must update to use ./mach try fuzzy.")
         return True
     return False
 
 
 def fzf_bootstrap(update=False):
-    """Bootstrap fzf if necessary and return path to the executable.
-
-    The bootstrap works by cloning the fzf repository and running the included
-    `install` script. If update is True, we will pull the repository and re-run
-    the install script.
     """
+    Bootstrap fzf if necessary and return path to the executable.
+
+    This function is a bit complicated. We fetch a new version of fzf if:
+    1) an existing fzf is too outdated
+    2) the user says --update and we are behind the recommended version
+    3) no fzf can be found and
+      3a) user passes --update
+      3b) user agrees to a prompt
+
+    """
+    fzf_path = get_fzf_state_dir()
+
     fzf_bin = find_executable("fzf")
-    if fzf_bin and should_force_fzf_update(fzf_bin):
+    if not fzf_bin:
+        fzf_bin = find_executable("fzf", fzf_path)
+
+    if fzf_bin and should_force_fzf_update(fzf_bin):  # Case (1)
         update = True
 
     if fzf_bin and not update:
         return fzf_bin
 
-    fzf_path = os.path.join(get_state_dir(), "fzf")
-
-    # Bug 1623197: We only want to run fzf's `install` if it's not in the $PATH
-    # Swap to os.path.commonpath when we're not on Py2
-    if fzf_bin and update and not fzf_bin.startswith(fzf_path):
-        print(
-            "fzf installed somewhere other than {}, please update manually".format(
-                fzf_path
-            )
-        )
-        sys.exit(1)
-
-    def get_fzf():
-        return find_executable("fzf", os.path.join(fzf_path, "bin"))
-
-    if os.path.isdir(fzf_path):
-        if update:
-            ret = run_cmd(["git", "pull"], cwd=fzf_path)
-            if ret:
-                print("Update fzf failed.")
+    elif fzf_bin and update:
+        # Case 2
+        fzf_version = get_fzf_version(fzf_bin)
+        if StrictVersion(fzf_version) < StrictVersion(FZF_CURRENT_VERSION) and update:
+            # Bug 1623197: We only want to run fzf's `install` if it's not in the $PATH
+            # Swap to os.path.commonpath when we're not on Py2
+            if fzf_bin and update and not fzf_bin.startswith(fzf_path):
+                print(
+                    "fzf installed somewhere other than {}, please update manually".format(
+                        fzf_path
+                    )
+                )
                 sys.exit(1)
 
-            run_fzf_install_script(fzf_path)
-            return get_fzf()
+            download_and_install_fzf()
+            print("Updated fzf to {}".format(FZF_CURRENT_VERSION))
+        else:
+            print("fzf is the recommended version and does not need an update")
 
-        fzf_bin = get_fzf()
-        if not fzf_bin or should_force_fzf_update(fzf_bin):
-            return fzf_bootstrap(update=True)
+    else:  # not fzf_bin:
+        if not update:
+            # Case 3b
+            install = input("Could not detect fzf, install it now? [y/n]: ")
+            if install.lower() != "y":
+                return
 
-        return fzf_bin
+        # Case 3a and 3b-fall-through
+        download_and_install_fzf()
+        fzf_bin = find_executable("fzf", fzf_path)
+        print("Installed fzf to {}".format(fzf_path))
 
-    if not update:
-        install = input("Could not detect fzf, install it now? [y/n]: ")
-        if install.lower() != "y":
-            return
-
-    if not find_executable("git"):
-        print("Git not found.")
-        print(FZF_INSTALL_FAILED)
-        sys.exit(1)
-
-    cmd = ["git", "clone", "--depth", "1", "https://github.com/junegunn/fzf.git"]
-    if subprocess.call(cmd, cwd=os.path.dirname(fzf_path)):
-        print(FZF_INSTALL_FAILED)
-        sys.exit(1)
-
-    run_fzf_install_script(fzf_path)
-
-    print("Installed fzf to {}".format(fzf_path))
-    return get_fzf()
+    return fzf_bin
 
 
 def format_header():
@@ -327,7 +450,8 @@ def run(
     full=False,
     parameters=None,
     save_query=False,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     message="{msg}",
     test_paths=None,
     exact=False,
@@ -341,6 +465,7 @@ def run(
         print(FZF_NOT_FOUND)
         return 1
 
+    push = not stage_changes and not dry_run
     check_working_directory(push)
     tg = generate_tasks(
         parameters, full=full, disable_target_task_filter=disable_target_task_filter
@@ -450,6 +575,7 @@ def run(
         "fuzzy",
         message.format(msg=msg),
         try_task_config=generate_try_task_config("fuzzy", selected, try_config),
-        push=push,
+        stage_changes=stage_changes,
+        dry_run=dry_run,
         closed_tree=closed_tree,
     )

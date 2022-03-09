@@ -8,6 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -49,9 +50,9 @@ NS_IMETHODIMP
 MIDIPermissionRequest::GetTypes(nsIArray** aTypes) {
   NS_ENSURE_ARG_POINTER(aTypes);
   nsTArray<nsString> options;
-  if (mNeedsSysex) {
-    options.AppendElement(u"sysex"_ns);
-  }
+  // NB: We always request midi-sysex, and the base |midi| permission is unused.
+  // This could be cleaned up at some point.
+  options.AppendElement(u"sysex"_ns);
   return nsContentPermissionUtils::CreatePermissionArray(mType, options,
                                                          aTypes);
 }
@@ -84,27 +85,37 @@ MIDIPermissionRequest::Run() {
     return NS_OK;
   }
 
-  // If we already have sysex perms, allow.
-  if (nsContentUtils::IsExactSitePermAllow(mPrincipal, "midi-sysex"_ns)) {
+  // Both the spec and our original implementation of WebMIDI have two
+  // conceptual permission levels: with and without sysex functionality.
+  // However, our current implementation just has one level, and requires the
+  // more-powerful |midi-sysex| permission irrespective of the mode requested in
+  // requestMIDIAccess.
+  constexpr auto kPermName = "midi-sysex"_ns;
+
+  // First, check for an explicit allow/deny. Note that we want to support
+  // granting a permission on the base domain and then using it on a subdomain,
+  // which is why we use the non-"Exact" variants of these APIs. See bug
+  // 1757218.
+  if (nsContentUtils::IsSitePermAllow(mPrincipal, kPermName)) {
     Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
 
-  // If midi is addon-gated, the we only pass through to ask permission if
-  // the permission already exists.  This allows for the user possibly changing
-  // the permission to ask, or deny and having the existing UX properly handle
-  // the outcome.
-  if (
-#ifndef RELEASE_OR_BETA
-      StaticPrefs::dom_webmidi_gated() &&
-#endif
-      !nsContentUtils::HasExactSitePerm(mPrincipal, "midi"_ns) &&
-      !nsContentUtils::HasExactSitePerm(mPrincipal, "midi-sysex"_ns)) {
+  if (nsContentUtils::IsSitePermDeny(mPrincipal, kPermName)) {
     Cancel();
     return NS_OK;
   }
 
-  // If we have no perms, or only have midi and are asking for sysex, pop dialog
+  // If the add-on is not installed, auto-deny (except for localhost).
+  if (!nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
+      !BasePrincipal::Cast(mPrincipal)->IsLoopbackHost()) {
+    Cancel();
+    return NS_OK;
+  }
+
+  // We can only get here for localhost, or if the add-on is installed, but the
+  // user has subsequently changed the permission from ALLOW to ASK. In that
+  // unusual case, throw up a prompt.
   if (NS_FAILED(nsContentPermissionUtils::AskPermission(this, mWindow))) {
     Cancel();
     return NS_ERROR_FAILURE;

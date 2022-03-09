@@ -67,7 +67,7 @@
 
 void usage(char *prog_name)
 {
-    printf("usage: %s <key> <plaintext> [-v]\n", prog_name);
+    printf("usage: %s <key> <plaintext> [<ciphertext>] [-v]\n", prog_name);
     exit(255);
 }
 
@@ -75,6 +75,8 @@ void usage(char *prog_name)
 
 int main(int argc, char *argv[])
 {
+    const char *expected_ciphertext = NULL;
+    const char *ciphertext = NULL;
     v128_t data;
     uint8_t key[AES_MAX_KEY_LEN];
     srtp_aes_expanded_key_t exp_key;
@@ -82,20 +84,24 @@ int main(int argc, char *argv[])
     int verbose = 0;
     srtp_err_status_t status;
 
-    if (argc == 3) {
-        /* we're not in verbose mode */
-        verbose = 0;
-    } else if (argc == 4) {
-        if (strncmp(argv[3], "-v", 2) == 0) {
-            /* we're in verbose mode */
-            verbose = 1;
-        } else {
-            /* unrecognized flag, complain and exit */
-            usage(argv[0]);
-        }
-    } else {
+    /* -v must be last if it's passed */
+    if (argc > 0 && strncmp(argv[argc - 1], "-v", 2) == 0) {
+        /* we're in verbose mode */
+        verbose = 1;
+        --argc;
+    }
+
+    if (argc < 3 || argc > 4) {
         /* we've been fed the wrong number of arguments - compain and exit */
         usage(argv[0]);
+    }
+
+    if (argc == 4) {
+        /* we're being passed the ciphertext to check (in unit test mode) */
+        expected_ciphertext = argv[3];
+        if (strlen(expected_ciphertext) != 16 * 2) {
+            usage(argv[0]);
+        }
     }
 
     /* read in key, checking length */
@@ -151,7 +157,16 @@ int main(int argc, char *argv[])
         printf("key:\t\t%s\n", octet_string_hex_string(key, key_len));
         printf("ciphertext:\t");
     }
-    printf("%s\n", v128_hex_string(&data));
+
+    ciphertext = v128_hex_string(&data);
+    printf("%s\n", ciphertext);
+
+    if (expected_ciphertext && strcmp(ciphertext, expected_ciphertext) != 0) {
+        fprintf(stderr, "error: calculated ciphertext %s does not match "
+                        "expected ciphertext %s\n",
+                ciphertext, expected_ciphertext);
+        exit(1);
+    }
 
     return 0;
 }

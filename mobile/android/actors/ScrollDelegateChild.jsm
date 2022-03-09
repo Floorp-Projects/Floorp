@@ -17,11 +17,6 @@ const EXPORTED_SYMBOLS = ["ScrollDelegateChild"];
 class ScrollDelegateChild extends GeckoViewActorChild {
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
-    if (!this.isContentWindow) {
-      // This not a GeckoView-controlled window
-      return;
-    }
-
     if (aEvent.originalTarget.ownerGlobal != this.contentWindow) {
       return;
     }

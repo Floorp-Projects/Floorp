@@ -60,6 +60,14 @@ class PlatformData {
 #endif
 };
 
+/**
+ * Return the number of nanoseconds of CPU time used since thread start.
+ *
+ * @return true on success.
+ */
+bool GetCpuTimeSinceThreadStartInNs(uint64_t* aResult,
+                                    const PlatformData& aPlatformData);
+
 }  // namespace mozilla::profiler
 
 #endif  // ProfilerThreadPlatformData_h

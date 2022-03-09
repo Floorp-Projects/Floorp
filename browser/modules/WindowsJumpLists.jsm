@@ -141,52 +141,34 @@ let privateWindowTask = {
 
 // Implementation
 
-var WinTaskbarJumpList = {
-  _builder: null,
-  _tasks: null,
-  _shuttingDown: false,
+var Builder = class {
+  constructor(builder) {
+    this._builder = builder;
+    this._tasks = null;
+    this._pendingStatements = {};
+    this._shuttingDown = false;
+    // These are ultimately controlled by prefs, so we disable
+    // everything until is read from there
+    this._showTasks = false;
+    this._showFrequent = false;
+    this._showRecent = false;
+    this._maxItemCount = 0;
+  }
 
-  /**
-   * Startup, shutdown, and update
-   */
+  refreshPrefs(showTasks, showFrequent, showRecent, maxItemCount) {
+    this._showTasks = showTasks;
+    this._showFrequent = showFrequent;
+    this._showRecent = showRecent;
+    this._maxItemCount = maxItemCount;
+  }
 
-  startup: function WTBJL_startup() {
-    // exit if this isn't win7 or higher.
-    if (!this._initTaskbar()) {
-      return;
-    }
+  updateShutdownState(shuttingDown) {
+    this._shuttingDown = shuttingDown;
+  }
 
-    // Store our task list config data
-    this._tasks = tasksCfg;
-
-    if (PrivateBrowsingUtils.enabled) {
-      tasksCfg.push(privateWindowTask);
-    }
-
-    // retrieve taskbar related prefs.
-    this._refreshPrefs();
-
-    // observer for private browsing and our prefs branch
-    this._initObs();
-
-    // jump list refresh timer
-    this._updateTimer();
-  },
-
-  update: function WTBJL_update() {
-    // are we disabled via prefs? don't do anything!
-    if (!this._enabled) {
-      return;
-    }
-
-    // do what we came here to do, update the taskbar jumplist
-    this._buildList();
-  },
-
-  _shutdown: function WTBJL__shutdown() {
-    this._shuttingDown = true;
-    this._free();
-  },
+  delete() {
+    delete this._builder;
+  }
 
   /**
    * List building
@@ -198,13 +180,15 @@ var WinTaskbarJumpList = {
    *       commitBuild() will commit for real.
    */
 
-  _pendingStatements: {},
-  _hasPendingStatements: function WTBJL__hasPendingStatements() {
+  _hasPendingStatements() {
     return !!Object.keys(this._pendingStatements).length;
-  },
+  }
 
-  async _buildList() {
-    if (this._hasPendingStatements()) {
+  async buildList() {
+    if (
+      (this._showFrequent || this._showRecent) &&
+      this._hasPendingStatements()
+    ) {
       // We were requested to update the list while another update was in
       // progress, this could happen at shutdown, idle or privatebrowsing.
       // Abort the current list building.
@@ -238,7 +222,7 @@ var WinTaskbarJumpList = {
     }
 
     this._commitBuild();
-  },
+  }
 
   /**
    * Taskbar api wrappers
@@ -251,10 +235,13 @@ var WinTaskbarJumpList = {
       // Prior to building, delete removed items from history.
       this._clearHistory(URIsToRemove);
     }
-  },
+  }
 
-  _commitBuild: function WTBJL__commitBuild() {
-    if (this._hasPendingStatements()) {
+  _commitBuild() {
+    if (
+      (this._showFrequent || this._showRecent) &&
+      this._hasPendingStatements()
+    ) {
       return;
     }
 
@@ -263,9 +250,9 @@ var WinTaskbarJumpList = {
         this._builder.abortListBuild();
       }
     });
-  },
+  }
 
-  _buildTasks: function WTBJL__buildTasks() {
+  _buildTasks() {
     var items = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     this._tasks.forEach(function(task) {
       if (
@@ -290,9 +277,9 @@ var WinTaskbarJumpList = {
         items
       );
     }
-  },
+  }
 
-  _buildCustom: function WTBJL__buildCustom(title, items) {
+  _buildCustom(title, items) {
     if (items.length) {
       this._builder.addListToBuild(
         this._builder.JUMPLIST_CATEGORY_CUSTOMLIST,
@@ -300,9 +287,9 @@ var WinTaskbarJumpList = {
         title
       );
     }
-  },
+  }
 
-  _buildFrequent: function WTBJL__buildFrequent() {
+  _buildFrequent() {
     // Windows supports default frequent and recent lists,
     // but those depend on internal windows visit tracking
     // which we don't populate. So we build our own custom
@@ -339,9 +326,9 @@ var WinTaskbarJumpList = {
       },
       this
     );
-  },
+  }
 
-  _buildRecent: function WTBJL__buildRecent() {
+  _buildRecent() {
     var items = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     // Frequent items will be skipped, so we select a double amount of
     // entries and stop fetching results at _maxItemCount.
@@ -385,23 +372,17 @@ var WinTaskbarJumpList = {
       },
       this
     );
-  },
+  }
 
-  _deleteActiveJumpList: function WTBJL__deleteAJL() {
+  _deleteActiveJumpList() {
     this._builder.deleteActiveList();
-  },
+  }
 
   /**
    * Jump list item creation helpers
    */
 
-  _getHandlerAppItem: function WTBJL__getHandlerAppItem(
-    name,
-    description,
-    args,
-    iconIndex,
-    faviconPageUri
-  ) {
+  _getHandlerAppItem(name, description, args, iconIndex, faviconPageUri) {
     var file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 
     var handlerApp = Cc[
@@ -422,25 +403,13 @@ var WinTaskbarJumpList = {
     item.iconIndex = iconIndex;
     item.faviconPageUri = faviconPageUri;
     return item;
-  },
-
-  _getSeparatorItem: function WTBJL__getSeparatorItem() {
-    var item = Cc["@mozilla.org/windows-jumplistseparator;1"].createInstance(
-      Ci.nsIJumpListSeparator
-    );
-    return item;
-  },
+  }
 
   /**
    * Nav history helpers
    */
 
-  _getHistoryResults: function WTBLJL__getHistoryResults(
-    aSortingMode,
-    aLimit,
-    aCallback,
-    aScope
-  ) {
+  _getHistoryResults(aSortingMode, aLimit, aCallback, aScope) {
     var options = PlacesUtils.history.getNewQueryOptions();
     options.maxResults = aLimit;
     options.sortingMode = aSortingMode;
@@ -464,12 +433,12 @@ var WinTaskbarJumpList = {
         );
       },
       handleCompletion(aReason) {
-        aCallback.call(WinTaskbarJumpList, null);
+        aCallback.call(aScope, null);
       },
     });
-  },
+  }
 
-  _clearHistory: function WTBJL__clearHistory(uriSpecsToRemove) {
+  _clearHistory(uriSpecsToRemove) {
     let URIsToRemove = uriSpecsToRemove
       .map(spec => {
         try {
@@ -484,6 +453,66 @@ var WinTaskbarJumpList = {
     if (URIsToRemove.length) {
       PlacesUtils.history.remove(URIsToRemove).catch(Cu.reportError);
     }
+  }
+};
+
+var WinTaskbarJumpList = {
+  // We build two separate jump lists -- one for the regular Firefox icon
+  // and one for the Private Browsing icon
+  _builder: null,
+  _pbBuilder: null,
+  _builtPb: false,
+  _shuttingDown: false,
+
+  /**
+   * Startup, shutdown, and update
+   */
+
+  startup: function WTBJL_startup() {
+    // exit if this isn't win7 or higher.
+    if (!this._initTaskbar()) {
+      return;
+    }
+
+    if (PrivateBrowsingUtils.enabled) {
+      tasksCfg.push(privateWindowTask);
+    }
+    // Store our task list config data
+    this._builder._tasks = tasksCfg;
+    this._pbBuilder._tasks = tasksCfg;
+
+    // retrieve taskbar related prefs.
+    this._refreshPrefs();
+
+    // observer for private browsing and our prefs branch
+    this._initObs();
+
+    // jump list refresh timer
+    this._updateTimer();
+  },
+
+  update: function WTBJL_update() {
+    // are we disabled via prefs? don't do anything!
+    if (!this._enabled) {
+      return;
+    }
+
+    // we only need to do this once, but we do it here
+    // to avoid main thread io on startup
+    if (!this._builtPb) {
+      this._pbBuilder.buildList();
+      this._builtPb = true;
+    }
+
+    // do what we came here to do, update the taskbar jumplist
+    this._builder.buildList();
+  },
+
+  _shutdown: function WTBJL__shutdown() {
+    this._builder.updateShutdownState(true);
+    this._pbBuilder.updateShutdownState(true);
+    this._shuttingDown = true;
+    this._free();
   },
 
   /**
@@ -492,10 +521,17 @@ var WinTaskbarJumpList = {
 
   _refreshPrefs: function WTBJL__refreshPrefs() {
     this._enabled = _prefs.getBoolPref(PREF_TASKBAR_ENABLED);
-    this._showFrequent = _prefs.getBoolPref(PREF_TASKBAR_FREQUENT);
-    this._showRecent = _prefs.getBoolPref(PREF_TASKBAR_RECENT);
-    this._showTasks = _prefs.getBoolPref(PREF_TASKBAR_TASKS);
-    this._maxItemCount = _prefs.getIntPref(PREF_TASKBAR_ITEMCOUNT);
+    var showTasks = _prefs.getBoolPref(PREF_TASKBAR_TASKS);
+    this._builder.refreshPrefs(
+      showTasks,
+      _prefs.getBoolPref(PREF_TASKBAR_FREQUENT),
+      _prefs.getBoolPref(PREF_TASKBAR_RECENT),
+      _prefs.getIntPref(PREF_TASKBAR_ITEMCOUNT)
+    );
+    // showTasks is the only relevant pref for the Private Browsing Jump List
+    // the others are are related to frequent/recent entries, which are
+    // explicitly disabled for it
+    this._pbBuilder.refreshPrefs(showTasks, false, false, 0);
   },
 
   /**
@@ -503,10 +539,14 @@ var WinTaskbarJumpList = {
    */
 
   _initTaskbar: function WTBJL__initTaskbar() {
-    this._builder = _taskbarService.createJumpListBuilder();
-    if (!this._builder || !this._builder.available) {
+    var builder = _taskbarService.createJumpListBuilder(false);
+    var pbBuilder = _taskbarService.createJumpListBuilder(true);
+    if (!builder || !builder.available || !pbBuilder || !pbBuilder.available) {
       return false;
     }
+
+    this._builder = new Builder(builder, true, true, true);
+    this._pbBuilder = new Builder(pbBuilder, true, false, false);
 
     return true;
   },
@@ -571,7 +611,8 @@ var WinTaskbarJumpList = {
     this._freeObs();
     this._updateTimer();
     this._updateIdleObserver();
-    delete this._builder;
+    this._builder.delete();
+    this._pbBuilder.delete();
   },
 
   notify: function WTBJL_notify(aTimer) {

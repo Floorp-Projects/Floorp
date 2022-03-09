@@ -61,7 +61,7 @@ async function checkAboutPreferences({ checkboxIsDisabled }) {
 add_task(async function test_policy_disable_masterpassword() {
   ok(!mpToken.hasPassword, "Starting the test with no password");
 
-  // No password and no policy: access to setting a master password
+  // No password and no policy: access to setting a primary password
   // should be enabled.
   await checkDeviceManager({ buttonIsDisabled: false });
   await checkAboutPreferences({ checkboxIsDisabled: false });
@@ -73,14 +73,14 @@ add_task(async function test_policy_disable_masterpassword() {
   });
 
   // With the `DisableMasterPasswordCreation: true` policy active, the
-  // UI entry points for creating a Master Password should be disabled.
+  // UI entry points for creating a Primary Password should be disabled.
   await checkDeviceManager({ buttonIsDisabled: true });
   await checkAboutPreferences({ checkboxIsDisabled: true });
 
   mpToken.changePassword("", MASTER_PASSWORD);
   ok(mpToken.hasPassword, "Master password was set");
 
-  // If a Master Password is already set, there's no point in disabling
+  // If a Primary Password is already set, there's no point in disabling
   // the
   await checkDeviceManager({ buttonIsDisabled: false });
   await checkAboutPreferences({ checkboxIsDisabled: false });

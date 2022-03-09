@@ -103,11 +103,10 @@ class JS_PUBLIC_API ReadableStreamUnderlyingSource {
    * JS::ReadableStreamUpdateDataAvailableFromSource. If not, it is invoked
    * if and when a new read request is made.
    *
-   * Note: This method *must not cause GC*, because that could potentially
-   * invalidate the `buffer` pointer.
    */
   virtual void writeIntoReadRequestBuffer(JSContext* cx, HandleObject stream,
-                                          void* buffer, size_t length,
+                                          JS::Handle<JSObject*> aChunk,
+                                          size_t length,
                                           size_t* bytesWritten) = 0;
 
   /**

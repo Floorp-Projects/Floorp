@@ -604,7 +604,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         return false;
       }
 
-      if (!instance.initElems(cx, seg->tableIndex, *seg, offset, 0, count)) {
+      if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
         return false;  // OOM
       }
     }
@@ -809,78 +809,28 @@ bool Module::instantiateMemory(JSContext* cx,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-bool Module::instantiateImportedTag(JSContext* cx,
-                                    Handle<WasmTagObject*> tagObj,
-                                    WasmTagObjectVector& tagObjs,
-                                    SharedExceptionTagVector* tags) const {
-  MOZ_ASSERT(tagObj);
-  // The check whether the TagDesc signature matches the tagObj value types
-  // is done by js::wasm::GetImports().
-
-  // Collects the exception tag from the imported tag.
-  ExceptionTag& tag = tagObj->tag();
-
-  if (!tags->append(&tag)) {
+bool Module::instantiateTags(JSContext* cx,
+                             WasmTagObjectVector& tagObjs) const {
+  size_t tagLength = metadata().tags.length();
+  if (tagLength == 0) {
+    return true;
+  }
+  size_t importedTagsLength = tagObjs.length();
+  if (tagObjs.length() <= tagLength && !tagObjs.resize(tagLength)) {
     ReportOutOfMemory(cx);
     return false;
   }
 
-  return true;
-}
-
-bool Module::instantiateLocalTag(JSContext* cx, const TagDesc& ed,
-                                 WasmTagObjectVector& tagObjs,
-                                 SharedExceptionTagVector* tags,
-                                 uint32_t tagIndex) const {
-  SharedExceptionTag tag;
-  // Extend tagObjs in anticipation of an exported tag object.
-  if (tagObjs.length() <= tagIndex && !tagObjs.resize(tagIndex + 1)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  if (ed.isExport) {
-    // If the tag description is exported, create an export tag
-    // object for it.
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTag));
-    RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, ed.type, proto));
-    if (!tagObj) {
-      return false;
-    }
-    // Take the exception tag that was created inside the WasmTagObject.
-    tag = &tagObj->tag();
-    // Save the new export tag object.
-    tagObjs[tagIndex] = tagObj;
-  } else {
-    // Create a new exception tag for every non exported tag.
-    tag = SharedExceptionTag(cx->new_<ExceptionTag>());
-    if (!tag) {
-      return false;
-    }
-    // The tagObj is null if the tag is neither exported nor imported.
-  }
-  // Collect an exception tag for every tag.
-  if (!tags->emplaceBack(tag)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
-}
-
-bool Module::instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs,
-                             SharedExceptionTagVector* tags) const {
   uint32_t tagIndex = 0;
-  for (const TagDesc& ed : metadata().tags) {
-    if (tagIndex < tagObjs.length()) {
-      Rooted<WasmTagObject*> tagObj(cx, tagObjs[tagIndex]);
-      if (!instantiateImportedTag(cx, tagObj, tagObjs, tags)) {
+  RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTag));
+  for (const TagDesc& desc : metadata().tags) {
+    if (tagIndex >= importedTagsLength) {
+      RootedWasmTagObject tagObj(cx,
+                                 WasmTagObject::create(cx, desc.type, proto));
+      if (!tagObj) {
         return false;
       }
-    } else {
-      if (!instantiateLocalTag(cx, ed, tagObjs, tags, tagIndex)) {
-        return false;
-      }
+      tagObjs[tagIndex] = tagObj;
     }
     tagIndex++;
   }
@@ -1274,9 +1224,8 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // On the contrary, all the slots of exceptionTags will be filled with
   // unique tags.
 
-  SharedExceptionTagVector tags;
 #ifdef ENABLE_WASM_EXCEPTIONS
-  if (!instantiateTags(cx, imports.tagObjs, &tags)) {
+  if (!instantiateTags(cx, imports.tagObjs)) {
     return false;
   }
 #endif
@@ -1314,9 +1263,9 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
 
   instance.set(WasmInstanceObject::create(
       cx, code, dataSegments_, elemSegments_, metadata().globalDataLength,
-      memory, std::move(tags), std::move(tables), imports.funcs,
-      metadata().globals, imports.globalValues, imports.globalObjs,
-      instanceProto, std::move(maybeDebug)));
+      memory, std::move(tables), imports.funcs, metadata().globals,
+      imports.globalValues, imports.globalObjs, imports.tagObjs, instanceProto,
+      std::move(maybeDebug)));
   if (!instance) {
     return false;
   }

@@ -52,21 +52,25 @@
 
 #define DEFAULT_RTP_OFFSET 42
 
+typedef enum {
+    mode_rtp = 0,
+    mode_rtcp,
+    mode_rtcp_mux,
+} rtp_decoder_mode_t;
+
 typedef struct rtp_decoder_ctx_t {
     srtp_policy_t policy;
     srtp_ctx_t *srtp_ctx;
+    rtp_decoder_mode_t mode;
     int rtp_offset;
     struct timeval start_tv;
     int frame_nr;
-    rtp_msg_t message;
+    int error_cnt;
+    int rtp_cnt;
+    int rtcp_cnt;
 } rtp_decoder_ctx_t;
 
 typedef struct rtp_decoder_ctx_t *rtp_decoder_t;
-
-/*
- * error to string
- */
-void rtp_print_error(srtp_err_status_t status, char *message);
 
 /*
  * prints the output of a random buffer in hexadecimal
@@ -95,11 +99,19 @@ rtp_decoder_t rtp_decoder_alloc(void);
 
 void rtp_decoder_dealloc(rtp_decoder_t rtp_ctx);
 
-int rtp_decoder_init(rtp_decoder_t dcdr, srtp_policy_t policy);
+int rtp_decoder_init(rtp_decoder_t dcdr,
+                     srtp_policy_t policy,
+                     rtp_decoder_mode_t mode,
+                     int rtp_packet_offset);
 
-srtp_err_status_t rtp_decoder_init_srtp(rtp_decoder_t decoder,
-                                        unsigned int ssrc);
+int rtp_decoder_deinit(rtp_decoder_t decoder);
 
-int rtp_decoder_deinit_srtp(rtp_decoder_t decoder);
+void rtp_decoder_srtp_log_handler(srtp_log_level_t level,
+                                  const char *msg,
+                                  void *data);
+
+void rtp_decoder_srtp_log_handler(srtp_log_level_t level,
+                                  const char *msg,
+                                  void *data);
 
 #endif /* RTP_DECODER_H */

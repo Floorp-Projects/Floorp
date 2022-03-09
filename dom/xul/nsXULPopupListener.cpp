@@ -336,10 +336,8 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
     pm->ShowPopup(mPopupContent, mElement, u""_ns, 0, 0, false, true, false,
                   aEvent);
   } else {
-    int32_t xPos = aEvent->ScreenX(CallerType::System);
-    int32_t yPos = aEvent->ScreenY(CallerType::System);
-
-    pm->ShowPopupAtScreen(mPopupContent, xPos, yPos, mIsContext, aEvent);
+    CSSIntPoint pos = aEvent->ScreenPoint(CallerType::System);
+    pm->ShowPopupAtScreen(mPopupContent, pos.x, pos.y, mIsContext, aEvent);
   }
 
   return NS_OK;

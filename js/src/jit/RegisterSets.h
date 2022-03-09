@@ -1314,6 +1314,8 @@ inline LiveGeneralRegisterSet SavedNonVolatileRegisters(
   result.add(Register::FromCode(Registers::lr));
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   result.add(Register::FromCode(Registers::ra));
+#elif defined(JS_CODEGEN_LOONG64)
+  result.add(Register::FromCode(Registers::ra));
 #endif
 
   return result;

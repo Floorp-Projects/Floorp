@@ -936,7 +936,7 @@ void gfxPlatform::Init() {
 
   if (XRE_IsParentProcess()) {
     nsAutoCString allowlist;
-    Preferences::GetCString("gfx.offscreencavas.domain-allowlist", allowlist);
+    Preferences::GetCString("gfx.offscreencanvas.domain-allowlist", allowlist);
     gfxVars::SetOffscreenCanvasDomainAllowlist(allowlist);
   }
 
@@ -1287,7 +1287,7 @@ void gfxPlatform::InitLayersIPC() {
     }
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
-      wr::RenderThread::Start();
+      wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
       image::ImageMemoryReporter::InitForWebRender();
     }
 
@@ -3313,7 +3313,7 @@ void gfxPlatform::DisableGPUProcess() {
   if (gfxVars::UseWebRender()) {
     // We need to initialize the parent process to prepare for WebRender if we
     // did not end up disabling it, despite losing the GPU process.
-    wr::RenderThread::Start();
+    wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
     image::ImageMemoryReporter::InitForWebRender();
   }
 }

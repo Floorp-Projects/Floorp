@@ -165,10 +165,18 @@ class GCVector {
   }
 
   bool traceWeak(JSTracer* trc) {
+    mutableEraseIf(
+        [trc](T& elem) { return !GCPolicy<T>::traceWeak(trc, &elem); });
+    return !empty();
+  }
+
+  // Like eraseIf, but may mutate the contents of the vector.
+  template <typename Pred>
+  void mutableEraseIf(Pred pred) {
     T* src = begin();
     T* dst = begin();
     while (src != end()) {
-      if (GCPolicy<T>::traceWeak(trc, src)) {
+      if (!pred(*src)) {
         if (src != dst) {
           *dst = std::move(*src);
         }
@@ -179,7 +187,6 @@ class GCVector {
 
     MOZ_ASSERT(dst <= end());
     shrinkBy(end() - dst);
-    return !empty();
   }
 };
 

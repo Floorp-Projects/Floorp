@@ -480,7 +480,8 @@ class DisplayListBuilder final {
       wr::SpatialTreeItemKey aKey);
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-                bool aIsBackfaceVisible, const wr::ColorF& aColor);
+                bool aIsBackfaceVisible, bool aForceAntiAliasing,
+                const wr::ColorF& aColor);
   void PushRectWithAnimation(const wr::LayoutRect& aBounds,
                              const wr::LayoutRect& aClip,
                              bool aIsBackfaceVisible, const wr::ColorF& aColor,
@@ -527,8 +528,9 @@ class DisplayListBuilder final {
                          const wr::LayoutSize aTileSpacing);
 
   void PushImage(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-                 bool aIsBackfaceVisible, wr::ImageRendering aFilter,
-                 wr::ImageKey aImage, bool aPremultipliedAlpha = true,
+                 bool aIsBackfaceVisible, bool aForceAntiAliasing,
+                 wr::ImageRendering aFilter, wr::ImageKey aImage,
+                 bool aPremultipliedAlpha = true,
                  const wr::ColorF& aColor = wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                  bool aPreferCompositorSurface = false,
                  bool aSupportsExternalCompositing = false);
@@ -550,6 +552,14 @@ class DisplayListBuilder final {
       bool aSupportsExternalCompositing = false);
 
   void PushNV12Image(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
+                     bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
+                     wr::ImageKey aImageChannel1, wr::WrColorDepth aColorDepth,
+                     wr::WrYuvColorSpace aColorSpace,
+                     wr::WrColorRange aColorRange, wr::ImageRendering aFilter,
+                     bool aPreferCompositorSurface = false,
+                     bool aSupportsExternalCompositing = false);
+
+  void PushP010Image(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                      bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1, wr::WrColorDepth aColorDepth,
                      wr::WrYuvColorSpace aColorSpace,

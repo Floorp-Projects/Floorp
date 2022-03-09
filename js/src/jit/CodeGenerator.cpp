@@ -1979,8 +1979,9 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                       temp1, JSVAL_TYPE_PRIVATE_GCTHING);
   masm.loadPtr(Address(temp1, RegExpShared::offsetOfSource()), temp2);
   masm.storePtr(temp2, lazySourceAddress);
-  masm.load32(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
-  masm.store32(temp2, Address(staticsReg, RegExpStatics::offsetOfLazyFlags()));
+  static_assert(sizeof(JS::RegExpFlags) == 1, "load size must match flag size");
+  masm.load8ZeroExtend(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
+  masm.store8(temp2, Address(staticsReg, RegExpStatics::offsetOfLazyFlags()));
 }
 
 // Prepare an InputOutputData and optional MatchPairs which space has been
@@ -3466,29 +3467,18 @@ void CodeGenerator::visitLambda(LLambda* lir) {
   Register envChain = ToRegister(lir->environmentChain());
   Register output = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp0());
-  const LambdaFunctionInfo& info = lir->mir()->info();
+
+  JSFunction* fun = lir->mir()->templateFunction();
 
   using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
   OutOfLineCode* ool = oolCallVM<Fn, js::Lambda>(
-      lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain),
-      StoreRegisterTo(output));
+      lir, ArgList(ImmGCPtr(fun), envChain), StoreRegisterTo(output));
 
-  TemplateObject templateObject(info.funUnsafe());
+  TemplateObject templateObject(fun);
   masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
                       ool->entry());
 
-  emitLambdaInit(output, envChain, info);
-
-  if (info.flags.isExtended()) {
-    MOZ_ASSERT(info.flags.allowSuperProperty() ||
-               info.flags.isSelfHostedBuiltin());
-    static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
-                  "All slots must be initialized");
-    masm.storeValue(UndefinedValue(),
-                    Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-    masm.storeValue(UndefinedValue(),
-                    Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
-  }
+  emitLambdaInit(output, envChain);
 
   masm.bind(ool->rejoin());
 }
@@ -3498,52 +3488,36 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetIndex);
   Register output = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
-  const LambdaFunctionInfo& info = lir->mir()->info();
+
+  JSFunction* fun = lir->mir()->templateFunction();
 
   using Fn =
       JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
   OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
-      lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain, newTarget),
+      lir, ArgList(ImmGCPtr(fun), envChain, newTarget),
       StoreRegisterTo(output));
 
-  TemplateObject templateObject(info.funUnsafe());
+  TemplateObject templateObject(fun);
   masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
                       ool->entry());
 
-  emitLambdaInit(output, envChain, info);
+  emitLambdaInit(output, envChain);
 
-  // Initialize extended slots. Lexical |this| is stored in the first one.
-  MOZ_ASSERT(info.flags.isExtended());
-  static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
-                "All slots must be initialized");
+  // Lexical new.target is stored in the first extended slot.
+  MOZ_ASSERT(fun->isExtended());
   static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
                 "|new.target| must be stored in first slot");
   masm.storeValue(newTarget,
                   Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-  masm.storeValue(UndefinedValue(),
-                  Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::emitLambdaInit(Register output, Register envChain,
-                                   const LambdaFunctionInfo& info) {
-  uint32_t flagsAndArgs =
-      info.flags.toRaw() | (info.nargs << JSFunction::ArgCountShift);
-  masm.storeValue(JS::PrivateUint32Value(flagsAndArgs),
-                  Address(output, JSFunction::offsetOfFlagsAndArgCount()));
-  masm.storePrivateValue(
-      ImmGCPtr(info.baseScript),
-      Address(output, JSFunction::offsetOfJitInfoOrScript()));
-
+void CodeGenerator::emitLambdaInit(Register output, Register envChain) {
   masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
                   Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
-
-  JSAtom* atom = info.funUnsafe()->displayAtom();
-  JS::Value atomValue = atom ? JS::StringValue(atom) : JS::UndefinedValue();
-  masm.storeValue(atomValue, Address(output, JSFunction::offsetOfAtom()));
 }
 
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
@@ -8042,38 +8016,46 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 #endif
 
   // LWasmCallBase::isCallPreserved() assumes that all MWasmCalls preserve the
-  // TLS and pinned regs. The only case where where we have to reload
-  // the TLS and pinned regs is when we emit import or builtin instance calls.
-  bool reloadRegs = false;
-  bool switchRealm = false;
+  // TLS and pinned regs. The only case where where we don't have to reload
+  // the TLS and pinned regs is when the callee preserves them.
+  bool reloadRegs = true;
+  bool switchRealm = true;
 
   const wasm::CallSiteDesc& desc = mir->desc();
   const wasm::CalleeDesc& callee = mir->callee();
   CodeOffset retOffset;
+  CodeOffset secondRetOffset;
   switch (callee.which()) {
     case wasm::CalleeDesc::Func:
       retOffset = masm.call(desc, callee.funcIndex());
+      reloadRegs = false;
+      switchRealm = false;
       break;
     case wasm::CalleeDesc::Import:
       retOffset = masm.wasmCallImport(desc, callee);
-      reloadRegs = true;
-      switchRealm = true;
       break;
     case wasm::CalleeDesc::AsmJSTable:
       retOffset = masm.asmCallIndirect(desc, callee);
       break;
     case wasm::CalleeDesc::WasmTable:
-      retOffset = masm.wasmCallIndirect(desc, callee, lir->needsBoundsCheck(),
-                                        lir->tableSize());
+      masm.wasmCallIndirect(desc, callee, lir->needsBoundsCheck(),
+                            lir->tableSize(), &retOffset, &secondRetOffset);
+      // Register reloading and realm switching are handled dynamically inside
+      // wasmCallIndirect.  There are two return offsets, one for each call
+      // instruction (fast path and slow path).
+      reloadRegs = false;
+      switchRealm = false;
       break;
     case wasm::CalleeDesc::Builtin:
       retOffset = masm.call(desc, callee.builtin());
+      reloadRegs = false;
+      switchRealm = false;
       break;
     case wasm::CalleeDesc::BuiltinInstanceMethod:
       retOffset = masm.wasmCallBuiltinInstanceMethod(
           desc, mir->instanceArg(), callee.builtin(),
           mir->builtinMethodFailureMode());
-      reloadRegs = true;
+      switchRealm = false;
       break;
   }
 
@@ -8082,9 +8064,17 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 
   // Now that all the outbound in-memory args are on the stack, note the
   // required lower boundary point of the associated StackMap.
-  lir->safepoint()->setFramePushedAtStackMapBase(
-      masm.framePushed() - mir->stackArgAreaSizeUnaligned());
+  uint32_t framePushedAtStackMapBase =
+      masm.framePushed() - mir->stackArgAreaSizeUnaligned();
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushedAtStackMapBase);
   MOZ_ASSERT(!lir->safepoint()->isWasmTrap());
+
+  // Note the assembler offset and framePushed for use by the adjunct
+  // LSafePoint, see visitor for LWasmCallIndirectAdjunctSafepoint below.
+  if (callee.which() == wasm::CalleeDesc::WasmTable) {
+    lir->adjunctSafepoint()->recordSafepointInfo(secondRetOffset,
+                                                 framePushedAtStackMapBase);
+  }
 
   if (reloadRegs) {
     masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetBeforeCall),
@@ -8117,6 +8107,13 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     MOZ_ASSERT(tryNote.end > tryNote.begin);
   }
 #endif
+}
+
+void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
+    LWasmCallIndirectAdjunctSafepoint* lir) {
+  markSafepointAt(lir->safepointLocation().offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(
+      lir->framePushedAtStackMapBase());
 }
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
@@ -11301,7 +11298,8 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   // condition flags sticking from the incoming branch.
   // Also note: this branch does not need Spectre mitigations, doing that for
   // the capacity check below is sufficient.
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   // Had to reimplement for MIPS because there are no flags.
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.branch32(Assembler::NotEqual, initLength, indexReg, ool->callStub());
@@ -16504,56 +16502,6 @@ void CodeGenerator::visitWasmAnyRefFromJSObject(LWasmAnyRefFromJSObject* lir) {
     masm.movePtr(input, output);
   }
 }
-
-// Wasm Exception Handling
-
-// Unboxes the array buffer object of a Wasm exception, for storing or
-// loading exception numeric values to or from the exception.
-void CodeGenerator::visitWasmExceptionDataPointer(
-    LWasmExceptionDataPointer* lir) {
-  Register exn = ToRegister(lir->exn());
-  Register dataPtr = ToRegister(lir->output());
-  const uint32_t dataOffset =
-      NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
-  const int32_t valuesOffset = (int32_t)WasmExceptionObject::offsetOfValues();
-
-  masm.unboxObject(Address(exn, valuesOffset), dataPtr);
-  masm.loadPtr(Address(dataPtr, dataOffset), dataPtr);
-}
-
-// Unboxes the array object of a Wasm exception, for loading exception reference
-// or rtt values from the exception.
-void CodeGenerator::visitWasmExceptionRefsPointer(
-    LWasmExceptionRefsPointer* lir) {
-  Register exn = ToRegister(lir->exn());
-  Register refsPtr = ToRegister(lir->output());
-  masm.unboxObject(Address(exn, WasmExceptionObject::offsetOfRefs()), refsPtr);
-
-#ifdef DEBUG
-  Label ok;
-  Register scratch = ToRegister(lir->temp());
-  uint32_t refCount = lir->mir()->refCount();
-  masm.load32(Address(refsPtr, NativeObject::offsetOfFixedElements() +
-                                   ObjectElements::offsetOfLength()),
-              scratch);
-  masm.branch32(Assembler::Equal, scratch, Imm32(refCount), &ok);
-  masm.assumeUnreachable("Array length should be equal to exn ref count.");
-  masm.bind(&ok);
-#endif
-  masm.loadPtr(Address(refsPtr, NativeObject::offsetOfElements()), refsPtr);
-}
-
-void CodeGenerator::visitWasmLoadExceptionRefsValue(
-    LWasmLoadExceptionRefsValue* lir) {
-  Register output = ToRegister(lir->output());
-  int32_t offset = lir->mir()->offset();
-  Register refsPtr = ToRegister(lir->refsPtr());
-
-  ASSERT_ANYREF_IS_JSOBJECT;
-  masm.unboxObjectOrNull(Address(refsPtr, offset), output);
-}
-
-// End Wasm Exception Handling
 
 static_assert(!std::is_polymorphic_v<CodeGenerator>,
               "CodeGenerator should not have any virtual methods");

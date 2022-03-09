@@ -187,6 +187,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "url",
+      "thread": "FakeThread",
       "url": "url",
     }
   }
@@ -384,6 +385,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "url",
+      "thread": "FakeThread",
       "url": "url",
     }
   }
@@ -581,6 +583,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "url",
+      "thread": "FakeThread",
       "url": "url",
     }
   }

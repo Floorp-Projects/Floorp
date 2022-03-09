@@ -94,7 +94,7 @@ DocGroup* nsRange::GetDocGroup() const {
 }
 
 /******************************************************
- * stack based utilty class for managing monitor
+ * stack based utility class for managing monitor
  ******************************************************/
 
 static void InvalidateAllFrames(nsINode* aNode) {
@@ -2785,7 +2785,7 @@ void nsRange::CollectClientRectsAndText(
 
 already_AddRefed<DOMRect> nsRange::GetBoundingClientRect(bool aClampToEdge,
                                                          bool aFlushLayout) {
-  RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
+  RefPtr<DOMRect> rect = new DOMRect(ToSupports(mOwner));
   if (!mIsPositioned) {
     return rect.forget();
   }
@@ -2810,8 +2810,7 @@ already_AddRefed<DOMRectList> nsRange::GetClientRects(bool aClampToEdge,
     return nullptr;
   }
 
-  RefPtr<DOMRectList> rectList =
-      new DOMRectList(static_cast<AbstractRange*>(this));
+  RefPtr<DOMRectList> rectList = new DOMRectList(ToSupports(mOwner));
 
   nsLayoutUtils::RectListBuilder builder(rectList);
 
@@ -2830,7 +2829,7 @@ void nsRange::GetClientRectsAndTexts(mozilla::dom::ClientRectsAndTexts& aResult,
     return;
   }
 
-  aResult.mRectList = new DOMRectList(static_cast<AbstractRange*>(this));
+  aResult.mRectList = new DOMRectList(ToSupports(mOwner));
 
   nsLayoutUtils::RectListBuilder builder(aResult.mRectList);
 
@@ -2986,7 +2985,6 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
     // the outer loop.
     nsIContent* firstNonSelectableContent = nullptr;
     while (true) {
-      ErrorResult err;
       nsINode* node = preOrderIter.GetCurrentNode();
       preOrderIter.Next();
       bool selectable = true;
@@ -3014,63 +3012,71 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
         if (!firstNonSelectableContent) {
           firstNonSelectableContent = content;
         }
-        if (preOrderIter.IsDone() && seenSelectable) {
-          // The tail end of the initial range is non-selectable - truncate the
-          // current range before the first non-selectable node.
-          range->SetEndBefore(*firstNonSelectableContent, err);
+        if (preOrderIter.IsDone()) {
+          if (seenSelectable) {
+            // The tail end of the initial range is non-selectable - truncate
+            // the current range before the first non-selectable node.
+            range->SetEndBefore(*firstNonSelectableContent, IgnoreErrors());
+          }
+          return;
         }
-      } else if (firstNonSelectableContent) {
+        continue;
+      }
+
+      if (firstNonSelectableContent) {
         if (range == this && !seenSelectable) {
           // This is the initial range and all its nodes until now are
           // non-selectable so just trim them from the start.
+          IgnoredErrorResult err;
           range->SetStartBefore(*node, err);
           if (err.Failed()) {
             return;
           }
           break;  // restart the same range with a new iterator
-        } else {
-          // Save the end point before truncating the range.
-          nsINode* endContainer = range->mEnd.Container();
-          const uint32_t endOffset =
-              *range->mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
-
-          // Truncate the current range before the first non-selectable node.
-          range->SetEndBefore(*firstNonSelectableContent, err);
-
-          // Store it in the result (strong ref) - do this before creating
-          // a new range in |newRange| below so we don't drop the last ref
-          // to the range created in the previous iteration.
-          if (!added && !err.Failed()) {
-            aOutRanges->AppendElement(range);
-          }
-
-          // Create a new range for the remainder.
-          nsINode* startContainer = node;
-          Maybe<uint32_t> startOffset = Some(0);
-          // Don't start *inside* a node with independent selection though
-          // (e.g. <input>).
-          if (content && content->HasIndependentSelection()) {
-            nsINode* parent = startContainer->GetParent();
-            if (parent) {
-              startOffset = parent->ComputeIndexOf(startContainer);
-              startContainer = parent;
-            }
-          }
-          newRange =
-              nsRange::Create(startContainer, startOffset.valueOr(UINT32_MAX),
-                              endContainer, endOffset, IgnoreErrors());
-          if (!newRange || newRange->Collapsed()) {
-            newRange = nullptr;
-          }
-          range = newRange;
-          break;  // create a new iterator for the new range, if any
         }
-      } else {
-        seenSelectable = true;
-        if (!added) {
-          added = true;
+
+        // Save the end point before truncating the range.
+        nsINode* endContainer = range->mEnd.Container();
+        const uint32_t endOffset =
+            *range->mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
+
+        // Truncate the current range before the first non-selectable node.
+        IgnoredErrorResult err;
+        range->SetEndBefore(*firstNonSelectableContent, err);
+
+        // Store it in the result (strong ref) - do this before creating
+        // a new range in |newRange| below so we don't drop the last ref
+        // to the range created in the previous iteration.
+        if (!added && !err.Failed()) {
           aOutRanges->AppendElement(range);
         }
+
+        // Create a new range for the remainder.
+        nsINode* startContainer = node;
+        Maybe<uint32_t> startOffset = Some(0);
+        // Don't start *inside* a node with independent selection though
+        // (e.g. <input>).
+        if (content && content->HasIndependentSelection()) {
+          nsINode* parent = startContainer->GetParent();
+          if (parent) {
+            startOffset = parent->ComputeIndexOf(startContainer);
+            startContainer = parent;
+          }
+        }
+        newRange =
+            nsRange::Create(startContainer, startOffset.valueOr(UINT32_MAX),
+                            endContainer, endOffset, IgnoreErrors());
+        if (!newRange || newRange->Collapsed()) {
+          newRange = nullptr;
+        }
+        range = newRange;
+        break;  // create a new iterator for the new range, if any
+      }
+
+      seenSelectable = true;
+      if (!added) {
+        added = true;
+        aOutRanges->AppendElement(range);
       }
       if (preOrderIter.IsDone()) {
         return;

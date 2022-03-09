@@ -345,15 +345,17 @@ test_gsub_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
 COMPILED_TESTS = \
 	test-algs \
 	test-array \
+	test-bimap \
 	test-iter \
+	test-machinery \
 	test-map \
 	test-number \
 	test-ot-tag \
 	test-priority-queue \
 	test-set \
+	test-serialize \
 	test-unicode-ranges \
 	test-vector \
-	test-bimap \
 	test-repacker \
 	$(NULL)
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
@@ -369,17 +371,17 @@ test_array_SOURCES = test-array.cc
 test_array_CPPFLAGS = $(HBCFLAGS)
 test_array_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_priority_queue_SOURCES = test-priority-queue.cc hb-static.cc
-test_priority_queue_CPPFLAGS = $(HBCFLAGS)
-test_priority_queue_LDADD = libharfbuzz.la $(HBLIBS)
-
-test_repacker_SOURCES = test-repacker.cc hb-static.cc
-test_repacker_CPPFLAGS = $(HBCFLAGS)
-test_repacker_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
+test_bimap_SOURCES = test-bimap.cc hb-static.cc
+test_bimap_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_bimap_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_iter_SOURCES = test-iter.cc hb-static.cc
 test_iter_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_iter_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_machinery_SOURCES = test-machinery.cc hb-static.cc
+test_machinery_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_machinery_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_map_SOURCES = test-map.cc hb-static.cc
 test_map_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
@@ -393,9 +395,21 @@ test_ot_tag_SOURCES = hb-ot-tag.cc
 test_ot_tag_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_ot_tag_LDADD = $(COMPILED_TESTS_LDADD)
 
+test_priority_queue_SOURCES = test-priority-queue.cc hb-static.cc
+test_priority_queue_CPPFLAGS = $(HBCFLAGS)
+test_priority_queue_LDADD = libharfbuzz.la $(HBLIBS)
+
+test_repacker_SOURCES = test-repacker.cc hb-static.cc
+test_repacker_CPPFLAGS = $(HBCFLAGS)
+test_repacker_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
+
 test_set_SOURCES = test-set.cc hb-static.cc
 test_set_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_set_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_serialize_SOURCES = test-serialize.cc hb-static.cc
+test_serialize_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_serialize_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_unicode_ranges_SOURCES = test-unicode-ranges.cc
 test_unicode_ranges_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
@@ -404,10 +418,6 @@ test_unicode_ranges_LDADD = $(COMPILED_TESTS_LDADD)
 test_vector_SOURCES = test-vector.cc hb-static.cc
 test_vector_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_vector_LDADD = $(COMPILED_TESTS_LDADD)
-
-test_bimap_SOURCES = test-bimap.cc hb-static.cc
-test_bimap_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
-test_bimap_LDADD = $(COMPILED_TESTS_LDADD)
 
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.py \

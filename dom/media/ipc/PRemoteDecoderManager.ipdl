@@ -9,8 +9,8 @@ include LayersSurfaces;
 include "mozilla/dom/MediaIPCUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
-using VideoInfo from "MediaInfo.h";
-using AudioInfo from "MediaInfo.h";
+using mozilla::VideoInfo from "MediaInfo.h";
+using mozilla::AudioInfo from "MediaInfo.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
 using mozilla::DecoderDoctorDiagnostics from "DecoderDoctorDiagnostics.h";
@@ -29,7 +29,7 @@ union RemoteDecoderInfoIPDL
   VideoDecoderInfoIPDL;
 };
 
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid]
 sync protocol PRemoteDecoderManager
 {
   manages PRemoteDecoder;

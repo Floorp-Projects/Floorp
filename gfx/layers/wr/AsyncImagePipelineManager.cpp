@@ -461,7 +461,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     } else {
       MOZ_ASSERT(keys.Length() == 1);
       aPipeline->mDLBuilder.PushImage(wr::ToLayoutRect(rect),
-                                      wr::ToLayoutRect(rect), true,
+                                      wr::ToLayoutRect(rect), true, false,
                                       aPipeline->mFilter, keys[0]);
     }
   }

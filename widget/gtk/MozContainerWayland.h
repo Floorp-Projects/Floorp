@@ -66,7 +66,7 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
                                           struct wl_surface** surface);
 
 struct wl_surface* moz_container_wayland_get_surface_locked(
-    MozContainer* container);
+    const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container);
 void moz_container_wayland_lock(MozContainer* container);
 void moz_container_wayland_unlock(MozContainer* container);
 

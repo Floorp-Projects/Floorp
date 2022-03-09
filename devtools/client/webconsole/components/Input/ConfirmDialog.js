@@ -33,12 +33,7 @@ const {
 const autocompleteActions = require("devtools/client/webconsole/actions/autocomplete");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
-const utmParams = new URLSearchParams({
-  utm_source: "mozilla",
-  utm_medium: "devtools-webconsole",
-  utm_campaign: "default",
-});
-const LEARN_MORE_URL = `https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete?${utmParams}`;
+const LEARN_MORE_URL = `https://firefox-source-docs.mozilla.org/devtools-user/web_console/invoke_getters_from_autocomplete/`;
 
 class ConfirmDialog extends Component {
   static get propTypes() {

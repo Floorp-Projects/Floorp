@@ -10,7 +10,8 @@
 menupopup,
 panel {
   min-width: 1px;
-  --panel-padding: max(env(-moz-gtk-csd-menu-radius) - 1px, 0px) 0;
+  --panel-padding-block: max(env(-moz-gtk-csd-menu-radius) - 1px, 0px);
+  --panel-padding: var(--panel-padding-block) 0;
   --panel-color: MenuText;
   --panel-background: Menu;
   --panel-border-radius: env(-moz-gtk-csd-menu-radius);
@@ -18,6 +19,12 @@ panel {
   --panel-width: initial;
   /* To account for the box-shadow below */
   margin: -4px;
+}
+
+menupopup > menu > menupopup {
+  /* Vertically align nested menupopups: 4px from the shadow plus the top
+   * padding */
+  margin-top: calc(-4px - var(--panel-padding-block));
 }
 
 /* ::::: arrow panel ::::: */

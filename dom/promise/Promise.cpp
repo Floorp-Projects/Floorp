@@ -858,12 +858,20 @@ Promise::PromiseState Promise::State() const {
   return PromiseState::Pending;
 }
 
-void Promise::SetSettledPromiseIsHandled() {
+bool Promise::SetSettledPromiseIsHandled() {
   AutoAllowLegacyScriptExecution exemption;
   AutoEntryScript aes(mGlobal, "Set settled promise handled");
   JSContext* cx = aes.cx();
   JS::RootedObject promiseObj(cx, mPromiseObj);
-  JS::SetSettledPromiseIsHandled(cx, promiseObj);
+  return JS::SetSettledPromiseIsHandled(cx, promiseObj);
+}
+
+bool Promise::SetAnyPromiseIsHandled() {
+  AutoAllowLegacyScriptExecution exemption;
+  AutoEntryScript aes(mGlobal, "Set any promise handled");
+  JSContext* cx = aes.cx();
+  JS::RootedObject promiseObj(cx, mPromiseObj);
+  return JS::SetAnyPromiseIsHandled(cx, promiseObj);
 }
 
 /* static */

@@ -11,7 +11,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/EventListenerManager.h"
 #include "mozilla/Likely.h"
 #include "MainThreadUtils.h"
 

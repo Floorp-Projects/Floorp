@@ -29,11 +29,6 @@
 #include "mozilla/ProfilerThreadState.h"
 #include "mozilla/ProgressLogger.h"
 
-enum class IsFastShutdown {
-  No,
-  Yes,
-};
-
 #ifndef MOZ_GECKO_PROFILER
 
 #  include "mozilla/UniquePtr.h"
@@ -42,9 +37,6 @@ enum class IsFastShutdown {
 // file must be guarded by a #ifdef MOZ_GECKO_PROFILER, *except* for the
 // following macros and functions, which encapsulate the most common operations
 // and thus avoid the need for many #ifdefs.
-
-#  define AUTO_PROFILER_INIT ::profiler_init_main_thread_id()
-#  define AUTO_PROFILER_INIT2
 
 #  define PROFILER_REGISTER_THREAD(name)
 #  define PROFILER_UNREGISTER_THREAD()
@@ -86,11 +78,6 @@ profiler_capture_backtrace() {
   return nullptr;
 }
 
-static inline void profiler_init(void* stackTop) {}
-
-static inline void profiler_shutdown(
-    IsFastShutdown aIsFastShutdown = IsFastShutdown::No) {}
-
 static inline void profiler_set_process_name(
     const nsACString& aProcessName, const nsACString* aETLDplus1 = nullptr) {}
 
@@ -107,6 +94,10 @@ static inline void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
 
 static inline void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv) {}
+
+static inline void profiler_thread_sleep() {}
+
+static inline void profiler_thread_wake() {}
 
 #else  // !MOZ_GECKO_PROFILER
 
@@ -140,103 +131,13 @@ class SpliceableJSONWriter;
 }  // namespace mozilla
 class nsIURI;
 
-namespace mozilla {
-class MallocAllocPolicy;
-template <class T, size_t MinInlineCapacity, class AllocPolicy>
-class Vector;
-}  // namespace mozilla
-
 // Macros used by the AUTO_PROFILER_* macros below.
 #  define PROFILER_RAII_PASTE(id, line) id##line
 #  define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
 #  define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
 
 //---------------------------------------------------------------------------
-// Start and stop the profiler
-//---------------------------------------------------------------------------
-
-static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
-#  if !defined(GP_PLAT_arm_android)
-    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
-#  else
-    mozilla::MakePowerOfTwo32<2 * 1024 * 1024>();  // 2M entries = 16MB
-#  endif
-
-// Startup profiling usually need to capture more data, especially on slow
-// systems.
-// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
-// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
-static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
-#  if !defined(GP_PLAT_arm_android)
-    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
-#  else
-    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
-#  endif
-
-#  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
-// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
-// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
-#  define PROFILER_DEFAULT_INTERVAL 1  /* millisecond */
-#  define PROFILER_MAX_INTERVAL 5000   /* milliseconds */
-#  define PROFILER_DEFAULT_ACTIVE_TAB_ID 0
-
-// Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will
-// also be started. This call must happen before any other profiler calls
-// (except profiler_start(), which will call profiler_init() if it hasn't
-// already run).
-void profiler_init(void* stackTop);
-void profiler_init_threadmanager();
-
-// Call this as early as possible
-#  define AUTO_PROFILER_INIT mozilla::AutoProfilerInit PROFILER_RAII
-// Call this after the nsThreadManager is Init()ed
-#  define AUTO_PROFILER_INIT2 mozilla::AutoProfilerInit2 PROFILER_RAII
-
-// Clean up the profiler module, stopping it if required. This function may
-// also save a shutdown profile if requested. No profiler calls should happen
-// after this point and all profiling stack labels should have been popped.
-void profiler_shutdown(IsFastShutdown aIsFastShutdown = IsFastShutdown::No);
-
-// Start the profiler -- initializing it first if necessary -- with the
-// selected options. Stops and restarts the profiler if it is already active.
-// After starting the profiler is "active". The samples will be recorded in a
-// circular buffer.
-//   "aCapacity" is the maximum number of 8-bytes entries in the profiler's
-//               circular buffer.
-//   "aInterval" the sampling interval, measured in millseconds.
-//   "aFeatures" is the feature set. Features unsupported by this
-//               platform/configuration are ignored.
-//   "aFilters" is the list of thread filters. Threads that do not match any
-//              of the filters are not profiled. A filter matches a thread if
-//              (a) the thread name contains the filter as a case-insensitive
-//                  substring, or
-//              (b) the filter is of the form "pid:<n>" where n is the process
-//                  id of the process that the thread is running in.
-//   "aActiveTabID" BrowserId of the active browser screen's active tab.
-//               It's being used to determine the profiled tab. It's "0" if
-//               we failed to get the ID.
-//   "aDuration" is the duration of entries in the profiler's circular buffer.
-void profiler_start(
-    mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
-    const char** aFilters, uint32_t aFilterCount, uint64_t aActiveTabID,
-    const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
-
-// Stop the profiler and discard the profile without saving it. A no-op if the
-// profiler is inactive. After stopping the profiler is "inactive".
-void profiler_stop();
-
-// If the profiler is inactive, start it. If it's already active, restart it if
-// the requested settings differ from the current settings. Both the check and
-// the state change are performed while the profiler state is locked.
-// The only difference to profiler_start is that the current buffer contents are
-// not discarded if the profiler is already running with the requested settings.
-void profiler_ensure_started(
-    mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
-    const char** aFilters, uint32_t aFilterCount, uint64_t aActiveTabID,
-    const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
-
-//---------------------------------------------------------------------------
-// Control the profiler
+// Give information to the profiler
 //---------------------------------------------------------------------------
 
 // Register/unregister threads with the profiler. Both functions operate the
@@ -313,20 +214,6 @@ using PostSamplingCallback = std::function<void(SamplingState)>;
 [[nodiscard]] bool profiler_callback_after_sampling(
     PostSamplingCallback&& aCallback);
 
-// Pause and resume the profiler. No-ops if the profiler is inactive. While
-// paused the profile will not take any samples and will not record any data
-// into its buffers. The profiler remains fully initialized in this state.
-// Timeline markers will still be stored. This feature will keep JavaScript
-// profiling enabled, thus allowing toggling the profiler without invalidating
-// the JIT.
-void profiler_pause();
-void profiler_resume();
-
-// Only pause and resume the periodic sampling loop, including stack sampling,
-// counters, and profiling overheads.
-void profiler_pause_sampling();
-void profiler_resume_sampling();
-
 // These functions tell the profiler that a thread went to sleep so that we can
 // avoid sampling it while it's sleeping. Calling profiler_thread_sleep()
 // twice without an intervening profiler_thread_wake() is an error. All three
@@ -355,16 +242,6 @@ void profiler_clear_js_context();
 //---------------------------------------------------------------------------
 // Get information from the profiler
 //---------------------------------------------------------------------------
-
-// Get the params used to start the profiler. Returns 0 and an empty vector
-// (via outparams) if the profile is inactive. It's possible that the features
-// returned may be slightly different to those requested due to required
-// adjustments.
-void profiler_get_start_params(
-    int* aEntrySize, mozilla::Maybe<double>* aDuration, double* aInterval,
-    uint32_t* aFeatures,
-    mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters,
-    uint64_t* aActiveTabID);
 
 // Get the chunk manager used in the current profiling session, or null.
 mozilla::ProfileBufferControlledChunkManager*
@@ -530,22 +407,6 @@ void profiler_save_profile_to_file(const char* aFilename);
 //---------------------------------------------------------------------------
 
 namespace mozilla {
-
-class MOZ_RAII AutoProfilerInit {
- public:
-  explicit AutoProfilerInit() { profiler_init(this); }
-
-  ~AutoProfilerInit() { profiler_shutdown(); }
-
- private:
-};
-
-class MOZ_RAII AutoProfilerInit2 {
- public:
-  explicit AutoProfilerInit2() { profiler_init_threadmanager(); }
-
- private:
-};
 
 // Convenience class to register and unregister a thread with the profiler.
 // Needs to be the first object on the stack of the thread.

@@ -55,6 +55,10 @@ use crate::{
 
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+#[cfg(all(target_arch = "arm", feature = "neon", std_arch))]
+use std::arch::is_arm_feature_detected;
+#[cfg(all(target_arch = "aarch64", feature = "neon", std_arch))]
+use std::arch::is_aarch64_feature_detected;
 
 pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
 pub const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;

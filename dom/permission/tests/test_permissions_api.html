@@ -47,25 +47,23 @@
   ];
 
   // Create a closure, so that tests are run on the correct window object.
-  function createPermissionTester(aWindow) {
+  function createPermissionTester(iframe) {
+    const iframeWindow = iframe.contentWindow;
     return {
-      setPermissions(allow) {
+      async setPermissions(allow, context = iframeWindow.document) {
         const permissions = PERMISSIONS.map(({ type }) => {
           return {
             type,
             allow,
-            'context': aWindow.document
+            context,
           };
         });
-        return new Promise((resolve) => {
-          SpecialPowers.popPermissions(() => {
-            SpecialPowers.pushPermissions(permissions, resolve);
-          });
-        });
+        await SpecialPowers.popPermissions();
+        return SpecialPowers.pushPermissions(permissions);
       },
       revokePermissions() {
         const promisesToRevoke = PERMISSIONS.map(({ name })  => {
-          return aWindow.navigator.permissions
+          return iframeWindow.navigator.permissions
             .revoke({ name })
             .then(
               ({ state }) => is(state, 'prompt', `correct state for '${name}'`),
@@ -76,7 +74,7 @@
       },
       revokeUnsupportedPermissions() {
         const promisesToRevoke = UNSUPPORTED_PERMISSIONS.map(({ name }) => {
-          return aWindow.navigator.permissions
+          return iframeWindow.navigator.permissions
             .revoke({ name })
             .then(
               () => ok(false, `revoke should not have resolved for '${name}'`),
@@ -87,7 +85,7 @@
       },
       checkPermissions(expectedState) {
         const promisesToQuery = PERMISSIONS.map(({ name: expectedName }) => {
-          return aWindow.navigator.permissions
+          return iframeWindow.navigator.permissions
             .query({ name: expectedName })
             .then(
               ({ state, name }) => {
@@ -101,7 +99,7 @@
       },
       checkUnsupportedPermissions() {
         const promisesToQuery = UNSUPPORTED_PERMISSIONS.map(({ name }) => {
-          return aWindow.navigator.permissions
+          return iframeWindow.navigator.permissions
             .query({ name })
             .then(
               () => ok(false, `query should not have resolved for '${name}'`),
@@ -114,7 +112,7 @@
         return Promise.all(promisesToQuery);
       },
       promiseStateChanged(name, state) {
-        return aWindow.navigator.permissions
+        return iframeWindow.navigator.permissions
           .query({ name })
           .then(status => {
             return new Promise( resolve => {
@@ -142,7 +140,7 @@
         });
       },
       testInvalidQuery() {
-        return aWindow.navigator.permissions
+        return iframeWindow.navigator.permissions
           .query({ name: 'invalid' })
           .then(
             () => ok(false, 'invalid query should not have resolved'),
@@ -150,12 +148,96 @@
           );
       },
       testInvalidRevoke() {
-        return aWindow.navigator.permissions
+        return iframeWindow.navigator.permissions
           .revoke({ name: 'invalid' })
           .then(
             () => ok(false, 'invalid revoke should not have resolved'),
             () => ok(true, 'invalid revoke should have rejected')
           );
+      },
+      async testNotFullyActiveDoc() {
+        const iframe1 = await createIframe();
+        const expectedErrorClass = iframe1.contentWindow.DOMException;
+        const permAPI = iframe1.contentWindow.navigator.permissions;
+        // Document no longer fully active
+        iframe1.remove();
+        await new Promise((res) => {
+          permAPI.query({ name: "geolocation" }).catch((error) => {
+            ok(
+              error instanceof expectedErrorClass,
+              "DOMException from other realm"
+            );
+            is(
+              error.name,
+              "InvalidStateError",
+              "Must reject with a InvalidStateError"
+            );
+            iframe1.remove();
+            res();
+          });
+        });
+      },
+      async testNotFullyActiveChange() {
+        await SpecialPowers.popPermissions();
+        const iframe2 = await createIframe();
+        const initialStatus = await iframe2.contentWindow.navigator.permissions.query(
+          { name: "geolocation" }
+        );
+        await SpecialPowers.pushPermissions([
+          {
+            type: "geo",
+            allow: PROMPT_ACTION,
+            context: iframe2.contentWindow.document,
+          },
+        ]);
+        is(
+          initialStatus.state,
+          "prompt",
+          "Initially the iframe's permission is prompt"
+        );
+
+        // Document no longer fully active
+        const stolenDoc = iframe2.contentWindow.document;
+        iframe2.remove();
+        initialStatus.onchange = () => {
+          ok(false, "onchange must not fire when document is not fully active.");
+        };
+        // We set it to grant for this origin, but the PermissionStatus doesn't change.
+        await SpecialPowers.pushPermissions([
+          {
+            type: "geo",
+            allow: ALLOW_ACTION,
+            context: stolenDoc,
+          },
+        ]);
+        is(
+          initialStatus.state,
+          "prompt",
+          "Inactive document's permission must not change"
+        );
+
+        // Re-attach the iframe
+        document.body.appendChild(iframe2);
+        await new Promise((res) => (iframe2.onload = res));
+        // Fully active again
+        const newStatus = await iframe2.contentWindow.navigator.permissions.query({
+          name: "geolocation",
+        });
+        is(newStatus.state, "granted", "Reflect that we are granted");
+
+        const newEventPromise = new Promise((res) => (newStatus.onchange = res));
+        await SpecialPowers.pushPermissions([
+          {
+            type: "geo",
+            allow: DENY_ACTION,
+            context: iframe2.contentWindow.document,
+          },
+        ]);
+        // Event fires...
+        await newEventPromise;
+        is(initialStatus.state, "prompt", "Remains prompt, as it's actually dead.");
+        is(newStatus.state, "denied", "New status must be 'denied'.");
+        iframe2.remove();
       },
     };
   }
@@ -173,7 +255,7 @@
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
       iframe.src = 'file_empty.html';
-      iframe.onload = () => resolve(iframe.contentWindow);
+      iframe.onload = () => resolve(iframe);
       document.body.appendChild(iframe);
     });
   }
@@ -198,7 +280,9 @@
           .then(() => tester.revokeUnsupportedPermissions())
           .then(() => tester.revokePermissions())
           .then(() => tester.checkPermissions('prompt'))
-          .then(() => tester.testInvalidRevoke());
+          .then(() => tester.testInvalidRevoke())
+          .then(() => tester.testNotFullyActiveDoc())
+          .then(() => tester.testNotFullyActiveChange());
       })
       .then(SimpleTest.finish)
       .catch((e) => {

@@ -282,7 +282,7 @@ static void UnlockD3DTexture(
 }
 
 D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
-                                   gfx::IntSize aSize,
+                                   uint32_t aArrayIndex, gfx::IntSize aSize,
                                    gfx::SurfaceFormat aFormat,
                                    TextureAllocationFlags aFlags)
     : mSize(aSize),
@@ -290,6 +290,7 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
       mHasSynchronization(HasKeyedMutex(aTexture)),
       mTexture(aTexture),
+      mArrayIndex(aArrayIndex),
       mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
 }
@@ -386,9 +387,9 @@ bool D3D11TextureData::SerializeSpecific(
     LOGD3D11("Error getting shared handle for texture.");
     return false;
   }
-
-  *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat,
-                                     mSize, mYUVColorSpace, mColorRange);
+  *aOutDesc =
+      SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mArrayIndex, mFormat,
+                             mSize, mYUVColorSpace, mColorRange);
   return true;
 }
 
@@ -406,6 +407,23 @@ void D3D11TextureData::GetSubDescriptor(
   if (!SerializeSpecific(&ret)) return;
 
   *aOutDesc = std::move(ret);
+}
+
+/* static */
+already_AddRefed<TextureClient> D3D11TextureData::CreateTextureClient(
+    ID3D11Texture2D* aTexture, uint32_t aIndex, gfx::IntSize aSize,
+    gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
+    gfx::ColorRange aColorRange, KnowsCompositor* aKnowsCompositor) {
+  D3D11TextureData* data = new D3D11TextureData(
+      aTexture, aIndex, aSize, aFormat,
+      TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION);
+  data->SetYUVColorSpace(aColorSpace);
+  data->SetColorRange(aColorRange);
+
+  RefPtr<TextureClient> textureClient = MakeAndAddRef<TextureClient>(
+      data, TextureFlags::NO_FLAGS, aKnowsCompositor->GetTextureForwarder());
+
+  return textureClient.forget();
 }
 
 D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
@@ -544,7 +562,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   texture11->SetPrivateDataInterface(
       sD3D11TextureUsage,
       new TextureMemoryMeasurer(newDesc.Width * newDesc.Height * 4));
-  return new D3D11TextureData(texture11, aSize, aFormat, aFlags);
+  return new D3D11TextureData(texture11, 0, aSize, aFormat, aFlags);
 }
 
 void D3D11TextureData::Deallocate(LayersIPCChannel* aAllocator) {
@@ -765,6 +783,7 @@ bool D3D11TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
 DXGITextureHostD3D11::DXGITextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorD3D10& aDescriptor)
     : TextureHost(aFlags),
+      mArrayIndex(aDescriptor.arrayIndex()),
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
@@ -916,8 +935,7 @@ void DXGITextureHostD3D11::UnlockInternal() {
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
-      mHandle, mFormat, mYUVColorSpace, mColorRange, mSize);
-
+      mHandle, mArrayIndex, mFormat, mYUVColorSpace, mColorRange, mSize);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -1025,7 +1043,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       aBuilder.PushImage(
-          aBounds, aClip, true, aFilter, aImageKeys[0],
+          aBounds, aClip, true, false, aFilter, aImageKeys[0],
           !(mFlags & TextureFlags::NON_PREMULTIPLIED),
           wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f}, preferCompositorSurface,
           SupportsExternalCompositing(aBuilder.GetBackendType()));
@@ -1034,6 +1052,11 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
+      // DXGI_FORMAT_P010 stores its 10 bit value in the most significant bits
+      // of each 16 bit word with the unused lower bits cleared to zero so that
+      // it may be handled as if it was DXGI_FORMAT_P016. This is approximately
+      // perceptually correct. However, due to rounding error, the precise
+      // quantized value after sampling may be off by 1.
       MOZ_ASSERT(aImageKeys.length() == 2);
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],

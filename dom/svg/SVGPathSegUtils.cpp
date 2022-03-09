@@ -571,4 +571,241 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
   }
 }
 
+// Possible directions of an edge that doesn't immediately disqualify the path
+// as a rectangle.
+enum class EdgeDir {
+  LEFT,
+  RIGHT,
+  UP,
+  DOWN,
+  // NONE represents (almost) zero-length edges, they should be ignored.
+  NONE,
+};
+
+Maybe<EdgeDir> GetDirection(Point v) {
+  if (!std::isfinite(v.x) || !std::isfinite(v.y)) {
+    return Nothing();
+  }
+
+  bool x = fabs(v.x) > 0.001;
+  bool y = fabs(v.y) > 0.001;
+  if (x && y) {
+    return Nothing();
+  }
+
+  if (!x && !y) {
+    return Some(EdgeDir::NONE);
+  }
+
+  if (x) {
+    return Some(v.x > 0.0 ? EdgeDir::RIGHT : EdgeDir::LEFT);
+  }
+
+  return Some(v.y > 0.0 ? EdgeDir::DOWN : EdgeDir::UP);
+}
+
+EdgeDir OppositeDirection(EdgeDir dir) {
+  switch (dir) {
+    case EdgeDir::LEFT:
+      return EdgeDir::RIGHT;
+    case EdgeDir::RIGHT:
+      return EdgeDir::LEFT;
+    case EdgeDir::UP:
+      return EdgeDir::DOWN;
+    case EdgeDir::DOWN:
+      return EdgeDir::UP;
+    default:
+      return EdgeDir::NONE;
+  }
+}
+
+struct IsRectHelper {
+  Point min;
+  Point max;
+  EdgeDir currentDir;
+  // Index of the next corner.
+  uint32_t idx;
+  EdgeDir dirs[4];
+
+  bool Edge(Point from, Point to) {
+    auto edge = to - from;
+
+    auto maybeDir = GetDirection(edge);
+    if (maybeDir.isNothing()) {
+      return false;
+    }
+
+    EdgeDir dir = maybeDir.value();
+
+    if (dir == EdgeDir::NONE) {
+      // zero-length edges aren't an issue.
+      return true;
+    }
+
+    if (dir != currentDir) {
+      // The edge forms a corner with the previous edge.
+      if (idx >= 4) {
+        // We are at the 5th corner, can't be a rectangle.
+        return false;
+      }
+
+      if (dir == OppositeDirection(currentDir)) {
+        // Can turn left or right but not a full 180 degrees.
+        return false;
+      }
+
+      dirs[idx] = dir;
+      idx += 1;
+      currentDir = dir;
+    }
+
+    min.x = fmin(min.x, to.x);
+    min.y = fmin(min.y, to.y);
+    max.x = fmax(max.x, to.x);
+    max.y = fmax(max.y, to.y);
+
+    return true;
+  }
+
+  bool EndSubpath() {
+    if (idx != 4) {
+      return false;
+    }
+
+    if (dirs[0] != OppositeDirection(dirs[2]) ||
+        dirs[1] != OppositeDirection(dirs[3])) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+bool ApproxEqual(gfx::Point a, gfx::Point b) {
+  auto v = b - a;
+  return fabs(v.x) < 0.001 && fabs(v.y) < 0.001;
+}
+
+Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
+  Point pathStart(0.0, 0.0);
+  Point segStart(0.0, 0.0);
+  IsRectHelper helper = {
+      Point(0.0, 0.0),
+      Point(0.0, 0.0),
+      EdgeDir::NONE,
+      0,
+      {EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE},
+  };
+
+  auto ToGfxPoint = [](const StyleCoordPair& aPair) {
+    return Point(aPair._0, aPair._1);
+  };
+
+  for (const StylePathCommand& cmd : aPath) {
+    switch (cmd.tag) {
+      case StylePathCommand::Tag::MoveTo: {
+        Point to = ToGfxPoint(cmd.move_to.point);
+        if (helper.idx != 0) {
+          // This is overly strict since empty moveto sequences such as "M 10 12
+          // M 3 2 M 0 0" render nothing, but I expect it won't make us miss a
+          // lot of rect-shaped paths in practice and lets us avoidhandling
+          // special caps for empty sub-paths like "M 0 0 L 0 0" and "M 1 2 Z".
+          return Nothing();
+        }
+
+        if (!ApproxEqual(pathStart, segStart)) {
+          // If we were only interested in filling we could auto-close here
+          // by calling helper.Edge like in the ClosePath case and detect some
+          // unclosed paths as rectangles.
+          //
+          // For example:
+          //  - "M 1 0 L 0 0 L 0 1 L 1 1 L 1 0" are both rects for filling and
+          //  stroking.
+          //  - "M 1 0 L 0 0 L 0 1 L 1 1" fills a rect but the stroke is shaped
+          //  like a C.
+          return Nothing();
+        }
+
+        if (helper.idx != 0 && !helper.EndSubpath()) {
+          return Nothing();
+        }
+
+        if (cmd.move_to.absolute == StyleIsAbsolute::No) {
+          to = segStart + to;
+        }
+
+        pathStart = to;
+        segStart = to;
+        if (helper.idx == 0) {
+          helper.min = to;
+          helper.max = to;
+        }
+
+        break;
+      }
+      case StylePathCommand::Tag::ClosePath: {
+        if (!helper.Edge(segStart, pathStart)) {
+          return Nothing();
+        }
+        if (!helper.EndSubpath()) {
+          return Nothing();
+        }
+        pathStart = segStart;
+        break;
+      }
+      case StylePathCommand::Tag::LineTo: {
+        Point to = ToGfxPoint(cmd.line_to.point);
+        if (cmd.line_to.absolute == StyleIsAbsolute::No) {
+          to = segStart + to;
+        }
+
+        if (!helper.Edge(segStart, to)) {
+          return Nothing();
+        }
+        segStart = to;
+        break;
+      }
+      case StylePathCommand::Tag::HorizontalLineTo: {
+        Point to = gfx::Point(cmd.horizontal_line_to.x, segStart.y);
+        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::No) {
+          to.x += segStart.x;
+        }
+
+        if (!helper.Edge(segStart, to)) {
+          return Nothing();
+        }
+        segStart = to;
+        break;
+      }
+      case StylePathCommand::Tag::VerticalLineTo: {
+        Point to = gfx::Point(segStart.x, cmd.vertical_line_to.y);
+        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::No) {
+          to.y += segStart.y;
+        }
+
+        if (!helper.Edge(segStart, to)) {
+          return Nothing();
+        }
+        segStart = to;
+        break;
+      }
+      default:
+        return Nothing();
+    }
+  }
+
+  if (!ApproxEqual(pathStart, segStart)) {
+    // Same situation as with moveto regarding stroking not fullly closed path
+    // even though the fill is a rectangle.
+    return Nothing();
+  }
+
+  if (!helper.EndSubpath()) {
+    return Nothing();
+  }
+
+  auto size = (helper.max - helper.min);
+  return Some(Rect(helper.min, Size(size.x, size.y)));
+}
+
 }  // namespace mozilla

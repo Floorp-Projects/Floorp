@@ -234,7 +234,8 @@ struct RangePaintInfo {
 
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
       : mRange(aRange),
-        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false) {
+        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false),
+        mList(&mBuilder) {
     MOZ_COUNT_CTOR(RangePaintInfo);
     mBuilder.BeginFrame();
   }
@@ -2622,8 +2623,9 @@ void PresShell::LoadComplete() {
 #ifdef DEBUG
 void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
   // XXXbz due to bug 372769, can't actually assert anything here...
-  return;
-
+  // XXX Since bug 372769 is now fixed, the assertion is being enabled in bug
+  //     1758104.
+#  if 0
   // XXXbz shouldn't need this part; remove it once FrameNeedsReflow
   // handles the root frame correctly.
   if (!aFrame->GetParent()) {
@@ -2646,6 +2648,7 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
   MOZ_ASSERT_UNREACHABLE(
       "Frame has dirty bits set but isn't scheduled to be "
       "reflowed?");
+#  endif
 }
 #endif
 
@@ -4691,12 +4694,10 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
   // part of the selection. Then, append the wrapper to the top of the list.
   // Otherwise, just delete the item and don't append it.
   nsRect surfaceRect;
-  nsDisplayList tmpList;
 
-  nsDisplayItem* i;
-  while ((i = aList->RemoveBottom())) {
+  for (nsDisplayItem* i : aList->TakeItems()) {
     if (i->GetType() == DisplayItemType::TYPE_CONTAINER) {
-      tmpList.AppendToTop(i);
+      aList->AppendToTop(i);
       surfaceRect.UnionRect(
           surfaceRect, ClipListToRange(aBuilder, i->GetChildren(), aRange));
       continue;
@@ -4777,7 +4778,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
     // list, insert that as well
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
     if (itemToInsert || sublist) {
-      tmpList.AppendToTop(itemToInsert ? itemToInsert : i);
+      aList->AppendToTop(itemToInsert ? itemToInsert : i);
       // if the item is a list, iterate over it as well
       if (sublist)
         surfaceRect.UnionRect(surfaceRect,
@@ -4787,9 +4788,6 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
       i->Destroy(aBuilder);
     }
   }
-
-  // now add all the items back onto the original list again
-  aList->AppendToTop(&tmpList);
 
   return surfaceRect;
 }
@@ -4909,7 +4907,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     ViewID zoomedId =
         nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
 
-    nsDisplayList wrapped;
+    nsDisplayList wrapped(&info->mBuilder);
     wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder, rootScrollFrame,
                                                &info->mList, nullptr, zoomedId);
     info->mList.AppendToTop(&wrapped);
@@ -5215,12 +5213,25 @@ already_AddRefed<SourceSurface> PresShell::RenderSelection(
                              aScreenRect, aFlags);
 }
 
+void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
+                            nsDisplayList* aList, nsDisplayItem* aItem) {
+  if (!aItem) {
+    return;
+  }
+
+  nsDisplayList list(aBuilder);
+  list.AppendToTop(aItem);
+  list.AppendToTop(aList);
+  aList->AppendToTop(&list);
+}
+
 void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
                                               nsDisplayList* aList,
                                               nsIFrame* aFrame,
                                               const nsRect& aBounds) {
-  aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                NS_RGB(115, 115, 115));
+  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
+  AddDisplayItemToBottom(aBuilder, aList, item);
 }
 
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
@@ -5274,16 +5285,15 @@ void PresShell::AddCanvasBackgroundColorItem(
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
-  // If we're only adding an unscrolled item, then pretend that we've
-  // already done it.
-  bool addedScrollingBackgroundColor =
-      !!(aFlags & AddCanvasBackgroundColorFlags::AppendUnscrolledOnly);
-  if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
+  bool addedScrollingBackgroundColor = false;
+  if (!aFrame->GetParent()) {
     nsIScrollableFrame* sf =
         aFrame->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
+        // TODO: We should be able to set canvas background color during display
+        // list building to avoid calling this function.
         addedScrollingBackgroundColor = AddCanvasBackgroundColor(
             aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
@@ -5299,8 +5309,9 @@ void PresShell::AddCanvasBackgroundColorItem(
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
-    aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                  bgcolor);
+    nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+        aBuilder, aFrame, aBounds, bgcolor);
+    AddDisplayItemToBottom(aBuilder, aList, item);
   }
 }
 
@@ -5538,107 +5549,12 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
   }
 }
 
-/**
- * Find the first floating view with a frame and a widget in a postorder
- * traversal of the view tree that contains the point. Thus more deeply nested
- * floating views are preferred over their ancestors, and floating views earlier
- * in the view hierarchy (i.e., added later) are preferred over their siblings.
- * This is adequate for finding the "topmost" floating view under a point, given
- * that floating views don't supporting having a specific z-index.
- *
- * We cannot exit early when aPt is outside the view bounds, because floating
- * views aren't necessarily included in their parent's bounds, so this could
- * traverse the entire view hierarchy --- use carefully.
- *
- * aPt is relative aRelativeToView with the viewport type
- * aRelativeToViewportType. aRelativeToView will always have a frame. If aView
- * has a frame then aRelativeToView will be aView. (The reason aRelativeToView
- * and aView are separate is because we need to traverse into views without
- * frames (ie the inner view of a subdocument frame) but we can only easily
- * transform between views using TransformPoint which takes frames.)
- */
-static nsView* FindFloatingViewContaining(nsView* aRelativeToView,
-                                          ViewportType aRelativeToViewportType,
-                                          nsView* aView, nsPoint aPt) {
-  MOZ_ASSERT(aRelativeToView->GetFrame());
-
-  if (aView->GetVisibility() == nsViewVisibility_kHide) {
-    // No need to look into descendants.
-    return nullptr;
-  }
-
-  bool crossingZoomBoundary = false;
-
-  nsIFrame* frame = aView->GetFrame();
-  if (frame) {
-    if (!frame->IsVisibleConsideringAncestors(
-            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
-        !frame->PresShell()->IsActive()) {
-      return nullptr;
-    }
-
-    // We start out in visual coords and then if we cross the zoom boundary we
-    // become in layout coords. The zoom boundary always occurs in a document
-    // with IsRootContentDocumentCrossProcess. The root view of such a document
-    // is outside the zoom boundary and any child view must be inside the zoom
-    // boundary because we only create views for certain kinds of frames and
-    // none of them can be between the root frame and the zoom boundary.
-    if (aRelativeToViewportType == ViewportType::Visual) {
-      if (!aRelativeToView->GetParent() ||
-          aRelativeToView->GetViewManager() !=
-              aRelativeToView->GetParent()->GetViewManager()) {
-        if (aRelativeToView->GetFrame()
-                ->PresContext()
-                ->IsRootContentDocumentCrossProcess()) {
-          crossingZoomBoundary = true;
-        }
-      }
-    }
-
-    ViewportType nextRelativeToViewportType = aRelativeToViewportType;
-    if (crossingZoomBoundary) {
-      nextRelativeToViewportType = ViewportType::Layout;
-    }
-
-    nsLayoutUtils::TransformResult result = nsLayoutUtils::TransformPoint(
-        RelativeTo{aRelativeToView->GetFrame(), aRelativeToViewportType},
-        RelativeTo{frame, nextRelativeToViewportType}, aPt);
-    if (result != nsLayoutUtils::TRANSFORM_SUCCEEDED) {
-      return nullptr;
-    }
-
-    aRelativeToView = aView;
-    aRelativeToViewportType = nextRelativeToViewportType;
-  }
-
-  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsView* r = FindFloatingViewContaining(aRelativeToView,
-                                           aRelativeToViewportType, v, aPt);
-    if (r) return r;
-  }
-
-  if (!frame || !aView->GetFloating() || !aView->HasWidget()) {
-    return nullptr;
-  }
-
-  // Even though aPt is in visual coordinates until we cross the zoom boundary
-  // it is valid to compare it to view coords (which are in layout coords)
-  // because visual coords are the same as layout coords for every view outside
-  // of the zoom boundary except for the root view of the root content document.
-  // For the root view of the root content document, its bounds don't actually
-  // correspond to what is visible when we have a MobileViewportManager. So we
-  // skip the hit test. This is okay because the point has already been hit
-  // test: 1) if we are the root view in the process then the point comes from a
-  // real mouse event so it must have been over our widget, or 2) if we are the
-  // root of a subdocument then hittesting against the view of the subdocument
-  // frame that contains us already happened and succeeded before getting here.
-  if (!crossingZoomBoundary) {
-    if (aView->GetDimensions().Contains(aPt)) {
-      return aView;
-    }
-  }
-
-  return nullptr;
+static nsView* FindFloatingViewContaining(nsPresContext* aRootPresContext,
+                                          nsIWidget* aRootWidget,
+                                          const LayoutDeviceIntPoint& aPt) {
+  nsIFrame* popupFrame =
+      nsLayoutUtils::GetPopupFrameForPoint(aRootPresContext, aRootWidget, aPt);
+  return popupFrame ? popupFrame->GetView() : nullptr;
 }
 
 /*
@@ -5668,9 +5584,9 @@ static nsView* FindViewContaining(nsView* aRelativeToView,
 
   nsIFrame* frame = aView->GetFrame();
   if (frame) {
-    if (!frame->IsVisibleConsideringAncestors(
-            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) ||
-        !frame->PresShell()->IsActive()) {
+    if (!frame->PresShell()->IsActive() ||
+        !frame->IsVisibleConsideringAncestors(
+            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
       return nullptr;
     }
 
@@ -5804,12 +5720,13 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   // the mouse is over. pointVM is the VM of that pres shell.
   nsViewManager* pointVM = nullptr;
 
-  // This could be a bit slow (traverses entire view hierarchy)
-  // but it's OK to do it once per synthetic mouse event
   if (rootView->GetFrame()) {
-    view = FindFloatingViewContaining(rootView, ViewportType::Visual, rootView,
-                                      mMouseLocation);
+    view = FindFloatingViewContaining(
+        mPresContext, rootView->GetWidget(),
+        LayoutDeviceIntPoint::FromAppUnitsToNearest(
+            mMouseLocation + rootView->ViewToWidgetOffset(), APD));
   }
+
   nsView* pointView = view;
   if (!view) {
     view = rootView;
@@ -11282,7 +11199,14 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
     }
   }
 
-  nsPoint prevOffset = GetVisualViewportOffset();
+  // Careful here not to call GetVisualViewportOffset to get the previous visual
+  // viewport offset because if mVisualViewportOffset is nothing then we'll get
+  // the layout scroll position directly from the scroll frame and it has likely
+  // already been updated.
+  nsPoint prevOffset = aPrevLayoutScrollPos;
+  if (mVisualViewportOffset.isSome()) {
+    prevOffset = *mVisualViewportOffset;
+  }
   if (prevOffset == newOffset) {
     return false;
   }
@@ -11306,6 +11230,8 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
 
   return true;
 }
+
+void PresShell::ResetVisualViewportOffset() { mVisualViewportOffset.reset(); }
 
 void PresShell::ScrollToVisual(const nsPoint& aVisualViewportOffset,
                                FrameMetrics::ScrollOffsetUpdateType aUpdateType,

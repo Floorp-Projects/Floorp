@@ -71,23 +71,22 @@ template <>
 struct ParamTraits<mozilla::net::SocketInfo> {
   typedef mozilla::net::SocketInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.host);
-    WriteParam(aMsg, aParam.sent);
-    WriteParam(aMsg, aParam.received);
-    WriteParam(aMsg, aParam.port);
-    WriteParam(aMsg, aParam.active);
-    WriteParam(aMsg, aParam.type);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.host);
+    WriteParam(aWriter, aParam.sent);
+    WriteParam(aWriter, aParam.received);
+    WriteParam(aWriter, aParam.port);
+    WriteParam(aWriter, aParam.active);
+    WriteParam(aWriter, aParam.type);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->host) &&
-           ReadParam(aMsg, aIter, &aResult->sent) &&
-           ReadParam(aMsg, aIter, &aResult->received) &&
-           ReadParam(aMsg, aIter, &aResult->port) &&
-           ReadParam(aMsg, aIter, &aResult->active) &&
-           ReadParam(aMsg, aIter, &aResult->type);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->host) &&
+           ReadParam(aReader, &aResult->sent) &&
+           ReadParam(aReader, &aResult->received) &&
+           ReadParam(aReader, &aResult->port) &&
+           ReadParam(aReader, &aResult->active) &&
+           ReadParam(aReader, &aResult->type);
   }
 };
 
@@ -95,23 +94,22 @@ template <>
 struct ParamTraits<mozilla::net::DNSCacheEntries> {
   typedef mozilla::net::DNSCacheEntries paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.hostname);
-    WriteParam(aMsg, aParam.hostaddr);
-    WriteParam(aMsg, aParam.family);
-    WriteParam(aMsg, aParam.expiration);
-    WriteParam(aMsg, aParam.netInterface);
-    WriteParam(aMsg, aParam.TRR);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.hostname);
+    WriteParam(aWriter, aParam.hostaddr);
+    WriteParam(aWriter, aParam.family);
+    WriteParam(aWriter, aParam.expiration);
+    WriteParam(aWriter, aParam.netInterface);
+    WriteParam(aWriter, aParam.TRR);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->hostname) &&
-           ReadParam(aMsg, aIter, &aResult->hostaddr) &&
-           ReadParam(aMsg, aIter, &aResult->family) &&
-           ReadParam(aMsg, aIter, &aResult->expiration) &&
-           ReadParam(aMsg, aIter, &aResult->netInterface) &&
-           ReadParam(aMsg, aIter, &aResult->TRR);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->hostname) &&
+           ReadParam(aReader, &aResult->hostaddr) &&
+           ReadParam(aReader, &aResult->family) &&
+           ReadParam(aReader, &aResult->expiration) &&
+           ReadParam(aReader, &aResult->netInterface) &&
+           ReadParam(aReader, &aResult->TRR);
   }
 };
 
@@ -119,13 +117,12 @@ template <>
 struct ParamTraits<mozilla::net::DnsAndConnectSockets> {
   typedef mozilla::net::DnsAndConnectSockets paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.speculative);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.speculative);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->speculative);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->speculative);
   }
 };
 
@@ -133,17 +130,16 @@ template <>
 struct ParamTraits<mozilla::net::HttpConnInfo> {
   typedef mozilla::net::HttpConnInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.ttl);
-    WriteParam(aMsg, aParam.rtt);
-    WriteParam(aMsg, aParam.protocolVersion);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.ttl);
+    WriteParam(aWriter, aParam.rtt);
+    WriteParam(aWriter, aParam.protocolVersion);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->ttl) &&
-           ReadParam(aMsg, aIter, &aResult->rtt) &&
-           ReadParam(aMsg, aIter, &aResult->protocolVersion);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->ttl) &&
+           ReadParam(aReader, &aResult->rtt) &&
+           ReadParam(aReader, &aResult->protocolVersion);
   }
 };
 
@@ -151,27 +147,26 @@ template <>
 struct ParamTraits<mozilla::net::HttpRetParams> {
   typedef mozilla::net::HttpRetParams paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.host);
-    WriteParam(aMsg, aParam.active);
-    WriteParam(aMsg, aParam.idle);
-    WriteParam(aMsg, aParam.dnsAndSocks);
-    WriteParam(aMsg, aParam.counter);
-    WriteParam(aMsg, aParam.port);
-    WriteParam(aMsg, aParam.httpVersion);
-    WriteParam(aMsg, aParam.ssl);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.host);
+    WriteParam(aWriter, aParam.active);
+    WriteParam(aWriter, aParam.idle);
+    WriteParam(aWriter, aParam.dnsAndSocks);
+    WriteParam(aWriter, aParam.counter);
+    WriteParam(aWriter, aParam.port);
+    WriteParam(aWriter, aParam.httpVersion);
+    WriteParam(aWriter, aParam.ssl);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->host) &&
-           ReadParam(aMsg, aIter, &aResult->active) &&
-           ReadParam(aMsg, aIter, &aResult->idle) &&
-           ReadParam(aMsg, aIter, &aResult->dnsAndSocks) &&
-           ReadParam(aMsg, aIter, &aResult->counter) &&
-           ReadParam(aMsg, aIter, &aResult->port) &&
-           ReadParam(aMsg, aIter, &aResult->httpVersion) &&
-           ReadParam(aMsg, aIter, &aResult->ssl);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->host) &&
+           ReadParam(aReader, &aResult->active) &&
+           ReadParam(aReader, &aResult->idle) &&
+           ReadParam(aReader, &aResult->dnsAndSocks) &&
+           ReadParam(aReader, &aResult->counter) &&
+           ReadParam(aReader, &aResult->port) &&
+           ReadParam(aReader, &aResult->httpVersion) &&
+           ReadParam(aReader, &aResult->ssl);
   }
 };
 

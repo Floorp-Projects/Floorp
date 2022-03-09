@@ -117,13 +117,13 @@ let apiManager = new (class extends SchemaAPIManager {
       return extension.apiManager.onStartup(extension);
     });
 
-    this.on("update", async (e, { id, resourceURI }) => {
+    this.on("update", async (e, { id, resourceURI, isPrivileged }) => {
       let modules = this.eventModules.get("update");
       if (modules.size == 0) {
         return;
       }
 
-      let extension = new ExtensionData(resourceURI);
+      let extension = new ExtensionData(resourceURI, isPrivileged);
       await extension.loadManifest();
 
       return Promise.all(

@@ -10,7 +10,7 @@ const MAX_WIDTH = 300;
 const START_TEXT = "Start text";
 const LONG_TEXT =
   "I am a long text and I will not fit in a 300px container. " +
-  "I expect the inplace editor to wrap.";
+  "I expect the inplace editor to wrap over more than two lines.";
 
 // Test the inplace-editor behavior with a maxWidth configuration option
 // defined.

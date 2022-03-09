@@ -8,6 +8,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
@@ -26,6 +27,8 @@ const DATA_COLLECTION_CHECKBOX_ID = "firefoxSuggestDataCollectionToggle";
 const INFO_BOX_ID = "firefoxSuggestInfoBox";
 const INFO_TEXT_ID = "firefoxSuggestInfoText";
 const LEARN_MORE_CLASS = "firefoxSuggestLearnMore";
+const BEST_MATCH_CONTAINER_ID = "firefoxSuggestBestMatchContainer";
+const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatch";
 
 // Maps text element IDs to `{ enabled, disabled }`, where `enabled` is the
 // expected l10n ID when the Firefox Suggest feature is enabled, and `disabled`
@@ -41,10 +44,9 @@ const EXPECTED_L10N_IDS = {
   },
 };
 
-// Allow more time for Mac machines so they don't time out in verify mode.
-if (AppConstants.platform == "macosx") {
-  requestLongerTimeout(3);
-}
+// This test can take a while due to the many permutations some of these tasks
+// run through, so request a longer timeout.
+requestLongerTimeout(10);
 
 // The following tasks check the visibility of the Firefox Suggest UI based on
 // the value of the feature pref. See doVisibilityTest().
@@ -124,12 +126,16 @@ async function doVisibilityTest({
 }) {
   info(
     "Running visibility test: " +
-      JSON.stringify({
-        initialScenario,
-        initialExpectedVisibility,
-        newScenario,
-        newExpectedVisibility,
-      })
+      JSON.stringify(
+        {
+          initialScenario,
+          initialExpectedVisibility,
+          newScenario,
+          newExpectedVisibility,
+        },
+        null,
+        2
+      )
   );
 
   // Set the initial scenario.
@@ -494,6 +500,242 @@ add_task(async function clickLearnMore() {
     gBrowser.selectedTab = prefsTab;
   }
 
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests the visibility of the best match checkbox based on the values of
+// `browser.urlbar.quicksuggest.enabled` and `browser.urlbar.bestMatch.enabled`.
+add_task(async function bestMatchVisibility() {
+  for (let initialQuickSuggest of [false, true]) {
+    for (let initialBestMatch of [false, true]) {
+      for (let newQuickSuggest of [false, true]) {
+        for (let newBestMatch of [false, true]) {
+          await doBestMatchVisibilityTest({
+            initialQuickSuggest,
+            initialBestMatch,
+            newQuickSuggest,
+            newBestMatch,
+          });
+        }
+      }
+    }
+  }
+});
+
+/**
+ * Runs a test that checks the visibility of the Firefox Suggest best match
+ * checkbox. It does the following:
+ *
+ * 1. Sets the quick suggest and best match feature prefs
+ * 2. Opens about:preferences and checks the visibility of the checkbox
+ * 3. Sets the quick suggest and best match feature prefs again
+ * 4. Checks the visibility of the checkbox again
+ *
+ * @param {boolean} initialQuickSuggest
+ *   The value to set for `browser.urlbar.quicksuggest.enabled` before
+ *   about:preferences is opened.
+ * @param {boolean} initialBestMatch
+ *   The value to set for `browser.urlbar.bestMatch.enabled` before
+ *   about:preferences is opened.
+ * @param {boolean} newQuickSuggest
+ *   The value to set for `browser.urlbar.quicksuggest.enabled` while
+ *   about:preferences is open.
+ * @param {boolean} newBestMatch
+ *   The value to set for `browser.urlbar.bestMatch.enabled` while
+ *   about:preferences is open.
+ */
+async function doBestMatchVisibilityTest({
+  initialQuickSuggest,
+  initialBestMatch,
+  newQuickSuggest,
+  newBestMatch,
+}) {
+  info(
+    "Running best match visibility test: " +
+      JSON.stringify(
+        {
+          initialQuickSuggest,
+          initialBestMatch,
+          newQuickSuggest,
+          newBestMatch,
+        },
+        null,
+        2
+      )
+  );
+
+  // Set the initial pref values.
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.enabled",
+    initialQuickSuggest
+  );
+  Services.prefs.setBoolPref(
+    "browser.urlbar.bestMatch.enabled",
+    initialBestMatch
+  );
+  await UrlbarQuickSuggest.readyPromise;
+
+  // Open prefs and check the initial visibility.
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let container = doc.getElementById(BEST_MATCH_CONTAINER_ID);
+  Assert.equal(
+    BrowserTestUtils.is_visible(container),
+    initialBestMatch,
+    "The checkbox container has the expected initial visibility"
+  );
+
+  // Set the new pref values.
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.enabled",
+    newQuickSuggest
+  );
+  Services.prefs.setBoolPref("browser.urlbar.bestMatch.enabled", newBestMatch);
+  await UrlbarQuickSuggest.readyPromise;
+
+  // Check visibility again.
+  Assert.equal(
+    BrowserTestUtils.is_visible(container),
+    newBestMatch,
+    "The checkbox container has the expected visibility after setting prefs"
+  );
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.enabled");
+  Services.prefs.clearUserPref("browser.urlbar.bestMatch.enabled");
+  await UrlbarQuickSuggest.readyPromise;
+}
+
+// Tests the visibility of the best match checkbox when the best match feature
+// is enabled via a Nimbus experiment before about:preferences is opened.
+add_task(async function bestMatchVisibility_experiment_beforeOpen() {
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      bestMatchEnabled: true,
+    },
+    callback: async () => {
+      await openPreferencesViaOpenPreferencesAPI("privacy", {
+        leaveOpen: true,
+      });
+      let doc = gBrowser.selectedBrowser.contentDocument;
+      let container = doc.getElementById(BEST_MATCH_CONTAINER_ID);
+      Assert.ok(
+        BrowserTestUtils.is_visible(container),
+        "The checkbox container is visible"
+      );
+      gBrowser.removeCurrentTab();
+    },
+  });
+});
+
+// Tests the visibility of the best match checkbox when the best match feature
+// is enabled via a Nimbus experiment after about:preferences is opened.
+add_task(async function bestMatchVisibility_experiment_afterOpen() {
+  // Open prefs and check the initial visibility.
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let container = doc.getElementById(BEST_MATCH_CONTAINER_ID);
+  Assert.ok(
+    BrowserTestUtils.is_hidden(container),
+    "The checkbox container is hidden initially"
+  );
+
+  // Install an experiment with best match enabled.
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      bestMatchEnabled: true,
+    },
+    callback: () => {
+      Assert.ok(
+        BrowserTestUtils.is_visible(container),
+        "The checkbox container is visible after installing the experiment"
+      );
+    },
+  });
+
+  Assert.ok(
+    BrowserTestUtils.is_hidden(container),
+    "The checkbox container is hidden again after the experiment is uninstalled"
+  );
+
+  gBrowser.removeCurrentTab();
+});
+
+// Check the pref and the checkbox for best match.
+add_task(async function bestMatchToggle() {
+  // Enable the feature so that the toggle appears.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+  checkbox.scrollIntoView();
+
+  info("Check if the checkbox stauts reflects the pref value");
+  for (const isEnabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.suggest.bestmatch", isEnabled]],
+    });
+    assertCheckboxes({ [BEST_MATCH_CHECKBOX_ID]: isEnabled });
+    await SpecialPowers.popPrefEnv();
+  }
+
+  info("Check if the pref value reflects the checkbox status");
+  for (let i = 0; i < 2; i++) {
+    const initialValue = checkbox.checked;
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + BEST_MATCH_CHECKBOX_ID,
+      {},
+      gBrowser.selectedBrowser
+    );
+    Assert.ok(initialValue !== checkbox.checked);
+    Assert.equal(
+      Services.prefs.getBoolPref("browser.urlbar.suggest.bestmatch"),
+      checkbox.checked
+    );
+  }
+
+  // Clean up.
+  Services.prefs.clearUserPref("browser.urlbar.suggest.bestmatch");
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Clicks the learn-more link for best match and checks the help page is opened
+// in a new tab.
+add_task(async function clickBestMatchLearnMore() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const link = doc.getElementById("firefoxSuggestBestMatchLearnMore");
+  Assert.ok(BrowserTestUtils.is_visible(link), "Learn-more link is visible");
+
+  const tabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    UrlbarProviderQuickSuggest.bestMatchHelpUrl
+  );
+
+  info("Clicking learn-more link");
+  link.scrollIntoView();
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#firefoxSuggestBestMatchLearnMore",
+    {},
+    gBrowser.selectedBrowser
+  );
+
+  info("Waiting for help page to load in a new tab");
+  const tab = await tabPromise;
+  gBrowser.removeTab(tab);
+
+  // Clean up.
   gBrowser.removeCurrentTab();
   await SpecialPowers.popPrefEnv();
 });

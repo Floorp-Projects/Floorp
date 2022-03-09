@@ -18,11 +18,11 @@
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
+#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
@@ -101,13 +101,9 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
 
   // Step 2. If controller.[[closeRequested]] is false and state is "readable",
   // return true.
-  if (!aController->CloseRequested() &&
-      state == ReadableStream::ReaderState::Readable) {
-    return true;
-  }
-
   // Step 3. Return false.
-  return false;
+  return !aController->CloseRequested() &&
+         state == ReadableStream::ReaderState::Readable;
 }
 
 enum class CloseOrEnqueue { Close, Enqueue };
@@ -150,6 +146,10 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
 
     case ReadableStream::ReaderState::Errored:
       aRv.ThrowTypeError(prefix + "has errored."_ns);
+      return false;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown ReaderState");
       return false;
   }
 }
@@ -407,7 +407,7 @@ void ReadableStreamDefaultControllerError(
 // MG:XXX: Probably can find base class between this and
 // StartPromiseNativeHandler
 class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
-  ~PullIfNeededNativePromiseHandler() = default;
+  ~PullIfNeededNativePromiseHandler() override = default;
 
   // Virtually const, but cycle collected
   RefPtr<ReadableStreamDefaultController> mController;
@@ -498,7 +498,7 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
 }
 
 class StartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~StartPromiseNativeHandler() = default;
+  ~StartPromiseNativeHandler() override = default;
 
   RefPtr<ReadableStreamDefaultController> mController;
 
@@ -720,5 +720,4 @@ void ReadableStreamDefaultController::ReleaseSteps() {
   // Step 1. Return.
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

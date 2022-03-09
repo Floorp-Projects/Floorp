@@ -3,9 +3,12 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the outline pane fuzzy filtering of outline items
+
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "long");
-  await selectSource(dbg, "long", 1);
+  const dbg = await initDebugger("doc-scripts.html", "long.js");
+  await selectSource(dbg, "long.js", 1);
   findElementWithSelector(dbg, ".outline-tab").click();
 
   // turn off alphetical sort if active
@@ -76,8 +79,4 @@ add_task(async function() {
 
 function getItems(dbg) {
   return findAllElements(dbg, "outlineItems");
-}
-
-function getNthItem(dbg, index) {
-  return findElement(dbg, "outlineItem", index);
 }

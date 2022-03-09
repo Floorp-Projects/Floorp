@@ -16,42 +16,42 @@ namespace IPC {
 template <>
 struct ParamTraits<nsIDOMGeoPositionCoords*> {
   // Function to serialize a geoposition
-  static void Write(Message* aMsg, nsIDOMGeoPositionCoords* aParam) {
+  static void Write(MessageWriter* aWriter, nsIDOMGeoPositionCoords* aParam) {
     bool isNull = !aParam;
-    WriteParam(aMsg, isNull);
+    WriteParam(aWriter, isNull);
     // If it is a null object, then we are done
     if (isNull) return;
 
     double coordData;
 
     aParam->GetLatitude(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetLongitude(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetAltitude(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetAccuracy(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetAltitudeAccuracy(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetHeading(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
 
     aParam->GetSpeed(&coordData);
-    WriteParam(aMsg, coordData);
+    WriteParam(aWriter, coordData);
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
+  static bool Read(MessageReader* aReader,
                    RefPtr<nsIDOMGeoPositionCoords>* aResult) {
     // Check if it is the null pointer we have transfered
     bool isNull;
-    if (!ReadParam(aMsg, aIter, &isNull)) return false;
+    if (!ReadParam(aReader, &isNull)) return false;
 
     if (isNull) {
       *aResult = nullptr;
@@ -67,12 +67,10 @@ struct ParamTraits<nsIDOMGeoPositionCoords*> {
     double speed;
 
     // It's not important to us where it fails, but rather if it fails
-    if (!(ReadParam(aMsg, aIter, &latitude) &&
-          ReadParam(aMsg, aIter, &longitude) &&
-          ReadParam(aMsg, aIter, &altitude) &&
-          ReadParam(aMsg, aIter, &accuracy) &&
-          ReadParam(aMsg, aIter, &altitudeAccuracy) &&
-          ReadParam(aMsg, aIter, &heading) && ReadParam(aMsg, aIter, &speed)))
+    if (!(ReadParam(aReader, &latitude) && ReadParam(aReader, &longitude) &&
+          ReadParam(aReader, &altitude) && ReadParam(aReader, &accuracy) &&
+          ReadParam(aReader, &altitudeAccuracy) &&
+          ReadParam(aReader, &heading) && ReadParam(aReader, &speed)))
       return false;
 
     // We now have all the data
@@ -91,27 +89,26 @@ struct ParamTraits<nsIDOMGeoPositionCoords*> {
 template <>
 struct ParamTraits<nsIDOMGeoPosition*> {
   // Function to serialize a geoposition
-  static void Write(Message* aMsg, nsIDOMGeoPosition* aParam) {
+  static void Write(MessageWriter* aWriter, nsIDOMGeoPosition* aParam) {
     bool isNull = !aParam;
-    WriteParam(aMsg, isNull);
+    WriteParam(aWriter, isNull);
     // If it is a null object, then we are done
     if (isNull) return;
 
     EpochTimeStamp timeStamp;
     aParam->GetTimestamp(&timeStamp);
-    WriteParam(aMsg, timeStamp);
+    WriteParam(aWriter, timeStamp);
 
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aParam->GetCoords(getter_AddRefs(coords));
-    WriteParam(aMsg, coords);
+    WriteParam(aWriter, coords);
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIDOMGeoPosition>* aResult) {
+  static bool Read(MessageReader* aReader, RefPtr<nsIDOMGeoPosition>* aResult) {
     // Check if it is the null pointer we have transfered
     bool isNull;
-    if (!ReadParam(aMsg, aIter, &isNull)) return false;
+    if (!ReadParam(aReader, &isNull)) return false;
 
     if (isNull) {
       *aResult = nullptr;
@@ -122,8 +119,7 @@ struct ParamTraits<nsIDOMGeoPosition*> {
     RefPtr<nsIDOMGeoPositionCoords> coords;
 
     // It's not important to us where it fails, but rather if it fails
-    if (!ReadParam(aMsg, aIter, &timeStamp) ||
-        !ReadParam(aMsg, aIter, &coords)) {
+    if (!ReadParam(aReader, &timeStamp) || !ReadParam(aReader, &coords)) {
       return false;
     }
 

@@ -1,9 +1,12 @@
 include protocol PTestMultiMgrsLeft;
 include protocol PTestMultiMgrsRight;
 
+include "mozilla/_ipdltest/TestMultiMgrs.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestMultiMgrsBottomChild", ParentImpl="TestMultiMgrsBottomParent"]
 protocol PTestMultiMgrsBottom {
     manager PTestMultiMgrsLeft or PTestMultiMgrsRight;
 

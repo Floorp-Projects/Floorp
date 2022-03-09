@@ -10,7 +10,7 @@ include protocol PSocketProcess;
 namespace mozilla {
 namespace net {
 
-[RefCounted] protocol PAltSvcTransaction
+protocol PAltSvcTransaction
 {
   manager PSocketProcess;
 

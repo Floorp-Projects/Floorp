@@ -25,7 +25,6 @@
 #include "nsIParser.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsParserCIID.h"
 #include "nsString.h"
 #include "nsTreeSanitizer.h"
 #include "nsXPCOM.h"

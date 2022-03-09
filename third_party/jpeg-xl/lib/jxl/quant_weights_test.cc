@@ -173,6 +173,7 @@ TEST_P(QuantWeightsTargetTest, DCTUniform) {
   FrameHeader frame_header(&metadata);
   ModularFrameEncoder encoder(frame_header, CompressParams{});
   DequantMatricesSetCustom(&dequant_matrices, encodings, &encoder);
+  JXL_CHECK(dequant_matrices.EnsureComputed(~0u));
 
   const float dc_quant[3] = {1.0f / kUniformQuant, 1.0f / kUniformQuant,
                              1.0f / kUniformQuant};

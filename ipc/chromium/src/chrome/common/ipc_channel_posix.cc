@@ -97,16 +97,6 @@ static int gClientChannelFd =
 //------------------------------------------------------------------------------
 const size_t kMaxPipeNameLength = sizeof(((sockaddr_un*)0)->sun_path);
 
-bool SetCloseOnExec(int fd) {
-  int flags = fcntl(fd, F_GETFD);
-  if (flags == -1) return false;
-
-  flags |= FD_CLOEXEC;
-  if (fcntl(fd, F_SETFD, flags) == -1) return false;
-
-  return true;
-}
-
 bool ErrorIsBrokenPipe(int err) { return err == EPIPE || err == ECONNRESET; }
 
 // Some Android ARM64 devices appear to have a bug where sendmsg
@@ -168,10 +158,11 @@ Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
   EnqueueHelloMessage();
 }
 
-Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
+                                  Listener* listener)
     : factory_(this) {
   Init(mode, listener);
-  SetPipe(fd);
+  SetPipe(pipe.release());
 
   EnqueueHelloMessage();
 }
@@ -223,40 +214,19 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   last_pending_fd_id_ = 0;
   other_task_ = nullptr;
 #endif
-  output_queue_length_ = 0;
 }
 
 bool Channel::ChannelImpl::CreatePipe(Mode mode) {
   DCHECK(server_listen_pipe_ == -1 && pipe_ == -1);
 
   if (mode == MODE_SERVER) {
-    // socketpair()
-    int pipe_fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, pipe_fds) != 0) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-          CrashReporter::Annotation::IpcCreatePipeSocketPairErrno, errno);
-      return false;
-    }
-    // Set both ends to be non-blocking.
-    if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
-        fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-          CrashReporter::Annotation::IpcCreatePipeFcntlErrno, errno);
-      IGNORE_EINTR(close(pipe_fds[0]));
-      IGNORE_EINTR(close(pipe_fds[1]));
+    ChannelHandle server, client;
+    if (!Channel::CreateRawPipe(&server, &client)) {
       return false;
     }
 
-    if (!SetCloseOnExec(pipe_fds[0]) || !SetCloseOnExec(pipe_fds[1])) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-          CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
-      IGNORE_EINTR(close(pipe_fds[0]));
-      IGNORE_EINTR(close(pipe_fds[1]));
-      return false;
-    }
-
-    SetPipe(pipe_fds[0]);
-    client_pipe_ = pipe_fds[1];
+    SetPipe(server.release());
+    client_pipe_ = client.release();
   } else {
     static mozilla::Atomic<bool> consumed(false);
     CHECK(!consumed.exchange(true))
@@ -265,15 +235,6 @@ bool Channel::ChannelImpl::CreatePipe(Mode mode) {
   }
 
   return true;
-}
-
-/**
- * Reset the file descriptor for communication with the peer.
- */
-void Channel::ChannelImpl::ResetFileDescriptor(int fd) {
-  NS_ASSERTION(fd > 0 && fd == pipe_, "Invalid file descriptor");
-
-  EnqueueHelloMessage();
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
@@ -878,7 +839,6 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
   output_queue_.Push(std::move(msg));
-  output_queue_length_++;
 }
 
 void Channel::ChannelImpl::OutputQueuePop() {
@@ -886,7 +846,6 @@ void Channel::ChannelImpl::OutputQueuePop() {
   partial_write_iter_.reset();
 
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
-  output_queue_length_--;
 }
 
 // Called by libevent when we can write to the pipe without blocking.
@@ -1202,11 +1161,7 @@ bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
 }
 #endif
 
-bool Channel::ChannelImpl::Unsound_IsClosed() const { return closed_; }
-
-uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const {
-  return output_queue_length_;
-}
+bool Channel::ChannelImpl::IsClosed() const { return closed_; }
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
@@ -1215,8 +1170,8 @@ Channel::Channel(const ChannelId& channel_id, Mode mode, Listener* listener)
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
-Channel::Channel(int fd, Mode mode, Listener* listener)
-    : channel_impl_(new ChannelImpl(fd, mode, listener)) {
+Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
@@ -1241,10 +1196,6 @@ void Channel::GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const {
   return channel_impl_->GetClientFileDescriptorMapping(src_fd, dest_fd);
 }
 
-void Channel::ResetFileDescriptor(int fd) {
-  channel_impl_->ResetFileDescriptor(fd);
-}
-
 int Channel::GetFileDescriptor() const {
   return channel_impl_->GetFileDescriptor();
 }
@@ -1255,13 +1206,7 @@ void Channel::CloseClientFileDescriptor() {
 
 int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
 
-bool Channel::Unsound_IsClosed() const {
-  return channel_impl_->Unsound_IsClosed();
-}
-
-uint32_t Channel::Unsound_NumQueuedMessages() const {
-  return channel_impl_->Unsound_NumQueuedMessages();
-}
+bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 
 #if defined(OS_MACOSX)
 void Channel::SetOtherMachTask(task_t task) {
@@ -1278,5 +1223,49 @@ Channel::ChannelId Channel::GenerateVerifiedChannelID() { return {}; }
 
 // static
 Channel::ChannelId Channel::ChannelIDForCurrentProcess() { return {}; }
+
+// static
+bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
+  int fds[2];
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
+    mozilla::ipc::AnnotateCrashReportWithErrno(
+        CrashReporter::Annotation::IpcCreatePipeSocketPairErrno, errno);
+    return false;
+  }
+
+  auto configureFd = [](int fd) -> bool {
+    // Mark the endpoints as non-blocking
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+      mozilla::ipc::AnnotateCrashReportWithErrno(
+          CrashReporter::Annotation::IpcCreatePipeFcntlErrno, errno);
+      return false;
+    }
+
+    // Mark the pipes as FD_CLOEXEC
+    int flags = fcntl(fd, F_GETFD);
+    if (flags == -1) {
+      mozilla::ipc::AnnotateCrashReportWithErrno(
+          CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
+      return false;
+    }
+    flags |= FD_CLOEXEC;
+    if (fcntl(fd, F_SETFD, flags) == -1) {
+      mozilla::ipc::AnnotateCrashReportWithErrno(
+          CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
+      return false;
+    }
+    return true;
+  };
+
+  if (!configureFd(fds[0]) || !configureFd(fds[1])) {
+    IGNORE_EINTR(close(fds[0]));
+    IGNORE_EINTR(close(fds[1]));
+    return false;
+  }
+
+  server->reset(fds[0]);
+  client->reset(fds[1]);
+  return true;
+}
 
 }  // namespace IPC

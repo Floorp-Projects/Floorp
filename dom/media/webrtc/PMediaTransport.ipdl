@@ -28,6 +28,7 @@ using net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc]
 async protocol PMediaTransport {
   manager PBackground;
 
@@ -40,8 +41,9 @@ parent:
   async EnterPrivateMode();
   async ExitPrivateMode();
 
-  async CreateIceCtx(string name,
-                     RTCIceServer[] iceServers,
+  async CreateIceCtx(string name);
+
+  async SetIceConfig(RTCIceServer[] iceServers,
                      RTCIceTransportPolicy icePolicy);
 
   async SetProxyConfig(WebrtcProxyConfig proxyConfig);

@@ -13,43 +13,34 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const MAX_RESULT_COUNT = UrlbarPrefs.get("maxRichResults");
 
-const BEST_MATCH_SEARCH_STRING = "bestmatch";
-const NON_BEST_MATCH_SEARCH_STRING = "foobar";
+// This search string length needs to be >= 4 to trigger its suggestion as a
+// best match instead of a usual quick suggest.
 const BEST_MATCH_POSITION_SEARCH_STRING = "bestmatchposition";
 const BEST_MATCH_POSITION = Math.round(MAX_RESULT_COUNT / 2);
 
 const SUGGESTIONS = [
   {
     id: 1,
-    url: "http://example.com/best-match",
-    title: `${BEST_MATCH_SEARCH_STRING} title`,
-    // Include a keyword that's a substring of the full search string so we can
-    // test title highlights. The suggestion's `full_keyword` will end up being
-    // the full search string, and when we search for the substring keyword,
-    // `result.titleHighlights` will contain the remaining part of the full
-    // string. (This only applies when best match is disabled.)
-    keywords: [BEST_MATCH_SEARCH_STRING.slice(0, -1), BEST_MATCH_SEARCH_STRING],
-    click_url: "http://example.com/click",
-    impression_url: "http://example.com/impression",
-    advertiser: "TestAdvertiser",
-    _test_is_best_match: true,
-  },
-  {
-    id: 2,
-    url: "http://example.com/non-best-match",
-    title: `${NON_BEST_MATCH_SEARCH_STRING} title`,
-    // See above, but since this is the non-best match suggestion, the comment
-    // always applies here.
+    url: "http://example.com/",
+    title: "Fullkeyword title",
     keywords: [
-      NON_BEST_MATCH_SEARCH_STRING.slice(0, -1),
-      NON_BEST_MATCH_SEARCH_STRING,
+      "fu",
+      "ful",
+      "full",
+      "fullk",
+      "fullke",
+      "fullkey",
+      "fullkeyw",
+      "fullkeywo",
+      "fullkeywor",
+      "fullkeyword",
     ],
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
     advertiser: "TestAdvertiser",
   },
   {
-    id: 3,
+    id: 2,
     url: "http://example.com/best-match-position",
     title: `${BEST_MATCH_POSITION_SEARCH_STRING} title`,
     keywords: [BEST_MATCH_POSITION_SEARCH_STRING],
@@ -57,7 +48,6 @@ const SUGGESTIONS = [
     impression_url: "http://example.com/impression",
     advertiser: "TestAdvertiser",
     position: BEST_MATCH_POSITION,
-    _test_is_best_match: true,
   },
 ];
 
@@ -67,8 +57,9 @@ const EXPECTED_BEST_MATCH_RESULT = {
   heuristic: false,
   isBestMatch: true,
   payload: {
-    url: "http://example.com/best-match",
-    title: `${BEST_MATCH_SEARCH_STRING} title`,
+    url: "http://example.com/",
+    originalUrl: "http://example.com/",
+    title: "Fullkeyword title",
     icon: null,
     isSponsored: true,
     sponsoredImpressionUrl: "http://example.com/impression",
@@ -77,7 +68,7 @@ const EXPECTED_BEST_MATCH_RESULT = {
     sponsoredAdvertiser: "TestAdvertiser",
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
-    displayUrl: "http://example.com/best-match",
+    displayUrl: "http://example.com",
     source: "remote-settings",
   },
 };
@@ -87,18 +78,19 @@ const EXPECTED_NON_BEST_MATCH_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    url: "http://example.com/non-best-match",
-    title: `${NON_BEST_MATCH_SEARCH_STRING} title`,
-    qsSuggestion: NON_BEST_MATCH_SEARCH_STRING,
+    url: "http://example.com/",
+    originalUrl: "http://example.com/",
+    title: "Fullkeyword title",
+    qsSuggestion: "fullkeyword",
     icon: null,
     isSponsored: true,
     sponsoredImpressionUrl: "http://example.com/impression",
     sponsoredClickUrl: "http://example.com/click",
-    sponsoredBlockId: 2,
+    sponsoredBlockId: 1,
     sponsoredAdvertiser: "TestAdvertiser",
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
-    displayUrl: "http://example.com/non-best-match",
+    displayUrl: "http://example.com",
     source: "remote-settings",
   },
 };
@@ -110,12 +102,13 @@ const EXPECTED_BEST_MATCH_POSITION_RESULT = {
   isBestMatch: true,
   payload: {
     url: "http://example.com/best-match-position",
+    originalUrl: "http://example.com/best-match-position",
     title: `${BEST_MATCH_POSITION_SEARCH_STRING} title`,
     icon: null,
     isSponsored: true,
     sponsoredImpressionUrl: "http://example.com/impression",
     sponsoredClickUrl: "http://example.com/click",
-    sponsoredBlockId: 3,
+    sponsoredBlockId: 2,
     sponsoredAdvertiser: "TestAdvertiser",
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
@@ -126,9 +119,10 @@ const EXPECTED_BEST_MATCH_POSITION_RESULT = {
 
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
+  UrlbarPrefs.set("suggest.bestmatch", true);
 
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
@@ -138,7 +132,7 @@ add_task(async function init() {
 
 // Tests a best match result.
 add_task(async function bestMatch() {
-  let context = createContext(BEST_MATCH_SEARCH_STRING, {
+  let context = createContext("fullkeyword", {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
@@ -151,14 +145,10 @@ add_task(async function bestMatch() {
 
   // The title should not include the full keyword and em dash, and the part of
   // the title that the search string matches should be highlighted.
-  Assert.equal(
-    result.title,
-    `${BEST_MATCH_SEARCH_STRING} title`,
-    "result.title"
-  );
+  Assert.equal(result.title, "Fullkeyword title", "result.title");
   Assert.deepEqual(
     result.titleHighlights,
-    [[0, BEST_MATCH_SEARCH_STRING.length]],
+    [[0, "fullkeyword".length]],
     "result.titleHighlights"
   );
 
@@ -174,8 +164,7 @@ add_task(async function bestMatch() {
 add_task(async function nonBestMatch() {
   // Search for a substring of the full search string so we can test title
   // highlights.
-  let searchString = NON_BEST_MATCH_SEARCH_STRING.slice(0, -1);
-  let context = createContext(searchString, {
+  let context = createContext("fu", {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
@@ -188,14 +177,10 @@ add_task(async function nonBestMatch() {
 
   // The title should include the full keyword and em dash, and the part of the
   // title that the search string does not match should be highlighted.
-  Assert.equal(
-    result.title,
-    `${NON_BEST_MATCH_SEARCH_STRING} — ${NON_BEST_MATCH_SEARCH_STRING} title`,
-    "result.title"
-  );
+  Assert.equal(result.title, "fullkeyword — Fullkeyword title", "result.title");
   Assert.deepEqual(
     result.titleHighlights,
-    [[NON_BEST_MATCH_SEARCH_STRING.length - 1, 1]],
+    [["fu".length, "fullkeyword".length - "fu".length]],
     "result.titleHighlights"
   );
 
@@ -207,6 +192,36 @@ add_task(async function nonBestMatch() {
   );
 });
 
+// Tests prefix keywords leading up to a best match.
+add_task(async function prefixKeywords() {
+  let sawNonBestMatch = false;
+  let sawBestMatch = false;
+  for (let keyword of SUGGESTIONS[0].keywords) {
+    info(`Searching for "${keyword}"`);
+    let context = createContext(keyword, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    });
+
+    let expectedResult;
+    if (keyword.length < 4) {
+      expectedResult = EXPECTED_NON_BEST_MATCH_RESULT;
+      sawNonBestMatch = true;
+    } else {
+      expectedResult = EXPECTED_BEST_MATCH_RESULT;
+      sawBestMatch = true;
+    }
+
+    await check_results({
+      context,
+      matches: [expectedResult],
+    });
+  }
+
+  Assert.ok(sawNonBestMatch, "Sanity check: Saw a non-best match");
+  Assert.ok(sawBestMatch, "Sanity check: Saw a best match");
+});
+
 // When tab-to-search is shown in the same search, both it and the best match
 // will have a `suggestedIndex` value of 1. The TTS should appear first.
 add_task(async function tabToSearch() {
@@ -216,7 +231,7 @@ add_task(async function tabToSearch() {
 
   // Install a test engine. The main part of its domain name needs to match the
   // best match result too so we can trigger both its TTS and the best match.
-  let engineURL = `https://foo.${BEST_MATCH_SEARCH_STRING}.com/`;
+  let engineURL = "https://foo.fullkeyword.com/";
   let extension = await SearchTestUtils.installSearchExtension(
     {
       name: "Test",
@@ -229,7 +244,7 @@ add_task(async function tabToSearch() {
   // Also need to add a visit to trigger TTS.
   await PlacesTestUtils.addVisits(engineURL);
 
-  let context = createContext(BEST_MATCH_SEARCH_STRING, {
+  let context = createContext("fullkeyword", {
     isPrivate: false,
   });
   await check_results({
@@ -267,42 +282,42 @@ add_task(async function tabToSearch() {
   UrlbarPrefs.clear("tabToSearch.onboard.interactionsLeft");
 });
 
+// When the best match feature gate is disabled, quick suggest results should be
+// shown as the usual non-best match results.
+add_task(async function disabled_featureGate() {
+  UrlbarPrefs.set("bestMatch.enabled", false);
+  await doDisabledTest();
+  UrlbarPrefs.set("bestMatch.enabled", true);
+});
+
+// When the best match suggestions are disabled, quick suggest results should be
+// shown as the usual non-best match results.
+add_task(async function disabled_suggestions() {
+  UrlbarPrefs.set("suggest.bestmatch", false);
+  await doDisabledTest();
+  UrlbarPrefs.set("suggest.bestmatch", true);
+});
+
 // When best match is disabled, quick suggest results should be shown as the
 // usual, non-best match results.
-add_task(async function disabled() {
-  UrlbarPrefs.set("bestMatch.enabled", false);
-
-  // Since best match is disabled, the "best match" suggestion will not actually
-  // be a best match here, so modify a copy of it accordingly.
-  let expectedResult = { ...EXPECTED_BEST_MATCH_RESULT };
-  delete expectedResult.isBestMatch;
-  expectedResult.payload = { ...expectedResult.payload };
-  expectedResult.payload.qsSuggestion = BEST_MATCH_SEARCH_STRING;
-
-  // Search for a substring of the full search string so we can test title
-  // highlights.
-  let searchString = BEST_MATCH_SEARCH_STRING.slice(0, -1);
-  let context = createContext(searchString, {
+async function doDisabledTest() {
+  let context = createContext("fullkeywor", {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [expectedResult],
+    matches: [EXPECTED_NON_BEST_MATCH_RESULT],
   });
 
   let result = context.results[0];
 
   // The title should include the full keyword and em dash, and the part of the
   // title that the search string does not match should be highlighted.
-  Assert.equal(
-    result.title,
-    `${BEST_MATCH_SEARCH_STRING} — ${BEST_MATCH_SEARCH_STRING} title`,
-    "result.title"
-  );
+  Assert.equal(result.title, "fullkeyword — Fullkeyword title", "result.title");
   Assert.deepEqual(
     result.titleHighlights,
-    [[BEST_MATCH_SEARCH_STRING.length - 1, 1]],
+    [["fullkeywor".length, 1]],
     "result.titleHighlights"
   );
 
@@ -312,9 +327,7 @@ add_task(async function disabled() {
     true,
     "result.isSuggestedIndexRelativeToGroup"
   );
-
-  UrlbarPrefs.set("bestMatch.enabled", true);
-});
+}
 
 // `suggestion.position` should be ignored when the suggestion is a best match.
 add_task(async function position() {
@@ -363,4 +376,40 @@ add_task(async function position() {
 
   await cleanupPlaces();
   UrlbarPrefs.clear("quicksuggest.allowPositionInSuggestions");
+});
+
+// Tests a suggestion that is blocked from being a best match.
+add_task(async function blockedAsBestMatch() {
+  let config = QuickSuggestTestUtils.DEFAULT_CONFIG;
+  config.best_match.blocked_suggestion_ids = [1];
+  await QuickSuggestTestUtils.withConfig({
+    config,
+    callback: async () => {
+      let context = createContext("fullkeyword", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      });
+      await check_results({
+        context,
+        matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+      });
+    },
+  });
+});
+
+// Tests without a best_match config to make sure nothing breaks.
+add_task(async function noConfig() {
+  await QuickSuggestTestUtils.withConfig({
+    config: {},
+    callback: async () => {
+      let context = createContext("fullkeyword", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      });
+      await check_results({
+        context,
+        matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+      });
+    },
+  });
 });

@@ -409,6 +409,20 @@ function run_test() {
   }
   assert.equal(message, "AssertionError: 2 <= 1");
 
+  try {
+    assert.greater(NaN, 0);
+  } catch (e) {
+    message = e.toString().split("\n")[0];
+  }
+  assert.equal(message, "AssertionError: 'NaN' is not a number");
+
+  try {
+    assert.greater(0, NaN);
+  } catch (e) {
+    message = e.toString().split("\n")[0];
+  }
+  assert.equal(message, "AssertionError: 'NaN' is not a number");
+
   /* ---- stringMatches ---- */
   assert.stringMatches("hello world", /llo\s/);
   assert.stringMatches("hello world", "llo\\s");

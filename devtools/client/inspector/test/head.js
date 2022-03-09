@@ -30,6 +30,7 @@ const INSPECTOR_L10N = new LocalizationHelper(
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
+  Services.prefs.clearUserPref("devtools.inspector.selectedSidebar");
 });
 
 registerCleanupFunction(function() {

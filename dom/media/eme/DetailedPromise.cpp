@@ -67,17 +67,6 @@ already_AddRefed<DetailedPromise> DetailedPromise::Create(
   return aRv.Failed() ? nullptr : promise.forget();
 }
 
-/* static */
-already_AddRefed<DetailedPromise> DetailedPromise::Create(
-    nsIGlobalObject* aGlobal, ErrorResult& aRv, const nsACString& aName,
-    Telemetry::HistogramID aSuccessLatencyProbe,
-    Telemetry::HistogramID aFailureLatencyProbe) {
-  RefPtr<DetailedPromise> promise = new DetailedPromise(
-      aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
-  promise->CreateWrapper(aRv);
-  return aRv.Failed() ? nullptr : promise.forget();
-}
-
 void DetailedPromise::MaybeReportTelemetry(eStatus aStatus) {
   if (mResponded) {
     return;

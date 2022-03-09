@@ -10,12 +10,15 @@
  *  4. stepOver to the end of a function
  *  5. stepUp at the end of a function
  */
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-debugger-statements.html");
 
   await reload(dbg);
   await waitForPaused(dbg);
-  await waitForLoadedSource(dbg, "debugger-statements.html");
+  await waitForLoadedSource(dbg, "doc-debugger-statements.html");
   assertPausedLocation(dbg);
 
   info("resume");

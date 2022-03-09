@@ -4056,7 +4056,7 @@ var gCSSProperties = {
       "color",
       "luminosity",
     ],
-    invalid_values: ["none", "10px", "multiply multiply"],
+    invalid_values: ["none", "10px", "multiply multiply", "plus-lighter"],
   },
   "background-clip": {
     /*
@@ -9047,6 +9047,7 @@ var gCSSProperties = {
       "saturation",
       "color",
       "luminosity",
+      "plus-lighter",
     ],
     invalid_values: [],
   },

@@ -113,8 +113,6 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
             Preferences::SetUint(sBenchmarkFpsVersionCheck,
                                  sBenchmarkVersionID);
           }
-          Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_VP9_BENCHMARK_FPS,
-                                aDecodeFps);
         },
         []() {});
   }

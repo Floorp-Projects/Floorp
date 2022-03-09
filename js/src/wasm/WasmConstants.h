@@ -453,7 +453,6 @@ enum class Op {
   RefEq = 0xd5,
 
   FirstPrefix = 0xfa,
-  IntrinsicPrefix = 0xfa,
   GcPrefix = 0xfb,
   MiscPrefix = 0xfc,
   SimdPrefix = 0xfd,
@@ -940,11 +939,12 @@ enum class ThreadOp {
   Limit
 };
 
-enum class IntrinsicOp {
+enum class IntrinsicId {
 // ------------------------------------------------------------------------
-// These operators are emitted internally when compiling intrinsic modules
-// and are rejected by wasm validation.  They are prefixed by
-// IntrinsicPrefix. See wasm/WasmIntrinsic.yaml for the list.
+// These are part/suffix of the MozOp::Intrinsic operators that are emitted
+// internally when compiling intrinsic modules and are rejected by wasm
+// validation.
+// See wasm/WasmIntrinsic.yaml for the list.
 #define DECL_INTRINSIC_OP(op, export, sa_name, abitype, entry, idx) \
   op = idx,  // NOLINT
   FOR_EACH_INTRINSIC(DECL_INTRINSIC_OP)
@@ -993,6 +993,10 @@ enum class MozOp {
   // asm.js-style call_indirect with the callee evaluated first.
   OldCallDirect,
   OldCallIndirect,
+
+  // Intrinsic modules operations. The operator has argument leb u32 to specify
+  // particular operation id. See IntrinsicId above.
+  Intrinsic,
 
   Limit
 };

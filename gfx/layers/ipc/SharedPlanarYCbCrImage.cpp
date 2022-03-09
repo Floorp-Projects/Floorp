@@ -132,18 +132,6 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
     return false;
   }
 
-  gfx::IntSize imageYSize =
-      aData.mCroppedYSize ? *aData.mCroppedYSize : aData.mYSize;
-  gfx::IntSize imageCbCrSize =
-      aData.mCroppedCbCrSize ? *aData.mCroppedCbCrSize : aData.mCbCrSize;
-  if (aData.mCroppedYSize || aData.mCroppedCbCrSize) {
-    // If cropping fails, then reset Y&CbCr sizes to non-cropped sizes.
-    if (!mTextureClient->CropYCbCrPlanes(imageYSize, imageCbCrSize)) {
-      imageYSize = aData.mYSize;
-      imageCbCrSize = aData.mCbCrSize;
-    }
-  }
-
   MappedYCbCrTextureData mapped;
   // The locking here is sort of a lie. The SharedPlanarYCbCrImage just pulls
   // pointers out of the TextureClient and keeps them around, which works only
@@ -163,8 +151,8 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   mData.mYChannel = aData.mYChannel;
   mData.mCbChannel = aData.mCbChannel;
   mData.mCrChannel = aData.mCrChannel;
-  mData.mYSize = imageYSize;
-  mData.mCbCrSize = imageCbCrSize;
+  mData.mYSize = aData.mYSize;
+  mData.mCbCrSize = aData.mCbCrSize;
   mData.mPicX = aData.mPicX;
   mData.mPicY = aData.mPicY;
   mData.mPicSize = aData.mPicSize;

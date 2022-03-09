@@ -414,6 +414,19 @@ TEST(Base64, DecodeNon8BitWideString)
   }
 }
 
+TEST(Base64, DecodeWideTo8Bit)
+{
+  for (auto& testCase : sRFC4648TestCases) {
+    const nsAutoCString in8bit(testCase.mOutput);
+    const NS_ConvertUTF8toUTF16 inWide(testCase.mOutput);
+    nsAutoCString out2;
+    nsAutoCString out1;
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(mozilla::Base64Decode(inWide, out1)));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(mozilla::Base64Decode(in8bit, out2)));
+    ASSERT_EQ(out1, out2);
+  }
+}
+
 TEST(Base64, TruncateOnInvalidDecodeCString)
 {
   constexpr auto invalid = "@@=="_ns;

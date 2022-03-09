@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
   Target: "chrome://remote/content/cdp/targets/Target.jsm",
 });
@@ -36,6 +37,10 @@ class TabTarget extends Target {
     super(targetList, TabSession);
 
     this.browser = browser;
+
+    // The tab target uses a unique id as shared with WebDriver to reference
+    // a specific tab.
+    this.id = TabManager.getIdForBrowser(browser);
 
     // Define the HTTP path to query this target
     this.path = `/devtools/page/${this.id}`;
@@ -136,7 +141,6 @@ class TabTarget extends Target {
       // title: this.title,
       type: this.type,
       url: this.url,
-      browsingContextId: this.browsingContext.id,
       webSocketDebuggerUrl: this.wsDebuggerURL,
     };
   }

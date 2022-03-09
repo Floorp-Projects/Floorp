@@ -519,7 +519,7 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      nsIURI* aURIToLoad, const nsCString& aFeatures,
       const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes,
@@ -528,9 +528,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
-      const nsString& aName, nsIPrincipal* aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const nsString& aName,
+      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes);
 
   static void BroadcastBlobURLRegistration(
@@ -760,10 +760,10 @@ class ContentParent final
   // window. aURIToLoad should always be provided, if available, to ensure
   // compatibility with GeckoView.
   mozilla::ipc::IPCResult CommonCreateWindow(
-      PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
+      PBrowserParent* aThisTab, BrowsingContext& aParent, bool aSetOpener,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      nsIURI* aURIToLoad, const nsCString& aFeatures,
       BrowserParent* aNextRemoteBrowser, const nsString& aName,
       nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
       bool* aWindowIsNew, int32_t& aOpenLocation,
@@ -1032,6 +1032,10 @@ class ContentParent final
       const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
       nsTArray<nsCString>* aTypes);
 
+  mozilla::ipc::IPCResult RecvGetClipboardAsync(
+      nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+      GetClipboardAsyncResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvPlaySound(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvBeep();
   mozilla::ipc::IPCResult RecvPlayEventSound(const uint32_t& aEventId);
@@ -1105,6 +1109,12 @@ class ContentParent final
       const bool& aIsFromChromeContext, const ClonedMessageData& aStack);
 
  private:
+  // Gets the clipboard data for the first type of aTypes that matches and
+  // fills out aDataTransfer.
+  nsresult GetDataFromClipboard(const nsTArray<nsCString>& aTypes,
+                                int32_t aWhichClipboard, bool aInSyncMessage,
+                                IPCDataTransfer* aDataTransfer);
+
   mozilla::ipc::IPCResult RecvScriptErrorInternal(
       const nsString& aMessage, const nsString& aSourceName,
       const nsString& aSourceLine, const uint32_t& aLineNumber,
@@ -1447,7 +1457,7 @@ class ContentParent final
 
   void UpdateNetworkLinkType();
 
-  static bool ShouldSyncPreference(const char16_t* aData);
+  static bool ShouldSyncPreference(const char* aPref);
 
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,

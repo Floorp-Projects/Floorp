@@ -147,7 +147,7 @@ class TextureHandle : public RefCounted<TextureHandle>,
 
   virtual void UpdateSize(const IntSize& aSize) {}
 
-  virtual void Cleanup(DrawTargetWebgl& aDT) {}
+  virtual void Cleanup(DrawTargetWebgl::SharedContext& aContext) {}
 
   virtual ~TextureHandle() {}
 
@@ -248,7 +248,7 @@ class SharedTextureHandle : public TextureHandle {
     return TextureHandle::UsedBytes(GetFormat(), mBounds.Size());
   }
 
-  void Cleanup(DrawTargetWebgl& aDT) override;
+  void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
 
   const RefPtr<SharedTexture>& GetOwner() const { return mTexture; }
 
@@ -284,7 +284,7 @@ class StandaloneTexture : public TextureHandle {
 
   void UpdateSize(const IntSize& aSize) override { mSize = aSize; }
 
-  void Cleanup(DrawTargetWebgl& aDT) override;
+  void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
 
  private:
   IntSize mSize;

@@ -50,6 +50,17 @@ int main(int argc, char** argv);
 int main(int argc, char** argv, char** envp);
 #endif
 
+// SanitizeEnvironmentVariables()
+//
+// Mitigate CVE-2007-6753 (binary planting via unexpanded environment variable
+// references) by forcibly expanding all environment variable references in
+// %PATH%.
+//
+// CVE-2007-6753 is documented to have affected all active mainline Windows
+// versions at the time of its announcement (i.e., up to Windows 7). Microsoft
+// has never formally stated that later versions of Windows are free of this
+// issue; out of an abundance of caution, we continue to mitigate it on Windows
+// 8 and beyond.
 static void SanitizeEnvironmentVariables() {
   DWORD bufferSize = GetEnvironmentVariableW(L"PATH", nullptr, 0);
   if (bufferSize) {
@@ -57,7 +68,16 @@ static void SanitizeEnvironmentVariables() {
     if (bufferSize - 1 ==
         GetEnvironmentVariableW(L"PATH", originalPath, bufferSize)) {
       bufferSize = ExpandEnvironmentStringsW(originalPath, nullptr, 0);
-      if (bufferSize) {
+      // The maximum length of a Windows environment variable and the maximum
+      // length of a string returned by ExpandEnvironmentStringsW are both
+      // documented to be 32,767 characters. Under some versions of Windows,
+      // however, both may be longer, with delayed but deleterious consequences.
+      //
+      // We therefore cap the size manually, in case the user has a sufficiently
+      // problematic %PATH%. (See bug 1753910.) This is unlikely to occur unless
+      // there is some form of recursive referencing involved, in which case
+      // expansion is no mitigation anyway.
+      if (bufferSize && bufferSize < 32768) {
         wchar_t* newPath = new wchar_t[bufferSize];
         if (ExpandEnvironmentStringsW(originalPath, newPath, bufferSize)) {
           SetEnvironmentVariableW(L"PATH", newPath);

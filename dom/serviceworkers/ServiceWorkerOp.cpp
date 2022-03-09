@@ -47,6 +47,8 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/NotificationEventBinding.h"
+#include "mozilla/dom/PerformanceTiming.h"
+#include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -1678,14 +1680,29 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
     // If preloadResponsePromise has already settled then this callback will get
     // run synchronously here.
     RefPtr<FetchEventOp> self = this;
+    RefPtr<PerformanceStorage> performanceStorage =
+        aWorkerPrivate->GetPerformanceStorage();
     preloadResponsePromise
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [self, globalObjectAsSupports = std::move(globalObjectAsSupports)](
-                SafeRefPtr<InternalResponse> aInternalResponse) {
-              self->mPreloadResponse->MaybeResolve(
-                  MakeRefPtr<Response>(globalObjectAsSupports,
-                                       std::move(aInternalResponse), nullptr));
+            [self, performanceStorage,
+             globalObjectAsSupports = std::move(globalObjectAsSupports)](
+                FetchEventPreloadResponseArgs&& aArgs) {
+              SafeRefPtr<InternalResponse> preloadResponse;
+              IPCPerformanceTimingData timingData;
+              nsString initiatorType;
+              nsString entryName;
+              Tie(preloadResponse, timingData, initiatorType, entryName) =
+                  std::move(aArgs);
+              if (performanceStorage &&
+                  NS_SUCCEEDED(preloadResponse->GetErrorCode())) {
+                performanceStorage->AddEntry(
+                    entryName, initiatorType,
+                    MakeUnique<PerformanceTimingData>(timingData));
+              }
+
+              self->mPreloadResponse->MaybeResolve(MakeRefPtr<Response>(
+                  globalObjectAsSupports, std::move(preloadResponse), nullptr));
               self->mPreloadResponsePromiseRequestHolder.Complete();
             },
             [self](int) {

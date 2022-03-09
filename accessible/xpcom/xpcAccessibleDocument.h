@@ -110,13 +110,18 @@ inline xpcAccessibleGeneric* ToXPC(Accessible* aAccessible) {
   return xpcDoc ? xpcDoc->GetAccessible(aAccessible) : nullptr;
 }
 
-inline xpcAccessibleHyperText* ToXPCText(HyperTextAccessible* aAccessible) {
-  if (!aAccessible) return nullptr;
+inline xpcAccessibleHyperText* ToXPCText(Accessible* aAccessible) {
+  if (!aAccessible || !aAccessible->IsHyperText()) {
+    return nullptr;
+  }
 
   xpcAccessibleDocument* xpcDoc =
-      GetAccService()->GetXPCDocument(aAccessible->Document());
+      aAccessible->IsLocal()
+          ? GetAccService()->GetXPCDocument(aAccessible->AsLocal()->Document())
+          : nsAccessibilityService::GetXPCDocument(
+                aAccessible->AsRemote()->Document());
   return static_cast<xpcAccessibleHyperText*>(
-      xpcDoc->GetAccessible(aAccessible));
+      xpcDoc ? xpcDoc->GetAccessible(aAccessible) : nullptr);
 }
 
 inline xpcAccessibleDocument* ToXPCDocument(DocAccessible* aAccessible) {

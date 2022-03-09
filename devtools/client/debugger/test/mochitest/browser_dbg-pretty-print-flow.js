@@ -5,6 +5,8 @@
 // Tests that loader and new tab appear when pretty printing,
 // and the selected location is mapped afterwards
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 

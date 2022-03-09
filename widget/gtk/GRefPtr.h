@@ -20,12 +20,18 @@ struct GObjectRefPtrTraits {
   static void Release(T* aObject) { g_object_unref(aObject); }
 };
 
-template <>
-struct RefPtrTraits<GtkWidget> : public GObjectRefPtrTraits<GtkWidget> {};
+#define GOBJECT_TRAITS(type_) \
+  template <>                 \
+  struct RefPtrTraits<type_> : public GObjectRefPtrTraits<type_> {};
 
-template <>
-struct RefPtrTraits<GdkDragContext>
-    : public GObjectRefPtrTraits<GdkDragContext> {};
+GOBJECT_TRAITS(GtkWidget)
+GOBJECT_TRAITS(GMenu)
+GOBJECT_TRAITS(GSimpleAction)
+GOBJECT_TRAITS(GSimpleActionGroup)
+GOBJECT_TRAITS(GDBusProxy)
+GOBJECT_TRAITS(GdkDragContext)
+
+#undef GOBJECT_TRAITS
 
 template <>
 struct RefPtrTraits<GVariant> {

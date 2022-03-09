@@ -60,7 +60,7 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   RefPtr<Instance> instance = this;
 
   mBridge->InstanceRequestAdapter(aOptions)->Then(
-      GetMainThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [promise, instance](ipc::ByteBuf aInfoBuf) {
         ffi::WGPUAdapterInformation info = {};
         ffi::wgpu_client_adapter_extract_info(ToFFI(&aInfoBuf), &info);

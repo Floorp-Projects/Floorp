@@ -4,6 +4,8 @@
 
 // Test cmd+click continuing to a line
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-pause-points.html", "pause-points.js");
   await selectSource(dbg, "pause-points.js");
@@ -19,11 +21,12 @@ add_task(async function() {
 
   info("Cmd+click on a line and check the debugger continues to that line");
   const lineToContinueTo = 31;
+  const onResumed = waitForResumed(dbg);
   await cmdClickLine(dbg, lineToContinueTo);
 
   // continuing will resume and pause again. Let's wait until we resume so we can properly
   // wait for the next pause.
-  await waitForState(dbg, () => !isPaused(dbg), "resumed");
+  await onResumed;
   // waitForPaused properly waits for the scopes to be available
   await waitForPaused(dbg);
 

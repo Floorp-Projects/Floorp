@@ -7,34 +7,30 @@
 //! TODO: document what this pass does!
 //!
 
-use api::{ColorF, DebugFlags};
+use api::{DebugFlags};
 use api::units::*;
-use euclid::Scale;
-use std::{usize, mem};
+use std::{usize};
 use crate::batch::BatchFilter;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::clip::{ClipInstance, ClipChainInstance};
-use crate::debug_colors;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::GpuCache;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
-use crate::picture::{PrimitiveList, SurfaceIndex, RasterConfig};
+use crate::picture::{SurfaceIndex, RasterConfig};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
 use crate::prim_store::{PrimitiveStore, PrimitiveInstance};
 use crate::render_backend::{DataStores, ScratchBuffer};
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use crate::space::SpaceMapper;
-use crate::internal_types::Filter;
 use crate::util::{MaxRect};
 
 pub struct FrameVisibilityContext<'a> {
     pub spatial_tree: &'a SpatialTree,
     pub global_screen_world_rect: WorldRect,
     pub global_device_pixel_scale: DevicePixelScale,
-    pub surfaces: &'a [SurfaceInfo],
     pub debug_flags: DebugFlags,
     pub scene_properties: &'a SceneProperties,
     pub config: FrameBuilderConfig,
@@ -51,17 +47,18 @@ pub struct FrameVisibilityState<'a> {
     pub composite_state: &'a mut CompositeState,
     /// A stack of currently active off-screen surfaces during the
     /// visibility frame traversal.
-    pub surface_stack: Vec<SurfaceIndex>,
+    pub surface_stack: Vec<(PictureIndex, SurfaceIndex)>,
 }
 
 impl<'a> FrameVisibilityState<'a> {
     pub fn push_surface(
         &mut self,
+        pic_index: PictureIndex,
         surface_index: SurfaceIndex,
         shared_clips: &[ClipInstance],
         spatial_tree: &SpatialTree,
     ) {
-        self.surface_stack.push(surface_index);
+        self.surface_stack.push((pic_index, surface_index));
         self.clip_chain_stack.push_surface(
             shared_clips,
             spatial_tree,
@@ -164,59 +161,52 @@ impl PrimitiveVisibility {
     }
 }
 
-/// Update visibility pass - update each primitive visibility struct, and
-/// build the clip chain instance if appropriate.
-pub fn update_primitive_visibility(
-    store: &mut PrimitiveStore,
+pub fn update_prim_visibility(
     pic_index: PictureIndex,
     parent_surface_index: Option<SurfaceIndex>,
     world_culling_rect: &WorldRect,
+    store: &PrimitiveStore,
+    prim_instances: &mut [PrimitiveInstance],
+    surfaces: &mut [SurfaceInfo],
+    is_root_tile_cache: bool,
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
     tile_cache: &mut TileCacheInstance,
-    is_root_tile_cache: bool,
-    prim_instances: &mut Vec<PrimitiveInstance>,
-) -> Option<PictureRect> {
-    profile_scope!("update_visibility");
-    let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, pop_surface) = {
-        let pic = &mut store.pictures[pic_index.0];
+ ) {
+    let pic = &store.pictures[pic_index.0];
 
-        let prim_list = mem::replace(&mut pic.prim_list, PrimitiveList::empty());
-        let (surface_index, pop_surface) = match pic.raster_config {
-            Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
-                (surface_index, false)
-            }
-            Some(ref raster_config) => {
-                frame_state.push_surface(
-                    raster_config.surface_index,
-                    &[],
-                    frame_context.spatial_tree,
-                );
+    let (surface_index, pop_surface) = match pic.raster_config {
+        Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
+            (surface_index, false)
+        }
+        Some(ref raster_config) => {
+            frame_state.push_surface(
+                pic_index,
+                raster_config.surface_index,
+                &[],
+                frame_context.spatial_tree,
+            );
 
-                // Let the picture cache know that we are pushing an off-screen
-                // surface, so it can treat dependencies of surface atomically.
-                tile_cache.push_surface(
-                    pic.estimated_local_rect,
-                    pic.spatial_node_index,
-                    frame_context.spatial_tree,
-                );
+            let surface_local_rect = surfaces[raster_config.surface_index.0].local_rect.cast_unit();
 
-                (raster_config.surface_index, true)
-            }
-            None => {
-                (parent_surface_index.expect("bug: pass-through with no parent"), false)
-            }
-        };
+            // Let the picture cache know that we are pushing an off-screen
+            // surface, so it can treat dependencies of surface atomically.
+            tile_cache.push_surface(
+                surface_local_rect,
+                pic.spatial_node_index,
+                frame_context.spatial_tree,
+            );
 
-        (prim_list, surface_index, pic.apply_local_clip_rect, world_culling_rect, pop_surface)
+            (raster_config.surface_index, true)
+        }
+        None => {
+            (parent_surface_index.expect("bug: pass-through with no parent"), false)
+        }
     };
 
-    let surface = &frame_context.surfaces[surface_index.0 as usize];
-
-    let mut map_local_to_surface = surface
-        .map_local_to_surface
-        .clone();
-
+    let surface = &surfaces[surface_index.0 as usize];
+    let device_pixel_scale = surface.device_pixel_scale;
+    let mut map_local_to_surface = surface.map_local_to_surface.clone();
     let map_surface_to_world = SpaceMapper::new_with_target(
         frame_context.root_spatial_node_index,
         surface.surface_spatial_node_index,
@@ -224,9 +214,7 @@ pub fn update_primitive_visibility(
         frame_context.spatial_tree,
     );
 
-    let mut surface_rect = PictureRect::zero();
-
-    for cluster in &mut prim_list.clusters {
+    for cluster in &pic.prim_list.clusters {
         profile_scope!("cluster");
 
         // Each prim instance must have reset called each frame, to clear
@@ -256,325 +244,141 @@ pub fn update_primitive_visibility(
         );
 
         for prim_instance_index in cluster.prim_range() {
-            let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instances[prim_instance_index].kind {
-                PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    let (is_visible, is_passthrough) = {
-                        let pic = &store.pictures[pic_index.0];
-                        (pic.is_visible(frame_context.spatial_tree), pic.raster_config.is_none())
-                    };
+            if let PrimitiveInstanceKind::Picture { pic_index, .. } = prim_instances[prim_instance_index].kind {
+                if !store.pictures[pic_index.0].is_visible(frame_context.spatial_tree) {
+                    continue;
+                }
 
-                    if !is_visible {
-                        continue;
-                    }
+                let is_passthrough = match store.pictures[pic_index.0].raster_config {
+                    Some(..) => false,
+                    None => true,
+                };
 
-                    if is_passthrough {
-                        frame_state.clip_chain_stack.push_clip(
-                            prim_instances[prim_instance_index].clip_set.clip_chain_id,
-                            frame_state.clip_store,
-                        );
-                    }
-
-                    let pic_surface_rect = update_primitive_visibility(
-                        store,
-                        pic_index,
-                        Some(surface_index),
-                        world_culling_rect,
-                        frame_context,
-                        frame_state,
-                        tile_cache,
-                        false,
-                        prim_instances,
+                if is_passthrough {
+                    frame_state.clip_chain_stack.push_clip(
+                        prim_instances[prim_instance_index].clip_set.clip_chain_id,
+                        frame_state.clip_store,
                     );
-
-                    if is_passthrough {
-                        frame_state.clip_chain_stack.pop_clip();
-                    }
-
-                    let pic = &store.pictures[pic_index.0];
-
-                    let mut shadow_rect = pic.precise_local_rect;
-                    match pic.raster_config {
-                        Some(ref rc) => match rc.composite_mode {
-                            // If we have a drop shadow filter, we also need to include the shadow in
-                            // our shadowed local rect for the purpose of calculating the size of the
-                            // picture.
-                            PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-                                for shadow in shadows {
-                                    shadow_rect = shadow_rect.union(&pic.precise_local_rect.translate(shadow.offset));
-                                }
-                            }
-                            _ => {}
-                        }
-                        None => {
-                            // If the primitive does not have its own raster config, we need to
-                            // propogate the surface rect calculation to the parent.
-                            if let Some(ref rect) = pic_surface_rect {
-                                surface_rect = surface_rect.union(rect);
-                            }
-                        }
-                    }
-
-                    (is_passthrough, pic.precise_local_rect, shadow_rect)
                 }
-                _ => {
-                    let prim_instance = &prim_instances[prim_instance_index];
-                    let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
 
-                    (false, prim_data.prim_rect, prim_data.prim_rect)
+                update_prim_visibility(
+                    pic_index,
+                    Some(surface_index),
+                    world_culling_rect,
+                    store,
+                    prim_instances,
+                    surfaces,
+                    false,
+                    frame_context,
+                    frame_state,
+                    tile_cache,
+                );
+
+                if is_passthrough {
+                    frame_state.clip_chain_stack.pop_clip();
+
+                    // Pass through pictures are always considered visible in all dirty tiles.
+                    prim_instances[prim_instance_index].vis.state = VisibilityState::PassThrough;
+
+                    continue;
                 }
-            };
+            }
 
             let prim_instance = &mut prim_instances[prim_instance_index];
 
-            if is_passthrough {
-                // Pass through pictures are always considered visible in all dirty tiles.
-                prim_instance.vis.state = VisibilityState::PassThrough;
-            } else {
-                if prim_local_rect.width() <= 0.0 || prim_local_rect.height() <= 0.0 {
-                    if prim_instance.is_chased() {
-                        info!("\tculled for zero local rectangle");
-                    }
-                    continue;
-                }
+            let local_coverage_rect = frame_state.data_stores.get_local_prim_coverage_rect(
+                prim_instance,
+                &store.pictures,
+                surfaces,
+            );
 
-                // Inflate the local rect for this primitive by the inflation factor of
-                // the picture context and include the shadow offset. This ensures that
-                // even if the primitive itstore is not visible, any effects from the
-                // blur radius or shadow will be correctly taken into account.
-                let inflation_factor = surface.inflation_factor;
-                let local_rect = prim_shadowed_rect
-                    .inflate(inflation_factor, inflation_factor)
-                    .intersection(&prim_instance.clip_set.local_clip_rect);
-                let local_rect = match local_rect {
-                    Some(local_rect) => local_rect,
-                    None => {
-                        if prim_instance.is_chased() {
-                            info!("\tculled for being out of the local clip rectangle: {:?}",
-                                     prim_instance.clip_set.local_clip_rect);
-                        }
-                        continue;
-                    }
-                };
+            // Include the clip chain for this primitive in the current stack.
+            frame_state.clip_chain_stack.push_clip(
+                prim_instance.clip_set.clip_chain_id,
+                frame_state.clip_store,
+            );
 
-                // Include the clip chain for this primitive in the current stack.
-                frame_state.clip_chain_stack.push_clip(
-                    prim_instance.clip_set.clip_chain_id,
-                    frame_state.clip_store,
-                );
+            frame_state.clip_store.set_active_clips(
+                prim_instance.clip_set.local_clip_rect,
+                cluster.spatial_node_index,
+                map_local_to_surface.ref_spatial_node_index,
+                frame_state.clip_chain_stack.current_clips_array(),
+                &frame_context.spatial_tree,
+                &frame_state.data_stores.clip,
+            );
 
-                frame_state.clip_store.set_active_clips(
-                    prim_instance.clip_set.local_clip_rect,
-                    cluster.spatial_node_index,
-                    map_local_to_surface.ref_spatial_node_index,
-                    frame_state.clip_chain_stack.current_clips_array(),
-                    &frame_context.spatial_tree,
-                    &frame_state.data_stores.clip,
-                );
-
-                let clip_chain = frame_state
-                    .clip_store
-                    .build_clip_chain_instance(
-                        local_rect,
-                        &map_local_to_surface,
-                        &map_surface_to_world,
-                        &frame_context.spatial_tree,
-                        frame_state.gpu_cache,
-                        frame_state.resource_cache,
-                        surface.device_pixel_scale,
-                        &world_culling_rect,
-                        &mut frame_state.data_stores.clip,
-                        true,
-                        prim_instance.is_chased(),
-                    );
-
-                // Ensure the primitive clip is popped
-                frame_state.clip_chain_stack.pop_clip();
-
-                prim_instance.vis.clip_chain = match clip_chain {
-                    Some(clip_chain) => clip_chain,
-                    None => {
-                        if prim_instance.is_chased() {
-                            info!("\tunable to build the clip chain, skipping");
-                        }
-                        continue;
-                    }
-                };
-
-                if prim_instance.is_chased() {
-                    info!("\teffective clip chain from {:?} {}",
-                             prim_instance.vis.clip_chain.clips_range,
-                             if apply_local_clip_rect { "(applied)" } else { "" },
-                    );
-                    info!("\tpicture rect {:?} @{:?}",
-                             prim_instance.vis.clip_chain.pic_coverage_rect,
-                             prim_instance.vis.clip_chain.pic_spatial_node_index,
-                    );
-                }
-
-                prim_instance.vis.combined_local_clip_rect = if apply_local_clip_rect {
-                    prim_instance.vis.clip_chain.local_clip_rect
-                } else {
-                    prim_instance.clip_set.local_clip_rect
-                };
-
-                if prim_instance.vis.combined_local_clip_rect.is_empty() {
-                    if prim_instance.is_chased() {
-                        info!("\tculled for zero local clip rectangle");
-                    }
-                    continue;
-                }
-
-                // Include the visible area for primitive, including any shadows, in
-                // the area affected by the surface.
-                match prim_instance.vis.combined_local_clip_rect.intersection(&local_rect) {
-                    Some(visible_rect) => {
-                        if let Some(rect) = map_local_to_surface.map(&visible_rect) {
-                            surface_rect = surface_rect.union(&rect);
-                        }
-                    }
-                    None => {
-                        if prim_instance.is_chased() {
-                            info!("\tculled for zero visible rectangle");
-                        }
-                        continue;
-                    }
-                }
-
-                tile_cache.update_prim_dependencies(
-                    prim_instance,
-                    cluster.spatial_node_index,
-                    prim_local_rect,
-                    frame_context,
-                    frame_state.data_stores,
-                    frame_state.clip_store,
-                    &store.pictures,
-                    frame_state.resource_cache,
-                    &store.color_bindings,
-                    &frame_state.surface_stack,
-                    &mut frame_state.composite_state,
-                    &mut frame_state.gpu_cache,
-                    is_root_tile_cache,
-                );
-
-                // Skip post visibility prim update if this primitive was culled above.
-                match prim_instance.vis.state {
-                    VisibilityState::Unset => panic!("bug: invalid state"),
-                    VisibilityState::Culled => continue,
-                    VisibilityState::Coarse { .. } | VisibilityState::Detailed { .. } | VisibilityState::PassThrough => {}
-                }
-
-                // When the debug display is enabled, paint a colored rectangle around each
-                // primitive.
-                if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
-                    let debug_color = match prim_instance.kind {
-                        PrimitiveInstanceKind::Picture { .. } => ColorF::TRANSPARENT,
-                        PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
-                        PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
-                        PrimitiveInstanceKind::NormalBorder { .. } |
-                        PrimitiveInstanceKind::ImageBorder { .. } => debug_colors::ORANGE,
-                        PrimitiveInstanceKind::Rectangle { .. } => ColorF { r: 0.8, g: 0.8, b: 0.8, a: 0.5 },
-                        PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
-                        PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
-                        PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
-                        PrimitiveInstanceKind::CachedLinearGradient { .. } => debug_colors::PINK,
-                        PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
-                        PrimitiveInstanceKind::ConicGradient { .. } => debug_colors::PINK,
-                        PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
-                        PrimitiveInstanceKind::Backdrop { .. } => debug_colors::MEDIUMAQUAMARINE,
-                    };
-                    if debug_color.a != 0.0 {
-                        if let Some(rect) = calculate_prim_clipped_world_rect(
-                            &prim_instance.vis.clip_chain.pic_coverage_rect,
-                            &world_culling_rect,
-                            &map_surface_to_world,
-                        ) {
-                            let debug_rect = rect * frame_context.global_device_pixel_scale;
-                            frame_state.scratch.primitive.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
-                        }
-                    }
-                } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
-                    let is_image = matches!(
-                        prim_instance.kind,
-                        PrimitiveInstanceKind::Image { .. } | PrimitiveInstanceKind::YuvImage { .. }
-                    );
-                    if is_image {
-                        // We allow "small" images, since they're generally UI elements.
-                        if let Some(rect) = calculate_prim_clipped_world_rect(
-                            &prim_instance.vis.clip_chain.pic_coverage_rect,
-                            &world_culling_rect,
-                            &map_surface_to_world,
-                        ) {
-                            let rect = rect * frame_context.global_device_pixel_scale;
-                            if rect.width() > 70.0 && rect.height() > 70.0 {
-                                frame_state.scratch.primitive.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
-                            }
-                        }
-                    }
-                }
-
-                if prim_instance.is_chased() {
-                    info!("\tvisible with {:?}", prim_instance.vis.combined_local_clip_rect);
-                }
-
-                // TODO(gw): This should probably be an instance method on PrimitiveInstance?
-                update_prim_post_visibility(
-                    store,
-                    prim_instance,
-                    world_culling_rect,
+            let clip_chain = frame_state
+                .clip_store
+                .build_clip_chain_instance(
+                    local_coverage_rect,
+                    &map_local_to_surface,
                     &map_surface_to_world,
+                    &frame_context.spatial_tree,
+                    frame_state.gpu_cache,
+                    frame_state.resource_cache,
+                    device_pixel_scale,
+                    &world_culling_rect,
+                    &mut frame_state.data_stores.clip,
+                    true,
+                    prim_instance.is_chased(),
+                );
+
+            // Ensure the primitive clip is popped
+            frame_state.clip_chain_stack.pop_clip();
+
+            prim_instance.vis.clip_chain = match clip_chain {
+                Some(clip_chain) => clip_chain,
+                None => {
+                    if prim_instance.is_chased() {
+                        info!("\tunable to build the clip chain, skipping");
+                    }
+                    continue;
+                }
+            };
+
+            if prim_instance.is_chased() {
+                info!("\teffective clip chain from {:?} {}",
+                         prim_instance.vis.clip_chain.clips_range,
+                         if pic.apply_local_clip_rect { "(applied)" } else { "" },
+                );
+                info!("\tpicture rect {:?} @{:?}",
+                         prim_instance.vis.clip_chain.pic_coverage_rect,
+                         prim_instance.vis.clip_chain.pic_spatial_node_index,
                 );
             }
+
+            prim_instance.vis.combined_local_clip_rect = if pic.apply_local_clip_rect {
+                prim_instance.vis.clip_chain.local_clip_rect
+            } else {
+                prim_instance.clip_set.local_clip_rect
+            };
+
+            tile_cache.update_prim_dependencies(
+                prim_instance,
+                cluster.spatial_node_index,
+                // It's OK to pass the local_coverage_rect here as it's only used by primitives
+                // (for compositor surfaces) that don't have inflation anyway.
+                local_coverage_rect,
+                frame_context,
+                frame_state.data_stores,
+                frame_state.clip_store,
+                &store.pictures,
+                frame_state.resource_cache,
+                &store.color_bindings,
+                &frame_state.surface_stack,
+                &mut frame_state.composite_state,
+                &mut frame_state.gpu_cache,
+                is_root_tile_cache,
+                surfaces,
+            );
         }
     }
 
-    // Similar to above, pop either the clip chain or root entry off the current clip stack.
     if pop_surface {
         frame_state.pop_surface();
     }
 
-    let pic = &mut store.pictures[pic_index.0];
-    pic.prim_list = prim_list;
-
-    // If the local rect changed (due to transforms in child primitives) then
-    // invalidate the GPU cache location to re-upload the new local rect
-    // and stretch size. Drop shadow filters also depend on the local rect
-    // size for the extra GPU cache data handle.
-    // TODO(gw): In future, if we support specifying a flag which gets the
-    //           stretch size from the segment rect in the shaders, we can
-    //           remove this invalidation here completely.
     if let Some(ref rc) = pic.raster_config {
-        // Inflate the local bounding rect if required by the filter effect.
-        if pic.options.inflate_if_required {
-            surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.scale_factors);
-        }
-
-        // Layout space for the picture is picture space from the
-        // perspective of its child primitives.
-        pic.precise_local_rect = surface_rect * Scale::new(1.0);
-
-        // If the precise rect changed since last frame, we need to invalidate
-        // any segments and gpu cache handles for drop-shadows.
-        // TODO(gw): Requiring storage of the `prev_precise_local_rect` here
-        //           is a total hack. It's required because `prev_precise_local_rect`
-        //           gets written to twice (during initial vis pass and also during
-        //           prepare pass). The proper longer term fix for this is to make
-        //           use of the conservative picture rect for segmenting (which should
-        //           be done during scene building).
-        if pic.precise_local_rect != pic.prev_precise_local_rect {
-            match rc.composite_mode {
-                PictureCompositeMode::Filter(Filter::DropShadows(..)) => {
-                    for handle in &pic.extra_gpu_data_handles {
-                        frame_state.gpu_cache.invalidate(handle);
-                    }
-                }
-                _ => {}
-            }
-            // Invalidate any segments built for this picture, since the local
-            // rect has changed.
-            pic.segments_are_valid = false;
-            pic.prev_precise_local_rect = pic.precise_local_rect;
-        }
-
         match rc.composite_mode {
             PictureCompositeMode::TileCache { .. } => {}
             _ => {
@@ -582,50 +386,6 @@ pub fn update_primitive_visibility(
                 tile_cache.pop_surface();
             }
         }
-
-        None
-    } else {
-        let parent_surface = &frame_context.surfaces[parent_surface_index.expect("bug: no parent").0 as usize];
-        let map_surface_to_parent_surface = SpaceMapper::new_with_target(
-            parent_surface.surface_spatial_node_index,
-            surface.surface_spatial_node_index,
-            PictureRect::max_rect(),
-            frame_context.spatial_tree,
-        );
-        map_surface_to_parent_surface.map(&surface_rect)
-    }
-}
-
-
-fn update_prim_post_visibility(
-    store: &mut PrimitiveStore,
-    prim_instance: &mut PrimitiveInstance,
-    world_culling_rect: &WorldRect,
-    map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
-) {
-    profile_scope!("update_prim_post_visibility");
-    match prim_instance.kind {
-        PrimitiveInstanceKind::Picture { pic_index, .. } => {
-            let pic = &mut store.pictures[pic_index.0];
-            // If this picture has a surface, determine the clipped bounding rect for it to
-            // minimize the size of the render target that is required.
-            if let Some(ref mut raster_config) = pic.raster_config {
-                raster_config.clipped_bounding_rect = map_surface_to_world
-                    .map(&prim_instance.vis.clip_chain.pic_coverage_rect)
-                    .and_then(|rect| {
-                        rect.intersection(world_culling_rect)
-                    })
-                    .unwrap_or(WorldRect::zero());
-            }
-        }
-        PrimitiveInstanceKind::TextRun { .. } => {
-            // Text runs can't request resources early here, as we don't
-            // know until TileCache::post_update() whether we are drawing
-            // on an opaque surface.
-            // TODO(gw): We might be able to detect simple cases of this earlier,
-            //           during the picture traversal. But it's probably not worth it?
-        }
-        _ => {}
     }
 }
 
@@ -675,16 +435,4 @@ pub fn compute_conservative_visible_rect(
         Some(rect) => rect,
         None => clip_chain.local_clip_rect,
     }
-}
-
-fn calculate_prim_clipped_world_rect(
-    pic_clip_rect: &PictureRect,
-    world_culling_rect: &WorldRect,
-    map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
-) -> Option<WorldRect> {
-    map_surface_to_world
-        .map(&pic_clip_rect)
-        .and_then(|world_rect| {
-            world_rect.intersection(world_culling_rect)
-        })
 }

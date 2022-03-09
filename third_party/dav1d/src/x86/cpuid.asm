@@ -38,8 +38,8 @@ cglobal cpu_cpuid, 0, 5, 0, regs, leaf, subleaf
     cpuid
     mov  [r4+4*0], eax
     mov  [r4+4*1], ebx
-    mov  [r4+4*2], ecx
-    mov  [r4+4*3], edx
+    mov  [r4+4*2], edx
+    mov  [r4+4*3], ecx
 %if ARCH_X86_64
     mov       rbx, r5
 %endif

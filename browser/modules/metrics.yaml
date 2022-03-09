@@ -27,17 +27,17 @@ browser.engagement:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1376942  # Telemetry
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172  # Telemetry
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1741674
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755050
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172#c8
     data_sensitivity:
       - interaction
     notification_emails:
       - loines@mozilla.com
-    expires: "100"
+    expires: 106
     send_in_pings:
       - baseline
       - metrics
-    telemetry_mirror: BROWSER_ENGAGEMENT_MIRROR_FOR_ACTIVE_TICKS
     no_lint:
       - BASELINE_PING
 
@@ -54,16 +54,16 @@ browser.engagement:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169  # Telemetry
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1741674
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755050
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169#c14
     data_sensitivity:
       - interaction
     notification_emails:
       - loines@mozilla.com
-    expires: "100"
+    expires: 106
     send_in_pings:
       - baseline
       - metrics
-    telemetry_mirror: BROWSER_ENGAGEMENT_MIRROR_FOR_URI_COUNT
     no_lint:
       - BASELINE_PING

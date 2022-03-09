@@ -2,23 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  document: gDoc,
-  ChromeUtils,
-} = window.docShell.chromeEventHandler.ownerGlobal;
-const { RemoteL10n } = ChromeUtils.import(
-  "resource://activity-stream/lib/RemoteL10n.jsm"
-);
+const browser = window.docShell.chromeEventHandler;
+const { document: gDoc, XPCOMUtils } = browser.ownerGlobal;
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+});
+
+const [CONFIG, PARAMS] = window.arguments[0];
 
 function cloneTemplate(id) {
   return document.getElementById(id).content.cloneNode(true);
 }
 
+function addStylesheet(href) {
+  const link = document.head.appendChild(document.createElement("link"));
+  link.rel = "stylesheet";
+  link.href = href;
+}
+
+/**
+ * Render content based on Spotlight-specific templates.
+ */
 async function renderSpotlight(ready) {
-  const [
-    { template, logo = {}, body, extra = {} },
-    params,
-  ] = window.arguments[0];
+  const { template, logo = {}, body, extra = {} } = CONFIG;
+
+  // Add Spotlight styles
+  addStylesheet("chrome://browser/skin/spotlight.css");
 
   // Apply desired message template.
   const clone = cloneTemplate(template);
@@ -26,8 +37,7 @@ async function renderSpotlight(ready) {
 
   // Render logo element.
   let imageEl = clone.querySelector(".logo");
-  // Allow backwards compatibility of previous content structure.
-  imageEl.src = logo.imageURL ?? window.arguments[0][0].logoImageURL;
+  imageEl.src = logo.imageURL;
   imageEl.style.height = imageEl.style.width = logo.size;
 
   // Set text data of an element by class name with local/remote as configured.
@@ -78,7 +88,7 @@ async function renderSpotlight(ready) {
   let secondaryBtn = document.getElementById("secondary");
   if (primaryBtn) {
     primaryBtn.addEventListener("click", () => {
-      params.primaryBtn = true;
+      PARAMS.primaryBtn = true;
       window.close();
     });
 
@@ -90,7 +100,7 @@ async function renderSpotlight(ready) {
   }
   if (secondaryBtn) {
     secondaryBtn.addEventListener("click", () => {
-      params.secondaryBtn = true;
+      PARAMS.secondaryBtn = true;
       window.close();
     });
   }
@@ -101,11 +111,54 @@ async function renderSpotlight(ready) {
   requestAnimationFrame(() => requestAnimationFrame(ready));
 }
 
+/**
+ * Render content based on about:welcome multistage template.
+ */
+function renderMultistage(ready) {
+  const AWParent = new AboutWelcomeParent();
+  const receive = name => data =>
+    AWParent.onContentMessage(`AWPage:${name}`, data, browser);
+
+  // Expose top level functions expected by the bundle.
+  window.AWGetDefaultSites = () => {};
+  window.AWGetFeatureConfig = () => CONFIG;
+  window.AWGetFxAMetricsFlowURI = () => {};
+  window.AWGetImportableSites = () => "[]";
+  window.AWGetRegion = receive("GET_REGION");
+  window.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
+  window.AWSendEventTelemetry = receive("TELEMETRY_EVENT");
+  window.AWSendToParent = (name, data) => receive(name)(data);
+  window.AWFinish = () => {
+    window.close();
+  };
+
+  // Update styling to be compatible with about:welcome.
+  addStylesheet(
+    "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
+  );
+
+  document.body.classList.add("onboardingContainer");
+  document.body.id = "root";
+
+  // The content handles styling including its own modal shadowing.
+  const { classList } = gDoc.getElementById("window-modal-dialog");
+  classList.add("noShadow");
+  addEventListener("pagehide", () => classList.remove("noShadow"));
+
+  // Load the bundle to render the content as configured.
+  document.head.appendChild(document.createElement("script")).src =
+    "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+  ready();
+}
+
 // Indicate when we're ready to show and size (async localized) content.
 document.mozSubdialogReady = new Promise(resolve =>
   document.addEventListener(
     "DOMContentLoaded",
-    () => renderSpotlight(resolve),
+    () =>
+      (CONFIG.template === "multistage" ? renderMultistage : renderSpotlight)(
+        resolve
+      ),
     {
       once: true,
     }

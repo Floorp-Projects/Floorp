@@ -288,6 +288,18 @@ struct FormatInfo {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+struct PackingInfoInfo final {
+  uint8_t bytesPerElement = 0;
+  uint8_t elementsPerPixel = 0;  // E.g. 1 for LOCAL_GL_UNSIGNED_SHORT_4_4_4_4
+  bool isPacked = false;
+
+  static Maybe<PackingInfoInfo> For(const PackingInfo&);
+
+  inline uint8_t BytesPerPixel() const {
+    return bytesPerElement * elementsPerPixel;
+  }
+};
+
 const FormatInfo* GetFormat(EffectiveFormat format);
 uint8_t BytesPerPixel(const PackingInfo& packing);
 bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes);

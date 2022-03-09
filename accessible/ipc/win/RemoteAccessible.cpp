@@ -151,6 +151,11 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::Value(aValue);
+    return;
+  }
+
   aValue.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
@@ -728,18 +733,6 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   acc->scrollSubstringToPoint(static_cast<long>(aStartOffset),
                               static_cast<long>(aEndOffset), coordType,
                               static_cast<long>(aX), static_cast<long>(aY));
-}
-
-uint32_t RemoteAccessible::EndOffset(bool* aOk) {
-  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
-  if (!acc) {
-    *aOk = false;
-    return 0;
-  }
-
-  long endOffset;
-  *aOk = SUCCEEDED(acc->get_endIndex(&endOffset));
-  return static_cast<uint32_t>(endOffset);
 }
 
 bool RemoteAccessible::IsLinkValid() {

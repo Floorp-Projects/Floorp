@@ -25,7 +25,9 @@
 
 #include "hb.hh"
 #include "hb-map.hh"
+#include <string>
 
+static const std::string invalid{"invalid"};
 
 int
 main (int argc, char **argv)
@@ -76,6 +78,14 @@ main (int argc, char **argv)
     assert (v.get_population () == 2);
   }
 
+  /* Test call fini() twice. */
+  {
+    hb_map_t s;
+    for (int i = 0; i < 16; i++)
+      s.set(i, i+1);
+    s.fini();
+  }
+
   /* Test initializing from iterator. */
   {
     hb_map_t s;
@@ -106,6 +116,23 @@ main (int argc, char **argv)
     assert (m1.get_population () == 0);
     assert (m2.get_population () == 0);
     assert (m3.get_population () == 0);
+  }
+
+  {
+    hb_hashmap_t<int, int, int, int, 0, 0> m0;
+    hb_hashmap_t<std::string, int, const std::string*, int, &invalid, 0> m1;
+    hb_hashmap_t<int, std::string, int, const std::string*, 0, &invalid> m2;
+    hb_hashmap_t<std::string, std::string, const std::string*, const std::string*, &invalid, &invalid> m3;
+
+    std::string s;
+    for (unsigned i = 1; i < 1000; i++)
+    {
+      s += "x";
+      m0.set (i, i);
+      m1.set (s, i);
+      m2.set (i, s);
+      m3.set (s, s);
+    }
   }
 
   return 0;

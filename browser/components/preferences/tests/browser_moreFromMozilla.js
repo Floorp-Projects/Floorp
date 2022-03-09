@@ -3,11 +3,21 @@
 
 "use strict";
 
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
+
 let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+async function clearPolicies() {
+  // Ensure no active policies are set
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
+}
+
 add_task(async function testDefaultUIWithoutTemplatePref() {
+  await clearPolicies();
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
@@ -70,6 +80,7 @@ add_task(async function testDefaultUIWithoutTemplatePref() {
 });
 
 add_task(async function testDefaulEmailClick() {
+  await clearPolicies();
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
@@ -154,6 +165,7 @@ add_task(async function test_aboutpreferences_event_telemetry() {
 });
 
 add_task(async function test_aboutpreferences_simple_template() {
+  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.preferences.moreFromMozilla", true],
@@ -182,6 +194,7 @@ add_task(async function test_aboutpreferences_simple_template() {
 });
 
 add_task(async function test_aboutpreferences_advanced_template() {
+  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.preferences.moreFromMozilla", true],
@@ -218,6 +231,7 @@ add_task(async function test_aboutpreferences_advanced_template() {
 });
 
 add_task(async function test_aboutpreferences_clickBtnVPN() {
+  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.preferences.moreFromMozilla", true],
@@ -331,6 +345,7 @@ add_task(async function test_aboutpreferences_clickBtnMobile() {
 });
 
 add_task(async function test_aboutpreferences_search() {
+  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.preferences.moreFromMozilla", true],

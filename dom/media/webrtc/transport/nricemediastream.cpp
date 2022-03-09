@@ -292,9 +292,9 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate,
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_MTLOG(ML_INFO, "NrIceCtx(" << ctx_->ctx()->label << ")/STREAM(" << name()
-                                 << ") : parsing trickle candidate "
-                                 << candidate);
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << ctx_->ctx()->label << ")/STREAM("
+                                   << name() << ") : parsing trickle candidate "
+                                   << candidate);
 
   int r = nr_ice_peer_ctx_parse_trickle_candidate(
       ctx_->peer(), stream, const_cast<char*>(candidate.c_str()),

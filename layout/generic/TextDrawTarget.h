@@ -211,9 +211,9 @@ class TextDrawTarget : public DrawTarget {
         wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
     glyphOptions.flags = mWRGlyphFlags;
 
-    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont, color, *mSc,
-                                     mBoundsRect, ClipRect(), mBackfaceVisible,
-                                     &glyphOptions);
+    mManager->WrBridge()->PushGlyphs(mBuilder, *mResources, glyphs, aFont,
+                                     color, *mSc, mBoundsRect, ClipRect(),
+                                     mBackfaceVisible, &glyphOptions);
   }
 
   void PushClipRect(const Rect& aRect) override {
@@ -243,7 +243,7 @@ class TextDrawTarget : public DrawTarget {
                            const DeviceColor& aColor) {
     auto rect = wr::ToLayoutRect(aRect);
     auto color = wr::ToColorF(aColor);
-    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, color);
   }
 
   // This function is basically designed to slide into the decoration drawing
@@ -341,7 +341,7 @@ class TextDrawTarget : public DrawTarget {
       return;
     }
     mBuilder.PushImage(wr::ToLayoutRect(aBounds), wr::ToLayoutRect(aClip), true,
-                       aFilter, aKey, true, aColor);
+                       false, aFilter, aKey, true, aColor);
   }
 
  private:
@@ -459,7 +459,7 @@ class TextDrawTarget : public DrawTarget {
     auto rect = wr::ToLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color =
         wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
-    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, color);
   }
 
   void StrokeRect(const Rect& aRect, const Pattern& aPattern,

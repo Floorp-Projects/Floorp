@@ -231,6 +231,25 @@ struct MOZ_RAII AutoStopVerifyingBarriers {
 };
 #endif /* JS_GC_ZEAL */
 
+class MOZ_RAII AutoDisableCompartmentCheckTracer {
+#ifdef DEBUG
+  JSContext* cx_;
+  bool prev_;
+
+ public:
+  AutoDisableCompartmentCheckTracer()
+      : cx_(TlsContext.get()), prev_(cx_->disableCompartmentCheckTracer) {
+    cx_->disableCompartmentCheckTracer = true;
+  }
+  ~AutoDisableCompartmentCheckTracer() {
+    cx_->disableCompartmentCheckTracer = prev_;
+  }
+#else
+ public:
+  AutoDisableCompartmentCheckTracer(){};
+#endif
+};
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);
@@ -260,13 +279,6 @@ extern void DelayCrossCompartmentGrayMarking(JSObject* src);
 inline bool IsOOMReason(JS::GCReason reason) {
   return reason == JS::GCReason::LAST_DITCH ||
          reason == JS::GCReason::MEM_PRESSURE;
-}
-
-// TODO: Bug 1650075. Adding XPCONNECT_SHUTDOWN seems to cause crash.
-inline bool IsShutdownReason(JS::GCReason reason) {
-  return reason == JS::GCReason::WORKER_SHUTDOWN ||
-         reason == JS::GCReason::SHUTDOWN_CC ||
-         reason == JS::GCReason::DESTROY_RUNTIME;
 }
 
 TenuredCell* AllocateCellInGC(JS::Zone* zone, AllocKind thingKind);

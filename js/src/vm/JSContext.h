@@ -211,7 +211,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // currently operating on.
   void setRuntime(JSRuntime* rt);
 
-  void setHelperThread(const js::AutoLockHelperThreadState& locked);
+  void setHelperThread(const JS::ContextOptions& options,
+                       const js::AutoLockHelperThreadState& locked);
   void clearHelperThread(const js::AutoLockHelperThreadState& locked);
 
   bool contextAvailable(js::AutoLockHelperThreadState& locked) {
@@ -295,9 +296,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Accessors for immutable runtime data.
   JSAtomState& names() { return *runtime_->commonNames; }
   js::StaticStrings& staticStrings() { return *runtime_->staticStrings; }
-  js::SharedImmutableStringsCache& sharedImmutableStrings() {
-    return runtime_->sharedImmutableStrings();
-  }
   bool permanentAtomsPopulated() { return runtime_->permanentAtomsPopulated(); }
   const js::FrozenAtomSet& permanentAtoms() {
     return *runtime_->permanentAtoms();

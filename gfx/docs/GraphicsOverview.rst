@@ -123,16 +123,6 @@ Compositing for the final result
 Graphics API
 ~~~~~~~~~~~~
 
-Moz2D
-~~~~~
-
--  The Moz2D graphics API, part of the Azure project, is a
-   cross-platform interface onto the various graphics backends that
-   Gecko uses for rendering such as Direct2D (1.0 and 1.1), Skia, Cairo,
-   Quartz, and NV Path. Adding a new graphics platform to Gecko is
-   accomplished by adding a backend to Moz2D.
-   See `Moz2D documentation on wiki <https://wiki.mozilla.org/Platform/GFX/Moz2D>`__.
-
 Compositing
 ~~~~~~~~~~~
 

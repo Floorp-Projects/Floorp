@@ -567,6 +567,14 @@ void BaseCompiler::pushI64(int64_t v) { push(Stk(v)); }
 
 void BaseCompiler::pushRef(intptr_t v) { pushConstRef(v); }
 
+void BaseCompiler::pushPtr(intptr_t v) {
+#ifdef JS_64BIT
+  pushI64(v);
+#else
+  pushI32(v);
+#endif
+}
+
 void BaseCompiler::pushF64(double v) { push(Stk(v)); }
 
 void BaseCompiler::pushF32(float v) { push(Stk(v)); }

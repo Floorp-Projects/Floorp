@@ -271,6 +271,10 @@ for protocol in sorted(allmessages.keys()):
 
 print(
     """
+  case DATA_PIPE_CLOSED_MESSAGE_TYPE:
+    return "DATA_PIPE_CLOSED_MESSAGE";
+  case DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE:
+    return "DATA_PIPE_BYTES_CONSUMED_MESSAGE";
   case ACCEPT_INVITE_MESSAGE_TYPE:
     return "ACCEPT_INVITE_MESSAGE";
   case REQUEST_INTRODUCTION_MESSAGE_TYPE:

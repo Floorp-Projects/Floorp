@@ -10633,6 +10633,10 @@ hlx3.page
 // Submitted by Przemyslaw Plewa <it-admin@domena.pl>
 beep.pl
 
+// Aiven: https://aiven.io/
+// Submitted by Etienne Stalmans <security@aiven.io>
+aivencloud.com
+
 // alboto.ca : http://alboto.ca
 // Submitted by Anton Avramov <avramov@alboto.ca>
 barsy.ca
@@ -11236,6 +11240,11 @@ deno-staging.dev
 // deSEC : https://desec.io/
 // Submitted by Peter Thomassen <peter@desec.io>
 dedyn.io
+
+// Deta: https://www.deta.sh/
+// Submitted by Aavash Shrestha <aavash@deta.sh>
+deta.app
+deta.dev
 
 // Diher Solutions : https://diher.solutions
 // Submitted by Didi Hermawan <mail@diher.solutions>
@@ -11866,8 +11875,6 @@ app.os.stg.fedoraproject.org
 
 // FearWorks Media Ltd. : https://fearworksmedia.co.uk
 // submitted by Keith Fairley <domains@fearworksmedia.co.uk>
-couk.me
-ukco.me
 conn.uk
 copro.uk
 hosp.uk
@@ -12035,8 +12042,113 @@ co.ro
 shop.ro
 
 // GMO Pepabo, Inc. : https://pepabo.com/
-// Submitted by dojineko <admin@pepabo.com>
+// Submitted by Hosting Div <admin@pepabo.com>
 lolipop.io
+angry.jp
+babyblue.jp
+babymilk.jp
+backdrop.jp
+bambina.jp
+bitter.jp
+blush.jp
+boo.jp
+boy.jp
+boyfriend.jp
+but.jp
+candypop.jp
+capoo.jp
+catfood.jp
+cheap.jp
+chicappa.jp
+chillout.jp
+chips.jp
+chowder.jp
+chu.jp
+ciao.jp
+cocotte.jp
+coolblog.jp
+cranky.jp
+cutegirl.jp
+daa.jp
+deca.jp
+deci.jp
+digick.jp
+egoism.jp
+fakefur.jp
+fem.jp
+flier.jp
+floppy.jp
+fool.jp
+frenchkiss.jp
+girlfriend.jp
+girly.jp
+gloomy.jp
+gonna.jp
+greater.jp
+hacca.jp
+heavy.jp
+her.jp
+hiho.jp
+hippy.jp
+holy.jp
+hungry.jp
+icurus.jp
+itigo.jp
+jellybean.jp
+kikirara.jp
+kill.jp
+kilo.jp
+kuron.jp
+littlestar.jp
+lolitapunk.jp
+lomo.jp
+lovepop.jp
+lovesick.jp
+main.jp
+mods.jp
+mond.jp
+mongolian.jp
+moo.jp
+namaste.jp
+nikita.jp
+nobushi.jp
+noor.jp
+oops.jp
+parallel.jp
+parasite.jp
+pecori.jp
+peewee.jp
+penne.jp
+pepper.jp
+perma.jp
+pigboat.jp
+pinoko.jp
+punyu.jp
+pupu.jp
+pussycat.jp
+pya.jp
+raindrop.jp
+readymade.jp
+sadist.jp
+schoolbus.jp
+secret.jp
+staba.jp
+stripper.jp
+sub.jp
+sunnyday.jp
+thick.jp
+tonkotsu.jp
+under.jp
+upper.jp
+velvet.jp
+verse.jp
+versus.jp
+vivian.jp
+watson.jp
+weblike.jp
+whitesnow.jp
+zombie.jp
+heteml.net
 
 // GOV.UK Platform as a Service : https://www.cloud.service.gov.uk/
 // Submitted by Tom Whitwell <gov-uk-paas-support@digital.cabinet-office.gov.uk>
@@ -12455,6 +12567,10 @@ js.org
 kaas.gg
 khplay.nl
 
+// Kakao : https://www.kakaocorp.com/
+// Submitted by JaeYoong Lee <cec@kakaocorp.com>
+ktistory.com
+
 // Kapsi : https://kapsi.fi
 // Submitted by Tomi Juntunen <erani@kapsi.fi>
 kapsi.fi
@@ -12776,7 +12892,10 @@ noop.app
 // Northflank Ltd. : https://northflank.com/
 // Submitted by Marco Suter <marco@northflank.com>
 *.northflank.app
+*.build.run
 *.code.run
+*.database.run
+*.migration.run
 
 // Noticeable : https://noticeable.io
 // Submitted by Laurent Pellegrino <security@noticeable.io>
@@ -12958,6 +13077,10 @@ orsites.com
 // Opera Software, A.S.A.
 // Submitted by Yngve Pettersen <yngve@opera.com>
 operaunite.com
+
+// Orange : https://www.orange.com
+// Submitted by Alexandre Linte <alexandre.linte@orange.com>
+tech.orange
 
 // Oursky Limited : https://authgear.com/, https://skygear.io/
 // Submited by Authgear Team <hello@authgear.com>, Skygear Developer <hello@skygear.io>
@@ -13379,6 +13502,8 @@ srht.site
 stackhero-network.com
 
 // Staclar : https://staclar.com
+// Submitted by Q Misell <q@staclar.com>
+musician.io
 // Submitted by Matthias Merkel <matthias.merkel@staclar.com>
 novecore.site
 
@@ -13598,6 +13723,10 @@ lima.zone
 *.transurl.eu
 *.transurl.nl
 
+// TransIP: https://www.transip.nl
+// Submitted by Cedric Dubois <cedric.dubois@team.blue>
+site.transip.me
+
 // TuxFamily : http://tuxfamily.org
 // Submitted by TuxFamily administrators <adm@staff.tuxfamily.org>
 tuxfamily.org
@@ -13617,6 +13746,10 @@ my-wan.de
 syno-ds.de
 synology-diskstation.de
 synology-ds.de
+
+// Typedream : https://typedream.com
+// Submitted by Putri Karunia <putri@typedream.com>
+typedream.app
 
 // Typeform : https://www.typeform.com
 // Submitted by Sergi Ferriz <sergi.ferriz@typeform.com>
@@ -13727,15 +13860,6 @@ v.ua
 // Waffle Computer Inc., Ltd. : https://docs.waffleinfo.com
 // Submitted by Masayuki Note <masa@blade.wafflecell.com>
 wafflecell.com
-
-// WapBlog.ID : https://www.wapblog.id
-// Submitted by Fajar Sodik <official@wapblog.id>
-idnblogger.com
-indowapblog.com
-bloger.id
-wblog.id
-wbq.me
-fastblog.net
 
 // WebHare bv: https://www.webhare.com/
 // Submitted by Arnold Hendriks <info@webhare.com>

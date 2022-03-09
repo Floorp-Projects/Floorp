@@ -151,8 +151,6 @@ class GfxInfoBase : public nsIGfxInfo,
 
   NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) override;
 
-  NS_IMETHOD EnsureGPUProcessReadyForTests(JSContext* cx,
-                                           dom::Promise** aPromise) override;
   NS_IMETHOD KillGPUProcessForTests() override;
   NS_IMETHOD CrashGPUProcessForTests() override;
 

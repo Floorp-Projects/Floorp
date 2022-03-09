@@ -1,3 +1,5 @@
+use rustc_version::{version, Version};
+
 fn main() {
     if cfg!(feature = "neon") && std::env::var_os("RUSTC_BOOTSTRAP").is_none() {
         // With Rust 1.50 and newer RUSTC_BOOTSTAP should
@@ -8,5 +10,8 @@ fn main() {
     let target = std::env::var("TARGET").expect("TARGET environment variable not defined");
     if target.contains("neon") {
         println!("cargo:rustc-cfg=libcore_neon");
+    }
+    if version().unwrap() >= Version::parse("1.60.0-alpha").unwrap() {
+        println!("cargo:rustc-cfg=std_arch");
     }
 }

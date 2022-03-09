@@ -204,12 +204,6 @@ class FilterNodeSoftware : public FilterNode,
   std::vector<FilterInvalidationListener*> mInvalidationListeners;
 
   /**
-   * Lock guarding mRequestedRect, mCachedRect, and mCachedOutput. All uses
-   * of those members must aquire this lock.
-   */
-  Mutex mCacheMutex;
-
-  /**
    * Stores the rect which we want to render and cache on the next call to
    * GetOutput.
    */
@@ -770,7 +764,6 @@ class FilterNodeLightingSoftware : public FilterNodeSoftware {
                                                CoordType aKernelUnitLengthX,
                                                CoordType aKernelUnitLengthY);
 
-  Mutex mLock;
   LightType mLight;
   LightingType mLighting;
   Float mSurfaceScale;

@@ -1455,7 +1455,7 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
       continue;
     }
 
-    MOZ_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(id.isString());
     if (!entries.append(id)) {
       return false;
     }
@@ -1469,7 +1469,7 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
       continue;
     }
 
-    if (!entries.append(INT_TO_JSID(i - 1))) {
+    if (!entries.append(PropertyKey::Int(i - 1))) {
       return false;
     }
 
@@ -1524,7 +1524,7 @@ bool JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls) {
     for (size_t i = properties.length(); i > 0; --i) {
       jsid id = properties[i - 1];
 
-      MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+      MOZ_ASSERT(id.isString() || id.isInt());
       if (!objectEntries.append(id)) {
         return false;
       }

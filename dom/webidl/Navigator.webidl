@@ -105,13 +105,12 @@ partial interface Navigator {
   readonly attribute Permissions permissions;
 };
 
-// Things that definitely need to be in the spec and and are not for some
-// reason.  See https://www.w3.org/Bugs/Public/show_bug.cgi?id=22406
 partial interface Navigator {
-  [Throws]
+  [Throws, SameObject]
   readonly attribute MimeTypeArray mimeTypes;
-  [Throws]
+  [Throws, SameObject]
   readonly attribute PluginArray plugins;
+  readonly attribute boolean pdfViewerEnabled;
 };
 
 // http://www.w3.org/TR/tracking-dnt/ sort of
@@ -241,7 +240,7 @@ partial interface Navigator {
 
 // http://webaudio.github.io/web-midi-api/#requestmidiaccess
 partial interface Navigator {
-  [Throws, Pref="dom.webmidi.enabled"]
+  [SecureContext, Throws, Pref="dom.webmidi.enabled"]
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options = {});
 };
 

@@ -78,7 +78,7 @@ struct nsFlowAreaRect {
  * 'direction' property of the containing block doesn't affect the
  * interpretation of line-right and line-left. We actually implement this by
  * passing in the writing mode of the block formatting context (BFC), i.e.
- * the of BlockReflowInput's writing mode.
+ * the of BlockReflowState's writing mode.
  *
  * nsFloatManager uses a special logical coordinate space with inline
  * coordinates on the line-axis and block coordinates on the block-axis

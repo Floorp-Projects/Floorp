@@ -34,24 +34,37 @@ interface nsIProfilerStartParams : nsISupports
 [scriptable, builtinclass, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
 interface nsIProfiler : nsISupports
 {
-  void StartProfiler(in uint32_t aEntries, in double aInterval,
-                     in Array<AUTF8String> aFeatures,
-                     [optional] in Array<AUTF8String> aFilters,
-                     [optional] in uint64_t aActiveTabID,
-                     [optional] in double aDuration);
-  void StopProfiler();
+  /*
+   * Control functions return as soon as this process' profiler has done its
+   * work. The returned promise gets resolved when sub-processes have completed
+   * their operation, or immediately if there are no sub-processes.
+   */
+  [implicit_jscontext]
+  Promise StartProfiler(in uint32_t aEntries, in double aInterval,
+                        in Array<AUTF8String> aFeatures,
+                        [optional] in Array<AUTF8String> aFilters,
+                        [optional] in uint64_t aActiveTabID,
+                        [optional] in double aDuration);
+  [implicit_jscontext]
+  Promise StopProfiler();
   boolean IsPaused();
-  void Pause();
-  void Resume();
+  [implicit_jscontext]
+  Promise Pause();
+  [implicit_jscontext]
+  Promise Resume();
   boolean IsSamplingPaused();
-  void PauseSampling();
-  void ResumeSampling();
+  [implicit_jscontext]
+  Promise PauseSampling();
+  [implicit_jscontext]
+  Promise ResumeSampling();
 
   /*
-   * Resolves the returned promise after at least one full periodic sampling.
-   * Rejects the promise if sampler is not running (yet, or anymore, or paused).
+   * Resolves the returned promise after at least one full periodic sampling in
+   * each process.
+   * Rejects the promise if sampler is not running (yet, or anymore, or paused)
+   * in the parent process.
    * This is mainly useful in tests, to wait just long enough to guarantee that
-   * one sample was taken in the main process.
+   * at least one sample was taken in each process.
    */
   [implicit_jscontext]
   Promise waitOnePeriodicSampling();

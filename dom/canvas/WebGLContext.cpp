@@ -792,7 +792,8 @@ void WebGLContext::OnEndOfFrame() {
 }
 
 void WebGLContext::BlitBackbufferToCurDriverFB(
-    const gl::MozFramebuffer* const source) const {
+    WebGLFramebuffer* const srcAsWebglFb,
+    const gl::MozFramebuffer* const srcAsMozFb, bool srcIsBGRA) const {
   DoColorMask(0x0f);
 
   if (mScissorTestEnabled) {
@@ -800,25 +801,54 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
   }
 
   [&]() {
-    const auto fb = source ? source : mDefaultFB.get();
-
-    if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
-      gl->fBlitFramebuffer(0, 0, fb->mSize.width, fb->mSize.height, 0, 0,
-                           fb->mSize.width, fb->mSize.height,
-                           LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
-      return;
+    // If a MozFramebuffer is supplied, ensure that a WebGLFramebuffer is not
+    // used since it might not have completeness info, while the MozFramebuffer
+    // can still supply the needed information.
+    MOZ_ASSERT(!(srcAsMozFb && srcAsWebglFb));
+    const auto* mozFb = srcAsMozFb ? srcAsMozFb : mDefaultFB.get();
+    GLuint fbo = 0;
+    gfx::IntSize size;
+    if (srcAsWebglFb) {
+      fbo = srcAsWebglFb->mGLName;
+      const auto* info = srcAsWebglFb->GetCompletenessInfo();
+      MOZ_ASSERT(info);
+      size = gfx::IntSize(info->width, info->height);
+    } else {
+      fbo = mozFb->mFB;
+      size = mozFb->mSize;
     }
-    if (mDefaultFB->mSamples &&
-        gl->IsExtensionSupported(
-            gl::GLContext::APPLE_framebuffer_multisample)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
-      gl->fResolveMultisampleFramebufferAPPLE();
-      return;
+
+    // If no format conversion is necessary, then attempt to directly blit
+    // between framebuffers. Otherwise, if we need to convert to RGBA from
+    // the source format, then we will need to use the texture blit path
+    // below.
+    if (!srcIsBGRA) {
+      if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+        gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
+                             size.height, LOCAL_GL_COLOR_BUFFER_BIT,
+                             LOCAL_GL_NEAREST);
+        return;
+      }
+      if (mDefaultFB->mSamples &&
+          gl->IsExtensionSupported(
+              gl::GLContext::APPLE_framebuffer_multisample)) {
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+        gl->fResolveMultisampleFramebufferAPPLE();
+        return;
+      }
     }
 
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(fb->ColorTex(), fb->mSize,
-                                                   fb->mSize);
+    GLuint colorTex = 0;
+    if (srcAsWebglFb) {
+      const auto& attach = srcAsWebglFb->ColorAttachment0();
+      MOZ_ASSERT(attach.Texture());
+      colorTex = attach.Texture()->mGLName;
+    } else {
+      colorTex = mozFb->ColorTex();
+    }
+    gl->BlitHelper()->DrawBlitTextureToFramebuffer(
+        colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
   }();
 
   if (mScissorTestEnabled) {
@@ -894,7 +924,7 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   const auto destFb = presenter->Fb();
   gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-  BlitBackbufferToCurDriverFB(&fb);
+  BlitBackbufferToCurDriverFB(nullptr, &fb);
 
   // https://immersive-web.github.io/webxr/#opaque-framebuffer
   // Opaque framebuffers will always be cleared regardless of the
@@ -910,6 +940,22 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   return true;
 }
 
+// Initialize a swap chain's surface factory given the desired surface type.
+void InitSwapChain(gl::GLContext& gl, gl::SwapChain& swapChain,
+                   const layers::TextureType consumerType) {
+  if (!swapChain.mFactory) {
+    auto typedFactory = gl::SurfaceFactory::Create(&gl, consumerType);
+    if (typedFactory) {
+      swapChain.mFactory = std::move(typedFactory);
+    }
+  }
+  if (!swapChain.mFactory) {
+    NS_WARNING("Failed to make an ideal SurfaceFactory.");
+    swapChain.mFactory = MakeUnique<gl::SurfaceFactory_Basic>(gl);
+  }
+  MOZ_ASSERT(swapChain.mFactory);
+}
+
 void WebGLContext::Present(WebGLFramebuffer* const xrFb,
                            const layers::TextureType consumerType,
                            const bool webvr) {
@@ -918,27 +964,17 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
 
   auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
   }
   const gl::MozFramebuffer* maybeFB = nullptr;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
     maybeFB = xrFb->mOpaque.get();
   } else {
     mResolvedDefaultFB = nullptr;
   }
 
-  if (!swapChain->mFactory) {
-    auto typedFactory = gl::SurfaceFactory::Create(gl, consumerType);
-    if (typedFactory) {
-      swapChain->mFactory = std::move(typedFactory);
-    }
-  }
-  if (!swapChain->mFactory) {
-    NS_WARNING("Failed to make an ideal SurfaceFactory.");
-    swapChain->mFactory = MakeUnique<gl::SurfaceFactory_Basic>(*gl);
-  }
-  MOZ_ASSERT(swapChain->mFactory);
+  InitSwapChain(*gl, *swapChain, consumerType);
 
   if (maybeFB) {
     (void)PresentIntoXR(*swapChain, *maybeFB);
@@ -947,11 +983,50 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
   }
 }
 
+void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
+                                   const layers::TextureType consumerType,
+                                   const webgl::SwapChainOptions& options) {
+  const FuncScope funcScope(*this, "<CopyToSwapChain>");
+  if (IsContextLost()) return;
+
+  OnEndOfFrame();
+
+  if (!srcFb) return;
+  const auto* info = srcFb->GetCompletenessInfo();
+  if (!info) {
+    return;
+  }
+  gfx::IntSize size(info->width, info->height);
+
+  InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
+
+  auto presenter = srcFb->mSwapChain.Acquire(size);
+  if (!presenter) {
+    GenerateWarning("Swap chain surface creation failed.");
+    LoseContext();
+    return;
+  }
+
+  const ScopedFBRebinder saveFB(this);
+
+  const auto destFb = presenter->Fb();
+  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+
+  BlitBackbufferToCurDriverFB(srcFb, nullptr, options.bgra);
+}
+
+void WebGLContext::EndOfFrame() {
+  const FuncScope funcScope(*this, "<EndOfFrame>");
+  if (IsContextLost()) return;
+
+  OnEndOfFrame();
+}
+
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
     WebGLFramebuffer* const xrFb, const bool webvr) {
   auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
   }
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
@@ -2023,5 +2098,161 @@ GLint WebGLContext::GetFragDataLocation(const WebGLProgram& prog,
 
 WebGLContextBoundObject::WebGLContextBoundObject(WebGLContext* webgl)
     : mContext(webgl) {}
+
+// -
+
+Result<webgl::ExplicitPixelPackingState, std::string>
+webgl::ExplicitPixelPackingState::ForUseWith(
+    const webgl::PixelPackingState& stateOrZero, const GLenum target,
+    const uvec3& subrectSize, const webgl::PackingInfo& pi,
+    const Maybe<size_t> bytesPerRowStrideOverride) {
+  auto state = stateOrZero;
+
+  if (!IsTexTarget3D(target)) {
+    state.skipImages = 0;
+    state.imageHeight = 0;
+  }
+  if (!state.rowLength) {
+    state.rowLength = subrectSize.x;
+  }
+  if (!state.imageHeight) {
+    state.imageHeight = subrectSize.y;
+  }
+
+  // -
+
+  const auto mpii = PackingInfoInfo::For(pi);
+  if (!mpii) {
+    const auto text =
+        nsPrintfCString("Invalid pi: { 0x%x, 0x%x}", pi.format, pi.type);
+    return Err(mozilla::ToString(text));
+  }
+  const auto pii = *mpii;
+  const auto bytesPerPixel = pii.BytesPerPixel();
+
+  const auto ElemsPerRowStride = [&]() {
+    // GLES 3.0.6 p116:
+    // p: `Elem*` pointer to the first element of the first row
+    // N: row number, starting at 0
+    // l: groups (pixels) per row
+    // n: elements per group (pixel) in [1,2,3,4]
+    // s: bytes per element in [1,2,4,8]
+    // a: UNPACK_ALIGNMENT in [1,2,4,8]
+    // Pointer to first element of Nth row: p + N*k
+    // k(s>=a): n*l
+    // k(s<a): a/s * ceil(s*n*l/a)
+    const auto n__elemsPerPixel = pii.elementsPerPixel;
+    const auto l__pixelsPerRow = state.rowLength;
+    const auto a__alignment = state.alignmentInTypeElems;
+    const auto s__bytesPerElem = pii.bytesPerElement;
+
+    const auto nl = CheckedInt<size_t>(n__elemsPerPixel) * l__pixelsPerRow;
+    auto k__elemsPerRowStride = nl;
+    if (s__bytesPerElem < a__alignment) {
+      // k = a/s * ceil(s*n*l/a)
+      k__elemsPerRowStride =
+          a__alignment / s__bytesPerElem *
+          ((nl * s__bytesPerElem + a__alignment - 1) / a__alignment);
+    }
+    return k__elemsPerRowStride;
+  };
+
+  // -
+
+  if (bytesPerRowStrideOverride) {  // E.g. HTMLImageElement
+    const size_t bytesPerRowStrideRequired = *bytesPerRowStrideOverride;
+    // We have to reverse-engineer an ALIGNMENT and ROW_LENGTH for this.
+
+    // GL does this in elems not bytes, so we should too.
+    MOZ_RELEASE_ASSERT(bytesPerRowStrideRequired % pii.bytesPerElement == 0);
+    const auto elemsPerRowStrideRequired =
+        bytesPerRowStrideRequired / pii.bytesPerElement;
+
+    state.rowLength = bytesPerRowStrideRequired / bytesPerPixel;
+    state.alignmentInTypeElems = 8;
+    while (true) {
+      const auto elemPerRowStride = ElemsPerRowStride();
+      if (elemPerRowStride.isValid() &&
+          elemPerRowStride.value() == elemsPerRowStrideRequired) {
+        break;
+      }
+      state.alignmentInTypeElems /= 2;
+      if (!state.alignmentInTypeElems) {
+        const auto text = nsPrintfCString(
+            "No valid alignment found: pi: { 0x%x, 0x%x},"
+            " bytesPerRowStrideRequired: %zu",
+            pi.format, pi.type, bytesPerRowStrideRequired);
+        return Err(mozilla::ToString(text));
+      }
+    }
+  }
+
+  // -
+
+  const auto usedPixelsPerRow =
+      CheckedInt<size_t>(state.skipPixels) + subrectSize.x;
+  if (!usedPixelsPerRow.isValid() ||
+      usedPixelsPerRow.value() > state.rowLength) {
+    return Err("UNPACK_SKIP_PIXELS + width > UNPACK_ROW_LENGTH.");
+  }
+
+  if (subrectSize.y > state.imageHeight) {
+    return Err("height > UNPACK_IMAGE_HEIGHT.");
+  }
+  // The spec doesn't bound SKIP_ROWS + height <= IMAGE_HEIGHT, unfortunately.
+
+  // -
+
+  auto metrics = Metrics{};
+
+  metrics.usedSize = subrectSize;
+  metrics.bytesPerPixel = BytesPerPixel(pi);
+
+  // -
+
+  const auto elemsPerRowStride = ElemsPerRowStride();
+  const auto bytesPerRowStride = pii.bytesPerElement * elemsPerRowStride;
+  if (!bytesPerRowStride.isValid()) {
+    return Err("ROW_LENGTH or width too large for packing.");
+  }
+  metrics.bytesPerRowStride = bytesPerRowStride.value();
+
+  // -
+
+  const auto firstImageTotalRows =
+      CheckedInt<size_t>(state.skipRows) + metrics.usedSize.y;
+  const auto totalImages =
+      CheckedInt<size_t>(state.skipImages) + metrics.usedSize.z;
+  auto totalRows = CheckedInt<size_t>(0);
+  if (metrics.usedSize.y && metrics.usedSize.z) {
+    totalRows = firstImageTotalRows + state.imageHeight * (totalImages - 1);
+  }
+  if (!totalRows.isValid()) {
+    return Err(
+        "SKIP_ROWS, height, IMAGE_HEIGHT, SKIP_IMAGES, or depth too large for "
+        "packing.");
+  }
+  metrics.totalRows = totalRows.value();
+
+  // -
+
+  const auto totalBytesStrided = totalRows * metrics.bytesPerRowStride;
+  if (!totalBytesStrided.isValid()) {
+    return Err("Total byte count too large for packing.");
+  }
+  metrics.totalBytesStrided = totalBytesStrided.value();
+
+  metrics.totalBytesUsed = metrics.totalBytesStrided;
+  if (metrics.usedSize.x && metrics.usedSize.y && metrics.usedSize.z) {
+    const auto usedBytesPerRow =
+        usedPixelsPerRow.value() * metrics.bytesPerPixel;
+    metrics.totalBytesUsed -= metrics.bytesPerRowStride;
+    metrics.totalBytesUsed += usedBytesPerRow;
+  }
+
+  // -
+
+  return {{state, metrics}};
+}
 
 }  // namespace mozilla

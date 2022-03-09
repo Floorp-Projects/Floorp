@@ -8,6 +8,7 @@
 
 #include "mozilla/URLExtraData.h"
 
+#include "mozilla/NullPrincipal.h"
 #include "nsProxyRelease.h"
 #include "ReferrerInfo.h"
 

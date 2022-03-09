@@ -11,6 +11,7 @@
 #include "mozilla/SVGUtils.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
+#include "nsIScrollableFrame.h"
 #include <limits>
 
 namespace mozilla::dom {
@@ -45,6 +46,14 @@ static uint32_t GetNodeDepth(nsINode* aNode) {
   return depth;
 }
 
+static nsSize GetContentRectSize(const nsIFrame& aFrame) {
+  if (const nsIScrollableFrame* f = do_QueryFrame(&aFrame)) {
+    // We return the scrollport rect for compat with other UAs, see bug 1733042.
+    return f->GetScrollPortRect().Size();
+  }
+  return aFrame.GetContentRectRelativeToSelf().Size();
+}
+
 /**
  * Returns |aTarget|'s size in the form of gfx::Size (in pixels).
  * If the target is SVG, width and height are determined from bounding box.
@@ -75,47 +84,42 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
       const LayoutDeviceIntSize snappedSize =
           RoundedToInt(CSSSize::FromUnknownSize(size) *
                        frame->PresContext()->CSSToDevPixelScale());
-      size = gfx::Size(snappedSize.ToUnknownSize());
+      return gfx::Size(snappedSize.ToUnknownSize());
     }
-  } else {
-    // Per the spec, non-replaced inline Elements will always have an empty
-    // content rect. Therefore, we always use the same trivially-empty size
-    // for non-replaced inline elements here, and their IsActive() will
-    // always return false. (So its observation won't be fired.)
-    if (!frame->IsFrameOfType(nsIFrame::eReplaced) &&
-        frame->IsFrameOfType(nsIFrame::eLineParticipant)) {
-      return size;
-    }
-
-    switch (aBox) {
-      case ResizeObserverBoxOptions::Border_box:
-        // GetSize() includes the content area, borders, and padding.
-        size = CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
-        break;
-      case ResizeObserverBoxOptions::Device_pixel_content_box: {
-        // This is a implementation-dependent for subpixel snapping algorithm.
-        // Gecko relys on LayoutDevicePixel to convert (and snap) the app units
-        // into device pixels in painting and gfx code, so here we simply
-        // convert it into dev pixels and round it.
-        //
-        // Note: This size must contain integer values.
-        // https://drafts.csswg.org/resize-observer/#dom-resizeobserverboxoptions-device-pixel-content-box
-        const LayoutDeviceIntSize snappedSize =
-            LayoutDevicePixel::FromAppUnitsRounded(
-                frame->GetContentRectRelativeToSelf().Size(),
-                frame->PresContext()->AppUnitsPerDevPixel());
-        size = gfx::Size(snappedSize.ToUnknownSize());
-        break;
-      }
-      case ResizeObserverBoxOptions::Content_box:
-      default:
-        size =
-            CSSPixel::FromAppUnits(frame->GetContentRectRelativeToSelf().Size())
-                .ToUnknownSize();
-    }
+    return size;
   }
 
-  return size;
+  // Per the spec, non-replaced inline Elements will always have an empty
+  // content rect. Therefore, we always use the same trivially-empty size
+  // for non-replaced inline elements here, and their IsActive() will
+  // always return false. (So its observation won't be fired.)
+  if (!frame->IsFrameOfType(nsIFrame::eReplaced) &&
+      frame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    return size;
+  }
+
+  switch (aBox) {
+    case ResizeObserverBoxOptions::Border_box:
+      return CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
+    case ResizeObserverBoxOptions::Device_pixel_content_box: {
+      // This is a implementation-dependent for subpixel snapping algorithm.
+      // Gecko relies on LayoutDevicePixel to convert (and snap) the app units
+      // into device pixels in painting and gfx code, so here we simply
+      // convert it into dev pixels and round it.
+      //
+      // Note: This size must contain integer values.
+      // https://drafts.csswg.org/resize-observer/#dom-resizeobserverboxoptions-device-pixel-content-box
+      const LayoutDeviceIntSize snappedSize =
+          LayoutDevicePixel::FromAppUnitsRounded(
+              GetContentRectSize(*frame),
+              frame->PresContext()->AppUnitsPerDevPixel());
+      return gfx::Size(snappedSize.ToUnknownSize());
+    }
+    case ResizeObserverBoxOptions::Content_box:
+    default:
+      break;
+  }
+  return CSSPixel::FromAppUnits(GetContentRectSize(*frame)).ToUnknownSize();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ResizeObservation)
@@ -325,7 +329,7 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
     gfx::Size devicePixelContentBoxSize = CalculateBoxSize(
         target, ResizeObserverBoxOptions::Device_pixel_content_box);
     RefPtr<ResizeObserverEntry> entry =
-        new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize,
+        new ResizeObserverEntry(mOwner, *target, borderBoxSize, contentBoxSize,
                                 devicePixelContentBoxSize);
 
     if (!entries.AppendElement(entry.forget(), fallible)) {
@@ -413,7 +417,7 @@ void ResizeObserverEntry::GetDevicePixelContentBoxSize(
 void ResizeObserverEntry::SetBorderBoxSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mBorderBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mBorderBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
@@ -425,19 +429,19 @@ void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
   // our contentRect.
   nsRect rect(nsPoint(padding.left, padding.top),
               CSSPixel::ToAppUnits(CSSSize::FromUnknownSize(aSize)));
-  RefPtr<DOMRect> contentRect = new DOMRect(this);
+  RefPtr<DOMRect> contentRect = new DOMRect(mOwner);
   contentRect->SetLayoutRect(rect);
   mContentRect = std::move(contentRect);
 
   // 2. Update mContentBoxSize.
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mDevicePixelContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mDevicePixelContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverSize, mOwner)

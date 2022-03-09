@@ -330,7 +330,7 @@ void nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
       aBuilder, this, clipFlags);
 
-  nsDisplayList list;
+  nsDisplayList list(aBuilder);
   list.AppendNewToTop<nsDisplayXULImage>(aBuilder, this);
 
   CreateOwnLayerIfNeeded(aBuilder, &list,
@@ -443,7 +443,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), false, rendering,
+                     key.value());
   return result;
 }
 

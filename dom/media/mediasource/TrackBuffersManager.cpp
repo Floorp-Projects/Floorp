@@ -216,9 +216,28 @@ void TrackBuffersManager::ProcessTasks() {
         // Note: we reset mInputBuffer here to ensure it doesn't grow unbounded.
         mInputBuffer.reset();
         mInputBuffer = Some(MediaSpan(task->As<AppendBufferTask>()->mBuffer));
-      } else if (!mInputBuffer->Append(task->As<AppendBufferTask>()->mBuffer)) {
-        RejectAppend(NS_ERROR_OUT_OF_MEMORY, __func__);
-        return;
+      } else {
+        // mInputBuffer wasn't empty, so we can't just reset it, but we move
+        // the data into a new buffer to clear out data no longer in the span.
+        MSE_DEBUG(
+            "mInputBuffer not empty during append -- data will be copied to "
+            "new buffer. mInputBuffer->Length()=%zu "
+            "mInputBuffer->Buffer()->Length()=%zu",
+            mInputBuffer->Length(), mInputBuffer->Buffer()->Length());
+        const RefPtr<MediaByteBuffer> newBuffer{new MediaByteBuffer()};
+        // Set capacity outside of ctor to let us explicitly handle OOM.
+        const size_t newCapacity =
+            mInputBuffer->Length() +
+            task->As<AppendBufferTask>()->mBuffer->Length();
+        if (!newBuffer->SetCapacity(newCapacity, fallible)) {
+          RejectAppend(NS_ERROR_OUT_OF_MEMORY, __func__);
+          return;
+        }
+        // Use infallible appends as we've already set capacity above.
+        newBuffer->AppendElements(mInputBuffer->Elements(),
+                                  mInputBuffer->Length());
+        newBuffer->AppendElements(*task->As<AppendBufferTask>()->mBuffer);
+        mInputBuffer = Some(MediaSpan(newBuffer));
       }
       mSourceBufferAttributes = MakeUnique<SourceBufferAttributes>(
           task->As<AppendBufferTask>()->mAttributes);
@@ -3009,6 +3028,25 @@ void TrackBuffersManager::GetDebugInfo(
 void TrackBuffersManager::AddSizeOfResources(
     MediaSourceDecoder::ResourceSizes* aSizes) const {
   MOZ_ASSERT(OnTaskQueue());
+
+  if (mInputBuffer.isSome() && mInputBuffer->Buffer()) {
+    // mInputBuffer should be the sole owner of the underlying buffer, so this
+    // won't double count.
+    aSizes->mByteSize += mInputBuffer->Buffer()->ShallowSizeOfIncludingThis(
+        aSizes->mMallocSizeOf);
+  }
+  if (mInitData) {
+    aSizes->mByteSize +=
+        mInitData->ShallowSizeOfIncludingThis(aSizes->mMallocSizeOf);
+  }
+  if (mPendingInputBuffer.isSome() && mPendingInputBuffer->Buffer()) {
+    // mPendingInputBuffer should be the sole owner of the underlying buffer, so
+    // this won't double count.
+    aSizes->mByteSize +=
+        mPendingInputBuffer->Buffer()->ShallowSizeOfIncludingThis(
+            aSizes->mMallocSizeOf);
+  }
+
   mVideoTracks.AddSizeOfResources(aSizes);
   mAudioTracks.AddSizeOfResources(aSizes);
 }

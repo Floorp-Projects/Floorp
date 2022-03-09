@@ -1658,7 +1658,7 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   }
 
   // Don't resize the nursery during shutdown.
-  if (gc::IsShutdownReason(reason)) {
+  if (options == JS::GCOptions::Shutdown) {
     clearRecentGrowthData();
     return capacity();
   }

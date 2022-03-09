@@ -25,16 +25,17 @@ already_AddRefed<nsIURI> DeserializeURI(const Maybe<URIParams>& aParams);
 
 template <>
 struct IPDLParamTraits<nsIURI*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam) {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    nsIURI* aParam) {
     Maybe<URIParams> params;
     SerializeURI(aParam, params);
-    WriteIPDLParam(aMsg, aActor, params);
+    WriteIPDLParam(aWriter, aActor, params);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIURI>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RefPtr<nsIURI>* aResult) {
     Maybe<URIParams> params;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &params)) {
+    if (!ReadIPDLParam(aReader, aActor, &params)) {
       return false;
     }
     *aResult = DeserializeURI(params);

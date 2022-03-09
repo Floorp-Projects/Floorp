@@ -194,7 +194,8 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
   }
 
   const Returned * operator -> () const { return get (); }
-  const Returned & operator * () const  { return *get (); }
+  template <typename U = Returned, hb_enable_if (!hb_is_same (U, void))>
+  const U & operator * () const  { return *get (); }
   explicit operator bool () const
   { return get_stored () != Funcs::get_null (); }
   template <typename C> operator const C * () const { return get (); }
@@ -244,19 +245,19 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
   {
     Stored *p = (Stored *) hb_calloc (1, sizeof (Stored));
     if (likely (p))
-      p->init (data);
+      p = new (p) Stored (data);
     return p;
   }
   static Stored *create ()
   {
     Stored *p = (Stored *) hb_calloc (1, sizeof (Stored));
     if (likely (p))
-      p->init ();
+      p = new (p) Stored ();
     return p;
   }
   static void destroy (Stored *p)
   {
-    p->fini ();
+    p->~Stored ();
     hb_free (p);
   }
 

@@ -18,7 +18,7 @@ let testCases = [
      */
     name: "test_toggle_password",
     logins: [],
-    enabledMasterPassword: false,
+    enabledPrimaryPassword: false,
     formDefaults: {},
     formChanges: {
       [passwordInputSelector]: "pw",
@@ -53,11 +53,11 @@ let testCases = [
   },
   {
     /* Test that the doorhanger password toggle checkbox is disabled
-     * when the master password is set.
+     * when the primary password is set.
      */
-    name: "test_checkbox_disabled_if_has_master_password",
+    name: "test_checkbox_disabled_if_has_primary_password",
     logins: [],
-    enabledMasterPassword: true,
+    enabledPrimaryPassword: true,
     formDefaults: {},
     formChanges: {
       [passwordInputSelector]: "pass",
@@ -229,15 +229,15 @@ async function testDoorhangerToggles({
   formDefaults = {},
   formChanges = {},
   expected,
-  enabledMasterPassword,
+  enabledPrimaryPassword,
 }) {
   formChanges = Array.isArray(formChanges) ? formChanges : [formChanges];
 
   for (let login of logins) {
     await LoginTestUtils.addLogin(login);
   }
-  if (enabledMasterPassword) {
-    LoginTestUtils.masterPassword.enable();
+  if (enabledPrimaryPassword) {
+    LoginTestUtils.primaryPassword.enable();
   }
   let formProcessedPromise = listenForTestNotification("FormProcessed");
   await BrowserTestUtils.withNewTab(
@@ -328,8 +328,8 @@ async function testDoorhangerToggles({
     }
   );
   await LoginTestUtils.clearData();
-  if (enabledMasterPassword) {
-    LoginTestUtils.masterPassword.disable();
+  if (enabledPrimaryPassword) {
+    LoginTestUtils.primaryPassword.disable();
   }
   await cleanupPasswordNotifications();
 }

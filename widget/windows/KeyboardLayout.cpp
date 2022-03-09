@@ -1240,7 +1240,7 @@ const MSG NativeKey::sEmptyMSG = {};
 MSG NativeKey::sLastKeyOrCharMSG = {};
 MSG NativeKey::sLastKeyMSG = {};
 
-NativeKey::NativeKey(nsWindowBase* aWidget, const MSG& aMessage,
+NativeKey::NativeKey(nsWindow* aWidget, const MSG& aMessage,
                      const ModifierKeyState& aModKeyState,
                      HKL aOverrideKeyboardLayout,
                      nsTArray<FakeCharMsg>* aFakeCharMsgs)
@@ -5083,9 +5083,9 @@ CodeNameIndex KeyboardLayout::ConvertScanCodeToCodeNameIndex(UINT aScanCode) {
 }
 
 nsresult KeyboardLayout::SynthesizeNativeKeyEvent(
-    nsWindowBase* aWidget, int32_t aNativeKeyboardLayout,
-    int32_t aNativeKeyCode, uint32_t aModifierFlags,
-    const nsAString& aCharacters, const nsAString& aUnmodifiedCharacters) {
+    nsWindow* aWidget, int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
+    uint32_t aModifierFlags, const nsAString& aCharacters,
+    const nsAString& aUnmodifiedCharacters) {
   UINT keyboardLayoutListCount = ::GetKeyboardLayoutList(0, nullptr);
   NS_ASSERTION(keyboardLayoutListCount > 0,
                "One keyboard layout must be installed at least");

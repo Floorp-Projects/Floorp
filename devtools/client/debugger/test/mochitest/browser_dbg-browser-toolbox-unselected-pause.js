@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that the debugger pauses in the multiprocess browser toolbox even when
 // it hasn't been opened.
@@ -9,6 +9,7 @@
 
 requestLongerTimeout(4);
 
+/* import-globals-from ../../../framework/browser-toolbox/test/helpers-browser-toolbox.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
   this
@@ -36,7 +37,7 @@ add_task(async function() {
   });
   // ToolboxTask.spawn pass input arguments by stringify them via string concatenation.
   // This mean we have to stringify the input object, but don't have to parse it from the task.
-  await ToolboxTask.spawn(JSON.stringify(selectors), async (_selectors) => {
+  await ToolboxTask.spawn(JSON.stringify(selectors), async _selectors => {
     this.selectors = _selectors;
   });
 
@@ -44,6 +45,7 @@ add_task(async function() {
 
   // The debugger should automatically be selected.
   await ToolboxTask.spawn(null, async () => {
+    /* global gToolbox */
     await waitUntil(() => gToolbox.currentToolId == "jsdebugger");
   });
   ok(true, "Debugger selected");

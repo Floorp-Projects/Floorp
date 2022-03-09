@@ -5,9 +5,14 @@
 
 // Test that iframe blocked because of CSP doesn't cause the browser to freeze.
 
-const TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURIComponent(`
+const IFRAME_TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURIComponent(`
   <h1>Test expanding CSP-blocked iframe</h1>
-  <iframe src="https://example.org/document-builder.sjs?html=Hello"></iframe>
+  <iframe src="https://example.org/document-builder.sjs?html=HelloIframe"></iframe>
+`)}&headers=content-security-policy:default-src 'self'`;
+const FRAME_TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURIComponent(`
+  <frameset>
+    <frame src="https://example.org/document-builder.sjs?html=HelloFrame"></frame>
+  </frameset>
 `)}&headers=content-security-policy:default-src 'self'`;
 
 const BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF =
@@ -15,8 +20,19 @@ const BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF =
 
 add_task(async function() {
   await pushPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF, true);
-  const { inspector } = await openInspectorForURL(TEST_URI);
-  let container = await getContainerForSelector("iframe", inspector);
+  const { inspector } = await openInspectorForURL(IFRAME_TEST_URI);
+  await testElementBlockedByCSP("iframe", inspector);
+
+  // Don't wait for the load event as it doesn't happen because the frame is blocked.
+  await navigateTo(FRAME_TEST_URI, { waitForLoad: false });
+  await testElementBlockedByCSP("frame", inspector);
+});
+
+async function testElementBlockedByCSP(selector, inspector) {
+  await inspector.markup.expandAll();
+  info(`Check that markup node for "${selector}" can't be expanded`);
+  let container = await getContainerForSelector(selector, inspector);
+
   is(
     container.expander.style.visibility,
     "hidden",
@@ -26,10 +42,12 @@ add_task(async function() {
   info("Reload the page and do same assertion with the guard");
   Services.prefs.clearUserPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF);
   await reloadBrowser();
-  container = await getContainerForSelector("iframe", inspector);
+
+  await inspector.markup.expandAll();
+  container = await getContainerForSelector(selector, inspector);
   is(
     container.expander.style.visibility,
     "hidden",
     "Expand icon is still hidden"
   );
-});
+}

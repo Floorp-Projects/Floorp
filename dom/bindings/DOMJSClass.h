@@ -203,7 +203,7 @@ struct PropertyInfo {
   void SetId(jsid aId) {
     static_assert(sizeof(jsid) == sizeof(mIdBits),
                   "jsid should fit in mIdBits");
-    mIdBits = JSID_BITS(aId);
+    mIdBits = aId.asRawBits();
   }
   MOZ_ALWAYS_INLINE jsid Id() const { return jsid::fromRawBits(mIdBits); }
 };

@@ -404,7 +404,7 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
         case StyleAppearance::ScrollbarHorizontal: {
           ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aBox);
           auto sizes = theme->GetScrollbarSizes(
-              pc, style->StyleUIReset()->mScrollbarWidth,
+              pc, style->StyleUIReset()->ScrollbarWidth(),
               nsITheme::Overlay::No);
           if (appearance == StyleAppearance::ScrollbarVertical) {
             aSize.width = pc->DevPixelsToAppUnits(sizes.mVertical);

@@ -8,6 +8,7 @@
 
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
@@ -124,6 +125,9 @@ class VsyncSource {
   RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0;  // Works across all displays
   void Shutdown();
+
+  // Returns the rate of the fastest enabled VsyncSource::Display or Nothing().
+  static Maybe<TimeDuration> GetFastestVsyncRate();
 
  protected:
   virtual ~VsyncSource() = default;

@@ -79,78 +79,19 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ 533:
-/***/ (function(module, exports) {
-
-module.exports = 
-(() => {
-  let factory;
-  function define(...args) {
-    if (factory) {
-      throw new Error("expected a single define call");
-    }
-
-    if (
-      args.length !== 2 ||
-      !Array.isArray(args[0]) ||
-      args[0].length !== 0 ||
-      typeof args[1] !== "function"
-    ) {
-      throw new Error("whatwg-url had unexpected factory arguments.");
-    }
-
-    factory = args[1];
-  }
-  define.amd = true;
-
-  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, "define");
-  globalThis.define = define;
-  let err;
-  try {
-    importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
-
-    if (!factory) {
-      throw new Error("Failed to load whatwg-url factory");
-    }
-  } finally {
-    if (existingDefine) {
-      Object.defineProperty(globalThis, "define", existingDefine);
-    } else {
-      delete globalThis.define;
-    }
-
-  }
-
-  return factory();
-})()
-;
-
-/***/ }),
-
-/***/ 560:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const networkRequest = __webpack_require__(567);
-
-const workerUtils = __webpack_require__(568);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 567:
+/***/ 1058:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function networkRequest(url, opts) {
+  const UNSUPPORTED_PROTOCOLS = ["chrome://", "resource://"];
+
+  if (UNSUPPORTED_PROTOCOLS.some(protocol => url.startsWith(protocol))) {
+    return Promise.reject(`unsupported protocol for sourcemap request ${url}`);
+  }
+
   return fetch(url, {
     cache: opts.loadFromCache ? "default" : "no-cache"
   }).then(res => {
@@ -171,16 +112,21 @@ function networkRequest(url, opts) {
   });
 }
 
-module.exports = networkRequest;
+module.exports = {
+  networkRequest
+};
 
 /***/ }),
 
-/***/ 568:
-/***/ (function(module, exports) {
+/***/ 1059:
+/***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+
 function WorkerDispatcher() {
   this.msgId = 1;
   this.worker = null; // Map of message ids -> promise resolution functions, for dispatching worker responses
@@ -338,12 +284,63 @@ function asErrorMessage(error) {
     message: error == null ? error : error.toString(),
     metadata: undefined
   };
+} // Might be loaded within a worker thread where `module` isn't available.
+
+
+if (true) {
+  module.exports = {
+    WorkerDispatcher,
+    workerHandler
+  };
 }
 
-module.exports = {
-  WorkerDispatcher,
-  workerHandler
-};
+/***/ }),
+
+/***/ 533:
+/***/ (function(module, exports) {
+
+module.exports = 
+(() => {
+  let factory;
+  function define(...args) {
+    if (factory) {
+      throw new Error("expected a single define call");
+    }
+
+    if (
+      args.length !== 2 ||
+      !Array.isArray(args[0]) ||
+      args[0].length !== 0 ||
+      typeof args[1] !== "function"
+    ) {
+      throw new Error("whatwg-url had unexpected factory arguments.");
+    }
+
+    factory = args[1];
+  }
+  define.amd = true;
+
+  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, "define");
+  globalThis.define = define;
+  let err;
+  try {
+    importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
+
+    if (!factory) {
+      throw new Error("Failed to load whatwg-url factory");
+    }
+  } finally {
+    if (existingDefine) {
+      Object.defineProperty(globalThis, "define", existingDefine);
+    } else {
+      delete globalThis.define;
+    }
+
+  }
+
+  return factory();
+})()
+;
 
 /***/ }),
 
@@ -2119,10 +2116,8 @@ const {
 } = __webpack_require__(927);
 
 const {
-  workerUtils: {
-    workerHandler
-  }
-} = __webpack_require__(560); // The interface is implemented in source-map to be
+  workerHandler
+} = __webpack_require__(1059); // The interface is implemented in source-map to be
 // easier to unit test.
 
 
@@ -2159,7 +2154,7 @@ self.onmessage = workerHandler({
  */
 const {
   networkRequest
-} = __webpack_require__(560);
+} = __webpack_require__(1058);
 
 const {
   SourceMapConsumer,
@@ -4537,7 +4532,7 @@ module.exports = assert;
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 const {
   networkRequest
-} = __webpack_require__(560);
+} = __webpack_require__(1058);
 
 const {
   getSourceMap,

@@ -19,7 +19,7 @@ add_task(async function test_profile_single_frame_page_info() {
   info(
     "Start the profiler to test the page information with single frame page."
   );
-  startProfiler();
+  await startProfiler();
 
   info("Open a tab with single_frame.html in it.");
   const url = BASE_URL + "single_frame.html";
@@ -34,7 +34,7 @@ add_task(async function test_profile_single_frame_page_info() {
 
     info("Capture the profile data.");
     const profile = await Services.profiler.getProfileDataAsync();
-    Services.profiler.StopProfiler();
+    await Services.profiler.StopProfiler();
 
     let pageFound = false;
     // We need to find the correct content process for that tab.
@@ -80,7 +80,7 @@ add_task(async function test_profile_private_browsing() {
   info(
     "Start the profiler to test the page information with single frame page."
   );
-  startProfiler();
+  await startProfiler();
 
   info("Open a private window with single_frame.html in it.");
   const win = await BrowserTestUtils.openNewBrowserWindow({
@@ -103,7 +103,7 @@ add_task(async function test_profile_private_browsing() {
 
     info("Capture the profile data.");
     const profile = await Services.profiler.getProfileDataAsync();
-    Services.profiler.StopProfiler();
+    await Services.profiler.StopProfiler();
 
     let pageFound = false;
     // We need to find the correct content process for that tab.

@@ -307,27 +307,6 @@ browser.engagement:
       - 'main'
       - 'account-ecosystem'
 
-  mirror_for_uri_count:
-    bug_numbers:
-      - 1741674
-      - 1752890
-    description: >
-      The count of the total non-unique http(s) URIs visited in a subsession, including
-      page reloads, after the session has been restored. URIs on minimized or background
-      tabs may also be counted towards this. Private browsing is included in this count.
-      Used for comparing with browser.engagement.total_uri_count_normal_and_private_mode
-      as a mirror of Glean's browser.engagement.uri_count.
-    expires: '100'
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-      - loines@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
   unfiltered_uri_count:
     bug_numbers:
       - 1304647
@@ -391,27 +370,6 @@ browser.engagement:
     record_into_store:
       - 'main'
       - 'account-ecosystem'
-
-  mirror_for_active_ticks:
-    bug_numbers:
-      - 1741674
-      - 1752890
-    description: >
-      The count of the number of five-second intervals ('ticks') the user
-      was considered 'active' in a subsession. Session activity involves keyboard or mouse
-      interaction with the application. It does not take into account whether or not the window
-      has focus or is in the foreground, only if it is receiving these interaction events.
-      Used for comparing with browser.engagement.active_ticks as a mirror for
-      Glean's browser.engagement.active_ticks
-    expires: '100'
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
 
   profile_count:
     bug_numbers:
@@ -678,6 +636,7 @@ browser.startup:
       - 1683101
       - 1714258
       - 1730042
+      - 1754641
     description: >
       How the about:home startup cache functioned on startup.
 
@@ -692,7 +651,7 @@ browser.startup:
       8: User did not load about:home on its own by default.
       9: Cache is disabled because about:newtab preloading is disabled.
 
-    expires: "100"
+    expires: "106"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
@@ -710,11 +669,12 @@ browser.startup:
       - 1683101
       - 1714258
       - 1730042
+      - 1754641
     description: >
       True if the about:home startup cache was written via the AsyncShutdown
       blocker.
 
-    expires: "100"
+    expires: "106"
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
@@ -1261,16 +1221,17 @@ security:
       - 1558870
       - 1630155
       - 1689269
+      - 1754650
     description: >
       Counts of how often Web Authentication was used in this session, keyed
       by authenticator protocol, method and result. Currently: U2FRegisterFinish,
       U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
-    expires: "100"
+    expires: "112"
     kind: uint
     keyed: true
     notification_emails:
       - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
+      - rmf@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2368,9 +2329,10 @@ media:
   video_hardware_decoding_support:
     bug_numbers:
       - 1733722
+      - 1754657
     description: >
       Record whether hardware decoding is supported for the specific video codec. The key is the type of video codec, eg. video/vp9.
-    expires: "100"
+    expires: "112"
     kind: boolean
     keyed: true
     notification_emails:
@@ -2386,9 +2348,10 @@ media:
   video_hd_hardware_decoding_support:
     bug_numbers:
       - 1741286
+      - 1754657
     description: >
       Record whether hardware decoding is supported for the specific video codec, this only records video in HD (1280*720) or higher resultion. The key is the type of video codec, eg. video/vp9.
-    expires: "100"
+    expires: "112"
     kind: boolean
     keyed: true
     notification_emails:
@@ -2425,7 +2388,7 @@ dom.contentprocess:
     description: >
       The number of times a process crashed early but we could verify it was not
       because of buildID mismatch between the parent and the content processes.
-    expires: "100"
+    expires: "105"
     kind: uint
     notification_emails:
       - alissy@mozilla.com
@@ -4294,9 +4257,10 @@ pdf.viewer:
   is_attachment:
     bug_numbers:
       - 1736864
+      - 1754659
     description: >
       How many times a PDF that sends Content-Disposition: attachment is opened.
-    expires: "100"
+    expires: "103"
     kind: uint
     notification_emails:
       - rtestard@mozilla.com
@@ -6032,10 +5996,15 @@ script.preloader:
   mainthread_recompile:
     bug_numbers:
       - 1364235
+      - 1590385
+      - 1623098
+      - 1649954
+      - 1689257
+      - 1754639
     description:
       How many times we ended up recompiling a script from the script preloader
       on the main thread.
-    expires: "100"
+    expires: "116"
     keyed: false
     kind: uint
     notification_emails:
@@ -6099,6 +6068,7 @@ networking:
       - 1590124
       - 1621800
       - 1668604
+      - 1706842
     description: >
       How many KB of HTTP data transferred by type, there are some categories
       separated by keys based on 5 parameters:
@@ -6133,7 +6103,7 @@ networking:
         "Y21_P3FpLead",
         "Y22_P3FpBg",
         "Y23_P3FpOth"
-    expires: "91"
+    expires: "never"
     keyed: true
     kind: uint
     notification_emails:
@@ -7415,6 +7385,24 @@ contextual.services.quicksuggest:
       - main
 
 power:
+  cpu_time_bogus_values:
+    bug_numbers:
+      - 1755733
+    description: >
+      Impossibly large CPU time values that were discarded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+      - 'gpu'
+      - 'socket'
+
   cpu_time_per_process_type_ms:
     bug_numbers:
       - 1747138
@@ -7448,6 +7436,22 @@ power:
       - gpu
       - gmplugin
       - utility
+
+  gpu_time_bogus_values:
+    bug_numbers:
+      - 1755733
+    description: >
+      Impossibly large GPU time values that were discarded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
 
   gpu_time_per_process_type_ms:
     bug_numbers:
@@ -7502,6 +7506,40 @@ power:
     record_in_processes:
       - 'main'
       - 'gpu'
+
+gifft.validation:
+  main_ping_assembling:
+    bug_numbers:
+      - 1753689
+    description: >
+      The value `true` recorded when a "main" ping is about to be assembled.
+      To be used for validating GIFFT.
+    expires: "102"
+    kind: boolean
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  mirror_for_main_ping_assembling:
+    bug_numbers:
+      - 1753689
+    description: >
+      The value `true` recorded when a "main" ping is about to be assembled.
+      To be used for validating GIFFT.
+      Mirror for Glean's `gifft.validation.main_ping_assembling`.
+    expires: "102"
+    kind: boolean
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.

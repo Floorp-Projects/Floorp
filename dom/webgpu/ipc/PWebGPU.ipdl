@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
-using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
+using layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
@@ -14,6 +14,7 @@ using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 
 include "mozilla/ipc/ByteBufUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 include protocol PCanvasManager;
@@ -26,7 +27,7 @@ namespace webgpu {
  * command from the content process, and a WebGPUParent in the compositor
  * process that runs the commands.
  */
-[RefCounted] async protocol PWebGPU
+async protocol PWebGPU
 {
   manager PCanvasManager;
 
@@ -63,9 +64,9 @@ parent:
   async ComputePipelineDestroy(RawId selfId);
   async RenderPipelineDestroy(RawId selfId);
   async ImplicitLayoutDestroy(RawId implicitPlId, RawId[] implicitBglIds);
-  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
-  async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
-  async SwapChainDestroy(ExternalImageId externalId);
+  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, CompositableHandle handle);
+  async SwapChainPresent(CompositableHandle handle, RawId textureId, RawId commandEncoderId);
+  async SwapChainDestroy(CompositableHandle handle);
 
   async DevicePushErrorScope(RawId selfId);
   async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);

@@ -272,7 +272,7 @@ SearchService.prototype = {
       this._addObservers();
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
-      logConsole.error("_init: failure initializing search:", ex.result);
+      logConsole.error("_init: failure initializing search:", ex);
     }
 
     this._initialized = true;
@@ -565,6 +565,10 @@ SearchService.prototype = {
     logConsole.debug("_loadEngines: start");
     let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
     this._setDefaultAndOrdersFromSelector(engines, privateDefault);
+
+    // We've done what we can without the add-on manager, now ensure that
+    // it has finished starting before we continue.
+    await AddonManager.readyPromise;
 
     let newEngines = await this._loadEnginesFromConfig(engines);
     for (let engine of newEngines) {

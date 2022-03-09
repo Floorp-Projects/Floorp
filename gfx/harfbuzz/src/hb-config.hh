@@ -55,6 +55,7 @@
 #define HB_NO_ATEXIT
 #define HB_NO_BUFFER_MESSAGE
 #define HB_NO_BUFFER_SERIALIZE
+#define HB_NO_BUFFER_VERIFY
 #define HB_NO_BITMAP
 #define HB_NO_CFF
 #define HB_NO_COLOR
@@ -86,8 +87,11 @@
 #define HB_NO_LEGACY
 #endif
 
-#ifdef HAVE_CONFIG_OVERRIDE_H
-#include "config-override.h"
+#if defined(HAVE_CONFIG_OVERRIDE_H) || defined(HB_CONFIG_OVERRIDE_H)
+#ifndef HB_CONFIG_OVERRIDE_H
+#define HB_CONFIG_OVERRIDE_H "config-override.h"
+#endif
+#include HB_CONFIG_OVERRIDE_H
 #endif
 
 /* Closure of options. */

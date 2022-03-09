@@ -2,21 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[cfg(target_os = "macos")]
-use core_foundation::string::CFString;
-#[cfg(target_os = "macos")]
-use core_graphics::font::CGFont;
 use peek_poke::PeekPoke;
-#[cfg(target_os = "macos")]
-use serde::de::{self, Deserialize, Deserializer};
-#[cfg(target_os = "macos")]
-use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 #[cfg(not(target_os = "macos"))]
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock, RwLockReadGuard};
-use std::collections::HashMap;
+use std::sync::Arc;
 // local imports
 use crate::IdNamespace;
 use crate::channel::Sender;
@@ -62,142 +53,6 @@ impl FontSize {
     pub fn to_f64_px(&self) -> f64 { self.0 as f64 }
 }
 
-/// Immutable description of a font instance requested by the user of the API.
-///
-/// `BaseFontInstance` can be identified by a `FontInstanceKey` so we should
-/// never need to hash it.
-#[derive(Clone, PartialEq, Eq, Debug, Ord, PartialOrd, MallocSizeOf)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub struct BaseFontInstance {
-    ///
-    pub instance_key: FontInstanceKey,
-    ///
-    pub font_key: FontKey,
-    ///
-    pub size: FontSize,
-    ///
-    pub bg_color: ColorU,
-    ///
-    pub render_mode: FontRenderMode,
-    ///
-    pub flags: FontInstanceFlags,
-    ///
-    pub synthetic_italics: SyntheticItalics,
-    ///
-    #[cfg_attr(any(feature = "serialize", feature = "deserialize"), serde(skip))]
-    pub platform_options: Option<FontInstancePlatformOptions>,
-    ///
-    pub variations: Vec<FontVariation>,
-}
-
-pub type FontInstanceMap = HashMap<FontInstanceKey, Arc<BaseFontInstance>>;
-/// A map of font instance data accessed concurrently from multiple threads.
-#[derive(Clone)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub struct SharedFontInstanceMap {
-    map: Arc<RwLock<FontInstanceMap>>,
-}
-
-impl SharedFontInstanceMap {
-    /// Creates an empty shared map.
-    pub fn new() -> Self {
-        SharedFontInstanceMap {
-            map: Arc::new(RwLock::new(HashMap::default()))
-        }
-    }
-
-    /// Acquires a write lock on the shared map.
-    pub fn lock(&mut self) -> Option<RwLockReadGuard<FontInstanceMap>> {
-        self.map.read().ok()
-    }
-
-    ///
-    pub fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
-        match self.map.read().unwrap().get(&key) {
-            Some(instance) => Some(FontInstanceData {
-                font_key: instance.font_key,
-                size: instance.size.into(),
-                options: Some(FontInstanceOptions {
-                  render_mode: instance.render_mode,
-                  flags: instance.flags,
-                  bg_color: instance.bg_color,
-                  synthetic_italics: instance.synthetic_italics,
-                }),
-                platform_options: instance.platform_options,
-                variations: instance.variations.clone(),
-            }),
-            None => None,
-        }
-    }
-
-    /// Replace the shared map with the provided map.
-    pub fn set(&mut self, map: FontInstanceMap) {
-        *self.map.write().unwrap() = map;
-    }
-
-    ///
-    pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
-        let instance_map = self.map.read().unwrap();
-        instance_map.get(&instance_key).map(|instance| { Arc::clone(instance) })
-    }
-
-    ///
-    pub fn add_font_instance(
-        &mut self,
-        instance_key: FontInstanceKey,
-        font_key: FontKey,
-        size: f32,
-        options: Option<FontInstanceOptions>,
-        platform_options: Option<FontInstancePlatformOptions>,
-        variations: Vec<FontVariation>,
-    ) {
-        let FontInstanceOptions {
-            render_mode,
-            flags,
-            bg_color,
-            synthetic_italics,
-            ..
-        } = options.unwrap_or_default();
-
-        let instance = Arc::new(BaseFontInstance {
-            instance_key,
-            font_key,
-            size: size.into(),
-            bg_color,
-            render_mode,
-            flags,
-            synthetic_italics,
-            platform_options,
-            variations,
-        });
-
-        self.map
-            .write()
-            .unwrap()
-            .insert(instance_key, instance);
-    }
-
-    ///
-    pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
-        self.map.write().unwrap().remove(&instance_key);
-    }
-
-    ///
-    pub fn clear_namespace(&mut self, namespace: IdNamespace) {
-        self.map
-            .write()
-            .unwrap()
-            .retain(|key, _| key.0 != namespace);
-    }
-
-    ///
-    pub fn clone_map(&self) -> FontInstanceMap {
-        self.map.read().unwrap().clone()
-    }
-}
-
 #[cfg(not(target_os = "macos"))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NativeFontHandle {
@@ -206,37 +61,9 @@ pub struct NativeFontHandle {
 }
 
 #[cfg(target_os = "macos")]
-#[derive(Clone)]
-pub struct NativeFontHandle(pub CGFont);
-
-#[cfg(target_os = "macos")]
-impl Serialize for NativeFontHandle {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.0
-            .postscript_name()
-            .to_string()
-            .serialize(serializer)
-    }
-}
-
-#[cfg(target_os = "macos")]
-impl<'de> Deserialize<'de> for NativeFontHandle {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let postscript_name: String = Deserialize::deserialize(deserializer)?;
-
-        match CGFont::from_name(&CFString::new(&*postscript_name)) {
-            Ok(font) => Ok(NativeFontHandle(font)),
-            Err(_) => Err(de::Error::custom(
-                "Couldn't find a font with that PostScript name!",
-            )),
-        }
-    }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NativeFontHandle {
+    pub name: String,
 }
 
 #[repr(C)]

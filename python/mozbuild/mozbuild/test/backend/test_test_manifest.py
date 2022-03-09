@@ -58,7 +58,7 @@ class TestTestManifestBackend(BackendTester):
         with open(test_defaults_path, "rb") as fh:
             o = {mozpath.normpath(k): v for k, v in pickle.load(fh).items()}
 
-        self.assertEquals(
+        self.assertEqual(
             set(mozpath.relpath(k, env.topsrcdir) for k in o.keys()),
             set(["dir1/xpcshell.ini", "xpcshell.ini", "mochitest.ini"]),
         )
@@ -79,7 +79,7 @@ class TestTestManifestBackend(BackendTester):
         with open(backend_path, "r") as fh:
             sources = set(source.strip() for source in fh)
 
-        self.assertEquals(
+        self.assertEqual(
             sources,
             set(
                 [

@@ -1120,7 +1120,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
    * WillBuildModel to be called before the document has had its
    * script global object set.
    */
-  rv = mExecutor->WillBuildModel(eDTDMode_unknown);
+  rv = mExecutor->WillBuildModel();
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsHtml5OwningUTF16Buffer> newBuf =

@@ -149,13 +149,11 @@ void CombinedStacks::Swap(CombinedStacks& aOther) {
   mMaxStacksCount = maxStacksCount;
 }
 
-#if defined(MOZ_GECKO_PROFILER)
 void CombinedStacks::Clear() {
   mNextIndex = 0;
   mStacks.clear();
   mModules.clear();
 }
-#endif
 
 JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
   JS::Rooted<JSObject*> ret(cx, JS_NewPlainObject(cx));

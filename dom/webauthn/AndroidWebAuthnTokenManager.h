@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/U2FTokenTransport.h"
+#include "mozilla/java/WebAuthnTokenManagerNatives.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,7 +33,15 @@ class AndroidWebAuthnResult {
   explicit AndroidWebAuthnResult(const nsAString& aErrorCode)
       : mErrorCode(aErrorCode) {}
 
-  explicit AndroidWebAuthnResult() {}
+  explicit AndroidWebAuthnResult(
+      const java::WebAuthnTokenManager::MakeCredentialResponse::LocalRef&
+          aResponse);
+
+  explicit AndroidWebAuthnResult(
+      const java::WebAuthnTokenManager::GetAssertionResponse::LocalRef&
+          aResponse);
+
+  AndroidWebAuthnResult() = delete;
 
   bool IsError() const { return NS_FAILED(GetError()); }
 
@@ -71,14 +80,8 @@ class AndroidWebAuthnResult {
     }
   }
 
-  AndroidWebAuthnResult(const AndroidWebAuthnResult& aOther)
-      : mAttObj(aOther.mAttObj.InfallibleClone()),
-        mKeyHandle(aOther.mKeyHandle.InfallibleClone()),
-        mClientDataJSON(aOther.mClientDataJSON),
-        mAuthData(aOther.mAuthData.InfallibleClone()),
-        mSignature(aOther.mSignature.InfallibleClone()),
-        mUserHandle(aOther.mUserHandle.InfallibleClone()),
-        mErrorCode(aOther.mErrorCode) {}
+  AndroidWebAuthnResult(const AndroidWebAuthnResult&) = delete;
+  AndroidWebAuthnResult(AndroidWebAuthnResult&&) = default;
 
   // Attestation-only
   CryptoBuffer mAttObj;
@@ -114,13 +117,13 @@ class AndroidWebAuthnTokenManager final : public U2FTokenTransport {
 
   void Drop() override;
 
-  void HandleRegisterResult(const AndroidWebAuthnResult& aResult);
-
-  void HandleSignResult(const AndroidWebAuthnResult& aResult);
-
   static AndroidWebAuthnTokenManager* GetInstance();
 
  private:
+  void HandleRegisterResult(AndroidWebAuthnResult&& aResult);
+
+  void HandleSignResult(AndroidWebAuthnResult&& aResult);
+
   void ClearPromises() {
     mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
     mSignPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);

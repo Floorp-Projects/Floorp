@@ -23,6 +23,20 @@ function moveFile(src, dest) {
   rimraf.sync(src);
 }
 
+/**
+ * The `bundle` module will build the following:
+ * - vendors.js and vendors.css:
+ *     Bundle for all the external packages still used by the Debugger frontend.
+ *     Source at devtools/client/debugger/src/vendors.js
+ * - parser-worker.js, pretty-print-worker.js, search-worker:
+ *     Workers used only by the debugger.
+ *     Sources at devtools/client/debugger/src/workers/*
+ * - source-map-index and source-map-worker:
+ *     Entry point and worker for handling source-maps used both by the debugger
+ *     and the rest of DevTools. Built from the devtools-source-map package, the
+ *     generated files are moved to devtools/client/shared/source-map and
+ *     usually provided by the toolbox.
+ */
 (async function bundle() {
   process.env.TARGET = "firefox-panel";
   process.env.OUTPUT_PATH = bundlePath;

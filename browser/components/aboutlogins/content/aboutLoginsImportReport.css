@@ -2,11 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.importreport {
+  display: block;
+}
+
 #report-body {
   display: grid;
   grid-template-columns: repeat(6, auto);
   grid-template-rows: 110px 145px auto;
   grid-column: logins/login;
+  height: 100%;
 }
 
 .import-report-heading {
@@ -81,8 +86,8 @@
   display: grid;
   grid-template-columns: auto 1fr;
   border-top: 1px solid var(--in-content-border-color);
-  padding-top: 35px;
   grid-auto-rows: 28px;
+  overflow-y: auto;
 }
 
 .not-imported {

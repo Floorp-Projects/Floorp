@@ -430,7 +430,6 @@ class MacroAssemblerNone : public Assembler {
 
   void buildFakeExitFrame(Register, uint32_t*) { MOZ_CRASH(); }
   bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }
-  void loadWasmPinnedRegsFromTls() { MOZ_CRASH(); }
 
   void setPrinter(Sprinter*) { MOZ_CRASH(); }
   Operand ToPayload(Operand base) { MOZ_CRASH(); }

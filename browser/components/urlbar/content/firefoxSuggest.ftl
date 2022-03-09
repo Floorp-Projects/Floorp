@@ -11,9 +11,13 @@
 
 ## These strings are used in the urlbar panel.
 
-# A label shown above the best match group in the urlbar results.
+# A label shown above the top pick group in the urlbar results.
 urlbar-group-best-match =
-  .label = { -firefox-suggest-brand-name } · Best Match
+  .label = Top pick
+
+# Tooltip text for the block button shown in top pick rows.
+firefox-suggest-urlbar-block =
+  .title = Dismiss this suggestion
 
 # Tooltip text for the help button shown in Firefox Suggest urlbar results.
 firefox-suggest-urlbar-learn-more =
@@ -31,6 +35,12 @@ addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-nam
 # the usual addressbar-suggest string and becomes the text of the description of
 # the address bar section in the preferences UI.
 addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
+
+# The best match checkbox label. This toggle controls best match suggestions
+# related to the user's search string.
+addressbar-firefox-suggest-best-match-option =
+  .label = Top pick
+addressbar-best-match-learn-more = Learn more
 
 # First Firefox Suggest toggle button main label and description. This toggle
 # controls non-sponsored suggestions related to the user's search string.

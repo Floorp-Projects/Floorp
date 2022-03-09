@@ -70,6 +70,7 @@ graph_config_schema = Schema(
         Extra: object,
     }
 )
+"""Schema for GraphConfig"""
 
 
 @attr.s(frozen=True, cmp=False)

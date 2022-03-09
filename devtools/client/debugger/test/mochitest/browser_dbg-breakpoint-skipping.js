@@ -7,14 +7,16 @@
  * invoking functions without pausing.
  */
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
-  await selectSource(dbg, "simple3");
+  await selectSource(dbg, "simple3.js");
 
   info("Adding a breakpoint should remove the skipped pausing state");
   await skipPausing(dbg);
   await waitForState(dbg, state => dbg.selectors.getSkipPausing());
-  await addBreakpoint(dbg, "simple3", 2);
+  await addBreakpoint(dbg, "simple3.js", 2);
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
   invokeInTab("simple");
   await waitForPaused(dbg);
@@ -40,7 +42,7 @@ add_task(async function() {
   await resume(dbg);
 
   info("Disabling a breakpoint should remove the skipped pausing state");
-  await addBreakpoint(dbg, "simple3", 3);
+  await addBreakpoint(dbg, "simple3.js", 3);
   await skipPausing(dbg);
   await disableBreakpoint(dbg, 0);
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());

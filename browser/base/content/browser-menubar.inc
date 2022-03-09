@@ -462,8 +462,8 @@
 #endif
                 <menuitem id="feedbackPage"
                           oncommand="openFeedbackPage()"
-                          data-l10n-id="menu-help-feedback-page"
-                          appmenu-data-l10n-id="appmenu-help-feedback-page"/>
+                          data-l10n-id="menu-help-share-ideas"
+                          appmenu-data-l10n-id="appmenu-help-share-ideas"/>
                 <menuitem id="helpSafeMode"
                           oncommand="safeModeRestart();"
                           data-l10n-id="menu-help-enter-troubleshoot-mode2"

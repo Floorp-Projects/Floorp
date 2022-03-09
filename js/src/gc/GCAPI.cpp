@@ -266,12 +266,17 @@ JS_PUBLIC_API void JS::SkipZoneForGC(JSContext* cx, Zone* zone) {
   zone->unscheduleGC();
 }
 
+static inline void CheckGCOptions(JS::GCOptions options) {
+  MOZ_ASSERT(options == JS::GCOptions::Normal ||
+             options == JS::GCOptions::Shrink ||
+             options == JS::GCOptions::Shutdown);
+}
+
 JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx, JS::GCOptions options,
                                         GCReason reason) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  MOZ_ASSERT(options == JS::GCOptions::Normal ||
-             options == JS::GCOptions::Shrink);
+  CheckGCOptions(options);
 
   cx->runtime()->gc.gc(options, reason);
 
@@ -283,8 +288,7 @@ JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx, JS::GCOptions options,
                                           const js::SliceBudget& budget) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  MOZ_ASSERT(options == JS::GCOptions::Normal ||
-             options == JS::GCOptions::Shrink);
+  CheckGCOptions(options);
 
   cx->runtime()->gc.startGC(options, reason, budget);
 }

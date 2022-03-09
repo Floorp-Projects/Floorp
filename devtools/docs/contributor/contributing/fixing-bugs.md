@@ -95,10 +95,17 @@ And that means it's time to ask for more information in the bug or from your col
 
 ### If this is about changing CSS code...
 
-If you think you have found the right file and the right CSS selector, you could try to edit the file to insert some outrageously colourful rule (for example, a really thick bright blue border), then restart DevTools to see if the changes show up.
+If you think you have found the right file and the right CSS selector, you could try to edit the file to insert some outrageously colourful rule (for example, a really thick bright blue border).
 
 ```css
 border: 4px solid blue;
+```
+
+Check if the changes show up by rebuilding your local changes.
+
+```bash
+./mach build faster
+./mach run
 ```
 
 ## NEXT: do whatever needs doing

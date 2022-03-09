@@ -23,8 +23,8 @@
 
 //Floorpアップデートの最新版である旨の通知を許可
 pref("enable.floorp.updater.latest", true);
-pref("enable.floorp.update", true);
-pref("update.id.floorp", "floorp-global");
+pref("enable.floorp.update", false);
+pref("update.id.floorp", "floorp-dev");
 
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 

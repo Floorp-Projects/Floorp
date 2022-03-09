@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Tests for preview through Babel's compile output.
 requestLongerTimeout(5);
 
@@ -11,9 +13,9 @@ add_task(async function() {
   dbg.actions.toggleMapScopes();
 
   info("1. Pause on line 20");
-  const filename = "webpack3-babel6://./esmodules-cjs/input.";
-  await waitForSources(dbg, filename);
-  const source = findSource(dbg, filename);
+  const url = "webpack3-babel6://./esmodules-cjs/input.js";
+  await waitForSources(dbg, url);
+  const source = findSource(dbg, url);
   await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 20, 2);
   invokeInTab("webpack3Babel6EsmodulesCjs");

@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Tests to see if we can trigger a breakpoint action via the context menu
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
-  await selectSource(dbg, "simple2");
-  await waitForSelectedSource(dbg, "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
+  await selectSource(dbg, "simple2.js");
+  await waitForSelectedSource(dbg, "simple2.js");
 
-  await addBreakpoint(dbg, "simple2", 3);
+  await addBreakpoint(dbg, "simple2.js", 3);
 
   await openFirstBreakpointContextMenu(dbg);
   // select "Remove breakpoint"
@@ -21,12 +23,12 @@ add_task(async function() {
 // Tests "disable others", "enable others" and "remove others" context actions
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
-  await selectSource(dbg, "simple1");
-  await waitForSelectedSource(dbg, "simple1");
+  await selectSource(dbg, "simple1.js");
+  await waitForSelectedSource(dbg, "simple1.js");
 
-  await addBreakpoint(dbg, "simple1", 4);
-  await addBreakpoint(dbg, "simple1", 5);
-  await addBreakpoint(dbg, "simple1", 6);
+  await addBreakpoint(dbg, "simple1.js", 4);
+  await addBreakpoint(dbg, "simple1.js", 5);
+  await addBreakpoint(dbg, "simple1.js", 6);
 
   await openFirstBreakpointContextMenu(dbg);
   // select "Disable Others"

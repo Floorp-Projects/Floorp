@@ -412,18 +412,18 @@ static bool str_enumerate(JSContext* cx, HandleObject obj) {
 
 static bool str_mayResolve(const JSAtomState&, jsid id, JSObject*) {
   // str_resolve ignores non-integer ids.
-  return JSID_IS_INT(id);
+  return id.isInt();
 }
 
 static bool str_resolve(JSContext* cx, HandleObject obj, HandleId id,
                         bool* resolvedp) {
-  if (!JSID_IS_INT(id)) {
+  if (!id.isInt()) {
     return true;
   }
 
   RootedString str(cx, obj->as<StringObject>().unbox());
 
-  int32_t slot = JSID_TO_INT(id);
+  int32_t slot = id.toInt();
   if ((size_t)slot < str->length()) {
     JSString* str1 =
         cx->staticStrings().getUnitStringForElement(cx, str, size_t(slot));

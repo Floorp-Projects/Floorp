@@ -31,14 +31,6 @@ MFBT_API ProfileChunkedBuffer& profiler_get_core_buffer();
 
 namespace mozilla::base_profiler_markers_detail {
 
-// Get the core buffer from the profiler, and cache it in a
-// non-templated-function static reference.
-inline ProfileChunkedBuffer& CachedBaseCoreBuffer() {
-  static ProfileChunkedBuffer& coreBuffer =
-      baseprofiler::profiler_get_core_buffer();
-  return coreBuffer;
-}
-
 struct Streaming {
   // A `MarkerDataDeserializer` is a free function that can read a serialized
   // payload from an `EntryReader` and streams it as JSON object properties.

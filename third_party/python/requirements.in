@@ -8,14 +8,13 @@ cbor2==4.0.1
 colorama==0.4.4
 compare-locales==8.2.1
 cookies==2.2.1
-coverage==5.1
 cram==0.7
 distro==1.4.0
 ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.11
 fluent.syntax==0.18.1
-glean_parser==4.4.0
+glean_parser==5.0.1
 jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.4
@@ -40,9 +39,10 @@ setuptools==51.2.0
 six==1.13.0
 slugid==2.0.0
 taskcluster==44.2.2
-taskcluster-taskgraph==1.1.5
+taskcluster-taskgraph==1.1.7
 taskcluster-urls==13.0.1
 tqdm==4.62.3
+urllib3==1.26
 voluptuous==0.12.1
 wheel==0.37.0
 yamllint==1.23

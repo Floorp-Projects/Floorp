@@ -461,9 +461,8 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     if (tmpDTRect.IsEmpty()) {
       return ImgDrawResult::SUCCESS;
     }
-    RefPtr<DrawTarget> tempDT =
-        gfxPlatform::GetPlatform()->CreateSimilarSoftwareDrawTarget(
-            ctx->GetDrawTarget(), tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
+    RefPtr<DrawTarget> tempDT = ctx->GetDrawTarget()->CreateSimilarDrawTarget(
+        tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!tempDT || !tempDT->IsValid()) {
       gfxDevCrash(LogReason::InvalidContext)
           << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
@@ -644,8 +643,8 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
       if (extendMode == ExtendMode::CLAMP) {
         // The image is not repeating. Just push as a regular image.
-        aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
-                           key.value(), true,
+        aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), false,
+                           rendering, key.value(), true,
                            wr::ColorF{1.0f, 1.0f, 1.0f, aOpacity});
       } else {
         nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(

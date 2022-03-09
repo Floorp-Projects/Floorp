@@ -138,21 +138,22 @@ RemoteImageHolder::~RemoteImageHolder() {
 }
 
 /* static */ void ipc::IPDLParamTraits<RemoteImageHolder>::Write(
-    IPC::Message* aMsg, ipc::IProtocol* aActor, RemoteImageHolder&& aParam) {
-  WriteIPDLParam(aMsg, aActor, aParam.mSource);
-  WriteIPDLParam(aMsg, aActor, aParam.mSize);
-  WriteIPDLParam(aMsg, aActor, aParam.mSD);
+    IPC::MessageWriter* aWriter, ipc::IProtocol* aActor,
+    RemoteImageHolder&& aParam) {
+  WriteIPDLParam(aWriter, aActor, aParam.mSource);
+  WriteIPDLParam(aWriter, aActor, aParam.mSize);
+  WriteIPDLParam(aWriter, aActor, aParam.mSD);
   // Empty this holder.
   aParam.mSD = Nothing();
   aParam.mManager = nullptr;
 }
 
 /* static */ bool ipc::IPDLParamTraits<RemoteImageHolder>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, ipc::IProtocol* aActor,
+    IPC::MessageReader* aReader, ipc::IProtocol* aActor,
     RemoteImageHolder* aResult) {
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSource) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSize) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSD)) {
+  if (!ReadIPDLParam(aReader, aActor, &aResult->mSource) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mSize) ||
+      !ReadIPDLParam(aReader, aActor, &aResult->mSD)) {
     return false;
   }
   if (!aResult->IsEmpty()) {

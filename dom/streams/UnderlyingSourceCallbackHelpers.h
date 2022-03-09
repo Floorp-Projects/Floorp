@@ -7,10 +7,9 @@
 #ifndef mozilla_dom_UnderlyingSourceCallbackHelpers_h
 #define mozilla_dom_UnderlyingSourceCallbackHelpers_h
 
+#include "js/loader/ModuleMapKey.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
@@ -27,6 +26,7 @@
 namespace mozilla::dom {
 
 class BodyStreamHolder;
+class ReadableStreamController;
 
 // Note: Until we need to be able to provide a native implementation of start,
 // I don't distinguish between UnderlyingSourceStartCallbackHelper and  a
@@ -91,12 +91,12 @@ class IDLUnderlyingSourcePullCallbackHelper final
   }
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) override;
+  already_AddRefed<Promise> PullCallback(JSContext* aCx,
+                                         ReadableStreamController& aController,
+                                         ErrorResult& aRv) override;
 
  protected:
-  virtual ~IDLUnderlyingSourcePullCallbackHelper() {
+  ~IDLUnderlyingSourcePullCallbackHelper() override {
     mozilla::DropJSObjects(this);
   }
 
@@ -117,12 +117,12 @@ class BodyStreamUnderlyingSourcePullCallbackHelper final
       BodyStreamHolder* underlyingSource);
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) override;
+  already_AddRefed<Promise> PullCallback(JSContext* aCx,
+                                         ReadableStreamController& aController,
+                                         ErrorResult& aRv) override;
 
  protected:
-  virtual ~BodyStreamUnderlyingSourcePullCallbackHelper() = default;
+  ~BodyStreamUnderlyingSourcePullCallbackHelper() override = default;
 
  private:
   RefPtr<BodyStreamHolder> mUnderlyingSource;
@@ -160,12 +160,12 @@ class IDLUnderlyingSourceCancelCallbackHelper final
   }
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> CancelCallback(
+  already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
 
  protected:
-  virtual ~IDLUnderlyingSourceCancelCallbackHelper() {
+  ~IDLUnderlyingSourceCancelCallbackHelper() override {
     mozilla::DropJSObjects(this);
   }
 
@@ -186,12 +186,12 @@ class BodyStreamUnderlyingSourceCancelCallbackHelper final
       BodyStreamHolder* aUnderlyingSource);
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> CancelCallback(
+  already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
 
  protected:
-  virtual ~BodyStreamUnderlyingSourceCancelCallbackHelper() = default;
+  ~BodyStreamUnderlyingSourceCancelCallbackHelper() override = default;
 
  private:
   RefPtr<BodyStreamHolder> mUnderlyingSource;
@@ -220,10 +220,10 @@ class BodyStreamUnderlyingSourceErrorCallbackHelper final
   explicit BodyStreamUnderlyingSourceErrorCallbackHelper(
       BodyStreamHolder* aUnderlyingSource);
 
-  virtual void Call() override;
+  void Call() override;
 
  protected:
-  virtual ~BodyStreamUnderlyingSourceErrorCallbackHelper() = default;
+  ~BodyStreamUnderlyingSourceErrorCallbackHelper() override = default;
 
  private:
   RefPtr<BodyStreamHolder> mUnderlyingSource;

@@ -1,7 +1,10 @@
+include "mozilla/_ipdltest/TestUrgency.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
-[NestedUpTo=inside_cpow] sync protocol PTestUrgency
+[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl="TestUrgencyChild", ParentImpl="TestUrgencyParent"]
+sync protocol PTestUrgency
 {
 parent:
     [Nested=inside_sync] sync Test1() returns (uint32_t result);

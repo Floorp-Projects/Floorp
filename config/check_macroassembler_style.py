@@ -30,13 +30,13 @@ import sys
 
 architecture_independent = set(["generic"])
 all_unsupported_architectures_names = set(["mips32", "mips64", "mips_shared"])
-all_architecture_names = set(["x86", "x64", "arm", "arm64"])
-all_shared_architecture_names = set(["x86_shared", "arm", "arm64"])
+all_architecture_names = set(["x86", "x64", "arm", "arm64", "loong64"])
+all_shared_architecture_names = set(["x86_shared", "arm", "arm64", "loong64"])
 
 reBeforeArg = "(?<=[(,\s])"
-reArgType = "(?P<type>[\w\s:*&]+)"
+reArgType = "(?P<type>[\w\s:*&<>]+)"
 reArgName = "(?P<name>\s\w+)"
-reArgDefault = "(?P<default>(?:\s=[^,)]+)?)"
+reArgDefault = "(?P<default>(?:\s=(?:(?:\s[\w:]+\(\))|[^,)]+))?)"
 reAfterArg = "(?=[,)])"
 reMatchArg = re.compile(reBeforeArg + reArgType + reArgName + reArgDefault + reAfterArg)
 

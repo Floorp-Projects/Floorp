@@ -18,12 +18,12 @@ const TARGET_BROWSERS = [
   {
     // Chrome doesn't need any prefix for both user-select and text-size-adjust.
     id: "chrome",
-    version: "84",
+    status: "current",
   },
   {
     // The safari_ios needs -webkit prefix for both properties.
     id: "safari_ios",
-    version: "13",
+    status: "current",
   },
 ];
 
@@ -40,7 +40,6 @@ const TEST_URI = `
 
 const TEST_DATA_INITIAL = [
   {
-    selector: "div",
     rules: [
       {},
       {
@@ -61,7 +60,6 @@ const TEST_DATA_INITIAL = [
 
 const TEST_DATA_FIX_USER_SELECT = [
   {
-    selector: "div",
     rules: [
       {},
       {
@@ -83,7 +81,6 @@ const TEST_DATA_FIX_USER_SELECT = [
 // still show an inline warning for its experimental status.
 const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
   {
-    selector: "div",
     rules: [
       {},
       {
@@ -111,6 +108,11 @@ add_task(async function() {
   );
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
+
+  // We're only looking for properties on this single node so select it here instead of
+  // passing `selector` to `runCSSCompatibilityTests` (otherwise addition requests are sent
+  // to the server and we may end up with pending promises when the toolbox closes).
+  await selectNode("div", inspector);
 
   await runCSSCompatibilityTests(view, inspector, TEST_DATA_INITIAL);
 

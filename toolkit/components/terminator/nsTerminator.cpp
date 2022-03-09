@@ -467,13 +467,9 @@ void nsTerminator::StartWatchdog() {
 #endif
 
   UniquePtr<Options> options(new Options());
-  const PRIntervalTime ticksDuration =
-      PR_MillisecondsToInterval(HEARTBEAT_INTERVAL_MS);
-  options->crashAfterTicks = crashAfterMS / ticksDuration;
-  // Handle systems where ticksDuration is greater than crashAfterMS.
-  if (options->crashAfterTicks == 0) {
-    options->crashAfterTicks = crashAfterMS / HEARTBEAT_INTERVAL_MS;
-  }
+  // crashAfterTicks is guaranteed to be > 0 as
+  // crashAfterMS >= ADDITIONAL_WAIT_BEFORE_CRASH_MS >> HEARTBEAT_INTERVAL_MS
+  options->crashAfterTicks = crashAfterMS / HEARTBEAT_INTERVAL_MS;
 
   DebugOnly<PRThread*> watchdogThread =
       CreateSystemThread(RunWatchdog, options.release());

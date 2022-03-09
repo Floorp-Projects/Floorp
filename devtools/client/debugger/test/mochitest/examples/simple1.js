@@ -57,3 +57,7 @@ class Klass {
   }
   test() {}
 }
+
+const o = 1 + 2;
+console.log(o);
+

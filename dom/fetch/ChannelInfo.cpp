@@ -14,7 +14,7 @@
 #include "nsSerializationHelper.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/net/HttpBaseChannel.h"
-#include "mozilla/ipc/ChannelInfo.h"
+#include "mozilla/ipc/IPCChannelInfo.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla;

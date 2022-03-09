@@ -14,6 +14,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultWriterBinding.h"
 #include "nsCOMPtr.h"
 
@@ -97,8 +98,8 @@ already_AddRefed<Promise> WritableStreamDefaultWriter::Ready() {
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-get-desired-size
-static Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
-    WritableStreamDefaultWriter* aWriter, ErrorResult& aRv) {
+Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
+    WritableStreamDefaultWriter* aWriter) {
   // Step 1. Let stream be writer.[[stream]].
   RefPtr<WritableStream> stream = aWriter->GetStream();
 
@@ -131,7 +132,7 @@ Nullable<double> WritableStreamDefaultWriter::GetDesiredSize(ErrorResult& aRv) {
 
   // Step 2. Return ! WritableStreamDefaultWriterGetDesiredSize(this).
   RefPtr<WritableStreamDefaultWriter> thisRefPtr = this;
-  return WritableStreamDefaultWriterGetDesiredSize(thisRefPtr, aRv);
+  return WritableStreamDefaultWriterGetDesiredSize(thisRefPtr);
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-abort
@@ -270,11 +271,9 @@ void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-write
-MOZ_CAN_RUN_SCRIPT static already_AddRefed<Promise>
-WritableStreamDefaultWriterWrite(JSContext* aCx,
-                                 WritableStreamDefaultWriter* aWriter,
-                                 JS::Handle<JS::Value> aChunk,
-                                 ErrorResult& aRv) {
+already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
+    JSContext* aCx, WritableStreamDefaultWriter* aWriter,
+    JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
   // Step 1. Let stream be writer.[[stream]].
   RefPtr<WritableStream> stream = aWriter->GetStream();
 
@@ -546,6 +545,46 @@ void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
 
   // Step 3. Set writer.[[readyPromise]].[[PromiseIsHandled]] to true.
   readyPromise->SetSettledPromiseIsHandled();
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-close-with-error-propagation
+already_AddRefed<Promise> WritableStreamDefaultWriterCloseWithErrorPropagation(
+    JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv) {
+  // Step 1. Let stream be writer.[[stream]].
+  RefPtr<WritableStream> stream = aWriter->GetStream();
+
+  // Step 2. Assert: stream is not undefined.
+  MOZ_ASSERT(stream);
+
+  // Step 3. Let state be stream.[[state]].
+  WritableStream::WriterState state = stream->State();
+
+  // Step 4. If ! WritableStreamCloseQueuedOrInFlight(stream) is true
+  // or state is "closed", return a promise resolved with undefined.
+  if (stream->CloseQueuedOrInFlight() ||
+      state == WritableStream::WriterState::Closed) {
+    return Promise::CreateResolvedWithUndefined(aWriter->GetParentObject(),
+                                                aRv);
+  }
+
+  // Step 5. If state is "errored",
+  // return a promise rejected with stream.[[storedError]].
+  if (state == WritableStream::WriterState::Errored) {
+    RefPtr<Promise> promise = Promise::Create(aWriter->GetParentObject(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> error(aCx, stream->StoredError());
+    promise->MaybeReject(error);
+    return promise.forget();
+  }
+
+  // Step 6. Assert: state is "writable" or "erroring".
+  MOZ_ASSERT(state == WritableStream::WriterState::Writable ||
+             state == WritableStream::WriterState::Erroring);
+
+  // Step 7. Return ! WritableStreamDefaultWriterClose(writer).
+  return WritableStreamDefaultWriterClose(aCx, aWriter, aRv);
 }
 
 }  // namespace mozilla::dom

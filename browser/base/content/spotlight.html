@@ -9,10 +9,10 @@
   <meta http-equiv="Content-Security-Policy" content="default-src resource: chrome:; img-src https://www.mozilla.org blob:; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
-  <link rel="stylesheet" type="text/css" href="chrome://browser/skin/spotlight.css">
   <link rel="localization" href="branding/brand.ftl">
   <link rel="localization" href="browser/branding/brandings.ftl">
   <link rel="localization" href="browser/newtab/asrouter.ftl">
+  <link rel="localization" href="browser/newtab/onboarding.ftl"/>
   <script defer src="resource://activity-stream/data/custom-elements/paragraph.js"></script>
 </head>
 <body role="dialog" aria-labelledby="title" aria-describedby="content">
@@ -29,6 +29,8 @@
     <button id="learn-more-toggle" class="text-link"></button>
     <p class="expanded" role="alert"></p>
   </template>
+  <script src="resource://activity-stream/vendor/react.js"></script>
+  <script src="resource://activity-stream/vendor/react-dom.js"></script>
   <script src="chrome://browser/content/spotlight.js"></script>
 </body>
 </html>

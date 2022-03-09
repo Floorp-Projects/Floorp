@@ -14,6 +14,7 @@
 #include "mozilla/EventForwards.h"  // for KeyNameIndex, temporarily
 #include "mozilla/FontRange.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/WritingModes.h"
@@ -475,8 +476,8 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                    writing mode at current selection.  However, when there
    *                    is no focused element and no selection ranges, this
    *                    should be set to Nothing().  Using the result of
-   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
-   *                    recommended.
+   *                    `TextEventDispatcher::MaybeQueryWritingModeAtSelection()`
+   *                    is recommended.
    */
   MOZ_CAN_RUN_SCRIPT void InitAllEditCommands(
       const Maybe<WritingMode>& aWritingMode);
@@ -492,15 +493,14 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                    writing mode at current selection.  However, when there
    *                    is no focused element and no selection ranges, this
    *                    should be set to Nothing().  Using the result of
-   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
-   *                    recommended.
+   *                    `TextEventDispatcher::MaybeQueryWritingModeAtSelection()`
+   *                    is recommended.
    * @return            false if some resource is not available to get
    *                    commands unexpectedly.  Otherwise, true even if
    *                    retrieved command is nothing.
    */
   MOZ_CAN_RUN_SCRIPT bool InitEditCommandsFor(
-      nsIWidget::NativeKeyBindingsType aType,
-      const Maybe<WritingMode>& aWritingMode);
+      NativeKeyBindingsType aType, const Maybe<WritingMode>& aWritingMode);
 
   /**
    * PreventNativeKeyBindings() makes the instance to not cause any edit
@@ -519,7 +519,7 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    * EditCommandsConstRef() returns reference to edit commands for aType.
    */
   const nsTArray<CommandInt>& EditCommandsConstRef(
-      nsIWidget::NativeKeyBindingsType aType) const {
+      NativeKeyBindingsType aType) const {
     return const_cast<WidgetKeyboardEvent*>(this)->EditCommandsRef(aType);
   }
 
@@ -527,7 +527,7 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    * IsEditCommandsInitialized() returns true if edit commands for aType
    * was already initialized.  Otherwise, false.
    */
-  bool IsEditCommandsInitialized(nsIWidget::NativeKeyBindingsType aType) const {
+  bool IsEditCommandsInitialized(NativeKeyBindingsType aType) const {
     return const_cast<WidgetKeyboardEvent*>(this)->IsEditCommandsInitializedRef(
         aType);
   }
@@ -549,9 +549,9 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                false, otherwise.
    */
   typedef void (*DoCommandCallback)(Command, void*);
-  MOZ_CAN_RUN_SCRIPT bool ExecuteEditCommands(
-      nsIWidget::NativeKeyBindingsType aType, DoCommandCallback aCallback,
-      void* aCallbackData);
+  MOZ_CAN_RUN_SCRIPT bool ExecuteEditCommands(NativeKeyBindingsType aType,
+                                              DoCommandCallback aCallback,
+                                              void* aCallbackData);
 
   // If the key should cause keypress events, this returns true.
   // Otherwise, false.
@@ -789,14 +789,13 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
   CopyableTArray<CommandInt> mEditCommandsForMultiLineEditor;
   CopyableTArray<CommandInt> mEditCommandsForRichTextEditor;
 
-  nsTArray<CommandInt>& EditCommandsRef(
-      nsIWidget::NativeKeyBindingsType aType) {
+  nsTArray<CommandInt>& EditCommandsRef(NativeKeyBindingsType aType) {
     switch (aType) {
-      case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      case NativeKeyBindingsType::SingleLineEditor:
         return mEditCommandsForSingleLineEditor;
-      case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+      case NativeKeyBindingsType::MultiLineEditor:
         return mEditCommandsForMultiLineEditor;
-      case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      case NativeKeyBindingsType::RichTextEditor:
         return mEditCommandsForRichTextEditor;
       default:
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
@@ -810,13 +809,13 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
   bool mEditCommandsForMultiLineEditorInitialized;
   bool mEditCommandsForRichTextEditorInitialized;
 
-  bool& IsEditCommandsInitializedRef(nsIWidget::NativeKeyBindingsType aType) {
+  bool& IsEditCommandsInitializedRef(NativeKeyBindingsType aType) {
     switch (aType) {
-      case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      case NativeKeyBindingsType::SingleLineEditor:
         return mEditCommandsForSingleLineEditorInitialized;
-      case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+      case NativeKeyBindingsType::MultiLineEditor:
         return mEditCommandsForMultiLineEditorInitialized;
-      case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      case NativeKeyBindingsType::RichTextEditor:
         return mEditCommandsForRichTextEditorInitialized;
       default:
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
@@ -1043,9 +1042,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
       return false;
     }
     switch (mMessage) {
-      case eQuerySelectedText:
-        return mReply->mOffsetAndData.isSome() ||
-               mInput.mSelectionType != SelectionType::eNormal;
       case eQueryTextContent:
       case eQueryTextRect:
       case eQueryCaretRect:
@@ -1173,8 +1169,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     CopyableTArray<mozilla::LayoutDeviceIntRect> mRectArray;
     // true if selection is reversed (end < start)
     bool mReversed;
-    // true if the selection exists
-    bool mHasSelection;
     // true if DOM element under mouse belongs to widget
     bool mWidgetIsHit;
 
@@ -1184,7 +1178,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
           mContentsRoot(nullptr),
           mFocusedWidget(nullptr),
           mReversed(false),
-          mHasSelection(false),
           mWidgetIsHit(false) {}
 
     // Don't allow to copy/move because of `mEventMessage`.
@@ -1206,13 +1199,13 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
                  mEventMessage == eQuerySelectedText);
       return mOffsetAndData.isSome() ? mOffsetAndData->Length() : 0;
     }
-    MOZ_NEVER_INLINE_DEBUG uint32_t SelectionStartOffset() const {
+    MOZ_NEVER_INLINE_DEBUG uint32_t AnchorOffset() const {
       MOZ_ASSERT(mEventMessage == eQuerySelectedText);
       MOZ_ASSERT(mOffsetAndData.isSome());
       return StartOffset() + (mReversed ? DataLength() : 0);
     }
 
-    MOZ_NEVER_INLINE_DEBUG uint32_t SelectionEndOffset() const {
+    MOZ_NEVER_INLINE_DEBUG uint32_t FocusOffset() const {
       MOZ_ASSERT(mEventMessage == eQuerySelectedText);
       MOZ_ASSERT(mOffsetAndData.isSome());
       return StartOffset() + (mReversed ? 0 : DataLength());
@@ -1272,8 +1265,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
                   << ToString(aReply.mTentativeCaretOffset).c_str() << ", ";
         }
       }
-      aStream << "mHasSelection=" << (aReply.mHasSelection ? "true" : "false");
-      if (aReply.mHasSelection) {
+      if (aReply.mOffsetAndData.isSome() && aReply.mOffsetAndData->Length()) {
         if (aReply.mEventMessage == eQuerySelectedText) {
           aStream << ", mReversed=" << (aReply.mReversed ? "true" : "false");
         }

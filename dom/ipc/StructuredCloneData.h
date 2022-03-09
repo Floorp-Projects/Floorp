@@ -15,7 +15,9 @@
 
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 class PickleIterator;
 
 namespace mozilla {
@@ -278,8 +280,8 @@ class StructuredCloneData : public StructuredCloneHolder {
   }
 
   // For IPC serialization
-  void WriteIPCParams(IPC::Message* aMessage) const;
-  bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
+  void WriteIPCParams(IPC::MessageWriter* aWriter) const;
+  bool ReadIPCParams(IPC::MessageReader* aReader);
 
  protected:
   already_AddRefed<SharedJSAllocatedData> TakeSharedData();

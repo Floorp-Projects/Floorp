@@ -440,7 +440,7 @@ class TestFileCopier(TestWithTmpDir):
         self.assertTrue(stat.S_ISDIR(st.st_mode))
 
         # What's worse, we have no record that dest was created.
-        self.assertEquals(len(result.updated_files), 0)
+        self.assertEqual(len(result.updated_files), 0)
 
         # But we do have an erroneous record of an optional file
         # existing when it does not.

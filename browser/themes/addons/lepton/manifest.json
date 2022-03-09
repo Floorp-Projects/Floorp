@@ -8,7 +8,7 @@
   },
   "name": "Lepton",
   "description": "Firefox-UI-Fix is coming to Floorp!",
-  "version": "1.2.0",
+  "version": "1.1.0",
   "icons": {"32": "icon.svg"},
 
   "theme": {

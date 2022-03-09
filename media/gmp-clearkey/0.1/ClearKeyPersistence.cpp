@@ -67,7 +67,8 @@ void ClearKeyPersistence::ReadAllRecordsFromIndex(
   };
 
   string filename = "index";
-  ReadData(mHost, filename, move(onIndexSuccess), move(onIndexFailed));
+  ReadData(mHost, filename, std::move(onIndexSuccess),
+           std::move(onIndexFailed));
 }
 
 void ClearKeyPersistence::WriteIndex() {
@@ -91,7 +92,8 @@ void ClearKeyPersistence::WriteIndex() {
   vector<uint8_t> data(dataArray, dataArray + dataString.size());
 
   string filename = "index";
-  WriteData(mHost, filename, data, move(onIndexSuccess), move(onIndexFail));
+  WriteData(mHost, filename, data, std::move(onIndexSuccess),
+            std::move(onIndexFail));
 }
 
 ClearKeyPersistence::ClearKeyPersistence(Host_10* aHost) {
@@ -103,7 +105,7 @@ void ClearKeyPersistence::EnsureInitialized(bool aPersistentStateAllowed,
   if (aPersistentStateAllowed &&
       mPersistentKeyState == PersistentKeyState::UNINITIALIZED) {
     mPersistentKeyState = LOADING;
-    ReadAllRecordsFromIndex(move(aOnInitialized));
+    ReadAllRecordsFromIndex(std::move(aOnInitialized));
   } else {
     mPersistentKeyState = PersistentKeyState::LOADED;
     aOnInitialized();

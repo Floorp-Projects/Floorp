@@ -35,15 +35,15 @@ class ReadableStreamDefaultTeePullAlgorithm final
                                          ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) override {
+  already_AddRefed<Promise> PullCallback(JSContext* aCx,
+                                         ReadableStreamController& aController,
+                                         ErrorResult& aRv) override {
     nsCOMPtr<nsIGlobalObject> global(aController.GetParentObject());
     return PullCallback(aCx, global, aRv);
   }
 
  protected:
-  ~ReadableStreamDefaultTeePullAlgorithm() = default;
+  ~ReadableStreamDefaultTeePullAlgorithm() override = default;
 };
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
@@ -58,17 +58,16 @@ struct ReadableStreamDefaultTeeReadRequest final : public ReadRequest {
   explicit ReadableStreamDefaultTeeReadRequest(TeeState* aTeeState)
       : mTeeState(aTeeState) {}
 
-  virtual void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                          ErrorResult& aRv) override;
+  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                  ErrorResult& aRv) override;
 
-  MOZ_CAN_RUN_SCRIPT virtual void CloseSteps(JSContext* aCx,
-                                             ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT void CloseSteps(JSContext* aCx, ErrorResult& aRv) override;
 
-  virtual void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
-                          ErrorResult& aRv) override;
+  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
+                  ErrorResult& aRv) override;
 
  protected:
-  virtual ~ReadableStreamDefaultTeeReadRequest() = default;
+  ~ReadableStreamDefaultTeeReadRequest() override = default;
 };
 
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamTee(

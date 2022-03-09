@@ -31,11 +31,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-Services.prefs.setBoolPref(
-  "extensions.webextensions.background-delayed-startup",
-  false
-);
-
 add_task(async function setup() {
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
   // storage mode will run in xpcshell-legacy-ep.ini
@@ -315,7 +310,7 @@ async function test_permissions(manifest_version) {
 
   // Restart, verify permissions are still present
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitStartup();
+  await extension.awaitBackgroundStarted();
 
   result = await call("getAll");
   deepEqual(
@@ -344,8 +339,12 @@ async function test_permissions(manifest_version) {
 
   await extension.unload();
 }
-add_task(() => test_permissions(2));
-add_task(() => test_permissions(3));
+add_task(async function test_permissions_mv2() {
+  return test_permissions(2);
+});
+add_task(async function test_permissions_mv3() {
+  return test_permissions(3);
+});
 
 add_task(async function test_startup() {
   async function background() {
@@ -547,8 +546,12 @@ async function test_alreadyGranted(manifest_version) {
 
   await extension.unload();
 }
-add_task(() => test_alreadyGranted(2));
-add_task(() => test_alreadyGranted(3));
+add_task(async function test_alreadyGranted_mv2() {
+  return test_alreadyGranted(2);
+});
+add_task(async function test_alreadyGranted_mv3() {
+  return test_alreadyGranted(3);
+});
 
 // IMPORTANT: Do not change this list without review from a Web Extensions peer!
 
@@ -738,8 +741,12 @@ async function test_permissions_prompt(manifest_version) {
 
   await extension.unload();
 }
-add_task(() => test_permissions_prompt(2));
-add_task(() => test_permissions_prompt(3));
+add_task(async function test_permissions_prompt_mv2() {
+  return test_permissions_prompt(2);
+});
+add_task(async function test_permissions_prompt_mv3() {
+  return test_permissions_prompt(3);
+});
 
 // Check that internal permissions can not be set and are not returned by the API.
 add_task(async function test_internal_permissions() {

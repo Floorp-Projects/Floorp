@@ -230,9 +230,19 @@ FetchEventOpChild::FetchEventOpChild(
     mPreloadResponseReadyPromise
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [this](SafeRefPtr<InternalResponse> aInternalResponse) {
-              auto response =
-                  aInternalResponse->ToParentToParentInternalResponse();
+            [this](FetchServiceResponse&& aResponse) {
+              SafeRefPtr<InternalResponse> preloadResponse;
+              IPCPerformanceTimingData timingData;
+              nsString initiatorType;
+              nsString entryName;
+              Tie(preloadResponse, timingData, initiatorType, entryName) =
+                  std::move(aResponse);
+              ParentToParentResponseWithTiming response;
+              response.response() =
+                  preloadResponse->ToParentToParentInternalResponse();
+              response.timingData() = timingData;
+              response.initiatorType() = initiatorType;
+              response.entryName() = entryName;
               if (!mWasSent) {
                 // The actor wasn't sent yet, we can still send the preload
                 // response with it.

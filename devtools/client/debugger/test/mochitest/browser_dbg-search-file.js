@@ -4,17 +4,12 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const {
-    selectors: { getBreakpoints, getBreakpoint, getActiveSearch },
-    getState,
-  } = dbg;
-  const source = findSource(dbg, "simple1.js");
+  await selectSource(dbg, "simple1.js");
 
-  await selectSource(dbg, source.url);
-
-  const cm = getCM(dbg);
   pressKey(dbg, "fileSearch");
   is(dbg.selectors.getActiveSearch(), "file", "The search UI was opened");
 
@@ -34,7 +29,6 @@ add_task(async function() {
   await waitForSearchState(dbg);
   await waitForDispatch(dbg.store, "UPDATE_SEARCH_RESULTS");
 
-  const state = cm.state.search;
   // All the lines in the script that include `con`
   const linesWithResults = [
     // const func
@@ -45,6 +39,8 @@ add_task(async function() {
     42,
     // constructor (in Klass)
     55,
+    // console.log
+    62,
   ];
 
   await waitFor(
@@ -120,7 +116,7 @@ add_task(async function() {
   );
 
   // selecting another source keeps search open
-  await selectSource(dbg, "simple2");
+  await selectSource(dbg, "simple2.js");
   ok(findElement(dbg, "searchField"), "Search field is still visible");
 
   // search is always focused regardless of when or how it was opened
@@ -147,14 +143,9 @@ function getCursorPositionLine(dbg) {
   // Cursor position text has the following shape: (L, C)
   // where N is the line number, and C the column number
   const line = innerText.substring(1, innerText.indexOf(","));
-  return parseInt(line);
+  return parseInt(line, 10);
 }
 
 function waitForSearchState(dbg) {
   return waitForState(dbg, () => getCM(dbg).state.search);
-}
-
-function getFocusedEl(dbg) {
-  const doc = dbg.win.document;
-  return doc.activeElement;
 }

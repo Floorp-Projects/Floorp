@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: state.c 17576 2010-10-29 01:07:51Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -21,6 +21,7 @@
 #if defined(OC_DUMP_IMAGES)
 # include <stdio.h>
 # include "png.h"
+# include "zlib.h"
 #endif
 
 /*The function used to fill in the chroma plane motion vectors for a macro
@@ -253,10 +254,14 @@ static void oc_mb_fill_cmapping10(oc_mb_map_plane _mb_map[3],
   This version is for use with no chroma decimation (4:4:4).
   This uses the already filled-in luma plane values.
   _mb_map:  The macro block map to fill.
-  _fplanes: The descriptions of the fragment planes.*/
+  _fplanes: The descriptions of the fragment planes.
+  _xfrag0:  The X location of the upper-left hand fragment in the luma plane.
+  _yfrag0:  The Y location of the upper-left hand fragment in the luma plane.*/
 static void oc_mb_fill_cmapping11(oc_mb_map_plane _mb_map[3],
- const oc_fragment_plane _fplanes[3]){
+ const oc_fragment_plane _fplanes[3],int _xfrag0,int _yfrag0){
   int k;
+  (void)_xfrag0;
+  (void)_yfrag0;
   for(k=0;k<4;k++){
     _mb_map[1][k]=_mb_map[0][k]+_fplanes[1].froffset;
     _mb_map[2][k]=_mb_map[0][k]+_fplanes[2].froffset;
@@ -278,7 +283,7 @@ static const oc_mb_fill_cmapping_func OC_MB_FILL_CMAPPING_TABLE[4]={
   oc_mb_fill_cmapping00,
   oc_mb_fill_cmapping01,
   oc_mb_fill_cmapping10,
-  (oc_mb_fill_cmapping_func)oc_mb_fill_cmapping11
+  oc_mb_fill_cmapping11
 };
 
 /*Fills in the mapping from macro blocks to their corresponding fragment
@@ -702,7 +707,8 @@ int oc_state_init(oc_theora_state *_state,const th_info *_info,int _nrefs){
      how it is specified in the bitstream, because the Y axis is flipped in
      the bitstream.
     The displayable frame must fit inside the encoded frame.
-    The color space must be one known by the encoder.*/
+    The color space must be one known by the encoder.
+    The framerate ratio must not contain a zero value.*/
   if((_info->frame_width&0xF)||(_info->frame_height&0xF)||
    _info->frame_width<=0||_info->frame_width>=0x100000||
    _info->frame_height<=0||_info->frame_height>=0x100000||
@@ -715,7 +721,8 @@ int oc_state_init(oc_theora_state *_state,const th_info *_info,int _nrefs){
       but there are a number of compilers which will mis-optimize this.
      It's better to live with the spurious warnings.*/
    _info->colorspace<0||_info->colorspace>=TH_CS_NSPACES||
-   _info->pixel_fmt<0||_info->pixel_fmt>=TH_PF_NFORMATS){
+   _info->pixel_fmt<0||_info->pixel_fmt>=TH_PF_NFORMATS||
+   _info->fps_numerator<1||_info->fps_denominator<1){
     return TH_EINVAL;
   }
   memset(_state,0,sizeof(*_state));

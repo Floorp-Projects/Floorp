@@ -1,8 +1,7 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
+
 
 %filter substitution
 
@@ -44,10 +43,10 @@
   color: var(--urlbar-box-hover-text-color);
 }
 
-.identity-box-button:not(:active):-moz-focusring,
-#tracking-protection-icon-container:not(:active):-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: -2px;
+.identity-box-button:focus-visible,
+#tracking-protection-icon-container:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 .identity-box-button {

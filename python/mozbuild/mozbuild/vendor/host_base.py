@@ -22,6 +22,8 @@ class BaseHost:
                 [
                     "git",
                     "clone",
+                    "-c",
+                    "core.autocrlf=input",
                     self.manifest["vendoring"]["url"],
                     self.manifest["origin"]["name"],
                 ],

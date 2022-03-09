@@ -120,13 +120,13 @@ class LoginManagerStorage_json {
   /**
    * Returns the "sync id" used by Sync to know whether the store is current with
    * respect to the sync servers. It is stored encrypted, but only so we
-   * can detect failure to decrypt (for example, a "reset" of the master
+   * can detect failure to decrypt (for example, a "reset" of the primary
    * password will leave all logins alone, but they will fail to decrypt. We
    * also want this metadata to be unavailable in that scenario)
    *
    * Returns null if the data doesn't exist or if the data can't be
-   * decrypted (including if the master-password prompt is cancelled). This is
-   * OK for Sync as it can't even begin syncing if the master-password is
+   * decrypted (including if the primary-password prompt is cancelled). This is
+   * OK for Sync as it can't even begin syncing if the primary-password is
    * locked as the sync encrytion keys are stored in this login manager.
    */
   async getSyncID() {
@@ -416,7 +416,7 @@ class LoginManagerStorage_json {
           this._crypto.decrypt(login.password);
         } catch (e) {
           // If decryption failed (corrupt entry?), just skip it.
-          // Rethrow other errors (like canceling entry of a master pw)
+          // Rethrow other errors (like canceling entry of a primary pw)
           if (e.result == Cr.NS_ERROR_FAILURE) {
             this.log(
               "Could not decrypt login:",
@@ -817,7 +817,7 @@ class LoginManagerStorage_json {
 
   /**
    * Returns the encrypted username, password, and encrypton type for the specified
-   * login. Can throw if the user cancels a master password entry.
+   * login. Can throw if the user cancels a primary password entry.
    */
   _encryptLogin(login) {
     let encUsername = this._crypto.encrypt(login.username);
@@ -836,7 +836,7 @@ class LoginManagerStorage_json {
    * value should be given to external callers (since still-encrypted
    * entries are useless), whereas internal callers generally don't want
    * to lose unencrypted entries (eg, because the user clicked Cancel
-   * instead of entering their master password)
+   * instead of entering their primary password)
    */
   _decryptLogins(logins) {
     let result = [];
@@ -847,7 +847,7 @@ class LoginManagerStorage_json {
         login.password = this._crypto.decrypt(login.password);
       } catch (e) {
         // If decryption failed (corrupt entry?), just skip it.
-        // Rethrow other errors (like canceling entry of a master pw)
+        // Rethrow other errors (like canceling entry of a primary pw)
         if (e.result == Cr.NS_ERROR_FAILURE) {
           continue;
         }

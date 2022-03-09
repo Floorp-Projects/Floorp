@@ -86,6 +86,7 @@ struct BlobItemData {
   // invalidation region
   UniquePtr<nsDisplayItemGeometry> mGeometry;
   DisplayItemClip mClip;
+  bool mInvisible;
   bool mUsed;  // initialized near construction
   // XXX: only used for debugging
   bool mInvalid;
@@ -100,7 +101,7 @@ struct BlobItemData {
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
-      : mUsed(false), mGroup(aGroup) {
+      : mInvisible(false), mUsed(false), mGroup(aGroup) {
     mInvalid = false;
     mDisplayItemKey = aItem->GetPerFrameKey();
     AddFrame(aItem->Frame());
@@ -215,7 +216,8 @@ struct Grouper {
                        WebRenderCommandBuilder* aCommandBuilder,
                        wr::DisplayListBuilder& aBuilder,
                        wr::IpcResourceUpdateQueue& aResources, DIGroup* aGroup,
-                       nsDisplayList* aList, const StackingContextHelper& aSc);
+                       nsDisplayList* aList, nsDisplayItem* aWrappingItem,
+                       const StackingContextHelper& aSc);
   // Builds a group of display items without promoting anything to active.
   bool ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
                                     wr::DisplayListBuilder& aBuilder,
@@ -297,6 +299,10 @@ struct DIGroup {
   // This is the intersection of mVisibleRect and mLastVisibleRect
   // we ensure that mInvalidRect is contained in mPreservedRect
   LayerIntRect mPreservedRect;
+  // mHitTestBounds is the same as mActualBounds except for the bounds
+  // of invisible items which are accounted for in the former but not
+  // in the latter.
+  LayerIntRect mHitTestBounds;
   LayerIntRect mActualBounds;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
@@ -538,7 +544,11 @@ struct DIGroup {
         }
       }
     }
-    mActualBounds.OrWith(aData->mRect);
+
+    mHitTestBounds.OrWith(aData->mRect);
+    if (!aData->mInvisible) {
+      mActualBounds.OrWith(aData->mRect);
+    }
     aData->mClip = clip;
     GP("post mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
@@ -549,9 +559,20 @@ struct DIGroup {
                 nsDisplayListBuilder* aDisplayListBuilder,
                 wr::DisplayListBuilder& aBuilder,
                 wr::IpcResourceUpdateQueue& aResources, Grouper* aGrouper,
-                nsDisplayItem* aStartItem, nsDisplayItem* aEndItem) {
+                nsDisplayList::iterator aStartItem,
+                nsDisplayList::iterator aEndItem) {
     GP("\n\n");
     GP("Begin EndGroup\n");
+
+    LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
+
+    auto hitTestRect = mVisibleRect.Intersect(ViewAs<LayerPixel>(
+        mHitTestBounds, PixelCastJustification::LayerIsImage));
+    if (!hitTestRect.IsEmpty()) {
+      auto deviceHitTestRect =
+          (LayerRect(hitTestRect) - mResidualOffset) / scale;
+      PushHitTest(aBuilder, deviceHitTestRect);
+    }
 
     mVisibleRect = mVisibleRect.Intersect(ViewAs<LayerPixel>(
         mActualBounds, PixelCastJustification::LayerIsImage));
@@ -578,7 +599,6 @@ struct DIGroup {
     IntSize dtSize = mVisibleRect.Size().ToUnknownSize();
     // The actual display item's size shouldn't have the scale factored in
     // Round the bounds out to leave space for unsnapped content
-    LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
     LayoutDeviceRect itemBounds =
         (LayerRect(mVisibleRect) - mResidualOffset) / scale;
 
@@ -608,8 +628,8 @@ struct DIGroup {
               aStream.write((const char*)&count, sizeof(count));
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
-                    aWrManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, &aResources);
+                    aWrManager->WrBridge()->GetFontKeyForScaledFont(scaled,
+                                                                    aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;
@@ -636,6 +656,7 @@ struct DIGroup {
 
     RenderRootStateManager* rootManager =
         aWrManager->GetRenderRootStateManager();
+
     bool empty = aStartItem == aEndItem;
     if (empty) {
       ClearImageKey(rootManager, true);
@@ -645,8 +666,8 @@ struct DIGroup {
     // Reset mHitInfo, it will get updated inside PaintItemRange
     mHitInfo = CompositorHitTestInvisibleToHit;
 
-    PaintItemRange(aGrouper, nsDisplayList::Range(aStartItem, aEndItem),
-                   context, recorder, rootManager, aResources);
+    PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
+                   rootManager, aResources);
 
     // XXX: set this correctly perhaps using
     // aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).
@@ -665,6 +686,7 @@ struct DIGroup {
       // we don't want to send a new image that doesn't have any
       // items in it
       if (!hasItems || mVisibleRect.IsEmpty()) {
+        GP("Skipped group with no items\n");
         return;
       }
 
@@ -723,6 +745,20 @@ struct DIGroup {
     auto rendering = wr::ImageRendering::Auto;
     bool backfaceHidden = false;
 
+    // XXX - clipping the item against the paint rect breaks some content.
+    // cf. Bug 1455422.
+    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
+
+    aBuilder.PushImage(dest, dest, !backfaceHidden, false, rendering,
+                       wr::AsImageKey(*mKey));
+  }
+
+  void PushHitTest(wr::DisplayListBuilder& aBuilder,
+                   const LayoutDeviceRect& bounds) {
+    wr::LayoutRect dest = wr::ToLayoutRect(bounds);
+    GP("PushHitTest: %f %f %f %f\n", dest.min.x, dest.min.y, dest.max.x,
+       dest.max.y);
+
     // We don't really know the exact shape of this blob because it may contain
     // SVG shapes. Also mHitInfo may be a combination of hit info flags from
     // different shapes so generate an irregular-area hit-test region for it.
@@ -731,28 +767,26 @@ struct DIGroup {
       hitInfo += CompositorHitTestFlags::eIrregularArea;
     }
 
-    // XXX - clipping the item against the paint rect breaks some content.
-    // cf. Bug 1455422.
-    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
-
+    bool backfaceHidden = false;
     aBuilder.PushHitTest(dest, dest, !backfaceHidden, mScrollId, hitInfo,
                          SideBits::eNone);
-
-    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
-                       wr::AsImageKey(*mKey));
   }
 
-  void PaintItemRange(Grouper* aGrouper, nsDisplayList::Iterator aIter,
-                      gfxContext* aContext,
+  void PaintItemRange(Grouper* aGrouper, nsDisplayList::iterator aStartItem,
+                      nsDisplayList::iterator aEndItem, gfxContext* aContext,
                       WebRenderDrawEventRecorder* aRecorder,
                       RenderRootStateManager* aRootManager,
                       wr::IpcResourceUpdateQueue& aResources) {
     LayerIntSize size = mVisibleRect.Size();
-    while (aIter.HasNext()) {
-      nsDisplayItem* item = aIter.GetNext();
+    for (auto it = aStartItem; it != aEndItem; ++it) {
+      nsDisplayItem* item = *it;
       MOZ_ASSERT(item);
 
       BlobItemData* data = GetBlobItemData(item);
+      if (data->mInvisible) {
+        continue;
+      }
+
       LayerIntRect bounds = data->mRect;
       auto bottomRight = bounds.BottomRight();
 
@@ -918,7 +952,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         aContext->Multiply(ThebesMatrix(trans2d));
-        aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
+        aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                                aContext, aRecorder, aRootManager, aResources);
       }
 
@@ -941,8 +975,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -958,8 +992,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -972,8 +1006,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -992,7 +1026,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
               GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
                  aItem->GetPerFrameKey());
               aContext->GetDrawTarget()->FlushItem(aItemBounds);
-              aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
+              aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                                      aContext, aRecorder, aRootManager,
                                      aResources);
               GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -1030,8 +1064,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     }
 
     default:
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       break;
   }
 }
@@ -1151,19 +1185,27 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                               wr::DisplayListBuilder& aBuilder,
                               wr::IpcResourceUpdateQueue& aResources,
                               DIGroup* aGroup, nsDisplayList* aList,
+                              nsDisplayItem* aWrappingItem,
                               const StackingContextHelper& aSc) {
   RenderRootStateManager* manager =
       aCommandBuilder->mManager->GetRenderRootStateManager();
 
-  nsDisplayItem* startOfCurrentGroup = nullptr;
+  nsDisplayList::iterator startOfCurrentGroup = aList->end();
   DIGroup* currentGroup = aGroup;
 
   // We need to track whether we have active siblings for mixed blend mode.
   bool encounteredActiveItem = false;
+  bool isFirstGroup = true;
 
-  for (nsDisplayItem* item : *aList) {
-    if (!startOfCurrentGroup) {
-      startOfCurrentGroup = item;
+  for (auto it = aList->begin(); it != aList->end(); ++it) {
+    nsDisplayItem* item = *it;
+    MOZ_ASSERT(item);
+
+    if (startOfCurrentGroup == aList->end()) {
+      startOfCurrentGroup = it;
+      if (!isFirstGroup) {
+        mClipManager.SwitchItem(aDisplayListBuilder, aWrappingItem);
+      }
     }
 
     if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
@@ -1215,10 +1257,11 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
           groupData->mFollowingGroup.mVisibleRect.Intersect(
               groupData->mFollowingGroup.mLastVisibleRect);
       groupData->mFollowingGroup.mActualBounds = LayerIntRect();
+      groupData->mFollowingGroup.mHitTestBounds = LayerIntRect();
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
-                             item);
+                             it);
 
       {
         auto spaceAndClipChain =
@@ -1238,7 +1281,8 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent--;
       }
 
-      startOfCurrentGroup = nullptr;
+      isFirstGroup = false;
+      startOfCurrentGroup = aList->end();
       currentGroup = &groupData->mFollowingGroup;
     } else {  // inactive item
       ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
@@ -1248,7 +1292,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
   currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                          aBuilder, aResources, this, startOfCurrentGroup,
-                         nullptr);
+                         aList->end());
 }
 
 // This does a pass over the display lists and will join the display items
@@ -1276,6 +1320,7 @@ bool Grouper::ConstructItemInsideInactive(
    * set it to 'true' we ensure that we're not using the value from the last
    * time that we painted */
   data->mInvalid = false;
+  data->mInvisible = aItem->IsInvisible();
 
   // we compute the geometry change here because we have the transform around
   // still
@@ -1493,6 +1538,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mLayerBounds = layerBounds;
   group.mVisibleRect = visibleRect;
   group.mActualBounds = LayerIntRect();
+  group.mHitTestBounds = LayerIntRect();
   group.mPreservedRect = group.mVisibleRect.Intersect(group.mLastVisibleRect);
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mClippedImageBounds = layerBounds;
@@ -1502,7 +1548,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mScale = scale;
   group.mScrollId = scrollId;
   g.ConstructGroups(aDisplayListBuilder, this, aBuilder, aResources, &group,
-                    aList, aSc);
+                    aList, aWrappingItem, aSc);
   mClipManager.EndList(aSc);
 }
 
@@ -1517,7 +1563,6 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
 
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   ClearCachedResources();
 }
 
@@ -1529,14 +1574,10 @@ void WebRenderCommandBuilder::EmptyTransaction() {
       canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
-  for (RefPtr<WebRenderLocalCanvasData> canvasData : mLastLocalCanvasDatas) {
-    canvasData->RefreshExternalImage();
-    canvasData->RequestFrameReadback();
-  }
 }
 
 bool WebRenderCommandBuilder::NeedsEmptyTransaction() {
-  return !mLastCanvasDatas.IsEmpty() || !mLastLocalCanvasDatas.IsEmpty();
+  return !mLastCanvasDatas.IsEmpty();
 }
 
 void WebRenderCommandBuilder::BuildWebRenderCommands(
@@ -1554,7 +1595,6 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   mBuilderDumpIndex = 0;
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
@@ -2025,7 +2065,8 @@ bool WebRenderCommandBuilder::PushImage(
 
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), false, rendering,
+                     key.value());
 
   return true;
 }
@@ -2051,12 +2092,33 @@ bool WebRenderCommandBuilder::PushImageProvider(
     return false;
   }
 
+  bool antialiased = aItem->GetType() == DisplayItemType::TYPE_SVG_GEOMETRY;
+
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), antialiased, rendering,
+                     key.value());
 
   return true;
+}
+
+void WebRenderCommandBuilder::PushInProcessImage(
+    nsDisplayItem* aItem, const CompositableHandle& aHandle,
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    const LayoutDeviceRect& aAsyncImageBounds) {
+  RefPtr<WebRenderInProcessImageData> imageData =
+      CreateOrRecycleWebRenderUserData<WebRenderInProcessImageData>(aItem);
+  MOZ_ASSERT(imageData);
+
+  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+  LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), aAsyncImageBounds.Size());
+  imageData->CreateWebRenderCommands(aBuilder, aHandle, aSc, aAsyncImageBounds,
+                                     scBounds, VideoInfo::Rotation::kDegree_0,
+                                     rendering, wr::MixBlendMode::Normal,
+                                     !aItem->BackfaceIsHidden());
 }
 
 static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
@@ -2334,8 +2396,8 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 aStream.write((const char*)&count, sizeof(count));
                 for (auto& scaled : aScaledFonts) {
                   Maybe<wr::FontInstanceKey> key =
-                      mManager->WrBridge()->GetFontKeyForScaledFont(
-                          scaled, &aResources);
+                      mManager->WrBridge()->GetFontKeyForScaledFont(scaled,
+                                                                    aResources);
                   if (key.isNothing()) {
                     validFonts = false;
                     break;
@@ -2538,7 +2600,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
               for (auto& scaled : aScaledFonts) {
                 Maybe<wr::FontInstanceKey> key =
                     mManager->WrBridge()->GetFontKeyForScaledFont(scaled,
-                                                                  &aResources);
+                                                                  aResources);
                 if (key.isNothing()) {
                   validFonts = false;
                   break;
@@ -2648,7 +2710,7 @@ bool WebRenderCommandBuilder::PushItemAsImage(
 
   wr::LayoutRect dest = wr::ToLayoutRect(imageRect);
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), rendering,
+  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), false, rendering,
                      fallbackData->GetImageKey().value());
   return true;
 }
@@ -2676,9 +2738,6 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
       switch (data->GetType()) {
         case WebRenderUserData::UserDataType::eCanvas:
           mLastCanvasDatas.Remove(data->AsCanvasData());
-          break;
-        case WebRenderUserData::UserDataType::eLocalCanvas:
-          mLastLocalCanvasDatas.Remove(data->AsLocalCanvasData());
           break;
         case WebRenderUserData::UserDataType::eAnimation:
           EffectCompositor::ClearIsRunningOnCompositor(

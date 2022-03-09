@@ -22,32 +22,33 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
       const LayersId& aLayersId, Endpoint<PAPZInputBridgeParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvReceiveMultiTouchInputEvent(
-      const MultiTouchInput& aEvent, APZEventResult* aOutResult,
-      MultiTouchInput* aOutEvent);
+      const MultiTouchInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, MultiTouchInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveMouseInputEvent(const MouseInput& aEvent,
+                                                     bool aWantsCallback,
                                                      APZEventResult* aOutResult,
                                                      MouseInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceivePanGestureInputEvent(
-      const PanGestureInput& aEvent, APZEventResult* aOutResult,
-      PanGestureInput* aOutEvent);
+      const PanGestureInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, PanGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceivePinchGestureInputEvent(
-      const PinchGestureInput& aEvent, APZEventResult* aOutResult,
-      PinchGestureInput* aOutEvent);
+      const PinchGestureInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, PinchGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveTapGestureInputEvent(
-      const TapGestureInput& aEvent, APZEventResult* aOutResult,
-      TapGestureInput* aOutEvent);
+      const TapGestureInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, TapGestureInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveScrollWheelInputEvent(
-      const ScrollWheelInput& aEvent, APZEventResult* aOutResult,
-      ScrollWheelInput* aOutEvent);
+      const ScrollWheelInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, ScrollWheelInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvReceiveKeyboardInputEvent(
-      const KeyboardInput& aEvent, APZEventResult* aOutResult,
-      KeyboardInput* aOutEvent);
+      const KeyboardInput& aEvent, bool aWantsCallback,
+      APZEventResult* aOutResult, KeyboardInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvUpdateWheelTransaction(
       const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage,

@@ -79,60 +79,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ 560:
+/***/ 1059:
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const networkRequest = __webpack_require__(567);
 
-const workerUtils = __webpack_require__(568);
 
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 567:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      if (res.headers.get("Content-Type") === "application/wasm") {
-        return res.arrayBuffer().then(buffer => ({
-          content: buffer,
-          isDwarf: true
-        }));
-      }
-
-      return res.text().then(text => ({
-        content: text
-      }));
-    }
-
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-
-/***/ 568:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function WorkerDispatcher() {
   this.msgId = 1;
   this.worker = null; // Map of message ids -> promise resolution functions, for dispatching worker responses
@@ -290,12 +245,15 @@ function asErrorMessage(error) {
     message: error == null ? error : error.toString(),
     metadata: undefined
   };
-}
+} // Might be loaded within a worker thread where `module` isn't available.
 
-module.exports = {
-  WorkerDispatcher,
-  workerHandler
-};
+
+if (true) {
+  module.exports = {
+    WorkerDispatcher,
+    workerHandler
+  };
+}
 
 /***/ }),
 
@@ -568,17 +526,14 @@ var _getMatches = _interopRequireDefault(__webpack_require__(701));
 
 var _projectSearch = __webpack_require__(909);
 
-var _devtoolsUtils = __webpack_require__(560);
+var _workerUtils = __webpack_require__(1059);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const {
-  workerHandler
-} = _devtoolsUtils.workerUtils;
-self.onmessage = workerHandler({
+self.onmessage = (0, _workerUtils.workerHandler)({
   getMatches: _getMatches.default,
   findSourceMatches: _projectSearch.findSourceMatches
 });

@@ -273,8 +273,6 @@ add_task(async function test_download_preferred_action() {
   for (const file of FILE_TYPES_TO_TEST) {
     // The CD header specifies the download file extension on download
     let fileNoHeader = file;
-    // Disabling eslint for structuredClone use, see Bug 1745030
-    // eslint-disable-next-line no-undef
     let fileWithHeader = structuredClone(file);
     fileWithHeader.url += "&withHeader";
     for (const action of PREFERRED_ACTIONS) {
@@ -282,7 +280,6 @@ add_task(async function test_download_preferred_action() {
       await createDownloadTest(
         downloadList,
         localHandlerApp,
-        // eslint-disable-next-line no-undef
         structuredClone(fileWithHeader),
         action,
         true
@@ -290,7 +287,6 @@ add_task(async function test_download_preferred_action() {
       await createDownloadTest(
         downloadList,
         localHandlerApp,
-        // eslint-disable-next-line no-undef
         structuredClone(fileNoHeader),
         action,
         false

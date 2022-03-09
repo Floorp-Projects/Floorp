@@ -4,6 +4,7 @@
 
 
 import os
+from taskgraph.util import taskcluster as tc_util
 
 GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
 
@@ -12,6 +13,10 @@ GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..
 # specifies 100, but we also optionally add the decision task id as a dep in
 # taskgraph.create, so let's set this to 99.
 MAX_DEPENDENCIES = 99
+
+# Default rootUrl to use if none is given in the environment; this should point
+# to the production Taskcluster deployment used for CI.
+tc_util.PRODUCTION_TASKCLUSTER_ROOT_URL = "https://firefox-ci-tc.services.mozilla.com"
 
 # Enable fast task generation for local debugging
 # This is normally switched on via the --fast/-F flag to `mach taskgraph`

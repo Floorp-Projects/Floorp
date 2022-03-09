@@ -32,6 +32,7 @@
 #include "nsIURIMutator.h"
 #include "mozilla/StaticPrefs_permissions.h"
 #include "nsIURIMutator.h"
+#include "nsMixedContentBlocker.h"
 #include "prnetdb.h"
 #include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
@@ -658,19 +659,23 @@ BasePrincipal::IsThirdPartyChannel(nsIChannel* aChan, bool* aRes) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
+BasePrincipal::IsSameOrigin(nsIURI* aURI, bool* aRes) {
   *aRes = false;
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
   if (NS_FAILED(rv) || !prinURI) {
+    // Note that expanded and system principals return here, because they have
+    // no URI.
     return NS_OK;
   }
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_OK;
   }
+  bool reportError = false;
+  bool isPrivateWindow = false;  // Only used for error reporting.
   *aRes = NS_SUCCEEDED(
-      ssm->CheckSameOriginURI(prinURI, aURI, false, aIsPrivateWin));
+      ssm->CheckSameOriginURI(prinURI, aURI, reportError, isPrivateWindow));
   return NS_OK;
 }
 
@@ -1110,6 +1115,13 @@ nsIPrincipal* BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
     return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI);
   }
   return this;
+}
+
+bool BasePrincipal::IsLoopbackHost() {
+  nsAutoCString host;
+  nsresult rv = GetHost(host);
+  NS_ENSURE_SUCCESS(rv, false);
+  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host);
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(

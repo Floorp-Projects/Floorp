@@ -220,21 +220,18 @@ function getExpectedExistingConsoleCalls(documentFilename) {
     {
       level: "log",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-log", { type: "undefined" }],
     },
     {
       level: "info",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-info", { type: "null" }],
     },
     {
       level: "warn",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
     },
@@ -256,7 +253,6 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "log",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-log", { type: "undefined" }],
     },
@@ -275,28 +271,24 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "info",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-info", { type: "null" }],
     },
     {
       level: "warn",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
     },
     {
       level: "debug",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: [{ type: "null" }],
     },
     {
       level: "trace",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       stacktrace: [
         {
@@ -309,7 +301,6 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "dir",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: [
         {
@@ -327,7 +318,6 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "log",
       filename: documentFilename,
-      functionName: EXPECTED_FUNCTION_NAME,
       timeStamp: NUMBER_REGEX,
       arguments: [
         "foo",
@@ -345,7 +335,6 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "error",
       filename: documentFilename,
-      functionName: "fromAsmJS",
       timeStamp: NUMBER_REGEX,
       arguments: ["foobarBaz-asmjs-error", { type: "undefined" }],
 
@@ -372,7 +361,6 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       level: "log",
       filename: gTestPath,
-      functionName: "frameScript",
       timeStamp: NUMBER_REGEX,
       arguments: [
         {

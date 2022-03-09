@@ -16,14 +16,11 @@ if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
         "nsPrintingProxy.cpp",
         "PrintingParent.cpp",
-        "PrintSettingsDialogChild.cpp",
-        "PrintSettingsDialogParent.cpp",
     ]
 
 IPDL_SOURCES += [
     "PPrinting.ipdl",
     "PPrintingTypes.ipdlh",
-    "PPrintSettingsDialog.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

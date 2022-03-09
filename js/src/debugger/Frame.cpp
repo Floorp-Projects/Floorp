@@ -1670,7 +1670,7 @@ DebuggerArguments* DebuggerArguments::create(JSContext* cx, HandleObject proto,
     if (!getobj) {
       return nullptr;
     }
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!NativeDefineAccessorProperty(cx, obj, id, getobj, nullptr,
                                       JSPROP_ENUMERATE)) {
       return nullptr;
@@ -1921,29 +1921,38 @@ const JSFunctionSpec DebuggerFrame::methods_[] = {
     JS_DEBUG_FN("eval", evalMethod, 1),
     JS_DEBUG_FN("evalWithBindings", evalWithBindingsMethod, 1), JS_FS_END};
 
-JSObject* js::IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
-  Rooted<ValueVector> vals(cx, ValueVector(cx));
-  if (!vals.growBy(ids.length())) {
+JSObject* js::IdVectorToArray(JSContext* cx, HandleIdVector ids) {
+  if (MOZ_UNLIKELY(ids.length() > UINT32_MAX)) {
+    ReportAllocationOverflow(cx);
     return nullptr;
   }
 
+  Rooted<ArrayObject*> arr(cx, NewDenseFullyAllocatedArray(cx, ids.length()));
+  if (!arr) {
+    return nullptr;
+  }
+
+  arr->ensureDenseInitializedLength(0, ids.length());
+
   for (size_t i = 0, len = ids.length(); i < len; i++) {
     jsid id = ids[i];
+    Value v;
     if (id.isInt()) {
       JSString* str = Int32ToString<CanGC>(cx, id.toInt());
       if (!str) {
         return nullptr;
       }
-      vals[i].setString(str);
+      v = StringValue(str);
     } else if (id.isAtom()) {
-      vals[i].setString(id.toAtom());
+      v = StringValue(id.toAtom());
     } else if (id.isSymbol()) {
-      vals[i].setSymbol(id.toSymbol());
+      v = SymbolValue(id.toSymbol());
     } else {
-      MOZ_ASSERT_UNREACHABLE(
-          "IdVector must contain only string, int, and Symbol jsids");
+      MOZ_CRASH("IdVector must contain only string, int, and Symbol jsids");
     }
+
+    arr->initDenseElement(i, v);
   }
 
-  return NewDenseCopiedArray(cx, vals.length(), vals.begin());
+  return arr;
 }

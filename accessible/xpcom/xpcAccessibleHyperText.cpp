@@ -307,15 +307,14 @@ xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aSelectionCount = IntlLocal()->SelectionCount();
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aSelectionCount = mIntl->AsRemote()->SelectionCount();
-#endif
   }
+#endif
+
+  *aSelectionCount = Intl()->SelectionCount();
   return NS_OK;
 }
 
@@ -331,12 +330,13 @@ xpcAccessibleHyperText::GetSelectionBounds(int32_t aSelectionNum,
 
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
-  if (mIntl->IsLocal()) {
-    if (aSelectionNum >= IntlLocal()->SelectionCount()) {
+  if (mIntl->IsLocal() ||
+      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (aSelectionNum >= Intl()->SelectionCount()) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    IntlLocal()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+    Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -437,12 +437,12 @@ xpcAccessibleHyperText::GetEnclosingRange(nsIAccessibleTextRange** aRange) {
 
   if (!IntlLocal()) return NS_ERROR_FAILURE;
 
-  RefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-  IntlLocal()->EnclosingRange(range->mRange);
-  NS_ASSERTION(range->mRange.IsValid(),
-               "Should always have an enclosing range!");
+  TextRange range;
+  IntlLocal()->EnclosingRange(range);
+  NS_ASSERTION(range.IsValid(), "Should always have an enclosing range!");
+  RefPtr<xpcAccessibleTextRange> xpcRange = new xpcAccessibleTextRange(range);
 
-  range.forget(aRange);
+  xpcRange.forget(aRange);
 
   return NS_OK;
 }
@@ -452,7 +452,9 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
 
-  if (!IntlLocal()) return NS_ERROR_FAILURE;
+  if (!IntlLocal() && !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> xpcRanges =
@@ -460,11 +462,10 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   AutoTArray<TextRange, 1> ranges;
-  IntlLocal()->SelectionRanges(&ranges);
+  Intl()->SelectionRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++) {
-    xpcRanges->AppendElement(
-        new xpcAccessibleTextRange(std::move(ranges[idx])));
+    xpcRanges->AppendElement(new xpcAccessibleTextRange(ranges[idx]));
   }
 
   xpcRanges.forget(aRanges);
@@ -487,8 +488,7 @@ xpcAccessibleHyperText::GetVisibleRanges(nsIArray** aRanges) {
   IntlLocal()->VisibleRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++) {
-    xpcRanges->AppendElement(
-        new xpcAccessibleTextRange(std::move(ranges[idx])));
+    xpcRanges->AppendElement(new xpcAccessibleTextRange(ranges[idx]));
   }
 
   xpcRanges.forget(aRanges);
@@ -505,9 +505,13 @@ xpcAccessibleHyperText::GetRangeByChild(nsIAccessible* aChild,
 
   LocalAccessible* child = aChild->ToInternalAccessible();
   if (child) {
-    RefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-    IntlLocal()->RangeByChild(child, range->mRange);
-    if (range->mRange.IsValid()) range.forget(aRange);
+    TextRange range;
+    IntlLocal()->RangeByChild(child, range);
+    if (range.IsValid()) {
+      RefPtr<xpcAccessibleTextRange> xpcRange =
+          new xpcAccessibleTextRange(range);
+      xpcRange.forget(aRange);
+    }
   }
 
   return NS_OK;
@@ -521,9 +525,12 @@ xpcAccessibleHyperText::GetRangeAtPoint(int32_t aX, int32_t aY,
 
   if (!IntlLocal()) return NS_ERROR_FAILURE;
 
-  RefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-  IntlLocal()->RangeAtPoint(aX, aY, range->mRange);
-  if (range->mRange.IsValid()) range.forget(aRange);
+  TextRange range;
+  IntlLocal()->RangeAtPoint(aX, aY, range);
+  if (range.IsValid()) {
+    RefPtr<xpcAccessibleTextRange> xpcRange = new xpcAccessibleTextRange(range);
+    xpcRange.forget(aRange);
+  }
 
   return NS_OK;
 }

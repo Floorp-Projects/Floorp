@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-"use strict";
-
 /*
  * Test loading inline scripts from cache:
  *   - Load document with inline script
  *   - Reload inside debugger with toolbox caching disabled
  *   - Reload inside debugger with toolbox caching enabled
  */
+
+"use strict";
 
 // Breakpoint position calculations can throw when interrupted by a navigation.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Resource .*? does not exist/);

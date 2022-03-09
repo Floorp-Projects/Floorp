@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
 #include "mozilla/Services.h"
@@ -30,9 +29,7 @@
 #include "nsIXULAppInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
@@ -236,6 +233,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
       break;
     case nsIGfxInfo::FEATURE_DMABUF:
       name = BLOCKLIST_PREF_BRANCH "dmabuf";
+      break;
+    case nsIGfxInfo::FEATURE_VAAPI:
+      name = BLOCKLIST_PREF_BRANCH "vaapi";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
       name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
@@ -488,6 +488,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("DMABUF")) {
     return nsIGfxInfo::FEATURE_DMABUF;
+  }
+  if (aFeature.EqualsLiteral("VAAPI")) {
+    return nsIGfxInfo::FEATURE_VAAPI;
   }
   if (aFeature.EqualsLiteral("WEBRENDER_PARTIAL_PRESENT")) {
     return nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT;
@@ -1373,6 +1376,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
                         nsIGfxInfo::FEATURE_X11_EGL,
                         nsIGfxInfo::FEATURE_DMABUF,
+                        nsIGfxInfo::FEATURE_VAAPI,
                         nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
                         0};
 
@@ -1888,29 +1892,6 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
   }
 
   *_retval = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfoBase::EnsureGPUProcessReadyForTests(JSContext* cx,
-                                           dom::Promise** aPromise) {
-  GPUProcessManager* gpm = GPUProcessManager::Get();
-  if (!gpm) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise =
-      dom::Promise::Create(xpc::CurrentNativeGlobal(cx), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "GfxInfoBase::EnsureGPUProcessReadyForTests",
-      [promise, gpm]() { promise->MaybeResolve(gpm->EnsureGPUReady()); }));
-
-  promise.forget(aPromise);
   return NS_OK;
 }
 

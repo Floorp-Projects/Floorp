@@ -14,7 +14,7 @@ add_task(async function() {
   const { document: doc, store } = flexboxInspector;
 
   info("Select a flex item whose basis size matches its final size.");
-  let onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
+  let onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
   await selectNode(".item", inspector);
   await onUpdate;
 
@@ -25,7 +25,7 @@ add_task(async function() {
   ok(basisFinalPoint, "The basis/final point exists");
 
   info("Select a flex item whose basis size is different than its final size.");
-  onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
+  onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
   await selectNode(".shrinking .item", inspector);
   await onUpdate;
 

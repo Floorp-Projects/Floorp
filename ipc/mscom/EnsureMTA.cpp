@@ -234,6 +234,7 @@ void EnsureMTA::SyncDispatchToPersistentThread(nsIRunnable* aRunnable) {
   const BOOL alertable = FALSE;
 #endif  // defined(ACCESSIBILITY)
 
+  AUTO_PROFILER_THREAD_SLEEP;
   DWORD waitResult;
   while ((waitResult = ::WaitForSingleObjectEx(event, INFINITE, alertable)) ==
          WAIT_IO_COMPLETION) {

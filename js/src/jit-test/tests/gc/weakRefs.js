@@ -8,72 +8,108 @@
 // dead) is kept alive so that subsequent, synchronous accesses also return the
 // object.
 
-let wr;
-{
-  let obj = {};
-  wr = new WeakRef(obj);
-  obj = null;
-}
-// obj is out of block scope now, should be GCed.
+function testSameZoneWeakRef(
+  targetReachable,
+  weakRefReachable) {
 
-gc();
+  let target = {};
 
-assertEq(undefined == wr.deref(), false);
+  let weakref = new WeakRef(target);
+  assertEq(weakref.deref(), target);
 
-// test for target is in another zone.
-var g = newGlobal({newCompartment: true});
-var wr2 = new g.WeakRef({});
-assertEq(undefined == wr2.deref(), false);
+  if (!targetReachable) {
+    target = undefined;
+  }
 
-let wr3 = g.eval("new WeakRef({})");
-let wr4 = new WeakRef(evalcx('({})', newGlobal({newCompartment: true})));
-let wr5 = new g.WeakRef(evalcx('({})', newGlobal({newCompartment: true})));
+  if (!weakRefReachable) {
+    weakRef = undefined;
+  }
 
-var that = this;
-(function(){
-  let wr6 = new g.WeakRef(newGlobal({newCompartment: true}));
-  let wr7 = new WeakRef(wr6);
-  let wr8 = new WeakRef(that);
-  wr6 = null;
-  wr7 = null;
-  wr8 = null;
-})();
-
-gc();
-
-let wr1;
-// Allocate the object in the function to prevent marked as a singleton so the
-// object won't be kept alive by IC stub.
-function allocObj() { return {}; }
-
-(function () {
-  let obj = allocObj();
-  wr1 = new WeakRef(obj);
-  obj = null;
-})();
-
-assertEq(undefined === wr1.deref(), false);
-
-gc();
-
-// See https://tc39.es/proposal-weakrefs/#sec-weakref-invariants
-// This list is reset when synchronous work is done using the
-// ClearKeptObjects abstract operation.
-//
-// TODO:
-// Bug 1603070: The shell has no way to start a new task.
-//
-// In shell, there's no window object hence there isn't a setTimeout nor event
-// handler, so we use this function to simulate that.
-// The timeout function in shell doesn't launch a new job, and it will cause
-// this test file timeout so I didn't use it here.
-function simulateEndOfJob(fn) {
   clearKeptObjects();
   gc();
-  fn();
+
+  if (weakRefReachable) {
+    if (targetReachable) {
+      assertEq(weakref.deref(), target);
+    } else {
+      assertEq(weakref.deref(), undefined);
+    }
+  }
 }
 
-simulateEndOfJob(() => {
-  assertEq(undefined, wr1.deref());
-});
+let serial = 0;
 
+function testCrossZoneWeakRef(
+  targetReachable,
+  weakRefReachable,
+  collectTargetZone,
+  collectWeakRefZone) {
+
+  gc();
+
+  let id = serial++;
+  let global = newGlobal({newCompartment: true});
+  global.eval('var target = {};');
+  global.target.id = id;
+
+  let weakref = new WeakRef(global.target);
+  assertEq(weakref.deref(), global.target);
+
+  if (!targetReachable) {
+    global.target = undefined;
+  }
+
+  if (!weakRefReachable) {
+    weakRef = undefined;
+  }
+
+  if (collectTargetZone || collectWeakRefZone) {
+    clearKeptObjects();
+
+    if (collectTargetZone) {
+      schedulezone(global);
+    }
+    if (collectWeakRefZone) {
+      schedulezone(this);
+    }
+
+    // Incremental GC so we use sweep groups. Shrinking GC to test updating
+    // pointers.
+    startgc(1, 'shrinking');
+    while (gcstate() !== 'NotActive') {
+      gcslice(1000, {dontStart: true});
+    }
+  }
+
+  if (!(collectWeakRefZone && !weakRefReachable)) {
+    if (collectTargetZone && !targetReachable) {
+      assertEq(weakref.deref(), undefined);
+    } else if (targetReachable) {
+      assertEq(weakref.deref(), global.target);
+    } else {
+      // Target is not strongly reachable but hasn't been collected yet. We
+      // can get it back through deref() but must check it based on properties.
+      assertEq(weakref.deref() !== undefined, true);
+      assertEq(weakref.deref().id, id);
+    }
+  }
+}
+
+gczeal(0);
+
+for (let targetReachable of [true, false]) {
+  for (let weakRefReachable of [true, false]) {
+    testSameZoneWeakRef(targetReachable, weakRefReachable);
+  }
+}
+
+for (let targetReachable of [true, false]) {
+  for (let weakRefReachable of [true, false]) {
+    for (let collectTargetZone of [true, false]) {
+      for (let collectWeakRefZone of [true, false]) {
+            testCrossZoneWeakRef(targetReachable, weakRefReachable,
+                                 collectTargetZone, collectWeakRefZone);
+      }
+    }
+  }
+}

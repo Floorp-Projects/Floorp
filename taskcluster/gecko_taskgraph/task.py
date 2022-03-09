@@ -41,20 +41,9 @@ class Task:
     dependencies = attr.ib(factory=dict)
     soft_dependencies = attr.ib(factory=list)
     if_dependencies = attr.ib(factory=list)
-    release_artifacts = attr.ib(
-        converter=attr.converters.optional(frozenset),
-        default=None,
-    )
 
     def __attrs_post_init__(self):
         self.attributes["kind"] = self.kind
-
-    @property
-    def name(self):
-        if self.label.startswith(self.kind + "-"):
-            return self.label[len(self.kind) + 1 :]
-        else:
-            raise AttributeError(f"Task {self.label} does not have a name.")
 
     def to_json(self):
         rv = {
@@ -70,8 +59,6 @@ class Task:
         }
         if self.task_id:
             rv["task_id"] = self.task_id
-        if self.release_artifacts:
-            rv["release_artifacts"] = sorted(self.release_artifacts)
         return rv
 
     @classmethod
@@ -91,7 +78,6 @@ class Task:
             dependencies=task_dict.get("dependencies"),
             soft_dependencies=task_dict.get("soft_dependencies"),
             if_dependencies=task_dict.get("if_dependencies"),
-            release_artifacts=task_dict.get("release-artifacts"),
         )
         if "task_id" in task_dict:
             rv.task_id = task_dict["task_id"]

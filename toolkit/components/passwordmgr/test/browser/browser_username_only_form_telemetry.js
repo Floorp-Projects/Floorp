@@ -71,9 +71,11 @@ async function checkChildHistogram(id, index, expected) {
 }
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["signon.usernameOnlyForm.enabled", true],
+      ["signon.usernameOnlyForm.lookupThreshold", 100], // ignore the threshold in test
+    ],
   });
 
   // Wait 1sec to make sure all the telemetry data recorded prior to the beginning of the

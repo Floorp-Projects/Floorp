@@ -163,6 +163,20 @@ addAccessibleTask(
     acc = findAccessibleChildByID(docAcc, "onclick_img");
     await untilCacheIs(() => acc.actionCount, 1, "img has 1 actions");
     await _testActions("onclick_img", ["showlongdesc"]);
+
+    // Remove 'href' from link and test linkable child
+    acc = findAccessibleChildByID(docAcc, "link1");
+    is(
+      acc.firstChild.getActionName(0),
+      "jump",
+      "linkable child has jump action"
+    );
+    await invokeContentTask(browser, [], () => {
+      let link1 = content.document.getElementById("link1");
+      link1.removeAttribute("href");
+    });
+    await untilCacheIs(() => acc.actionCount, 0, "link has no actions");
+    is(acc.firstChild.actionCount, 0, "linkable child's actions removed");
   },
   {
     chrome: true,

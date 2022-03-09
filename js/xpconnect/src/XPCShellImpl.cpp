@@ -46,8 +46,8 @@
 
 #include "nsIXULRuntime.h"
 #include "nsIAppStartup.h"
-#include "GeckoProfiler.h"
 #include "Components.h"
+#include "ProfilerControl.h"
 
 #ifdef ANDROID
 #  include <android/log.h>
@@ -1318,7 +1318,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     // Ensure that DLL Services are running
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->StartUntrustedModulesProcessor();
+    dllSvc->StartUntrustedModulesProcessor(true);
     auto dllServicesDisable =
         MakeScopeExit([&dllSvc]() { dllSvc->DisableFull(); });
 

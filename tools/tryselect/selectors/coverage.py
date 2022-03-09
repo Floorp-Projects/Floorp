@@ -390,7 +390,8 @@ def run(
     try_config={},
     full=False,
     parameters=None,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     message="{msg}",
     closed_tree=False,
 ):
@@ -441,6 +442,7 @@ def run(
         "coverage",
         message.format(msg=msg),
         try_task_config=generate_try_task_config("coverage", tasks, try_config),
-        push=push,
+        stage_changes=stage_changes,
+        dry_run=dry_run,
         closed_tree=closed_tree,
     )

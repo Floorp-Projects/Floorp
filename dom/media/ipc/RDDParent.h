@@ -29,7 +29,8 @@ class RDDParent final : public PRDDParent {
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const Maybe<ipc::FileDescriptor>& aBrokerFd,
-                                   const bool& aCanRecordReleaseTelemetry);
+                                   const bool& aCanRecordReleaseTelemetry,
+                                   const bool& aIsReadyForBackgroundProcessing);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
@@ -47,6 +48,7 @@ class RDDParent final : public PRDDParent {
 #if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref);

@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <linux/rtnetlink.h>
 
+#include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "NetlinkService.h"
@@ -1199,7 +1200,10 @@ NetlinkService::Run() {
       }
     }
 
-    int rc = EINTR_RETRY(poll(fds, 2, GetPollWait()));
+    int rc = eintr_retry([&]() {
+      AUTO_PROFILER_THREAD_SLEEP;
+      return poll(fds, 2, GetPollWait());
+    });
 
     if (rc > 0) {
       if (fds[0].revents & POLLIN) {

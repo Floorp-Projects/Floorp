@@ -213,6 +213,8 @@ function isToolbarVisible(aToolbar) {
  *        The URL of the dialog.
  * @param {boolean} [skipOverlayWait]
  *        Avoid waiting for the overlay.
+ * @returns {string} guid
+ *          Bookmark guid
  */
 var withBookmarksDialog = async function(
   autoCancel,
@@ -295,7 +297,7 @@ var withBookmarksDialog = async function(
   if (closeFn) {
     closePromise = closeFn(dialogWin);
   }
-
+  let guid;
   try {
     await taskFn(dialogWin);
   } finally {
@@ -304,9 +306,11 @@ var withBookmarksDialog = async function(
       doc.getElementById("bookmarkpropertiesdialog").cancelDialog();
       await closePromise;
     }
+    guid = await PlacesUIUtils.lastBookmarkDialogDeferred.promise;
     // Give the dialog a little time to close itself.
     await dialogClosePromise;
   }
+  return guid;
 };
 
 /**

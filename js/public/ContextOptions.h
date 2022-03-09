@@ -49,16 +49,12 @@ class JS_PUBLIC_API ContextOptions {
         trySmoosh_(false),
 #endif
         fuzzing_(false),
-        privateClassFields_(false),
-        privateClassMethods_(false),
 #ifdef NIGHTLY_BUILD
         arrayGrouping_(true),
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
 #endif
-        ergonomicBrandChecks_(false),
-        classStaticBlocks_(false),
         importAssertions_(false) {
   }
   // clang-format on
@@ -151,24 +147,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool privateClassFields() const { return privateClassFields_; }
-  ContextOptions& setPrivateClassFields(bool enabled) {
-    privateClassFields_ = enabled;
-    return *this;
-  }
-
-  bool privateClassMethods() const { return privateClassMethods_; }
-  ContextOptions& setPrivateClassMethods(bool enabled) {
-    privateClassMethods_ = enabled;
-    return *this;
-  }
-
-  bool ergonomicBrandChecks() const { return ergonomicBrandChecks_; }
-  ContextOptions& setErgnomicBrandChecks(bool enabled) {
-    ergonomicBrandChecks_ = enabled;
-    return *this;
-  }
-
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping() const { return arrayGrouping_; }
   ContextOptions& setArrayGrouping(bool enabled) {
@@ -184,12 +162,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 #endif
-
-  bool classStaticBlocks() const { return classStaticBlocks_; }
-  ContextOptions& setClassStaticBlocks(bool enabled) {
-    classStaticBlocks_ = enabled;
-    return *this;
-  }
 
   bool importAssertions() const { return importAssertions_; }
   ContextOptions& setImportAssertions(bool enabled) {
@@ -304,16 +276,12 @@ class JS_PUBLIC_API ContextOptions {
   bool trySmoosh_ : 1;
 #endif
   bool fuzzing_ : 1;
-  bool privateClassFields_ : 1;
-  bool privateClassMethods_ : 1;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ : 1;
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ : 1;
 #endif
-  bool ergonomicBrandChecks_ : 1;
-  bool classStaticBlocks_ : 1;
   bool importAssertions_ : 1;
 };
 

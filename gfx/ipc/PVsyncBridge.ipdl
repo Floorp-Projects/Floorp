@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "mozilla/layers/LayersMessageUtils.h";
+
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::VsyncEvent from "mozilla/VsyncDispatcher.h";
@@ -14,7 +16,7 @@ namespace gfx {
 // dedicated thread in the UI process to the compositor thread in the
 // compositor process. The child side exists in the UI process, and the
 // parent side in the GPU process.
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid]
 sync protocol PVsyncBridge
 {
 parent:

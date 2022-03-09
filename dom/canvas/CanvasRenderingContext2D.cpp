@@ -39,7 +39,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
 #include "nsFocusManager.h"
-#include "nsContentUtils.h"
 
 #include "nsTArray.h"
 
@@ -89,7 +88,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FilterInstance.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -118,7 +116,6 @@
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
 #include "Units.h"
-#include "CanvasUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
@@ -305,12 +302,9 @@ class CanvasGeneralPattern {
           gradient->mCenter, gradient->mAngle, 0, 1,
           gradient->GetGradientStopsForTarget(aRT));
     } else if (state.patternStyles[aStyle]) {
-      if (aCtx->mCanvasElement) {
-        CanvasUtils::DoDrawImageSecurityCheck(
-            aCtx->mCanvasElement, state.patternStyles[aStyle]->mPrincipal,
-            state.patternStyles[aStyle]->mForceWriteOnly,
-            state.patternStyles[aStyle]->mCORSUsed);
-      }
+      aCtx->DoSecurityCheck(state.patternStyles[aStyle]->mPrincipal,
+                            state.patternStyles[aStyle]->mForceWriteOnly,
+                            state.patternStyles[aStyle]->mCORSUsed);
 
       ExtendMode mode;
       if (state.patternStyles[aStyle]->mRepeat ==
@@ -507,9 +501,8 @@ class AdjustedTargetForShadow {
     int32_t blurRadius = state.ShadowBlurRadius();
     bounds.Inflate(blurRadius);
     bounds.RoundOut();
-    bounds.ToIntRect(&mTempRect);
-
-    if (!mFinalTarget->CanCreateSimilarDrawTarget(mTempRect.Size(),
+    if (!bounds.ToIntRect(&mTempRect) ||
+        !mFinalTarget->CanCreateSimilarDrawTarget(mTempRect.Size(),
                                                   SurfaceFormat::B8G8R8A8)) {
       mTarget = mFinalTarget;
       mCtx = nullptr;
@@ -601,7 +594,7 @@ class AdjustedTarget {
       bounds = bounds.Intersect(*aBounds);
     }
     gfx::Rect boundsAfterFilter = BoundsAfterFilter(bounds, aCtx);
-    if (!aCtx->IsTargetValid()) {
+    if (!aCtx->IsTargetValid() || !boundsAfterFilter.IsFinite()) {
       return;
     }
 
@@ -1511,6 +1504,14 @@ bool CanvasRenderingContext2D::TryBasicTarget(
   return true;
 }
 
+Maybe<SurfaceDescriptor> CanvasRenderingContext2D::GetFrontBuffer(
+    WebGLFramebufferJS*, const bool webvr) {
+  if (mBufferProvider) {
+    return mBufferProvider->GetFrontBuffer();
+  }
+  return Nothing();
+}
+
 PresShell* CanvasRenderingContext2D::GetPresShell() {
   if (mCanvasElement) {
     return mCanvasElement->OwnerDoc()->GetPresShell();
@@ -2149,7 +2150,9 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
     return nullptr;
   }
 
-  Element* element;
+  Element* element = nullptr;
+  OffscreenCanvas* offscreenCanvas = nullptr;
+
   if (aSource.IsHTMLCanvasElement()) {
     HTMLCanvasElement* canvas = &aSource.GetAsHTMLCanvasElement();
     element = canvas;
@@ -2195,9 +2198,9 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
         mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_PATTERN);
     element = &video;
   } else if (aSource.IsOffscreenCanvas()) {
-    OffscreenCanvas& canvas = aSource.GetAsOffscreenCanvas();
+    offscreenCanvas = &aSource.GetAsOffscreenCanvas();
 
-    nsIntSize size = canvas.GetWidthHeight();
+    nsIntSize size = offscreenCanvas->GetWidthHeight();
     if (size.width == 0) {
       aError.ThrowInvalidStateError("Passed-in canvas has width 0");
       return nullptr;
@@ -2208,23 +2211,22 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
       return nullptr;
     }
 
-    nsICanvasRenderingContextInternal* srcCanvas = canvas.GetContext();
-    if (!srcCanvas) {
-      aError.ThrowInvalidStateError("Passed-in canvas has no context");
-      return nullptr;
+    nsICanvasRenderingContextInternal* srcCanvas =
+        offscreenCanvas->GetContext();
+    if (srcCanvas) {
+      RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
+      if (!srcSurf) {
+        aError.ThrowInvalidStateError(
+            "Passed-in canvas failed to create snapshot");
+        return nullptr;
+      }
+
+      RefPtr<CanvasPattern> pat =
+          new CanvasPattern(this, srcSurf, repeatMode, nullptr,
+                            offscreenCanvas->IsWriteOnly(), false);
+
+      return pat.forget();
     }
-
-    RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
-    if (!srcSurf) {
-      aError.ThrowInvalidStateError(
-          "Passed-in canvas failed to create snapshot");
-      return nullptr;
-    }
-
-    RefPtr<CanvasPattern> pat = new CanvasPattern(
-        this, srcSurf, repeatMode, nullptr, canvas.IsWriteOnly(), false);
-
-    return pat.forget();
   } else {
     // Special case for ImageBitmap
     ImageBitmap& imgBitmap = aSource.GetAsImageBitmap();
@@ -2260,7 +2262,10 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
   auto flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
   SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromElement(element, flags, mTarget);
+      offscreenCanvas
+          ? nsLayoutUtils::SurfaceFromOffscreenCanvas(offscreenCanvas, flags,
+                                                      mTarget)
+          : nsLayoutUtils::SurfaceFromElement(element, flags, mTarget);
 
   // Per spec, we should throw here for the HTMLImageElement and SVGImageElement
   // cases if the image request state is "broken".  In terms of the infromation
@@ -4568,8 +4573,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   RefPtr<SourceSurface> srcSurf;
   gfx::IntSize imgSize;
   gfx::IntSize intrinsicImgSize;
-
   Element* element = nullptr;
+  OffscreenCanvas* offscreenCanvas = nullptr;
 
   EnsureTarget();
   if (!IsTargetValid()) {
@@ -4588,17 +4593,20 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       SetWriteOnly();
     }
   } else if (aImage.IsOffscreenCanvas()) {
-    OffscreenCanvas& canvas = aImage.GetAsOffscreenCanvas();
-    srcSurf = canvas.GetSurfaceSnapshot();
-    if (!srcSurf) {
-      return;
+    offscreenCanvas = &aImage.GetAsOffscreenCanvas();
+    nsIntSize size = offscreenCanvas->GetWidthHeight();
+    if (size.IsEmpty()) {
+      return aError.ThrowInvalidStateError("Passed-in canvas is empty");
     }
 
-    if (canvas.IsWriteOnly()) {
+    srcSurf = offscreenCanvas->GetSurfaceSnapshot();
+    if (srcSurf) {
+      imgSize = intrinsicImgSize = srcSurf->GetSize();
+    }
+
+    if (offscreenCanvas->IsWriteOnly()) {
       SetWriteOnly();
     }
-
-    imgSize = intrinsicImgSize = srcSurf->GetSize();
   } else if (aImage.IsImageBitmap()) {
     ImageBitmap& imageBitmap = aImage.GetAsImageBitmap();
     srcSurf = imageBitmap.PrepareForDrawTarget(mTarget);
@@ -4643,11 +4651,15 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
                         nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS |
                         nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
 
-    SurfaceFromElementResult res =
-        CanvasRenderingContext2D::CachedSurfaceFromElement(element);
-
-    if (!res.mSourceSurface) {
-      res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
+    SurfaceFromElementResult res;
+    if (offscreenCanvas) {
+      res = nsLayoutUtils::SurfaceFromOffscreenCanvas(offscreenCanvas, sfeFlags,
+                                                      mTarget);
+    } else {
+      res = CanvasRenderingContext2D::CachedSurfaceFromElement(element);
+      if (!res.mSourceSurface) {
+        res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
+      }
     }
 
     if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
@@ -4668,11 +4680,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     imgSize = res.mSize;
     intrinsicImgSize = res.mIntrinsicSize;
-
-    if (mCanvasElement) {
-      CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, res.mPrincipal,
-                                            res.mIsWriteOnly, res.mCORSUsed);
-    }
+    DoSecurityCheck(res.mPrincipal, res.mIsWriteOnly, res.mCORSUsed);
 
     if (res.mSourceSurface) {
       if (res.mImageRequest) {
@@ -4758,10 +4766,9 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     AdjustedTarget tempTarget(this, bounds.IsEmpty() ? nullptr : &bounds);
     if (!tempTarget) {
-      gfxDevCrash(LogReason::InvalidDrawTarget)
-          << "Invalid adjusted target in Canvas2D "
-          << gfx::hexa((DrawTarget*)mTarget) << ", " << NeedToDrawShadow()
-          << NeedToApplyFilter();
+      gfxWarning() << "Invalid adjusted target in Canvas2D "
+                   << gfx::hexa((DrawTarget*)mTarget) << ", "
+                   << NeedToDrawShadow() << NeedToApplyFilter();
       return;
     }
 

@@ -430,7 +430,7 @@ union BlobURLDataRequestResult
  * and a content process. There is exactly one PContentParent/PContentChild pair
  * for each content process.
  */
-[NestedUpTo=inside_cpow, NeedsOtherPid]
+[ManualDealloc, NestedUpTo=inside_cpow, NeedsOtherPid]
 sync protocol PContent
 {
     manages PBrowser;
@@ -554,6 +554,7 @@ child:
       uint32_t[] namespaces);
 
     async NetworkLinkTypeChange(uint32_t type);
+    async SocketProcessCrashed();
 
     // Re-create the rendering stack for a device reset.
     async ReinitRenderingForDeviceReset();
@@ -579,6 +580,13 @@ child:
      * to pull data from content processes.
      */
     async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+    /**
+    * This method is used to notifty a child process to start
+    * processing module loading events in UntrustedModulesProcessor.
+    * This should be called when the parent process has gone idle.
+    */
+    async UnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
     /**
@@ -749,7 +757,8 @@ child:
                                     SystemFontList systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,
                                     uintptr_t sharedUASheetAddress,
-                                    SharedMemoryHandle[] sharedFontListBlocks);
+                                    SharedMemoryHandle[] sharedFontListBlocks,
+                                    bool aIsStartingUp);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
@@ -776,6 +785,12 @@ child:
                          uint32_t aKeyModifiers);
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
+
+    /**
+     * Notify the child that it will soon be asked to shutdown.
+     * This is sent with high priority right before the normal shutdown.
+     */
+    [Priority=control] async ShutdownConfirmedHP();
 
     /**
      * Notify the child to shutdown. The child will in turn call FinishShutdown
@@ -1178,6 +1193,10 @@ parent:
     // Returns a list of formats supported by the clipboard
     sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
 
+    // Given a list of supported types, returns the clipboard data for the
+    // first type that matches.
+    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCDataTransfer dataTransfer);
+
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);
 
@@ -1489,7 +1508,6 @@ parent:
                        bool aForWindowDotPrint,
                        nsIURI aURIToLoad,
                        nsCString aFeatures,
-                       float aFullZoom,
                        Principal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
                        nsIReferrerInfo aReferrerInfo,
@@ -1503,7 +1521,6 @@ parent:
       bool aCalledFromJS,
       nsIURI aURIToLoad,
       nsCString aFeatures,
-      float aFullZoom,
       nsString aName,
       nsIPrincipal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,

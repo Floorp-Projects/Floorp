@@ -7,6 +7,7 @@
 #ifdef MOZ_WAYLAND
 
 #  include "WaylandVsyncSource.h"
+#  include "mozilla/UniquePtr.h"
 #  include "nsThreadUtils.h"
 #  include "nsISupportsImpl.h"
 #  include "MainThreadUtils.h"
@@ -50,6 +51,27 @@ static float GetFPS(TimeDuration aVsyncRate) {
   return 1000.0 / aVsyncRate.ToMilliseconds();
 }
 
+static UniquePtr<LinkedList<WaylandVsyncSource::WaylandDisplay>>
+    gWaylandDisplays;
+
+Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
+  Maybe<TimeDuration> retVal;
+  if (gWaylandDisplays) {
+    for (auto* display : *gWaylandDisplays) {
+      if (display->IsVsyncEnabled()) {
+        TimeDuration rate = display->GetVsyncRate();
+        if (!retVal.isSome()) {
+          retVal.emplace(rate);
+        } else if (rate < *retVal) {
+          retVal.ref() = rate;
+        }
+      }
+    }
+  }
+
+  return retVal;
+}
+
 WaylandVsyncSource::WaylandDisplay::WaylandDisplay()
     : mMutex("WaylandVsyncSource"),
       mIsShutdown(false),
@@ -60,6 +82,19 @@ WaylandVsyncSource::WaylandDisplay::WaylandDisplay()
       mVsyncRate(TimeDuration::FromMilliseconds(1000.0 / 60.0)),
       mLastVsyncTimeStamp(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gWaylandDisplays) {
+    gWaylandDisplays =
+        MakeUnique<LinkedList<WaylandVsyncSource::WaylandDisplay>>();
+  }
+  gWaylandDisplays->insertBack(this);
+}
+
+WaylandVsyncSource::WaylandDisplay::~WaylandDisplay() {
+  remove();  // Remove from the linked list.
+  if (gWaylandDisplays->isEmpty()) {
+    gWaylandDisplays = nullptr;
+  }
 }
 
 void WaylandVsyncSource::WaylandDisplay::MaybeUpdateSource(

@@ -53,33 +53,14 @@
 
 #include "datatypes.h"
 
-static const int8_t octet_weight[256] = {
-    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-};
-
-int octet_get_weight(uint8_t octet)
-{
-    return (int)octet_weight[octet];
-}
-
 /*
  * bit_string is a buffer that is used to hold output strings, e.g.
  * for printing.
  */
 
 /* the value MAX_PRINT_STRING_LEN is defined in datatypes.h */
-
-char bit_string[MAX_PRINT_STRING_LEN];
+/* include space for null terminator */
+static char bit_string[MAX_PRINT_STRING_LEN + 1];
 
 uint8_t srtp_nibble_to_hex_char(uint8_t nibble)
 {
@@ -172,104 +153,6 @@ void v128_copy_octet_string(v128_t *x, const uint8_t s[16])
 #endif
 }
 
-#ifndef DATATYPES_USE_MACROS /* little functions are not macros */
-
-void v128_set_to_zero(v128_t *x)
-{
-    _v128_set_to_zero(x);
-}
-
-void v128_copy(v128_t *x, const v128_t *y)
-{
-    _v128_copy(x, y);
-}
-
-void v128_xor(v128_t *z, v128_t *x, v128_t *y)
-{
-    _v128_xor(z, x, y);
-}
-
-void v128_and(v128_t *z, v128_t *x, v128_t *y)
-{
-    _v128_and(z, x, y);
-}
-
-void v128_or(v128_t *z, v128_t *x, v128_t *y)
-{
-    _v128_or(z, x, y);
-}
-
-void v128_complement(v128_t *x)
-{
-    _v128_complement(x);
-}
-
-int v128_is_eq(const v128_t *x, const v128_t *y)
-{
-    return _v128_is_eq(x, y);
-}
-
-int v128_xor_eq(v128_t *x, const v128_t *y)
-{
-    return _v128_xor_eq(x, y);
-}
-
-int v128_get_bit(const v128_t *x, int i)
-{
-    return _v128_get_bit(x, i);
-}
-
-void v128_set_bit(v128_t *x, int i)
-{
-    _v128_set_bit(x, i);
-}
-
-void v128_clear_bit(v128_t *x, int i)
-{
-    _v128_clear_bit(x, i);
-}
-
-void v128_set_bit_to(v128_t *x, int i, int y)
-{
-    _v128_set_bit_to(x, i, y);
-}
-
-#endif /* DATATYPES_USE_MACROS */
-
-void v128_right_shift(v128_t *x, int shift)
-{
-    const int base_index = shift >> 5;
-    const int bit_index = shift & 31;
-    int i, from;
-    uint32_t b;
-
-    if (shift > 127) {
-        v128_set_to_zero(x);
-        return;
-    }
-
-    if (bit_index == 0) {
-        /* copy each word from left size to right side */
-        x->v32[4 - 1] = x->v32[4 - 1 - base_index];
-        for (i = 4 - 1; i > base_index; i--)
-            x->v32[i - 1] = x->v32[i - 1 - base_index];
-
-    } else {
-        /* set each word to the "or" of the two bit-shifted words */
-        for (i = 4; i > base_index; i--) {
-            from = i - 1 - base_index;
-            b = x->v32[from] << bit_index;
-            if (from > 0)
-                b |= x->v32[from - 1] >> (32 - bit_index);
-            x->v32[i - 1] = b;
-        }
-    }
-
-    /* now wrap up the final portion */
-    for (i = 0; i < base_index; i++)
-        x->v32[i] = 0;
-}
-
 void v128_left_shift(v128_t *x, int shift)
 {
     int i;
@@ -297,25 +180,6 @@ void v128_left_shift(v128_t *x, int shift)
 }
 
 /* functions manipulating bitvector_t */
-
-#ifndef DATATYPES_USE_MACROS /* little functions are not macros */
-
-int bitvector_get_bit(const bitvector_t *v, int bit_index)
-{
-    return _bitvector_get_bit(v, bit_index);
-}
-
-void bitvector_set_bit(bitvector_t *v, int bit_index)
-{
-    _bitvector_set_bit(v, bit_index);
-}
-
-void bitvector_clear_bit(bitvector_t *v, int bit_index)
-{
-    _bitvector_clear_bit(v, bit_index);
-}
-
-#endif /* DATATYPES_USE_MACROS */
 
 int bitvector_alloc(bitvector_t *v, unsigned long length)
 {
@@ -361,27 +225,6 @@ void bitvector_set_to_zero(bitvector_t *x)
     memset(x->word, 0, x->length >> 3);
 }
 
-char *bitvector_bit_string(bitvector_t *x, char *buf, int len)
-{
-    int j, i;
-    uint32_t mask;
-
-    for (j = i = 0; j < (int)(x->length >> 5) && i < len - 1; j++) {
-        for (mask = 0x80000000; mask > 0; mask >>= 1) {
-            if (x->word[j] & mask)
-                buf[i] = '1';
-            else
-                buf[i] = '0';
-            ++i;
-            if (i >= len - 1)
-                break;
-        }
-    }
-    buf[i] = 0; /* null terminate string */
-
-    return buf;
-}
-
 void bitvector_left_shift(bitvector_t *x, int shift)
 {
     int i;
@@ -410,7 +253,7 @@ void bitvector_left_shift(bitvector_t *x, int shift)
         x->word[i] = 0;
 }
 
-int octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
+int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
 {
     uint8_t *end = b + len;
     uint8_t accumulator = 0;
@@ -442,49 +285,3 @@ void octet_string_set_to_zero(void *s, size_t len)
     srtp_cleanse(s, len);
 #endif
 }
-
-#ifdef TESTAPP_SOURCE
-
-static const char b64chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                               "abcdefghijklmnopqrstuvwxyz0123456789+/";
-
-static int base64_block_to_octet_triple(char *out, char *in)
-{
-    unsigned char sextets[4] = { 0 };
-    int j = 0;
-    int i;
-
-    for (i = 0; i < 4; i++) {
-        char *p = strchr(b64chars, in[i]);
-        if (p != NULL)
-            sextets[i] = p - b64chars;
-        else
-            j++;
-    }
-
-    out[0] = (sextets[0] << 2) | (sextets[1] >> 4);
-    if (j < 2)
-        out[1] = (sextets[1] << 4) | (sextets[2] >> 2);
-    if (j < 1)
-        out[2] = (sextets[2] << 6) | sextets[3];
-    return j;
-}
-
-int base64_string_to_octet_string(char *out, int *pad, char *in, int len)
-{
-    int k = 0;
-    int i = 0;
-    int j = 0;
-    if (len % 4 != 0)
-        return 0;
-
-    while (i < len && j == 0) {
-        j = base64_block_to_octet_triple(out + k, in + i);
-        k += 3;
-        i += 4;
-    }
-    *pad = j;
-    return i;
-}
-
-#endif

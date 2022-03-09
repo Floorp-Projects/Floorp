@@ -11,6 +11,7 @@
 #include "gfxContext.h"
 #include "nsDisplayList.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsObjectLoadingContent.h"
 #include "nsSubDocumentFrame.h"
 #include "mozilla/PresShell.h"
@@ -81,16 +82,6 @@ SVGOuterSVGFrame::SVGOuterSVGFrame(ComputedStyle* aStyle,
   // Outer-<svg> has CSS layout, so remove this bit:
   RemoveStateBits(NS_FRAME_SVG_LAYOUT);
   AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-}
-
-// helper
-static inline bool DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame) {
-  const nsStylePosition* pos = aEmbeddingFrame->StylePosition();
-
-  // XXX it would be nice to know if the size of aEmbeddingFrame's containing
-  // block depends on aEmbeddingFrame, then we'd know if we can return false
-  // for eStyleUnit_Percent too.
-  return !pos->mWidth.ConvertsToLength() || !pos->mHeight.ConvertsToLength();
 }
 
 // The CSS Containment spec says that size-contained replaced elements must be
@@ -1006,7 +997,7 @@ void SVGOuterSVGAnonChildFrame::BuildDisplayList(
   // inside the nsDisplayTransform for our viewbox transform. The
   // nsDisplaySVGWrapper's reference frame is this frame, because this frame
   // always returns true from IsSVGTransformed.
-  nsDisplayList newList;
+  nsDisplayList newList(aBuilder);
   nsDisplayListSet set(&newList, &newList, &newList, &newList, &newList,
                        &newList);
   BuildDisplayListForNonBlockChildren(aBuilder, set);

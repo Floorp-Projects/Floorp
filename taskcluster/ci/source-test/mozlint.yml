@@ -81,19 +81,6 @@ rejected-words:
             - '**/*.ftl'
             - 'tools/lint/rejected-words.yml'
 
-cpp-virtual-final:
-    description: lint C++ virtual function declarations
-    treeherder:
-        symbol: cpp(Cvf)
-    run:
-        mach: lint -v -l cpp-virtual-final -f treeherder -f json:/builds/worker/mozlint.json *
-    when:
-        files-changed:
-            - '**/*.cpp'
-            - '**/*.h'
-            - '**/*.mm'
-            - 'tools/lint/cpp-virtual-final.yml'
-
 eslint:
     description: JS lint check
     treeherder:

@@ -74,50 +74,51 @@ JXL_INLINE_TRANSPOSE void GenericTransposeBlock(TransposeSimdTag<true>,
   static_assert(COLS_or_0 % 8 == 0, "Invalid number of columns");
   for (size_t n = 0; n < ROWS; n += 8) {
     for (size_t m = 0; m < COLS; m += 8) {
-      auto i0 = from.LoadPart(BlockDesc<8>(), n + 0, m + 0);
-      auto i1 = from.LoadPart(BlockDesc<8>(), n + 1, m + 0);
-      auto i2 = from.LoadPart(BlockDesc<8>(), n + 2, m + 0);
-      auto i3 = from.LoadPart(BlockDesc<8>(), n + 3, m + 0);
-      auto i4 = from.LoadPart(BlockDesc<8>(), n + 4, m + 0);
-      auto i5 = from.LoadPart(BlockDesc<8>(), n + 5, m + 0);
-      auto i6 = from.LoadPart(BlockDesc<8>(), n + 6, m + 0);
-      auto i7 = from.LoadPart(BlockDesc<8>(), n + 7, m + 0);
+      const BlockDesc<8> d;
+      auto i0 = from.LoadPart(d, n + 0, m + 0);
+      auto i1 = from.LoadPart(d, n + 1, m + 0);
+      auto i2 = from.LoadPart(d, n + 2, m + 0);
+      auto i3 = from.LoadPart(d, n + 3, m + 0);
+      auto i4 = from.LoadPart(d, n + 4, m + 0);
+      auto i5 = from.LoadPart(d, n + 5, m + 0);
+      auto i6 = from.LoadPart(d, n + 6, m + 0);
+      auto i7 = from.LoadPart(d, n + 7, m + 0);
       // Surprisingly, this straightforward implementation (24 cycles on port5)
       // is faster than load128+insert and LoadDup128+ConcatUpperLower+blend.
-      const auto q0 = InterleaveLower(i0, i2);
-      const auto q1 = InterleaveLower(i1, i3);
-      const auto q2 = InterleaveUpper(i0, i2);
-      const auto q3 = InterleaveUpper(i1, i3);
-      const auto q4 = InterleaveLower(i4, i6);
-      const auto q5 = InterleaveLower(i5, i7);
-      const auto q6 = InterleaveUpper(i4, i6);
-      const auto q7 = InterleaveUpper(i5, i7);
+      const auto q0 = InterleaveLower(d, i0, i2);
+      const auto q1 = InterleaveLower(d, i1, i3);
+      const auto q2 = InterleaveUpper(d, i0, i2);
+      const auto q3 = InterleaveUpper(d, i1, i3);
+      const auto q4 = InterleaveLower(d, i4, i6);
+      const auto q5 = InterleaveLower(d, i5, i7);
+      const auto q6 = InterleaveUpper(d, i4, i6);
+      const auto q7 = InterleaveUpper(d, i5, i7);
 
-      const auto r0 = InterleaveLower(q0, q1);
-      const auto r1 = InterleaveUpper(q0, q1);
-      const auto r2 = InterleaveLower(q2, q3);
-      const auto r3 = InterleaveUpper(q2, q3);
-      const auto r4 = InterleaveLower(q4, q5);
-      const auto r5 = InterleaveUpper(q4, q5);
-      const auto r6 = InterleaveLower(q6, q7);
-      const auto r7 = InterleaveUpper(q6, q7);
+      const auto r0 = InterleaveLower(d, q0, q1);
+      const auto r1 = InterleaveUpper(d, q0, q1);
+      const auto r2 = InterleaveLower(d, q2, q3);
+      const auto r3 = InterleaveUpper(d, q2, q3);
+      const auto r4 = InterleaveLower(d, q4, q5);
+      const auto r5 = InterleaveUpper(d, q4, q5);
+      const auto r6 = InterleaveLower(d, q6, q7);
+      const auto r7 = InterleaveUpper(d, q6, q7);
 
-      i0 = ConcatLowerLower(r4, r0);
-      i1 = ConcatLowerLower(r5, r1);
-      i2 = ConcatLowerLower(r6, r2);
-      i3 = ConcatLowerLower(r7, r3);
-      i4 = ConcatUpperUpper(r4, r0);
-      i5 = ConcatUpperUpper(r5, r1);
-      i6 = ConcatUpperUpper(r6, r2);
-      i7 = ConcatUpperUpper(r7, r3);
-      to.StorePart(BlockDesc<8>(), i0, m + 0, n + 0);
-      to.StorePart(BlockDesc<8>(), i1, m + 1, n + 0);
-      to.StorePart(BlockDesc<8>(), i2, m + 2, n + 0);
-      to.StorePart(BlockDesc<8>(), i3, m + 3, n + 0);
-      to.StorePart(BlockDesc<8>(), i4, m + 4, n + 0);
-      to.StorePart(BlockDesc<8>(), i5, m + 5, n + 0);
-      to.StorePart(BlockDesc<8>(), i6, m + 6, n + 0);
-      to.StorePart(BlockDesc<8>(), i7, m + 7, n + 0);
+      i0 = ConcatLowerLower(d, r4, r0);
+      i1 = ConcatLowerLower(d, r5, r1);
+      i2 = ConcatLowerLower(d, r6, r2);
+      i3 = ConcatLowerLower(d, r7, r3);
+      i4 = ConcatUpperUpper(d, r4, r0);
+      i5 = ConcatUpperUpper(d, r5, r1);
+      i6 = ConcatUpperUpper(d, r6, r2);
+      i7 = ConcatUpperUpper(d, r7, r3);
+      to.StorePart(d, i0, m + 0, n + 0);
+      to.StorePart(d, i1, m + 1, n + 0);
+      to.StorePart(d, i2, m + 2, n + 0);
+      to.StorePart(d, i3, m + 3, n + 0);
+      to.StorePart(d, i4, m + 4, n + 0);
+      to.StorePart(d, i5, m + 5, n + 0);
+      to.StorePart(d, i6, m + 6, n + 0);
+      to.StorePart(d, i7, m + 7, n + 0);
     }
   }
 }

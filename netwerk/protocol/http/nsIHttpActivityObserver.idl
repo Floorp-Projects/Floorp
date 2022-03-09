@@ -194,6 +194,13 @@ interface nsIHttpActivityDistributor : nsIHttpActivityObserver
     void removeObserver(in nsIHttpActivityObserver aObserver);
 
     /**
+     * C++ friendly getter
+     */
+    [noscript, notxpcom] bool Activated();
+    [noscript, notxpcom] bool ObserveProxyResponseEnabled();
+    [noscript, notxpcom] bool ObserveConnectionEnabled();
+
+    /**
      * When true, the ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER will be sent to
      * the observers.
      */

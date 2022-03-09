@@ -177,8 +177,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRENDER_SHADER_CACHE = 35;
   /* Whether partial present is allowed with WebRender, starting in 98. */
   const long FEATURE_WEBRENDER_PARTIAL_PRESENT = 36;
+  /* Whether VA-API is supported, starting in 96. */
+  const long FEATURE_VAAPI = 37;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_PARTIAL_PRESENT;
+  const long FEATURE_MAX_VALUE = FEATURE_VAAPI;
 
   /*
    * A set of return values from GetFeatureStatus
@@ -316,12 +318,6 @@ interface nsIGfxInfo : nsISupports
   // Forces the GPU process to start or shutdown. This is intended only for
   // xpcshell-tests.
   boolean controlGPUProcessForXPCShell(in boolean aEnable);
-
-  // Returns a promise resolving to true if the GPU process is enabled and ready,
-  // and false if it is disabled. If the process is currently being (re)started
-  // then this will not resolve until it has finished launching.
-  [implicit_jscontext]
-  Promise ensureGPUProcessReadyForTests();
 
   // Kills the GPU process cleanly, without generating a crash dump.
   // This is intended only for use by tests.

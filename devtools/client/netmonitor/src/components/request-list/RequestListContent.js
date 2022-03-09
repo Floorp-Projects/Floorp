@@ -60,6 +60,7 @@ const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;
 
 const LEFT_MOUSE_BUTTON = 0;
+const MIDDLE_MOUSE_BUTTON = 1;
 const RIGHT_MOUSE_BUTTON = 2;
 
 /**
@@ -272,6 +273,8 @@ class RequestListContent extends Component {
       this.props.selectRequest(id, request);
     } else if (evt.button === RIGHT_MOUSE_BUTTON) {
       this.props.onItemRightMouseButtonDown(id);
+    } else if (evt.button === MIDDLE_MOUSE_BUTTON) {
+      this.onMiddleMouseButtonDown(request);
     }
   }
 
@@ -327,6 +330,10 @@ class RequestListContent extends Component {
   }
 
   onDoubleClick({ id, url, requestHeaders, requestPostData }) {
+    this.openRequestInTab(id, url, requestHeaders, requestPostData);
+  }
+
+  onMiddleMouseButtonDown({ id, url, requestHeaders, requestPostData }) {
     this.openRequestInTab(id, url, requestHeaders, requestPostData);
   }
 

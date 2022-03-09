@@ -60,8 +60,14 @@ module.exports = {
     new ObjectRestSpreadPlugin(),
     new ExtractTextPlugin("[name].css"),
     new webpack.NormalModuleReplacementPlugin(
-      /.\/src\/network-request/,
-      "./src/privileged-network-request"
+      /\.\/utils\/network-request/,
+      "./utils/privileged-network-request"
+    ),
+    // This additional NormalModuleReplacementPlugin is for files in the same
+    // folder as network-request which use require("./network-request");
+    new webpack.NormalModuleReplacementPlugin(
+      /\.\/network-request/,
+      "./privileged-network-request"
     ),
     new webpack.DefinePlugin({
       "process.env": {

@@ -92,7 +92,6 @@ bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
                                         uint32_t create_disposition,
                                         uint32_t create_options) {
   if (!PreProcessName(name)) {
-    // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
@@ -146,7 +145,6 @@ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
                                       uint32_t share_access,
                                       uint32_t open_options) {
   if (!PreProcessName(name)) {
-    // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
@@ -201,7 +199,6 @@ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
     return false;
 
   if (!PreProcessName(name)) {
-    // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
@@ -250,7 +247,6 @@ bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
     return false;
 
   if (!PreProcessName(name)) {
-    // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
@@ -312,7 +308,6 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
   name.assign(rename_info->FileName,
               rename_info->FileNameLength / sizeof(rename_info->FileName[0]));
   if (!PreProcessName(&name)) {
-    // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }

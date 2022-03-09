@@ -24,6 +24,7 @@
 #include <cfloat>
 
 #include "hwy/detect_compiler_arch.h"
+#include "hwy/highway_export.h"
 
 //------------------------------------------------------------------------------
 // Compiler-specific definitions
@@ -184,10 +185,6 @@
   } while (0)
 #endif
 
-#if defined(HWY_EMULATE_SVE)
-class FarmFloat16;
-#endif
-
 namespace hwy {
 
 //------------------------------------------------------------------------------
@@ -205,7 +202,9 @@ static constexpr HWY_MAYBE_UNUSED size_t kMaxVectorSize = 16;
 //------------------------------------------------------------------------------
 // Alignment
 
-// For stack-allocated partial arrays or LoadDup128.
+// Potentially useful for LoadDup128 and capped vectors. In other cases, arrays
+// should be allocated dynamically via aligned_allocator.h because Lanes() may
+// exceed the stack size.
 #if HWY_ARCH_X86
 #define HWY_ALIGN_MAX alignas(64)
 #elif HWY_ARCH_RVV && defined(__riscv_vector)
@@ -228,9 +227,7 @@ static constexpr HWY_MAYBE_UNUSED size_t kMaxVectorSize = 16;
 
 #pragma pack(push, 1)
 
-#if defined(HWY_EMULATE_SVE)
-using float16_t = FarmFloat16;
-#elif HWY_NATIVE_FLOAT16
+#if HWY_NATIVE_FLOAT16
 using float16_t = __fp16;
 // Clang does not allow __fp16 arguments, but scalar.h requires LaneType
 // arguments, so use a wrapper.
@@ -253,15 +250,15 @@ using float64_t = double;
 //------------------------------------------------------------------------------
 // Controlling overload resolution (SFINAE)
 
-template <bool Condition, class T>
+template <bool Condition>
 struct EnableIfT {};
-template <class T>
-struct EnableIfT<true, T> {
-  using type = T;
+template <>
+struct EnableIfT<true> {
+  using type = void;
 };
 
-template <bool Condition, class T = void>
-using EnableIf = typename EnableIfT<Condition, T>::type;
+template <bool Condition>
+using EnableIf = typename EnableIfT<Condition>::type;
 
 template <typename T, typename U>
 struct IsSameT {
@@ -283,7 +280,7 @@ HWY_API constexpr bool IsSame() {
 //
 // Note that enabling for exactly 128 bits is unnecessary because a function can
 // simply be overloaded with Vec128<T> and/or Full128<T> tag. Enabling for other
-// sizes (e.g. 64 bit) can be achieved via Simd<T, 8 / sizeof(T)>.
+// sizes (e.g. 64 bit) can be achieved via Simd<T, 8 / sizeof(T), 0>.
 #define HWY_IF_LE128(T, N) hwy::EnableIf<N * sizeof(T) <= 16>* = nullptr
 #define HWY_IF_LE64(T, N) hwy::EnableIf<N * sizeof(T) <= 8>* = nullptr
 #define HWY_IF_LE32(T, N) hwy::EnableIf<N * sizeof(T) <= 4>* = nullptr
@@ -318,102 +315,6 @@ struct RemoveConstT<const T> {
 
 template <class T>
 using RemoveConst = typename RemoveConstT<T>::type;
-
-//------------------------------------------------------------------------------
-// Type traits
-
-template <typename T>
-HWY_API constexpr bool IsFloat() {
-  // Cannot use T(1.25) != T(1) for float16_t, which can only be converted to or
-  // from a float, not compared.
-  return IsSame<T, float>() || IsSame<T, double>();
-}
-
-template <typename T>
-HWY_API constexpr bool IsSigned() {
-  return T(0) > T(-1);
-}
-template <>
-constexpr bool IsSigned<float16_t>() {
-  return true;
-}
-template <>
-constexpr bool IsSigned<bfloat16_t>() {
-  return true;
-}
-
-// Largest/smallest representable integer values.
-template <typename T>
-HWY_API constexpr T LimitsMax() {
-  static_assert(!IsFloat<T>(), "Only for integer types");
-  return IsSigned<T>() ? T((1ULL << (sizeof(T) * 8 - 1)) - 1)
-                       : static_cast<T>(~0ull);
-}
-template <typename T>
-HWY_API constexpr T LimitsMin() {
-  static_assert(!IsFloat<T>(), "Only for integer types");
-  return IsSigned<T>() ? T(-1) - LimitsMax<T>() : T(0);
-}
-
-// Largest/smallest representable value (integer or float). This naming avoids
-// confusion with numeric_limits<float>::min() (the smallest positive value).
-template <typename T>
-HWY_API constexpr T LowestValue() {
-  return LimitsMin<T>();
-}
-template <>
-constexpr float LowestValue<float>() {
-  return -FLT_MAX;
-}
-template <>
-constexpr double LowestValue<double>() {
-  return -DBL_MAX;
-}
-
-template <typename T>
-HWY_API constexpr T HighestValue() {
-  return LimitsMax<T>();
-}
-template <>
-constexpr float HighestValue<float>() {
-  return FLT_MAX;
-}
-template <>
-constexpr double HighestValue<double>() {
-  return DBL_MAX;
-}
-
-// Returns bitmask of the exponent field in IEEE binary32/64.
-template <typename T>
-constexpr T ExponentMask() {
-  static_assert(sizeof(T) == 0, "Only instantiate the specializations");
-  return 0;
-}
-template <>
-constexpr uint32_t ExponentMask<uint32_t>() {
-  return 0x7F800000;
-}
-template <>
-constexpr uint64_t ExponentMask<uint64_t>() {
-  return 0x7FF0000000000000ULL;
-}
-
-// Returns 1 << mantissa_bits as a floating-point number. All integers whose
-// absolute value are less than this can be represented exactly.
-template <typename T>
-constexpr T MantissaEnd() {
-  static_assert(sizeof(T) == 0, "Only instantiate the specializations");
-  return 0;
-}
-template <>
-constexpr float MantissaEnd<float>() {
-  return 8388608.0f;  // 1 << 23
-}
-template <>
-constexpr double MantissaEnd<double>() {
-  // floating point literal with p52 requires C++17.
-  return 4503599627370496.0;  // 1 << 52
-}
 
 //------------------------------------------------------------------------------
 // Type relations
@@ -557,6 +458,118 @@ template <size_t N>
 using FloatFromSize = typename detail::TypeFromSize<N>::Float;
 
 //------------------------------------------------------------------------------
+// Type traits
+
+template <typename T>
+HWY_API constexpr bool IsFloat() {
+  // Cannot use T(1.25) != T(1) for float16_t, which can only be converted to or
+  // from a float, not compared.
+  return IsSame<T, float>() || IsSame<T, double>();
+}
+
+template <typename T>
+HWY_API constexpr bool IsSigned() {
+  return T(0) > T(-1);
+}
+template <>
+constexpr bool IsSigned<float16_t>() {
+  return true;
+}
+template <>
+constexpr bool IsSigned<bfloat16_t>() {
+  return true;
+}
+
+// Largest/smallest representable integer values.
+template <typename T>
+HWY_API constexpr T LimitsMax() {
+  static_assert(!IsFloat<T>(), "Only for integer types");
+  using TU = MakeUnsigned<T>;
+  return static_cast<T>(IsSigned<T>() ? (static_cast<TU>(~0ull) >> 1)
+                                      : static_cast<TU>(~0ull));
+}
+template <typename T>
+HWY_API constexpr T LimitsMin() {
+  static_assert(!IsFloat<T>(), "Only for integer types");
+  return IsSigned<T>() ? T(-1) - LimitsMax<T>() : T(0);
+}
+
+// Largest/smallest representable value (integer or float). This naming avoids
+// confusion with numeric_limits<float>::min() (the smallest positive value).
+template <typename T>
+HWY_API constexpr T LowestValue() {
+  return LimitsMin<T>();
+}
+template <>
+constexpr float LowestValue<float>() {
+  return -FLT_MAX;
+}
+template <>
+constexpr double LowestValue<double>() {
+  return -DBL_MAX;
+}
+
+template <typename T>
+HWY_API constexpr T HighestValue() {
+  return LimitsMax<T>();
+}
+template <>
+constexpr float HighestValue<float>() {
+  return FLT_MAX;
+}
+template <>
+constexpr double HighestValue<double>() {
+  return DBL_MAX;
+}
+
+// Returns bitmask of the exponent field in IEEE binary32/64.
+template <typename T>
+constexpr T ExponentMask() {
+  static_assert(sizeof(T) == 0, "Only instantiate the specializations");
+  return 0;
+}
+template <>
+constexpr uint32_t ExponentMask<uint32_t>() {
+  return 0x7F800000;
+}
+template <>
+constexpr uint64_t ExponentMask<uint64_t>() {
+  return 0x7FF0000000000000ULL;
+}
+
+// Returns bitmask of the mantissa field in IEEE binary32/64.
+template <typename T>
+constexpr T MantissaMask() {
+  static_assert(sizeof(T) == 0, "Only instantiate the specializations");
+  return 0;
+}
+template <>
+constexpr uint32_t MantissaMask<uint32_t>() {
+  return 0x007FFFFF;
+}
+template <>
+constexpr uint64_t MantissaMask<uint64_t>() {
+  return 0x000FFFFFFFFFFFFFULL;
+}
+
+// Returns 1 << mantissa_bits as a floating-point number. All integers whose
+// absolute value are less than this can be represented exactly.
+template <typename T>
+constexpr T MantissaEnd() {
+  static_assert(sizeof(T) == 0, "Only instantiate the specializations");
+  return 0;
+}
+template <>
+constexpr float MantissaEnd<float>() {
+  return 8388608.0f;  // 1 << 23
+}
+template <>
+constexpr double MantissaEnd<double>() {
+  // floating point literal with p52 requires C++17.
+  return 4503599627370496.0;  // 1 << 52
+}
+
+//------------------------------------------------------------------------------
 // Helper functions
 
 template <typename T1, typename T2>
@@ -661,14 +674,21 @@ HWY_API size_t PopCount(uint64_t x) {
 #endif
 }
 
+// Skip HWY_API due to GCC "function not considered for inlining". Previously
+// such errors were caused by underlying type mismatches, but it's not clear
+// what is still mismatched despite all the casts.
 template <typename TI>
-HWY_API constexpr size_t FloorLog2(TI x) {
-  return x == 1 ? 0 : FloorLog2(x >> 1) + 1;
+/*HWY_API*/ constexpr size_t FloorLog2(TI x) {
+  return x == TI{1}
+             ? 0
+             : static_cast<size_t>(FloorLog2(static_cast<TI>(x >> 1)) + 1);
 }
 
 template <typename TI>
-HWY_API constexpr size_t CeilLog2(TI x) {
-  return x == 1 ? 0 : FloorLog2(x - 1) + 1;
+/*HWY_API*/ constexpr size_t CeilLog2(TI x) {
+  return x == TI{1}
+             ? 0
+             : static_cast<size_t>(FloorLog2(static_cast<TI>(x - 1)) + 1);
 }
 
 #if HWY_COMPILER_MSVC && HWY_ARCH_X86_64
@@ -727,7 +747,7 @@ HWY_API bfloat16_t BF16FromF32(float f) {
   return bf;
 }
 
-HWY_NORETURN void HWY_FORMAT(3, 4)
+HWY_DLLEXPORT HWY_NORETURN void HWY_FORMAT(3, 4)
     Abort(const char* file, int line, const char* format, ...);
 
 }  // namespace hwy

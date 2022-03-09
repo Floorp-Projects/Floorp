@@ -313,16 +313,6 @@ ifneq (android,$(MOZ_WIDGET_TOOLKIT))
   JAR_COMPRESSION ?= none
 endif
 
-# A js binary is needed to perform verification of JavaScript minification.
-# We can only use the built binary when not cross-compiling. Environments
-# (such as release automation) can provide their own js binary to enable
-# verification when cross-compiling.
-ifndef JS_BINARY
-  ifndef CROSS_COMPILE
-    JS_BINARY = $(wildcard $(DIST)/bin/js)
-  endif
-endif
-
 ifeq ($(OS_TARGET), WINNT)
   INSTALLER_PACKAGE = $(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 endif

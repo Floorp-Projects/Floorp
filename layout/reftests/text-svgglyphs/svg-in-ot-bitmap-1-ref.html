@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SVG-in-OT bitmap issue</title>
+    <style>
+        @font-face {
+            font-family: test;
+            src: url("resources/svg-bitmap.ttf");
+        }
+        span {
+            white-space: pre;
+        }
+        .a {
+            background: red;
+        }
+        .b {
+            background: yellow;
+        }
+        .c {
+            background: blue;
+        }
+    </style>
+</head>
+<body>
+    <div style="font: 32px/1 test, serif">
+        x <span class=a> </span><span class=b> </span><span class=c> </span> x
+    </div>
+</body>
+</html>

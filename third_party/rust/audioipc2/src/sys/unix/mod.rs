@@ -133,9 +133,11 @@ impl Drop for ConnectionBuffer {
 
 fn close_fds(cmsg: &mut BytesMut) {
     while !cmsg.is_empty() {
-        let fd = cmsg::decode_handle(cmsg);
-        unsafe {
-            close_platform_handle(fd);
+        let fds = cmsg::decode_handles(cmsg);
+        for fd in fds {
+            unsafe {
+                close_platform_handle(fd);
+            }
         }
     }
     assert!(cmsg.is_empty());

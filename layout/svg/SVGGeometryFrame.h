@@ -96,6 +96,8 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
   // SVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
 
+  bool IsInvisible() const;
+
  protected:
   // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
@@ -127,10 +129,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
-      bool aDryRun) {
-    MOZ_RELEASE_ASSERT(aDryRun, "You shouldn't be calling this directly");
-    return false;
-  }
+      bool aDryRun);
   /**
    * @param aMatrix The transform that must be multiplied onto aContext to
    *   establish this frame's SVG user space.
@@ -207,6 +206,11 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
                                                  this, /*aDryRun=*/false);
     MOZ_ASSERT(result, "ShouldBeActive inconsistent with CreateWRCommands?");
     return result;
+  }
+
+  bool IsInvisible() const override {
+    auto* frame = static_cast<SVGGeometryFrame*>(mFrame);
+    return frame->IsInvisible();
   }
 };
 

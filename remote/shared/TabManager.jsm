@@ -20,9 +20,28 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const browserUniqueIds = new WeakMap();
 
 var TabManager = {
-  get gBrowser() {
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    return this.getTabBrowser(window);
+  /**
+   * Retrieve all the browser elements from tabs as contained in open windows.
+   *
+   * @return {Array<xul:browser>}
+   *     All the found <xul:browser>s. Will return an empty array if
+   *     no windows and tabs can be found.
+   */
+  browsers() {
+    const browsers = [];
+
+    for (const win of this.windows) {
+      const tabBrowser = this.getTabBrowser(win);
+
+      if (tabBrowser && tabBrowser.tabs) {
+        const contentBrowsers = tabBrowser.tabs.map(tab => {
+          return this.getBrowserForTab(tab);
+        });
+        browsers.push(...contentBrowsers);
+      }
+    }
+
+    return browsers;
   },
 
   get windows() {
@@ -103,7 +122,10 @@ var TabManager = {
   },
 
   addTab({ userContextId }) {
-    const tab = this.gBrowser.addTab("about:blank", {
+    const window = Services.wm.getMostRecentWindow(null);
+    const tabBrowser = this.getTabBrowser(window);
+
+    const tab = tabBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
@@ -176,6 +198,30 @@ var TabManager = {
     return this.getIdForBrowser(contentBrowser);
   },
 
+  /**
+   * Retrieve the id of a Browsing Context.
+   *
+   * For a top-level browsing context a custom unique id will be returned.
+   *
+   * @param {BrowsingContext=} browsingContext
+   *     The browsing context to get the id from.
+   *
+   * @returns {String}
+   *     The id of the browsing context.
+   */
+  getIdForBrowsingContext(browsingContext) {
+    if (!browsingContext) {
+      return null;
+    }
+
+    if (!browsingContext.parent) {
+      // Top-level browsing contexts have their own custom unique id.
+      return this.getIdForBrowser(browsingContext.embedderElement);
+    }
+
+    return browsingContext.id.toString();
+  },
+
   getTabCount() {
     let count = 0;
     for (const win of this.windows) {
@@ -191,10 +237,12 @@ var TabManager = {
   },
 
   removeTab(tab) {
-    this.gBrowser.removeTab(tab);
+    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    tabBrowser.removeTab(tab);
   },
 
   selectTab(tab) {
-    this.gBrowser.selectedTab = tab;
+    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    tabBrowser.selectedTab = tab;
   },
 };

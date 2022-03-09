@@ -49,6 +49,10 @@ body {
   /* light colours */
 }
 
+pre {
+  font-family: inherit;
+}
+
 body.sepia {
   --main-background: #f4ecd8;
   --main-foreground: #5b4636;
@@ -159,6 +163,24 @@ body.dark blockquote {
 .sepia-button {
   color: #5b4636;
   background-color: #f4ecd8;
+}
+
+.auto-button {
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auto-button {
+    background-color: #1c1b22;
+    color: #eeeeee;
+  }
+}
+
+@media not (prefers-color-scheme: dark){
+  .auto-button {
+    background-color: #ffffff;
+    color: #333333;
+  }
 }
 
 /* Loading/error message */
@@ -446,6 +468,8 @@ button:disabled {
 .radiorow,
 .buttonrow {
   display: flex;
+  align-content: center;
+  justify-content: center;
 }
 
 .content-width-value,

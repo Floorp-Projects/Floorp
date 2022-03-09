@@ -105,6 +105,19 @@
       res = a11yrange.compareEndPoints(EndPoint_End, a11yrange, EndPoint_Start);
       is(res, 1, "end must be greater than start");
 
+      // Crop a range to its next sibling.
+      range.selectNode(getNode("c3p1").firstChild);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      testTextRange(a11yrange, "selection range #8", "c3p1", 0, "c3p1", 1);
+      ok(!a11yrange.crop(getAccessible("c3p2")), "Crop #8 succeeded but shouldn't have.");
+      // Crop a range to its previous sibling.
+      range.selectNode(getNode("c3p2").firstChild);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      testTextRange(a11yrange, "selection range #9", "c3p2", 0, "c3p2", 1);
+      ok(!a11yrange.crop(getAccessible("c3p1")), "Crop #9 succeeded but shouldn't have.");
+
       SimpleTest.finish();
     }
 
@@ -125,5 +138,7 @@
   <p id="p1">text <a id="p2_a" href="www">link<img id="p2_img", src="../moz.png"></a> text</p>
 
   <div id="c2">start<table id="table"><tr><td>cell</td></tr></table>end</div>
+
+  <div id="c3"><p id="c3p1">a</p><p id="c3p2">b</p></div>
 </body>
 </html>

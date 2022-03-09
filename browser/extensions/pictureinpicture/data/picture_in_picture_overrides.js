@@ -46,8 +46,12 @@ let AVAILABLE_PIP_OVERRIDES;
 
     netflix: {
       "https://*.netflix.com/*": { keyboardControls: ~KEYBOARD_CONTROLS.SEEK },
-      "https://*.netflix.com/browse": { policy: TOGGLE_POLICIES.HIDDEN },
-      "https://*.netflix.com/latest": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/browse*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/latest*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/Kids*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/title*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/notification*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/search*": { policy: TOGGLE_POLICIES.HIDDEN },
     },
 
     twitch: {
@@ -64,6 +68,17 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.youtube.com/*": {
         visibilityThreshold: 0.9,
         videoWrapperScriptPath: "video-wrappers/youtube.js",
+      },
+    },
+
+    primeVideo: {
+      "https://*.primevideo.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
+      },
+      "https://*.amazon.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
       },
     },
   };

@@ -20,7 +20,7 @@ const {
  *
  * If type == "tab":
  * - id:
- *      {Number} the tab outerWindowID
+ *      {Number} the tab browserId
  *
  * If type == "extension":
  * - id:
@@ -83,22 +83,45 @@ async function _descriptorFromURL(client, id, type) {
 
   let descriptorFront;
   if (type === "tab") {
-    // Fetch target for a remote tab
-    id = parseInt(id, 10);
-    if (isNaN(id)) {
-      throw new Error(
-        `descriptorFromURL, wrong tab id '${id}', should be a number`
-      );
-    }
-    try {
-      descriptorFront = await client.mainRoot.getTab({ outerWindowID: id });
-    } catch (ex) {
-      if (ex.message.startsWith("Protocol error (noTab)")) {
+    // For remote debugging, about:debugging currently pass a browserId for remote Fx>=99
+    // or an outerWindowID for remote Fx <99
+    // @backward-compat { version 99 } This fallback to outerWindowID can be removed once 100 is released
+    if (id.startsWith("outerID-")) {
+      let outerWindowID = id.replace("outerID-", "");
+      if (isNaN(outerWindowID)) {
         throw new Error(
-          `descriptorFromURL, tab with outerWindowID '${id}' doesn't exist`
+          `descriptorFromURL, wrong tab id '${outerWindowID}', should be a number`
         );
       }
-      throw ex;
+      outerWindowID = parseInt(outerWindowID, 10);
+      try {
+        descriptorFront = await client.mainRoot.getTab({ outerWindowID });
+      } catch (ex) {
+        if (ex.message.startsWith("Protocol error (noTab)")) {
+          throw new Error(
+            `descriptorFromURL, tab with outerWindowID '${outerWindowID}' doesn't exist`
+          );
+        }
+        throw ex;
+      }
+    } else {
+      // Fetch target for a remote tab
+      id = parseInt(id, 10);
+      if (isNaN(id)) {
+        throw new Error(
+          `descriptorFromURL, wrong tab id '${id}', should be a number`
+        );
+      }
+      try {
+        descriptorFront = await client.mainRoot.getTab({ browserId: id });
+      } catch (ex) {
+        if (ex.message.startsWith("Protocol error (noTab)")) {
+          throw new Error(
+            `descriptorFromURL, tab with browserId '${id}' doesn't exist`
+          );
+        }
+        throw ex;
+      }
     }
   } else if (type === "extension") {
     descriptorFront = await client.mainRoot.getAddon({ id });

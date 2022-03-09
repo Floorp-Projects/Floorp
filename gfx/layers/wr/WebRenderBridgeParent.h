@@ -354,13 +354,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                        const nsTArray<RefCountedShmem>& aSmallShmems,
                        const nsTArray<ipc::Shmem>& aLargeShmems,
                        wr::TransactionBuilder& aUpdates);
-  void AddPrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
-                               wr::ImageDescriptor aDesc,
-                               wr::TransactionBuilder& aResources);
-  void UpdatePrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
-                                  const wr::ImageDescriptor& aDesc,
-                                  const ImageIntRect& aDirtyRect,
-                                  wr::TransactionBuilder& aResources);
   bool AddSharedExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                               wr::TransactionBuilder& aResources);
   bool UpdateSharedExternalImage(
@@ -378,7 +371,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
-                                    const bool& aAsync,
+                                    const CompositableHandleOwner& aOwner,
                                     wr::TransactionBuilder& aTxn,
                                     wr::TransactionBuilder& aTxnForImageBridge);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,

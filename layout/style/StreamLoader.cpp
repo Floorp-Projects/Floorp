@@ -43,11 +43,11 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
     int64_t length;
     nsresult rv = channel->GetContentLength(&length);
     if (NS_SUCCEEDED(rv) && length > 0) {
-      if (uint64_t(length) >
-          std::numeric_limits<nsACString::size_type>::max()) {
+      CheckedInt<nsACString::size_type> checkedLength(length);
+      if (!checkedLength.isValid()) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
-      if (!mBytes.SetCapacity(length, fallible)) {
+      if (!mBytes.SetCapacity(checkedLength.value(), fallible)) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
     }

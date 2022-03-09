@@ -43,6 +43,8 @@ class PickleIterator;
 
 namespace IPC {
 class Message;
+class MessageReader;
+class MessageWriter;
 }  // namespace IPC
 
 namespace mozilla {
@@ -267,6 +269,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
       GlobalObject&, uint64_t aId) {
     return GetCurrentTopByBrowserId(aId);
   }
+
+  static void UpdateCurrentTopByBrowserId(BrowsingContext* aNewBrowsingContext);
 
   static already_AddRefed<BrowsingContext> GetFromWindow(
       WindowProxyHolder& aProxy);
@@ -817,7 +821,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
                                     uint32_t aLoadType,
-                                    uint32_t aUpdatedCacheKey);
+                                    uint32_t aUpdatedCacheKey,
+                                    bool aUpdateLength = true);
 
   // Replace the active entry for this browsing context. This is used for
   // implementing history.replaceState and same document navigations.
@@ -1340,20 +1345,18 @@ extern template class syncedcontext::Transaction<BrowsingContext>;
 namespace ipc {
 template <>
 struct IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const dom::MaybeDiscarded<dom::BrowsingContext>& aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    dom::MaybeDiscarded<dom::BrowsingContext>* aResult);
 };
 
 template <>
 struct IPDLParamTraits<dom::BrowsingContext::IPCInitializer> {
-  static void Write(IPC::Message* aMessage, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     const dom::BrowsingContext::IPCInitializer& aInitializer);
 
-  static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    dom::BrowsingContext::IPCInitializer* aInitializer);
 };
 }  // namespace ipc

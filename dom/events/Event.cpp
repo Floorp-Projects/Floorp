@@ -581,12 +581,11 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
   LayoutDeviceIntPoint rounded = RoundedToInt(topLevelPoint);
 
   nsPoint pt = LayoutDevicePixel::ToAppUnits(
-      rounded,
-      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+      rounded, aPresContext->DeviceContext()->AppUnitsPerDevPixel());
 
   pt += LayoutDevicePixel::ToAppUnits(
       guiEvent->mWidget->TopLevelWidgetToScreenOffset(),
-      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+      aPresContext->DeviceContext()->AppUnitsPerDevPixel());
 
   return CSSPixel::FromAppUnitsRounded(pt);
 }
@@ -781,38 +780,39 @@ double Event::TimeStamp() {
       workerPrivate->CrossOriginIsolated());
 }
 
-void Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) {
+void Event::Serialize(IPC::MessageWriter* aWriter,
+                      bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, u"event"_ns);
+    IPC::WriteParam(aWriter, u"event"_ns);
   }
 
   nsString type;
   GetType(type);
-  IPC::WriteParam(aMsg, type);
+  IPC::WriteParam(aWriter, type);
 
-  IPC::WriteParam(aMsg, Bubbles());
-  IPC::WriteParam(aMsg, Cancelable());
-  IPC::WriteParam(aMsg, IsTrusted());
-  IPC::WriteParam(aMsg, Composed());
+  IPC::WriteParam(aWriter, Bubbles());
+  IPC::WriteParam(aWriter, Cancelable());
+  IPC::WriteParam(aWriter, IsTrusted());
+  IPC::WriteParam(aWriter, Composed());
 
   // No timestamp serialization for now!
 }
 
-bool Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
+bool Event::Deserialize(IPC::MessageReader* aReader) {
   nsString type;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &type), false);
 
   bool bubbles = false;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &bubbles), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &bubbles), false);
 
   bool cancelable = false;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &cancelable), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &cancelable), false);
 
   bool trusted = false;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &trusted), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &trusted), false);
 
   bool composed = false;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &composed), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &composed), false);
 
   InitEvent(type, bubbles, cancelable);
   SetTrusted(trusted);

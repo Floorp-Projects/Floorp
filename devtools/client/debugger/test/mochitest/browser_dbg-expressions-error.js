@@ -10,6 +10,8 @@
  * 3. expand properties
  */
 
+"use strict";
+
 const EXPRESSION_SELECTORS = {
   plusIcon: ".watch-expressions-pane button.plus",
   input: "input.input-expression",
@@ -21,7 +23,7 @@ add_task(async function() {
   await togglePauseOnExceptions(dbg, true, true);
 
   // add a good expression, 2 bad expressions, and another good one
-  log(`Adding location`);
+  info(`Adding location`);
   await addExpression(dbg, "location");
   await addExpression(dbg, "foo.bar");
   await addExpression(dbg, "foo.batt");

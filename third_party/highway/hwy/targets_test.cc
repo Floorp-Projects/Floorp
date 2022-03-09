@@ -44,11 +44,11 @@ void CheckFakeFunction() {
     hwy::SetSupportedTargetsForTest(HWY_##TGT);                             \
     /* Calling Update() first to make &HWY_DYNAMIC_DISPATCH() return */     \
     /* the pointer to the already cached function. */                       \
-    hwy::chosen_target.Update();                                            \
+    hwy::GetChosenTarget().Update();                                        \
     EXPECT_EQ(uint32_t(HWY_##TGT), HWY_DYNAMIC_DISPATCH(FakeFunction)(42)); \
     /* Calling DeInit() will test that the initializer function */          \
     /* also calls the right function. */                                    \
-    hwy::chosen_target.DeInit();                                            \
+    hwy::GetChosenTarget().DeInit();                                        \
     EXPECT_EQ(uint32_t(HWY_##TGT), HWY_DYNAMIC_DISPATCH(FakeFunction)(42)); \
     /* Second call uses the cached value from the previous call. */         \
     EXPECT_EQ(uint32_t(HWY_##TGT), HWY_DYNAMIC_DISPATCH(FakeFunction)(42)); \

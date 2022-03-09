@@ -5,8 +5,7 @@
 use api::{AsyncBlobImageRasterizer, BlobImageResult, Parameter};
 use api::{DocumentId, PipelineId, ExternalEvent, BlobImageRequest};
 use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
-use api::{PrimitiveKeyKind, SharedFontInstanceMap};
-use api::{GlyphDimensionRequest, GlyphIndexRequest};
+use api::{PrimitiveKeyKind, GlyphDimensionRequest, GlyphIndexRequest};
 use api::channel::{unbounded_channel, single_msg_channel, Receiver, Sender};
 use api::units::*;
 use crate::render_api::{ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, TransactionMsg, MemoryReport};
@@ -16,6 +15,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::scene_building::SceneBuilder;
 use crate::clip::{ClipIntern, PolygonIntern};
 use crate::filterdata::FilterDataIntern;
+use crate::glyph_rasterizer::SharedFontInstanceMap;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};

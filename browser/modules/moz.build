@@ -102,9 +102,11 @@ with Files("TransientPrefs.jsm"):
 
 with Files("WindowsJumpLists.jsm"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
+    SCHEDULES.exclusive = ["windows"]
 
 with Files("WindowsPreviewPerTab.jsm"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
+    SCHEDULES.exclusive = ["windows"]
 
 with Files("webrtcUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")

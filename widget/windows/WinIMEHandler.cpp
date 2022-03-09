@@ -21,7 +21,7 @@
 #include "nsWindow.h"
 #include "WinUtils.h"
 #include "nsIWindowsRegKey.h"
-#include "nsIWindowsUIUtils.h"
+#include "WindowsUIUtils.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -466,7 +466,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
 }
 
 // static
-void IMEHandler::AssociateIMEContext(nsWindowBase* aWindowBase, bool aEnable) {
+void IMEHandler::AssociateIMEContext(nsWindow* aWindowBase, bool aEnable) {
   IMEContext context(aWindowBase);
   if (aEnable) {
     context.AssociateDefaultContext();
@@ -551,7 +551,7 @@ void IMEHandler::OnKeyboardLayoutChanged() {
 
   // If there is no TSFTextStore which has focus, i.e., no editor has focus,
   // nothing to do here.
-  nsWindowBase* windowBase = TSFTextStore::GetEnabledWindowBase();
+  nsWindow* windowBase = TSFTextStore::GetEnabledWindowBase();
   if (!windowBase) {
     return;
   }
@@ -944,15 +944,7 @@ bool IMEHandler::IsKeyboardPresentOnSlate() {
 
 // static
 bool IMEHandler::IsInTabletMode() {
-  nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-      do_GetService("@mozilla.org/windows-ui-utils;1"));
-  if (NS_WARN_IF(!uiUtils)) {
-    Preferences::SetString(kOskDebugReason,
-                           L"IITM: nsIWindowsUIUtils not available.");
-    return false;
-  }
-  bool isInTabletMode = false;
-  uiUtils->GetInTabletMode(&isInTabletMode);
+  bool isInTabletMode = WindowsUIUtils::GetInTabletMode();
   if (isInTabletMode) {
     Preferences::SetString(kOskDebugReason, L"IITM: GetInTabletMode=true.");
   } else {

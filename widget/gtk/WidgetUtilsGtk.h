@@ -10,7 +10,9 @@
 #include "nsTArray.h"
 
 #include <stdint.h>
-#include <gdk/gdk.h>
+
+typedef struct _GdkDisplay GdkDisplay;
+typedef struct _GdkDevice GdkDevice;
 
 namespace mozilla::widget {
 
@@ -30,11 +32,17 @@ bool GdkIsX11Display();
 
 GdkDevice* GdkGetPointer();
 
+// Return the snap's instance name, or null when not running as a snap.
+const char* GetSnapInstanceName();
+inline bool IsRunningUnderSnap() { return !!GetSnapInstanceName(); }
 bool IsRunningUnderFlatpak();
+inline bool IsRunningUnderFlatpakOrSnap() {
+  return IsRunningUnderFlatpak() || IsRunningUnderSnap();
+}
+
 enum class PortalKind {
   FilePicker,
   MimeHandler,
-  Print,
   Settings,
 };
 bool ShouldUsePortal(PortalKind);

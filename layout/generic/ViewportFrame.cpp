@@ -124,7 +124,7 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
       aBuilder, aFrame, visible, dirty);
 
-  nsDisplayList list;
+  nsDisplayList list(aBuilder);
   aFrame->BuildDisplayListForStackingContext(aBuilder, &list);
   aList->AppendToTop(&list);
 }
@@ -135,7 +135,7 @@ static bool BackdropListIsOpaque(ViewportFrame* aFrame,
   // The common case for ::backdrop elements on the top layer is a single
   // fixed position container, holding an opaque background color covering
   // the whole viewport.
-  if (aList->Count() != 1 ||
+  if (aList->Length() != 1 ||
       aList->GetTop()->GetType() != DisplayItemType::TYPE_FIXED_POSITION) {
     return false;
   }
@@ -168,7 +168,7 @@ static bool BackdropListIsOpaque(ViewportFrame* aFrame,
 
 nsDisplayWrapList* ViewportFrame::BuildDisplayListForTopLayer(
     nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
-  nsDisplayList topLayerList;
+  nsDisplayList topLayerList(aBuilder);
 
   nsTArray<dom::Element*> topLayer = PresContext()->Document()->GetTopLayer();
   for (dom::Element* elem : topLayer) {

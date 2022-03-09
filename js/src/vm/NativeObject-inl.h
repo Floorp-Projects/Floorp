@@ -60,7 +60,7 @@ inline void NativeObject::setDenseElementHole(uint32_t index) {
 }
 
 inline void NativeObject::removeDenseElementForSparseIndex(uint32_t index) {
-  MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
+  MOZ_ASSERT(containsPure(PropertyKey::Int(index)));
   if (containsDenseElement(index)) {
     setDenseElementHole(index);
   }
@@ -651,8 +651,8 @@ static MOZ_ALWAYS_INLINE bool CallResolveOp(JSContext* cx,
   MOZ_ASSERT_IF(obj->getClass()->getMayResolve(),
                 obj->getClass()->getMayResolve()(cx->names(), id, obj));
 
-  if (JSID_IS_INT(id)) {
-    uint32_t index = JSID_TO_INT(id);
+  if (id.isInt()) {
+    uint32_t index = id.toInt();
     if (obj->containsDenseElement(index)) {
       propp->setDenseElement(index);
       return true;
@@ -692,8 +692,8 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
 #endif
 
   // Check for a native dense element.
-  if (JSID_IS_INT(id)) {
-    uint32_t index = JSID_TO_INT(id);
+  if (id.isInt()) {
+    uint32_t index = id.toInt();
     if (obj->containsDenseElement(index)) {
       propp->setDenseElement(index);
       return true;
@@ -869,7 +869,7 @@ MOZ_ALWAYS_INLINE bool AddDataPropertyToPlainObject(JSContext* cx,
                                                     HandlePlainObject obj,
                                                     HandleId id,
                                                     HandleValue v) {
-  MOZ_ASSERT(!JSID_IS_INT(id));
+  MOZ_ASSERT(!id.isInt());
 
   uint32_t slot;
   if (!NativeObject::addProperty(cx, obj, id,

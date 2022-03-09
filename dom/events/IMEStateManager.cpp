@@ -1350,6 +1350,8 @@ static bool IsNextFocusableElementTextControl(const Element* aInputContent) {
 
 static void GetInputType(const IMEState& aState, const nsIContent& aContent,
                          nsAString& aInputType) {
+  // NOTE: If you change here, you may need to update
+  //       widget::InputContext::GatNativeKeyBindings too.
   if (aContent.IsHTMLElement(nsGkAtoms::input)) {
     const HTMLInputElement* inputElement =
         HTMLInputElement::FromNode(&aContent);

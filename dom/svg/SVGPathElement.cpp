@@ -314,6 +314,23 @@ void SVGPathElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
+void SVGPathElement::GetAsSimplePath(SimplePath* aSimplePath) {
+  aSimplePath->Reset();
+  auto callback = [&](const ComputedStyle* s) {
+    const nsStyleSVGReset* styleSVGReset = s->StyleSVGReset();
+    if (styleSVGReset->mD.IsPath()) {
+      auto pathData = styleSVGReset->mD.AsPath()._0.AsSpan();
+      auto maybeRect = SVGPathToAxisAlignedRect(pathData);
+      if (maybeRect.isSome()) {
+        Rect r = maybeRect.value();
+        aSimplePath->SetRect(r.x, r.y, r.width, r.height);
+      }
+    }
+  };
+
+  SVGGeometryProperty::DoForComputedStyle(this, callback);
+}
+
 already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
   // The Moz2D PathBuilder that our SVGPathData will be using only cares about
   // the fill rule. However, in order to fulfill the requirements of the SVG

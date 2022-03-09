@@ -412,20 +412,11 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
 already_AddRefed<PRemoteLazyInputStreamParent>
 SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                                        const uint64_t& aSize) {
+  // There is nothing to construct here, so we do not implement
+  // RecvPRemoteLazyInputStreamConstructor.
   RefPtr<RemoteLazyInputStreamParent> actor =
       RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
-}
-
-mozilla::ipc::IPCResult
-SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
-    PRemoteLazyInputStreamParent* aActor, const nsID& aID,
-    const uint64_t& aSize) {
-  if (!static_cast<RemoteLazyInputStreamParent*>(aActor)->HasValidStream()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(

@@ -202,6 +202,16 @@ class ExtensionWrapper {
     return this.startupPromise;
   }
 
+  awaitBackgroundStarted() {
+    if (!this.extension.manifest.background) {
+      throw new Error("Extension has no background");
+    }
+    return Promise.all([
+      this.startupPromise,
+      this.extension.promiseBackgroundStarted(),
+    ]);
+  }
+
   async startup() {
     if (this.state != "uninitialized") {
       throw new Error("Extension already started");

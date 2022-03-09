@@ -39,6 +39,9 @@
 #  define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
+#if LIBAVCODEC_VERSION_MAJOR > 58
+#  define AV_PIX_FMT_VAAPI_VLD AV_PIX_FMT_VAAPI
+#endif
 #include "mozilla/PodOperations.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
@@ -345,20 +348,23 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
 void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
+  if (!mEnableHardwareDecoding) {
+    FFMPEG_LOG("VAAPI is disabled by parent decoder module.");
+    return;
+  }
   bool isHardwareWebRenderUsed = mImageAllocator &&
                                  (mImageAllocator->GetCompositorBackendType() ==
                                   layers::LayersBackend::LAYERS_WR) &&
                                  !mImageAllocator->UsingSoftwareWebRender();
   if (!isHardwareWebRenderUsed) {
     mEnableHardwareDecoding = false;
-    FFMPEG_LOG("Hardware WebRender is off, disabled DMABuf & VAAPI.");
+    FFMPEG_LOG("Hardware WebRender is off, VAAPI is disabled");
     return;
   }
 
-  if (mEnableHardwareDecoding &&
-      !widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
+  if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
     mEnableHardwareDecoding = false;
-    FFMPEG_LOG("VA-API is disabled by pref.");
+    FFMPEG_LOG("VA-API is disabled by preference.");
   }
 }
 #endif
@@ -377,6 +383,8 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
       mImageContainer(aImageContainer),
       mInfo(aConfig),
       mLowLatency(aLowLatency) {
+  FFMPEG_LOG("FFmpegVideoDecoder::FFmpegVideoDecoder MIME %s Codec ID %d",
+             aConfig.mMimeType.get(), mCodecID);
   // Use a new MediaByteBuffer as the object will be modified during
   // initialization.
   mExtraData = new MediaByteBuffer;
@@ -542,8 +550,6 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
                                  &paddedYSize.height);
   data.mYSize = gfx::IntSize{paddedYSize.Width(), paddedYSize.Height()};
   data.mYStride = data.mYSize.Width() * bytesPerChannel;
-  data.mCroppedYSize = Some(
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height});
 
   MOZ_ASSERT(
       IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt));
@@ -560,11 +566,9 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
   data.mCbCrSize =
       gfx::IntSize{paddedCbCrSize.Width(), paddedCbCrSize.Height()};
   data.mCbCrStride = data.mCbCrSize.Width() * bytesPerChannel;
-  data.mCroppedCbCrSize = Some(gfx::IntSize{uvDims.Width(), uvDims.Height()});
 
   // Setting other attributes
-  data.mPicSize =
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
+  data.mPicSize = gfx::IntSize{aCodecContext->width, aCodecContext->height};
   const gfx::IntRect picture =
       aInfo.ScaledImageRect(data.mPicSize.Width(), data.mPicSize.Height());
   data.mPicX = picture.x;
@@ -585,9 +589,8 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
       "Created plane data, YSize=(%d, %d), CbCrSize=(%d, %d), "
       "CroppedYSize=(%d, %d), CroppedCbCrSize=(%d, %d), ColorDepth=%hhu",
       data.mYSize.Width(), data.mYSize.Height(), data.mCbCrSize.Width(),
-      data.mCbCrSize.Height(), data.mCroppedYSize->Width(),
-      data.mCroppedYSize->Height(), data.mCroppedCbCrSize->Width(),
-      data.mCroppedCbCrSize->Height(), static_cast<uint8_t>(data.mColorDepth));
+      data.mCbCrSize.Height(), data.mPicSize.Width(), data.mPicSize.Height(),
+      uvDims.Width(), uvDims.Height(), static_cast<uint8_t>(data.mColorDepth));
   return data;
 }
 
@@ -662,11 +665,11 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
     FFMPEG_LOG("Failed to lock the texture");
     return AVERROR(EINVAL);
   }
+  auto autoUnlock = MakeScopeExit([&] { texture->Unlock(); });
 
   layers::MappedYCbCrTextureData mapped;
   if (!texture->BorrowMappedYCbCrData(mapped)) {
     FFMPEG_LOG("Failed to borrow mapped data for the texture");
-    texture->Unlock();
     return AVERROR(EINVAL);
   }
 
@@ -697,7 +700,8 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   }
 
   FFMPEG_LOG("Created av buffer, buf=%p, data=%p, image=%p, sz=%d",
-             aFrame->buf[0], aFrame->data[0], image.get(), dataSize.value());
+             aFrame->buf[0], aFrame->data[0], imageWrapper.get(),
+             dataSize.value());
   mAllocatedImages.Insert(imageWrapper.get());
   mIsUsingShmemBufferForDecode = Some(true);
   return 0;
@@ -764,6 +768,14 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
 }
 #endif
 
+static int64_t GetFramePts(AVFrame* aFrame) {
+#if LIBAVCODEC_VERSION_MAJOR > 58
+  return aFrame->pts;
+#else
+  return aFrame->pkt_pts;
+#endif
+}
+
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame,
     MediaDataDecoder::DecodedData& aResults) {
@@ -829,7 +841,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
     if (IsHardwareAccelerated()) {
-      rv = CreateImageVAAPI(mFrame->pkt_pos, mFrame->pkt_pts,
+      rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
                             mFrame->pkt_duration, aResults);
       // If VA-API playback failed, just quit. Decoder is going to be restarted
       // without VA-API.
@@ -842,8 +854,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     } else
 #  endif
     {
-      rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts, mFrame->pkt_duration,
-                       aResults);
+      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame),
+                       mFrame->pkt_duration, aResults);
     }
     if (NS_FAILED(rv)) {
       return rv;
@@ -877,9 +889,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       "DoDecodeFrame:decode_video: rv=%d decoded=%d "
       "(Input: pts(%" PRId64 ") dts(%" PRId64 ") Output: pts(%" PRId64
       ") "
-      "opaque(%" PRId64 ") pkt_pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
+      "opaque(%" PRId64 ") pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
       bytesConsumed, decoded, packet.pts, packet.dts, mFrame->pts,
-      mFrame->reordered_opaque, mFrame->pkt_pts, mFrame->pkt_dts);
+      mFrame->reordered_opaque, mFrame->pts, mFrame->pkt_dts);
 
   if (bytesConsumed < 0) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -894,7 +906,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   }
 
   // If we've decoded a frame then we need to output it
-  int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
+  int64_t pts =
+      mPtsContext.GuessCorrectPts(GetFramePts(mFrame), mFrame->pkt_dts);
   // Retrieve duration from dts.
   // We use the first entry found matching this dts (this is done to
   // handle damaged file with multiple frames with the same dts)
@@ -1022,20 +1035,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     RefPtr<ImageBufferWrapper> wrapper = static_cast<ImageBufferWrapper*>(
         mLib->av_buffer_get_opaque(mFrame->buf[0]));
     MOZ_ASSERT(wrapper);
-    auto* image = wrapper->AsPlanarYCbCrImage();
-    RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
-    if (!texture) {
-      NS_WARNING("Failed to get the texture client!");
-    } else {
-      // Texture was locked to ensure no one can modify or access texture's data
-      // except ffmpeg decoder. After finisheing decoding, texture's data would
-      // be avaliable for accessing for everyone so we unlock texture.
-      texture->Unlock();
-      v = VideoData::CreateFromImage(
-          mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
-          TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
-          TimeUnit::FromMicroseconds(-1));
-    }
+    FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
+    v = VideoData::CreateFromImage(
+        mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
+        TimeUnit::FromMicroseconds(aDuration), wrapper->AsImage(),
+        !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
   }
 #endif
   if (!v) {

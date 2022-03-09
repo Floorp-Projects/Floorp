@@ -13,8 +13,7 @@
 #include "js/TypeDecls.h"
 #include "js/PropertyAndElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ByteLengthQueuingStrategy,
                                                 BaseQueuingStrategy)
@@ -98,5 +97,4 @@ already_AddRefed<Function> ByteLengthQueuingStrategy::GetSize(
   return function.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

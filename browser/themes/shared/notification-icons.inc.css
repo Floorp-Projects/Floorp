@@ -1,8 +1,6 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
 
 #notification-popup-box {
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
@@ -26,10 +24,16 @@
   fill: currentColor;
 }
 
-.blocked-permission-icon:-moz-focusring,
-.notification-anchor-icon:-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: calc(var(--urlbar-icon-padding) - 2px);
+.notification-anchor-icon:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
+  border-radius: var(--urlbar-icon-border-radius);
+}
+
+.blocked-permission-icon:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--urlbar-icon-padding) + var(--focus-outline-inset));
+  border-radius: 1px;
 }
 
 /* This class can be used alone or in combination with the class defining the
@@ -278,7 +282,7 @@
  * more aesthetically pleasing way.
  */
 #blocked-permissions-container > .popup-icon {
-  transform: translateY(2px);
+  transform: translateY(1px);
 }
 
 #permission-popup-menulist,

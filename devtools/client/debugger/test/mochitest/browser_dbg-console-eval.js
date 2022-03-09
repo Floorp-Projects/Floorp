@@ -5,10 +5,12 @@
 // Tests that clicking the DOM node button in any ObjectInspect
 // opens the Inspector panel
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
+"use strict";
 
-  await selectSource(dbg, "simple2", 1);
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
+
+  await selectSource(dbg, "simple2.js", 1);
 
   clickElement(dbg, "CodeMirrorLines");
   await waitForElementWithSelector(dbg, ".CodeMirror-code");

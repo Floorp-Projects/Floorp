@@ -121,10 +121,13 @@ class Storage : public nsISupports, public nsWrapperCache {
   virtual void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aRv) {}
 
-  virtual bool GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
-                                    ErrorResult& aRv) {
+  virtual bool GetHasSnapshot(nsIPrincipal& aSubjectPrincipal,
+                              ErrorResult& aRv) {
     return false;
   }
+
+  virtual int64_t GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aRv);
 
   //////////////////////////////////////////////////////////////////////////////
 

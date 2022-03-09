@@ -207,7 +207,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
 
     nsresult rv = NS_OK;
 
-    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+    rv = observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
                                       false);
     MOZ_ALWAYS_SUCCEEDS(rv);
     rv = observerService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
@@ -218,7 +218,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
-    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    if (strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID) == 0) {
       CSFLogDebug(LOGTAG, "Shutting down PeerConnectionCtx");
       PeerConnectionCtx::Destroy();
 
@@ -229,7 +229,8 @@ class PeerConnectionCtxObserver : public nsIObserver {
       nsresult rv = observerService->RemoveObserver(
           this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       MOZ_ALWAYS_SUCCEEDS(rv);
-      rv = observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      rv = observerService->RemoveObserver(this,
+                                           NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
       MOZ_ALWAYS_SUCCEEDS(rv);
 
       // Make sure we're not deleted while still inside ::Observe()
@@ -257,7 +258,7 @@ class PeerConnectionCtxObserver : public nsIObserver {
         services::GetObserverService();
     if (observerService) {
       observerService->RemoveObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
     }
   }
 };
@@ -265,16 +266,10 @@ class PeerConnectionCtxObserver : public nsIObserver {
 NS_IMPL_ISUPPORTS(PeerConnectionCtxObserver, nsIObserver);
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
-nsIThread* PeerConnectionCtx::gMainThread;
 StaticRefPtr<PeerConnectionCtxObserver>
     PeerConnectionCtx::gPeerConnectionCtxObserver;
 
-nsresult PeerConnectionCtx::InitializeGlobal(nsIThread* mainThread) {
-  if (!gMainThread) {
-    gMainThread = mainThread;
-  }
-
-  MOZ_ASSERT(gMainThread == mainThread);
+nsresult PeerConnectionCtx::InitializeGlobal() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult res;
@@ -421,7 +416,7 @@ void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
   MOZ_ASSERT(PeerConnectionCtx::isActive());
 
   for (auto& idAndPc : GetInstance()->mPeerConnections) {
-    if (idAndPc.second->HasMedia()) {
+    if (!idAndPc.second->IsClosed()) {
       idAndPc.second->GetStats(nullptr, true)
           ->Then(
               GetMainThreadSerialEventTarget(), __func__,
@@ -476,12 +471,18 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
 
     SharedThreadPoolWebRtcTaskQueueFactory taskQueueFactory;
     constexpr bool supportTailDispatch = true;
-    auto callWorkerThread = WrapUnique(
-        taskQueueFactory
-            .CreateTaskQueueWrapper("CallWorker", supportTailDispatch,
-                                    webrtc::TaskQueueFactory::Priority::NORMAL,
-                                    MediaThreadType::WEBRTC_CALL_THREAD)
-            .release());
+    // Note the NonBlocking DeletionPolicy!
+    // This task queue is passed into libwebrtc as a raw pointer.
+    // WebrtcCallWrapper guarantees that it outlives its webrtc::Call instance.
+    // Outside of libwebrtc we must use ref-counting to either the
+    // WebrtcCallWrapper or to the CallWorkerThread to keep it alive.
+    auto callWorkerThread =
+        WrapUnique(taskQueueFactory
+                       .CreateTaskQueueWrapper<DeletionPolicy::NonBlocking>(
+                           "CallWorker", supportTailDispatch,
+                           webrtc::TaskQueueFactory::Priority::NORMAL,
+                           MediaThreadType::WEBRTC_CALL_THREAD)
+                       .release());
 
     UniquePtr<webrtc::WebRtcKeyValueConfig> trials =
         WrapUnique(new NoTrialsConfig());
@@ -536,8 +537,8 @@ static void GMPReady_m() {
 };
 
 static void GMPReady() {
-  PeerConnectionCtx::gMainThread->Dispatch(WrapRunnableNM(&GMPReady_m),
-                                           NS_DISPATCH_NORMAL);
+  GetMainThreadEventTarget()->Dispatch(WrapRunnableNM(&GMPReady_m),
+                                       NS_DISPATCH_NORMAL);
 };
 
 void PeerConnectionCtx::initGMP() {

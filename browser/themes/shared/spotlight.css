@@ -17,8 +17,8 @@ body {
 }
 
 body {
-  padding: 20px 52px;
-  width: 500px;
+  padding: 20px;
+  width: 465px;
 }
 
 #dialog-content {
@@ -33,20 +33,20 @@ body {
   width: 100px;
   height: 100px;
   object-fit: contain;
-  margin-bottom: 13px;
+  margin-bottom: 8px;
 }
 
 #title {
   font-weight: 500;
   font-size: 26px;
-  margin-bottom: 5px;
+  margin-bottom: 0;
   white-space: pre-wrap;
 }
 
 #content {
   font-weight: 400;
   font-size: 13px;
-  margin-bottom: 24px;
+  margin-block: 10px 18px;
 }
 
 #learn-more-toggle::after {

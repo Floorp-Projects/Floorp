@@ -20,13 +20,15 @@ const DEFAULT_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
   transitions: true,
-  background_url:
-    "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
+  backdrop:
+    "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
       order: 0,
       content: {
+        position: "corner",
+        logo: {},
         title: {
           string_id: "mr1-onboarding-pin-header",
         },
@@ -38,6 +40,7 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "mr1-onboarding-welcome-image-caption",
           },
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-pin-primary-button-label",
@@ -73,12 +76,14 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_SET_DEFAULT",
       order: 1,
       content: {
+        logo: {},
         title: {
           string_id: "mr1-onboarding-default-header",
         },
         subtitle: {
           string_id: "mr1-onboarding-default-subtitle",
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-default-primary-button-label",
@@ -99,15 +104,46 @@ const DEFAULT_WELCOME_CONTENT = {
       },
     },
     {
-      id: "AW_IMPORT_SETTINGS",
+      id: "AW_LANGUAGE_MISMATCH",
       order: 2,
       content: {
+        logo: {},
+        title: { string_id: "onboarding-live-language-header" },
+        subtitle: { string_id: "onboarding-live-language-subtitle" },
+        has_noodles: true,
+        languageSwitcher: {
+          switch: {
+            string_id: "onboarding-live-language-switch-button-label",
+          },
+          downloading: {
+            string_id: "onboarding-live-language-button-label-downloading",
+          },
+          cancel: {
+            string_id: "onboarding-live-language-secondary-cancel-download",
+          },
+          not_now: {
+            string_id: "onboarding-live-language-not-now-button-label",
+          },
+          waiting: { string_id: "onboarding-live-language-waiting-button" },
+          skip: { string_id: "onboarding-live-language-skip-button-label" },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_IMPORT_SETTINGS",
+      order: 3,
+      content: {
+        logo: {},
         title: {
           string_id: "mr1-onboarding-import-header",
         },
         subtitle: {
           string_id: "mr1-onboarding-import-subtitle",
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id:
@@ -131,14 +167,16 @@ const DEFAULT_WELCOME_CONTENT = {
     },
     {
       id: "AW_CHOOSE_THEME",
-      order: 3,
+      order: 4,
       content: {
+        logo: {},
         title: {
           string_id: "mr1-onboarding-theme-header",
         },
         subtitle: {
           string_id: "mr1-onboarding-theme-subtitle",
         },
+        has_noodles: true,
         tiles: {
           type: "theme",
           action: {
@@ -222,12 +260,13 @@ async function getAddonFromRepository(data) {
   if (addonInfo.sourceURI.scheme !== "https") {
     return null;
   }
+
   return {
     name: addonInfo.name,
     url: addonInfo.sourceURI.spec,
     iconURL: addonInfo.icons["64"] || addonInfo.icons["32"],
     type: addonInfo.type,
-    themePreviewInfo: addonInfo.previews,
+    screenshots: addonInfo.screenshots,
   };
 }
 
@@ -403,6 +442,25 @@ async function prepareContentForReact(content) {
     delete content.screens?.find(
       screen => screen.content?.help_text?.deleteIfNotEn
     )?.content.help_text.text;
+  }
+
+  if (content.languageMismatchEnabled) {
+    const screen = content?.screens?.find(s => s.id === "AW_LANGUAGE_MISMATCH");
+    if (screen) {
+      // Add the display names for the OS and Firefox languages, like "American English".
+      const { appAndSystemLocaleInfo } = content;
+      function addMessageArgs(obj) {
+        for (const value of Object.values(obj)) {
+          if (value?.string_id) {
+            value.args = appAndSystemLocaleInfo.displayNames;
+          }
+        }
+      }
+      addMessageArgs(screen.content.languageSwitcher);
+      addMessageArgs(screen.content);
+    }
+  } else {
+    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH");
   }
 
   return content;

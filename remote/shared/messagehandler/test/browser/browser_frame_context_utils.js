@@ -21,6 +21,15 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(contentBrowser2);
   const browserId2 = contentBrowser2.browsingContext.browserId;
 
+  const { extension, sidebarBrowser } = await installSidebarExtension();
+
+  const tab3 = BrowserTestUtils.addTab(
+    gBrowser,
+    `moz-extension://${extension.uuid}/tab.html`
+  );
+  const { bcId } = await extension.awaitMessage("tab-loaded");
+  const tabExtensionBrowser = BrowsingContext.get(bcId).top.embedderElement;
+
   const parentBrowser1 = createParentBrowserElement(tab1, "content");
   const parentBrowser2 = createParentBrowserElement(tab1, "chrome");
 
@@ -44,8 +53,20 @@ add_task(async function() {
   await checkBrowsingContextCompatible(parentBrowser2, browserId1, false);
   await checkBrowsingContextCompatible(parentBrowser2, browserId2, false);
 
+  info("Check browsing context compatibility for extension");
+  await checkBrowsingContextCompatible(sidebarBrowser, undefined, false);
+  await checkBrowsingContextCompatible(sidebarBrowser, browserId1, false);
+  await checkBrowsingContextCompatible(sidebarBrowser, browserId2, false);
+
+  info("Check browsing context compatibility for extension viewed in a tab");
+  await checkBrowsingContextCompatible(tabExtensionBrowser, undefined, false);
+  await checkBrowsingContextCompatible(tabExtensionBrowser, browserId1, false);
+  await checkBrowsingContextCompatible(tabExtensionBrowser, browserId2, false);
+
   gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);
+  gBrowser.removeTab(tab3);
+  await extension.unload();
 });
 
 async function checkBrowsingContextCompatible(browser, browserId, expected) {

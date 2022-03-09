@@ -10,7 +10,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.ipc += [
-    "AutoTransportDescriptor.h",
     "BackgroundChild.h",
     "BackgroundParent.h",
     "BackgroundStarterChild.h",
@@ -24,6 +23,7 @@ EXPORTS.mozilla.ipc += [
     "CrashReporterHost.h",
     "CrossProcessMutex.h",
     "CrossProcessSemaphore.h",
+    "DataPipe.h",
     "Endpoint.h",
     "EnvironmentMap.h",
     "FileDescriptor.h",
@@ -63,7 +63,6 @@ EXPORTS.mozilla.ipc += [
     "ShmemMessageUtils.h",
     "TaintingIPCUtils.h",
     "TaskFactory.h",
-    "Transport.h",
     "TransportSecurityInfoUtils.h",
     "URIUtils.h",
     "UtilityProcessChild.h",
@@ -76,21 +75,13 @@ EXPORTS.mozilla.ipc += [
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    EXPORTS.mozilla.ipc += [
-        "Transport_win.h",
-    ]
     SOURCES += [
         "SharedMemory_windows.cpp",
-        "Transport_win.cpp",
         "WindowsMessageLoop.cpp",
     ]
 else:
-    EXPORTS.mozilla.ipc += [
-        "Transport_posix.h",
-    ]
     UNIFIED_SOURCES += [
         "SharedMemory_posix.cpp",
-        "Transport_posix.cpp",
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
@@ -163,12 +154,12 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
-    "AutoTransportDescriptor.cpp",
     "BackgroundImpl.cpp",
     "BackgroundUtils.cpp",
     "BrowserProcessSubThread.cpp",
     "CrashReporterClient.cpp",
     "CrashReporterHost.cpp",
+    "DataPipe.cpp",
     "Endpoint.cpp",
     "FileDescriptor.cpp",
     "FileDescriptorUtils.cpp",

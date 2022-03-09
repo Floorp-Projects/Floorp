@@ -69,13 +69,12 @@ struct PlainOldDataSerializer {
 
   typedef T paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(paramType));
   }
 };
 
@@ -87,10 +86,9 @@ template <typename T>
 struct EmptyStructSerializer {
   typedef T paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {}
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {}
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     *aResult = {};
     return true;
   }
@@ -100,13 +98,12 @@ template <>
 struct ParamTraits<int8_t> {
   typedef int8_t paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -119,13 +116,12 @@ template <>
 struct ParamTraits<uint8_t> {
   typedef uint8_t paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
@@ -138,11 +134,10 @@ struct ParamTraits<uint8_t> {
 template <>
 struct ParamTraits<base::FileDescriptor> {
   typedef base::FileDescriptor paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     MOZ_CRASH("FileDescriptor isn't meaningful on this platform");
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     MOZ_CRASH("FileDescriptor isn't meaningful on this platform");
     return false;
   }
@@ -152,9 +147,8 @@ struct ParamTraits<base::FileDescriptor> {
 template <>
 struct ParamTraits<mozilla::void_t> {
   typedef mozilla::void_t paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {}
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {}
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     *aResult = paramType();
     return true;
   }
@@ -163,9 +157,8 @@ struct ParamTraits<mozilla::void_t> {
 template <>
 struct ParamTraits<mozilla::null_t> {
   typedef mozilla::null_t paramType;
-  static void Write(Message* aMsg, const paramType& aParam) {}
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {}
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     *aResult = paramType();
     return true;
   }
@@ -178,11 +171,10 @@ struct BitfieldHelper {
   // We need this helper because we can't get the address of a bitfield to
   // pass directly to ReadParam. So instead we read it into a temporary bool
   // and set the bitfield using a setter function
-  static bool ReadBoolForBitfield(const Message* aMsg, PickleIterator* aIter,
-                                  ParamType* aResult,
+  static bool ReadBoolForBitfield(MessageReader* aReader, ParamType* aResult,
                                   void (ParamType::*aSetter)(bool)) {
     bool value;
-    if (ReadParam(aMsg, aIter, &value)) {
+    if (ReadParam(aReader, &value)) {
       (aResult->*aSetter)(value);
       return true;
     }
@@ -195,14 +187,13 @@ struct BitfieldHelper {
 // ReadParams(aMsg, aIter, aParam.foo, aParam.bar, aParam.baz)
 
 template <typename... Ts>
-static void WriteParams(Message* aMsg, const Ts&... aArgs) {
-  (WriteParam(aMsg, aArgs), ...);
+static void WriteParams(MessageWriter* aWriter, const Ts&... aArgs) {
+  (WriteParam(aWriter, aArgs), ...);
 }
 
 template <typename... Ts>
-static bool ReadParams(const Message* aMsg, PickleIterator* aIter,
-                       Ts&... aArgs) {
-  return (ReadParam(aMsg, aIter, &aArgs) && ...);
+static bool ReadParams(MessageReader* aReader, Ts&... aArgs) {
+  return (ReadParam(aReader, &aArgs) && ...);
 }
 
 // Macros that allow syntax like:
@@ -215,15 +206,14 @@ static bool ReadParams(const Message* aMsg, PickleIterator* aIter,
   template <>                                                                \
   struct ParamTraits<Type> {                                                 \
     typedef Type paramType;                                                  \
-    static void Write(Message* aMsg, const paramType& aParam) {              \
-      WriteParams(aMsg, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
-                                               (__VA_ARGS__)));              \
+    static void Write(MessageWriter* aWriter, const paramType& aParam) {     \
+      WriteParams(aWriter, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ),  \
+                                                  (), (__VA_ARGS__)));       \
     }                                                                        \
                                                                              \
-    static bool Read(const Message* aMsg, PickleIterator* aIter,             \
-                     paramType* aResult) {                                   \
+    static bool Read(MessageReader* aReader, paramType* aResult) {           \
       paramType& aParam = *aResult;                                          \
-      return ReadParams(aMsg, aIter,                                         \
+      return ReadParams(aReader,                                             \
                         MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
                                                (__VA_ARGS__)));              \
     }                                                                        \
@@ -239,17 +229,16 @@ static bool ReadParams(const Message* aMsg, PickleIterator* aIter,
   template <>                                                                \
   struct ParamTraits<Type> {                                                 \
     typedef Type paramType;                                                  \
-    static void Write(Message* aMsg, const paramType& aParam) {              \
-      WriteParam(aMsg, static_cast<const Super&>(aParam));                   \
-      WriteParams(aMsg, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
-                                               (__VA_ARGS__)));              \
+    static void Write(MessageWriter* aWriter, const paramType& aParam) {     \
+      WriteParam(aWriter, static_cast<const Super&>(aParam));                \
+      WriteParams(aWriter, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ),  \
+                                                  (), (__VA_ARGS__)));       \
     }                                                                        \
                                                                              \
-    static bool Read(const Message* aMsg, PickleIterator* aIter,             \
-                     paramType* aResult) {                                   \
+    static bool Read(MessageReader* aReader, paramType* aResult) {           \
       paramType& aParam = *aResult;                                          \
-      return ReadParam(aMsg, aIter, static_cast<Super*>(aResult)) &&         \
-             ReadParams(aMsg, aIter,                                         \
+      return ReadParam(aReader, static_cast<Super*>(aResult)) &&             \
+             ReadParams(aReader,                                             \
                         MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
                                                (__VA_ARGS__)));              \
     }                                                                        \

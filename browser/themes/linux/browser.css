@@ -1,8 +1,6 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
@@ -17,7 +15,7 @@
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
-  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
+  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.075), rgba(255,255,255,.075));
 
   --toolbarbutton-border-radius: 4px;
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
@@ -25,10 +23,6 @@
   --panel-separator-color: ThreeDShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
-}
-
-:root:not(:-moz-lwtheme) {
-  --focus-outline-color: -moz-accent-color;
 }
 
 #TabsToolbar:not(:-moz-lwtheme),
@@ -200,16 +194,6 @@ menuitem.bookmark-item {
   appearance: auto;
   -moz-default-appearance: menubar;
   color: -moz-menubartext;
-}
-
-#nav-bar {
-  -moz-window-dragging: drag;
-}
-
-@media (-moz-menubar-drag) {
-  #TabsToolbar {
-    -moz-window-dragging: drag;
-  }
 }
 
 #context_reloadTab {

@@ -58,6 +58,7 @@
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
+#include "wasm/WasmJS.h"       // WasmExceptionObject
 
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
@@ -266,12 +267,18 @@ JSErrorReport* js::ErrorFromException(JSContext* cx, HandleObject objArg) {
 }
 
 JS_PUBLIC_API JSObject* JS::ExceptionStackOrNull(HandleObject objArg) {
-  ErrorObject* obj = objArg->maybeUnwrapIf<ErrorObject>();
-  if (!obj) {
-    return nullptr;
+  ErrorObject* errorObject = objArg->maybeUnwrapIf<ErrorObject>();
+  if (errorObject) {
+    return errorObject->stack();
   }
 
-  return obj->stack();
+  WasmExceptionObject* wasmObject =
+      objArg->maybeUnwrapIf<WasmExceptionObject>();
+  if (wasmObject) {
+    return wasmObject->stack();
+  }
+
+  return nullptr;
 }
 
 JS_PUBLIC_API JSLinearString* js::GetErrorTypeName(JSContext* cx,

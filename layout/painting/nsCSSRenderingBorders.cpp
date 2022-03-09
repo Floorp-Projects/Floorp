@@ -3653,8 +3653,8 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         // but there are reftests that are sensible to the test going through a
         // blob while the reference doesn't.
         if (noVerticalBorders && noHorizontalBorders) {
-          aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
-                             key.value());
+          aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), false,
+                             rendering, key.value());
           break;
         }
 

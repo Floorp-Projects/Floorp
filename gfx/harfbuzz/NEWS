@@ -1,3 +1,89 @@
+Overview of changes leading to 3.4.0
+Sunday, February 13, 2022
+====================================
+- Perform sanity checks on shaping results is now part of “harfbuzz” library
+  and can be enabled by setting the buffer flag HB_BUFFER_FLAG_VERIFY.
+  (Behdad Esfahbod)
+- Arabic Mark Transient Reordering Algorithm have been updated to revision 6.
+  (Khaled Hosny)
+- ISO 15924 code for mathematical notation, ‘Zmth’, now maps to the OpenType
+  ‘math’ tag. (Alexis King)
+- It is now possible to get at once all math kerning values for a given glyph
+  at a given corner. (Alexis King)
+- Fix locale_t portability issues on systems the typdef’s it to a void pointer.
+  (Behdad Esfahbod)
+
+- New API:
++HB_BUFFER_FLAG_VERIFY
++HB_OT_TAG_MATH_SCRIPT
++HB_SCRIPT_MATH
++hb_ot_math_kern_entry_t
++hb_ot_math_get_glyph_kernings
+
+- Deprecated API
++HB_OT_MATH_SCRIPT
+
+
+Overview of changes leading to 3.3.2
+Sunday, February 6, 2022
+====================================
+- Revert splitting of pair positioning values introduced in 3.3.0 as it proved
+  problematic. (Behdad Esfahbod)
+
+
+Overview of changes leading to 3.3.1
+Monday, January 31, 2022
+====================================
+- Fix heap-use-after-free in harfbuzz-subset introduced in previous release.
+  (Garret Rieger)
+
+
+Overview of changes leading to 3.3.0
+Monday, January 31, 2022
+====================================
+- Improved documentation. (Matthias Clasen)
+- Internal code cleanup, using C++ standard library more. (Behdad Esfahbod)
+- The low 16-bits of face index will be used by hb_face_create() to select a
+  face inside a font collection file format, while the high 16-bits will be
+  used by hb_font_create() to load the named instance. (Behdad Esfahbod)
+- Glyph positions and other font metrics now apply synthetic slant set by
+  hb_font_set_synthetic_slant(), for improved positioning for synthetically
+  slanted fonts. (Behdad Esfahbod)
+- Fixed unintentional locale dependency in hb_variation_to_string() for decimal
+  point representation. (Matthias Clasen)
+- When applying pair positioning (kerning) the positioning value is split
+  between the two sides of the pair for improved cursor positioning between
+  such pairs. (Behdad Esfahbod)
+- Introduced new HB_GLYPH_FLAG_UNSAFE_TO_CONCAT, to be used in conjunction
+  with HB_GLYPH_FLAG_UNSAFE_TO_BREAK for optimizing re-shaping during line
+  breaking. Check the documentation for further details. (Behdad Esfahbod)
+- Improved handling of macrolanguages when mapping BCP 47 codes to OpenType
+  tags. (David Corbett)
+
+- New API:
++HB_GLYPH_FLAG_UNSAFE_TO_CONCAT
++hb_segment_properties_overlay()
++hb_buffer_create_similar()
++hb_font_set_synthetic_slant()
++hb_font_get_synthetic_slant()
++hb_font_get_var_coords_design()
+
+
+Overview of changes leading to 3.2.0
+Friday, November 26, 2021
+====================================
+“harfbuzz” library improvements:
+- Fixed shaping of Apple Color Emoji flags in right-to-left context. (Behdad Esfahbod)
+- Fixed positioning of CFF fonts in HB_TINY profile. (Behdad Esfahbod)
+- OpenType 1.9 language tags update. (David Corbett)
+- Add HB_NO_VERTICAL config option.
+- Add HB_CONFIG_OVERRIDE_H for easier configuration. (Behdad Esfahbod)
+
+“harfbuzz-subset” library improvements:
+- Improved packing of cmap, loca, and Ligature tables. (Garret Rieger)
+- Significantly improved overflow-resolution strategy in the repacker. (Garret Rieger)
+
+
 Overview of changes leading to 3.1.2
 Friday, November 26, 2021
 ====================================
@@ -368,7 +454,7 @@ Friday, May 24, 2019
   code-base changes.  We now require C++11.  Support for gcc 4.8 and earlier has been
   dropped.
 - New hb-config.hh facility for compiling smaller library for embedded and web usecases.
-- New Unicode Character Databse implementation that is half the size of previously-used
+- New Unicode Character Database implementation that is half the size of previously-used
   UCDN.
 - Subsetter improvements.
 - Improved documentation, thanks to Nathan Willis.
@@ -1216,7 +1302,7 @@ Thursday, February 25, 2016
   due to bug in glyph class of ASCII double-quote character.  This should
   address "regression" introduced in 1.2.0 when we switched mark zeroing
   in most shapers from BY_UNICODE_LATE to BY_GDEF_LATE.
-  This fourth release in a week should finally stablize things...
+  This fourth release in a week should finally stabilize things...
 
 - hb-ot-font's get_glyph() implementation saw some optimizations.  Though,
   might be really hard to measure in real-world situations.
@@ -2264,7 +2350,7 @@ o Changed API:
   - hb_buffer_create() takes zero arguments now.
     Use hb_buffer_pre_allocate() to pre-allocate.
 
-  - hb_buffer_add_utf*() now accept -1 for length parameteres,
+  - hb_buffer_add_utf*() now accept -1 for length parameters,
     meaning "nul-terminated".
 
   - hb_direction_t enum values changed.

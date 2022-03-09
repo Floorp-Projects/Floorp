@@ -354,7 +354,9 @@ TextureHost::~TextureHost() {
 }
 
 void TextureHost::Finalize() {
-  MaybeDestroyRenderTexture();
+  if (!(GetFlags() & TextureFlags::BORROWED_EXTERNAL_ID)) {
+    MaybeDestroyRenderTexture();
+  }
 
   if (!(GetFlags() & TextureFlags::DEALLOCATE_CLIENT)) {
     DeallocateSharedData();
@@ -527,11 +529,12 @@ void BufferTextureHost::PushResourceUpdates(
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    gfx::IntSize ySize = desc.display().Size();
+    gfx::IntSize cbcrSize = ImageDataSerializer::GetCroppedCbCrSize(desc);
     wr::ImageDescriptor yDescriptor(
-        desc.ySize(), desc.yStride(),
-        SurfaceFormatForColorDepth(desc.colorDepth()));
+        ySize, desc.yStride(), SurfaceFormatForColorDepth(desc.colorDepth()));
     wr::ImageDescriptor cbcrDescriptor(
-        desc.cbCrSize(), desc.cbCrStride(),
+        cbcrSize, desc.cbCrStride(),
         SurfaceFormatForColorDepth(desc.colorDepth()));
     (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, imageType, 0);
     (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, imageType, 1);
@@ -552,7 +555,7 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
       aFlags.contains(PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES);
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
-    aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
+    aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                        !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                        wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                        preferCompositorSurface, useExternalSurface);

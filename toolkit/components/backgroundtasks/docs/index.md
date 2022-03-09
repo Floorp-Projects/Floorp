@@ -44,7 +44,7 @@ The exit codes 2-4 have special meaning:
 
 See [`BackgroundTasksManager.EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
 
-## Test-only Background Tasks
+## Test-only background tasks
 
 There is special support for test-only background tasks.  Add to your `moz.build` file a stanza like:
 
@@ -55,6 +55,10 @@ TESTING_JS_MODULES.backgroundtasks += [
 ```
 
 For more details, see [`XPCSHELL_TESTING_MODULES_URI`](https://searchfox.org/mozilla-central/search?q=XPCSHELL_TESTING_MODULES_URI).
+
+## Debugging background tasks
+
+Background task mode supports using the JavaScript debugger and the Firefox Devtools and Browser Toolbox.  When invoked with the command line parameters `--jsdebugger` (and optionally `--wait-for-jsdebugger`), the background task framework will launch a Browser Toolbox, connect to the background task, and pause execution at the first line of the task implementation.  The Browser Toolbox is launched with a temporary profile (located inside the transient temporary profile the background task itself creates, for historical reasons.)  The Browser Toolbox profile's preferences are copied from the default browsing profile, allowing to configure devtools preferences.  (The `--start-debugger-server` command line option is also recognized; see the output of `firefox --backgroundtask success --attach-console --help` for details.)
 
 ## The background task mode runtime environment
 
@@ -73,3 +77,17 @@ See the [documentation for defining static components](https://firefox-source-do
 ### Most background tasks do not process updates
 
 To prevent unexpected interactions between background tasks and the Firefox runtime lifecycle, such as those uncovered by [Bug 1736373](https://bugzilla.mozilla.org/show_bug.cgi?id=1736373), most background tasks do not process application updates.  The startup process decides whether to process updates in [`::ShouldProcessUpdates`](https://searchfox.org/mozilla-central/source/toolkit/xre/nsAppRunner.cpp) and the predicate that determines whether a particular background task *does* process updates is [`BackgroundTasks::IsUpdatingTaskName`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasks.h).
+
+Background tasks that are launched at shutdown (and that are not updating) do not prevent Firefox from updating.  However, this can result in Firefox updating out from underneath a running background task: see [this summary of the issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1480452#c8).  Generally, background tasks should be minimal and short-lived and are unlikely to launch additional child subprocesses after startup, so they should not witness this issue, but it is still possible.  See the diagram below visualizing process lifetimes.
+
+```{mermaid}
+    gantt
+        title Background tasks launched at Firefox shutdown
+        dateFormat  YYYY-MM-DD
+        axisFormat  
+        section Firefox
+        firefox (version N)                      :2014-01-03, 3d
+        updater                                  :2014-01-06, 1d
+        firefox (version N+1)                    :2014-01-07, 3d
+        firefox --backgroundtask ... (version N) :2014-01-05, 3d
+```

@@ -1179,7 +1179,7 @@ class nsCycleCollector : public nsIMemoryReporter {
   MOZ_CAN_RUN_SCRIPT
   void ShutdownCollect();
 
-  void FixGrayBits(bool aForceGC, TimeLog& aTimeLog);
+  void FixGrayBits(bool aIsShutdown, TimeLog& aTimeLog);
   bool IsIncrementalGCInProgress();
   void FinishAnyIncrementalGCInProgress();
   bool ShouldMergeZones(ccIsManual aIsManual);
@@ -3234,20 +3234,22 @@ void nsCycleCollector::CheckThreadSafety() {
 #endif
 }
 
-// The cycle collector uses the mark bitmap to discover what JS objects
-// were reachable only from XPConnect roots that might participate in
-// cycles. We ask the JS context whether we need to force a GC before
-// this CC. It returns true on startup (before the mark bits have been set),
-// and also when UnmarkGray has run out of stack.  We also force GCs on shut
-// down to collect cycles involving both DOM and JS.
-void nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog) {
+// The cycle collector uses the mark bitmap to discover what JS objects are
+// reachable only from XPConnect roots that might participate in cycles. We ask
+// the JS runtime whether we need to force a GC before this CC. It should only
+// be true when UnmarkGray has run out of stack. We also force GCs on shutdown
+// to collect cycles involving both DOM and JS, and in WantAllTraces CCs to
+// prevent hijinks from ForgetSkippable and compartmental GCs.
+void nsCycleCollector::FixGrayBits(bool aIsShutdown, TimeLog& aTimeLog) {
   CheckThreadSafety();
 
   if (!mCCJSRuntime) {
     return;
   }
 
-  if (!aForceGC) {
+  // If we're not forcing a GC anyways due to shutdown or an all traces CC,
+  // check to see if we still need to do one to fix the gray bits.
+  if (!(aIsShutdown || (mLogger && mLogger->IsAllTraces()))) {
     mCCJSRuntime->FixWeakMappingGrayBits();
     aTimeLog.Checkpoint("FixWeakMappingGrayBits");
 
@@ -3257,13 +3259,19 @@ void nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog) {
     if (!needGC) {
       return;
     }
-    mResults.mForcedGC = true;
   }
+
+  mResults.mForcedGC = true;
 
   uint32_t count = 0;
   do {
-    mCCJSRuntime->GarbageCollect(aForceGC ? JS::GCReason::SHUTDOWN_CC
-                                          : JS::GCReason::CC_FORCED);
+    if (aIsShutdown) {
+      mCCJSRuntime->GarbageCollect(JS::GCOptions::Shutdown,
+                                   JS::GCReason::SHUTDOWN_CC);
+    } else {
+      mCCJSRuntime->GarbageCollect(JS::GCOptions::Normal,
+                                   JS::GCReason::CC_FORCED);
+    }
 
     mCCJSRuntime->FixWeakMappingGrayBits();
 
@@ -3562,16 +3570,12 @@ void nsCycleCollector::BeginCollection(
     }
   }
 
-  // On a WantAllTraces CC, force a synchronous global GC to prevent
-  // hijinks from ForgetSkippable and compartmental GCs.
-  bool forceGC = isShutdown || (mLogger && mLogger->IsAllTraces());
-
   // BeginCycleCollectionCallback() might have started an IGC, and we need
   // to finish it before we run FixGrayBits.
   FinishAnyIncrementalGCInProgress();
   timeLog.Checkpoint("Pre-FixGrayBits finish IGC");
 
-  FixGrayBits(forceGC, timeLog);
+  FixGrayBits(isShutdown, timeLog);
   if (mCCJSRuntime) {
     mCCJSRuntime->CheckGrayBits();
   }

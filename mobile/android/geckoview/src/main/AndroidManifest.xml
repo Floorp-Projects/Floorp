@@ -78,6 +78,13 @@
                 android:isolatedProcess="false"
                 android:process=":utility">
         </service>
+        <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$ipdlunittest"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":ipdlunittest">
+        </service>
     </application>
 
 </manifest>

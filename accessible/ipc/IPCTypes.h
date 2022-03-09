@@ -49,13 +49,12 @@ template <>
 struct ParamTraits<mozilla::a11y::FontSize> {
   typedef mozilla::a11y::FontSize paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &(aResult->mValue));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &(aResult->mValue));
   }
 };
 
@@ -63,13 +62,12 @@ template <>
 struct ParamTraits<mozilla::a11y::DeleteEntry> {
   typedef mozilla::a11y::DeleteEntry paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &(aResult->mValue));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &(aResult->mValue));
   }
 };
 
@@ -77,12 +75,11 @@ template <>
 struct ParamTraits<mozilla::a11y::AccGroupInfo> {
   typedef mozilla::a11y::AccGroupInfo paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     MOZ_ASSERT_UNREACHABLE("Cannot serialize AccGroupInfo");
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     MOZ_ASSERT_UNREACHABLE("Cannot de-serialize AccGroupInfo");
     return false;
   }
@@ -92,13 +89,12 @@ template <>
 struct ParamTraits<mozilla::a11y::Color> {
   typedef mozilla::a11y::Color paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mValue);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &(aResult->mValue));
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &(aResult->mValue));
   }
 };
 
@@ -106,27 +102,26 @@ template <>
 struct ParamTraits<mozilla::a11y::AccAttributes*> {
   typedef mozilla::a11y::AccAttributes paramType;
 
-  static void Write(Message* aMsg, const paramType* aParam) {
+  static void Write(MessageWriter* aWriter, const paramType* aParam) {
     if (!aParam) {
-      WriteParam(aMsg, true);
+      WriteParam(aWriter, true);
       return;
     }
 
-    WriteParam(aMsg, false);
+    WriteParam(aWriter, false);
     uint32_t count = aParam->mData.Count();
-    WriteParam(aMsg, count);
+    WriteParam(aWriter, count);
     for (auto iter = aParam->mData.ConstIter(); !iter.Done(); iter.Next()) {
       RefPtr<nsAtom> key = iter.Key();
-      WriteParam(aMsg, key);
+      WriteParam(aWriter, key);
       const paramType::AttrValueType& data = iter.Data();
-      WriteParam(aMsg, data);
+      WriteParam(aWriter, data);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<paramType>* aResult) {
+  static bool Read(MessageReader* aReader, RefPtr<paramType>* aResult) {
     bool isNull = false;
-    if (!ReadParam(aMsg, aIter, &isNull)) {
+    if (!ReadParam(aReader, &isNull)) {
       return false;
     }
 
@@ -137,16 +132,16 @@ struct ParamTraits<mozilla::a11y::AccAttributes*> {
 
     *aResult = mozilla::MakeRefPtr<mozilla::a11y::AccAttributes>();
     uint32_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
+    if (!ReadParam(aReader, &count)) {
       return false;
     }
     for (uint32_t i = 0; i < count; ++i) {
       RefPtr<nsAtom> key;
-      if (!ReadParam(aMsg, aIter, &key)) {
+      if (!ReadParam(aReader, &key)) {
         return false;
       }
       paramType::AttrValueType val(0);
-      if (!ReadParam(aMsg, aIter, &val)) {
+      if (!ReadParam(aReader, &val)) {
         return false;
       }
       (*aResult)->mData.InsertOrUpdate(key, std::move(val));

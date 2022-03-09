@@ -89,17 +89,17 @@ ProfileBufferBlockIndex AddMarker(
 #ifndef MOZ_GECKO_PROFILER
   return {};
 #else
-  if ((aOptions.ThreadId().IsUnspecified() ||
-       aOptions.ThreadId().ThreadId() == profiler_current_thread_id())
-          ? !baseprofiler::profiler_thread_is_being_profiled()
-          // If targetting another thread, we can only check if the profiler
-          // is active&unpaused.
-          : !baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused()) {
+  // Record base markers whenever the core buffer is in session.
+  // TODO: When profiler_thread_is_being_profiled becomes available from
+  // mozglue, use it instead.
+  ProfileChunkedBuffer& coreBuffer =
+      ::mozilla::baseprofiler::profiler_get_core_buffer();
+  if (!coreBuffer.IsInSession()) {
     return {};
   }
   return ::mozilla::baseprofiler::AddMarkerToBuffer(
-      base_profiler_markers_detail::CachedBaseCoreBuffer(), aName, aCategory,
-      std::move(aOptions), aMarkerType, aPayloadArguments...);
+      coreBuffer, aName, aCategory, std::move(aOptions), aMarkerType,
+      aPayloadArguments...);
 #endif
 }
 

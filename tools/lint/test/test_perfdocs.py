@@ -482,6 +482,7 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
             }
 
         if framework == "talos":
+            fg._get_ci_tasks = mock.Mock()
             for suite, suitetests in fg.get_test_list().items():
                 assert suite == "Talos Tests"
                 assert suitetests

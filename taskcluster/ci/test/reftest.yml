@@ -45,9 +45,11 @@ crashtest:
             default: 1
     variants:
         - fission
+        - no-fission
         - wayland
-        - webrender-sw
+        - webrender-sw+no-fission
         - webrender-sw+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission:
@@ -59,7 +61,7 @@ crashtest:
                     linux1804-64-qr/debug: built-projects
                     linux1804-64(-tsan|-asan)-qr/opt: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
@@ -73,7 +75,7 @@ crashtest:
                     windows10-64-2004-asan-qr/opt: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux1804-64-qr/debug: ['trunk']
@@ -96,11 +98,14 @@ crashtest-qr:
     schedules-component: crashtest
     treeherder-symbol: R(C)
     chunks: 1
-    variants: ['fission']
+    variants:
+        - fission
+        - no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission: []
-            default: built-projects
+            no-fission: built-projects
     max-run-time: 1200
     tier: 2
     virtualization: virtual
@@ -128,14 +133,17 @@ jsreftest:
         by-test-platform:
             .*ccov.*: 7200
             default: 3600
-    variants: ['fission']
+    variants:
+        - fission
+        - no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     android.*/.*: []
                     default: built-projects
-            default:
+            no-fission:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
@@ -165,9 +173,11 @@ reftest:
             default: 8
     variants:
         - fission
+        - no-fission
         - wayland
-        - webrender-sw
+        - webrender-sw+no-fission
         - webrender-sw+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission:
@@ -181,7 +191,7 @@ reftest:
                     linux1804-64-qr/debug: built-projects
                     linux1804-64(-asan|-tsan)-qr/opt: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
@@ -195,7 +205,7 @@ reftest:
                     windows10-64-2004(-asan)?-qr/opt: built-projects
                     windows7-32(?:-shippable)?-qr/opt: built-projects
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux1804-64-qr/debug: ['trunk']
@@ -231,15 +241,17 @@ reftest-qr:
     treeherder-symbol: R(R)
     chunks: 2
     variants:
-        - webrender-sw
+        - no-fission
+        - webrender-sw+no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-hw-p2-8-0-android-aarch64-qr/debug: built-projects
                     default: []
-            default: built-projects
+            no-fission: built-projects
     max-run-time: 2400
     mozharness:
         chunked: true

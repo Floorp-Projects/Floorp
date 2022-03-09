@@ -24,52 +24,6 @@ var WebConsoleUtils = {
   },
 
   /**
-   * Clone an object.
-   *
-   * @param object object
-   *        The object you want cloned.
-   * @param boolean recursive
-   *        Tells if you want to dig deeper into the object, to clone
-   *        recursively.
-   * @param function [filter]
-   *        Optional, filter function, called for every property. Three
-   *        arguments are passed: key, value and object. Return true if the
-   *        property should be added to the cloned object. Return false to skip
-   *        the property.
-   * @return object
-   *         The cloned object.
-   */
-  cloneObject: function(object, recursive, filter) {
-    if (typeof object != "object") {
-      return object;
-    }
-
-    let temp;
-
-    if (Array.isArray(object)) {
-      temp = [];
-      object.forEach(function(value, index) {
-        if (!filter || filter(index, value, object)) {
-          temp.push(recursive ? WebConsoleUtils.cloneObject(value) : value);
-        }
-      });
-    } else {
-      temp = {};
-      for (const key in object) {
-        const value = object[key];
-        if (
-          object.hasOwnProperty(key) &&
-          (!filter || filter(key, value, object))
-        ) {
-          temp[key] = recursive ? WebConsoleUtils.cloneObject(value) : value;
-        }
-      }
-    }
-
-    return temp;
-  },
-
-  /**
    * Gets the ID of the inner window of this DOM window.
    *
    * @param nsIDOMWindow window

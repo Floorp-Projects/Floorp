@@ -13,7 +13,7 @@ include IPCStream;
 
 namespace mozilla {
 
-[RefCounted] protocol PRemoteLazyInputStream
+protocol PRemoteLazyInputStream
 {
   manager PBackground or PContent or PSocketProcess;
 

@@ -88,7 +88,8 @@ def run(
     limit_locales,
     tasks,
     try_config=None,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     message="{msg}",
     closed_tree=False,
 ):
@@ -152,7 +153,8 @@ def run(
     return push_to_try(
         "release",
         message.format(msg=msg),
-        push=push,
+        stage_changes=stage_changes,
+        dry_run=dry_run,
         closed_tree=closed_tree,
         try_task_config=task_config,
         files_to_change=files_to_change,

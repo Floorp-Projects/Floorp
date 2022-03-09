@@ -79,31 +79,30 @@ already_AddRefed<PaintRequestList> NotifyPaintEvent::PaintRequests(
   return requests.forget();
 }
 
-void NotifyPaintEvent::Serialize(IPC::Message* aMsg,
+void NotifyPaintEvent::Serialize(IPC::MessageWriter* aWriter,
                                  bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, u"notifypaintevent"_ns);
+    IPC::WriteParam(aWriter, u"notifypaintevent"_ns);
   }
 
-  Event::Serialize(aMsg, false);
+  Event::Serialize(aWriter, false);
 
   uint32_t length = mInvalidateRequests.Length();
-  IPC::WriteParam(aMsg, length);
+  IPC::WriteParam(aWriter, length);
   for (uint32_t i = 0; i < length; ++i) {
-    IPC::WriteParam(aMsg, mInvalidateRequests[i]);
+    IPC::WriteParam(aWriter, mInvalidateRequests[i]);
   }
 }
 
-bool NotifyPaintEvent::Deserialize(const IPC::Message* aMsg,
-                                   PickleIterator* aIter) {
-  NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
+bool NotifyPaintEvent::Deserialize(IPC::MessageReader* aReader) {
+  NS_ENSURE_TRUE(Event::Deserialize(aReader), false);
 
   uint32_t length = 0;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &length), false);
+  NS_ENSURE_TRUE(IPC::ReadParam(aReader, &length), false);
   mInvalidateRequests.SetCapacity(length);
   for (uint32_t i = 0; i < length; ++i) {
     nsRect req;
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req), false);
+    NS_ENSURE_TRUE(IPC::ReadParam(aReader, &req), false);
     mInvalidateRequests.AppendElement(req);
   }
 

@@ -17,20 +17,19 @@
 template <>
 struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   using paramType = mozilla::ipc::NodeChannel::Introduction;
-  static void Write(Message* aMsg, paramType&& aParam) {
-    WriteParam(aMsg, aParam.mName);
-    WriteParam(aMsg, std::move(aParam.mTransport));
-    WriteParam(aMsg, aParam.mMode);
-    WriteParam(aMsg, aParam.mMyPid);
-    WriteParam(aMsg, aParam.mOtherPid);
+  static void Write(MessageWriter* aWriter, paramType&& aParam) {
+    WriteParam(aWriter, aParam.mName);
+    WriteParam(aWriter, std::move(aParam.mHandle));
+    WriteParam(aWriter, aParam.mMode);
+    WriteParam(aWriter, aParam.mMyPid);
+    WriteParam(aWriter, aParam.mOtherPid);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mName) &&
-           ReadParam(aMsg, aIter, &aResult->mTransport) &&
-           ReadParam(aMsg, aIter, &aResult->mMode) &&
-           ReadParam(aMsg, aIter, &aResult->mMyPid) &&
-           ReadParam(aMsg, aIter, &aResult->mOtherPid);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mName) &&
+           ReadParam(aReader, &aResult->mHandle) &&
+           ReadParam(aReader, &aResult->mMode) &&
+           ReadParam(aReader, &aResult->mMyPid) &&
+           ReadParam(aReader, &aResult->mOtherPid);
   }
 };
 
@@ -159,14 +158,16 @@ void NodeChannel::RequestIntroduction(const NodeName& aPeerName) {
   MOZ_ASSERT(aPeerName != mojo::core::ports::kInvalidNodeName);
   auto message = MakeUnique<IPC::Message>(MSG_ROUTING_CONTROL,
                                           REQUEST_INTRODUCTION_MESSAGE_TYPE);
-  WriteParam(message.get(), aPeerName);
+  IPC::MessageWriter writer(*message);
+  WriteParam(&writer, aPeerName);
   SendMessage(std::move(message));
 }
 
 void NodeChannel::Introduce(Introduction aIntroduction) {
   auto message =
       MakeUnique<IPC::Message>(MSG_ROUTING_CONTROL, INTRODUCE_MESSAGE_TYPE);
-  WriteParam(message.get(), std::move(aIntroduction));
+  IPC::MessageWriter writer(*message);
+  WriteParam(&writer, std::move(aIntroduction));
   SendMessage(std::move(message));
 }
 
@@ -182,8 +183,9 @@ void NodeChannel::AcceptInvite(const NodeName& aRealName,
   MOZ_ASSERT(aInitialPort != mojo::core::ports::kInvalidPortName);
   auto message =
       MakeUnique<IPC::Message>(MSG_ROUTING_CONTROL, ACCEPT_INVITE_MESSAGE_TYPE);
-  WriteParam(message.get(), aRealName);
-  WriteParam(message.get(), aInitialPort);
+  IPC::MessageWriter writer(*message);
+  WriteParam(&writer, aRealName);
+  WriteParam(&writer, aInitialPort);
   SendMessage(std::move(message));
 }
 
@@ -227,11 +229,11 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
     return;
   }
 
-  PickleIterator iter(aMessage);
+  IPC::MessageReader reader(aMessage);
   switch (aMessage.type()) {
     case REQUEST_INTRODUCTION_MESSAGE_TYPE: {
       NodeName name;
-      if (IPC::ReadParam(&aMessage, &iter, &name)) {
+      if (IPC::ReadParam(&reader, &name)) {
         mListener->OnRequestIntroduction(mName, name);
         return;
       }
@@ -239,7 +241,7 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
     }
     case INTRODUCE_MESSAGE_TYPE: {
       Introduction introduction;
-      if (IPC::ReadParam(&aMessage, &iter, &introduction)) {
+      if (IPC::ReadParam(&reader, &introduction)) {
         mListener->OnIntroduce(mName, std::move(introduction));
         return;
       }
@@ -253,8 +255,8 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
     case ACCEPT_INVITE_MESSAGE_TYPE: {
       NodeName realName;
       PortName initialPort;
-      if (IPC::ReadParam(&aMessage, &iter, &realName) &&
-          IPC::ReadParam(&aMessage, &iter, &initialPort)) {
+      if (IPC::ReadParam(&reader, &realName) &&
+          IPC::ReadParam(&reader, &initialPort)) {
         mListener->OnAcceptInvite(mName, realName, initialPort);
         return;
       }

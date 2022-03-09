@@ -1,0 +1,27 @@
+# Verify that snapping on a clipped surface with a 180 deg rotation + a local 180 deg rotation works correctly
+---
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [0, 0, 400, 30]
+      complex:
+        - rect: [0, 0, 400, 30]
+          radius: {
+            top-left: 2,
+            top-right: 2,
+            bottom-left: 2,
+            bottom-right: 2,
+          }
+    - type: stacking-context
+      clip-node: 2
+      transform: rotate(180)
+      items:
+        - type: stacking-context
+          transform: rotate(180)
+          items:
+            - text: "Should be upright"
+              origin: 20 24
+              size: 18
+              color: black
+              font: "VeraBd.ttf"

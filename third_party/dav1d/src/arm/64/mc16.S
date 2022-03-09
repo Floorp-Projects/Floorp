@@ -1801,7 +1801,7 @@ L(\type\()_8tap_v):
         st_s            \d_strd, v16, 4
         ret
 
-28:     // 2x8, 2x16 v
+28:     // 2x6, 2x8, 2x12, 2x16 v
         ld1             {v0.8b}, [\xmy]
         sub             \sr2,  \src,  \s_strd, lsl #1
         add             \ds2,  \dst,  \d_strd
@@ -1814,28 +1814,32 @@ L(\type\()_8tap_v):
         interleave_1_s  v1,  v2,  v3,  v4,  v5
         interleave_1_s  v5,  v6,  v7
 216:
-        subs            \h,  \h,  #8
+        subs            \h,  \h,  #4
         load_s          \sr2, \src, \s_strd, v16, v17, v18, v19
-        load_s          \sr2, \src, \s_strd, v20, v21, v22, v23
         interleave_1_s  v7,  v16, v17, v18, v19
-        interleave_1_s  v19, v20, v21, v22, v23
         smull_smlal_8   v24, v1,  v2,  v3,  v4,  v5,  v6,  v7,  v16
         smull_smlal_8   v25, v3,  v4,  v5,  v6,  v7,  v16, v17, v18
-        smull_smlal_8   v26, v5,  v6,  v7,  v16, v17, v18, v19, v20
-        smull_smlal_8   v27, v7,  v16, v17, v18, v19, v20, v21, v22
-        sqrshrun_h      6,   v24, v25, v26, v27
-        umin_h          v31, .8h, v24, v26
+        sqrshrun_h      6,   v24, v25
+        umin_h          v31, .8h, v24
         st_s            \d_strd, v24, 4
-        st_s            \d_strd, v26, 4
         b.le            0f
-        mov             v1.16b,  v17.16b
-        mov             v2.16b,  v18.16b
-        mov             v3.16b,  v19.16b
-        mov             v4.16b,  v20.16b
-        mov             v5.16b,  v21.16b
-        mov             v6.16b,  v22.16b
-        mov             v7.16b,  v23.16b
+        cmp             \h,  #2
+        mov             v1.16b,  v5.16b
+        mov             v2.16b,  v6.16b
+        mov             v3.16b,  v7.16b
+        mov             v4.16b,  v16.16b
+        mov             v5.16b,  v17.16b
+        mov             v6.16b,  v18.16b
+        mov             v7.16b,  v19.16b
+        b.eq            26f
         b               216b
+26:
+        load_s          \sr2, \src, \s_strd, v16, v17
+        interleave_1_s  v7,  v16, v17
+        smull_smlal_8   v24, v1,  v2,  v3,  v4,  v5,  v6,  v7,  v16
+        sqrshrun_h      6,   v24
+        umin_h          v31, .4h, v24
+        st_s            \d_strd, v24, 2
 0:
         ret
 .endif
@@ -1867,7 +1871,7 @@ L(\type\()_8tap_v):
 0:
         ret
 
-480:    // 4x8, 4x16 v
+480:    // 4x6, 4x8, 4x12, 4x16 v
         ld1             {v0.8b}, [\xmy]
         sub             \sr2, \src, \s_strd, lsl #1
         add             \ds2, \dst, \d_strd
@@ -1887,6 +1891,7 @@ L(\type\()_8tap_v):
         smull_smlal_8   v4,  v19, v20, v21, v22, v23, v24, v25, v26
         shift_store_4   \type, \d_strd, v1, v2, v3, v4
         b.le            0f
+        cmp             \h,  #2
         mov             v16.8b,  v20.8b
         mov             v17.8b,  v21.8b
         mov             v18.8b,  v22.8b
@@ -1894,7 +1899,13 @@ L(\type\()_8tap_v):
         mov             v20.8b,  v24.8b
         mov             v21.8b,  v25.8b
         mov             v22.8b,  v26.8b
+        b.eq            46f
         b               48b
+46:
+        load_4h         \sr2, \src, \s_strd, v23, v24
+        smull_smlal_8   v1,  v16, v17, v18, v19, v20, v21, v22, v23
+        smull_smlal_8   v2,  v17, v18, v19, v20, v21, v22, v23, v24
+        shift_store_4   \type, \d_strd, v1, v2
 0:
         ret
 
@@ -2858,6 +2869,7 @@ L(\type\()_bilin_v):
         // 2x2 v
         ld1             {v16.s}[0], [\src], \s_strd
         b.gt            24f
+22:
         ld1             {v17.s}[0], [\sr2], \s_strd
         ld1             {v18.s}[0], [\src], \s_strd
         trn1            v16.2s,  v16.2s,  v17.2s
@@ -2868,11 +2880,12 @@ L(\type\()_bilin_v):
         st1             {v4.s}[0], [\dst]
         st1             {v4.s}[1], [\ds2]
         ret
-24:     // 2x4, 2x8, ... v
+24:     // 2x4, 2x6, 2x8, ... v
         ld1             {v17.s}[0], [\sr2], \s_strd
         ld1             {v18.s}[0], [\src], \s_strd
         ld1             {v19.s}[0], [\sr2], \s_strd
         ld1             {v20.s}[0], [\src], \s_strd
+        sub             \h,  \h,  #4
         trn1            v16.2s,  v16.2s,  v17.2s
         trn1            v17.2s,  v17.2s,  v18.2s
         trn1            v18.2s,  v18.2s,  v19.2s
@@ -2881,14 +2894,15 @@ L(\type\()_bilin_v):
         trn1            v17.2d,  v17.2d,  v19.2d
         mul             v4.8h,   v16.8h,  v2.8h
         mla             v4.8h,   v17.8h,  v3.8h
-        subs            \h,  \h,  #4
+        cmp             \h,  #2
         urshr           v4.8h,   v4.8h,   #4
         st1             {v4.s}[0], [\dst], \d_strd
         st1             {v4.s}[1], [\ds2], \d_strd
         st1             {v4.s}[2], [\dst], \d_strd
         st1             {v4.s}[3], [\ds2], \d_strd
-        b.le            0f
+        b.lt            0f
         mov             v16.8b,  v20.8b
+        b.eq            22b
         b               24b
 0:
         ret

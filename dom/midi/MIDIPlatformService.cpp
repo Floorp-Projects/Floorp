@@ -87,8 +87,9 @@ void MIDIPlatformService::QueueMessages(const nsAString& aId,
     MutexAutoLock lock(mMessageQueueMutex);
     MIDIMessageQueue* msgQueue = mMessageQueues.GetOrInsertNew(aId);
     msgQueue->Add(aMsgs);
-    ScheduleSend(aId);
   }
+
+  ScheduleSend(aId);
 }
 
 void MIDIPlatformService::SendPortList() {

@@ -6,7 +6,7 @@ export TARGET="$1"
 COMPRESS_EXT=zst
 
 case "$(uname -s)" in
-MINGW*)
+MINGW*|MSYS*)
     UPLOAD_DIR=$PWD/public/build
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh

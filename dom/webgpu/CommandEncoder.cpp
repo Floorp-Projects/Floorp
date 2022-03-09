@@ -11,7 +11,7 @@
 #include "ComputePassEncoder.h"
 #include "Device.h"
 #include "RenderPassEncoder.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "ipc/WebGPUChild.h"
 
@@ -134,9 +134,9 @@ void CommandEncoder::CopyBufferToTexture(
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-    const auto& targetCanvas = aDestination.mTexture->mTargetCanvasElement;
-    if (targetCanvas) {
-      mTargetCanvases.AppendElement(targetCanvas);
+    const auto& targetContext = aDestination.mTexture->mTargetContext;
+    if (targetContext) {
+      mTargetContexts.AppendElement(targetContext);
     }
   }
 }
@@ -163,9 +163,9 @@ void CommandEncoder::CopyTextureToTexture(
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-    const auto& targetCanvas = aDestination.mTexture->mTargetCanvasElement;
-    if (targetCanvas) {
-      mTargetCanvases.AppendElement(targetCanvas);
+    const auto& targetContext = aDestination.mTexture->mTargetContext;
+    if (targetContext) {
+      mTargetContexts.AppendElement(targetContext);
     }
   }
 }
@@ -203,13 +203,13 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
 already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   for (const auto& at : aDesc.mColorAttachments) {
-    auto* targetCanvasElement = at.mView->GetTargetCanvasElement();
-    if (targetCanvasElement) {
-      mTargetCanvases.AppendElement(targetCanvasElement);
+    auto* targetContext = at.mView->GetTargetContext();
+    if (targetContext) {
+      mTargetContexts.AppendElement(targetContext);
     }
     if (at.mResolveTarget.WasPassed()) {
-      targetCanvasElement = at.mResolveTarget.Value().GetTargetCanvasElement();
-      mTargetCanvases.AppendElement(targetCanvasElement);
+      targetContext = at.mResolveTarget.Value().GetTargetContext();
+      mTargetContexts.AppendElement(targetContext);
     }
   }
 
@@ -247,7 +247,7 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
     id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
   }
   RefPtr<CommandBuffer> comb =
-      new CommandBuffer(mParent, id, std::move(mTargetCanvases));
+      new CommandBuffer(mParent, id, std::move(mTargetContexts));
   return comb.forget();
 }
 

@@ -6,6 +6,7 @@
 #include "lib/jxl/render_pipeline/simple_render_pipeline.h"
 
 namespace jxl {
+
 void SimpleRenderPipeline::PrepareForThreadsInternal(size_t num) {
   if (!channel_data_.empty()) {
     return;
@@ -25,45 +26,52 @@ void SimpleRenderPipeline::PrepareForThreadsInternal(size_t num) {
   }
 }
 
-std::vector<std::pair<ImageF*, Rect>> SimpleRenderPipeline::PrepareBuffers(
-    size_t group_id, size_t thread_id) {
-  std::vector<std::pair<ImageF*, Rect>> ret;
+Rect SimpleRenderPipeline::MakeChannelRect(size_t group_id, size_t channel,
+                                           bool is_color) {
   size_t base_color_shift =
       CeilLog2Nonzero(frame_dimensions_.xsize_upsampled_padded /
                       frame_dimensions_.xsize_padded);
+
+  const size_t gx = group_id % frame_dimensions_.xsize_groups;
+  const size_t gy = group_id / frame_dimensions_.xsize_groups;
+  size_t xgroupdim = (frame_dimensions_.group_dim << base_color_shift) >>
+                     channel_shifts_[0][channel].first;
+  size_t ygroupdim = (frame_dimensions_.group_dim << base_color_shift) >>
+                     channel_shifts_[0][channel].second;
+  return Rect(kRenderPipelineXOffset + gx * xgroupdim,
+              kRenderPipelineXOffset + gy * ygroupdim, xgroupdim, ygroupdim,
+              kRenderPipelineXOffset +
+                  DivCeil(frame_dimensions_.GetUpsampledXSize(is_color),
+                          1 << channel_shifts_[0][channel].first),
+              kRenderPipelineXOffset +
+                  DivCeil(frame_dimensions_.GetUpsampledYSize(is_color),
+                          1 << channel_shifts_[0][channel].second));
+}
+
+std::vector<std::pair<ImageF*, Rect>> SimpleRenderPipeline::PrepareBuffers(
+    size_t group_id, size_t thread_id) {
+  std::vector<std::pair<ImageF*, Rect>> ret;
   for (size_t c = 0; c < channel_data_.size(); c++) {
-    const size_t gx = group_id % frame_dimensions_.xsize_groups;
-    const size_t gy = group_id / frame_dimensions_.xsize_groups;
-    size_t xgroupdim = (frame_dimensions_.group_dim << base_color_shift) >>
-                       channel_shifts_[0][c].first;
-    size_t ygroupdim = (frame_dimensions_.group_dim << base_color_shift) >>
-                       channel_shifts_[0][c].second;
     bool is_color_c =
         c < 3 || (uses_noise_ && c >= channel_shifts_[0].size() - 3);
-    const Rect rect(kRenderPipelineXOffset + gx * xgroupdim,
-                    kRenderPipelineXOffset + gy * ygroupdim, xgroupdim,
-                    ygroupdim,
-                    kRenderPipelineXOffset +
-                        DivCeil(frame_dimensions_.GetUpsampledXSize(is_color_c),
-                                1 << channel_shifts_[0][c].first),
-                    kRenderPipelineXOffset +
-                        DivCeil(frame_dimensions_.GetUpsampledYSize(is_color_c),
-                                1 << channel_shifts_[0][c].second));
-    ret.emplace_back(&channel_data_[c], rect);
+    ret.emplace_back(&channel_data_[c],
+                     MakeChannelRect(group_id, c, is_color_c));
   }
   return ret;
 }
 
 void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
-  if (!ReceivedAllInput()) return;
+  if (PassesWithAllInput() <= processed_passes_) return;
+  processed_passes_++;
 
-  for (const auto& ch : channel_data_) {
-    (void)ch;
+  for (size_t c = 0; c < channel_data_.size(); c++) {
+    Rect r = MakeChannelRect(group_id, c, false);
+    (void)r;
     JXL_CHECK_IMAGE_INITIALIZED(
-        ch, Rect(kRenderPipelineXOffset, kRenderPipelineXOffset,
-                 ch.xsize() - 2 * kRenderPipelineXOffset,
-                 ch.ysize() - 2 * kRenderPipelineXOffset));
+        channel_data_[c], Rect(kRenderPipelineXOffset, kRenderPipelineXOffset,
+                               r.xsize(), r.ysize()));
   }
+
   for (size_t stage_id = 0; stage_id < stages_.size(); stage_id++) {
     const auto& stage = stages_[stage_id];
     // Prepare buffers for kInOut channels.
@@ -109,14 +117,14 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
         }
       }
       // Vertical mirroring.
-      for (int iy = 0; iy < static_cast<int>(stage->settings_.border_y); iy++) {
-        memcpy(get_row(c, -iy - 1) - stage->settings_.border_x,
-               get_row(c, iy) - stage->settings_.border_x,
+      for (int y = 0; y < static_cast<int>(stage->settings_.border_y); y++) {
+        memcpy(get_row(c, -y - 1) - stage->settings_.border_x,
+               get_row(c, y) - stage->settings_.border_x,
                sizeof(float) *
                    (input_sizes[c].first + 2 * stage->settings_.border_x));
         memcpy(
-            get_row(c, input_sizes[c].second + iy) - stage->settings_.border_x,
-            get_row(c, input_sizes[c].second - iy - 1) -
+            get_row(c, input_sizes[c].second + y) - stage->settings_.border_x,
+            get_row(c, input_sizes[c].second - y - 1) -
                 stage->settings_.border_x,
             sizeof(float) *
                 (input_sizes[c].first + 2 * stage->settings_.border_x));
@@ -145,6 +153,9 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
       for (size_t y = 0; y < ysize; y++) {
         // Prepare input rows.
         for (size_t c = 0; c < channel_data_.size(); c++) {
+          if (stage->GetChannelMode(c) == RenderPipelineChannelMode::kIgnored) {
+            continue;
+          }
           input_rows[c].resize(2 * border_y + 1);
           for (int iy = -border_y; iy <= border_y; iy++) {
             input_rows[c][iy + border_y] =
@@ -174,12 +185,12 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
       }
       channel_data_[c] = std::move(new_channels[c]);
     }
-    for (const auto& ch : channel_data_) {
-      (void)ch;
+    for (size_t c = 0; c < channel_data_.size(); c++) {
+      Rect r = MakeChannelRect(group_id, c, false);
+      (void)r;
       JXL_CHECK_IMAGE_INITIALIZED(
-          ch, Rect(kRenderPipelineXOffset, kRenderPipelineXOffset,
-                   ch.xsize() - 2 * kRenderPipelineXOffset,
-                   ch.ysize() - 2 * kRenderPipelineXOffset));
+          channel_data_[c], Rect(kRenderPipelineXOffset, kRenderPipelineXOffset,
+                                 r.xsize(), r.ysize()));
     }
   }
 }

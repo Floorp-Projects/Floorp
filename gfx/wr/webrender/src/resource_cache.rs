@@ -8,7 +8,6 @@ use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageKey, VoidPtrToSizeFn};
-use api::{SharedFontInstanceMap, BaseFontInstance};
 use api::units::*;
 use crate::{render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}, util::WeakTable};
 use crate::image_tiling::{compute_tile_size, compute_tile_range};
@@ -23,6 +22,7 @@ use crate::device::TextureFilter;
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
+use crate::glyph_rasterizer::{SharedFontInstanceMap, BaseFontInstance};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{
@@ -39,8 +39,6 @@ use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::{Iter, IterMut};
 use std::collections::VecDeque;
-#[cfg(any(feature = "capture", feature = "replay"))]
-use std::collections::HashMap;
 use std::{cmp, mem};
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -1791,7 +1789,7 @@ struct PlainImageTemplate {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PlainResources {
     font_templates: FastHashMap<FontKey, PlainFontTemplate>,
-    font_instances: HashMap<FontInstanceKey, Arc<BaseFontInstance>>,
+    font_instances: FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>,
     image_templates: FastHashMap<ImageKey, PlainImageTemplate>,
 }
 
@@ -1970,7 +1968,7 @@ impl ResourceCache {
                         #[cfg(target_os = "macos")]
                         FontTemplate::Native(ref native) => {
                             PlainFontTemplate {
-                                data: native.0.postscript_name().to_string(),
+                                data: native.name.clone(),
                                 index: 0,
                             }
                         }

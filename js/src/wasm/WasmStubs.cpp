@@ -729,7 +729,8 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
   // Save the return address if it wasn't already saved by the call insn.
 #ifdef JS_USE_LINK_REGISTER
-#  if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS64)
+#  if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS64) || \
+      defined(JS_CODEGEN_LOONG64)
   masm.pushReturnAddress();
 #  elif defined(JS_CODEGEN_ARM64)
   // WasmPush updates framePushed() unlike pushReturnAddress(), but that's
@@ -939,9 +940,15 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
   masm.jump(ScratchIonEntry);
 }
 
-// Helper function for allocating a BigInt and initializing it from an I64
-// in GenerateJitEntry and GenerateImportInterpExit. The return result is
-// written to scratch.
+// Helper function for allocating a BigInt and initializing it from an I64 in
+// GenerateJitEntry.  The return result is written to scratch.
+//
+// Note that this will create a new frame and must not - in its current form -
+// be called from a context where there is already another stub frame on the
+// stack, as that confuses unwinding during profiling.  This was a problem for
+// its use from GenerateImportJitExit, see bug 1754258.  Therefore,
+// FuncType::canHaveJitExit prevents the present function from being called for
+// exits.
 static void GenerateBigIntInitialization(MacroAssembler& masm,
                                          unsigned bytesPushedByPrologue,
                                          Register64 input, Register scratch,
@@ -1776,10 +1783,9 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
-                                         i->gpr64(), scratch, nullptr,
-                                         throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else {
             masm.store64(i->gpr64(), dst);
           }
@@ -1807,10 +1813,9 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
-                                         i->gpr64(), scratch, nullptr,
-                                         throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else {
             masm.store64(i->gpr64(), dst);
           }
@@ -1873,16 +1878,9 @@ static void FillArgumentArrayForExit(
             GenPrintIsize(DebugChannel::Import, masm, scratch);
             masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
           } else if (type == MIRType::Int64) {
-#if JS_BITS_PER_WORD == 64
-            Register64 scratch64(scratch2);
-#else
-            Register64 scratch64(scratch2, scratch3);
-#endif
-            masm.load64(src, scratch64);
-            GenPrintI64(DebugChannel::Import, masm, scratch64);
-            GenerateBigIntInitialization(masm, sizeof(Frame), scratch64,
-                                         scratch, nullptr, throwLabel);
-            masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
+            // FuncType::canHaveJitExit should prevent this.  Also see comments
+            // at GenerateBigIntInitialization.
+            MOZ_CRASH("Should not happen");
           } else if (type == MIRType::RefOrNull) {
             // This works also for FuncRef because it is distinguishable from a
             // boxed AnyRef.
@@ -2037,6 +2035,8 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                                      uint32_t funcImportIndex,
                                      Label* throwLabel,
                                      CallableOffsets* offsets) {
+  AutoCreatedBy acb(masm, "GenerateImportInterpExit");
+
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
@@ -2066,6 +2066,10 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                        offsets);
 
   // Fill the argument array.
+  //
+  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
+  // The only user of this value is FillArgumentArrayForExit, and it
+  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
   unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
   Register scratch2 = ABINonArgReturnReg1;
@@ -2198,8 +2202,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   // The native ABI preserves the TLS, heap and global registers since they
   // are non-volatile.
   MOZ_ASSERT(NonVolatileRegs.has(WasmTlsReg));
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_LOONG64)
   MOZ_ASSERT(NonVolatileRegs.has(HeapReg));
 #endif
 
@@ -2215,6 +2220,8 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                                   unsigned funcImportIndex, Label* throwLabel,
                                   JitExitOffsets* offsets) {
+  AutoCreatedBy acb(masm, "GenerateImportJitExit");
+
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
@@ -2273,6 +2280,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments.
+  //
+  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
+  // The only user of this value is FillArgumentArrayForExit, and it
+  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
   const uint32_t offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
@@ -2571,167 +2582,6 @@ struct ABIFunctionArgs {
   }
 };
 
-static void PushFrame(MacroAssembler& masm) {
-#if defined(JS_CODEGEN_MIPS64)
-  masm.subFromStackPtr(Imm32(sizeof(Frame)));
-  masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset()));
-  masm.storePtr(FramePointer, Address(StackPointer, Frame::callerFPOffset()));
-#elif defined(JS_CODEGEN_ARM64)
-  {
-    AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 3);
-    masm.Sub(sp, sp, sizeof(Frame));
-    masm.Str(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
-    masm.Str(ARMRegister(FramePointer, 64),
-             MemOperand(sp, Frame::callerFPOffset()));
-  }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_X86)
-  {
-#  if defined(JS_CODEGEN_ARM)
-    AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 3);
-    masm.push(lr);
-#  endif
-    masm.push(FramePointer);
-  }
-#else
-  MOZ_CRASH("Unknown architecture");
-#endif
-}
-
-static void PopFrame(MacroAssembler& masm) {
-#if defined(JS_CODEGEN_MIPS64)
-  masm.loadPtr(Address(StackPointer, Frame::callerFPOffset()), FramePointer);
-  masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset()), ra);
-  masm.addToStackPtr(Imm32(sizeof(Frame)));
-#elif defined(JS_CODEGEN_ARM64)
-  {
-    AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 3);
-
-    masm.Ldr(ARMRegister(FramePointer, 64),
-             MemOperand(sp, Frame::callerFPOffset()));
-    masm.Ldr(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
-    masm.Add(sp, sp, sizeof(Frame));
-  }
-#elif defined(JS_CODEGEN_ARM)
-  {
-    AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 3);
-    masm.pop(FramePointer);
-    masm.pop(lr);
-  }
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  masm.pop(FramePointer);
-#else
-  MOZ_CRASH("Unknown architecture");
-#endif
-}
-
-static void AllocateStackBytes(MacroAssembler& masm, const uint32_t bytes) {
-  if (!bytes) {
-    return;
-  }
-
-#if defined(JS_CODEGEN_ARM64)
-  masm.Sub(sp, sp, bytes);
-#else
-  masm.subPtr(Imm32(static_cast<int32_t>(bytes)), masm.getStackPointer());
-#endif
-}
-
-static void DeallocateStackBytes(MacroAssembler& masm, const uint32_t bytes) {
-  if (!bytes) {
-    return;
-  }
-
-#if defined(JS_CODEGEN_ARM64)
-  masm.Add(sp, sp, bytes);
-#else
-  masm.addPtr(Imm32(static_cast<int32_t>(bytes)), masm.getStackPointer());
-#endif
-}
-
-bool wasm::GenerateIndirectStub(MacroAssembler& masm,
-                                uint8_t* calleeCheckedEntry, TlsData* tlsPtr,
-                                Offsets* offsets) {
-#if defined(JS_CODEGEN_ARM64)
-  // See comment in |GenerateCallablePrologue|.
-  // Revisit after resolution of the
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1709853.
-  const vixl::Register stashedSPreg = masm.GetStackPointer64();
-  masm.SetStackPointer64(vixl::sp);
-#endif
-
-  ImmWord tlsPtrImm(reinterpret_cast<uintptr_t>(tlsPtr));
-  Label sameInstanceCase;
-
-  masm.haltingAlign(CodeAlignment);
-  offsets->begin = masm.currentOffset();
-  masm.setFramePushed(0);
-
-  masm.movePtr(tlsPtrImm, WasmTableCallScratchReg0);
-  masm.branchPtr(Assembler::Condition::Equal, WasmTlsReg,
-                 WasmTableCallScratchReg0, &sameInstanceCase);
-
-  // Preserve caller's TLS and callee's TLS.
-  masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall));
-  masm.movePtr(WasmTableCallScratchReg0, WasmTlsReg);
-  masm.storePtr(WasmTableCallScratchReg0,
-                Address(masm.getStackPointer(), WasmCalleeTlsOffsetAfterCall));
-  masm.loadWasmPinnedRegsFromTls();
-  masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
-
-  // Setup the frame for this stub and tag caller FP so runtime can recongize
-  // it during stack walking.
-  PushFrame(masm);
-  masm.moveStackPtrTo(FramePointer);
-  masm.addPtr(Imm32(wasm::TrampolineFpTag), Address(FramePointer, 0));
-
-  Label prepareFrameOnCalleeBehalfAndJumpCallee;
-
-  AllocateStackBytes(masm, IndirectStubAdditionalAlignment);
-  masm.call(&prepareFrameOnCalleeBehalfAndJumpCallee);
-  DeallocateStackBytes(masm, IndirectStubAdditionalAlignment);
-
-  // Restore the caller state and return.
-  PopFrame(masm);
-  masm.subPtr(Imm32(wasm::TrampolineFpTag), FramePointer);
-  masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall),
-               WasmTlsReg);
-  masm.loadWasmPinnedRegsFromTls();
-  masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
-
-#if defined(JS_CODEGEN_MIPS64)
-  masm.abiret();
-#elif defined(JS_CODEGEN_ARM64)
-  // See comment in |GenerateCallablePrologue|.
-  masm.Mov(PseudoStackPointer64, vixl::sp);
-  masm.Ret(ARMRegister(lr, 64));
-  masm.SetStackPointer64(stashedSPreg);
-#elif defined(JS_CODEGEN_ARM)
-  masm.branch(lr);
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  masm.ret();
-#else
-  MOZ_CRASH("Unknown architecture");
-#endif
-
-  masm.bind(&prepareFrameOnCalleeBehalfAndJumpCallee);
-  PushFrame(masm);
-  ImmPtr calleeTailEntry(calleeCheckedEntry + WasmCheckedTailEntryOffset,
-                         ImmPtr::NoCheckToken());
-  masm.jump(calleeTailEntry);
-
-  masm.bind(&sameInstanceCase);
-  ImmPtr calleeCheckedCallEntry(calleeCheckedEntry, ImmPtr::NoCheckToken());
-  masm.jump(calleeCheckedCallEntry);
-
-  return FinishOffsets(masm, offsets);
-}
-
 bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
                                 ExitReason exitReason, void* funcPtr,
                                 CallableOffsets* offsets) {
@@ -2818,6 +2668,17 @@ static const LiveRegisterSet RegsToPreserve(
                          (Registers::SetType(1) << Registers::k1) |
                          (Registers::SetType(1) << Registers::sp) |
                          (Registers::SetType(1) << Registers::zero))),
+    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+#  ifdef ENABLE_WASM_SIMD
+#    error "high lanes of SIMD registers need to be saved too."
+#  endif
+#elif defined(JS_CODEGEN_LOONG64)
+static const LiveRegisterSet RegsToPreserve(
+    GeneralRegisterSet(Registers::AllMask &
+                       ~((uint32_t(1) << Registers::tp) |
+                         (uint32_t(1) << Registers::fp) |
+                         (uint32_t(1) << Registers::sp) |
+                         (uint32_t(1) << Registers::zero))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #  ifdef ENABLE_WASM_SIMD
 #    error "high lanes of SIMD registers need to be saved too."

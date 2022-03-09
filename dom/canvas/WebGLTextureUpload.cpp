@@ -37,7 +37,7 @@
 namespace mozilla {
 namespace webgl {
 
-Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, uvec3 size,
+Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, Maybe<uvec3> size,
                                          const dom::ImageBitmap& imageBitmap,
                                          ErrorResult* const out_rv) {
   if (imageBitmap.IsWriteOnly()) {
@@ -52,24 +52,19 @@ Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, uvec3 size,
 
   const RefPtr<gfx::DataSourceSurface> surf = cloneData->mSurface;
   const auto imageSize = *uvec2::FromSize(surf->GetSize());
-
-  if (!size.x) {
-    size.x = imageSize.x;
-  }
-
-  if (!size.y) {
-    size.y = imageSize.y;
+  if (!size) {
+    size.emplace(imageSize.x, imageSize.y, 1);
   }
 
   // WhatWG "HTML Living Standard" (30 October 2015):
   // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
   // non-premultiplied alpha values."
   return Some(TexUnpackBlobDesc{target,
-                                size,
+                                size.value(),
                                 cloneData->mAlphaType,
                                 {},
                                 {},
-                                imageSize,
+                                Some(imageSize),
                                 nullptr,
                                 {},
                                 surf,
@@ -77,7 +72,7 @@ Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, uvec3 size,
                                 false});
 }
 
-TexUnpackBlobDesc FromImageData(const GLenum target, uvec3 size,
+TexUnpackBlobDesc FromImageData(const GLenum target, Maybe<uvec3> size,
                                 const dom::ImageData& imageData,
                                 dom::Uint8ClampedArray* const scopedArr) {
   MOZ_RELEASE_ASSERT(scopedArr->Init(imageData.GetDataObject()));
@@ -98,12 +93,8 @@ TexUnpackBlobDesc FromImageData(const GLenum target, uvec3 size,
 
   ////
 
-  if (!size.x) {
-    size.x = imageUSize.x;
-  }
-
-  if (!size.y) {
-    size.y = imageUSize.y;
+  if (!size) {
+    size.emplace(imageUSize.x, imageUSize.y, 1);
   }
 
   ////
@@ -111,8 +102,9 @@ TexUnpackBlobDesc FromImageData(const GLenum target, uvec3 size,
   // WhatWG "HTML Living Standard" (30 October 2015):
   // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
   // non-premultiplied alpha values."
-  return {target, size, gfxAlphaType::NonPremult, {}, {}, imageUSize, nullptr,
-          {},     surf};
+  return {target,  size.value(), gfxAlphaType::NonPremult,
+          {},      {},           Some(imageUSize),
+          nullptr, {},           surf};
 }
 
 static layers::SurfaceDescriptor Flatten(const layers::SurfaceDescriptor& sd) {
@@ -149,7 +141,7 @@ static layers::SurfaceDescriptor Flatten(const layers::SurfaceDescriptor& sd) {
 }
 
 Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
-    const ClientWebGLContext& webgl, const GLenum target, uvec3 size,
+    const ClientWebGLContext& webgl, const GLenum target, Maybe<uvec3> size,
     const dom::OffscreenCanvas& canvas, ErrorResult* const out_error) {
   if (canvas.IsWriteOnly()) {
     webgl.EnqueueWarning(
@@ -173,26 +165,35 @@ Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
 
   if (!dataSurf) {
     webgl.EnqueueWarning("Resource has no data (yet?). Uploading zeros.");
-    return Some(TexUnpackBlobDesc{target, size, gfxAlphaType::NonPremult});
+    if (!size) {
+      size.emplace(0, 0, 1);
+    }
+    return Some(
+        TexUnpackBlobDesc{target, size.value(), gfxAlphaType::NonPremult});
   }
 
   // We checked this above before we requested the surface.
   MOZ_RELEASE_ASSERT(!sfer.mIsWriteOnly);
 
   uvec2 canvasSize = *uvec2::FromSize(dataSurf->GetSize());
-  if (!size.x) {
-    size.x = canvasSize.x;
-  }
-  if (!size.y) {
-    size.y = canvasSize.y;
+  if (!size) {
+    size.emplace(canvasSize.x, canvasSize.y, 1);
   }
 
-  return Some(TexUnpackBlobDesc{
-      target, size, sfer.mAlphaType, {}, {}, canvasSize, {}, {}, dataSurf});
+  return Some(TexUnpackBlobDesc{target,
+                                size.value(),
+                                sfer.mAlphaType,
+                                {},
+                                {},
+                                Some(canvasSize),
+                                {},
+                                {},
+                                dataSurf});
 }
 
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
-                                            const GLenum target, uvec3 size,
+                                            const GLenum target,
+                                            Maybe<uvec3> size,
                                             const dom::Element& elem,
                                             ErrorResult* const out_error) {
   if (elem.IsHTMLElement(nsGkAtoms::canvas)) {
@@ -212,7 +213,7 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
                    nsLayoutUtils::SFE_EXACT_SIZE_SURFACE |
                    nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
   const auto& unpacking = webgl.State().mPixelUnpackState;
-  if (unpacking.mColorspaceConversion == LOCAL_GL_NONE) {
+  if (unpacking.colorspaceConversion == LOCAL_GL_NONE) {
     flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
   }
 
@@ -249,19 +250,19 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
 
   //////
 
-  if (!size.x) {
-    size.x = elemSize.x;
-  }
-
-  if (!size.y) {
-    size.y = elemSize.y;
+  if (!size) {
+    size.emplace(elemSize.x, elemSize.y, 1);
   }
 
   ////
 
   if (!sd && !dataSurf) {
     webgl.EnqueueWarning("Resource has no data (yet?). Uploading zeros.");
-    return Some(TexUnpackBlobDesc{target, size, gfxAlphaType::NonPremult});
+    if (!size) {
+      size.emplace(0, 0, 1);
+    }
+    return Some(
+        TexUnpackBlobDesc{target, size.value(), gfxAlphaType::NonPremult});
   }
 
   //////
@@ -293,11 +294,11 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
   // Ok, we're good!
 
   return Some(TexUnpackBlobDesc{target,
-                                size,
+                                size.value(),
                                 sfer.mAlphaType,
                                 {},
                                 {},
-                                elemSize,
+                                Some(elemSize),
                                 layersImage,
                                 sd,
                                 dataSurf});
@@ -966,7 +967,7 @@ void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
                                                     src.srcAlphaType,
                                                     std::move(cpuDataView),
                                                     src.pboOffset,
-                                                    src.imageSize,
+                                                    src.structuredSrcSize,
                                                     src.image,
                                                     src.sd,
                                                     src.dataSurf,
@@ -1115,12 +1116,13 @@ void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
     }
   }
 
-  WebGLPixelStore::AssertDefault(*mContext->gl, mContext->IsWebGL2());
+  webgl::PixelPackingState{}.AssertCurrentUnpack(*mContext->gl,
+                                                 mContext->IsWebGL2());
 
-  blob->mDesc.unpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+  blob->mDesc.unpacking.ApplyUnpack(*mContext->gl, mContext->IsWebGL2(), size);
   const auto revertUnpacking = MakeScopeExit([&]() {
-    const WebGLPixelStore defaultUnpacking;
-    defaultUnpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+    webgl::PixelPackingState{}.ApplyUnpack(*mContext->gl, mContext->IsWebGL2(),
+                                           size);
   });
 
   const bool isSubImage = !respecFormat;
@@ -1760,7 +1762,7 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
     }
 
     if (!isSubImage || zeros) {
-      WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
+      webgl::PixelPackingState{}.AssertCurrentUnpack(*gl, webgl->IsWebGL2());
 
       gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
       const auto revert = MakeScopeExit(

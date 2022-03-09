@@ -43,7 +43,10 @@ class DrawTargetSkia : public DrawTarget {
   virtual BackendType GetBackendType() const override {
     return BackendType::SKIA;
   }
-  virtual already_AddRefed<SourceSurface> Snapshot() override;
+  already_AddRefed<SourceSurface> Snapshot(SurfaceFormat aFormat);
+  virtual already_AddRefed<SourceSurface> Snapshot() override {
+    return Snapshot(mFormat);
+  }
   already_AddRefed<SourceSurface> GetBackingSurface() override;
   virtual IntSize GetSize() const override { return mSize; };
   virtual bool LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,

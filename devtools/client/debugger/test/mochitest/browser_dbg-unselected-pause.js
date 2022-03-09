@@ -1,22 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that the debugger pauses and is automatically highlighted and selected,
 // even when it hasn't been opened.
 
 "use strict";
 
-const IFRAME_TEST_COM_URI =
-  `https://example.com/document-builder.sjs?html=` +
-  encodeURI(`<script>const a=2;\ndebugger;\nconsole.log(a);</script>`);
+const IFRAME_TEST_COM_URI = `https://example.com/document-builder.sjs?html=${encodeURI(
+  `<script>const a=2;\ndebugger;\nconsole.log(a);</script>`
+)}`;
 
 // Embed the example.com test page in an example.org iframe.
-const IFRAME_TEST_URI =
-  `https://example.org/document-builder.sjs?html=` +
-  encodeURI(
-    `<script>function breakDebugger() {const b=3;\ndebugger;\nconsole.log(b);}</script><iframe src="${IFRAME_TEST_COM_URI}"></iframe><body>`
-  );
+const IFRAME_TEST_URI = `https://example.org/document-builder.sjs?html=${encodeURI(
+  `<script>function breakDebugger() {const b=3;\ndebugger;\nconsole.log(b);}</script><iframe src="${IFRAME_TEST_COM_URI}"></iframe><body>`
+)}`;
 
 add_task(async function() {
   info("Test a debugger statement from the top level document");

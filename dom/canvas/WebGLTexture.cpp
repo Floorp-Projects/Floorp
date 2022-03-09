@@ -595,7 +595,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
     // Don't bother with striding it well.
     // TODO: We shouldn't need to do this for CompressedTexSubImage.
-    WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
+    webgl::PixelPackingState{}.AssertCurrentUnpack(*gl, webgl->IsWebGL2());
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
     const auto revert = MakeScopeExit(
         [&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
@@ -639,7 +639,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
   if (!zeros) return false;
 
   // Don't bother with striding it well.
-  WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
+  webgl::PixelPackingState{}.AssertCurrentUnpack(*gl, webgl->IsWebGL2());
   gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
   const auto revert =
       MakeScopeExit([&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
@@ -798,18 +798,21 @@ void WebGLTexture::GenerateMipmap() {
   gl::GLContext* gl = mContext->gl;
 
   if (gl->WorkAroundDriverBugs()) {
-    // bug 696495 - to work around failures in the texture-mips.html test on
-    // various drivers, we set the minification filter before calling
-    // glGenerateMipmap. This should not carry a significant performance
-    // overhead so we do it unconditionally.
-    //
-    // note that the choice of GL_NEAREST_MIPMAP_NEAREST really matters. See
-    // Chromium bug 101105.
-    gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
-                       LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-    gl->fGenerateMipmap(mTarget.get());
-    gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
-                       mSamplingState.minFilter.get());
+    // Don't generate mipmaps when the base level is out of range:
+    if (!(mImmutable && mBaseMipmapLevel >= mImmutableLevelCount)) {
+      // bug 696495 - to work around failures in the texture-mips.html test on
+      // various drivers, we set the minification filter before calling
+      // glGenerateMipmap. This should not carry a significant performance
+      // overhead so we do it unconditionally.
+      //
+      // note that the choice of GL_NEAREST_MIPMAP_NEAREST really matters. See
+      // Chromium bug 101105.
+      gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
+                         LOCAL_GL_NEAREST_MIPMAP_NEAREST);
+      gl->fGenerateMipmap(mTarget.get());
+      gl->fTexParameteri(mTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
+                         mSamplingState.minFilter.get());
+    }
   } else {
     gl->fGenerateMipmap(mTarget.get());
   }

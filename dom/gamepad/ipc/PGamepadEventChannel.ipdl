@@ -10,7 +10,7 @@ using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 namespace mozilla {
 namespace dom {
 
-[RefCounted] protocol PGamepadEventChannel {
+protocol PGamepadEventChannel {
   manager PBackground;
   parent:
     async __delete__();

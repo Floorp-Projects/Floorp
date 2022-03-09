@@ -210,6 +210,26 @@ class TestExecuteContent(MarionetteTestCase):
         )
         self.assertEqual(expected, actual)
 
+    def test_return_web_element_nested_array(self):
+        self.marionette.navigate(elements)
+        expected = self.marionette.find_elements(By.TAG_NAME, "p")
+        actual = self.marionette.execute_script(
+            """
+            let els = document.querySelectorAll('p')
+            return { els: [els[0], els[1]] }"""
+        )
+        self.assertEqual(expected, actual["els"])
+
+    def test_return_web_element_nested_dict(self):
+        self.marionette.navigate(elements)
+        expected = self.marionette.find_element(By.TAG_NAME, "p")
+        actual = self.marionette.execute_script(
+            """
+            let el = document.querySelector('p')
+            return { path: { to: { el } } }"""
+        )
+        self.assertEqual(expected, actual["path"]["to"]["el"])
+
     # Bug 938228 identifies a problem with unmarshaling NodeList
     # objects from the DOM.  document.querySelectorAll returns this
     # construct.
@@ -480,6 +500,12 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         pass
 
     def test_return_web_element_array(self):
+        pass
+
+    def test_return_web_element_nested_array(self):
+        pass
+
+    def test_return_web_element_nested_dict(self):
         pass
 
     def test_return_web_element_nodelist(self):

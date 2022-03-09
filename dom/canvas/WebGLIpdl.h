@@ -8,6 +8,7 @@
 
 #include "gfxTypes.h"
 #include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
@@ -114,15 +115,15 @@ template <>
 struct IPDLParamTraits<mozilla::webgl::FrontBufferSnapshotIpc> final {
   using T = mozilla::webgl::FrontBufferSnapshotIpc;
 
-  static void Write(IPC::Message* const msg, IProtocol* actor, T& in) {
-    WriteParam(msg, in.surfSize);
-    WriteIPDLParam(msg, actor, std::move(in.shmem));
+  static void Write(IPC::MessageWriter* const writer, IProtocol* actor, T& in) {
+    WriteParam(writer, in.surfSize);
+    WriteIPDLParam(writer, actor, std::move(in.shmem));
   }
 
-  static bool Read(const IPC::Message* const msg, PickleIterator* const itr,
-                   IProtocol* actor, T* const out) {
-    return ReadParam(msg, itr, &out->surfSize) &&
-           ReadIPDLParam(msg, itr, actor, &out->shmem);
+  static bool Read(IPC::MessageReader* const reader, IProtocol* actor,
+                   T* const out) {
+    return ReadParam(reader, &out->surfSize) &&
+           ReadIPDLParam(reader, actor, &out->shmem);
   }
 };
 
@@ -132,17 +133,17 @@ template <>
 struct IPDLParamTraits<mozilla::webgl::ReadPixelsResultIpc> final {
   using T = mozilla::webgl::ReadPixelsResultIpc;
 
-  static void Write(IPC::Message* const msg, IProtocol* actor, T& in) {
-    WriteParam(msg, in.subrect);
-    WriteParam(msg, in.byteStride);
-    WriteIPDLParam(msg, actor, std::move(in.shmem));
+  static void Write(IPC::MessageWriter* const writer, IProtocol* actor, T& in) {
+    WriteParam(writer, in.subrect);
+    WriteParam(writer, in.byteStride);
+    WriteIPDLParam(writer, actor, std::move(in.shmem));
   }
 
-  static bool Read(const IPC::Message* const msg, PickleIterator* const itr,
-                   IProtocol* actor, T* const out) {
-    return ReadParam(msg, itr, &out->subrect) &&
-           ReadParam(msg, itr, &out->byteStride) &&
-           ReadIPDLParam(msg, itr, actor, &out->shmem);
+  static bool Read(IPC::MessageReader* const reader, IProtocol* actor,
+                   T* const out) {
+    return ReadParam(reader, &out->subrect) &&
+           ReadParam(reader, &out->byteStride) &&
+           ReadIPDLParam(reader, actor, &out->shmem);
   }
 };
 
@@ -152,29 +153,30 @@ template <>
 struct IPDLParamTraits<mozilla::webgl::TexUnpackBlobDesc> final {
   using T = mozilla::webgl::TexUnpackBlobDesc;
 
-  static void Write(IPC::Message* const msg, IProtocol* actor, T&& in) {
-    WriteParam(msg, in.imageTarget);
-    WriteParam(msg, in.size);
-    WriteParam(msg, in.srcAlphaType);
+  static void Write(IPC::MessageWriter* const writer, IProtocol* actor,
+                    T&& in) {
+    WriteParam(writer, in.imageTarget);
+    WriteParam(writer, in.size);
+    WriteParam(writer, in.srcAlphaType);
     MOZ_RELEASE_ASSERT(!in.cpuData);
     MOZ_RELEASE_ASSERT(!in.pboOffset);
-    WriteParam(msg, in.imageSize);
+    WriteParam(writer, in.structuredSrcSize);
     MOZ_RELEASE_ASSERT(!in.image);
-    WriteIPDLParam(msg, actor, std::move(in.sd));
+    WriteIPDLParam(writer, actor, std::move(in.sd));
     MOZ_RELEASE_ASSERT(!in.dataSurf);
-    WriteParam(msg, in.unpacking);
-    WriteParam(msg, in.applyUnpackTransforms);
+    WriteParam(writer, in.unpacking);
+    WriteParam(writer, in.applyUnpackTransforms);
   }
 
-  static bool Read(const IPC::Message* const msg, PickleIterator* const itr,
-                   IProtocol* actor, T* const out) {
-    return ReadParam(msg, itr, &out->imageTarget) &&
-           ReadParam(msg, itr, &out->size) &&
-           ReadParam(msg, itr, &out->srcAlphaType) &&
-           ReadParam(msg, itr, &out->imageSize) &&
-           ReadIPDLParam(msg, itr, actor, &out->sd) &&
-           ReadParam(msg, itr, &out->unpacking) &&
-           ReadParam(msg, itr, &out->applyUnpackTransforms);
+  static bool Read(IPC::MessageReader* const reader, IProtocol* actor,
+                   T* const out) {
+    return ReadParam(reader, &out->imageTarget) &&
+           ReadParam(reader, &out->size) &&
+           ReadParam(reader, &out->srcAlphaType) &&
+           ReadParam(reader, &out->structuredSrcSize) &&
+           ReadIPDLParam(reader, actor, &out->sd) &&
+           ReadParam(reader, &out->unpacking) &&
+           ReadParam(reader, &out->applyUnpackTransforms);
   }
 };
 
@@ -215,14 +217,13 @@ bool ValidateParam(const T& val) {
 
 template <typename T>
 struct ValidatedPlainOldDataSerializer : public PlainOldDataSerializer<T> {
-  static void Write(Message* const msg, const T& in) {
+  static void Write(MessageWriter* const writer, const T& in) {
     MOZ_ASSERT(ValidateParam(in));
-    PlainOldDataSerializer<T>::Write(msg, in);
+    PlainOldDataSerializer<T>::Write(writer, in);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    if (!PlainOldDataSerializer<T>::Read(msg, itr, out)) return false;
+  static bool Read(MessageReader* const reader, T* const out) {
+    if (!PlainOldDataSerializer<T>::Read(reader, out)) return false;
     return ValidateParam(*out);
   }
 
@@ -275,19 +276,17 @@ template <>
 struct ParamTraits<mozilla::webgl::InitContextResult> final {
   using T = mozilla::webgl::InitContextResult;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.error);
-    WriteParam(msg, in.options);
-    WriteParam(msg, in.limits);
-    WriteParam(msg, in.uploadableSdTypes);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.error);
+    WriteParam(writer, in.options);
+    WriteParam(writer, in.limits);
+    WriteParam(writer, in.uploadableSdTypes);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->error) &&
-           ReadParam(msg, itr, &out->options) &&
-           ReadParam(msg, itr, &out->limits) &&
-           ReadParam(msg, itr, &out->uploadableSdTypes);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->error) && ReadParam(reader, &out->options) &&
+           ReadParam(reader, &out->limits) &&
+           ReadParam(reader, &out->uploadableSdTypes);
   }
 };
 
@@ -300,8 +299,11 @@ struct ParamTraits<mozilla::webgl::Limits> final
     : public PlainOldDataSerializer<mozilla::webgl::Limits> {};
 
 template <>
-struct ParamTraits<mozilla::WebGLPixelStore> final
-    : public PlainOldDataSerializer<mozilla::WebGLPixelStore> {};
+struct ParamTraits<mozilla::webgl::PixelPackingState> final
+    : public PlainOldDataSerializer<mozilla::webgl::PixelPackingState> {};
+template <>
+struct ParamTraits<mozilla::webgl::PixelUnpackStateWebgl> final
+    : public PlainOldDataSerializer<mozilla::webgl::PixelUnpackStateWebgl> {};
 
 // -
 
@@ -309,40 +311,17 @@ template <>
 struct ParamTraits<mozilla::webgl::ReadPixelsDesc> final {
   using T = mozilla::webgl::ReadPixelsDesc;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.srcOffset);
-    WriteParam(msg, in.size);
-    WriteParam(msg, in.pi);
-    WriteParam(msg, in.packState);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.srcOffset);
+    WriteParam(writer, in.size);
+    WriteParam(writer, in.pi);
+    WriteParam(writer, in.packState);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->srcOffset) &&
-           ReadParam(msg, itr, &out->size) && ReadParam(msg, itr, &out->pi) &&
-           ReadParam(msg, itr, &out->packState);
-  }
-};
-
-// -
-
-template <>
-struct ParamTraits<mozilla::webgl::PixelPackState> final {
-  using T = mozilla::webgl::PixelPackState;
-
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.alignment);
-    WriteParam(msg, in.rowLength);
-    WriteParam(msg, in.skipRows);
-    WriteParam(msg, in.skipPixels);
-  }
-
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->alignment) &&
-           ReadParam(msg, itr, &out->rowLength) &&
-           ReadParam(msg, itr, &out->skipRows) &&
-           ReadParam(msg, itr, &out->skipPixels);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->srcOffset) &&
+           ReadParam(reader, &out->size) && ReadParam(reader, &out->pi) &&
+           ReadParam(reader, &out->packState);
   }
 };
 
@@ -352,14 +331,13 @@ template <>
 struct ParamTraits<mozilla::webgl::PackingInfo> final {
   using T = mozilla::webgl::PackingInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.format);
-    WriteParam(msg, in.type);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.format);
+    WriteParam(writer, in.type);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->format) && ReadParam(msg, itr, &out->type);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->format) && ReadParam(reader, &out->type);
   }
 };
 
@@ -369,19 +347,17 @@ template <>
 struct ParamTraits<mozilla::webgl::CompileResult> final {
   using T = mozilla::webgl::CompileResult;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.pending);
-    WriteParam(msg, in.log);
-    WriteParam(msg, in.translatedSource);
-    WriteParam(msg, in.success);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.pending);
+    WriteParam(writer, in.log);
+    WriteParam(writer, in.translatedSource);
+    WriteParam(writer, in.success);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->pending) &&
-           ReadParam(msg, itr, &out->log) &&
-           ReadParam(msg, itr, &out->translatedSource) &&
-           ReadParam(msg, itr, &out->success);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->pending) && ReadParam(reader, &out->log) &&
+           ReadParam(reader, &out->translatedSource) &&
+           ReadParam(reader, &out->success);
   }
 };
 
@@ -391,21 +367,19 @@ template <>
 struct ParamTraits<mozilla::webgl::LinkResult> final {
   using T = mozilla::webgl::LinkResult;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.pending);
-    WriteParam(msg, in.log);
-    WriteParam(msg, in.success);
-    WriteParam(msg, in.active);
-    WriteParam(msg, in.tfBufferMode);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.pending);
+    WriteParam(writer, in.log);
+    WriteParam(writer, in.success);
+    WriteParam(writer, in.active);
+    WriteParam(writer, in.tfBufferMode);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->pending) &&
-           ReadParam(msg, itr, &out->log) &&
-           ReadParam(msg, itr, &out->success) &&
-           ReadParam(msg, itr, &out->active) &&
-           ReadParam(msg, itr, &out->tfBufferMode);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->pending) && ReadParam(reader, &out->log) &&
+           ReadParam(reader, &out->success) &&
+           ReadParam(reader, &out->active) &&
+           ReadParam(reader, &out->tfBufferMode);
   }
 };
 
@@ -415,19 +389,18 @@ template <>
 struct ParamTraits<mozilla::webgl::LinkActiveInfo> final {
   using T = mozilla::webgl::LinkActiveInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.activeAttribs);
-    WriteParam(msg, in.activeUniforms);
-    WriteParam(msg, in.activeUniformBlocks);
-    WriteParam(msg, in.activeTfVaryings);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.activeAttribs);
+    WriteParam(writer, in.activeUniforms);
+    WriteParam(writer, in.activeUniformBlocks);
+    WriteParam(writer, in.activeTfVaryings);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->activeAttribs) &&
-           ReadParam(msg, itr, &out->activeUniforms) &&
-           ReadParam(msg, itr, &out->activeUniformBlocks) &&
-           ReadParam(msg, itr, &out->activeTfVaryings);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->activeAttribs) &&
+           ReadParam(reader, &out->activeUniforms) &&
+           ReadParam(reader, &out->activeUniformBlocks) &&
+           ReadParam(reader, &out->activeTfVaryings);
   }
 };
 
@@ -437,17 +410,15 @@ template <>
 struct ParamTraits<mozilla::webgl::ActiveInfo> final {
   using T = mozilla::webgl::ActiveInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.elemType);
-    WriteParam(msg, in.elemCount);
-    WriteParam(msg, in.name);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.elemType);
+    WriteParam(writer, in.elemCount);
+    WriteParam(writer, in.name);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->elemType) &&
-           ReadParam(msg, itr, &out->elemCount) &&
-           ReadParam(msg, itr, &out->name);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->elemType) &&
+           ReadParam(reader, &out->elemCount) && ReadParam(reader, &out->name);
   }
 };
 
@@ -457,17 +428,16 @@ template <>
 struct ParamTraits<mozilla::webgl::ActiveAttribInfo> final {
   using T = mozilla::webgl::ActiveAttribInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, static_cast<const mozilla::webgl::ActiveInfo&>(in));
-    WriteParam(msg, in.location);
-    WriteParam(msg, in.baseType);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, static_cast<const mozilla::webgl::ActiveInfo&>(in));
+    WriteParam(writer, in.location);
+    WriteParam(writer, in.baseType);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, static_cast<mozilla::webgl::ActiveInfo*>(out)) &&
-           ReadParam(msg, itr, &out->location) &&
-           ReadParam(msg, itr, &out->baseType);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, static_cast<mozilla::webgl::ActiveInfo*>(out)) &&
+           ReadParam(reader, &out->location) &&
+           ReadParam(reader, &out->baseType);
   }
 };
 
@@ -477,25 +447,24 @@ template <>
 struct ParamTraits<mozilla::webgl::ActiveUniformInfo> final {
   using T = mozilla::webgl::ActiveUniformInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, static_cast<const mozilla::webgl::ActiveInfo&>(in));
-    WriteParam(msg, in.locByIndex);
-    WriteParam(msg, in.block_index);
-    WriteParam(msg, in.block_offset);
-    WriteParam(msg, in.block_arrayStride);
-    WriteParam(msg, in.block_matrixStride);
-    WriteParam(msg, in.block_isRowMajor);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, static_cast<const mozilla::webgl::ActiveInfo&>(in));
+    WriteParam(writer, in.locByIndex);
+    WriteParam(writer, in.block_index);
+    WriteParam(writer, in.block_offset);
+    WriteParam(writer, in.block_arrayStride);
+    WriteParam(writer, in.block_matrixStride);
+    WriteParam(writer, in.block_isRowMajor);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, static_cast<mozilla::webgl::ActiveInfo*>(out)) &&
-           ReadParam(msg, itr, &out->locByIndex) &&
-           ReadParam(msg, itr, &out->block_index) &&
-           ReadParam(msg, itr, &out->block_offset) &&
-           ReadParam(msg, itr, &out->block_arrayStride) &&
-           ReadParam(msg, itr, &out->block_matrixStride) &&
-           ReadParam(msg, itr, &out->block_isRowMajor);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, static_cast<mozilla::webgl::ActiveInfo*>(out)) &&
+           ReadParam(reader, &out->locByIndex) &&
+           ReadParam(reader, &out->block_index) &&
+           ReadParam(reader, &out->block_offset) &&
+           ReadParam(reader, &out->block_arrayStride) &&
+           ReadParam(reader, &out->block_matrixStride) &&
+           ReadParam(reader, &out->block_isRowMajor);
   }
 };
 
@@ -505,21 +474,19 @@ template <>
 struct ParamTraits<mozilla::webgl::ActiveUniformBlockInfo> final {
   using T = mozilla::webgl::ActiveUniformBlockInfo;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.name);
-    WriteParam(msg, in.dataSize);
-    WriteParam(msg, in.activeUniformIndices);
-    WriteParam(msg, in.referencedByVertexShader);
-    WriteParam(msg, in.referencedByFragmentShader);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.name);
+    WriteParam(writer, in.dataSize);
+    WriteParam(writer, in.activeUniformIndices);
+    WriteParam(writer, in.referencedByVertexShader);
+    WriteParam(writer, in.referencedByFragmentShader);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->name) &&
-           ReadParam(msg, itr, &out->dataSize) &&
-           ReadParam(msg, itr, &out->activeUniformIndices) &&
-           ReadParam(msg, itr, &out->referencedByVertexShader) &&
-           ReadParam(msg, itr, &out->referencedByFragmentShader);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->name) && ReadParam(reader, &out->dataSize) &&
+           ReadParam(reader, &out->activeUniformIndices) &&
+           ReadParam(reader, &out->referencedByVertexShader) &&
+           ReadParam(reader, &out->referencedByFragmentShader);
   }
 };
 
@@ -529,17 +496,16 @@ template <>
 struct ParamTraits<mozilla::webgl::ShaderPrecisionFormat> final {
   using T = mozilla::webgl::ShaderPrecisionFormat;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.rangeMin);
-    WriteParam(msg, in.rangeMax);
-    WriteParam(msg, in.precision);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.rangeMin);
+    WriteParam(writer, in.rangeMax);
+    WriteParam(writer, in.precision);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->rangeMin) &&
-           ReadParam(msg, itr, &out->rangeMax) &&
-           ReadParam(msg, itr, &out->precision);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->rangeMin) &&
+           ReadParam(reader, &out->rangeMax) &&
+           ReadParam(reader, &out->precision);
   }
 };
 
@@ -552,16 +518,15 @@ struct ParamTraits<U[N]> final {
 
   static_assert(std::is_trivial<U>::value);
 
-  static void Write(Message* const msg, const T& in) {
-    msg->WriteBytes(in, kByteSize);
+  static void Write(MessageWriter* const writer, const T& in) {
+    writer->WriteBytes(in, kByteSize);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    if (!msg->HasBytesAvailable(itr, kByteSize)) {
+  static bool Read(MessageReader* const reader, T* const out) {
+    if (!reader->HasBytesAvailable(kByteSize)) {
       return false;
     }
-    return msg->ReadBytesInto(itr, *out, kByteSize);
+    return reader->ReadBytesInto(*out, kByteSize);
   }
 };
 
@@ -571,15 +536,14 @@ template <>
 struct ParamTraits<mozilla::webgl::GetUniformData> final {
   using T = mozilla::webgl::GetUniformData;
 
-  static void Write(Message* const msg, const T& in) {
-    ParamTraits<decltype(in.data)>::Write(msg, in.data);
-    WriteParam(msg, in.type);
+  static void Write(MessageWriter* const writer, const T& in) {
+    ParamTraits<decltype(in.data)>::Write(writer, in.data);
+    WriteParam(writer, in.type);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ParamTraits<decltype(out->data)>::Read(msg, itr, &out->data) &&
-           ReadParam(msg, itr, &out->type);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ParamTraits<decltype(out->data)>::Read(reader, &out->data) &&
+           ReadParam(reader, &out->type);
   }
 };
 
@@ -589,14 +553,13 @@ template <typename U>
 struct ParamTraits<mozilla::avec2<U>> final {
   using T = mozilla::avec2<U>;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.x);
-    WriteParam(msg, in.y);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.x);
+    WriteParam(writer, in.y);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->x) && ReadParam(msg, itr, &out->y);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->x) && ReadParam(reader, &out->y);
   }
 };
 
@@ -606,16 +569,15 @@ template <typename U>
 struct ParamTraits<mozilla::avec3<U>> final {
   using T = mozilla::avec3<U>;
 
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.x);
-    WriteParam(msg, in.y);
-    WriteParam(msg, in.z);
+  static void Write(MessageWriter* const writer, const T& in) {
+    WriteParam(writer, in.x);
+    WriteParam(writer, in.y);
+    WriteParam(writer, in.z);
   }
 
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->x) && ReadParam(msg, itr, &out->y) &&
-           ReadParam(msg, itr, &out->z);
+  static bool Read(MessageReader* const reader, T* const out) {
+    return ReadParam(reader, &out->x) && ReadParam(reader, &out->y) &&
+           ReadParam(reader, &out->z);
   }
 };
 

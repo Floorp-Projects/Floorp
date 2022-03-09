@@ -6,6 +6,7 @@
 
 #include "UtilityProcessHost.h"
 
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/Telemetry.h"
@@ -59,7 +60,8 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mUtilityProcessParent);
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
+      dom::ContentParent::ShouldSyncPreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }
@@ -220,7 +222,8 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   Unused << GetActor()->SendInitProfiler(
       ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
 
-  ResolvePromise();
+  // Promise will be resolved later, from UtilityProcessParent when the child
+  // will send the InitCompleted message.
 }
 
 void UtilityProcessHost::Shutdown() {
@@ -266,9 +269,9 @@ void UtilityProcessHost::OnChannelClosed() {
   if (!mShutdownRequested && mListener) {
     // This is an unclean shutdown. Notify our listener that we're going away.
     mListener->OnProcessUnexpectedShutdown(this);
-  } else {
-    DestroyProcess();
   }
+
+  DestroyProcess();
 
   // Release the actor.
   UtilityProcessParent::Destroy(std::move(mUtilityProcessParent));

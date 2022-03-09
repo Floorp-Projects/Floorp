@@ -44,6 +44,7 @@ struct HttpChannelOnStartRequestArgs
   ResourceTimingStructArgs timing;
   bool allRedirectsSameOrigin;
   uint32_t? multiPartID;
+  bool isFirstPartOfMultiPart;
   bool isLastPartOfMultiPart;
   CrossOriginOpenerPolicy openerPolicy;
   nsIReferrerInfo overrideReferrerInfo;

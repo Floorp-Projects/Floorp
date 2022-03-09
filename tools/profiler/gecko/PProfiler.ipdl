@@ -14,16 +14,20 @@ namespace mozilla {
 // It is a top-level protocol so that its child endpoint can be on a
 // background thread, so that profiles can be gathered even if the main thread
 // is unresponsive.
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PProfiler
 {
 child:
-  async Start(ProfilerInitParams params);
-  async EnsureStarted(ProfilerInitParams params);
-  async Stop();
-  async Pause();
-  async Resume();
-  async PauseSampling();
-  async ResumeSampling();
+  // The unused returned value is to have a promise we can await.
+  async Start(ProfilerInitParams params) returns (bool unused);
+  async EnsureStarted(ProfilerInitParams params) returns (bool unused);
+  async Stop() returns (bool unused);
+  async Pause() returns (bool unused);
+  async Resume() returns (bool unused);
+  async PauseSampling() returns (bool unused);
+  async ResumeSampling() returns (bool unused);
+
+  async WaitOnePeriodicSampling() returns (bool sampled);
 
   async AwaitNextChunkManagerUpdate() returns (ProfileBufferChunkManagerUpdate update);
   async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);

@@ -103,11 +103,12 @@ class LSSnapshot final : public nsIRunnable {
 
   uint32_t mInitLength;
   uint32_t mLength;
-  int64_t mExactUsage;
+  int64_t mUsage;
   int64_t mPeakUsage;
 
   LoadState mLoadState;
 
+  bool mHasOtherProcessDatabases;
   bool mHasOtherProcessObservers;
   bool mExplicit;
   bool mHasPendingStableStateCallback;
@@ -157,6 +158,8 @@ class LSSnapshot final : public nsIRunnable {
 
   nsresult End();
 
+  int64_t GetUsage() const;
+
  private:
   ~LSSnapshot();
 
@@ -174,7 +177,7 @@ class LSSnapshot final : public nsIRunnable {
 
   nsresult Checkpoint();
 
-  nsresult Finish();
+  nsresult Finish(bool aSync = false);
 
   void CancelIdleTimer();
 

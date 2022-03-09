@@ -22,6 +22,10 @@ class nsChildView;
 class nsMenuBarX;
 @class ChildView;
 
+namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
+}  // namespace mozilla
+
 typedef struct _nsCocoaWindowList {
   _nsCocoaWindowList() : prev(nullptr), window(nullptr) {}
   struct _nsCocoaWindowList* prev;
@@ -343,7 +347,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override { return mInputContext; }
   MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
-      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      mozilla::NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 
   void SetPopupWindowLevel();

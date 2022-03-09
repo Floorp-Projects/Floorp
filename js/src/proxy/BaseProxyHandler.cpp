@@ -244,7 +244,7 @@ bool js::SetPropertyIgnoringNamedGetter(
 
 bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
     JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
+  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), ENUMERATE);
   MOZ_ASSERT(props.length() == 0);
 
   if (!ownPropertyKeys(cx, proxy, props)) {
@@ -285,7 +285,7 @@ bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
 
 bool BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
                                  MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
+  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), ENUMERATE);
 
   // GetPropertyKeys will invoke getOwnEnumerablePropertyKeys along the proto
   // chain for us.
@@ -339,7 +339,7 @@ bool BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
 
 bool BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy,
                                    MutableHandleValue v, bool* bp) const {
-  assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), GET);
   cx->check(proxy, v);
   return JS::InstanceofOperator(cx, proxy, v, bp);
 }
@@ -389,7 +389,7 @@ bool BaseProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy,
 bool BaseProxyHandler::getElements(JSContext* cx, HandleObject proxy,
                                    uint32_t begin, uint32_t end,
                                    ElementAdder* adder) const {
-  assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), GET);
 
   return js::GetElementsWithAdder(cx, proxy, proxy, begin, end, adder);
 }
@@ -417,7 +417,7 @@ JS_PUBLIC_API void js::NukeRemovedCrossCompartmentWrapper(JSContext* cx,
                                                           JSObject* wrapper) {
   MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
 
-  NotifyGCNukeWrapper(wrapper);
+  NotifyGCNukeWrapper(cx, wrapper);
 
   // We don't need to call finalize here because the CCW finalizer doesn't do
   // anything. Skipping finalize means that |wrapper| doesn't need to be rooted

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Ignore strange errors when shutting down.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/No such actor/);
 
@@ -75,7 +77,6 @@ function isFrameSelected(dbg, index, title) {
 
   const {
     selectors: { getSelectedFrame, getCurrentThread },
-    getState,
   } = dbg;
 
   const frame = getSelectedFrame(getCurrentThread());

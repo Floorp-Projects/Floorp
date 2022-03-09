@@ -12,6 +12,7 @@ const {
 } = require("devtools/server/actors/webconsole/listeners/document-events");
 
 class DocumentEventWatcher {
+  #abortController = new AbortController();
   /**
    * Start watching for all document event related to a given Target Actor.
    *
@@ -75,11 +76,33 @@ class DocumentEventWatcher {
     };
 
     this.listener = new DocumentEventsListener(targetActor);
-    this.listener.on("*", onDocumentEvent);
+
+    this.listener.on(
+      "will-navigate",
+      data => onDocumentEvent("will-navigate", data),
+      { signal: this.#abortController.signal }
+    );
+    this.listener.on(
+      "dom-loading",
+      data => onDocumentEvent("dom-loading", data),
+      { signal: this.#abortController.signal }
+    );
+    this.listener.on(
+      "dom-interactive",
+      data => onDocumentEvent("dom-interactive", data),
+      { signal: this.#abortController.signal }
+    );
+    this.listener.on(
+      "dom-complete",
+      data => onDocumentEvent("dom-complete", data),
+      { signal: this.#abortController.signal }
+    );
+
     this.listener.listen();
   }
 
   destroy() {
+    this.#abortController.abort();
     if (this.listener) {
       this.listener.destroy();
     }

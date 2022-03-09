@@ -25,15 +25,17 @@
 #include <numeric>  // iota
 
 #include "hwy/aligned_allocator.h"
+// Must come after foreach_target.h to avoid redefinition errors.
 #include "hwy/highway.h"
 #include "hwy/nanobenchmark.h"
+
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
 #if HWY_TARGET != HWY_SCALAR
-using hwy::HWY_NAMESPACE::CombineShiftRightBytes;
+using hwy::HWY_NAMESPACE::CombineShiftRightLanes;
 #endif
 
 class TwoArray {
@@ -87,14 +89,14 @@ void RunBenchmark(const char* caption) {
 }
 
 void Intro() {
-  HWY_ALIGN const float in[16] = {1, 2, 3, 4, 5, 6};
-  HWY_ALIGN float out[16];
+  const float in[16] = {1, 2, 3, 4, 5, 6};
+  float out[16];
   const ScalableTag<float> d;  // largest possible vector
   for (size_t i = 0; i < 16; i += Lanes(d)) {
-    const auto vec = Load(d, in + i);  // aligned!
-    auto result = vec * vec;
-    result += result;  // can update if not const
-    Store(result, d, out + i);
+    const auto vec = LoadU(d, in + i);  // no alignment requirement
+    auto result = Mul(vec, vec);
+    result = Add(result, result);  // can update if not const
+    StoreU(result, d, out + i);
   }
   printf("\nF(x)->2*x^2, F(%.0f) = %.1f\n", in[2], out[2]);
 }
@@ -109,32 +111,34 @@ class BenchmarkDot : public TwoArray {
     const ScalableTag<float> d;
     const size_t N = Lanes(d);
     using V = decltype(Zero(d));
-    constexpr size_t unroll = 8;
     // Compiler doesn't make independent sum* accumulators, so unroll manually.
-    // Some older compilers might not be able to fit the 8 arrays in registers,
-    // so manual unrolling can be helpfull if you run into this issue.
-    // 2 FMA ports * 4 cycle latency = 8x unrolled.
-    V sum[unroll];
-    for (size_t i = 0; i < unroll; ++i) {
-      sum[i] = Zero(d);
-    }
+    // We cannot use an array because V might be a sizeless type. For reasonable
+    // code, we unroll 4x, but 8x might help (2 FMA ports * 4 cycle latency).
+    V sum0 = Zero(d);
+    V sum1 = Zero(d);
+    V sum2 = Zero(d);
+    V sum3 = Zero(d);
     const float* const HWY_RESTRICT pa = &a_[0];
     const float* const HWY_RESTRICT pb = b_;
-    for (size_t i = 0; i < num_items; i += unroll * N) {
-      for (size_t j = 0; j < unroll; ++j) {
-        const auto a = Load(d, pa + i + j * N);
-        const auto b = Load(d, pb + i + j * N);
-        sum[j] = MulAdd(a, b, sum[j]);
-      }
+    for (size_t i = 0; i < num_items; i += 4 * N) {
+      const auto a0 = Load(d, pa + i + 0 * N);
+      const auto b0 = Load(d, pb + i + 0 * N);
+      sum0 = MulAdd(a0, b0, sum0);
+      const auto a1 = Load(d, pa + i + 1 * N);
+      const auto b1 = Load(d, pb + i + 1 * N);
+      sum1 = MulAdd(a1, b1, sum1);
+      const auto a2 = Load(d, pa + i + 2 * N);
+      const auto b2 = Load(d, pb + i + 2 * N);
+      sum2 = MulAdd(a2, b2, sum2);
+      const auto a3 = Load(d, pa + i + 3 * N);
+      const auto b3 = Load(d, pb + i + 3 * N);
+      sum3 = MulAdd(a3, b3, sum3);
     }
-    // Reduction tree: sum of all accumulators by pairs into sum[0], then the
-    // lanes.
-    for (size_t power = 1; power < unroll; power *= 2) {
-      for (size_t i = 0; i < unroll; i += 2 * power) {
-        sum[i] += sum[i + power];
-      }
-    }
-    dot_ = GetLane(SumOfLanes(d, sum[0]));
+    // Reduction tree: sum of all accumulators by pairs into sum0.
+    sum0 = Add(sum0, sum1);
+    sum2 = Add(sum2, sum3);
+    sum0 = Add(sum0, sum2);
+    dot_ = GetLane(SumOfLanes(d, sum0));
     return static_cast<FuncOutput>(dot_);
   }
   void Verify(size_t num_items) {
@@ -193,9 +197,9 @@ struct BenchmarkDelta : public TwoArray {
     auto prev = Load(df, &a_[0]);
     for (; i < num_items; i += Lanes(df)) {
       const auto a = Load(df, &a_[i]);
-      const auto shifted = CombineShiftRightLanes<3>(a, prev);
+      const auto shifted = CombineShiftRightLanes<3>(df, a, prev);
       prev = a;
-      Store(a - shifted, df, &b_[i]);
+      Store(Sub(a, shifted), df, &b_[i]);
     }
 #endif
     return static_cast<FuncOutput>(b_[num_items - 1]);

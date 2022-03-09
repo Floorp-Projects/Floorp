@@ -31,6 +31,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const SCREEN_PROPS = {
         order: 0,
         content: {
+          position: "corner",
           title: "test title",
           hero_text: "test subtitle",
         },
@@ -39,35 +40,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
-    });
-
-    it("should autoClose on last screen", () => {
-      const fakeWindow = {
-        location: {
-          href: "test",
-        },
-        document: {
-          querySelector: () => {
-            return { className: "dialog-last" };
-          },
-        },
-      };
-      const SCREEN_PROPS = {
-        order: 1,
-        autoClose: true,
-        totalNumberOfScreens: 1,
-        content: {
-          title: "test title",
-          subtitle: "test subtitle",
-        },
-        windowObj: fakeWindow,
-      };
-      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
-      assert.ok(wrapper.exists());
-      assert.equal(fakeWindow.location.href, "test");
-
-      clock.tick(20001);
-      assert.equal(fakeWindow.location.href, "about:home");
+      assert.equal(wrapper.find("main").prop("pos"), "corner");
     });
   });
 
@@ -101,28 +74,28 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_SET_DEFAULT");
-      assert.lengthOf(data.screens, getData().screens.length);
+      assert.lengthOf(data.screens, getData().screens.length - 1);
     });
     it("should keep 'pin' and remove 'default' if already default", async () => {
       const data = await prepConfig({ needPin: true });
 
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 1);
+      assert.lengthOf(data.screens, getData().screens.length - 2);
     });
     it("should switch to 'default' if already pinned", async () => {
       const data = await prepConfig({ needDefault: true });
 
       assert.propertyVal(data.screens[0], "id", "AW_ONLY_DEFAULT");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 1);
+      assert.lengthOf(data.screens, getData().screens.length - 2);
     });
     it("should switch to 'start' if already pinned and default", async () => {
       const data = await prepConfig();
 
       assert.propertyVal(data.screens[0], "id", "AW_GET_STARTED");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 1);
+      assert.lengthOf(data.screens, getData().screens.length - 2);
     });
     it("should have a FxA button", async () => {
       const data = await prepConfig();
@@ -141,7 +114,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should have an image caption", async () => {
       const data = await prepConfig();
 
-      assert.property(data.screens[0].content, "help_text");
+      assert.property(data.screens[0].content.help_text, "text");
     });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
@@ -156,6 +129,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
             id: "AW_PIN_FIREFOX",
             order: 0,
             content: {
+              position: "corner",
               help_text: {
                 deleteIfNotEn: true,
                 text: {

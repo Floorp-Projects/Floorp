@@ -22,7 +22,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/MessageChannel.h"         // for MessageChannel, etc
-#include "mozilla/ipc/Transport.h"              // for Transport
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
@@ -458,8 +457,7 @@ void ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint) {
 }
 
 void ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent) {
-  ipc::MessageChannel* parentChannel = aParent->GetIPCChannel();
-  Open(parentChannel, aParent->GetThread(), mozilla::ipc::ChildSide);
+  Open(aParent, aParent->GetThread(), mozilla::ipc::ChildSide);
 
   // This reference is dropped in DeallocPImageBridgeChild.
   this->AddRef();

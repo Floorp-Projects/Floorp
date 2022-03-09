@@ -15,6 +15,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.RectF;
 import android.os.Build
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SdkSuppress
@@ -23,7 +24,10 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.junit.Assume.assumeThat
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameter
@@ -34,6 +38,11 @@ import org.mozilla.geckoview.GeckoSession
 @RunWith(Parameterized::class)
 @WithDisplay(width = 400, height = 400)
 class SelectionActionDelegateTest : BaseSessionTest() {
+    val activityRule = ActivityScenarioRule(GeckoViewTestActivity::class.java)
+
+    @get:Rule
+    override val rules: RuleChain = RuleChain.outerRule(activityRule).around(sessionRule)
+
     enum class ContentType {
         DIV, EDITABLE_ELEMENT, IFRAME
     }
@@ -72,6 +81,15 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Before
+    fun setup() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Writing clipboard requires foreground on Android 10.
+            activityRule.scenario.onActivity { activity ->
+                activity.onWindowFocusChanged(true)
+            }
+        }
+    }
 
     /** Generic tests for each content type. */
 
@@ -336,7 +354,11 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     private fun withClipboard(content: String = "", lambda: () -> Unit) {
         val oldClip = clipboard.primaryClip
         try {
-            clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P && content.isEmpty()) {
+                clipboard.clearPrimaryClip()
+            } else {
+                clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+            }
 
             sessionRule.addExternalDelegateUntilTestEnd(
                     ClipboardManager.OnPrimaryClipChangedListener::class,

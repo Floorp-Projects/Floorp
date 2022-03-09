@@ -27,6 +27,10 @@ IPDL_SOURCES = [
     "printing/ipc/PRemotePrintJob.ipdl",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
 if CONFIG["NS_PRINTING"]:
     DIRS += ["printing"]
 

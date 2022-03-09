@@ -52,6 +52,7 @@ class SurfaceDescriptorBuffer;
 
 #ifdef XP_WIN
 class D3D11ShareHandleImage;
+class D3D11TextureIMFSampleImage;
 class D3D11YCbCrImage;
 class SurfaceDescriptorD3D10;
 class SurfaceDescriptorDXGIYCbCr;
@@ -217,9 +218,10 @@ class GLBlitHelper final {
                             GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                             GLenum destTarget = LOCAL_GL_TEXTURE_2D) const;
 
-  void DrawBlitTextureToFramebuffer(
-      GLuint srcTex, const gfx::IntSize& srcSize, const gfx::IntSize& destSize,
-      GLenum srcTarget = LOCAL_GL_TEXTURE_2D) const;
+  void DrawBlitTextureToFramebuffer(GLuint srcTex, const gfx::IntSize& srcSize,
+                                    const gfx::IntSize& destSize,
+                                    GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
+                                    bool srcIsBGRA = false) const;
 
   bool BlitImageToFramebuffer(layers::Image* srcImage,
                               const gfx::IntSize& destSize,
@@ -237,6 +239,8 @@ class GLBlitHelper final {
 #ifdef XP_WIN
   // GLBlitHelperD3D.cpp:
   bool BlitImage(layers::D3D11ShareHandleImage* srcImage,
+                 const gfx::IntSize& destSize, OriginPos destOrigin) const;
+  bool BlitImage(layers::D3D11TextureIMFSampleImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
   bool BlitImage(layers::D3D11YCbCrImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;

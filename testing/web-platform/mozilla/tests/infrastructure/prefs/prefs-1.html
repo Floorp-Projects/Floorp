@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<link rel="match" href="prefs-true.html"/>
+<div id="result"></div>
+<script>
+// If the pref is changed here, it needs to also be changed in the corresponding ini file
+result.innerHTML = SpecialPowers.getBoolPref("apz.allow_zooming_out");
+document.documentElement.classList.remove("reftest-wait");
+</script>
+</html>

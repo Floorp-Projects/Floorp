@@ -518,7 +518,8 @@ LAllocation LIRGeneratorShared::useRegisterOrNonDoubleConstant(
   return useRegister(mir);
 }
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_LOONG64)
 LAllocation LIRGeneratorShared::useAnyOrConstant(MDefinition* mir) {
   return useRegisterOrConstant(mir);
 }

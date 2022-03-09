@@ -5893,7 +5893,12 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let metrics = get_metrics_provider_for_product();
 
     let element = GeckoElement(element);
-    let parent_element = element.inheritance_parent();
+    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
+    let parent_element = if pseudo.is_none() {
+        element.inheritance_parent()
+    } else {
+        Some(element)
+    };
     let parent_data = parent_element.as_ref().and_then(|e| e.borrow_data());
     let parent_style = parent_data
         .as_ref()
@@ -5910,7 +5915,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
         &mut conditions,
     );
 
-    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
     let restriction = pseudo.and_then(|p| p.property_restriction());
 
     let global_style_data = &*GLOBAL_STYLE_DATA;

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ARIAMap.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
@@ -15,8 +16,11 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
+#include "nsTextEquivUtils.h"
+#include "Pivot.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
 
@@ -206,6 +210,47 @@ void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
+  if (mCachedFields) {
+    if (mCachedFields->HasAttribute(nsGkAtoms::aria_valuetext)) {
+      mCachedFields->GetAttribute(nsGkAtoms::aria_valuetext, aValue);
+      VERIFY_CACHE(CacheDomain::Value);
+      return;
+    }
+
+    if (HasNumericValue()) {
+      double checkValue = CurValue();
+      if (!IsNaN(checkValue)) {
+        aValue.AppendFloat(checkValue);
+      }
+      return;
+    }
+
+    const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+    // Value of textbox is a textified subtree.
+    if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) {
+      nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
+      return;
+    }
+
+    if (IsCombobox()) {
+      Pivot p = Pivot(const_cast<RemoteAccessibleBase<Derived>*>(this));
+      PivotStateRule rule(states::ACTIVE);
+      Accessible* option = p.First(rule);
+      if (!option) {
+        option =
+            const_cast<RemoteAccessibleBase<Derived>*>(this)->GetSelectedItem(
+                0);
+      }
+
+      if (option) {
+        option->Name(aValue);
+      }
+    }
+  }
+}
+
+template <class Derived>
 double RemoteAccessibleBase<Derived>::CurValue() const {
   if (mCachedFields) {
     if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
@@ -270,12 +315,38 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
+  // First, attempt to retrieve the transform from the cache.
+  Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
+      mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
+          nsGkAtoms::transform);
+  if (!maybeTransform) {
+    return false;
+  }
+  // The transform matrix we cache is meant to operate on rects
+  // within the coordinate space of the frame to which the
+  // transform is applied (self-relative rects). We cache bounds
+  // relative to some ancestor. Remove the relative offset before
+  // transforming. The transform matrix will add it back in.
+  aBounds.MoveTo(0, 0);
+  auto mtxInPixels = gfx::Matrix4x4Typed<CSSPixel, CSSPixel>::FromUnknownMatrix(
+      *(*maybeTransform));
+
+  // Our matrix is in CSS Pixels, so we need our rect to be in CSS
+  // Pixels too. Convert before applying.
+  auto boundsInPixels = CSSRect::FromAppUnits(aBounds);
+  boundsInPixels = mtxInPixels.TransformBounds(boundsInPixels);
+  aBounds = CSSRect::ToAppUnits(boundsInPixels);
+
+  return true;
+}
+
+template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
     if (maybeBounds) {
       nsRect bounds = *maybeBounds;
-      LayoutDeviceIntRect devPxBounds;
       dom::CanonicalBrowsingContext* cbc =
           static_cast<dom::BrowserParent*>(mDoc->Manager())
               ->GetBrowsingContext()
@@ -284,7 +355,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
       nsPresContext* presContext =
           bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
 
+      Unused << ApplyTransform(bounds);
+
+      LayoutDeviceIntRect devPxBounds;
       const Accessible* acc = this;
+
       while (acc) {
         if (LocalAccessible* localAcc =
                 const_cast<Accessible*>(acc)->AsLocal()) {
@@ -305,7 +380,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
           // by GetFullZoom because LocalAccessible::Bounds already does
           // that.
           devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
-
           break;
         }
 
@@ -316,6 +390,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             (remoteAcc == this) ? Nothing() : remoteAcc->RetrieveCachedBounds();
 
         if (maybeRemoteBounds) {
+          nsRect remoteBounds = *maybeRemoteBounds;
           // We need to take into account a non-1 resolution set on the
           // presshell. This happens with async pinch zooming, among other
           // things. We can't reliably query this value in the parent process,
@@ -334,11 +409,10 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             bounds.ScaleRoundOut(res.valueOr(1.0f));
           }
 
-          // Regardless of whether this is a doc, we should offset `bounds`
-          // by the bounds retrieved here. This is how we build screen
-          // coordinates from relative coordinates.
-          nsRect remoteBounds = *maybeRemoteBounds;
+          // We should offset `bounds` by the bounds retrieved above.
+          // This is how we build screen coordinates from relative coordinates.
           bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
+          Unused << remoteAcc->ApplyTransform(bounds);
         }
 
         acc = acc->Parent();
@@ -504,6 +578,10 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
             nsGkAtoms::textInputType)) {
       attributes->SetAttribute(nsGkAtoms::textInputType, *inputType);
     }
+
+    if (RefPtr<nsAtom> display = DisplayStyle()) {
+      attributes->SetAttribute(nsGkAtoms::display, display);
+    }
   }
 
   return attributes.forget();
@@ -522,10 +600,35 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
 }
 
 template <class Derived>
+already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::DisplayStyle() const {
+  if (mCachedFields) {
+    if (auto display =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::display)) {
+      RefPtr<nsAtom> result = *display;
+      return result.forget();
+    }
+  }
+  return nullptr;
+}
+
+template <class Derived>
+nsAtom* RemoteAccessibleBase<Derived>::GetPrimaryAction() const {
+  if (mCachedFields) {
+    if (auto action =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::action)) {
+      return *action;
+    }
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
 uint8_t RemoteAccessibleBase<Derived>::ActionCount() const {
   uint8_t actionCount = 0;
   if (mCachedFields) {
-    if (mCachedFields->HasAttribute(nsGkAtoms::action)) {
+    if (HasPrimaryAction() ||
+        ((IsTextLeaf() || IsImage()) && ActionAncestor())) {
       actionCount++;
     }
 
@@ -543,19 +646,26 @@ void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
                                                  nsAString& aName) {
   if (mCachedFields) {
     aName.Truncate();
-    auto action =
-        mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::action);
-    bool haslongdesc = mCachedFields->HasAttribute(nsGkAtoms::longdesc);
+    nsAtom* action = GetPrimaryAction();
+    if (!action && (IsTextLeaf() || IsImage())) {
+      const Accessible* actionAcc = ActionAncestor();
+      Derived* acc =
+          actionAcc ? const_cast<Accessible*>(actionAcc)->AsRemote() : nullptr;
+      if (acc) {
+        action = acc->GetPrimaryAction();
+      }
+    }
+
     switch (aIndex) {
       case 0:
         if (action) {
-          (*action)->ToString(aName);
-        } else if (haslongdesc) {
+          action->ToString(aName);
+        } else if (mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;
       case 1:
-        if (action && haslongdesc) {
+        if (action && mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;
@@ -574,6 +684,12 @@ bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
 
   Unused << mDoc->SendDoActionAsync(mID, aIndex);
   return true;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::SelectionRanges(
+    nsTArray<TextRange>* aRanges) const {
+  Document()->SelectionRanges(aRanges);
 }
 
 template <class Derived>
@@ -644,8 +760,146 @@ void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::HasPrimaryAction() const {
+  return mCachedFields && mCachedFields->HasAttribute(nsGkAtoms::action);
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SelectAccessible
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::SelectedItems(
+    nsTArray<Accessible*>* aItems) {
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTED);
+  for (Accessible* selected = p.First(rule); selected;
+       selected = p.Next(selected, rule)) {
+    aItems->AppendElement(selected);
+  }
+}
+
+template <class Derived>
+uint32_t RemoteAccessibleBase<Derived>::SelectedItemCount() {
+  uint32_t count = 0;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTED);
+  for (Accessible* selected = p.First(rule); selected;
+       selected = p.Next(selected, rule)) {
+    count++;
+  }
+
+  return count;
+}
+
+template <class Derived>
+Accessible* RemoteAccessibleBase<Derived>::GetSelectedItem(uint32_t aIndex) {
+  uint32_t index = 0;
+  Accessible* selected = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTED);
+  for (selected = p.First(rule); selected && index < aIndex;
+       selected = p.Next(selected, rule)) {
+    index++;
+  }
+
+  return selected;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::IsItemSelected(uint32_t aIndex) {
+  uint32_t index = 0;
+  Accessible* selectable = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTABLE);
+  for (selectable = p.First(rule); selectable && index < aIndex;
+       selectable = p.Next(selectable, rule)) {
+    index++;
+  }
+
+  return selectable && selectable->State() & states::SELECTED;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::AddItemToSelection(uint32_t aIndex) {
+  uint32_t index = 0;
+  Accessible* selectable = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTABLE);
+  for (selectable = p.First(rule); selectable && index < aIndex;
+       selectable = p.Next(selectable, rule)) {
+    index++;
+  }
+
+  if (selectable) selectable->SetSelected(true);
+
+  return static_cast<bool>(selectable);
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::RemoveItemFromSelection(uint32_t aIndex) {
+  uint32_t index = 0;
+  Accessible* selectable = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTABLE);
+  for (selectable = p.First(rule); selectable && index < aIndex;
+       selectable = p.Next(selectable, rule)) {
+    index++;
+  }
+
+  if (selectable) selectable->SetSelected(false);
+
+  return static_cast<bool>(selectable);
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::SelectAll() {
+  if ((State() & states::MULTISELECTABLE) == 0) {
+    return false;
+  }
+
+  bool success = false;
+  Accessible* selectable = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTABLE);
+  for (selectable = p.First(rule); selectable;
+       selectable = p.Next(selectable, rule)) {
+    success = true;
+    selectable->SetSelected(true);
+  }
+  return success;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::UnselectAll() {
+  if ((State() & states::MULTISELECTABLE) == 0) {
+    return false;
+  }
+
+  bool success = false;
+  Accessible* selectable = nullptr;
+  Pivot p = Pivot(this);
+  PivotStateRule rule(states::SELECTABLE);
+  for (selectable = p.First(rule); selectable;
+       selectable = p.Next(selectable, rule)) {
+    success = true;
+    selectable->SetSelected(false);
+  }
+  return success;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::TakeSelection() {
+  Unused << mDoc->SendTakeSelection(mID);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
+  Unused << mDoc->SendSetSelected(mID, aSelect);
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

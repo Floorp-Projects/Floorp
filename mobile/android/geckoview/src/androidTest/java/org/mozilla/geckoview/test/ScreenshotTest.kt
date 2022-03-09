@@ -230,26 +230,19 @@ class ScreenshotTest : BaseSessionTest() {
     }
 
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
-    @Test
-    fun capturePixelsBeforeGpuProcessCrash() {
+    @Test(expected = IllegalStateException::class)
+    fun capturePixelsAfterGpuProcessCrash() {
         // We need the GPU process for this test
         assumeTrue(sessionRule.usingGpuProcess())
 
-        val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-        mainSession.loadTestPath(COLORS_HTML_PATH)
-        sessionRule.waitUntilCalled(object : ContentDelegate {
-            @AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
-
         sessionRule.display?.let {
-            // Request screen pixels then immediately kill the GPU process
-            val result = it.capturePixels()
+            // Kill the GPU process then immediately request screen pixels. Requesting the pixels
+            // *before* killing the process will often result in the same error, but sometimes the
+            // screenshot request will complete successfully before the crash.
             sessionRule.killGpuProcess()
+            val result = it.capturePixels()
 
-            assertScreenshotResult(result, screenshotFile)
+            sessionRule.waitForResult(result)
         }
     }
 

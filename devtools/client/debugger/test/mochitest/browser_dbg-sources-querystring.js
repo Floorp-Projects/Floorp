@@ -4,28 +4,21 @@
 
 // Tests that the source tree works.
 
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources-querystring.html", "simple1.js?x=1", "simple1.js?x=2");
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
+  const dbg = await initDebugger(
+    "doc-sources-querystring.html",
+    "simple1.js?x=1",
+    "simple1.js?x=2"
+  );
 
   // Expand nodes and make sure more sources appear.
   await assertSourceCount(dbg, 2);
   await clickElement(dbg, "sourceDirectoryLabel", 2);
 
-  const labels = [getLabel(dbg, 4), getLabel(dbg, 3)];
-  is(
-    getLabel(dbg, 3),
-    "simple1.js?x=1",
-    "simple1.js?x=1 exists"
-  );
-  is(
-    getLabel(dbg, 4),
-    "simple1.js?x=2",
-    "simple1.js?x=2 exists"
-  );
+  is(getLabel(dbg, 3), "simple1.js?x=1", "simple1.js?x=1 exists");
+  is(getLabel(dbg, 4), "simple1.js?x=2", "simple1.js?x=2 exists");
 
   const source = findSource(dbg, "simple1.js?x=1");
   await selectSource(dbg, source);

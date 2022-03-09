@@ -199,7 +199,7 @@ def build_one_stage(
     libcxx_include_dir,
     build_wasm,
     is_final_stage=False,
-    pgo_phase=None,
+    profile=None,
 ):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
@@ -242,7 +242,6 @@ def build_one_stage(
         # libc++ doesn't build with MSVC because of the use of #include_next.
         if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
             cmake_args += [
-                "-DLLVM_FORCE_BUILD_RUNTIME=ON",
                 "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                 # libc++abi has conflicting definitions between the shared and static
                 # library on Windows because of the import library for the dll having
@@ -252,13 +251,9 @@ def build_one_stage(
             ]
         if not is_final_stage:
             cmake_args += [
-                "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt",
+                "-DLLVM_ENABLE_PROJECTS=clang",
                 "-DLLVM_INCLUDE_TESTS=OFF",
                 "-DLLVM_TOOL_LLI_BUILD=OFF",
-                "-DCOMPILER_RT_BUILD_SANITIZERS=OFF",
-                "-DCOMPILER_RT_BUILD_XRAY=OFF",
-                "-DCOMPILER_RT_BUILD_MEMPROF=OFF",
-                "-DCOMPILER_RT_BUILD_LIBFUZZER=OFF",
             ]
 
         # There is no libxml2 on Windows except if we build one ourselves.
@@ -316,15 +311,15 @@ def build_one_stage(
                 "-DDARWIN_macosx_OVERRIDE_SDK_VERSION=%s"
                 % os.environ["MACOSX_DEPLOYMENT_TARGET"],
             ]
-        if pgo_phase == "gen":
+        if profile == "gen":
             # Per https://releases.llvm.org/10.0.0/docs/HowToBuildWithPGO.html
             cmake_args += [
                 "-DLLVM_BUILD_INSTRUMENTED=IR",
                 "-DLLVM_BUILD_RUNTIME=No",
             ]
-        if pgo_phase == "use":
+        elif profile:
             cmake_args += [
-                "-DLLVM_PROFDATA_FILE=%s/merged.profdata" % stage_dir,
+                "-DLLVM_PROFDATA_FILE=%s" % profile,
             ]
         return cmake_args
 
@@ -469,7 +464,7 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
             delete(f)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
@@ -512,7 +507,6 @@ if __name__ == "__main__":
     extra_source_dir = source_dir + "/clang-tools-extra"
     clang_source_dir = source_dir + "/clang"
     lld_source_dir = source_dir + "/lld"
-    compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
     libcxxabi_source_dir = source_dir + "/libcxxabi"
 
@@ -573,8 +567,6 @@ if __name__ == "__main__":
         pgo = config["pgo"]
         if pgo not in (True, False):
             raise ValueError("Only boolean values are accepted for pgo.")
-        if pgo and stages != 4:
-            raise ValueError("PGO is only supported in 4-stage builds.")
     build_type = "Release"
     if "build_type" in config:
         build_type = config["build_type"]
@@ -649,13 +641,10 @@ if __name__ == "__main__":
         for p in config.get("patches", []):
             patch(p, source_dir)
 
-    compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
-
     symlinks = [
         (clang_source_dir, llvm_source_dir + "/tools/clang"),
         (extra_source_dir, llvm_source_dir + "/tools/clang/tools/extra"),
         (lld_source_dir, llvm_source_dir + "/tools/lld"),
-        (compiler_rt_source_dir, compiler_rt_source_link),
         (libcxx_source_dir, llvm_source_dir + "/projects/libcxx"),
         (libcxxabi_source_dir, llvm_source_dir + "/projects/libcxxabi"),
         (source_dir + "/cmake", llvm_source_dir + "/projects/cmake"),
@@ -685,7 +674,6 @@ if __name__ == "__main__":
     stage1_inst_dir = stage1_dir + "/" + package_name
 
     final_stage_dir = stage1_dir
-    final_inst_dir = stage1_inst_dir
 
     if is_darwin():
         extra_cflags = []
@@ -786,8 +774,6 @@ if __name__ == "__main__":
         stage2_dir = build_dir + "/stage2"
         stage2_inst_dir = stage2_dir + "/" + package_name
         final_stage_dir = stage2_dir
-        final_inst_dir = stage2_inst_dir
-        pgo_phase = "gen" if pgo else None
         if skip_stages < 1:
             cc = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
             cxx = stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
@@ -810,14 +796,13 @@ if __name__ == "__main__":
             libcxx_include_dir,
             build_wasm,
             is_final_stage=(stages == 2),
-            pgo_phase=pgo_phase,
+            profile="gen" if pgo else None,
         )
 
     if stages >= 3 and skip_stages < 3:
         stage3_dir = build_dir + "/stage3"
         stage3_inst_dir = stage3_dir + "/" + package_name
         final_stage_dir = stage3_dir
-        final_inst_dir = stage3_inst_dir
         if skip_stages < 2:
             cc = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
             cxx = stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
@@ -841,23 +826,28 @@ if __name__ == "__main__":
             build_wasm,
             (stages == 3),
         )
-
-    if stages >= 4 and skip_stages < 4:
-        stage4_dir = build_dir + "/stage4"
-        stage4_inst_dir = stage4_dir + "/" + package_name
-        final_stage_dir = stage4_dir
-        final_inst_dir = stage4_inst_dir
-        pgo_phase = None
         if pgo:
-            pgo_phase = "use"
-            llvm_profdata = stage3_inst_dir + "/bin/llvm-profdata%s" % exe_ext
+            llvm_profdata = stage2_inst_dir + "/bin/llvm-profdata%s" % exe_ext
             merge_cmd = [llvm_profdata, "merge", "-o", "merged.profdata"]
             profraw_files = glob.glob(
                 os.path.join(stage2_dir, "build", "profiles", "*.profraw")
             )
-            if not os.path.exists(stage4_dir):
-                os.mkdir(stage4_dir)
-            run_in(stage4_dir, merge_cmd + profraw_files)
+            run_in(stage3_dir, merge_cmd + profraw_files)
+            if stages == 3:
+                mkdir_p(upload_dir)
+                shutil.copy2(os.path.join(stage3_dir, "merged.profdata"), upload_dir)
+                return
+
+    if stages >= 4 and skip_stages < 4:
+        stage4_dir = build_dir + "/stage4"
+        final_stage_dir = stage4_dir
+        profile = None
+        if pgo:
+            if skip_stages == 3:
+                profile_dir = os.environ.get("MOZ_FETCHES_DIR", "")
+            else:
+                profile_dir = stage3_dir
+            profile = os.path.join(profile_dir, "merged.profdata")
         if skip_stages < 3:
             cc = stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
             cxx = stage3_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
@@ -880,7 +870,7 @@ if __name__ == "__main__":
             libcxx_include_dir,
             build_wasm,
             (stages == 4),
-            pgo_phase=pgo_phase,
+            profile=profile,
         )
 
     if build_clang_tidy:
@@ -888,20 +878,9 @@ if __name__ == "__main__":
             os.path.join(final_stage_dir, package_name), osx_cross_compile
         )
 
-    # Copy the wasm32 builtins to the final_inst_dir if the archive is present.
-    if "wasi-compiler-rt" in config:
-        compiler_rt = config["wasi-compiler-rt"].format(**os.environ)
-        if os.path.isdir(compiler_rt):
-            for libdir in glob.glob(
-                os.path.join(final_inst_dir, "lib", "clang", "*", "lib")
-            ):
-                srcdir = os.path.join(compiler_rt, "lib", "wasi")
-                print("Copying from wasi-compiler-rt srcdir %s" % srcdir)
-                # Copy the contents of the "lib/wasi" subdirectory to the
-                # appropriate location in final_inst_dir.
-                destdir = os.path.join(libdir, "wasi")
-                mkdir_p(destdir)
-                copy_tree(srcdir, destdir)
-
     if not args.skip_tar:
         build_tar_package("%s.tar.zst" % package_name, final_stage_dir, package_name)
+
+
+if __name__ == "__main__":
+    main()

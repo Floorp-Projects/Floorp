@@ -169,10 +169,10 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   }
 
   template <typename P>
-  static bool ReadParamAtomicHelper(const IPC::Message* aMsg,
-                                    PickleIterator* aIter, Atomic<P>& atomic) {
+  static bool ReadParamAtomicHelper(IPC::MessageReader* aReader,
+                                    Atomic<P>& atomic) {
     P tmpStore;
-    bool result = ReadParam(aMsg, aIter, &tmpStore);
+    bool result = ReadParam(aReader, &tmpStore);
     if (result == false) {
       return result;
     }

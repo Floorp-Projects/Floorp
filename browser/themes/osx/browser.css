@@ -315,10 +315,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-#editBMPanel_newFolderButton:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
 #editBMPanel_newFolderButton .button-text {
   -moz-box-flex: 1; /* push the button icon to the start side */
   text-align: start;
@@ -334,12 +330,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   border-radius: 2px;
   border: 1px solid var(--panel-separator-color);
   margin: 0;
-}
-
-#editBMPanel_folderTree:-moz-focusring,
-#editBMPanel_tagsSelector:-moz-focusring {
-  border-color: -moz-mac-focusring;
-  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #editBMPanel_folderTree > treechildren::-moz-tree-row(blur,selected),

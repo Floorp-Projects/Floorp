@@ -102,7 +102,6 @@
 #include "WrapperFactory.h"
 #include <algorithm>
 #include "nsGlobalWindow.h"
-#include "nsDOMMutationObserver.h"
 #include "GeometryUtils.h"
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"

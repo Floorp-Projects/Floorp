@@ -42,19 +42,18 @@ template <>
 struct ParamTraits<mozilla::dom::LSValue> {
   typedef mozilla::dom::LSValue paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBuffer);
-    WriteParam(aMsg, aParam.mUTF16Length);
-    WriteParam(aMsg, aParam.mConversionType);
-    WriteParam(aMsg, aParam.mCompressionType);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mBuffer);
+    WriteParam(aWriter, aParam.mUTF16Length);
+    WriteParam(aWriter, aParam.mConversionType);
+    WriteParam(aWriter, aParam.mCompressionType);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBuffer) &&
-           ReadParam(aMsg, aIter, &aResult->mUTF16Length) &&
-           ReadParam(aMsg, aIter, &aResult->mConversionType) &&
-           ReadParam(aMsg, aIter, &aResult->mCompressionType);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mBuffer) &&
+           ReadParam(aReader, &aResult->mUTF16Length) &&
+           ReadParam(aReader, &aResult->mConversionType) &&
+           ReadParam(aReader, &aResult->mCompressionType);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {

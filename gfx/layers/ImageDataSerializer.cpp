@@ -160,6 +160,18 @@ gfx::IntRect RectFromBufferDescriptor(const BufferDescriptor& aDescriptor) {
   }
 }
 
+Maybe<gfx::IntSize> YSizeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor) {
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TRGBDescriptor:
+      return Nothing();
+    case BufferDescriptor::TYCbCrDescriptor:
+      return Some(aDescriptor.get_YCbCrDescriptor().ySize());
+    default:
+      MOZ_CRASH("GFX: YSizeFromBufferDescriptor");
+  }
+}
+
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor) {
   switch (aDescriptor.type()) {
@@ -331,6 +343,11 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
 
   gfx::ConvertYCbCrToRGB(ycbcrData, aDestFormat, aDestSize, aDestBuffer,
                          aStride);
+}
+
+gfx::IntSize GetCroppedCbCrSize(const YCbCrDescriptor& aDescriptor) {
+  return gfx::GetCroppedCbCrSize(aDescriptor.ySize(), aDescriptor.cbCrSize(),
+                                 aDescriptor.display().Size());
 }
 
 }  // namespace ImageDataSerializer

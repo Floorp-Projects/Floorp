@@ -45,14 +45,20 @@ class ProfilerChild final : public PProfilerChild,
  private:
   virtual ~ProfilerChild();
 
-  mozilla::ipc::IPCResult RecvStart(const ProfilerInitParams& params) override;
+  mozilla::ipc::IPCResult RecvStart(const ProfilerInitParams& params,
+                                    StartResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvEnsureStarted(
-      const ProfilerInitParams& params) override;
-  mozilla::ipc::IPCResult RecvStop() override;
-  mozilla::ipc::IPCResult RecvPause() override;
-  mozilla::ipc::IPCResult RecvResume() override;
-  mozilla::ipc::IPCResult RecvPauseSampling() override;
-  mozilla::ipc::IPCResult RecvResumeSampling() override;
+      const ProfilerInitParams& params,
+      EnsureStartedResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvStop(StopResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvPause(PauseResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvResume(ResumeResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvPauseSampling(
+      PauseSamplingResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvResumeSampling(
+      ResumeSamplingResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvWaitOnePeriodicSampling(
+      WaitOnePeriodicSamplingResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvAwaitNextChunkManagerUpdate(
       AwaitNextChunkManagerUpdateResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvDestroyReleasedChunksAtOrBefore(

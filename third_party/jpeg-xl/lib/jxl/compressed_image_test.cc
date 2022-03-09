@@ -77,6 +77,8 @@ void RunRGBRoundTrip(float distance, bool fast) {
   PassesEncoderState enc_state;
   JXL_CHECK(InitializePassesSharedState(frame_header, &enc_state.shared));
 
+  JXL_CHECK(enc_state.shared.matrices.EnsureComputed(~0u));
+
   enc_state.shared.quantizer.SetQuant(4.0f, 4.0f,
                                       &enc_state.shared.raw_quant_field);
   enc_state.shared.ac_strategy.FillDCT8();

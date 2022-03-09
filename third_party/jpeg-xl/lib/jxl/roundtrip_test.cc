@@ -98,12 +98,13 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   } else {
     color_encoding = jxl::ColorEncoding::SRGB(is_gray);
   }
-  EXPECT_TRUE(ConvertFromExternal(
-      jxl::Span<const uint8_t>(buf.data(), buf.size()), xsize, ysize,
-      color_encoding, has_alpha,
-      /*alpha_is_premultiplied=*/false,
-      /*bits_per_sample=*/bitdepth, pixel_format.endianness,
-      /*flipped_y=*/false, /*pool=*/nullptr, &io.Main(), float_in));
+  EXPECT_TRUE(
+      ConvertFromExternal(jxl::Span<const uint8_t>(buf.data(), buf.size()),
+                          xsize, ysize, color_encoding, has_alpha,
+                          /*alpha_is_premultiplied=*/false,
+                          /*bits_per_sample=*/bitdepth, pixel_format.endianness,
+                          /*flipped_y=*/false, /*pool=*/nullptr, &io.Main(),
+                          float_in, /*align=*/0));
   return io;
 }
 
@@ -239,7 +240,8 @@ void VerifyRoundtripCompression(
                                      extra_channel_bytes.size()),
             xsize, ysize, basic_info.bits_per_sample,
             input_pixel_format.endianness, /*pool=*/nullptr, &alpha_channel,
-            /*float_in=*/input_pixel_format.data_type == JXL_TYPE_FLOAT),
+            /*float_in=*/input_pixel_format.data_type == JXL_TYPE_FLOAT,
+            /*align=*/0),
         true);
 
     original_io.metadata.m.SetAlphaBits(basic_info.bits_per_sample);

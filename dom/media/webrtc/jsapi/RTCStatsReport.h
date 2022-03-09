@@ -17,7 +17,6 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"  // RTCStatsCollection
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIGlobalObject.h"

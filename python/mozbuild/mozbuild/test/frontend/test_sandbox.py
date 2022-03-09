@@ -540,7 +540,7 @@ def Template():
             source = "a = foo(1, 2)"
             sandbox.exec_source(source, "foo.mozbuild")
 
-            self.assertEquals(sandbox["a"], (Foo, int))
+            self.assertEqual(sandbox["a"], (Foo, int))
         finally:
             del FUNCTIONS["foo"]
 

@@ -412,8 +412,6 @@ struct EventFlags;
 
 class WidgetEventTime;
 
-class NativeEventData;
-
 // TextEvents.h
 enum class AccessKeyType;
 

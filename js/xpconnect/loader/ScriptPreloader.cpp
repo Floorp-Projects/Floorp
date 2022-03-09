@@ -775,7 +775,10 @@ nsresult ScriptPreloader::Run() {
   result = WriteCache();
   Unused << NS_WARN_IF(result.isErr());
 
-  result = mChildCache->WriteCache();
+  {
+    MonitorAutoLock lock(mChildCache->mSaveMonitor);
+    result = mChildCache->WriteCache();
+  }
   Unused << NS_WARN_IF(result.isErr());
 
   NS_DispatchToMainThread(
@@ -909,6 +912,11 @@ void ScriptPreloader::FillDecodeOptionsForCachedStencil(
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
     JSContext* cx, const JS::DecodeOptions& options, const nsCString& path) {
+  MOZ_RELEASE_ASSERT(
+      !(XRE_IsContentProcess() && !mCacheInitialized),
+      "ScriptPreloader must be initialized before getting cached "
+      "scripts in the content process.");
+
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {

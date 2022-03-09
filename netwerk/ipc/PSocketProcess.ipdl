@@ -85,10 +85,13 @@ struct SocketPorcessInitAttributes {
   bool mOffline;
   bool mConnectivity;
   bool mInitSandbox;
+#if defined(XP_WIN)
+  bool mIsReadyForBackgroundProcessing;
+#endif
   FileDescriptor? mSandboxBroker;
 };
 
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid]
 sync protocol PSocketProcess
 {
   manages PDNSRequest;
@@ -222,6 +225,13 @@ child:
 
 #if defined(XP_WIN)
   async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+  /**
+  * This method is used to notifty a child process to start
+  * processing module loading events in UntrustedModulesProcessor.
+  * This should be called when the parent process has gone idle.
+  */
+  async UnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
 both:

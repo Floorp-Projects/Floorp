@@ -510,6 +510,10 @@ def run_web_platform_tests(command_context, **params):
     wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
     logger = wpt_runner.setup_logging(**params)
+    # wptrunner already handles setting any log parameter from
+    # mach test to the logger, so it's OK to remove that argument now
+    if "log" in params:
+        del params["log"]
 
     if (
         conditions.is_android(command_context)

@@ -12,8 +12,7 @@
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
@@ -63,15 +62,13 @@ class ReadableStreamGenericReader : public nsISupports {
   RefPtr<ReadableStream> mStream;
 };
 
-bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
-                                           ReadableStreamGenericReader* aReader,
+bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
                                            ReadableStream* aStream,
                                            ErrorResult& aRv);
 
 void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
                                         ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

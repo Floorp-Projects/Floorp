@@ -35,8 +35,7 @@ function doTests()
   catch(ex) { }
   ok(!readable, "window pixels per css pixel shouldn't be readable to content");
 
-  var domWindowUtils = window.windowUtils;
-  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
+  var devPxPerCSSPx = window.devicePixelRatio;
 
   is(window.devicePixelRatio, devPxPerCSSPx, "window.devicePixelRatio");
 
@@ -59,8 +58,7 @@ function doTests()
             "frame screen Y");
 
   fbc.fullZoom *= 2;
-  var frameDomWindowUtils = f.contentWindow.windowUtils;
-  is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
+  is(f.contentWindow.devicePixelRatio, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
 
   is(f.contentWindow.devicePixelRatio, 2*devPxPerCSSPx, "frame devicePixelRatio");

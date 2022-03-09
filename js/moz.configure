@@ -156,7 +156,15 @@ set_define("ENABLE_RECORD_TUPLE", enable_record_tuple)
 def jit_default(target, enable_record_tuple):
     if enable_record_tuple:
         return False
-    if target.cpu in ("x86", "x86_64", "arm", "aarch64", "mips32", "mips64"):
+    if target.cpu in (
+        "x86",
+        "x86_64",
+        "arm",
+        "aarch64",
+        "mips32",
+        "mips64",
+        "loongarch64",
+    ):
         return True
     return False
 
@@ -176,7 +184,7 @@ def report_deprecated(value):
 # =======================================================
 option(
     "--enable-simulator",
-    choices=("arm", "arm64", "mips32", "mips64"),
+    choices=("arm", "arm64", "mips32", "mips64", "loong64"),
     nargs=1,
     help="Enable a JIT code simulator for the specified architecture",
 )
@@ -193,7 +201,7 @@ def simulator(jit_enabled, simulator_enabled, target):
         if target.cpu != "x86":
             die("The %s simulator only works on x86." % sim_cpu)
 
-    if sim_cpu in ("arm64", "mips64"):
+    if sim_cpu in ("arm64", "mips64", "loong64"):
         if target.cpu != "x86_64":
             die("The %s simulator only works on x86-64." % sim_cpu)
 
@@ -205,11 +213,13 @@ set_config("JS_SIMULATOR_ARM", simulator.arm)
 set_config("JS_SIMULATOR_ARM64", simulator.arm64)
 set_config("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_config("JS_SIMULATOR_MIPS64", simulator.mips64)
+set_config("JS_SIMULATOR_LOONG64", simulator.loong64)
 set_define("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
 set_define("JS_SIMULATOR_ARM", simulator.arm)
 set_define("JS_SIMULATOR_ARM64", simulator.arm64)
 set_define("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_define("JS_SIMULATOR_MIPS64", simulator.mips64)
+set_define("JS_SIMULATOR_LOONG64", simulator.loong64)
 
 
 @depends("--enable-jit", simulator, target)
@@ -233,6 +243,7 @@ set_config("JS_CODEGEN_ARM", jit_codegen.arm)
 set_config("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_config("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_config("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_config("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_config("JS_CODEGEN_X86", jit_codegen.x86)
 set_config("JS_CODEGEN_X64", jit_codegen.x64)
 set_define("JS_CODEGEN_NONE", jit_codegen.none)
@@ -240,6 +251,7 @@ set_define("JS_CODEGEN_ARM", jit_codegen.arm)
 set_define("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_define("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_define("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_define("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_define("JS_CODEGEN_X86", jit_codegen.x86)
 set_define("JS_CODEGEN_X64", jit_codegen.x64)
 
@@ -958,46 +970,6 @@ def wasm_memory64(value, cranelift, simulator, target):
 set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
 set_define("ENABLE_WASM_MEMORY64", wasm_memory64)
 
-# Support for checking for indirect call to null via traps
-# =====================================================
-
-
-@depends(milestone.is_nightly, "--enable-jit", "--enable-simulator")
-def default_wasm_call_indirect_null(is_nightly, enable_jit, simulator):
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    if is_nightly:
-        return True
-
-
-option(
-    "--enable-wasm-call-indirect-null",
-    default=default_wasm_call_indirect_null,
-    help="{Enable|Disable} WebAssembly call-indirect-to-null optimization",
-)
-
-
-@depends("--enable-wasm-call-indirect-null", "--enable-jit", "--enable-simulator")
-def wasm_call_indirect_null(value, enable_jit, simulator):
-    if not value:
-        return
-
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    return True
-
-
-set_config("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
-set_define("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
-
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")
@@ -1169,10 +1141,15 @@ set_define(
 # ==================================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_exceptions(is_nightly):
-    if is_nightly:
-        return True
+@depends(milestone.is_nightly, "--enable-cranelift")
+def default_wasm_exceptions(is_nightly, cranelift_enabled):
+    if cranelift_enabled:
+        return
+
+    if not is_nightly:
+        return
+
+    return True
 
 
 option(
@@ -1181,12 +1158,24 @@ option(
     help="{Enable|Disable} WebAssembly exceptions",
 )
 
-set_config(
-    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
-)
-set_define(
-    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
-)
+
+@depends("--enable-wasm-exceptions", "--enable-cranelift")
+def wasm_exceptions(value, cranelift_enabled):
+    if not value:
+        return
+
+    if cranelift_enabled:
+        die("--enable-wasm-exceptions is not supported for --enable-cranelift")
+
+    return True
+
+
+set_config("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
+set_define("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
+
+# Wasi configuration
+# ===================================================
+
 
 set_define(
     "_WASI_EMULATED_PROCESS_CLOCKS",
@@ -1256,6 +1245,24 @@ set_config(
     ),
 )
 
+
+# Some platforms have HeapReg, some don't
+# =====================================================
+
+# The ARM simulator runs on x86 and might be excluded by the first test,
+# so we special-case it.
+
+
+@depends("--enable-simulator", target)
+def wasm_has_heapreg(simulator, target):
+    if target.cpu != "x86":
+        return True
+
+    if simulator and simulator[0] == "arm":
+        return True
+
+
+set_define("WASM_HAS_HEAPREG", wasm_has_heapreg)
 
 # Check for tm_zone, tm_gmtoff in struct tm
 # ===================================================

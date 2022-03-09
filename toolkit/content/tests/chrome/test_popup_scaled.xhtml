@@ -71,22 +71,18 @@ function nextTest()
   else {
     screenTest = true;
     var rootElement = document.documentElement;
-    let x, y;
 
-    // - the iframe is at 4×, but out here css pixels are only 2× device pixels
-    // - the popup manager rounds off (or truncates) the coordinates to
-    //   integers, so ensure we pass in even numbers to openPopupAtScreen
-    screenx = (x = even(rootElement.screenX + 120))/2;
-    screeny = (y = even(rootElement.screenY + 120))/2;
     setScale(window, 2);
-    $("popup").openPopupAtScreen(x, y);
+    // - the iframe will be at 4×, but out here css pixels are only 2× device pixels
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      screenx = rootElement.screenX + 20;
+      screeny = rootElement.screenY + 20;
+      $("popup").openPopupAtScreen(screenx, screeny);
+    }));
   }
 }
 
-function even(n)
-{
-  return (n % 2) ? n+1 : n;
-}
 ]]>
 </script>
 

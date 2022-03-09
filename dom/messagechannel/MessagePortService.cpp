@@ -387,6 +387,7 @@ bool MessagePortService::ForceClose(const nsID& aUUID,
   MessagePortServiceData* data;
   if (!mPorts.Get(aUUID, &data)) {
     NS_WARNING("Unknown MessagePort in ForceClose()");
+    // There is nothing to close so we are ok.
     return true;
   }
 

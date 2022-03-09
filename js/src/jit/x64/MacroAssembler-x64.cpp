@@ -408,6 +408,13 @@ void MacroAssemblerX64::vcmplepdSimd128(const SimdConstant& v,
   vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vcmplepd_ripr);
 }
 
+void MacroAssemblerX64::vpmaddubswSimd128(const SimdConstant& v,
+                                          FloatRegister lhs,
+                                          FloatRegister dest) {
+  vpRiprOpSimd128(v, lhs, dest,
+                  &X86Encoding::BaseAssemblerX64::vpmaddubsw_ripr);
+}
+
 void MacroAssemblerX64::bindOffsets(
     const MacroAssemblerX86Shared::UsesVector& uses) {
   for (JmpSrc src : uses) {

@@ -2044,30 +2044,24 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
         return false;
       }
-      const ValTypeVector& args =
-          (*env->types)[funcTypeIndex].funcType().args();
+      ValTypeVector args;
+      if (!args.appendAll((*env->types)[funcTypeIndex].funcType().args())) {
+        return false;
+      }
 #  ifdef WASM_PRIVATE_REFTYPES
       if (!TagIsJSCompatible(d, args)) {
         return false;
       }
 #  endif
-      ValTypeVector tagArgs;
-      if (!tagArgs.appendAll(args)) {
+      MutableTagType tagType = js_new<TagType>();
+      if (!tagType || !tagType->initialize(std::move(args))) {
         return false;
       }
-      TagOffsetVector offsets;
-      if (!offsets.resize(tagArgs.length())) {
-        return false;
-      }
-      TagType type = TagType(std::move(tagArgs), std::move(offsets));
-      if (!env->tags.emplaceBack(tagKind, std::move(type))) {
+      if (!env->tags.emplaceBack(tagKind, tagType)) {
         return false;
       }
       if (env->tags.length() > MaxTags) {
         return d.fail("too many tags");
-      }
-      if (!env->tags.back().type.computeLayout()) {
-        return false;
       }
       break;
     }
@@ -2281,20 +2275,15 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
       return false;
     }
-    const ValTypeVector& args = (*env->types)[funcTypeIndex].funcType().args();
-    ValTypeVector tagArgs;
-    if (!tagArgs.appendAll(args)) {
+    ValTypeVector args;
+    if (!args.appendAll((*env->types)[funcTypeIndex].funcType().args())) {
       return false;
     }
-    TagOffsetVector offsets;
-    if (!offsets.resize(tagArgs.length())) {
+    MutableTagType tagType = js_new<TagType>();
+    if (!tagType || !tagType->initialize(std::move(args))) {
       return false;
     }
-    TagType type = TagType(std::move(tagArgs), std::move(offsets));
-    env->tags.infallibleEmplaceBack(tagKind, std::move(type));
-    if (!env->tags.back().type.computeLayout()) {
-      return false;
-    }
+    env->tags.infallibleEmplaceBack(tagKind, tagType);
   }
 
   return d.finishSection(*range, "tag");
@@ -2413,7 +2402,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       }
 
 #  ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, env->tags[tagIndex].type.argTypes)) {
+      if (!TagIsJSCompatible(d, env->tags[tagIndex].type->argTypes_)) {
         return false;
       }
 #  endif

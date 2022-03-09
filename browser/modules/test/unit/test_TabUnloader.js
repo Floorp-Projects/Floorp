@@ -36,6 +36,10 @@ let TestTabUnloaderMethods = {
     return /\bwebrtc\b/.test(tab.keywords) ? weight : 0;
   },
 
+  isPrivate(tab, weight) {
+    return /\bprivate\b/.test(tab.keywords) ? weight : 0;
+  },
+
   getMinTabCount() {
     // Use a low number for testing.
     return 3;
@@ -136,6 +140,17 @@ let unloadTests = [
       "6 selected",
     ],
     result: "2,0,3,5,1,4",
+  },
+  {
+    tabs: [
+      "10 selected",
+      "20 private",
+      "30 webrtc",
+      "40 pictureinpicture",
+      "50 loading pinned",
+      "60",
+    ],
+    result: "5,4,0,1,2,3",
   },
   {
     // Since TestTabUnloaderMethods.getNow() returns 100 and the test

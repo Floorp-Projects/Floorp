@@ -112,7 +112,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
 
   WebSocketChannel();
   static void Shutdown();
-  bool IsOnTargetThread();
 
   // Off main thread URI access.
   void GetEffectiveURL(nsAString& aEffectiveURL) const override;
@@ -212,48 +211,70 @@ class WebSocketChannel : public BaseWebSocketChannel,
   }
 
   nsCOMPtr<nsIEventTarget> mIOThread;
+  // Set in AsyncOpenNative and AsyncOnChannelRedirect, modified in
+  // DoStopSession on IO thread (.forget()).   Probably ok...
   nsCOMPtr<nsIHttpChannelInternal> mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
+
   nsCOMPtr<nsICancelable> mCancelable;
+  // Mainthread only
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+  // Set on Mainthread during AsyncOpen, used on IO thread and Mainthread
   nsCOMPtr<nsIRandomGenerator> mRandomGenerator;
 
-  nsCString mHashedSecret;
+  nsCString mHashedSecret;  // MainThread only
 
   // Used as key for connection managment: Initially set to hostname from URI,
   // then to IP address (unless we're leaving DNS resolution to a proxy server)
+  // MainThread only
   nsCString mAddress;
   int32_t mPort;  // WS server port
   // Secondary key for the connection queue. Used by nsWSAdmissionManager.
-  nsCString mOriginSuffix;
+  nsCString mOriginSuffix;  // MainThread only
 
   // Used for off main thread access to the URI string.
+  // Set on MainThread in AsyncOpenNative, used on TargetThread and IO thread
   nsCString mHost;
   nsString mEffectiveURL;
 
+  // Set on MainThread before multithread use, used on IO thread, cleared on
+  // IOThread
   nsCOMPtr<nsISocketTransport> mTransport;
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
   RefPtr<WebSocketConnectionBase> mConnection;
 
+  // Only used on IO Thread (accessed when known-to-be-null in DoStopSession
+  // on MainThread before mDataStarted)
   nsCOMPtr<nsITimer> mCloseTimer;
+  // set in AsyncOpenInternal on MainThread, used on IO thread.
+  // No multithread use before it's set, no changes after that.
   uint32_t mCloseTimeout; /* milliseconds */
 
-  nsCOMPtr<nsITimer> mOpenTimer;
-  uint32_t mOpenTimeout;         /* milliseconds */
-  wsConnectingState mConnecting; /* 0 if not connecting */
+  nsCOMPtr<nsITimer> mOpenTimer; /* Mainthread only */
+  uint32_t mOpenTimeout;         /* milliseconds, MainThread only */
+  wsConnectingState mConnecting; /* 0 if not connecting, MainThread only */
+  // Set on MainThread, deleted on either MainThread mainthread, used on
+  // MainThread or IO Thread in DoStopSession
   nsCOMPtr<nsITimer> mReconnectDelayTimer;
 
+  // Only touched on IOThread (DoStopSession reads it on MainThread if
+  // we haven't connected yet (mDataStarted==false), and it's always null
+  // until mDataStarted=true)
   nsCOMPtr<nsITimer> mPingTimer;
 
+  // Created in DoStopSession on IO thread (mDataStarted=true), accessed
+  // only from IO Thread
   nsCOMPtr<nsITimer> mLingeringCloseTimer;
   const static int32_t kLingeringCloseTimeout = 1000;
   const static int32_t kLingeringCloseThreshold = 50;
 
-  RefPtr<WebSocketEventService> mService;
+  RefPtr<WebSocketEventService> mService;  // effectively const
 
-  int32_t mMaxConcurrentConnections;
+  int32_t
+      mMaxConcurrentConnections;  // only used in AsyncOpenNative on MainThread
 
+  // Set on MainThread in AsyncOpenNative; then used on IO thread
   uint64_t mInnerWindowID;
 
   // following members are accessed only on the main thread
@@ -261,17 +282,22 @@ class WebSocketChannel : public BaseWebSocketChannel,
   uint32_t mRecvdHttpUpgradeTransport : 1;
   uint32_t mAutoFollowRedirects : 1;
   uint32_t mAllowPMCE : 1;
-  uint32_t : 0;
+  uint32_t : 0;  // ensure these aren't mixed with the next set
 
-  // following members are accessed only on the socket thread
+  // following members are accessed only on the IO thread
   uint32_t mPingOutstanding : 1;
   uint32_t mReleaseOnTransmit : 1;
   uint32_t : 0;
 
   Atomic<bool> mDataStarted;
+  // All changes to mRequestedClose happen under mutex, but since it's atomic,
+  // it can be read anywhere without a lock
   Atomic<bool> mRequestedClose;
+  // mServer/ClientClosed are only modified on IOThread
   Atomic<bool> mClientClosed;
   Atomic<bool> mServerClosed;
+  // All changes to mStopped happen under mutex, but since it's atomic, it
+  // can be read anywhere without a lock
   Atomic<bool> mStopped;
   Atomic<bool> mCalledOnStop;
   Atomic<bool> mTCPClosed;
@@ -279,10 +305,13 @@ class WebSocketChannel : public BaseWebSocketChannel,
   Atomic<bool> mIncrementedSessionCount;
   Atomic<bool> mDecrementedSessionCount;
 
-  int32_t mMaxMessageSize;
+  int32_t mMaxMessageSize;  // set on MainThread in AsyncOpenNative, read on IO
+                            // thread
+  // Set on IOThread, or on MainThread before mDataStarted.  Used on IO Thread
+  // (after mDataStarted)
   nsresult mStopOnClose;
-  uint16_t mServerCloseCode;
-  nsCString mServerCloseReason;
+  uint16_t mServerCloseCode;     // only used on IO thread
+  nsCString mServerCloseReason;  // only used on IO thread
   uint16_t mScriptCloseCode;
   nsCString mScriptCloseReason;
 
@@ -293,6 +322,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   // increase the buffer temporarily, then drop back down to this size.
   const static uint32_t kIncomingBufferStableSize = 128 * 1024;
 
+  // Set at creation, used/modified only on IO thread
   uint8_t* mFramePtr;
   uint8_t* mBuffer;
   uint8_t mFragmentOpcode;
@@ -303,6 +333,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   // These are for the send buffers
   const static int32_t kCopyBreak = 1000;
 
+  // Only used on IO thread
   OutboundMessage* mCurrentOut;
   uint32_t mCurrentOutSent;
   nsDeque<OutboundMessage> mOutgoingMessages;
@@ -311,12 +342,20 @@ class WebSocketChannel : public BaseWebSocketChannel,
   uint32_t mHdrOutToSend;
   uint8_t* mHdrOut;
   uint8_t mOutHeader[kCopyBreak + 16]{0};
+
+  // Set on MainThread in OnStartRequest (before mDataStarted), used on IO
+  // Thread (after mDataStarted), cleared in DoStopSession on IOThread or
+  // on MainThread (if mDataStarted == false)
   UniquePtr<PMCECompression> mPMCECompressor;
+
+  // Used by EnsureHdrOut, which isn't called anywhere
   uint32_t mDynamicOutputSize;
   uint8_t* mDynamicOutput;
-  bool mPrivateBrowsing;
+  // Set on creation and AsyncOpen, read on both threads
+  Atomic<bool> mPrivateBrowsing;
 
-  nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
+  nsCOMPtr<nsIDashboardEventNotifier>
+      mConnectionLogService;  // effectively const
 
   mozilla::Mutex mMutex;
 };

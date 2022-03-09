@@ -1,0 +1,179 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.searchbar-engine-image {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.search-one-offs {
+  -moz-box-orient: vertical;
+  width: 100%;
+}
+
+.search-panel-header {
+  font-weight: normal;
+  margin: 0;
+}
+
+.search-panel-header > label {
+  margin-top: 2px;
+  margin-bottom: 1px;
+  opacity: .6;
+}
+
+/* Make the contrast stronger in dark mode */
+:root[lwt-toolbar-field-focus-brighttext] .search-panel-header > label {
+  opacity: 1;
+}
+
+/**
+ * The borders of the various elements are specified as follows.
+ *
+ * The current engine always has a bottom border.
+ * The search results never have a border.
+ *
+ * When the search results are not collapsed:
+ * - The elements underneath the search results all have a top border.
+ *
+ * When the search results are collapsed:
+ * - The elements underneath the search results all have a bottom border.
+ */
+
+.search-panel-current-engine {
+  -moz-box-align: center;
+  border-top: none !important;
+  padding-inline: 8px;
+}
+
+.search-panel-one-offs:not([hidden]),
+.search-panel-one-offs-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+}
+
+.search-panel-one-offs {
+  margin: 0 !important;
+  /* Bug 1108841: prevent font-size from affecting the layout */
+  line-height: 0;
+  flex-wrap: wrap;
+}
+
+.searchbar-engine-one-off-item {
+  appearance: none;
+  display: inline-block;
+  background-color: transparent;
+  border: none;
+  min-width: 32px;
+  height: 32px;
+  margin-inline-end: 8px;
+  margin-block: 0;
+  padding: 0;
+  color: inherit;
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+@media (-moz-platform: windows) {
+  .searchbar-engine-one-off-item:focus-visible {
+    outline: none;
+  }
+}
+
+/* We don't handle `:active` because it doesn't work on the search or settings
+   buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
+.searchbar-engine-one-off-item:not([selected]):hover {
+  background-color: var(--autocomplete-popup-hover-background);
+  color: inherit;
+}
+
+.searchbar-engine-one-off-item[selected] {
+  background-color: var(--autocomplete-popup-highlight-background);
+  color: var(--autocomplete-popup-highlight-color);
+}
+
+.searchbar-engine-one-off-item > .button-box > .button-text {
+  display: none;
+}
+
+.searchbar-engine-one-off-item > .button-box > .button-icon {
+  margin-inline: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.search-panel-tree {
+  background: transparent;
+  color: inherit;
+}
+
+.search-panel-tree > .autocomplete-richlistitem {
+  padding: 1px 3px;
+}
+
+.search-panel-tree > .autocomplete-richlistitem:hover {
+  background-color: var(--autocomplete-popup-hover-background);
+}
+
+.search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
+  display: -moz-box;
+  width: 14px;
+  height: 14px;
+  margin-inline-end: 7px;
+}
+
+.search-panel-tree > .autocomplete-richlistitem[originaltype="fromhistory"] > .ac-type-icon {
+  list-style-image: url("chrome://browser/skin/history.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  fill-opacity: 0.6;
+}
+
+.search-panel-tree > .autocomplete-richlistitem[originaltype="fromhistory"][selected] > .ac-type-icon {
+  fill-opacity: 1;
+}
+
+.searchbar-separator {
+  appearance: none;
+  margin: var(--panel-separator-margin);
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--autocomplete-popup-separator-color);
+  color: inherit;
+}
+
+.search-panel-tree[collapsed=true] + .searchbar-separator {
+  display: none;
+}
+
+.search-setting-button {
+  max-height: 32px;
+  align-self: end;
+  margin-inline: 0;
+}
+
+.search-setting-button > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
+@media (-moz-platform: windows-win10) {
+  #PopupSearchAutoComplete {
+    /* A border is necessary because the shadow is bottom-right */
+    border-color: var(--menu-border-color);
+    border-radius: var(--arrowpanel-border-radius);
+    -moz-window-shadow: cliprounded;
+  }
+}
+
+@media (-moz-platform: macos) {
+  #PopupSearchAutoComplete {
+    border-radius: 4px;
+  }
+}

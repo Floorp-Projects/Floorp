@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   Component,
   createFactory,
@@ -23,7 +24,7 @@ const {
   getHeadersURL,
   getTrackingProtectionURL,
   getHTTPStatusCodeURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
+} = require("devtools/client/netmonitor/src/utils/doc-utils");
 const {
   fetchNetworkUpdatePacket,
   writeHeaderText,
@@ -110,7 +111,7 @@ const HEADERS_ETP = L10N.getStr(
  * Lists basic information about the request
  *
  * In http/2 all response headers are in small case.
- * See: https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_details#Headers
+ * See: https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/request_details/index.html#response-headers
  * RFC: https://tools.ietf.org/html/rfc7540#section-8.1.2
  */
 class HeadersPanel extends Component {
@@ -124,6 +125,7 @@ class HeadersPanel extends Component {
       openLink: PropTypes.func,
       targetSearchResult: PropTypes.object,
       openRequestBlockingAndAddUrl: PropTypes.func.isRequired,
+      openHTTPCustomRequestTab: PropTypes.func.isRequired,
       cloneRequest: PropTypes.func,
       sendCustomRequest: PropTypes.func,
       shouldExpandPreview: PropTypes.bool,
@@ -542,6 +544,7 @@ class HeadersPanel extends Component {
         transferredSize,
       },
       openRequestBlockingAndAddUrl,
+      openHTTPCustomRequestTab,
       shouldExpandPreview,
       setHeadersUrlPreviewExpanded,
     } = this.props;
@@ -743,6 +746,10 @@ class HeadersPanel extends Component {
       trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);
 
+    const newEditAndResendPref = Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend"
+    );
+
     return div(
       { className: "headers-panel-container" },
       div(
@@ -767,9 +774,15 @@ class HeadersPanel extends Component {
         button(
           {
             id: "edit-resend-button",
-            className: "devtools-button devtools-dropdown-button",
+            className: !newEditAndResendPref
+              ? "devtools-button devtools-dropdown-button"
+              : "devtools-button",
             title: RESEND,
-            onClick: this.onShowResendMenu,
+            onClick: !newEditAndResendPref
+              ? this.onShowResendMenu
+              : () => {
+                  openHTTPCustomRequestTab();
+                },
           },
           span({ className: "title" }, RESEND)
         )
@@ -810,6 +823,8 @@ module.exports = connect(
       dispatch(Actions.setHeadersUrlPreviewExpanded(expanded)),
     openRequestBlockingAndAddUrl: url =>
       dispatch(Actions.openRequestBlockingAndAddUrl(url)),
+    openHTTPCustomRequestTab: () =>
+      dispatch(Actions.openHTTPCustomRequest(true)),
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),

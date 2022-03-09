@@ -8,6 +8,9 @@
 #define mozilla_dom_ScriptLoader_h
 
 #include "js/TypeDecls.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptKind.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIScriptElement.h"
@@ -20,13 +23,10 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/JSExecutionContext.h"  // JSExecutionContext
-#include "mozilla/dom/ScriptLoadRequest.h"
+#include "ModuleLoader.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
-#include "ScriptKind.h"
-#include "ModuleLoader.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsIChannel;
@@ -44,6 +44,16 @@ class CompileOptions;
 template <typename UnitT>
 class SourceText;
 
+namespace loader {
+
+class LoadedScript;
+class ScriptLoaderInterface;
+class ModuleLoadRequest;
+class ModuleScript;
+class ScriptLoadRequest;
+class ScriptLoadRequestList;
+
+}  // namespace loader
 }  // namespace JS
 
 namespace mozilla {
@@ -56,14 +66,11 @@ namespace dom {
 class AutoJSAPI;
 class DocGroup;
 class Document;
-class LoadedScript;
 class ModuleLoader;
-class ScriptLoaderInterface;
-class ModuleLoadRequest;
-class ModuleScript;
 class SRICheckDataVerifier;
 class SRIMetadata;
 class ScriptLoadHandler;
+class ScriptLoadContext;
 class ScriptLoader;
 class ScriptRequestProcessor;
 
@@ -92,7 +99,7 @@ class AsyncCompileShutdownObserver final : public nsIObserver {
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class ScriptLoader final : public ScriptLoaderInterface {
+class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater {
    public:
     AutoCurrentScriptUpdater(ScriptLoader* aScriptLoader,
@@ -113,7 +120,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
     ScriptLoader* mScriptLoader;
   };
 
-  friend class ModuleLoadRequest;
+  friend class JS::loader::ModuleLoadRequest;
   friend class ScriptRequestProcessor;
   friend class ModuleLoader;
   friend class ScriptLoadHandler;
@@ -131,8 +138,6 @@ class ScriptLoader final : public ScriptLoaderInterface {
    * be dropped.
    */
   void DropDocumentReference() { mDocument = nullptr; }
-
-  void EnsureModuleHooksInitialized() override;
 
   /**
    * Add an observer for all scripts loaded through this loader.
@@ -407,7 +412,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
    * Get the currently active script. This is used as the initiating script when
    * executing timeout handler scripts.
    */
-  static LoadedScript* GetActiveScript(JSContext* aCx);
+  static JS::loader::LoadedScript* GetActiveScript(JSContext* aCx);
 
   Document* GetDocument() const { return mDocument; }
 
@@ -416,12 +421,10 @@ class ScriptLoader final : public ScriptLoaderInterface {
  private:
   virtual ~ScriptLoader();
 
-  ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind, nsIURI* aURI,
-                                       nsIScriptElement* aElement,
-                                       nsIPrincipal* aTriggeringPrincipal,
-                                       mozilla::CORSMode aCORSMode,
-                                       const SRIMetadata& aIntegrity,
-                                       ReferrerPolicy aReferrerPolicy);
+  already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
+      ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
+      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
+      const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
@@ -439,9 +442,9 @@ class ScriptLoader final : public ScriptLoaderInterface {
 
   bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind);
 
-  ScriptLoadRequest* LookupPreloadRequest(nsIScriptElement* aElement,
-                                          ScriptKind aScriptKind,
-                                          const SRIMetadata& aSRIMetadata);
+  JS::loader::ScriptLoadRequest* LookupPreloadRequest(
+      nsIScriptElement* aElement, ScriptKind aScriptKind,
+      const SRIMetadata& aSRIMetadata);
 
   void GetSRIMetadata(const nsAString& aIntegrityAttr,
                       SRIMetadata* aMetadataOut);
@@ -472,23 +475,12 @@ class ScriptLoader final : public ScriptLoaderInterface {
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(ScriptLoadRequest* aRequest) {
-    return aRequest->IsModuleRequest() ? StartModuleLoad(aRequest)
-                                       : StartClassicLoad(aRequest);
-  }
-
+  nsresult StartLoad(ScriptLoadRequest* aRequest);
   /**
    * Start a load for a classic script URI.
    * Sets up the necessary security flags before calling StartLoadInternal.
    */
   nsresult StartClassicLoad(ScriptLoadRequest* aRequest);
-
-  /**
-   * Start a load for a module script URI.
-   * Sets up the necessary security flags before calling StartLoadInternal.
-   * Short-circuits if the module is already being loaded.
-   */
-  nsresult StartModuleLoad(ScriptLoadRequest* aRequest) override;
 
   /**
    * Start a load for a module script URI.
@@ -549,7 +541,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
 
   nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
                                      bool* aCouldCompileOut);
-  nsresult ProcessRequest(ScriptLoadRequest* aRequest) override;
+  nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
@@ -620,13 +612,14 @@ class ScriptLoader final : public ScriptLoaderInterface {
   nsresult PrepareLoadedRequest(ScriptLoadRequest* aRequest,
                                 nsIIncrementalStreamLoader* aLoader,
                                 nsresult aStatus);
-  void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) override;
 
   void AddDeferRequest(ScriptLoadRequest* aRequest);
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
 
-  bool ShouldFullParse(ScriptLoadRequest* aRequest);
+  bool ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest);
+  void ApplyDelazifyStrategy(JS::CompileOptions* aOptions);
+
   bool ShouldCompileOffThread(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
@@ -638,7 +631,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
   // execution of the script.
   static bool ShouldCacheBytecode(ScriptLoadRequest* aRequest);
 
-  void RunScriptWhenSafe(ScriptLoadRequest* aRequest) override;
+  void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 
   /**
    *  Wait for any unused off thread compilations to finish and then

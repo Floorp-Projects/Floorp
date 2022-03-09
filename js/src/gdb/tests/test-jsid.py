@@ -11,7 +11,7 @@ unique_symbol_pretty = str(gdb.parse_and_eval("unique_symbol_id")).split("@")[0]
 assert_eq(unique_symbol_pretty, '$jsid(Symbol("moon"))')
 assert_pretty("registry_symbol_id", '$jsid(Symbol.for("moon"))')
 assert_pretty("well_known_symbol_id", "$jsid(Symbol.iterator)")
-assert_pretty("void_id", "JSID_VOID")
+assert_pretty("void_id", "JS::VoidPropertyKey")
 
 run_fragment("jsid.handles")
 

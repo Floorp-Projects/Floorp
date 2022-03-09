@@ -28,7 +28,6 @@ async function startTest() {
   checkConsoleAPICall(message, {
     level: "log",
     filename: /test_object_actor/,
-    functionName: "startTest",
     arguments: ["hello", {
       type: "object",
       actor: /[a-z]/,
@@ -48,7 +47,7 @@ async function startTest() {
       },
     },
   };
-  ok(Object.keys(ownProperties).length >= Object.keys(expectedProps).length, 
+  ok(Object.keys(ownProperties).length >= Object.keys(expectedProps).length,
     "number of properties");
 
   info("check ownProperties");

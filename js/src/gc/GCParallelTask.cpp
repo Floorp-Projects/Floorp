@@ -156,7 +156,8 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
   setRunning(lock);
 
-  AutoSetHelperThreadContext usesContext(lock);
+  JS::ContextOptions options;  // The GC doesn't use any context options.
+  AutoSetHelperThreadContext usesContext(options, lock);
   AutoSetContextRuntime ascr(gc->rt);
   gc::AutoSetThreadIsPerformingGC performingGC;
   runTask(lock);

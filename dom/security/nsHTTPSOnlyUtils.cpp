@@ -693,7 +693,7 @@ void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
   // Allow for easy distinction in devtools code.
   nsCString category(aUseHttpsFirst ? "HTTPSFirst" : "HTTPSOnly");
 
-  uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+  uint64_t innerWindowId = aLoadInfo->GetInnerWindowID();
   if (innerWindowId > 0) {
     // Send to content console
     nsContentUtils::ReportToConsoleByWindowID(message, aFlags, category,

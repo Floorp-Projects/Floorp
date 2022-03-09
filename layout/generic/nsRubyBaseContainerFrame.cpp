@@ -20,6 +20,7 @@
 #include "nsPresContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsTextFrame.h"
+#include "gfxContext.h"
 #include "RubyUtils.h"
 
 using namespace mozilla;
@@ -333,7 +334,7 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
         availSize.ConvertTo(textContainer->GetWritingMode(), lineWM));
     reflowInputs.AppendElement(reflowInput);
     nsLineLayout* lineLayout =
-        new nsLineLayout(aPresContext, reflowInput->mFloatManager, reflowInput,
+        new nsLineLayout(aPresContext, reflowInput->mFloatManager, *reflowInput,
                          nullptr, aReflowInput.mLineLayout);
     lineLayout->SetSuppressLineWrap(true);
     lineLayouts.AppendElement(lineLayout);

@@ -471,7 +471,7 @@ bool nsDisplaySelectionOverlay::CreateWebRenderCommands(
   wr::LayoutRect bounds = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
       nsRect(ToReferenceFrame(), Frame()->GetSize()),
       mFrame->PresContext()->AppUnitsPerDevPixel()));
-  aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(),
+  aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(), false,
                     wr::ToColorF(ComputeColor()));
   return true;
 }
@@ -2754,16 +2754,17 @@ void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
   if (StyleDisplay()->IsContainLayout() &&
       IsFrameOfType(eSupportsContainLayoutAndPaint)) {
     // If we have layout containment and are not a non-atomic, inline-level
-    // principal box, we should only consider our child's visual (ink) overflow,
+    // principal box, we should only consider our child's ink overflow,
     // leaving the scrollable regions of the parent unaffected.
     // Note: scrollable overflow is a subset of ink overflow,
-    // so this has the same affect as unioning the child's visual and
+    // so this has the same affect as unioning the child's ink and
     // scrollable overflow with the parent's ink overflow.
-    nsRect childVisual = aChildFrame->InkOverflowRect();
-    OverflowAreas combined = OverflowAreas(childVisual, nsRect());
-    aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());
+    const OverflowAreas childOverflows(aChildFrame->InkOverflowRect(),
+                                       nsRect());
+    aOverflowAreas.UnionWith(childOverflows + aChildFrame->GetPosition());
   } else {
-    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreasRelativeToParent());
+    aOverflowAreas.UnionWith(
+        aChildFrame->GetActualAndNormalOverflowAreasRelativeToParent());
   }
 }
 

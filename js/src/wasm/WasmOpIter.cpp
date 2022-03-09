@@ -297,8 +297,6 @@ OpKind wasm::Classify(OpBytes op) {
       WASM_FUNCTION_REFERENCES_OP(OpKind::BrOnNull);
     case Op::RefEq:
       WASM_GC_OP(OpKind::Comparison);
-    case Op::IntrinsicPrefix:
-      return OpKind::Intrinsic;
     case Op::GcPrefix: {
       switch (GcOp(op.b1)) {
         case GcOp::Limit:
@@ -780,9 +778,13 @@ OpKind wasm::Classify(OpBytes op) {
           return OpKind::OldCallDirect;
         case MozOp::OldCallIndirect:
           return OpKind::OldCallIndirect;
+        case MozOp::Intrinsic:
+          return OpKind::Intrinsic;
       }
       break;
     }
+    case Op::FirstPrefix:
+      break;
   }
   MOZ_CRASH("unimplemented opcode");
 }

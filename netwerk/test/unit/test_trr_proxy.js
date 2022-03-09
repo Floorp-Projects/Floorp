@@ -19,6 +19,7 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.proxy.type");
+  Services.prefs.clearUserPref("network.proxy.parse_pac_on_socket_process");
   trr_clear_prefs();
 });
 
@@ -47,7 +48,7 @@ const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
 
-add_task(async function test_pac_dnsResolve() {
+async function do_test_pac_dnsResolve() {
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   Services.console.reset();
   // Create a console listener.
@@ -133,4 +134,26 @@ add_task(async function test_pac_dnsResolve() {
   await test_with("test3.com", 2, false);
   await test_with("test4.com", 3, false);
   await httpserv.stop();
+}
+
+add_task(async function test_pac_dnsResolve() {
+  Services.prefs.setBoolPref(
+    "network.proxy.parse_pac_on_socket_process",
+    false
+  );
+
+  await do_test_pac_dnsResolve();
+
+  if (mozinfo.socketprocess_networking) {
+    info("run test again");
+    Services.prefs.clearUserPref("network.proxy.type");
+    trr_clear_prefs();
+    Services.prefs.setBoolPref(
+      "network.proxy.parse_pac_on_socket_process",
+      true
+    );
+    Services.prefs.setIntPref("network.proxy.type", 2);
+    Services.prefs.setIntPref("network.proxy.type", 0);
+    await do_test_pac_dnsResolve();
+  }
 });

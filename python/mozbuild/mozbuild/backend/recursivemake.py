@@ -42,9 +42,7 @@ from ..frontend.data import (
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
-    GeneratedSources,
     HostDefines,
-    HostGeneratedSources,
     HostLibrary,
     HostProgram,
     HostRustProgram,
@@ -70,7 +68,6 @@ from ..frontend.data import (
     StaticLibrary,
     TestManifest,
     VariablePassthru,
-    WasmGeneratedSources,
     WasmSources,
     XPIDLModule,
 )
@@ -450,7 +447,7 @@ class RecursiveMakeBackend(MakeBackend):
             # CommonBackend.
             assert os.path.basename(obj.output_path) == "Makefile"
             self._create_makefile(obj)
-        elif isinstance(obj, (Sources, GeneratedSources)):
+        elif isinstance(obj, Sources):
             suffix_map = {
                 ".s": "ASFILES",
                 ".c": "CSRCS",
@@ -460,60 +457,51 @@ class RecursiveMakeBackend(MakeBackend):
                 ".S": "SSRCS",
             }
             variables = [suffix_map[obj.canonical_suffix]]
-            if isinstance(obj, GeneratedSources):
-                base = backend_file.objdir
-                cls = ObjDirPath
-                prefix = "!"
-            else:
-                base = backend_file.srcdir
-                cls = SourcePath
-                prefix = ""
-            for f in sorted(obj.files):
-                p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
-                )
-                for var in variables:
-                    backend_file.write("%s += %s\n" % (var, p))
+            for files, base, cls, prefix in (
+                (obj.static_files, backend_file.srcdir, SourcePath, ""),
+                (obj.generated_files, backend_file.objdir, ObjDirPath, "!"),
+            ):
+                for f in sorted(files):
+                    p = self._pretty_path(
+                        cls(obj._context, prefix + mozpath.relpath(f, base)),
+                        backend_file,
+                    )
+                    for var in variables:
+                        backend_file.write("%s += %s\n" % (var, p))
             self._compile_graph[mozpath.join(backend_file.relobjdir, "target-objects")]
-        elif isinstance(obj, (HostSources, HostGeneratedSources)):
+        elif isinstance(obj, HostSources):
             suffix_map = {
                 ".c": "HOST_CSRCS",
                 ".mm": "HOST_CMMSRCS",
                 ".cpp": "HOST_CPPSRCS",
             }
             variables = [suffix_map[obj.canonical_suffix]]
-            if isinstance(obj, HostGeneratedSources):
-                base = backend_file.objdir
-                cls = ObjDirPath
-                prefix = "!"
-            else:
-                base = backend_file.srcdir
-                cls = SourcePath
-                prefix = ""
-            for f in sorted(obj.files):
-                p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
-                )
-                for var in variables:
-                    backend_file.write("%s += %s\n" % (var, p))
+            for files, base, cls, prefix in (
+                (obj.static_files, backend_file.srcdir, SourcePath, ""),
+                (obj.generated_files, backend_file.objdir, ObjDirPath, "!"),
+            ):
+                for f in sorted(files):
+                    p = self._pretty_path(
+                        cls(obj._context, prefix + mozpath.relpath(f, base)),
+                        backend_file,
+                    )
+                    for var in variables:
+                        backend_file.write("%s += %s\n" % (var, p))
             self._compile_graph[mozpath.join(backend_file.relobjdir, "host-objects")]
-        elif isinstance(obj, (WasmSources, WasmGeneratedSources)):
+        elif isinstance(obj, WasmSources):
             suffix_map = {".c": "WASM_CSRCS", ".cpp": "WASM_CPPSRCS"}
             variables = [suffix_map[obj.canonical_suffix]]
-            if isinstance(obj, WasmGeneratedSources):
-                base = backend_file.objdir
-                cls = ObjDirPath
-                prefix = "!"
-            else:
-                base = backend_file.srcdir
-                cls = SourcePath
-                prefix = ""
-            for f in sorted(obj.files):
-                p = self._pretty_path(
-                    cls(obj._context, prefix + mozpath.relpath(f, base)), backend_file
-                )
-                for var in variables:
-                    backend_file.write("%s += %s\n" % (var, p))
+            for files, base, cls, prefix in (
+                (obj.static_files, backend_file.srcdir, SourcePath, ""),
+                (obj.generated_files, backend_file.objdir, ObjDirPath, "!"),
+            ):
+                for f in sorted(files):
+                    p = self._pretty_path(
+                        cls(obj._context, prefix + mozpath.relpath(f, base)),
+                        backend_file,
+                    )
+                    for var in variables:
+                        backend_file.write("%s += %s\n" % (var, p))
             self._compile_graph[mozpath.join(backend_file.relobjdir, "target-objects")]
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
@@ -1775,7 +1763,6 @@ class RecursiveMakeBackend(MakeBackend):
         sorted_ipdl_sources,
         sorted_nonstatic_ipdl_sources,
         sorted_static_ipdl_sources,
-        unified_ipdl_cppsrcs_mapping,
     ):
         # Write out a master list of all IPDL source files.
         mk = Makefile()
@@ -1800,10 +1787,6 @@ class RecursiveMakeBackend(MakeBackend):
                 " ".join(sorted_nonstatic_ipdl_basenames),
                 " ".join(sorted_static_ipdl_sources),
             )
-        )
-
-        self._add_unified_build_rules(
-            mk, unified_ipdl_cppsrcs_mapping, unified_files_makefile_variable="CPPSRCS"
         )
 
         # Preprocessed ipdl files are generated in ipdl_dir.

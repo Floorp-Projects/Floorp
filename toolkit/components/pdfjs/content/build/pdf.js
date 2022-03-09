@@ -47,7 +47,6 @@ exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
-exports.createObjectURL = createObjectURL;
 exports.createPromiseCapability = createPromiseCapability;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.escapeString = escapeString;
@@ -57,10 +56,7 @@ exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
 exports.isAscii = isAscii;
-exports.isBool = isBool;
-exports.isNum = isNum;
 exports.isSameOrigin = isSameOrigin;
-exports.isString = isString;
 exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
 exports.setVerbosityLevel = setVerbosityLevel;
@@ -986,18 +982,6 @@ function utf8StringToString(str) {
   return unescape(encodeURIComponent(str));
 }
 
-function isBool(v) {
-  return typeof v === "boolean";
-}
-
-function isNum(v) {
-  return typeof v === "number";
-}
-
-function isString(v) {
-  return typeof v === "string";
-}
-
 function isArrayBuffer(v) {
   return typeof v === "object" && v !== null && v.byteLength !== undefined;
 }
@@ -1042,30 +1026,6 @@ function createPromiseCapability() {
     };
   });
   return capability;
-}
-
-function createObjectURL(data, contentType = "", forceDataSchema = false) {
-  if (URL.createObjectURL && typeof Blob !== "undefined" && !forceDataSchema) {
-    return URL.createObjectURL(new Blob([data], {
-      type: contentType
-    }));
-  }
-
-  const digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-  let buffer = `data:${contentType};base64,`;
-
-  for (let i = 0, ii = data.length; i < ii; i += 3) {
-    const b1 = data[i] & 0xff;
-    const b2 = data[i + 1] & 0xff;
-    const b3 = data[i + 2] & 0xff;
-    const d1 = b1 >> 2,
-          d2 = (b1 & 3) << 4 | b2 >> 4;
-    const d3 = i + 1 < ii ? (b2 & 0xf) << 2 | b3 >> 6 : 64;
-    const d4 = i + 2 < ii ? b3 & 0x3f : 64;
-    buffer += digits[d1] + digits[d2] + digits[d3] + digits[d4];
-  }
-
-  return buffer;
 }
 
 /***/ }),
@@ -1344,7 +1304,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.13.93',
+    apiVersion: '2.14.13',
     source: {
       data: source.data,
       url: source.url,
@@ -1871,14 +1831,12 @@ class PDFPageProxy {
   }
 
   streamTextContent({
-    normalizeWhitespace = false,
     disableCombineTextItems = false,
     includeMarkedContent = false
   } = {}) {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
     return this._transport.messageHandler.sendWithStream("GetTextContent", {
       pageIndex: this._pageIndex,
-      normalizeWhitespace: normalizeWhitespace === true,
       combineTextItems: disableCombineTextItems !== true,
       includeMarkedContent: includeMarkedContent === true
     }, {
@@ -2736,9 +2694,13 @@ class WorkerTransport {
 
       if (loadingTask.onPassword) {
         const updatePassword = password => {
-          this._passwordCapability.resolve({
-            password
-          });
+          if (password instanceof Error) {
+            this._passwordCapability.reject(password);
+          } else {
+            this._passwordCapability.resolve({
+              password
+            });
+          }
         };
 
         try {
@@ -2919,7 +2881,7 @@ class WorkerTransport {
 
   getPage(pageNumber) {
     if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this._numPages) {
-      return Promise.reject(new Error("Invalid page request"));
+      return Promise.reject(new Error("Invalid page request."));
     }
 
     const pageIndex = pageNumber - 1,
@@ -2945,8 +2907,13 @@ class WorkerTransport {
   }
 
   getPageIndex(ref) {
+    if (typeof ref !== "object" || ref === null || !Number.isInteger(ref.num) || ref.num < 0 || !Number.isInteger(ref.gen) || ref.gen < 0) {
+      return Promise.reject(new Error("Invalid pageIndex request."));
+    }
+
     return this.messageHandler.sendWithPromise("GetPageIndex", {
-      ref
+      num: ref.num,
+      gen: ref.gen
     });
   }
 
@@ -3104,32 +3071,31 @@ class WorkerTransport {
 }
 
 class PDFObjects {
-  constructor() {
-    this._objs = Object.create(null);
-  }
+  #objs = Object.create(null);
 
-  _ensureObj(objId) {
-    if (this._objs[objId]) {
-      return this._objs[objId];
+  #ensureObj(objId) {
+    const obj = this.#objs[objId];
+
+    if (obj) {
+      return obj;
     }
 
-    return this._objs[objId] = {
+    return this.#objs[objId] = {
       capability: (0, _util.createPromiseCapability)(),
-      data: null,
-      resolved: false
+      data: null
     };
   }
 
   get(objId, callback = null) {
     if (callback) {
-      this._ensureObj(objId).capability.promise.then(callback);
-
+      const obj = this.#ensureObj(objId);
+      obj.capability.promise.then(() => callback(obj.data));
       return null;
     }
 
-    const obj = this._objs[objId];
+    const obj = this.#objs[objId];
 
-    if (!obj || !obj.resolved) {
+    if (!obj?.capability.settled) {
       throw new Error(`Requesting object that isn't resolved yet ${objId}.`);
     }
 
@@ -3137,20 +3103,18 @@ class PDFObjects {
   }
 
   has(objId) {
-    const obj = this._objs[objId];
-    return obj?.resolved || false;
+    const obj = this.#objs[objId];
+    return obj?.capability.settled || false;
   }
 
-  resolve(objId, data) {
-    const obj = this._ensureObj(objId);
-
-    obj.resolved = true;
+  resolve(objId, data = null) {
+    const obj = this.#ensureObj(objId);
     obj.data = data;
-    obj.capability.resolve(data);
+    obj.capability.resolve();
   }
 
   clear() {
-    this._objs = Object.create(null);
+    this.#objs = Object.create(null);
   }
 
 }
@@ -3345,9 +3309,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.13.93';
+const version = '2.14.13';
 exports.version = version;
-const build = '6b9cc24d4';
+const build = '234aa9a50';
 exports.build = build;
 
 /***/ }),
@@ -3374,15 +3338,13 @@ var _base_factory = __w_pdfjs_require__(6);
 var _util = __w_pdfjs_require__(1);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const PixelsPerInch = {
-  CSS: 96.0,
-  PDF: 72.0,
 
-  get PDF_TO_CSS_UNITS() {
-    return (0, _util.shadow)(this, "PDF_TO_CSS_UNITS", this.CSS / this.PDF);
-  }
+class PixelsPerInch {
+  static CSS = 96.0;
+  static PDF = 72.0;
+  static PDF_TO_CSS_UNITS = this.CSS / this.PDF;
+}
 
-};
 exports.PixelsPerInch = PixelsPerInch;
 
 class DOMCanvasFactory extends _base_factory.BaseCanvasFactory {
@@ -3716,7 +3678,7 @@ let pdfDateStringRegex;
 
 class PDFDateString {
   static toDateObject(input) {
-    if (!input || !(0, _util.isString)(input)) {
+    if (!input || typeof input !== "string") {
       return null;
     }
 
@@ -4521,6 +4483,10 @@ function mirrorContextOperations(ctx, destCtx) {
 }
 
 function addContextCurrentTransform(ctx) {
+  if (ctx._transformStack) {
+    ctx._transformStack = [];
+  }
+
   if (ctx.mozCurrentTransform) {
     return;
   }
@@ -4575,6 +4541,10 @@ function addContextCurrentTransform(ctx) {
   };
 
   ctx.restore = function ctxRestore() {
+    if (this._transformStack.length === 0) {
+      (0, _util.warn)("Tried to restore a ctx when the stack was already empty.");
+    }
+
     const prev = this._transformStack.pop();
 
     if (prev) {
@@ -5335,6 +5305,7 @@ class CanvasGraphics {
       addContextCurrentTransform(canvasCtx);
     }
 
+    this._cachedScaleForStroking = null;
     this._cachedGetSinglePixelWidth = null;
   }
 
@@ -5372,7 +5343,6 @@ class CanvasGraphics {
     this.ctx.transform.apply(this.ctx, viewport.transform);
     this.viewportScale = viewport.scale;
     this.baseTransform = this.ctx.mozCurrentTransform.slice();
-    this._combinedScaleFactor = Math.hypot(this.baseTransform[0], this.baseTransform[2]);
 
     if (this.imageLayer) {
       this.imageLayer.beginLayout();
@@ -5435,7 +5405,7 @@ class CanvasGraphics {
   }
 
   endDrawing() {
-    while (this.stateStack.length || this.current.activeSMask !== null) {
+    while (this.stateStack.length || this.inSMaskMode) {
       this.restore();
     }
 
@@ -5547,6 +5517,10 @@ class CanvasGraphics {
   }
 
   setLineWidth(width) {
+    if (width !== this.current.lineWidth) {
+      this._cachedScaleForStroking = null;
+    }
+
     this.current.lineWidth = width;
     this.ctx.lineWidth = width;
   }
@@ -5640,8 +5614,12 @@ class CanvasGraphics {
     }
   }
 
+  get inSMaskMode() {
+    return !!this.suspendedCtx;
+  }
+
   checkSMaskState() {
-    const inSMaskMode = !!this.suspendedCtx;
+    const inSMaskMode = this.inSMaskMode;
 
     if (this.current.activeSMask && !inSMaskMode) {
       this.beginSMaskMode();
@@ -5651,7 +5629,7 @@ class CanvasGraphics {
   }
 
   beginSMaskMode() {
-    if (this.suspendedCtx) {
+    if (this.inSMaskMode) {
       throw new Error("beginSMaskMode called while already in smask mode");
     }
 
@@ -5669,7 +5647,7 @@ class CanvasGraphics {
   }
 
   endSMaskMode() {
-    if (!this.suspendedCtx) {
+    if (!this.inSMaskMode) {
       throw new Error("endSMaskMode called while not in smask mode");
     }
 
@@ -5677,7 +5655,6 @@ class CanvasGraphics {
 
     copyCtxState(this.ctx, this.suspendedCtx);
     this.ctx = this.suspendedCtx;
-    this.current.activeSMask = null;
     this.suspendedCtx = null;
   }
 
@@ -5705,28 +5682,43 @@ class CanvasGraphics {
   }
 
   save() {
-    this.ctx.save();
+    if (this.inSMaskMode) {
+      copyCtxState(this.ctx, this.suspendedCtx);
+      this.suspendedCtx.save();
+    } else {
+      this.ctx.save();
+    }
+
     const old = this.current;
     this.stateStack.push(old);
     this.current = old.clone();
   }
 
   restore() {
-    if (this.stateStack.length === 0 && this.current.activeSMask) {
+    if (this.stateStack.length === 0 && this.inSMaskMode) {
       this.endSMaskMode();
     }
 
     if (this.stateStack.length !== 0) {
       this.current = this.stateStack.pop();
-      this.ctx.restore();
+
+      if (this.inSMaskMode) {
+        this.suspendedCtx.restore();
+        copyCtxState(this.suspendedCtx, this.ctx);
+      } else {
+        this.ctx.restore();
+      }
+
       this.checkSMaskState();
       this.pendingClip = null;
+      this._cachedScaleForStroking = null;
       this._cachedGetSinglePixelWidth = null;
     }
   }
 
   transform(a, b, c, d, e, f) {
     this.ctx.transform(a, b, c, d, e, f);
+    this._cachedScaleForStroking = null;
     this._cachedGetSinglePixelWidth = null;
   }
 
@@ -5826,25 +5818,12 @@ class CanvasGraphics {
 
     if (this.contentVisible) {
       if (typeof strokeColor === "object" && strokeColor?.getPattern) {
-        const lineWidth = this.getSinglePixelWidth();
         ctx.save();
         ctx.strokeStyle = strokeColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.STROKE);
-        ctx.lineWidth = Math.max(lineWidth, this.current.lineWidth);
-        ctx.stroke();
+        this.rescaleAndStroke(false);
         ctx.restore();
       } else {
-        const lineWidth = this.getSinglePixelWidth();
-
-        if (lineWidth < 0 && -lineWidth >= this.current.lineWidth) {
-          ctx.save();
-          ctx.resetTransform();
-          ctx.lineWidth = Math.floor(this._combinedScaleFactor);
-          ctx.stroke();
-          ctx.restore();
-        } else {
-          ctx.lineWidth = Math.max(lineWidth, this.current.lineWidth);
-          ctx.stroke();
-        }
+        this.rescaleAndStroke(true);
       }
     }
 
@@ -6060,7 +6039,7 @@ class CanvasGraphics {
     this.moveText(0, this.current.leading);
   }
 
-  paintChar(character, x, y, patternTransform, resetLineWidthToOne) {
+  paintChar(character, x, y, patternTransform) {
     const ctx = this.ctx;
     const current = this.current;
     const font = current.font;
@@ -6090,11 +6069,6 @@ class CanvasGraphics {
       }
 
       if (fillStrokeMode === _util.TextRenderingMode.STROKE || fillStrokeMode === _util.TextRenderingMode.FILL_STROKE) {
-        if (resetLineWidthToOne) {
-          ctx.resetTransform();
-          ctx.lineWidth = Math.floor(this._combinedScaleFactor);
-        }
-
         ctx.stroke();
       }
 
@@ -6105,16 +6079,7 @@ class CanvasGraphics {
       }
 
       if (fillStrokeMode === _util.TextRenderingMode.STROKE || fillStrokeMode === _util.TextRenderingMode.FILL_STROKE) {
-        if (resetLineWidthToOne) {
-          ctx.save();
-          ctx.moveTo(x, y);
-          ctx.resetTransform();
-          ctx.lineWidth = Math.floor(this._combinedScaleFactor);
-          ctx.strokeText(character, 0, 0);
-          ctx.restore();
-        } else {
-          ctx.strokeText(character, x, y);
-        }
+        ctx.strokeText(character, x, y);
       }
     }
 
@@ -6196,16 +6161,13 @@ class CanvasGraphics {
     }
 
     let lineWidth = current.lineWidth;
-    let resetLineWidthToOne = false;
     const scale = current.textMatrixScale;
 
     if (scale === 0 || lineWidth === 0) {
       const fillStrokeMode = current.textRenderingMode & _util.TextRenderingMode.FILL_STROKE_MASK;
 
       if (fillStrokeMode === _util.TextRenderingMode.STROKE || fillStrokeMode === _util.TextRenderingMode.FILL_STROKE) {
-        this._cachedGetSinglePixelWidth = null;
         lineWidth = this.getSinglePixelWidth();
-        resetLineWidthToOne = lineWidth < 0;
       }
     } else {
       lineWidth /= scale;
@@ -6223,7 +6185,7 @@ class CanvasGraphics {
     for (i = 0; i < glyphsLength; ++i) {
       const glyph = glyphs[i];
 
-      if ((0, _util.isNum)(glyph)) {
+      if (typeof glyph === "number") {
         x += spacingDir * glyph * fontSize / 1000;
         continue;
       }
@@ -6265,12 +6227,12 @@ class CanvasGraphics {
         if (simpleFillText && !accent) {
           ctx.fillText(character, scaledX, scaledY);
         } else {
-          this.paintChar(character, scaledX, scaledY, patternTransform, resetLineWidthToOne);
+          this.paintChar(character, scaledX, scaledY, patternTransform);
 
           if (accent) {
             const scaledAccentX = scaledX + fontSize * accent.offset.x / fontSizeScale;
             const scaledAccentY = scaledY - fontSize * accent.offset.y / fontSizeScale;
-            this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY, patternTransform, resetLineWidthToOne);
+            this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY, patternTransform);
           }
         }
       }
@@ -6320,6 +6282,7 @@ class CanvasGraphics {
       return;
     }
 
+    this._cachedScaleForStroking = null;
     this._cachedGetSinglePixelWidth = null;
     ctx.save();
     ctx.transform.apply(ctx, current.textMatrix);
@@ -6329,7 +6292,7 @@ class CanvasGraphics {
     for (i = 0; i < glyphsLength; ++i) {
       glyph = glyphs[i];
 
-      if ((0, _util.isNum)(glyph)) {
+      if (typeof glyph === "number") {
         spacingLength = spacingDir * glyph * fontSize / 1000;
         this.ctx.translate(spacingLength, 0);
         current.x += spacingLength * textHScale;
@@ -6519,10 +6482,9 @@ class CanvasGraphics {
     }
 
     this.save();
-    const suspendedCtx = this.suspendedCtx;
 
-    if (this.current.activeSMask) {
-      this.suspendedCtx = null;
+    if (this.inSMaskMode) {
+      this.endSMaskMode();
       this.current.activeSMask = null;
     }
 
@@ -6603,10 +6565,7 @@ class CanvasGraphics {
     copyCtxState(currentCtx, groupCtx);
     this.ctx = groupCtx;
     this.setGState([["BM", "source-over"], ["ca", 1], ["CA", 1]]);
-    this.groupStack.push({
-      ctx: currentCtx,
-      suspendedCtx
-    });
+    this.groupStack.push(currentCtx);
     this.groupLevel++;
   }
 
@@ -6617,16 +6576,9 @@ class CanvasGraphics {
 
     this.groupLevel--;
     const groupCtx = this.ctx;
-    const {
-      ctx,
-      suspendedCtx
-    } = this.groupStack.pop();
+    const ctx = this.groupStack.pop();
     this.ctx = ctx;
     this.ctx.imageSmoothingEnabled = false;
-
-    if (suspendedCtx) {
-      this.suspendedCtx = suspendedCtx;
-    }
 
     if (group.smask) {
       this.tempSMask = this.smaskStack.pop();
@@ -7000,23 +6952,98 @@ class CanvasGraphics {
   }
 
   getSinglePixelWidth() {
-    if (this._cachedGetSinglePixelWidth === null) {
+    if (!this._cachedGetSinglePixelWidth) {
       const m = this.ctx.mozCurrentTransform;
-      const absDet = Math.abs(m[0] * m[3] - m[2] * m[1]);
-      const sqNorm1 = m[0] ** 2 + m[2] ** 2;
-      const sqNorm2 = m[1] ** 2 + m[3] ** 2;
-      const pixelHeight = Math.sqrt(Math.max(sqNorm1, sqNorm2)) / absDet;
 
-      if (sqNorm1 !== sqNorm2 && this._combinedScaleFactor * pixelHeight > 1) {
-        this._cachedGetSinglePixelWidth = -(this._combinedScaleFactor * pixelHeight);
-      } else if (absDet > Number.EPSILON) {
-        this._cachedGetSinglePixelWidth = pixelHeight;
+      if (m[1] === 0 && m[2] === 0) {
+        this._cachedGetSinglePixelWidth = 1 / Math.min(Math.abs(m[0]), Math.abs(m[3]));
       } else {
-        this._cachedGetSinglePixelWidth = 1;
+        const absDet = Math.abs(m[0] * m[3] - m[2] * m[1]);
+        const normX = Math.hypot(m[0], m[2]);
+        const normY = Math.hypot(m[1], m[3]);
+        this._cachedGetSinglePixelWidth = Math.max(normX, normY) / absDet;
       }
     }
 
     return this._cachedGetSinglePixelWidth;
+  }
+
+  getScaleForStroking() {
+    if (!this._cachedScaleForStroking) {
+      const {
+        lineWidth
+      } = this.current;
+      const m = this.ctx.mozCurrentTransform;
+      let scaleX, scaleY;
+
+      if (m[1] === 0 && m[2] === 0) {
+        const normX = Math.abs(m[0]);
+        const normY = Math.abs(m[3]);
+
+        if (lineWidth === 0) {
+          scaleX = 1 / normX;
+          scaleY = 1 / normY;
+        } else {
+          const scaledXLineWidth = normX * lineWidth;
+          const scaledYLineWidth = normY * lineWidth;
+          scaleX = scaledXLineWidth < 1 ? 1 / scaledXLineWidth : 1;
+          scaleY = scaledYLineWidth < 1 ? 1 / scaledYLineWidth : 1;
+        }
+      } else {
+        const absDet = Math.abs(m[0] * m[3] - m[2] * m[1]);
+        const normX = Math.hypot(m[0], m[1]);
+        const normY = Math.hypot(m[2], m[3]);
+
+        if (lineWidth === 0) {
+          scaleX = normY / absDet;
+          scaleY = normX / absDet;
+        } else {
+          const baseArea = lineWidth * absDet;
+          scaleX = normY > baseArea ? normY / baseArea : 1;
+          scaleY = normX > baseArea ? normX / baseArea : 1;
+        }
+      }
+
+      this._cachedScaleForStroking = [scaleX, scaleY];
+    }
+
+    return this._cachedScaleForStroking;
+  }
+
+  rescaleAndStroke(saveRestore) {
+    const {
+      ctx
+    } = this;
+    const {
+      lineWidth
+    } = this.current;
+    const [scaleX, scaleY] = this.getScaleForStroking();
+    ctx.lineWidth = lineWidth || 1;
+
+    if (scaleX === 1 && scaleY === 1) {
+      ctx.stroke();
+      return;
+    }
+
+    let savedMatrix, savedDashes, savedDashOffset;
+
+    if (saveRestore) {
+      savedMatrix = ctx.mozCurrentTransform.slice();
+      savedDashes = ctx.getLineDash().slice();
+      savedDashOffset = ctx.lineDashOffset;
+    }
+
+    ctx.scale(scaleX, scaleY);
+    const scale = Math.max(scaleX, scaleY);
+    ctx.setLineDash(ctx.getLineDash().map(x => x / scale));
+    ctx.lineDashOffset /= scale;
+    ctx.stroke();
+
+    if (saveRestore) {
+      ctx.setTransform(...savedMatrix);
+      ctx.setLineDash(savedDashes);
+      ctx.lineDashOffset = savedDashOffset;
+    }
   }
 
   getCanvasPosition(x, y) {
@@ -7506,6 +7533,7 @@ class TilingPattern {
 
     tmpCtx.translate(-(dimx.scale * adjustedX0), -(dimy.scale * adjustedY0));
     graphics.transform(dimx.scale, 0, 0, dimy.scale, 0, 0);
+    tmpCtx.save();
     this.clipBbox(graphics, adjustedX0, adjustedY0, adjustedX1, adjustedY1);
     graphics.baseTransform = graphics.ctx.mozCurrentTransform.slice();
     graphics.executeOperatorList(operatorList);
@@ -7648,8 +7676,7 @@ const StreamKind = {
 
 function wrapReason(reason) {
   if (!(reason instanceof Error || typeof reason === "object" && reason !== null)) {
-    (0, _util.warn)('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
-    return reason;
+    (0, _util.unreachable)('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
   }
 
   switch (reason.name) {
@@ -12291,12 +12318,6 @@ Object.defineProperty(exports, "build", ({
     return _api.build;
   }
 }));
-Object.defineProperty(exports, "createObjectURL", ({
-  enumerable: true,
-  get: function () {
-    return _util.createObjectURL;
-  }
-}));
 Object.defineProperty(exports, "createPromiseCapability", ({
   enumerable: true,
   get: function () {
@@ -12382,8 +12403,8 @@ var _svg = __w_pdfjs_require__(22);
 
 var _xfa_layer = __w_pdfjs_require__(20);
 
-const pdfjsVersion = '2.13.93';
-const pdfjsBuild = '6b9cc24d4';
+const pdfjsVersion = '2.14.13';
+const pdfjsBuild = '234aa9a50';
 ;
 })();
 

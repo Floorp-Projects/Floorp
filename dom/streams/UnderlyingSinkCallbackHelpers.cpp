@@ -9,20 +9,8 @@
 using namespace mozilla::dom;
 
 // UnderlyingSinkStartCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(UnderlyingSinkStartCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(UnderlyingSinkStartCallbackHelper)
-  tmp->mUnderlyingSink = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(UnderlyingSinkStartCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSinkStartCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUnderlyingSink)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSinkStartCallbackHelper,
+                                         (mCallback), (mUnderlyingSink))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkStartCallbackHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkStartCallbackHelper)
@@ -42,20 +30,8 @@ void UnderlyingSinkStartCallbackHelper::StartCallback(
 }
 
 // UnderlyingSinkWriteCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(UnderlyingSinkWriteCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(UnderlyingSinkWriteCallbackHelper)
-  tmp->mUnderlyingSink = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(UnderlyingSinkWriteCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSinkWriteCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUnderlyingSink)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSinkWriteCallbackHelper,
+                                         (mCallback), (mUnderlyingSink))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkWriteCallbackHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkWriteCallbackHelper)
@@ -76,20 +52,8 @@ already_AddRefed<Promise> UnderlyingSinkWriteCallbackHelper::WriteCallback(
 }
 
 // UnderlyingSinkCloseCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(UnderlyingSinkCloseCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(UnderlyingSinkCloseCallbackHelper)
-  tmp->mUnderlyingSink = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(UnderlyingSinkCloseCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSinkCloseCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUnderlyingSink)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSinkCloseCallbackHelper,
+                                         (mCallback), (mUnderlyingSink))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkCloseCallbackHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkCloseCallbackHelper)
@@ -109,20 +73,8 @@ already_AddRefed<Promise> UnderlyingSinkCloseCallbackHelper::CloseCallback(
 }
 
 // UnderlyingSinkAbortCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(UnderlyingSinkAbortCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(UnderlyingSinkAbortCallbackHelper)
-  tmp->mUnderlyingSink = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(UnderlyingSinkAbortCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSinkAbortCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUnderlyingSink)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSinkAbortCallbackHelper,
+                                         (mCallback), (mUnderlyingSink))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkAbortCallbackHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkAbortCallbackHelper)

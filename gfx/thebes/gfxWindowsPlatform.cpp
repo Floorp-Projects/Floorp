@@ -315,6 +315,13 @@ void gfxWindowsPlatform::InitMemoryReportersForGPUProcess() {
 /* static */
 nsresult gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(
     uint64_t* aResult) {
+  // If win32k is locked down then we should not have any GPU processing and
+  // cannot use these APIs either way.
+  if (IsWin32kLockedDown()) {
+    *aResult = 0;
+    return NS_OK;
+  }
+
   nsModuleHandle module(LoadLibrary(L"gdi32.dll"));
   if (!module) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1686,7 +1693,10 @@ class D3DVsyncSource final : public VsyncSource {
           UpdateVBlankOutput();
           if (mWaitVBlankOutput) {
             const TimeStamp vblank_begin_wait = TimeStamp::Now();
-            hr = mWaitVBlankOutput->WaitForVBlank();
+            {
+              AUTO_PROFILER_THREAD_SLEEP;
+              hr = mWaitVBlankOutput->WaitForVBlank();
+            }
             if (SUCCEEDED(hr)) {
               // vblank might return instantly when running headless,
               // monitor powering off, etc.  Since we're on a dedicated

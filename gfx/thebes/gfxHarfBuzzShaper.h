@@ -169,6 +169,12 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
   // Whether the font implements GetGlyph, or we should read tables
   // directly
   bool mUseFontGetGlyph;
+
+  // Whether the font is an MS Symbol-encoded font, in which case we will
+  // try remapping U+0020..00FF to U+F020..F0FF for characters in the U+00xx
+  // range that are otherwise unsupported.
+  bool mIsSymbolFont;
+
   // Whether the font implements GetGlyphWidth, or we should read tables
   // directly to get ideal widths
   bool mUseFontGlyphWidths;

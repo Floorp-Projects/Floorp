@@ -11,7 +11,7 @@ case "$(uname -s)" in
 Linux)
     PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
     ;;
-MINGW*)
+MINGW*|MSYS*)
     UPLOAD_DIR=$PWD/public/build
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
@@ -54,7 +54,7 @@ Linux)
     esac
 
     ;;
-MINGW*)
+MINGW*|MSYS*)
     cargo build --verbose --release --features="dist-client s3 gcs $COMMON_FEATURES"
     ;;
 esac

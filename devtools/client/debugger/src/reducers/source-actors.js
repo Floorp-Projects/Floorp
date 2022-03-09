@@ -8,7 +8,6 @@ import {
   updateResources,
   removeResources,
   hasResource,
-  getResource,
 } from "../utils/resource";
 
 import { asyncActionAsValue } from "../actions/utils/middleware/promise";
@@ -22,8 +21,6 @@ import { asyncActionAsValue } from "../actions/utils/middleware/promise";
  * This reducer will append the following attributes:
  * - breakableLines: { state: <"pending"|"fulfilled">, value: Array<Number> }
  *   List of all lines where breakpoints can be set
- * - breakpointPositions: Map<line, { state: <"pending"|"fulfilled">, value: Array<Number> }>
- *   Map of the column positions per line where breakpoints can be set
  */
 export const initial = createInitial();
 
@@ -36,7 +33,6 @@ export default function update(state = initial, action) {
         state,
         items.map(item => ({
           ...item,
-          breakpointPositions: new Map(),
           breakableLines: null,
         }))
       );
@@ -51,10 +47,6 @@ export default function update(state = initial, action) {
       state = initial;
       break;
     }
-
-    case "SET_SOURCE_ACTOR_BREAKPOINT_COLUMNS":
-      state = updateBreakpointColumns(state, action);
-      break;
 
     case "SET_SOURCE_ACTOR_BREAKABLE_LINES":
       state = updateBreakableLines(state, action);
@@ -79,22 +71,6 @@ function clearSourceActorMapURL(state, id) {
       sourceMapURL: "",
     },
   ]);
-}
-
-function updateBreakpointColumns(state, action) {
-  const { sourceId, line } = action;
-  const value = asyncActionAsValue(action);
-
-  if (!hasResource(state, sourceId)) {
-    return state;
-  }
-
-  const breakpointPositions = new Map(
-    getResource(state, sourceId).breakpointPositions
-  );
-  breakpointPositions.set(line, value);
-
-  return updateResources(state, [{ id: sourceId, breakpointPositions }]);
 }
 
 function updateBreakableLines(state, action) {

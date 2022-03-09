@@ -164,9 +164,12 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 
   // Avoid starting the GPU process for the initial navigator:blank window.
   if (mIsEarlyBlankWindow) {
-    // Call BeginPaint/EndPaint or Windows will keep sending us messages.
-    ::BeginPaint(mWnd, &ps);
-    ::EndPaint(mWnd, &ps);
+    // We need to validate the update rect or Windows will keep sending us
+    // WM_PAINT messages.
+    RECT rect;
+    if (::GetUpdateRect(mWnd, &rect, FALSE)) {
+      ::ValidateRect(mWnd, &rect);
+    }
     return true;
   }
 
@@ -202,11 +205,12 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     // WM_PAINT messages are normally generated. To support asynchronous
     // painting we force generation of WM_PAINT messages by invalidating window
     // areas with RedrawWindow, InvalidateRect or InvalidateRgn function calls.
-    // BeginPaint/EndPaint must be called to make Windows think that invalid
-    // area is painted. Otherwise it will continue sending the same message
-    // endlessly.
-    ::BeginPaint(mWnd, &ps);
-    ::EndPaint(mWnd, &ps);
+    // We need to validate the update rect or Windows will keep sending us
+    // WM_PAINT messages.
+    RECT rect;
+    if (::GetUpdateRect(mWnd, &rect, FALSE)) {
+      ::ValidateRect(mWnd, &rect);
+    }
 
     // We're guaranteed to have a widget proxy since we called
     // GetLayerManager().
@@ -444,7 +448,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
 // call for RequesetFxrOutput as soon as the compositor for this widget is
 // available.
 void nsWindow::CreateCompositor() {
-  nsWindowBase::CreateCompositor();
+  nsBaseWidget::CreateCompositor();
 
   MaybeEnableWindowOcclusion(/* aEnable */ true);
 
@@ -456,7 +460,7 @@ void nsWindow::CreateCompositor() {
 void nsWindow::DestroyCompositor() {
   MaybeEnableWindowOcclusion(/* aEnable */ false);
 
-  nsWindowBase::DestroyCompositor();
+  nsBaseWidget::DestroyCompositor();
 }
 
 void nsWindow::RequestFxrOutput() {

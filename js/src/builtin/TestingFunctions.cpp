@@ -190,18 +190,6 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool privateFields = cx->options().privateClassFields();
-  if (!JS_SetProperty(cx, info, "privateFields",
-                      privateFields ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
-  bool privateMethods = cx->options().privateClassMethods();
-  if (!JS_SetProperty(cx, info, "privateMethods",
-                      privateFields && privateMethods ? TrueHandleValue
-                                                      : FalseHandleValue)) {
-    return false;
-  }
-
   bool importAssertions = cx->options().importAssertions();
   if (!JS_SetProperty(cx, info, "importAssertions",
                       importAssertions ? TrueHandleValue : FalseHandleValue)) {
@@ -445,6 +433,24 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   value = BooleanValue(false);
 #endif
   if (!JS_SetProperty(cx, info, "wasi", value)) {
+    return false;
+  }
+
+#ifdef JS_CODEGEN_LOONG64
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "loong64", value)) {
+    return false;
+  }
+
+#ifdef JS_SIMULATOR_LOONG64
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "loong64-simulator", value)) {
     return false;
   }
 
@@ -2031,9 +2037,9 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  wasm::IntrinsicOp ops[] = {wasm::IntrinsicOp::I8VecMul};
+  wasm::IntrinsicId ids[] = {wasm::IntrinsicId::I8VecMul};
   RootedWasmModuleObject module(cx);
-  if (!wasm::CompileIntrinsicModule(cx, ops, wasm::Shareable::False, &module)) {
+  if (!wasm::CompileIntrinsicModule(cx, ids, wasm::Shareable::False, &module)) {
     return false;
   }
   args.rval().set(ObjectValue(*module.get()));
@@ -2424,7 +2430,7 @@ static bool CurrentGC(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  val = BooleanValue(gc.isShrinkingGC());
+  val = BooleanValue(gc.isIncrementalGCInProgress() && gc.isShrinkingGC());
   if (!JS_DefineProperty(cx, result, "isShrinking", val, JSPROP_ENUMERATE)) {
     return false;
   }
@@ -4108,7 +4114,7 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      idx = INT_TO_JSID(inlineFrameNo);
+      idx = PropertyKey::Int(inlineFrameNo);
       if (!JS_DefinePropertyById(cx, inlineStack, idx, inlineFrameInfo, 0)) {
         return false;
       }
@@ -4117,7 +4123,7 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // Push inline array into main array.
-    idx = INT_TO_JSID(physicalFrameNo);
+    idx = PropertyKey::Int(physicalFrameNo);
     if (!JS_DefinePropertyById(cx, stack, idx, inlineStack, 0)) {
       return false;
     }
@@ -4210,7 +4216,7 @@ JSObject* ShellAllocationMetadataBuilder::build(
   RootedValue callee(cx);
   for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
     if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
-      id = INT_TO_JSID(stackIndex);
+      id = PropertyKey::Int(stackIndex);
       RootedObject callee(cx, iter.callee(cx));
       if (!JS_DefinePropertyById(cx, stack, id, callee, JSPROP_ENUMERATE)) {
         oomUnsafe.crash("ShellAllocationMetadataBuilder::build");

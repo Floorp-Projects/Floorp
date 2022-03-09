@@ -1,5 +1,5 @@
 case "$(uname -s)" in
-MINGW*)
+MINGW*|MSYS*)
   # For some reason, by the time the task finishes, and when run-task
   # starts its cleanup, there is still a vctip.exe (MSVC telemetry-related
   # process) running and using a dll that run-task can't then delete.

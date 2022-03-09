@@ -309,14 +309,14 @@ class RegisterAllocator {
     return outputOf(ins);
   }
 
-  void dumpInstructions();
+  void dumpInstructions(const char* who);
 
  public:
   template <typename TakeableSet>
   static void takeWasmRegisters(TakeableSet& regs) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
     defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
     regs.take(HeapReg);
 #endif
     regs.take(FramePointer);

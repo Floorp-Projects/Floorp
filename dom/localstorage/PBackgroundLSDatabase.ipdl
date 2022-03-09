@@ -30,11 +30,13 @@ struct LSSnapshotInitInfo
    * be false.
    */
   bool addKeyToUnknownItems;
+
   /**
    * As many key/value or key/void pairs as the snapshot prefill byte budget
    * allowed.
    */
   LSItemInfo[] itemInfos;
+
   /**
    * The total number of key/value pairs in LocalStorage for this origin at the
    * time the snapshot was created.  (And the point of the snapshot is to
@@ -43,15 +45,17 @@ struct LSSnapshotInitInfo
    * processes.)
    */
   uint32_t totalLength;
+
   /**
    * The current amount of LocalStorage usage as measured by the summing the
    * nsString Length() of both the key and the value over all stored pairs.
    */
-  int64_t initialUsage;
+  int64_t usage;
+
   /**
    * The amount of storage allowed to be used by the Snapshot without requesting
-   * more storage space via IncreasePeakUsage.  This is the `initialUsage` plus
-   * 0 or more bytes of space.  If space was available, the increase will be the
+   * more storage space via IncreasePeakUsage.  This is the `usage` plus 0 or
+   * more bytes of space.  If space was available, the increase will be the
    * `minSize` from the PBackgroundLSSnapshot constructor plus the configured
    * pre-increment (via "dom.storage.snapshot_peak_usage.initial_preincrement").
    * If the LocalStorage total usage was already close to the limit, then the
@@ -60,8 +64,16 @@ struct LSSnapshotInitInfo
    * `minSize`, or 0 depending on remaining available space.
    */
   int64_t peakUsage;
+
   // See `LSSnapshot::LoadState` in `LSSnapshot.h`
   LoadState loadState;
+
+  /**
+   * Boolean indicating whether there where cross-process databases registered
+   * for this origin at the time the snapshot was created.
+   */
+  bool hasOtherProcessDatabases;
+
   /**
    * Boolean indicating whether there where cross-process observers registered
    * for this origin at the time the snapshot was created.
@@ -80,6 +92,7 @@ struct LSSnapshotInitInfo
  * ContentParent::AboutToLoadHttpFtpDocumentForChild, the central place
  * for pre-loading.)
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundLSDatabase
 {
   manager PBackground;

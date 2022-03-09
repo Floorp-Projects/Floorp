@@ -58,6 +58,7 @@ const EXPECTED_REMOTE_SETTINGS_RESULT = {
     qsSuggestion: REMOTE_SETTINGS_SEARCH_STRING,
     title: "frabbits",
     url: "http://test.com/q=frabbits",
+    originalUrl: "http://test.com/q=frabbits",
     icon: null,
     sponsoredImpressionUrl: "http://impression.reporting.test.com/",
     sponsoredClickUrl: "http://click.reporting.test.com/",
@@ -99,6 +100,7 @@ const EXPECTED_MERINO_RESULT = {
     qsSuggestion: "full_keyword",
     title: "title",
     url: "url",
+    originalUrl: "url",
     icon: "icon",
     sponsoredImpressionUrl: "impression_url",
     sponsoredClickUrl: "click_url",
@@ -498,6 +500,7 @@ add_task(async function multipleMerinoSuggestions() {
           qsSuggestion: "multipleMerinoSuggestions 1 full_keyword",
           title: "multipleMerinoSuggestions 1 title",
           url: "multipleMerinoSuggestions 1 url",
+          originalUrl: "multipleMerinoSuggestions 1 url",
           icon: "multipleMerinoSuggestions 1 icon",
           sponsoredImpressionUrl: "multipleMerinoSuggestions 1 impression_url",
           sponsoredClickUrl: "multipleMerinoSuggestions 1 click_url",
@@ -1017,7 +1020,8 @@ add_task(async function timestamps() {
   // Set up the Merino response with template URLs.
   let resp = setMerinoResponse();
   let suggestion = resp.body.suggestions[0];
-  let timestampTemplate = "%YYYYMMDDHH%";
+  let { timestampTemplate } = UrlbarProviderQuickSuggest;
+
   suggestion.url = `http://example.com/time-${timestampTemplate}`;
   suggestion.click_url = `http://example.com/time-${timestampTemplate}-foo`;
 
@@ -1206,6 +1210,29 @@ add_task(async function suggestedDisabled_dataCollectionEnabled_providers() {
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+});
+
+// Test whether the blocking for Merino results works.
+add_task(async function block() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+
+  for (const suggestion of MERINO_RESPONSE.body.suggestions) {
+    await UrlbarProviderQuickSuggest.blockSuggestion(suggestion.url);
+  }
+
+  const context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+
+  await check_results({
+    context,
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
+  });
+
+  await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
 });
 
 function makeMerinoServer(endpointPath) {

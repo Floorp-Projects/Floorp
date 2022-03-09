@@ -467,7 +467,7 @@ void CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth) {
 
   // This should be a fast test so that it won't affect the next task
   // processing.
-  IsIdleGCTaskNeeded();
+  MaybePokeGC();
 }
 
 void CycleCollectedJSContext::AfterProcessMicrotasks() {
@@ -493,7 +493,9 @@ void CycleCollectedJSContext::AfterProcessMicrotasks() {
   JS::ClearKeptObjects(mJSContext);
 }
 
-void CycleCollectedJSContext::IsIdleGCTaskNeeded() const {
+void CycleCollectedJSContext::MaybePokeGC() {
+  // Worker-compatible check to see if we want to do an idle-time minor
+  // GC.
   class IdleTimeGCTaskRunnable : public mozilla::IdleRunnable {
    public:
     using mozilla::IdleRunnable::IdleRunnable;

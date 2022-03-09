@@ -63,29 +63,28 @@ template <>
 struct ParamTraits<SerializedLoadContext> {
   typedef SerializedLoadContext paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     nsAutoCString suffix;
     aParam.mOriginAttributes.CreateSuffix(suffix);
 
-    WriteParam(aMsg, aParam.mIsNotNull);
-    WriteParam(aMsg, aParam.mIsContent);
-    WriteParam(aMsg, aParam.mIsPrivateBitValid);
-    WriteParam(aMsg, aParam.mUseRemoteTabs);
-    WriteParam(aMsg, aParam.mUseRemoteSubframes);
-    WriteParam(aMsg, aParam.mUseTrackingProtection);
-    WriteParam(aMsg, suffix);
+    WriteParam(aWriter, aParam.mIsNotNull);
+    WriteParam(aWriter, aParam.mIsContent);
+    WriteParam(aWriter, aParam.mIsPrivateBitValid);
+    WriteParam(aWriter, aParam.mUseRemoteTabs);
+    WriteParam(aWriter, aParam.mUseRemoteSubframes);
+    WriteParam(aWriter, aParam.mUseTrackingProtection);
+    WriteParam(aWriter, suffix);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsAutoCString suffix;
-    if (!ReadParam(aMsg, aIter, &aResult->mIsNotNull) ||
-        !ReadParam(aMsg, aIter, &aResult->mIsContent) ||
-        !ReadParam(aMsg, aIter, &aResult->mIsPrivateBitValid) ||
-        !ReadParam(aMsg, aIter, &aResult->mUseRemoteTabs) ||
-        !ReadParam(aMsg, aIter, &aResult->mUseRemoteSubframes) ||
-        !ReadParam(aMsg, aIter, &aResult->mUseTrackingProtection) ||
-        !ReadParam(aMsg, aIter, &suffix)) {
+    if (!ReadParam(aReader, &aResult->mIsNotNull) ||
+        !ReadParam(aReader, &aResult->mIsContent) ||
+        !ReadParam(aReader, &aResult->mIsPrivateBitValid) ||
+        !ReadParam(aReader, &aResult->mUseRemoteTabs) ||
+        !ReadParam(aReader, &aResult->mUseRemoteSubframes) ||
+        !ReadParam(aReader, &aResult->mUseTrackingProtection) ||
+        !ReadParam(aReader, &suffix)) {
       return false;
     }
     return aResult->mOriginAttributes.PopulateFromSuffix(suffix);

@@ -18,8 +18,8 @@ if (location.search) {
 }
 
 
-// Global samplerate at which we run the context.
-var samplerate = 48000;
+// Global sample rate at which we run the context.
+var sampleRate = 48000;
 // Array containing at first the url of the audio resources to fetch, and the
 // the actual buffers audio buffer we have at our disposal to for tests.
 var sources = [];
@@ -35,17 +35,19 @@ var playingSource = null;
 // audiocontext used to play back the result of the benchmarks
 var ac = new AudioContext();
 
-function getFile(url, callback) {
+function getFile(source, callback) {
   var request = new XMLHttpRequest();
-  request.open("GET", url, true);
+  request.open("GET", source.url, true);
   request.responseType = "arraybuffer";
 
   request.onload = function() {
-    var ctx = new AudioContext();
-    ctx.decodeAudioData(request.response, function(data) {
-      callback(data, undefined);
+    // decode buffer at its initial sample rate
+    var ctx = new OfflineAudioContext(1, 1, source.sampleRate);
+
+    ctx.decodeAudioData(request.response, function(buffer) {
+      callback(buffer, undefined);
     }, function() {
-      callback(undefined, "Error decoding the file " + url);
+      callback(undefined, "Error decoding the file " + source.url);
     });
   }
   request.send();
@@ -74,11 +76,11 @@ function benchmark(testcase, ended) {
 }
 
 function getMonoFile() {
-  return getSpecificFile({numberOfChannels: 1});
+  return getSpecificFile({ numberOfChannels: 1 });
 }
 
 function getStereoFile() {
-  return getSpecificFile({numberOfChannels: 2});
+  return getSpecificFile({ numberOfChannels: 2 });
 }
 
 function matchIfSpecified(a, b) {
@@ -91,10 +93,11 @@ function matchIfSpecified(a, b) {
 function getSpecificFile(spec) {
   for (var i = 0 ; i < sources.length; i++) {
     if (matchIfSpecified(sources[i].numberOfChannels, spec.numberOfChannels) &&
-        matchIfSpecified(sources[i].samplerate, spec.samplerate)) {
+        matchIfSpecified(sources[i].sampleRate, spec.sampleRate)) {
       return sources[i];
     }
   }
+
   throw new Error("Could not find a file that matches the specs.");
 }
 
@@ -189,15 +192,20 @@ function initAll() {
 }
 
 function loadOne(i, endCallback) {
-  getFile(sources[i], function(b) {
-    sources[i] = b;
+  getFile(sources[i], function(buffer, err) {
+    if (err) {
+      throw new Error(msg);
+    }
+
+    sources[i] = buffer;
     i++;
-    if (i == sources.length) {
-      loadOne(i);
+
+    if (i < sources.length) {
+      loadOne(i, endCallback);
     } else {
       endCallback();
     }
-  })
+  });
 }
 
 function loadAllSources(endCallback) {

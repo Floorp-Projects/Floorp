@@ -172,10 +172,12 @@ def push_to_try(
     method,
     msg,
     try_task_config=None,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     closed_tree=False,
     files_to_change=None,
 ):
+    push = not stage_changes and not dry_run
     check_working_directory(push)
 
     if try_task_config and method not in ("auto", "empty"):
@@ -201,7 +203,7 @@ def push_to_try(
         config_path = write_task_config(try_task_config)
         changed_files.append(config_path)
 
-    if files_to_change:
+    if (push or stage_changes) and files_to_change:
         for path, content in files_to_change.items():
             path = os.path.join(vcs.path, path)
             with open(path, "wb") as fh:

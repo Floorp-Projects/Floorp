@@ -63,15 +63,23 @@ browsertime-tp6:
         run-on-projects:
             by-variant:
                 fission:
-                    by-test-platform:
-                        windows.*-32.*: []
-                        .*shippable-qr/.*: [trunk, mozilla-beta]
-                        default: []
+                    by-subtest:
+                        netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
+                            by-test-platform:
+                                windows.*-32.*: []
+                                (linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                                macosx1015.*shippable-qr.*: []
+                                default: []
+                        default:
+                            by-test-platform:
+                                windows.*-32.*: []
+                                .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                                default: []
                 default:
                     by-app:
                         firefox:
                             by-test-platform:
-                                (!.*shippable-qr/.*): [trunk, mozilla-beta]
+                                (!.*shippable-qr/.*): [trunk, mozilla-beta, mozilla-release]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -177,13 +185,13 @@ browsertime-tp6-essential:
                 by-test-platform:
                     windows.*-32.*: []
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    .*shippable-qr/.*: [trunk, mozilla-beta]
+                    .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
             default:
                 by-app:
                     firefox:
                         by-test-platform:
-                            (!.*shippable-qr/.*): [trunk]
+                            (!.*shippable-qr/.*): [trunk, mozilla-release]
                             default: []
                     default: []
     tier:
@@ -240,12 +248,12 @@ browsertime-benchmark:
                     unity-webgl:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*shippable-qr/.*: [trunk]
+                            .*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*shippable-qr/.*: [trunk, mozilla-beta]
+                            .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             default: []
             default:
                 by-subtest:
@@ -254,7 +262,7 @@ browsertime-benchmark:
                             firefox:
                                 by-test-platform:
                                     windows.*-32.*: []
-                                    (!.*shippable-qr/.*): [trunk]
+                                    (!.*shippable-qr/.*): [trunk, mozilla-release]
                                     default: []
                             default: []
                     default:
@@ -262,7 +270,7 @@ browsertime-benchmark:
                             firefox:
                                 by-test-platform:
                                     windows.*-32.*: []
-                                    (!.*shippable-qr/.*): [trunk, mozilla-beta]
+                                    (!.*shippable-qr/.*): [trunk, mozilla-beta, mozilla-release]
                                     default: []
                             default: []
     max-run-time:
@@ -307,13 +315,13 @@ browsertime-benchmark-wasm:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central, mozilla-release]
                     default: []
             default:
                 by-app:
                     firefox:
                         by-test-platform:
-                            (!.*shippable-qr/.*): [mozilla-central]
+                            (!.*shippable-qr/.*): [mozilla-central, mozilla-release]
                             default: []
                     default: []
     max-run-time:
@@ -346,11 +354,11 @@ browsertime-youtube-playback:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central, mozilla-release]
                     default: []
             default:
                 by-test-platform:
-                    (!.*shippable-qr/.*): [mozilla-central]
+                    (!.*shippable-qr/.*): [mozilla-central, mozilla-release]
                     default: []
     tier: 2
     limit-platforms:

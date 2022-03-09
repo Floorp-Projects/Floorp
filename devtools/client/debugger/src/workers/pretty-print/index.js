@@ -3,8 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { prefs } from "../../utils/prefs";
-import { workerUtils } from "devtools-utils";
-const { WorkerDispatcher } = workerUtils;
+import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 
 let dispatcher;
 let workerPath;

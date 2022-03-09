@@ -35,7 +35,8 @@ void nsHtml5StreamListener::DropDelegateImpl() {
   mozilla::ReentrantMonitorAutoEnter autoEnter(mDelegateMonitor);
   if (mDelegate) {
     nsCOMPtr<nsIRunnable> releaser = new nsHtml5StreamParserReleaser(mDelegate);
-    if (NS_FAILED(mDelegate->DispatchToMain(releaser.forget()))) {
+    if (NS_FAILED(((nsHtml5StreamParser*)mDelegate)
+                      ->DispatchToMain(releaser.forget()))) {
       NS_WARNING("Failed to dispatch releaser event.");
     }
     mDelegate = nullptr;
@@ -44,12 +45,10 @@ void nsHtml5StreamListener::DropDelegateImpl() {
 
 nsHtml5StreamParser* nsHtml5StreamListener::GetDelegate() {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-  // Let's acquire the monitor in order to always access mDelegate
-  // with monitor held. Since this can be called only on the main
+  // Since this can be called only on the main
   // thread and DropDelegate() can only be called on the main thread
   // it's OK that the monitor here doesn't protect the use of the
   // return value.
-  mozilla::ReentrantMonitorAutoEnter autoEnter(mDelegateMonitor);
   return mDelegate;
 }
 
@@ -67,7 +66,7 @@ nsHtml5StreamListener::OnStartRequest(nsIRequest* aRequest) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStartRequest(aRequest);
+  return ((nsHtml5StreamParser*)mDelegate)->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -76,7 +75,7 @@ nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStopRequest(aRequest, aStatus);
+  return ((nsHtml5StreamParser*)mDelegate)->OnStopRequest(aRequest, aStatus);
 }
 
 NS_IMETHODIMP
@@ -88,6 +87,6 @@ nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnDataAvailable(aRequest, aInStream, aSourceOffset,
-                                    aLength);
+  return ((nsHtml5StreamParser*)mDelegate)
+      ->OnDataAvailable(aRequest, aInStream, aSourceOffset, aLength);
 }

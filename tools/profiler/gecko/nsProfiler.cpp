@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "GeckoProfiler.h"
+#include "ProfilerControl.h"
 #include "ProfilerParent.h"
 #include "js/Array.h"  // JS::NewArrayObject
 #include "js/JSON.h"
@@ -68,11 +69,46 @@ static nsresult FillVectorFromStringArray(Vector<const char*>& aVector,
   return NS_OK;
 }
 
+// Given a PromiseReturningFunction: () -> GenericPromise,
+// run the function, and return a JS Promise (through aPromise) that will be
+// resolved when the function's GenericPromise gets resolved.
+template <typename PromiseReturningFunction>
+static nsresult RunFunctionAndConvertPromise(
+    JSContext* aCx, Promise** aPromise,
+    PromiseReturningFunction&& aPromiseReturningFunction) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  std::forward<PromiseReturningFunction>(aPromiseReturningFunction)()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [promise](GenericPromise::ResolveOrRejectValue&&) {
+        promise->MaybeResolveWithUndefined();
+      });
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const nsTArray<nsCString>& aFeatures,
                           const nsTArray<nsCString>& aFilters,
-                          uint64_t aActiveTabID, double aDuration) {
+                          uint64_t aActiveTabID, double aDuration,
+                          JSContext* aCx, Promise** aPromise) {
   ResetGathering();
 
   Vector<const char*> featureStringVector;
@@ -89,20 +125,19 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  profiler_start(PowerOfTwo32(aEntries), aInterval, features,
-                 filterStringVector.begin(), filterStringVector.length(),
-                 aActiveTabID, duration);
 
-  return NS_OK;
+  return RunFunctionAndConvertPromise(aCx, aPromise, [&]() {
+    return profiler_start(PowerOfTwo32(aEntries), aInterval, features,
+                          filterStringVector.begin(),
+                          filterStringVector.length(), aActiveTabID, duration);
+  });
 }
 
 NS_IMETHODIMP
-nsProfiler::StopProfiler() {
+nsProfiler::StopProfiler(JSContext* aCx, Promise** aPromise) {
   ResetGathering();
-
-  profiler_stop();
-
-  return NS_OK;
+  return RunFunctionAndConvertPromise(aCx, aPromise,
+                                      []() { return profiler_stop(); });
 }
 
 NS_IMETHODIMP
@@ -112,15 +147,15 @@ nsProfiler::IsPaused(bool* aIsPaused) {
 }
 
 NS_IMETHODIMP
-nsProfiler::Pause() {
-  profiler_pause();
-  return NS_OK;
+nsProfiler::Pause(JSContext* aCx, Promise** aPromise) {
+  return RunFunctionAndConvertPromise(aCx, aPromise,
+                                      []() { return profiler_pause(); });
 }
 
 NS_IMETHODIMP
-nsProfiler::Resume() {
-  profiler_resume();
-  return NS_OK;
+nsProfiler::Resume(JSContext* aCx, Promise** aPromise) {
+  return RunFunctionAndConvertPromise(aCx, aPromise,
+                                      []() { return profiler_resume(); });
 }
 
 NS_IMETHODIMP
@@ -130,15 +165,15 @@ nsProfiler::IsSamplingPaused(bool* aIsSamplingPaused) {
 }
 
 NS_IMETHODIMP
-nsProfiler::PauseSampling() {
-  profiler_pause_sampling();
-  return NS_OK;
+nsProfiler::PauseSampling(JSContext* aCx, Promise** aPromise) {
+  return RunFunctionAndConvertPromise(
+      aCx, aPromise, []() { return profiler_pause_sampling(); });
 }
 
 NS_IMETHODIMP
-nsProfiler::ResumeSampling() {
-  profiler_resume_sampling();
-  return NS_OK;
+nsProfiler::ResumeSampling(JSContext* aCx, Promise** aPromise) {
+  return RunFunctionAndConvertPromise(
+      aCx, aPromise, []() { return profiler_resume_sampling(); });
 }
 
 NS_IMETHODIMP
@@ -184,17 +219,7 @@ nsProfiler::WaitOnePeriodicSampling(JSContext* aCx, Promise** aPromise) {
                 NS_NewRunnableFunction(
                     "nsProfiler::WaitOnePeriodicSampling result on main thread",
                     [promiseHandleInMT = std::move(promiseHandleInSampler),
-                     aSamplingState]() {
-                      AutoJSAPI jsapi;
-                      if (NS_WARN_IF(!jsapi.Init(
-                              promiseHandleInMT->GetGlobalObject()))) {
-                        // We're really hosed if we can't get a JS context for
-                        // some reason.
-                        promiseHandleInMT->MaybeReject(
-                            NS_ERROR_DOM_UNKNOWN_ERR);
-                        return;
-                      }
-
+                     aSamplingState]() mutable {
                       switch (aSamplingState) {
                         case SamplingState::JustStopped:
                         case SamplingState::SamplingPaused:
@@ -202,10 +227,17 @@ nsProfiler::WaitOnePeriodicSampling(JSContext* aCx, Promise** aPromise) {
                           break;
 
                         case SamplingState::NoStackSamplingCompleted:
-                        case SamplingState::SamplingCompleted: {
-                          JS::RootedValue val(jsapi.cx());
-                          promiseHandleInMT->MaybeResolve(val);
-                        } break;
+                        case SamplingState::SamplingCompleted:
+                          // The parent process has succesfully done a sampling,
+                          // check the child processes (if any).
+                          ProfilerParent::WaitOnePeriodicSampling()->Then(
+                              GetMainThreadSerialEventTarget(), __func__,
+                              [promiseHandleInMT =
+                                   std::move(promiseHandleInMT)](
+                                  GenericPromise::ResolveOrRejectValue&&) {
+                                promiseHandleInMT->MaybeResolveWithUndefined();
+                              });
+                          break;
 
                         default:
                           MOZ_ASSERT(false, "Unexpected SamplingState value");

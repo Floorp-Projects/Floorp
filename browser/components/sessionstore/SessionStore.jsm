@@ -65,6 +65,48 @@ const OBSERVING = [
 // Restored in restoreDimensions()
 const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 
+const CHROME_FLAGS_MAP = [
+  [Ci.nsIWebBrowserChrome.CHROME_TITLEBAR, "titlebar"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_CLOSE, "close"],
+  [Ci.nsIWebBrowserChrome.CHROME_TOOLBAR, "toolbar"],
+  [Ci.nsIWebBrowserChrome.CHROME_LOCATIONBAR, "location"],
+  [Ci.nsIWebBrowserChrome.CHROME_PERSONAL_TOOLBAR, "personalbar"],
+  [Ci.nsIWebBrowserChrome.CHROME_STATUSBAR, "status"],
+  [Ci.nsIWebBrowserChrome.CHROME_MENUBAR, "menubar"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE, "resizable"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_MIN, "minimizable"],
+  [Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS, "", "scrollbars=0"],
+  [Ci.nsIWebBrowserChrome.CHROME_PRIVATE_WINDOW, "private"],
+  [Ci.nsIWebBrowserChrome.CHROME_NON_PRIVATE_WINDOW, "non-private"],
+  // Do not inherit remoteness and fissionness from the previous session.
+  //[Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW, "remote", "non-remote"],
+  //[Ci.nsIWebBrowserChrome.CHROME_FISSION_WINDOW, "fission", "non-fission"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_POPUP, "popup"],
+  [
+    Ci.nsIWebBrowserChrome.CHROME_WINDOW_POPUP |
+      Ci.nsIWebBrowserChrome.CHROME_TITLEBAR,
+    "",
+    "titlebar=0",
+  ],
+  [
+    Ci.nsIWebBrowserChrome.CHROME_WINDOW_POPUP |
+      Ci.nsIWebBrowserChrome.CHROME_WINDOW_CLOSE,
+    "",
+    "close=0",
+  ],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_LOWERED, "alwayslowered"],
+  [Ci.nsIWebBrowserChrome.HROME_WINDOW_RAISED, "alwaysraised"],
+  // "chrome" and "suppressanimation" are always set.
+  //[Ci.nsIWebBrowserChrome.CHROME_SUPPRESS_ANIMATION, "suppressanimation"],
+  [Ci.nsIWebBrowserChrome.CHROME_ALWAYS_ON_TOP, "alwaysontop"],
+  //[Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME, "chrome", "chrome=0"],
+  [Ci.nsIWebBrowserChrome.CHROME_EXTRA, "extrachrome"],
+  [Ci.nsIWebBrowserChrome.CHROME_CENTER_SCREEN, "centerscreen"],
+  [Ci.nsIWebBrowserChrome.CHROME_DEPENDENT, "dependent"],
+  [Ci.nsIWebBrowserChrome.CHROME_MODAL, "modal"],
+  [Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG, "dialog", "dialog=0"],
+];
+
 // Hideable window features to (re)store
 // Restored in restoreWindowFeatures()
 const WINDOW_HIDEABLE_FEATURES = [
@@ -1481,6 +1523,9 @@ var SessionStoreInternal = {
       _closedTabs: [],
       _lastClosedTabGroupCount: -1,
       busy: false,
+      chromeFlags: aWindow.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow).chromeFlags,
     };
 
     if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
@@ -2526,6 +2571,7 @@ var SessionStoreInternal = {
    *        Tab reference
    */
   resetBrowserToLazyState(aTab) {
+    const gBrowser = aTab.ownerGlobal.gBrowser;
     let browser = aTab.linkedBrowser;
     // Browser is already lazy so don't do anything.
     if (!browser.isConnected) {
@@ -2539,6 +2585,7 @@ var SessionStoreInternal = {
     this._lastKnownFrameLoader.delete(browser.permanentKey);
     this._crashedBrowsers.delete(browser.permanentKey);
     aTab.removeAttribute("crashed");
+    gBrowser.tabContainer.updateTabIndicatorAttr(aTab);
 
     let { userTypedValue = null, userTypedClear = 0 } = browser;
 
@@ -3690,6 +3737,7 @@ var SessionStoreInternal = {
       );
     }
 
+    const gBrowser = aTab.ownerGlobal.gBrowser;
     let browser = aTab.linkedBrowser;
     if (!this._crashedBrowsers.has(browser.permanentKey)) {
       return;
@@ -3709,6 +3757,8 @@ var SessionStoreInternal = {
     // a flash of the about:tabcrashed page after selecting
     // the revived tab.
     aTab.removeAttribute("crashed");
+    gBrowser.tabContainer.updateTabIndicatorAttr(aTab);
+
     browser.loadURI("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
         userContextId: aTab.userContextId,
@@ -4826,13 +4876,13 @@ var SessionStoreInternal = {
   /**
    * Restore a window's dimensions
    * @param aWidth
-   *        Window width
+   *        Window width in desktop pixels
    * @param aHeight
-   *        Window height
+   *        Window height in desktop pixels
    * @param aLeft
-   *        Window left
+   *        Window left in desktop pixels
    * @param aTop
-   *        Window top
+   *        Window top in desktop pixels
    * @param aSizeMode
    *        Window size mode (eg: maximized)
    * @param aSizeModeBeforeMinimized
@@ -4870,46 +4920,56 @@ var SessionStoreInternal = {
         screenWidth,
         screenHeight
       );
-      // screenX/Y are based on the origin of the screen's desktop-pixel coordinate space
-      let screenLeftCss = screenLeft.value;
-      let screenTopCss = screenTop.value;
-      // convert screen's device pixel dimensions to CSS px dimensions
-      screen.GetAvailRect(screenLeft, screenTop, screenWidth, screenHeight);
-      let cssToDevScale = screen.defaultCSSScaleFactor;
-      let screenRightCss = screenLeftCss + screenWidth.value / cssToDevScale;
-      let screenBottomCss = screenTopCss + screenHeight.value / cssToDevScale;
+
+      // We store aLeft / aTop (screenX/Y) in desktop pixels, see
+      // _getWindowDimension.
+      screenLeft = screenLeft.value;
+      screenTop = screenTop.value;
+      screenWidth = screenWidth.value;
+      screenHeight = screenHeight.value;
+
+      let screenBottom = screenTop + screenHeight;
+      let screenRight = screenLeft + screenWidth;
+
+      // NOTE: contentsScaleFactor is the desktopToDeviceScale of the screen.
+      // Naming could be more consistent here.
+      let cssToDesktopScale =
+        screen.defaultCSSScaleFactor / screen.contentsScaleFactor;
+
+      let slop = SCREEN_EDGE_SLOP * cssToDesktopScale;
 
       // Pull the window within the screen's bounds (allowing a little slop
       // for windows that may be deliberately placed with their border off-screen
       // as when Win10 "snaps" a window to the left/right edge -- bug 1276516).
       // First, ensure the left edge is large enough...
-      if (aLeft < screenLeftCss - SCREEN_EDGE_SLOP) {
-        aLeft = screenLeftCss;
+      if (aLeft < screenLeft - slop) {
+        aLeft = screenLeft;
       }
       // Then check the resulting right edge, and reduce it if necessary.
-      let right = aLeft + aWidth;
-      if (right > screenRightCss + SCREEN_EDGE_SLOP) {
-        right = screenRightCss;
+      let right = aLeft + aWidth * cssToDesktopScale;
+      if (right > screenRight + slop) {
+        right = screenRight;
         // See if we can move the left edge leftwards to maintain width.
-        if (aLeft > screenLeftCss) {
-          aLeft = Math.max(right - aWidth, screenLeftCss);
+        if (aLeft > screenLeft) {
+          aLeft = Math.max(right - aWidth * cssToDesktopScale, screenLeft);
         }
       }
-      // Finally, update aWidth to account for the adjusted left and right edges.
-      aWidth = right - aLeft;
+      // Finally, update aWidth to account for the adjusted left and right
+      // edges, and convert it back to CSS pixels on the target screen.
+      aWidth = (right - aLeft) / cssToDesktopScale;
 
       // And do the same in the vertical dimension.
-      if (aTop < screenTopCss - SCREEN_EDGE_SLOP) {
-        aTop = screenTopCss;
+      if (aTop < screenTop - slop) {
+        aTop = screenTop;
       }
-      let bottom = aTop + aHeight;
-      if (bottom > screenBottomCss + SCREEN_EDGE_SLOP) {
-        bottom = screenBottomCss;
-        if (aTop > screenTopCss) {
-          aTop = Math.max(bottom - aHeight, screenTopCss);
+      let bottom = aTop + aHeight * cssToDesktopScale;
+      if (bottom > screenBottom + slop) {
+        bottom = screenBottom;
+        if (aTop > screenTop) {
+          aTop = Math.max(bottom - aHeight * cssToDesktopScale, screenTop);
         }
       }
-      aHeight = bottom - aTop;
+      aHeight = (bottom - aTop) / cssToDesktopScale;
     }
 
     // Suppress animations.
@@ -4923,7 +4983,12 @@ var SessionStoreInternal = {
         !isNaN(aTop) &&
         (aLeft != win_("screenX") || aTop != win_("screenY"))
       ) {
-        aWindow.moveTo(aLeft, aTop);
+        // moveTo uses CSS pixels relative to aWindow, while aLeft and aRight
+        // are on desktop pixels, undo the conversion we do in
+        // _getWindowDimension.
+        let desktopToCssScale =
+          aWindow.desktopToDeviceScale / aWindow.devicePixelRatio;
+        aWindow.moveTo(aLeft * desktopToCssScale, aTop * desktopToCssScale);
       }
       if (
         aWidth &&
@@ -5146,18 +5211,39 @@ var SessionStoreInternal = {
     argString.data = "";
 
     // Build feature string
-    let features = ["chrome", "dialog=no", "suppressanimation"];
+    let features;
     let winState = aState.windows[0];
-    let hidden = winState.hidden?.split(",") || [];
-    if (!hidden.length) {
-      features.push("all");
-    } else {
-      features.push("resizable");
-      WINDOW_HIDEABLE_FEATURES.forEach(aFeature => {
-        if (!hidden.includes(aFeature)) {
-          features.push(WINDOW_OPEN_FEATURES_MAP[aFeature] || aFeature);
+    if (winState.chromeFlags) {
+      features = ["chrome", "suppressanimation"];
+      let chromeFlags = winState.chromeFlags;
+      const allFlags = Ci.nsIWebBrowserChrome.CHROME_ALL;
+      const hasAll = (chromeFlags & allFlags) == allFlags;
+      if (hasAll) {
+        features.push("all");
+      }
+      for (let [flag, onValue, offValue] of CHROME_FLAGS_MAP) {
+        if (hasAll && allFlags & flag) {
+          continue;
         }
-      });
+        let value = chromeFlags & flag ? onValue : offValue;
+        if (value) {
+          features.push(value);
+        }
+      }
+    } else {
+      // |chromeFlags| is not found. Fallbacks to the old method.
+      features = ["chrome", "dialog=no", "suppressanimation"];
+      let hidden = winState.hidden?.split(",") || [];
+      if (!hidden.length) {
+        features.push("all");
+      } else {
+        features.push("resizable");
+        WINDOW_HIDEABLE_FEATURES.forEach(aFeature => {
+          if (!hidden.includes(aFeature)) {
+            features.push(WINDOW_OPEN_FEATURES_MAP[aFeature] || aFeature);
+          }
+        });
+      }
     }
     WINDOW_ATTRIBUTES.forEach(aFeature => {
       // Use !isNaN as an easy way to ignore sizemode and check for numbers
@@ -5268,6 +5354,17 @@ var SessionStoreInternal = {
         return aWindow.outerWidth;
       case "height":
         return aWindow.outerHeight;
+      case "screenX":
+      case "screenY":
+        // We use desktop pixels rather than CSS pixels to store window
+        // positions, see bug 1247335.  This allows proper multi-monitor
+        // positioning in mixed-DPI situations.
+        // screenX/Y are in CSS pixels for the current window, so, convert them
+        // to desktop pixels.
+        return (
+          (aWindow[aAttribute] * aWindow.devicePixelRatio) /
+          aWindow.desktopToDeviceScale
+        );
       default:
         return aAttribute in aWindow ? aWindow[aAttribute] : "";
     }

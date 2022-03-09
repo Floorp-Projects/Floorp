@@ -103,7 +103,7 @@ static void NotifyImageLoading(nsIURI* aURI) {
 already_AddRefed<Image> ImageFactory::CreateImage(
     nsIRequest* aRequest, ProgressTracker* aProgressTracker,
     const nsCString& aMimeType, nsIURI* aURI, bool aIsMultiPart,
-    uint32_t aInnerWindowId) {
+    uint64_t aInnerWindowId) {
   // Compute the image's initialization flags.
   uint32_t imageFlags = ComputeImageFlags(aURI, aMimeType, aIsMultiPart);
 
@@ -225,7 +225,7 @@ uint32_t GetContentSize(nsIRequest* aRequest) {
 already_AddRefed<Image> ImageFactory::CreateRasterImage(
     nsIRequest* aRequest, ProgressTracker* aProgressTracker,
     const nsCString& aMimeType, nsIURI* aURI, uint32_t aImageFlags,
-    uint32_t aInnerWindowId) {
+    uint64_t aInnerWindowId) {
   MOZ_ASSERT(aProgressTracker);
 
   nsresult rv;
@@ -253,7 +253,7 @@ already_AddRefed<Image> ImageFactory::CreateRasterImage(
 already_AddRefed<Image> ImageFactory::CreateVectorImage(
     nsIRequest* aRequest, ProgressTracker* aProgressTracker,
     const nsCString& aMimeType, nsIURI* aURI, uint32_t aImageFlags,
-    uint32_t aInnerWindowId) {
+    uint64_t aInnerWindowId) {
   MOZ_ASSERT(aProgressTracker);
 
   nsresult rv;

@@ -38,6 +38,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
+#include "nsJSEnvironment.h"
 #include "jsapi.h"
 #include "js/ArrayBuffer.h"
 #include "js/ContextOptions.h"
@@ -227,6 +228,7 @@ class Watchdog {
   }
   void Sleep(PRIntervalTime timeout) {
     MOZ_ASSERT(!NS_IsMainThread());
+    AUTO_PROFILER_THREAD_SLEEP;
     MOZ_ALWAYS_TRUE(PR_WaitCondVar(mWakeup, timeout) == PR_SUCCESS);
   }
   void Finished() {
@@ -852,12 +854,6 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
-      .setPrivateClassFields(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_fields"))
-      .setPrivateClassMethods(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.private_methods"))
-      .setClassStaticBlocks(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.class_static_blocks"))
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy"))
@@ -866,8 +862,7 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setImportAssertions(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.import_assertions"))
 #endif
-      .setErgnomicBrandChecks(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks"));
+      ;
 }
 
 // Mirrored value of javascript.options.self_hosted.use_shared_memory.
@@ -975,6 +970,11 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       StaticPrefs::
           javascript_options_spectre_jit_to_cxx_calls_DoNotUseDirectly());
 #endif
+
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC,
+      StaticPrefs::
+          javascript_options_watchtower_megamorphic_DoNotUseDirectly());
 
   if (disableWasmHugeMemory) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
@@ -1095,7 +1095,7 @@ XPCJSContext::~XPCJSContext() {
 XPCJSContext::XPCJSContext()
     : mCallContext(nullptr),
       mAutoRoots(nullptr),
-      mResolveName(JSID_VOID),
+      mResolveName(JS::PropertyKey::Void()),
       mResolvingWrapper(nullptr),
       mWatchdogManager(GetWatchdogManager()),
       mSlowScriptSecondHalf(false),
@@ -1490,6 +1490,8 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
   // this value again. Clear it to prevent leaks.
   SetPendingException(nullptr);
 }
+
+void XPCJSContext::MaybePokeGC() { nsJSContext::MaybePokeGC(); }
 
 bool XPCJSContext::IsSystemCaller() const {
   return nsContentUtils::IsSystemCaller(Context());

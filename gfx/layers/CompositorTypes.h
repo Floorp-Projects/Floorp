@@ -83,9 +83,14 @@ enum class TextureFlags : uint32_t {
   // have trouble with RGBX/BGRX formats, so we use RGBA/BGRA but set this
   // hint when we know alpha is opaque (eg. WebGL)
   IS_OPAQUE = 1 << 18,
+  // The ExternalImageId bound to the texture is borrowed and should not be
+  // explicitly released when the texture is freed. This is meant to be used
+  // with WebRenderTextureHost wrapping another TextureHost which was
+  // initialized with its own external image ID.
+  BORROWED_EXTERNAL_ID = 1 << 19,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 19) - 1,
+  ALL_BITS = (1 << 20) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

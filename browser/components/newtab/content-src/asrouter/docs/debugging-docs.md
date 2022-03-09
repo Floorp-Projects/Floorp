@@ -16,8 +16,6 @@ To disable it, uncheck the checkbox. You should see a red label indicating the p
 
 ## How to see all messages from a provider
 
-(Only available in Firefox 65+)
-
 In order to see all active messages for a current provider such as `snippets`, use the drop down selector under the "Messages" section. Select the name of the provider you are interested in.
 
 The messages on the page should now be filtered to include only the provider you selected.
@@ -29,6 +27,9 @@ To test telemetry pings, complete the the following steps:
 - In about:config, set:
   - `browser.newtabpage.activity-stream.telemetry` to `true`
   - `browser.ping-centre.log` to `true`
+- To view additional debug logs for messaging system or about:welcome, set:
+  - `messaging-system.log` to `debug`
+  - `browser.aboutwelcome.log` to `debug`
 - Open the Browser Toolbox devtools (Tools > Web Developer > Browser Toolbox) and switch to the console tab. Add a filter for for `activity-stream` to only display relevant pings:
 
 ![Devtools telemetry ping](./telemetry-screenshot.png)

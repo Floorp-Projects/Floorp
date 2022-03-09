@@ -71,7 +71,7 @@ struct hb_colrv1_closure_context_t :
   bool paint_visited (const void *paint)
   {
     hb_codepoint_t delta = (hb_codepoint_t) ((uintptr_t) paint - (uintptr_t) base);
-     if (visited_paint.has (delta))
+    if (visited_paint.in_error() || visited_paint.has (delta))
       return true;
 
     visited_paint.add (delta);
@@ -1025,7 +1025,7 @@ struct ClipList
     if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
     if (!c->serializer->check_assign (out->format, format, HB_SERIALIZE_ERROR_INT_OVERFLOW)) return_trace (false);
 
-    const hb_set_t& glyphset = *c->plan->_glyphset;
+    const hb_set_t& glyphset = *c->plan->_glyphset_colred;
     const hb_map_t &glyph_map = *c->plan->glyph_map;
 
     hb_map_t new_gid_offset_map;
@@ -1193,7 +1193,7 @@ struct BaseGlyphList : SortedArray32Of<BaseGlyphPaintRecord>
     TRACE_SUBSET (this);
     auto *out = c->serializer->start_embed (this);
     if (unlikely (!c->serializer->extend_min (out)))  return_trace (false);
-    const hb_set_t* glyphset = c->plan->_glyphset;
+    const hb_set_t* glyphset = c->plan->_glyphset_colred;
 
     for (const auto& _ : as_array ())
     {
@@ -1270,13 +1270,9 @@ struct COLR
 
   struct accelerator_t
   {
-    accelerator_t () {}
-    ~accelerator_t () { fini (); }
-
-    void init (hb_face_t *face)
+    accelerator_t (hb_face_t *face)
     { colr = hb_sanitize_context_t ().reference_table<COLR> (face); }
-
-    void fini () { this->colr.destroy (); }
+    ~accelerator_t () { this->colr.destroy (); }
 
     bool is_valid () { return colr.get_blob ()->length; }
 
@@ -1411,10 +1407,9 @@ struct COLR
 
   const BaseGlyphRecord* get_base_glyph_record (hb_codepoint_t gid) const
   {
-    if ((unsigned int) gid == 0) // Ignore notdef.
-      return nullptr;
     const BaseGlyphRecord* record = &(this+baseGlyphsZ).bsearch (numBaseGlyphs, (unsigned int) gid);
-    if ((record && (hb_codepoint_t) record->glyphId != gid))
+    if (record == &Null (BaseGlyphRecord) ||
+        (record && (hb_codepoint_t) record->glyphId != gid))
       record = nullptr;
     return record;
   }
@@ -1432,9 +1427,16 @@ struct COLR
     TRACE_SUBSET (this);
 
     const hb_map_t &reverse_glyph_map = *c->plan->reverse_glyph_map;
+    const hb_set_t& glyphset = *c->plan->_glyphset_colred;
 
     auto base_it =
     + hb_range (c->plan->num_output_glyphs ())
+    | hb_filter ([&](hb_codepoint_t new_gid)
+		 {
+		    hb_codepoint_t old_gid = reverse_glyph_map.get (new_gid);
+		    if (glyphset.has (old_gid)) return true;
+		    return false;
+		 })
     | hb_map_retains_sorting ([&](hb_codepoint_t new_gid)
 			      {
 				hb_codepoint_t old_gid = reverse_glyph_map.get (new_gid);
@@ -1442,7 +1444,6 @@ struct COLR
 				const BaseGlyphRecord* old_record = get_base_glyph_record (old_gid);
 				if (unlikely (!old_record))
 				  return hb_pair_t<bool, BaseGlyphRecord> (false, Null (BaseGlyphRecord));
-
 				BaseGlyphRecord new_record = {};
 				new_record.glyphId = new_gid;
 				new_record.numLayers = old_record->numLayers;
@@ -1455,6 +1456,7 @@ struct COLR
     auto layer_it =
     + hb_range (c->plan->num_output_glyphs ())
     | hb_map (reverse_glyph_map)
+    | hb_filter (glyphset)
     | hb_map_retains_sorting ([&](hb_codepoint_t old_gid)
 			      {
 				const BaseGlyphRecord* old_record = get_base_glyph_record (old_gid);
@@ -1527,6 +1529,10 @@ struct COLR
   Offset32To<VariationStore>		varStore;
   public:
   DEFINE_SIZE_MIN (14);
+};
+
+struct COLR_accelerator_t : COLR::accelerator_t {
+  COLR_accelerator_t (hb_face_t *face) : COLR::accelerator_t (face) {}
 };
 
 } /* namespace OT */

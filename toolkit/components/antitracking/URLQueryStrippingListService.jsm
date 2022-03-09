@@ -85,10 +85,6 @@ class URLQueryStrippingListService {
     Services.obs.removeObserver(this, "xpcom-shutdown");
     Services.prefs.removeObserver(PREF_STRIP_LIST_NAME, this);
     Services.prefs.removeObserver(PREF_ALLOW_LIST_NAME, this);
-
-    if (!this.isParentProcess) {
-      Services.cpmm.sharedData.removeEventListener("change", this);
-    }
   }
 
   _onRemoteSettingsUpdate(entries) {

@@ -12,12 +12,13 @@ void AssertRoundTrips(const nsHttpResponseHead& aHead) {
   {
     // Assert it round-trips via IPC.
     UniquePtr<IPC::Message> msg(new IPC::Message(MSG_ROUTING_NONE, 0));
-    IPC::ParamTraits<nsHttpResponseHead>::Write(msg.get(), aHead);
+    IPC::MessageWriter writer(*msg);
+    IPC::ParamTraits<nsHttpResponseHead>::Write(&writer, aHead);
 
     nsHttpResponseHead deserializedHead;
-    PickleIterator iter(*msg);
+    IPC::MessageReader reader(*msg);
     bool res = IPC::ParamTraits<mozilla::net::nsHttpResponseHead>::Read(
-        msg.get(), &iter, &deserializedHead);
+        &reader, &deserializedHead);
     ASSERT_TRUE(res);
     ASSERT_EQ(aHead, deserializedHead);
   }

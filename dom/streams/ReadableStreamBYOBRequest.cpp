@@ -18,8 +18,7 @@
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal) {
@@ -30,23 +29,12 @@ ReadableStreamBYOBRequest::~ReadableStreamBYOBRequest() {
   mozilla::DropJSObjects(this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamBYOBRequest)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamBYOBRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController)
-  tmp->mView = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStreamBYOBRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(ReadableStreamBYOBRequest,
+                                                      (mGlobal, mController),
+                                                      (mView))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamBYOBRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamBYOBRequest)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStreamBYOBRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mView)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamBYOBRequest)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -136,5 +124,4 @@ void ReadableStreamBYOBRequest::SetController(
   mController = aController;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

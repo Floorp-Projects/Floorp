@@ -33,6 +33,7 @@ describe("MultiStageAboutWelcome module", () => {
       AWGetRegion: () => Promise.resolve(),
       AWWaitForMigrationClose: () => Promise.resolve(),
       AWSelectTheme: () => Promise.resolve(),
+      AWFinish: () => Promise.resolve(),
     });
     sandbox = sinon.createSandbox();
   });
@@ -107,6 +108,39 @@ describe("MultiStageAboutWelcome module", () => {
         welcomeScreenWrapper.props().messageId
       );
       assert.equal(stub.firstCall.args[1], "primary_button");
+    });
+
+    it("should autoAdvance on last screen", () => {
+      let clock = sinon.useFakeTimers();
+      const screens = [
+        {
+          order: 1,
+          auto_advance: "primary_button",
+          content: {
+            title: "test title",
+            subtitle: "test subtitle",
+            primary_button: {
+              label: "Test Button",
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ];
+      const AUTO_ADVANCE_PROPS = {
+        screens,
+        metricsFlowUri: "http://localhost/",
+        message_id: "DEFAULT_ABOUTWELCOME",
+        utm_term: "default",
+      };
+      const wrapper = mount(<MultiStageAboutWelcome {...AUTO_ADVANCE_PROPS} />);
+      wrapper.update();
+      const stub = sandbox.stub(global, "AWFinish");
+      assert.notCalled(stub);
+      clock.tick(20001);
+      assert.calledOnce(stub);
+      clock.restore();
     });
   });
 

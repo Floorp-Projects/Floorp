@@ -205,7 +205,7 @@ number e.g.
      not `about:config` should be available.
      ([bug 1540065]({{bugzilla}}1540065))
 
-   [71.12]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
+   [71.12]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled(boolean)
 
 Submitting to the ``try`` server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

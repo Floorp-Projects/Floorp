@@ -153,8 +153,6 @@ nsDocShell* DocumentChannel::GetDocShell() {
   return nsDocShell::Cast(docshell);
 }
 
-// Changes here should also be made in
-// E10SUtils.documentChannelPermittedForURI().
 static bool URIUsesDocChannel(nsIURI* aURI) {
   if (SchemeIsJavascript(aURI)) {
     return false;

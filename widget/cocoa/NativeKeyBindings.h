@@ -14,6 +14,7 @@
 struct objc_selector;
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
 
 class WritingMode;
 template <typename T>
@@ -25,8 +26,6 @@ typedef nsTHashMap<nsPtrHashKey<objc_selector>, Command>
     SelectorCommandHashtable;
 
 class NativeKeyBindings final {
-  typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
-
  public:
   static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
   static void Shutdown();

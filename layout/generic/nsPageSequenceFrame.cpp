@@ -731,7 +731,7 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   aBuilder->SetDisablePartialUpdates(true);
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  nsDisplayList content;
+  nsDisplayList content(aBuilder);
 
   {
     // Clear clip state while we construct the children of the

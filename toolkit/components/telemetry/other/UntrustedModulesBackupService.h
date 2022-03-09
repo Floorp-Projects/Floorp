@@ -40,26 +40,30 @@ class UntrustedModulesBackupData
                                UntrustedModulesDataContainer> {
  public:
   void Add(UntrustedModulesData&& aData);
+  void AddWithoutStacks(UntrustedModulesData&& aData);
 };
 
 class MOZ_HEAP_CLASS UntrustedModulesBackupService final {
  public:
-  enum class BackupType : uint32_t {
-    Staging = 0,
-    Settled,
-
-    Count
-  };
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UntrustedModulesBackupService)
 
   static UntrustedModulesBackupService* Get();
-  void Backup(BackupType aType, UntrustedModulesData&& aData);
+
+  // Back up data to mStaging
+  void Backup(UntrustedModulesData&& aData);
+
   void SettleAllStagingData();
-  const UntrustedModulesBackupData& Ref(BackupType aType) const;
+
+  const UntrustedModulesBackupData& Staging() const { return mStaging; }
+  const UntrustedModulesBackupData& Settled() const { return mSettled; }
 
  private:
-  UntrustedModulesBackupData mBackup[static_cast<uint32_t>(BackupType::Count)];
+  // Data not yet submitted as telemetry
+  UntrustedModulesBackupData mStaging;
+
+  // Data already submitted as telemetry
+  // (This does not have stack information)
+  UntrustedModulesBackupData mSettled;
 
   ~UntrustedModulesBackupService() = default;
 };

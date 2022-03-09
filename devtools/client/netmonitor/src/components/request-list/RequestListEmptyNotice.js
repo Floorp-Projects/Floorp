@@ -18,7 +18,7 @@ const { ACTIVITY_TYPE } = require("devtools/client/netmonitor/src/constants");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   getPerformanceAnalysisURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
+} = require("devtools/client/netmonitor/src/utils/doc-utils");
 
 // Components
 const MDNLink = createFactory(

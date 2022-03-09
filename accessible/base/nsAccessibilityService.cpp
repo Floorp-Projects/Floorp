@@ -372,6 +372,21 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
   }
 }
 
+void nsAccessibilityService::NotifyOfComputedStyleChange(
+    mozilla::PresShell* aPresShell, nsIContent* aContent) {
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (document) {
+    LocalAccessible* accessible = document->GetAccessible(aContent);
+    if (accessible) {
+      accessible->MaybeQueueCacheUpdateForStyleChanges();
+    }
+  }
+}
+
 void nsAccessibilityService::NotifyOfResolutionChange(
     mozilla::PresShell* aPresShell, float aResolution) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {

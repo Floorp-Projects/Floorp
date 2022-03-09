@@ -154,7 +154,7 @@ class BodyStream final : public nsIInputStreamCallback,
  private:
   // Fills a buffer with bytes from the stream.
   void WriteIntoReadRequestBuffer(JSContext* aCx, ReadableStream* aStream,
-                                  void* aBuffer, size_t aLength,
+                                  JS::Handle<JSObject*> aBuffer, size_t aLength,
                                   size_t* aByteWritten);
 
   // This is a script boundary until Bug 1750605 is resolved and allows us
@@ -175,7 +175,7 @@ class BodyStream final : public nsIInputStreamCallback,
                    size_t aDesiredSize) override;
 
   void writeIntoReadRequestBuffer(JSContext* aCx, JS::HandleObject aStream,
-                                  void* aBuffer, size_t aLength,
+                                  JS::Handle<JSObject*> aChunk, size_t aLength,
                                   size_t* aBytesWritten) override;
 
   JS::Value cancel(JSContext* aCx, JS::HandleObject aStream,

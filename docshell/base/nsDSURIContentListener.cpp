@@ -138,26 +138,8 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
 
   // determine if the channel has just been retargeted to us...
   nsLoadFlags loadFlags = 0;
-  nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(aRequest);
-
-  if (aOpenedChannel) {
-    aOpenedChannel->GetLoadFlags(&loadFlags);
-
-    // block top-level data URI navigations if triggered by the web
-    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
-            aOpenedChannel)) {
-      // logging to console happens within AllowTopLevelNavigationToDataURI
-      aRequest->Cancel(NS_ERROR_DOM_BAD_URI);
-      *aAbortProcess = true;
-      // close the window since the navigation to a data URI was blocked
-      if (mDocShell && mDocShell->GetBrowsingContext()) {
-        RefPtr<MaybeCloseWindowHelper> maybeCloseWindowHelper =
-            new MaybeCloseWindowHelper(mDocShell->GetBrowsingContext());
-        maybeCloseWindowHelper->SetShouldCloseWindow(true);
-        Unused << maybeCloseWindowHelper->MaybeCloseWindow();
-      }
-      return NS_OK;
-    }
+  if (nsCOMPtr<nsIChannel> openedChannel = do_QueryInterface(aRequest)) {
+    openedChannel->GetLoadFlags(&loadFlags);
   }
 
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {

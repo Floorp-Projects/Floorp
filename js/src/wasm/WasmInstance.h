@@ -53,7 +53,6 @@ class Instance {
   const SharedCode code_;
   const UniqueTlsData tlsData_;
   const GCPtrWasmMemoryObject memory_;
-  const SharedExceptionTagVector exceptionTags_;
   const SharedTableVector tables_;
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
@@ -66,7 +65,9 @@ class Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
-  void* checkedCallEntry(const uint32_t functionIndex, const Tier tier) const;
+#ifdef ENABLE_WASM_EXCEPTIONS
+  GCPtrWasmTagObject& tagTls(const TagDesc& td) const;
+#endif
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -78,12 +79,12 @@ class Instance {
  public:
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
-           SharedExceptionTagVector&& exceptionTags, SharedTableVector&& tables,
-           UniqueDebugState maybeDebug);
+           SharedTableVector&& tables, UniqueDebugState maybeDebug);
   ~Instance();
   bool init(JSContext* cx, const JSFunctionVector& funcImports,
             const ValVector& globalImportValues,
             const WasmGlobalObjectVector& globalObjs,
+            const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
             const ElemSegmentVector& elemSegments);
   void trace(JSTracer* trc);
@@ -98,9 +99,6 @@ class Instance {
   uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
-
-  Instance* getOriginalInstanceAndFunction(Tier tier, uint32_t funcIdx,
-                                           JSFunction** fun);
 
   JS::Realm* realm() const { return realm_; }
   const Code& code() const { return *code_; }
@@ -120,9 +118,6 @@ class Instance {
   size_t memoryMappedSize() const;
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
   bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
-  const SharedExceptionTagVector& exceptionTags() const {
-    return exceptionTags_;
-  }
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -149,6 +144,12 @@ class Instance {
                                 CallArgs args,
                                 CoercionLevel level = CoercionLevel::Spec);
 
+  // Exception handling support
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  void setPendingException(HandleAnyRef exn);
+#endif
+
   // Constant expression support
 
   [[nodiscard]] bool constantRefFunc(uint32_t funcIndex,
@@ -173,28 +174,9 @@ class Instance {
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.
 
-  [[nodiscard]] bool initElems(JSContext* cx, uint32_t tableIndex,
-                               const ElemSegment& seg, uint32_t dstOffset,
-                               uint32_t srcOffset, uint32_t len);
-
-  // This will return null if an indirect stub for (func,tls) is not found in
-  // the present instance.
-  [[nodiscard]] void* getIndirectStub(uint32_t funcIndex,
-                                      TlsData* targetTlsData,
-                                      const Tier tier) const;
-  // This combines ensureIndirectStub and getIndirectStub, but returns null only
-  // on OOM (because the get should not fail).
-  [[nodiscard]] void* ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex);
-  [[nodiscard]] bool createManyIndirectStubs(
-      const VectorOfIndirectStubTarget& targets, const Tier tier);
-  [[nodiscard]] bool ensureIndirectStubs(JSContext* cx,
-                                         const Uint32Vector& elemFuncIndices,
-                                         uint32_t srcOffset, uint32_t len,
-                                         const Tier tier,
-                                         const bool tableIsImportedOrExported);
-  [[nodiscard]] bool ensureIndirectStub(JSContext* cx, FuncRef* ref,
-                                        const Tier tier,
-                                        const bool tableIsImportedOrExported);
+  [[nodiscard]] bool initElems(uint32_t tableIndex, const ElemSegment& seg,
+                               uint32_t dstOffset, uint32_t srcOffset,
+                               uint32_t len);
 
   // Debugger support:
 
@@ -283,12 +265,8 @@ class Instance {
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, void* structDescr);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  static void* exceptionNew(Instance* instance, uint32_t exnIndex,
-                            uint32_t nbytes);
+  static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
-  static uint32_t consumePendingException(Instance* instance);
-  static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
-                                JSObject* ref);
 #endif
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);

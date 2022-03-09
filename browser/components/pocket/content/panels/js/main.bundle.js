@@ -63,10 +63,12 @@ function ArticleList(props) {
   }, /*#__PURE__*/react.createElement("a", {
     className: "stp_article_list_link",
     href: article.url
-  }, /*#__PURE__*/react.createElement("img", {
+  }, article.thumbnail ? /*#__PURE__*/react.createElement("img", {
     className: "stp_article_list_thumb",
     src: article.thumbnail,
     alt: article.alt
+  }) : /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_thumb_placeholder"
   }), /*#__PURE__*/react.createElement("div", {
     className: "stp_article_list_meta"
   }, /*#__PURE__*/react.createElement("header", {
@@ -96,45 +98,20 @@ function PopularTopics(props) {
 }
 
 /* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
-;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
+;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-
-
-
-function Home(props) {
-  const {
-    articles,
-    locale,
-    topics,
-    pockethost
-  } = props;
-  return /*#__PURE__*/react.createElement("div", {
-    className: "stp_panel_container"
-  }, /*#__PURE__*/react.createElement("div", {
-    className: "stp_panel stp_panel_home"
-  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-header-my-list"
-  }))), /*#__PURE__*/react.createElement("hr", null), articles?.length ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-home-most-recent-saves"
-  }), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
-    articles: articles
-  }), /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-button-show-all"
-  })) : /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-home-new-user-cta"
-  }), /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-home-new-user-message"
-  })), /*#__PURE__*/react.createElement("hr", null), pockethost && locale?.startsWith("en") && topics?.length && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", null, "Explore popular topics:"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
-    topics: topics,
-    pockethost: pockethost
-  }))));
+function Button(props) {
+  return /*#__PURE__*/react.createElement("a", {
+    href: props.url,
+    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
+  }, props.children);
 }
 
-/* harmony default export */ const Home_Home = (Home);
+/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/messages.js
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
 var pktPanelMessaging = {
@@ -189,6 +166,131 @@ var pktPanelMessaging = {
 
 };
 /* harmony default export */ const messages = (pktPanelMessaging);
+;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+
+
+
+function encodeThumbnail(rawSource) {
+  return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
+}
+
+function Home(props) {
+  const {
+    locale,
+    topics,
+    pockethost,
+    hideRecentSaves
+  } = props;
+  const [{
+    articles,
+    status
+  }, setArticlesState] = (0,react.useState)({
+    articles: [],
+    // Can be success, loading, or error.
+    status: ""
+  });
+  (0,react.useEffect)(() => {
+    if (!hideRecentSaves) {
+      // We don't display the loading message until instructed. This is because cache
+      // loads should be fast, so using the loading message for cache just adds loading jank.
+      messages.addMessageListener("PKT_loadingRecentSaves", function (resp) {
+        setArticlesState({
+          articles,
+          status: "loading"
+        });
+      });
+      messages.addMessageListener("PKT_renderRecentSaves", function (resp) {
+        const {
+          data
+        } = resp;
+
+        if (data.status === "error") {
+          setArticlesState({
+            articles: [],
+            status: "error"
+          });
+          return;
+        }
+
+        setArticlesState({
+          articles: data.map(item => ({
+            url: item.resolved_url,
+            // Using array notation because there is a key titled `1` (`images` is an object)
+            thumbnail: encodeThumbnail(item?.top_image_url || item?.images?.["1"]?.src),
+            alt: "thumbnail image",
+            title: item.resolved_title,
+            publisher: item.domain_metadata?.name
+          })),
+          status: "success"
+        });
+      });
+    } // tell back end we're ready
+
+
+    messages.sendMessage("PKT_show_home");
+  }, []);
+  let recentSavesSection = null;
+
+  if (status === "error" || hideRecentSaves) {
+    recentSavesSection = /*#__PURE__*/react.createElement("h3", {
+      className: "header_medium",
+      "data-l10n-id": "pocket-panel-home-new-user-cta"
+    });
+  } else if (status === "loading") {
+    recentSavesSection = /*#__PURE__*/react.createElement("span", {
+      "data-l10n-id": "pocket-panel-home-most-recent-saves-loading"
+    });
+  } else if (status === "success") {
+    if (articles?.length) {
+      recentSavesSection = /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+        className: "header_medium",
+        "data-l10n-id": "pocket-panel-home-most-recent-saves"
+      }), articles.length > 3 ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+        articles: articles.slice(0, 3)
+      }), /*#__PURE__*/react.createElement("span", {
+        className: "stp_button_wide"
+      }, /*#__PURE__*/react.createElement(Button_Button, {
+        style: "secondary"
+      }, /*#__PURE__*/react.createElement("span", {
+        "data-l10n-id": "pocket-panel-button-show-all"
+      })))) : /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+        articles: articles
+      }));
+    } else {
+      recentSavesSection = /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+        className: "header_medium",
+        "data-l10n-id": "pocket-panel-home-new-user-cta"
+      }), /*#__PURE__*/react.createElement("h3", {
+        className: "header_medium",
+        "data-l10n-id": "pocket-panel-home-new-user-message"
+      }));
+    }
+  }
+
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel_container"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel stp_panel_home"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "primary"
+  }, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-header-my-list"
+  }))), /*#__PURE__*/react.createElement("hr", null), recentSavesSection, /*#__PURE__*/react.createElement("hr", null), pockethost && locale?.startsWith("en") && topics?.length && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium"
+  }, "Explore popular topics:"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
+    topics: topics,
+    pockethost: pockethost
+  }))));
+}
+
+/* harmony default export */ const Home_Home = (Home);
 ;// CONCATENATED MODULE: ./content/panels/js/home/overlay.js
 /* global Handlebars:false */
 
@@ -235,6 +337,7 @@ HomeOverlay.prototype = {
     const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const locale = searchParams.get(`locale`) || ``;
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
+    const hideRecentSaves = searchParams.get(`hiderecentsaves`) === `true`;
 
     if (this.active) {
       return;
@@ -246,20 +349,38 @@ HomeOverlay.prototype = {
       // Create actual content
       react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
         locale: locale,
-        articles: [],
+        hideRecentSaves: hideRecentSaves,
         pockethost: pockethost,
         topics: [{
+          title: "Technology",
+          topic: "technology"
+        }, {
           title: "Self Improvement",
           topic: "self-improvement"
         }, {
           title: "Food",
           topic: "food"
         }, {
-          title: "Entertainment",
-          topic: "entertainment"
+          title: "Parenting",
+          topic: "parenting"
         }, {
           title: "Science",
           topic: "science"
+        }, {
+          title: "Entertainment",
+          topic: "entertainment"
+        }, {
+          title: "Career",
+          topic: "career"
+        }, {
+          title: "Health",
+          topic: "health"
+        }, {
+          title: "Travel",
+          topic: "travel"
+        }, {
+          title: "Must-Reads",
+          topic: "must-reads"
         }]
       }), document.querySelector(`body`));
     } else {
@@ -299,11 +420,10 @@ HomeOverlay.prototype = {
       } // click events
 
 
-      this.setupClickEvents();
-    } // tell back end we're ready
+      this.setupClickEvents(); // tell back end we're ready
 
-
-    messages.sendMessage("PKT_show_home");
+      messages.sendMessage("PKT_show_home");
+    }
   }
 
 };
@@ -315,6 +435,7 @@ HomeOverlay.prototype = {
 
 
 
+
 function Signup(props) {
   const {
     locale
@@ -322,18 +443,42 @@ function Signup(props) {
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
-    className: "stp_panel stp_panel_home"
-  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-header-sign-in"
-  }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-signup-cta-a"
+    className: "stp_panel stp_panel_signup"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "secondary"
+  }, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-signup-login"
+  }))), /*#__PURE__*/react.createElement("hr", null), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium",
+    "data-l10n-id": "pocket-panel-signup-cta-a-fix"
   }), /*#__PURE__*/react.createElement("p", {
     "data-l10n-id": "pocket-panel-signup-cta-b"
-  }), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", null, "Get thought-provoking article recommendations"), /*#__PURE__*/react.createElement("p", null, "Find stories that go deep into a subject or offer a new perspective.")) : /*#__PURE__*/react.createElement("p", {
+  })), /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("hr", null)), /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_img_rainbow_reader"
+  }), /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium"
+  }, "Get thought-provoking article recommendations"), /*#__PURE__*/react.createElement("p", null, "Find stories that go deep into a subject or offer a new perspective."))) : /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-signup-cta-a-fix"
+  }), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-signup-cta-b-short"
+  }), /*#__PURE__*/react.createElement("strong", null, /*#__PURE__*/react.createElement("p", {
     "data-l10n-id": "pocket-panel-signup-cta-c"
-  }), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
+  }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("span", {
+    className: "stp_button_wide"
+  }, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "primary"
+  }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-button-activate"
-  })));
+  })))));
 }
 
 /* harmony default export */ const Signup_Signup = (Signup);
@@ -390,8 +535,11 @@ var SignupOverlay = function (options) {
     this.active = true;
 
     if (layoutRefresh) {
-      // Create actual content
-      document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`);
+      // For now, we need to do a little work on the body element
+      // to support both old and new versions.
+      document.querySelector(`.pkt_ext_containersignup`)?.classList.add(`stp_signup_body`);
+      document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`); // Create actual content
+
       react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
         pockethost: pockethost,
         locale: locale
@@ -1044,20 +1192,6 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function Button(props) {
-  return /*#__PURE__*/react.createElement("a", {
-    href: props.url,
-    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
-  }, props.children);
-}
-
-/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
 
 
@@ -1080,7 +1214,15 @@ StyleGuideOverlay.prototype = {
       style: "primary"
     }, "Primary Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
       style: "secondary"
-    }, "Secondary Button"), /*#__PURE__*/react.createElement("h4", {
+    }, "Secondary Button"), /*#__PURE__*/react.createElement("span", {
+      className: "stp_button_wide"
+    }, /*#__PURE__*/react.createElement(Button_Button, {
+      style: "primary"
+    }, "Primary Wide Button")), /*#__PURE__*/react.createElement("span", {
+      className: "stp_button_wide"
+    }, /*#__PURE__*/react.createElement(Button_Button, {
+      style: "secondary"
+    }, "Secondary Wide Button")), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "Header"), /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
       style: "primary"
@@ -1124,7 +1266,13 @@ StyleGuideOverlay.prototype = {
         url: "https://example.org",
         alt: "Alt Text"
       }]
-    })), document.querySelector(`#stp_style_guide_components`));
+    }), /*#__PURE__*/react.createElement("h3", null, "Typography:"), /*#__PURE__*/react.createElement("h2", {
+      className: "header_large"
+    }, ".header_large"), /*#__PURE__*/react.createElement("h3", {
+      className: "header_medium"
+    }, ".header_medium"), /*#__PURE__*/react.createElement("p", null, "paragraph"), /*#__PURE__*/react.createElement("h3", null, "Native Elements:"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "Horizontal Rule"), /*#__PURE__*/react.createElement("hr", null)), document.querySelector(`#stp_style_guide_components`));
   }
 
 };

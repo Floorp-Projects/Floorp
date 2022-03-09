@@ -1005,12 +1005,9 @@ MsaaAccessible::get_accValue(
   if (accessible) {
     return accessible->get_accValue(kVarChildIdSelf, pszValue);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
   nsAutoString value;
-  LocalAcc()->Value(value);
+  Acc()->Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave
@@ -1284,7 +1281,7 @@ MsaaAccessible::get_accFocus(
  */
 class AccessibleEnumerator final : public IEnumVARIANT {
  public:
-  explicit AccessibleEnumerator(const nsTArray<LocalAccessible*>& aArray)
+  explicit AccessibleEnumerator(const nsTArray<Accessible*>& aArray)
       : mArray(aArray.Clone()), mCurIndex(0) {}
   AccessibleEnumerator(const AccessibleEnumerator& toCopy)
       : mArray(toCopy.mArray.Clone()), mCurIndex(toCopy.mCurIndex) {}
@@ -1304,7 +1301,7 @@ class AccessibleEnumerator final : public IEnumVARIANT {
   STDMETHODIMP Clone(IEnumVARIANT FAR* FAR* ppenum);
 
  private:
-  nsTArray<LocalAccessible*> mArray;
+  nsTArray<Accessible*> mArray;
   uint32_t mCurIndex;
 };
 
@@ -1394,17 +1391,14 @@ MsaaAccessible::get_accSelection(VARIANT __RPC_FAR* pvarChildren) {
   if (!mAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
-  LocalAccessible* localAcc = LocalAcc();
-  if (!localAcc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
+  Accessible* acc = Acc();
 
-  if (!localAcc->IsSelect()) {
+  if (!acc->IsSelect()) {
     return S_OK;
   }
 
-  AutoTArray<LocalAccessible*, 10> selectedItems;
-  localAcc->SelectedItems(&selectedItems);
+  AutoTArray<Accessible*, 10> selectedItems;
+  acc->SelectedItems(&selectedItems);
   uint32_t count = selectedItems.Length();
   if (count == 1) {
     pvarChildren->vt = VT_DISPATCH;
@@ -1462,15 +1456,17 @@ MsaaAccessible::accSelect(
     return accessible->accSelect(flagsSelect, kVarChildIdSelf);
   }
 
-  LocalAccessible* localAcc = mAcc->AsLocal();
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
     if (XRE_IsContentProcess()) {
       // In this case we might have been invoked while the IPC MessageChannel is
       // waiting on a sync reply. We cannot dispatch additional IPC while that
       // is happening, so we dispatch TakeFocus from the main thread to
       // guarantee that we are outside any IPC.
+      MOZ_ASSERT(mAcc->IsLocal(),
+                 "Content process should only have local accessibles");
       nsCOMPtr<nsIRunnable> runnable = mozilla::NewRunnableMethod(
-          "LocalAccessible::TakeFocus", localAcc, &LocalAccessible::TakeFocus);
+          "LocalAccessible::TakeFocus", mAcc->AsLocal(),
+          &LocalAccessible::TakeFocus);
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
@@ -1478,22 +1474,18 @@ MsaaAccessible::accSelect(
     return S_OK;
   }
 
-  if (!localAcc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
-
   if (flagsSelect & SELFLAG_TAKESELECTION) {
-    localAcc->TakeSelection();
+    mAcc->TakeSelection();
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_ADDSELECTION) {
-    localAcc->SetSelected(true);
+    mAcc->SetSelected(true);
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_REMOVESELECTION) {
-    localAcc->SetSelected(false);
+    mAcc->SetSelected(false);
     return S_OK;
   }
 

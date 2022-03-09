@@ -32,9 +32,10 @@
 #undef HWY_MAX_BYTES
 #undef HWY_LANES
 
-#undef HWY_CAP_INTEGER64
-#undef HWY_CAP_FLOAT16
-#undef HWY_CAP_FLOAT64
+#undef HWY_HAVE_SCALABLE
+#undef HWY_HAVE_INTEGER64
+#undef HWY_HAVE_FLOAT16
+#undef HWY_HAVE_FLOAT64
 #undef HWY_CAP_GE256
 #undef HWY_CAP_GE512
 
@@ -79,9 +80,10 @@
 #define HWY_MAX_BYTES 16
 #define HWY_LANES(T) (16 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_AES 0
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
@@ -96,9 +98,10 @@
 #define HWY_MAX_BYTES 16
 #define HWY_LANES(T) (16 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -113,9 +116,10 @@
 #define HWY_MAX_BYTES 32
 #define HWY_LANES(T) (32 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 1
 #define HWY_CAP_GE512 0
 
@@ -129,9 +133,10 @@
 #define HWY_MAX_BYTES 64
 #define HWY_LANES(T) (64 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 1
 #define HWY_CAP_GE512 1
 
@@ -159,9 +164,10 @@
 #define HWY_MAX_BYTES 16
 #define HWY_LANES(T) (16 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 0
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 0
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -177,15 +183,16 @@
 #define HWY_MAX_BYTES 16
 #define HWY_LANES(T) (16 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
 #if HWY_ARCH_ARM_A64
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_FLOAT64 1
 #else
-#define HWY_CAP_FLOAT64 0
+#define HWY_HAVE_FLOAT64 0
 #endif
 
 #define HWY_NAMESPACE N_NEON
@@ -196,23 +203,19 @@
 // SVE[2]
 #elif HWY_TARGET == HWY_SVE2 || HWY_TARGET == HWY_SVE
 
-#if defined(HWY_EMULATE_SVE) && !defined(__F16C__)
-#error "Disable HWY_CAP_FLOAT16 or ensure farm_sve actually converts to f16"
-#endif
-
 // SVE only requires lane alignment, not natural alignment of the entire vector.
 #define HWY_ALIGN alignas(8)
 
 #define HWY_MAX_BYTES 256
 
-// <= HWY_MAX_BYTES / sizeof(T): exact size. Otherwise a fraction 1/div (div =
-// 1,2,4,8) is encoded as HWY_LANES(T) / div. This value leaves enough room for
-// div=8 and demoting to 1/8 the lane width while still exceeding HWY_MAX_BYTES.
-#define HWY_LANES(T) (32768 / sizeof(T))
+// Value ensures MaxLanes() is the tightest possible upper bound to reduce
+// overallocation.
+#define HWY_LANES(T) ((HWY_MAX_BYTES) / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 1
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -232,9 +235,10 @@
 #define HWY_MAX_BYTES 16
 #define HWY_LANES(T) (16 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 0
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 0
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 0
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -250,9 +254,10 @@
 #define HWY_MAX_BYTES 32
 #define HWY_LANES(T) (32 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 0
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 0
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 0
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -271,20 +276,20 @@
 // The spec requires VLEN <= 2^16 bits, so the limit is 2^16 bytes (LMUL=8).
 #define HWY_MAX_BYTES 65536
 
-// <= HWY_MAX_BYTES / sizeof(T): exact size. Otherwise a fraction 1/div (div =
-// 1,2,4,8) is encoded as HWY_LANES(T) / div. This value leaves enough room for
-// div=8 and demoting to 1/8 the lane width while still exceeding HWY_MAX_BYTES.
-#define HWY_LANES(T) (8388608 / sizeof(T))
+// = HWY_MAX_BYTES divided by max LMUL=8 because MaxLanes includes the actual
+// LMUL. This is the tightest possible upper bound.
+#define HWY_LANES(T) (8192 / sizeof(T))
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 1
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
 #if defined(__riscv_zfh)
-#define HWY_CAP_FLOAT16 1
+#define HWY_HAVE_FLOAT16 1
 #else
-#define HWY_CAP_FLOAT16 0
+#define HWY_HAVE_FLOAT16 0
 #endif
 
 #define HWY_NAMESPACE N_RVV
@@ -300,9 +305,10 @@
 #define HWY_MAX_BYTES 8
 #define HWY_LANES(T) 1
 
-#define HWY_CAP_INTEGER64 1
-#define HWY_CAP_FLOAT16 1
-#define HWY_CAP_FLOAT64 1
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
@@ -344,7 +350,3 @@
 #else
 #define HWY_ATTR
 #endif
-
-// DEPRECATED
-#undef HWY_GATHER_LANES
-#define HWY_GATHER_LANES(T) HWY_LANES(T)

@@ -475,12 +475,15 @@ class IDLExposureMixins:
         assert scope.parentScope is None
         self._globalScope = scope
 
-        # Verify that our [Exposed] value, if any, makes sense.
-        for globalName in self._exposureGlobalNames:
-            if globalName not in scope.globalNames:
-                raise WebIDLError(
-                    "Unknown [Exposed] value %s" % globalName, [self._location]
-                )
+        if "*" in self._exposureGlobalNames:
+            self._exposureGlobalNames = scope.globalNames
+        else:
+            # Verify that our [Exposed] value, if any, makes sense.
+            for globalName in self._exposureGlobalNames:
+                if globalName not in scope.globalNames:
+                    raise WebIDLError(
+                        "Unknown [Exposed] value %s" % globalName, [self._location]
+                    )
 
         # Verify that we are exposed _somwhere_ if we have some place to be
         # exposed.  We don't want to assert that we're definitely exposed
@@ -6692,6 +6695,7 @@ class Tokenizer(object):
         "[": "LBRACKET",
         "]": "RBRACKET",
         "?": "QUESTIONMARK",
+        "*": "ASTERISK",
         ",": "COMMA",
         "=": "EQUALS",
         "<": "LT",
@@ -8024,6 +8028,7 @@ class Parser(Tokenizer):
         ExtendedAttribute : ExtendedAttributeNoArgs
                           | ExtendedAttributeArgList
                           | ExtendedAttributeIdent
+                          | ExtendedAttributeWildcard
                           | ExtendedAttributeNamedArgList
                           | ExtendedAttributeIdentList
         """
@@ -8063,6 +8068,7 @@ class Parser(Tokenizer):
               | EQUALS
               | GT
               | QUESTIONMARK
+              | ASTERISK
               | DOMSTRING
               | BYTESTRING
               | USVSTRING
@@ -8456,6 +8462,12 @@ class Parser(Tokenizer):
         """
         ExtendedAttributeIdent : IDENTIFIER EQUALS STRING
                                | IDENTIFIER EQUALS IDENTIFIER
+        """
+        p[0] = (p[1], p[3])
+
+    def p_ExtendedAttributeWildcard(self, p):
+        """
+        ExtendedAttributeWildcard : IDENTIFIER EQUALS ASTERISK
         """
         p[0] = (p[1], p[3])
 

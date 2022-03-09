@@ -46,6 +46,11 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::Value(aValue);
+    return;
+  }
+
   Unused << mDoc->SendValue(mID, &aValue);
 }
 
@@ -124,6 +129,10 @@ bool RemoteAccessible::IsSearchbox() const {
 }
 
 nsAtom* RemoteAccessible::LandmarkRole() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::LandmarkRole();
+  }
+
   nsString landmark;
   Unused << mDoc->SendLandmarkRole(mID, &landmark);
   return NS_GetStaticAtom(landmark);
@@ -186,6 +195,9 @@ uint32_t RemoteAccessible::CharacterCount() const {
 }
 
 int32_t RemoteAccessible::SelectionCount() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::SelectionCount();
+  }
   int32_t count = 0;
   Unused << mDoc->SendSelectionCount(mID, &count);
   return count;
@@ -399,9 +411,13 @@ uint32_t RemoteAccessible::StartOffset() {
   return retVal;
 }
 
-uint32_t RemoteAccessible::EndOffset(bool* aOk) {
+uint32_t RemoteAccessible::EndOffset() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::EndOffset();
+  }
+  bool ok;
   uint32_t retVal = 0;
-  Unused << mDoc->SendEndOffset(mID, &retVal, aOk);
+  Unused << mDoc->SendEndOffset(mID, &retVal, &ok);
   return retVal;
 }
 
@@ -692,8 +708,12 @@ RemoteAccessible* RemoteAccessible::AtkTableRowHeader(int32_t aRow) {
   return ok ? mDoc->GetAccessible(headerID) : nullptr;
 }
 
-void RemoteAccessible::SelectedItems(
-    nsTArray<RemoteAccessible*>* aSelectedItems) {
+void RemoteAccessible::SelectedItems(nsTArray<Accessible*>* aSelectedItems) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::SelectedItems(aSelectedItems);
+    return;
+  }
+
   AutoTArray<uint64_t, 10> itemIDs;
   Unused << mDoc->SendSelectedItems(mID, &itemIDs);
   aSelectedItems->SetCapacity(itemIDs.Length());
@@ -703,12 +723,20 @@ void RemoteAccessible::SelectedItems(
 }
 
 uint32_t RemoteAccessible::SelectedItemCount() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::SelectedItemCount();
+  }
+
   uint32_t count = 0;
   Unused << mDoc->SendSelectedItemCount(mID, &count);
   return count;
 }
 
-RemoteAccessible* RemoteAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* RemoteAccessible::GetSelectedItem(uint32_t aIndex) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::GetSelectedItem(aIndex);
+  }
+
   uint64_t selectedItemID = 0;
   bool ok = false;
   Unused << mDoc->SendGetSelectedItem(mID, aIndex, &selectedItemID, &ok);
@@ -716,41 +744,54 @@ RemoteAccessible* RemoteAccessible::GetSelectedItem(uint32_t aIndex) {
 }
 
 bool RemoteAccessible::IsItemSelected(uint32_t aIndex) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::IsItemSelected(aIndex);
+  }
+
   bool selected = false;
   Unused << mDoc->SendIsItemSelected(mID, aIndex, &selected);
   return selected;
 }
 
 bool RemoteAccessible::AddItemToSelection(uint32_t aIndex) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::AddItemToSelection(aIndex);
+  }
+
   bool success = false;
   Unused << mDoc->SendAddItemToSelection(mID, aIndex, &success);
   return success;
 }
 
 bool RemoteAccessible::RemoveItemFromSelection(uint32_t aIndex) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::RemoveItemFromSelection(
+        aIndex);
+  }
+
   bool success = false;
   Unused << mDoc->SendRemoveItemFromSelection(mID, aIndex, &success);
   return success;
 }
 
 bool RemoteAccessible::SelectAll() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::SelectAll();
+  }
+
   bool success = false;
   Unused << mDoc->SendSelectAll(mID, &success);
   return success;
 }
 
 bool RemoteAccessible::UnselectAll() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::UnselectAll();
+  }
+
   bool success = false;
   Unused << mDoc->SendUnselectAll(mID, &success);
   return success;
-}
-
-void RemoteAccessible::TakeSelection() {
-  Unused << mDoc->SendTakeSelection(mID);
-}
-
-void RemoteAccessible::SetSelected(bool aSelect) {
-  Unused << mDoc->SendSetSelected(mID, aSelect);
 }
 
 bool RemoteAccessible::DoAction(uint8_t aIndex) const {

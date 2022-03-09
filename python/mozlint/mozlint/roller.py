@@ -164,7 +164,7 @@ class LintRoller(object):
         50  # set a max size to prevent command lines that are too long on Windows
     )
 
-    def __init__(self, root, exclude=None, **lintargs):
+    def __init__(self, root, exclude=None, setupargs=None, **lintargs):
         self.parse = Parser(root)
         try:
             self.vcs = get_repository_object(root)
@@ -174,6 +174,7 @@ class LintRoller(object):
         self.linters = []
         self.lintargs = lintargs
         self.lintargs["root"] = root
+        self._setupargs = setupargs or {}
 
         # result state
         self.result = ResultSummary(root)
@@ -216,6 +217,7 @@ class LintRoller(object):
 
             try:
                 setupargs = copy.deepcopy(self.lintargs)
+                setupargs.update(self._setupargs)
                 setupargs["name"] = linter["name"]
                 setupargs["log"] = logging.LoggerAdapter(
                     self.log, {"lintname": linter["name"]}
@@ -223,7 +225,9 @@ class LintRoller(object):
                 if virtualenv_manager is not None:
                     setupargs["virtualenv_manager"] = virtualenv_manager
                 start_time = time.time()
-                res = findobject(linter["setup"])(**setupargs)
+                res = findobject(linter["setup"])(
+                    **setupargs,
+                )
                 self.log.debug(
                     f"setup for {linter['name']} finished in "
                     f"{round(time.time() - start_time, 2)} seconds"

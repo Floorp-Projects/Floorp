@@ -585,6 +585,8 @@ var Impl = {
     reason,
     clearSubsession
   ) {
+    Services.telemetry.scalarSet("gifft.validation.main_ping_assembling", true);
+    Glean.gifftValidation.mainPingAssembling.set(true);
     const isSubsession = IS_UNIFIED_TELEMETRY && !this._isClassicReason(reason);
     clearSubsession = IS_UNIFIED_TELEMETRY && clearSubsession;
     this._log.trace(

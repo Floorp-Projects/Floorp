@@ -23,11 +23,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-Services.prefs.setBoolPref(
-  "extensions.webextensions.background-delayed-startup",
-  false
-);
-
 const ADDON_ID = "test-startup-cache@xpcshell.mozilla.org";
 
 function makeExtension(opts) {
@@ -68,7 +63,7 @@ function makeExtension(opts) {
   };
 }
 
-add_task(async function() {
+add_task(async function test_langpack_startup_cache() {
   Preferences.set("extensions.logging.enabled", false);
   await AddonTestUtils.promiseStartupManager();
 
@@ -132,7 +127,7 @@ add_task(async function() {
 
   info("Restart and re-check");
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitStartup();
+  await extension.awaitBackgroundStarted();
 
   equal(extension.version, "1.0", "Expected extension version");
   manifest = await getManifest();
@@ -141,7 +136,7 @@ add_task(async function() {
   info("Change locale to 'fr' and restart");
   Services.locale.requestedLocales = ["fr"];
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitStartup();
+  await extension.awaitBackgroundStarted();
 
   equal(extension.version, "1.0", "Expected extension version");
   manifest = await getManifest();
@@ -157,7 +152,7 @@ add_task(async function() {
   info("Change locale to 'en-US' and restart");
   Services.locale.requestedLocales = ["en-US"];
   await AddonTestUtils.promiseRestartManager();
-  await extension.awaitStartup();
+  await extension.awaitBackgroundStarted();
 
   equal(extension.version, "1.1", "Expected extension version");
   manifest = await getManifest();

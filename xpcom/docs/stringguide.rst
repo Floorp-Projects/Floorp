@@ -300,30 +300,29 @@ back-and-forth sequence resulting from using ``SetLength()`` followed by
 Low-level means that writing via a raw pointer is possible as with
 ``BeginWriting()``.
 
-``BulkWrite()`` takes four arguments: The new capacity (which may be rounded
+``BulkWrite()`` takes three arguments: The new capacity (which may be rounded
 up), the number of code units at the beginning of the string to preserve
-(typically the old logical length), a boolean indicating whether reallocating
-a smaller buffer is OK if the requested capacity would fit in a buffer that's
-smaller than current one, and a reference to an ``nsresult`` for indicating
-failure on OOM. (Don't access the return value if the ``nsresult`` indicates
-failure. Unfortunately ``mozilla::Result`` is not versatile enough to be used
-here.)
+(typically the old logical length), and a boolean indicating whether
+reallocating a smaller buffer is OK if the requested capacity would fit in a
+buffer that's smaller than current one. It returns a ``mozilla::Result`` which
+contains either a usable ``mozilla::BulkWriteHandle<T>`` (where ``T`` is the
+string's ``char_type``) or an ``nsresult`` explaining why none can be had
+(presumably OOM).
 
-``BulkWrite()`` returns a ``mozilla::BulkWriteHandle<T>``, where ``T`` is
-either ``char`` or ``char16_t``. The actual writes are performed through this
-handle. You must not access the string except via the handle until you call
-``Finish()`` on the handle in the success case or you let the handle go out
-of scope without calling ``Finish()`` in the failure case, in which case the
-destructor of the handle puts the string in a mostly harmless but consistent
-state (containing a single REPLACEMENT CHARACTER if a capacity greater than 0
-was requested, or in the ``char`` case if the three-byte UTF-8 representation
-of the REPLACEMENT CHARACTER doesn't fit, an ASCII SUBSTITUTE).
+The actual writes are performed through the returned
+``mozilla::BulkWriteHandle<T>``. You must not access the string except via this
+handle until you call ``Finish()`` on the handle in the success case or you let
+the handle go out of scope without calling ``Finish()`` in the failure case, in
+which case the destructor of the handle puts the string in a mostly harmless but
+consistent state (containing a single REPLACEMENT CHARACTER if a capacity
+greater than 0 was requested, or in the ``char`` case if the three-byte UTF-8
+representation of the REPLACEMENT CHARACTER doesn't fit, an ASCII SUBSTITUTE).
 
 ``mozilla::BulkWriteHandle<T>`` autoconverts to a writable
 ``mozilla::Span<T>`` and also provides explicit access to itself as ``Span``
 (``AsSpan()``) or via component accessors named consistently with those on
-``Span``: ``Elements()`` and ``Length()`` the latter is not the logical
-length of the string but the writable length of the buffer. The buffer
+``Span``: ``Elements()`` and ``Length()``. (The latter is not the logical
+length of the string but the writable length of the buffer.) The buffer
 exposed via these methods includes the prefix that you may have requested to
 be preserved. It's up to you to skip past it so as to not overwrite it.
 

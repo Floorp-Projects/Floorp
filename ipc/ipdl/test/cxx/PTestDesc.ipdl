@@ -1,9 +1,12 @@
 include protocol PTestDescSub;
 include protocol PTestDescSubsub;
 
+include "mozilla/_ipdltest/TestDesc.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestDescChild", ParentImpl="TestDescParent"]
 intr protocol PTestDesc {
     manages PTestDescSub; 
 child:

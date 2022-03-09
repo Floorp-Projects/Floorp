@@ -1,8 +1,11 @@
 
+include "mozilla/_ipdltest/TestSanity.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
 
+[ManualDealloc, ChildImpl="TestSanityChild", ParentImpl="TestSanityParent"]
 protocol PTestSanity {
 
 child:

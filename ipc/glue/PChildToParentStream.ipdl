@@ -15,6 +15,7 @@ namespace ipc {
 
 // This is protocol is the opposite of PParentToChildStream. Please keep these
 // protocols in sync.
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PChildToParentStream
 {
   manager PBackground or PContent or PSocketProcess;

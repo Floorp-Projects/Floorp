@@ -1,5 +1,13 @@
 # Testing
 
+```{admonition} This documentation is about testing FOG itself
+This document contains information about how FOG tests itself,
+how to add new tests, how and what to log, and stuff like that.
+If you're interested in learning how to test instrumentation you added,
+you'll want to read
+[the instrumetnation testing docs](../user/instrumentation_tests) instead.
+```
+
 Given the multiple API languages, processes, and dependencies,
 testing FOG is a matter of choosing the right tool for the situation.
 

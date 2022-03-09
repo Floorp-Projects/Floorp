@@ -2,45 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/**
- * The Mochitest API documentation
- * @module mochitest
- */
+/* eslint-disable no-unused-vars */
 
-/**
- * The mochitest API to wait for certain events.
- * @module mochitest/waits
- * @parent mochitest
- */
+"use strict";
 
-/**
- * The mochitest API predefined asserts.
- * @module mochitest/asserts
- * @parent mochitest
- */
-
-/**
- * The mochitest API for interacting with the debugger.
- * @module mochitest/actions
- * @parent mochitest
- */
-
-/**
- * Helper methods for the mochitest API.
- * @module mochitest/helpers
- * @parent mochitest
- */
-
-// shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this
-);
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
-  this
-);
+// This head.js file is only imported by debugger mochitests.
+// Anything that is meant to be used by tests of other panels should be moved to shared-head.js
+// Also, any symbol that may conflict with other test symbols should stay in head.js
+// (like EXAMPLE_URL)
 
 const EXAMPLE_URL =
   "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/";
@@ -49,3 +18,16 @@ const EXAMPLE_URL =
 // Note that this depends on initDebugger to always use EXAMPLE_URL
 const EXAMPLE_REMOTE_URL =
   "https://example.org/browser/devtools/client/debugger/test/mochitest/examples/";
+
+// shared-head.js handles imports, constants, and utility functions
+/* import-globals-from ../../../shared/test/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this
+);
+
+/* import-globals-from ./shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
+  this
+);

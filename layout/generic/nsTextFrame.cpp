@@ -196,6 +196,82 @@ NS_DECLARE_FRAME_PROPERTY_RELEASABLE(UninflatedTextRunProperty, gfxTextRun)
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
 
+struct nsTextFrame::PaintTextSelectionParams : nsTextFrame::PaintTextParams {
+  Point textBaselinePt;
+  PropertyProvider* provider = nullptr;
+  Range contentRange;
+  nsTextPaintStyle* textPaintStyle = nullptr;
+  Range glyphRange;
+  explicit PaintTextSelectionParams(const PaintTextParams& aParams)
+      : PaintTextParams(aParams) {}
+};
+
+struct nsTextFrame::DrawTextRunParams {
+  gfxContext* context;
+  PropertyProvider* provider = nullptr;
+  gfxFloat* advanceWidth = nullptr;
+  mozilla::SVGContextPaint* contextPaint = nullptr;
+  DrawPathCallbacks* callbacks = nullptr;
+  nscolor textColor = NS_RGBA(0, 0, 0, 0);
+  nscolor textStrokeColor = NS_RGBA(0, 0, 0, 0);
+  float textStrokeWidth = 0.0f;
+  bool drawSoftHyphen = false;
+  explicit DrawTextRunParams(gfxContext* aContext) : context(aContext) {}
+};
+
+struct nsTextFrame::ClipEdges {
+  ClipEdges(const nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
+            nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
+    nsRect r = aFrame->ScrollableOverflowRect() + aToReferenceFrame;
+    if (aFrame->GetWritingMode().IsVertical()) {
+      mVisIStart = aVisIStartEdge > 0 ? r.y + aVisIStartEdge : nscoord_MIN;
+      mVisIEnd = aVisIEndEdge > 0
+                     ? std::max(r.YMost() - aVisIEndEdge, mVisIStart)
+                     : nscoord_MAX;
+    } else {
+      mVisIStart = aVisIStartEdge > 0 ? r.x + aVisIStartEdge : nscoord_MIN;
+      mVisIEnd = aVisIEndEdge > 0
+                     ? std::max(r.XMost() - aVisIEndEdge, mVisIStart)
+                     : nscoord_MAX;
+    }
+  }
+
+  void Intersect(nscoord* aVisIStart, nscoord* aVisISize) const {
+    nscoord end = *aVisIStart + *aVisISize;
+    *aVisIStart = std::max(*aVisIStart, mVisIStart);
+    *aVisISize = std::max(std::min(end, mVisIEnd) - *aVisIStart, 0);
+  }
+
+  nscoord mVisIStart;
+  nscoord mVisIEnd;
+};
+
+struct nsTextFrame::DrawTextParams : nsTextFrame::DrawTextRunParams {
+  Point framePt;
+  LayoutDeviceRect dirtyRect;
+  const nsTextPaintStyle* textStyle = nullptr;
+  const ClipEdges* clipEdges = nullptr;
+  const nscolor* decorationOverrideColor = nullptr;
+  Range glyphRange;
+  explicit DrawTextParams(gfxContext* aContext) : DrawTextRunParams(aContext) {}
+};
+
+struct nsTextFrame::PaintShadowParams {
+  gfxTextRun::Range range;
+  LayoutDeviceRect dirtyRect;
+  Point framePt;
+  Point textBaselinePt;
+  gfxContext* context;
+  nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
+  const ClipEdges* clipEdges = nullptr;
+  PropertyProvider* provider = nullptr;
+  nscoord leftSideOffset = 0;
+  explicit PaintShadowParams(const PaintTextParams& aParams)
+      : dirtyRect(aParams.dirtyRect),
+        framePt(aParams.framePt),
+        context(aParams.context) {}
+};
+
 /**
  * A glyph observer for the change of a font glyph in a text run.
  *
@@ -1677,6 +1753,9 @@ void BuildTextRunsScanner::FlushFrames(bool aFlushLineBreaks,
 
   if (aFlushLineBreaks) {
     FlushLineBreaks(aSuppressTrailingBreak ? nullptr : textRun.get());
+    if (!mDoLineBreaking && textRun) {
+      CreateObserversForAnimatedGlyphs(textRun.get());
+    }
   }
 
   mCanStopOnThisLine = true;
@@ -4765,6 +4844,17 @@ nsTextFrame* nsTextFrame::LastContinuation() const {
   return lastContinuation;
 }
 
+bool nsTextFrame::ShouldSuppressLineBreak() const {
+  // If the parent frame of the text frame is ruby content box, it must
+  // suppress line break inside. This check is necessary, because when
+  // a whitespace is only contained by pseudo ruby frames, its style
+  // context won't have SuppressLineBreak bit set.
+  if (mozilla::RubyUtils::IsRubyContentBox(GetParent()->Type())) {
+    return true;
+  }
+  return Style()->ShouldSuppressLineBreak();
+}
+
 void nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                   bool aRebuildDisplayItems) {
   InvalidateSelectionState();
@@ -4795,6 +4885,10 @@ void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
 
 gfxTextRun* nsTextFrame::GetUninflatedTextRun() const {
   return GetProperty(UninflatedTextRunProperty());
+}
+
+void nsTextFrame::SetInflatedFontMetrics(nsFontMetrics* aFontMetrics) {
+  mFontMetrics = aFontMetrics;
 }
 
 void nsTextFrame::SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
@@ -6288,8 +6382,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
 bool nsTextFrame::PaintTextWithSelectionColors(
     const PaintTextSelectionParams& aParams,
     const UniquePtr<SelectionDetails>& aDetails,
-    SelectionTypeMask* aAllSelectionTypeMask,
-    const nsDisplayText::ClipEdges& aClipEdges) {
+    SelectionTypeMask* aAllSelectionTypeMask, const ClipEdges& aClipEdges) {
   const gfxTextRun::Range& contentRange = aParams.contentRange;
 
   // Figure out which selections control the colors to use for each character.
@@ -6550,8 +6643,7 @@ void nsTextFrame::PaintTextSelectionDecorations(
 }
 
 bool nsTextFrame::PaintTextWithSelection(
-    const PaintTextSelectionParams& aParams,
-    const nsDisplayText::ClipEdges& aClipEdges) {
+    const PaintTextSelectionParams& aParams, const ClipEdges& aClipEdges) {
   NS_ASSERTION(GetContent()->IsMaybeSelected(), "wrong paint path");
 
   UniquePtr<SelectionDetails> details = GetSelectionDetails();
@@ -6906,8 +6998,8 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   } else {
     textBaselinePt.x += reversed ? -snappedEndEdge : snappedStartEdge;
   }
-  nsDisplayText::ClipEdges clipEdges(this, aToReferenceFrame, snappedStartEdge,
-                                     snappedEndEdge);
+  const ClipEdges clipEdges(this, aToReferenceFrame, snappedStartEdge,
+                            snappedEndEdge);
   nsTextPaintStyle textPaintStyle(this);
   textPaintStyle.SetResolveColors(!aParams.callbacks);
 
@@ -9762,7 +9854,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
-  UnionAdditionalOverflow(presContext, aLineLayout.LineContainerRI()->mFrame,
+  UnionAdditionalOverflow(presContext, aLineLayout.LineContainerFrame(),
                           provider, &aMetrics.InkOverflow(), false, true);
 
   /////////////////////////////////////////////////////////////////////

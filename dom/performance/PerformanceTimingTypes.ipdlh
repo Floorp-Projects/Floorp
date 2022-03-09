@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using DOMHighResTimeStamp from "nsDOMNavigationTiming.h";
+
+namespace mozilla {
+namespace dom {
+
+struct IPCServerTiming {
+  nsCString name;
+  double duration;
+  nsCString description;
+};
+
+struct IPCPerformanceTimingData {
+  IPCServerTiming[] serverTiming;
+  nsString nextHopProtocol;
+  TimeStamp asyncOpen;
+  TimeStamp redirectStart;
+  TimeStamp redirectEnd;
+  TimeStamp domainLookupStart;
+  TimeStamp domainLookupEnd;
+  TimeStamp connectStart;
+  TimeStamp secureConnectionStart;
+  TimeStamp connectEnd;
+  TimeStamp requestStart;
+  TimeStamp responseStart;
+  TimeStamp cacheReadStart;
+  TimeStamp responseEnd;
+  TimeStamp cacheReadEnd;
+  TimeStamp workerStart;
+  TimeStamp workerRequestStart;
+  TimeStamp workerResponseEnd;
+  DOMHighResTimeStamp zeroTime;
+  DOMHighResTimeStamp fetchStart;
+  uint64_t encodedBodySize;
+  uint64_t transferSize;
+  uint64_t decodedBodySize;
+  uint8_t redirectCount;
+  bool allRedirectsSameOrigin;
+  bool allRedirectsPassTAO;
+  bool secureConnection;
+  bool timingAllowed;
+  bool initialized;
+};
+
+}
+}

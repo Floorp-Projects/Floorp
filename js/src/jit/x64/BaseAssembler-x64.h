@@ -1118,6 +1118,10 @@ class BaseAssemblerX64 : public BaseAssembler {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_LE, src, dst);
   }
+  [[nodiscard]] JmpSrc vpmaddubsw_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return threeByteRipOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq,
+                              ESCAPE_38, src, dst);
+  }
 
   // BMI instructions:
 

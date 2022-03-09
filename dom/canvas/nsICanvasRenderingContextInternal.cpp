@@ -5,6 +5,7 @@
 
 #include "nsICanvasRenderingContextInternal.h"
 
+#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
@@ -60,4 +61,14 @@ void nsICanvasRenderingContextInternal::AddPostRefreshObserverIfNecessary() {
   }
   mRefreshDriver = GetPresShell()->GetPresContext()->RefreshDriver();
   mRefreshDriver->AddPostRefreshObserver(this);
+}
+
+void nsICanvasRenderingContextInternal::DoSecurityCheck(
+    nsIPrincipal* aPrincipal, bool aForceWriteOnly, bool aCORSUsed) {
+  if (mCanvasElement) {
+    mozilla::CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, aPrincipal,
+                                                   aForceWriteOnly, aCORSUsed);
+  } else if (mOffscreenCanvas && (aForceWriteOnly || aCORSUsed)) {
+    mOffscreenCanvas->SetWriteOnly();
+  }
 }

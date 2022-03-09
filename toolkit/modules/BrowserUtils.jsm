@@ -20,6 +20,15 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Region.jsm"
 );
 
+function stringPrefToSet(prefVal) {
+  return new Set(
+    prefVal
+      .toLowerCase()
+      .split(/\s*,\s*/g) // split on commas, ignoring whitespace
+      .filter(v => !!v) // discard any falsey values
+  );
+}
+
 var BrowserUtils = {
   /**
    * Return or create a principal with the content of one, and the originAttributes
@@ -72,6 +81,7 @@ var BrowserUtils = {
     return (
       mimeType.startsWith("text/") ||
       mimeType.endsWith("+xml") ||
+      mimeType.endsWith("+json") ||
       mimeType == "application/x-javascript" ||
       mimeType == "application/javascript" ||
       mimeType == "application/json" ||
@@ -305,20 +315,31 @@ var BrowserUtils = {
 
   // Returns true if user should see VPN promos
   shouldShowVPNPromo() {
-    const enablePromoPref = Services.prefs.getBoolPref(
-      "browser.vpn_promo.enabled"
+    const vpnPromoEnabled = Services.prefs.getBoolPref(
+      "browser.vpn_promo.enabled",
+      true
     );
     const homeRegion = Region.home || "";
     const currentRegion = Region.current || "";
-    let avoidAdsCountries = BrowserUtils.vpnDisallowedRegions;
+    const supportedRegions = BrowserUtils.vpnSupportedRegions;
+    const inSupportedRegion =
+      supportedRegions.has(currentRegion.toLowerCase()) ||
+      supportedRegions.has(homeRegion.toLowerCase());
+    const avoidAdsCountries = BrowserUtils.vpnDisallowedRegions;
     // Extra check for countries where VPNs are illegal and compliance is strongly enforced
-    let vpnIllegalCountries = ["cn", "kp", "tm"];
+    const vpnIllegalCountries = ["cn", "kp", "tm"];
     vpnIllegalCountries.forEach(country => avoidAdsCountries.add(country));
+    // Don't show promo if there's an active enterprise policy
+    const noActivePolicy =
+      !Services.policies ||
+      Services.policies.status !== Services.policies.ACTIVE;
 
     return (
-      enablePromoPref &&
+      vpnPromoEnabled &&
       !avoidAdsCountries.has(homeRegion.toLowerCase()) &&
-      !avoidAdsCountries.has(currentRegion.toLowerCase())
+      !avoidAdsCountries.has(currentRegion.toLowerCase()) &&
+      inSupportedRegion &&
+      noActivePolicy
     );
   },
 
@@ -342,15 +363,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   BrowserUtils,
+  "vpnSupportedRegions",
+  "browser.contentblocking.report.vpn_regions",
+  "us,ca,nz,sg,my,gb,de,fr",
+  null,
+  stringPrefToSet
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BrowserUtils,
   "vpnDisallowedRegions",
   "browser.vpn_promo.disallowed_regions",
   "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
   null,
-  prefVal =>
-    new Set(
-      prefVal
-        .toLowerCase()
-        .split(/\s*,\s*/g) // split on commas, ignoring whitespace
-        .filter(v => !!v) // discard any falsey values
-    )
+  stringPrefToSet
 );

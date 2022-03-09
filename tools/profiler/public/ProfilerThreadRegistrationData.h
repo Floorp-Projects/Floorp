@@ -270,6 +270,7 @@ class ThreadRegistrationData {
   static const int SLEEPING_OBSERVED = 2;
   // Read&written from thread and suspended thread.
   Atomic<int> mSleep{AWAKE};
+  Atomic<uint64_t> mThreadCpuTimeInNsAtLastSleep{0};
 
   // Is this thread currently being profiled, and with which features?
   // Written from profiler, read from any thread.
@@ -338,6 +339,20 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
   void SetAwake() {
     MOZ_ASSERT(mSleep != AWAKE);
     mSleep = AWAKE;
+  }
+
+  // Returns the CPU time used by the thread since the previous call to this
+  // method or since the thread was started if this is the first call.
+  uint64_t GetNewCpuTimeInNs() {
+    uint64_t newCpuTimeNs;
+    if (!GetCpuTimeSinceThreadStartInNs(&newCpuTimeNs, PlatformDataCRef())) {
+      newCpuTimeNs = 0;
+    }
+    uint64_t before = mThreadCpuTimeInNsAtLastSleep;
+    uint64_t result =
+        MOZ_LIKELY(newCpuTimeNs > before) ? newCpuTimeNs - before : 0;
+    mThreadCpuTimeInNsAtLastSleep = newCpuTimeNs;
+    return result;
   }
 
   // This is called on every profiler restart. Put things that should happen

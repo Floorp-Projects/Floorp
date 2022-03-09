@@ -85,12 +85,11 @@ void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
   }
 }
 
-static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask,
-                             const Matrix& aExtraMasksTransform) {
+static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask) {
   MOZ_ASSERT(aExtraMask);
 
   Matrix origin = aTarget->GetTransform();
-  aTarget->SetTransform(aExtraMasksTransform * aTarget->GetTransform());
+  aTarget->SetTransform(Matrix());
   aTarget->MaskSurface(ColorPattern(DeviceColor(0.0, 0.0, 0.0, 1.0)),
                        aExtraMask, Point(0, 0),
                        DrawOptions(1.0, CompositionOp::OP_IN));
@@ -100,8 +99,7 @@ static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask,
 void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
                                      nsIFrame* aClippedFrame,
                                      const gfxMatrix& aMatrix,
-                                     SourceSurface* aExtraMask,
-                                     const Matrix& aExtraMasksTransform) {
+                                     SourceSurface* aExtraMask) {
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
 
   // A clipPath can reference another clipPath, creating a chain of clipPaths
@@ -157,7 +155,7 @@ void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   }
 
   if (aExtraMask) {
-    ComposeExtraMask(maskDT, aExtraMask, aExtraMasksTransform);
+    ComposeExtraMask(maskDT, aExtraMask);
   }
 }
 
@@ -226,8 +224,7 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
 
 already_AddRefed<SourceSurface> SVGClipPathFrame::GetClipMask(
     gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
-    const gfxMatrix& aMatrix, SourceSurface* aExtraMask,
-    const Matrix& aExtraMasksTransform) {
+    const gfxMatrix& aMatrix, SourceSurface* aExtraMask) {
   RefPtr<DrawTarget> maskDT =
       aReferenceContext.GetDrawTarget()->CreateClippedDrawTarget(
           Rect(), SurfaceFormat::A8);
@@ -242,8 +239,7 @@ already_AddRefed<SourceSurface> SVGClipPathFrame::GetClipMask(
     return nullptr;
   }
 
-  PaintClipMask(*maskContext, aClippedFrame, aMatrix, aExtraMask,
-                aExtraMasksTransform);
+  PaintClipMask(*maskContext, aClippedFrame, aMatrix, aExtraMask);
 
   RefPtr<SourceSurface> surface = maskDT->Snapshot();
   return surface.forget();

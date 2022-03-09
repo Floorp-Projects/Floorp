@@ -10,7 +10,6 @@ with Files('*'):
 EXPORTS.theora += [
     'include/theora/codec.h',
     'include/theora/theoradec.h',
-    'include/theora/theoraenc.h',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.

@@ -1386,7 +1386,8 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
       writer.Write(Annotation::ThreadIdNameMapping, aValue);
     }
   };
-  GetFlatThreadAnnotation(getThreadAnnotationCB, false);
+  GetFlatThreadAnnotation(getThreadAnnotationCB,
+                          /* aIsHandlingException */ true);
 }
 
 static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
@@ -1661,7 +1662,8 @@ static void PrepareChildExceptionTimeAnnotations(
       writer.Write(Annotation::ThreadIdNameMapping, aValue);
     }
   };
-  GetFlatThreadAnnotation(getThreadAnnotationCB, true);
+  GetFlatThreadAnnotation(getThreadAnnotationCB,
+                          /* aIsHandlingException */ true);
 
   WriteAnnotations(writer, crashReporterAPIData_Table);
 }

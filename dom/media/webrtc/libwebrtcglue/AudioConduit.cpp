@@ -488,7 +488,7 @@ void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
-  if (mRecvStreamConfig.rtp.remote_ssrc != aHeader.ssrc) {
+  if (mAllowSsrcChange && mRecvStreamConfig.rtp.remote_ssrc != aHeader.ssrc) {
     CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
                 mRecvStreamConfig.rtp.remote_ssrc, aHeader.ssrc);
     OverrideRemoteSSRC(aHeader.ssrc);

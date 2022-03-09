@@ -61,7 +61,6 @@ const EnumName<JxlRenderingIntent> kJxlRenderingIntentNames[] = {
 template <typename T>
 Status ParseEnum(const std::string& token, const EnumName<T>* enum_values,
                  size_t enum_len, T* value) {
-  std::string str;
   for (size_t i = 0; i < enum_len; i++) {
     if (enum_values[i].name == token) {
       *value = enum_values[i].value;

@@ -10,22 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var utilityPid = undefined;
-const utilityProcessTest = Cc[
-  "@mozilla.org/utility-process-test;1"
-].createInstance(Ci.nsIUtilityProcessTest);
-
-add_task(async () => {
-  await utilityProcessTest
-    .startProcess()
-    .then(async pid => {
-      utilityPid = pid;
-      ok(true, "Could start Utility process: " + pid);
-    })
-    .catch(async () => {
-      ok(false, "Cannot start Utility process?");
-    });
-});
+startUtilityProcess();
 
 add_task(async () => {
   info("Start the profiler");
@@ -45,10 +30,23 @@ add_task(async () => {
     p => p.threads[0].pid == utilityPid
   );
   Assert.notEqual(utilityProcessIndex, -1, "Could find index of utility");
+
   Assert.equal(
     profile.processes[utilityProcessIndex].threads[0].processType,
     "utility",
     "Profile has processType utility"
+  );
+
+  Assert.equal(
+    profile.processes[utilityProcessIndex].threads[0].name,
+    "GeckoMain",
+    "Profile has correct main thread name"
+  );
+
+  Assert.equal(
+    profile.processes[utilityProcessIndex].threads[0].processName,
+    "Utility Process",
+    "Profile has correct process name"
   );
 
   Assert.greater(
@@ -66,7 +64,4 @@ add_task(async () => {
   Services.profiler.StopProfiler();
 });
 
-add_task(async () => {
-  info("Stop Utility Process");
-  utilityProcessTest.stopProcess();
-});
+cleanUtilityProcessShutdown();

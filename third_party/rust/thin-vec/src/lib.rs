@@ -247,9 +247,22 @@ mod impl_details {
     }
 }
 
-/// The header of a ThinVec.
-///
-/// The _cap can be a bitfield, so use accessors to avoid trouble.
+// The header of a ThinVec.
+//
+// The _cap can be a bitfield, so use accessors to avoid trouble.
+//
+// In "real" gecko-ffi mode, the empty singleton will be aligned
+// to 8 by gecko. But in tests we have to provide the singleton
+// ourselves, and Rust makes it hard to "just" align a static.
+// To avoid messing around with a wrapper type around the
+// singleton *just* for tests, we just force all headers to be
+// aligned to 8 in this weird "zombie" gecko mode.
+//
+// This shouldn't affect runtime layout (padding), but it will
+// result in us asking the allocator to needlessly overalign
+// non-empty ThinVecs containing align < 8 types in
+// zombie-mode, but not in "real" geck-ffi mode. Minor.
+#[cfg_attr(all(feature = "gecko-ffi", any(test, miri)), repr(align(8)))]
 #[repr(C)]
 struct Header {
     _len: SizeType,
@@ -263,23 +276,6 @@ impl Header {
 
     fn set_len(&mut self, len: usize) {
         self._len = assert_size(len);
-    }
-
-    fn data<T>(&self) -> *mut T {
-        let header_size = mem::size_of::<Header>();
-        let padding = padding::<T>();
-
-        let ptr = self as *const Header as *mut Header as *mut u8;
-
-        unsafe {
-            if padding > 0 && self.cap() == 0 {
-                // The empty header isn't well-aligned, just make an aligned one up
-                NonNull::dangling().as_ptr()
-            } else {
-                // This could technically result in overflow, but padding would have to be absurdly large for this to occur.
-                ptr.add(header_size + padding) as *mut T
-            }
-        }
     }
 }
 
@@ -321,10 +317,10 @@ impl Header {
 /// optimize everything to not do that (basically, make ptr == len and branch
 /// on size == 0 in every method), but it's a bunch of work for something that
 /// doesn't matter much.
-#[cfg(any(not(feature = "gecko-ffi"), test))]
+#[cfg(any(not(feature = "gecko-ffi"), test, miri))]
 static EMPTY_HEADER: Header = Header { _len: 0, _cap: 0 };
 
-#[cfg(all(feature = "gecko-ffi", not(test)))]
+#[cfg(all(feature = "gecko-ffi", not(test), not(miri)))]
 extern "C" {
     #[link_name = "sEmptyTArrayHeader"]
     static EMPTY_HEADER: Header;
@@ -442,17 +438,26 @@ macro_rules! thin_vec {
 
 impl<T> ThinVec<T> {
     pub fn new() -> ThinVec<T> {
-        unsafe {
-            ThinVec {
-                ptr: NonNull::new_unchecked(&EMPTY_HEADER as *const Header as *mut Header),
-                boo: PhantomData,
-            }
-        }
+        ThinVec::with_capacity(0)
     }
 
     pub fn with_capacity(cap: usize) -> ThinVec<T> {
+        // `padding` contains ~static assertions against types that are
+        // incompatible with the current feature flags. We also call it to
+        // invoke these assertions when getting a pointer to the `ThinVec`
+        // contents, but since we also get a pointer to the contents in the
+        // `Drop` impl, trippng an assertion along that code path causes a
+        // double panic. We duplicate the assertion here so that it is
+        // testable,
+        let _ = padding::<T>();
+
         if cap == 0 {
-            ThinVec::new()
+            unsafe {
+                ThinVec {
+                    ptr: NonNull::new_unchecked(&EMPTY_HEADER as *const Header as *mut Header),
+                    boo: PhantomData,
+                }
+            }
         } else {
             ThinVec {
                 ptr: header_with_capacity::<T>(cap),
@@ -470,7 +475,47 @@ impl<T> ThinVec<T> {
         unsafe { self.ptr.as_ref() }
     }
     fn data_raw(&self) -> *mut T {
-        self.header().data()
+        // `padding` contains ~static assertions against types that are
+        // incompatible with the current feature flags. Even if we don't
+        // care about its result, we should always call it before getting
+        // a data pointer to guard against invalid types!
+        let padding = padding::<T>();
+
+        // Although we ensure the data array is aligned when we allocate,
+        // we can't do that with the empty singleton. So when it might not
+        // be properly aligned, we substitute in the NonNull::dangling
+        // which *is* aligned.
+        //
+        // To minimize dynamic branches on `cap` for all accesses
+        // to the data, we include this guard which should only involve
+        // compile-time constants. Ideally this should result in the branch
+        // only be included for types with excessive alignment.
+        let empty_header_is_aligned = if cfg!(feature = "gecko-ffi") {
+            // in gecko-ffi mode `padding` will ensure this under
+            // the assumption that the header has size 8 and the
+            // static empty singleton is aligned to 8.
+            true
+        } else {
+            // In non-gecko-ffi mode, the empty singleton is just
+            // naturally aligned to the Header. If the Header is at
+            // least as aligned as T *and* the padding would have
+            // been 0, then one-past-the-end of the empty singleton
+            // *is* a valid data pointer and we can remove the
+            // `dangling` special case.
+            mem::align_of::<Header>() >= mem::align_of::<T>() && padding == 0
+        };
+
+        unsafe {
+            if !empty_header_is_aligned && self.header().cap() == 0 {
+                NonNull::dangling().as_ptr()
+            } else {
+                // This could technically result in overflow, but padding
+                // would have to be absurdly large for this to occur.
+                let header_size = mem::size_of::<Header>();
+                let ptr = self.ptr.as_ptr() as *mut u8;
+                ptr.add(header_size + padding) as *mut T
+            }
+        }
     }
 
     // This is unsafe when the header is EMPTY_HEADER.
@@ -565,7 +610,7 @@ impl<T> ThinVec<T> {
                 // doesn't re-drop the just-failed value.
                 let new_len = self.len() - 1;
                 self.set_len(new_len);
-                ptr::drop_in_place(self.get_unchecked_mut(new_len));
+                ptr::drop_in_place(self.data_raw().add(new_len));
             }
         }
     }
@@ -915,7 +960,7 @@ impl<T> ThinVec<T> {
             (*ptr).set_cap(new_cap);
             self.ptr = NonNull::new_unchecked(ptr);
         } else {
-            let mut new_header = header_with_capacity::<T>(new_cap);
+            let new_header = header_with_capacity::<T>(new_cap);
 
             // If we get here and have a non-zero len, then we must be handling
             // a gecko auto array, and we have items in a stack buffer. We shouldn't
@@ -931,8 +976,9 @@ impl<T> ThinVec<T> {
             let len = self.len();
             if cfg!(feature = "gecko-ffi") && len > 0 {
                 new_header
-                    .as_mut()
-                    .data::<T>()
+                    .as_ptr()
+                    .add(1)
+                    .cast::<T>()
                     .copy_from_nonoverlapping(self.data_raw(), len);
                 self.set_len(0);
             }
@@ -1371,6 +1417,28 @@ mod tests {
     #[test]
     fn test_drop_empty() {
         ThinVec::<u8>::new();
+    }
+
+    #[test]
+    fn test_data_ptr_alignment() {
+        let v = ThinVec::<u16>::new();
+        assert!(v.data_raw() as usize % 2 == 0);
+
+        let v = ThinVec::<u32>::new();
+        assert!(v.data_raw() as usize % 4 == 0);
+
+        let v = ThinVec::<u64>::new();
+        assert!(v.data_raw() as usize % 8 == 0);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "gecko-ffi", should_panic)]
+    fn test_overaligned_type_is_rejected_for_gecko_ffi_mode() {
+        #[repr(align(16))]
+        struct Align16(u8);
+
+        let v = ThinVec::<Align16>::new();
+        assert!(v.data_raw() as usize % 16 == 0);
     }
 
     #[test]
@@ -2654,9 +2722,9 @@ mod std_tests {
         macro_rules! assert_aligned_head_ptr {
             ($typename:ty) => {{
                 let v: ThinVec<$typename> = ThinVec::with_capacity(1 /* ensure allocation */);
-                let head_ptr: *mut $typename = v.header().data::<$typename>();
+                let head_ptr: *mut $typename = v.data_raw();
                 assert_eq!(
-                    head_ptr.align_offset(std::mem::align_of::<$typename>()),
+                    head_ptr as usize % std::mem::align_of::<$typename>(),
                     0,
                     "expected Header::data<{}> to be aligned",
                     stringify!($typename)

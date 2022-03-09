@@ -14,7 +14,7 @@ include NeckoChannelParams;
 namespace mozilla {
 namespace net {
 
-[RefCounted] async protocol PHttpConnectionMgr
+async protocol PHttpConnectionMgr
 {
   manager PSocketProcess;
 

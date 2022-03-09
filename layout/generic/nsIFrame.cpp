@@ -753,7 +753,7 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // In general, frames that have contain:layout+size can be reflow roots.
     // (One exception: table-wrapper frames don't work well as reflow roots,
     // because their inner-table ReflowInput init path tries to reuse & deref
-    // the wrapper's containing block reflow input, which may be null if we
+    // the wrapper's containing block's reflow input, which may be null if we
     // initiate reflow from the table-wrapper itself.)
     //
     // Changes to `contain` force frame reconstructions, so this bit can be set
@@ -1179,6 +1179,18 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 // Subclass hook for style post processing
 /* virtual */
 void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+#ifdef ACCESSIBILITY
+  // Don't notify for reconstructed frames here, since the frame is still being
+  // constructed at this point and so LocalAccessible::GetFrame() will return
+  // null. Style changes for reconstructed frames are handled in
+  // DocAccessible::PruneOrInsertSubtree.
+  if (aOldComputedStyle) {
+    if (nsAccessibilityService* accService = GetAccService()) {
+      accService->NotifyOfComputedStyleChange(PresShell(), mContent);
+    }
+  }
+#endif
+
   MaybeScheduleReflowSVGNonDisplayText(this);
 
   Document* doc = PresContext()->Document();
@@ -1283,8 +1295,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
 
     if (disp->mPosition != oldDisp->mPosition) {
-      if (!disp->IsRelativelyPositionedStyle() &&
-          oldDisp->IsRelativelyPositionedStyle()) {
+      if (!disp->IsRelativelyOrStickyPositionedStyle() &&
+          oldDisp->IsRelativelyOrStickyPositionedStyle()) {
         RemoveProperty(NormalPositionProperty());
       }
 
@@ -2912,7 +2924,7 @@ static bool ItemParticipatesIn3DContext(nsIFrame* aAncestor,
   const bool isContainer = type == DisplayItemType::TYPE_WRAP_LIST ||
                            type == DisplayItemType::TYPE_CONTAINER;
 
-  if (isContainer && aItem->GetChildren()->Count() == 1) {
+  if (isContainer && aItem->GetChildren()->Length() == 1) {
     // If the wraplist has only one child item, use the type of that item.
     type = aItem->GetChildren()->GetBottom()->GetType();
   }
@@ -3119,7 +3131,6 @@ bool TryToReuseStackingContextItem(nsDisplayListBuilder* aBuilder,
   }
 
   nsDisplayItem* container = *res;
-  MOZ_ASSERT(!container->GetAbove());
   MOZ_ASSERT(container->Frame() == aFrame);
   DL_LOGD("RDL - Found SC item %p (%s) (frame: %p)", container,
           container->Name(), container->Frame());
@@ -3329,7 +3340,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool usingSVGEffects = usingFilter || usingMask;
 
   nsRect visibleRectOutsideSVGEffects = visibleRect;
-  nsDisplayList hoistedScrollInfoItemsStorage;
+  nsDisplayList hoistedScrollInfoItemsStorage(aBuilder);
   if (usingSVGEffects) {
     dirtyRect =
         SVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
@@ -3558,7 +3569,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     content = PresContext()->Document()->GetRootElement();
   }
 
-  nsDisplayList resultList;
+  nsDisplayList resultList(aBuilder);
   set.SerializeWithCorrectZOrder(&resultList, content);
 
 #ifdef DEBUG
@@ -3685,13 +3696,14 @@ void nsIFrame::BuildDisplayListForStackingContext(
   if (isTransformed && extend3DContext) {
     // Install dummy nsDisplayTransform as a leaf containing
     // descendants not participating this 3D rendering context.
-    nsDisplayList nonparticipants;
-    nsDisplayList participants;
+    nsDisplayList nonparticipants(aBuilder);
+    nsDisplayList participants(aBuilder);
     int index = 1;
 
     nsDisplayItem* separator = nullptr;
 
-    while (nsDisplayItem* item = resultList.RemoveBottom()) {
+    // TODO: This can be simplified: |participants| is just |resultList|.
+    for (nsDisplayItem* item : resultList.TakeItems()) {
       if (ItemParticipatesIn3DContext(this, item) &&
           !item->GetClip().HasClip()) {
         // The frame of this item participates the same 3D context.
@@ -3868,11 +3880,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     nsDisplayItem* container = resultList.GetBottom();
-    if (resultList.Count() > 1 || container->Frame() != this) {
+    if (resultList.Length() > 1 || container->Frame() != this) {
       container = MakeDisplayItem<nsDisplayContainer>(
           aBuilder, this, containerItemASR, &resultList);
     } else {
-      container = resultList.RemoveBottom();
+      MOZ_ASSERT(resultList.Length() == 1);
+      resultList.Clear();
     }
 
     // Mark the outermost display item as reusable. These display items and
@@ -3906,13 +3919,14 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
   // on which items we build, so we need to ensure that we don't transition
   // to/from a wrap list without invalidating correctly.
   bool needsWrapList =
-      aList->Count() > 1 || item->Frame() != aFrame || item->GetChildren();
+      aList->Length() > 1 || item->Frame() != aFrame || item->GetChildren();
 
   // If we have an explicit container item (that can't change without an
   // invalidation) or we're doing a full build and don't need a wrap list, then
   // we can skip adding one.
   if (aBuiltContainerItem || (!aBuilder->IsPartialUpdate() && !needsWrapList)) {
-    aList->RemoveBottom();
+    MOZ_ASSERT(aList->Length() == 1);
+    aList->Clear();
     return item;
   }
 
@@ -3929,7 +3943,8 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
     if (needsWrapList) {
       DiscardOldItems(aFrame);
     } else {
-      aList->RemoveBottom();
+      MOZ_ASSERT(aList->Length() == 1);
+      aList->Clear();
       return item;
     }
   }
@@ -4328,8 +4343,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     awayFromCommonPath = true;
   }
 
-  nsDisplayList list;
-  nsDisplayList extraPositionedDescendants;
+  nsDisplayList list(aBuilder);
+  nsDisplayList extraPositionedDescendants(aBuilder);
   const ActiveScrolledRoot* wrapListASR;
   bool builtContainerItem = false;
   if (isStackingContext) {
@@ -7613,7 +7628,7 @@ void nsIFrame::MovePositionBy(const nsPoint& aTranslation) {
   nsPoint position = GetNormalPosition() + aTranslation;
 
   const nsMargin* computedOffsets = nullptr;
-  if (IsRelativelyPositioned()) {
+  if (IsRelativelyOrStickyPositioned()) {
     computedOffsets = GetProperty(nsIFrame::ComputedOffsetProperty());
   }
   ReflowInput::ApplyRelativePositioning(
@@ -7661,7 +7676,7 @@ nsRect nsIFrame::GetOverflowRect(OverflowType aType) const {
     return InkOverflowFromDeltas();
   }
 
-  return nsRect(nsPoint(0, 0), GetSize());
+  return GetRectRelativeToSelf();
 }
 
 OverflowAreas nsIFrame::GetOverflowAreas() const {
@@ -7677,43 +7692,54 @@ OverflowAreas nsIFrame::GetOverflowAreas() const {
 
 OverflowAreas nsIFrame::GetOverflowAreasRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows) {
-      return OverflowAreas(preTransformOverflows->InkOverflow(),
-                           preTransformOverflows->ScrollableOverflow());
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
+      return *preTransformOverflows;
     }
   }
-  return OverflowAreas(InkOverflowRect(), ScrollableOverflowRect());
+  return GetOverflowAreas();
 }
 
 OverflowAreas nsIFrame::GetOverflowAreasRelativeToParent() const {
-  return GetOverflowAreas() + mRect.TopLeft();
+  return GetOverflowAreas() + GetPosition();
+}
+
+OverflowAreas nsIFrame::GetActualAndNormalOverflowAreasRelativeToParent()
+    const {
+  if (MOZ_LIKELY(!IsRelativelyOrStickyPositioned())) {
+    return GetOverflowAreasRelativeToParent();
+  }
+
+  const OverflowAreas overflows = GetOverflowAreas();
+  OverflowAreas actualAndNormalOverflows = overflows + GetPosition();
+  actualAndNormalOverflows.UnionWith(overflows + GetNormalPosition());
+  return actualAndNormalOverflows;
 }
 
 nsRect nsIFrame::ScrollableOverflowRectRelativeToParent() const {
-  return ScrollableOverflowRect() + mRect.TopLeft();
+  return ScrollableOverflowRect() + GetPosition();
 }
 
 nsRect nsIFrame::InkOverflowRectRelativeToParent() const {
-  return InkOverflowRect() + mRect.TopLeft();
+  return InkOverflowRect() + GetPosition();
 }
 
 nsRect nsIFrame::ScrollableOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows)
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
       return preTransformOverflows->ScrollableOverflow();
+    }
   }
   return ScrollableOverflowRect();
 }
 
 nsRect nsIFrame::InkOverflowRectRelativeToSelf() const {
   if (IsTransformed()) {
-    OverflowAreas* preTransformOverflows =
-        GetProperty(PreTransformOverflowAreasProperty());
-    if (preTransformOverflows) return preTransformOverflows->InkOverflow();
+    if (OverflowAreas* preTransformOverflows =
+            GetProperty(PreTransformOverflowAreasProperty())) {
+      return preTransformOverflows->InkOverflow();
+    }
   }
   return InkOverflowRect();
 }
@@ -10773,8 +10799,8 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 
     // create a reflow input to tell our child to flow at the given size.
 
-    // Construct a bogus parent reflow input so that there's a usable
-    // containing block reflow input.
+    // Construct a bogus parent reflow input so that there's a usable reflow
+    // input for the containing block.
     nsMargin margin(0, 0, 0, 0);
     GetXULMargin(margin);
 
@@ -11409,7 +11435,7 @@ nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
     area = ScrollableOverflowRect();
   } else {
-    area = nsRect(nsPoint(0, 0), GetSize());
+    area = GetRectRelativeToSelf();
   }
 
   if (!area.IsEmpty()) {

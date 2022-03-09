@@ -189,11 +189,11 @@ class BackgroundFactoryRequestChild final
 
   void SetDatabaseActor(BackgroundDatabaseChild* aActor);
 
-  bool HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  bool HandleResponse(const OpenDatabaseRequestResponse& aResponse);
+  void HandleResponse(const OpenDatabaseRequestResponse& aResponse);
 
-  bool HandleResponse(const DeleteDatabaseRequestResponse& aResponse);
+  void HandleResponse(const DeleteDatabaseRequestResponse& aResponse);
 
  public:
   // IPDL methods are only called by IPDL.
@@ -309,9 +309,9 @@ class BackgroundDatabaseRequestChild final
   // Only destroyed by BackgroundDatabaseChild.
   ~BackgroundDatabaseRequestChild();
 
-  bool HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  bool HandleResponse(const CreateFileRequestResponse& aResponse);
+  void HandleResponse(const CreateFileRequestResponse& aResponse);
 
  public:
   // IPDL methods are only called by IPDL.

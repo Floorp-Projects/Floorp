@@ -146,8 +146,14 @@ class TextLeafPoint final {
                                    const AccAttributes* aOriginAttrs = nullptr,
                                    bool aIncludeDefaults = true) const;
 
+  bool IsLineFeedChar() const { return GetChar() == '\n'; }
+
+  bool IsSpace() const;
+
  private:
   bool IsEmptyLastLine() const;
+
+  char16_t GetChar() const;
 
   TextLeafPoint FindLineStartSameRemoteAcc(nsDirection aDirection,
                                            bool aIncludeOrigin) const;
@@ -157,6 +163,12 @@ class TextLeafPoint final {
    *is local or remote.
    */
   TextLeafPoint FindLineStartSameAcc(nsDirection aDirection,
+                                     bool aIncludeOrigin) const;
+
+  TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin) const;
+  TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin) const;
+
+  TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
 };
 

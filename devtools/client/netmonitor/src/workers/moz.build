@@ -6,7 +6,3 @@
 DIRS += [
     "search",
 ]
-
-DevToolsModules(
-    "worker-utils.js",
-)

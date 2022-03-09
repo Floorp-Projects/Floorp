@@ -4,32 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_TARGET"] != "Android":
-    GeckoProgram("minidump-analyzer", linkage=None)
+GeckoProgram("minidump-analyzer", linkage=None)
 
-    if CONFIG["OS_TARGET"] == "WINNT":
-        DEFINES["UNICODE"] = True
-        DEFINES["_UNICODE"] = True
+if CONFIG["OS_TARGET"] == "WINNT":
+    DEFINES["UNICODE"] = True
+    DEFINES["_UNICODE"] = True
 
-        if CONFIG["CPU_ARCH"] == "x86_64":
-            UNIFIED_SOURCES += [
-                "MozStackFrameSymbolizer.cpp",
-                "Win64ModuleUnwindMetadata.cpp",
-            ]
-
-            OS_LIBS += ["dbghelp", "imagehlp"]
-
-    if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
-        # This allows us to use wmain as the entry point on mingw
-        LDFLAGS += [
-            "-municode",
+    if CONFIG["CPU_ARCH"] == "x86_64":
+        UNIFIED_SOURCES += [
+            "MozStackFrameSymbolizer.cpp",
+            "Win64ModuleUnwindMetadata.cpp",
         ]
 
-else:
-    Library("minidump-analyzer")
+        OS_LIBS += ["dbghelp", "imagehlp"]
 
-    EXPORTS += [
-        "minidump-analyzer.h",
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
+    # This allows us to use wmain as the entry point on mingw
+    LDFLAGS += [
+        "-municode",
     ]
 
 UNIFIED_SOURCES += [

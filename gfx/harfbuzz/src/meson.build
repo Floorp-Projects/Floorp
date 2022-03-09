@@ -29,6 +29,7 @@ hb_base_sources = files(
   'hb-blob.cc',
   'hb-blob.hh',
   'hb-buffer-serialize.cc',
+  'hb-buffer-verify.cc',
   'hb-buffer.cc',
   'hb-buffer.hh',
   'hb-cache.hh',
@@ -54,7 +55,6 @@ hb_base_sources = files(
   'hb-map.cc',
   'hb-map.hh',
   'hb-meta.hh',
-  'hb-ms-feature-ranges.cc',
   'hb-ms-feature-ranges.hh',
   'hb-mutex.hh',
   'hb-null.hh',
@@ -363,6 +363,7 @@ endif
 if conf.get('HAVE_DIRECTWRITE', 0) == 1
   hb_sources += hb_directwrite_sources
   hb_headers += hb_directwrite_headers
+  harfbuzz_deps += directwrite_dep
   # hb-directwrite needs a C++ linker
   libharfbuzz_link_language = 'cpp'
 endif
@@ -485,13 +486,15 @@ if get_option('tests').enabled()
   compiled_tests = {
     'test-algs': ['test-algs.cc', 'hb-static.cc'],
     'test-array': ['test-array.cc'],
-    'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
-    'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
     'test-iter': ['test-iter.cc', 'hb-static.cc'],
+    'test-machinery': ['test-machinery.cc', 'hb-static.cc'],
     'test-map': ['test-map.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
+    'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
+    'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
     'test-set': ['test-set.cc', 'hb-static.cc'],
+    'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
     'test-vector': ['test-vector.cc', 'hb-static.cc'],
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],

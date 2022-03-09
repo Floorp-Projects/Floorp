@@ -9,8 +9,12 @@ cached_functions = {}
 
 
 def getMetricsJson(src_url):
-    print("Fetching source for function extraction: {}".format(src_url))
-    metrics = subprocess.check_output(["./fetch_fn_names.sh", src_url])
+    if src_url.startswith("http"):
+        print("Fetching source for function extraction: {}".format(src_url))
+        metrics = subprocess.check_output(["./fetch_fn_names.sh", src_url])
+    else:
+        print("Skip fetching source: {}".format(src_url))
+        metrics = ""
 
     try:
         return json.loads(metrics)

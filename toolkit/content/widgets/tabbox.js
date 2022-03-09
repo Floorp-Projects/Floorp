@@ -117,6 +117,11 @@
         return;
       }
 
+      // Skip if chrome code has cancelled this:
+      if (event.defaultPreventedByChrome) {
+        return;
+      }
+
       // Don't check if the event was already consumed because tab
       // navigation should always work for better user experience.
 

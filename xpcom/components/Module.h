@@ -21,7 +21,7 @@ namespace mozilla {
  * via a module loader.
  */
 struct Module {
-  static const unsigned int kVersion = 98;
+  static const unsigned int kVersion = 99;
 
   struct CIDEntry;
 
@@ -46,9 +46,12 @@ struct Module {
     CONTENT_PROCESS_ONLY = 0x2,
 
     /**
-     * By default, modules are not loaded in the GPU process, even if
-     * ANY_PROCESS is specified. This flag enables a module in the
-     * GPU process.
+     * By default, modules are not loaded in the GPU, VR, Socket, RDD, Utility
+     * and IPDLUnitTest processes, even if ANY_PROCESS is specified. This flag
+     * enables a module in the relevant process.
+     *
+     * NOTE: IPDLUnitTest does not have its own flag, and will only load a
+     * module if it is enabled in all processes.
      */
     ALLOW_IN_GPU_PROCESS = 0x4,
     ALLOW_IN_VR_PROCESS = 0x8,

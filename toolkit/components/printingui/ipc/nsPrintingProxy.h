@@ -15,7 +15,7 @@ class PRemotePrintJobChild;
 }
 }  // namespace mozilla
 
-class nsPrintingProxy final : public nsIPrintingPromptService,
+class nsPrintingProxy final : public nsISupports,
                               public mozilla::embedding::PPrintingChild {
   friend class mozilla::embedding::PPrintingChild;
 
@@ -23,24 +23,8 @@ class nsPrintingProxy final : public nsIPrintingPromptService,
   static already_AddRefed<nsPrintingProxy> GetInstance();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTINGPROMPTSERVICE
-
-  /**
-   * Used to proxy nsIPrintSettings.savePrintSettingsToPrefs calls to the
-   * parent process.
-   *
-   * @param aFlags - kInitSave* flags from nsIPrintSettings's to specify
-   *          which settings to save.
-   */
-  nsresult SavePrintSettings(nsIPrintSettings* aPS, bool aUsePrinterNamePrefix,
-                             uint32_t aFlags);
 
  protected:
-  PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild() final;
-
-  bool DeallocPPrintSettingsDialogChild(
-      PPrintSettingsDialogChild* aActor) final;
-
   already_AddRefed<PRemotePrintJobChild> AllocPRemotePrintJobChild() final;
 
  private:

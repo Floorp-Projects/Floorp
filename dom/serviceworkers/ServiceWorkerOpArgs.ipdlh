@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include ChannelInfo;
+include IPCChannelInfo;
 include ClientIPCTypes;
 include DOMTypes;
 include FetchTypes;
@@ -10,7 +10,7 @@ include FetchTypes;
 include "mozilla/dom/ServiceWorkerIPCUtils.h";
 
 using ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
-using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace dom {
@@ -93,12 +93,12 @@ struct ServiceWorkerFetchEventOpArgsCommon {
 
 struct ParentToParentServiceWorkerFetchEventOpArgs {
   ServiceWorkerFetchEventOpArgsCommon common;
-  ParentToParentInternalResponse? preloadResponse;
+  ParentToParentResponseWithTiming? preloadResponse;
 };
 
 struct ParentToChildServiceWorkerFetchEventOpArgs {
   ServiceWorkerFetchEventOpArgsCommon common;
-  ParentToChildInternalResponse? preloadResponse;
+  ParentToChildResponseWithTiming? preloadResponse;
 };
 
 union ServiceWorkerOpArgs {

@@ -73,7 +73,8 @@ void GPUChild::Init() {
     features = gfxInfoRaw->GetAllFeatures();
   }
 
-  SendInit(updates, devicePrefs, mappings, features);
+  SendInit(updates, devicePrefs, mappings, features,
+           GPUProcessManager::Get()->AllocateNamespace());
 
   gfxVars::AddReceiver(this);
 

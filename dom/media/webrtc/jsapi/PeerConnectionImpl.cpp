@@ -36,7 +36,6 @@
 #include "IPeerConnection.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
-#include "PeerConnectionMedia.h"
 #include "RemoteTrackSource.h"
 #include "nsDOMDataChannelDeclarations.h"
 #include "transport/dtlsidentity.h"
@@ -97,6 +96,19 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/net/DataChannelProtocol.h"
 #include "MediaManager.h"
+
+#include "transport/nr_socket_proxy_config.h"
+#include "RTCDtlsTransport.h"
+#include "jsep/JsepTransport.h"
+
+#include "nsILoadInfo.h"
+#include "nsIProxyInfo.h"
+#include "nsIPrincipal.h"
+#include "mozilla/LoadInfo.h"
+#include "nsIProxiedChannel.h"
+
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/net/WebrtcProxyConfig.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
@@ -231,7 +243,26 @@ void PeerConnectionAutoTimer::UnregisterConnection(bool aContainedAV) {
 
 bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 
-NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
+  tmp->Close();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
+                                  mSTSThread, mReceiveStreams, mKungFuDeathGrip)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPCObserver, mWindow, mCertificate,
+                                    mSTSThread, mReceiveStreams,
+                                    mKungFuDeathGrip)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PeerConnectionImpl)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PeerConnectionImpl)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PeerConnectionImpl)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
     const dom::GlobalObject& aGlobal) {
@@ -242,10 +273,13 @@ already_AddRefed<PeerConnectionImpl> PeerConnectionImpl::Constructor(
   return pc.forget();
 }
 
-bool PeerConnectionImpl::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto,
-                                    JS::MutableHandle<JSObject*> aReflector) {
-  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto, aReflector);
+JSObject* PeerConnectionImpl::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
+  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsPIDOMWindowInner* PeerConnectionImpl::GetParentObject() const {
+  return mWindow;
 }
 
 bool PCUuidGenerator::Generate(std::string* idp) {
@@ -298,7 +332,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mCertificate(nullptr),
       mSTSThread(nullptr),
       mForceIceTcp(false),
-      mMedia(nullptr),
       mTransportHandler(nullptr),
       mUuidGen(MakeUnique<PCUuidGenerator>()),
       mIceRestartCount(0),
@@ -308,8 +341,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       ,
       mPrivateWindow(false),
       mActiveOnWindow(false),
-      mPacketDumpEnabled(false),
-      mPacketDumpFlagsMutex("Packet dump flags mutex"),
       mTimestampMaker(mWindow),
       mIdGenerator(new RTCStatsIdGenerator()),
       listenPort(0),
@@ -317,6 +348,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       connectStr(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(aGlobal, mWindow);
+  mKungFuDeathGrip = this;
   if (aGlobal) {
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
@@ -335,64 +367,34 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       Preferences::GetBool("media.peerconnection.ice.force_ice_tcp", false);
   memset(mMaxReceiving, 0, sizeof(mMaxReceiving));
   memset(mMaxSending, 0, sizeof(mMaxSending));
+  mJsConfiguration.mCertificatesProvided = false;
+  mJsConfiguration.mPeerIdentityProvided = false;
 }
 
 PeerConnectionImpl::~PeerConnectionImpl() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ASSERT(!mTransportHandler,
+             "PeerConnection should either be closed, or not initted in the "
+             "first place.");
+
   if (mTimeCard) {
     STAMP_TIMECARD(mTimeCard, "Destructor Invoked");
+    STAMP_TIMECARD(mTimeCard, mHandle.c_str());
     print_timecard(mTimeCard);
     destroy_timecard(mTimeCard);
     mTimeCard = nullptr;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mWindow && mActiveOnWindow) {
-    mWindow->RemovePeerConnection();
-    // No code is supposed to observe the assignment below, but
-    // hopefully it makes looking at this object in a debugger
-    // make more sense.
-    mActiveOnWindow = false;
-  }
-
-  if (mPrivateWindow && mTransportHandler) {
-    mTransportHandler->ExitPrivateMode();
-  }
-  if (PeerConnectionCtx::isActive()) {
-    PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
-  } else {
-    CSFLogError(LOGTAG, "PeerConnectionCtx is already gone. Ignoring...");
-  }
-
   CSFLogInfo(LOGTAG, "%s: PeerConnectionImpl destructor invoked for %s",
              __FUNCTION__, mHandle.c_str());
-
-  // Since this and Initialize() occur on MainThread, they can't both be
-  // running at once
-
-  // Right now, we delete PeerConnectionCtx at XPCOM shutdown only, but we
-  // probably want to shut it down more aggressively to save memory.  We
-  // could shut down here when there are no uses.  It might be more optimal
-  // to release off a timer (and XPCOM Shutdown) to avoid churn
-  ShutdownMedia();
 }
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                                        nsGlobalWindowInner* aWindow,
-                                        const RTCConfiguration& aConfiguration,
-                                        nsISupports* aThread) {
+                                        nsGlobalWindowInner* aWindow) {
   nsresult res;
 
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  if (!mThread) {
-    mThread = do_QueryInterface(aThread);
-    MOZ_ASSERT(mThread);
-  }
-  CheckThread();
-
-  // Store the configuration for about:webrtc
-  StoreConfigurationForAboutWebrtc(aConfiguration);
 
   mPCObserver = &aObserver;
 
@@ -450,20 +452,10 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mName = temp;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
-  res = PeerConnectionCtx::InitializeGlobal(mThread);
+  res = PeerConnectionCtx::InitializeGlobal();
   NS_ENSURE_SUCCESS(res, res);
 
-  nsTArray<dom::RTCIceServer> iceServers;
-  if (aConfiguration.mIceServers.WasPassed()) {
-    iceServers = aConfiguration.mIceServers.Value();
-  }
-
-  res = mTransportHandler->CreateIceCtx("PC:" + GetName(), iceServers,
-                                        aConfiguration.mIceTransportPolicy);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
+  mTransportHandler->CreateIceCtx("PC:" + GetName());
 
   mJsepSession =
       MakeUnique<JsepSessionImpl>(mName, MakeUnique<PCUuidGenerator>());
@@ -476,38 +468,18 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  JsepBundlePolicy bundlePolicy;
-  switch (aConfiguration.mBundlePolicy) {
-    case dom::RTCBundlePolicy::Balanced:
-      bundlePolicy = kBundleBalanced;
-      break;
-    case dom::RTCBundlePolicy::Max_compat:
-      bundlePolicy = kBundleMaxCompat;
-      break;
-    case dom::RTCBundlePolicy::Max_bundle:
-      bundlePolicy = kBundleMaxBundle;
-      break;
-    default:
-      MOZ_CRASH();
+  if (XRE_IsContentProcess()) {
+    mStunAddrsRequest =
+        new net::StunAddrsRequestChild(new StunAddrsHandler(this));
   }
-
-  res = mJsepSession->SetBundlePolicy(bundlePolicy);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
-                __FUNCTION__, static_cast<unsigned>(res),
-                mJsepSession->GetLastError().c_str());
-    return res;
-  }
-
-  mMedia = new PeerConnectionMedia(this);
 
   // Initialize the media object.
-  res = mMedia->Init();
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Couldn't initialize media object", __FUNCTION__);
-    ShutdownMedia();
-    return res;
-  }
+  mForceProxy = ShouldForceProxy();
+
+  // setup the stun local addresses IPC async call
+  InitLocalAddrs();
+
+  mSignalHandler = MakeUnique<SignalHandler>(this, mTransportHandler.get());
 
   PeerConnectionCtx::GetInstance()->AddPeerConnection(mHandle, this);
 
@@ -516,21 +488,13 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                     nsGlobalWindowInner& aWindow,
-                                    const RTCConfiguration& aConfiguration,
-                                    nsISupports* aThread, ErrorResult& rv) {
+                                    ErrorResult& rv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aThread);
-  mThread = do_QueryInterface(aThread);
 
-  nsresult res = Initialize(aObserver, &aWindow, aConfiguration, aThread);
+  nsresult res = Initialize(aObserver, &aWindow);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
-  }
-
-  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
-    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
-    mPrivacyRequested = Some(true);
   }
 }
 
@@ -969,16 +933,15 @@ nsresult PeerConnectionImpl::AddRtpTransceiverToJsepSession(
 already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
     ErrorResult& aRv) {
-  // TODO: Maybe this should be done in PeerConnectionMedia?
   if (aSendTrack) {
     aSendTrack->AddPrincipalChangeObserver(this);
   }
 
   PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   RefPtr<TransceiverImpl> transceiverImpl;
-  aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack,
-                               ctx->GetSharedWebrtcState(), mIdGenerator,
-                               &transceiverImpl);
+  aRv =
+      AddTransceiver(aJsepTransceiver, aSendTrack, ctx->GetSharedWebrtcState(),
+                     mIdGenerator, &transceiverImpl);
 
   return transceiverImpl.forget();
 }
@@ -1215,7 +1178,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
 
   STAMP_TIMECARD(mTimeCard, "Create Offer");
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), aOptions] {
         std::string offer;
 
@@ -1249,7 +1212,7 @@ PeerConnectionImpl::CreateAnswer() {
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
 
@@ -1284,7 +1247,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   JSErrorResult rv;
   STAMP_TIMECARD(mTimeCard, "Set Local Description");
 
-  if (mMedia->AnyLocalTrackHasPeerIdentity()) {
+  if (AnyLocalTrackHasPeerIdentity()) {
     mPrivacyRequested = Some(true);
   }
 
@@ -1488,6 +1451,10 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
     return nullptr;
   }
 
+  if (!mWindow) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
@@ -1543,15 +1510,15 @@ PeerConnectionImpl::AddIceCandidate(
       aCandidate, aMid, level, aUfrag, &transportId);
 
   if (!result.mError.isSome()) {
-    // We do not bother PCMedia about this before offer/answer concludes.
-    // Once offer/answer concludes, PCMedia will extract these candidates from
-    // the remote SDP.
+    // We do not bother the MediaTransportHandler about this before
+    // offer/answer concludes.  Once offer/answer concludes, we will extract
+    // these candidates from the remote SDP.
     if (mSignalingState == RTCSignalingState::Stable && !transportId.empty()) {
-      mMedia->AddIceCandidate(aCandidate, transportId, aUfrag);
+      AddIceCandidate(aCandidate, transportId, aUfrag);
       mRawTrickledCandidates.push_back(aCandidate);
     }
     // Spec says we queue a task for these updates
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
           if (IsClosed()) {
             return;
@@ -1572,7 +1539,7 @@ PeerConnectionImpl::AddIceCandidate(
                 static_cast<unsigned>(*result.mError), aCandidate,
                 level.valueOr(-1), errorString.c_str());
 
-    mThread->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__,
         [this, self = RefPtr<PeerConnectionImpl>(this), errorString, result] {
           if (IsClosed()) {
@@ -1585,13 +1552,6 @@ PeerConnectionImpl::AddIceCandidate(
   }
 
   return NS_OK;
-}
-
-void PeerConnectionImpl::UpdateNetworkState(bool online) {
-  if (!mMedia) {
-    return;
-  }
-  mMedia->UpdateNetworkState(online);
 }
 
 NS_IMETHODIMP
@@ -1613,14 +1573,13 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
     }
   } else {
     mPeerIdentity = new PeerIdentity(aPeerIdentity);
-    Document* doc = GetWindow()->GetExtantDoc();
+    Document* doc = mWindow->GetExtantDoc();
     if (!doc) {
       CSFLogInfo(LOGTAG, "Can't update principal on streams; document gone");
       return NS_ERROR_FAILURE;
     }
     MediaStreamTrack* allTracks = nullptr;
-    mMedia->UpdateSinkIdentity_m(allTracks, doc->NodePrincipal(),
-                                 mPeerIdentity);
+    UpdateSinkIdentity_m(allTracks, doc->NodePrincipal(), mPeerIdentity);
   }
   return NS_OK;
 }
@@ -1637,9 +1596,9 @@ nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
 }
 
 void PeerConnectionImpl::PrincipalChanged(MediaStreamTrack* aTrack) {
-  Document* doc = GetWindow()->GetExtantDoc();
+  Document* doc = mWindow->GetExtantDoc();
   if (doc) {
-    mMedia->UpdateSinkIdentity_m(aTrack, doc->NodePrincipal(), mPeerIdentity);
+    UpdateSinkIdentity_m(aTrack, doc->NodePrincipal(), mPeerIdentity);
   } else {
     CSFLogInfo(LOGTAG, "Can't update sink principal; document gone");
   }
@@ -1650,31 +1609,6 @@ void PeerConnectionImpl::OnMediaError(const std::string& aError) {
   // TODO: Let content know about this somehow.
 }
 
-bool PeerConnectionImpl::ShouldDumpPacket(size_t level,
-                                          dom::mozPacketDumpType type,
-                                          bool sending) const {
-  if (!mPacketDumpEnabled) {
-    return false;
-  }
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-
-  const std::vector<unsigned>* packetDumpFlags;
-
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  if (level < packetDumpFlags->size()) {
-    unsigned flag = 1 << (unsigned)type;
-    return flag & packetDumpFlags->at(level);
-  }
-
-  return false;
-}
-
 void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
                                       bool sending,
                                       UniquePtr<uint8_t[]>& packet,
@@ -1683,14 +1617,10 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
     return;
   }
 
-  if (!ShouldDumpPacket(level, type, sending)) {
-    return;
-  }
-
   // TODO: Is this efficient? Should we try grabbing our JS ctx from somewhere
   // else?
   AutoJSAPI jsapi;
-  if (!jsapi.Init(GetWindow())) {
+  if (!jsapi.Init(mWindow)) {
     return;
   }
 
@@ -1777,43 +1707,13 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
                                               dom::mozPacketDumpType type,
                                               bool sending) {
-  mPacketDumpEnabled = true;
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level >= packetDumpFlags->size()) {
-    packetDumpFlags->resize(level + 1);
-  }
-
-  (*packetDumpFlags)[level] |= flag;
-  return NS_OK;
+  return GetPacketDumper()->EnablePacketDump(level, type, sending);
 }
 
 nsresult PeerConnectionImpl::DisablePacketDump(unsigned long level,
                                                dom::mozPacketDumpType type,
                                                bool sending) {
-  std::vector<unsigned>* packetDumpFlags;
-  if (sending) {
-    packetDumpFlags = &mSendPacketDumpFlags;
-  } else {
-    packetDumpFlags = &mRecvPacketDumpFlags;
-  }
-
-  unsigned flag = 1 << (unsigned)type;
-
-  MutexAutoLock lock(mPacketDumpFlagsMutex);
-  if (level < packetDumpFlags->size()) {
-    (*packetDumpFlags)[level] &= ~flag;
-  }
-
-  return NS_OK;
+  return GetPacketDumper()->DisablePacketDump(level, type, sending);
 }
 
 void PeerConnectionImpl::StampTimecard(const char* aEvent) {
@@ -1975,10 +1875,6 @@ nsresult PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const {
     CSFLogError(LOGTAG, "%s: called API while closed", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  if (!mMedia) {
-    CSFLogError(LOGTAG, "%s: called API with disposed mMedia", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
@@ -1991,21 +1887,169 @@ PeerConnectionImpl::Close() {
     return NS_OK;
   }
 
-  CloseInt();
+  STAMP_TIMECARD(mTimeCard, "Close");
+  mSignalingState = RTCSignalingState::Closed;
+
+  // When ICE completes, we record a bunch of statistics that outlive the
+  // PeerConnection. This includes a call to GetStats, as well as some
+  // telemetry. We do this at the end of the call because we want to make sure
+  // we've waited for all trickle ICE candidates to come in; this can happen
+  // well after we've transitioned to connected. As a bonus, this allows us to
+  // detect race conditions where a stats dispatch happens right as the PC
+  // closes.
+  if (!mPrivateWindow) {
+    WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
+  }
+  RecordEndOfCallTelemetry();
+
+  CSFLogInfo(LOGTAG,
+             "%s: Closing PeerConnectionImpl %s; "
+             "ending call",
+             __FUNCTION__, mHandle.c_str());
+  if (mJsepSession) {
+    mJsepSession->Close();
+  }
+  if (mDataConnection) {
+    CSFLogInfo(LOGTAG, "%s: Destroying DataChannelConnection %p for %s",
+               __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
+    mDataConnection->Destroy();
+    mDataConnection =
+        nullptr;  // it may not go away until the runnables are dead
+  }
+  // before we destroy references to local tracks, detach from them
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    RefPtr<dom::MediaStreamTrack> track = transceiver->GetSendTrack();
+    if (track) {
+      track->RemovePrincipalChangeObserver(this);
+    }
+  }
+
+  if (mStunAddrsRequest) {
+    for (const auto& hostname : mRegisteredMDNSHostnames) {
+      mStunAddrsRequest->SendUnregisterMDNSHostname(
+          nsCString(hostname.c_str()));
+    }
+    mRegisteredMDNSHostnames.clear();
+    mStunAddrsRequest->Cancel();
+    mStunAddrsRequest = nullptr;
+  }
+
+  for (auto& transceiver : mTransceivers) {
+    // transceivers are garbage-collected, so we need to poke them to perform
+    // cleanup right now so the appropriate events fire.
+    transceiver->Shutdown_m();
+  }
+
+  mTransceivers.Clear();
+
+  mQueuedIceCtxOperations.clear();
+
   // Uncount this connection as active on the inner window upon close.
   if (mWindow && mActiveOnWindow) {
     mWindow->RemovePeerConnection();
     mActiveOnWindow = false;
   }
 
+  if (!mTransportHandler) {
+    // We were never initialized, apparently.
+    return NS_OK;
+  }
+
+  // Clear any resources held by libwebrtc through our Call instance.
+  RefPtr<GenericPromise> promise;
+  if (mCall) {
+    // Make sure the compiler does not get confused and try to acquire a
+    // reference to this thread _after_ we null out mCall.
+    auto callThread = mCall->mCallThread;
+    promise = InvokeAsync(callThread, __func__, [call = std::move(mCall)]() {
+      call->Destroy();
+      return GenericPromise::CreateAndResolve(
+          true, "PCImpl->WebRtcCallWrapper::Destroy");
+    });
+  } else {
+    promise = GenericPromise::CreateAndResolve(true, __func__);
+  }
+
+  // We do this after the call is destroyed, to allow things like RTCP BYE to
+  // make it out on the wire before we shut the MediaTransportHandler down.
+  // Before we can tear down the MediaTransportHandler, we also need to unhook
+  // from sigslot, which is accomplished by destroying mSignalHandler.
+  MOZ_RELEASE_ASSERT(mSTSThread);
+  promise
+      ->Then(
+          mSTSThread, __func__,
+          [signalHandler = std::move(mSignalHandler)]() mutable {
+            CSFLogDebug(
+                LOGTAG,
+                "Destroying PeerConnectionImpl::SignalHandler on STS thread");
+            return GenericPromise::CreateAndResolve(
+                true, "PeerConnectionImpl::~SignalHandler");
+          })
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [this, self = RefPtr<PeerConnectionImpl>(this)]() mutable {
+            CSFLogDebug(LOGTAG, "PCImpl->mTransportHandler::RemoveTransports");
+            mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
+            if (mPrivateWindow) {
+              mTransportHandler->ExitPrivateMode();
+            }
+            mTransportHandler = nullptr;
+            if (PeerConnectionCtx::isActive()) {
+              // If we're shutting down xpcom, this Instance will be unset
+              // before calling Close() on all remaining PCs, to avoid
+              // reentrancy.
+              PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
+            }
+          });
+
+  return NS_OK;
+}
+
+nsresult PeerConnectionImpl::SetConfiguration(
+    const RTCConfiguration& aConfiguration) {
+  nsresult rv = mTransportHandler->SetIceConfig(
+      aConfiguration.mIceServers, aConfiguration.mIceTransportPolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  JsepBundlePolicy bundlePolicy;
+  switch (aConfiguration.mBundlePolicy) {
+    case dom::RTCBundlePolicy::Balanced:
+      bundlePolicy = kBundleBalanced;
+      break;
+    case dom::RTCBundlePolicy::Max_compat:
+      bundlePolicy = kBundleMaxCompat;
+      break;
+    case dom::RTCBundlePolicy::Max_bundle:
+      bundlePolicy = kBundleMaxBundle;
+      break;
+    default:
+      MOZ_CRASH();
+  }
+
+  rv = mJsepSession->SetBundlePolicy(bundlePolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
+                __FUNCTION__, static_cast<unsigned>(rv),
+                mJsepSession->GetLastError().c_str());
+    return rv;
+  }
+
+  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
+    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
+    mPrivacyRequested = Some(true);
+  }
+
+  // Store the configuration for about:webrtc
+  StoreConfigurationForAboutWebrtc(aConfiguration);
   return NS_OK;
 }
 
 bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
                                      const nsAString& aPluginName) {
   // fire an event to the DOM window if this is "ours"
-  bool result = mMedia ? mMedia->AnyCodecHasPluginID(aPluginID) : false;
-  if (!result) {
+  if (!AnyCodecHasPluginID(aPluginID)) {
     return false;
   }
 
@@ -2095,57 +2139,6 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() {
   mCallTelemEnded = true;
 }
 
-nsresult PeerConnectionImpl::CloseInt() {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  mSignalingState = RTCSignalingState::Closed;
-
-  // We do this at the end of the call because we want to make sure we've waited
-  // for all trickle ICE candidates to come in; this can happen well after we've
-  // transitioned to connected. As a bonus, this allows us to detect race
-  // conditions where a stats dispatch happens right as the PC closes.
-  if (!mPrivateWindow) {
-    RecordLongtermICEStatistics();
-  }
-  RecordEndOfCallTelemetry();
-  CSFLogInfo(LOGTAG,
-             "%s: Closing PeerConnectionImpl %s; "
-             "ending call",
-             __FUNCTION__, mHandle.c_str());
-  if (mJsepSession) {
-    mJsepSession->Close();
-  }
-  if (mDataConnection) {
-    CSFLogInfo(LOGTAG, "%s: Destroying DataChannelConnection %p for %s",
-               __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
-    mDataConnection->Destroy();
-    mDataConnection =
-        nullptr;  // it may not go away until the runnables are dead
-  }
-  ShutdownMedia();
-
-  // DataConnection will need to stay alive until all threads/runnables exit
-
-  return NS_OK;
-}
-
-void PeerConnectionImpl::ShutdownMedia() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mMedia) return;
-
-  // before we destroy references to local tracks, detach from them
-  for (RefPtr<TransceiverImpl>& transceiver : mMedia->GetTransceivers()) {
-    RefPtr<dom::MediaStreamTrack> track = transceiver->GetSendTrack();
-    if (track) {
-      track->RemovePrincipalChangeObserver(this);
-    }
-  }
-
-  mMedia->Shutdown();
-  mMedia = nullptr;
-}
-
 DOMMediaStream* PeerConnectionImpl::GetReceiveStream(
     const std::string& aId) const {
   nsString wanted = NS_ConvertASCIItoUTF16(aId.c_str());
@@ -2171,27 +2164,25 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
   // Spec says we queue a task for all the stuff that ends up back in JS
   auto newSignalingState = GetSignalingState();
 
-  mThread->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
                  newSignalingState, sdpType, remote] {
         if (IsClosed()) {
           return;
         }
 
-        if (HasMedia()) {
-          // Section 4.4.1.5 Set the RTCSessionDescription:
-          if (sdpType == mozilla::kJsepSdpRollback) {
-            // - step 4.5.10, type is rollback
-            mMedia->RollbackRTCDtlsTransports();
-          } else if (!(remote && sdpType == mozilla::kJsepSdpOffer)) {
-            // - step 4.5.9 type is not rollback
-            // - step 4.5.9.1 when remote is false
-            // - step 4.5.9.2.13 when remote is true, type answer or pranswer
-            // More simply: not rollback, and not for remote offers.
-            bool markAsStable = sdpType == kJsepSdpOffer &&
-                                mSignalingState == RTCSignalingState::Stable;
-            mMedia->UpdateRTCDtlsTransports(markAsStable);
-          }
+        // Section 4.4.1.5 Set the RTCSessionDescription:
+        if (sdpType == mozilla::kJsepSdpRollback) {
+          // - step 4.5.10, type is rollback
+          RollbackRTCDtlsTransports();
+        } else if (!(remote && sdpType == mozilla::kJsepSdpOffer)) {
+          // - step 4.5.9 type is not rollback
+          // - step 4.5.9.1 when remote is false
+          // - step 4.5.9.2.13 when remote is true, type answer or pranswer
+          // More simply: not rollback, and not for remote offers.
+          bool markAsStable = sdpType == kJsepSdpOffer &&
+                              mSignalingState == RTCSignalingState::Stable;
+          UpdateRTCDtlsTransports(markAsStable);
         }
 
         JSErrorResult jrv;
@@ -2214,12 +2205,9 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
           mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
         }
 
-        // TODO: Spec says that we should do this even if JS closes the PC
-        // during the signalingstatechange event. We'd need to refactor a
-        // little here to make this possible.
-        if (remote && HasMedia()) {
+        if (remote) {
           dom::RTCRtpReceiver::StreamAssociationChanges changes;
-          for (const auto& transceiver : mMedia->GetTransceivers()) {
+          for (const auto& transceiver : mTransceivers) {
             transceiver->Receiver()->UpdateStreams(&changes);
           }
 
@@ -2285,15 +2273,15 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
 
   // Did we just apply a local description?
   if (!remote) {
-    // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
+    // We'd like to handle this in PeerConnectionImpl::UpdateNetworkState.
     // Unfortunately, if the WiFi switch happens quickly, we never see
     // that state change.  We need to detect the ice restart here and
-    // reset the PeerConnectionMedia's stun addresses so they are
-    // regathered when PeerConnectionMedia::GatherIfReady is called.
+    // reset the PeerConnectionImpl's stun addresses so they are
+    // regathered when PeerConnectionImpl::GatherIfReady is called.
     if (mJsepSession->IsIceRestarting()) {
-      mMedia->ResetStunAddrsForIceRestart();
+      ResetStunAddrsForIceRestart();
     }
-    mMedia->EnsureTransports(*mJsepSession);
+    EnsureTransports(*mJsepSession);
   }
 
   if (mJsepSession->GetState() != kJsepStateStable) {
@@ -2303,8 +2291,8 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
   // If we're rolling back a local offer, we might need to remove some
   // transports, and stomp some MediaPipeline setup, but nothing further
   // needs to be done.
-  mMedia->UpdateTransports(*mJsepSession, mForceIceTcp);
-  if (NS_FAILED(mMedia->UpdateMediaPipelines())) {
+  UpdateTransports(*mJsepSession, mForceIceTcp);
+  if (NS_FAILED(UpdateMediaPipelines())) {
     CSFLogError(LOGTAG, "Error Updating MediaPipelines");
     NS_ASSERTION(false,
                  "Error Updating MediaPipelines in OnSetDescriptionSuccess()");
@@ -2314,7 +2302,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
 
   if (sdpType != kJsepSdpRollback) {
     InitializeDataChannel();
-    mMedia->StartIceChecks(*mJsepSession);
+    StartIceChecks(*mJsepSession);
   }
 
   // Telemetry: record info on the current state of streams/renegotiations/etc
@@ -2362,20 +2350,11 @@ bool PeerConnectionImpl::IsClosed() const {
   return mSignalingState == RTCSignalingState::Closed;
 }
 
-bool PeerConnectionImpl::HasMedia() const { return mMedia; }
-
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
-  PeerConnectionImpl* impl =
-      PeerConnectionCtx::GetInstance()->GetPeerConnection(handle);
-
-  if (!PeerConnectionCtx::isActive() || !impl) {
-    return;
+  if (PeerConnectionCtx::isActive()) {
+    impl_ = PeerConnectionCtx::GetInstance()->GetPeerConnection(handle);
   }
-
-  if (!impl->media()) return;
-
-  impl_ = impl;
 }
 
 const RefPtr<MediaTransportHandler> PeerConnectionImpl::GetTransportHandler()
@@ -2383,10 +2362,7 @@ const RefPtr<MediaTransportHandler> PeerConnectionImpl::GetTransportHandler()
   return mTransportHandler;
 }
 
-const std::string& PeerConnectionImpl::GetHandle() {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  return mHandle;
-}
+const std::string& PeerConnectionImpl::GetHandle() { return mHandle; }
 
 const std::string& PeerConnectionImpl::GetName() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -2396,10 +2372,12 @@ const std::string& PeerConnectionImpl::GetName() {
 void PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                         const std::string& transportId,
                                         const std::string& ufrag) {
+  STAMP_TIMECARD(mTimeCard, "Ice Candidate gathered");
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
     CSFLogWarn(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
+    STAMP_TIMECARD(mTimeCard, "UDP Ice Candidate blocked");
     return;
   }
 
@@ -2413,6 +2391,7 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   if (NS_FAILED(res)) {
     std::string errorString = mJsepSession->GetLastError();
 
+    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate invalid");
     CSFLogError(LOGTAG,
                 "Failed to incorporate local candidate into SDP:"
                 " res = %u, candidate = %s, transport-id = %s,"
@@ -2423,12 +2402,13 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   }
 
   if (skipped) {
-    CSFLogDebug(LOGTAG,
-                "Skipped adding local candidate %s (transport-id %s) "
-                "to SDP, this typically happens because the m-section "
-                "is bundled, which means it doesn't make sense for it "
-                "to have its own transport-related attributes.",
-                candidate.c_str(), transportId.c_str());
+    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate skipped");
+    CSFLogInfo(LOGTAG,
+               "Skipped adding local candidate %s (transport-id %s) "
+               "to SDP, this typically happens because the m-section "
+               "is bundled, which means it doesn't make sense for it "
+               "to have its own transport-related attributes.",
+               candidate.c_str(), transportId.c_str());
     return;
   }
 
@@ -2436,14 +2416,15 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
       mJsepSession->GetLocalDescription(kJsepDescriptionPending);
   mCurrentLocalDescription =
       mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-  CSFLogDebug(LOGTAG, "Passing local candidate to content: %s",
-              candidate.c_str());
+  CSFLogInfo(LOGTAG, "Passing local candidate to content: %s",
+             candidate.c_str());
   SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
 }
 
 void PeerConnectionImpl::SendLocalIceCandidateToContent(
     uint16_t level, const std::string& mid, const std::string& candidate,
     const std::string& ufrag) {
+  STAMP_TIMECARD(mTimeCard, "Send Ice Candidate to content");
   JSErrorResult rv;
   mPCObserver->OnIceCandidate(level, ObString(mid.c_str()),
                               ObString(candidate.c_str()),
@@ -2463,13 +2444,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
   }
 
   mIceConnectionState = domState;
-
-  // Uncount this connection as active on the inner window upon close.
-  if (mWindow && mActiveOnWindow &&
-      mIceConnectionState == RTCIceConnectionState::Closed) {
-    mWindow->RemovePeerConnection();
-    mActiveOnWindow = false;
-  }
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
@@ -2508,6 +2482,26 @@ void PeerConnectionImpl::IceConnectionStateChange(
 
 void PeerConnectionImpl::OnCandidateFound(const std::string& aTransportId,
                                           const CandidateInfo& aCandidateInfo) {
+  if (mStunAddrsRequest && !aCandidateInfo.mMDNSAddress.empty()) {
+    MOZ_ASSERT(!aCandidateInfo.mActualAddress.empty());
+
+    if (mCanRegisterMDNSHostnamesDirectly) {
+      auto itor = mRegisteredMDNSHostnames.find(aCandidateInfo.mMDNSAddress);
+
+      // We'll see the address twice if we're generating both UDP and TCP
+      // candidates.
+      if (itor == mRegisteredMDNSHostnames.end()) {
+        mRegisteredMDNSHostnames.insert(aCandidateInfo.mMDNSAddress);
+        mStunAddrsRequest->SendRegisterMDNSHostname(
+            nsCString(aCandidateInfo.mMDNSAddress.c_str()),
+            nsCString(aCandidateInfo.mActualAddress.c_str()));
+      }
+    } else {
+      mMDNSHostnamesToRegister.emplace(aCandidateInfo.mMDNSAddress,
+                                       aCandidateInfo.mActualAddress);
+    }
+  }
+
   if (!aCandidateInfo.mDefaultHostRtp.empty()) {
     UpdateDefaultCandidate(aCandidateInfo.mDefaultHostRtp,
                            aCandidateInfo.mDefaultPortRtp,
@@ -2862,20 +2856,16 @@ RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetDataChannelStats(
 void PeerConnectionImpl::CollectConduitTelemetryData() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mMedia) {
-    return;
-  }
-
   nsTArray<RefPtr<VideoSessionConduit>> conduits;
-  for (const auto& transceiver : mMedia->GetTransceivers()) {
+  for (const auto& transceiver : mTransceivers) {
     if (RefPtr<MediaSessionConduit> conduit = transceiver->GetConduit()) {
       conduit->AsVideoSessionConduit().apply(
           [&](const auto& aVideo) { conduits.AppendElement(aVideo); });
     }
   }
 
-  if (!conduits.IsEmpty()) {
-    mMedia->mCall->mCallThread->Dispatch(
+  if (!conduits.IsEmpty() && mCall) {
+    mCall->mCallThread->Dispatch(
         NS_NewRunnableFunction(__func__, [conduits = std::move(conduits)] {
           for (const auto& conduit : conduits) {
             conduit->CollectTelemetryData();
@@ -2888,10 +2878,6 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
     DOMHighResTimeStamp aNow) {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<dom::RTCCodecStats> result;
-
-  if (!mMedia) {
-    return result;
-  }
 
   struct CodecComparator {
     bool operator()(const JsepCodecDescription* aA,
@@ -2910,7 +2896,7 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
       recvCodecMap;
 
   // Find all JsepCodecDescription instances we want to turn into codec stats.
-  for (const auto& transceiver : mMedia->GetTransceivers()) {
+  for (const auto& transceiver : mTransceivers) {
     auto sendCodecs = transceiver->GetNegotiatedSendCodecs();
     auto recvCodecs = transceiver->GetNegotiatedRecvCodecs();
 
@@ -3006,63 +2992,61 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
 
   nsTArray<dom::RTCCodecStats> codecStats = GetCodecStats(now);
 
-  if (mMedia) {
-    nsTArray<
-        std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>>
-        transceiverStatsPromises;
-    for (const auto& transceiver : mMedia->GetTransceivers()) {
-      const bool sendSelected = transceiver->HasSendTrack(aSelector);
-      const bool recvSelected = transceiver->Receiver()->HasTrack(aSelector);
-      if (!sendSelected && !recvSelected) {
-        continue;
-      }
-      nsTArray<RefPtr<RTCStatsPromise>> rtpStreamPromises;
-      // Get all rtp stream stats for the given selector. Then filter away any
-      // codec stat not related to the selector, and assign codec ids to the
-      // stream stats.
-      if (sendSelected) {
-        // TODO(bug 1616937): Use RTCRtpSender for these instead.
-        rtpStreamPromises.AppendElements(GetSenderStats(transceiver));
-      }
-      if (recvSelected) {
-        // Right now, returns two promises; one for RTP/RTCP stats, and
-        // another for ICE stats.
-        rtpStreamPromises.AppendElements(
-            transceiver->Receiver()->GetStatsInternal());
-      }
-      transceiverStatsPromises.AppendElement(
-          std::make_tuple(transceiver.get(),
-                          RTCStatsPromise::All(GetMainThreadSerialEventTarget(),
-                                               rtpStreamPromises)));
+  nsTArray<
+      std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>>
+      transceiverStatsPromises;
+  for (const auto& transceiver : mTransceivers) {
+    const bool sendSelected = transceiver->HasSendTrack(aSelector);
+    const bool recvSelected = transceiver->Receiver()->HasTrack(aSelector);
+    if (!sendSelected && !recvSelected) {
+      continue;
     }
-
-    promises.AppendElement(TransceiverImpl::ApplyCodecStats(
-        std::move(codecStats), std::move(transceiverStatsPromises)));
-
-    // TODO(bug 1616937): We need to move this is RTCRtpSender, to make
-    // getStats on those objects work properly. It might be worth optimizing
-    // the null selector case, so we don't end up with bunches of copies of
-    // the same transport information in the final report.
-    if (aSelector) {
-      std::string transportId =
-          mMedia->GetTransportIdMatchingSendTrack(*aSelector);
-      if (!transportId.empty()) {
-        promises.AppendElement(
-            mTransportHandler->GetIceStats(transportId, now));
-      }
-    } else {
-      promises.AppendElement(mTransportHandler->GetIceStats("", now));
+    nsTArray<RefPtr<RTCStatsPromise>> rtpStreamPromises;
+    // Get all rtp stream stats for the given selector. Then filter away any
+    // codec stat not related to the selector, and assign codec ids to the
+    // stream stats.
+    if (sendSelected) {
+      // TODO(bug 1616937): Use RTCRtpSender for these instead.
+      rtpStreamPromises.AppendElements(GetSenderStats(transceiver));
     }
-
-    promises.AppendElement(GetDataChannelStats(mDataConnection, now));
+    if (recvSelected) {
+      // Right now, returns two promises; one for RTP/RTCP stats, and
+      // another for ICE stats.
+      rtpStreamPromises.AppendElements(
+          transceiver->Receiver()->GetStatsInternal());
+    }
+    transceiverStatsPromises.AppendElement(
+        std::make_tuple(transceiver.get(),
+                        RTCStatsPromise::All(GetMainThreadSerialEventTarget(),
+                                             rtpStreamPromises)));
   }
+
+  promises.AppendElement(TransceiverImpl::ApplyCodecStats(
+      std::move(codecStats), std::move(transceiverStatsPromises)));
+
+  // TODO(bug 1616937): We need to move this is RTCRtpSender, to make
+  // getStats on those objects work properly. It might be worth optimizing
+  // the null selector case, so we don't end up with bunches of copies of
+  // the same transport information in the final report.
+  if (aSelector) {
+    std::string transportId = GetTransportIdMatchingSendTrack(*aSelector);
+    if (!transportId.empty()) {
+      promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
+    }
+  } else {
+    promises.AppendElement(mTransportHandler->GetIceStats("", now));
+  }
+
+  promises.AppendElement(GetDataChannelStats(mDataConnection, now));
 
   // This is what we're going to return; all the stuff in |promises| will be
   // accumulated here.
   UniquePtr<dom::RTCStatsReportInternal> report(
       new dom::RTCStatsReportInternal);
   report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
-  report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  if (mWindow && mWindow->GetBrowsingContext()) {
+    report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
+  }
   report->mConfiguration.Construct(mJsConfiguration);
   // TODO(bug 1589416): We need to do better here.
   if (!mIceStartTime.IsNull()) {
@@ -3111,9 +3095,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     }
   }
 
-  return dom::RTCStatsPromise::All(mThread, promises)
+  return dom::RTCStatsPromise::All(GetMainThreadSerialEventTarget(), promises)
       ->Then(
-          mThread, __func__,
+          GetMainThreadSerialEventTarget(), __func__,
           [report = std::move(report), idGen = mIdGenerator](
               nsTArray<UniquePtr<dom::RTCStatsCollection>> aStats) mutable {
             idGen->RewriteIds(std::move(aStats), report.get());
@@ -3123,10 +3107,6 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           [](nsresult rv) {
             return dom::RTCStatsReportPromise::CreateAndReject(rv, __func__);
           });
-}
-
-void PeerConnectionImpl::RecordLongtermICEStatistics() {
-  WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
 }
 
 void PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type) {
@@ -3149,38 +3129,38 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   // configured, at least until setConfiguration is implemented
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
   // @TODO bug 1739451 call this from setConfiguration
-  if (aConfig.mIceServers.WasPassed()) {
-    for (const auto& server : aConfig.mIceServers.Value()) {
-      RTCIceServerInternal internal;
-      internal.mCredentialProvided = server.mCredential.WasPassed();
-      internal.mUserNameProvided = server.mUsername.WasPassed();
-      if (server.mUrl.WasPassed()) {
-        if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
-          mozalloc_handle_oom(0);
-        }
-      }
-      if (server.mUrls.WasPassed()) {
-        for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
-          if (!internal.mUrls.AppendElement(url, fallible)) {
-            mozalloc_handle_oom(0);
-          }
-        }
-      }
-      if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
+  mJsConfiguration.mIceServers.Clear();
+  for (const auto& server : aConfig.mIceServers) {
+    RTCIceServerInternal internal;
+    internal.mCredentialProvided = server.mCredential.WasPassed();
+    internal.mUserNameProvided = server.mUsername.WasPassed();
+    if (server.mUrl.WasPassed()) {
+      if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
         mozalloc_handle_oom(0);
       }
     }
+    if (server.mUrls.WasPassed()) {
+      for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
+        if (!internal.mUrls.AppendElement(url, fallible)) {
+          mozalloc_handle_oom(0);
+        }
+      }
+    }
+    if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
+      mozalloc_handle_oom(0);
+    }
   }
+  mJsConfiguration.mSdpSemantics.Reset();
   if (aConfig.mSdpSemantics.WasPassed()) {
     mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
   }
 
+  mJsConfiguration.mIceTransportPolicy.Reset();
   mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
+  mJsConfiguration.mBundlePolicy.Reset();
   mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
   mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
-  mJsConfiguration.mCertificatesProvided =
-      aConfig.mCertificates.WasPassed() &&
-      !aConfig.mCertificates.Value().Length();
+  mJsConfiguration.mCertificatesProvided = !aConfig.mCertificates.Length();
 }
 
 dom::Sequence<dom::RTCSdpParsingErrorInternal>
@@ -3227,6 +3207,718 @@ void PeerConnectionImpl::StartCallTelem() {
   // as separate calls. Expect numbers to drop compared to
   // WEBRTC_CALL_COUNT_2.
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_3, 1);
+}
+
+void PeerConnectionImpl::StunAddrsHandler::OnMDNSQueryComplete(
+    const nsCString& hostname, const Maybe<nsCString>& address) {
+  MOZ_ASSERT(NS_IsMainThread());
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  auto itor = pcw.impl()->mQueriedMDNSHostnames.find(hostname.BeginReading());
+  if (itor != pcw.impl()->mQueriedMDNSHostnames.end()) {
+    if (address) {
+      for (auto& cand : itor->second) {
+        // Replace obfuscated address with actual address
+        std::string obfuscatedAddr = cand.mTokenizedCandidate[4];
+        cand.mTokenizedCandidate[4] = address->BeginReading();
+        std::ostringstream o;
+        for (size_t i = 0; i < cand.mTokenizedCandidate.size(); ++i) {
+          o << cand.mTokenizedCandidate[i];
+          if (i + 1 != cand.mTokenizedCandidate.size()) {
+            o << " ";
+          }
+        }
+        std::string mungedCandidate = o.str();
+        pcw.impl()->StampTimecard("Done looking up mDNS name");
+        pcw.impl()->mTransportHandler->AddIceCandidate(
+            cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
+      }
+    } else {
+      pcw.impl()->StampTimecard("Failed looking up mDNS name");
+    }
+    pcw.impl()->mQueriedMDNSHostnames.erase(itor);
+  }
+}
+
+void PeerConnectionImpl::StunAddrsHandler::OnStunAddrsAvailable(
+    const mozilla::net::NrIceStunAddrArray& addrs) {
+  CSFLogInfo(LOGTAG, "%s: receiving (%d) stun addrs", __FUNCTION__,
+             (int)addrs.Length());
+  PeerConnectionWrapper pcw(mPcHandle);
+  if (!pcw.impl()) {
+    return;
+  }
+  pcw.impl()->mStunAddrs = addrs.Clone();
+  pcw.impl()->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
+  pcw.impl()->FlushIceCtxOperationQueueIfReady();
+  // If parent process returns 0 STUN addresses, change ICE connection
+  // state to failed.
+  if (!pcw.impl()->mStunAddrs.Length()) {
+    pcw.impl()->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
+  }
+}
+
+void PeerConnectionImpl::InitLocalAddrs() {
+  if (mLocalAddrsRequestState == STUN_ADDR_REQUEST_PENDING) {
+    return;
+  }
+  if (mStunAddrsRequest) {
+    mLocalAddrsRequestState = STUN_ADDR_REQUEST_PENDING;
+    mStunAddrsRequest->SendGetStunAddrs();
+  } else {
+    mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
+  }
+}
+
+bool PeerConnectionImpl::ShouldForceProxy() const {
+  if (Preferences::GetBool("media.peerconnection.ice.proxy_only", false)) {
+    return true;
+  }
+
+  if (!Preferences::GetBool(
+          "media.peerconnection.ice.proxy_only_if_behind_proxy", false)) {
+    return false;
+  }
+
+  // Ok, we're supposed to be proxy_only, but only if a proxy is configured.
+  // Let's just see if the document was loaded via a proxy.
+
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = GetChannel();
+  if (!httpChannelInternal) {
+    return false;
+  }
+
+  nsCOMPtr<nsIProxiedChannel> proxiedChannel =
+      do_QueryInterface(httpChannelInternal);
+  if (!proxiedChannel) {
+    return false;
+  }
+
+  nsCOMPtr<nsIProxyInfo> proxyInfo;
+  proxiedChannel->GetProxyInfo(getter_AddRefs(proxyInfo));
+  if (!proxyInfo) {
+    return false;
+  }
+
+  nsCString proxyType;
+  proxyInfo->GetType(proxyType);
+
+  return !proxyType.IsEmpty() && !proxyType.EqualsLiteral("direct");
+}
+
+void PeerConnectionImpl::EnsureTransports(const JsepSession& aSession) {
+  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
+    (void)id;  // Lame, but no better way to do this right now.
+    if (transceiver->HasOwnTransport()) {
+      mTransportHandler->EnsureProvisionalTransport(
+          transceiver->mTransport.mTransportId,
+          transceiver->mTransport.mLocalUfrag,
+          transceiver->mTransport.mLocalPwd,
+          transceiver->mTransport.mComponents);
+    }
+  }
+
+  GatherIfReady();
+}
+
+void PeerConnectionImpl::UpdateRTCDtlsTransports(bool aMarkAsStable) {
+  for (auto& transceiver : mTransceivers) {
+    std::string transportId = transceiver->GetTransportId();
+    if (transportId.empty()) {
+      continue;
+    }
+    if (!mTransportIdToRTCDtlsTransport.count(transportId)) {
+      mTransportIdToRTCDtlsTransport.emplace(
+          transportId, new RTCDtlsTransport(transceiver->GetParentObject()));
+    }
+
+    transceiver->SetDtlsTransport(mTransportIdToRTCDtlsTransport[transportId],
+                                  aMarkAsStable);
+  }
+}
+
+void PeerConnectionImpl::RollbackRTCDtlsTransports() {
+  for (auto& transceiver : mTransceivers) {
+    transceiver->RollbackToStableDtlsTransport();
+  }
+}
+
+void PeerConnectionImpl::RemoveRTCDtlsTransportsExcept(
+    const std::set<std::string>& aTransportIds) {
+  for (auto iter = mTransportIdToRTCDtlsTransport.begin();
+       iter != mTransportIdToRTCDtlsTransport.end();) {
+    if (!aTransportIds.count(iter->first)) {
+      iter = mTransportIdToRTCDtlsTransport.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+nsresult PeerConnectionImpl::UpdateTransports(const JsepSession& aSession,
+                                              const bool forceIceTcp) {
+  std::set<std::string> finalTransports;
+  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
+    (void)id;  // Lame, but no better way to do this right now.
+    if (transceiver->HasOwnTransport()) {
+      finalTransports.insert(transceiver->mTransport.mTransportId);
+      UpdateTransport(*transceiver, forceIceTcp);
+    }
+  }
+
+  // clean up the unused RTCDtlsTransports
+  RemoveRTCDtlsTransportsExcept(finalTransports);
+
+  mTransportHandler->RemoveTransportsExcept(finalTransports);
+
+  for (const auto& transceiverImpl : mTransceivers) {
+    transceiverImpl->UpdateTransport();
+  }
+
+  return NS_OK;
+}
+
+void PeerConnectionImpl::UpdateTransport(const JsepTransceiver& aTransceiver,
+                                         bool aForceIceTcp) {
+  std::string ufrag;
+  std::string pwd;
+  std::vector<std::string> candidates;
+  size_t components = 0;
+
+  const JsepTransport& transport = aTransceiver.mTransport;
+  unsigned level = aTransceiver.GetLevel();
+
+  CSFLogDebug(LOGTAG, "ACTIVATING TRANSPORT! - PC %s: level=%u components=%u",
+              mHandle.c_str(), (unsigned)level,
+              (unsigned)transport.mComponents);
+
+  ufrag = transport.mIce->GetUfrag();
+  pwd = transport.mIce->GetPassword();
+  candidates = transport.mIce->GetCandidates();
+  components = transport.mComponents;
+  if (aForceIceTcp) {
+    candidates.erase(
+        std::remove_if(candidates.begin(), candidates.end(),
+                       [](const std::string& s) {
+                         return s.find(" UDP ") != std::string::npos ||
+                                s.find(" udp ") != std::string::npos;
+                       }),
+        candidates.end());
+  }
+
+  nsTArray<uint8_t> keyDer;
+  nsTArray<uint8_t> certDer;
+  nsresult rv = Identity()->Serialize(&keyDer, &certDer);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "%s: Failed to serialize DTLS identity: %d",
+                __FUNCTION__, (int)rv);
+    return;
+  }
+
+  DtlsDigestList digests;
+  for (const auto& fingerprint :
+       transport.mDtls->GetFingerprints().mFingerprints) {
+    std::ostringstream ss;
+    ss << fingerprint.hashFunc;
+    digests.emplace_back(ss.str(), fingerprint.fingerprint);
+  }
+
+  mTransportHandler->ActivateTransport(
+      transport.mTransportId, transport.mLocalUfrag, transport.mLocalPwd,
+      components, ufrag, pwd, keyDer, certDer, Identity()->auth_type(),
+      transport.mDtls->GetRole() == JsepDtlsTransport::kJsepDtlsClient, digests,
+      PrivacyRequested());
+
+  for (auto& candidate : candidates) {
+    AddIceCandidate("candidate:" + candidate, transport.mTransportId, ufrag);
+  }
+}
+
+nsresult PeerConnectionImpl::UpdateMediaPipelines() {
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    transceiver->ResetSync();
+  }
+
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    if (!transceiver->IsVideo()) {
+      nsresult rv = transceiver->SyncWithMatchingVideoConduits(mTransceivers);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+
+    nsresult rv = transceiver->UpdateConduit();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+void PeerConnectionImpl::StartIceChecks(const JsepSession& aSession) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mCanRegisterMDNSHostnamesDirectly) {
+    for (auto& pair : mMDNSHostnamesToRegister) {
+      mRegisteredMDNSHostnames.insert(pair.first);
+      mStunAddrsRequest->SendRegisterMDNSHostname(
+          nsCString(pair.first.c_str()), nsCString(pair.second.c_str()));
+    }
+    mMDNSHostnamesToRegister.clear();
+    mCanRegisterMDNSHostnamesDirectly = true;
+  }
+
+  std::vector<std::string> attributes;
+  if (aSession.RemoteIsIceLite()) {
+    attributes.push_back("ice-lite");
+  }
+
+  if (!aSession.GetIceOptions().empty()) {
+    attributes.push_back("ice-options:");
+    for (const auto& option : aSession.GetIceOptions()) {
+      attributes.back() += option + ' ';
+    }
+  }
+
+  nsCOMPtr<nsIRunnable> runnable(
+      WrapRunnable(mTransportHandler, &MediaTransportHandler::StartIceChecks,
+                   aSession.IsIceControlling(), attributes));
+
+  PerformOrEnqueueIceCtxOperation(runnable);
+}
+
+bool PeerConnectionImpl::GetPrefDefaultAddressOnly() const {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint64_t winId = mWindow->WindowID();
+
+  bool default_address_only = Preferences::GetBool(
+      "media.peerconnection.ice.default_address_only", false);
+  default_address_only |=
+      !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
+  return default_address_only;
+}
+
+bool PeerConnectionImpl::GetPrefObfuscateHostAddresses() const {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint64_t winId = mWindow->WindowID();
+
+  bool obfuscate_host_addresses = Preferences::GetBool(
+      "media.peerconnection.ice.obfuscate_host_addresses", false);
+  obfuscate_host_addresses &=
+      !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
+  obfuscate_host_addresses &= !PeerConnectionImpl::HostnameInPref(
+      "media.peerconnection.ice.obfuscate_host_addresses.blocklist",
+      mWindow->GetDocumentURI());
+  obfuscate_host_addresses &= XRE_IsContentProcess();
+
+  return obfuscate_host_addresses;
+}
+
+PeerConnectionImpl::SignalHandler::SignalHandler(PeerConnectionImpl* aPc,
+                                                 MediaTransportHandler* aSource)
+    : mHandle(aPc->GetHandle()),
+      mSource(aSource),
+      mSTSThread(aPc->GetSTSThread()) {
+  ConnectSignals();
+}
+
+PeerConnectionImpl::SignalHandler::~SignalHandler() {
+  ASSERT_ON_THREAD(mSTSThread);
+}
+
+void PeerConnectionImpl::SignalHandler::ConnectSignals() {
+  mSource->SignalGatheringStateChange.connect(
+      this, &PeerConnectionImpl::SignalHandler::IceGatheringStateChange_s);
+  mSource->SignalConnectionStateChange.connect(
+      this, &PeerConnectionImpl::SignalHandler::IceConnectionStateChange_s);
+  mSource->SignalCandidate.connect(
+      this, &PeerConnectionImpl::SignalHandler::OnCandidateFound_s);
+  mSource->SignalAlpnNegotiated.connect(
+      this, &PeerConnectionImpl::SignalHandler::AlpnNegotiated_s);
+}
+
+void PeerConnectionImpl::AddIceCandidate(const std::string& aCandidate,
+                                         const std::string& aTransportId,
+                                         const std::string& aUfrag) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aTransportId.empty());
+
+  bool obfuscate_host_addresses = Preferences::GetBool(
+      "media.peerconnection.ice.obfuscate_host_addresses", false);
+
+  if (obfuscate_host_addresses && !RelayOnly()) {
+    std::vector<std::string> tokens;
+    TokenizeCandidate(aCandidate, tokens);
+
+    if (tokens.size() > 4) {
+      std::string addr = tokens[4];
+
+      // Check for address ending with .local
+      size_t nPeriods = std::count(addr.begin(), addr.end(), '.');
+      size_t dotLocalLength = 6;  // length of ".local"
+
+      if (nPeriods == 1 &&
+          addr.rfind(".local") + dotLocalLength == addr.length()) {
+        if (mStunAddrsRequest) {
+          PendingIceCandidate cand;
+          cand.mTokenizedCandidate = std::move(tokens);
+          cand.mTransportId = aTransportId;
+          cand.mUfrag = aUfrag;
+          mQueriedMDNSHostnames[addr].push_back(cand);
+
+          GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+              "PeerConnectionImpl::SendQueryMDNSHostname",
+              [self = RefPtr<PeerConnectionImpl>(this), addr]() mutable {
+                if (self->mStunAddrsRequest) {
+                  self->StampTimecard("Look up mDNS name");
+                  self->mStunAddrsRequest->SendQueryMDNSHostname(
+                      nsCString(nsAutoCString(addr.c_str())));
+                }
+                NS_ReleaseOnMainThread(
+                    "PeerConnectionImpl::SendQueryMDNSHostname", self.forget());
+              }));
+        }
+        // TODO: Bug 1535690, we don't want to tell the ICE context that remote
+        // trickle is done if we are waiting to resolve a mDNS candidate.
+        return;
+      }
+    }
+  }
+
+  mTransportHandler->AddIceCandidate(aTransportId, aCandidate, aUfrag, "");
+}
+
+void PeerConnectionImpl::UpdateNetworkState(bool online) {
+  if (mTransportHandler) {
+    mTransportHandler->UpdateNetworkState(online);
+  }
+}
+
+void PeerConnectionImpl::FlushIceCtxOperationQueueIfReady() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsIceCtxReady()) {
+    for (auto& queuedIceCtxOperation : mQueuedIceCtxOperations) {
+      queuedIceCtxOperation->Run();
+    }
+    mQueuedIceCtxOperations.clear();
+  }
+}
+
+void PeerConnectionImpl::PerformOrEnqueueIceCtxOperation(
+    nsIRunnable* runnable) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsIceCtxReady()) {
+    runnable->Run();
+  } else {
+    mQueuedIceCtxOperations.push_back(runnable);
+  }
+}
+
+void PeerConnectionImpl::GatherIfReady() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Init local addrs here so that if we re-gather after an ICE restart
+  // resulting from changing WiFi networks, we get new local addrs.
+  // Otherwise, we would reuse the addrs from the original WiFi network
+  // and the ICE restart will fail.
+  if (!mStunAddrs.Length()) {
+    InitLocalAddrs();
+  }
+
+  // If we had previously queued gathering or ICE start, unqueue them
+  mQueuedIceCtxOperations.clear();
+  nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
+      RefPtr<PeerConnectionImpl>(this), &PeerConnectionImpl::EnsureIceGathering,
+      GetPrefDefaultAddressOnly(), GetPrefObfuscateHostAddresses()));
+
+  PerformOrEnqueueIceCtxOperation(runnable);
+}
+
+already_AddRefed<nsIHttpChannelInternal> PeerConnectionImpl::GetChannel()
+    const {
+  Document* doc = mWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    NS_WARNING("Unable to get document from window");
+    return nullptr;
+  }
+
+  if (!doc->GetDocumentURI()->SchemeIs("file")) {
+    nsIChannel* channel = doc->GetChannel();
+    if (!channel) {
+      NS_WARNING("Unable to get channel from document");
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+        do_QueryInterface(channel);
+    if (NS_WARN_IF(!httpChannelInternal)) {
+      CSFLogInfo(LOGTAG, "%s: Document does not have an HTTP channel",
+                 __FUNCTION__);
+      return nullptr;
+    }
+    return httpChannelInternal.forget();
+  }
+  return nullptr;
+}
+
+nsresult PeerConnectionImpl::SetTargetForDefaultLocalAddressLookup() {
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = GetChannel();
+  if (!httpChannelInternal) {
+    return NS_OK;
+  }
+
+  nsCString remoteIp;
+  nsresult rv = httpChannelInternal->GetRemoteAddress(remoteIp);
+  if (NS_FAILED(rv) || remoteIp.IsEmpty()) {
+    CSFLogError(LOGTAG, "%s: Failed to get remote IP address: %d", __FUNCTION__,
+                (int)rv);
+    return rv;
+  }
+
+  int32_t remotePort;
+  rv = httpChannelInternal->GetRemotePort(&remotePort);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "%s: Failed to get remote port number: %d",
+                __FUNCTION__, (int)rv);
+    return rv;
+  }
+
+  mTransportHandler->SetTargetForDefaultLocalAddressLookup(remoteIp.get(),
+                                                           remotePort);
+
+  return NS_OK;
+}
+
+void PeerConnectionImpl::EnsureIceGathering(bool aDefaultRouteOnly,
+                                            bool aObfuscateHostAddresses) {
+  auto proxyConfig = GetProxyConfig();
+  if (proxyConfig) {
+    // Note that this could check if PrivacyRequested() is set on the PC and
+    // remove "webrtc" from the ALPN list.  But that would only work if the PC
+    // was constructed with a peerIdentity constraint, not when isolated
+    // streams are added.  If we ever need to signal to the proxy that the
+    // media is isolated, then we would need to restructure this code.
+    mTransportHandler->SetProxyConfig(std::move(*proxyConfig));
+  }
+
+  if (!mTargetForDefaultLocalAddressLookupIsSet) {
+    nsresult rv = SetTargetForDefaultLocalAddressLookup();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Unable to set target for default local address lookup");
+    }
+    mTargetForDefaultLocalAddressLookupIsSet = true;
+  }
+
+  // Make sure we don't call StartIceGathering if we're in e10s mode
+  // and we received no STUN addresses from the parent process.  In the
+  // absence of previously provided STUN addresses, StartIceGathering will
+  // attempt to gather them (as in non-e10s mode), and this will cause a
+  // sandboxing exception in e10s mode.
+  if (!mStunAddrs.Length() && XRE_IsContentProcess()) {
+    CSFLogInfo(LOGTAG, "%s: No STUN addresses returned from parent process",
+               __FUNCTION__);
+    return;
+  }
+
+  mTransportHandler->StartIceGathering(aDefaultRouteOnly,
+                                       aObfuscateHostAddresses, mStunAddrs);
+}
+
+nsresult PeerConnectionImpl::AddTransceiver(
+    JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
+    SharedWebrtcState* aSharedWebrtcState, RTCStatsIdGenerator* aIdGenerator,
+    RefPtr<TransceiverImpl>* aTransceiverImpl) {
+  if (!mCall) {
+    mCall = WebrtcCallWrapper::Create(
+        GetTimestampMaker(),
+        media::ShutdownBlockingTicket::Create(
+            u"WebrtcCallWrapper shutdown blocker"_ns,
+            NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
+        aSharedWebrtcState);
+  }
+
+  RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
+      mWindow, PrivacyNeeded(), GetHandle(), mTransportHandler,
+      aJsepTransceiver, GetMainThreadSerialEventTarget(), mSTSThread.get(),
+      aSendTrack, mCall.get(), aIdGenerator);
+
+  if (!transceiver->IsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aSendTrack) {
+    // implement checking for peerIdentity (where failure == black/silence)
+    Document* doc = mWindow->GetExtantDoc();
+    if (doc) {
+      transceiver->UpdateSinkIdentity(nullptr, doc->NodePrincipal(),
+                                      GetPeerIdentity());
+    } else {
+      MOZ_CRASH();
+      return NS_ERROR_FAILURE;  // Don't remove this till we know it's safe.
+    }
+  }
+
+  mTransceivers.AppendElement(transceiver);
+  *aTransceiverImpl = transceiver;
+
+  return NS_OK;
+}
+
+std::string PeerConnectionImpl::GetTransportIdMatchingSendTrack(
+    const dom::MediaStreamTrack& aTrack) const {
+  for (const RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    if (transceiver->HasSendTrack(&aTrack)) {
+      return transceiver->GetTransportId();
+    }
+  }
+  return std::string();
+}
+
+void PeerConnectionImpl::SignalHandler::IceGatheringStateChange_s(
+    dom::RTCIceGatheringState aState) {
+  ASSERT_ON_THREAD(mSTSThread);
+
+  GetMainThreadEventTarget()->Dispatch(
+      NS_NewRunnableFunction(__func__,
+                             [handle = mHandle, aState] {
+                               PeerConnectionWrapper wrapper(handle);
+                               if (wrapper.impl()) {
+                                 wrapper.impl()->IceGatheringStateChange(
+                                     aState);
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::SignalHandler::IceConnectionStateChange_s(
+    dom::RTCIceConnectionState aState) {
+  ASSERT_ON_THREAD(mSTSThread);
+
+  GetMainThreadEventTarget()->Dispatch(
+      NS_NewRunnableFunction(__func__,
+                             [handle = mHandle, aState] {
+                               PeerConnectionWrapper wrapper(handle);
+                               if (wrapper.impl()) {
+                                 wrapper.impl()->IceConnectionStateChange(
+                                     aState);
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::SignalHandler::OnCandidateFound_s(
+    const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
+  ASSERT_ON_THREAD(mSTSThread);
+  CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aTransportId.c_str());
+
+  MOZ_ASSERT(!aCandidateInfo.mUfrag.empty());
+
+  GetMainThreadEventTarget()->Dispatch(
+      NS_NewRunnableFunction(__func__,
+                             [handle = mHandle, aTransportId, aCandidateInfo] {
+                               PeerConnectionWrapper wrapper(handle);
+                               if (wrapper.impl()) {
+                                 wrapper.impl()->OnCandidateFound(
+                                     aTransportId, aCandidateInfo);
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::SignalHandler::AlpnNegotiated_s(
+    const std::string& aAlpn, bool aPrivacyRequested) {
+  MOZ_DIAGNOSTIC_ASSERT((aAlpn == "c-webrtc") == aPrivacyRequested);
+  GetMainThreadEventTarget()->Dispatch(
+      NS_NewRunnableFunction(__func__,
+                             [handle = mHandle, aPrivacyRequested] {
+                               PeerConnectionWrapper wrapper(handle);
+                               if (wrapper.impl()) {
+                                 wrapper.impl()->OnAlpnNegotiated(
+                                     aPrivacyRequested);
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
+}
+
+/**
+ * Tells you if any local track is isolated to a specific peer identity.
+ * Obviously, we want all the tracks to be isolated equally so that they can
+ * all be sent or not.  We check once when we are setting a local description
+ * and that determines if we flip the "privacy requested" bit on.  Once the bit
+ * is on, all media originating from this peer connection is isolated.
+ *
+ * @returns true if any track has a peerIdentity set on it
+ */
+bool PeerConnectionImpl::AnyLocalTrackHasPeerIdentity() const {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (const RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    if (transceiver->GetSendTrack() &&
+        transceiver->GetSendTrack()->GetPeerIdentity()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void PeerConnectionImpl::UpdateSinkIdentity_m(
+    const MediaStreamTrack* aTrack, nsIPrincipal* aPrincipal,
+    const PeerIdentity* aSinkIdentity) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    transceiver->UpdateSinkIdentity(aTrack, aPrincipal, aSinkIdentity);
+  }
+}
+
+bool PeerConnectionImpl::AnyCodecHasPluginID(uint64_t aPluginID) {
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    if (transceiver->ConduitHasPluginID(aPluginID)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::unique_ptr<NrSocketProxyConfig> PeerConnectionImpl::GetProxyConfig()
+    const {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mForceProxy &&
+      Preferences::GetBool("media.peerconnection.disable_http_proxy", false)) {
+    return nullptr;
+  }
+
+  nsCString alpn = "webrtc,c-webrtc"_ns;
+  auto* browserChild = BrowserChild::GetFrom(mWindow);
+  if (!browserChild) {
+    // Android doesn't have browser child apparently...
+    return nullptr;
+  }
+
+  Document* doc = mWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    NS_WARNING("Unable to get document from window");
+    return nullptr;
+  }
+
+  TabId id = browserChild->GetTabId();
+  nsCOMPtr<nsILoadInfo> loadInfo =
+      new net::LoadInfo(doc->NodePrincipal(), doc->NodePrincipal(), doc, 0,
+                        nsIContentPolicy::TYPE_INVALID);
+
+  Maybe<net::LoadInfoArgs> loadInfoArgs;
+  MOZ_ALWAYS_SUCCEEDS(
+      mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
+  return std::unique_ptr<NrSocketProxyConfig>(new NrSocketProxyConfig(
+      net::WebrtcProxyConfig(id, alpn, *loadInfoArgs, mForceProxy)));
 }
 
 std::map<uint64_t, PeerConnectionAutoTimer>

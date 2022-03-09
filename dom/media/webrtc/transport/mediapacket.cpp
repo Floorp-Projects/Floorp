@@ -26,34 +26,34 @@ void MediaPacket::Copy(const uint8_t* data, size_t len, size_t capacity) {
   memcpy(data_.get(), data, len);
 }
 
-void MediaPacket::Serialize(IPC::Message* aMsg) const {
-  aMsg->WriteUInt32(len_);
-  aMsg->WriteUInt32(capacity_);
+void MediaPacket::Serialize(IPC::MessageWriter* aWriter) const {
+  aWriter->WriteUInt32(len_);
+  aWriter->WriteUInt32(capacity_);
   if (len_) {
-    aMsg->WriteBytes(data_.get(), len_);
+    aWriter->WriteBytes(data_.get(), len_);
   }
-  aMsg->WriteUInt32(encrypted_len_);
+  aWriter->WriteUInt32(encrypted_len_);
   if (encrypted_len_) {
-    aMsg->WriteBytes(encrypted_data_.get(), encrypted_len_);
+    aWriter->WriteBytes(encrypted_data_.get(), encrypted_len_);
   }
-  aMsg->WriteInt32(sdp_level_.isSome() ? *sdp_level_ : -1);
-  aMsg->WriteInt32(type_);
+  aWriter->WriteInt32(sdp_level_.isSome() ? *sdp_level_ : -1);
+  aWriter->WriteInt32(type_);
 }
 
-bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
+bool MediaPacket::Deserialize(IPC::MessageReader* aReader) {
   Reset();
   uint32_t len;
-  if (!aMsg->ReadUInt32(aIter, &len)) {
+  if (!aReader->ReadUInt32(&len)) {
     return false;
   }
   uint32_t capacity;
-  if (!aMsg->ReadUInt32(aIter, &capacity)) {
+  if (!aReader->ReadUInt32(&capacity)) {
     return false;
   }
   if (len) {
     MOZ_RELEASE_ASSERT(capacity >= len);
     UniquePtr<uint8_t[]> data(new uint8_t[capacity]);
-    if (!aMsg->ReadBytesInto(aIter, data.get(), len)) {
+    if (!aReader->ReadBytesInto(data.get(), len)) {
       return false;
     }
     data_ = std::move(data);
@@ -61,12 +61,12 @@ bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
     capacity_ = capacity;
   }
 
-  if (!aMsg->ReadUInt32(aIter, &len)) {
+  if (!aReader->ReadUInt32(&len)) {
     return false;
   }
   if (len) {
     UniquePtr<uint8_t[]> data(new uint8_t[len]);
-    if (!aMsg->ReadBytesInto(aIter, data.get(), len)) {
+    if (!aReader->ReadBytesInto(data.get(), len)) {
       return false;
     }
     encrypted_data_ = std::move(data);
@@ -74,7 +74,7 @@ bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
   }
 
   int32_t sdp_level;
-  if (!aMsg->ReadInt32(aIter, &sdp_level)) {
+  if (!aReader->ReadInt32(&sdp_level)) {
     return false;
   }
 
@@ -83,7 +83,7 @@ bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
   }
 
   int32_t type;
-  if (!aMsg->ReadInt32(aIter, &type)) {
+  if (!aReader->ReadInt32(&type)) {
     return false;
   }
   type_ = static_cast<Type>(type);

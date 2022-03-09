@@ -1442,6 +1442,13 @@ audiounit_destroy(cubeb * ctx)
           audiounit_active_streams(ctx));
     }
 
+    // Destroying a cubeb context with device collection callbacks registered
+    // is misuse of the API, assert then attempt to clean up.
+    assert(!ctx->input_collection_changed_callback &&
+           !ctx->input_collection_changed_user_ptr &&
+           !ctx->output_collection_changed_callback &&
+           !ctx->output_collection_changed_user_ptr);
+
     /* Unregister the callback if necessary. */
     if (ctx->input_collection_changed_callback) {
       audiounit_remove_device_listener(ctx, CUBEB_DEVICE_TYPE_INPUT);

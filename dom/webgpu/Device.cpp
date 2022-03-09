@@ -247,7 +247,7 @@ already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
   context->mParentId = mId;
   mBridge->DeviceCreateComputePipelineAsync(context.get(), aDesc)
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, context, promise](RawId aId) {
             RefPtr<ComputePipeline> object = new ComputePipeline(
                 self, aId, context->mImplicitPipelineLayoutId,
@@ -274,7 +274,7 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
   context->mParentId = mId;
   mBridge->DeviceCreateRenderPipelineAsync(context.get(), aDesc)
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, context, promise](RawId aId) {
             RefPtr<RenderPipeline> object = new RenderPipeline(
                 self, aId, context->mImplicitPipelineLayoutId,
@@ -291,7 +291,7 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
 
 already_AddRefed<Texture> Device::InitSwapChain(
     const dom::GPUCanvasConfiguration& aDesc,
-    wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
+    const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
     gfx::IntSize* aCanvasSize) {
   gfx::IntSize size = *aCanvasSize;
   if (aDesc.mSize.WasPassed()) {
@@ -314,8 +314,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
-  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
-                                 aExternalImageId);
+  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount, aHandle);
 
   dom::GPUTextureDescriptor desc;
   desc.mDimension = dom::GPUTextureDimension::_2d;
@@ -351,7 +350,7 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
   auto errorPromise = mBridge->SendDevicePopErrorScope(mId);
 
   errorPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, promise](const MaybeScopedError& aMaybeError) {
         if (aMaybeError) {
           if (aMaybeError->operationError) {

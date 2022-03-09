@@ -21,9 +21,7 @@ const {
 const { getOriginalStackFrames } = require("./utils/getOriginalStackFrames");
 const { setAssetRootURL } = require("./utils/assetRoot");
 
-const {
-  workerUtils: { workerHandler },
-} = require("devtools-utils");
+const { workerHandler } = require("devtools/client/shared/worker-utils");
 
 // The interface is implemented in source-map to be
 // easier to unit test.

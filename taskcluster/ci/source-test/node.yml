@@ -124,6 +124,32 @@ devtools-tests:
             - 'devtools/client/**'
             - 'devtools/shared/**'
 
+devtools-verify-bundle:
+    description: devtools bundle checker
+    platform: linux1804-64/opt
+    treeherder:
+        symbol: node(devtools-bundle)
+        kind: test
+        tier: 2
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 600
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}'
+        command: >
+            npm install &&
+            cd devtools/client/debugger &&
+            yarn &&
+            node bin/bundle.js &&
+            cd ../../.. &&
+            ./mach python taskcluster/scripts/misc/verify-devtools-bundle.py
+    when:
+        files-changed:
+            - 'devtools/**'
+
 eslint-plugin-mozilla:
     description: eslint-plugin-mozilla integration tests
     platform: linux1804-64/opt

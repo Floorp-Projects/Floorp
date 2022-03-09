@@ -92,8 +92,8 @@ async function testFormatterWithNoStyleGroup(consoleFront) {
 
   checkConsoleAPICall(packet.message, {
     arguments: ["%cfoobar"],
-    styles: []
   });
+  is(packet.message.styles, undefined, "No 'styles' property");
 }
 
 async function testFormatterWithNoStyleGroupCollapsed(consoleFront) {
@@ -105,8 +105,8 @@ async function testFormatterWithNoStyleGroupCollapsed(consoleFront) {
 
   checkConsoleAPICall(packet.message, {
     arguments: ["%cfoobaz"],
-    styles: []
   });
+  is(packet.message.styles, undefined, "No 'styles' property");
 }
 
   </script>

@@ -2,16 +2,154 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/BackgroundTasks.h"
+
+#include "nsIBackgroundTasksManager.h"
+#include "nsIFile.h"
+#include "nsImportModule.h"
 #include "nsPrintfCString.h"
+#include "nsXULAppAPI.h"
 #include "SpecialSystemDirectory.h"
 
-#include "mozilla/BackgroundTasks.h"
+#include "mozilla/LateWriteChecks.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(BackgroundTasks, nsIBackgroundTasks);
+
+BackgroundTasks::BackgroundTasks(Maybe<nsCString> aBackgroundTask)
+    : mBackgroundTask(std::move(aBackgroundTask)) {
+  // Log when a background task is created.
+  if (mBackgroundTask.isSome()) {
+    MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+            ("Created background task: %s", mBackgroundTask->get()));
+  }
+}
+
+void BackgroundTasks::Init(Maybe<nsCString> aBackgroundTask) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+
+  MOZ_RELEASE_ASSERT(!sSingleton,
+                     "BackgroundTasks singleton already initialized");
+  // The singleton will be cleaned up by `Shutdown()`.
+  sSingleton = new BackgroundTasks(std::move(aBackgroundTask));
+}
+
+void BackgroundTasks::Shutdown() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+
+  MOZ_LOG(sBackgroundTasksLog, LogLevel::Info, ("Shutdown"));
+
+  if (!sSingleton) {
+    return;
+  }
+
+  if (sSingleton->mProfD) {
+    AutoSuspendLateWriteChecks suspend;
+
+    // Log that the temporary profile is being removed.
+    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+      nsAutoString path;
+      if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
+        MOZ_LOG(
+            sBackgroundTasksLog, mozilla::LogLevel::Info,
+            ("Removing profile: %s", NS_LossyConvertUTF16toASCII(path).get()));
+      }
+    }
+
+    Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
+  }
+
+  sSingleton = nullptr;
+}
+
+BackgroundTasks* BackgroundTasks::GetSingleton() {
+  if (!sSingleton) {
+    // xpcshell doesn't set up background tasks: default to no background
+    // task.
+    Init(Nothing());
+  }
+
+  MOZ_RELEASE_ASSERT(sSingleton,
+                     "BackgroundTasks singleton should have been initialized");
+
+  return sSingleton.get();
+}
+
+already_AddRefed<BackgroundTasks> BackgroundTasks::GetSingletonAddRefed() {
+  return RefPtr<BackgroundTasks>(GetSingleton()).forget();
+}
+
+Maybe<nsCString> BackgroundTasks::GetBackgroundTasks() {
+  if (!XRE_IsParentProcess()) {
+    return Nothing();
+  }
+
+  return GetSingleton()->mBackgroundTask;
+}
+
+bool BackgroundTasks::IsBackgroundTaskMode() {
+  if (!XRE_IsParentProcess()) {
+    return false;
+  }
+
+  return GetBackgroundTasks().isSome();
+}
+
+nsresult BackgroundTasks::CreateTemporaryProfileDirectory(
+    const nsCString& aInstallHash, nsIFile** aFile) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv =
+      GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash, aFile);
+
+  // Log whether the temporary profile was created.
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+            ("Failed to create temporary profile directory!"));
+  } else {
+    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+      nsAutoString path;
+      if (aFile && *aFile && NS_SUCCEEDED((*aFile)->GetPath(path))) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Created temporary profile directory: %s",
+                 NS_LossyConvertUTF16toASCII(path).get()));
+      }
+    }
+  }
+
+  return rv;
+}
+
+bool BackgroundTasks::IsUsingTemporaryProfile() {
+  return sSingleton && sSingleton->mProfD;
+}
+
+nsresult BackgroundTasks::RunBackgroundTask(nsICommandLine* aCmdLine) {
+  Maybe<nsCString> task = GetBackgroundTasks();
+  if (task.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIBackgroundTasksManager> manager =
+      do_GetService("@mozilla.org/backgroundtasksmanager;1");
+
+  MOZ_RELEASE_ASSERT(manager, "Could not get background tasks manager service");
+
+  NS_ConvertASCIItoUTF16 name(task.ref().get());
+  Unused << manager->RunBackgroundTaskNamed(name, aCmdLine);
+
+  return NS_OK;
+}
+
+bool BackgroundTasks::IsUpdatingTaskName(const nsCString& aName) {
+  return aName.EqualsLiteral("backgroundupdate") ||
+         aName.EqualsLiteral("shouldprocessupdates");
+}
 
 nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
     const nsCString& aInstallHash, nsIFile** aFile) {
@@ -72,6 +210,8 @@ nsresult BackgroundTasks::OverrideBackgroundTaskNameForTesting(
   return NS_OK;
 }
 
-mozilla::StaticRefPtr<BackgroundTasks> BackgroundTasks::sSingleton;
+StaticRefPtr<BackgroundTasks> BackgroundTasks::sSingleton;
+
+LazyLogModule BackgroundTasks::sBackgroundTasksLog("BackgroundTasks");
 
 }  // namespace mozilla

@@ -24,6 +24,8 @@
 #  include "jit/mips32/CodeGenerator-mips32.h"
 #elif defined(JS_CODEGEN_MIPS64)
 #  include "jit/mips64/CodeGenerator-mips64.h"
+#elif defined(JS_CODEGEN_LOONG64)
+#  include "jit/loong64/CodeGenerator-loong64.h"
 #elif defined(JS_CODEGEN_NONE)
 #  include "jit/none/CodeGenerator-none.h"
 #else
@@ -242,8 +244,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                            const ConstantOrRegister& id,
                            const ConstantOrRegister& value, bool strict);
 
-  void emitLambdaInit(Register resultReg, Register envChainReg,
-                      const LambdaFunctionInfo& info);
+  void emitLambdaInit(Register output, Register envChain);
 
   template <class IteratorObject, class OrderedHashTable>
   void emitGetNextEntryForIterator(LGetNextEntryForIterator* lir);

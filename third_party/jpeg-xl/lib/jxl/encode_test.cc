@@ -5,6 +5,7 @@
 
 #include "jxl/encode.h"
 
+#include "enc_color_management.h"
 #include "gtest/gtest.h"
 #include "jxl/decode.h"
 #include "jxl/decode_cxx.h"
@@ -206,7 +207,11 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
 
   EXPECT_LE(
       ComputeDistance2(input_io.Main(), decoded_io.Main(), jxl::GetJxlCms()),
+#if JXL_HIGH_PRECISION
       1.8);
+#else
+      4.8);
+#endif
 }
 
 void VerifyFrameEncoding(JxlEncoder* enc,

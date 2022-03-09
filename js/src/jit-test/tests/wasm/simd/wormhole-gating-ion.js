@@ -11,7 +11,7 @@ function nativeIntel() {
     var conf = getBuildConfiguration();
     if (!(conf.x64 || conf.x86))
         return false;
-    if (conf.arm64 || conf.arm || conf.mips32 || conf.mips64)
+    if (conf.arm64 || conf.arm || conf.mips32 || conf.mips64 || conf.loong64)
         return false;
     return true;
 }

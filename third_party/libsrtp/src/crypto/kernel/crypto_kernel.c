@@ -101,10 +101,6 @@ srtp_err_status_t srtp_crypto_kernel_init()
     if (status) {
         return status;
     }
-    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_stat);
-    if (status) {
-        return status;
-    }
     status = srtp_crypto_kernel_load_debug_module(&srtp_mod_alloc);
     if (status) {
         return status;
@@ -277,7 +273,8 @@ static inline srtp_err_status_t srtp_crypto_kernel_do_load_cipher_type(
     srtp_cipher_type_id_t id,
     int replace)
 {
-    srtp_kernel_cipher_type_t *ctype, *new_ctype;
+    srtp_kernel_cipher_type_t *ctype;
+    srtp_kernel_cipher_type_t *new_ctype = NULL;
     srtp_err_status_t status;
 
     /* defensive coding */
@@ -354,7 +351,8 @@ srtp_err_status_t srtp_crypto_kernel_do_load_auth_type(
     srtp_auth_type_id_t id,
     int replace)
 {
-    srtp_kernel_auth_type_t *atype, *new_atype;
+    srtp_kernel_auth_type_t *atype;
+    srtp_kernel_auth_type_t *new_atype = NULL;
     srtp_err_status_t status;
 
     /* defensive coding */

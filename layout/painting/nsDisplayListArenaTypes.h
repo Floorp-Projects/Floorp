@@ -7,7 +7,9 @@
 /* a list of all types that can be allocated in the display list's nsPresArena,
    for preprocessing */
 
-DISPLAY_LIST_ARENA_OBJECT(CLIPCHAIN)
 #define DECLARE_DISPLAY_ITEM_TYPE(name_, ...) DISPLAY_LIST_ARENA_OBJECT(name_)
+DISPLAY_LIST_ARENA_OBJECT(UNUSED)  // DisplayItemType::TYPE_ZERO
 #include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
+DISPLAY_LIST_ARENA_OBJECT(CLIPCHAIN)
+DISPLAY_LIST_ARENA_OBJECT(LISTNODE)

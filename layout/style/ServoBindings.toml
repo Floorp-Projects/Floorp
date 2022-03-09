@@ -417,6 +417,7 @@ cbindgen-types = [
     { gecko = "StyleCursorKind", servo = "crate::values::computed::ui::CursorKind" },
     { gecko = "StyleDisplay", servo = "crate::values::specified::Display" },
     { gecko = "StyleDisplayMode", servo = "crate::gecko::media_features::DisplayMode" },
+    { gecko = "StylePlatform", servo = "crate::gecko::media_features::Platform" },
     { gecko = "StylePrefersColorScheme", servo = "crate::gecko::media_features::PrefersColorScheme" },
     { gecko = "StyleFillRule", servo = "crate::values::generics::basic_shape::FillRule" },
     { gecko = "StyleFontDisplay", servo = "crate::font_face::FontDisplay" },

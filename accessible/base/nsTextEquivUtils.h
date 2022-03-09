@@ -8,10 +8,16 @@
 #ifndef _nsTextEquivUtils_H_
 #define _nsTextEquivUtils_H_
 
-#include "LocalAccessible.h"
+#include "mozilla/a11y/Accessible.h"
 #include "Role.h"
 
 class nsIContent;
+
+namespace mozilla {
+namespace a11y {
+class LocalAccessible;
+}
+}  // namespace mozilla
 
 /**
  * Text equivalent computation rules (see nsTextEquivUtils::gRoleToNameRulesMap)
@@ -40,6 +46,7 @@ enum ETextEquivRule {
 class nsTextEquivUtils {
  public:
   typedef mozilla::a11y::LocalAccessible LocalAccessible;
+  typedef mozilla::a11y::Accessible Accessible;
 
   /**
    * Determines if the accessible has a given name rule.
@@ -48,7 +55,7 @@ class nsTextEquivUtils {
    * @param aRule       [in] a given name rule
    * @return true if the accessible has the rule
    */
-  static inline bool HasNameRule(LocalAccessible* aAccessible,
+  static inline bool HasNameRule(Accessible* aAccessible,
                                  ETextEquivRule aRule) {
     return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
   }
@@ -66,7 +73,7 @@ class nsTextEquivUtils {
    * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
    * However it returns not empty result for things like HTML p.
    */
-  static void GetTextEquivFromSubtree(const LocalAccessible* aAccessible,
+  static void GetTextEquivFromSubtree(const Accessible* aAccessible,
                                       nsString& aTextEquiv) {
     aTextEquiv.Truncate();
 
@@ -126,21 +133,20 @@ class nsTextEquivUtils {
    * Iterates accessible children and calculates text equivalent from each
    * child.
    */
-  static nsresult AppendFromAccessibleChildren(
-      const LocalAccessible* aAccessible, nsAString* aString);
+  static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
+                                               nsAString* aString);
 
   /**
    * Calculates text equivalent from the given accessible and its subtree if
    * allowed.
    */
-  static nsresult AppendFromAccessible(LocalAccessible* aAccessible,
+  static nsresult AppendFromAccessible(Accessible* aAccessible,
                                        nsAString* aString);
 
   /**
    * Calculates text equivalent from the value of given accessible.
    */
-  static nsresult AppendFromValue(LocalAccessible* aAccessible,
-                                  nsAString* aString);
+  static nsresult AppendFromValue(Accessible* aAccessible, nsAString* aString);
 
   /**
    * Calculates text equivalent from the given DOM node and its subtree if
@@ -164,7 +170,13 @@ class nsTextEquivUtils {
    * Returns true if a given accessible should be included when calculating
    * the text equivalent for the initiator's subtree.
    */
-  static bool ShouldIncludeInSubtreeCalculation(LocalAccessible* aAccessible);
+  static bool ShouldIncludeInSubtreeCalculation(Accessible* aAccessible);
+
+  /**
+   * Returns true if a given accessible is a text leaf containing only
+   * whitespace.
+   */
+  static bool IsWhitespaceLeaf(Accessible* aAccessible);
 };
 
 #endif

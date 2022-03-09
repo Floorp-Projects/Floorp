@@ -67,6 +67,12 @@ interface nsIWinTaskbar : nsISupports
   readonly attribute AString defaultGroupId;
 
   /**
+   * Same as above, but a different value so that Private Browsing windows
+   * can be separated in the Taskbar.
+   */
+  readonly attribute AString defaultPrivateGroupId;
+
+  /**
    * Taskbar window and tab preview management
    */
 
@@ -123,7 +129,7 @@ interface nsIWinTaskbar : nsISupports
    * @throw NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
    * currently building a list.
    */
-  nsIJumpListBuilder createJumpListBuilder();
+  nsIJumpListBuilder createJumpListBuilder(in boolean aPrivateBrowsing);
 
   /**
    * Application window taskbar group settings

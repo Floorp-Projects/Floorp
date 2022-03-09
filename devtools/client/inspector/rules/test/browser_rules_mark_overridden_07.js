@@ -20,10 +20,12 @@ const TEST_URI = `
     body {
       margin-right: 1px !important;
       font-size: 79px;
+      line-height: 100px !important;
     }
 
     span {
       font-size: 12px;
+      line-height: 10px;
     }
   </style>
   <body>
@@ -51,10 +53,14 @@ function testMarkOverridden(inspector, view) {
       { name: "margin-right", value: "23px", overridden: false },
       { name: "margin-left", value: "1px", overridden: false },
     ],
-    [{ name: "font-size", value: "12px", overridden: false }],
+    [
+      { name: "font-size", value: "12px", overridden: false },
+      { name: "line-height", value: "10px", overridden: false },
+    ],
     [
       { name: "margin-right", value: "1px", overridden: true },
       { name: "font-size", value: "79px", overridden: true },
+      { name: "line-height", value: "100px", overridden: true },
     ],
   ];
 

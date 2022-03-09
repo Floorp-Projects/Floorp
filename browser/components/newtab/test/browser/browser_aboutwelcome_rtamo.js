@@ -24,6 +24,7 @@ const TEST_ADDON_INFO_THEME = [
     name: "Test Add-on",
     sourceURI: { scheme: "https", spec: "https://test.xpi" },
     icons: { 32: "test.png", 64: "test.png" },
+    screenshots: [{ url: "test.png" }],
     type: "theme",
   },
 ];
@@ -134,7 +135,7 @@ add_task(async function test_rtamo_aboutwelcome() {
     "RTAMO UI",
     // Expected selectors:
     [
-      "div.onboardingContainer",
+      `div.onboardingContainer[style*='.avif']`,
       "h2[data-l10n-id='return-to-amo-addon-title']",
       "div.rtamo-icon",
       "button.primary[data-l10n-id='return-to-amo-add-extension-label']",
@@ -210,7 +211,7 @@ add_task(async function test_rtamo_aboutwelcome() {
   );
   Assert.equal(
     telemetryCall.args[1].message_id,
-    "RTAMO_DEFAULT_WELCOME",
+    "RTAMO_DEFAULT_WELCOME_EXTENSION",
     "Message Id sent in telemetry for default RTAMO"
   );
 
@@ -267,8 +268,8 @@ add_task(async function test_rtamo_over_experiments() {
 });
 
 add_task(async function test_rtamo_primary_button_theme() {
-  let sandbox = sinon.createSandbox();
-  sandbox
+  let themeSandbox = sinon.createSandbox();
+  themeSandbox
     .stub(AddonRepository, "getAddonsByIDs")
     .resolves(TEST_ADDON_INFO_THEME);
 
@@ -284,6 +285,7 @@ add_task(async function test_rtamo_primary_button_theme() {
       "div.rtamo-icon",
       "button.primary[data-l10n-id='return-to-amo-add-theme-label']",
       "button[data-l10n-id='onboarding-not-now-button-label']",
+      "img.rtamo-theme-icon",
     ],
     // Unexpected selectors:
     [
@@ -294,5 +296,5 @@ add_task(async function test_rtamo_primary_button_theme() {
     ]
   );
 
-  sandbox.restore();
+  themeSandbox.restore();
 });

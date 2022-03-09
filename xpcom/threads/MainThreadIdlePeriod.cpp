@@ -38,7 +38,8 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
   TimeStamp currentGuess =
       now + TimeDuration::FromMilliseconds(kLongIdlePeriodMS);
 
-  currentGuess = nsRefreshDriver::GetIdleDeadlineHint(currentGuess);
+  currentGuess = nsRefreshDriver::GetIdleDeadlineHint(
+      currentGuess, nsRefreshDriver::IdleCheck::AllVsyncListeners);
   if (XRE_IsContentProcess()) {
     currentGuess = gfx::VRManagerChild::GetIdleDeadlineHint(currentGuess);
   }

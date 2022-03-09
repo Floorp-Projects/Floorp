@@ -33,6 +33,7 @@
 
 #ifdef XP_WIN
 #  include "mozilla/layers/D3D11ShareHandleImage.h"
+#  include "mozilla/layers/D3D11TextureIMFSampleImage.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
@@ -86,6 +87,16 @@ const char* const kFragBody_RGBA =
     void main(void)                                                          \n\
     {                                                                        \n\
         FRAG_COLOR = TEXTURE(uTex0, vTexCoord0);                             \n\
+    }                                                                        \n\
+";
+const char* const kFragBody_BGRA =
+    "\
+    VARYING vec2 vTexCoord0;                                                 \n\
+    uniform SAMPLER uTex0;                                                   \n\
+                                                                             \n\
+    void main(void)                                                          \n\
+    {                                                                        \n\
+        FRAG_COLOR = TEXTURE(uTex0, vTexCoord0).bgra;                        \n\
     }                                                                        \n\
 ";
 const char* const kFragBody_CrYCb =
@@ -777,6 +788,10 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
     case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
       return BlitImage(static_cast<layers::D3D11ShareHandleImage*>(srcImage),
                        destSize, destOrigin);
+    case ImageFormat::D3D11_TEXTURE_IMF_SAMPLE:
+      return BlitImage(
+          static_cast<layers::D3D11TextureIMFSampleImage*>(srcImage), destSize,
+          destOrigin);
     case ImageFormat::D3D11_YCBCR_IMAGE:
       return BlitImage(static_cast<layers::D3D11YCbCrImage*>(srcImage),
                        destSize, destOrigin);
@@ -784,6 +799,7 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       return false;  // todo
 #else
     case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
+    case ImageFormat::D3D11_TEXTURE_IMF_SAMPLE:
     case ImageFormat::D3D11_YCBCR_IMAGE:
     case ImageFormat::D3D9_RGB32_TEXTURE:
       MOZ_ASSERT(false);
@@ -1120,8 +1136,9 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
 void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
                                                 const gfx::IntSize& srcSize,
                                                 const gfx::IntSize& destSize,
-                                                const GLenum srcTarget) const {
-  const char* fragHeader;
+                                                const GLenum srcTarget,
+                                                const bool srcIsBGRA) const {
+  const char* fragHeader = nullptr;
   Mat3 texMatrix0;
   switch (srcTarget) {
     case LOCAL_GL_TEXTURE_2D:
@@ -1136,7 +1153,8 @@ void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
       gfxCriticalError() << "Unexpected srcTarget: " << srcTarget;
       return;
   }
-  const auto& prog = GetDrawBlitProg({fragHeader, kFragBody_RGBA});
+  const char* fragBody = srcIsBGRA ? kFragBody_BGRA : kFragBody_RGBA;
+  const auto& prog = GetDrawBlitProg({fragHeader, fragBody});
 
   const ScopedSaveMultiTex saveTex(mGL, 1, srcTarget);
   mGL->fBindTexture(srcTarget, srcTex);

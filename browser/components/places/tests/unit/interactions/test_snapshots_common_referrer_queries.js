@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests of queries on common referrer snapshots (i.e. those with a referrer common to the context url)
+ * Tests of queries on common referrer snapshots (i.e. those with a referrer common to the context url's interactions)
  */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -20,7 +20,7 @@ async function reset_interactions_snapshots() {
 }
 
 /**
- * Creates a an interaction and snapshot for a given url
+ * Creates an interaction and snapshot for a given url
  *
  * @param {object} [options]
  * @param {string} [options.url]
@@ -89,16 +89,14 @@ add_task(async function test_query_no_common_referrer() {
 
   await assertCommonReferrerSnapshots([], {
     url: "https://example.com/product_a",
-    referrerUrl: "https://example.com/product_search",
   });
 
   await assertCommonReferrerSnapshots([], {
     url: "https://example.com/product_b",
-    referrerUrl: "https://example.com/",
   });
 });
 
-// The snapshot has an interaction with referrer common to the context url, so it should be found
+// The snapshots have interactions with a referrer common to the context url's interactions, so they should be found
 add_task(async function test_query_common_referrer() {
   await reset_interactions_snapshots();
 
@@ -114,44 +112,137 @@ add_task(async function test_query_common_referrer() {
     referrer: "https://example.com/product_search",
   });
 
+  // The context url should never be a self-suggestion
+  let context = {
+    url: "https://example.com/product_a",
+  };
+  await assertCommonReferrerSnapshots([], context);
+
   await create_interaction_and_snapshot({
     url: "https://example.com/product_b",
     referrer: "https://example.com/product_search",
   });
 
-  // No interactions with a common referrer for /product_c
   await create_interaction_and_snapshot({
     url: "https://example.com/product_c",
+    referrer: "https://example.com/product_search",
   });
 
-  let context = {
+  context = {
     url: "https://example.com/product_a",
-    referrerUrl: "https://example.com/product_search",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 }],
+    [
+      { url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 },
+      { url: "https://example.com/product_c", commonReferrerScoreEqualTo: 1.0 },
+    ],
     context
   );
 
   context = {
     url: "https://example.com/product_b",
-    referrerUrl: "https://example.com/product_search",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
+    [
+      { url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 },
+      { url: "https://example.com/product_c", commonReferrerScoreEqualTo: 1.0 },
+    ],
     context
   );
 
-  // Snapshots should still be found for https://example.com/product_c since the context shares a common referrer with the snapshots
   context = {
     url: "https://example.com/product_c",
-    referrerUrl: "https://example.com/product_search",
   };
   await assertCommonReferrerSnapshots(
     [
       { url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 },
       { url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 },
     ],
+    context
+  );
+
+  // The root search context should not lead to any suggestions
+  context = {
+    url: "https://example.com/product_search",
+  };
+  await assertCommonReferrerSnapshots([], context);
+});
+
+// Verify that common referrers are correctly found in a hierarchical browsing pattern
+add_task(async function test_query_common_referrer_hierarchical() {
+  await reset_interactions_snapshots();
+
+  await create_interaction_and_snapshot({
+    url: "https://example.com/top_level_search",
+  });
+
+  await create_interaction_and_snapshot({
+    url: "https://example.com/product_search",
+    referrer: "https://example.com/top_level_search",
+  });
+
+  await create_interaction_and_snapshot({
+    url: "https://example.com/services_search",
+    referrer: "https://example.com/top_level_search",
+  });
+
+  await create_interaction_and_snapshot({
+    url: "https://example.com/product_a",
+    referrer: "https://example.com/product_search",
+  });
+
+  await create_interaction_and_snapshot({
+    url: "https://example.com/product_b",
+    referrer: "https://example.com/product_search",
+  });
+
+  // With the top level search as context, no sites should be suggested
+  let context = {
+    url: "https://example.com/top_level_search",
+  };
+
+  await assertCommonReferrerSnapshots([], context);
+
+  // With the children urls, only siblings should be found
+  context = {
+    url: "https://example.com/services_search",
+  };
+  await assertCommonReferrerSnapshots(
+    [
+      {
+        url: "https://example.com/product_search",
+        commonReferrerScoreEqualTo: 1.0,
+      },
+    ],
+    context
+  );
+
+  context = {
+    url: "https://example.com/product_search",
+  };
+  await assertCommonReferrerSnapshots(
+    [
+      {
+        url: "https://example.com/services_search",
+        commonReferrerScoreEqualTo: 1.0,
+      },
+    ],
+    context
+  );
+
+  // And similarly for the leaf nodes
+  context = {
+    url: "https://example.com/product_a",
+  };
+  await assertCommonReferrerSnapshots(
+    [{ url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 }],
+    context
+  );
+  context = {
+    url: "https://example.com/product_b",
+  };
+  await assertCommonReferrerSnapshots(
+    [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
     context
   );
 });
@@ -171,7 +262,7 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
     },
   ]);
 
-  // Add interactions with separate referrer
+  // Add interactions with separate referrers
   await addInteractions([
     {
       url: "https://example.com/product_a",
@@ -203,7 +294,6 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
   // https://example.com/product_a should be found as a snapshot with either of the referrer urls
   let context = {
     url: "https://example.com/product_b",
-    referrerUrl: "https://example.com/product_search",
   };
   await assertCommonReferrerSnapshots(
     [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
@@ -212,7 +302,6 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
 
   context = {
     url: "https://example.com/product_b",
-    referrerUrl: "https://example.com/top_level_search",
   };
   await assertCommonReferrerSnapshots(
     [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
@@ -220,9 +309,15 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
   );
 
   // No snapshot should be found if an unrelated referrer is used
+  await addInteractions([
+    {
+      url: "https://example.com/product_c",
+      referrer: "https://example.com/unrelated_search",
+    },
+  ]);
+
   context = {
-    url: "https://example.com/product_b",
-    referrerUrl: "https://example.com/different_path",
+    url: "https://example.com/product_c",
   };
   await assertCommonReferrerSnapshots([], context);
 });
@@ -291,13 +386,9 @@ add_task(
 
     let context = {
       url: "https://example.com/product_b",
-      referrerUrl: "https://example.com/product_search",
     };
 
-    let snapshot = await Snapshots.queryCommonReferrer(
-      context.url,
-      context.referrerUrl
-    );
+    let snapshot = await Snapshots.queryCommonReferrer(context.url);
 
     Assert.equal(snapshot.length, 1, "One shapshot should be found");
     Assert.equal(

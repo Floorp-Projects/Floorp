@@ -78,8 +78,10 @@ function initUserSettings() {
     dispatch({ type: COMPATIBILITY_INIT_USER_SETTINGS_START });
 
     try {
-      const defaultTargetBrowsers = UserSettings.getDefaultTargetBrowsers();
-      const targetBrowsers = UserSettings.getTargetBrowsers();
+      const [defaultTargetBrowsers, targetBrowsers] = await Promise.all([
+        UserSettings.getBrowsersList(),
+        UserSettings.getTargetBrowsers(),
+      ]);
 
       dispatch({
         type: COMPATIBILITY_INIT_USER_SETTINGS_SUCCESS,

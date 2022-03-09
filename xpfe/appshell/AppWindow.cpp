@@ -2630,7 +2630,9 @@ void AppWindow::SizeShell() {
 
   // If we're using fingerprint resistance, we're going to resize the window
   // once we have primary content.
-  if (nsContentUtils::ShouldResistFingerprinting() &&
+  if (nsContentUtils::ShouldResistFingerprinting(
+          "if RFP is enabled we want to round the dimensions of the new"
+          "new pop up window regardless of their origin") &&
       windowType.EqualsLiteral("navigator:browser")) {
     // Once we've got primary content, force dimensions.
     if (mPrimaryContentShell || mPrimaryBrowserParent) {

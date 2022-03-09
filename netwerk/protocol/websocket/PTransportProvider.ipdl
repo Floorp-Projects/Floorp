@@ -6,6 +6,8 @@
 
 include protocol PNecko;
 
+include "mozilla/net/IPCTransportProvider.h";
+
 namespace mozilla {
 namespace net {
 
@@ -15,6 +17,7 @@ namespace net {
  * again. Hence there's no need for any messages on the protocol itself.
  */
 
+[ManualDealloc, ChildImpl="TransportProviderChild", ParentImpl="TransportProviderParent"]
 async protocol PTransportProvider
 {
   manager PNecko;

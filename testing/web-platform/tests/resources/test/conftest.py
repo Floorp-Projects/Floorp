@@ -30,12 +30,12 @@ def pytest_addoption(parser):
     parser.addoption("--headless", action="store_true", default=False, help="run browser in headless mode")
 
 
-def pytest_collect_file(path, parent):
-    if path.ext.lower() != '.html':
+def pytest_collect_file(file_path, path, parent):
+    if file_path.suffix.lower() != '.html':
         return
 
     # Tests are organized in directories by type
-    test_type = os.path.relpath(str(path), HERE)
+    test_type = os.path.relpath(str(file_path), HERE)
     if os.path.sep not in test_type or ".." in test_type:
         # HTML files in this directory are not tests
         return
@@ -44,8 +44,8 @@ def pytest_collect_file(path, parent):
     # Handle the deprecation of Node construction in pytest6
     # https://docs.pytest.org/en/stable/deprecations.html#node-construction-changed-to-node-from-parent
     if hasattr(HTMLItem, "from_parent"):
-        return HTMLItem.from_parent(parent, filename=str(path), test_type=test_type)
-    return HTMLItem(parent, str(path), test_type)
+        return HTMLItem.from_parent(parent, filename=str(file_path), test_type=test_type)
+    return HTMLItem(parent, str(file_path), test_type)
 
 
 def pytest_configure(config):
@@ -87,6 +87,62 @@ def resolve_uri(context, uri):
         path = uri
 
     return os.path.exists(os.path.join(base, path))
+
+
+def _summarize(actual):
+    def _scrub_stack(test_obj):
+        copy = dict(test_obj)
+        del copy['stack']
+        return copy
+
+    def _expand_status(status_obj):
+        for key, value in [item for item in status_obj.items()]:
+            # In "status" and "test" objects, the "status" value enum
+            # definitions are interspersed with properties for unrelated
+            # metadata. The following condition is a best-effort attempt to
+            # ignore non-enum properties.
+            if key != key.upper() or not isinstance(value, int):
+                continue
+
+            del status_obj[key]
+
+            if status_obj['status'] == value:
+                status_obj[u'status_string'] = key
+
+        del status_obj['status']
+
+        return status_obj
+
+    def _summarize_test(test_obj):
+        del test_obj['index']
+
+        assert 'phase' in test_obj
+        assert 'phases' in test_obj
+        assert 'COMPLETE' in test_obj['phases']
+        assert test_obj['phase'] == test_obj['phases']['COMPLETE']
+        del test_obj['phases']
+        del test_obj['phase']
+
+        return _expand_status(_scrub_stack(test_obj))
+
+    def _summarize_status(status_obj):
+        return _expand_status(_scrub_stack(status_obj))
+
+
+    summarized = {}
+
+    summarized[u'summarized_status'] = _summarize_status(actual['status'])
+    summarized[u'summarized_tests'] = [
+        _summarize_test(test) for test in actual['tests']]
+    summarized[u'summarized_tests'].sort(key=lambda test_obj: test_obj.get('name'))
+    summarized[u'summarized_asserts'] = [
+        {"assert_name": assert_item["assert_name"],
+        "test": assert_item["test"]["name"] if assert_item["test"] else None,
+        "args": assert_item["args"],
+        "status": assert_item["status"]} for assert_item in actual["asserts"]]
+    summarized[u'type'] = actual['type']
+
+    return summarized
 
 
 class HTMLItem(pytest.Item, pytest.Collector):
@@ -181,7 +237,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
             'runTest("%s", "foo", arguments[0])' % self.url
         )
 
-        summarized = self._summarize(copy.deepcopy(actual))
+        summarized = _summarize(copy.deepcopy(actual))
 
         print(json.dumps(summarized, indent=2))
 
@@ -205,7 +261,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
         print(json.dumps(actual, indent=2))
 
-        summarized = self._summarize(copy.deepcopy(actual))
+        summarized = _summarize(copy.deepcopy(actual))
 
         print(json.dumps(summarized, indent=2))
 
@@ -229,65 +285,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
         assert summarized == self.expected
 
-    def _summarize(self, actual):
-        summarized = {}
-
-        summarized[u'summarized_status'] = self._summarize_status(actual['status'])
-        summarized[u'summarized_tests'] = [
-            self._summarize_test(test) for test in actual['tests']]
-        summarized[u'summarized_tests'].sort(key=lambda test_obj: test_obj.get('name'))
-        summarized[u'summarized_asserts'] = [
-            {"assert_name": assert_item["assert_name"],
-            "test": assert_item["test"]["name"] if assert_item["test"] else None,
-            "args": assert_item["args"],
-            "status": assert_item["status"]} for assert_item in actual["asserts"]]
-        summarized[u'type'] = actual['type']
-
-        return summarized
-
     @staticmethod
     def _assert_sequence(nums):
         if nums and len(nums) > 0:
             assert nums == list(range(1, nums[-1] + 1))
-
-    @staticmethod
-    def _scrub_stack(test_obj):
-        copy = dict(test_obj)
-        del copy['stack']
-        return copy
-
-    @staticmethod
-    def _expand_status(status_obj):
-        for key, value in [item for item in status_obj.items()]:
-            # In "status" and "test" objects, the "status" value enum
-            # definitions are interspersed with properties for unrelated
-            # metadata. The following condition is a best-effort attempt to
-            # ignore non-enum properties.
-            if key != key.upper() or not isinstance(value, int):
-                continue
-
-            del status_obj[key]
-
-            if status_obj['status'] == value:
-                status_obj[u'status_string'] = key
-
-        del status_obj['status']
-
-        return status_obj
-
-    @staticmethod
-    def _summarize_test(test_obj):
-        del test_obj['index']
-
-        assert 'phase' in test_obj
-        assert 'phases' in test_obj
-        assert 'COMPLETE' in test_obj['phases']
-        assert test_obj['phase'] == test_obj['phases']['COMPLETE']
-        del test_obj['phases']
-        del test_obj['phase']
-
-        return HTMLItem._expand_status(HTMLItem._scrub_stack(test_obj))
-
-    @staticmethod
-    def _summarize_status(status_obj):
-        return HTMLItem._expand_status(HTMLItem._scrub_stack(status_obj))

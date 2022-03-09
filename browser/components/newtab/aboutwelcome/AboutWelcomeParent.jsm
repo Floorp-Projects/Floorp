@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
+  LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -233,10 +234,9 @@ class AboutWelcomeParent extends JSWindowActorParent {
    *
    * @param {string} type
    * @param {any=} data
-   * @param {Browser} browser
-   * @param {Window} window
+   * @param {Browser} the xul:browser rendering the page
    */
-  async onContentMessage(type, data, browser, window) {
+  async onContentMessage(type, data, browser) {
     log.debug(`Received content event: ${type}`);
     switch (type) {
       case "AWPage:SET_WELCOME_MESSAGE_SEEN":
@@ -304,6 +304,14 @@ class AboutWelcomeParent extends JSWindowActorParent {
             }
           })
         );
+      case "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO":
+        return LangPackMatcher.getAppAndSystemLocaleInfo();
+      case "AWPage:NEGOTIATE_LANGPACK":
+        return LangPackMatcher.negotiateLangPackForLanguageMismatch(data);
+      case "AWPage:ENSURE_LANG_PACK_INSTALLED":
+        return LangPackMatcher.ensureLangPackInstalled(data);
+      case "AWPage:SET_REQUESTED_LOCALES":
+        return LangPackMatcher.setRequestedAppLocales(data);
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
     }
@@ -318,12 +326,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
   receiveMessage(message) {
     const { name, data } = message;
     let browser;
-    let window;
 
     if (this.manager.rootFrameLoader) {
       browser = this.manager.rootFrameLoader.ownerElement;
-      window = browser.ownerGlobal;
-      return this.onContentMessage(name, data, browser, window);
+      return this.onContentMessage(name, data, browser);
     }
 
     log.warn(`Not handling ${name} because the browser doesn't exist.`);

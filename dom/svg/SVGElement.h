@@ -120,6 +120,7 @@ class SVGElement : public SVGElementBase  // nsIContent
                                               int32_t aModType) const override;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
+  virtual bool IsSVGGraphicsElement() const { return false; }
 
   /**
    * We override the default to unschedule computation of Servo declaration

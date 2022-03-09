@@ -47,16 +47,11 @@
 #include <config.h>
 #endif
 
-#include <stdio.h>  /* for printf() */
-#include <stdlib.h> /* for rand() */
+#include <stdio.h> /* for printf() */
 #include "getopt_s.h"
 #include "cipher.h"
-#ifdef GCM
-#include "aes_icm_ext.h"
-#include "aes_gcm.h"
-#else
-#include "aes_icm.h"
-#endif
+#include "cipher_priv.h"
+#include "datatypes.h"
 
 #define PRINT_DEBUG 0
 
@@ -390,7 +385,7 @@ srtp_err_status_t cipher_driver_test_buffering(srtp_cipher_t *c)
         end = buffer1 + buflen;
         while (current < end) {
             /* choose a short length */
-            len = rand() & 0x01f;
+            len = srtp_cipher_rand_u32_for_tests() & 0x01f;
 
             /* make sure that len doesn't cause us to overreach the buffer */
             if (current + len > end)
@@ -473,9 +468,8 @@ srtp_err_status_t cipher_array_alloc_init(srtp_cipher_t ***ca,
             return status;
 
         /* generate random key and initialize cipher */
-        for (j = 0; j < klen; j++)
-            key[j] = (uint8_t)rand();
-        for (; j < klen_pad; j++)
+        srtp_cipher_rand_for_tests(key, klen);
+        for (j = klen; j < klen_pad; j++)
             key[j] = 0;
         status = srtp_cipher_init(*cipher_array, key);
         if (status)
@@ -529,7 +523,7 @@ uint64_t cipher_array_bits_per_second(srtp_cipher_t *cipher_array[],
     v128_t nonce;
     clock_t timer;
     unsigned char *enc_buf;
-    int cipher_index = rand() % num_cipher;
+    int cipher_index = srtp_cipher_rand_u32_for_tests() % num_cipher;
 
     /* Over-alloc, for NIST CBC padding */
     enc_buf = srtp_crypto_alloc(octets_in_buffer + 17);

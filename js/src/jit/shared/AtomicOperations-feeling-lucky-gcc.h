@@ -48,7 +48,7 @@
 // code in this file.
 
 #if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) || \
-    defined(JS_SIMULATOR_MIPS64)
+    defined(JS_SIMULATOR_MIPS64) || defined(JS_SIMULATOR_LOONG64)
 // On some x86 (32-bit) systems this will not work because the compiler does not
 // open-code 64-bit atomics.  If so, try linking with -latomic.  If that doesn't
 // work, you're mostly on your own.
@@ -63,6 +63,11 @@
 #endif
 
 #if defined(__riscv) && __riscv_xlen == 64
+#  define HAS_64BIT_ATOMICS
+#  define HAS_64BIT_LOCKFREE
+#endif
+
+#if defined(__loongarch64)
 #  define HAS_64BIT_ATOMICS
 #  define HAS_64BIT_LOCKFREE
 #endif

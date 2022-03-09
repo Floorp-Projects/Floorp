@@ -121,10 +121,6 @@ class SocketProcessParent final
   already_AddRefed<PRemoteLazyInputStreamParent>
   AllocPRemoteLazyInputStreamParent(const nsID& aID, const uint64_t& aSize);
 
-  mozilla::ipc::IPCResult RecvPRemoteLazyInputStreamConstructor(
-      PRemoteLazyInputStreamParent* aActor, const nsID& aID,
-      const uint64_t& aSize);
-
   mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
 
   mozilla::ipc::IPCResult RecvExcludeHttp2OrHttp3(

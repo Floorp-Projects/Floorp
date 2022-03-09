@@ -457,13 +457,15 @@ def generate_beetmover_upstream_artifacts(
                 )
             )
 
-        if job.get("dependencies") and getattr(
-            job["dependencies"][dep], "release_artifacts", None
+        if (
+            job.get("dependencies")
+            and getattr(job["dependencies"][dep], "attributes", None)
+            and job["dependencies"][dep].attributes.get("release_artifacts")
         ):
             paths = [
                 path
                 for path in paths
-                if path in job["dependencies"][dep].release_artifacts
+                if path in job["dependencies"][dep].attributes["release_artifacts"]
             ]
 
         if not paths:

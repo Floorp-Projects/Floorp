@@ -17,11 +17,6 @@
 
 namespace mozilla::widget {
 
-static constexpr gfx::sRGBColor sScrollbarColor(
-    gfx::sRGBColor::UnusualFromARGB(0xfff0f0f0));
-static constexpr gfx::sRGBColor sScrollbarThumbColor(
-    gfx::sRGBColor::UnusualFromARGB(0xffcdcdcd));
-
 class ScrollbarDrawing {
  protected:
   using DPIRatio = mozilla::CSSToLayoutDeviceScale;
@@ -33,22 +28,17 @@ class ScrollbarDrawing {
   using Overlay = nsITheme::Overlay;
   using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
 
- public:
-  ScrollbarDrawing() = default;
-  virtual ~ScrollbarDrawing() = default;
-
-  struct ScrollbarParams {
-    bool isOverlay = false;
-    bool isRolledOver = false;
-    bool isSmall = false;
-    bool isHorizontal = false;
-    bool isRtl = false;
-    bool isOnDarkBackground = false;
-    bool isCustom = false;
-    // Two colors only used when custom is true.
-    nscolor trackColor = NS_RGBA(0, 0, 0, 0);
-    nscolor faceColor = NS_RGBA(0, 0, 0, 0);
+  enum class Kind : uint8_t {
+    Android,
+    Cocoa,
+    Gtk,
+    Win10,
+    Win11,
   };
+
+ public:
+  explicit ScrollbarDrawing(Kind aKind) : mKind(aKind) {}
+  virtual ~ScrollbarDrawing() = default;
 
   static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
 
@@ -77,11 +67,6 @@ class ScrollbarDrawing {
   virtual sRGBColor ComputeScrollbarThumbColor(
       nsIFrame*, const ComputedStyle&, const EventStates& aElementState,
       const EventStates& aDocumentState, const Colors&);
-
-  static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
-                                                const ComputedStyle& aStyle,
-                                                bool aIsHorizontal);
-  static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
 
   nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
   Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
@@ -119,16 +104,16 @@ class ScrollbarDrawing {
                                const EventStates& aElementState,
                                const EventStates& aDocumentState, const Colors&,
                                const DPIRatio&);
-  virtual bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              const DPIRatio&);
-  virtual bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              const DPIRatio&);
+  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&, bool aHorizontal,
+                      nsIFrame*, const ComputedStyle&,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, const Colors&,
+                      const DPIRatio&);
+  bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
+                      bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, const Colors&,
+                      const DPIRatio&);
 
   virtual bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
                                    bool aHorizontal, nsIFrame*,
@@ -171,6 +156,9 @@ class ScrollbarDrawing {
   uint32_t GetVerticalScrollbarWidth() const { return mVerticalScrollbarWidth; }
 
  protected:
+  // For some kind of style differences a full virtual method is overkill, so we
+  // store the kind here so we can branch on it if necessary.
+  Kind mKind;
   uint32_t mHorizontalScrollbarHeight = 0;
   uint32_t mVerticalScrollbarWidth = 0;
 };

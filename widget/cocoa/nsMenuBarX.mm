@@ -76,6 +76,7 @@ nsMenuBarX::nsMenuBarX(mozilla::dom::Element* aElement)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mMenuGroupOwner = new nsMenuGroupOwnerX(aElement, this);
+  mMenuGroupOwner->RegisterForLocaleChanges();
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   mContent = aElement;
@@ -109,6 +110,8 @@ nsMenuBarX::~nsMenuBarX() {
   if (sPrefItemContent == mPrefItemContent) {
     sPrefItemContent = nullptr;
   }
+
+  mMenuGroupOwner->UnregisterForLocaleChanges();
 
   // make sure we unregister ourselves as a content observer
   if (mContent) {

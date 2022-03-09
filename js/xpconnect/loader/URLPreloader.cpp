@@ -301,20 +301,32 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
 
       LOG(Debug, "Cached file: %s %s", key.TypeString(), key.mPath.get());
 
+      // Don't bother doing anything else if the key didn't load correctly.
+      // We're going to throw it out right away, and it is possible that this
+      // leads to pendingURLs getting into a weird state.
+      if (buf.error()) {
+        return Err(NS_ERROR_UNEXPECTED);
+      }
+
       auto entry = mCachedURLs.GetOrInsertNew(key, key);
       entry->mResultCode = NS_ERROR_NOT_INITIALIZED;
 
       if (entry->isInList()) {
+#ifdef NIGHTLY_BUILD
+        MOZ_DIAGNOSTIC_ASSERT(pendingURLs.contains(entry),
+                              "Entry should be in pendingURLs");
+        MOZ_DIAGNOSTIC_ASSERT(key.mPath.Length() > 0,
+                              "Path should be non-empty");
         MOZ_DIAGNOSTIC_ASSERT(false, "Entry should be new and not in any list");
+#endif
         return Err(NS_ERROR_UNEXPECTED);
       }
 
       pendingURLs.insertBack(entry);
     }
 
-    if (buf.error()) {
-      return Err(NS_ERROR_UNEXPECTED);
-    }
+    MOZ_RELEASE_ASSERT(!buf.error(),
+                       "We should have already bailed on an error");
 
     cleanup.release();
   }
@@ -662,7 +674,12 @@ Result<nsCString, nsresult> URLPreloader::URLEntry::ReadOrWait(
   return res;
 }
 
-inline URLPreloader::CacheKey::CacheKey(InputBuffer& buffer) { Code(buffer); }
+inline URLPreloader::CacheKey::CacheKey(InputBuffer& buffer) {
+  Code(buffer);
+  MOZ_DIAGNOSTIC_ASSERT(
+      mType == TypeAppJar || mType == TypeGREJar || mType == TypeFile,
+      "mType should be valid");
+}
 
 NS_IMPL_ISUPPORTS(URLPreloader, nsIMemoryReporter)
 

@@ -1,5 +1,19 @@
 "use strict";
 
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  true
+);
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
+
 /**
  * This duplicates the test from netwerk/test/unit/test_captive_portal_service.js
  * however using an extension to gather the captive portal information.
@@ -30,7 +44,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_DNS_NATIVE_IS_LOCALHOST);
 });
 
-add_task(function setup() {
+add_task(async function setup() {
   Services.prefs.setCharPref(
     PREF_CAPTIVE_ENDPOINT,
     `http://localhost:${httpserver.identity.primaryPort}/captive.txt`
@@ -38,6 +52,9 @@ add_task(function setup() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_TESTMODE, true);
   Services.prefs.setIntPref(PREF_CAPTIVE_MINTIME, 0);
   Services.prefs.setBoolPref(PREF_DNS_NATIVE_IS_LOCALHOST, true);
+
+  Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
+  await AddonTestUtils.promiseStartupManager();
 });
 
 add_task(async function test_captivePortal_basic() {
@@ -46,8 +63,10 @@ add_task(async function test_captivePortal_basic() {
   );
 
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     manifest: {
       permissions: ["captivePortal"],
+      background: { persistent: false },
     },
     isPrivileged: true,
     async background() {
@@ -63,6 +82,10 @@ add_task(async function test_captivePortal_basic() {
         browser.test.sendMessage("state", details);
       });
 
+      browser.captivePortal.canonicalURL.onChange.addListener(details => {
+        browser.test.sendMessage("url", details);
+      });
+
       browser.test.onMessage.addListener(async msg => {
         if (msg == "getstate") {
           browser.test.sendMessage(
@@ -71,21 +94,20 @@ add_task(async function test_captivePortal_basic() {
           );
         }
       });
-      browser.test.assertEq(
-        "unknown",
-        await browser.captivePortal.getState(),
-        "initial state unknown"
-      );
     },
   });
   await extension.startup();
+
+  extension.sendMessage("getstate");
+  let details = await extension.awaitMessage("getstate");
+  equal(details, "unknown", "initial state");
 
   // The captive portal service is started by nsIOService when the pref becomes true, so we
   // toggle the pref.  We cannot set to false before the extension loads above.
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
 
-  let details = await extension.awaitMessage("connectivity");
+  details = await extension.awaitMessage("connectivity");
   equal(details.status, "clear", "initial connectivity");
   extension.sendMessage("getstate");
   details = await extension.awaitMessage("getstate");
@@ -105,6 +127,66 @@ add_task(async function test_captivePortal_basic() {
 
   details = await extension.awaitMessage("state");
   equal(details.state, "unlocked_portal", "state after unlocking portal");
+
+  assertPersistentListeners(
+    extension,
+    "captivePortal",
+    "onConnectivityAvailable",
+    {
+      primed: false,
+    }
+  );
+
+  assertPersistentListeners(extension, "captivePortal", "onStateChanged", {
+    primed: false,
+  });
+
+  assertPersistentListeners(extension, "captivePortal", "captiveURL.onChange", {
+    primed: false,
+  });
+
+  info("Test event page terminate/waken");
+  await extension.terminateBackground();
+
+  assertPersistentListeners(extension, "captivePortal", "onStateChanged", {
+    primed: true,
+  });
+  assertPersistentListeners(
+    extension,
+    "captivePortal",
+    "onConnectivityAvailable",
+    {
+      primed: true,
+    }
+  );
+
+  assertPersistentListeners(extension, "captivePortal", "captiveURL.onChange", {
+    primed: true,
+  });
+
+  info("REFRESH 2nd pass to other");
+  cpResponse = "other";
+  cps.recheckCaptivePortal();
+  details = await extension.awaitMessage("state");
+  equal(details.state, "locked_portal", "state in portal");
+
+  info("Test event page terminate/waken with settings");
+  await extension.terminateBackground();
+
+  assertPersistentListeners(extension, "captivePortal", "captiveURL.onChange", {
+    primed: true,
+  });
+
+  Services.prefs.setStringPref(
+    "captivedetect.canonicalURL",
+    "http://example.com"
+  );
+  let url = await extension.awaitMessage("url");
+  equal(
+    url.value,
+    "http://example.com",
+    "The canonicalURL setting has the expected value."
+  );
 
   await extension.unload();
 });

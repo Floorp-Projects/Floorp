@@ -16,15 +16,14 @@ template <>
 struct ParamTraits<mozilla::dom::CollectedNonMultipleSelectValue> {
   typedef mozilla::dom::CollectedNonMultipleSelectValue paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mSelectedIndex);
-    WriteParam(aMsg, aParam.mValue);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSelectedIndex);
+    WriteParam(aWriter, aParam.mValue);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mSelectedIndex) &&
-           ReadParam(aMsg, aIter, &aResult->mValue);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mSelectedIndex) &&
+           ReadParam(aReader, &aResult->mValue);
   }
 };
 
@@ -32,17 +31,16 @@ template <>
 struct ParamTraits<CollectedInputDataValue> {
   typedef CollectedInputDataValue paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.id);
-    WriteParam(aMsg, aParam.type);
-    WriteParam(aMsg, aParam.value);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.id);
+    WriteParam(aWriter, aParam.type);
+    WriteParam(aWriter, aParam.value);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->id) &&
-           ReadParam(aMsg, aIter, &aResult->type) &&
-           ReadParam(aMsg, aIter, &aResult->value);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->id) &&
+           ReadParam(aReader, &aResult->type) &&
+           ReadParam(aReader, &aResult->value);
   }
 };
 
@@ -50,21 +48,20 @@ template <>
 struct ParamTraits<InputFormData> {
   typedef InputFormData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.descendants);
-    WriteParam(aMsg, aParam.innerHTML);
-    WriteParam(aMsg, aParam.url);
-    WriteParam(aMsg, aParam.numId);
-    WriteParam(aMsg, aParam.numXPath);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.descendants);
+    WriteParam(aWriter, aParam.innerHTML);
+    WriteParam(aWriter, aParam.url);
+    WriteParam(aWriter, aParam.numId);
+    WriteParam(aWriter, aParam.numXPath);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->descendants) &&
-           ReadParam(aMsg, aIter, &aResult->innerHTML) &&
-           ReadParam(aMsg, aIter, &aResult->url) &&
-           ReadParam(aMsg, aIter, &aResult->numId) &&
-           ReadParam(aMsg, aIter, &aResult->numXPath);
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->descendants) &&
+           ReadParam(aReader, &aResult->innerHTML) &&
+           ReadParam(aReader, &aResult->url) &&
+           ReadParam(aReader, &aResult->numId) &&
+           ReadParam(aReader, &aResult->numXPath);
   }
 };
 
@@ -79,35 +76,34 @@ struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData*> {
   // won't be doing anything with the children lists, and it avoids sending form
   // data for subframes to the content processes of their embedders.
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     mozilla::dom::SessionStoreRestoreData* aParam) {
     bool isNull = !aParam;
-    WriteIPDLParam(aMsg, aActor, isNull);
+    WriteIPDLParam(aWriter, aActor, isNull);
     if (isNull) {
       return;
     }
-    WriteIPDLParam(aMsg, aActor, aParam->mURI);
-    WriteIPDLParam(aMsg, aActor, aParam->mInnerHTML);
-    WriteIPDLParam(aMsg, aActor, aParam->mScroll);
-    WriteIPDLParam(aMsg, aActor, aParam->mEntries);
+    WriteIPDLParam(aWriter, aActor, aParam->mURI);
+    WriteIPDLParam(aWriter, aActor, aParam->mInnerHTML);
+    WriteIPDLParam(aWriter, aActor, aParam->mScroll);
+    WriteIPDLParam(aWriter, aActor, aParam->mEntries);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    RefPtr<mozilla::dom::SessionStoreRestoreData>* aResult) {
     *aResult = nullptr;
     bool isNull;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &isNull)) {
+    if (!ReadIPDLParam(aReader, aActor, &isNull)) {
       return false;
     }
     if (isNull) {
       return true;
     }
     auto data = MakeRefPtr<mozilla::dom::SessionStoreRestoreData>();
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &data->mURI) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mInnerHTML) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mScroll) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mEntries)) {
+    if (!ReadIPDLParam(aReader, aActor, &data->mURI) ||
+        !ReadIPDLParam(aReader, aActor, &data->mInnerHTML) ||
+        !ReadIPDLParam(aReader, aActor, &data->mScroll) ||
+        !ReadIPDLParam(aReader, aActor, &data->mEntries)) {
       return false;
     }
     *aResult = std::move(data);
@@ -117,17 +113,16 @@ struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData*> {
 
 template <>
 struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData::Entry> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
                     mozilla::dom::SessionStoreRestoreData::Entry aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mData);
-    WriteIPDLParam(aMsg, aActor, aParam.mIsXPath);
+    WriteIPDLParam(aWriter, aActor, aParam.mData);
+    WriteIPDLParam(aWriter, aActor, aParam.mIsXPath);
   }
 
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
                    mozilla::dom::SessionStoreRestoreData::Entry* aResult) {
-    return ReadIPDLParam(aMsg, aIter, aActor, &aResult->mData) &&
-           ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIsXPath);
+    return ReadIPDLParam(aReader, aActor, &aResult->mData) &&
+           ReadIPDLParam(aReader, aActor, &aResult->mIsXPath);
   }
 };
 

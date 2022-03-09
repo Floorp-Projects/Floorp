@@ -18,16 +18,15 @@ struct ParamTraits<
     mozilla::PermissionDelegateHandler::DelegatedPermissionList> {
   typedef mozilla::PermissionDelegateHandler::DelegatedPermissionList paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     for (auto& permission : aParam.mPermissions) {
-      WriteParam(aMsg, permission);
+      WriteParam(aWriter, permission);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     for (auto& permission : aResult->mPermissions) {
-      if (!ReadParam(aMsg, aIter, &permission)) {
+      if (!ReadParam(aReader, &permission)) {
         return false;
       }
     }

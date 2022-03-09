@@ -8,7 +8,6 @@
   /* ::::: Variables ::::: */
   --panel-description-color: hsl(0,0%,50%);
 
-  --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
   /* ::::: Styles ::::: */
   appearance: auto;
   -moz-default-appearance: dialog;
@@ -71,12 +70,6 @@ xul|separator.groove[orient="vertical"] {
   border-left: 1px solid #A3A3A3;
   width: 0;
   margin-inline: 0.4em;
-}
-
-/* Link focus outline */
-
-.text-link:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
 }
 
 /* Input margins */

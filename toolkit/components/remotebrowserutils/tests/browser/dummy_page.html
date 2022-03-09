@@ -7,9 +7,7 @@
     <script>
         // Prevent this page from being stored in the bfcache for the
         // browser_httpToFileHistory.js test
-        window.addEventListener('beforeunload', event => {
-            // do nothing
-        });
+        window.blockBFCache = new RTCPeerConnection();
     </script>
 </body>
 </html>

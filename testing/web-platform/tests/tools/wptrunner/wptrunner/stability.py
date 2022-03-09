@@ -292,6 +292,10 @@ def run_step(logger, iterations, restart_after_iteration, kwargs_extras, **kwarg
     # if the runs were stopped to avoid hitting the maximum run time.
     _, test_status = wptrunner.run_tests(**kwargs)
     iterations = test_status.repeated_runs
+
+    if not restart_after_iteration:
+        iterations = kwargs["rerun"]
+
     all_skipped = test_status.all_skipped
 
     logger._state.handlers = initial_handlers
@@ -376,7 +380,7 @@ def check_stability(logger, repeat_loop=10, repeat_restart=5, chaos_mode=True, m
         logger.info('::: Running test verification step "%s"...' % desc)
         logger.info(':::')
         results, inconsistent, slow, iterations, all_skipped = step_func(**kwargs)
-
+        logger.info(f"::: Ran {iterations} of expected {expected_iterations} iterations.")
         if iterations <= 1 and expected_iterations > 1 and not all_skipped:
             step_results.append((desc, "FAIL"))
             logger.info("::: Reached iteration timeout before finishing 2 or more repeat runs.")

@@ -113,6 +113,8 @@ const ERR_BGTASK_EXCLUSIVE =
   "failed to exclusively open executable file from background task: ";
 
 const LOG_SVC_SUCCESSFUL_LAUNCH = "Process was started... waiting on result.";
+const LOG_SVC_UNSUCCESSFUL_LAUNCH =
+  "The install directory path is not valid for this application.";
 
 // Typical end of a message when calling assert
 const MSG_SHOULD_EQUAL = " should equal the expected value";
@@ -167,6 +169,7 @@ var gShouldResetEnv = undefined;
 var gAddedEnvXRENoWindowsCrashDialog = false;
 var gEnvXPCOMDebugBreak;
 var gEnvXPCOMMemLeakLog;
+var gEnvForceServiceFallback = false;
 
 const URL_HTTP_UPDATE_SJS = "http://test_details/";
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
@@ -2139,7 +2142,15 @@ function runUpdate(
       "the contents of the maintenanceservice.log should not " +
         "be the same as the original contents"
     );
-    if (!isInvalidArgTest) {
+    if (gEnvForceServiceFallback) {
+      // If we are forcing the service to fail and fall back to update without
+      // the service, the service log should reflect that we failed in that way.
+      Assert.ok(
+        contents.includes(LOG_SVC_UNSUCCESSFUL_LAUNCH),
+        "the contents of the maintenanceservice.log should " +
+          "contain the unsuccessful launch string"
+      );
+    } else if (!isInvalidArgTest) {
       Assert.notEqual(
         contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH),
         -1,
@@ -2465,8 +2476,12 @@ function isBinarySigned(aBinPath) {
  * Helper function for setting up the application files required to launch the
  * application for the updater tests by either copying or creating symlinks to
  * the files.
+ *
+ * @param options.requiresOmnijar when true, copy or symlink omnijars as well.
+ * This may be required to launch the updated application and have non-trivial
+ * functionality available.
  */
-function setupAppFiles() {
+function setupAppFiles({ requiresOmnijar = false } = {}) {
   debugDump(
     "start - copying or creating symlinks to application files " +
       "for the test"
@@ -2494,6 +2509,18 @@ function setupAppFiles() {
     { relPath: FILE_APPLICATION_INI, inGreDir: true },
     { relPath: "dependentlibs.list", inGreDir: true },
   ];
+
+  if (requiresOmnijar) {
+    appFiles.push({ relPath: AppConstants.OMNIJAR_NAME, inGreDir: true });
+
+    if (AppConstants.MOZ_BUILD_APP == "browser") {
+      // Only Firefox uses an app-specific omnijar.
+      appFiles.push({
+        relPath: "browser/" + AppConstants.OMNIJAR_NAME,
+        inGreDir: true,
+      });
+    }
+  }
 
   // On Linux the updater.png must also be copied and libsoftokn3.so must be
   // symlinked or copied.
@@ -3080,12 +3107,18 @@ async function waitForHelperExit() {
  *          passed to createUpdaterINI.
  * @param   aSetupActiveUpdate
  *          Whether to setup the active update.
+ *
+ * @param   options.requiresOmnijar
+ *          When true, copy or symlink omnijars as well.  This may be required
+ *          to launch the updated application and have non-trivial functionality
+ *          available.
  */
 async function setupUpdaterTest(
   aMarFile,
   aPostUpdateAsync,
   aPostUpdateExeRelPathPrefix = "",
-  aSetupActiveUpdate = true
+  aSetupActiveUpdate = true,
+  { requiresOmnijar = false } = {}
 ) {
   debugDump("start - updater test setup");
   let updatesPatchDir = getUpdateDirFile(DIR_PATCH);
@@ -3200,7 +3233,7 @@ async function setupUpdaterTest(
 
   await TestUtils.waitForCondition(() => {
     try {
-      setupAppFiles();
+      setupAppFiles({ requiresOmnijar });
       return true;
     } catch (e) {
       logTestInfo("exception when calling setupAppFiles, Exception: " + e);
@@ -3568,8 +3601,8 @@ function checkFilesAfterUpdateSuccess(
       if (AppConstants.platform != "win" && aTestFile.comparePerms) {
         // Check if the permssions as set in the complete mar file are correct.
         Assert.equal(
-          testFile.permissions & 0xfff,
-          aTestFile.comparePerms & 0xfff,
+          "0o" + (testFile.permissions & 0xfff).toString(8),
+          "0o" + (aTestFile.comparePerms & 0xfff).toString(8),
           "the file permissions" + MSG_SHOULD_EQUAL
         );
       }
@@ -4710,7 +4743,12 @@ function setEnvironment() {
 
   gEnv.set("XPCOM_DEBUG_BREAK", "warn");
 
-  if (gIsServiceTest) {
+  if (gEnvForceServiceFallback) {
+    // This env variable forces the updater to use the service in an invalid
+    // way, so that it has to fall back to updating without the service.
+    debugDump("setting MOZ_FORCE_SERVICE_FALLBACK environment variable to 1");
+    gEnv.set("MOZ_FORCE_SERVICE_FALLBACK", "1");
+  } else if (gIsServiceTest) {
     debugDump("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "1");
   }
@@ -4752,7 +4790,10 @@ function resetEnvironment() {
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 
-  if (gIsServiceTest) {
+  if (gEnvForceServiceFallback) {
+    debugDump("removing MOZ_FORCE_SERVICE_FALLBACK environment variable");
+    gEnv.set("MOZ_FORCE_SERVICE_FALLBACK", "");
+  } else if (gIsServiceTest) {
     debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "");
   }

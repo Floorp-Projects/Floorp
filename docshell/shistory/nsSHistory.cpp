@@ -1324,37 +1324,34 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
                "saving presentation=%i",
                canSave));
 
-      if (!canSave) {
-        nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
-            do_QueryInterface(canonicalBC->GetEmbedderElement());
-        if (frameLoaderOwner) {
-          RefPtr<nsFrameLoader> currentFrameLoader =
-              frameLoaderOwner->GetFrameLoader();
-          if (currentFrameLoader &&
-              currentFrameLoader->GetMaybePendingBrowsingContext()) {
-            WindowGlobalParent* wgp =
-                currentFrameLoader->GetMaybePendingBrowsingContext()
-                    ->Canonical()
-                    ->GetCurrentWindowGlobal();
-            if (wgp) {
-              wgp->PermitUnload([canonicalBC, loadState, she, frameLoader,
-                                 currentFrameLoader](bool aAllow) {
-                if (aAllow) {
-                  FinishRestore(canonicalBC, loadState, she, frameLoader,
-                                false);
-                } else if (currentFrameLoader
-                               ->GetMaybePendingBrowsingContext()) {
-                  nsISHistory* shistory =
-                      currentFrameLoader->GetMaybePendingBrowsingContext()
-                          ->Canonical()
-                          ->GetSessionHistory();
-                  if (shistory) {
-                    shistory->InternalSetRequestedIndex(-1);
-                  }
+      nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
+          do_QueryInterface(canonicalBC->GetEmbedderElement());
+      if (frameLoaderOwner) {
+        RefPtr<nsFrameLoader> currentFrameLoader =
+            frameLoaderOwner->GetFrameLoader();
+        if (currentFrameLoader &&
+            currentFrameLoader->GetMaybePendingBrowsingContext()) {
+          if (WindowGlobalParent* wgp =
+                  currentFrameLoader->GetMaybePendingBrowsingContext()
+                      ->Canonical()
+                      ->GetCurrentWindowGlobal()) {
+            wgp->PermitUnload([canonicalBC, loadState, she, frameLoader,
+                               currentFrameLoader, canSave](bool aAllow) {
+              if (aAllow) {
+                FinishRestore(canonicalBC, loadState, she, frameLoader,
+                              canSave && canonicalBC->AllowedInBFCache(
+                                             Nothing(), nullptr));
+              } else if (currentFrameLoader->GetMaybePendingBrowsingContext()) {
+                nsISHistory* shistory =
+                    currentFrameLoader->GetMaybePendingBrowsingContext()
+                        ->Canonical()
+                        ->GetSessionHistory();
+                if (shistory) {
+                  shistory->InternalSetRequestedIndex(-1);
                 }
-              });
-              return;
-            }
+              }
+            });
+            return;
           }
         }
       }

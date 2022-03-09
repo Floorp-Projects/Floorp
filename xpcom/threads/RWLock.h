@@ -12,10 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/BlockingResourceBase.h"
-
-#ifndef XP_WIN
-#  include <pthread.h>
-#endif
+#include "mozilla/PlatformRWLock.h"
 
 namespace mozilla {
 
@@ -41,54 +38,33 @@ namespace mozilla {
 //
 // It is unspecified whether RWLock gives priority to waiting readers or
 // a waiting writer when unlocking.
-class RWLock : public BlockingResourceBase {
+class RWLock : public detail::RWLockImpl, public BlockingResourceBase {
  public:
   explicit RWLock(const char* aName);
 
-  // Windows rwlocks don't need any special handling to be destroyed, but
-  // POSIX ones do.
-#ifdef XP_WIN
-  ~RWLock() = default;
-#else
-  ~RWLock();
-#endif
-
 #ifdef DEBUG
   bool LockedForWritingByCurrentThread();
-  bool TryReadLock();
+  [[nodiscard]] bool TryReadLock();
   void ReadLock();
   void ReadUnlock();
-  bool TryWriteLock();
+  [[nodiscard]] bool TryWriteLock();
   void WriteLock();
   void WriteUnlock();
 #else
-  bool TryReadLock() { return TryReadLockInternal(); }
-  void ReadLock() { ReadLockInternal(); }
-  void ReadUnlock() { ReadUnlockInternal(); }
-  bool TryWriteLock() { return TryWriteLockInternal(); }
-  void WriteLock() { WriteLockInternal(); }
-  void WriteUnlock() { WriteUnlockInternal(); }
+  [[nodiscard]] bool TryReadLock() { return detail::RWLockImpl::tryReadLock(); }
+  void ReadLock() { detail::RWLockImpl::readLock(); }
+  void ReadUnlock() { detail::RWLockImpl::readUnlock(); }
+  [[nodiscard]] bool TryWriteLock() {
+    return detail::RWLockImpl::tryWriteLock();
+  }
+  void WriteLock() { detail::RWLockImpl::writeLock(); }
+  void WriteUnlock() { detail::RWLockImpl::writeUnlock(); }
 #endif
 
  private:
-  bool TryReadLockInternal();
-  void ReadLockInternal();
-  void ReadUnlockInternal();
-  bool TryWriteLockInternal();
-  void WriteLockInternal();
-  void WriteUnlockInternal();
-
   RWLock() = delete;
   RWLock(const RWLock&) = delete;
   RWLock& operator=(const RWLock&) = delete;
-
-#ifndef XP_WIN
-  pthread_rwlock_t mRWLock;
-#else
-  // SRWLock is pointer-sized.  We declare it in such a fashion here to
-  // avoid pulling in windows.h wherever this header is used.
-  void* mRWLock;
-#endif
 
 #ifdef DEBUG
   // We record the owning thread for write locks only.
@@ -210,15 +186,15 @@ class StaticRWLock {
   StaticRWLock() { MOZ_ASSERT(!mLock); }
 #endif
 
-  bool TryReadLock() { return Lock()->TryReadLock(); }
+  [[nodiscard]] bool TryReadLock() { return Lock()->TryReadLock(); }
   void ReadLock() { Lock()->ReadLock(); }
   void ReadUnlock() { Lock()->ReadUnlock(); }
-  bool TryWriteLock() { return Lock()->TryWriteLock(); }
+  [[nodiscard]] bool TryWriteLock() { return Lock()->TryWriteLock(); }
   void WriteLock() { Lock()->WriteLock(); }
   void WriteUnlock() { Lock()->WriteUnlock(); }
 
  private:
-  RWLock* Lock() {
+  [[nodiscard]] RWLock* Lock() {
     if (mLock) {
       return mLock;
     }
@@ -242,9 +218,9 @@ class StaticRWLock {
 #endif
 
   // Disallow these operators.
-  StaticRWLock& operator=(StaticRWLock* aRhs);
-  static void* operator new(size_t) noexcept(true);
-  static void operator delete(void*);
+  StaticRWLock& operator=(StaticRWLock* aRhs) = delete;
+  static void* operator new(size_t) noexcept(true) = delete;
+  static void operator delete(void*) = delete;
 };
 
 typedef BaseAutoTryReadLock<StaticRWLock> StaticAutoTryReadLock;

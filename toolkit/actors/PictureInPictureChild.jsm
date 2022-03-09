@@ -46,6 +46,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ContentDOMReference.jsm"
 );
 
+const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -53,6 +54,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "DISPLAY_TEXT_TRACKS_PREF",
+  "media.videocontrols.picture-in-picture.display-text-tracks.enabled",
+  false
+);
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_TESTING_PREF =
@@ -62,6 +73,8 @@ const TOGGLE_VISIBILITY_THRESHOLD_PREF =
 
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
+// If you change this, also change VideoControlsWidget.SEEK_TIME_SECS:
+const SEEK_TIME_SECS = 5;
 
 // The ToggleChild does not want to capture events from the PiP
 // windows themselves. This set contains all currently open PiP
@@ -712,6 +725,19 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         "toggle",
         1
       );
+      let args = {
+        method: "toggle",
+        firstTimeToggle: (!Services.prefs.getBoolPref(
+          "media.videocontrols.picture-in-picture.video-toggle.has-used"
+        )).toString(),
+      };
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "opened_method",
+        "method",
+        null,
+        args
+      );
 
       let pipEvent = new this.contentWindow.CustomEvent(
         "MozTogglePictureInPicture",
@@ -923,6 +949,24 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       toggle.removeAttribute("policy");
     }
 
+    const nimbusExperimentVariables = NimbusFeatures.pictureinpicture.getAllVariables(
+      { defaultValues: { title: null, message: false, showIconOnly: false } }
+    );
+    // nimbusExperimentVariables will be defaultValues when the experiment is disabled
+    if (nimbusExperimentVariables.title && nimbusExperimentVariables.message) {
+      let pipExplainer = shadowRoot.querySelector(".pip-explainer");
+      let pipLabel = shadowRoot.querySelector(".pip-label");
+
+      pipExplainer.innerText = nimbusExperimentVariables.message;
+      pipLabel.innerText = nimbusExperimentVariables.title;
+    } else if (nimbusExperimentVariables.showIconOnly) {
+      // We only want to show the PiP icon in this experiment scenario
+      let pipExpanded = shadowRoot.querySelector(".pip-expanded");
+      pipExpanded.style.display = "none";
+      let pipIcon = shadowRoot.querySelector(".pip-icon");
+      pipIcon.style.display = "block";
+    }
+
     controlsOverlay.removeAttribute("hidetoggle");
 
     // The hideToggleDeferredTask we create here is for automatically hiding
@@ -959,6 +1003,23 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       !toggle.hasAttribute("hidden")
     ) {
       Services.telemetry.scalarAdd("pictureinpicture.saw_toggle", 1);
+      const hasUsedPiP = Services.prefs.getBoolPref(
+        "media.videocontrols.picture-in-picture.video-toggle.has-used"
+      );
+      let args = {
+        firstTime: (!hasUsedPiP).toString(),
+      };
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "saw_toggle",
+        "toggle",
+        null,
+        args
+      );
+      // only record if this is the first time seeing the toggle
+      if (!hasUsedPiP) {
+        NimbusFeatures.pictureinpicture.recordExposureEvent();
+      }
     }
 
     // Now that we're hovering the video, we'll check to see if we're
@@ -1070,14 +1131,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let toggle = this.getToggleElement(shadowRoot);
     if (this.isMouseOverToggle(toggle, event)) {
-      event.stopImmediatePropagation();
-      event.preventDefault();
-
+      let devicePixelRatio = toggle.ownerGlobal.devicePixelRatio;
       this.sendAsyncMessage("PictureInPicture:OpenToggleContextMenu", {
-        screenX: event.screenX,
-        screenY: event.screenY,
+        screenXDevPx: event.screenX * devicePixelRatio,
+        screenYDevPx: event.screenY * devicePixelRatio,
         mozInputSource: event.mozInputSource,
       });
+      event.stopImmediatePropagation();
+      event.preventDefault();
     }
   }
 
@@ -1130,6 +1191,177 @@ class PictureInPictureChild extends JSWindowActorChild {
 
   // A weak reference to this PiP window's content window
   weakPlayerContent = null;
+
+  // A reference to current WebVTT track currently displayed on the content window
+  _currentWebVTTTrack = null;
+
+  observerFunction = null;
+
+  observe(subject, topic, data) {
+    if (
+      topic != "nsPref:changed" ||
+      data !==
+        "media.videocontrols.picture-in-picture.display-text-tracks.enabled"
+    ) {
+      return;
+    }
+
+    const originatingVideo = this.getWeakVideo();
+    let isTextTrackPrefEnabled = Services.prefs.getBoolPref(
+      "media.videocontrols.picture-in-picture.display-text-tracks.enabled"
+    );
+
+    // Enable or disable text track support
+    if (isTextTrackPrefEnabled) {
+      this.setupTextTracks(originatingVideo);
+    } else {
+      this.removeTextTracks(originatingVideo);
+    }
+  }
+
+  /**
+   * Creates a link element with a reference to the css stylesheet needed
+   * for text tracks responsive styling.
+   * @returns {Element} the link element containing text tracks stylesheet.
+   */
+  createTextTracksStyleSheet() {
+    let headStyleElement = this.document.createElement("link");
+    headStyleElement.setAttribute("rel", "stylesheet");
+    headStyleElement.setAttribute(
+      "href",
+      "chrome://global/skin/pictureinpicture/texttracks.css"
+    );
+    headStyleElement.setAttribute("type", "text/css");
+    return headStyleElement;
+  }
+
+  /**
+   * Sets up Picture-in-Picture to support displaying text tracks from WebVTT
+   * or if WebVTT isn't supported we will register the caption change mutation observer if
+   * the site wrapper exists.
+   *
+   * If the originating video supports WebVTT, try to read the
+   * active track and cues. Display any active cues on the pip window
+   * right away if applicable.
+   *
+   * @param originatingVideo {Element|null}
+   *  The <video> being displayed in Picture-in-Picture mode, or null if that <video> no longer exists.
+   */
+  setupTextTracks(originatingVideo) {
+    const isWebVTTSupported = !!originatingVideo.textTracks?.length;
+
+    if (!isWebVTTSupported) {
+      this.setUpCaptionChangeListener(originatingVideo);
+      return;
+    }
+
+    // Verify active track for originating video
+    this.setActiveTextTrack(originatingVideo.textTracks);
+
+    if (!this._currentWebVTTTrack) {
+      return;
+    }
+
+    // Listen for changes in tracks and active cues
+    originatingVideo.textTracks.addEventListener("change", this);
+    this._currentWebVTTTrack.addEventListener("cuechange", this.onCueChange);
+
+    const cues = this._currentWebVTTTrack.activeCues;
+    this.updateWebVTTTextTracksDisplay(cues);
+  }
+
+  /**
+   * Removes existing text tracks on the Picture in Picture window.
+   *
+   * If the originating video supports WebVTT, clear references to active
+   * tracks and cues. No longer listen for any track or cue changes.
+   *
+   * @param originatingVideo {Element|null}
+   *  The <video> being displayed in Picture-in-Picture mode, or null if that <video> no longer exists.
+   */
+  removeTextTracks(originatingVideo) {
+    const isWebVTTSupported = !!originatingVideo.textTracks;
+
+    if (!isWebVTTSupported) {
+      return;
+    }
+
+    // No longer listen for changes to tracks and active cues
+    originatingVideo.textTracks.removeEventListener("change", this);
+    this._currentWebVTTTrack?.removeEventListener(
+      "cuechange",
+      this.onCueChange
+    );
+    this._currentWebVTTTrack = null;
+    this.updateWebVTTTextTracksDisplay(null);
+  }
+
+  /**
+   * Updates the text content for the container that holds and displays text tracks
+   * on the pip window.
+   * @param textTrackCues {TextTrackCueList|null}
+   *  Collection of TextTrackCue objects containing text displayed, or null if there is no cue to display.
+   */
+  updateWebVTTTextTracksDisplay(textTrackCues) {
+    let pipWindowTracksContainer = this.document.getElementById("texttracks");
+    let playerVideo = this.document.getElementById("playervideo");
+    let playerVideoWindow = playerVideo.ownerGlobal;
+
+    // To prevent overlap with previous cues, clear all text from the pip window
+    pipWindowTracksContainer.replaceChildren();
+
+    if (!textTrackCues) {
+      return;
+    }
+
+    let allCuesArray = [...textTrackCues];
+    // Re-order cues
+    this.getOrderedWebVTTCues(allCuesArray);
+    // Parse through WebVTT cue using vtt.js to ensure
+    // semantic markup like <b> and <i> tags are rendered.
+    allCuesArray.forEach(cue => {
+      let text = cue.text;
+      let cueTextNode = WebVTT.convertCueToDOMTree(playerVideoWindow, text);
+      let cueDiv = this.document.createElement("div");
+      cueDiv.appendChild(cueTextNode);
+      pipWindowTracksContainer.appendChild(cueDiv);
+    });
+  }
+
+  /**
+   * Re-orders list of multiple active cues to ensure cues are rendered in the correct order.
+   * How cues are ordered depends on the VTTCue.line value of the cue.
+   *
+   * If line is string "auto", we want to reverse the order of cues.
+   * Cues are read from top to bottom in a vtt file, but are inserted into a video from bottom to top.
+   * Ensure this order is followed.
+   *
+   * If line is an integer or percentage, we want to order cues according to numeric value.
+   * Assumptions:
+   *  1) all active cues are numeric
+   *  2) all active cues are in range 0..100
+   *  3) all actives cue are horizontal (no VTTCue.vertical)
+   *  4) all active cues with VTTCue.line integer have VTTCue.snapToLines = true
+   *  5) all active cues with VTTCue.line percentage have VTTCue.snapToLines = false
+   *
+   * vtt.jsm currently sets snapToLines to false if line is a percentage value, but
+   * cues are still ordered by line. In most cases, snapToLines is set to true by default,
+   * unless intentionally overridden.
+   * @param allCuesArray {Array<VTTCue>} array of active cues
+   */
+  getOrderedWebVTTCues(allCuesArray) {
+    if (!allCuesArray || allCuesArray.length <= 1) {
+      return;
+    }
+
+    let allCuesHaveNumericLines = allCuesArray.find(cue => cue.line !== "auto");
+
+    if (allCuesHaveNumericLines) {
+      allCuesArray.sort((cue1, cue2) => cue1.line - cue2.line);
+    } else if (allCuesArray.length >= 2) {
+      allCuesArray.reverse();
+    }
+  }
 
   /**
    * Returns a reference to the PiP's <video> element being displayed in Picture-in-Picture
@@ -1246,6 +1478,37 @@ class PictureInPictureChild extends JSWindowActorChild {
             videoWidth: video.videoWidth,
           });
         }
+        this.setupTextTracks(video);
+        break;
+      }
+      case "change": {
+        // Clear currently stored track data (webvtt support) before reading
+        // a new track.
+        if (this._currentWebVTTTrack) {
+          this._currentWebVTTTrack.removeEventListener(
+            "cuechange",
+            this.onCueChange
+          );
+          this._currentWebVTTTrack = null;
+        }
+
+        const tracks = event.target;
+        this.setActiveTextTrack(tracks);
+        const isCurrentTrackAvailable = this._currentWebVTTTrack;
+
+        // If tracks are disabled or invalid while change occurs,
+        // remove text tracks from the pip window and stop here.
+        if (!isCurrentTrackAvailable || !tracks.length) {
+          this.updateWebVTTTextTracksDisplay(null);
+          return;
+        }
+
+        this._currentWebVTTTrack.addEventListener(
+          "cuechange",
+          this.onCueChange
+        );
+        const cues = this._currentWebVTTTrack.activeCues;
+        this.updateWebVTTTextTracksDisplay(cues);
         break;
       }
     }
@@ -1328,11 +1591,37 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * Updates this._currentWebVTTTrack if an active track is found
+   * for the originating video.
+   * @param {TextTrackList} textTrackList list of text tracks
+   */
+  setActiveTextTrack(textTrackList) {
+    this._currentWebVTTTrack = null;
+
+    for (let i = 0; i < textTrackList.length; i++) {
+      let track = textTrackList[i];
+      let isCCText = track.kind === "subtitles" || track.kind === "captions";
+      if (isCCText && track.mode === "showing") {
+        this._currentWebVTTTrack = track;
+        break;
+      }
+    }
+  }
+
+  /**
    * Keeps an eye on the originating video's document. If it ever
    * goes away, this will cause the Picture-in-Picture window for any
    * of its content to go away as well.
    */
   trackOriginatingVideo(originatingVideo) {
+    this.observerFunction = (subject, topic, data) => {
+      this.observe(subject, topic, data);
+    };
+    Services.prefs.addObserver(
+      "media.videocontrols.picture-in-picture.display-text-tracks.enabled",
+      this.observerFunction
+    );
+
     let originatingWindow = originatingVideo.ownerGlobal;
     if (originatingWindow) {
       originatingWindow.addEventListener("pagehide", this);
@@ -1340,6 +1629,10 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.addEventListener("pause", this);
       originatingVideo.addEventListener("volumechange", this);
       originatingVideo.addEventListener("resize", this);
+
+      if (DISPLAY_TEXT_TRACKS_PREF) {
+        this.setupTextTracks(originatingVideo);
+      }
 
       let chromeEventHandler = originatingWindow.docShell.chromeEventHandler;
       chromeEventHandler.addEventListener(
@@ -1355,6 +1648,12 @@ class PictureInPictureChild extends JSWindowActorChild {
     }
   }
 
+  setUpCaptionChangeListener(originatingVideo) {
+    if (this.videoWrapper) {
+      this.videoWrapper.setCaptionContainerObserver(originatingVideo, this);
+    }
+  }
+
   /**
    * Stops tracking the originating video's document. This should
    * happen once the Picture-in-Picture window goes away (or is about
@@ -1362,6 +1661,11 @@ class PictureInPictureChild extends JSWindowActorChild {
    * window's document unloads.
    */
   untrackOriginatingVideo(originatingVideo) {
+    Services.prefs.removeObserver(
+      "media.videocontrols.picture-in-picture.display-text-tracks.enabled",
+      this.observerFunction
+    );
+
     let originatingWindow = originatingVideo.ownerGlobal;
     if (originatingWindow) {
       originatingWindow.removeEventListener("pagehide", this);
@@ -1369,6 +1673,10 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.removeEventListener("pause", this);
       originatingVideo.removeEventListener("volumechange", this);
       originatingVideo.removeEventListener("resize", this);
+
+      if (DISPLAY_TEXT_TRACKS_PREF) {
+        this.removeTextTracks(originatingVideo);
+      }
 
       let chromeEventHandler = originatingWindow.docShell.chromeEventHandler;
       chromeEventHandler.removeEventListener(
@@ -1411,7 +1719,8 @@ class PictureInPictureChild extends JSWindowActorChild {
         : null;
     this.videoWrapper = new PictureInPictureChildVideoWrapper(
       wrapperPath,
-      originatingVideo
+      originatingVideo,
+      this
     );
   }
 
@@ -1463,6 +1772,8 @@ class PictureInPictureChild extends JSWindowActorChild {
 
     let doc = this.document;
     let playerVideo = doc.createElement("video");
+    playerVideo.id = "playervideo";
+    let textTracks = doc.createElement("div");
 
     doc.body.style.overflow = "hidden";
     doc.body.style.margin = "0";
@@ -1473,7 +1784,15 @@ class PictureInPictureChild extends JSWindowActorChild {
     playerVideo.style.width = "100vw";
     playerVideo.style.backgroundColor = "#000";
 
+    // Load text tracks container in the content process so that
+    // we can load text tracks without having to constantly
+    // access the parent process.
+    textTracks.id = "texttracks";
     doc.body.appendChild(playerVideo);
+    doc.body.appendChild(textTracks);
+    // Load text tracks stylesheet
+    let textTracksStyleSheet = this.createTextTracksStyleSheet();
+    doc.head.appendChild(textTracksStyleSheet);
 
     originatingVideo.cloneElementVisually(playerVideo);
 
@@ -1483,6 +1802,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       playerVideo.style.transform = "scaleX(-1)";
     }
 
+    this.onCueChange = this.onCueChange.bind(this);
     this.trackOriginatingVideo(originatingVideo);
 
     this.contentWindow.addEventListener(
@@ -1524,6 +1844,15 @@ class PictureInPictureChild extends JSWindowActorChild {
     let video = this.getWeakVideo();
     if (video && this.videoWrapper) {
       this.videoWrapper.setMuted(video, false);
+    }
+  }
+
+  onCueChange(e) {
+    if (!DISPLAY_TEXT_TRACKS_PREF) {
+      this.updateWebVTTTextTracksDisplay(null);
+    } else {
+      const cues = this._currentWebVTTTrack.activeCues;
+      this.updateWebVTTTextTracksDisplay(cues);
     }
   }
 
@@ -1668,7 +1997,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           }
           this.videoWrapper.setMuted(video, false);
           break;
-        case "leftArrow": /* Seek back 15 seconds */
+        case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
           if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
@@ -1676,13 +2005,13 @@ class PictureInPictureChild extends JSWindowActorChild {
 
           oldval = this.videoWrapper.getCurrentTime(video);
           if (keystroke == "leftArrow") {
-            newval = oldval - 15;
+            newval = oldval - SEEK_TIME_SECS;
           } else {
             newval = oldval - this.videoWrapper.getDuration(video) / 10;
           }
           this.videoWrapper.setCurrentTime(video, newval >= 0 ? newval : 0);
           break;
-        case "rightArrow": /* Seek forward 15 seconds */
+        case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
           if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
@@ -1691,7 +2020,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           oldval = this.videoWrapper.getCurrentTime(video);
           var maxtime = this.videoWrapper.getDuration(video);
           if (keystroke == "rightArrow") {
-            newval = oldval + 15;
+            newval = oldval + SEEK_TIME_SECS;
           } else {
             newval = oldval + maxtime / 10;
           }
@@ -1748,6 +2077,7 @@ class PictureInPictureChild extends JSWindowActorChild {
 class PictureInPictureChildVideoWrapper {
   #sandbox;
   #siteWrapper;
+  #PictureInPictureChild;
 
   /**
    * Create a wrapper for the original <video>
@@ -1759,10 +2089,11 @@ class PictureInPictureChildVideoWrapper {
    * @param {HTMLVideoElement} video
    *        The original <video> we want to create a wrapper class for.
    */
-  constructor(videoWrapperScriptPath, video) {
+  constructor(videoWrapperScriptPath, video, piPChild) {
     this.#sandbox = videoWrapperScriptPath
       ? this.#createSandbox(videoWrapperScriptPath, video)
       : null;
+    this.#PictureInPictureChild = piPChild;
   }
 
   /**
@@ -1873,6 +2204,17 @@ class PictureInPictureChildVideoWrapper {
     }
   }
 
+  /**
+   * Function to display the captions on the PiP window
+   * @param text The captions to be shown on the PiP window
+   */
+  updatePiPTextTracks(text) {
+    let pipWindowTracksContainer = this.#PictureInPictureChild.document.getElementById(
+      "texttracks"
+    );
+    pipWindowTracksContainer.textContent = text;
+  }
+
   /* Video methods to be used for video controls from the PiP window. */
 
   play(video) {
@@ -1960,13 +2302,27 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
-  setMuted(video, isMuted) {
+  setMuted(video, shouldMute) {
     return this.#callWrapperMethod({
       name: "setMuted",
-      args: [video, isMuted],
+      args: [video, shouldMute],
       fallback: () => {
-        video.muted = isMuted;
+        video.muted = shouldMute;
       },
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  setCaptionContainerObserver(video) {
+    return this.#callWrapperMethod({
+      name: "setCaptionContainerObserver",
+      args: [
+        video,
+        text => {
+          this.updatePiPTextTracks(text);
+        },
+      ],
+      fallback: () => {},
       validateRetVal: retVal => retVal == null,
     });
   }

@@ -9,139 +9,124 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-SpecialPowers.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", true);
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
-});
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("have to test that top level data: URI navgiation is blocked");
+async function expectBlockedToplevelData() {
+  await SpecialPowers.spawnChrome([], async () => {
+    let progressListener;
+    let bid = await new Promise(resolve => {
+      let bcs = [];
+      progressListener = {
+        QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"]),
+        onStateChange(webProgress, request, stateFlags, status) {
+          if (!(request instanceof Ci.nsIChannel) || !webProgress.isTopLevel ||
+              !(stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) ||
+              !(stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
+            return;
+          }
 
-var testsToRun = {
-  test1: false,
-  test3: false,
-};
+          if (ChromeUtils.getXPCOMErrorName(status) != "NS_ERROR_DOM_BAD_URI") {
+            isnot(request.URI.scheme, "data");
+            return;
+          }
 
-// test1 and test3 event messages will not be received if toplevel data: URI
-// is blocked.
-window.addEventListener("message", receiveMessage);
-function receiveMessage(event) {
-  switch (event.data) {
-    case "test1":
-      testsToRun.test1 = true;
-      break;
-    case "test3":
-      testsToRun.test3 = true;
-      break;
-  }
+          // We can't check for the scheme to be "data" because in the case of a
+          // redirected load, we'll get a `NS_ERROR_DOM_BAD_URI` load error
+          // before observing the redirect, cancelling the load. Instead we just
+          // wait for any load to error with `NS_ERROR_DOM_BAD_URI`.
+          for (let bc of bcs) {
+            try {
+              bc.webProgress.removeProgressListener(progressListener);
+            } catch(e) { }
+          }
+          bcs = [];
+          Services.obs.removeObserver(observer, "browsing-context-attached");
+          resolve(webProgress.browsingContext.browserId);
+        }
+      };
+
+      function observer(subject, topic) {
+        if (!bcs.includes(subject.webProgress)) {
+          bcs.push(subject.webProgress);
+          subject.webProgress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+        }
+      }
+      Services.obs.addObserver(observer, "browsing-context-attached");
+    });
+    return bid;
+  });
 }
 
-function test1() {
+async function expectBlockedURIWarning() {
+  await SpecialPowers.spawnChrome([], async () => {
+    return new Promise(resolve => {
+      Services.console.registerListener(function onConsoleMessage(msg) {
+        info("Seeing console message: " + msg.message);
+        if (!(msg instanceof Ci.nsIScriptError)) {
+          return;
+        }
+        if (msg.category != "DATA_URI_BLOCKED") {
+          return;
+        }
+
+        Services.console.unregisterListener(onConsoleMessage);
+        resolve();
+      });
+    });
+  });
+}
+
+async function expectBrowserDiscarded(browserId) {
+  await SpecialPowers.spawnChrome([browserId], async (browserId) => {
+    return new Promise(resolve => {
+      function check() {
+        if (!BrowsingContext.getCurrentTopByBrowserId(browserId)) {
+          ok(true, `BrowserID ${browserId} discarded`);
+          resolve();
+          Services.obs.removeObserver(check, "browsing-context-discarded");
+        }
+      }
+      Services.obs.addObserver(check, "browsing-context-discarded");
+      check();
+    });
+  });
+}
+
+async function popupTest(uri, expectClose) {
+  info(`Running expect blocked test for ${uri}`);
+  let reqBlockedPromise = expectBlockedToplevelData();
+  let warningPromise = expectBlockedURIWarning();
+  let win = window.open(uri);
+  let browserId = await reqBlockedPromise;
+  await warningPromise;
+  if (expectClose) {
+    await expectBrowserDiscarded(browserId);
+  }
+  win.close();
+}
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
+  });
+
   // simple data: URI click navigation should be prevented
-  let TEST_FILE = "file_block_toplevel_data_navigation.html";
-  let win1 = window.open(TEST_FILE);
-  // testsToRun["test1"] will be false if toplevel data: URI is blocked
-  setTimeout(function () {
-    is(testsToRun.test1, false,
-      "toplevel data: URI navigation through click() should be blocked");
-    win1.close();
-    test2();
-  }, 1000);
-}
+  await popupTest("file_block_toplevel_data_navigation.html", false);
 
-function test2() {
-  // data: URI in iframe which opens data: URI in _blank should be blocked 
-  let win2 = window.open("file_block_toplevel_data_navigation2.html");
-  window.addEventListener("message", receiveMessage);
-  function receiveMessage(event) {
-    window.removeEventListener("message", receiveMessage);
-    is(event.data, "blocked",
-      "data: URI navigation using _blank from data: URI should be blocked");
-    win2.close();
-    test3();
-  }
-}
+  // data: URI in iframe which opens data: URI in _blank should be blocked
+  await popupTest("file_block_toplevel_data_navigation2.html", false);
 
-function test3() {
   // navigating to a data: URI using window.location.href should be blocked
-  let win3 = window.open("file_block_toplevel_data_navigation3.html");
-  // testsToRun["test3"] will be false if toplevel data: URI is blocked
-  setTimeout(function () {
-    is(testsToRun.test3, false,
-      "data: URI navigation through win.loc.href should be blocked");
-    win3.close();
-    test4();
-  }, 1000);
-}
+  await popupTest("file_block_toplevel_data_navigation3.html", false);
 
-function test4() {
   // navigating to a data: URI using window.open() should be blocked
-  let win4 = window.open("data:text/html,<body>toplevel data: URI navigations should be blocked</body>");
-  setTimeout(function () {
-    // Please note that the data: URI will be displayed in the URL-Bar but not
-    // loaded, hence we rather rely on document.body than document.location
-    // GeckoView displays an error page for invalid navigations,
-    // so catch the case where we're not allowed to access to (cross-origin)
-    // error document and treat that as blocked.
-    let body = "Error";
-    try {
-      body = win4.document.body.innerHTML;
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "SecurityError") {
-        body = "";
-      } else {
-        throw e;
-      }
-    }
-    is(body, "", "navigating to a data: URI using window.open() should be blocked");
-    test5();
-  }, 1000);
-}
+  await popupTest("data:text/html,<body>toplevel data: URI navigations should be blocked</body>", false);
 
-function test5() {
   // navigating to a URI which redirects to a data: URI using window.open() should be blocked
-  let win5 = window.open("file_block_toplevel_data_redirect.sjs");
-  setTimeout(function () {
-    // Please note that the data: URI will be displayed in the URL-Bar but not
-    // loaded, hence we rather rely on document.body than document.location
-    let body = "Error";
-    try {
-      body = win5.document.body.innerHTML;
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "SecurityError") {
-        body = "";
-      } else {
-        throw e;
-      }
-    }
-    is(body, "", "navigating to URI which redirects to a data: URI using window.open() should be blocked");
-    win5.close();
-    test6();
-  }, 1000);
-}
+  await popupTest("file_block_toplevel_data_redirect.sjs", false);
 
-function test6() {
   // navigating to a data: URI without a Content Type should be blocked
-  let win6 = window.open("data:DataURIsWithNoContentTypeShouldBeBlocked");
-  setTimeout(function () {
-    let body = "Error";
-    try {
-      body = win6.document.body.innerHTML;
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "SecurityError") {
-        body = "";
-      } else {
-        throw e;
-      }
-    }
-    is(body, "", "navigating to a data: URI without a Content Type should be blocked");
-    win6.close();
-    SimpleTest.finish();
-  }, 1000);
-}
-
-// fire up the tests
-test1();
+  await popupTest("data:,DataURIsWithNoContentTypeShouldBeBlocked", false);
+});
 
 </script>
 </body>

@@ -30,7 +30,18 @@ void AddIPCProfilerMarker(const Message& aMessage, int32_t aOtherPid,
 
     // The current timestamp must be given to the `IPCMarker` payload.
     [[maybe_unused]] const mozilla::TimeStamp now = mozilla::TimeStamp::Now();
-    PROFILER_MARKER("IPC", IPC, mozilla::MarkerTiming::InstantAt(now),
+    PROFILER_MARKER("IPC", IPC,
+                    mozilla::MarkerOptions(
+                        mozilla::MarkerTiming::InstantAt(now),
+                        // If the thread is being profiled, add the marker to
+                        // the current thread. If the thread is not being
+                        // profiled, add the marker to the main thread. It will
+                        // appear in the main thread's IPC track. Profiler
+                        // analysis UI correlates all the IPC markers from
+                        // different threads and generates processed markers.
+                        profiler_thread_is_being_profiled_for_markers()
+                            ? mozilla::MarkerThreadId::CurrentThread()
+                            : mozilla::MarkerThreadId::MainThread()),
                     IPCMarker, now, now, aOtherPid, aMessage.seqno(),
                     aMessage.type(), mozilla::ipc::UnknownSide, aDirection,
                     aPhase, aMessage.is_sync());

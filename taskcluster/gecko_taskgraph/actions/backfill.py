@@ -9,8 +9,8 @@ import re
 import sys
 from functools import partial
 
+from taskgraph.util.taskcluster import get_task_definition
 
-from gecko_taskgraph.util.taskcluster import get_task_definition
 from .registry import register_callback_action
 from .util import (
     combine_task_graph_files,

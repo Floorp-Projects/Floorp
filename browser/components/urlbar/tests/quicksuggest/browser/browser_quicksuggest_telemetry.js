@@ -10,13 +10,15 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 const TEST_URL = "http://example.com/quicksuggest?q=frabbits";
 const TEST_SEARCH_STRING = "frab";
+
+const BEST_MATCH_URL = "http://example.com/best-match";
+const BEST_MATCH_SEARCH_STRING = "bestmatch";
+
 const TEST_DATA = [
   {
     id: 1,
@@ -26,6 +28,16 @@ const TEST_DATA = [
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "Test-Advertiser",
+  },
+  {
+    id: 2,
+    url: BEST_MATCH_URL,
+    title: "Best match",
+    keywords: [BEST_MATCH_SEARCH_STRING],
+    click_url: "http://click.reporting.test.com/",
+    impression_url: "http://impression.reporting.test.com/",
+    advertiser: "Test-Advertiser",
+    _test_is_best_match: true,
   },
 ];
 
@@ -313,19 +325,42 @@ add_task(async function click_mouse_online_dataCollectionEnabled() {
   });
 });
 
-async function doClickTest({ useKeyboard, scenario }) {
+// Tests impression and click telemetry for best matches.
+add_task(async function bestMatch() {
+  UrlbarPrefs.set("bestMatch.enabled", true);
+  await QuickSuggestTestUtils.setScenario("offline");
+  await doClickTest({
+    useKeyboard: false,
+    scenario: "offline",
+    searchString: BEST_MATCH_SEARCH_STRING,
+    url: BEST_MATCH_URL,
+    block_id: 2,
+    isBestMatch: true,
+  });
+  UrlbarPrefs.clear("bestMatch.enabled");
+});
+
+async function doClickTest({
+  useKeyboard,
+  scenario,
+  block_id = undefined,
+  isBestMatch = false,
+  searchString = TEST_SEARCH_STRING,
+  url = TEST_URL,
+}) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: TEST_SEARCH_STRING,
+      value: searchString,
       fireInputEvent: true,
     });
     let index = 1;
     let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
       window,
       index,
-      url: TEST_URL,
+      url,
+      isBestMatch,
     });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       if (useKeyboard) {
@@ -339,12 +374,22 @@ async function doClickTest({ useKeyboard, scenario }) {
       [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
       [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
     });
+    let match_type = isBestMatch ? "best-match" : "firefox-suggest";
     QuickSuggestTestUtils.assertImpressionPing({
       index,
       spy,
       scenario,
+      block_id,
+      match_type,
+      is_clicked: true,
     });
-    QuickSuggestTestUtils.assertClickPing({ index, spy, scenario });
+    QuickSuggestTestUtils.assertClickPing({
+      index,
+      spy,
+      scenario,
+      block_id,
+      match_type,
+    });
   });
 
   await PlacesUtils.history.clear();
@@ -390,7 +435,11 @@ add_task(async function click_beforeSearchSuggestions() {
         [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
         [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
       });
-      QuickSuggestTestUtils.assertImpressionPing({ index, spy });
+      QuickSuggestTestUtils.assertImpressionPing({
+        index,
+        spy,
+        is_clicked: true,
+      });
       QuickSuggestTestUtils.assertClickPing({ index, spy });
     });
   });
@@ -413,7 +462,7 @@ add_task(async function help_keyboard() {
     index,
     url: TEST_URL,
   });
-  let helpButton = result.element.row._elements.get("helpButton");
+  let helpButton = result.element.row._buttons.get("help");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
   await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -451,7 +500,7 @@ add_task(async function help_mouse() {
     index,
     url: TEST_URL,
   });
-  let helpButton = result.element.row._elements.get("helpButton");
+  let helpButton = result.element.row._buttons.get("help");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
   await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -608,95 +657,159 @@ add_task(async function dataCollectionToggled() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", !enabled);
 });
 
+// Tests telemetry recorded when clicking the checkbox for best match in
+// preferences UI. The telemetry will be stored as following keyed scalar.
+// scalar: browser.ui.interaction.preferences_panePrivacy
+// key:    firefoxSuggestBestMatch
+add_task(async function bestmatchCheckbox() {
+  // Set the initial enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  // Open preferences page for best match.
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences#privacy",
+    true
+  );
+
+  for (let i = 0; i < 2; i++) {
+    Services.telemetry.clearScalars();
+
+    // Click on the checkbox.
+    const doc = gBrowser.selectedBrowser.contentDocument;
+    const checkboxId = "firefoxSuggestBestMatch";
+    const checkbox = doc.getElementById(checkboxId);
+    checkbox.scrollIntoView();
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + checkboxId,
+      {},
+      gBrowser.selectedBrowser
+    );
+
+    TelemetryTestUtils.assertKeyedScalar(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "browser.ui.interaction.preferences_panePrivacy",
+      checkboxId,
+      1
+    );
+  }
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests telemetry recorded when opening the learn more link for best match in
+// the preferences UI. The telemetry will be stored as following keyed scalar.
+// scalar: browser.ui.interaction.preferences_panePrivacy
+// key:    firefoxSuggestBestMatchLearnMore
+add_task(async function bestmatchLearnMore() {
+  // Set the initial enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  // Open preferences page for best match.
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences#privacy",
+    true
+  );
+
+  // Click on the learn more link.
+  Services.telemetry.clearScalars();
+  const learnMoreLinkId = "firefoxSuggestBestMatchLearnMore";
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const link = doc.getElementById(learnMoreLinkId);
+  link.scrollIntoView();
+  const onLearnMoreOpenedByClick = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#" + learnMoreLinkId,
+    {},
+    gBrowser.selectedBrowser
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "browser.ui.interaction.preferences_panePrivacy",
+    "firefoxSuggestBestMatchLearnMore",
+    1
+  );
+  await onLearnMoreOpenedByClick;
+  gBrowser.removeCurrentTab();
+
+  // Type enter key on the learm more link.
+  Services.telemetry.clearScalars();
+  link.focus();
+  const onLearnMoreOpenedByKey = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+  );
+  await BrowserTestUtils.synthesizeKey(
+    "KEY_Enter",
+    {},
+    gBrowser.selectedBrowser
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "browser.ui.interaction.preferences_panePrivacy",
+    "firefoxSuggestBestMatchLearnMore",
+    1
+  );
+  await onLearnMoreOpenedByKey;
+  gBrowser.removeCurrentTab();
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
 // Tests the Nimbus exposure event gets recorded after a quick suggest result
 // impression.
 add_task(async function nimbusExposure() {
-  // Exposure event recording is queued to the idle thread, so wait for idle
-  // before we start so any events from previous tasks will have been recorded
-  // and won't interfere with this task.
-  await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
+  await QuickSuggestTestUtils.clearExposureEvent();
 
-  Services.telemetry.clearEvents();
-  NimbusFeatures.urlbar._didSendExposureEvent = false;
-  UrlbarProviderQuickSuggest._recordedExposureEvent = false;
-  let doExperimentCleanup = await QuickSuggestTestUtils.enrollExperiment({
+  await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
       quickSuggestEnabled: true,
       quickSuggestShouldShowOnboardingDialog: false,
     },
+    callback: async () => {
+      // No exposure event should be recorded after only enrolling.
+      await QuickSuggestTestUtils.assertExposureEvent(false);
+
+      // Do a search that doesn't trigger a quick suggest result. No exposure
+      // event should be recorded.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "nimbusExposure no result",
+        fireInputEvent: true,
+      });
+      await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
+      await UrlbarTestUtils.promisePopupClose(window);
+      QuickSuggestTestUtils.assertExposureEvent(false);
+
+      // Do a search that does trigger a quick suggest result. The exposure
+      // event should be recorded.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: TEST_SEARCH_STRING,
+        fireInputEvent: true,
+      });
+      await QuickSuggestTestUtils.assertIsQuickSuggest({
+        window,
+        index: 1,
+        url: TEST_URL,
+      });
+      await QuickSuggestTestUtils.assertExposureEvent(true, "control");
+
+      await UrlbarTestUtils.promisePopupClose(window);
+    },
   });
-
-  // This filter is needed to exclude the enrollment event.
-  let filter = {
-    category: "normandy",
-    method: "expose",
-    object: "nimbus_experiment",
-  };
-
-  // No exposure event should be recorded after only enrolling.
-  Assert.ok(
-    !UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent remains false after enrolling"
-  );
-  TelemetryTestUtils.assertEvents([], filter);
-
-  // Do a search that doesn't trigger a quick suggest result. No exposure event
-  // should be recorded.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "nimbusExposure no result",
-    fireInputEvent: true,
-  });
-  await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
-  await UrlbarTestUtils.promisePopupClose(window);
-  Assert.ok(
-    !UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent remains false after no quick suggest result"
-  );
-  TelemetryTestUtils.assertEvents([], filter);
-
-  // Do a search that does trigger a quick suggest result. The exposure event
-  // should be recorded.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_SEARCH_STRING,
-    fireInputEvent: true,
-  });
-  await QuickSuggestTestUtils.assertIsQuickSuggest({
-    window,
-    index: 1,
-    url: TEST_URL,
-  });
-  Assert.ok(
-    UrlbarProviderQuickSuggest._recordedExposureEvent,
-    "_recordedExposureEvent is true after showing quick suggest result"
-  );
-
-  // The event recording is queued to the idle thread when the search starts, so
-  // likewise queue the assert to idle instead of doing it immediately.
-  await new Promise(resolve => {
-    Services.tm.idleDispatchToMainThread(() => {
-      TelemetryTestUtils.assertEvents(
-        [
-          {
-            category: "normandy",
-            method: "expose",
-            object: "nimbus_experiment",
-            extra: {
-              branchSlug: "control",
-              featureId: "urlbar",
-            },
-          },
-        ],
-        filter
-      );
-      resolve();
-    });
-  });
-
-  await UrlbarTestUtils.promisePopupClose(window);
-
-  await doExperimentCleanup();
 });
 
 // The "firefox-suggest-update" notification should cause TelemetryEnvironment

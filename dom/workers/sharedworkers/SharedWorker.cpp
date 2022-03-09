@@ -127,7 +127,15 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   // Here, the PartitionedPrincipal is always equal to the SharedWorker's
   // principal because the channel is not opened yet, and, because of this, it's
   // not classified. We need to force the correct originAttributes.
-  if (ShouldPartitionStorage(storageAllowed)) {
+  //
+  // The sharedWorker's principal could be a null principal, e.g. loading a
+  // data url. In this case, we don't need to force the OAs for the partitioned
+  // principal because creating storage from a null principal will fail anyway.
+  // We should only do this for content principals.
+  //
+  // You can find more details in StoragePrincipalHelper.h
+  if (ShouldPartitionStorage(storageAllowed) &&
+      BasePrincipal::Cast(loadInfo.mPrincipal)->IsContentPrincipal()) {
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
     if (!sop) {
       aRv.Throw(NS_ERROR_FAILURE);

@@ -292,10 +292,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
   // Protected flex-container-specific methods / member-vars
 
-  /*
+  /**
    * This method does the bulk of the flex layout, implementing the algorithm
-   * described at:
-   *   http://dev.w3.org/csswg/css-flexbox/#layout-algorithm
+   * described at: https://drafts.csswg.org/css-flexbox-1/#layout-algorithm
    * (with a few initialization pieces happening in the caller, Reflow().
    *
    * (The logic behind the division of work between Reflow and DoFlexLayout is
@@ -303,27 +302,42 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * to, if we find any visibility:collapse children, and Reflow() does
    * everything before that point.)
    *
-   * @param aContentBoxMainSize [in/out] initially, the "tentative" content-box
-   *                            main-size of the flex container; "tentative"
-   *                            because it may be unconstrained or may run off
-   *                            the page. In those cases, this method will
-   *                            resolve it to a final value before returning.
-   * @param aContentBoxCrossSize [out] the final content-box cross-size of the
-   *                             flex container.
-   * @param aFlexContainerAscent [out] the flex container's ascent, derived from
-   *                             any baseline-aligned flex items in the first
-   *                             flex line, if any such items exist. Otherwise,
-   *                             nscoord_MIN.
+   * @param aTentativeContentBoxMainSize the "tentative" content-box main-size
+   *                                     of the flex container; "tentative"
+   *                                     because it may be unconstrained or may
+   *                                     run off the page.
+   * @param aTentativeContentBoxCrossSize the "tentative" content-box cross-size
+   *                                      of the flex container; "tentative"
+   *                                      because it may be unconstrained or may
+   *                                      run off the page.
    */
-  void DoFlexLayout(const ReflowInput& aReflowInput,
-                    nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
-                    nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-                    nsTArray<StrutInfo>& aStruts,
-                    nsTArray<nsIFrame*>& aPlaceholders,
-                    const FlexboxAxisTracker& aAxisTracker,
-                    nscoord aMainGapSize, nscoord aCrossGapSize,
-                    nscoord aConsumedBSize, bool aHasLineClampEllipsis,
-                    ComputedFlexContainerInfo* const aContainerInfo);
+  struct FlexLayoutResult final {
+    // The flex lines of the flex container.
+    nsTArray<FlexLine> mLines;
+
+    // The absolutely-positioned flex children.
+    nsTArray<nsIFrame*> mPlaceholders;
+
+    // The final content-box main-size of the flex container as if there's no
+    // fragmentation.
+    nscoord mContentBoxMainSize = NS_UNCONSTRAINEDSIZE;
+
+    // The final content-box cross-size of the flex container as if there's no
+    // fragmentation.
+    nscoord mContentBoxCrossSize = NS_UNCONSTRAINEDSIZE;
+
+    // The flex container's ascent, derived from any baseline-aligned flex items
+    // in the first flex line, if any such items exist. Otherwise, nscoord_MIN.
+    nscoord mAscent = NS_UNCONSTRAINEDSIZE;
+  };
+  FlexLayoutResult DoFlexLayout(
+      const ReflowInput& aReflowInput,
+      const nscoord aTentativeContentBoxMainSize,
+      const nscoord aTentativeContentBoxCrossSize,
+      const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
+      nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+      nsTArray<StrutInfo>& aStruts,
+      ComputedFlexContainerInfo* const aContainerInfo);
 
   /**
    * If our devtools have requested a ComputedFlexContainerInfo for this flex
@@ -371,10 +385,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * updating aLine's bookkeeping (via FlexLine::AddLastItemToMainSizeTotals),
    * or moving the new item to a new line otherwise.
    */
-  FlexItem* GenerateFlexItemForChild(FlexLine& aLine, nsIFrame* aChildFrame,
-                                     const ReflowInput& aParentReflowInput,
-                                     const FlexboxAxisTracker& aAxisTracker,
-                                     bool aHasLineClampEllipsis);
+  FlexItem* GenerateFlexItemForChild(
+      FlexLine& aLine, nsIFrame* aChildFrame,
+      const ReflowInput& aParentReflowInput,
+      const FlexboxAxisTracker& aAxisTracker,
+      const nscoord aTentativeContentBoxCrossSize, bool aHasLineClampEllipsis);
 
   /**
    * This method looks up cached block-axis measurements for a flex item, or
@@ -432,7 +447,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * (Absolutely positioned children of a flex container are *not* flex items.)
    */
   void GenerateFlexLines(const ReflowInput& aReflowInput,
-                         nscoord aContentBoxMainSize,
+                         const nscoord aTentativeContentBoxMainSize,
+                         const nscoord aTentativeContentBoxCrossSize,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize, bool aHasLineClampEllipsis,
@@ -440,16 +456,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                          nsTArray<FlexLine>& aLines);
 
   /**
-   * This method creates FlexLines and FlexItems for children in flex
-   * container's next-in-flows by using the SharedFlexData stored in flex
-   * container's first-in-flow. Returns FlexLines in the outparam |aLines|.
+   * Generates and returns a FlexLayoutResult that contains the FlexLines and
+   * some sizing metrics that should be used to lay out a particular flex
+   * container continuation (i.e. don't call this on the first-in-flow).
    */
-  void GenerateFlexLines(const SharedFlexData& aData,
-                         nsTArray<FlexLine>& aLines);
-
-  nscoord GetMainSizeFromReflowInput(const ReflowInput& aReflowInput,
-                                     const FlexboxAxisTracker& aAxisTracker,
-                                     nscoord aConsumedBSize);
+  FlexLayoutResult GenerateFlexLayoutResult();
 
   /**
    * Resolves the content-box main-size of a flex container frame,
@@ -469,18 +480,17 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * the spec. https://drafts.csswg.org/css-flexbox-1/#algo-main-container
    *
    * (Note: This function should be structurally similar to
-   * 'ComputeCrossSize()', except that here, the caller has already grabbed the
-   * tentative size from the reflow input.)
+   *  ComputeCrossSize().)
    */
   nscoord ComputeMainSize(const ReflowInput& aReflowInput,
                           const FlexboxAxisTracker& aAxisTracker,
-                          nscoord aTentativeMainSize,
+                          const nscoord aTentativeContentBoxMainSize,
                           nsTArray<FlexLine>& aLines) const;
 
   nscoord ComputeCrossSize(const ReflowInput& aReflowInput,
                            const FlexboxAxisTracker& aAxisTracker,
-                           nscoord aSumLineCrossSizes, nscoord aConsumedBSize,
-                           bool* aIsDefinite) const;
+                           const nscoord aTentativeContentBoxCrossSize,
+                           nscoord aSumLineCrossSizes, bool* aIsDefinite) const;
 
   /**
    * Compute the size of the available space that we'll give to our children to
@@ -543,10 +553,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   /**
    * Perform a final Reflow for our child frames.
    *
-   * @param aContentBoxMainSize the final content-box main-size of the flex
-   *                            container.
-   * @param aContentBoxCrossSize the final content-box cross-size of the flex
-   *                             container.
    * @param aContainerSize this frame's tentative physical border-box size, used
    *                       only for logical to physical coordinate conversion.
    * @param aAvailableSizeForItems the size of the available space for our
@@ -556,26 +562,25 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                       continuation chain).
    * @param aSumOfPrevInFlowsChildrenBlockSize See the comment for
    *                                           SumOfChildrenBlockSizeProperty.
-   * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
-   *                             container ascent computed in DoFlexLayout; or,
-   *                             nscoord_MIN if the ascent hasn't been
-   *                             established yet. If the latter, this will be
-   *                             updated with an ascent derived from the first
-   *                             flex item (if there are any flex items).
+   * @param aFlr the result returned by DoFlexLayout.
+   *             Note: aFlr is mostly an "input" parameter, but we use
+   *             aFlr.mAscent an "in/out" parameter; it's initially the
+   *             "tentative" flex container ascent computed in DoFlexLayout; or,
+   *             nscoord_MIN if the ascent hasn't been established yet. If the
+   *             latter, this will be updated with an ascent derived from the
+   *             first flex item (if there are any flex items).
    * @return nscoord the maximum block-end edge of children of this fragment in
    *                 flex container's coordinate space.
    * @return bool true if any child being reflowed is incomplete; false
    *              otherwise.
    */
   std::tuple<nscoord, bool> ReflowChildren(
-      const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
-      const nscoord aContentBoxCrossSize, const nsSize& aContainerSize,
+      const ReflowInput& aReflowInput, const nsSize& aContainerSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
       const nscoord aSumOfPrevInFlowsChildrenBlockSize,
-      nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-      nsTArray<nsIFrame*>& aPlaceholders,
-      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
+      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis,
+      FlexLayoutResult& aFlr);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any

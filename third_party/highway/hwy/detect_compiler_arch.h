@@ -106,20 +106,6 @@
 //------------------------------------------------------------------------------
 // Architecture
 
-#if defined(HWY_EMULATE_SVE)
-
-#define HWY_ARCH_X86_32 0
-#define HWY_ARCH_X86_64 0
-#define HWY_ARCH_X86 0
-#define HWY_ARCH_PPC 0
-#define HWY_ARCH_ARM_A64 1
-#define HWY_ARCH_ARM_V7 0
-#define HWY_ARCH_ARM 1
-#define HWY_ARCH_WASM 0
-#define HWY_ARCH_RVV 0
-
-#else
-
 #if defined(__i386__) || defined(_M_IX86)
 #define HWY_ARCH_X86_32 1
 #else
@@ -181,8 +167,6 @@
 #else
 #define HWY_ARCH_RVV 0
 #endif
-
-#endif // defined(HWY_EMULATE_SVE)
 
 // It is an error to detect multiple architectures at the same time, but OK to
 // detect none of the above.

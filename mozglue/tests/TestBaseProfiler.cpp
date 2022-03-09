@@ -7,7 +7,9 @@
 #include "BaseProfiler.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfileJSONWriter.h"
+#include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/ProgressLogger.h"
 #include "mozilla/ProportionValue.h"
@@ -227,6 +229,278 @@ void TestProfilerUtils() {
                             mozilla::baseprofiler::BaseProfilerThreadId>);
 
   printf("TestProfilerUtils done\n");
+}
+
+void TestBaseAndProfilerDetail() {
+  printf("TestBaseAndProfilerDetail...\n");
+
+  {
+    using mozilla::profiler::detail::FilterHasPid;
+
+    const auto pid123 =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(123);
+    MOZ_RELEASE_ASSERT(FilterHasPid("pid:123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid(" ", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid=123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:123 ", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid: 123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0000000000000000000000123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:12", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:1234", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0", pid123));
+
+    using PidNumber = mozilla::baseprofiler::BaseProfilerProcessId::NumberType;
+    const PidNumber maxNumber = std::numeric_limits<PidNumber>::max();
+    const auto maxPid =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(maxNumber);
+    const std::string maxPidString = "pid:" + std::to_string(maxNumber);
+    MOZ_RELEASE_ASSERT(FilterHasPid(maxPidString.c_str(), maxPid));
+
+    const std::string tooBigPidString = maxPidString + "0";
+    MOZ_RELEASE_ASSERT(!FilterHasPid(tooBigPidString.c_str(), maxPid));
+  }
+
+  {
+    using mozilla::profiler::detail::FiltersExcludePid;
+    const auto pid123 =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(123);
+
+    MOZ_RELEASE_ASSERT(
+        !FiltersExcludePid(mozilla::Span<const char*>{}, pid123));
+
+    {
+      const char* const filters[] = {"main"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"main", "pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"main", "pid:456"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:123", "pid:456"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456", "pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456"};
+      MOZ_RELEASE_ASSERT(FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456", "pid:789"};
+      MOZ_RELEASE_ASSERT(FiltersExcludePid(filters, pid123));
+    }
+  }
+
+  printf("TestBaseAndProfilerDetail done\n");
+}
+
+void TestSharedMutex() {
+  printf("TestSharedMutex...\n");
+
+  mozilla::baseprofiler::detail::BaseProfilerSharedMutex sm;
+
+  // First round of minimal tests in this thread.
+
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+
+  sm.LockExclusive();
+  MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+  sm.UnlockExclusive();
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+
+  sm.LockShared();
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+  sm.UnlockShared();
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+
+  {
+    mozilla::baseprofiler::detail::BaseProfilerAutoLockExclusive exclusiveLock{
+        sm};
+    MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+  }
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+
+  {
+    mozilla::baseprofiler::detail::BaseProfilerAutoLockShared sharedLock{sm};
+    MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+  }
+  MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+
+  // The following will run actions between two threads, to verify that
+  // exclusive and shared locks work as expected.
+
+  // These actions will happen from top to bottom.
+  // This will test all possible lock interactions.
+  enum NextAction {                  // State of the lock:
+    t1Starting,                      // (x=exclusive, s=shared, ?=blocked)
+    t2Starting,                      // t1 t2
+    t1LockExclusive,                 // x
+    t2LockExclusiveAndBlock,         // x  x? - Can't have two exclusives.
+    t1UnlockExclusive,               //    x
+    t2UnblockedAfterT1Unlock,        //    x
+    t1LockSharedAndBlock,            // s? x - Can't have shared during excl
+    t2UnlockExclusive,               // s
+    t1UnblockedAfterT2Unlock,        // s
+    t2LockShared,                    // s  s - Can have multiple shared locks
+    t1UnlockShared,                  //    s
+    t2StillLockedShared,             //    s
+    t1LockExclusiveAndBlock,         // x? s - Can't have excl during shared
+    t2UnlockShared,                  // x
+    t1UnblockedAfterT2UnlockShared,  // x
+    t2CheckAfterT1Lock,              // x
+    t1LastUnlockExclusive,           // (unlocked)
+    done
+  };
+
+  // Each thread will repeatedly read this `nextAction`, and run actions that
+  // target it...
+  std::atomic<NextAction> nextAction{static_cast<NextAction>(0)};
+  // ... and advance to the next available action (which should usually be for
+  // the other thread).
+  auto AdvanceAction = [&nextAction]() {
+    MOZ_RELEASE_ASSERT(nextAction <= done);
+    nextAction = static_cast<NextAction>(static_cast<int>(nextAction) + 1);
+  };
+
+  std::thread t1{[&]() {
+    for (;;) {
+      switch (nextAction) {
+        case t1Starting:
+          AdvanceAction();
+          break;
+        case t1LockExclusive:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          sm.LockExclusive();
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case t1UnlockExclusive:
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          // Advance first, before unlocking, so that t2 sees the new state.
+          AdvanceAction();
+          sm.UnlockExclusive();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          break;
+        case t1LockSharedAndBlock:
+          // Advance action before attempting to lock after t2's exclusive lock.
+          AdvanceAction();
+          sm.LockShared();
+          // We will only acquire the lock after t1 unlocks.
+          MOZ_RELEASE_ASSERT(nextAction == t1UnblockedAfterT2Unlock);
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case t1UnlockShared:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          // Advance first, before unlocking, so that t2 sees the new state.
+          AdvanceAction();
+          sm.UnlockShared();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          break;
+        case t1LockExclusiveAndBlock:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          // Advance action before attempting to lock after t2's shared lock.
+          AdvanceAction();
+          sm.LockExclusive();
+          // We will only acquire the lock after t2 unlocks.
+          MOZ_RELEASE_ASSERT(nextAction == t1UnblockedAfterT2UnlockShared);
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case t1LastUnlockExclusive:
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          // Advance first, before unlocking, so that t2 sees the new state.
+          AdvanceAction();
+          sm.UnlockExclusive();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          break;
+        case done:
+          return;
+        default:
+          // Ignore other actions intended for t2.
+          break;
+      }
+    }
+  }};
+
+  std::thread t2{[&]() {
+    for (;;) {
+      switch (nextAction) {
+        case t2Starting:
+          AdvanceAction();
+          break;
+        case t2LockExclusiveAndBlock:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          // Advance action before attempting to lock after t1's exclusive lock.
+          AdvanceAction();
+          sm.LockExclusive();
+          // We will only acquire the lock after t1 unlocks.
+          MOZ_RELEASE_ASSERT(nextAction == t2UnblockedAfterT1Unlock);
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case t2UnlockExclusive:
+          MOZ_RELEASE_ASSERT(sm.IsLockedExclusiveOnCurrentThread());
+          // Advance first, before unlocking, so that t1 sees the new state.
+          AdvanceAction();
+          sm.UnlockExclusive();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          break;
+        case t2LockShared:
+          sm.LockShared();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case t2StillLockedShared:
+          AdvanceAction();
+          break;
+        case t2UnlockShared:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          // Advance first, before unlocking, so that t1 sees the new state.
+          AdvanceAction();
+          sm.UnlockShared();
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          break;
+        case t2CheckAfterT1Lock:
+          MOZ_RELEASE_ASSERT(!sm.IsLockedExclusiveOnCurrentThread());
+          AdvanceAction();
+          break;
+        case done:
+          return;
+        default:
+          // Ignore other actions intended for t1.
+          break;
+      }
+    }
+  }};
+
+  t1.join();
+  t2.join();
+
+  printf("TestSharedMutex done\n");
 }
 
 void TestProportionValue() {
@@ -5129,6 +5403,8 @@ int main()
 #endif  // MOZ_GECKO_PROFILER
 
   TestProfilerUtils();
+  TestBaseAndProfilerDetail();
+  TestSharedMutex();
   TestProportionValue();
   TestProgressLogger();
   // Note that there are two `TestProfiler{,Markers}` functions above, depending

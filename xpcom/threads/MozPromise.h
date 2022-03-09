@@ -1087,9 +1087,11 @@ class MozPromise : public MozPromiseBase {
     using jni::GeckoResultCallback;
     RefPtr<Private> p = new Private("GeckoResult Glue", false);
     auto resolve = GeckoResultCallback::CreateAndAttach<ResolveValueType>(
-        [p](ResolveValueType aArg) { p->Resolve(aArg, __func__); });
+        [p](ResolveValueType&& aArg) {
+          p->Resolve(MaybeMove(aArg), __func__);
+        });
     auto reject = GeckoResultCallback::CreateAndAttach<RejectValueType>(
-        [p](RejectValueType aArg) { p->Reject(aArg, __func__); });
+        [p](RejectValueType&& aArg) { p->Reject(MaybeMove(aArg), __func__); });
     aGeckoResult->NativeThen(resolve, reject);
     return p;
   }

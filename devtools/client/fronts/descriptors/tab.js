@@ -179,6 +179,11 @@ class TabDescriptorFront extends DescriptorMixin(
     return this._form.isZombieTab;
   }
 
+  get browserId() {
+    return this._form.browserId;
+  }
+
+  // @backward-compat { version 99 } This outerWindowID attribute can be removed once 100 is released
   get outerWindowID() {
     return this._form.outerWindowID;
   }

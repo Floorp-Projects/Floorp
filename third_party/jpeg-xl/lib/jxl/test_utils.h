@@ -374,7 +374,7 @@ jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
       /*has_alpha=*/num_channels == 2 || num_channels == 4,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, /*pool=*/nullptr,
-      /*ib=*/&io.Main(), /*float_in=*/false));
+      /*ib=*/&io.Main(), /*float_in=*/false, 0));
   return io;
 }
 

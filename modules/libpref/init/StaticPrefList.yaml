@@ -1816,6 +1816,13 @@
   value: @IS_ANDROID@
   mirror: always
 
+# If true, page with beforeunload event listeners can be bfcached.
+# This only works when sessionHistoryInParent is enabled.
+- name: docshell.shistory.bfcache.ship_allow_beforeunload_listeners
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
@@ -2354,7 +2361,7 @@
 - name: dom.image-lazy-loading.root-margin.top
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 500
+  value: 100 # 100%
 #else
   value: 300
 #endif
@@ -2362,13 +2369,17 @@
 
 - name: dom.image-lazy-loading.root-margin.top.percentage
   type: bool
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.bottom
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 500
+  value: 100 # 100%
 #else
   value: 300
 #endif
@@ -2376,13 +2387,17 @@
 
 - name: dom.image-lazy-loading.root-margin.bottom.percentage
   type: bool
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.left
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 500
+  value: 100 # 100%
 #else
   value: 300
 #endif
@@ -2390,13 +2405,17 @@
 
 - name: dom.image-lazy-loading.root-margin.left.percentage
   type: bool
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.right
   type: float
 #if defined(EARLY_BETA_OR_EARLIER)
-  value: 500
+  value: 100 # 100%
 #else
   value: 300
 #endif
@@ -2404,7 +2423,11 @@
 
 - name: dom.image-lazy-loading.root-margin.right.percentage
   type: bool
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # Enable passing the "storage" option to indexedDB.open.
@@ -2827,9 +2850,14 @@
   mirror: always
 
 # Network Information API
+# This feature is not available on Firefox desktop. It exposes too much
+# user information. Let's be consistent and disable it on Android.
+# But let's keep it around in case it becomes necessary for webcompat
+# reasons
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1637922
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # Whether we should open noopener links in a new process.
@@ -3151,15 +3179,39 @@
   value: 0
   mirror: always
 
-# Maximum total size for all full parsed scripts in each ScriptLoader instance.
-# -1 implies full parse everything.  Default value is 10MB for utf8 scripts.
-- name: dom.script_loader.full_parse_max_size
+# Select which parse/delazification strategy should be used while parsing
+# scripts off-main-thread. (see CompileOptions.h, DelazificationOption enum)
+#
+#   0: On-demand only. Delazification will be triggered only on the main thread
+#      before the execution of the function.
+#
+#   1: Depth-first. Delazify all functions off-thread in the order of appearance
+#      in the source.
+#
+# 255: Parse everything eagerly, from the first parse. All functions are parsed
+#      at the same time as the top-level of a file.
+- name: dom.script_loader.delazification.strategy
+  type: uint32_t
+  value: 255
+  mirror: always
+
+# Maximum total size after which the delazification strategy, specified by
+# `dom.script_loader.delazification.strategy`, is no longer applied, and the
+# on-demand strategy is used by default.
+#
+# -1 disable the threshold, and delazification strategy is applied to all
+# scripts.
+#
+# Default value is 10MB for utf8 scripts.
+- name: dom.script_loader.delazification.max_size
   type: int32_t
   value: 10485760
   mirror: always
 
-# Minimum memory, in GB, required to enable full parsing.
-- name: dom.script_loader.full_parse_min_mem
+# Minimum memory, in GB, required to enable delazification strategy, specified
+# by `dom.script_loader.delazification.strategy`. Otherwise, the on-demand
+# delazification strategy is used.
+- name: dom.script_loader.delazification.min_mem
   type: int32_t
   value: 2
   mirror: always
@@ -3397,7 +3449,7 @@
 
 - name: dom.serviceWorkers.navigationPreload.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Mitigates ServiceWorker navigation faults by bypassing the ServiceWorker on
@@ -3444,7 +3496,7 @@
 
 - name: dom.workers.requestAnimationFrame
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.workers.serialized-sab-access
@@ -3605,13 +3657,22 @@
   value: false
   mirror: always
 
-# DON'T enable, there are known issues!
 - name: dom.streams.byte_streams.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
 - name: dom.streams.writable_streams.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.transform_streams.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.pipeTo.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -4110,7 +4171,7 @@
 # Whether the WebMIDI API is enabled
 - name: dom.webmidi.enabled
   type: bool
-  value: false
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # midi permission is addon-gated
@@ -4342,14 +4403,6 @@
   type: String
   value: "#FFFFFF"
   mirror: never
-
-# Use CreateElementTransaction or not.  This is available only in a couple of
-# release cycles to make it possible to cancel stopping using
-# CreateElementTransaction.
-- name: editor.create_element_transaction.enabled
-  type: bool
-  value: false
-  mirror: always
 
 # Default length unit of indent blocks with CSS.
 # TODO: Delete this pref after checking the compatibility with the other
@@ -5056,12 +5109,12 @@
 
 - name: gfx.canvas.accelerated.cache-items
   type: RelaxedAtomicUint32
-  value: 1024
+  value: 2048
   mirror: always
 
 - name: gfx.canvas.accelerated.cache-size
   type: RelaxedAtomicUint32
-  value: 128
+  value: 256
   mirror: always
 
 - name: gfx.canvas.accelerated.max-size
@@ -5398,6 +5451,21 @@
   value: true
   mirror: always
 
+#if defined(XP_WIN)
+# Whether the DirectWrite bold simulation should be used when a bold font-weight
+# is requested but no bold face available in the family. This renders poorly with
+# some third-party fonts, so by default we disable it for webfonts and allow it
+# only with locally-installed fonts.
+# Values:
+#   0 - never use DWrite bold simulation; always multi-strike instead
+#   1 - use DWrite bold for installed fonts, multi-strike for webfont resources
+#   2 - use DWrite bold for all fonts
+- name: gfx.font_rendering.directwrite.bold_simulation
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+#endif
+
 # The level of logging:
 # - 0: no logging;
 # - 1: adds errors;
@@ -5455,13 +5523,13 @@
 # Enable OffscreenCanvas based on the domain allowlist.
 - name: gfx.offscreencanvas.domain-enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Domains included in the allowlist.
 - name: gfx.offscreencanvas.domain-allowlist
   type: String
-  value: ""
+  value: "*.zoom.us"
   mirror: never
 
 - name: gfx.omta.background-color
@@ -5574,7 +5642,7 @@
 
 - name: gfx.will-change.ignore-opacity
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
@@ -6453,6 +6521,15 @@
   mirror: always
   do_not_use_directly: true
 
+# Whether the megamorphic property lookup cache is enabled.
+#
+# NOTE: This must match JitOptions defaults.
+- name: javascript.options.watchtower.megamorphic
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
@@ -7171,6 +7248,15 @@
   value: false
   mirror: always
 
+# Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
+# A value of 0 means use the system DPI. A positive value is used as the DPI.
+# This sets the physical size of a device pixel and thus controls the
+# interpretation of physical units such as "pt".
+- name: layout.css.dpi
+  type: int32_t
+  value: -1
+  mirror: always
+
 # Whether non-standard caption-side values are enabled
 - name: layout.css.caption-side-non-standard.enabled
   type: RelaxedAtomicBool
@@ -7502,7 +7588,7 @@
 # Is support for caching an grid item's block axis measurement enabled?
 - name: layout.css.grid-item-baxis-measurement.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Is support for CSS masonry layout enabled?
@@ -8104,6 +8190,12 @@
   mirror: always
   rust: true
 
+# Whether we want scrollbar-width: thin to behave as scrollbar-width: auto.
+- name: layout.css.scrollbar-width-thin.disabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether the `scrollbar-gutter` CSS property is enabled.
 - name: layout.css.scrollbar-gutter.enabled
   type: RelaxedAtomicBool
@@ -8357,7 +8449,7 @@
 
 # ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
-  type: int32_t
+  type: uint32_t
   mirror: always
   value: 50
 
@@ -9276,11 +9368,6 @@
   value: true
   mirror: always
 
-- name: media.peerconnection.rtpsourcesapi.enabled
-  type: bool
-  value: true
-  mirror: always
-
 #ifdef MOZ_WEBRTC
   # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
   # acceleration for decoding.
@@ -9890,6 +9977,16 @@
   value: true
   mirror: always
 
+# Set this pref to an integer like 99 to override the User-Agent string's
+# Firefox version. The value 0 means use the default Firefox version. If
+# enterprise users rely on sites that aren't compatible with Firefox version
+# 100's three-digit version number, enterprise admins can set this pref to a
+# known-good version (like 99) in an enterprise policy file.
+- name: network.http.useragent.forceVersion
+  type: uint32_t
+  value: 0
+  mirror: always
+
 # Whether or not we use Windows for SSO to Microsoft sites.
 - name: network.http.windows-sso.enabled
   type: RelaxedAtomicBool
@@ -10223,7 +10320,19 @@
 # If true, don't fallback to native DNS upon network errors.
 - name: network.trr.strict_native_fallback
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# If true, we'll fallback to native if the retry also times out.
+- name: network.trr.strict_native_fallback_allow_timeouts
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Single TRR request timeout (ms) when strict native fallback is enabled.
+- name: network.trr.strict_fallback_request_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 6000
   mirror: always
 
 # If false, the temporary blocklisting feature is disabled.
@@ -10695,6 +10804,13 @@
   value: false
   mirror: always
 
+# When this pref is true, we will use the HTTPS acceptable content encoding
+# list for trustworthy domains such as http://localhost
+- name: network.http.encoding.trustworthy_is_https
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Support http3 version1
 - name: network.http.http3.support_version1
   type: RelaxedAtomicBool
@@ -10711,6 +10827,13 @@
 - name: network.http.early_data_max_error
   type: RelaxedAtomicUint32
   value: 5
+  mirror: always
+
+# The maximum count that we allow socket prrocess to crash. If this count is
+# reached, we won't use networking over socket process.
+- name: network.max_socket_process_failed_count
+  type: RelaxedAtomicUint32
+  value: 1
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -10754,6 +10877,15 @@
 - name: page_load.deprioritization_period
   type: RelaxedAtomicUint32
   value: 5000
+  mirror: always
+
+#---------------------------------------------------------------------------
+# Prefs starting with "pdfjs."
+#---------------------------------------------------------------------------
+
+- name: pdfjs.disabled
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -11394,11 +11526,6 @@
   value: true
   mirror: always
 
-- name: security.csp.enable
-  type: bool
-  value: true
-  mirror: always
-
 - name: security.csp.reporting.script-sample.max-length
   type: int32_t
   value: 40
@@ -11499,17 +11626,6 @@
   mirror: always
   do_not_use_directly: true # Consumers should use SandboxSettings to ask.
 
-
-# Whether win32k is disabled for content processes.
-# true means win32k system calls are not permitted.
-# (This cannot be put behind the XP_WIN and MOZ_SANDBOX guards because
-#  "Nightly Experiments" has no way to filter options based on OS or other
-#  CPP defines, and it fails if the pref doesn't exist)
-- name: security.sandbox.content.win32k-disable
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Enrollment preferences for the win32k experiment, set and managed by Normandy
 - name: security.sandbox.content.win32k-experiment.enrollmentStatus
   type: uint32_t
@@ -11522,6 +11638,14 @@
   mirror: never
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
+
+  # Whether win32k is disabled for content processes.
+  # true means win32k system calls are not permitted.
+-   name: security.sandbox.content.win32k-disable
+    type: RelaxedAtomicBool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: always
+
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
   # failures, where the GMP process fails very early. See bug 1449348.
 -   name: security.sandbox.gmp.win32k-disable
@@ -11574,14 +11698,15 @@
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  # Run content processes in headless mode and disallow connections to
-  # the X server.  Experimental; breaks WebGL and Flash, and requires
-  # `widget.non-native-theme.enabled` and `widget.remote-look-and-feel`.
-  # Changing it requires a restart because sandbox policy information dependent
-  # on it is cached.  See bug 1640345 for details.
+  # Run content processes in headless mode and disallow
+  # connections to the X server.  Requires:
+  # * `webgl.out-of-process` (or else WebGL breaks)
+  # * `widget.non-native-theme.enabled` (scrollbars & form controls)
+  # Changing it requires a restart because sandbox policy information
+  # dependent on it is cached.  See bug 1640345 for details.
 - name: security.sandbox.content.headless
   type: bool
-  value: false
+  value: true
   mirror: once
 #endif
 
@@ -11740,6 +11865,25 @@
 - name: svg.new-getBBox.enabled
   type: bool
   value: false
+  mirror: always
+
+# Tweak which elements are allowed in <svg:use> subtrees, and in which
+# circumstances. See RemoveForbiddenNodes in SVGUseElement.cpp for the spec
+# text.
+#
+# - 0: Don't restrict ever.
+# - 1: Restrict only cross-document.
+# - 2/other: restrict always.
+#
+# We allow the behavior to be configurable via this pref. Our chosen default
+# value forbids non-graphical content in <svg:use> clones of cross-document
+# elements. This is a compromise between our more-permissive pre-existing
+# behavior (which SVG 2 seems to call for, and maps to pref value 0) and the
+# behavior of other UAs (which SVG 1.1 seems to call for, and maps to pref
+# value 2).
+- name: svg.use-element.graphics-element-restrictions
+  type: int32_t
+  value: 1
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -12382,7 +12526,9 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(XP_WIN)
+# (When reading the next line, know that preprocessor.py doesn't
+# understand parentheses, but && is higher precedence than ||.)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
@@ -12512,10 +12658,16 @@
   value: 0
   mirror: always
 
+# Whether we should use themed values for dark scrollbars.
+- name: widget.non-native-theme.scrollbar.dark-themed
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether the active thumb color should always use the themed colors, even if
 # dark scrollbars are in use.
 - name: widget.non-native-theme.scrollbar.active-always-themed
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
@@ -12621,6 +12773,25 @@
   value: false
   mirror: always
 
+# Whether native GTK context menus are enabled.
+# Disabled because at the very least there's missing custom icon support.
+- name: widget.gtk.native-context-menus
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Whether we use overlay scrollbars on GTK.
+- name: widget.gtk.overlay-scrollbars.enabled
+  type: RelaxedAtomicBool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
+# Whether we honor the scrollbar colors from the gtk theme.
+- name: widget.gtk.theme-scrollbar-colors.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether selection colors for the non-system theme get passed from the system
 # GTK theme.
 - name: widget.gtk.alt-theme.selection
@@ -12640,15 +12811,6 @@
 - name: widget.gtk.alt-theme.scrollbar_active
   type: bool
   value: true
-  mirror: always
-
-# Whether other scrollbar colors get passed from the real GTK theme.
-#
-# This is default false because light scrollbars usually match better websites,
-# and we have automatic scrollbar darkening.
-- name: widget.gtk.alt-theme.scrollbar
-  type: bool
-  value: false
   mirror: always
 
 # Whether to use gtk high contrast themes to disable content styling like on
@@ -12710,6 +12872,19 @@
 
 #ifdef MOZ_WIDGET_GTK
 
+# The time we should spend on a DBUS call to the FileManager1 interface before
+# giving up and trying an alternative method.
+#
+# -1 for the default system timeout, INT_MAX for "infinite time".
+#
+# This happens right now on the main thread so 1 second should be enough, we
+# should consider moving it to a background task and just use the default
+# timeout.
+- name: widget.gtk.file-manager-show-items-timeout-ms
+  type: int32_t
+  value: 1000
+  mirror: always
+
 # The timeout we should spend on a DBUS call to the Settings proxy before
 # giving up.
 #
@@ -12736,19 +12911,10 @@
 # Whether to use gtk portal for the mime handler.
 #  - 0: never
 #  - 1: always
-#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)
+#  - 2: auto (for now only true for flatpak, see bug 1516290)
 - name: widget.use-xdg-desktop-portal.mime-handler
   type: int32_t
   value: 2
-  mirror: always
-
-# Whether to use gtk portal for the print dialog.
-#  - 0: never
-#  - 1: always
-#  - 2: auto (for now only true for flatpak, since it needs work, see bug 1688720).
-- name: widget.use-xdg-desktop-portal.print
-  type: int32_t
-  value: 0
   mirror: always
 
 # Whether to try to use XDG portal for settings / look-and-feel information.
@@ -12780,6 +12946,13 @@
   value: true
   mirror: always
 
+# Whether overlay scrollbars respect the system settings.
+# Note that these can be overridden by the ui.useOverlayScrollbars pref.
+- name: widget.windows.overlay_scrollbars.enabled
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
   type: bool
   value: false
@@ -12787,7 +12960,7 @@
 
 - name: widget.windows.window_occlusion_tracking_session_lock.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 #endif
 
@@ -12795,10 +12968,30 @@
 - name: widget.disable-swipe-tracker
   type: bool
 #ifdef XP_WIN
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
 #else
   value: false
 #endif
+  mirror: always
+
+# Various metrics to control SwipeTracker.
+- name: widget.swipe.velocity-twitch-tolerance
+  type: float
+  value: 0.0000001f
+  mirror: always
+
+- name: widget.swipe.success-threshold
+  type: float
+#if defined(XP_WIN)
+  value: 0.5f
+#else
+  value: 0.25f
+#endif
+  mirror: always
+
+- name: widget.swipe.success-velocity-contribution
+  type: float
+  value: 0.05f
   mirror: always
 
 #---------------------------------------------------------------------------

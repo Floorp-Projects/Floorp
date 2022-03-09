@@ -18,6 +18,7 @@ for feature in gkrust_features:
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
+    "fog",
     "selectors",
     "servo_arc",
     "stylo_tests",
@@ -26,11 +27,6 @@ RUST_TESTS = [
     # also see: https://github.com/rust-lang/cargo/issues/9856
     "gkrust",
 ]
-
-if not CONFIG["MOZ_CODE_COVERAGE"]:
-    # glean tests are disabled for ccov builds because some of them test panics
-    # and those builds are compiled with '-Cpanic=abort -Zpanic_abort_tests'
-    RUST_TESTS += ["fog"]
 
 if CONFIG["CPU_ARCH"] != "x86":
     # malloc_size_of_derive is a build dependency, so if we are doing

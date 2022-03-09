@@ -19,6 +19,9 @@
 #ifdef OS_LINUX
 #  include "linux_memfd_defs.h"
 #endif
+#ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
 
 #ifdef __FreeBSD__
 #  include <sys/capsicum.h>
@@ -260,22 +263,13 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
     return false;
   }
   *str += '/';
-#  ifdef OS_LINUX
+#  ifdef MOZ_WIDGET_GTK
   // The Snap package environment doesn't provide a private /dev/shm
   // (it's used for communication with services like PulseAudio);
   // instead AppArmor is used to restrict access to it.  Anything with
   // this prefix is allowed:
-  static const char* const kSnap = [] {
-    auto instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
-    if (instanceName != nullptr) {
-      return instanceName;
-    }
-    // Compatibility for snapd <= 2.35:
-    return PR_GetEnv("SNAP_NAME");
-  }();
-
-  if (kSnap) {
-    StringAppendF(str, "snap.%s.", kSnap);
+  if (const char* snap = mozilla::widget::GetSnapInstanceName()) {
+    StringAppendF(str, "snap.%s.", snap);
   }
 #  endif  // OS_LINUX
   // Hopefully the "implementation defined" name length limit is long

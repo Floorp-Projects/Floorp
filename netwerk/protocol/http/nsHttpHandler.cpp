@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_general.h"
@@ -47,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsIParentalControlsService.h"
 #include "nsPIDOMWindow.h"
+#include "nsIHttpActivityObserver.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsINetworkLinkService.h"
 #include "nsNetUtil.h"
@@ -341,6 +343,25 @@ static const char* gCallbackPrefs[] = {
     nullptr,
 };
 
+static void GetFirefoxVersionForUserAgent(nsACString& aVersion) {
+  // If the "network.http.useragent.forceVersion" pref has a non-zero value,
+  // then override the User-Agent string's Firefox version. The value 0 means
+  // use the default Firefox version. If enterprise users rely on sites that
+  // aren't compatible with Firefox version 100's three-digit version number,
+  // enterprise admins can set this pref to a known-good version (like 99) in an
+  // enterprise policy file.
+  uint32_t forceVersion =
+      mozilla::StaticPrefs::network_http_useragent_forceVersion();
+  if (forceVersion == 0) {
+    // Use the default Firefox version.
+    aVersion.AssignLiteral(MOZILLA_UAVERSION);
+  } else {
+    // Use the pref's version.
+    aVersion.AppendInt(forceVersion);
+    aVersion.AppendLiteral(".0");
+  }
+}
+
 nsresult nsHttpHandler::Init() {
   nsresult rv;
 
@@ -374,6 +395,7 @@ nsresult nsHttpHandler::Init() {
     usageOfHTTPSRRPrefs[2] = StaticPrefs::network_dns_echconfig_enabled();
     Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTPS_RR_PREFS_USAGE,
                          static_cast<uint32_t>(usageOfHTTPSRRPrefs.to_ulong()));
+    mActivityDistributor = components::HttpActivityDistributor::Service();
   }
 
   auto initQLogDir = [&]() {
@@ -423,9 +445,14 @@ nsresult nsHttpHandler::Init() {
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
                        StaticPrefs::network_http_http3_enable());
 
-  mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
+  nsAutoCString uaVersion;
+  GetFirefoxVersionForUserAgent(uaVersion);
 
-  mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
+  mMisc.AssignLiteral("rv:");
+  mMisc.Append(uaVersion);
+
+  mCompatFirefox.AssignLiteral("Firefox/");
+  mCompatFirefox.Append(uaVersion);
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
@@ -457,7 +484,7 @@ nsresult nsHttpHandler::Init() {
   mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
-  mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+  mProductSub.Assign(uaVersion);
 #else
   mProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif
@@ -507,6 +534,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "browser-delayed-startup-finished", true);
     obsService->AddObserver(this, "network:captive-portal-connectivity", true);
     obsService->AddObserver(this, "network:reset-http3-excluded-list", true);
+    obsService->AddObserver(this, "network:socket-process-crashed", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(this, "net:current-top-browsing-context-id",
@@ -2198,6 +2226,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
         Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
       }
     }
+
+    mActivityDistributor = nullptr;
   } else if (!strcmp(topic, "profile-change-net-restore")) {
     // initialize connection manager
     rv = InitConnectionMgr();
@@ -2313,6 +2343,10 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
   } else if (!strcmp(topic, "network:reset-http3-excluded-list")) {
     MutexAutoLock lock(mHttpExclusionLock);
     mExcludedHttp3Origins.Clear();
+  } else if (!strcmp(topic, "network:socket-process-crashed")) {
+    ShutdownConnectionManager();
+    mConnMgr = nullptr;
+    Unused << InitConnectionMgr();
   }
 
   return NS_OK;
@@ -2968,6 +3002,37 @@ bool nsHttpHandler::Is0RttTcpExcluded(const nsHttpConnectionInfo* ci) {
   }
 
   return mExcluded0RttTcpOrigins.Contains(ci->GetOrigin());
+}
+
+bool nsHttpHandler::HttpActivityDistributorActivated() {
+  if (!mActivityDistributor) {
+    return false;
+  }
+
+  return mActivityDistributor->Activated();
+}
+
+void nsHttpHandler::ObserveHttpActivityWithArgs(
+    const HttpActivityArgs& aArgs, uint32_t aActivityType,
+    uint32_t aActivitySubtype, PRTime aTimestamp, uint64_t aExtraSizeData,
+    const nsACString& aExtraStringData) {
+  if (!HttpActivityDistributorActivated()) {
+    return;
+  }
+
+  if (aActivitySubtype == NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER &&
+      !mActivityDistributor->ObserveProxyResponseEnabled()) {
+    return;
+  }
+
+  if (aActivityType == NS_ACTIVITY_TYPE_HTTP_CONNECTION &&
+      !mActivityDistributor->ObserveConnectionEnabled()) {
+    return;
+  }
+
+  Unused << mActivityDistributor->ObserveActivityWithArgs(
+      aArgs, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
+      aExtraStringData);
 }
 
 }  // namespace mozilla::net

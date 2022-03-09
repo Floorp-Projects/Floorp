@@ -30,7 +30,184 @@ class RefPtr;
 template <typename T>
 class nsCOMPtr;
 
+namespace mozilla::ipc {
+class IProtocol;
+template <typename P>
+struct IPDLParamTraits;
+
+// Implemented in ProtocolUtils.cpp
+MOZ_NEVER_INLINE void PickleFatalError(const char* aMsg, IProtocol* aActor);
+}  // namespace mozilla::ipc
+
 namespace IPC {
+
+/**
+ * Context used to serialize into an IPC::Message. Provides relevant context
+ * used when serializing.
+ */
+class MOZ_STACK_CLASS MessageWriter final {
+ public:
+  explicit MessageWriter(Message& message,
+                         mozilla::ipc::IProtocol* actor = nullptr)
+      : message_(message), actor_(actor) {}
+
+  MessageWriter(const MessageWriter&) = delete;
+  MessageWriter& operator=(const MessageWriter&) = delete;
+
+  mozilla::ipc::IProtocol* GetActor() const { return actor_; }
+
+#define FORWARD_WRITE(name, type) \
+  bool Write##name(const type& result) { return message_.Write##name(result); }
+
+  FORWARD_WRITE(Bool, bool)
+  FORWARD_WRITE(Int16, int16_t)
+  FORWARD_WRITE(UInt16, uint16_t)
+  FORWARD_WRITE(Int, int)
+  FORWARD_WRITE(Long, long)
+  FORWARD_WRITE(ULong, unsigned long)
+  FORWARD_WRITE(Int32, int32_t)
+  FORWARD_WRITE(UInt32, uint32_t)
+  FORWARD_WRITE(Int64, int64_t)
+  FORWARD_WRITE(UInt64, uint64_t)
+  FORWARD_WRITE(Double, double)
+  FORWARD_WRITE(IntPtr, intptr_t)
+  FORWARD_WRITE(UnsignedChar, unsigned char)
+  FORWARD_WRITE(String, std::string)
+  FORWARD_WRITE(WString, std::wstring)
+
+#undef FORWARD_WRITE
+
+  bool WriteData(const char* data, uint32_t length) {
+    return message_.WriteData(data, length);
+  }
+
+  bool WriteBytes(const void* data, uint32_t data_len,
+                  uint32_t alignment = sizeof(uint32_t)) {
+    return message_.WriteBytes(data, data_len, alignment);
+  }
+
+  bool WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity) {
+    return message_.WriteBytesZeroCopy(data, data_len, capacity);
+  }
+
+  bool WriteSentinel(uint32_t sentinel) {
+    return message_.WriteSentinel(sentinel);
+  }
+
+  bool WriteFileHandle(mozilla::UniqueFileHandle handle) {
+    return message_.WriteFileHandle(std::move(handle));
+  }
+
+  void WritePort(mozilla::ipc::ScopedPort port) {
+    message_.WritePort(std::move(port));
+  }
+
+#if defined(OS_MACOSX)
+  bool WriteMachSendRight(mozilla::UniqueMachSendRight port) {
+    return message_.WriteMachSendRight(std::move(port));
+  }
+#endif
+
+  void FatalError(const char* aErrorMsg) const {
+    mozilla::ipc::PickleFatalError(aErrorMsg, actor_);
+  }
+
+ private:
+  Message& message_;
+  mozilla::ipc::IProtocol* actor_;
+};
+
+/**
+ * Context used to read data from an IPC::Message. Provides relevant context
+ * used when deserializing and tracks iteration.
+ */
+class MOZ_STACK_CLASS MessageReader final {
+ public:
+  explicit MessageReader(const Message& message,
+                         mozilla::ipc::IProtocol* actor = nullptr)
+      : message_(message), iter_(message), actor_(actor) {}
+
+  MessageReader(const MessageReader&) = delete;
+  MessageReader& operator=(const MessageReader&) = delete;
+
+  mozilla::ipc::IProtocol* GetActor() const { return actor_; }
+
+#define FORWARD_READ(name, type)                \
+  [[nodiscard]] bool Read##name(type* result) { \
+    return message_.Read##name(&iter_, result); \
+  }
+
+  FORWARD_READ(Bool, bool)
+  FORWARD_READ(Int16, int16_t)
+  FORWARD_READ(UInt16, uint16_t)
+  FORWARD_READ(Short, short)
+  FORWARD_READ(Int, int)
+  FORWARD_READ(Long, long)
+  FORWARD_READ(ULong, unsigned long)
+  FORWARD_READ(Int32, int32_t)
+  FORWARD_READ(UInt32, uint32_t)
+  FORWARD_READ(Int64, int64_t)
+  FORWARD_READ(UInt64, uint64_t)
+  FORWARD_READ(Double, double)
+  FORWARD_READ(IntPtr, intptr_t)
+  FORWARD_READ(UnsignedChar, unsigned char)
+  FORWARD_READ(String, std::string)
+  FORWARD_READ(WString, std::wstring)
+
+  // Special version of ReadInt() which rejects negative values
+  FORWARD_READ(Length, int);
+
+#undef FORWARD_READ
+
+  [[nodiscard]] bool ReadBytesInto(void* data, uint32_t length) {
+    return message_.ReadBytesInto(&iter_, data, length);
+  }
+
+  [[nodiscard]] bool ExtractBuffers(
+      size_t length, mozilla::BufferList<InfallibleAllocPolicy>* buffers,
+      uint32_t alignment = sizeof(uint32_t)) {
+    return message_.ExtractBuffers(&iter_, length, buffers, alignment);
+  }
+
+  [[nodiscard]] bool IgnoreBytes(uint32_t length) {
+    return message_.IgnoreBytes(&iter_, length);
+  }
+
+  [[nodiscard]] bool ReadSentinel(uint32_t sentinel) {
+    return message_.ReadSentinel(&iter_, sentinel);
+  }
+
+  bool IgnoreSentinel() { return message_.IgnoreSentinel(&iter_); }
+
+  bool HasBytesAvailable(uint32_t len) {
+    return message_.HasBytesAvailable(&iter_, len);
+  }
+
+  void EndRead() { message_.EndRead(iter_, message_.type()); }
+
+  [[nodiscard]] bool ConsumeFileHandle(mozilla::UniqueFileHandle* handle) {
+    return message_.ConsumeFileHandle(&iter_, handle);
+  }
+
+  [[nodiscard]] bool ConsumePort(mozilla::ipc::ScopedPort* port) {
+    return message_.ConsumePort(&iter_, port);
+  }
+
+#if defined(OS_MACOSX)
+  [[nodiscard]] bool ConsumeMachSendRight(mozilla::UniqueMachSendRight* port) {
+    return message_.ConsumeMachSendRight(&iter_, port);
+  }
+#endif
+
+  void FatalError(const char* aErrorMsg) const {
+    mozilla::ipc::PickleFatalError(aErrorMsg, actor_);
+  }
+
+ private:
+  const Message& message_;
+  PickleIterator iter_;
+  mozilla::ipc::IProtocol* actor_;
+};
 
 //-----------------------------------------------------------------------------
 // An iterator class for reading the fields contained within a Message.
@@ -112,14 +289,13 @@ template <class P>
 struct ParamTraits;
 
 template <typename P>
-static inline void WriteParam(Message* m, P&& p) {
-  ParamTraits<std::decay_t<P>>::Write(m, std::forward<P>(p));
+static inline void WriteParam(MessageWriter* writer, P&& p) {
+  ParamTraits<std::decay_t<P>>::Write(writer, std::forward<P>(p));
 }
 
 template <typename P>
-static inline bool WARN_UNUSED_RESULT ReadParam(const Message* m,
-                                                PickleIterator* iter, P* p) {
-  return ParamTraits<P>::Read(m, iter, p);
+static inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
+  return ParamTraits<P>::Read(reader, p);
 }
 
 template <typename P>
@@ -127,17 +303,43 @@ static inline void LogParam(const P& p, std::wstring* l) {
   ParamTraits<P>::Log(p, l);
 }
 
+// Temporary fallback class to allow types to declare serialization using the
+// IPDLParamTraits type class. Will be removed once all remaining
+// IPDLParamTraits implementations are gone. (bug 1754009)
+
+template <class P>
+struct ParamTraitsIPDLFallback {
+  template <class R>
+  static auto Write(MessageWriter* writer, R&& p)
+      -> decltype(mozilla::ipc::IPDLParamTraits<P>::Write(writer,
+                                                          writer->GetActor(),
+                                                          std::forward<R>(p))) {
+    mozilla::ipc::IPDLParamTraits<P>::Write(writer, writer->GetActor(),
+                                            std::forward<R>(p));
+  }
+  template <class R>
+  static auto Read(MessageReader* reader, R* r)
+      -> decltype(mozilla::ipc::IPDLParamTraits<P>::Read(reader,
+                                                         reader->GetActor(),
+                                                         r)) {
+    return mozilla::ipc::IPDLParamTraits<P>::Read(reader, reader->GetActor(),
+                                                  r);
+  }
+};
+
 // Fundamental types.
 
 template <class P>
-struct ParamTraitsFundamental {};
+struct ParamTraitsFundamental : ParamTraitsIPDLFallback<P> {};
 
 template <>
 struct ParamTraitsFundamental<bool> {
   typedef bool param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteBool(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadBool(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteBool(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadBool(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(p ? L"true" : L"false");
@@ -147,9 +349,11 @@ struct ParamTraitsFundamental<bool> {
 template <>
 struct ParamTraitsFundamental<int> {
   typedef int param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteInt(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadInt(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteInt(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadInt(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%d", p));
@@ -159,9 +363,11 @@ struct ParamTraitsFundamental<int> {
 template <>
 struct ParamTraitsFundamental<long> {
   typedef long param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteLong(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadLong(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteLong(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadLong(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%l", p));
@@ -171,9 +377,11 @@ struct ParamTraitsFundamental<long> {
 template <>
 struct ParamTraitsFundamental<unsigned long> {
   typedef unsigned long param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteULong(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadULong(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteULong(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadULong(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%ul", p));
@@ -183,11 +391,11 @@ struct ParamTraitsFundamental<unsigned long> {
 template <>
 struct ParamTraitsFundamental<long long> {
   typedef long long param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteBytes(&p, sizeof(param_type));
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteBytes(&p, sizeof(param_type));
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadBytesInto(iter, r, sizeof(*r));
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadBytesInto(r, sizeof(*r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%ll", p));
@@ -197,11 +405,11 @@ struct ParamTraitsFundamental<long long> {
 template <>
 struct ParamTraitsFundamental<unsigned long long> {
   typedef unsigned long long param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteBytes(&p, sizeof(param_type));
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteBytes(&p, sizeof(param_type));
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadBytesInto(iter, r, sizeof(*r));
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadBytesInto(r, sizeof(*r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%ull", p));
@@ -211,9 +419,11 @@ struct ParamTraitsFundamental<unsigned long long> {
 template <>
 struct ParamTraitsFundamental<double> {
   typedef double param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteDouble(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadDouble(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteDouble(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadDouble(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"e", p));
@@ -228,9 +438,11 @@ struct ParamTraitsFixed : ParamTraitsFundamental<P> {};
 template <>
 struct ParamTraitsFixed<int16_t> {
   typedef int16_t param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteInt16(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadInt16(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteInt16(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadInt16(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%hd", p));
@@ -240,9 +452,11 @@ struct ParamTraitsFixed<int16_t> {
 template <>
 struct ParamTraitsFixed<uint16_t> {
   typedef uint16_t param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteUInt16(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadUInt16(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteUInt16(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadUInt16(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%hu", p));
@@ -252,9 +466,11 @@ struct ParamTraitsFixed<uint16_t> {
 template <>
 struct ParamTraitsFixed<uint32_t> {
   typedef uint32_t param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteUInt32(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadUInt32(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteUInt32(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadUInt32(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%u", p));
@@ -264,9 +480,11 @@ struct ParamTraitsFixed<uint32_t> {
 template <>
 struct ParamTraitsFixed<int64_t> {
   typedef int64_t param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteInt64(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadInt64(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteInt64(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadInt64(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%" PRId64L, p));
@@ -276,11 +494,11 @@ struct ParamTraitsFixed<int64_t> {
 template <>
 struct ParamTraitsFixed<uint64_t> {
   typedef uint64_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt64(static_cast<int64_t>(p));
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteInt64(static_cast<int64_t>(p));
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadInt64(iter, reinterpret_cast<int64_t*>(r));
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadInt64(reinterpret_cast<int64_t*>(r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%" PRIu64L, p));
@@ -295,9 +513,11 @@ struct ParamTraitsStd : ParamTraitsFixed<P> {};
 template <>
 struct ParamTraitsStd<std::string> {
   typedef std::string param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteString(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadString(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteString(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadString(r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(UTF8ToWide(p));
@@ -307,9 +527,11 @@ struct ParamTraitsStd<std::string> {
 template <>
 struct ParamTraitsStd<std::wstring> {
   typedef std::wstring param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteWString(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadWString(iter, r);
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteWString(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadWString(r);
   }
   static void Log(const param_type& p, std::wstring* l) { l->append(p); }
 };
@@ -317,22 +539,22 @@ struct ParamTraitsStd<std::wstring> {
 template <class K, class V>
 struct ParamTraitsStd<std::map<K, V>> {
   typedef std::map<K, V> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, static_cast<int>(p.size()));
+  static void Write(MessageWriter* writer, const param_type& p) {
+    WriteParam(writer, static_cast<int>(p.size()));
     typename param_type::const_iterator iter;
     for (iter = p.begin(); iter != p.end(); ++iter) {
-      WriteParam(m, iter->first);
-      WriteParam(m, iter->second);
+      WriteParam(writer, iter->first);
+      WriteParam(writer, iter->second);
     }
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
+  static bool Read(MessageReader* reader, param_type* r) {
     int size;
-    if (!ReadParam(m, iter, &size) || size < 0) return false;
+    if (!ReadParam(reader, &size) || size < 0) return false;
     for (int i = 0; i < size; ++i) {
       K k;
-      if (!ReadParam(m, iter, &k)) return false;
+      if (!ReadParam(reader, &k)) return false;
       V& value = (*r)[k];
-      if (!ReadParam(m, iter, &value)) return false;
+      if (!ReadParam(reader, &value)) return false;
     }
     return true;
   }
@@ -351,11 +573,11 @@ template <>
 struct ParamTraitsWindows<HANDLE> {
   static_assert(sizeof(HANDLE) == sizeof(intptr_t), "Wrong size for HANDLE?");
 
-  static void Write(Message* m, HANDLE p) {
-    m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
+  static void Write(MessageWriter* writer, HANDLE p) {
+    writer->WriteIntPtr(reinterpret_cast<intptr_t>(p));
   }
-  static bool Read(const Message* m, PickleIterator* iter, HANDLE* r) {
-    return m->ReadIntPtr(iter, reinterpret_cast<intptr_t*>(r));
+  static bool Read(MessageReader* reader, HANDLE* r) {
+    return reader->ReadIntPtr(reinterpret_cast<intptr_t*>(r));
   }
   static void Log(const HANDLE& p, std::wstring* l) {
     l->append(StringPrintf(L"0x%X", p));
@@ -366,11 +588,11 @@ template <>
 struct ParamTraitsWindows<HWND> {
   static_assert(sizeof(HWND) == sizeof(intptr_t), "Wrong size for HWND?");
 
-  static void Write(Message* m, HWND p) {
-    m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
+  static void Write(MessageWriter* writer, HWND p) {
+    writer->WriteIntPtr(reinterpret_cast<intptr_t>(p));
   }
-  static bool Read(const Message* m, PickleIterator* iter, HWND* r) {
-    return m->ReadIntPtr(iter, reinterpret_cast<intptr_t*>(r));
+  static bool Read(MessageReader* reader, HWND* r) {
+    return reader->ReadIntPtr(reinterpret_cast<intptr_t*>(r));
   }
   static void Log(const HWND& p, std::wstring* l) {
     l->append(StringPrintf(L"0x%X", p));
@@ -396,18 +618,18 @@ struct ParamTraitsIPC : ParamTraitsWindows<P> {};
 template <>
 struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
   typedef mozilla::UniqueFileHandle param_type;
-  static void Write(Message* m, param_type&& p) {
+  static void Write(MessageWriter* writer, param_type&& p) {
     const bool valid = p != nullptr;
-    WriteParam(m, valid);
+    WriteParam(writer, valid);
     if (valid) {
-      if (!m->WriteFileHandle(std::move(p))) {
+      if (!writer->WriteFileHandle(std::move(p))) {
         NOTREACHED() << "Too many file handles for one message!";
       }
     }
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
+  static bool Read(MessageReader* reader, param_type* r) {
     bool valid;
-    if (!ReadParam(m, iter, &valid)) {
+    if (!ReadParam(reader, &valid)) {
       return false;
     }
 
@@ -416,7 +638,7 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
       return true;
     }
 
-    return m->ConsumeFileHandle(iter, r);
+    return reader->ConsumeFileHandle(r);
   }
 };
 
@@ -434,18 +656,18 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
 template <>
 struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
   typedef mozilla::UniqueMachSendRight param_type;
-  static void Write(Message* m, param_type&& p) {
+  static void Write(MessageWriter* writer, param_type&& p) {
     const bool valid = p != nullptr;
-    WriteParam(m, valid);
+    WriteParam(writer, valid);
     if (valid) {
-      if (!m->WriteMachSendRight(std::move(p))) {
+      if (!writer->WriteMachSendRight(std::move(p))) {
         NOTREACHED() << "Too many mach send rights for one message!";
       }
     }
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
+  static bool Read(MessageReader* reader, param_type* r) {
     bool valid;
-    if (!ReadParam(m, iter, &valid)) {
+    if (!ReadParam(reader, &valid)) {
       return false;
     }
 
@@ -454,7 +676,7 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
       return true;
     }
 
-    return m->ConsumeMachSendRight(iter, r);
+    return reader->ConsumeMachSendRight(r);
   }
 };
 #endif
@@ -467,11 +689,11 @@ struct ParamTraitsMozilla : ParamTraitsIPC<P> {};
 template <>
 struct ParamTraitsMozilla<nsresult> {
   typedef nsresult param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteUInt32(static_cast<uint32_t>(p));
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteUInt32(static_cast<uint32_t>(p));
   }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadUInt32(iter, reinterpret_cast<uint32_t*>(r));
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadUInt32(reinterpret_cast<uint32_t*>(r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
@@ -482,24 +704,24 @@ struct ParamTraitsMozilla<nsresult> {
 // nsCOMPtr<T> for more details.
 template <class T>
 struct ParamTraitsMozilla<RefPtr<T>> {
-  static void Write(Message* m, const RefPtr<T>& p) {
-    ParamTraits<T*>::Write(m, p.get());
+  static void Write(MessageWriter* writer, const RefPtr<T>& p) {
+    ParamTraits<T*>::Write(writer, p.get());
   }
 
-  static bool Read(const Message* m, PickleIterator* iter, RefPtr<T>* r) {
-    return ParamTraits<T*>::Read(m, iter, r);
+  static bool Read(MessageReader* reader, RefPtr<T>* r) {
+    return ParamTraits<T*>::Read(reader, r);
   }
 };
 
 template <class T>
 struct ParamTraitsMozilla<nsCOMPtr<T>> {
-  static void Write(Message* m, const nsCOMPtr<T>& p) {
-    ParamTraits<T*>::Write(m, p.get());
+  static void Write(MessageWriter* writer, const nsCOMPtr<T>& p) {
+    ParamTraits<T*>::Write(writer, p.get());
   }
 
-  static bool Read(const Message* m, PickleIterator* iter, nsCOMPtr<T>* r) {
+  static bool Read(MessageReader* reader, nsCOMPtr<T>* r) {
     RefPtr<T> refptr;
-    if (!ParamTraits<T*>::Read(m, iter, &refptr)) {
+    if (!ParamTraits<T*>::Read(reader, &refptr)) {
       return false;
     }
     *r = std::move(refptr);

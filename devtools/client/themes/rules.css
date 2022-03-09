@@ -796,3 +796,11 @@ ul.ruleview-rule-ancestor-data {
 .flash-out {
   transition: background 1s;
 }
+
+.ruleview-propertyvalue-draggable {
+  cursor: col-resize;
+}
+
+.ruleview-propertyvalue-dragging {
+  user-select: none;
+}

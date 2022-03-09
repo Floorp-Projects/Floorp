@@ -12,13 +12,11 @@ SimpleTest.requestLongerTimeout(2);
 
 let state = "start";
 
-const utils = SpecialPowers.DOMWindowUtils;
-
 function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   const rect = aElement.getBoundingClientRect();
   const x = aOffsetX + window.mozInnerScreenX + rect.left;
   const y = aOffsetY + window.mozInnerScreenY + rect.top;
-  const scale = utils.screenPixelsPerCSSPixel;
+  const scale = window.devicePixelRatio;
   return [Math.round(x * scale), Math.round(y * scale)];
 }
 

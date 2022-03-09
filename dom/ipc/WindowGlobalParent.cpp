@@ -45,7 +45,6 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
-#include "nsFrameLoaderOwner.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsSerializationHelper.h"
@@ -57,7 +56,6 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "nsIURIMutator.h"
-#include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -1390,6 +1388,7 @@ nsCString BFCacheStatusToString(uint32_t aFlags) {
   ADD_BFCACHESTATUS_TO_STRING(HAS_USED_VR);
   ADD_BFCACHESTATUS_TO_STRING(CONTAINS_REMOTE_SUBFRAMES);
   ADD_BFCACHESTATUS_TO_STRING(NOT_ONLY_TOPLEVEL_IN_BCG);
+  ADD_BFCACHESTATUS_TO_STRING(BEFOREUNLOAD_LISTENER);
   ADD_BFCACHESTATUS_TO_STRING(ACTIVE_LOCK);
 
 #undef ADD_BFCACHESTATUS_TO_STRING

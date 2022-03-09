@@ -223,7 +223,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(ptr), StubField::Type::RawPointer);
   }
   void writeIdField(jsid id) {
-    addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
+    addStubField(id.asRawBits(), StubField::Type::Id);
   }
   void writeValueField(const Value& val) {
     addStubField(val.asRawBits(), StubField::Type::Value);

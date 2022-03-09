@@ -279,6 +279,25 @@ interface nsIPrefBranch : nsISupports
   boolean prefHasUserValue(in string aPrefName);
 
   /**
+   * Called to check if a specific preference has a default value associated to
+   * it.
+   *
+   * @param aPrefName The preference to be tested.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the user branch.
+   *
+   * @note
+   * This method can be used to distinguish between a built-in preference and a
+   * user-added preference.
+   *
+   * @return boolean  true  The preference has a default value.
+   *                  false The preference only has a user value.
+   */
+  boolean prefHasDefaultValue(in string aPrefName);
+
+  /**
    * Called to check if a specific preference is locked. If a preference is
    * locked calling its Get method will always return the default value.
    *

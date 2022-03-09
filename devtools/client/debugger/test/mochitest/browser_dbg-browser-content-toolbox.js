@@ -2,47 +2,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-"use strict";
-
 /**
  * Tests that the debugger is succesfully loaded in the Browser Content Toolbox.
  */
 
+"use strict";
+
 const {
-  gDevToolsBrowser
+  gDevToolsBrowser,
 } = require("devtools/client/framework/devtools-browser");
 
 add_task(async function() {
   clearDebuggerPreferences();
 
   info("Open a tab pointing to doc-scripts.html");
-  await addTab(EXAMPLE_URL + "doc-scripts.html");
+  await addTab(`${EXAMPLE_URL}doc-scripts.html`);
 
   info("Open the Browser Content Toolbox");
-  let toolbox = await gDevToolsBrowser.openContentProcessToolbox(gBrowser);
+  const toolbox = await gDevToolsBrowser.openContentProcessToolbox(gBrowser);
 
   info("Select the debugger");
   await toolbox.selectTool("jsdebugger");
 
-  let dbg = createDebuggerContext(toolbox);
+  const dbg = createDebuggerContext(toolbox);
   ok(dbg, "Debugger context is available");
 
   info("Create a breakpoint");
-  await selectSource(dbg, "simple2");
-  await addBreakpoint(dbg, "simple2", 3);
+  await selectSource(dbg, "simple2.js");
+  await addBreakpoint(dbg, "simple2.js", 3);
 
   info("Disable the breakpoint");
   await disableBreakpoint(dbg, 0);
-  let bp = findBreakpoint(dbg, "simple2", 3);
+  let bp = findBreakpoint(dbg, "simple2.js", 3);
   is(bp.disabled, true, "breakpoint is disabled");
 
   info("Enable the breakpoint");
   await enableBreakpoint(dbg, 0);
-  bp = findBreakpoint(dbg, "simple2", 3);
+  bp = findBreakpoint(dbg, "simple2.js", 3);
   is(bp.disabled, false, "breakpoint is enabled");
 
   info("Close the browser toolbox window");
-  let onToolboxDestroyed = toolbox.once("destroyed");
+  const onToolboxDestroyed = toolbox.once("destroyed");
   toolbox.win.top.close();
   await onToolboxDestroyed;
 

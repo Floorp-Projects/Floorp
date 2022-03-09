@@ -759,21 +759,21 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MessagePort", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIAccess", disabled: true },
+  { name: "MIDIAccess", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIConnectionEvent", disabled: true },
+  { name: "MIDIConnectionEvent", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInputMap", disabled: true },
+  { name: "MIDIInputMap", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInput", disabled: true },
+  { name: "MIDIInput", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIMessageEvent", disabled: true },
+  { name: "MIDIMessageEvent", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutputMap", disabled: true },
+  { name: "MIDIOutputMap", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutput", disabled: true },
+  { name: "MIDIOutput", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIPort", disabled: true },
+  { name: "MIDIPort", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MimeType", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -797,9 +797,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "NamedNodeMap", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  "NavigationPreloadManager",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Navigator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NetworkInformation", insecureContext: true, desktop: false },
+  { name: "NetworkInformation", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Node", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

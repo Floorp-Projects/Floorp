@@ -477,6 +477,7 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs,
   temp2 = temp;
   if (temp < 0) {
     temp = -temp;
+    if (temp < 0) return false;
     temp2--;
   }
   int dc_nbits = (temp == 0) ? 0 : (FloorLog2Nonzero<uint32_t>(temp) + 1);
@@ -493,6 +494,7 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs,
     }
     if (temp < 0) {
       temp = -temp;
+      if (temp < 0) return false;
       temp2 = ~temp;
     } else {
       temp2 = temp;
@@ -534,6 +536,7 @@ bool EncodeDCTBlockProgressive(const coeff_t* coeffs,
     temp2 = temp;
     if (temp < 0) {
       temp = -temp;
+      if (temp < 0) return false;
       temp2--;
     }
     int nbits = (temp == 0) ? 0 : (FloorLog2Nonzero<uint32_t>(temp) + 1);
@@ -554,6 +557,7 @@ bool EncodeDCTBlockProgressive(const coeff_t* coeffs,
     }
     if (temp < 0) {
       temp = -temp;
+      if (temp < 0) return false;
       temp >>= Al;
       temp2 = ~temp;
     } else {

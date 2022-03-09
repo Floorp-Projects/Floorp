@@ -11,6 +11,7 @@ import json
 
 from collections.abc import Iterable
 from collections import OrderedDict
+from pathlib import Path
 from types import ModuleType
 
 import mozpack.path as mozpath
@@ -242,10 +243,11 @@ class PartialConfigDict(object):
         self._dict = {}
 
         existing_files = self._load_config_track()
+        existing_files = {Path(f) for f in existing_files}
 
         new_files = set()
         for k, v in six.iteritems(values):
-            new_files.add(self._write_file(k, v))
+            new_files.add(Path(self._write_file(k, v)))
 
         for filename in existing_files - new_files:
             # We can't actually os.remove() here, since make would not see that the

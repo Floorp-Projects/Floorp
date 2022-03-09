@@ -1355,6 +1355,7 @@ XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate,
       mBackgroundRequest(false),
       mWithCredentials(false),
       mCanceled(false),
+      mFlagSendActive(false),
       mMozAnon(false),
       mMozSystem(false),
       mMimeTypeOverride(VoidString()) {
@@ -1881,6 +1882,17 @@ void XMLHttpRequestWorker::Send(
     ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  if (mFlagSendActive) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT);
+    return;
+  }
+  mFlagSendActive = true;
+  auto clearRecursionFlag = MakeScopeExit([&]() {
+    // No one else should have touched this flag.
+    MOZ_ASSERT(mFlagSendActive);
+    mFlagSendActive = false;
+  });
+
   if (mCanceled) {
     aRv.ThrowUncatchableException();
     return;
@@ -2159,7 +2171,8 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
             Blob::Create(GetOwnerGlobal(), mResponseData->mResponseBlobImpl);
       }
 
-      if (!GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
+      if (!mResponseBlob ||
+          !GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
         aResponse.setNull();
       }
 

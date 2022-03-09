@@ -7,6 +7,7 @@
 #include "GPUProcessHost.h"
 #include "chrome/common/process_watcher.h"
 #include "gfxPlatform.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/SynchronousTask.h"
@@ -41,7 +42,8 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!mGPUChild);
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
+      dom::ContentParent::ShouldSyncPreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }

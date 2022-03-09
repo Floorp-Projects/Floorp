@@ -29,6 +29,7 @@ try_config_options = [
 
 test_flavors = {
     "browser-chrome": {},
+    "browser-a11y": {},
     "chrome": {},
     "devtools-chrome": {},
     "mochitest": {},
@@ -63,6 +64,7 @@ class TryToolsMixin(TransferMixin):
             },
             (
                 "browser-chrome",
+                "browser-a11y",
                 "chrome",
                 "devtools-chrome",
                 "marionette",

@@ -622,7 +622,7 @@ this.FormAutofillUtils = {
   },
 
   /**
-   * Used to populate dropdowns in the UI (e.g. FormAutofill preferences, Web Payments).
+   * Used to populate dropdowns in the UI (e.g. FormAutofill preferences).
    * Use findAddressSelectOption for matching a value to a region.
    *
    * @param {string[]} subKeys An array of regionCode strings

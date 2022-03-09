@@ -33,6 +33,41 @@ void Accessible::StaticAsserts() const {
       "Accessible::mGenericType was oversized by eLastAccGenericType!");
 }
 
+bool Accessible::IsBefore(const Accessible* aAcc) const {
+  // Build the chain of parents.
+  const Accessible* thisP = this;
+  const Accessible* otherP = aAcc;
+  AutoTArray<const Accessible*, 30> thisParents, otherParents;
+  do {
+    thisParents.AppendElement(thisP);
+    thisP = thisP->Parent();
+  } while (thisP);
+  do {
+    otherParents.AppendElement(otherP);
+    otherP = otherP->Parent();
+  } while (otherP);
+
+  // Find where the parent chain differs.
+  uint32_t thisPos = thisParents.Length(), otherPos = otherParents.Length();
+  for (uint32_t len = std::min(thisPos, otherPos); len > 0; --len) {
+    const Accessible* thisChild = thisParents.ElementAt(--thisPos);
+    const Accessible* otherChild = otherParents.ElementAt(--otherPos);
+    if (thisChild != otherChild) {
+      return thisChild->IndexInParent() < otherChild->IndexInParent();
+    }
+  }
+
+  // If the ancestries are the same length (both thisPos and otherPos are 0),
+  // we should have returned by now.
+  MOZ_ASSERT(thisPos != 0 || otherPos != 0);
+  // At this point, one of the ancestries is a superset of the other, so one of
+  // thisPos or otherPos should be 0.
+  MOZ_ASSERT(thisPos != otherPos);
+  // If the other Accessible is deeper than this one (otherPos > 0), this
+  // Accessible comes before the other.
+  return otherPos > 0;
+}
+
 const nsRoleMapEntry* Accessible::ARIARoleMap() const {
   return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
 }
@@ -80,6 +115,14 @@ uint32_t Accessible::StartOffset() {
   HyperTextAccessibleBase* hyperText =
       parent ? parent->AsHyperTextBase() : nullptr;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
+}
+
+uint32_t Accessible::EndOffset() {
+  MOZ_ASSERT(IsLink(), "EndOffset is called on not hyper link!");
+  Accessible* parent = Parent();
+  HyperTextAccessibleBase* hyperText =
+      parent ? parent->AsHyperTextBase() : nullptr;
+  return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
 }
 
 GroupPos Accessible::GroupPosition() {
@@ -266,4 +309,68 @@ void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
   nsresult rv = stringBundle->GetStringFromName(
       NS_ConvertUTF16toUTF8(aKey).get(), xsValue);
   if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
+}
+
+const Accessible* Accessible::ActionAncestor() const {
+  for (Accessible* parent = Parent(); parent && !parent->IsDoc();
+       parent = parent->Parent()) {
+    if (parent->HasPrimaryAction()) {
+      return parent;
+    }
+  }
+
+  return nullptr;
+}
+
+nsAtom* Accessible::LandmarkRole() const {
+  nsAtom* tagName = TagName();
+  if (!tagName) {
+    // Either no associated content, or no cache.
+    return nullptr;
+  }
+
+  if (tagName == nsGkAtoms::nav) {
+    return nsGkAtoms::navigation;
+  }
+
+  if (tagName == nsGkAtoms::aside) {
+    return nsGkAtoms::complementary;
+  }
+
+  if (tagName == nsGkAtoms::main) {
+    return nsGkAtoms::main;
+  }
+
+  if (tagName == nsGkAtoms::header) {
+    if (Role() == roles::LANDMARK) {
+      return nsGkAtoms::banner;
+    }
+  }
+
+  if (tagName == nsGkAtoms::footer) {
+    if (Role() == roles::LANDMARK) {
+      return nsGkAtoms::contentinfo;
+    }
+  }
+
+  if (tagName == nsGkAtoms::section) {
+    nsAutoString name;
+    Name(name);
+    if (!name.IsEmpty()) {
+      return nsGkAtoms::region;
+    }
+  }
+
+  if (tagName == nsGkAtoms::form) {
+    nsAutoString name;
+    Name(name);
+    if (!name.IsEmpty()) {
+      return nsGkAtoms::form;
+    }
+  }
+
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
+             ? roleMapEntry->roleAtom
+             : nullptr;
 }

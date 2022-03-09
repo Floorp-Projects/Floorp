@@ -48,6 +48,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
+#include "nsDisplayList.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -5185,6 +5186,9 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
     gfxMatrix m(GetCanvasTM());
     if (!m.IsSingular()) {
       contextScale = GetContextScale(m);
+      if (!std::isfinite(contextScale)) {
+        contextScale = 1.0f;
+      }
     }
   }
   mLastContextScale = contextScale;

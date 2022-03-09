@@ -8,6 +8,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/ToString.h"
 
 #include "nsPoint.h"
@@ -20,7 +21,11 @@ class nsIWidget;
 
 namespace mozilla {
 
+class ContentSelection;
 class WritingMode;
+
+template <class T>
+class Maybe;
 
 // Helper class to logging string which may contain various Unicode characters
 // and/or may be too long string for logging.
@@ -32,6 +37,9 @@ class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
 
   PrintStringDetail() = delete;
   explicit PrintStringDetail(const nsAString& aString,
+                             uint32_t aMaxLength = UINT32_MAX);
+  template <typename StringType>
+  explicit PrintStringDetail(const Maybe<StringType>& aMaybeString,
                              uint32_t aMaxLength = UINT32_MAX);
 
  private:
@@ -124,9 +132,15 @@ class OffsetAndData {
       OffsetAndDataFor aFor = OffsetAndDataFor::CompositionString)
       : mData(aData), mOffset(aStartOffset), mFor(aFor) {}
 
+  bool IsValid() const {
+    CheckedInt<IntType> offset(mOffset);
+    offset += mData.Length();
+    return offset.isValid();
+  }
   IntType StartOffset() const { return mOffset; }
   IntType Length() const {
-    CheckedInt<IntType> endOffset(mOffset + mData.Length());
+    CheckedInt<IntType> endOffset(CheckedInt<IntType>(mOffset) +
+                                  mData.Length());
     return endOffset.isValid() ? mData.Length() : MaxOffset() - mOffset;
   }
   IntType EndOffset() const { return mOffset + Length(); }
@@ -149,6 +163,10 @@ class OffsetAndData {
     return aOffset >= mOffset && aOffset <= EndOffset();
   }
 
+  void Collapse(IntType aOffset) {
+    mOffset = aOffset;
+    mData.Truncate();
+  }
   void MoveTo(IntType aNewOffset) { mOffset = aNewOffset; }
   void SetOffsetAndData(IntType aStartOffset, const nsAString& aData) {
     mOffset = aStartOffset;
@@ -401,6 +419,17 @@ struct InputContext final {
 
   bool IsPasswordEditor() const {
     return mHTMLInputType.LowerCaseEqualsLiteral("password");
+  }
+
+  NativeKeyBindingsType GetNativeKeyBindingsType() const {
+    MOZ_DIAGNOSTIC_ASSERT(mIMEState.IsEditable());
+    // See GetInputType in IMEStateManager.cpp
+    if (mHTMLInputType.IsEmpty()) {
+      return NativeKeyBindingsType::RichTextEditor;
+    }
+    return mHTMLInputType.EqualsLiteral("textarea")
+               ? NativeKeyBindingsType::MultiLineEditor
+               : NativeKeyBindingsType::SingleLineEditor;
   }
 
   // https://html.spec.whatwg.org/dev/interaction.html#autocapitalization
@@ -742,28 +771,56 @@ struct IMENotification final {
     nsString* mString;
 
     // Writing mode at the selection.
-    uint8_t mWritingMode;
+    uint8_t mWritingModeBits;
 
+    bool mIsInitialized;
+    bool mHasRange;
     bool mReversed;
     bool mCausedByComposition;
     bool mCausedBySelectionEvent;
     bool mOccurredDuringComposition;
 
+    // FYI: Cannot we make these methods inline because of an include hell of
+    //      RawServoAnimationValueMap
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
 
     uint32_t StartOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset;
+    }
+    uint32_t EndOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset + Length();
+    }
+    uint32_t AnchorOffset() const {
+      MOZ_ASSERT(mHasRange);
       return mOffset + (mReversed ? Length() : 0);
     }
-    uint32_t EndOffset() const { return mOffset + (mReversed ? 0 : Length()); }
-    const nsString& String() const { return *mString; }
-    uint32_t Length() const { return mString->Length(); }
-    bool IsInInt32Range() const { return mOffset + Length() <= INT32_MAX; }
-    bool IsCollapsed() const { return mString->IsEmpty(); }
+    uint32_t FocusOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset + (mReversed ? 0 : Length());
+    }
+    const nsString& String() const {
+      MOZ_ASSERT(mHasRange);
+      return *mString;
+    }
+    uint32_t Length() const {
+      MOZ_ASSERT(mHasRange);
+      return mString->Length();
+    }
+    bool IsInInt32Range() const {
+      return mHasRange && mOffset <= INT32_MAX && Length() <= INT32_MAX &&
+             mOffset + Length() <= INT32_MAX;
+    }
+    bool HasRange() const { return mIsInitialized && mHasRange; }
+    bool IsCollapsed() const { return !mHasRange || mString->IsEmpty(); }
     void ClearSelectionData() {
+      mIsInitialized = false;
+      mHasRange = false;
       mOffset = UINT32_MAX;
       mString->Truncate();
-      mWritingMode = 0;
+      mWritingModeBits = 0;
       mReversed = false;
     }
     void Clear() {
@@ -772,20 +829,59 @@ struct IMENotification final {
       mCausedBySelectionEvent = false;
       mOccurredDuringComposition = false;
     }
-    bool IsValid() const { return mOffset != UINT32_MAX; }
+    bool IsInitialized() const { return mIsInitialized; }
     void Assign(const SelectionChangeDataBase& aOther) {
-      mOffset = aOther.mOffset;
-      *mString = aOther.String();
-      mWritingMode = aOther.mWritingMode;
-      mReversed = aOther.mReversed;
+      mIsInitialized = aOther.mIsInitialized;
+      mHasRange = aOther.mHasRange;
+      if (mIsInitialized && mHasRange) {
+        mOffset = aOther.mOffset;
+        *mString = aOther.String();
+        mReversed = aOther.mReversed;
+        mWritingModeBits = aOther.mWritingModeBits;
+      } else {
+        mOffset = UINT32_MAX;
+        mString->Truncate();
+        mReversed = false;
+        // Let's keep the writing mode for avoiding temporarily changing the
+        // writing mode at no selection range.
+      }
       AssignReason(aOther.mCausedByComposition, aOther.mCausedBySelectionEvent,
                    aOther.mOccurredDuringComposition);
     }
+    void Assign(const WidgetQueryContentEvent& aQuerySelectedTextEvent);
     void AssignReason(bool aCausedByComposition, bool aCausedBySelectionEvent,
                       bool aOccurredDuringComposition) {
       mCausedByComposition = aCausedByComposition;
       mCausedBySelectionEvent = aCausedBySelectionEvent;
       mOccurredDuringComposition = aOccurredDuringComposition;
+    }
+
+    bool EqualsRange(const SelectionChangeDataBase& aOther) const {
+      if (HasRange() != aOther.HasRange()) {
+        return false;
+      }
+      if (!HasRange()) {
+        return true;
+      }
+      return mOffset == aOther.mOffset && mString->Equals(*aOther.mString);
+    }
+    bool EqualsRangeAndDirection(const SelectionChangeDataBase& aOther) const {
+      return EqualsRange(aOther) &&
+             (!HasRange() || mReversed == aOther.mReversed);
+    }
+    bool EqualsRangeAndDirectionAndWritingMode(
+        const SelectionChangeDataBase& aOther) const {
+      return EqualsRangeAndDirection(aOther) &&
+             mWritingModeBits == aOther.mWritingModeBits;
+    }
+
+    bool EqualsRange(const ContentSelection& aContentSelection) const;
+    bool EqualsRangeAndWritingMode(
+        const ContentSelection& aContentSelection) const;
+
+    OffsetAndData<uint32_t> ToUint32OffsetAndData() const {
+      return OffsetAndData<uint32_t>(mOffset, *mString,
+                                     OffsetAndDataFor::SelectedString);
     }
   };
 

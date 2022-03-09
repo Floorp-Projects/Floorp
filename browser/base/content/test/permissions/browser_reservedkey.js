@@ -6,8 +6,6 @@ add_task(async function test_reserved_shortcuts() {
   key1.setAttribute("key", "O");
   key1.setAttribute("reserved", "true");
   key1.setAttribute("count", "0");
-  // We need to have the attribute "oncommand" for the "command" listener to fire
-  key1.setAttribute("oncommand", "//");
   key1.addEventListener("command", () => {
     let attribute = key1.getAttribute("count");
     key1.setAttribute("count", Number(attribute) + 1);
@@ -19,8 +17,6 @@ add_task(async function test_reserved_shortcuts() {
   key2.setAttribute("key", "P");
   key2.setAttribute("reserved", "false");
   key2.setAttribute("count", "0");
-  // We need to have the attribute "oncommand" for the "command" listener to fire
-  key2.setAttribute("oncommand", "//");
   key2.addEventListener("command", () => {
     let attribute = key2.getAttribute("count");
     key2.setAttribute("count", Number(attribute) + 1);
@@ -31,8 +27,6 @@ add_task(async function test_reserved_shortcuts() {
   key3.setAttribute("modifiers", "shift");
   key3.setAttribute("key", "Q");
   key3.setAttribute("count", "0");
-  // We need to have the attribute "oncommand" for the "command" listener to fire
-  key3.setAttribute("oncommand", "//");
   key3.addEventListener("command", () => {
     let attribute = key3.getAttribute("count");
     key3.setAttribute("count", Number(attribute) + 1);
@@ -226,3 +220,98 @@ add_task(async function test_backspace_delete() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+// TODO: Make this to run on Windows too to have automated tests also there.
+if (
+  navigator.platform.includes("Mac") ||
+  navigator.platform.includes("Linux")
+) {
+  add_task(
+    async function test_reserved_shortcuts_conflict_with_user_settings() {
+      await new Promise(resolve => {
+        SpecialPowers.pushPrefEnv(
+          { set: [["test.events.async.enabled", true]] },
+          resolve
+        );
+      });
+
+      const keyset = document.createXULElement("keyset");
+      const key = document.createXULElement("key");
+      key.setAttribute("id", "conflict_with_known_native_key_binding");
+      if (navigator.platform.includes("Mac")) {
+        // Select to end of the paragraph
+        key.setAttribute("modifiers", "ctrl,shift");
+        key.setAttribute("key", "E");
+      } else {
+        // Select All
+        key.setAttribute("modifiers", "ctrl");
+        key.setAttribute("key", "a");
+      }
+      key.setAttribute("reserved", "true");
+      key.setAttribute("count", "0");
+      key.addEventListener("command", () => {
+        const attribute = key.getAttribute("count");
+        key.setAttribute("count", Number(attribute) + 1);
+      });
+
+      keyset.appendChild(key);
+      const container = document.createXULElement("box");
+      container.appendChild(keyset);
+      document.documentElement.appendChild(container);
+
+      const pageUrl =
+        "data:text/html,<body onload='document.body.firstChild.focus(); getSelection().collapse(document.body.firstChild, 0)'><div contenteditable>Test</div></body>";
+      const tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        pageUrl
+      );
+
+      await SpecialPowers.spawn(
+        tab.linkedBrowser,
+        [key.getAttribute("key")],
+        async function(aExpectedKeyValue) {
+          content.promiseTestResult = new Promise(resolve => {
+            content.addEventListener("keyup", event => {
+              if (event.key.toLowerCase() == aExpectedKeyValue.toLowerCase()) {
+                resolve(
+                  content
+                    .getSelection()
+                    .getRangeAt(0)
+                    .toString()
+                );
+              }
+            });
+          });
+        }
+      );
+
+      EventUtils.synthesizeKey(key.getAttribute("key"), {
+        ctrlKey: key.getAttribute("modifiers").includes("ctrl"),
+        shiftKey: key.getAttribute("modifiers").includes("shift"),
+      });
+
+      const selectedText = await SpecialPowers.spawn(
+        tab.linkedBrowser,
+        [],
+        async function() {
+          return content.promiseTestResult;
+        }
+      );
+      is(
+        selectedText,
+        "Test",
+        "The shortcut key should select all text in the editor"
+      );
+
+      is(
+        key.getAttribute("count"),
+        "0",
+        "The reserved shortcut key should be consumed by the focused editor instead"
+      );
+
+      document.documentElement.removeChild(container);
+
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+}

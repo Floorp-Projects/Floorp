@@ -9,6 +9,12 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 #include "nsString.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "platform.h"
+#else
+#  define profiler_mark_thread_awake()
+#  define profiler_mark_thread_asleep()
+#endif
 
 namespace mozilla::profiler {
 
@@ -41,6 +47,7 @@ ThreadRegistration::ThreadRegistration(const char* aName, const void* aStackTop)
 
   tls->set(this);
   ThreadRegistry::Register(OnThreadRef{*this});
+  profiler_mark_thread_awake();
 }
 
 ThreadRegistration::~ThreadRegistration() {
@@ -65,6 +72,7 @@ ThreadRegistration::~ThreadRegistration() {
       return;
     }
 
+    profiler_mark_thread_asleep();
     ThreadRegistry::Unregister(OnThreadRef{*this});
 #ifdef DEBUG
     // After ThreadRegistry::Unregister, other threads should not be able to
@@ -164,21 +172,6 @@ void ThreadRegistration::UnregisterThread() {
     // `RegisterThread()` that created this ThreadRegistration on the heap.
     // Just delete this root registration, it will de-register itself from the
     // TLS (and from the Profiler).
-    if (NS_WARN_IF(rootRegistration->mData.mProfilingStack.stackPointer !=
-                   0u)) {
-      // A non-empty stack is dangerous to destroy (probable UAF when remaining
-      // labels remove themselves), so it's safer to let the registration leak.
-      // TODO: Remove this temporary fix once there is a better solution to the
-      // problem of seemingly mismatched label pushes&pops. See bug 1749978,
-      // comment 8 for the plan of attack, and its follow-up bugs.
-      // Capture stack in a marker for debugging. We don't know what name was
-      // used in the related RegisterThread().
-      PROFILER_MARKER_UNTYPED(
-          "ThreadRegistration::UnregisterThread(), last heap-allocated "
-          "registration not deleted because of non-empty profiling stack",
-          OTHER_Profiling, MarkerStack::Capture());
-      return;
-    }
     delete rootRegistration;
     return;
   }

@@ -229,7 +229,7 @@ void TestCheckpointing(bool ans, bool lz77) {
     ANSSymbolReader reader(&decoded_codes, &br);
 
     ANSSymbolReader::Checkpoint checkpoint;
-    size_t br_pos;
+    size_t br_pos = 0;
     constexpr size_t kInterval = ANSSymbolReader::kMaxCheckpointInterval - 2;
     for (size_t i = 0; i < input_values[0].size(); i++) {
       if (i % kInterval == 0 && i > 0) {

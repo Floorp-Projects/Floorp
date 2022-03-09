@@ -506,11 +506,11 @@ struct MOZ_RAII AutoSetContextOffThreadFrontendErrors {
 };
 
 AutoSetHelperThreadContext::AutoSetHelperThreadContext(
-    AutoLockHelperThreadState& lock)
+    const JS::ContextOptions& options, AutoLockHelperThreadState& lock)
     : lock(lock) {
   cx = HelperThreadState().getFirstUnusedContext(lock);
   MOZ_ASSERT(cx);
-  cx->setHelperThread(lock);
+  cx->setHelperThread(options, lock);
   // When we set the JSContext, we need to reset the computed stack limits for
   // the current thread, so we also set the native stack quota.
   JS_SetNativeStackQuota(cx, HelperThreadState().stackQuota);
@@ -528,7 +528,11 @@ AutoSetHelperThreadContext::~AutoSetHelperThreadContext() {
 
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-    : kind(kind), options(cx), callback(callback), callbackData(callbackData) {
+    : kind(kind),
+      options(cx),
+      contextOptions(cx->options()),
+      callback(callback),
+      callbackData(callbackData) {
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -614,7 +618,7 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
 }
 
 void ParseTask::runTask(AutoLockHelperThreadState& lock) {
-  AutoSetHelperThreadContext usesContext(lock);
+  AutoSetHelperThreadContext usesContext(contextOptions, lock);
 
   AutoUnlockHelperThreadState unlock(lock);
 
@@ -644,7 +648,7 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
 
   UniquePtr<DelazifyTask> task;
   {
-    AutoSetHelperThreadContext usesContext(lock);
+    AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
     JSContext* cx = TlsContext.get();
     AutoSetContextRuntime ascr(runtime);
@@ -659,7 +663,7 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     OffThreadFrontendErrors errors;
     AutoSetContextOffThreadFrontendErrors recordErrors(&errors);
 
-    task.reset(js_new<DelazifyTask>(runtime));
+    task.reset(js_new<DelazifyTask>(runtime, contextOptions));
     if (!task) {
       return;
     }
@@ -686,8 +690,10 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     task->errors_ = std::move(errors);
   }
 
-  // Schedule delazification task.
-  HelperThreadState().submitTask(task.release(), lock);
+  // Schedule delazification task if there is any function to delazify.
+  if (!task->strategy->done()) {
+    HelperThreadState().submitTask(task.release(), lock);
+  }
 }
 
 template <typename Unit>
@@ -904,8 +910,9 @@ bool DepthFirstDelazification::add(JSContext* cx,
   return true;
 }
 
-DelazifyTask::DelazifyTask(JSRuntime* runtime)
-    : runtime(runtime), merger(), errors_() {
+DelazifyTask::DelazifyTask(JSRuntime* runtime,
+                           const JS::ContextOptions& options)
+    : runtime(runtime), contextOptions(options), merger(), errors_() {
   AutoLockScriptData alsd(runtime);
   runtime->addParseTaskRef();
 }
@@ -929,22 +936,15 @@ bool DelazifyTask::init(
       // inner functions before the siblings functions.
       strategy = cx->make_unique<DepthFirstDelazification>();
       break;
-    case JS::DelazificationOption::ConcurrentBreathFirst:
-      // ConcurrentDepthFirst visit all functions to be delazified, visiting the
-      // siblings functions before the inner functions.
-      MOZ_CRASH("Strategy is not yet implemented");
-      break;
-    case JS::DelazificationOption::ConcurrentMostFrequentNameFirst:
-      // ConcurrentMostFrequentNameFirst uses the frequency of names to
-      // determine the order in which functions should be delazified. Unamed
-      // functions are delazified first.
-      MOZ_CRASH("Strategy is not yet implemented");
-      break;
     case JS::DelazificationOption::ParseEverythingEagerly:
       // ParseEverythingEagerly parse all functions eagerly, thus leaving no
       // functions to be parsed on demand.
       MOZ_CRASH("ParseEverythingEagerly should not create a DelazifyTask");
       break;
+  }
+
+  if (!strategy) {
+    return false;
   }
 
   // Queue functions from the top-level to be delazify.
@@ -961,7 +961,7 @@ size_t DelazifyTask::sizeOfExcludingThis(
 
 void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   {
-    AutoSetHelperThreadContext usesContext(lock);
+    AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
     JSContext* cx = TlsContext.get();
     if (!runTask(cx)) {

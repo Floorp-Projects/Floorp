@@ -11,13 +11,15 @@ add_task(async () => {
   const threads = [];
   const features = ["js"];
 
-  Services.profiler.StartProfiler(entries, interval, features, threads);
+  await Services.profiler.StartProfiler(entries, interval, features, threads);
 
   // Call the following to get a nice stack in the profiler:
   // functionA -> functionB -> functionC -> captureAtLeastOneJsSample
   const sampleIndex = await functionA();
 
   const profile = await Services.profiler.getProfileDataAsync();
+  await Services.profiler.StopProfiler();
+
   const [thread] = profile.threads;
   const { samples } = thread;
 
@@ -34,14 +36,16 @@ add_task(async () => {
       // The following regexes match a string similar to:
       //
       // "functionA (/gecko/obj/_tests/xpcshell/tools/profiler/tests/xpcshell/test_feature_js.js:47:0)"
+      // or
+      // "functionA (test_feature_js.js:47:0)"
       //
       //          this matches the script location
       //          |                       match the line number
       //          |                       |   match the column number
       //          v                       v   v
-      /^functionA \(.+test_feature_js\.js:\d+:\d+\)$/,
-      /^functionB \(.+test_feature_js\.js:\d+:\d+\)$/,
-      /^functionC \(.+test_feature_js\.js:\d+:\d+\)$/,
+      /^functionA \(.*test_feature_js\.js:\d+:\d+\)$/,
+      /^functionB \(.*test_feature_js\.js:\d+:\d+\)$/,
+      /^functionC \(.*test_feature_js\.js:\d+:\d+\)$/,
     ],
     "The stack contains a few frame labels, as well as the JS functions that we called."
   );

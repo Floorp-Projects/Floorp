@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::android::AndroidHandler;
-use crate::capabilities::FirefoxOptions;
+use crate::capabilities::{FirefoxOptions, ProfileType};
 use crate::logging;
 use crate::prefs;
 use mozprofile::preferences::Pref;
@@ -35,11 +35,11 @@ impl Browser {
         }
     }
 
-    pub(crate) fn marionette_port(&mut self) -> Option<u16> {
+    pub(crate) fn marionette_port(&mut self) -> WebDriverResult<Option<u16>> {
         match self {
             Browser::Local(x) => x.marionette_port(),
             Browser::Remote(x) => x.marionette_port(),
-            Browser::Existing(x) => Some(*x),
+            Browser::Existing(x) => Ok(Some(*x)),
         }
     }
 }
@@ -50,7 +50,7 @@ pub(crate) struct LocalBrowser {
     marionette_port: u16,
     prefs_backup: Option<PrefsBackup>,
     process: FirefoxProcess,
-    profile_path: PathBuf,
+    profile_path: Option<PathBuf>,
 }
 
 impl LocalBrowser {
@@ -71,30 +71,37 @@ impl LocalBrowser {
             )
         })?;
 
-        let is_custom_profile = options.profile.is_some();
+        let is_custom_profile = matches!(options.profile, ProfileType::Path(_));
 
         let mut profile = match options.profile {
-            Some(x) => x,
-            None => Profile::new()?,
+            ProfileType::Named => None,
+            ProfileType::Path(x) => Some(x),
+            ProfileType::Temporary => Some(Profile::new()?),
         };
 
-        let prefs_backup = set_prefs(
-            marionette_port,
-            &mut profile,
-            is_custom_profile,
-            options.prefs,
-            allow_hosts,
-            allow_origins,
-            jsdebugger,
-        )
-        .map_err(|e| {
-            WebDriverError::new(
-                ErrorStatus::SessionNotCreated,
-                format!("Failed to set preferences: {}", e),
+        let (profile_path, prefs_backup) = if let Some(ref mut profile) = profile {
+            let profile_path = profile.path.clone();
+            let prefs_backup = set_prefs(
+                marionette_port,
+                profile,
+                is_custom_profile,
+                options.prefs,
+                allow_hosts,
+                allow_origins,
+                jsdebugger,
             )
-        })?;
+            .map_err(|e| {
+                WebDriverError::new(
+                    ErrorStatus::SessionNotCreated,
+                    format!("Failed to set preferences: {}", e),
+                )
+            })?;
+            (Some(profile_path), prefs_backup)
+        } else {
+            warn!("Unable to set geckodriver prefs when using a named profile");
+            (None, None)
+        };
 
-        let profile_path = profile.path.clone();
         let mut runner = FirefoxRunner::new(&binary, profile);
 
         runner.arg("--marionette");
@@ -150,15 +157,22 @@ impl LocalBrowser {
         Ok(())
     }
 
-    fn marionette_port(&mut self) -> Option<u16> {
+    fn marionette_port(&mut self) -> WebDriverResult<Option<u16>> {
         if self.marionette_port != 0 {
-            return Some(self.marionette_port);
+            return Ok(Some(self.marionette_port));
         }
-        let port = read_marionette_port(&self.profile_path);
-        if let Some(port) = port {
-            self.marionette_port = port;
+        if let Some(profile_path) = self.profile_path.as_ref() {
+            let port = read_marionette_port(profile_path);
+            if let Some(port) = port {
+                self.marionette_port = port;
+            }
+            return Ok(port);
         }
-        port
+        // This should be impossible, but it isn't enforced
+        Err(WebDriverError::new(
+            ErrorStatus::SessionNotCreated,
+            "Port not known when using named profile",
+        ))
     }
 
     pub(crate) fn check_status(&mut self) -> Option<String> {
@@ -217,9 +231,16 @@ impl RemoteBrowser {
         let handler = AndroidHandler::new(&android_options, marionette_port, websocket_port)?;
 
         // Profile management.
-        let is_custom_profile = options.profile.is_some();
-
-        let mut profile = options.profile.unwrap_or(Profile::new()?);
+        let (mut profile, is_custom_profile) = match options.profile {
+            ProfileType::Named => {
+                return Err(WebDriverError::new(
+                    ErrorStatus::SessionNotCreated,
+                    "Cannot use a named profile on Android",
+                ));
+            }
+            ProfileType::Path(x) => (x, true),
+            ProfileType::Temporary => (Profile::new()?, false),
+        };
 
         set_prefs(
             handler.marionette_target_port,
@@ -252,8 +273,8 @@ impl RemoteBrowser {
         Ok(())
     }
 
-    fn marionette_port(&mut self) -> Option<u16> {
-        Some(self.marionette_port)
+    fn marionette_port(&mut self) -> WebDriverResult<Option<u16>> {
+        Ok(Some(self.marionette_port))
     }
 }
 
@@ -369,7 +390,7 @@ impl PrefsBackup {
 mod tests {
     use super::set_prefs;
     use crate::browser::read_marionette_port;
-    use crate::capabilities::FirefoxOptions;
+    use crate::capabilities::{FirefoxOptions, ProfileType};
     use mozprofile::preferences::{Pref, PrefValue};
     use mozprofile::profile::Profile;
     use serde_json::{Map, Value};
@@ -429,7 +450,10 @@ mod tests {
         let opts = FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
             .expect("Valid profile and prefs");
 
-        let mut profile = opts.profile.expect("valid firefox profile");
+        let mut profile = match opts.profile {
+            ProfileType::Path(profile) => profile,
+            _ => panic!("Expected ProfileType::Path"),
+        };
 
         set_prefs(2828, &mut profile, true, opts.prefs, vec![], vec![], false)
             .expect("set preferences");
@@ -519,13 +543,13 @@ mod tests {
 
         let profile_dir = tempdir().unwrap();
         let profile_path = profile_dir.path();
-        assert_eq!(read_marionette_port(&profile_path), None);
-        assert_eq!(read_marionette_port(&profile_path), None);
-        create_port_file(&profile_path, b"");
-        assert_eq!(read_marionette_port(&profile_path), None);
-        create_port_file(&profile_path, b"1234");
-        assert_eq!(read_marionette_port(&profile_path), Some(1234));
-        create_port_file(&profile_path, b"1234abc");
-        assert_eq!(read_marionette_port(&profile_path), None);
+        assert_eq!(read_marionette_port(profile_path), None);
+        assert_eq!(read_marionette_port(profile_path), None);
+        create_port_file(profile_path, b"");
+        assert_eq!(read_marionette_port(profile_path), None);
+        create_port_file(profile_path, b"1234");
+        assert_eq!(read_marionette_port(profile_path), Some(1234));
+        create_port_file(profile_path, b"1234abc");
+        assert_eq!(read_marionette_port(profile_path), None);
     }
 }

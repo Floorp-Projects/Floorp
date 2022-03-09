@@ -65,7 +65,7 @@ class Addresses extends AddressesBase {
    *          Return true if address is merged into target with specific guid or false if not.
    */
   async mergeIfPossible(guid, address, strict) {
-    this.log.debug("mergeIfPossible:", guid, address);
+    this.log.debug(`mergeIfPossible: ${guid}`);
 
     let addressFound = this._findByGUID(guid);
     if (!addressFound) {
@@ -190,7 +190,7 @@ class CreditCards extends CreditCardsBase {
    *          Return true if credit card is merged into target with specific guid or false if not.
    */
   async mergeIfPossible(guid, creditCard) {
-    this.log.debug("mergeIfPossible:", guid, creditCard);
+    this.log.debug(`mergeIfPossible: ${guid}`);
 
     // Credit card number is required since it also must match.
     if (!creditCard["cc-number"]) {

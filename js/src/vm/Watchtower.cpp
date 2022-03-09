@@ -55,10 +55,16 @@ static bool InvokeWatchtowerCallback(JSContext* cx, const char* kind,
 
 static bool ReshapeForShadowedProp(JSContext* cx, HandleNativeObject obj,
                                    HandleId id) {
+  // |obj| has been used as the prototype of another object. Check if we're
+  // shadowing a property on its proto chain. In this case we need to reshape
+  // that object for shape teleporting to work correctly.
+  //
+  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
+
   MOZ_ASSERT(obj->isUsedAsPrototype());
 
   // Lookups on integer ids cannot be cached through prototypes.
-  if (JSID_IS_INT(id)) {
+  if (id.isInt()) {
     return true;
   }
 
@@ -79,19 +85,28 @@ static bool ReshapeForShadowedProp(JSContext* cx, HandleNativeObject obj,
   return true;
 }
 
+static void InvalidateMegamorphicCache(JSContext* cx, HandleNativeObject obj) {
+  // The megamorphic cache only checks the receiver object's shape. We need to
+  // invalidate the cache when a prototype object changes its set of properties,
+  // to account for cached properties that are deleted, turned into an accessor
+  // property, or shadowed by another object on the proto chain.
+
+  MOZ_ASSERT(obj->isUsedAsPrototype());
+
+  cx->caches().megamorphicCache.bumpGeneration();
+}
+
 // static
 bool Watchtower::watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
                                       HandleId id) {
   MOZ_ASSERT(watchesPropertyAdd(obj));
 
-  // If |obj| is a prototype of another object, check if we're shadowing a
-  // property on its proto chain. In this case we need to reshape that object
-  // for shape teleporting to work correctly.
-  //
-  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
   if (obj->isUsedAsPrototype()) {
     if (!ReshapeForShadowedProp(cx, obj, id)) {
       return false;
+    }
+    if (!id.isInt()) {
+      InvalidateMegamorphicCache(cx, obj);
     }
   }
 
@@ -158,12 +173,95 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
     if (!ReshapeForProtoMutation(cx, obj)) {
       return false;
     }
+    if (obj->is<NativeObject>()) {
+      InvalidateMegamorphicCache(cx, obj.as<NativeObject>());
+    }
   }
 
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
     if (!InvokeWatchtowerCallback(cx, "proto-change", obj,
                                   JS::UndefinedHandleValue)) {
       return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchPropertyRemoveSlow(JSContext* cx, HandleNativeObject obj,
+                                         HandleId id) {
+  MOZ_ASSERT(watchesPropertyRemove(obj));
+
+  if (obj->isUsedAsPrototype() && !id.isInt()) {
+    InvalidateMegamorphicCache(cx, obj);
+  }
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    RootedValue val(cx, IdToValue(id));
+    if (!InvokeWatchtowerCallback(cx, "remove-prop", obj, val)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchPropertyChangeSlow(JSContext* cx, HandleNativeObject obj,
+                                         HandleId id) {
+  MOZ_ASSERT(watchesPropertyChange(obj));
+
+  if (obj->isUsedAsPrototype() && !id.isInt()) {
+    InvalidateMegamorphicCache(cx, obj);
+  }
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    RootedValue val(cx, IdToValue(id));
+    if (!InvokeWatchtowerCallback(cx, "change-prop", obj, val)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj) {
+  MOZ_ASSERT(watchesFreezeOrSeal(obj));
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    if (!InvokeWatchtowerCallback(cx, "freeze-or-seal", obj,
+                                  JS::UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchObjectSwapSlow(JSContext* cx, HandleObject a,
+                                     HandleObject b) {
+  MOZ_ASSERT(watchesObjectSwap(a, b));
+
+  if (a->isUsedAsPrototype() && a->is<NativeObject>()) {
+    InvalidateMegamorphicCache(cx, a.as<NativeObject>());
+  }
+  if (b->isUsedAsPrototype() && b->is<NativeObject>()) {
+    InvalidateMegamorphicCache(cx, b.as<NativeObject>());
+  }
+
+  if (MOZ_UNLIKELY(a->useWatchtowerTestingCallback() ||
+                   b->useWatchtowerTestingCallback())) {
+    RootedValue extra(cx, ObjectValue(*b));
+    if (!InvokeWatchtowerCallback(cx, "object-swap", a, extra)) {
+      // The JSObject::swap caller unfortunately assumes failures are OOM and
+      // crashes. Ignore non-OOM exceptions for now.
+      if (cx->isThrowingOutOfMemory()) {
+        return false;
+      }
+      cx->clearPendingException();
     }
   }
 

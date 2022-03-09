@@ -54,7 +54,7 @@ Building NSS
       <TODO>
 
 .. note::
-   To retreive the source code from the project repositories, users will need to
+   To retrieve the source code from the project repositories, users will need to
    download a release or pull the source code with their favourite Version
    Control System (git or Mercurial). Installing a VCS is not necessary to build
    an NSS release when downloaded as a compressed archive.

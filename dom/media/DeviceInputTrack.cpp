@@ -123,7 +123,7 @@ void NativeInputTrack::DestroyImpl() {
 
 void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                     uint32_t aFlags) {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(mGraph->OnGraphThread());
   TRACE_COMMENT("NativeInputTrack::ProcessInput", "%p", this);
 
   TRACK_GRAPH_LOGV("ProcessInput from %" PRId64 " to %" PRId64
@@ -169,7 +169,7 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                        size_t aFrames, TrackRate aRate,
                                        uint32_t aChannels,
                                        uint32_t aAlreadyBuffered) {
-  MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(aGraph == mGraph, "Receive input data from another graph");
   TRACK_GRAPH_LOGV(
       "NotifyInputData: frames=%zu, rate=%d, channel=%u, alreadyBuffered=%u",
@@ -273,7 +273,7 @@ void NativeInputTrack::RemoveDataListener(AudioDataListener* aListener) {
           mInputTrack(aInputTrack),
           mListener(aListener) {}
     void Run() override {
-      TRACE("NativeInputTrack::AddDataListener ControlMessage");
+      TRACE("NativeInputTrack::RemoveDataListener ControlMessage");
       DebugOnly<bool> wasPresent =
           mInputTrack->mDataUsers.RemoveElement(mListener.get());
       MOZ_ASSERT(wasPresent, "Remove an unknown listener");

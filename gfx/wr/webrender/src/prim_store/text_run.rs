@@ -246,7 +246,6 @@ impl TextRunPrimitive {
         transform: &LayoutToWorldTransform,
         mut allow_subpixel: bool,
         raster_space: RasterSpace,
-        root_scaling_factor: f32,
         spatial_tree: &SpatialTree,
     ) -> bool {
         // If local raster space is specified, include that in the scale
@@ -257,10 +256,7 @@ impl TextRunPrimitive {
         //           will no longer be required.
         let raster_scale = raster_space.local_scale().unwrap_or(1.0).max(0.001);
 
-        // root_scaling_factor is used to scale very large pictures that establish
-        // a raster root back to something sane, thus scale the device size accordingly.
-        // to the shader it looks like a change in DPI which it already supports.
-        let dps = surface.device_pixel_scale.0 * root_scaling_factor;
+        let dps = surface.device_pixel_scale.0;
         let font_size = specified_font.size.to_f32_px();
 
         // Small floating point error can accumulate in the raster * device_pixel scale.
@@ -442,7 +438,6 @@ impl TextRunPrimitive {
         transform: &LayoutToWorldTransform,
         surface: &SurfaceInfo,
         spatial_node_index: SpatialNodeIndex,
-        root_scaling_factor: f32,
         allow_subpixel: bool,
         low_quality_pinch_zoom: bool,
         resource_cache: &mut ResourceCache,
@@ -464,14 +459,13 @@ impl TextRunPrimitive {
             transform,
             allow_subpixel,
             raster_space,
-            root_scaling_factor,
             spatial_tree,
         );
 
         if self.glyph_keys_range.is_empty() || cache_dirty {
             let subpx_dir = self.used_font.get_subpx_dir();
 
-            let dps = surface.device_pixel_scale.0 * root_scaling_factor;
+            let dps = surface.device_pixel_scale.0;
             let transform = match raster_space {
                 RasterSpace::Local(scale) => FontTransform::new(scale * dps, 0.0, 0.0, scale * dps),
                 RasterSpace::Screen => self.used_font.transform.scale(dps),

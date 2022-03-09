@@ -79,7 +79,6 @@
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "ipc/ErrorIPCUtils.h"
-#include "mozilla/UseCounter.h"
 #include "mozilla/dom/DocGroup.h"
 #include "nsXULElement.h"
 
@@ -252,23 +251,24 @@ nsTArray<nsCString>& TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(
 }
 
 template <typename CleanupPolicy>
-void TErrorResult<CleanupPolicy>::SerializeMessage(IPC::Message* aMsg) const {
+void TErrorResult<CleanupPolicy>::SerializeMessage(
+    IPC::MessageWriter* aWriter) const {
   using namespace IPC;
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasMessage);
   MOZ_ASSERT(mExtra.mMessage);
-  WriteParam(aMsg, mExtra.mMessage->mArgs);
-  WriteParam(aMsg, mExtra.mMessage->mErrorNumber);
+  WriteParam(aWriter, mExtra.mMessage->mArgs);
+  WriteParam(aWriter, mExtra.mMessage->mErrorNumber);
 }
 
 template <typename CleanupPolicy>
-bool TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
-                                                     PickleIterator* aIter) {
+bool TErrorResult<CleanupPolicy>::DeserializeMessage(
+    IPC::MessageReader* aReader) {
   using namespace IPC;
   AssertInOwningThread();
   auto readMessage = MakeUnique<Message>();
-  if (!ReadParam(aMsg, aIter, &readMessage->mArgs) ||
-      !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
+  if (!ReadParam(aReader, &readMessage->mArgs) ||
+      !ReadParam(aReader, &readMessage->mErrorNumber)) {
     return false;
   }
   if (!readMessage->HasCorrectNumberOfArguments()) {
@@ -393,23 +393,23 @@ struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
 
 template <typename CleanupPolicy>
 void TErrorResult<CleanupPolicy>::SerializeDOMExceptionInfo(
-    IPC::Message* aMsg) const {
+    IPC::MessageWriter* aWriter) const {
   using namespace IPC;
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
   MOZ_ASSERT(mExtra.mDOMExceptionInfo);
-  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mMessage);
-  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mRv);
+  WriteParam(aWriter, mExtra.mDOMExceptionInfo->mMessage);
+  WriteParam(aWriter, mExtra.mDOMExceptionInfo->mRv);
 }
 
 template <typename CleanupPolicy>
 bool TErrorResult<CleanupPolicy>::DeserializeDOMExceptionInfo(
-    const IPC::Message* aMsg, PickleIterator* aIter) {
+    IPC::MessageReader* aReader) {
   using namespace IPC;
   AssertInOwningThread();
   nsCString message;
   nsresult rv;
-  if (!ReadParam(aMsg, aIter, &message) || !ReadParam(aMsg, aIter, &rv)) {
+  if (!ReadParam(aReader, &message) || !ReadParam(aReader, &rv)) {
     return false;
   }
 
@@ -811,12 +811,11 @@ static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
   if (!nameStr) {
     return false;
   }
-  JS::Rooted<JS::PropertyKey> nameKey(cx,
-                                      JS::PropertyKey::fromNonIntAtom(nameStr));
+  JS::Rooted<JS::PropertyKey> nameKey(cx, JS::PropertyKey::NonIntAtom(nameStr));
   return DefineConstructor(cx, global, nameKey, constructor);
 }
 
-// name must be an atom (or JS::PropertyKey::fromNonIntAtom will assert).
+// name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
@@ -849,8 +848,8 @@ static JSObject* CreateInterfaceObject(
           ->wantsInterfaceHasInstance) {
     if (isChrome ||
         StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled()) {
-      JS::Rooted<jsid> hasInstanceId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                             cx, JS::SymbolCode::hasInstance)));
+      JS::Rooted<jsid> hasInstanceId(
+          cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::hasInstance));
       if (!JS_DefineFunctionById(
               cx, constructor, hasInstanceId, InterfaceHasInstance, 1,
               // Flags match those of Function[Symbol.hasInstance]
@@ -907,7 +906,7 @@ static JSObject* CreateInterfaceObject(
     return nullptr;
   }
 
-  JS::Rooted<jsid> nameStr(cx, JS::PropertyKey::fromNonIntAtom(name));
+  JS::Rooted<jsid> nameStr(cx, JS::PropertyKey::NonIntAtom(name));
   if (defineOnGlobal && !DefineConstructor(cx, global, nameStr, constructor)) {
     return nullptr;
   }
@@ -975,8 +974,8 @@ static JSObject* CreateInterfacePrototypeObject(
       }
     }
 
-    JS::Rooted<jsid> unscopableId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                          cx, JS::SymbolCode::unscopables)));
+    JS::Rooted<jsid> unscopableId(
+        cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::unscopables));
     // Readonly and non-enumerable to match Array.prototype.
     if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
                                JSPROP_READONLY)) {
@@ -984,8 +983,8 @@ static JSObject* CreateInterfacePrototypeObject(
     }
   }
 
-  JS::Rooted<jsid> toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                         cx, JS::SymbolCode::toStringTag)));
+  JS::Rooted<jsid> toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
   if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, name,
                              JSPROP_READONLY)) {
     return nullptr;
@@ -1261,9 +1260,11 @@ static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
   const uint16_t index2 = *static_cast<const uint16_t*>(aElement2);
   const PropertyInfo* infos = static_cast<PropertyInfo*>(aClosure);
 
-  MOZ_ASSERT(JSID_BITS(infos[index1].Id()) != JSID_BITS(infos[index2].Id()));
+  uintptr_t rawBits1 = infos[index1].Id().asRawBits();
+  uintptr_t rawBits2 = infos[index2].Id().asRawBits();
+  MOZ_ASSERT(rawBits1 != rawBits2);
 
-  return JSID_BITS(infos[index1].Id()) < JSID_BITS(infos[index2].Id()) ? -1 : 1;
+  return rawBits1 < rawBits2 ? -1 : 1;
 }
 
 // {JSPropertySpec,JSFunctionSpec} use {JSPropertySpec,JSFunctionSpec}::Name
@@ -1435,7 +1436,7 @@ static JSObject* XrayCreateFunction(JSContext* cx,
                                     JSNativeWrapper native, unsigned nargs,
                                     JS::Handle<jsid> id) {
   JSFunction* fun;
-  if (JSID_IS_STRING(id)) {
+  if (id.isString()) {
     fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0, id);
   } else {
     // Can't pass this id (probably a symbol) to NewFunctionByIdWithReserved;
@@ -1467,10 +1468,10 @@ struct IdToIndexComparator {
   explicit IdToIndexComparator(const jsid& aId, const PropertyInfo* aInfos)
       : mId(aId), mInfos(aInfos) {}
   int operator()(const uint16_t aIndex) const {
-    if (JSID_BITS(mId) == JSID_BITS(mInfos[aIndex].Id())) {
+    if (mId.asRawBits() == mInfos[aIndex].Id().asRawBits()) {
       return 0;
     }
-    return JSID_BITS(mId) < JSID_BITS(mInfos[aIndex].Id()) ? -1 : 1;
+    return mId.asRawBits() < mInfos[aIndex].Id().asRawBits() ? -1 : 1;
   }
 };
 

@@ -1,0 +1,5 @@
+pth:testing/webcompat
+pypi:pytest==4.6.6
+pypi:selenium==3.141.0
+vendored:testing/web-platform/tests/tools/webdriver
+vendored:testing/web-platform/tests/tools/third_party/websockets/src

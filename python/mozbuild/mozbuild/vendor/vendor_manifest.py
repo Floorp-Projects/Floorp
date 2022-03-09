@@ -187,7 +187,7 @@ class VendorManifest(MozbuildObject):
                 paths.extend(glob.iglob(pattern_full_path, recursive=True))
         # Remove folder names from list of paths in order to avoid prematurely
         # truncating directories elsewhere
-        return [path for path in paths if not os.path.isdir(path)]
+        return [mozpath.normsep(path) for path in paths if not os.path.isdir(path)]
 
     def fetch_and_unpack(self, revision):
         """Fetch and unpack upstream source"""
@@ -214,7 +214,9 @@ class VendorManifest(MozbuildObject):
                             "Tar archive contains non-local paths, e.g. '%s'" % name
                         )
 
-                vendor_dir = self.manifest["vendoring"]["vendor-directory"]
+                vendor_dir = mozpath.normsep(
+                    self.manifest["vendoring"]["vendor-directory"]
+                )
                 if self.should_perform_step("keep"):
                     self.log(
                         logging.INFO,
@@ -245,6 +247,7 @@ class VendorManifest(MozbuildObject):
                 )
                 # We use double asterisk wildcard here to get complete list of recursive contents
                 for file in self.convert_patterns_to_paths(vendor_dir, "**"):
+                    file = mozpath.normsep(file)
                     if file not in to_keep:
                         mozfile.remove(file)
 
@@ -257,6 +260,8 @@ class VendorManifest(MozbuildObject):
                 tar.extractall(tmpextractdir)
 
                 prefix = self.manifest["origin"]["name"] + "-" + revision
+                prefix = prefix.replace("@", "-")
+                prefix = prefix.replace("/", "-")
                 has_prefix = all(
                     map(lambda name: name.startswith(prefix), tar.getnames())
                 )
@@ -343,7 +348,7 @@ class VendorManifest(MozbuildObject):
         assert len(replacements) == replaced
 
         with open(yaml_file, "wb") as f:
-            f.write(("".join(yaml) + "\n").encode("utf-8"))
+            f.write(("".join(yaml)).encode("utf-8"))
 
     def update_files(self, revision, yaml_file):
         def get_full_path(path, support_cwd=False):
@@ -359,7 +364,7 @@ class VendorManifest(MozbuildObject):
                 path = mozpath.join(
                     self.manifest["vendoring"]["vendor-directory"], path
                 )
-            return path
+            return os.path.abspath(path)
 
         if "update-actions" not in self.manifest["vendoring"]:
             return

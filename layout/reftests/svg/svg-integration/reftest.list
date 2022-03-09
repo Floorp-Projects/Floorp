@@ -43,6 +43,7 @@ fuzzy(0-1,0-5000) == mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01-re
 fuzzy(0-1,0-5000) == mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01-ref.xhtml
 fuzzy(0-1,0-5000) == mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01-ref.xhtml
 fuzzy(0-1,0-5000) == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-mask-clipPath-opacity-scale.xhtml mask-mask-clipPath-opacity-scale-ref.xhtml
 
 == transform-outer-svg-01.xhtml transform-outer-svg-01-ref.xhtml
 

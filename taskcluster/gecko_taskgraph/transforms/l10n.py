@@ -17,7 +17,10 @@ from gecko_taskgraph.util.schema import (
     resolve_keyed_by,
     taskref_or_string,
 )
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    task_name,
+)
 from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.util.treeherder import add_suffix
 from gecko_taskgraph.transforms.job import job_description_schema
@@ -159,7 +162,7 @@ def setup_name(config, jobs):
         dep = job["primary-dependency"]
         # Set the name to the same as the dep task, without kind name.
         # Label will get set automatically with this kinds name.
-        job["name"] = job.get("name", dep.name)
+        job["name"] = job.get("name", task_name(dep))
         yield job
 
 

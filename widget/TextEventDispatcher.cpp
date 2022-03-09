@@ -3,15 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "TextEventDispatcher.h"
+
+#include "IMEData.h"
+#include "PuppetWidget.h"
+#include "TextEvents.h"
+
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/TextEvents.h"
-#include "mozilla/TextEventDispatcher.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
 #include "nsView.h"
-#include "PuppetWidget.h"
 
 namespace mozilla {
 namespace widget {
@@ -227,8 +230,9 @@ void TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const {
 #endif  // #ifdef DEBUG
 }
 
-Maybe<WritingMode> TextEventDispatcher::MaybeWritingModeAtSelection() const {
-  if (mWritingMode.isSome()) {
+Maybe<WritingMode> TextEventDispatcher::MaybeQueryWritingModeAtSelection()
+    const {
+  if (mHasFocus || mWritingMode.isSome()) {
     return mWritingMode;
   }
 
@@ -242,15 +246,9 @@ Maybe<WritingMode> TextEventDispatcher::MaybeWritingModeAtSelection() const {
   const_cast<TextEventDispatcher*>(this)->DispatchEvent(
       mWidget, querySelectedTextEvent, status);
   if (!querySelectedTextEvent.FoundSelection()) {
-    if (mHasFocus) {
-      mWritingMode.reset();
-    }
     return Nothing();
   }
 
-  if (mHasFocus) {
-    mWritingMode = Some(querySelectedTextEvent.mReply->mWritingMode);
-  }
   return Some(querySelectedTextEvent.mReply->mWritingMode);
 }
 
@@ -414,6 +412,10 @@ nsresult TextEventDispatcher::NotifyIME(
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
   switch (aIMENotification.mMessage) {
+    case NOTIFY_IME_OF_FOCUS: {
+      mWritingMode = MaybeQueryWritingModeAtSelection();
+      break;
+    }
     case NOTIFY_IME_OF_BLUR:
       mHasFocus = false;
       mWritingMode.reset();
@@ -430,7 +432,7 @@ nsresult TextEventDispatcher::NotifyIME(
       }
       break;
     case NOTIFY_IME_OF_SELECTION_CHANGE:
-      if (mHasFocus) {
+      if (mHasFocus && aIMENotification.mSelectionChangeData.HasRange()) {
         mWritingMode =
             Some(aIMENotification.mSelectionChangeData.GetWritingMode());
       }
@@ -644,9 +646,8 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.mNativeKeyEvent = aKeyboardEvent.mNativeKeyEvent;
   } else {
     // If it's not a keyboard event for native key event, we should ensure that
-    // mNativeKeyEvent and mPluginEvent are null/empty.
+    // mNativeKeyEvent is null.
     keyEvent.mNativeKeyEvent = nullptr;
-    keyEvent.mPluginEvent.Clear();
   }
   // TODO: Manage mUniqueId here.
 
@@ -692,6 +693,14 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     // Note that even if we set it to true, this may be overwritten by
     // PresShell::DispatchEventToDOM().
     keyEvent.mFlags.mOnlySystemGroupDispatchInContent = true;
+  }
+
+  // If an editable element has focus and we're in the parent process, we should
+  // retrieve native key bindings right now because even if it matches with a
+  // reserved shortcut key, it should be handled by the editor.
+  if (XRE_IsParentProcess() && mHasFocus &&
+      (aMessage == eKeyDown || aMessage == eKeyPress)) {
+    keyEvent.InitAllEditCommands(mWritingMode);
   }
 
   DispatchInputEvent(mWidget, keyEvent, aStatus);

@@ -266,8 +266,6 @@ bool nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign) {
         return false;
     }
   }
-
-  return false;
 }
 
 bool nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign) {
@@ -307,8 +305,6 @@ bool nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign) {
         return false;
     }
   }
-
-  return false;
 }
 
 void nsBoxFrame::GetInitialOrientation(bool& aIsHorizontal) {
@@ -965,7 +961,7 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // and merge them into a single Content() list. This can cause us
     // to violate CSS stacking order, but forceLayer is a magic
     // XUL-only extension anyway.
-    nsDisplayList masterList;
+    nsDisplayList masterList(aBuilder);
     masterList.AppendToTop(tempLists.BorderBackground());
     masterList.AppendToTop(tempLists.BlockBorderBackgrounds());
     masterList.AppendToTop(tempLists.Floats());

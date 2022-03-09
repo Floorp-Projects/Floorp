@@ -1008,6 +1008,17 @@ void AcStrategyHeuristics::Init(const Image3F& src,
   const CompressParams& cparams = enc_state->cparams;
   const float butteraugli_target = cparams.butteraugli_distance;
 
+  if (cparams.speed_tier >= SpeedTier::kCheetah) {
+    JXL_CHECK(enc_state->shared.matrices.EnsureComputed(1));  // DCT8 only
+  } else {
+    uint32_t acs_mask = 0;
+    // All transforms up to 64x64.
+    for (size_t i = 0; i < AcStrategy::DCT128X128; i++) {
+      acs_mask |= (1 << i);
+    }
+    JXL_CHECK(enc_state->shared.matrices.EnsureComputed(acs_mask));
+  }
+
   // Image row pointers and strides.
   config.quant_field_row = enc_state->initial_quant_field.Row(0);
   config.quant_field_stride = enc_state->initial_quant_field.PixelsPerRow();

@@ -66,8 +66,10 @@ web-platform-tests:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
-        - webrender-sw
+        - no-fission
+        - webrender-sw+no-fission
         - webrender-sw+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -85,14 +87,14 @@ web-platform-tests:
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     (linux1804|windows10)-32.*/.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
@@ -159,8 +161,10 @@ web-platform-tests-reftest:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
-        - webrender-sw
+        - no-fission
+        - webrender-sw+no-fission
         - webrender-sw+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -177,13 +181,13 @@ web-platform-tests-reftest:
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux1804-64-qr/debug: ['trunk']
@@ -244,10 +248,12 @@ web-platform-tests-wdspec:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
-        - webrender-sw
+        - no-fission
+        - webrender-sw+no-fission
         - webrender-sw+fission
-        - headless
+        - headless+no-fission
         - headless+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -258,7 +264,7 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     android.*: []
                     default: built-projects
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
@@ -270,7 +276,7 @@ web-platform-tests-wdspec:
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            headless:
+            headless+no-fission:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
@@ -279,7 +285,7 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     android.*: []
                     default: built-projects
-            default:
+            no-fission:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
@@ -331,8 +337,10 @@ web-platform-tests-crashtest:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
+        - no-fission
         - webrender-sw+fission
-        - webrender-sw
+        - webrender-sw+no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -350,13 +358,13 @@ web-platform-tests-crashtest:
                     macosx101.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux1804-64-qr/debug: ['trunk']
@@ -375,8 +383,10 @@ web-platform-tests-print-reftest:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
+        - no-fission
         - webrender-sw+fission
-        - webrender-sw
+        - webrender-sw+no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -394,13 +404,13 @@ web-platform-tests-print-reftest:
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            default:
+            no-fission:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
@@ -416,6 +426,7 @@ test-verify-wpt:
         category: test-verify
         name: test-verify-wpt
     variants: [fission]
+    run-without-variant: false
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:
@@ -445,23 +456,21 @@ test-coverage-wpt:
     max-run-time: 10800
     variants:
         - fission
-        - webrender-sw
+        - webrender-sw+no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: built-projects
-                    default: []
-            default:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: built-projects
                     .*-ccov.*/.*: built-projects
+                    default: []
+            webrender-sw+no-fission:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    default: []
+            no-fission:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
                     default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2

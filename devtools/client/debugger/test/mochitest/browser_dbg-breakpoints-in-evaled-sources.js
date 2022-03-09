@@ -7,13 +7,14 @@
 // We wrap it in a setTimeout to avoid errors in the webconsole actor which
 // would still be processing the outcome of the evaluation after we destroy
 // the thread actor.
+
+"use strict";
+
 const EVALED_SOURCE_TEXT = `setTimeout(function() {
   debugger;
   console.log("SECOND LINE");
 }, 10)`;
 
-// doc-scripts.html contains some javascript on which we can set breakpoints.
-const REGULAR_SOURCE_FILE = "doc-scripts.html";
 /**
  * Check against blank debugger panel issues when attempting to restore
  * breakpoints set in evaled sources (Bug 1720512).
@@ -43,12 +44,16 @@ add_task(async function() {
   info("Wait for the debugger to be paused on the debugger statement");
   await waitForPaused(dbg);
 
-  is(getCM(dbg).getValue(), EVALED_SOURCE_TEXT, "The debugger is showing the evaled source");
+  is(
+    getCM(dbg).getValue(),
+    EVALED_SOURCE_TEXT,
+    "The debugger is showing the evaled source"
+  );
 
   const evaledSource = dbg.selectors.getSelectedSource();
   assertPausedAtSourceAndLine(dbg, evaledSource.id, 2);
 
-  info("Add a breakpoint in the evaled source")
+  info("Add a breakpoint in the evaled source");
   await addBreakpoint(dbg, evaledSource, 3);
 
   info("Resume and check that we hit the breakpoint");

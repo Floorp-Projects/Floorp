@@ -5,6 +5,8 @@
 // Tests that the paused overlay isn't visible after resuming if the debugger paused
 // while the DOM was still loading (Bug 1678636).
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebuggerWithAbsoluteURL(
     "data:text/html,<meta charset=utf8><script>debugger;</script>"
@@ -31,7 +33,7 @@ add_task(async function() {
     "paused-dbg-resume-button"
   );
 
-  await waitFor(() => !isPaused(dbg), "Wait for the debugger to resume");
+  await waitForResumed(dbg);
   ok("The debugger isn't paused after clicking on the resume button");
 
   await waitFor(async () => {

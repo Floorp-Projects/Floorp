@@ -101,6 +101,8 @@ pixel_10bpc_max: times 8 dw  0x03ff
 
 pw_1567_3784:    times 4 dw  1567,  3784
 pw_m3784_1567:   times 4 dw -3784,  1567
+pw_2896_2896:    times 4 dw  2896,  2896
+pw_m2896_2896:   times 4 dw -2896,  2896
 
 clip_18b_min: times 4 dd -0x20000
 clip_18b_max: times 4 dd  0x1ffff
@@ -429,22 +431,19 @@ cglobal idct_4x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     ; m0 = in0 in1
     ; m1 = in2 in3
     ; m5 = pd_2048
-    mova                 m4, [o(pw_m3784_1567)]
     punpckhwd            m2, m1, m0
-    psubw                m3, m0, m1
-    paddw                m0, m1
-    punpcklqdq           m0, m3
-    pmaddwd              m4, m2
+    punpcklwd            m1, m0
+    pmaddwd              m4, m2, [o(pw_m3784_1567)]
     pmaddwd              m2, [o(pw_1567_3784)]
-    pmulhrsw             m0, [o(pw_2896x8)]     ; t0 t1
-    paddd                m4, m5
-    paddd                m2, m5
-    psrad                m4, 12
-    psrad                m2, 12
-    packssdw             m2, m4     ; t3 t2
-    psubsw               m1, m0, m2 ; tmp3 tmp2
-    paddsw               m0, m2     ; tmp0 tmp1
+    pmaddwd              m0, m1, [o(pw_m2896_2896)]
+    pmaddwd              m1, [o(pw_2896_2896)]
+    REPX      {paddd x, m5}, m4, m2, m0, m1
     packssdw             m5, m5     ; pw_2048
+    REPX      {psrad x, 12}, m4, m2, m0, m1
+    packssdw             m2, m4     ; t3 t2
+    packssdw             m1, m0     ; t0 t1
+    paddsw               m0, m1, m2 ; out0 out1
+    psubsw               m1, m2     ; out3 out2
     pmulhrsw             m0, m5
     pmulhrsw             m1, m5
     movq                 m2, [dstq+strideq*0]

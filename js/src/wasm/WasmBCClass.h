@@ -130,7 +130,7 @@ struct AccessCheck {
 struct FunctionCall {
   explicit FunctionCall(uint32_t lineOrBytecode)
       : lineOrBytecode(lineOrBytecode),
-        isInterModule(false),
+        restoreRegisterStateAndRealm(false),
         usesSystemAbi(false),
 #ifdef JS_CODEGEN_ARM
         hardFP(true),
@@ -141,7 +141,7 @@ struct FunctionCall {
 
   uint32_t lineOrBytecode;
   WasmABIArgGenerator abi;
-  bool isInterModule;
+  bool restoreRegisterStateAndRealm;
   bool usesSystemAbi;
 #ifdef JS_CODEGEN_ARM
   bool hardFP;
@@ -605,6 +605,7 @@ struct BaseCompiler final {
   inline void pushI32(int32_t v);
   inline void pushI64(int64_t v);
   inline void pushRef(intptr_t v);
+  inline void pushPtr(intptr_t v);
   inline void pushF64(double v);
   inline void pushF32(float v);
 #ifdef ENABLE_WASM_SIMD
@@ -913,7 +914,8 @@ struct BaseCompiler final {
   //
   // Calls.
 
-  void beginCall(FunctionCall& call, UseABI useABI, InterModule interModule);
+  void beginCall(FunctionCall& call, UseABI useABI,
+                 RestoreRegisterStateAndRealm restoreRegisterStateAndRealm);
   void endCall(FunctionCall& call, size_t stackSpace);
   void startCallArgs(size_t stackArgAreaSizeUnaligned, FunctionCall* call);
   ABIArg reservePointerArgument(FunctionCall* call);
@@ -923,8 +925,9 @@ struct BaseCompiler final {
 
   // Precondition for the call*() methods: sync()
 
-  CodeOffset callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                          const Stk& indexVal, const FunctionCall& call);
+  void callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+                    const Stk& indexVal, const FunctionCall& call,
+                    CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
   CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);
   CodeOffset builtinCall(SymbolicAddress builtin, const FunctionCall& call);
   CodeOffset builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
@@ -965,9 +968,9 @@ struct BaseCompiler final {
   // Immediate-to-register moves.
   //
   // The compiler depends on moveImm32() clearing the high bits of a 64-bit
-  // register on 64-bit systems except MIPS64 where high bits are sign extended
-  // from lower bits, see doc block "64-bit GPRs carrying 32-bit values" in
-  // MacroAssembler.h.
+  // register on 64-bit systems except MIPS64 And LoongArch64 where high bits
+  // are sign extended from lower bits, see doc block "64-bit GPRs carrying
+  // 32-bit values" in MacroAssembler.h.
 
   inline void moveImm32(int32_t v, RegI32 dest);
   inline void moveImm64(int64_t v, RegI64 dest);
@@ -1092,7 +1095,7 @@ struct BaseCompiler final {
   void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr, Label* ok);
   void boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr, Label* ok);
 
-#if defined(RABALDR_HAS_HEAPREG)
+#if defined(WASM_HAS_HEAPREG)
   template <typename RegIndexType>
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check, RegPtr tls,
@@ -1220,8 +1223,11 @@ struct BaseCompiler final {
   // at the end of a series of catch blocks (if none matched the exception).
   [[nodiscard]] bool throwFrom(RegRef exn, uint32_t lineOrBytecode);
 
-  // Load a pending exception object from the TlsData.
-  void loadPendingException(Register dest);
+  // Load the specified tag object from the TlsData.
+  void loadTag(RegPtr tlsData, uint32_t tagIndex, RegRef tagDst);
+
+  // Load the pending exception state from the TlsData and then reset it.
+  void consumePendingException(RegRef* exnDst, RegRef* tagDst);
 #endif
 
   ////////////////////////////////////////////////////////////
@@ -1248,6 +1254,10 @@ struct BaseCompiler final {
   // inside the GC cell `object`. Preserves `object` and `value`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
                                         RegPtr valueAddr, RegRef value);
+
+  // Emits a store of nullptr to a JS object pointer at the address valueAddr,
+  // Preserves `valueAddr`.
+  void emitBarrieredClear(RegPtr valueAddr);
 
   ////////////////////////////////////////////////////////////
   //
@@ -1577,7 +1587,7 @@ struct BaseCompiler final {
 #  endif
 #endif
 
-  [[nodiscard]] bool emitIntrinsic(IntrinsicOp op);
+  [[nodiscard]] bool emitIntrinsic();
 };
 
 }  // namespace wasm

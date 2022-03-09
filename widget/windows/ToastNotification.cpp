@@ -14,12 +14,13 @@
 #include "nsThreadUtils.h"
 #include "ToastNotificationHandler.h"
 #include "WinTaskbar.h"
+#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIObserver,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIAlertsDoNotDisturb,
+                  nsIObserver)
 
 ToastNotification::ToastNotification() = default;
 
@@ -43,7 +44,7 @@ nsresult ToastNotification::Init() {
   }
 
   nsCOMPtr<nsIObserverService> obsServ =
-      do_GetService("@mozilla.org/observer-service;1");
+      mozilla::services::GetObserverService();
   if (obsServ) {
     obsServ->AddObserver(this, "quit-application", true);
   }
@@ -53,6 +54,18 @@ nsresult ToastNotification::Init() {
 
 nsresult ToastNotification::BackgroundDispatch(nsIRunnable* runnable) {
   return mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
+NS_IMETHODIMP
+ToastNotification::GetSuppressForScreenSharing(bool* aRetVal) {
+  *aRetVal = mSuppressForScreenSharing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ToastNotification::SetSuppressForScreenSharing(bool aSuppress) {
+  mSuppressForScreenSharing = aSuppress;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -106,47 +119,41 @@ ToastNotification::ShowPersistentNotification(const nsAString& aPersistentData,
 }
 
 NS_IMETHODIMP
+ToastNotification::SetManualDoNotDisturb(bool aDoNotDisturb) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ToastNotification::GetManualDoNotDisturb(bool* aRet) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
                              nsIObserver* aAlertListener) {
-  if (NS_WARN_IF(!aAlert)) {
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG(aAlert);
+
+  if (mSuppressForScreenSharing) {
+    return NS_OK;
   }
 
   nsAutoString cookie;
-  nsresult rv = aAlert->GetCookie(cookie);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetCookie(cookie));
 
   nsAutoString name;
-  rv = aAlert->GetName(name);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetName(name));
 
   nsAutoString title;
-  rv = aAlert->GetTitle(title);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetTitle(title));
 
   nsAutoString text;
-  rv = aAlert->GetText(text);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetText(text));
 
   bool textClickable;
-  rv = aAlert->GetTextClickable(&textClickable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetTextClickable(&textClickable));
 
   nsAutoString hostPort;
-  rv = aAlert->GetSource(hostPort);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(aAlert->GetSource(hostPort));
 
   RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
 
@@ -154,7 +161,7 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
       this, aAlertListener, name, cookie, title, text, hostPort, textClickable);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
-  rv = handler->InitAlertAsync(aAlert);
+  nsresult rv = handler->InitAlertAsync(aAlert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mActiveHandlers.Remove(name);
     handler->UnregisterHandler();

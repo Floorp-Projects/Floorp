@@ -29,33 +29,6 @@
  * dispatches the commands that apply to individual items.
  */
 
-/**
- * A few words on focus and focusrings
- *
- * We do quite a few hacks in the Downloads Panel for focusrings. In fact, we
- * basically suppress most if not all XUL-level focusrings, and style/draw
- * them ourselves (using :focus instead of -moz-focusring). There are a few
- * reasons for this:
- *
- * 1) Richlists on OSX don't have focusrings; instead, they are shown as
- *    selected. This makes for some ambiguity when we have a focused/selected
- *    item in the list, and the mouse is hovering a completed download (which
- *    highlights).
- * 2) Windows doesn't show focusrings until after the first time that tab is
- *    pressed (and by then you're focusing the second item in the panel).
- * 3) Richlistbox sets -moz-focusring even when we select it with a mouse.
- *
- * In general, the desired behaviour is to focus the first item after pressing
- * tab/down, and show that focus with a ring. Then, if the mouse moves over
- * the panel, to hide that focus ring; essentially resetting us to the state
- * before pressing the key.
- *
- * We end up capturing the tab/down key events, and preventing their default
- * behaviour. We then set a "keyfocus" attribute on the panel, which allows
- * us to draw a ring around the currently focused element. If the panel is
- * closed or the mouse moves over the panel, we remove the attribute.
- */
-
 "use strict";
 
 var { XPCOMUtils } = ChromeUtils.import(
@@ -249,6 +222,9 @@ var DownloadsPanel = {
     Services.telemetry.scalarAdd("downloads.panel_shown", 1);
     DownloadsCommon.log("Opening the downloads panel.");
 
+    this._openedManually = openedManually;
+    this._preventFocusRing = !openedManually || !isKeyPress;
+
     if (this.isPanelShowing) {
       DownloadsCommon.log("Panel is already showing - focusing instead.");
       this._focusPanel();
@@ -263,7 +239,7 @@ var DownloadsPanel = {
     // called while another window is closing (like the window for selecting
     // whether to save or open the file), and that would cause the panel to
     // close immediately.
-    setTimeout(() => this._openPopupIfDataReady(openedManually, isKeyPress), 0);
+    setTimeout(() => this._openPopupIfDataReady(), 0);
 
     DownloadsCommon.log("Waiting for the downloads panel to appear.");
     this._state = this.kStateWaitingData;
@@ -299,36 +275,17 @@ var DownloadsPanel = {
     );
   },
 
-  /**
-   * Returns whether the user has started keyboard navigation.
-   */
-  get keyFocusing() {
-    return this.panel.hasAttribute("keyfocus");
-  },
-
-  /**
-   * Set to true if the user has started keyboard navigation, and we should be
-   * showing focusrings in the panel. Also adds a mousemove event handler to
-   * the panel which disables keyFocusing.
-   */
-  set keyFocusing(aValue) {
-    if (aValue) {
-      this.panel.setAttribute("keyfocus", "true");
-      this.panel.addEventListener("mousemove", this);
-    } else {
-      this.panel.removeAttribute("keyfocus");
-      this.panel.removeEventListener("mousemove", this);
-    }
-  },
-
-  /**
-   * Handles the mousemove event for the panel, which disables focusring
-   * visualization.
-   */
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mousemove":
-        this.keyFocusing = false;
+        if (this.panel.contains(document.activeElement)) {
+          // Let mouse movement remove focus rings and reset focus in the panel.
+          // This behavior is copied from PanelMultiView.
+          document.activeElement.blur();
+          DownloadsView.richListBox.removeAttribute("force-focus-visible");
+          this._preventFocusRing = true;
+          this._focusPanel();
+        }
         break;
       case "keydown":
         this._onKeyDown(aEvent);
@@ -395,9 +352,7 @@ var DownloadsPanel = {
       this._delayTimeout = null;
     }
 
-    // Removes the keyfocus attribute so that we stop handling keyboard
-    // navigation.
-    this.keyFocusing = false;
+    DownloadsView.richListBox.removeAttribute("force-focus-visible");
 
     // Since at most one popup is open at any given time, we can set globally.
     DownloadsCommon.getIndicatorData(
@@ -438,6 +393,7 @@ var DownloadsPanel = {
     // Handle keypress to be able to preventDefault() events before they reach
     // the richlistbox, for keyboard navigation.
     this.panel.addEventListener("keypress", this);
+    this.panel.addEventListener("mousemove", this);
     DownloadsView.richListBox.addEventListener("focus", this);
     DownloadsView.richListBox.addEventListener("select", this);
   },
@@ -449,6 +405,7 @@ var DownloadsPanel = {
   _unattachEventListeners() {
     this.panel.removeEventListener("keydown", this);
     this.panel.removeEventListener("keypress", this);
+    this.panel.removeEventListener("mousemove", this);
     DownloadsView.richListBox.removeEventListener("focus", this);
     DownloadsView.richListBox.removeEventListener("select", this);
   },
@@ -475,20 +432,21 @@ var DownloadsPanel = {
       this._handlePotentiallySpammyDownloadActivation(aEvent);
       return;
     }
-    // If the user has pressed the tab, up, or down cursor key, start keyboard
-    // navigation, thus enabling focusrings in the panel.  Keyboard navigation
-    // is automatically disabled if the user moves the mouse on the panel, or
-    // if the panel is closed.
-    if (
-      (aEvent.keyCode == aEvent.DOM_VK_TAB ||
-        aEvent.keyCode == aEvent.DOM_VK_UP ||
-        aEvent.keyCode == aEvent.DOM_VK_DOWN) &&
-      !this.keyFocusing
-    ) {
-      this.keyFocusing = true;
-    }
 
     let richListBox = DownloadsView.richListBox;
+
+    // If the user has pressed the up or down cursor key, force-enable focus
+    // indicators for the richlistbox.  :focus-visible doesn't work in this case
+    // because the the focused element may not change here if the richlistbox
+    // already had focus.  The force-focus-visible attribute will be removed
+    // again if the user moves the mouse on the panel or if the panel is closed.
+    if (
+      aEvent.keyCode == aEvent.DOM_VK_UP ||
+      aEvent.keyCode == aEvent.DOM_VK_DOWN
+    ) {
+      richListBox.setAttribute("force-focus-visible", "true");
+    }
+
     // If the footer is focused and the downloads list has at least 1 element
     // in it, focus the last element in the list when going up.
     if (aEvent.keyCode == aEvent.DOM_VK_UP && richListBox.firstElementChild) {
@@ -575,17 +533,15 @@ var DownloadsPanel = {
       return;
     }
 
-    let element = document.commandDispatcher.focusedElement;
-    while (element && element != this.panel) {
-      element = element.parentNode;
+    if (document.activeElement && this.panel.contains(document.activeElement)) {
+      return;
     }
-    if (!element) {
-      if (DownloadsView.richListBox.itemCount > 0) {
-        DownloadsView.richListBox.selectedIndex = 0;
-        DownloadsView.richListBox.focus();
-      } else {
-        DownloadsFooter.focus();
-      }
+    let focusOptions = { preventFocusRing: !!this._preventFocusRing };
+    if (DownloadsView.richListBox.itemCount > 0) {
+      DownloadsView.richListBox.selectedIndex = 0;
+      DownloadsView.richListBox.focus(focusOptions);
+    } else {
+      DownloadsFooter.focus(focusOptions);
     }
   },
 
@@ -636,7 +592,7 @@ var DownloadsPanel = {
   /**
    * Opens the downloads panel when data is ready to be displayed.
    */
-  _openPopupIfDataReady(openedManually, isKeyPress) {
+  _openPopupIfDataReady() {
     // We don't want to open the popup if we already displayed it, or if we are
     // still loading data.
     if (this._state != this.kStateWaitingData || DownloadsView.loading) {
@@ -675,11 +631,6 @@ var DownloadsPanel = {
 
     DownloadsCommon.log("Opening downloads panel popup.");
 
-    if (isKeyPress) {
-      // If the panel was opened via a keypress, enable focus indicators.
-      this.keyFocusing = true;
-    }
-
     // Delay displaying the panel because this function will sometimes be
     // called while another window is closing (like the window for selecting
     // whether to save or open the file), and that would cause the panel to
@@ -698,7 +649,7 @@ var DownloadsPanel = {
         this._state = this.kStateHidden;
       });
 
-      if (!openedManually) {
+      if (!this._openedManually) {
         this._delayPopupItems();
       }
     }, 0);
@@ -1528,9 +1479,9 @@ var DownloadsSummary = {
   /**
    * Focuses the root element of the summary.
    */
-  focus() {
+  focus(focusOptions) {
     if (this._summaryNode) {
-      this._summaryNode.focus();
+      this._summaryNode.focus(focusOptions);
     }
   },
 
@@ -1624,11 +1575,11 @@ var DownloadsFooter = {
    * is visible, focus it. If not, focus the "Show all downloads"
    * button.
    */
-  focus() {
+  focus(focusOptions) {
     if (this._showingSummary) {
-      DownloadsSummary.focus();
+      DownloadsSummary.focus(focusOptions);
     } else {
-      DownloadsView.downloadsHistory.focus({ preventFocusRing: true });
+      DownloadsView.downloadsHistory.focus(focusOptions);
     }
   },
 

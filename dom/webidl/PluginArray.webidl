@@ -7,13 +7,8 @@
 [LegacyUnenumerableNamedProperties,
  Exposed=Window]
 interface PluginArray {
-  [NeedsCallerType]
+  void refresh();
   readonly attribute unsigned long length;
-
-  [NeedsCallerType]
   getter Plugin? item(unsigned long index);
-  [NeedsCallerType]
   getter Plugin? namedItem(DOMString name);
-
-  void refresh(optional boolean reloadDocuments = false);
 };

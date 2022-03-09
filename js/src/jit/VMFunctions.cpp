@@ -1584,6 +1584,32 @@ static bool MaybeTypedArrayIndexString(jsid id) {
   return false;
 }
 
+static void VerifyCacheEntry(JSContext* cx, NativeObject* obj, PropertyKey key,
+                             const MegamorphicCache::Entry& entry) {
+#ifdef DEBUG
+  if (entry.isMissingProperty()) {
+    NativeObject* pobj;
+    PropertyResult prop;
+    MOZ_ASSERT(LookupPropertyPure(cx, obj, key, &pobj, &prop));
+    MOZ_ASSERT(prop.isNotFound());
+    return;
+  }
+  if (entry.isMissingOwnProperty()) {
+    MOZ_ASSERT(!obj->containsPure(key));
+    return;
+  }
+  MOZ_ASSERT(entry.isDataProperty());
+  for (size_t i = 0, numHops = entry.numHops(); i < numHops; i++) {
+    MOZ_ASSERT(!obj->containsPure(key));
+    obj = &obj->staticPrototype()->as<NativeObject>();
+  }
+  mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
+  MOZ_ASSERT(prop.isSome());
+  MOZ_ASSERT(prop->isDataProperty());
+  MOZ_ASSERT(prop->slot() == entry.slot());
+#endif
+}
+
 static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
                                                         NativeObject* obj,
                                                         jsid id, Value* vp) {
@@ -1595,6 +1621,27 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   MOZ_ASSERT(id.isAtom() || id.isSymbol());
 
+  Shape* receiverShape = obj->shape();
+  MegamorphicCache& cache = cx->caches().megamorphicCache;
+  MegamorphicCache::Entry* entry;
+  if (JitOptions.enableWatchtowerMegamorphic &&
+      cache.lookup(receiverShape, id, &entry)) {
+    VerifyCacheEntry(cx, obj, id, *entry);
+    if (entry->isDataProperty()) {
+      for (size_t i = 0, numHops = entry->numHops(); i < numHops; i++) {
+        obj = &obj->staticPrototype()->as<NativeObject>();
+      }
+      *vp = obj->getSlot(entry->slot());
+      return true;
+    }
+    if (entry->isMissingProperty()) {
+      vp->setUndefined();
+      return true;
+    }
+    MOZ_ASSERT(entry->isMissingOwnProperty());
+  }
+
+  size_t numHops = 0;
   while (true) {
     uint32_t index;
     if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
@@ -1602,7 +1649,10 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
       if (!prop.isDataProperty()) {
         return false;
       }
-
+      if (JitOptions.enableWatchtowerMegamorphic) {
+        cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
+                                       prop.slot());
+      }
       *vp = obj->getSlot(prop.slot());
       return true;
     }
@@ -1623,6 +1673,9 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
     JSObject* proto = obj->staticPrototype();
     if (!proto) {
+      if (JitOptions.enableWatchtowerMegamorphic) {
+        cache.initEntryForMissingProperty(entry, receiverShape, id);
+      }
       vp->setUndefined();
       return true;
     }
@@ -1631,6 +1684,7 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
       return false;
     }
     obj = &proto->as<NativeObject>();
+    numHops++;
   }
 }
 
@@ -1658,7 +1712,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
     }
     *id = AtomToId(atom);
   } else if (idVal.isSymbol()) {
-    *id = SYMBOL_TO_JSID(idVal.toSymbol());
+    *id = PropertyKey::Symbol(idVal.toSymbol());
   } else {
     if (!ValueToIdPure(idVal, id)) {
       return false;
@@ -1666,9 +1720,9 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
   }
 
   // Watch out for ids that may be stored in dense elements.
-  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
+  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < PropertyKey::IntMax,
                 "All dense elements must have integer jsids");
-  if (MOZ_UNLIKELY(JSID_IS_INT(*id))) {
+  if (MOZ_UNLIKELY(id->isInt())) {
     return false;
   }
 
@@ -1773,51 +1827,79 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
     return false;
   }
 
+  Shape* receiverShape = obj->shape();
+  MegamorphicCache& cache = cx->caches().megamorphicCache;
+  MegamorphicCache::Entry* entry;
+  if (JitOptions.enableWatchtowerMegamorphic &&
+      cache.lookup(receiverShape, id, &entry)) {
+    VerifyCacheEntry(cx, &obj->as<NativeObject>(), id, *entry);
+    if (entry->isDataProperty()) {
+      vp[1].setBoolean(HasOwn ? entry->numHops() == 0 : true);
+      return true;
+    }
+    if (HasOwn || entry->isMissingProperty()) {
+      vp[1].setBoolean(false);
+      return true;
+    }
+    MOZ_ASSERT(!HasOwn);
+    MOZ_ASSERT(entry->isMissingOwnProperty());
+  }
+
+  size_t numHops = 0;
   do {
-    if (obj->is<NativeObject>()) {
-      uint32_t unused;
-      if (obj->shape()->lookup(cx, id, &unused)) {
-        vp[1].setBoolean(true);
-        return true;
-      }
-
-      // Property not found. Watch out for Class hooks and TypedArrays.
-      if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
-        // Fail if there's a resolve hook, unless the mayResolve hook tells us
-        // the resolve hook won't define a property with this id.
-        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
-          return false;
-        }
-
-        // Don't skip past TypedArrayObjects if the id can be a TypedArray
-        // index.
-        if (obj->is<TypedArrayObject>()) {
-          if (MaybeTypedArrayIndexString(id)) {
-            return false;
-          }
-        }
-      }
-    } else if (obj->is<TypedObject>()) {
-      RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
-      if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
-        vp[1].setBoolean(true);
-        return true;
-      }
-    } else {
+    if (MOZ_UNLIKELY(!obj->is<NativeObject>())) {
       return false;
     }
 
+    uint32_t index;
+    if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
+      if (JitOptions.enableWatchtowerMegamorphic) {
+        PropertyInfo prop = map->getPropertyInfo(index);
+        if (prop.isDataProperty()) {
+          cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
+                                         prop.slot());
+        }
+      }
+      vp[1].setBoolean(true);
+      return true;
+    }
+
+    // Property not found. Watch out for Class hooks and TypedArrays.
+    if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
+      // Fail if there's a resolve hook, unless the mayResolve hook tells us
+      // the resolve hook won't define a property with this id.
+      if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
+        return false;
+      }
+
+      // Don't skip past TypedArrayObjects if the id can be a TypedArray
+      // index.
+      if (obj->is<TypedArrayObject>()) {
+        if (MaybeTypedArrayIndexString(id)) {
+          return false;
+        }
+      }
+    }
+
     // If implementing Object.hasOwnProperty, don't follow protochain.
-    if (HasOwn) {
+    if constexpr (HasOwn) {
       break;
     }
 
     // Get prototype. Objects that may allow dynamic prototypes are already
     // filtered out above.
     obj = obj->staticPrototype();
+    numHops++;
   } while (obj);
 
   // Missing property.
+  if (JitOptions.enableWatchtowerMegamorphic) {
+    if constexpr (HasOwn) {
+      cache.initEntryForMissingOwnProperty(entry, receiverShape, id);
+    } else {
+      cache.initEntryForMissingProperty(entry, receiverShape, id);
+    }
+  }
   vp[1].setBoolean(false);
   return true;
 }
@@ -1846,7 +1928,7 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
     return true;
   }
 
-  jsid id = INT_TO_JSID(index);
+  jsid id = PropertyKey::Int(index);
   uint32_t unused;
   if (obj->shape()->lookup(cx, id, &unused)) {
     vp[0].setBoolean(true);

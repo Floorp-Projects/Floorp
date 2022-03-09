@@ -1279,15 +1279,22 @@ JS_PUBLIC_API void JS_RemoveExtraGCRootsTracer(JSContext* cx,
   return cx->runtime()->gc.removeBlackRootsTracer(traceOp, data);
 }
 
-JS_PUBLIC_API bool JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
-  // Currently, we only collect nursery during idle time.
-  return rt->gc.nursery().shouldCollect();
+JS_PUBLIC_API JS::GCReason JS::WantEagerMinorGC(JSRuntime* rt) {
+  if (rt->gc.nursery().shouldCollect()) {
+    return JS::GCReason::EAGER_NURSERY_COLLECTION;
+  }
+  return JS::GCReason::NO_REASON;
 }
 
-JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
+JS_PUBLIC_API JS::GCReason JS::WantEagerMajorGC(JSRuntime* rt) {
+  return rt->gc.wantMajorGC(true);
+}
+
+JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
+                                                 JS::GCReason reason) {
   gc::GCRuntime& gc = rt->gc;
   if (gc.nursery().shouldCollect()) {
-    gc.minorGC(JS::GCReason::IDLE_TIME_COLLECTION);
+    gc.minorGC(reason);
   }
 }
 
@@ -1765,7 +1772,7 @@ JS_PUBLIC_API void JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global) {
   // know the global is live.
   globalRealm->traceGlobalData(trc);
 
-  globalObj->traceData(trc);
+  globalObj->traceData(trc, globalObj);
 
   if (JSTraceOp trace = globalRealm->creationOptions().getTrace()) {
     trace(trc, global);
@@ -1997,7 +2004,7 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
 bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
                           MutableHandleId id) {
   if (name.isSymbol()) {
-    id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(name.symbol())));
+    id.set(PropertyKey::Symbol(cx->wellKnownSymbols().get(name.symbol())));
   } else {
     JSAtom* atom = Atomize(cx, name.string(), strlen(name.string()));
     if (!atom) {
@@ -2178,11 +2185,11 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
 
 #ifdef DEBUG
   if (fs->name.isSymbol()) {
-    MOZ_ASSERT(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(fs->name.symbol())) ==
-               id);
+    JS::Symbol* sym = cx->wellKnownSymbols().get(fs->name.symbol());
+    MOZ_ASSERT(PropertyKey::Symbol(sym) == id);
   } else {
-    MOZ_ASSERT(JSID_IS_STRING(id) &&
-               StringEqualsAscii(JSID_TO_LINEAR_STRING(id), fs->name.string()));
+    MOZ_ASSERT(id.isString() &&
+               StringEqualsAscii(id.toLinearString(), fs->name.string()));
   }
 #endif
 
@@ -2302,10 +2309,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   allowHTMLComments = rhs.allowHTMLComments;
   nonSyntacticScope = rhs.nonSyntacticScope;
 
-  privateClassFields = rhs.privateClassFields;
-  privateClassMethods = rhs.privateClassMethods;
   topLevelAwait = rhs.topLevelAwait;
-  classStaticBlocks = rhs.classStaticBlocks;
   importAssertions = rhs.importAssertions;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 
@@ -2396,10 +2400,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
-  privateClassFields = cx->options().privateClassFields();
-  privateClassMethods = cx->options().privateClassMethods();
-
-  classStaticBlocks = cx->options().classStaticBlocks();
 
   importAssertions = cx->options().importAssertions();
 
@@ -2613,9 +2613,8 @@ JS_PUBLIC_API JSObject* JS::GetPromisePrototype(JSContext* cx) {
   return GlobalObject::getOrCreatePromisePrototype(cx, global);
 }
 
-JS_PUBLIC_API JS::PromiseState JS::GetPromiseState(
-    JS::HandleObject promiseObj_) {
-  PromiseObject* promiseObj = promiseObj_->maybeUnwrapIf<PromiseObject>();
+JS_PUBLIC_API JS::PromiseState JS::GetPromiseState(JS::HandleObject promise) {
+  PromiseObject* promiseObj = promise->maybeUnwrapIf<PromiseObject>();
   if (!promiseObj) {
     return JS::PromiseState::Pending;
   }
@@ -2634,31 +2633,51 @@ JS_PUBLIC_API JS::Value JS::GetPromiseResult(JS::HandleObject promiseObj) {
                                                          : promise->reason();
 }
 
-JS_PUBLIC_API bool JS::GetPromiseIsHandled(JS::HandleObject promiseObj) {
-  PromiseObject* promise = &promiseObj->as<PromiseObject>();
-  return !promise->isUnhandled();
+JS_PUBLIC_API bool JS::GetPromiseIsHandled(JS::HandleObject promise) {
+  PromiseObject* promiseObj = &promise->as<PromiseObject>();
+  return !promiseObj->isUnhandled();
 }
 
-JS_PUBLIC_API void JS::SetSettledPromiseIsHandled(JSContext* cx,
-                                                  JS::HandleObject promise) {
+static PromiseObject* UnwrapPromise(JSContext* cx, JS::HandleObject promise,
+                                    mozilla::Maybe<AutoRealm>& ar) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(promise);
 
-  mozilla::Maybe<AutoRealm> ar;
-  Rooted<PromiseObject*> promiseObj(cx);
+  PromiseObject* promiseObj;
   if (IsWrapper(promise)) {
     promiseObj = promise->maybeUnwrapAs<PromiseObject>();
     if (!promiseObj) {
       ReportAccessDenied(cx);
-      return;
+      return nullptr;
     }
     ar.emplace(cx, promiseObj);
   } else {
     promiseObj = promise.as<PromiseObject>();
   }
+  return promiseObj;
+}
 
+JS_PUBLIC_API bool JS::SetSettledPromiseIsHandled(JSContext* cx,
+                                                  JS::HandleObject promise) {
+  mozilla::Maybe<AutoRealm> ar;
+  Rooted<PromiseObject*> promiseObj(cx, UnwrapPromise(cx, promise, ar));
+  if (!promiseObj) {
+    return false;
+  }
   js::SetSettledPromiseIsHandled(cx, promiseObj);
+  return true;
+}
+
+JS_PUBLIC_API bool JS::SetAnyPromiseIsHandled(JSContext* cx,
+                                              JS::HandleObject promise) {
+  mozilla::Maybe<AutoRealm> ar;
+  Rooted<PromiseObject*> promiseObj(cx, UnwrapPromise(cx, promise, ar));
+  if (!promiseObj) {
+    return false;
+  }
+  js::SetAnyPromiseIsHandled(cx, promiseObj);
+  return true;
 }
 
 JS_PUBLIC_API JSObject* JS::GetPromiseAllocationSite(JS::HandleObject promise) {
@@ -2991,12 +3010,14 @@ JS_PUBLIC_API JSString* JS_AtomizeAndPinStringN(JSContext* cx, const char* s,
                                                 size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  JSAtom* atom = Atomize(cx, s, length);
+
+  JSAtom* atom = cx->zone() ? Atomize(cx, s, length)
+                            : AtomizeWithoutActiveZone(cx, s, length);
   if (!atom || !PinAtom(cx, atom)) {
     return nullptr;
   }
 
-  MOZ_ASSERT_IF(atom, JS_StringHasBeenPinned(cx, atom));
+  MOZ_ASSERT(JS_StringHasBeenPinned(cx, atom));
   return atom;
 }
 
@@ -3362,6 +3383,11 @@ JS_PUBLIC_API JS::SymbolCode JS::GetSymbolCode(Handle<Symbol*> symbol) {
 JS_PUBLIC_API JS::Symbol* JS::GetWellKnownSymbol(JSContext* cx,
                                                  JS::SymbolCode which) {
   return cx->wellKnownSymbols().get(which);
+}
+
+JS_PUBLIC_API JS::PropertyKey JS::GetWellKnownSymbolKey(JSContext* cx,
+                                                        JS::SymbolCode which) {
+  return PropertyKey::Symbol(cx->wellKnownSymbols().get(which));
 }
 
 #ifdef DEBUG
@@ -4091,6 +4117,9 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS:
       jit::JitOptions.spectreJitToCxxCalls = !!value;
       break;
+    case JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC:
+      jit::JitOptions.enableWatchtowerMegamorphic = !!value;
+      break;
     case JSJITCOMPILER_WASM_FOLD_OFFSETS:
       jit::JitOptions.wasmFoldOffsets = !!value;
       break;
@@ -4164,6 +4193,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
       *valueOut = rt->canUseOffthreadIonCompilation();
+      break;
+    case JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC:
+      *valueOut = jit::JitOptions.enableWatchtowerMegamorphic ? 1 : 0;
       break;
     case JSJITCOMPILER_WASM_FOLD_OFFSETS:
       *valueOut = jit::JitOptions.wasmFoldOffsets ? 1 : 0;

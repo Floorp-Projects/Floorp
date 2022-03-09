@@ -17,6 +17,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -85,7 +86,7 @@ RenderThread::~RenderThread() { MOZ_ASSERT(mRenderTexturesDeferred.empty()); }
 RenderThread* RenderThread::Get() { return sRenderThread; }
 
 // static
-void RenderThread::Start() {
+void RenderThread::Start(uint32_t aNamespace) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
 
@@ -116,6 +117,7 @@ void RenderThread::Start() {
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
+  layers::CompositableInProcessManager::Initialize(aNamespace);
   layers::SharedSurfacesParent::Initialize();
 
   RefPtr<Runnable> runnable = WrapRunnable(
@@ -141,6 +143,7 @@ void RenderThread::ShutDown() {
   task.Wait();
 
   layers::SharedSurfacesParent::Shutdown();
+  layers::CompositableInProcessManager::Shutdown();
 
   sRenderThread = nullptr;
 #ifdef XP_WIN
@@ -812,8 +815,6 @@ void RenderThread::DeferredRenderTextureHostDestroy() {
 
 RenderTextureHost* RenderThread::GetRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(IsInRenderThread());
-
   MutexAutoLock lock(mRenderTextureMapLock);
   auto it = mRenderTextures.find(aExternalImageId);
   MOZ_ASSERT(it != mRenderTextures.end());

@@ -1337,10 +1337,12 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     gint x, y;
     GdkDisplay* display = gdk_display_get_default();
     GdkScreen* screen = gdk_display_get_default_screen(display);
-    GdkWindow* window = gdk_screen_get_root_window(screen);
-    gdk_window_get_device_position(window, widget::GdkGetPointer(), &x, &y,
+    GtkWindow* window = GetGtkWindow(mSourceDocument);
+    GdkWindow* gdkWindow = window ? gtk_widget_get_window(GTK_WIDGET(window))
+                                  : gdk_screen_get_root_window(screen);
+    gdk_window_get_device_position(gdkWindow, widget::GdkGetPointer(), &x, &y,
                                    nullptr);
-    gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
+    gint scale = gdk_window_get_scale_factor(gdkWindow);
     SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
     LOGDRAGSERVICE(("guess drag end point %d %d\n", x * scale, y * scale));
   }
@@ -2107,7 +2109,7 @@ gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
     return FALSE;
   }
 
-  SetDragEndPoint(aWindowPoint + aWindow->WidgetToScreenOffset());
+  SetDragEndPoint(aWindowPoint);
 
   // We'll reply with gtk_drag_finish().
   return TRUE;

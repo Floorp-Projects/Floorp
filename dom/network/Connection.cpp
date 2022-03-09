@@ -23,8 +23,10 @@ namespace mozilla::dom::network {
 // we're not the only class with that name.
 NS_IMPL_ISUPPORTS_INHERITED0(dom::network::Connection, DOMEventTargetHelper)
 
-Connection::Connection(nsPIDOMWindowInner* aWindow)
+Connection::Connection(nsPIDOMWindowInner* aWindow,
+                       bool aShouldResistFingerprinting)
     : DOMEventTargetHelper(aWindow),
+      mShouldResistFingerprinting(aShouldResistFingerprinting),
       mType(static_cast<ConnectionType>(kDefaultType)),
       mIsWifi(kDefaultIsWifi),
       mDHCPGateway(kDefaultDHCPGateway),
@@ -63,16 +65,16 @@ void Connection::Update(ConnectionType aType, bool aIsWifi,
   mIsWifi = aIsWifi;
   mDHCPGateway = aDHCPGateway;
 
-  if (aNotify && previousType != aType &&
-      !nsContentUtils::ShouldResistFingerprinting()) {
+  if (aNotify && previousType != aType && !mShouldResistFingerprinting) {
     DispatchTrustedEvent(CHANGE_EVENT_NAME);
   }
 }
 
 /* static */
-Connection* Connection::CreateForWindow(nsPIDOMWindowInner* aWindow) {
+Connection* Connection::CreateForWindow(nsPIDOMWindowInner* aWindow,
+                                        bool aShouldResistFingerprinting) {
   MOZ_ASSERT(aWindow);
-  return new ConnectionMainThread(aWindow);
+  return new ConnectionMainThread(aWindow, aShouldResistFingerprinting);
 }
 
 /* static */

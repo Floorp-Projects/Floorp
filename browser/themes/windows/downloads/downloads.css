@@ -2,20 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared/downloads/downloads.inc.css
+@import "chrome://browser/skin/downloads/downloads.inc.css";
 
 /*** Panel and outer controls ***/
 
 #downloadsHistory {
   border: 0;
-}
-
-#downloadsSummary:focus-visible {
-  outline-offset: -5px;
-}
-
-#downloadsPanel:not([keyfocus]) #downloadsSummary:focus-visible {
-  outline: none;
 }
 
 /*** List items and similar elements in the summary ***/
@@ -25,17 +17,6 @@
   --downloads-item-font-size-factor: 0.9;
   --downloads-item-details-opacity: 0.6;
   --downloads-item-disabled-opacity: 0.6;
-}
-
-#downloadsPanel:not([keyfocus]) .downloadButton:focus-visible {
-  outline: none;
-}
-
-/*** Highlighted list items ***/
-
-#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected] {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
 }
 
 /*** Progress bars ***/

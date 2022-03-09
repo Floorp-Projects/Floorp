@@ -51,6 +51,7 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
   ReentrantMonitor mMonitor;
+  nsString mAppUserModelId;
 
   bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
   void RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray* aObjArray,

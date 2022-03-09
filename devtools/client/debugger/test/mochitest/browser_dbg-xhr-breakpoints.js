@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
   info("Test XHR requests done very early during page load");
 
@@ -11,7 +13,7 @@ add_task(async function() {
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
+    [`${EXAMPLE_REMOTE_URL}doc-early-xhr.html`],
     remoteUrl => {
       const firstIframe = content.document.createElement("iframe");
       content.document.body.append(firstIframe);
@@ -33,7 +35,7 @@ add_task(async function() {
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
+    [`${EXAMPLE_REMOTE_URL}doc-early-xhr.html`],
     remoteUrl => {
       const secondIframe = content.document.createElement("iframe");
       content.document.body.append(secondIframe);
@@ -43,7 +45,7 @@ add_task(async function() {
 
   // Wait for some time, in order to wait for it to be paused
   // in case we regress
-  await waitForTime(1000);
+  await wait(1000);
 
   assertNotPaused(dbg);
 });

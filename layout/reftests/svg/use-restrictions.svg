@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="foreign">
+      <foreignObject x="100" y="0" width="100" height="100">
+        <p xmlns="http://www.w3.org/1999/xhtml">Foo</p>
+      </foreignObject>
+    </g>
+  </defs>
+  <g color="green">
+    <use href="use-02-extref-resource.svg#foreign" />
+    <use href="#foreign" />
+  </g>
+</svg>

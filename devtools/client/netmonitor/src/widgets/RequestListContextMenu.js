@@ -324,8 +324,12 @@ class RequestListContextMenu {
 
     menu.push({
       id: "request-list-context-resend",
-      label: L10N.getStr("netmonitor.context.editAndResend"),
-      accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
+      label: newEditAndResendPref
+        ? L10N.getStr("netmonitor.context.resend.label")
+        : L10N.getStr("netmonitor.context.editAndResend"),
+      accesskey: newEditAndResendPref
+        ? L10N.getStr("netmonitor.context.resend.accesskey")
+        : L10N.getStr("netmonitor.context.editAndResend.accesskey"),
       visible: !!(clickedRequest && !isCustom),
       click: () => {
         this.fetchRequestHeaders(id).then(() => {

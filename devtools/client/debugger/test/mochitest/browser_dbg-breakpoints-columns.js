@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1");
-  await selectSource(dbg, "long");
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
+  await selectSource(dbg, "long.js");
 
   info("1. Add a column breakpoint on line 32");
   await enableFirstBreakpoint(dbg);
@@ -39,7 +41,7 @@ add_task(async function() {
 
 async function enableFirstBreakpoint(dbg) {
   getCM(dbg).setCursor({ line: 32, ch: 0 });
-  await addBreakpoint(dbg, "long", 32);
+  await addBreakpoint(dbg, "long.js", 32);
   const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
 
   ok(bpMarkers.length === 2, "2 column breakpoints");

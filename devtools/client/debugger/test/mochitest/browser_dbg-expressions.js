@@ -10,6 +10,8 @@
  * 4. expanding properties when not paused
  */
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 

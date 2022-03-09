@@ -72,7 +72,9 @@ def split_public_and_private(config, jobs):
     # in a single task. Only use a single task for each type though.
     partner_config = get_partner_config_by_kind(config, config.kind)
     for job in jobs:
-        upstream_artifacts = job["primary-dependency"].release_artifacts
+        upstream_artifacts = job["primary-dependency"].attributes.get(
+            "release_artifacts"
+        )
         attribution_task_ref = "<{}>".format(job["primary-dependency"].label)
         prefix = get_artifact_prefix(job["primary-dependency"])
         artifacts = defaultdict(list)

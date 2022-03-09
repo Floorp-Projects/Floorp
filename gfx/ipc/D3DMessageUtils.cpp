@@ -27,40 +27,39 @@ const DXGI_ADAPTER_DESC& DxgiAdapterDesc::ToDesc() const {
 
 namespace IPC {
 
-void ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg,
+void ParamTraits<DxgiAdapterDesc>::Write(MessageWriter* aWriter,
                                          const paramType& aParam) {
 #if defined(XP_WIN)
-  aMsg->WriteBytes(aParam.Description, sizeof(aParam.Description));
-  WriteParam(aMsg, aParam.VendorId);
-  WriteParam(aMsg, aParam.DeviceId);
-  WriteParam(aMsg, aParam.SubSysId);
-  WriteParam(aMsg, aParam.Revision);
-  WriteParam(aMsg, aParam.DedicatedVideoMemory);
-  WriteParam(aMsg, aParam.DedicatedSystemMemory);
-  WriteParam(aMsg, aParam.SharedSystemMemory);
-  WriteParam(aMsg, aParam.AdapterLuid.LowPart);
-  WriteParam(aMsg, aParam.AdapterLuid.HighPart);
+  aWriter->WriteBytes(aParam.Description, sizeof(aParam.Description));
+  WriteParam(aWriter, aParam.VendorId);
+  WriteParam(aWriter, aParam.DeviceId);
+  WriteParam(aWriter, aParam.SubSysId);
+  WriteParam(aWriter, aParam.Revision);
+  WriteParam(aWriter, aParam.DedicatedVideoMemory);
+  WriteParam(aWriter, aParam.DedicatedSystemMemory);
+  WriteParam(aWriter, aParam.SharedSystemMemory);
+  WriteParam(aWriter, aParam.AdapterLuid.LowPart);
+  WriteParam(aWriter, aParam.AdapterLuid.HighPart);
 #endif
 }
 
-bool ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg,
-                                        PickleIterator* aIter,
+bool ParamTraits<DxgiAdapterDesc>::Read(MessageReader* aReader,
                                         paramType* aResult) {
 #if defined(XP_WIN)
-  if (!aMsg->ReadBytesInto(aIter, aResult->Description,
-                           sizeof(aResult->Description))) {
+  if (!aReader->ReadBytesInto(aResult->Description,
+                              sizeof(aResult->Description))) {
     return false;
   }
 
-  if (ReadParam(aMsg, aIter, &aResult->VendorId) &&
-      ReadParam(aMsg, aIter, &aResult->DeviceId) &&
-      ReadParam(aMsg, aIter, &aResult->SubSysId) &&
-      ReadParam(aMsg, aIter, &aResult->Revision) &&
-      ReadParam(aMsg, aIter, &aResult->DedicatedVideoMemory) &&
-      ReadParam(aMsg, aIter, &aResult->DedicatedSystemMemory) &&
-      ReadParam(aMsg, aIter, &aResult->SharedSystemMemory) &&
-      ReadParam(aMsg, aIter, &aResult->AdapterLuid.LowPart) &&
-      ReadParam(aMsg, aIter, &aResult->AdapterLuid.HighPart)) {
+  if (ReadParam(aReader, &aResult->VendorId) &&
+      ReadParam(aReader, &aResult->DeviceId) &&
+      ReadParam(aReader, &aResult->SubSysId) &&
+      ReadParam(aReader, &aResult->Revision) &&
+      ReadParam(aReader, &aResult->DedicatedVideoMemory) &&
+      ReadParam(aReader, &aResult->DedicatedSystemMemory) &&
+      ReadParam(aReader, &aResult->SharedSystemMemory) &&
+      ReadParam(aReader, &aResult->AdapterLuid.LowPart) &&
+      ReadParam(aReader, &aResult->AdapterLuid.HighPart)) {
     return true;
   }
   return false;

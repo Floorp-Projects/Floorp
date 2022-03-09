@@ -1172,11 +1172,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
 
 /* static */
 bool ChromeUtils::VsyncEnabled(GlobalObject& aGlobal) {
-  mozilla::gfx::VsyncSource* vsyncSource =
-      gfxPlatform::GetPlatform()->GetHardwareVsync();
-  MOZ_ASSERT(vsyncSource != nullptr);
-
-  return vsyncSource->GetGlobalDisplay().IsVsyncEnabled();
+  return mozilla::gfx::VsyncSource::GetFastestVsyncRate().isSome();
 }
 
 /* static */

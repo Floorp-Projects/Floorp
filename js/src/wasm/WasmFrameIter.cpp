@@ -160,11 +160,7 @@ void WasmFrameIter::popFrame() {
   }
 
   Frame* prevFP = fp_;
-  if (fp_->callerIsTrampolineFP()) {
-    fp_ = fp_->trampolineCaller();
-  } else {
-    fp_ = fp_->wasmCaller();
-  }
+  fp_ = fp_->wasmCaller();
   resumePCinCurrentFrame_ = prevFP->returnAddress();
 
   if (!fp_) {
@@ -220,9 +216,7 @@ void WasmFrameIter::popFrame() {
   const CallSite* callsite = code_->lookupCallSite(returnAddress);
   MOZ_ASSERT(callsite);
 
-  if (callsite->isImportCall()) {
-    tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
-  } else if (callsite->isIndirectCall() && prevFP->callerIsTrampolineFP()) {
+  if (callsite->mightBeCrossInstance()) {
     tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
   }
 
@@ -381,6 +375,11 @@ static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 12;
 static const unsigned SetFP = 16;
 static const unsigned PoppedFP = 4;
+#elif defined(JS_CODEGEN_LOONG64)
+static const unsigned PushedRetAddr = 8;
+static const unsigned PushedFP = 12;
+static const unsigned SetFP = 16;
+static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 // Synthetic values to satisfy asserts and avoid compiler warnings.
 static const unsigned PushedRetAddr = 0;
@@ -440,6 +439,18 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   // tight as possible.
 
 #if defined(JS_CODEGEN_MIPS64)
+  {
+    *entry = masm.currentOffset();
+
+    masm.subFromStackPtr(Imm32(sizeof(Frame)));
+    masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset()));
+    MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
+    masm.storePtr(FramePointer, Address(StackPointer, Frame::callerFPOffset()));
+    MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
+    masm.moveStackPtrTo(FramePointer);
+    MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
+  }
+#elif defined(JS_CODEGEN_LOONG64)
   {
     *entry = masm.currentOffset();
 
@@ -525,6 +536,16 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   *ret = masm.currentOffset();
   masm.as_jr(ra);
   masm.addToStackPtr(Imm32(sizeof(Frame)));
+
+#elif defined(JS_CODEGEN_LOONG64)
+
+  masm.loadPtr(Address(StackPointer, Frame::callerFPOffset()), FramePointer);
+  poppedFP = masm.currentOffset();
+  masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset()), ra);
+
+  *ret = masm.currentOffset();
+  masm.addToStackPtr(Imm32(sizeof(Frame)));
+  masm.as_jirl(zero, ra, BOffImm16(0));
 
 #elif defined(JS_CODEGEN_ARM64)
 
@@ -793,6 +814,9 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets) {
 #elif defined(JS_CODEGEN_MIPS64)
     offsets->begin = masm.currentOffset();
     masm.push(ra);
+#elif defined(JS_CODEGEN_LOONG64)
+    offsets->begin = masm.currentOffset();
+    masm.push(ra);
 #elif defined(JS_CODEGEN_ARM64)
     AutoForbidPoolsAndNops afp(&masm,
                                /* number of instructions in scope = */ 3);
@@ -937,7 +961,6 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
       callerFP_ = fp->rawCaller();
       AssertMatchesCallSite(callerPC_, callerFP_);
       break;
-    case CodeRange::IndirectStub:
     case CodeRange::ImportJitExit:
     case CodeRange::ImportInterpExit:
     case CodeRange::BuiltinThunk:
@@ -969,10 +992,6 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
 
 const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   while (true) {
-    if (fp->callerIsTrampolineFP()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
       MOZ_ASSERT(!LookupCode(fp->returnAddress()));
@@ -988,14 +1007,10 @@ const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
       return ExtractCalleeTlsFromFrameWithTls(fp);
     }
 
-    if (codeRange->isIndirectStub()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp->wasmCaller());
-    }
-
     MOZ_ASSERT(codeRange->kind() == CodeRange::Function);
     MOZ_ASSERT(code);
     const CallSite* callsite = code->lookupCallSite(returnAddress);
-    if (callsite->isImportCall()) {
+    if (callsite->mightBeCrossInstance()) {
       return ExtractCalleeTlsFromFrameWithTls(fp);
     }
 
@@ -1099,6 +1114,25 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
       } else
+#elif defined(JS_CODEGEN_LOONG64)
+      if (codeRange->isThunk()) {
+        // The FarJumpIsland sequence temporary scrambles ra.
+        // Don't unwind to caller.
+        fixedPC = pc;
+        fixedFP = fp;
+        *unwoundCaller = false;
+        AssertMatchesCallSite(
+            Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
+            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
+      } else if (offsetFromEntry < PushedFP) {
+        // On LoongArch we rely on register state instead of state saved on
+        // stack until the wasm::Frame is completely built.
+        // On entry the return address is in ra (registers.lr) and
+        // fp holds the caller's fp.
+        fixedPC = (uint8_t*)registers.lr;
+        fixedFP = fp;
+        AssertMatchesCallSite(fixedPC, fixedFP);
+      } else
 #elif defined(JS_CODEGEN_ARM64)
       if (offsetFromEntry < PushedFP || codeRange->isThunk()) {
         // Constraints above ensure that this covers BeforePushRetAddr and
@@ -1146,6 +1180,16 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedPC = Frame::fromUntaggedWasmExitFP(sp)->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
+#elif defined(JS_CODEGEN_LOONG64)
+      } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
+                 offsetInCode <= codeRange->ret()) {
+        // The fixedFP field of the Frame has been loaded into fp.
+        // The ra might also be loaded, but the Frame structure is still on
+        // stack, so we can acess the ra from there.
+        MOZ_ASSERT(*sp == fp);
+        fixedPC = Frame::fromUntaggedWasmExitFP(sp)->returnAddress();
+        fixedFP = fp;
+        AssertMatchesCallSite(fixedPC, fixedFP);
 #elif defined(JS_CODEGEN_ARM64)
         // The stack pointer does not move until all values have
         // been restored so several cases can be coalesced here.
@@ -1182,9 +1226,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
           // Frame has been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
-          fixedFP = frame->callerIsTrampolineFP()
-                        ? reinterpret_cast<uint8_t*>(frame->trampolineCaller())
-                        : reinterpret_cast<uint8_t*>(frame->wasmCaller());
+          fixedFP = frame->rawCaller();
           fixedPC = frame->returnAddress();
           AssertMatchesCallSite(fixedPC, fixedFP);
           break;
@@ -1214,22 +1256,12 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       // entry trampoline also doesn't GeneratePrologue/Epilogue so we can't
       // use the general unwinding logic above.
       break;
-    case CodeRange::IndirectStub: {
-      // IndirectStub is used now as a trivial proxy into the function
-      // so we aren't in the prologue/epilogue.
-      fixedPC = pc;
-      fixedFP = fp;
-      *unwoundCaller = false;
-      AssertMatchesCallSite(Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
-                            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
-      break;
-    }
     case CodeRange::JitEntry:
       // There's a jit frame above the current one; we don't care about pc
       // since the Jit entry frame is a jit frame which can be considered as
       // an exit frame.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
       if (offsetFromEntry < PushedRetAddr) {
         // We haven't pushed the jit return address yet, thus the jit
         // frame is incomplete. During profiling frame iteration, it means
@@ -1404,8 +1436,6 @@ void ProfilingFrameIterator::operator++() {
     }
     case CodeRange::InterpEntry:
       MOZ_CRASH("should have had null caller fp");
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("we can't profile indirect stub");
     case CodeRange::JitEntry:
       MOZ_CRASH("should have been guarded above");
     case CodeRange::Throw:
@@ -1574,10 +1604,6 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
-    case SymbolicAddress::ConsumePendingException:
-      return "call to native that consumes exn and returns its index (in wasm)";
-    case SymbolicAddress::PushRefIntoExn:
-      return "call to native that pushes a ref value into an exn (in wasm)";
 #endif
     case SymbolicAddress::ArrayNew:
       return "call to native array.new (in wasm)";
@@ -1645,8 +1671,6 @@ const char* ProfilingFrameIterator::label() const {
       return code_->profilingLabel(codeRange_->funcIndex());
     case CodeRange::InterpEntry:
       MOZ_CRASH("should be an ExitReason");
-    case CodeRange::IndirectStub:
-      return "indirect stub";
     case CodeRange::JitEntry:
       return "fast entry trampoline (in wasm)";
     case CodeRange::ImportJitExit:

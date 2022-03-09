@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "chrome://browser/skin/downloads/progressmeter.css";
+@import "chrome://browser/skin/downloads/download-blockedStates.css";
+
 /*** Panel and outer controls ***/
 
 #downloadsListBox {
@@ -49,17 +52,24 @@
 #downloadsListBox > richlistitem.openWhenFinished.hoveringMainArea:hover,
 #downloadsListBox > richlistitem[verdict]:hover,
 #downloadsListBox > richlistitem.openWhenFinished:hover,
-.downloadsPanelFooterButton:hover,
-#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected],
-#downloadsHistory:focus {
+.downloadsPanelFooterButton:hover {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
 #downloadsListBox > richlistitem[state="1"][exists].hoveringMainArea:hover:active,
 #downloadsListBox > richlistitem.openWhenFinished.hoveringMainArea:hover:active,
-.downloadsPanelFooterButton[open="true"],
-#downloadsListBox > richlistitem[verdict]:hover:active {
+#downloadsListBox > richlistitem[verdict]:hover:active,
+.downloadsPanelFooterButton[open="true"] {
   background-color: var(--panel-item-active-bgcolor);
+}
+
+#downloadsListBox:focus-visible > richlistitem[selected],
+#downloadsListBox[force-focus-visible]:focus > richlistitem[selected],
+.downloadButton:focus-visible,
+#downloadsSummary:focus-visible,
+.downloadsPanelFooterButton:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
@@ -84,18 +94,11 @@
   margin-top: 1.5em;
 }
 
-#downloadsPanel:not([keyfocus]) .downloadsPanelFooterButton:-moz-focusring {
-  outline: none;
-}
-
 #downloadsSummary {
   background: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   /* Reserve the same space as the button and separator in download items. */
   padding-inline-end: 59px;
-}
-
-#downloadsSummary {
   -moz-user-focus: normal;
 }
 
@@ -221,11 +224,13 @@
 }
 
 .downloadIconShow > .button-box > .button-icon {
-%ifdef XP_MACOSX
-  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
-%else
-  list-style-image: url("chrome://browser/skin/folder.png");
-%endif
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
+}
+
+@media (-moz-platform: macos) {
+  .downloadIconShow > .button-box > .button-icon {
+    list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+  }
 }
 
 .downloadIconRetry > .button-box > .button-icon {
@@ -257,9 +262,3 @@
 #downloadsFooterButtons > toolbarseparator {
   margin-inline: 0;
 }
-
-/*** Progressmeter ***/
-%include progressmeter.inc.css
-
-/*** Blocked iconography ***/
-%include download-blockedStates.inc.css

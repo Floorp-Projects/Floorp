@@ -504,9 +504,9 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
       auto connection,
       OrElseIf(
           // Expression.
-          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<mozIStorageConnection>,
-                                            storageService, OpenDatabase,
-                                            &aDBFile),
+          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+              nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
+              &aDBFile, mozIStorageService::CONNECTION_DEFAULT),
           // Predicate.
           IsDatabaseCorruptionError,
           // Fallback.
@@ -540,7 +540,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
 
             QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                 nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-                &aDBFile));
+                &aDBFile, mozIStorageService::CONNECTION_DEFAULT));
           })));
 
   QM_TRY(MOZ_TO_RESULT(SetDefaultPragmas(connection)));
@@ -693,9 +693,10 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetStorageConnection(
                                          MOZ_SELECT_OVERLOAD(do_GetService),
                                          MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  QM_TRY_UNWRAP(auto connection, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                                     nsCOMPtr<mozIStorageConnection>, ss,
-                                     OpenDatabase, databaseFile));
+  QM_TRY_UNWRAP(auto connection,
+                MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                    nsCOMPtr<mozIStorageConnection>, ss, OpenDatabase,
+                    databaseFile, mozIStorageService::CONNECTION_DEFAULT));
 
   QM_TRY(MOZ_TO_RESULT(SetDefaultPragmas(connection)));
 
@@ -744,8 +745,9 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
       auto connection,
       QM_OR_ELSE_WARN_IF(
           // Expression.
-          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                            OpenUnsharedDatabase, archiveFile),
+          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+              nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase,
+              archiveFile, mozIStorageService::CONNECTION_DEFAULT),
           // Predicate.
           IsDatabaseCorruptionError,
           // Fallback. Don't throw an error, leave a corrupted ls-archive
@@ -839,8 +841,9 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
       auto connection,
       QM_OR_ELSE_WARN_IF(
           // Expression.
-          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                            OpenUnsharedDatabase, shadowFile),
+          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+              nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase,
+              shadowFile, mozIStorageService::CONNECTION_DEFAULT),
           // Predicate.
           IsDatabaseCorruptionError,
           // Fallback.
@@ -850,7 +853,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
             QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                 nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase,
-                shadowFile));
+                shadowFile, mozIStorageService::CONNECTION_DEFAULT));
           })));
 
   QM_TRY(MOZ_TO_RESULT(SetShadowJournalMode(connection)));
@@ -879,7 +882,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
         QM_TRY_UNWRAP(connection, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                                       nsCOMPtr<mozIStorageConnection>, ss,
-                                      OpenUnsharedDatabase, shadowFile));
+                                      OpenUnsharedDatabase, shadowFile,
+                                      mozIStorageService::CONNECTION_DEFAULT));
 
         QM_TRY(MOZ_TO_RESULT(SetShadowJournalMode(connection)));
 
@@ -910,7 +914,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetShadowStorageConnection(
                                          MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-      nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase, shadowFile));
+      nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase, shadowFile,
+      mozIStorageService::CONNECTION_DEFAULT));
 }
 
 nsresult AttachShadowDatabase(const nsAString& aBasePath,
@@ -1548,6 +1553,8 @@ class Datastore final
 
   void NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore);
 
+  bool HasOtherProcessDatabases(Database* aDatabase);
+
   void NoteLiveDatabase(Database* aDatabase);
 
   void NoteFinishedDatabase(Database* aDatabase);
@@ -1573,10 +1580,10 @@ class Datastore final
   //////////////////////////////////////////////////////////////////////////////
   // Mutation Methods
   //
-  // These are only called during Snapshot::RecvCheckpoint
+  // These are only called during Snapshot::RecvAsyncCheckpoint
 
   /**
-   * Used by Snapshot::RecvCheckpoint to set a key/value pair as part of a an
+   * Used by Snapshot::RecvAsyncCheckpoint to set a key/value pair as part of an
    * explicit batch.
    */
   void SetItem(Database* aDatabase, const nsString& aKey,
@@ -1586,7 +1593,7 @@ class Datastore final
 
   void Clear(Database* aDatabase);
 
-  void BeginUpdateBatch(int64_t aSnapshotInitialUsage);
+  void BeginUpdateBatch(int64_t aSnapshotUsage);
 
   int64_t EndUpdateBatch(int64_t aSnapshotPeakUsage);
 
@@ -1622,6 +1629,8 @@ class Datastore final
 
   void NotifySnapshots(Database* aDatabase, const nsAString& aKey,
                        const LSValue& aOldValue, bool aAffectsOrder);
+
+  void NoteChangedDatabaseMap();
 };
 
 class PrivateDatastore {
@@ -1932,6 +1941,13 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   bool mLoadKeysReceived;
   bool mSentMarkDirty;
 
+  /**
+   * True if there are Database objects in other content processes. The value
+   * never gets updated, we instead mark snapshots as dirty when Database
+   * objects are added or removed. Marking snapshots as dirty forces creation
+   * of new snapshots for new tasks.
+   */
+  bool mHasOtherProcessDatabases;
   bool mHasOtherProcessObservers;
 
  public:
@@ -1940,11 +1956,12 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   void Init(nsTHashtable<nsStringHashKey>& aLoadedItems,
             nsTHashSet<nsString>&& aUnknownItems, uint32_t aNextLoadIndex,
-            uint32_t aTotalLength, int64_t aInitialUsage, int64_t aPeakUsage,
-            LSSnapshot::LoadState aLoadState, bool aHasOtherProcessObservers) {
+            uint32_t aTotalLength, int64_t aUsage, int64_t aPeakUsage,
+            LSSnapshot::LoadState aLoadState, bool aHasOtherProcessDatabases,
+            bool aHasOtherProcessObservers) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aInitialUsage >= 0);
-    MOZ_ASSERT(aPeakUsage >= aInitialUsage);
+    MOZ_ASSERT(aUsage >= 0);
+    MOZ_ASSERT(aPeakUsage >= aUsage);
     MOZ_ASSERT_IF(aLoadState != LSSnapshot::LoadState::AllOrderedItems,
                   aNextLoadIndex < aTotalLength);
     MOZ_ASSERT(mTotalLength == 0);
@@ -1955,7 +1972,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
     mUnknownItems = std::move(aUnknownItems);
     mNextLoadIndex = aNextLoadIndex;
     mTotalLength = aTotalLength;
-    mUsage = aInitialUsage;
+    mUsage = aUsage;
     mPeakUsage = aPeakUsage;
     if (aLoadState == LSSnapshot::LoadState::AllOrderedKeys) {
       MOZ_ASSERT(mUnknownItems.Count() == 0);
@@ -1968,6 +1985,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
       mLoadedAllItems = true;
       mLoadKeysReceived = true;
     }
+    mHasOtherProcessDatabases = aHasOtherProcessDatabases;
     mHasOtherProcessObservers = aHasOtherProcessObservers;
   }
 
@@ -1985,6 +2003,12 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
     AssertIsOnBackgroundThread();
 
     return mSentMarkDirty;
+  }
+
+  bool HasOtherProcessDatabases() const {
+    AssertIsOnBackgroundThread();
+
+    return mHasOtherProcessDatabases;
   }
 
   bool HasOtherProcessObservers() const {
@@ -2006,13 +2030,15 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvCheckpoint(
+  mozilla::ipc::IPCResult RecvAsyncCheckpoint(
       nsTArray<LSWriteInfo>&& aWriteInfos) override;
 
-  mozilla::ipc::IPCResult RecvCheckpointAndNotify(
+  mozilla::ipc::IPCResult RecvAsyncCheckpointAndNotify(
       nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
 
-  mozilla::ipc::IPCResult RecvFinish() override;
+  mozilla::ipc::IPCResult RecvAsyncFinish() override;
+
+  mozilla::ipc::IPCResult RecvSyncFinish() override;
 
   mozilla::ipc::IPCResult RecvLoaded() override;
 
@@ -2024,8 +2050,6 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   mozilla::ipc::IPCResult RecvIncreasePeakUsage(const int64_t& aMinSize,
                                                 int64_t* aSize) override;
-
-  mozilla::ipc::IPCResult RecvPing() override;
 };
 
 class Observer final : public PBackgroundLSObserverParent {
@@ -3197,13 +3221,13 @@ PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
   }
 
   if (NS_WARN_IF(!gPreparedDatastores)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
   PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
   if (NS_WARN_IF(!preparedDatastore)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
@@ -3272,13 +3296,13 @@ PBackgroundLSObserverParent* AllocPBackgroundLSObserverParent(
   }
 
   if (NS_WARN_IF(!gPreparedObsevers)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
   RefPtr<Observer> observer = gPreparedObsevers->Get(aObserverId);
   if (NS_WARN_IF(!observer)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
@@ -4523,6 +4547,20 @@ void Datastore::NoteFinishedPreparedDatastore(
   MaybeClose();
 }
 
+bool Datastore::HasOtherProcessDatabases(Database* aDatabase) {
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
+
+  for (Database* database : mDatabases) {
+    if (database->Manager() != databaseBackgroundActor) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void Datastore::NoteLiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -4531,6 +4569,8 @@ void Datastore::NoteLiveDatabase(Database* aDatabase) {
   MOZ_ASSERT(!mClosed);
 
   mDatabases.Insert(aDatabase);
+
+  NoteChangedDatabaseMap();
 }
 
 void Datastore::NoteFinishedDatabase(Database* aDatabase) {
@@ -4542,6 +4582,8 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
   MOZ_ASSERT(!mClosed);
 
   mDatabases.Remove(aDatabase);
+
+  NoteChangedDatabaseMap();
 
   QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::LS,
                                                    "Database finished"_ns);
@@ -4921,14 +4963,15 @@ void Datastore::Clear(Database* aDatabase) {
   }
 }
 
-void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
+void Datastore::BeginUpdateBatch(int64_t aSnapshotUsage) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSnapshotInitialUsage >= 0);
+  // Don't assert `aSnapshotUsage >= 0`, it can be negative when multiple
+  // snapshots are operating in parallel.
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mUpdateBatchUsage == -1);
   MOZ_ASSERT(!mInUpdateBatch);
 
-  mUpdateBatchUsage = aSnapshotInitialUsage;
+  mUpdateBatchUsage = aSnapshotUsage;
 
   if (IsPersistent()) {
     mConnection->BeginUpdateBatch();
@@ -5237,6 +5280,24 @@ void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
   }
 }
 
+void Datastore::NoteChangedDatabaseMap() {
+  AssertIsOnBackgroundThread();
+
+  for (Database* database : mActiveDatabases) {
+    Snapshot* snapshot = database->GetSnapshot();
+    MOZ_ASSERT(snapshot);
+
+    if (snapshot->IsDirty()) {
+      continue;
+    }
+
+    if (snapshot->HasOtherProcessDatabases() !=
+        HasOtherProcessDatabases(database)) {
+      snapshot->MarkDirty();
+    }
+  }
+}
+
 /*******************************************************************************
  * PreparedDatastore
  ******************************************************************************/
@@ -5434,7 +5495,7 @@ mozilla::ipc::IPCResult Database::RecvDeleteMe() {
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSDatabaseParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
+    return IPC_FAIL(mgr, "Send__delete__ failed!");
   }
   return IPC_OK();
 }
@@ -5443,8 +5504,7 @@ mozilla::ipc::IPCResult Database::RecvAllowToClose() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mAllowedToClose)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mAllowedToClose already set!");
   }
 
   AllowToClose();
@@ -5459,12 +5519,12 @@ PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(aIncreasePeakUsage && aMinSize < 0)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
   if (NS_WARN_IF(mAllowedToClose)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    MOZ_ASSERT_UNLESS_FUZZING(false);
     return nullptr;
   }
 
@@ -5500,9 +5560,9 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
 
   uint32_t totalLength = mDatastore->GetLength();
 
-  int64_t initialUsage = mDatastore->GetUsage();
+  int64_t usage = mDatastore->GetUsage();
 
-  int64_t peakUsage = initialUsage;
+  int64_t peakUsage = usage;
 
   if (aIncreasePeakUsage) {
     int64_t size =
@@ -5511,20 +5571,22 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
     peakUsage += size;
   }
 
+  bool hasOtherProcessDatabases = mDatastore->HasOtherProcessDatabases(this);
   bool hasOtherProcessObservers = mDatastore->HasOtherProcessObservers(this);
 
   snapshot->Init(loadedItems, std::move(unknownItems), nextLoadIndex,
-                 totalLength, initialUsage, peakUsage, loadState,
-                 hasOtherProcessObservers);
+                 totalLength, usage, peakUsage, loadState,
+                 hasOtherProcessDatabases, hasOtherProcessObservers);
 
   RegisterSnapshot(snapshot);
 
   aInitInfo->addKeyToUnknownItems() = addKeyToUnknownItems;
   aInitInfo->itemInfos() = std::move(itemInfos);
   aInitInfo->totalLength() = totalLength;
-  aInitInfo->initialUsage() = initialUsage;
+  aInitInfo->usage() = usage;
   aInitInfo->peakUsage() = peakUsage;
   aInitInfo->loadState() = loadState;
+  aInitInfo->hasOtherProcessDatabases() = hasOtherProcessDatabases;
   aInitInfo->hasOtherProcessObservers() = hasOtherProcessObservers;
 
   return IPC_OK();
@@ -5629,25 +5691,24 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSSnapshotParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
+    return IPC_FAIL(mgr, "Send__delete__ failed!");
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
+mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpoint(
     nsTArray<LSWriteInfo>&& aWriteInfos) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mUsage >= 0);
+  // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
+  // operating in parallel.
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aWriteInfos is empty!");
   }
 
   if (NS_WARN_IF(mHasOtherProcessObservers)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mHasOtherProcessObservers already set!");
   }
 
   mDatastore->BeginUpdateBatch(mUsage);
@@ -5688,20 +5749,19 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
+mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpointAndNotify(
     nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mUsage >= 0);
+  // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
+  // operating in parallel.
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteAndNotifyInfos.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aWriteAndNotifyInfos is empty!");
   }
 
   if (NS_WARN_IF(!mHasOtherProcessObservers)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mHasOtherProcessObservers is not set!");
   }
 
   mDatastore->BeginUpdateBatch(mUsage);
@@ -5756,12 +5816,25 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvFinish() {
+mozilla::ipc::IPCResult Snapshot::RecvAsyncFinish() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_ASSERT_UNLESS_FUZZING(false);
+    return IPC_FAIL(this, "Already finished");
+  }
+
+  Finish();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvSyncFinish() {
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    MOZ_ASSERT_UNLESS_FUZZING(false);
+    return IPC_FAIL(this, "Already finished");
   }
 
   Finish();
@@ -5773,23 +5846,19 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mFinishReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadedReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadedAllItems)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadedAllItems already set!");
   }
 
   if (NS_WARN_IF(mLoadKeysReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadKeysReceived already set!");
   }
 
   mLoadedReceived = true;
@@ -5812,23 +5881,23 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mFinishReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadedReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadedAllItems)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadedAllItems already set!");
   }
 
-  if (mLoadedItems.Contains(aKey) || mUnknownItems.Contains(aKey)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+  if (mLoadedItems.Contains(aKey)) {
+    return IPC_FAIL(this, "mLoadedItems already contains aKey!");
+  }
+
+  if (mUnknownItems.Contains(aKey)) {
+    return IPC_FAIL(this, "mUnknownItems already contains aKey!");
   }
 
   if (auto entry = mValues.Lookup(aKey)) {
@@ -5953,18 +6022,15 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadKeys(nsTArray<nsString>* aKeys) {
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mFinishReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadedReceived already set!");
   }
 
   if (NS_WARN_IF(mLoadKeysReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mLoadKeysReceived already set!");
   }
 
   mLoadKeysReceived = true;
@@ -5984,13 +6050,11 @@ mozilla::ipc::IPCResult Snapshot::RecvIncreasePeakUsage(const int64_t& aMinSize,
   MOZ_ASSERT(aSize);
 
   if (NS_WARN_IF(aMinSize <= 0)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aMinSize not valid!");
   }
 
   if (NS_WARN_IF(mFinishReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mFinishReceived already set!");
   }
 
   int64_t size =
@@ -5999,15 +6063,6 @@ mozilla::ipc::IPCResult Snapshot::RecvIncreasePeakUsage(const int64_t& aMinSize,
   mPeakUsage += size;
 
   *aSize = size;
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult Snapshot::RecvPing() {
-  AssertIsOnBackgroundThread();
-
-  // Do nothing here. This is purely a sync message allowing the child to
-  // confirm that the actor has received previous async message.
 
   return IPC_OK();
 }
@@ -6067,7 +6122,7 @@ mozilla::ipc::IPCResult Observer::RecvDeleteMe() {
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSObserverParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
+    return IPC_FAIL(mgr, "Send__delete__ failed!");
   }
   return IPC_OK();
 }
@@ -6441,7 +6496,7 @@ mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
 
   IProtocol* mgr = Manager();
   if (!PBackgroundLSRequestParent::Send__delete__(this, NS_ERROR_FAILURE)) {
-    return IPC_FAIL_NO_REASON(mgr);
+    return IPC_FAIL(mgr, "Send__delete__ failed!");
   }
 
   return IPC_OK();

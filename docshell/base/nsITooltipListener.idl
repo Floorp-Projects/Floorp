@@ -28,7 +28,7 @@ interface nsITooltipListener : nsISupports
      * @param aTipDir  The direction (ltr or rtl) in which to display the text
      *
      * @note
-     * Coordinates are specified in pixels, relative to the top-left
+     * Coordinates are specified in device pixels, relative to the top-left
      * corner of the browser area.
      *
      * @return <code>NS_OK</code> if the tooltip was displayed.

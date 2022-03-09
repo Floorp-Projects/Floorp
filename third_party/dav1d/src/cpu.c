@@ -49,16 +49,11 @@
 #endif
 
 static unsigned flags = 0;
-
-#if __has_feature(memory_sanitizer)
-// memory sanitizer is inherently incompatible with asm
-static unsigned flags_mask = 0;
-#else
 static unsigned flags_mask = -1;
-#endif
 
 COLD void dav1d_init_cpu(void) {
-#if HAVE_ASM
+#if HAVE_ASM && !__has_feature(memory_sanitizer)
+// memory sanitizer is inherently incompatible with asm
 #if ARCH_AARCH64 || ARCH_ARM
     flags = dav1d_get_cpu_flags_arm();
 #elif ARCH_PPC64LE

@@ -30,6 +30,7 @@ class ContentProcessTargetFront extends TargetMixin(
     this.targetForm = json;
 
     this.remoteType = json.remoteType;
+    this.isXpcShellTarget = json.isXpcShellTarget;
   }
 
   get name() {

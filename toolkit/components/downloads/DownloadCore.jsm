@@ -2343,7 +2343,15 @@ DownloadCopySaver.prototype = {
           }
         },
 
-        onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+        onDataAvailable: (aRequest, aInputStream, aOffset, aCount) => {
+          // Check if the download have been canceled in the mean time,
+          // and close the channel and return earlier, BackgroundFileSaver
+          // methods shouldn't be called anymore after `finish` was called
+          // on download cancellation.
+          if (this._canceled) {
+            aRequest.cancel(Cr.NS_BINDING_ABORTED);
+            return;
+          }
           backgroundFileSaver.onDataAvailable(
             aRequest,
             aInputStream,

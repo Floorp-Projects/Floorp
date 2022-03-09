@@ -47,6 +47,7 @@ CPU_bitness = {
     "arm": 32,
     "hppa": 32,
     "ia64": 64,
+    "loongarch64": 64,
     "m68k": 32,
     "mips32": 32,
     "mips64": 64,
@@ -95,6 +96,7 @@ CPU_preprocessor_checks = OrderedDict(
         ("mips64", "__mips64"),
         ("mips32", "__mips__"),
         ("riscv64", "__riscv && __riscv_xlen == 64"),
+        ("loongarch64", "__loongarch64"),
         ("sh4", "__sh__"),
         ("wasm32", "__wasm32__"),
     )

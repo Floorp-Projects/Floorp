@@ -180,41 +180,85 @@ size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return initial_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-bool TagType::computeLayout() {
-  StructLayout layout;
-  int32_t refCount = 0;
-  for (const ValType argType : argTypes) {
-    if (argType.isRefRepr()) {
-      refCount++;
-    }
+bool TagType::initialize(ValTypeVector&& argTypes) {
+  MOZ_ASSERT(argTypes_.empty() && argOffsets_.empty() && size_ == 0);
+
+  argTypes_ = std::move(argTypes);
+  if (!argOffsets_.resize(argTypes_.length())) {
+    return false;
   }
-  int32_t refIndex = 0;
-  for (size_t i = 0; i < argTypes.length(); i++) {
-    CheckedInt32 offset;
-    if (argTypes[i].isRefRepr()) {
-      NativeObject::elementsSizeMustNotOverflow();
-      // Reference typed elements need to be loaded in reverse order
-      // as they are pushed stack-like into the exception's Array.
-      offset = (refCount - refIndex - 1) * CheckedInt32(sizeof(Value));
-      refIndex++;
-    } else {
-      offset = layout.addField(FieldType(argTypes[i].packed()));
-    }
+
+  StructLayout layout;
+  for (size_t i = 0; i < argTypes_.length(); i++) {
+    CheckedInt32 offset = layout.addField(FieldType(argTypes_[i].packed()));
     if (!offset.isValid()) {
       return false;
     }
-    argOffsets[i] = offset.value();
+    argOffsets_[i] = offset.value();
   }
-  this->refCount = refCount;
 
   CheckedInt32 size = layout.close();
   if (!size.isValid()) {
     return false;
   }
-  this->bufferSize = size.value();
+  this->size_ = size.value();
 
   return true;
 }
+
+size_t TagType::serializedSize() const {
+  return SerializedPodVectorSize(argTypes_) +
+         SerializedPodVectorSize(argOffsets_) + sizeof(size_);
+}
+
+uint8_t* TagType::serialize(uint8_t* cursor) const {
+  cursor = SerializePodVector(cursor, argTypes_);
+  cursor = SerializePodVector(cursor, argOffsets_);
+  cursor = WriteBytes(cursor, &size_, sizeof(size_));
+  return cursor;
+}
+
+const uint8_t* TagType::deserialize(const uint8_t* cursor) {
+  (cursor = DeserializePodVector(cursor, &argTypes_)) &&
+      (cursor = DeserializePodVector(cursor, &argOffsets_)) &&
+      (cursor = ReadBytes(cursor, &size_, sizeof(size_)));
+  return cursor;
+}
+
+size_t TagType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return argTypes_.sizeOfExcludingThis(mallocSizeOf) +
+         argOffsets_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+
+size_t TagDesc::serializedSize() const {
+  return sizeof(kind) + type.serializedSize() + sizeof(globalDataOffset) +
+         sizeof(isExport);
+}
+
+uint8_t* TagDesc::serialize(uint8_t* cursor) const {
+  cursor = WriteBytes(cursor, &kind, sizeof(kind));
+  cursor = type.serialize(cursor);
+  cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
+  cursor = WriteBytes(cursor, &isExport, sizeof(isExport));
+  return cursor;
+}
+
+const uint8_t* TagDesc::deserialize(const uint8_t* cursor) {
+  (cursor = ReadBytes(cursor, &kind, sizeof(kind))) &&
+      (cursor = type.deserialize(cursor)) &&
+      (cursor =
+           ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
+      (cursor = ReadBytes(cursor, &isExport, sizeof(isExport)));
+  return cursor;
+}
+
+size_t TagDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return type.sizeOfExcludingThis(mallocSizeOf);
+}
+
+#endif // ENABLE_WASM_EXCEPTIONS
 
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +

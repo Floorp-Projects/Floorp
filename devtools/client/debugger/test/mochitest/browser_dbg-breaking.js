@@ -2,20 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // Tests the breakpoints are hit in various situations.
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   const {
     selectors: { getSelectedSource },
-    getState,
   } = dbg;
 
-  await selectSource(dbg, "scripts.html");
+  await selectSource(dbg, "doc-scripts.html");
 
   // Make sure we can set a top-level breakpoint and it will be hit on
   // reload.
-  await addBreakpoint(dbg, "scripts.html", 21);
+  await addBreakpoint(dbg, "doc-scripts.html", 21);
 
   reload(dbg);
 

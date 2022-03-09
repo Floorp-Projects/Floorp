@@ -244,8 +244,6 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
         trc, Compartment::NonGrayEdges);
   }
 
-  markFinalizationRegistryRoots(trc);
-
   traceRuntimeCommon(trc, MarkRuntime);
 }
 
@@ -341,13 +339,10 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
     r->traceRoots(trc, traceOrMark);
   }
 
-  // Trace zone script-table roots. See comment in
-  // Zone::traceScriptTableRoots() for justification re: calling this only
-  // during major (non-nursery) collections.
   if (!JS::RuntimeHeapIsMinorCollecting()) {
     for (ZonesIter zone(this, ZoneSelector::SkipAtoms); !zone.done();
          zone.next()) {
-      zone->traceScriptTableRoots(trc);
+      zone->traceRootsInMajorGC(trc);
     }
   }
 

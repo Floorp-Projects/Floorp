@@ -75,18 +75,18 @@
 
     await new Promise(SimpleTest.executeSoon);
     ok(!ttListContainer.hidden, "Texttrack menu should show up");
-    ok(ttList.lastChild.hasAttribute("on"), "The last added item should be highlighted");
+    ok(ttList.lastChild.getAttribute("aria-checked") === "true", "The last added item should be highlighted");
   });
 
   add_task(async function check_select_texttrack() {
     const tt = ttList.children[1];
 
-    ok(!tt.hasAttribute("on"), "Item should be off before click");
+    ok(tt.getAttribute("aria-checked") === "false", "Item should be off before click");
     synthesizeMouseAtCenter(tt, {});
 
     await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
-    ok(tt.hasAttribute("on"), "Selected item should be enabled");
+    ok(tt.getAttribute("aria-checked") === "true", "Selected item should be enabled");
     ok(ttListContainer.hidden, "Should hide texttrack menu once clicked on an item");
   });
 
@@ -103,7 +103,7 @@
     await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
     ok(ccBtn.hasAttribute("enabled"), "CC button should be enabled");
-    ok(ttList.lastChild.hasAttribute("on"), "The last item should be highlighted");
+    ok(ttList.lastChild.getAttribute("aria-checked") === "true", "The last item should be highlighted");
   });
 
 </script>

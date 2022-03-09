@@ -6,13 +6,16 @@ include protocol PBackground;
 include protocol PBackgroundSessionStorageCache;
 include PBackgroundSharedTypes;
 
+include "mozilla/dom/quota/SerializationHelpers.h";
+
 using mozilla::OriginAttributesPattern
   from "mozilla/OriginAttributes.h";
 
 namespace mozilla {
 namespace dom {
 
-[RefCounted] sync protocol PBackgroundSessionStorageManager
+[ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PBackgroundSessionStorageManager
 {
  manager PBackground;
  manages PBackgroundSessionStorageCache;

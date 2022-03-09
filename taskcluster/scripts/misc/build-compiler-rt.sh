@@ -2,8 +2,9 @@
 
 set -e -x
 
-target=$1
-shift
+artifact=$(basename $TOOLCHAIN_ARTIFACT)
+dir=${artifact%.tar.*}
+target=${dir#compiler-rt-}
 
 clang=$MOZ_FETCHES_DIR/clang/bin/clang
 
@@ -51,13 +52,14 @@ esac
 
 case "$target" in
 *-apple-darwin)
-  libdir=lib/darwin
   EXTRA_CMAKE_FLAGS="
-    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld
-    -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld64.lld
+    -DCMAKE_LIPO=$MOZ_FETCHES_DIR/clang/bin/llvm-lipo
     -DCMAKE_SYSTEM_NAME=Darwin
     -DCMAKE_SYSTEM_VERSION=$MACOSX_DEPLOYMENT_TARGET
     -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
     -DDARWIN_osx_ARCHS=$arch
     -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
     -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0
@@ -68,10 +70,9 @@ case "$target" in
   # Give it a fake one.
   echo "#!/bin/sh" > codesign
   chmod +x codesign
-  PATH="$PWD:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+  PATH="$PATH:$PWD"
   ;;
 *-linux-android)
-  libdir=lib/linux
   cflags="
     --gcc-toolchain=$MOZ_FETCHES_DIR/android-ndk/toolchains/$ndk_prefix-4.9/prebuilt/linux-x86_64
     -isystem $MOZ_FETCHES_DIR/android-ndk/sysroot/usr/include/$ndk_target
@@ -86,7 +87,6 @@ case "$target" in
   "
   EXTRA_CMAKE_FLAGS="
     -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/android-ndk/platforms/android-$api_level/arch-$ndk_arch
-    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
     -DCMAKE_C_FLAGS='-fPIC $cflags'
     -DCMAKE_ASM_FLAGS='$cflags'
@@ -100,13 +100,13 @@ case "$target" in
     -DCOMPILER_RT_BUILD_ORC=OFF
   "
   ;;
-aarch64-unknown-linux-gnu)
-  libdir=lib/linux
+*-unknown-linux-gnu)
   EXTRA_CMAKE_FLAGS="
-    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-aarch64-linux-gnu
+    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-${target%-unknown-linux-gnu}-linux-gnu
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
+    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
   "
-  PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
   ;;
 *-pc-windows-msvc)
   VSPATH="$MOZ_FETCHES_DIR/vs2017_15.9.6"
@@ -177,16 +177,22 @@ eval cmake \
   -DCMAKE_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-${ar:-ar} \
   -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=${PWD}/${dir} \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
   -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
   $EXTRA_CMAKE_FLAGS
 
-ninja -v
+ninja install -v
 
-cd ..
+# ninja install doesn't copy the PDBs
+case "$target" in
+*-pc-windows-msvc)
+  cp lib/windows/*pdb $dir/lib/windows/
+  ;;
+esac
 
-tar caf compiler-rt.tar.zst compiler-rt/$libdir
+tar caf "$artifact" "$dir"
 
 mkdir -p "$UPLOAD_DIR"
-mv "compiler-rt.tar.zst" "$UPLOAD_DIR"
+mv "$artifact" "$UPLOAD_DIR"

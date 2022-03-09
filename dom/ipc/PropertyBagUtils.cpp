@@ -20,7 +20,8 @@ using namespace mozilla::dom;
 
 namespace mozilla::ipc {
 
-void IPDLParamTraits<nsIVariant*>::Write(Message* aMsg, IProtocol* aActor,
+void IPDLParamTraits<nsIVariant*>::Write(MessageWriter* aWriter,
+                                         IProtocol* aActor,
                                          nsIVariant* aParam) {
   IDPLVariant variant;
 
@@ -130,15 +131,14 @@ void IPDLParamTraits<nsIVariant*>::Write(Message* aMsg, IProtocol* aActor,
       MOZ_CRASH("Non handled variant type, patch welcome");
       break;
   }
-  WriteIPDLParam(aMsg, aActor, variant);
+  WriteIPDLParam(aWriter, aActor, variant);
 }
 
-bool IPDLParamTraits<nsIVariant*>::Read(const Message* aMsg,
-                                        PickleIterator* aIter,
+bool IPDLParamTraits<nsIVariant*>::Read(MessageReader* aReader,
                                         IProtocol* aActor,
                                         RefPtr<nsIVariant>* aResult) {
   IDPLVariant value;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &value)) {
+  if (!ReadIPDLParam(aReader, aActor, &value)) {
     return false;
   }
 
@@ -219,7 +219,8 @@ bool IPDLParamTraits<nsIVariant*>::Read(const Message* aMsg,
   return true;
 }
 
-void IPDLParamTraits<nsIPropertyBag2*>::Write(Message* aMsg, IProtocol* aActor,
+void IPDLParamTraits<nsIPropertyBag2*>::Write(MessageWriter* aWriter,
+                                              IProtocol* aActor,
                                               nsIPropertyBag2* aParam) {
   // We send a nsIPropertyBag as an array of IPDLProperty
   nsTArray<IPDLProperty> bag;
@@ -235,15 +236,14 @@ void IPDLParamTraits<nsIPropertyBag2*>::Write(Message* aMsg, IProtocol* aActor,
       bag.AppendElement(IPDLProperty{name, value});
     }
   }
-  WriteIPDLParam(aMsg, aActor, bag);
+  WriteIPDLParam(aWriter, aActor, bag);
 }
 
-bool IPDLParamTraits<nsIPropertyBag2*>::Read(const Message* aMsg,
-                                             PickleIterator* aIter,
+bool IPDLParamTraits<nsIPropertyBag2*>::Read(MessageReader* aReader,
                                              IProtocol* aActor,
                                              RefPtr<nsIPropertyBag2>* aResult) {
   nsTArray<IPDLProperty> bag;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &bag)) {
+  if (!ReadIPDLParam(aReader, aActor, &bag)) {
     return false;
   }
 

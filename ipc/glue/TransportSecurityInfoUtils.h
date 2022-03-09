@@ -15,16 +15,15 @@ struct ParamTraits;
 
 template <>
 struct ParamTraits<nsITransportSecurityInfo*> {
-  static void Write(Message* aMsg, nsITransportSecurityInfo* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
+  static void Write(MessageWriter* aWriter, nsITransportSecurityInfo* aParam);
+  static bool Read(MessageReader* aReader,
                    RefPtr<nsITransportSecurityInfo>* aResult);
 };
 
 template <>
 struct ParamTraits<nsIX509Cert*> {
-  static void Write(Message* aMsg, nsIX509Cert* aCert);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIX509Cert>* aResult);
+  static void Write(MessageWriter* aWriter, nsIX509Cert* aCert);
+  static bool Read(MessageReader* aReader, RefPtr<nsIX509Cert>* aResult);
 };
 
 }  // namespace IPC

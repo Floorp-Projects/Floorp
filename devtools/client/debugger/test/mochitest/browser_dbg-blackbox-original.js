@@ -3,15 +3,13 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // This source map does not have source contents, so it's fetched separately
+
+"use strict";
+
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps3.html");
   dbg.actions.toggleMapScopes();
-
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState,
-  } = dbg;
 
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
@@ -45,7 +43,7 @@ add_task(async function() {
   // invoke test
   invokeInTab("test");
   // should not pause
-  is(isPaused(dbg), false);
+  assertNotPaused(dbg);
 
   // unblackbox
   await clickElement(dbg, "blackbox");

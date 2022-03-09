@@ -19,10 +19,6 @@ add_task(async function() {
 
   let dbDirectory = do_get_profile();
   dbDirectory.append("security_state");
-  let dbFile = do_get_file(
-    "test_cert_storage_preexisting_crlite/data.safe.bin"
-  );
-  dbFile.copyTo(dbDirectory, "data.safe.bin");
   let crliteFile = do_get_file(
     "test_cert_storage_preexisting_crlite/crlite.filter"
   );
@@ -31,6 +27,10 @@ add_task(async function() {
     "test_cert_storage_preexisting_crlite/crlite.coverage"
   );
   coverageFile.copyTo(dbDirectory, "crlite.coverage");
+  let enrollmentFile = do_get_file(
+    "test_cert_storage_preexisting_crlite/crlite.enrollment"
+  );
+  enrollmentFile.copyTo(dbDirectory, "crlite.enrollment");
 
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
     Ci.nsICertStorage

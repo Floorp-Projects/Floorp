@@ -136,11 +136,12 @@ shell = help_shell | shell
 @checking("for Python 3", callback=lambda x: "%s (%s)" % (x.path, x.str_version))
 @imports("sys")
 @imports(_from="mach.site", _import="PythonVirtualenv")
+@imports(_from="os.path", _import="realpath")
 def virtualenv_python3():
     return namespace(
         # sys.executable is currently not updated for in-process activations. However,
         # sys.prefix is, so we can calculate the python executable's path from there.
-        path=normsep(PythonVirtualenv(sys.prefix).python_path),
+        path=normsep(PythonVirtualenv(realpath(sys.prefix)).python_path),
         str_version=".".join(str(i) for i in sys.version_info[0:3]),
     )
 
@@ -525,6 +526,9 @@ def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
         endianness = "little"
     elif cpu in ("riscv64", "riscv64gc"):
         canonical_cpu = "riscv64"
+        endianness = "little"
+    elif cpu.startswith("loongarch64"):
+        canonical_cpu = "loongarch64"
         endianness = "little"
     elif cpu == "sh4":
         canonical_cpu = "sh4"

@@ -65,6 +65,19 @@ interface nsIObserverService : nsISupports
                           in string aTopic,
                           [optional] in wstring someData );
 
+    /**
+     * hasObservers
+     *
+     * Checks to see if there are registered listeners for the given topic.
+     *
+     * Implemented in "nsObserverService.cpp".
+     *
+     * @param aTopic   : The notification topic or subject.
+     * @param aFound : An out parameter; True if there are registered observers,
+     * False otherwise.
+     */
+    [noscript, notxpcom, nostdcall] boolean hasObservers(in string aTopic);
+
     %{C++
     /**
      * notifyWhenScriptSafe

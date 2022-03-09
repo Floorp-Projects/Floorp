@@ -30,18 +30,34 @@ body {
   }
 }
 
+// Styling for content rendered in a Spotlight messaging surface.
+:root {
+  &[dialogroot] {
+    background-color: transparent;
+    min-width: 504px;
+
+    body {
+      padding: 0;
+    }
+
+    .onboardingContainer {
+      overflow: visible;
+
+      .screen {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
 .onboardingContainer {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
-  background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
-  background-color: #212121;
 
   @media (prefers-contrast: more) {
     background-color: var(--in-content-page-background);
   }
-
-  --main-content-min-height: 271px;
 
   // Transition all of these and reduced motion effectively only does opacity.
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
@@ -77,11 +93,14 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 504px;
+    flex-shrink: 0;
   }
 
   .main-content {
     background-color: var(--in-content-page-background);
     border-radius: 20px;
+    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -102,6 +121,7 @@ body {
   }
 
   .screen {
+    background-color: rgba(21, 20, 26, 0.5);
     display: flex;
     position: relative;
     flex-flow: row nowrap;
@@ -109,15 +129,45 @@ body {
     min-height: 500px;
     overflow: hidden;
 
+    &.light-text {
+      --in-content-page-color: rgb(251, 251, 254);
+      --in-content-primary-button-text-color: rgb(43, 42, 51);
+      --in-content-primary-button-text-color-hover: rgb(43, 42, 51);
+      --in-content-primary-button-background: rgb(0, 221, 255);
+      --in-content-primary-button-background-hover: rgb(128, 235, 255);
+      --in-content-primary-button-background-active: rgb(170, 242, 255);
+      --in-content-link-color: var(--in-content-primary-button-background);
+      --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
+      --in-content-link-color-active: var(--in-content-primary-button-background-active);
+      --in-content-link-color-visited: var(--in-content-link-color);
+      --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
+      --in-content-button-text-color: var(--in-content-page-color);
+    }
+
+    &.dark-text {
+      --in-content-page-color: rgb(21,  20,  26);
+      --in-content-primary-button-text-color: rgb(251, 251, 254);
+      --in-content-primary-button-text-color-hover: rgb(251, 251, 254);
+      --in-content-primary-button-background: #0061E0;
+      --in-content-primary-button-background-hover: #0250BB;
+      --in-content-primary-button-background-active: #053E94;
+      --in-content-primary-button-border-color: transparent;
+      --in-content-primary-button-border-hover: transparent;
+      --in-content-link-color: var(--blue-60);
+      --in-content-link-color-hover: var(--blue-70);
+      --in-content-link-color-active: var(--blue-80);
+      --in-content-link-color-visited: var(--blue-60);
+      --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
+      --in-content-button-text-color: var(--in-content-page-color);
+    }
+
     &:dir(rtl) {
       transform: rotateY(180deg);
     }
   }
 
   .brand-logo {
-    background: url('chrome://branding/content/about-logo.svg') top center / $logo-size no-repeat;
-    padding: $logo-size 0 10px;
-    margin-top: 60px;
+    margin-block: 60px 10px;
     transition: var(--transition);
 
     &.cta-top {
@@ -131,6 +181,13 @@ body {
     }
   }
 
+  .rtamo-theme-icon {
+    max-height: 30px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+
   .hide-rtamo-icon {
     display: none;
   }
@@ -140,7 +197,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 5px;
+    margin: 0.5em 1em;
     transition: var(--transition);
 
     h1,
@@ -154,7 +211,6 @@ body {
       font-weight: 600;
       margin: 0 6px;
       letter-spacing: -0.02em;
-      width: 283px;
       outline: none;
     }
 
@@ -166,6 +222,50 @@ body {
       max-width: 750px;
       letter-spacing: -0.01em;
     }
+
+    &.larger {
+      h1 {
+        font-size: 36px;
+      }
+    }
+
+    &.slim {
+      h1 {
+        font-weight: 276;
+      }
+    }
+
+    &.fancy {
+      h1 {
+        background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
+        background-size: 400% auto;
+        color: #000;
+        background-clip: text;
+        -webkit-background-clip: text;
+        animation: shine 50s linear infinite;
+        @media (prefers-contrast: no-preference) {
+          -webkit-text-fill-color: transparent;
+        }
+        @media (prefers-color-scheme: dark) {
+          background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
+        }
+      }
+
+      @keyframes shine {
+        to {
+          background-position: 400% center;
+        }
+      }
+    }
+  }
+
+  // Override light and dark mode fancy title colors for use over light and dark backgrounds
+  .screen.light-text .welcome-text.fancy h1 {
+    background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
+  }
+
+  .screen.dark-text .welcome-text.fancy h1 {
+    background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
   }
 
   .welcomeZap {
@@ -196,6 +296,22 @@ body {
       &.long::after {
         background-image:  url('chrome://activity-stream/content/data/content/assets/long-zap.svg');
       }
+    }
+  }
+
+  .language-loader {
+    filter: invert(1);
+    margin-inline-end: 10px;
+    position: relative;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .language-loader {
+      filter: invert(0);
     }
   }
 
@@ -731,29 +847,6 @@ body {
     }
   }
 
-  .confetti {
-    display: block;
-    margin: auto;
-    background-image: url('chrome://activity-stream/content/data/content/assets/confetti.svg');
-    background-position: top;
-    background-size: 100%;
-    background-repeat: no-repeat;
-    height: 438px;
-    width: 504px;
-    position: absolute;
-    z-index: -1;
-
-    @media (max-width: $break-point-large) {
-      height: 400px;
-      width: 450px;
-    }
-
-    @media (max-width: $break-point-medium) {
-      height: 370px;
-      width: 420px;
-    }
-  }
-
   .outline-L {
     background-image: url('chrome://activity-stream/content/data/content/assets/noodle-outline-L.svg');
   }
@@ -776,7 +869,8 @@ body {
     fill: #FFA437;
   }
 
-  .screen-0 {
+  [pos='corner'] {
+    background-color: transparent;
     min-width: 700px;
 
     .section-left {
@@ -823,15 +917,15 @@ body {
     }
 
     .section-main {
-      flex-shrink: 0;
-      width: 490px;
       z-index: 1;
 
       .main-content {
         background: transparent;
+        box-shadow: none;
         display: block;
         position: absolute;
         height: 350px;
+        width: 295px;
         bottom: -60px;
         inset-inline-end: 80px;
         transition: var(--transition);
@@ -885,27 +979,9 @@ body {
   }
 
   .screen-1 {
-    background-color: rgba(21, 20, 26, 0.5);
-
     .section-main {
       z-index: 1;
-      width: 504px;
-      height: 503px;
       margin: auto;
-
-      .main-content-inner {
-        min-height: var(--main-content-min-height);
-      }
-
-      @media (max-width: $break-point-large) {
-        width: 450px;
-        height: auto;
-      }
-
-      @media (max-width: $break-point-medium) {
-        width: 420px;
-        height: auto;
-      }
     }
 
     //Position of noodles on second screen
@@ -922,24 +998,12 @@ body {
       height: 660px;
       transform: rotate(-155deg) translate(11%, -18%);
       transition-delay: 0.2s;
-
-      @media (max-width: $break-point-large) {
-        width: 448px;
-        height: 568px;
-        transform: rotate(-155deg) translate(12%, -21%);
-      }
     }
 
     .purple-C {
       width: 310px;
       height: 260px;
       transform: translate(-18%, -67%);
-
-      @media (max-width: $break-point-large) {
-        width: 294px;
-        height: 254px;
-        transform: translate(-20%, -62%);
-      }
     }
 
     .yellow-circle {
@@ -949,14 +1013,6 @@ body {
       transform: translate(230%, -5%);
       background: #952BB9;
       transition-delay: -0.2s;
-
-      @media (max-width: $break-point-large) {
-        transform: translate(205%, -5%);
-      }
-
-      @media (max-width: $break-point-medium) {
-        transform: translate(185%, -5%);
-      }
     }
   }
 
@@ -984,7 +1040,7 @@ body {
   }
 
   // Delays for transitioning-in of intermediate screens
-  .screen:not(.dialog-initial):not(.screen-0) {
+  .screen:not(.dialog-initial):not([pos='corner']) {
     .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.2s;
@@ -997,27 +1053,9 @@ body {
   }
 
   .screen-2 {
-    background-color: rgba(21, 20, 26, 0.5);
-
     .section-main {
       z-index: 1;
-      width: 504px;
-      height: 503px;
       margin: auto;
-
-      .main-content-inner {
-        min-height: var(--main-content-min-height);
-      }
-
-      @media (max-width: $break-point-large) {
-        width: 450px;
-        height: auto;
-      }
-
-      @media (max-width: $break-point-medium) {
-        width: 420px;
-        height: auto;
-      }
     }
 
     // Position of noodles on third screen
@@ -1027,10 +1065,6 @@ body {
       transform: rotate(250deg) translate(-420%, 425%);
       transition-delay: 0.2s;
       z-index: 2;
-
-      @media (max-width: $break-point-large) {
-        transform: rotate(250deg) translate(-400%, 280%);
-      }
     }
 
     .orange-L {
@@ -1038,11 +1072,6 @@ body {
       width: 660px;
       transform: rotate(35deg) translate(-10%, -7%);
       transition-delay: -0.4s;
-
-      @media (max-width: $break-point-large) {
-        height: 740px;
-        width: 600px;
-      }
     }
 
     .purple-C {
@@ -1062,37 +1091,6 @@ body {
     }
   }
 
-  .fancy-headings {
-    h1 {
-      font-size: 36px;
-      line-height: unset;
-      width: 410px;
-      padding-bottom: 16px;
-      position: relative;
-      text-align: center;
-      background-image: linear-gradient(90deg, #6173FF, #ED1D5F, #F6901E, #6173FF);
-      background-size: 400% auto;
-      color: #000;
-      background-clip: text;
-      -webkit-background-clip: text;
-      animation: shine 50s linear infinite;
-
-      @media (prefers-contrast: no-preference) {
-        -webkit-text-fill-color: transparent;
-      }
-    }
-
-    @keyframes shine {
-      to {
-        background-position: 400% center;
-      }
-    }
-
-    h2 {
-      margin: 10px 30px 0;
-    }
-  }
-
   &.transition-in {
     .noodle {
       opacity: 0;
@@ -1100,7 +1098,7 @@ body {
       scale: var(--scale);
     }
 
-    .screen-0 {
+    [pos='corner'] {
       .brand-logo,
       .welcome-text,
       .primary,
@@ -1128,13 +1126,13 @@ body {
       }
     }
 
-    .screen:not(.dialog-initial):not(.screen-0) {
+    .screen:not(.dialog-initial):not([pos='corner']) {
       .steps {
         opacity: 0.2;
       }
     }
 
-    .screen:not(.screen-0) {
+    .screen:not([pos='corner']) {
       .welcome-text,
       .colorway-variations,
       .tiles-theme-section,
@@ -1154,7 +1152,7 @@ body {
       transition-delay: 0.2s;
     }
 
-    .screen-0 {
+    [pos='corner'] {
       .message-text {
         opacity: 0;
         translate: 0 var(--translate);
@@ -1177,7 +1175,7 @@ body {
       }
     }
 
-    .screen:not(.dialog-last):not(.screen-0) {
+    .screen:not(.dialog-last):not([pos='corner']) {
       .main-content {
         overflow: hidden;
       }
@@ -1220,5 +1218,9 @@ body {
         transition-delay: 0.4s;
       }
     }
+  }
+
+  .screen.with-noodles:not(.corner) .section-main {
+    height: 503px;
   }
 }

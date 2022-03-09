@@ -4,14 +4,14 @@
 
 // Tests the search bar retains previous query on re-opening.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
     selectors: { getActiveSearch, getFileSearchQuery },
   } = dbg;
-  const source = findSource(dbg, "simple1.js");
-
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, "simple1.js");
 
   // Open search bar
   pressKey(dbg, "fileSearch");

@@ -102,7 +102,7 @@ struct Dav1dContext {
 
     // decoded output picture queue
     Dav1dData in;
-    Dav1dPicture out;
+    Dav1dThreadPicture out, cache;
     // dummy is a pointer to prevent compiler errors about atomic_load()
     // not taking const arguments
     atomic_int flush_mem, *flush;
@@ -158,6 +158,7 @@ struct Dav1dContext {
     unsigned frame_size_limit;
     int strict_std_compliance;
     int output_invisible_frames;
+    enum Dav1dInloopFilterType inloop_filters;
     int drain;
     enum PictureFlags frame_flags;
     enum Dav1dEventFlags event_flags;
@@ -169,14 +170,15 @@ struct Dav1dContext {
 
 enum TaskType {
     DAV1D_TASK_TYPE_INIT,
+    DAV1D_TASK_TYPE_INIT_CDF,
     DAV1D_TASK_TYPE_TILE_ENTROPY,
+    DAV1D_TASK_TYPE_ENTROPY_PROGRESS,
     DAV1D_TASK_TYPE_TILE_RECONSTRUCTION,
     DAV1D_TASK_TYPE_DEBLOCK_COLS,
     DAV1D_TASK_TYPE_DEBLOCK_ROWS,
     DAV1D_TASK_TYPE_CDEF,
     DAV1D_TASK_TYPE_SUPER_RESOLUTION,
     DAV1D_TASK_TYPE_LOOP_RESTORATION,
-    DAV1D_TASK_TYPE_ENTROPY_PROGRESS,
     DAV1D_TASK_TYPE_RECONSTRUCTION_PROGRESS,
 };
 
@@ -303,6 +305,7 @@ struct Dav1dFrameContext {
         struct TaskThreadData *ttd;
         struct Dav1dTask *tasks, *tile_tasks[2], init_task;
         int num_tasks, num_tile_tasks;
+        int init_done;
         int done[2];
         int retval;
         int update_set; // whether we need to update CDF reference

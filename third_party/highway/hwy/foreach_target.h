@@ -74,6 +74,28 @@
 #endif
 #endif
 
+#if (HWY_TARGETS & HWY_SVE) && (HWY_STATIC_TARGET != HWY_SVE)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_SVE
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
+#if (HWY_TARGETS & HWY_SVE2) && (HWY_STATIC_TARGET != HWY_SVE2)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_SVE2
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
 #if (HWY_TARGETS & HWY_SSSE3) && (HWY_STATIC_TARGET != HWY_SSSE3)
 #undef HWY_TARGET
 #define HWY_TARGET HWY_SSSE3

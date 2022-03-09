@@ -41,10 +41,6 @@ module.exports = {
     openDialog: false,
     // https://developer.mozilla.org/docs/Web/API/Window/sizeToContent
     sizeToContent: false,
-    // structuredClone is a new global that only Firefox has currently and so isn't
-    // in ESLint's globals yet.
-    // https://developer.mozilla.org/docs/Web/API/structuredClone
-    structuredClone: false,
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/uneval
     uneval: false,
   },

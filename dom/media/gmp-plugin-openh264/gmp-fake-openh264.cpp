@@ -389,7 +389,9 @@ class FakeVideoDecoder : public GMPVideoDecoder {
 
 extern "C" {
 
-PUBLIC_FUNC GMPErr GMPInit(GMPPlatformAPI* aPlatformAPI) { return GMPNoErr; }
+PUBLIC_FUNC GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) {
+  return GMPNoErr;
+}
 
 PUBLIC_FUNC GMPErr GMPGetAPI(const char* aApiName, void* aHostAPI,
                              void** aPluginApi) {

@@ -2141,4 +2141,15 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
   vorps(scratch, output, output);
 }
 
+void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
+                                        Register pointer) {
+  if (IsShiftInScaleRange(shift)) {
+    computeEffectiveAddress(
+        BaseIndex(pointer, indexTemp32, ShiftToScale(shift)), pointer);
+    return;
+  }
+  lshift32(Imm32(shift), indexTemp32);
+  addPtr(indexTemp32, pointer);
+}
+
 //}}} check_macroassembler_style

@@ -144,10 +144,6 @@ class BackgroundParentImpl : public PBackgroundParent,
   AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                     const uint64_t& aSize) override;
 
-  mozilla::ipc::IPCResult RecvPRemoteLazyInputStreamConstructor(
-      PRemoteLazyInputStreamParent* aActor, const nsID& aID,
-      const uint64_t& aSize) override;
-
   PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
 
   mozilla::ipc::IPCResult RecvPTemporaryIPCBlobConstructor(

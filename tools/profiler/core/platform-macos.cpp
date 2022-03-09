@@ -60,6 +60,21 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return aRawValue;
 }
 
+namespace mozilla::profiler {
+bool GetCpuTimeSinceThreadStartInNs(
+    uint64_t* aResult, const mozilla::profiler::PlatformData& aPlatformData) {
+  thread_extended_info_data_t threadInfoData;
+  mach_msg_type_number_t count = THREAD_EXTENDED_INFO_COUNT;
+  if (thread_info(aPlatformData.ProfiledThread(), THREAD_EXTENDED_INFO,
+                  (thread_info_t)&threadInfoData, &count) != KERN_SUCCESS) {
+    return false;
+  }
+
+  *aResult = threadInfoData.pth_user_time + threadInfoData.pth_system_time;
+  return true;
+}
+}  // namespace mozilla::profiler
+
 static RunningTimes GetProcessRunningTimesDiff(
     PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
   AUTO_PROFILER_STATS(GetProcessRunningTimes);

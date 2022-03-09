@@ -1371,10 +1371,9 @@ void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
   MacroAssemblerX86Shared::blendInt16x8(lhs, rhs, dest, lanes);
 }
 
-void MacroAssembler::laneSelectSimd128(FloatRegister mask,
-                                       FloatRegister rhsDest,
-                                       FloatRegister lhs) {
-  MacroAssemblerX86Shared::laneSelectSimd128(lhs, rhsDest, mask, rhsDest);
+void MacroAssembler::laneSelectSimd128(FloatRegister mask, FloatRegister lhs,
+                                       FloatRegister rhs, FloatRegister dest) {
+  MacroAssemblerX86Shared::laneSelectSimd128(mask, lhs, rhs, dest);
 }
 
 void MacroAssembler::interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
@@ -1452,14 +1451,14 @@ void MacroAssembler::concatAndRightShiftSimd128(FloatRegister lhs,
 
 void MacroAssembler::leftShiftSimd128(Imm32 count, FloatRegister src,
                                       FloatRegister dest) {
-  moveSimd128(src, dest);
-  vpslldq(count, dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpslldq(count, src, dest);
 }
 
 void MacroAssembler::rightShiftSimd128(Imm32 count, FloatRegister src,
                                        FloatRegister dest) {
-  moveSimd128(src, dest);
-  vpsrldq(count, dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpsrldq(count, src, dest);
 }
 
 // Reverse bytes in lanes.
@@ -1467,10 +1466,10 @@ void MacroAssembler::rightShiftSimd128(Imm32 count, FloatRegister src,
 void MacroAssembler::reverseInt16x8(FloatRegister src, FloatRegister dest) {
   // Byteswap is MOV + PSLLW + PSRLW + POR, a small win over PSHUFB.
   ScratchSimd128Scope scratch(*this);
-  moveSimd128(src, dest);
-  moveSimd128(src, scratch);
-  vpsllw(Imm32(8), dest, dest);
-  vpsrlw(Imm32(8), scratch, scratch);
+  FloatRegister srcForScratch = moveSimd128IntIfNotAVX(src, scratch);
+  vpsrlw(Imm32(8), srcForScratch, scratch);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpsllw(Imm32(8), src, dest);
   vpor(scratch, dest, dest);
 }
 
@@ -1556,8 +1555,8 @@ void MacroAssembler::bitmaskInt16x8(FloatRegister src, Register dest) {
   // input and shifting rather than masking at the end, but creates a false
   // dependency on the old value of scratch.  The better fix is to allow src to
   // be clobbered.
-  moveSimd128(src, scratch);
-  vpacksswb(Operand(scratch), scratch, scratch);
+  src = moveSimd128IntIfNotAVX(src, scratch);
+  vpacksswb(Operand(src), src, scratch);
   vpmovmskb(scratch, dest);
   andl(Imm32(0xFF), dest);
 }
@@ -1713,20 +1712,22 @@ void MacroAssembler::mulInt64x2(FloatRegister lhs, FloatRegister rhs,
   // lhs = <D C> <B A>
   // rhs = <H G> <F E>
   // result = <(DG+CH)_low+CG_high CG_low> <(BE+AF)_low+AE_high AE_low>
-  moveSimd128(lhs, temp);               // temp  = <D C> <B A>
-  vpsrlq(Imm32(32), temp, temp);        // temp  = <0 D> <0 B>
-  vpmuludq(rhs, temp, temp);            // temp  = <DG> <BE>
-  moveSimd128(rhs, temp2);              // temp2 = <H G> <F E>
-  vpsrlq(Imm32(32), temp2, temp2);      // temp2 = <0 H> <0 F>
-  vpmuludq(lhs, temp2, temp2);          // temp2 = <CH> <AF>
-  vpaddq(Operand(temp), temp2, temp2);  // temp2 = <DG+CH> <BE+AF>
-  vpsllq(Imm32(32), temp2, temp2);      // temp2 = <(DG+CH)_low 0>
-                                        //         <(BE+AF)_low 0>
-  vpmuludq(rhs, dest, dest);            // dest = <CG_high CG_low>
-                                        //        <AE_high AE_low>
-  vpaddq(Operand(temp2), dest, dest);   // dest =
-                                        //    <(DG+CH)_low+CG_high CG_low>
-                                        //    <(BE+AF)_low+AE_high AE_low>
+  FloatRegister lhsForTemp =
+      moveSimd128IntIfNotAVX(lhs, temp);  // temp  = <D C> <B A>
+  vpsrlq(Imm32(32), lhsForTemp, temp);    // temp  = <0 D> <0 B>
+  vpmuludq(rhs, temp, temp);              // temp  = <DG> <BE>
+  FloatRegister rhsForTemp =
+      moveSimd128IntIfNotAVX(rhs, temp2);  // temp2 = <H G> <F E>
+  vpsrlq(Imm32(32), rhsForTemp, temp2);    // temp2 = <0 H> <0 F>
+  vpmuludq(lhs, temp2, temp2);             // temp2 = <CH> <AF>
+  vpaddq(Operand(temp), temp2, temp2);     // temp2 = <DG+CH> <BE+AF>
+  vpsllq(Imm32(32), temp2, temp2);         // temp2 = <(DG+CH)_low 0>
+                                           //         <(BE+AF)_low 0>
+  vpmuludq(rhs, dest, dest);               // dest = <CG_high CG_low>
+                                           //        <AE_high AE_low>
+  vpaddq(Operand(temp2), dest, dest);      // dest =
+                                           //    <(DG+CH)_low+CG_high CG_low>
+                                           //    <(BE+AF)_low+AE_high AE_low>
 }
 
 // Code generation from the PR: https://github.com/WebAssembly/simd/pull/376.
@@ -2141,9 +2142,9 @@ void MacroAssembler::absInt32x4(FloatRegister src, FloatRegister dest) {
 
 void MacroAssembler::absInt64x2(FloatRegister src, FloatRegister dest) {
   ScratchSimd128Scope scratch(*this);
-  moveSimd128(src, dest);
   signReplicationInt64x2(src, scratch);
-  vpxor(Operand(scratch), dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpxor(Operand(scratch), src, dest);
   vpsubq(Operand(scratch), dest, dest);
 }
 
@@ -2167,7 +2168,7 @@ void MacroAssembler::leftShiftInt16x8(Register rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::leftShiftInt16x8(Imm32 count, FloatRegister src,
                                       FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsllw(count, src, dest);
 }
 
@@ -2178,7 +2179,7 @@ void MacroAssembler::leftShiftInt32x4(Register rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::leftShiftInt32x4(Imm32 count, FloatRegister src,
                                       FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpslld(count, src, dest);
 }
 
@@ -2189,7 +2190,7 @@ void MacroAssembler::leftShiftInt64x2(Register rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::leftShiftInt64x2(Imm32 count, FloatRegister src,
                                       FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsllq(count, src, dest);
 }
 
@@ -2226,7 +2227,7 @@ void MacroAssembler::rightShiftInt16x8(Register rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::rightShiftInt16x8(Imm32 count, FloatRegister src,
                                        FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsraw(count, src, dest);
 }
 
@@ -2238,7 +2239,7 @@ void MacroAssembler::unsignedRightShiftInt16x8(Register rhs,
 
 void MacroAssembler::unsignedRightShiftInt16x8(Imm32 count, FloatRegister src,
                                                FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsrlw(count, src, dest);
 }
 
@@ -2249,7 +2250,7 @@ void MacroAssembler::rightShiftInt32x4(Register rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::rightShiftInt32x4(Imm32 count, FloatRegister src,
                                        FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsrad(count, src, dest);
 }
 
@@ -2261,7 +2262,7 @@ void MacroAssembler::unsignedRightShiftInt32x4(Register rhs,
 
 void MacroAssembler::unsignedRightShiftInt32x4(Imm32 count, FloatRegister src,
                                                FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsrld(count, src, dest);
 }
 
@@ -2284,7 +2285,7 @@ void MacroAssembler::unsignedRightShiftInt64x2(Register rhs,
 
 void MacroAssembler::unsignedRightShiftInt64x2(Imm32 count, FloatRegister src,
                                                FloatRegister dest) {
-  moveSimd128(src, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpsrlq(count, src, dest);
 }
 
@@ -2299,14 +2300,14 @@ void MacroAssembler::signReplicationInt8x16(FloatRegister src,
 
 void MacroAssembler::signReplicationInt16x8(FloatRegister src,
                                             FloatRegister dest) {
-  moveSimd128(src, dest);
-  vpsraw(Imm32(15), dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpsraw(Imm32(15), src, dest);
 }
 
 void MacroAssembler::signReplicationInt32x4(FloatRegister src,
                                             FloatRegister dest) {
-  moveSimd128(src, dest);
-  vpsrad(Imm32(31), dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpsrad(Imm32(31), src, dest);
 }
 
 void MacroAssembler::signReplicationInt64x2(FloatRegister src,
@@ -2581,30 +2582,30 @@ void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
 
 // NaN-propagating minimum
 
-void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat32x4(lhs, rhs, temp1, temp2, dest);
 }
 
-void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat64x2(lhs, rhs, temp1, temp2, dest);
 }
 
 // NaN-propagating maximum
 
-void MacroAssembler::maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat32x4(lhs, rhs, temp1, temp2, dest);
 }
 
-void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::maxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat64x2(lhs, rhs, temp1, temp2, dest);
 }
 
 // Compare-based minimum
@@ -2810,30 +2811,22 @@ void MacroAssembler::extAddPairwiseInt8x16(FloatRegister src,
 
 void MacroAssembler::unsignedExtAddPairwiseInt8x16(FloatRegister src,
                                                    FloatRegister dest) {
-  ScratchSimd128Scope scratch(*this);
-  moveSimd128(src, dest);
-  loadConstantSimd128Int(SimdConstant::SplatX16(1), scratch);
-  vpmaddubsw(scratch, dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpmaddubswSimd128(SimdConstant::SplatX16(1), src, dest);
 }
 
 void MacroAssembler::extAddPairwiseInt16x8(FloatRegister src,
                                            FloatRegister dest) {
-  ScratchSimd128Scope scratch(*this);
-  moveSimd128(src, dest);
-  loadConstantSimd128Int(SimdConstant::SplatX8(1), scratch);
-  vpmaddwd(Operand(scratch), dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpmaddwdSimd128(SimdConstant::SplatX8(1), src, dest);
 }
 
 void MacroAssembler::unsignedExtAddPairwiseInt16x8(FloatRegister src,
                                                    FloatRegister dest) {
-  ScratchSimd128Scope scratch(*this);
-  moveSimd128(src, dest);
-  loadConstantSimd128Int(SimdConstant::SplatX8(0x8000), scratch);
-  vpxor(scratch, dest, dest);
-  loadConstantSimd128Int(SimdConstant::SplatX8(1), scratch);
-  vpmaddwd(Operand(scratch), dest, dest);
-  loadConstantSimd128Int(SimdConstant::SplatX4(0x00010000), scratch);
-  vpaddd(Operand(scratch), dest, dest);
+  src = moveSimd128IntIfNotAVX(src, dest);
+  vpxorSimd128(SimdConstant::SplatX8(-0x8000), src, dest);
+  vpmaddwdSimd128(SimdConstant::SplatX8(1), dest, dest);
+  vpadddSimd128(SimdConstant::SplatX4(0x00010000), dest, dest);
 }
 
 // Floating square root
@@ -3023,8 +3016,8 @@ void MacroAssembler::unsignedWidenLowInt32x4(FloatRegister src,
 }
 
 void MacroAssembler::widenHighInt32x4(FloatRegister src, FloatRegister dest) {
-  if (src == dest) {
-    vmovhlps(dest, dest, dest);
+  if (src == dest || HasAVX()) {
+    vmovhlps(src, src, dest);
   } else {
     vpshufd(ComputeShuffleMask(2, 3, 2, 3), src, dest);
   }
@@ -3033,11 +3026,10 @@ void MacroAssembler::widenHighInt32x4(FloatRegister src, FloatRegister dest) {
 
 void MacroAssembler::unsignedWidenHighInt32x4(FloatRegister src,
                                               FloatRegister dest) {
-  moveSimd128(src, dest);
-
   ScratchSimd128Scope scratch(*this);
+  src = moveSimd128IntIfNotAVX(src, dest);
   vpxor(scratch, scratch, scratch);
-  vpunpckhdq(scratch, dest, dest);
+  vpunpckhdq(scratch, src, dest);
 }
 
 // Floating multiply-accumulate: srcDest [+-]= src1 * src2

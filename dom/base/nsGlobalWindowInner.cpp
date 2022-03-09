@@ -31,6 +31,7 @@
 #include "js/CompileOptions.h"
 #include "js/friend/PerformanceHint.h"
 #include "js/Id.h"
+#include "js/loader/LoadedScript.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/PropertyDescriptor.h"
 #include "js/RealmOptions.h"
@@ -80,6 +81,7 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
@@ -135,7 +137,6 @@
 #include "mozilla/dom/IntlUtils.h"
 #include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/LSObject.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/Location.h"
@@ -211,6 +212,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsDebug.h"
+#include "nsDeviceContext.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameMessageManager.h"
@@ -326,10 +328,6 @@
 
 #ifdef ANDROID
 #  include <android/log.h>
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/dom/WindowOrientationObserver.h"
 #endif
 
 #ifdef XP_WIN
@@ -904,6 +902,7 @@ class PromiseDocumentFlushedResolver final {
 nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
                                          WindowGlobalChild* aActor)
     : nsPIDOMWindowInner(aOuterWindow, aActor),
+      mHasOrientationChangeListeners(false),
       mWasOffline(false),
       mHasHadSlowScript(false),
       mIsChrome(false),
@@ -922,6 +921,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mHasSeenGamepadInput(false),
       mHintedWasLoading(false),
       mHasOpenedExternalProtocolFrame(false),
+      mScrollMarksOnHScrollbar(false),
       mStorageAllowedReasonCache(0),
       mSuspendDepth(0),
       mFreezeDepth(0),
@@ -949,13 +949,13 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       *this, StaticPrefs::dom_timeout_max_idle_defer_ms());
 
   mObserver = new nsGlobalWindowObserver(this);
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
+  if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
     // Watch for online/offline status changes so we can fire events. Use
     // a strong reference.
     os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, false);
     os->AddObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC, false);
     os->AddObserver(mObserver, PERMISSION_CHANGED_TOPIC, false);
+    os->AddObserver(mObserver, "screen-information-changed", false);
   }
 
   Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
@@ -1172,10 +1172,6 @@ void nsGlobalWindowInner::FreeInnerObjects() {
 
   mScreen = nullptr;
 
-#if defined(MOZ_WIDGET_ANDROID)
-  mOrientationChangeObserver = nullptr;
-#endif
-
   if (mDoc) {
     // Remember the document's principal, URI, and CSP.
     mDocumentPrincipal = mDoc->NodePrincipal();
@@ -1247,12 +1243,16 @@ void nsGlobalWindowInner::FreeInnerObjects() {
 
   DisconnectEventTargetObjects();
 
+#ifdef MOZ_WIDGET_ANDROID
+  DisableOrientationChangeListener();
+#endif
+
   if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
+    if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC);
       os->RemoveObserver(mObserver, PERMISSION_CHANGED_TOPIC);
+      os->RemoveObserver(mObserver, "screen-information-changed");
     }
 
     RefPtr<StorageNotifierService> sns = StorageNotifierService::GetOrCreate();
@@ -3079,7 +3079,7 @@ bool nsGlobalWindowInner::DoResolve(
   // Note: Keep this in sync with MayResolve.
 
   // Note: The infallibleInit call in GlobalResolve depends on this check.
-  if (!JSID_IS_STRING(aId)) {
+  if (!aId.isString()) {
     return true;
   }
 
@@ -3143,7 +3143,7 @@ bool nsGlobalWindowInner::DoResolve(
 bool nsGlobalWindowInner::MayResolve(jsid aId) {
   // Note: This function does not fail and may not have any side-effects.
   // Note: Keep this in sync with DoResolve.
-  if (!JSID_IS_STRING(aId)) {
+  if (!aId.isString()) {
     return false;
   }
 
@@ -3519,10 +3519,64 @@ float nsGlobalWindowInner::GetMozInnerScreenY(CallerType aCallerType,
   FORWARD_TO_OUTER_OR_THROW(GetMozInnerScreenYOuter, (aCallerType), aError, 0);
 }
 
+static nsPresContext* GetPresContextForRatio(Document* aDoc) {
+  if (nsPresContext* presContext = aDoc->GetPresContext()) {
+    return presContext;
+  }
+  // We're in an undisplayed subdocument... There's not really an awesome way
+  // to tell what the right DPI is from here, so we try to walk up our parent
+  // document chain to the extent that the docs can observe each other.
+  Document* doc = aDoc;
+  while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
+    doc = doc->GetInProcessParentDocument();
+    if (nsPresContext* presContext = doc->GetPresContext()) {
+      return presContext;
+    }
+  }
+  return nullptr;
+}
+
 double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
                                                 ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(GetDevicePixelRatioOuter, (aCallerType), aError,
-                            0.0);
+  ENSURE_ACTIVE_DOCUMENT(aError, 0.0);
+
+  RefPtr<nsPresContext> presContext = GetPresContextForRatio(mDoc);
+  if (NS_WARN_IF(!presContext)) {
+    // Still nothing, oh well.
+    return 1.0;
+  }
+
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+    // Spoofing the DevicePixelRatio causes blurriness in some situations
+    // on HiDPI displays. pdf.js is a non-system caller; but it can't
+    // expose the fingerprintable information, so we can safely disable
+    // spoofing in this situation. It doesn't address the issue for
+    // web-rendered content (including pdf.js instances on the web.)
+    // In the future we hope to have a better solution to fix all HiDPI
+    // blurriness...
+    nsAutoCString origin;
+    nsresult rv = this->GetPrincipal()->GetOrigin(origin);
+    if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
+      return 1.0;
+    }
+  }
+
+  float overrideDPPX = presContext->GetOverrideDPPX();
+  if (overrideDPPX > 0.0f) {
+    return overrideDPPX;
+  }
+
+  return double(AppUnitsPerCSSPixel()) /
+         double(presContext->AppUnitsPerDevPixel());
+}
+
+double nsGlobalWindowInner::GetDesktopToDeviceScale(ErrorResult& aError) {
+  ENSURE_ACTIVE_DOCUMENT(aError, 0.0);
+  nsPresContext* presContext = GetPresContextForRatio(mDoc);
+  if (!presContext) {
+    return 1.0;
+  }
+  return presContext->DeviceContext()->GetDesktopToDeviceScale().scale;
 }
 
 uint64_t nsGlobalWindowInner::GetMozPaintCount(ErrorResult& aError) {
@@ -5304,6 +5358,24 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  if (!nsCRT::strcmp(aTopic, "screen-information-changed")) {
+    if (mScreen) {
+      if (RefPtr<ScreenOrientation> orientation =
+              mScreen->GetOrientationIfExists()) {
+        orientation->MaybeChanged();
+      }
+    }
+    if (mHasOrientationChangeListeners) {
+      int32_t oldAngle = mOrientationAngle;
+      mOrientationAngle = Orientation(CallerType::System);
+      if (mOrientationAngle != oldAngle && IsCurrentInnerWindow()) {
+        nsCOMPtr<nsPIDOMWindowOuter> outer = GetOuterWindow();
+        outer->DispatchCustomEvent(u"orientationchange"_ns);
+      }
+    }
+    return NS_OK;
+  }
+
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     MOZ_ASSERT(!NS_strcmp(aData, u"intl.accept_languages"));
 
@@ -6056,7 +6128,7 @@ class WindowScriptTimeoutHandler final : public ScriptTimeoutHandler {
   virtual ~WindowScriptTimeoutHandler() = default;
 
   // Initiating script for use when evaluating mExpr on the main thread.
-  RefPtr<LoadedScript> mInitiatingScript;
+  RefPtr<JS::loader::LoadedScript> mInitiatingScript;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowScriptTimeoutHandler,
@@ -6402,14 +6474,14 @@ void nsGlobalWindowInner::DisableDeviceSensor(uint32_t aType) {
 
 #if defined(MOZ_WIDGET_ANDROID)
 void nsGlobalWindowInner::EnableOrientationChangeListener() {
-  if (!nsContentUtils::ShouldResistFingerprinting(GetDocShell()) &&
-      !mOrientationChangeObserver) {
-    mOrientationChangeObserver = MakeUnique<WindowOrientationObserver>(this);
+  if (!nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
+    mHasOrientationChangeListeners = true;
+    mOrientationAngle = Orientation(CallerType::System);
   }
 }
 
 void nsGlobalWindowInner::DisableOrientationChangeListener() {
-  mOrientationChangeObserver = nullptr;
+  mHasOrientationChangeListeners = false;
 }
 #endif
 
@@ -6519,13 +6591,22 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
     mHasVRDisplayActivateEvents = true;
   }
 
-  if ((aType == nsGkAtoms::onunload || aType == nsGkAtoms::onbeforeunload) &&
-      mWindowGlobalChild) {
+  if (aType == nsGkAtoms::onunload && mWindowGlobalChild) {
     if (++mUnloadOrBeforeUnloadListenerCount == 1) {
       mWindowGlobalChild->BlockBFCacheFor(BFCacheStatus::UNLOAD_LISTENER);
     }
-    if (aType == nsGkAtoms::onbeforeunload &&
-        (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
+  }
+
+  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild) {
+    if (!mozilla::SessionHistoryInParent() ||
+        !StaticPrefs::
+            docshell_shistory_bfcache_ship_allow_beforeunload_listeners()) {
+      if (++mUnloadOrBeforeUnloadListenerCount == 1) {
+        mWindowGlobalChild->BlockBFCacheFor(
+            BFCacheStatus::BEFOREUNLOAD_LISTENER);
+      }
+    }
+    if (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS)) {
       mWindowGlobalChild->BeforeUnloadAdded();
       MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() > 0);
     }
@@ -6547,14 +6628,23 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 }
 
 void nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType) {
-  if ((aType == nsGkAtoms::onunload || aType == nsGkAtoms::onbeforeunload) &&
-      mWindowGlobalChild) {
+  if (aType == nsGkAtoms::onunload && mWindowGlobalChild) {
     MOZ_ASSERT(mUnloadOrBeforeUnloadListenerCount > 0);
     if (--mUnloadOrBeforeUnloadListenerCount == 0) {
       mWindowGlobalChild->UnblockBFCacheFor(BFCacheStatus::UNLOAD_LISTENER);
     }
-    if (aType == nsGkAtoms::onbeforeunload &&
-        (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
+  }
+
+  if (aType == nsGkAtoms::onbeforeunload && mWindowGlobalChild) {
+    if (!mozilla::SessionHistoryInParent() ||
+        !StaticPrefs::
+            docshell_shistory_bfcache_ship_allow_beforeunload_listeners()) {
+      if (--mUnloadOrBeforeUnloadListenerCount == 0) {
+        mWindowGlobalChild->UnblockBFCacheFor(
+            BFCacheStatus::BEFOREUNLOAD_LISTENER);
+      }
+    }
+    if (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS)) {
       mWindowGlobalChild->BeforeUnloadRemoved();
       MOZ_ASSERT(mWindowGlobalChild->BeforeUnloadListeners() >= 0);
     }
@@ -7247,13 +7337,19 @@ ChromeMessageBroadcaster* nsGlobalWindowInner::GetGroupMessageManager(
 
 void nsGlobalWindowInner::InitWasOffline() { mWasOffline = NS_IsOffline(); }
 
-#if defined(MOZ_WIDGET_ANDROID)
-int16_t nsGlobalWindowInner::Orientation(CallerType aCallerType) const {
-  return nsContentUtils::ResistFingerprinting(aCallerType)
-             ? 0
-             : WindowOrientationObserver::OrientationAngle();
+int16_t nsGlobalWindowInner::Orientation(CallerType aCallerType) {
+  // GetOrientationAngle() returns 0, 90, 180 or 270.
+  // window.orientation returns -90, 0, 90 or 180.
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+    return 0;
+  }
+  nsScreen* s = GetScreen(IgnoreErrors());
+  if (!s) {
+    return 0;
+  }
+  int16_t angle = AssertedCast<int16_t>(s->GetOrientationAngle());
+  return angle <= 180 ? angle : angle - 360;
 }
-#endif
 
 already_AddRefed<Console> nsGlobalWindowInner::GetConsole(JSContext* aCx,
                                                           ErrorResult& aRv) {
@@ -7631,9 +7727,10 @@ ContentMediaController* nsGlobalWindowInner::GetContentMediaController() {
   return mContentMediaController;
 }
 
-void nsGlobalWindowInner::SetScrollMarks(
-    const nsTArray<uint32_t>& aScrollMarks) {
+void nsGlobalWindowInner::SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks,
+                                         bool aOnHScrollbar) {
   mScrollMarks.Assign(aScrollMarks);
+  mScrollMarksOnHScrollbar = aOnHScrollbar;
 
   // Mark the scrollbar for repainting.
   if (mDoc) {
@@ -7641,7 +7738,7 @@ void nsGlobalWindowInner::SetScrollMarks(
     if (presShell) {
       nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
       if (sf) {
-        sf->InvalidateVerticalScrollbar();
+        sf->InvalidateScrollbars();
       }
     }
   }

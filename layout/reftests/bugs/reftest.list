@@ -820,12 +820,14 @@ fuzzy(0-2,0-21) == 398682-1.html 398682-1-ref.html
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
-random-if(gtkWidget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
-random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
-random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+# These tests are expected to fail on Windows and Mac since bug 1756720 deliberately changed behavior here;
+# random elsewhere depending on font availability.
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-standards-css.html 399636-standards-ref.html
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-standards-html.html 399636-standards-ref.html
+fails-if(winWidget||cocoaWidget) random-if(!winWidget&&!cocoaWidget) == 399636-quirks-css.html 399636-quirks-ref.html
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
-fails-if(cocoaWidget||winWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
+random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
@@ -1822,7 +1824,7 @@ pref(layout.css.caption-side-non-standard.enabled,true) == 1062963-floatmanager-
 == 1069716-1.html 1069716-1-ref.html
 == 1078262-1.html about:blank # bug 1656792
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
-fuzzy(63-64,142-845) fuzzy-if(useDrawSnapshot,33-33,218-218) == 1081185-1.html 1081185-1-ref.html
+fuzzy(15-65,100-500) fuzzy-if(useDrawSnapshot,33-33,218-218) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
@@ -2058,7 +2060,7 @@ pref(layout.css.supports-selector.enabled,false) != 1499386.html 1499386-ref.htm
 == 1513423-2.html 1513423-2-ref.html
 == 1513423-3.html 1513423-3-ref.html
 pref(layout.accessiblecaret.enabled,true) == 1517385.html 1517385-ref.html
-fuzzy-if(winWidget&&swgl,1-1,12-16) fuzzy-if(cocoaWidget&&swgl,1-1,32-32) fuzzy-if(useDrawSnapshot,2-2,209-209) == 1529992-1.html 1529992-1-ref.html
+fuzzy(0-5,0-2300) == 1529992-1.html 1529992-1-ref.html
 fuzzy-if(Android,9-14,44-60) fails-if(!useDrawSnapshot) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml

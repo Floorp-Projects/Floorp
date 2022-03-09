@@ -371,9 +371,7 @@ function getBoundsForDOMElm(aID) {
 }
 
 function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight) {
-  var winUtil = aWindow.windowUtils;
-
-  var ratio = winUtil.screenPixelsPerCSSPixel;
+  var ratio = aWindow.devicePixelRatio;
 
   // CSS pixels and ratio can be not integer. Device pixels are always integer.
   // Do our best and hope it works.

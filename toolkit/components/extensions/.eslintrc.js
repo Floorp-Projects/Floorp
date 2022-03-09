@@ -13,6 +13,7 @@ module.exports = {
     Cu: true,
     AppConstants: true,
     ExtensionAPI: true,
+    ExtensionAPIPersistent: true,
     ExtensionCommon: true,
     ExtensionUtils: true,
     extensions: true,

@@ -51,9 +51,7 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_xul.h"
 #include "mozilla/widget/nsAutoRollup.h"
-#ifdef XP_MACOSX
-#  include "mozilla/widget/NativeMenuSupport.h"
-#endif
+#include "mozilla/widget/NativeMenuSupport.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -770,7 +768,7 @@ void nsXULPopupManager::ShowPopup(nsIContent* aPopup,
 }
 
 static bool ShouldUseNativeContextMenus() {
-#ifdef XP_MACOSX
+#ifdef HAS_NATIVE_MENU_SUPPORT
   return mozilla::widget::NativeMenuSupport::ShouldUseNativeContextMenus();
 #else
   return false;
@@ -810,7 +808,7 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
   }
 
   RefPtr<NativeMenu> menu;
-#ifdef XP_MACOSX
+#ifdef HAS_NATIVE_MENU_SUPPORT
   if (aPopup->IsElement()) {
     menu = mozilla::widget::NativeMenuSupport::CreateNativeContextMenu(
         aPopup->AsElement());
@@ -849,13 +847,9 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
     return true;
   }
 
-  auto scale = presContext->CSSToDevPixelScale() /
-               presContext->DeviceContext()->GetDesktopToDeviceScale();
-  DesktopPoint position = CSSPoint(aXPos, aYPos) * scale;
-
   mNativeMenu = menu;
   mNativeMenu->AddObserver(this);
-  mNativeMenu->ShowAsContextMenu(position);
+  mNativeMenu->ShowAsContextMenu(presContext, CSSIntPoint(aXPos, aYPos));
 
   // While the native menu is open, it consumes mouseup events.
   // Clear any :active state, mouse capture state and drag tracking now.

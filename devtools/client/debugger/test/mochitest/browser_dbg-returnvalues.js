@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-return-values.html");
   await togglePauseOnExceptions(dbg, true, true);
@@ -30,7 +32,7 @@ async function testReturnValue(dbg, val) {
   is(getLabel(dbg, 1), "return_something", "check for return_something");
 
   // We don't show "undefined" but we do show other falsy values.
-  let label = getLabel(dbg, 2);
+  const label = getLabel(dbg, 2);
   if (val === "undefined") {
     ok(label !== "<return>", "do not show <return> for undefined");
   } else {

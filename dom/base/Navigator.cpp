@@ -32,7 +32,9 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StaticPrefs_pdfjs.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
@@ -100,10 +102,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 
-#if defined(XP_LINUX)
-#  include "mozilla/Hal.h"
-#endif
-
 #if defined(XP_WIN)
 #  include "mozilla/WindowsVersion.h"
 #endif
@@ -143,7 +141,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Navigator)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMimeTypes)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlugins)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPermissions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGeolocation)
@@ -175,11 +172,7 @@ void Navigator::Invalidate() {
   // Don't clear mWindow here so we know we've got a non-null mWindow
   // until we're unlinked.
 
-  mMimeTypes = nullptr;
-
-  if (mPlugins) {
-    mPlugins = nullptr;
-  }
+  mPlugins = nullptr;
 
   mPermissions = nullptr;
 
@@ -475,15 +468,12 @@ void Navigator::GetProductSub(nsAString& aProductSub) {
 }
 
 nsMimeTypeArray* Navigator::GetMimeTypes(ErrorResult& aRv) {
-  if (!mMimeTypes) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mMimeTypes = new nsMimeTypeArray(mWindow);
+  auto* plugins = GetPlugins(aRv);
+  if (!plugins) {
+    return nullptr;
   }
 
-  return mMimeTypes;
+  return plugins->MimeTypeArray();
 }
 
 nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
@@ -492,11 +482,13 @@ nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    mPlugins = new nsPluginArray(mWindow);
+    mPlugins = MakeRefPtr<nsPluginArray>(mWindow);
   }
 
   return mPlugins;
 }
+
+bool Navigator::PdfViewerEnabled() { return !StaticPrefs::pdfjs_disabled(); }
 
 Permissions* Navigator::GetPermissions(ErrorResult& aRv) {
   if (!mWindow) {
@@ -550,6 +542,13 @@ bool Navigator::CookieEnabled() {
     // Not a content, so technically can't set cookies, but let's
     // just return the default value.
     return cookieEnabled;
+  }
+
+  // We should return true if the cookie is partitioned because the cookie is
+  // still available in this case.
+  if (!granted &&
+      StoragePartitioningEnabled(rejectedReason, doc->CookieJarSettings())) {
+    granted = true;
   }
 
   ContentBlockingNotifier::OnDecision(
@@ -1802,7 +1801,9 @@ network::Connection* Navigator::GetConnection(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    mConnection = network::Connection::CreateForWindow(mWindow);
+    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+    mConnection = network::Connection::CreateForWindow(
+        mWindow, nsContentUtils::ShouldResistFingerprinting(doc));
   }
 
   return mConnection;
@@ -2119,9 +2120,7 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
   }
 
   RefPtr<DetailedPromise> promise = DetailedPromise::Create(
-      mWindow->AsGlobal(), aRv, "navigator.requestMediaKeySystemAccess"_ns,
-      Telemetry::VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS,
-      Telemetry::VIDEO_EME_REQUEST_FAILURE_LATENCY_MS);
+      mWindow->AsGlobal(), aRv, "navigator.requestMediaKeySystemAccess"_ns);
   if (aRv.Failed()) {
     return nullptr;
   }

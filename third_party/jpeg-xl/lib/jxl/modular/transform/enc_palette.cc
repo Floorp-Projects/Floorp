@@ -491,14 +491,12 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
                                           {1, 3}, {2, 2}, {1, 0}, {1, 4},
                                           {2, 1}, {2, 3}, {2, 0}, {2, 4}};
           float total_available = 0;
-          int n = 0;
           for (int i = 0; i < 11; ++i) {
             const int row = offsets[i][0];
             const int col = offsets[i][1];
             if (std::signbit(error_row[row][c][x + col]) !=
                 std::signbit(total_error)) {
               total_available += error_row[row][c][x + col];
-              n++;
             }
           }
           float weight =

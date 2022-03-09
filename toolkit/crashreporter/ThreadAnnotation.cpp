@@ -248,7 +248,7 @@ void SetCurrentThreadName(const char* aName) {
 
 void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback,
                              bool aIsHandlingException) {
-  bool lockNeeded = true;
+  bool lockNeeded = !aIsHandlingException;
 
 #ifdef XP_MACOSX
   if (aIsHandlingException) {

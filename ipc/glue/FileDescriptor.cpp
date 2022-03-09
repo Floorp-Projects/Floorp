@@ -92,18 +92,17 @@ FileDescriptor::UniquePlatformHandle FileDescriptor::Clone(
   return UniqueFileHandle();
 }
 
-void IPDLParamTraits<FileDescriptor>::Write(IPC::Message* aMsg,
+void IPDLParamTraits<FileDescriptor>::Write(IPC::MessageWriter* aWriter,
                                             IProtocol* aActor,
                                             const FileDescriptor& aParam) {
-  WriteIPDLParam(aMsg, aActor, aParam.ClonePlatformHandle());
+  WriteIPDLParam(aWriter, aActor, aParam.ClonePlatformHandle());
 }
 
-bool IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
-                                           PickleIterator* aIter,
+bool IPDLParamTraits<FileDescriptor>::Read(IPC::MessageReader* aReader,
                                            IProtocol* aActor,
                                            FileDescriptor* aResult) {
   UniqueFileHandle handle;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &handle)) {
+  if (!ReadIPDLParam(aReader, aActor, &handle)) {
     return false;
   }
 

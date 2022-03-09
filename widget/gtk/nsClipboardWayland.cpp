@@ -20,9 +20,9 @@ using namespace mozilla;
 
 nsRetrievalContextWayland::nsRetrievalContextWayland() = default;
 
-ClipboardTargets nsRetrievalContextWayland::GetTargets(
+ClipboardTargets nsRetrievalContextWayland::GetTargetsImpl(
     int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextWayland::GetTargets()\n");
+  LOGCLIP("nsRetrievalContextWayland::GetTargetsImpl()\n");
 
   return WaitForClipboardData(ClipboardDataType::Targets, aWhichClipboard)
       .ExtractTargets();

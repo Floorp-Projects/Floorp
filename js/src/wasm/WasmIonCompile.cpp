@@ -60,74 +60,22 @@ using DefVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 using ControlInstructionVector =
     Vector<MControlInstruction*, 8, SystemAllocPolicy>;
 
-struct CatchInfo {
-  uint32_t tagIndex;
-  MBasicBlock* block;
-
-  CatchInfo(uint32_t tagIndex, MBasicBlock* block)
-      : tagIndex(tagIndex), block(block) {}
-};
-
-using CatchInfoVector = Vector<CatchInfo, 8, SystemAllocPolicy>;
-
 struct Control {
   MBasicBlock* block;
-  MBasicBlock* catchAllBlock;
   // For a try-catch ControlItem, when its block's Labelkind is Try, this
   // collects branches to later bind and create the try's landing pad.
   ControlInstructionVector tryPadPatches;
 
-  // For a try-catch ControlItem, when its block's Labelkind is Catch, this
-  // collects the first basic block of each handler and the handler's tag index
-  // immediate, both wrapped together into a CatchInfo.
-  CatchInfoVector tryCatches;
+  Control() : block(nullptr) {}
 
-  Control() : block(nullptr), catchAllBlock(nullptr) {}
-
-  explicit Control(MBasicBlock* block) : block(block), catchAllBlock(nullptr) {}
+  explicit Control(MBasicBlock* block) : block(block) {}
 
  public:
   void setBlock(MBasicBlock* newBlock) { block = newBlock; }
-
-  // We ignore handlers whose tag index already appeared.
-  bool tagAlreadyHandled(uint32_t tagIndex) {
-    for (CatchInfo& info : tryCatches) {
-      if (tagIndex == info.tagIndex) {
-        return true;
-      }
-    }
-    return false;
-  }
 };
 
 // [SMDOC] WebAssembly Exception Handling (Wasm-EH) in Ion
 // =======================================================
-//
-// Control struct as ControlItem for WebAssembly Exception Handling (Wasm-EH)
-// --------------------------------------------------------------------------
-//
-// Using the above "struct Control" as a ControlItem in IonCompilePolicy,
-// simplifies the compilation of Wasm-EH try-catch blocks in two ways.
-//
-// 1. By collecting any paths we create from throws or potential throws (Wasm
-//    function calls) in the vector tryPadPatches, so they can be bound to
-//    create the landing pad.
-// 2. By keeping track of each handler with its CatchInfo in the vector
-//    tryCatches, to simplify creating the landing pad's control instruction,
-//    after we read End. This control instruction, in general a table switch,
-//    will direct caught exceptions to the correct catch code.
-//
-// Without such a Control structure, we'd have to track the tryPadPatches of
-// potentially nested try blocks manually in the function compiler. Moreover,
-// the landing pad's control instruction, a table switch, would have to be
-// modified every time we read a new catch. With the above control structure,
-// that table switch is created after we read the last catch and know which
-// successors it should have, and whether it has a catch_all block or if it
-// rethrows unhandled exceptions.
-//
-//
-// Design and terminology around the Wasm-EH additions in Ion
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
 // This documentation aims to explain the design and names used for the Wasm-EH
 // additions in Ion. We'll go through what happens while compiling a Wasm
@@ -143,10 +91,10 @@ struct Control {
 //
 // Wasm exceptions can be thrown by either a throw instruction (local throw),
 // or by a direct or indirect Wasm function call. On all these occassions, we
-// know we are in try-code, if there is a surrounding ControlItem with
+// know we are in try-code if there is a surrounding ControlItem with
 // LabelKind::Try. The innermost such control is called the "catching try
 // control". In all these occassions, we create a branch to a new block, which
-// contains the exception in its slots, and call this a pre-pad block.
+// contains the exception in its slots, and call this a 'pre-pad block'.
 //
 // Creating pre-pad blocks
 // .......................
@@ -156,9 +104,8 @@ struct Control {
 // call:
 //
 // - If we encounter a throw instruction while in try-code (a local throw), we
-//   create the exception and tag index MDefinitions, create and jump to a
-//   pre-pad block. The exception and tag index are pushed to the pre-pad
-//   block.
+//   create the exception and tag MDefinitions, create and jump to a pre-pad
+//   block. The exception and tag index are pushed to the pre-pad block.
 //
 // - If we encounter a direct, indirect, or imported Wasm function call, then
 //   we set the WasmCall to initialise a WasmTryNote, whose "start", "end", and
@@ -168,15 +115,14 @@ struct Control {
 //   wasm::TlsData::pendingException. We then add a test which branches to a new
 //   pre-pad block if there is a pending exception, or continues with the
 //   opcodes in the try-code, if there was no pending exception. During this
-//   branch, any found exception is pushed to the pre-pad block, and then an
-//   instance call is made from the pre-pad block to clear the pending exception
-//   from the TlsData, and retrieve its local tag index. This tag index is
-//   pushed to the pre-pad block as well.
+//   branch, any found exception is pushed to the pre-pad block, and the
+//   pending tag is pulled from wasm::TlsData::pendingExceptionTag. This tag
+//   is pushed to the pre-pad block as well.
 //
 // We end each pre-pad block with a jump to a nullptr, as is done when using
 // ControlFlowPatches. However, we don't need to collect ControlFlowPatches
 // for our case, because we only have one successor to a pad patch's last
-// instruction. We collect all [1] these last instructíons (jumps-to-be-patched)
+// instruction. We collect all these last instructíons (jumps-to-be-patched)
 // in the catching try control's  `tryPadPatches`.
 //
 // Creating the landing pad
@@ -187,8 +133,8 @@ struct Control {
 // instructions (pad patches). If not, we don't compile any catches and we mark
 // the rest as dead code. If there are pre-pad blocks, we join them to
 // create a landing pad (or just "pad"), which becomes the ControlItem's block.
-// The pad's last two slots are the caught exception, and the exception's local
-// tag index.
+// The pad's last two slots are the caught exception, and the exception's tag
+// object.
 //
 // There are three different forms of try-catch/catch_all Wasm instructions,
 // which result in different form of landing pad.
@@ -198,27 +144,23 @@ struct Control {
 //
 // 2. A single catch_all after a try.
 //    - If the first catch after a try is a catch_all, then there won't be
-//      any more catches, but we need the exception and its local tag index, in
+//      any more catches, but we need the exception and its tag object, in
 //      case the code in a catch_all contains "rethrow" instructions.
-//      - The Wasm instruction "rethrow", gets the exception and tag index to
+//      - The Wasm instruction "rethrow", gets the exception and tag object to
 //        rethrow from the last two slots of the landing pad which, due to
 //        validation, is the l'th surrounding ControlItem.
 //      - We immediately GoTo to a new block after the pad and pop both the
-//        exception and tag index, as we don't need them anymore in this case.
+//        exception and tag object, as we don't need them anymore in this case.
 //
 // 3. Otherwise, there is one or more catch code blocks following.
-//    - In this case, we leave the pad without a last instruction for now, and
-//      compile "catch" or "catch_all" each in a new block created [3] from the
-//      pad, collecting these blocks together with their tag index, into the
-//      ControlItem's CatchInfoVector. Any of these blocks which is not dead
-//      code is finished like a br 0 (including the last block of the end of the
-//      try code). When we finally reach "end" we use the exception's local tag
-//      index (last slot of the pad) to finish the pad with a tableswitch [2].
-//      The successors of the table switch and the case (tag index) they
-//      correspond to (they handle) are added with the help of the Control's
-//      `CatchInfoVector tryCatches`. If there was no catch_all found, the
-//      table's default case is a block which rethrows the exception.
-//
+//    - In this case, we construct the landing pad by creating a sequence
+//      of compare and branch blocks that compare the pending exception tag
+//      object to the tag object of the current tagged catch block. This is
+//      done incrementally as we visit each tagged catch block in the bytecode
+//      stream. At every step, we update the ControlItem's block to point to
+//      the next block to be created in the landing pad sequence. The final
+//      block will either be a rethrow, if there is no catch_all, or else a
+//      jump to a catch_all block.
 //
 // Throws without a catching try control node
 // ..........................................
@@ -276,7 +218,7 @@ struct Control {
 //            V                \     | v4 = f64.const 6                       |
 //   __block2___________        \--->| v5 = create a new exception (&v6) with |
 //  |                   |            |      tag $exn (v7), and store v4 in    |
-//  | v3 = f64.const 2  |            |      the exception's VALUES buffer)    |
+//  | v3 = f64.const 2  |            |      the exception's data buffer)      |
 //  | v10 = GoTo block5 |            | v9 = GoTo block4 (local throw)         |
 //  |___________________|            |________________________________________|
 //            |                                       |
@@ -285,7 +227,7 @@ struct Control {
 //   __block5_____________________________________    |                        |
 //  |                                             |   | v6 = the new exception |
 //  | v11 = call $f                               |   |      now carrying v4   |
-//  | v12 = load exception from TlsData           |   | v7 = tag index $exn    |
+//  | v12 = load exception from TlsData           |   | v7 = tag object $exn   |
 //  | v13 = Test (v12 not nullref?) block7 block6 |   | v8 = GoTo ?? -> block8 |
 //  |_____________________________________________|   |________________________|
 //       0|              1\                                                |
@@ -295,26 +237,26 @@ struct Control {
 //        V                   \-->|                                   |    |
 //  (last block in try code)      | v14 = clear the pending exception |    |
 //   __block6_________________    |       from TlsData and get v12's  |    |
-//  |                         |   |       local tag index &v15        |    |
-//  | v17 = f64.const 3       |   | v15 = tag index of v12            |    |
-//  | v18 = f64.sub v4 v17    |   | v16 = GoTo ?? -> block8           |    |
-//  | v19 GoTo ??? -> block11 |   |___________________________________|    |
+//  |                         |   |       tag object &v15             |    |
+//  | v17 = f64.const 3       |   | v16 = GoTo ?? -> block8           |    |
+//  | v18 = f64.sub v4 v17    |   |___________________________________|    |
+//  | v19 GoTo ??? -> block11 |     |                                      |
 //  |_________________________|     |                                      |
 //             |                    |          (control Try)               |
 //             |                    V__block8__(landing_pad)_______________V
 //             |                    |                                      |
 //             |                    | v20 = Phi(v6, v12) exception         |
-//             |                    | v21 = Phi(v7, v15) tag index         |
-//             |                    | v27 = 1 + v21                        |
-//             |                    | v28 = TableSwitch v27 block10 block9 |
+//             |                    | v21 = Phi(v7, v15) tag object        |
+//             |                    | v27 = load tag object for $exn       |
+//             |                    | v28 = Test v21 == v27 block10 block9 |
 //             |                    |______________________________________|
-//             |                      0|     $exn+1|
-//             |                default|           |
+//             |                 false |      true |
+//             |                       |           |
 //             |                       |           V__block9__(catch_$exn)_____
 //             |                       V           |                           |
 //             |      __block10__(catch_all)_      | v22 = load the first (and |
 //             |     |                       |     |       only) value in      |
-//             |     | v26 = f64.const 5     |     |       v20's VALUES buffer |
+//             |     | v26 = f64.const 5     |     |       v20's data buffer   |
 //             |     | v30 = GoTo block11    |     | v23 = f64.const 4         |
 //             |     |_______________________|     | v24 = f64.add v22 v23     |
 //             |         |                         | v25 = GoTo ??? -> block11 |
@@ -335,25 +277,6 @@ struct Control {
 //   respect to any local wasm state changes, that may have occurred in the try
 //   code before an exception was thrown.
 //
-// Footnotes:
-// ----------
-//
-// [1] We could potentially optimise this by separately collecting any jumps
-//     from pre-pad blocks coming from Wasm function calls, not doing any
-//     instance calls in these pre-pad blocks, but join them to an intermediate
-//     basic block which only does the instance call to consume the pending
-//     exception and get the tag index once. // TODO: Is it worth it?
-//
-// [2] We could potentially optimise this by compiling the case of a single
-//     tagged catch into a plain MTest, although it's possible that in that case
-//     Ion automatically simplifies such a table switch to a test anyway.
-//
-// [3] Each new block created for a catch is "created from the pad block" in the
-//     sense of "newBlock(pad, catch)". This is done to make sure that the catch
-//     has the correct stack position and contents. Each catch block must hold
-//     the exception and tag index in its initial slots, and each must have the
-//     same stack position as the pad, because the pad is later added as a
-//     predecessor.
 
 struct IonCompilePolicy {
   // We store SSA definitions in the value stack.
@@ -1785,6 +1708,23 @@ class FunctionCompiler {
         MWasmInterruptCheck::New(alloc(), tlsPointer_, bytecodeOffset()));
   }
 
+  bool postBarrierFilteringCall(uint32_t lineOrBytecode,
+                                MDefinition* barrierAddr) {
+    const SymbolicAddressSignature& callee = SASigPostBarrierFiltering;
+    CallCompileState args;
+    if (!passInstance(callee.argTypes[0], &args)) {
+      return false;
+    }
+    if (!passArg(barrierAddr, callee.argTypes[1], &args)) {
+      return false;
+    }
+    finishCall(&args);
+    if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
+      return false;
+    }
+    return true;
+  }
+
   /***************************************************************** Calls */
 
   // The IonMonkey backend maintains a single stack offset (from the stack
@@ -2487,7 +2427,8 @@ class FunctionCompiler {
     // patches around.
 #ifdef ENABLE_WASM_EXCEPTIONS
     for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
-      if (iter().controlKind(depth) != LabelKind::Try) {
+      LabelKind kind = iter().controlKind(depth);
+      if (kind != LabelKind::Try && kind != LabelKind::Body) {
         continue;
       }
       Control& control = iter().controlItem(depth);
@@ -2717,19 +2658,51 @@ class FunctionCompiler {
     return inTryBlock(&relativeDepth);
   }
 
-  bool clearExceptionGetTag(MDefinition** tagIndex) {
-    // This clears the pending exception from the tls data and returns the
-    // exception's local tag index.
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-    const SymbolicAddressSignature& callee = SASigConsumePendingException;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    return builtinInstanceMethodCall(callee, lineOrBytecode, args, tagIndex);
+  MDefinition* loadTag(uint32_t tagIndex) {
+    MWasmLoadGlobalVar* tag = MWasmLoadGlobalVar::New(
+        alloc(), MIRType::RefOrNull, moduleEnv_.tags[tagIndex].globalDataOffset,
+        true, tlsPointer_);
+    curBlock_->add(tag);
+    return tag;
+  }
+
+  MDefinition* loadPendingException() {
+    MWasmLoadTls* exn = MWasmLoadTls::New(
+        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
+        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
+    curBlock_->add(exn);
+    return exn;
+  }
+
+  MDefinition* loadPendingExceptionTag() {
+    MWasmLoadTls* tag = MWasmLoadTls::New(
+        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingExceptionTag),
+        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
+    curBlock_->add(tag);
+    return tag;
+  }
+
+  void clearPendingExceptionState() {
+    // Clear the pending exception object
+    auto* exceptionLoc = MWasmDerivedPointer::New(
+        alloc(), tlsPointer_, offsetof(TlsData, pendingException));
+    curBlock_->add(exceptionLoc);
+    auto* null = nullRefConstant();
+    auto* clearException =
+        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionLoc, null,
+                           AliasSet::WasmPendingException);
+    curBlock_->add(clearException);
+    // No post barrier is required here as we are storing null
+
+    // Clear the pending exception tag object
+    auto* exceptionTagLoc = MWasmDerivedPointer::New(
+        alloc(), tlsPointer_, offsetof(TlsData, pendingExceptionTag));
+    curBlock_->add(exceptionTagLoc);
+    auto* clearExceptionTag =
+        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagLoc, null,
+                           AliasSet::WasmPendingException);
+    curBlock_->add(clearExceptionTag);
+    // No post barrier is required here as we are storing null
   }
 
   bool addPadPatch(MControlInstruction* ins, size_t relativeTryDepth) {
@@ -2738,12 +2711,12 @@ class FunctionCompiler {
     return padPatches.emplaceBack(ins);
   }
 
-  bool endWithPadPatch(MBasicBlock* block, MDefinition* exn,
-                       MDefinition* tagIndex, uint32_t relativeTryDepth) {
+  bool endWithPadPatch(MBasicBlock* block, MDefinition* exn, MDefinition* tag,
+                       uint32_t relativeTryDepth) {
     MOZ_ASSERT(iter().controlKind(relativeTryDepth) == LabelKind::Try);
     MOZ_ASSERT(exn);
     MOZ_ASSERT(exn->type() == MIRType::RefOrNull);
-    MOZ_ASSERT(tagIndex && tagIndex->type() == MIRType::Int32);
+    MOZ_ASSERT(tag && tag->type() == MIRType::RefOrNull);
     MOZ_ASSERT(numPushed(block) == 0);
 
     // Push the exception and its tag index on the stack to make them available
@@ -2752,7 +2725,7 @@ class FunctionCompiler {
       return false;
     }
     block->push(exn);
-    block->push(tagIndex);
+    block->push(tag);
 
     MGoto* insToPatch = MGoto::New(alloc());
     block->end(insToPatch);
@@ -2760,17 +2733,33 @@ class FunctionCompiler {
     return addPadPatch(insToPatch, relativeTryDepth);
   }
 
+  bool delegatePadPatches(const ControlInstructionVector& patches,
+                          uint32_t relativeDepth) {
+    if (patches.empty()) {
+      return true;
+    }
+
+    // Find where we are delegating the pad patches to.
+    uint32_t targetRelativeDepth;
+    if (!iter().controlFindInnermostFrom(LabelKind::Try, relativeDepth,
+                                         &targetRelativeDepth)) {
+      MOZ_ASSERT(relativeDepth <= blockDepth_ - 1);
+      targetRelativeDepth = blockDepth_ - 1;
+    }
+    // Append the delegate's pad patches to the target's.
+    for (MControlInstruction* ins : patches) {
+      if (!addPadPatch(ins, targetRelativeDepth)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool checkPendingExceptionAndBranch(uint32_t relativeTryDepth) {
     // Assuming we're in a Wasm try block, branch to a new pre-pad block, if
     // there exists a pendingException in the Wasm TlsData.
 
     MOZ_ASSERT(inTryCode());
-
-    // Get the contents of pendingException from the Wasm TlsData.
-    MWasmLoadTls* pendingException = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
-        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
-    curBlock_->add(pendingException);
 
     // Set up a test to see if there was a pending exception or not.
     MBasicBlock* fallthroughBlock = nullptr;
@@ -2781,27 +2770,23 @@ class FunctionCompiler {
     if (!newBlock(curBlock_, &prePadBlock)) {
       return false;
     }
+    MDefinition* pendingException = loadPendingException();
     MDefinition* nullVal = nullRefConstant();
     // We use a not-equal comparison to benefit the non-exceptional common case.
     MDefinition* pendingExceptionIsNotNull = compare(
         pendingException, nullVal, JSOp::Ne, MCompare::Compare_RefOrNull);
-
-    // Here we don't null check nullVal and pendingExceptionIsNull because the
-    // temp allocator ballast should make allocation infallible.
-
     MTest* branchIfNull = MTest::New(alloc(), pendingExceptionIsNotNull,
                                      prePadBlock, fallthroughBlock);
     curBlock_->end(branchIfNull);
+
+    // Switch to the prePadBlock
     curBlock_ = prePadBlock;
-
-    // Clear pending exception and get the exceptions local tag index.
-    MDefinition* tagIndex = nullptr;
-    if (!clearExceptionGetTag(&tagIndex)) {
-      return false;
-    }
-
+    // Load the tag index of the pending exception
+    MDefinition* pendingTag = loadPendingExceptionTag();
+    // Clear the pending exception state
+    clearPendingExceptionState();
     // Finish the prePadBlock with a patch.
-    if (!endWithPadPatch(prePadBlock, pendingException, tagIndex,
+    if (!endWithPadPatch(prePadBlock, pendingException, pendingTag,
                          relativeTryDepth)) {
       return false;
     }
@@ -2823,19 +2808,16 @@ class FunctionCompiler {
   // which will become the landing pad, and also become the curBlock_.
   //
   // For the latter to work, the last block in the try code (the curBlock_)
-  // should be either dead code or finished before maybeCreateTryPadBlock gets
-  // called. This function should only be called when try code ends.
-  bool maybeCreateTryPadBlock(Control& catching) {
-    // Make sure the last block in try code is finished.
-    MOZ_ASSERT(inDeadCode() || curBlock_->hasLastIns());
-
+  // should be either dead code or finished before createTryLandingPadIfNeeded
+  // gets called. This function should only be called when try code ends.
+  bool createTryLandingPadIfNeeded(Control& control, MBasicBlock** landingPad) {
     // If there are no pad-patches for this try control, it means there are no
     // instructions in the try code that could throw a Wasm exception. In this
     // case, all the catches are dead code, and the try code ends up equivalent
     // to a plain Wasm block.
-    ControlInstructionVector& patches = catching.tryPadPatches;
+    ControlInstructionVector& patches = control.tryPadPatches;
     if (patches.empty()) {
-      curBlock_ = nullptr;
+      *landingPad = nullptr;
       return true;
     }
 
@@ -2862,27 +2844,28 @@ class FunctionCompiler {
     // control flow patch to be joined with the end if each catch block. We are
     // now ready to start the landing pad, which will eventually branch to each
     // catch block.
-    curBlock_ = pad;
-    mirGraph().moveBlockToEnd(curBlock_);
-    mirGraph().setHasTryBlock();
+    *landingPad = pad;
+    mirGraph().moveBlockToEnd(pad);
 
     // Clear the now bound pad patches.
     patches.clear();
     return true;
   }
 
-  bool emitTry(MBasicBlock** curBlock) {
+  bool startTry(MBasicBlock** curBlock) {
     *curBlock = curBlock_;
     return startBlock();
   }
 
-  bool finishTryOrCatchBlock(Control& control) {
+  bool joinTryOrCatchBlock(Control& control) {
+    // If the try or catch block ended with dead code, there is no need to
+    // do any control flow join.
     if (inDeadCode()) {
       return true;
     }
 
-    // If we are not in dead code, then this is a split path which we'll need
-    // to join later, using a control flow patch.
+    // This is a split path which we'll need to join later, using a control
+    // flow patch.
     MOZ_ASSERT(!curBlock_->hasLastIns());
     MGoto* jump = MGoto::New(alloc());
     if (!addControlFlowPatch(jump, 0, MGoto::TargetIndex)) {
@@ -2894,428 +2877,285 @@ class FunctionCompiler {
     return true;
   }
 
-  bool switchToCatch(const LabelKind& kind, uint32_t tagIndex,
-                     Control& control) {
-    // Finish the previous block (either a try or catch block) and then setup a
-    // new catch block.
-
-    // If there is no control block (which is the entry block for `try` and the
-    // landing pad block for `catch`/`catch_all`) then we are in dead code.
+  // Finish the previous block (either a try or catch block) and then setup a
+  // new catch block.
+  bool switchToCatch(Control& control, const LabelKind& fromKind,
+                     uint32_t tagIndex) {
+    // If there is no control block, then either:
+    //   - the entry of the try block is dead code, or
+    //   - there is no landing pad for the try-catch.
+    // In either case, any catch will be dead code.
     if (!control.block) {
       MOZ_ASSERT(inDeadCode());
       return true;
     }
 
-    if (!finishTryOrCatchBlock(control)) {
+    // Join the previous try or catch block with a patch to the future join of
+    // the whole try-catch block.
+    if (!joinTryOrCatchBlock(control)) {
       return false;
     }
 
-    // Finish a try block by emitting a landing pad if there was any code that
-    // may throw.
-    if (kind == LabelKind::Try) {
-      if (!maybeCreateTryPadBlock(control)) {
+    // If we are switching from the try block, create the landing pad. This is
+    // guaranteed to happen once and only once before processing catch blocks.
+    if (fromKind == LabelKind::Try) {
+      MBasicBlock* padBlock = nullptr;
+      if (!createTryLandingPadIfNeeded(control, &padBlock)) {
         return false;
       }
-
-      // The landing pad becomes the control block.
-      control.block = curBlock_;
-
-      // If there is no landing pad created, the catches are dead code.
-      if (curBlock_ == nullptr) {
-        return true;
-      }
-
-      // If there is a landing pad, then it has exactly two slots pushed, the
-      // caught exception and its tag index.
-      MOZ_ASSERT(numPushed(curBlock_) == 2);
-
-      // If this is a single catch_all after a try block then we don't need the
-      // exception nor its tag index. So we pop these and there's nothing else
-      // to do.
-      if (tagIndex == CatchAllIndex) {
-        MBasicBlock* catchAllBlock = nullptr;
-        if (!goToNewBlock(curBlock_, &catchAllBlock)) {
-          return false;
-        }
-        control.catchAllBlock = catchAllBlock;
-        curBlock_ = catchAllBlock;
-        curBlock_->pop();
-        curBlock_->pop();
-        return true;
-      }
-
-      MOZ_ASSERT(control.tryCatches.empty());
+      // Set the control block for this try-catch to the landing pad.
+      control.block = padBlock;
     }
 
-    // Get the landing pad.
-    MBasicBlock* padBlock = control.block;
-
-    // If this is not a catch_all and if tagIndex is already handled, then this
-    // catch is dead.
-    if (tagIndex != CatchAllIndex && control.tagAlreadyHandled(tagIndex)) {
+    // If there is no landing pad, then this and following catches are dead
+    // code.
+    if (!control.block) {
       curBlock_ = nullptr;
       return true;
     }
 
-    // Create a new block for the next catch.
-    MBasicBlock* nextCatch = nullptr;
-    if (!newBlock(padBlock, &nextCatch)) {
+    // Switch to the landing pad.
+    curBlock_ = control.block;
+
+    // Handle a catch_all by immediately jumping to a new block. We require a
+    // new block (as opposed to just emitting the catch_all code in the current
+    // block) because rethrow requires the exception/tag to be present in the
+    // landing pad's slots, while the catch_all block must not have the
+    // exception/tag in slots.
+    if (tagIndex == CatchAllIndex) {
+      MBasicBlock* catchAllBlock = nullptr;
+      if (!goToNewBlock(curBlock_, &catchAllBlock)) {
+        return false;
+      }
+      // Compilation will continue in the catch_all block.
+      curBlock_ = catchAllBlock;
+      // Remove the tag and exception slots from the block, they are no
+      // longer necessary.
+      curBlock_->pop();
+      curBlock_->pop();
+      return true;
+    }
+
+    // Handle a tagged catch by doing a compare and branch on the tag index,
+    // jumping to a catch block if they match, or else to a fallthrough block
+    // to continue the landing pad.
+    MBasicBlock* catchBlock = nullptr;
+    MBasicBlock* fallthroughBlock = nullptr;
+    if (!newBlock(curBlock_, &catchBlock) ||
+        !newBlock(curBlock_, &fallthroughBlock)) {
       return false;
     }
 
-    // If this is a catch_all, mark it in the control as such, otherwise collect
-    // the catch info into the control's tryCatches.
-    if (tagIndex == CatchAllIndex) {
-      control.catchAllBlock = nextCatch;
-    } else {
-      CatchInfo catchInfo(tagIndex, nextCatch);
-      if (!control.tryCatches.emplaceBack(catchInfo)) {
-        return false;
-      }
-    }
+    // Get the exception and its tag from the slots we pushed when adding
+    // control flow patches.
+    MDefinition* exceptionTag = curBlock_->pop();
+    MDefinition* exception = curBlock_->pop();
 
-    // Pop the exception, extract the exception values if necessary, and
-    // continue with the instructions in the next catch.
-    curBlock_ = nextCatch;
-    mirGraph().moveBlockToEnd(curBlock_);
-    // Pop the tag index, which we don't need, to get to the exception object.
+    // Branch to the catch block if the exception's tag matches this catch
+    // block's tag.
+    MDefinition* catchTag = loadTag(tagIndex);
+    MDefinition* matchesCatchTag =
+        compare(exceptionTag, catchTag, JSOp::Eq, MCompare::Compare_RefOrNull);
+    curBlock_->end(
+        MTest::New(alloc(), matchesCatchTag, catchBlock, fallthroughBlock));
+
+    // The landing pad will continue in the fallthrough block
+    control.block = fallthroughBlock;
+
+    // Set up the catch block by extracting the values from the exception
+    // object.
+    curBlock_ = catchBlock;
+
+    // Remove the tag and exception slots from the block, they are no
+    // longer necessary.
     curBlock_->pop();
-    MDefinition* exn = curBlock_->pop();
-    MOZ_ASSERT(exn->type() == MIRType::RefOrNull);
+    curBlock_->pop();
 
-    // Nothing left to do for a catch_all block, as it gets no params.
-    if (tagIndex == CatchAllIndex) {
-      return true;
-    }
-
-    // Since this is not a catch_all, extract the exception values.
-    const TagType& tagType = moduleEnv().tags[tagIndex].type;
-    const ValTypeVector& tagParams = tagType.argTypes;
-    const TagOffsetVector& offsets = tagType.argOffsets;
-
-    MWasmExceptionDataPointer* exnDataPtr =
-        MWasmExceptionDataPointer::New(alloc(), exn);
-    curBlock_->add(exnDataPtr);
-    MWasmExceptionRefsPointer* exnRefsPtr =
-        MWasmExceptionRefsPointer::New(alloc(), exn, tagType.refCount);
-    curBlock_->add(exnRefsPtr);
-
-    MIRType type;
-    size_t count = tagParams.length();
-    DefVector loadedValues;
-    // Presize the loadedValues vector to the amount of params.
-    if (!loadedValues.reserve(count)) {
+    // Extract the exception values for the catch block
+    DefVector values;
+    if (!loadExceptionValues(exception, tagIndex, &values)) {
       return false;
     }
-
-    for (size_t i = 0; i < count; i++) {
-      int32_t offset = offsets[i];
-      type = ToMIRType(tagParams[i]);
-      if (IsNumberType(type) || tagParams[i].kind() == ValType::V128) {
-        auto* load =
-            MWasmLoadExceptionDataValue::New(alloc(), exnDataPtr, offset, type);
-        if (!load || !loadedValues.append(load)) {
-          return false;
-        }
-        MOZ_ASSERT(load->type() != MIRType::None);
-        curBlock_->add(load);
-      } else {
-        MOZ_ASSERT(tagParams[i].kind() == ValType::Rtt ||
-                   tagParams[i].kind() == ValType::Ref);
-        auto* load =
-            MWasmLoadExceptionRefsValue::New(alloc(), exnRefsPtr, offset);
-        if (!load || !loadedValues.append(load)) {
-          return false;
-        }
-        MOZ_ASSERT(load->type() != MIRType::None);
-        curBlock_->add(load);
-      }
-    }
-    iter().setResults(count, loadedValues);
+    iter().setResults(values.length(), values);
     return true;
   }
 
-  bool delegatePadPatches(const ControlInstructionVector& delegatePadPatches,
-                          uint32_t relativeDepth) {
-    if (delegatePadPatches.empty()) {
-      return true;
+  bool loadExceptionValues(MDefinition* exception, uint32_t tagIndex,
+                           DefVector* values) {
+    SharedTagType tagType = moduleEnv().tags[tagIndex].type;
+    const ValTypeVector& params = tagType->argTypes_;
+    const TagOffsetVector& offsets = tagType->argOffsets_;
+
+    // Get the data pointer from the exception object
+    auto* data = MWasmLoadObjectField::New(alloc(), exception,
+                                           WasmExceptionObject::offsetOfData(),
+                                           MIRType::Pointer);
+    curBlock_->add(data);
+
+    // Presize the values vector to the number of params
+    if (!values->reserve(params.length())) {
+      return false;
     }
 
-    // Find where we are delegating the pad patches to.
-    uint32_t targetRelativeDepth;
-    if (!iter().controlFindInnermostFrom(LabelKind::Try, relativeDepth,
-                                         &targetRelativeDepth)) {
-      MOZ_ASSERT(relativeDepth <= blockDepth_ - 1);
-      targetRelativeDepth = blockDepth_ - 1;
-    }
-    // Append the delegate's pad patches to the target's.
-    for (MControlInstruction* ins : delegatePadPatches) {
-      if (!addPadPatch(ins, targetRelativeDepth)) {
+    // Load each value from the data pointer
+    for (size_t i = 0; i < params.length(); i++) {
+      auto* load = MWasmLoadObjectDataField::New(
+          alloc(), exception, data, offsets[i], ToMIRType(params[i]));
+      if (!load || !values->append(load)) {
         return false;
       }
+      curBlock_->add(load);
     }
     return true;
   }
 
-  bool finishCatchlessTry(Control& control) {
-    // If a try has no catches and nothing that may throw, then we have no work
-    // to do.
-    if (control.tryPadPatches.empty()) {
-      return true;
+  bool finishTryCatch(LabelKind kind, Control& control, DefVector* defs) {
+    switch (kind) {
+      case LabelKind::Try: {
+        // This is a catchless try, we must delegate all throwing instructions
+        // to the nearest enclosing try block if one exists, or else to the
+        // body block which will handle it in emitBodyDelegateThrowPad. We
+        // specify a relativeDepth of '1' to delegate outside of the still
+        // active try block.
+        uint32_t relativeDepth = 1;
+        if (!delegatePadPatches(control.tryPadPatches, relativeDepth)) {
+          return false;
+        }
+        break;
+      }
+      case LabelKind::Catch: {
+        // This is a try without a catch_all, we must have a rethrow at the end
+        // of the landing pad (if any).
+        MBasicBlock* padBlock = control.block;
+        if (padBlock) {
+          MBasicBlock* prevBlock = curBlock_;
+          curBlock_ = padBlock;
+          MDefinition* tag = curBlock_->pop();
+          MDefinition* exception = curBlock_->pop();
+          if (!throwFrom(exception, tag)) {
+            return false;
+          }
+          curBlock_ = prevBlock;
+        }
+        break;
+      }
+      case LabelKind::CatchAll:
+        // This is a try with a catch_all, and requires no special handling.
+        break;
+      default:
+        MOZ_CRASH();
     }
 
-    // Delegate all the throwing instructions to an enclosing try block if one
-    // exists, or else to the body block which will handle it in
-    // finishBodyDelegateThrowPad. We specify a relativeDepth of '1' to
-    // delegate outside of the still active try block.
-    uint32_t relativeDepth = 1;
-    if (!delegatePadPatches(control.tryPadPatches, relativeDepth)) {
-      return false;
-    }
-    return true;
+    // Finish the block, joining the try and catch blocks
+    return finishBlock(defs);
   }
 
-  bool finishBodyDelegateThrowPad(Control& control) {
-    // If a function has no catches and nothing that may throw, then we have no
-    // work to do.
-    if (control.tryPadPatches.empty()) {
-      return true;
-    }
-
-    // Note the curBlock_ to return to it after we create the landing pad.
-    MBasicBlock* prevBlock = curBlock_;
-    curBlock_ = nullptr;
-
-    // Create a landing pad for the pad patches.
-    if (!maybeCreateTryPadBlock(control)) {
+  bool emitBodyDelegateThrowPad(Control& control) {
+    // Create a landing pad for any throwing instructions
+    MBasicBlock* padBlock;
+    if (!createTryLandingPadIfNeeded(control, &padBlock)) {
       return false;
     }
 
-    // If there are tryPadPatches (which we ensured in the beginning of this
-    // function), then `maybeCreateTryPadBlock` should create a padBlock and set
-    // curBlock_ to it. So we should not be in dead code but in the landing pad,
-    // which should have two slots.
-    MOZ_ASSERT(!inDeadCode());
-    MOZ_ASSERT(numPushed(curBlock_) == 2);
-
-    // So we are now in a landing pad resulting from pad patches. Get the caught
-    // exception and its tag index, and rethrow.
-    MDefinition* tagIndex = curBlock_->pop();
-    MDefinition* exn = curBlock_->pop();
-    if (!throwFrom(exn, tagIndex)) {
-      return false;
-    }
-
-    // Return to the previous block.
-    curBlock_ = prevBlock;
-    return true;
-  }
-
-  bool finishCatches(LabelKind kind, Control& control) {
-    MBasicBlock* padBlock = control.block;
-    // If there is no landing pad, there's nothing to do.
+    // If no landing pad was necessary, then we don't need to do anything here
     if (!padBlock) {
       return true;
     }
 
-    // If there are no tryCatches then this is a single catch_all after a try,
-    // and we don't create a table switch as we can just fallthrough.
-    if (control.tryCatches.empty()) {
-      MOZ_ASSERT(kind == LabelKind::CatchAll);
-      MOZ_ASSERT(padBlock->hasLastIns());
-      return true;
-    }
-
-    // Otherwise we end the landing pad with a table switch.
-
-    // Put the curBlock_ aside while we set up the switch.
+    // Switch to the landing pad and rethrow the exception
     MBasicBlock* prevBlock = curBlock_;
-
-    // Switch to the landing pad.
     curBlock_ = padBlock;
-
-    // Get the pushed exception and its tag index definition.
-    MOZ_ASSERT(numPushed(curBlock_) == 2);
-    MDefinition* tagIndex = curBlock_->pop();
-    MDefinition* exn = curBlock_->pop();
-    MOZ_ASSERT(exn && tagIndex);
-    MOZ_ASSERT(tagIndex->type() == MIRType::Int32);
-    MOZ_ASSERT(exn->type() == MIRType::RefOrNull);
-
-    // Push the exception and its tag index, so the handlers and the
-    // defaultCatch can access it.
-    curBlock_->push(exn);
-    curBlock_->push(tagIndex);
-
-    // We're going to generate a table switch to branch to the target catch
-    // block based off of the tag index of the caught exception. MTableSwitch
-    // requires the default case to be '0', while the default case for tags is
-    // UINT32_MAX. To resolve this difference, we add '1' to the incoming tag
-    // index to force wraparound. This yields an 'adjusted tag index' that we
-    // use below.
-    //
-    // For example:
-    //   CatchAllIndex (UINT32_MAX) -> case 0
-    //   tagIndex 0 -> case 1
-    //   tagIndex n -> case n+1
-    MDefinition* one = constant(Int32Value(1), MIRType::Int32);
-    MDefinition* adjustedTagIndex = add(tagIndex, one, MIRType::Int32);
-    uint32_t numTags = moduleEnv_.tags.length();
-
-    // Set up a table switch test.
-    MTableSwitch* table =
-        MTableSwitch::New(alloc(), adjustedTagIndex, 0, (int32_t)numTags);
-
-    // Get or create the default successor of the landing pad.
-    MBasicBlock* defaultCatch = nullptr;
-    if (kind == LabelKind::CatchAll) {
-      MOZ_ASSERT(control.catchAllBlock);
-      defaultCatch = control.catchAllBlock;
-    } else {
-      if (!newBlock(curBlock_, &defaultCatch)) {
-        return false;
-      }
-      // Set up default catch behaviour.
-      curBlock_ = defaultCatch;
-      MDefinition* rethrowTagIndex = curBlock_->pop();
-      MDefinition* rethrowExn = curBlock_->pop();
-      if (!throwFrom(rethrowExn, rethrowTagIndex)) {
-        return false;
-      }
-      curBlock_ = padBlock;
-    }
-
-    // Add the default catch to the table switch.
-    size_t defaultIndex;
-    if (!table->addDefault(defaultCatch, &defaultIndex)) {
+    MDefinition* tag = curBlock_->pop();
+    MDefinition* exception = curBlock_->pop();
+    if (!throwFrom(exception, tag)) {
       return false;
     }
-    MOZ_ASSERT(defaultIndex == 0);
-    using TagMap =
-        HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>;
-
-    TagMap tagMap;
-
-    // Add the rest of the catches as table switch successors.
-    for (CatchInfo& info : control.tryCatches) {
-      uint32_t catchTagIndex = info.tagIndex;
-      MBasicBlock* catchBlock = info.block;
-      MOZ_ASSERT(catchTagIndex < numTags);
-      MOZ_ASSERT(catchBlock);
-      size_t switchIndex;
-      if (!table->addSuccessor(catchBlock, &switchIndex)) {
-        return false;
-      }
-      if (!tagMap.put(catchTagIndex, switchIndex)) {
-        return false;
-      }
-    }
-
-    // Add cases mapping from 'adjusted tag index' to tag successor to the
-    // table.
-
-    // Add the default case to the table.
-    if (!table->addCase(0)) {
-      return false;
-    }
-
-    // Add a case for each possible tag in the module.
-    for (size_t catchTagIndex = 0; catchTagIndex < numTags; catchTagIndex++) {
-      size_t switchIndex;
-      TagMap::Ptr p = tagMap.lookup(catchTagIndex);
-      switchIndex = p ? p->value() : 0;
-      if (!table->addCase(switchIndex)) {
-        return false;
-      }
-    }
-
-    // End the landing pad with the table switch.
-    curBlock_->end(table);
-
-    // Return to the previous block.
     curBlock_ = prevBlock;
-    if (prevBlock) {
-      mirGraph().moveBlockToEnd(curBlock_);
-    }
-
     return true;
+  }
+
+  bool emitNewException(MDefinition* tag, MDefinition** exception) {
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    const SymbolicAddressSignature& callee = SASigExceptionNew;
+    CallCompileState args;
+    if (!passInstance(callee.argTypes[0], &args)) {
+      return false;
+    }
+    if (!passArg(tag, callee.argTypes[1], &args)) {
+      return false;
+    }
+    if (!finishCall(&args)) {
+      return false;
+    }
+    return builtinInstanceMethodCall(callee, lineOrBytecode, args, exception);
   }
 
   bool emitThrow(uint32_t tagIndex, const DefVector& argValues) {
     if (inDeadCode()) {
       return true;
     }
-
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-    const TagType& tagType = moduleEnv_.tags[tagIndex].type;
-    const ResultType& tagParams = tagType.resultType();
 
-    // First call an instance method to allocate a new WasmExceptionObject.
-    MDefinition* tagIndexDef =
-        constant(Int32Value(int32_t(tagIndex)), MIRType::Int32);
-    MDefinition* exnSize =
-        constant(Int32Value(tagType.bufferSize), MIRType::Int32);
-    MDefinition* exn = nullptr;
-    const SymbolicAddressSignature& callee = SASigExceptionNew;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
+    // Load the tag
+    MDefinition* tag = loadTag(tagIndex);
+    if (!tag) {
       return false;
     }
-    if (!passArg(tagIndexDef, callee.argTypes[1], &args)) {
-      return false;
-    }
-    if (!passArg(exnSize, callee.argTypes[2], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    if (!builtinInstanceMethodCall(callee, lineOrBytecode, args, &exn)) {
-      return false;
-    }
-    MOZ_ASSERT(exn);
 
-    // Then store the exception values.
-    MWasmExceptionDataPointer* exnDataPtr =
-        MWasmExceptionDataPointer::New(alloc(), exn);
-    curBlock_->add(exnDataPtr);
+    // Allocate an exception object
+    MDefinition* exception;
+    if (!emitNewException(tag, &exception)) {
+      return false;
+    }
 
-    for (int32_t i = (int32_t)tagParams.length() - 1; i >= 0; i--) {
-      int32_t offset = tagType.argOffsets[i];
-      if (IsNumberType(tagParams[i]) || tagParams[i].kind() == ValType::V128) {
-        MWasmStoreExceptionDataValue* store = MWasmStoreExceptionDataValue::New(
-            alloc(), exnDataPtr, offset, argValues[i]);
+    // Load the data pointer from the object
+    auto* data = MWasmLoadObjectField::New(alloc(), exception,
+                                           WasmExceptionObject::offsetOfData(),
+                                           MIRType::Pointer);
+    if (!data) {
+      return false;
+    }
+    curBlock_->add(data);
+
+    // Store the params into the data pointer
+    SharedTagType tagType = moduleEnv_.tags[tagIndex].type;
+    for (size_t i = 0; i < tagType->argOffsets_.length(); i++) {
+      ValType type = tagType->argTypes_[i];
+      uint32_t offset = tagType->argOffsets_[i];
+
+      if (!type.isRefRepr()) {
+        auto* store = MWasmStoreObjectDataField::New(alloc(), exception, data,
+                                                     offset, argValues[i]);
+        if (!store) {
+          return false;
+        }
         curBlock_->add(store);
-      } else {
-        MOZ_ASSERT(tagParams[i].kind() == ValType::Ref ||
-                   tagParams[i].kind() == ValType::Rtt);
-        MOZ_ASSERT(argValues[i]->type() != MIRType::None);
+        continue;
+      }
 
-        const SymbolicAddressSignature& callee = SASigPushRefIntoExn;
-        CallCompileState args;
-        if (!passInstance(callee.argTypes[0], &args)) {
-          return false;
-        }
-        if (!passArg(exn, callee.argTypes[1], &args)) {
-          return false;
-        }
-        if (!passArg(argValues[i], callee.argTypes[2], &args)) {
-          return false;
-        }
-        if (!finishCall(&args)) {
-          return false;
-        }
-        if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
-          return false;
-        }
+      auto* fieldAddr = MWasmDerivedPointer::New(alloc(), data, offset);
+      if (!fieldAddr) {
+        return false;
+      }
+      curBlock_->add(fieldAddr);
+
+      auto* store = MWasmStoreObjectDataRefField::New(
+          alloc(), tlsPointer_, exception, fieldAddr, argValues[i]);
+      if (!store) {
+        return false;
+      }
+      curBlock_->add(store);
+
+      if (!postBarrierFilteringCall(lineOrBytecode, fieldAddr)) {
+        return false;
       }
     }
 
-    // Throw the exception.
-    return throwFrom(exn, tagIndexDef);
+    // Throw the exception
+    return throwFrom(exception, tag);
   }
 
-  bool throwFrom(MDefinition* exn, MDefinition* tagIndex) {
+  bool throwFrom(MDefinition* exn, MDefinition* tag) {
     if (inDeadCode()) {
       return true;
     }
@@ -3331,7 +3171,7 @@ class FunctionCompiler {
       MGoto* ins = MGoto::New(alloc(), prePadBlock);
 
       // Finish the prePadBlock with a control flow (pad) patch.
-      if (!endWithPadPatch(prePadBlock, exn, tagIndex, relativeTryDepth)) {
+      if (!endWithPadPatch(prePadBlock, exn, tag, relativeTryDepth)) {
         return false;
       }
       curBlock_->end(ins);
@@ -3362,7 +3202,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool rethrow(uint32_t relativeDepth) {
+  bool emitRethrow(uint32_t relativeDepth) {
     if (inDeadCode()) {
       return true;
     }
@@ -3376,11 +3216,11 @@ class FunctionCompiler {
 
     // The exception will always be the last slot in the landing pad.
     size_t exnSlotPosition = pad->nslots() - 2;
-    MDefinition* tagIndex = pad->getSlot(exnSlotPosition + 1);
-    MDefinition* exn = pad->getSlot(exnSlotPosition);
-    MOZ_ASSERT(exn->type() == MIRType::RefOrNull &&
-               tagIndex->type() == MIRType::Int32);
-    return throwFrom(exn, tagIndex);
+    MDefinition* tag = pad->getSlot(exnSlotPosition + 1);
+    MDefinition* exception = pad->getSlot(exnSlotPosition);
+    MOZ_ASSERT(exception->type() == MIRType::RefOrNull &&
+               tag->type() == MIRType::RefOrNull);
+    return throwFrom(exception, tag);
   }
 #endif
 
@@ -3639,7 +3479,7 @@ static bool EmitEnd(FunctionCompiler& f) {
   switch (kind) {
     case LabelKind::Body:
 #ifdef ENABLE_WASM_EXCEPTIONS
-      if (!f.finishBodyDelegateThrowPad(control)) {
+      if (!f.emitBodyDelegateThrowPad(control)) {
         return false;
       }
 #endif
@@ -3688,26 +3528,10 @@ static bool EmitEnd(FunctionCompiler& f) {
       f.iter().popEnd();
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case LabelKind::Try: {
-      if (block) {
-        if (!f.finishCatchlessTry(control)) {
-          return false;
-        }
-      }
-      if (!f.finishBlock(&postJoinDefs)) {
-        return false;
-      }
-      f.iter().popEnd();
-      break;
-    }
+    case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
-      if (block) {
-        if (!f.finishCatches(kind, control)) {
-          return false;
-        }
-      }
-      if (!f.finishBlock(&postJoinDefs)) {
+      if (!f.finishTryCatch(kind, control, &postJoinDefs)) {
         return false;
       }
       f.iter().popEnd();
@@ -3799,7 +3623,7 @@ static bool EmitTry(FunctionCompiler& f) {
   }
 
   MBasicBlock* curBlock = nullptr;
-  if (!f.emitTry(&curBlock)) {
+  if (!f.startTry(&curBlock)) {
     return false;
   }
 
@@ -3825,7 +3649,7 @@ static bool EmitCatch(FunctionCompiler& f) {
     return false;
   }
 
-  return f.switchToCatch(kind, tagIndex, f.iter().controlItem());
+  return f.switchToCatch(f.iter().controlItem(), kind, tagIndex);
 }
 
 static bool EmitCatchAll(FunctionCompiler& f) {
@@ -3843,7 +3667,7 @@ static bool EmitCatchAll(FunctionCompiler& f) {
     return false;
   }
 
-  return f.switchToCatch(kind, CatchAllIndex, f.iter().controlItem());
+  return f.switchToCatch(f.iter().controlItem(), kind, CatchAllIndex);
 }
 
 static bool EmitDelegate(FunctionCompiler& f) {
@@ -3899,7 +3723,7 @@ static bool EmitRethrow(FunctionCompiler& f) {
     return false;
   }
 
-  return f.rethrow(relativeDepth);
+  return f.emitRethrow(relativeDepth);
 }
 #endif
 
@@ -4123,25 +3947,12 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
   MInstruction* barrierAddr =
       f.storeGlobalVar(global.offset(), global.isIndirect(), value);
 
-  // We always call the C++ postbarrier because the location will never be in
-  // the nursery, and the value stored will very frequently be in the nursery.
-  // The C++ postbarrier performs any necessary filtering.
-
   if (barrierAddr) {
-    const SymbolicAddressSignature& callee = SASigPostBarrierFiltering;
-    CallCompileState args;
-    if (!f.passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!f.passArg(barrierAddr, callee.argTypes[1], &args)) {
-      return false;
-    }
-    f.finishCall(&args);
-    if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
-      return false;
-    }
+    // We always call the C++ postbarrier because the location will never be in
+    // the nursery, and the value stored will very frequently be in the nursery.
+    // The C++ postbarrier performs any necessary filtering.
+    return f.postBarrierFilteringCall(lineOrBytecode, barrierAddr);
   }
-
   return true;
 }
 
@@ -5857,23 +5668,23 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 
 #endif
 
-static bool EmitIntrinsic(FunctionCompiler& f, IntrinsicOp op) {
-  const Intrinsic& intrinsic = Intrinsic::getFromOp(op);
+static bool EmitIntrinsic(FunctionCompiler& f) {
+  const Intrinsic* intrinsic;
 
   DefVector params;
-  if (!f.iter().readIntrinsic(intrinsic, &params)) {
+  if (!f.iter().readIntrinsic(&intrinsic, &params)) {
     return false;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-  const SymbolicAddressSignature& callee = intrinsic.signature;
+  const SymbolicAddressSignature& callee = intrinsic->signature;
 
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
   }
 
-  if (!f.passArgs(params, intrinsic.params, &args)) {
+  if (!f.passArgs(params, intrinsic->params, &args)) {
     return false;
   }
 
@@ -6385,15 +6196,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
 
-      case uint16_t(Op::IntrinsicPrefix): {
-        if (!f.moduleEnv().intrinsicsEnabled() ||
-            op.b1 >= uint32_t(IntrinsicOp::Limit)) {
-          return f.iter().unrecognizedOpcode(&op);
-        }
-        CHECK(EmitIntrinsic(f, IntrinsicOp(op.b1)));
-      }
-
-      // Gc operations
+        // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         return f.iter().unrecognizedOpcode(&op);
@@ -6975,6 +6778,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
       // asm.js-specific operators
       case uint16_t(Op::MozPrefix): {
+        if (op.b1 == uint32_t(MozOp::Intrinsic)) {
+          if (!f.moduleEnv().intrinsicsEnabled()) {
+            return f.iter().unrecognizedOpcode(&op);
+          }
+          CHECK(EmitIntrinsic(f));
+        }
+
         if (!f.moduleEnv().isAsmJS()) {
           return f.iter().unrecognizedOpcode(&op);
         }
@@ -7194,7 +7004,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
 bool js::wasm::IonPlatformSupport() {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||    \
     defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS64) || \
-    defined(JS_CODEGEN_ARM64)
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_LOONG64)
   return true;
 #else
   return false;

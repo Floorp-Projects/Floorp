@@ -1,0 +1,53 @@
+# Verify that surfaces with differing surface/raster spatial nodes correctly sample from
+# parent mix-blend container surfaces
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [100, 100, 0, 0]
+      transform: scale(2)
+      blend-container: true
+      items:
+        - type: "shadow"
+          blur-radius: 0
+          offset: [-5, -2]
+          color: [255, 255, 0, 1]
+        - text: "Fault"
+          origin: 100 150
+          size: 100
+          color: [0, 0, 0, 0]
+          font: "VeraBd.ttf"
+        -
+          type: "pop-all-shadows"
+
+        - type: stacking-context
+          blend-container: true
+          mix-blend-mode: darken
+          items:
+            - type: "shadow"
+              blur-radius: 0
+              offset: [3, -4]
+              color: [0, 255, 255, 1]
+            - text: "Fault"
+              origin: 100 150
+              size: 100
+              color: [0, 0, 0, 0]
+              font: "VeraBd.ttf"
+            -
+              type: "pop-all-shadows"
+
+            - type: stacking-context
+              blend-container: true
+              mix-blend-mode: darken
+              items:
+                - type: "shadow"
+                  blur-radius: 0
+                  offset: [5, 2]
+                  color: [255, 0, 255, 1]
+                - text: "Fault"
+                  origin: 100 150
+                  size: 100
+                  color: [0, 0, 0, 0]
+                  font: "VeraBd.ttf"
+                -
+                  type: "pop-all-shadows"

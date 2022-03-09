@@ -10,14 +10,13 @@
 #include "ChangeAttributeTransaction.h"
 #include "ChangeStyleTransaction.h"
 #include "CompositionTransaction.h"
-#include "CreateElementTransaction.h"
 #include "DeleteNodeTransaction.h"
 #include "DeleteRangeTransaction.h"
 #include "DeleteTextTransaction.h"
 #include "EditAggregateTransaction.h"
 #include "InsertNodeTransaction.h"
 #include "InsertTextTransaction.h"
-#include "JoinNodeTransaction.h"
+#include "JoinNodesTransaction.h"
 #include "PlaceholderTransaction.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
@@ -76,14 +75,13 @@ LogModule* EditTransactionBase::GetLogModule() {
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeAttributeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeStyleTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(CompositionTransaction)
-NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(CreateElementTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteNodeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteRangeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteTextTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(EditAggregateTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(InsertNodeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(InsertTextTransaction)
-NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(JoinNodeTransaction)
+NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(JoinNodesTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(PlaceholderTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ReplaceTextTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(SplitNodeTransaction)

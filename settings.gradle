@@ -9,9 +9,9 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
     // gradle is called before parsing config.status, we cannot use PYTHON
     // value.
     if (System.env.MOZILLABUILD) {
-        def mozillabuild = System.env.MOZILLABUILD
+        def mozillabuild = System.env.MOZILLABUILD.toLowerCase()
         if (mozillabuild) {
-            commandLine.addAll(0, ["${mozillabuild}/python3/python.exe"])
+            commandLine.addAll(0, ["${mozillabuild}/python3/python3.exe"])
         }
     }
 }

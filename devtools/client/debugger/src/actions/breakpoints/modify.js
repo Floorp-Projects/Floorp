@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
+import { createBreakpoint } from "../../client/firefox/create";
 import {
   makeBreakpointLocation,
   makeBreakpointId,
@@ -92,7 +92,7 @@ export function enableBreakpoint(cx, initialBreakpoint) {
     return dispatch({
       type: "SET_BREAKPOINT",
       cx,
-      breakpoint: { ...breakpoint, disabled: false },
+      breakpoint: createBreakpoint({ ...breakpoint, disabled: false }),
       [PROMISE]: clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
     });
   };
@@ -102,7 +102,7 @@ export function addBreakpoint(
   cx,
   initialLocation,
   options = {},
-  disabled = false,
+  disabled,
   shouldCancel = () => false
 ) {
   return async thunkArgs => {
@@ -148,8 +148,9 @@ export function addBreakpoint(
     );
 
     const id = makeBreakpointId(location);
-    const breakpoint = {
+    const breakpoint = createBreakpoint({
       id,
+      thread: generatedSource.thread,
       disabled,
       options,
       location,
@@ -157,7 +158,7 @@ export function addBreakpoint(
       generatedLocation,
       text,
       originalText,
-    };
+    });
 
     if (shouldCancel()) {
       return;
@@ -277,7 +278,7 @@ export function disableBreakpoint(cx, initialBreakpoint) {
     return dispatch({
       type: "SET_BREAKPOINT",
       cx,
-      breakpoint: { ...breakpoint, disabled: true },
+      breakpoint: createBreakpoint({ ...breakpoint, disabled: true }),
       [PROMISE]: clientRemoveBreakpoint(
         client,
         getState(),
@@ -307,7 +308,7 @@ export function setBreakpointOptions(cx, location, options = {}) {
     }
 
     // Note: setting a breakpoint's options implicitly enables it.
-    breakpoint = { ...breakpoint, disabled: false, options };
+    breakpoint = createBreakpoint({ ...breakpoint, disabled: false, options });
 
     return dispatch({
       type: "SET_BREAKPOINT",

@@ -585,7 +585,7 @@ nsSize nsPageFrame::ComputePageSize() const {
 
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                    const nsDisplayListSet& aLists) {
-  nsDisplayList content;
+  nsDisplayList content(aBuilder);
   nsDisplayListSet set(&content, &content, &content, &content, &content,
                        &content);
   {

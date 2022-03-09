@@ -39,6 +39,7 @@
 // #include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/DoubleConversion.h"
 #include "mozilla/Printf.h"
@@ -182,6 +183,16 @@ void PrintToConsole(const char* aFmt, ...) {
   va_end(args);
 }
 
+ProfileChunkedBuffer& profiler_get_core_buffer() {
+  // This needs its own mutex, because it is used concurrently from functions
+  // guarded by gPSMutex as well as others without safety (e.g.,
+  // profiler_add_marker). It is *not* used inside the critical section of the
+  // sampler, because mutexes cannot be used there.
+  static ProfileChunkedBuffer sProfileChunkedBuffer{
+      ProfileChunkedBuffer::ThreadSafety::WithMutex};
+  return sProfileChunkedBuffer;
+}
+
 Atomic<int, MemoryOrdering::Relaxed> gSkipSampling;
 
 constexpr static bool ValidateFeatures() {
@@ -315,12 +326,7 @@ typedef const PSAutoLock& PSLockRef;
 class CorePS {
  private:
   CorePS()
-      : mProcessStartTime(TimeStamp::ProcessCreation()),
-        // This needs its own mutex, because it is used concurrently from
-        // functions guarded by gPSMutex as well as others without safety (e.g.,
-        // profiler_add_marker). It is *not* used inside the critical section of
-        // the sampler, because mutexes cannot be used there.
-        mCoreBuffer(ProfileChunkedBuffer::ThreadSafety::WithMutex)
+      : mProcessStartTime(TimeStamp::ProcessCreation())
 #ifdef USE_LUL_STACKWALK
         ,
         mLul(nullptr)
@@ -378,9 +384,6 @@ class CorePS {
 
   // No PSLockRef is needed for this field because it's immutable.
   PS_GET_LOCKLESS(const TimeStamp&, ProcessStartTime)
-
-  // No PSLockRef is needed for this field because it's thread-safe.
-  PS_GET_LOCKLESS(ProfileChunkedBuffer&, CoreBuffer)
 
   PS_GET(const Vector<UniquePtr<RegisteredThread>>&, RegisteredThreads)
 
@@ -487,17 +490,6 @@ class CorePS {
   // The time that the process started.
   const TimeStamp mProcessStartTime;
 
-  // The thread-safe blocks-oriented buffer into which all profiling data is
-  // recorded.
-  // ActivePS controls the lifetime of the underlying contents buffer: When
-  // ActivePS does not exist, mCoreBuffer is empty and rejects all reads&writes;
-  // see ActivePS for further details.
-  // Note: This needs to live here outside of ActivePS, because some producers
-  // are indirectly controlled (e.g., by atomic flags) and therefore may still
-  // attempt to write some data shortly after ActivePS has shutdown and deleted
-  // the underlying buffer in memory.
-  ProfileChunkedBuffer mCoreBuffer;
-
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
   Vector<UniquePtr<RegisteredThread>> mRegisteredThreads;
@@ -522,11 +514,6 @@ class CorePS {
 };
 
 CorePS* CorePS::sInstance = nullptr;
-
-ProfileChunkedBuffer& profiler_get_core_buffer() {
-  MOZ_ASSERT(CorePS::Exists());
-  return CorePS::CoreBuffer();
-}
 
 class SamplerThread;
 
@@ -625,11 +612,14 @@ class ActivePS {
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         mProfileBufferChunkManager(
-            size_t(ClampToAllowedEntries(aCapacity.Value())) * scBytesPerEntry,
-            ChunkSizeForEntries(aCapacity.Value())),
+            MakeUnique<ProfileBufferChunkManagerWithLocalLimit>(
+                size_t(ClampToAllowedEntries(aCapacity.Value())) *
+                    scBytesPerEntry,
+                ChunkSizeForEntries(aCapacity.Value()))),
         mProfileBuffer([this]() -> ProfileChunkedBuffer& {
-          CorePS::CoreBuffer().SetChunkManager(mProfileBufferChunkManager);
-          return CorePS::CoreBuffer();
+          ProfileChunkedBuffer& buffer = profiler_get_core_buffer();
+          buffer.SetChunkManager(*mProfileBufferChunkManager);
+          return buffer;
         }()),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
@@ -649,7 +639,12 @@ class ActivePS {
     }
   }
 
-  ~ActivePS() { CorePS::CoreBuffer().ResetChunkManager(); }
+  ~ActivePS() {
+    if (mProfileBufferChunkManager) {
+      // We still control the chunk manager, remove it from the core buffer.
+      profiler_get_core_buffer().ResetChunkManager();
+    }
+  }
 
   bool ThreadSelected(const char* aThreadName) {
     if (mFiltersLowered.empty()) {
@@ -669,13 +664,9 @@ class ActivePS {
         return true;
       }
 
-      // If the filter starts with pid:, check for a pid match
-      if (filter.find("pid:") == 0) {
-        std::string mypid =
-            std::to_string(profiler_current_process_id().ToNumber());
-        if (filter.compare(4, std::string::npos, mypid) == 0) {
-          return true;
-        }
+      // If the filter is "pid:<my pid>", profile all threads.
+      if (mozilla::profiler::detail::FilterHasPid(filter.c_str())) {
+        return true;
       }
     }
 
@@ -739,6 +730,12 @@ class ActivePS {
     return n;
   }
 
+  static UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
+  ExtractBaseProfilerChunkManager(PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return std::move(sInstance->mProfileBufferChunkManager);
+  }
+
   static bool ShouldProfileThread(PSLockRef aLock, ThreadInfo* aInfo) {
     MOZ_ASSERT(sInstance);
     return sInstance->ThreadSelected(aInfo->Name());
@@ -769,7 +766,9 @@ class ActivePS {
 
   static void FulfillChunkRequests(PSLockRef) {
     MOZ_ASSERT(sInstance);
-    sInstance->mProfileBufferChunkManager.FulfillChunkRequests();
+    if (sInstance->mProfileBufferChunkManager) {
+      sInstance->mProfileBufferChunkManager->FulfillChunkRequests();
+    }
   }
 
   static ProfileBuffer& Buffer(PSLockRef) {
@@ -1019,7 +1018,8 @@ class ActivePS {
   Vector<std::string> mFiltersLowered;
 
   // The chunk manager used by `mProfileBuffer` below.
-  ProfileBufferChunkManagerWithLocalLimit mProfileBufferChunkManager;
+  // May become null if it gets transferred to the Gecko Profiler.
+  UniquePtr<ProfileBufferChunkManagerWithLocalLimit> mProfileBufferChunkManager;
 
   // The buffer into which all samples are recorded.
   ProfileBuffer mProfileBuffer;
@@ -1062,6 +1062,19 @@ uint32_t ActivePS::sNextGeneration = 0;
 #undef PS_GET
 #undef PS_GET_LOCKLESS
 #undef PS_GET_AND_SET
+
+namespace detail {
+
+[[nodiscard]] MFBT_API UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
+ExtractBaseProfilerChunkManager() {
+  PSAutoLock lock;
+  if (MOZ_UNLIKELY(!ActivePS::Exists(lock))) {
+    return nullptr;
+  }
+  return ActivePS::ExtractBaseProfilerChunkManager(lock);
+}
+
+}  // namespace detail
 
 Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
 
@@ -1177,6 +1190,26 @@ ProfilingStack* AutoProfilerLabel::GetProfilingStack() {
 // This second pointer isn't ideal, but does provide a way to satisfy those
 // constraints. TLSRegisteredThread is responsible for updating it.
 MOZ_THREAD_LOCAL(ProfilingStack*) AutoProfilerLabel::sProfilingStack;
+
+namespace detail {
+
+[[nodiscard]] MFBT_API TimeStamp GetThreadRegistrationTime() {
+  if (!CorePS::Exists()) {
+    return {};
+  }
+
+  PSAutoLock lock;
+
+  RegisteredThread* registeredThread =
+      TLSRegisteredThread::RegisteredThread(lock);
+  if (!registeredThread) {
+    return {};
+  }
+
+  return registeredThread->Info()->RegisterTime();
+}
+
+}  // namespace detail
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -2341,11 +2374,11 @@ void SamplerThread::Run() {
               LOG("Stack sample too big for local storage, needed %u bytes",
                   unsigned(state.mRangeEnd - previousState.mRangeEnd));
             } else if (state.mRangeEnd - previousState.mRangeEnd >=
-                       *CorePS::CoreBuffer().BufferLength()) {
+                       *profiler_get_core_buffer().BufferLength()) {
               LOG("Stack sample too big for profiler storage, needed %u bytes",
                   unsigned(state.mRangeEnd - previousState.mRangeEnd));
             } else {
-              CorePS::CoreBuffer().AppendContents(localBuffer);
+              profiler_get_core_buffer().AppendContents(localBuffer);
             }
 
             // Clean up for the next run.
@@ -2731,6 +2764,11 @@ void profiler_init(void* aStackTop) {
     if (startupFilters && startupFilters[0] != '\0') {
       filters = SplitAtCommas(startupFilters, filterStorage);
       LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+
+      if (mozilla::profiler::detail::FiltersExcludePid(filters)) {
+        LOG(" -> This process is excluded and won't be profiled");
+        return;
+      }
     }
 
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
@@ -3649,7 +3687,7 @@ bool profiler_is_locked_on_current_thread() {
   // - The buffer mutex, used directly in some functions without locking the
   //   main mutex, e.g., marker-related functions.
   return PSAutoLock::IsLockedOnCurrentThread() ||
-         CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
+         profiler_get_core_buffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
 // This is a simplified version of profiler_add_marker that can be easily passed

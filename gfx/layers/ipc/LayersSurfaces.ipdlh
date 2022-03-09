@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "gfxipc/ShadowLayerUtils.h";
+include "mozilla/GfxMessageUtils.h";
 
-using struct gfxPoint from "gfxPoint.h";
+using gfxPoint from "gfxPoint.h";
 using nsIntRegion from "nsRegion.h";
 using mozilla::StereoMode from "ImageTypes.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
@@ -24,6 +25,7 @@ namespace layers {
 
 [Comparable] struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
+  uint32_t arrayIndex;
   SurfaceFormat format;
   IntSize size;
   YUVColorSpace yUVColorSpace;

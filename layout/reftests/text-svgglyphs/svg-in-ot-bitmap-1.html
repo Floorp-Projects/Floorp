@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>SVG-in-OT bitmap issue</title>
+    <style>
+        @font-face {
+            font-family: test;
+            src: url("resources/svg-bitmap.ttf");
+        }
+    </style>
+    <script>
+        // Spin for 1 second using requestAnimationFrame, which should be plenty
+        // for the PNG images in the SVG-in-OT font to be decoded.
+        let start;
+        function rAF(timestamp) {
+            if (start === undefined) {
+                start = timestamp;
+            }
+            if (timestamp - start < 1000) {
+                window.requestAnimationFrame(rAF);
+            } else {
+                document.documentElement.classList.remove("reftest-wait");
+            }
+        }
+    </script>
+</head>
+<body onload="window.requestAnimationFrame(rAF)">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 50" x="0" y="0" width="400" height="50">
+        <text x="0" y="24" font-family="test, serif" font-size="32px">x ABC x</text>
+    </svg>
+</body>
+</html>

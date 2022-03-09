@@ -5,15 +5,14 @@
 // Test that incorrect source contents are not shown if the server refetches
 // different HTML when attaching to an open page.
 
+"use strict";
+
 add_task(async function() {
-  await addTab(EXAMPLE_URL + "different_html.sjs");
+  await addTab(`${EXAMPLE_URL}different_html.sjs`);
 
   // This goop is here to manually clear the HTTP cache because setting response
   // headers in different_html.sjs to not cache the response doesn't work.
-  const cacheStorageSrv = SpecialPowers.Cc[
-    "@mozilla.org/netwerk/cache-storage-service;1"
-  ].getService(Ci.nsICacheStorageService);
-  cacheStorageSrv.clear();
+  Services.cache2.clear();
 
   const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
@@ -21,5 +20,8 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "different_html.sjs");
   const contents = findSourceContent(dbg, "different_html.sjs");
 
-  ok(contents.value.includes("Incorrect contents fetched"), "Error message is shown");
+  ok(
+    contents.value.includes("Incorrect contents fetched"),
+    "Error message is shown"
+  );
 });

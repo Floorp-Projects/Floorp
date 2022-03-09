@@ -51,7 +51,7 @@ struct TestAlignedT {
         for (size_t y = 0; y < ysize; ++y) {
           T* HWY_RESTRICT row = img.MutableRow(y);
           for (size_t x = 0; x < xsize; x += Lanes(d)) {
-            const auto values = Iota(d, dist(rng));
+            const auto values = Iota(d, static_cast<T>(dist(rng)));
             Store(values, d, row + x);
           }
         }

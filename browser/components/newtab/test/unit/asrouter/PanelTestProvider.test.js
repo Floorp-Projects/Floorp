@@ -9,10 +9,10 @@ describe("PanelTestProvider", () => {
   beforeEach(async () => {
     messages = await PanelTestProvider.getMessages();
   });
-  it("should have 12 messages", () => {
+  it("should have correct number of messages", () => {
     // Careful: when changing this number make sure that new messages also go
     // through schema verifications.
-    assert.lengthOf(messages, 12);
+    assert.lengthOf(messages, 15);
   });
   it("should be a valid message", () => {
     const updateMessages = messages.filter(

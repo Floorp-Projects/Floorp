@@ -5,16 +5,17 @@
 // Tests the breakpoint gutter and making sure breakpoint icons exist
 // correctly
 
+"use strict";
+
 // FIXME bug 1524374 removing breakpoints in this test can cause uncaught
 // rejections and make bug 1512742 permafail.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
-  const { getState } = dbg;
   const source = findSource(dbg, "simple1.js");
 
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, source);
 
   // Make sure that clicking the gutter creates a breakpoint icon.
   await clickGutter(dbg, 4);
@@ -33,10 +34,6 @@ add_task(async function() {
   info("Ensure clicking on gutter to add breakpoint will un-blackbox source");
   const dbg = await initDebugger("doc-sourcemaps3.html");
   dbg.actions.toggleMapScopes();
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState
-  } = dbg;
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
   info("blackbox the source");
@@ -48,7 +45,7 @@ add_task(async function() {
   // invoke test
   invokeInTab("test");
   // should not pause
-  is(isPaused(dbg), false);
+  assertNotPaused(dbg);
 
   info("ensure gutter breakpoint gets set with click");
   await clickGutter(dbg, 4);

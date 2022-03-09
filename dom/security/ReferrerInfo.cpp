@@ -497,14 +497,7 @@ bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
     return true;
   }
 
-  bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  bool isSameOrigin = false;
-  rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(uri, isPrivateWin,
-                                                     &isSameOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return true;
-  }
-  return !isSameOrigin;
+  return !loadInfo->TriggeringPrincipal()->IsSameOrigin(uri);
 }
 
 /* static */

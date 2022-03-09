@@ -45,12 +45,12 @@ struct Intrinsic {
   // Allocate a FuncType for this intrinsic, returning false for OOM
   bool funcType(FuncType* type) const;
 
-  // Get the Intrinsic for an IntrinsicOp. IntrinsicOp must be validated.
-  static const Intrinsic& getFromOp(IntrinsicOp op);
+  // Get the Intrinsic for an IntrinsicId. IntrinsicId must be validated.
+  static const Intrinsic& getFromId(IntrinsicId id);
 };
 
-// Compile and return the intrinsic module for a given set of intrinsic ops.
-bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicOp> ops,
+// Compile and return the intrinsic module for a given set of operations.
+bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicId> ids,
                             Shareable sharedMemory,
                             MutableHandleWasmModuleObject result);
 

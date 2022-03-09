@@ -4,6 +4,9 @@
 
 // Test that an error while loading a sourcemap does not break
 // debugging.
+
+"use strict";
+
 requestLongerTimeout(2);
 
 add_task(async function() {

@@ -2046,6 +2046,11 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTaskContext *const t, const enum BlockSize 
 }
 
 void bytefn(dav1d_filter_sbrow_deblock_cols)(Dav1dFrameContext *const f, const int sby) {
+    if (!(f->c->inloop_filters & DAV1D_INLOOPFILTER_DEBLOCK) ||
+        (!f->frame_hdr->loopfilter.level_y[0] && !f->frame_hdr->loopfilter.level_y[1]))
+    {
+        return;
+    }
     const int y = sby * f->sb_step * 4;
     const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
     pixel *const p[3] = {
@@ -2054,9 +2059,8 @@ void bytefn(dav1d_filter_sbrow_deblock_cols)(Dav1dFrameContext *const f, const i
         f->lf.p[2] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver)
     };
     Av1Filter *mask = f->lf.mask + (sby >> !f->seq_hdr->sb128) * f->sb128w;
-    if (f->frame_hdr->loopfilter.level_y[0] || f->frame_hdr->loopfilter.level_y[1])
-        bytefn(dav1d_loopfilter_sbrow_cols)(f, p, mask, sby,
-                                            f->lf.start_of_tile_row[sby]);
+    bytefn(dav1d_loopfilter_sbrow_cols)(f, p, mask, sby,
+                                        f->lf.start_of_tile_row[sby]);
 }
 
 void bytefn(dav1d_filter_sbrow_deblock_rows)(Dav1dFrameContext *const f, const int sby) {
@@ -2068,7 +2072,9 @@ void bytefn(dav1d_filter_sbrow_deblock_rows)(Dav1dFrameContext *const f, const i
         f->lf.p[2] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver)
     };
     Av1Filter *mask = f->lf.mask + (sby >> !f->seq_hdr->sb128) * f->sb128w;
-    if (f->frame_hdr->loopfilter.level_y[0] || f->frame_hdr->loopfilter.level_y[1]) {
+    if (f->c->inloop_filters & DAV1D_INLOOPFILTER_DEBLOCK &&
+        (f->frame_hdr->loopfilter.level_y[0] || f->frame_hdr->loopfilter.level_y[1]))
+    {
         bytefn(dav1d_loopfilter_sbrow_rows)(f, p, mask, sby);
     }
     if (f->seq_hdr->cdef || f->lf.restore_planes) {
@@ -2079,6 +2085,7 @@ void bytefn(dav1d_filter_sbrow_deblock_rows)(Dav1dFrameContext *const f, const i
 
 void bytefn(dav1d_filter_sbrow_cdef)(Dav1dTaskContext *const tc, const int sby) {
     const Dav1dFrameContext *const f = tc->f;
+    if (!(f->c->inloop_filters & DAV1D_INLOOPFILTER_CDEF)) return;
     const int sbsz = f->sb_step;
     const int y = sby * sbsz * 4;
     const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
@@ -2140,6 +2147,7 @@ void bytefn(dav1d_filter_sbrow_resize)(Dav1dFrameContext *const f, const int sby
 }
 
 void bytefn(dav1d_filter_sbrow_lr)(Dav1dFrameContext *const f, const int sby) {
+    if (!(f->c->inloop_filters & DAV1D_INLOOPFILTER_RESTORATION)) return;
     const int y = sby * f->sb_step * 4;
     const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
     pixel *const sr_p[3] = {

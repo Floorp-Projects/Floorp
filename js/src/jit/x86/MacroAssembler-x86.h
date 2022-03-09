@@ -1063,6 +1063,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
                        FloatRegister dest);
   void vcmplepdSimd128(const SimdConstant& v, FloatRegister lhs,
                        FloatRegister dest);
+  void vpmaddubswSimd128(const SimdConstant& v, FloatRegister lhs,
+                         FloatRegister dest);
 
   Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
     test32(operand.payloadReg(), operand.payloadReg());
@@ -1108,10 +1110,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
 
   inline void ensureDouble(const ValueOperand& source, FloatRegister dest,
                            Label* failure);
-
-  void loadWasmPinnedRegsFromTls() {
-    // x86 doesn't have any pinned registers.
-  }
 
  public:
   // Used from within an Exit frame to handle a pending exception.

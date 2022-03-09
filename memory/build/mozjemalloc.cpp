@@ -202,8 +202,9 @@ using namespace mozilla;
 // depending on kernel configuration, so they are opted out by default.
 // Debug builds are opted out too, for test coverage.
 #ifndef MOZ_DEBUG
-#  if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && \
-      !defined(__aarch64__) && !defined(__powerpc__) && !defined(XP_MACOSX)
+#  if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) &&       \
+      !defined(__aarch64__) && !defined(__powerpc__) && !defined(XP_MACOSX) && \
+      !defined(__loongarch__)
 #    define MALLOC_STATIC_PAGESIZE 1
 #  endif
 #endif
@@ -471,6 +472,8 @@ static const size_t kChunkSizeMask = kChunkSize - 1;
 // Platform specific page size conditions copied from js/public/HeapAPI.h
 #  if defined(__powerpc64__)
 static const size_t gPageSize = 64_KiB;
+#  elif defined(__loongarch64)
+static const size_t gPageSize = 16_KiB;
 #  else
 static const size_t gPageSize = 4_KiB;
 #  endif

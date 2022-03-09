@@ -472,4 +472,23 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                     \
   NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
 
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(              \
+    class_, native_members_, js_members_)                                   \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(class_)                                    \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(class_)                             \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(                                        \
+        MOZ_FOR_EACH_EXPAND_HELPER native_members_)                         \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(MOZ_FOR_EACH_EXPAND_HELPER js_members_) \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER                       \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                       \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(class_)                           \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(                                      \
+        MOZ_FOR_EACH_EXPAND_HELPER native_members_)                         \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                     \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(class_)                              \
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBERS(                              \
+        MOZ_FOR_EACH_EXPAND_HELPER js_members_)                             \
+    NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER                        \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 #endif /* nsWrapperCache_h___ */

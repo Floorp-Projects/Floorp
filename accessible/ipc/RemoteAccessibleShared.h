@@ -31,7 +31,7 @@ ENameValueFlag Name(nsString& aName) const override;
 /*
  * Set aValue to the value of the proxied accessible.
  */
-void Value(nsString& aValue) const;
+void Value(nsString& aValue) const override;
 
 /*
  * Set aHelp to the help string of the proxied accessible.
@@ -61,8 +61,6 @@ void Relations(nsTArray<RelationType>* aTypes,
 
 bool IsSearchbox() const;
 
-nsAtom* LandmarkRole() const;
-
 nsStaticAtom* ARIARoleAtom() const;
 
 virtual mozilla::a11y::GroupPos GroupPosition() override;
@@ -74,8 +72,6 @@ void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 int32_t CaretLineNumber();
 virtual int32_t CaretOffset() const override;
 void SetCaretOffset(int32_t aOffset);
-
-int32_t SelectionCount();
 
 virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                            nsAString& aText) const override;
@@ -104,9 +100,6 @@ LayoutDeviceIntRect TextBounds(
 LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
 int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
-
-bool SelectionBoundsAt(int32_t aSelectionNum, nsString& aData,
-                       int32_t* aStartOffset, int32_t* aEndOffset);
 
 bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
                           int32_t aEndOffset);
@@ -138,8 +131,6 @@ bool PasteText(int32_t aPosition);
 LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
 
 LayoutDeviceIntSize ImageSize();
-
-uint32_t EndOffset(bool* aOk);
 
 bool IsLinkValid();
 
@@ -205,18 +196,6 @@ void TableUnselectRow(uint32_t aRow);
 bool TableIsProbablyForLayout();
 RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
 RemoteAccessible* AtkTableRowHeader(int32_t aRow);
-
-void SelectedItems(nsTArray<RemoteAccessible*>* aSelectedItems);
-uint32_t SelectedItemCount();
-RemoteAccessible* GetSelectedItem(uint32_t aIndex);
-bool IsItemSelected(uint32_t aIndex);
-bool AddItemToSelection(uint32_t aIndex);
-bool RemoveItemFromSelection(uint32_t aIndex);
-bool SelectAll();
-bool UnselectAll();
-
-void TakeSelection();
-void SetSelected(bool aSelect);
 
 KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();

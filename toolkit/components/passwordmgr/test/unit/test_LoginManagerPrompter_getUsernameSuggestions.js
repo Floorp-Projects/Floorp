@@ -163,7 +163,7 @@ async function _test(testCase) {
 
   if (!testCase.isLoggedIn) {
     // Primary Password should be enabled and locked
-    LoginTestUtils.masterPassword.enable();
+    LoginTestUtils.primaryPassword.enable();
   }
 
   info("Computing results");
@@ -176,7 +176,7 @@ async function _test(testCase) {
 
   info("Cleaning up state");
   if (!testCase.isLoggedIn) {
-    LoginTestUtils.masterPassword.disable();
+    LoginTestUtils.primaryPassword.disable();
   }
   LoginTestUtils.clearData();
 }

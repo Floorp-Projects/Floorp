@@ -37,7 +37,7 @@ dictionary VideoConfiguration {
   required unsigned long width;
   required unsigned long height;
   required unsigned long long bitrate;
-  required DOMString framerate;
+  required double framerate;
   boolean hasAlphaChannel;
   HdrMetadataType hdrMetadataType;
   ColorGamut colorGamut;

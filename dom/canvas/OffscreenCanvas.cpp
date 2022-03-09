@@ -100,20 +100,14 @@ void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
   }
 }
 
-void OffscreenCanvas::UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight) {
-  MOZ_ASSERT(mNeutered);
-  MOZ_ASSERT(!mCurrentContext);
-  mWidth = aWidth;
-  mHeight = aHeight;
-}
-
 void OffscreenCanvas::GetContext(
     JSContext* aCx, const OffscreenRenderingContextId& aContextId,
     JS::Handle<JS::Value> aContextOptions,
     Nullable<OwningOffscreenRenderingContext>& aResult, ErrorResult& aRv) {
   if (mNeutered) {
     aResult.SetNull();
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.ThrowInvalidStateError(
+        "Cannot create context for placeholder canvas transferred to worker.");
     return;
   }
 
@@ -250,6 +244,18 @@ OffscreenCanvasCloneData* OffscreenCanvas::ToCloneData() {
 
 already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
     ErrorResult& aRv) {
+  if (mNeutered) {
+    aRv.ThrowInvalidStateError(
+        "Cannot get bitmap from placeholder canvas transferred to worker.");
+    return nullptr;
+  }
+
+  if (!mCurrentContext) {
+    aRv.ThrowInvalidStateError(
+        "Cannot get bitmap from canvas without a context.");
+    return nullptr;
+  }
+
   RefPtr<ImageBitmap> result =
       ImageBitmap::CreateFromOffscreenCanvas(GetOwnerGlobal(), *this, aRv);
   if (aRv.Failed()) {
@@ -310,13 +316,18 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
     const ImageEncodeOptions& aOptions, ErrorResult& aRv) {
   // do a trust check if this is a write-only canvas
   if (mIsWriteOnly) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("Cannot get blob from write-only canvas.");
     return nullptr;
   }
 
   if (mNeutered) {
     aRv.ThrowInvalidStateError(
         "Cannot get blob from placeholder canvas transferred to worker.");
+    return nullptr;
+  }
+
+  if (mWidth == 0 || mHeight == 0) {
+    aRv.ThrowIndexSizeError("Cannot get blob from empty canvas.");
     return nullptr;
   }
 
@@ -331,7 +342,10 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
   nsContentUtils::ASCIIToLower(aOptions.mType, type);
 
   nsAutoString encodeOptions;
-  if (aOptions.mQuality.WasPassed()) {
+
+  // Only image/jpeg and image/webp support the quality parameter.
+  if (aOptions.mQuality.WasPassed() &&
+      (type.EqualsLiteral("image/jpeg") || type.EqualsLiteral("image/webp"))) {
     encodeOptions.AppendLiteral("quality=");
     encodeOptions.AppendInt(NS_lround(aOptions.mQuality.Value() * 100.0));
   }
@@ -355,13 +369,18 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
                                                   ErrorResult& aRv) {
   // do a trust check if this is a write-only canvas
   if (mIsWriteOnly) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("Cannot get blob from write-only canvas.");
     return nullptr;
   }
 
   if (mNeutered) {
     aRv.ThrowInvalidStateError(
         "Cannot get blob from placeholder canvas transferred to worker.");
+    return nullptr;
+  }
+
+  if (mWidth == 0 || mHeight == 0) {
+    aRv.ThrowIndexSizeError("Cannot get blob from empty canvas.");
     return nullptr;
   }
 

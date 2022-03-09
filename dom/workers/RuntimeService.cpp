@@ -47,7 +47,6 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
@@ -142,7 +141,7 @@ const uint32_t kNoIndex = uint32_t(-1);
 uint32_t gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
 
 // Does not hold an owning reference.
-RuntimeService* gRuntimeService = nullptr;
+Atomic<RuntimeService*> gRuntimeService(nullptr);
 
 // Only true during the call to Init.
 bool gRuntimeServiceDuringInit = false;
@@ -1025,15 +1024,14 @@ RuntimeService::RuntimeService()
       mShuttingDown(false),
       mNavigatorPropertiesLoaded(false) {
   AssertIsOnMainThread();
-  NS_ASSERTION(!gRuntimeService, "More than one service!");
+  MOZ_ASSERT(!GetService(), "More than one service!");
 }
 
 RuntimeService::~RuntimeService() {
   AssertIsOnMainThread();
 
   // gRuntimeService can be null if Init() fails.
-  NS_ASSERTION(!gRuntimeService || gRuntimeService == this,
-               "More than one service!");
+  MOZ_ASSERT(!GetService() || GetService() == this, "More than one service!");
 
   gRuntimeService = nullptr;
 }
@@ -1045,9 +1043,9 @@ RuntimeService* RuntimeService::GetOrCreateService() {
   if (!gRuntimeService) {
     // The observer service now owns us until shutdown.
     gRuntimeService = new RuntimeService();
-    if (NS_FAILED(gRuntimeService->Init())) {
+    if (NS_FAILED((*gRuntimeService).Init())) {
       NS_WARNING("Failed to initialize!");
-      gRuntimeService->Cleanup();
+      (*gRuntimeService).Cleanup();
       gRuntimeService = nullptr;
       return nullptr;
     }
@@ -2184,7 +2182,9 @@ WorkerThreadPrimaryRunnable::Run() {
 
       // Perform a full GC. This will collect the main worker global and CC,
       // which should break all cycles that touch JS.
-      JS_GC(cx, JS::GCReason::WORKER_SHUTDOWN);
+      JS::PrepareForFullGC(cx);
+      JS::NonIncrementalGC(cx, JS::GCOptions::Shutdown,
+                           JS::GCReason::WORKER_SHUTDOWN);
 
       // Before shutting down the cycle collector we need to do one more pass
       // through the event loop to clean up any C++ objects that need deferred

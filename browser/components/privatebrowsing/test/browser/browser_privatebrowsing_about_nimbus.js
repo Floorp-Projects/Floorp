@@ -539,9 +539,14 @@ add_task(async function test_experiment_messaging_system() {
       "should format the infoLinkUrl url"
     );
     is(
-      content.document.querySelector(".promo a").getAttribute("href"),
-      "http://bar.example.com/" + locale,
-      "should format the promoLinkUrl url"
+      content.document.querySelector(".info a").getAttribute("target"),
+      "_blank",
+      "should open info url in new tab"
+    );
+    is(
+      content.document.querySelector(".promo a").getAttribute("target"),
+      "_blank",
+      "should open promo url in new tab"
     );
   });
 

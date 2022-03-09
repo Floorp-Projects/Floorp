@@ -19,15 +19,15 @@ class TestLicenses(unittest.TestCase):
         pass
 
     def testLicense(self):
-        self.assertEquals(VendorRust.runtime_license("", "Apache-2.0"), True)
-        self.assertEquals(VendorRust.runtime_license("", "MIT"), True)
-        self.assertEquals(VendorRust.runtime_license("", "GPL"), False)
-        self.assertEquals(VendorRust.runtime_license("", "MIT /GPL"), True)
-        self.assertEquals(VendorRust.runtime_license("", "GPL/ Proprietary"), False)
-        self.assertEquals(VendorRust.runtime_license("", "GPL AND MIT"), False)
-        self.assertEquals(VendorRust.runtime_license("", "ISC\tAND\tMIT"), False)
-        self.assertEquals(VendorRust.runtime_license("", "GPL OR MIT"), True)
-        self.assertEquals(VendorRust.runtime_license("", "ALLIGATOR MIT"), False)
+        self.assertEqual(VendorRust.runtime_license("", "Apache-2.0"), True)
+        self.assertEqual(VendorRust.runtime_license("", "MIT"), True)
+        self.assertEqual(VendorRust.runtime_license("", "GPL"), False)
+        self.assertEqual(VendorRust.runtime_license("", "MIT /GPL"), True)
+        self.assertEqual(VendorRust.runtime_license("", "GPL/ Proprietary"), False)
+        self.assertEqual(VendorRust.runtime_license("", "GPL AND MIT"), False)
+        self.assertEqual(VendorRust.runtime_license("", "ISC\tAND\tMIT"), False)
+        self.assertEqual(VendorRust.runtime_license("", "GPL OR MIT"), True)
+        self.assertEqual(VendorRust.runtime_license("", "ALLIGATOR MIT"), False)
         pass
 
 

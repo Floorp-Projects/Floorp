@@ -261,12 +261,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
         EditorDOMPoint(&aLeftBlockElement, 0),
         HTMLEditor::MoveToEndOfContainer::Yes);
-    if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    if (moveNodeResult.Failed()) {
+      NS_WARNING(
+          "HTMLEditor::MoveOneHardLineContents(MoveToEndOfContainer::Yes) "
+          "failed");
+      return EditActionResult(moveNodeResult.Rv());
     }
-    NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
-                         "HTMLEditor::MoveOneHardLineContents("
-                         "MoveToEndOfContainer::Yes) failed, but ignored");
     if (moveNodeResult.Succeeded()) {
 #ifdef DEBUG
       MOZ_ASSERT(!firstLineHasContent.isErr());
@@ -387,18 +387,21 @@ EditActionResult WhiteSpaceVisibilityKeeper::
           "failed at left block child");
       return EditActionResult(rv);
     }
-    // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
-    //     Do we really need to do update aRightBlockElement here??
-    // XXX And atLeftBlockChild.GetContainerAsElement() always returns
-    //     an element pointer so that probably here should not use
-    //     accessors of EditorDOMPoint, should use DOM API directly instead.
-    if (atLeftBlockChild.GetContainerAsElement()) {
-      leftBlockElement = *atLeftBlockChild.GetContainerAsElement();
-    } else if (NS_WARN_IF(!atLeftBlockChild.GetContainerParentAsElement())) {
-      return EditActionResult(NS_ERROR_UNEXPECTED);
-    } else {
-      leftBlockElement = *atLeftBlockChild.GetContainerParentAsElement();
-    }
+  }
+  if (!atLeftBlockChild.IsSetAndValid()) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
+        "unexpected DOM tree");
+    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  // XXX atLeftBlockChild.GetContainerAsElement() should always return
+  //     an element pointer so that probably here should not use
+  //     accessors of EditorDOMPoint, should use DOM API directly instead.
+  if (Element* nearestAncestor =
+          atLeftBlockChild.GetContainerOrContainerParentElement()) {
+    leftBlockElement = *nearestAncestor;
+  } else {
+    return EditActionResult(NS_ERROR_UNEXPECTED);
   }
 
   // Do br adjustment.
@@ -450,7 +453,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 
     EditorDOMPoint atPreviousContent;
     if (&aLeftContentInBlock == leftBlockElement) {
-      // We are working with valid HTML, aLeftContentInBlock is a block node,
+      // We are working with valid HTML, aLeftContentInBlock is a block element,
       // and is therefore allowed to contain aRightBlockElement.  This is the
       // simple case, we will simply move the content in aRightBlockElement
       // out of its block.
@@ -471,7 +474,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       atPreviousContent.AdvanceOffset();
     }
 
-    MOZ_ASSERT(atPreviousContent.IsSet());
+    MOZ_ASSERT(atPreviousContent.IsSetAndValid());
 
     // Because we don't want the moving content to receive the style of the
     // previous content, we split the previous content's style.
@@ -482,10 +485,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
             EditorRawDOMPoint(&aRightBlockElement, 0));
 #endif  // #ifdef DEBUG
 
-    Element* editingHost = aHTMLEditor.GetActiveEditingHost();
-    // XXX It's odd to continue handling this edit action if there is no
-    //     editing host.
-    if (!editingHost || &aLeftContentInBlock != editingHost) {
+    Element* editingHost =
+        aHTMLEditor.GetActiveEditingHost(HTMLEditor::LimitInBodyElement::No);
+    if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+    if (&aLeftContentInBlock != editingHost) {
       SplitNodeResult splitResult =
           aHTMLEditor.SplitAncestorStyledInlineElementsAt(atPreviousContent,
                                                           nullptr, nullptr);
@@ -510,6 +515,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
           }
         }
       }
+      MOZ_DIAGNOSTIC_ASSERT(atPreviousContent.IsSetAndValid());
     }
 
     MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(

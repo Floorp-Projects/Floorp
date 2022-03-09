@@ -3845,7 +3845,6 @@
     "test-android-em-7.0-x86_64/opt-geckoview-web-platform-tests-e10s-6",
     "test-windows10-64-2004/debug-reftest-e10s-1",
     "test-windows10-64-2004/opt-web-platform-tests-e10s-4",
-    "source-test-mozlint-cpp-virtual-final",
     "test-vismet-android-hw-g5-7-0-arm7-shippable/opt-browsertime-tp6m-geckoview-cold-bing",
     "test-linux64-shippable/opt-raptor-tp6-firefox-cold-youtube-e10s",
     "test-linux64-shippable-qr/opt-raptor-tp6-firefox-cold-twitch-e10s",

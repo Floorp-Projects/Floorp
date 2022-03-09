@@ -11,6 +11,7 @@
 #include "ScriptLoader.h"
 #include "ScriptTrace.h"
 #include "js/Transcoding.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -24,7 +25,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SRICheck.h"
 #include "mozilla/dom/ScriptDecoding.h"
-#include "mozilla/dom/ScriptLoadRequest.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -50,7 +50,7 @@ namespace dom {
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
 ScriptLoadHandler::ScriptLoadHandler(
-    ScriptLoader* aScriptLoader, ScriptLoadRequest* aRequest,
+    ScriptLoader* aScriptLoader, JS::loader::ScriptLoadRequest* aRequest,
     UniquePtr<SRICheckDataVerifier>&& aSRIDataVerifier)
     : mScriptLoader(aScriptLoader),
       mRequest(aRequest),
@@ -76,7 +76,7 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
   }
 
   // Reference to the script source buffer which we will update.
-  ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
+  JS::loader::ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
       mRequest->ScriptText<Unit>();
 
   uint32_t haveRead = scriptText.length();
@@ -122,7 +122,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
 
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
-    mRequest->NotifyStart(channelRequest);
+    mRequest->mLoadContext->NotifyStart(channelRequest);
   }
 
   if (mRequest->IsCanceled()) {
@@ -222,8 +222,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   // Check the hint charset from the script element or preload
   // request.
   nsAutoString hintCharset;
-  if (!mRequest->IsPreload()) {
-    mRequest->GetScriptElement()->GetScriptCharset(hintCharset);
+  if (!mRequest->mLoadContext->IsPreload()) {
+    mRequest->mLoadContext->GetScriptElement()->GetScriptCharset(hintCharset);
   } else {
     nsTArray<ScriptLoader::PreloadInfo>::index_type i =
         mScriptLoader->mPreloads.IndexOf(
@@ -296,7 +296,8 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
 
   if (mRequest->IsLoadingSource()) {
     mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->GetScriptElement(), "scriptloader_load_source");
+    TRACE_FOR_TEST(mRequest->mLoadContext->GetScriptElement(),
+                   "scriptloader_load_source");
     return NS_OK;
   }
 
@@ -306,7 +307,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     cic->GetAlternativeDataType(altDataType);
     if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->SetBytecode();
-      TRACE_FOR_TEST(mRequest->GetScriptElement(),
+      TRACE_FOR_TEST(mRequest->mLoadContext->GetScriptElement(),
                      "scriptloader_load_bytecode");
       return NS_OK;
     }
@@ -314,7 +315,8 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   }
 
   mRequest->SetTextSource();
-  TRACE_FOR_TEST(mRequest->GetScriptElement(), "scriptloader_load_source");
+  TRACE_FOR_TEST(mRequest->mLoadContext->GetScriptElement(),
+                 "scriptloader_load_source");
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
@@ -339,11 +341,11 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
-    mRequest->NotifyStart(channelRequest);
+    mRequest->mLoadContext->NotifyStart(channelRequest);
   }
 
-  auto notifyStop =
-      MakeScopeExit([&] { mRequest->NotifyStop(channelRequest, rv); });
+  auto notifyStop = MakeScopeExit(
+      [&] { mRequest->mLoadContext->NotifyStop(channelRequest, rv); });
 
   if (!mRequest->IsCanceled()) {
     if (mRequest->IsUnknownDataType()) {

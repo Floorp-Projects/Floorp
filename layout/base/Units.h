@@ -173,6 +173,7 @@ typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;
 typedef gfx::ScaleFactor<CSSPixel, ScreenPixel> CSSToScreenScale;
 typedef gfx::ScaleFactor<CSSPixel, ParentLayerPixel> CSSToParentLayerScale;
+typedef gfx::ScaleFactor<CSSPixel, DesktopPixel> CSSToDesktopScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, CSSPixel> LayoutDeviceToCSSScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, LayerPixel>
     LayoutDeviceToLayerScale;
@@ -202,6 +203,8 @@ typedef gfx::ScaleFactor<ParentLayerPixel, ParentLayerPixel>
     ParentLayerToParentLayerScale;
 typedef gfx::ScaleFactor<DesktopPixel, LayoutDevicePixel>
     DesktopToLayoutDeviceScale;
+typedef gfx::ScaleFactor<LayoutDevicePixel, DesktopPixel>
+    LayoutDeviceToDesktopScale;
 
 typedef gfx::ScaleFactors2D<CSSPixel, LayoutDevicePixel>
     CSSToLayoutDeviceScale2D;
@@ -435,6 +438,15 @@ struct LayoutDevicePixel {
     return LayoutDeviceIntPoint(
         NSAppUnitsToIntPixels(aPoint.x, aAppUnitsPerDevPixel),
         NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));
+  }
+
+  static LayoutDeviceIntRect FromAppUnitsRounded(const nsRect& aRect,
+                                                 nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntRect(
+        NSAppUnitsToIntPixels(aRect.x, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.y, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.Width(), aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aRect.Height(), aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntPoint FromAppUnitsToNearest(

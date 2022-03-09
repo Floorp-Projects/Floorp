@@ -380,6 +380,9 @@ if <code>Object.getOwnPropertyNames(<i>referent</i>)</code> had been
 called in the debuggee, and the result copied in the scope of the
 debugger's global object.
 
+### `getOwnPropertyNamesLength()`
+Return the number of the referent's own properties.
+
 ### `getOwnPropertySymbols()`
 Return an array of strings naming all the referent's own symbols, as
 if <code>Object.getOwnPropertySymbols(<i>referent</i>)</code> had been

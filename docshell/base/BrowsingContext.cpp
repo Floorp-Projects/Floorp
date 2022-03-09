@@ -170,6 +170,15 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
+// static
+void BrowsingContext::UpdateCurrentTopByBrowserId(
+    BrowsingContext* aNewBrowsingContext) {
+  if (aNewBrowsingContext->IsTopContent()) {
+    sCurrentTopByBrowserId->InsertOrUpdate(aNewBrowsingContext->BrowserId(),
+                                           aNewBrowsingContext);
+  }
+}
+
 BrowsingContext* BrowsingContext::GetParent() const {
   return mParentWindow ? mParentWindow->GetBrowsingContext() : nullptr;
 }
@@ -400,7 +409,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   fields.mDefaultLoadFlags =
       inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
 
-  fields.mOrientationLock = mozilla::hal::eScreenOrientation_None;
+  fields.mOrientationLock = mozilla::hal::ScreenOrientation::None;
 
   fields.mUseGlobalHistory = inherit ? inherit->GetUseGlobalHistory() : false;
 
@@ -2910,6 +2919,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
 
   const bool isInBFCache = GetIsInBFCache();
   if (!isInBFCache) {
+    UpdateCurrentTopByBrowserId(this);
     PreOrderWalk([&](BrowsingContext* aContext) {
       aContext->mIsInBFCache = false;
       nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
@@ -3562,7 +3572,7 @@ void BrowsingContext::SessionHistoryCommit(
 
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, uint32_t aUpdatedCacheKey) {
+    uint32_t aLoadType, uint32_t aUpdatedCacheKey, bool aUpdateLength) {
   if (XRE_IsContentProcess()) {
     // XXX Why we update cache key only in content process case?
     if (aUpdatedCacheKey != 0) {
@@ -3570,9 +3580,11 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
     }
 
     nsID changeID = {};
-    RefPtr<ChildSHistory> shistory = Top()->GetChildSessionHistory();
-    if (shistory) {
-      changeID = shistory->AddPendingHistoryChange();
+    if (aUpdateLength) {
+      RefPtr<ChildSHistory> shistory = Top()->GetChildSessionHistory();
+      if (shistory) {
+        changeID = shistory->AddPendingHistoryChange();
+      }
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
         this, aPreviousScrollPos, *aInfo, aLoadType, aUpdatedCacheKey,
@@ -3699,19 +3711,19 @@ void BrowsingContext::ResetLocationChangeRateLimit() {
 namespace ipc {
 
 void IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Write(
-    IPC::Message* aMsg, IProtocol* aActor,
+    IPC::MessageWriter* aWriter, IProtocol* aActor,
     const dom::MaybeDiscarded<dom::BrowsingContext>& aParam) {
   MOZ_DIAGNOSTIC_ASSERT(!aParam.GetMaybeDiscarded() ||
                         aParam.GetMaybeDiscarded()->EverAttached());
   uint64_t id = aParam.ContextId();
-  WriteIPDLParam(aMsg, aActor, id);
+  WriteIPDLParam(aWriter, aActor, id);
 }
 
 bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     dom::MaybeDiscarded<dom::BrowsingContext>* aResult) {
   uint64_t id = 0;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+  if (!ReadIPDLParam(aReader, aActor, &id)) {
     return false;
   }
 
@@ -3726,43 +3738,39 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
 }
 
 void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
-    IPC::Message* aMessage, IProtocol* aActor,
+    IPC::MessageWriter* aWriter, IProtocol* aActor,
     const dom::BrowsingContext::IPCInitializer& aInit) {
   // Write actor ID parameters.
-  WriteIPDLParam(aMessage, aActor, aInit.mId);
-  WriteIPDLParam(aMessage, aActor, aInit.mParentId);
-  WriteIPDLParam(aMessage, aActor, aInit.mWindowless);
-  WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteTabs);
-  WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteSubframes);
-  WriteIPDLParam(aMessage, aActor, aInit.mCreatedDynamically);
-  WriteIPDLParam(aMessage, aActor, aInit.mChildOffset);
-  WriteIPDLParam(aMessage, aActor, aInit.mOriginAttributes);
-  WriteIPDLParam(aMessage, aActor, aInit.mRequestContextId);
-  WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryIndex);
-  WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryCount);
-  WriteIPDLParam(aMessage, aActor, aInit.mFields);
+  WriteIPDLParam(aWriter, aActor, aInit.mId);
+  WriteIPDLParam(aWriter, aActor, aInit.mParentId);
+  WriteIPDLParam(aWriter, aActor, aInit.mWindowless);
+  WriteIPDLParam(aWriter, aActor, aInit.mUseRemoteTabs);
+  WriteIPDLParam(aWriter, aActor, aInit.mUseRemoteSubframes);
+  WriteIPDLParam(aWriter, aActor, aInit.mCreatedDynamically);
+  WriteIPDLParam(aWriter, aActor, aInit.mChildOffset);
+  WriteIPDLParam(aWriter, aActor, aInit.mOriginAttributes);
+  WriteIPDLParam(aWriter, aActor, aInit.mRequestContextId);
+  WriteIPDLParam(aWriter, aActor, aInit.mSessionHistoryIndex);
+  WriteIPDLParam(aWriter, aActor, aInit.mSessionHistoryCount);
+  WriteIPDLParam(aWriter, aActor, aInit.mFields);
 }
 
 bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
-    const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
+    IPC::MessageReader* aReader, IProtocol* aActor,
     dom::BrowsingContext::IPCInitializer* aInit) {
   // Read actor ID parameters.
-  if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mId) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mParentId) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mWindowless) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mUseRemoteTabs) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor,
-                     &aInit->mUseRemoteSubframes) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor,
-                     &aInit->mCreatedDynamically) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mChildOffset) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOriginAttributes) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mRequestContextId) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor,
-                     &aInit->mSessionHistoryIndex) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor,
-                     &aInit->mSessionHistoryCount) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields)) {
+  if (!ReadIPDLParam(aReader, aActor, &aInit->mId) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mParentId) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mWindowless) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mUseRemoteTabs) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mUseRemoteSubframes) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mCreatedDynamically) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mChildOffset) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mOriginAttributes) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mRequestContextId) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mSessionHistoryIndex) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mSessionHistoryCount) ||
+      !ReadIPDLParam(aReader, aActor, &aInit->mFields)) {
     return false;
   }
   return true;

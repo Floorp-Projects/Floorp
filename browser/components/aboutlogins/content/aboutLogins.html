@@ -47,7 +47,7 @@
     <remove-logins-dialog hidden></remove-logins-dialog>
     <import-summary-dialog hidden></import-summary-dialog>
     <import-error-dialog hidden></import-error-dialog>
-    <div id="master-password-required-overlay"></div>
+    <div id="primary-password-required-overlay"></div>
 
     <template id="confirmation-dialog-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
@@ -267,7 +267,7 @@
           <div class="error-message">
             <span class="error-message-text" data-l10n-id="about-logins-error-message-default"></span>
             <span class="error-message-link">
-              <a data-l10n-name="duplicate-link" href=""></a>
+              <a data-l10n-name="duplicate-link" tabindex="0" href=""></a>
             </span>
           </div>
           <div class="header">

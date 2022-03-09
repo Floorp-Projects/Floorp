@@ -16,16 +16,9 @@ Services.scriptloader.loadSubScript(
 );
 
 // Import helpers for the new debugger
-/* import-globals-from ../../../debugger/test/mochitest/helpers/context.js */
+/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
-  this
-);
-
-// Import helpers for the new debugger
-/* import-globals-from ../../../debugger/test/mochitest/helpers.js*/
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this
 );
 
@@ -152,7 +145,9 @@ function logAllStoreChanges(hud) {
   // Adding logging each time the store is modified in order to check
   // the store state in case of failure.
   store.subscribe(() => {
-    const messages = [...store.getState().messages.messagesById.values()];
+    const messages = [
+      ...store.getState().messages.mutableMessagesById.values(),
+    ];
     const debugMessages = messages.map(
       ({ id, type, parameters, messageText }) => {
         return { id, type, parameters, messageText };

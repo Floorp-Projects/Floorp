@@ -4,18 +4,16 @@
 
 // Make sure named eval sources appear in the list.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sources.html",
-    "simple1",
-    "simple2",
-    "nested-source",
+    "simple1.js",
+    "simple2.js",
+    "nested-source.js",
     "long.js"
   );
-  const {
-    selectors: { getSelectedSource },
-    getState,
-  } = dbg;
 
   info(`>>> contentTask: evaluate evaled.js\n`);
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
@@ -23,7 +21,6 @@ add_task(async function() {
   });
 
   await waitForSourceCount(dbg, 3);
-  // is(getLabel(dbg, 3), "evaled.js", "evaled exists");
   ok(true);
 });
 
@@ -33,10 +30,4 @@ async function waitForSourceCount(dbg, i) {
   await waitUntil(() => {
     return findAllElements(dbg, "sourceNodes").length === i;
   }, `waiting for source count ${i}`);
-}
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index)
-    .textContent.trim()
-    .replace(/^[\s\u200b]*/g, "");
 }

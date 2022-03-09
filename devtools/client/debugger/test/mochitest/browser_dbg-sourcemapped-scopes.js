@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // This test can be really slow on debug platforms and should be split.
 requestLongerTimeout(30);
 
 // Tests loading sourcemapped sources for Babel's compile output.
+
+/* eslint-disable no-inline-comments */
 
 const ACTIVE_TARGETS = new Set([
   // "webpack3",
@@ -53,20 +57,17 @@ async function breakpointScopes(
   { line, column },
   scopes
 ) {
-  if (!ACTIVE_TARGETS.has(target)) return;
+  if (!ACTIVE_TARGETS.has(target)) {
+    return;
+  }
 
-  const filename = `${target}://./${fixture}/input.`;
+  const extension = fixture == "typescript-classes" ? "ts" : "js";
+  const url = `${target}://./${fixture}/input.${extension}`;
   const fnName = pairToFnName(target, fixture);
 
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    filename,
-    { line, column },
-    async () => {
-      await assertScopes(dbg, scopes);
-    }
-  );
+  await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
+    await assertScopes(dbg, scopes);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
@@ -84,7 +85,6 @@ function targetToFlags(target) {
   const isRollup = target.startsWith("rollup");
   const isWebpack = target.startsWith("webpack");
   const isParcel = target.startsWith("parcel");
-  const hasBabel = target.includes("-babel") || isParcel;
   const isWebpack4 = target.startsWith("webpack4");
 
   // Rollup removes lots of things as dead code, so they are marked as optimized out.
@@ -108,14 +108,14 @@ function targetToFlags(target) {
   };
 }
 function pairToFnName(target, fixture) {
-  return (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
-    c.toUpperCase()
-  );
+  return `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 }
 
 function runtimeFunctionName(target, fixture) {
   // Webpack 4 appears to output it's bundles in such a way that Spidermonkey
-  if (target === "webpack4") return "js";
+  if (target === "webpack4") {
+    return "js";
+  }
 
   return pairToFnName(target, fixture);
 }
@@ -223,12 +223,9 @@ async function testEvalMaps(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      defaultExport,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { defaultExport, rollupOptimized, maybeLineStart } = targetToFlags(
+      target
+    );
 
     await breakpointScopes(
       dbg,
@@ -280,12 +277,7 @@ async function testForOf(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      defaultExport,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { defaultExport, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -348,12 +340,7 @@ async function testShadowedVars(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      isParcel,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { isParcel, rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -367,6 +354,7 @@ async function testShadowedVars(dbg) {
         "Block",
         ["aConst", rollupOptimized || '"const2"'],
         ["aLet", rollupOptimized || '"let2"'],
+        // eslint-disable-next-line no-nested-ternary
         isParcel
           ? "Outer()"
           : rollupOptimized
@@ -375,6 +363,7 @@ async function testShadowedVars(dbg) {
         "Function Body",
         ["aConst", rollupOptimized || '"const1"'],
         ["aLet", rollupOptimized || '"let1"'],
+        // eslint-disable-next-line no-nested-ternary
         rollupOptimized
           ? ["Outer", rollupOptimized]
           : isParcel
@@ -427,11 +416,7 @@ async function testLineStartBindingsES6(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -518,12 +503,7 @@ async function testThisArgumentsBindings(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      isParcel,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { isParcel, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -622,12 +602,7 @@ async function testClasses(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      isParcel,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { isParcel, rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -722,11 +697,7 @@ async function testForLoops(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -811,12 +782,7 @@ async function testFunctions(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      isParcel,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { isParcel, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -888,11 +854,7 @@ async function testSwitches(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -956,11 +918,7 @@ async function testTryCatches(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { rollupOptimized, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1014,12 +972,7 @@ async function testLexAndNonlex(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      isParcel,
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { isParcel, maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1102,11 +1055,7 @@ async function testTypeModule(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      rollupOptimized,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { maybeLineStart } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,

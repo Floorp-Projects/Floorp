@@ -60,9 +60,9 @@ function openClientAuthDialog(cert) {
  *
  * @param {window} win The cert chooser window.
  * @param {String} notBefore
- *        The notBeforeLocalTime attribute of mochitest.client.
+ *        The formatted notBefore date of mochitest.client.
  * @param {String} notAfter
- *        The notAfterLocalTime attribute of mochitest.client.
+ *        The formatted notAfter date of mochitest.client.
  */
 function checkDialogContents(win, notBefore, notAfter) {
   is(
@@ -143,11 +143,15 @@ add_task(async function setup() {
 // Test that the contents of the dialog correspond to the details of the
 // provided cert.
 add_task(async function testContents() {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "long",
+  });
   let [win] = await openClientAuthDialog(cert);
   checkDialogContents(
     win,
-    cert.validity.notBeforeLocalTime,
-    cert.validity.notAfterLocalTime
+    formatter.format(new Date(cert.validity.notBefore / 1000)),
+    formatter.format(new Date(cert.validity.notAfter / 1000))
   );
   await BrowserTestUtils.closeWindow(win);
 });

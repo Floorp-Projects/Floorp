@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
   await pushPref(
     "devtools.debugger.features.event-listeners-breakpoints",
@@ -10,10 +12,10 @@ add_task(async function() {
 
   const dbg = await initDebugger(
     "doc-event-breakpoints.html",
-    "event-breakpoints"
+    "event-breakpoints.js"
   );
-  await selectSource(dbg, "event-breakpoints");
-  await waitForSelectedSource(dbg, "event-breakpoints");
+  await selectSource(dbg, "event-breakpoints.js");
+  await waitForSelectedSource(dbg, "event-breakpoints.js");
 
   // We want to set each breakpoint individually to test adding/removing breakpoints, see Bug 1748589.
   await toggleEventBreakpoint(dbg, "Mouse", "event.mouse.click");

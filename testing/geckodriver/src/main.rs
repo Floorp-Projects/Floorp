@@ -123,6 +123,7 @@ macro_rules! usage {
 
 type ProgramResult<T> = result::Result<T, FatalError>;
 
+#[allow(clippy::large_enum_variant)]
 enum Operation {
     Help,
     Version,

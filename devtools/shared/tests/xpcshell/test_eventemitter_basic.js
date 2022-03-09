@@ -185,52 +185,6 @@ const TESTS = {
     });
   },
 
-  // This API is only provided for backward compatibility reasons with the old SDK
-  // event-emitter.
-  // !!! This API will be removed by Bug 1391261.
-  testWildcard() {
-    const emitter = getEventEmitter();
-
-    const received = [];
-    const listener = (...args) => received.push(args);
-
-    emitter.on("*", listener);
-
-    emitter.emit("a", 1);
-
-    equal(received.length, 1, "the listener was triggered once");
-    equal(received[0].length, 2, "the listener was called with 2 arguments");
-    equal(received[0][0], "a", "first argument is the event name");
-    equal(received[0][1], 1, "additional arguments are forwarded");
-
-    emitter.emit("*", "wildcard");
-
-    equal(received.length, 2, "the listener was only triggered once");
-    equal(
-      received[1].length,
-      1,
-      "the listener was called with only 1 argument"
-    );
-    equal(received[1][0], "wildcard", "first argument is the actual argument");
-
-    emitter.emit("other", "arg1", "arg2");
-
-    equal(received.length, 3, "the listener was triggered once");
-    equal(
-      received[2].length,
-      3,
-      "the listener was called with only 1 argument"
-    );
-    equal(received[2][0], "other", "first argument is the event name");
-    equal(received[2][1], "arg1", "additional arguments are forwarded");
-    equal(received[2][2], "arg2", "additional arguments are forwarded");
-
-    emitter.off("*", listener);
-    emitter.emit("a");
-    emitter.emit("*");
-    equal(received.length, 3, "the listener was not called anymore");
-  },
-
   testClearEvents() {
     const emitter = getEventEmitter();
 

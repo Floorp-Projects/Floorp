@@ -16,8 +16,10 @@ import time
 from copy import deepcopy
 
 import attr
-
 from mozbuild.util import memoize
+from taskgraph.util.time import value_of
+from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
+
 from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.treeherder import split_symbol
@@ -37,9 +39,7 @@ from gecko_taskgraph.util.scriptworker import (
     get_release_config,
 )
 from gecko_taskgraph.util.signed_artifacts import get_signed_artifacts
-from gecko_taskgraph.util.time import value_of
 from gecko_taskgraph.util.workertypes import worker_type_implementation
-from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 from gecko_taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
 from ..util.workertypes import get_worker_type
@@ -192,8 +192,6 @@ task_description_schema = Schema(
         "worker-type": str,
         # Whether the job should use sccache compiler caching.
         Required("use-sccache"): bool,
-        # Set of artifacts relevant to release tasks
-        Optional("release-artifacts"): [str],
         # information specific to the worker implementation that will run this task
         Optional("worker"): {
             Required("implementation"): str,
@@ -851,7 +849,8 @@ def build_scriptworker_signing_payload(config, task, task_def):
         for attribute in ("entitlements-url", "requirements-plist-url"):
             if worker.get(attribute):
                 task_def["payload"][attribute] = worker[attribute]
-    artifacts = set(task.get("release-artifacts", []))
+
+    artifacts = set(task.setdefault("attributes", {}).get("release_artifacts", []))
     for upstream_artifact in worker["upstream-artifacts"]:
         for path in upstream_artifact["paths"]:
             artifacts.update(
@@ -861,7 +860,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
                     behavior=worker.get("mac-behavior"),
                 )
             )
-    task["release-artifacts"] = list(artifacts)
+    task["attributes"]["release_artifacts"] = list(artifacts)
 
 
 @payload_builder(
@@ -2008,7 +2007,6 @@ def build_task(config, tasks):
             "soft-dependencies": task.get("soft-dependencies", []),
             "attributes": attributes,
             "optimization": task.get("optimization", None),
-            "release-artifacts": task.get("release-artifacts", []),
         }
 
 

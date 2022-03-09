@@ -11,6 +11,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/AnimationInfo.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
@@ -47,8 +48,8 @@ class WebRenderCanvasRenderer;
 class WebRenderCanvasRendererAsync;
 class WebRenderImageData;
 class WebRenderImageProviderData;
+class WebRenderInProcessImageData;
 class WebRenderFallbackData;
-class WebRenderLocalCanvasData;
 class RenderRootStateManager;
 class WebRenderGroupData;
 
@@ -82,9 +83,11 @@ class WebRenderUserData {
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
   virtual WebRenderImageProviderData* AsImageProviderData() { return nullptr; }
+  virtual WebRenderInProcessImageData* AsInProcessImageData() {
+    return nullptr;
+  }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
   virtual WebRenderCanvasData* AsCanvasData() { return nullptr; }
-  virtual WebRenderLocalCanvasData* AsLocalCanvasData() { return nullptr; }
   virtual WebRenderGroupData* AsGroupData() { return nullptr; }
 
   enum class UserDataType {
@@ -93,11 +96,11 @@ class WebRenderUserData {
     eAPZAnimation,
     eAnimation,
     eCanvas,
-    eLocalCanvas,
     eRemote,
     eGroup,
     eMask,
     eImageProvider,  // ImageLib
+    eInProcessImage,
   };
 
   virtual UserDataType GetType() = 0;
@@ -209,6 +212,30 @@ class WebRenderImageProviderData final : public WebRenderUserData {
   image::ImgDrawResult mDrawResult;
 };
 
+class WebRenderInProcessImageData final : public WebRenderUserData {
+ public:
+  WebRenderInProcessImageData(RenderRootStateManager* aManager,
+                              nsDisplayItem* aItem);
+  WebRenderInProcessImageData(RenderRootStateManager* aManager,
+                              uint32_t aDisplayItemKey, nsIFrame* aFrame);
+  ~WebRenderInProcessImageData() override;
+
+  WebRenderInProcessImageData* AsInProcessImageData() override { return this; }
+  UserDataType GetType() override { return UserDataType::eInProcessImage; }
+  static UserDataType Type() { return UserDataType::eInProcessImage; }
+
+  void CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      const CompositableHandle& aHandle, const StackingContextHelper& aSc,
+      const LayoutDeviceRect& aBounds, const LayoutDeviceRect& aSCBounds,
+      VideoInfo::Rotation aRotation, const wr::ImageRendering& aFilter,
+      const wr::MixBlendMode& aMixBlendMode, bool aIsBackfaceVisible);
+
+ protected:
+  Maybe<wr::PipelineId> mPipelineId;
+  CompositableHandle mHandle = CompositableHandle();
+};
+
 /// Used for fallback rendering.
 ///
 /// In most cases this uses blob images but it can also render on the content
@@ -303,32 +330,6 @@ class WebRenderCanvasData : public WebRenderUserData {
  protected:
   RefPtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
   RefPtr<ImageContainer> mContainer;
-};
-
-// WebRender data assocatiated with canvases that don't need to
-// synchronize across content-GPU process barrier.
-class WebRenderLocalCanvasData : public WebRenderUserData {
- public:
-  WebRenderLocalCanvasData(RenderRootStateManager* aManager,
-                           nsDisplayItem* aItem);
-  virtual ~WebRenderLocalCanvasData();
-
-  WebRenderLocalCanvasData* AsLocalCanvasData() override { return this; }
-  UserDataType GetType() override { return UserDataType::eLocalCanvas; }
-  static UserDataType Type() { return UserDataType::eLocalCanvas; }
-
-  void RequestFrameReadback();
-  void RefreshExternalImage();
-
-  // TODO: introduce a CanvasRenderer derivative to store here?
-
-  WeakPtr<webgpu::WebGPUChild> mGpuBridge;
-  uint64_t mGpuTextureId = 0;
-  wr::ExternalImageId mExternalImageId = {0};
-  wr::ImageKey mImageKey = {};
-  wr::ImageDescriptor mDescriptor;
-  gfx::SurfaceFormat mFormat = gfx::SurfaceFormat::UNKNOWN;
-  bool mDirty = false;
 };
 
 class WebRenderRemoteData : public WebRenderUserData {

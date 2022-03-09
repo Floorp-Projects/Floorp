@@ -1,0 +1,118 @@
+diff --git a/src/google_breakpad/common/minidump_cpu_arm64.h b/src/google_breakpad/common/minidump_cpu_arm64.h
+--- a/src/google_breakpad/common/minidump_cpu_arm64.h
++++ b/src/google_breakpad/common/minidump_cpu_arm64.h
+@@ -86,16 +86,20 @@ typedef struct {
+ #define MD_CONTEXT_ARM64_INTEGER (MD_CONTEXT_ARM64 | 0x00000002)
+ #define MD_CONTEXT_ARM64_FLOATING_POINT (MD_CONTEXT_ARM64 | 0x00000004)
+ #define MD_CONTEXT_ARM64_DEBUG (MD_CONTEXT_ARM64 | 0x00000008)
+ #define MD_CONTEXT_ARM64_FULL (MD_CONTEXT_ARM64_CONTROL | \
+                                MD_CONTEXT_ARM64_INTEGER | \
+                                MD_CONTEXT_ARM64_FLOATING_POINT)
+ #define MD_CONTEXT_ARM64_ALL (MD_CONTEXT_ARM64_FULL | MD_CONTEXT_ARM64_DEBUG)
+ 
++/* Use the same 32-bit alignment when accessing these structures from 64-bit
++ * code as is used natively in 32-bit code. */
++#pragma pack(push, 4)
++
+ typedef struct {
+   /* Determines which fields of this struct are populated */
+   uint32_t context_flags;
+ 
+   /* CPSR (flags, basically): 32 bits:
+         bit 31 - N (negative)
+         bit 30 - Z (zero)
+         bit 29 - C (carry)
+@@ -125,20 +129,16 @@ typedef struct {
+ typedef struct {
+   uint32_t       fpsr;      /* FPU status register */
+   uint32_t       fpcr;      /* FPU control register */
+ 
+   /* 32 128-bit floating point registers, d0 .. d31. */
+   uint128_struct regs[MD_FLOATINGSAVEAREA_ARM64_FPR_COUNT];
+ } MDFloatingSaveAreaARM64_Old;
+ 
+-/* Use the same 32-bit alignment when accessing this structure from 64-bit code
+- * as is used natively in 32-bit code. */
+-#pragma pack(push, 4)
+-
+ typedef struct {
+   /* The next field determines the layout of the structure, and which parts
+    * of it are populated
+    */
+   uint64_t      context_flags;
+ 
+   /* 33 64-bit integer registers, x0 .. x31 + the PC
+    * Note the following fixed uses:
+diff --git a/src/google_breakpad/common/minidump_cpu_ppc.h b/src/google_breakpad/common/minidump_cpu_ppc.h
+--- a/src/google_breakpad/common/minidump_cpu_ppc.h
++++ b/src/google_breakpad/common/minidump_cpu_ppc.h
+@@ -73,16 +73,20 @@
+ /*
+  * Breakpad minidump extension for PowerPC support.  Based on Darwin/Mac OS X'
+  * mach/ppc/_types.h
+  */
+ 
+ #ifndef GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_PPC_H__
+ #define GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_PPC_H__
+ 
++/* Use the same 32-bit alignment when accessing these structures from 64-bit
++ * code as is used natively in 32-bit code. */
++#pragma pack(push, 4)
++
+ #define MD_FLOATINGSAVEAREA_PPC_FPR_COUNT 32
+ 
+ typedef struct {
+   /* fpregs is a double[32] in mach/ppc/_types.h, but a uint64_t is used
+    * here for precise sizing. */
+   uint64_t fpregs[MD_FLOATINGSAVEAREA_PPC_FPR_COUNT];
+   uint32_t fpscr_pad;
+   uint32_t fpscr;      /* Status/control */
+@@ -99,25 +103,16 @@ typedef struct {
+   uint32_t       save_pad5[4];
+   uint32_t       save_vrvalid;  /* Indicates which vector registers are saved */
+   uint32_t       save_pad6[7];
+ } MDVectorSaveAreaPPC;  /* ppc_vector_state */
+ 
+ 
+ #define MD_CONTEXT_PPC_GPR_COUNT 32
+ 
+-/* Use the same 32-bit alignment when accessing this structure from 64-bit code
+- * as is used natively in 32-bit code.  #pragma pack is a MSVC extension
+- * supported by gcc. */
+-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+-#pragma pack(4)
+-#else
+-#pragma pack(push, 4)
+-#endif
+-
+ typedef struct {
+   /* context_flags is not present in ppc_thread_state, but it aids
+    * identification of MDRawContextPPC among other raw context types,
+    * and it guarantees alignment when we get to float_save. */
+   uint32_t              context_flags;
+ 
+   uint32_t              srr0;    /* Machine status save/restore: stores pc
+                                   * (instruction) */
+@@ -140,21 +135,17 @@ typedef struct {
+   MDVectorSaveAreaPPC   vector_save;
+ } MDRawContextPPC;  /* Based on ppc_thread_state */
+ 
+ /* Indices into gpr for registers with a dedicated or conventional purpose. */
+ enum MDPPCRegisterNumbers {
+   MD_CONTEXT_PPC_REG_SP = 1
+ };
+ 
+-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+-#pragma pack(0)
+-#else
+ #pragma pack(pop)
+-#endif
+ 
+ /* For (MDRawContextPPC).context_flags.  These values indicate the type of
+  * context stored in the structure.  MD_CONTEXT_PPC is Breakpad-defined.  Its
+  * value was chosen to avoid likely conflicts with MD_CONTEXT_* for other
+  * CPUs. */
+ #define MD_CONTEXT_PPC                0x20000000
+ #define MD_CONTEXT_PPC_BASE           (MD_CONTEXT_PPC | 0x00000001)
+ #define MD_CONTEXT_PPC_FLOATING_POINT (MD_CONTEXT_PPC | 0x00000008)
+

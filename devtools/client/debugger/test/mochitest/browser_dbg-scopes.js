@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
   const ready = Promise.all([
     waitForPaused(dbg),
-    waitForLoadedSource(dbg, "switching-02"),
+    waitForLoadedSource(dbg, "script-switching-02.js"),
 
     // MAP_FRAMES triggers a new Scopes panel render cycle, which introduces
     // a race condition with the click event on the foo node.

@@ -178,6 +178,10 @@ class ImageBundle {
   ImageF* alpha();
 
   // -- EXTRA CHANNELS
+  bool HasBlack() const {
+    return metadata_->Find(ExtraChannel::kBlack) != nullptr;
+  }
+  const ImageF& black() const;
 
   // Extra channels of unknown interpretation (e.g. spot colors).
   void SetExtraChannels(std::vector<ImageF>&& extra_channels);

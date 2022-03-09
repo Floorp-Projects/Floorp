@@ -15,6 +15,7 @@
 using GtkWidget = struct _GtkWidget;
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
 
 class WritingMode;
 template <typename T>
@@ -23,8 +24,6 @@ class Maybe;
 namespace widget {
 
 class NativeKeyBindings final {
-  typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
-
  public:
   static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
   static void Shutdown();

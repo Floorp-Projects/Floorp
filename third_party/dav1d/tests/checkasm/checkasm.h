@@ -311,11 +311,12 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
 #endif
 
 
+#define ROUND_UP(x,a) (((x)+((a)-1)) & ~((a)-1))
 #define PIXEL_RECT(name, w, h) \
-    ALIGN_STK_64(pixel, name##_buf, ((h)+32)*((w)+64) + 64,); \
-    ptrdiff_t name##_stride = sizeof(pixel)*((w)+64); \
+    ALIGN_STK_64(pixel, name##_buf, ((h)+32)*(ROUND_UP(w,64)+64) + 64,); \
+    ptrdiff_t name##_stride = sizeof(pixel)*(ROUND_UP(w,64)+64); \
     (void)name##_stride; \
-    pixel *name = name##_buf + ((w)+64)*16 + 64
+    pixel *name = name##_buf + (ROUND_UP(w,64)+64)*16 + 64
 
 #define CLEAR_PIXEL_RECT(name) \
     memset(name##_buf, 0x99, sizeof(name##_buf)) \

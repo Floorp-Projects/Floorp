@@ -11,16 +11,10 @@
 ;********************************************************************
 ; Original implementation:
 ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
-; last mod: $Id: armidct.s 17481 2010-10-03 22:49:42Z tterribe $
+; last mod: $Id$
 ;********************************************************************
 
 	AREA	|.text|, CODE, READONLY
-
-	; Explicitly specifying alignment here because some versions of
-	; gas don't align code correctly. See
-	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
-	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
-	ALIGN
 
 	GET	armopts.s
 
@@ -70,11 +64,8 @@ oc_idct8x8_slow_arm
 	BL	idct8core_arm
 	BL	idct8core_arm
 	LDR	r0, [r13], #4	; Write to the final destination.
-	; Clear input data for next block (decoder only).
 	SUB	r2, r1, #8*16
-	CMP	r0, r2
-	MOV	r1, r13		; And read from temp storage.
-	BEQ	oc_idct8x8_slow_arm_cols
+	; Clear input data for next block.
 	MOV	r4, #0
 	MOV	r5, #0
 	MOV	r6, #0
@@ -87,7 +78,7 @@ oc_idct8x8_slow_arm
 	STMIA	r2!,{r4,r5,r6,r7}
 	STMIA	r2!,{r4,r5,r6,r7}
 	STMIA	r2!,{r4,r5,r6,r7}
-oc_idct8x8_slow_arm_cols
+	MOV	r1, r13		; And read from temp storage.
 ; Column transforms
 	BL	idct8core_down_arm
 	BL	idct8core_down_arm
@@ -111,18 +102,15 @@ oc_idct8x8_10_arm PROC
 	BL	idct3core_arm
 	BL	idct2core_arm
 	BL	idct1core_arm
-	; Clear input data for next block (decoder only).
-	SUB	r0, r1, #4*16
-	CMP	r0, r2
-	MOV	r1, r13		; Read from temp storage.
-	BEQ	oc_idct8x8_10_arm_cols
+	; Clear input data for next block.
 	MOV	r4, #0
-	STR	r4, [r0]
-	STR	r4, [r0,#4]
-	STR	r4, [r0,#16]
-	STR	r4, [r0,#20]
-	STR	r4, [r0,#32]
-	STR	r4, [r0,#48]
+	STR	r4, [r1,#-4*16]!
+	STR	r4, [r1,#4]
+	STR	r4, [r1,#16]
+	STR	r4, [r1,#20]
+	STR	r4, [r1,#32]
+	STR	r4, [r1,#48]
+	MOV	r1, r13		; Read from temp storage.
 	MOV	r0, r2		; Write to the final destination
 oc_idct8x8_10_arm_cols
 ; Column transforms
@@ -147,18 +135,14 @@ oc_idct8x8_6_arm PROC
 	BL	idct3core_arm
 	BL	idct2core_arm
 	BL	idct1core_arm
-	; Clear input data for next block (decoder only).
-	SUB	r0, r1, #3*16
-	CMP	r0, r2
-	MOV	r1, r13		; Read from temp storage.
-	BEQ	oc_idct8x8_6_arm_cols
+	; Clear input data for next block.
 	MOV	r4, #0
-	STR	r4, [r0]
-	STR	r4, [r0,#4]
-	STR	r4, [r0,#16]
-	STR	r4, [r0,#32]
+	STR	r4, [r1,#-3*16]!
+	STR	r4, [r1,#4]
+	STR	r4, [r1,#16]
+	STR	r4, [r1,#32]
+	MOV	r1, r13		; Read from temp storage.
 	MOV	r0, r2		; Write to the final destination
-oc_idct8x8_6_arm_cols
 ; Column transforms
 	BL	idct3core_down_arm
 	BL	idct3core_down_arm
@@ -180,14 +164,12 @@ oc_idct8x8_3_arm PROC
 	MOV	r0, r13		; Write to temp storage.
 	BL	idct2core_arm
 	BL	idct1core_arm
-	; Clear input data for next block (decoder only).
-	SUB	r0, r1, #2*16
-	CMP	r0, r2
+	; Clear input data for next block.
+	MOV	r4, #0
+	STR	r4, [r1,#-2*16]!
+	STR	r4, [r1,#16]
 	MOV	r1, r13		; Read from temp storage.
-	MOVNE	r4, #0
-	STRNE	r4, [r0]
-	STRNE	r4, [r0,#16]
-	MOVNE	r0, r2		; Write to the final destination
+	MOV	r0, r2		; Write to the final destination
 ; Column transforms
 	BL	idct2core_down_arm
 	BL	idct2core_down_arm
@@ -805,30 +787,26 @@ oc_idct8x8_slow_v6
 	BL	idct8_8core_v6
 	BL	idct8_8core_v6
 	LDR	r0, [r13], #4	; Write to the final destination.
-	; Clear input data for next block (decoder only).
-	SUB	r2, r1, #8*16
-	CMP	r0, r2
-	MOV	r1, r13		; And read from temp storage.
-	BEQ	oc_idct8x8_slow_v6_cols
+	; Clear input data for next block.
 	MOV	r4, #0
 	MOV	r5, #0
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-	STRD	r4, [r2], #8
-oc_idct8x8_slow_v6_cols
+	STRD	r4, [r1,#-8*16]!
+	STRD	r4, [r1,#8]
+	STRD	r4, [r1,#16]
+	STRD	r4, [r1,#24]
+	STRD	r4, [r1,#32]
+	STRD	r4, [r1,#40]
+	STRD	r4, [r1,#48]
+	STRD	r4, [r1,#56]
+	STRD	r4, [r1,#64]
+	STRD	r4, [r1,#72]
+	STRD	r4, [r1,#80]
+	STRD	r4, [r1,#88]
+	STRD	r4, [r1,#96]
+	STRD	r4, [r1,#104]
+	STRD	r4, [r1,#112]
+	STRD	r4, [r1,#120]
+	MOV	r1, r13		; And read from temp storage.
 ; Column transforms
 	BL	idct8_8core_down_v6
 	BL	idct8_8core_down_v6
@@ -849,20 +827,16 @@ oc_idct8x8_10_v6 PROC
 	BL	idct4_3core_v6
 	BL	idct2_1core_v6
 	LDR	r0, [r13], #4	; Write to the final destination.
-	; Clear input data for next block (decoder only).
-	SUB	r2, r1, #4*16
-	CMP	r0, r2
-	AND	r1, r13,#4	; Align the stack.
-	BEQ	oc_idct8x8_10_v6_cols
+	; Clear input data for next block.
 	MOV	r4, #0
 	MOV	r5, #0
-	STRD	r4, [r2]
-	STRD	r4, [r2,#16]
-	STR	r4, [r2,#32]
-	STR	r4, [r2,#48]
-oc_idct8x8_10_v6_cols
-; Column transforms
+	STRD	r4, [r1,#-4*16]!
+	STRD	r4, [r1,#16]
+	STR	r4, [r1,#32]
+	STR	r4, [r1,#48]
+	AND	r1, r13,#4	; Align the stack.
 	ADD	r1, r1, r13	; And read from temp storage.
+; Column transforms
 	BL	idct4_4core_down_v6
 	BL	idct4_4core_down_v6
 	BL	idct4_4core_down_v6
@@ -878,14 +852,12 @@ oc_idct8x8_3_v6 PROC
 	MOV	r8, r0
 	MOV	r0, r13		; Write to temp storage.
 	BL	idct2_1core_v6
-	; Clear input data for next block (decoder only).
-	SUB	r0, r1, #2*16
-	CMP	r0, r8
+	; Clear input data for next block.
+	MOV	r4, #0
+	STR	r4, [r1,#-2*16]!
+	STR	r4, [r1,#16]
 	MOV	r1, r13		; Read from temp storage.
-	MOVNE	r4, #0
-	STRNE	r4, [r0]
-	STRNE	r4, [r0,#16]
-	MOVNE	r0, r8		; Write to the final destination.
+	MOV	r0, r8		; Write to the final destination.
 ; Column transforms
 	BL	idct2_2core_down_v6
 	BL	idct2_2core_down_v6
@@ -1041,20 +1013,16 @@ oc_idct8x8_6_v6 PROC
 	ADD	r0, r0, r13	; Write to temp storage.
 	BL	idct3_2core_v6
 	BL	idct1core_v6
-	; Clear input data for next block (decoder only).
-	SUB	r0, r1, #3*16
-	CMP	r0, r8
-	AND	r1, r13,#4	; Align the stack.
-	BEQ	oc_idct8x8_6_v6_cols
+	; Clear input data for next block.
 	MOV	r4, #0
 	MOV	r5, #0
-	STRD	r4, [r0]
-	STR	r4, [r0,#16]
-	STR	r4, [r0,#32]
+	STRD	r4, [r1,#-3*16]!
+	STR	r4, [r1,#16]
+	STR	r4, [r1,#32]
+	AND	r1, r13,#4	; Align the stack.
 	MOV	r0, r8		; Write to the final destination.
-oc_idct8x8_6_v6_cols
-; Column transforms
 	ADD	r1, r1, r13	; And read from temp storage.
+; Column transforms
 	BL	idct3_3core_down_v6
 	BL	idct3_3core_down_v6
 	BL	idct3_3core_down_v6
@@ -1596,7 +1564,6 @@ oc_idct8x8_slow_neon
 	VSWP		D23,D30
 	; Column transforms
 	BL	oc_idct8x8_stage123_neon
-	CMP	r0,r1
 	; We have to put the return address back in the LR, or the branch
 	;  predictor will not recognize the function return and mis-predict the
 	;  entire call stack.
@@ -1610,7 +1577,6 @@ oc_idct8x8_slow_neon
 	VADD.S16	Q10,Q10,Q5	; Q10 = y[2]=t[2]'+t[5]''
 	VSUB.S16	Q12,Q11,Q4	; Q12 = y[4]=t[3]'-t[4]'
 	VADD.S16	Q11,Q11,Q4	; Q11 = y[3]=t[3]'+t[4]'
-	BEQ		oc_idct8x8_slow_neon_noclear
 	VMOV.I8		Q2,#0
 	VPOP		{D8-D15}
 	VMOV.I8		Q3,#0
@@ -1625,19 +1591,6 @@ oc_idct8x8_slow_neon
 	VRSHR.S16	Q13,Q13,#4	; Q13 = y[5]+8>>4
 	VRSHR.S16	Q14,Q14,#4	; Q14 = y[6]+8>>4
 	VST1.64		{D4, D5, D6, D7}, [r1@128]
-	VRSHR.S16	Q15,Q15,#4	; Q15 = y[7]+8>>4
-	VSTMIA		r0, {D16-D31}
-	MOV	PC, r14
-
-oc_idct8x8_slow_neon_noclear
-	VPOP		{D8-D15}
-	VRSHR.S16	Q8, Q8, #4	; Q8  = y[0]+8>>4
-	VRSHR.S16	Q9, Q9, #4	; Q9  = y[1]+8>>4
-	VRSHR.S16	Q10,Q10,#4	; Q10 = y[2]+8>>4
-	VRSHR.S16	Q11,Q11,#4	; Q11 = y[3]+8>>4
-	VRSHR.S16	Q12,Q12,#4	; Q12 = y[4]+8>>4
-	VRSHR.S16	Q13,Q13,#4	; Q13 = y[5]+8>>4
-	VRSHR.S16	Q14,Q14,#4	; Q14 = y[6]+8>>4
 	VRSHR.S16	Q15,Q15,#4	; Q15 = y[7]+8>>4
 	VSTMIA		r0, {D16-D31}
 	MOV	PC, r14
@@ -1871,7 +1824,6 @@ oc_idct8x8_10_neon PROC
 	VADD.S16	Q10,Q1, Q2	; Q10= t[1]'=t[0]+t[2]
 	VSUB.S16	Q2, Q1, Q2	; Q2 = t[2]'=t[0]-t[2]
 ; Stage 4
-	CMP	r0, r1
 	VADD.S16	Q8, Q11,Q15	; Q8  = y[0]=t[0]'+t[7]'
 	VADD.S16	Q9, Q10,Q14	; Q9  = y[1]=t[1]'+t[6]''
 	VSUB.S16	Q15,Q11,Q15	; Q15 = y[7]=t[0]'-t[7]'
@@ -1880,7 +1832,6 @@ oc_idct8x8_10_neon PROC
 	VADD.S16	Q11,Q3, Q12	; Q11 = y[3]=t[3]'+t[4]'
 	VSUB.S16	Q12,Q3, Q12	; Q12 = y[4]=t[3]'-t[4]'
 	VSUB.S16	Q13,Q2, Q13	; Q13 = y[5]=t[2]'-t[5]''
-	BEQ	oc_idct8x8_10_neon_noclear
 	VMOV.I8		D2, #0
 	VRSHR.S16	Q8, Q8, #4	; Q8  = y[0]+8>>4
 	VST1.64		{D2}, [r1@64], r12
@@ -1893,18 +1844,6 @@ oc_idct8x8_10_neon PROC
 	VRSHR.S16	Q13,Q13,#4	; Q13 = y[5]+8>>4
 	VRSHR.S16	Q14,Q14,#4	; Q14 = y[6]+8>>4
 	VST1.64		{D2}, [r1@64]
-	VRSHR.S16	Q15,Q15,#4	; Q15 = y[7]+8>>4
-	VSTMIA		r0, {D16-D31}
-	MOV	PC, r14
-
-oc_idct8x8_10_neon_noclear
-	VRSHR.S16	Q8, Q8, #4	; Q8  = y[0]+8>>4
-	VRSHR.S16	Q9, Q9, #4	; Q9  = y[1]+8>>4
-	VRSHR.S16	Q10,Q10,#4	; Q10 = y[2]+8>>4
-	VRSHR.S16	Q11,Q11,#4	; Q11 = y[3]+8>>4
-	VRSHR.S16	Q12,Q12,#4	; Q12 = y[4]+8>>4
-	VRSHR.S16	Q13,Q13,#4	; Q13 = y[5]+8>>4
-	VRSHR.S16	Q14,Q14,#4	; Q14 = y[6]+8>>4
 	VRSHR.S16	Q15,Q15,#4	; Q15 = y[7]+8>>4
 	VSTMIA		r0, {D16-D31}
 	MOV	PC, r14

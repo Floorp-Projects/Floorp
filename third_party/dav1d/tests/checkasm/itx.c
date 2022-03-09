@@ -243,8 +243,8 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
                             const enum RectTxfmSize tx)
 {
     ALIGN_STK_64(coef, coeff, 2, [32 * 32]);
-    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    PIXEL_RECT(c_dst, 64, 64);
+    PIXEL_RECT(a_dst, 64, 64);
 
     static const uint8_t subsh_iters[5] = { 2, 2, 3, 5, 5 };
 
@@ -275,21 +275,26 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
                     const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, bitdepth_max);
                     memcpy(coeff[1], coeff[0], sizeof(*coeff));
 
-                    for (int j = 0; j < w * h; j++)
-                        c_dst[j] = a_dst[j] = rnd() & bitdepth_max;
+                    CLEAR_PIXEL_RECT(c_dst);
+                    CLEAR_PIXEL_RECT(a_dst);
 
-                    call_ref(c_dst, w * sizeof(*c_dst), coeff[0], eob
+                    for (int y = 0; y < h; y++)
+                        for (int x = 0; x < w; x++)
+                            c_dst[y*PXSTRIDE(c_dst_stride) + x] =
+                            a_dst[y*PXSTRIDE(a_dst_stride) + x] = rnd() & bitdepth_max;
+
+                    call_ref(c_dst, c_dst_stride, coeff[0], eob
                              HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, w * sizeof(*c_dst), coeff[1], eob
+                    call_new(a_dst, a_dst_stride, coeff[1], eob
                              HIGHBD_TAIL_SUFFIX);
 
-                    checkasm_check_pixel(c_dst, w * sizeof(*c_dst),
-                                         a_dst, w * sizeof(*a_dst),
-                                         w, h, "dst");
+                    checkasm_check_pixel_padded(c_dst, c_dst_stride,
+                                                a_dst, a_dst_stride,
+                                                w, h, "dst");
                     if (memcmp(coeff[0], coeff[1], sizeof(*coeff)))
                         fail();
 
-                    bench_new(a_dst, w * sizeof(*c_dst), coeff[0], eob
+                    bench_new(a_dst, a_dst_stride, coeff[0], eob
                               HIGHBD_TAIL_SUFFIX);
                 }
     }

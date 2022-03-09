@@ -289,6 +289,9 @@ bool wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
   // TODO (bug 1699696): Implement this.  As for the platforms above, we need to
   // enumerate all code sequences that can precede the stackmap location.
   return true;
+#  elif defined(JS_CODEGEN_LOONG64)
+  // TODO(loong64): Implement IsValidStackMapKey.
+  return true;
 #  else
   MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
 #  endif

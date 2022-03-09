@@ -114,8 +114,8 @@ class UntrustedModulesCollector {
                 if (aResult.isSome()) {
                   wprintf(L"Received data. (pendingQueries=%d)\n",
                           pendingQueries);
-                  for (const auto& evt : aResult.ref().mEvents) {
-                    aChecker.Decrement(evt.mRequestedDllName);
+                  for (auto item : aResult.ref().mEvents) {
+                    aChecker.Decrement(item->mEvent.mRequestedDllName);
                   }
                   EXPECT_TRUE(mData.emplaceBack(std::move(aResult.ref())));
                 }
@@ -177,7 +177,8 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
       kLoadCountBeforeDllServices + kLoadCountAfterDllServices;
   static const nsString kTestModules[];
 
-  static void ValidateUntrustedModules(const UntrustedModulesData& aData);
+  static void ValidateUntrustedModules(const UntrustedModulesData& aData,
+                                       bool aIsTruncatedData = false);
 
   static void LoadAndFree(const nsAString& aLeaf) {
     nsModuleHandle dll(::LoadLibraryW(PrependWorkingDir(aLeaf).get()));
@@ -260,7 +261,7 @@ INIT_ONCE UntrustedModulesFixture::sInitLoadOnce = INIT_ONCE_STATIC_INIT;
 UntrustedModulesCollector UntrustedModulesFixture::sInitLoadDataCollector;
 
 void UntrustedModulesFixture::ValidateUntrustedModules(
-    const UntrustedModulesData& aData) {
+    const UntrustedModulesData& aData, bool aIsTruncatedData) {
   // This defines a list of modules which are listed on our blocklist and
   // thus its loading status is not expected to be Status::Loaded.
   // Although the UntrustedModulesFixture test does not touch any of them,
@@ -286,7 +287,8 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
   }
 
   size_t numBlockedEvents = 0;
-  for (const auto& evt : aData.mEvents) {
+  for (auto item : aData.mEvents) {
+    const auto& evt = item->mEvent;
     const nsDependentSubstring leafName =
         nt::GetLeafName(evt.mModule->mResolvedNtName);
     const nsAutoString leafNameStr(leafName.Data(), leafName.Length());
@@ -326,9 +328,14 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
 
   // No check for the mXULLoadDurationMS field because the field has a value
   // in CCov build GTest, but it is empty in non-CCov build (bug 1681936).
-  EXPECT_GT(aData.mEvents.length(), 0);
-  if (numBlockedEvents == aData.mEvents.length()) {
-    // If all loading events were blocked, the stacks are empty.
+  EXPECT_EQ(aData.mNumEvents, aData.mEvents.length());
+  EXPECT_GT(aData.mNumEvents, 0);
+  if (aIsTruncatedData) {
+    EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
+    EXPECT_LE(aData.mNumEvents, UntrustedModulesData::kMaxEvents);
+  } else if (numBlockedEvents == aData.mNumEvents) {
+    // If all loading events were blocked or aData is truncated,
+    // the stacks are empty.
     EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
   } else {
     EXPECT_GT(aData.mStacks.GetModuleCount(), 0);
@@ -346,7 +353,7 @@ BOOL CALLBACK UntrustedModulesFixture::InitialModuleLoadOnce(PINIT_ONCE, void*,
   }
 
   RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->StartUntrustedModulesProcessor();
+  dllSvc->StartUntrustedModulesProcessor(true);
 
   for (int i = 0; i < kLoadCountAfterDllServices; ++i) {
     for (const auto& mod : kTestModules) {
@@ -425,22 +432,20 @@ TEST_F(UntrustedModulesFixture, Serialize) {
 }
 
 TEST_F(UntrustedModulesFixture, Backup) {
-  using BackupType = UntrustedModulesBackupService::BackupType;
-
   RefPtr<UntrustedModulesBackupService> backupSvc(
       UntrustedModulesBackupService::Get());
-  for (int i = 0; i < 5; ++i) {
-    backupSvc->Backup(BackupType::Staging, CollectSingleData());
+  for (int i = 0; i < 100; ++i) {
+    backupSvc->Backup(CollectSingleData());
   }
 
   backupSvc->SettleAllStagingData();
-  EXPECT_TRUE(backupSvc->Ref(BackupType::Staging).IsEmpty());
+  EXPECT_TRUE(backupSvc->Staging().IsEmpty());
 
-  for (const auto& entry : backupSvc->Ref(BackupType::Settled)) {
+  for (const auto& entry : backupSvc->Settled()) {
     const RefPtr<UntrustedModulesDataContainer>& container = entry.GetData();
     EXPECT_TRUE(!!container);
     const UntrustedModulesData& data = container->mData;
     EXPECT_EQ(entry.GetKey(), ProcessHashKey(data.mProcessType, data.mPid));
-    ValidateUntrustedModules(data);
+    ValidateUntrustedModules(data, /*aIsTruncatedData*/ true);
   }
 }

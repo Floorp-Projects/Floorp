@@ -286,7 +286,6 @@ EXPORTS.mozilla.dom += [
     "ViewportMetaData.h",
     "VisualViewport.h",
     "WindowFeatures.h",
-    "WindowOrientationObserver.h",
     "WindowProxyHolder.h",
 ]
 
@@ -464,7 +463,6 @@ UNIFIED_SOURCES += [
     "WindowDestroyedEvent.cpp",
     "WindowFeatures.cpp",
     "WindowNamedPropertiesHandler.cpp",
-    "WindowOrientationObserver.cpp",
     "XPathGenerator.cpp",
 ]
 
@@ -561,6 +559,7 @@ LOCAL_INCLUDES += [
     "/layout/xul",
     "/netwerk/base",
     "/netwerk/url-classifier",
+    "/parser/htmlparser",
     "/security/manager/ssl",
     "/widget",
     "/xpcom/ds",

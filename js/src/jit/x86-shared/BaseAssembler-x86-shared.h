@@ -578,6 +578,11 @@ class BaseAssembler : public GenericAssembler {
     threeByteOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq, ESCAPE_38, src1,
                     src0, dst);
   }
+  void vpmaddubsw_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    threeByteOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq, ESCAPE_38,
+                    address, src0, dst);
+  }
 
   void vpaddb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpaddb", VEX_PD, OP2_PADDB_VdqWdq, src1, src0, dst);
@@ -1826,7 +1831,7 @@ class BaseAssembler : public GenericAssembler {
     }
 
     spew("cmpb       $0x%x, %s", uint32_t(rhs), GPReg8Name(lhs));
-    m_formatter.oneByteOp(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
+    m_formatter.oneByteOp(OP_GROUP1_EbIb, lhs, GROUP1_OP_CMP);
     m_formatter.immediate8(rhs);
   }
 
@@ -3836,17 +3841,8 @@ class BaseAssembler : public GenericAssembler {
 
   void vpblendvb_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0,
                     XMMRegisterID dst) {
-    if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
-      spew("%-11s%s, %s", "pblendvb", XMMRegName(src1), XMMRegName(dst));
-      m_formatter.legacySSEPrefix(VEX_PD);
-      m_formatter.threeByteOp(OP3_PBLENDVB_VdqWdq, ESCAPE_38, (RegisterID)src1,
-                              dst);
-      return;
-    }
-    spew("vpblendvb  %s, %s, %s, %s", XMMRegName(mask), XMMRegName(src1),
-         XMMRegName(src0), XMMRegName(dst));
-    m_formatter.vblendvOpVex(VEX_PD, OP3_VPBLENDVB_VdqWdq, ESCAPE_3A, mask,
-                             (RegisterID)src1, src0, dst);
+    vblendvOpSimd("vpblendvb", OP3_PBLENDVB_VdqWdq, OP3_VPBLENDVB_VdqWdq, mask,
+                  src1, src0, dst);
   }
 
   void vpinsrb_irr(unsigned lane, RegisterID src1, XMMRegisterID src0,
@@ -3922,11 +3918,18 @@ class BaseAssembler : public GenericAssembler {
 
   void vblendvps_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0,
                     XMMRegisterID dst) {
-    vblendvOpSimd(mask, src1, src0, dst);
+    vblendvOpSimd("vblendvps", OP3_BLENDVPS_VdqWdq, OP3_VBLENDVPS_VdqWdq, mask,
+                  src1, src0, dst);
   }
   void vblendvps_mr(XMMRegisterID mask, int32_t offset, RegisterID base,
                     XMMRegisterID src0, XMMRegisterID dst) {
-    vblendvOpSimd(mask, offset, base, src0, dst);
+    vblendvOpSimd("vblendvps", OP3_BLENDVPS_VdqWdq, OP3_VBLENDVPS_VdqWdq, mask,
+                  offset, base, src0, dst);
+  }
+  void vblendvpd_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0,
+                    XMMRegisterID dst) {
+    vblendvOpSimd("vblendvpd", OP3_BLENDVPD_VdqWdq, OP3_VBLENDVPD_VdqWdq, mask,
+                  src1, src0, dst);
   }
 
   void vmovsldup_rr(XMMRegisterID src, XMMRegisterID dst) {
@@ -5276,42 +5279,45 @@ class BaseAssembler : public GenericAssembler {
 
   // Blendv is a three-byte op, but the VEX encoding has a different opcode
   // than the SSE encoding, so we handle it specially.
-  void vblendvOpSimd(XMMRegisterID mask, XMMRegisterID rm, XMMRegisterID src0,
-                     XMMRegisterID dst) {
+  void vblendvOpSimd(const char* name, ThreeByteOpcodeID opcode,
+                     ThreeByteOpcodeID vexOpcode, XMMRegisterID mask,
+                     XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst) {
     if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
-      spew("blendvps   %s, %s", XMMRegName(rm), XMMRegName(dst));
+      spew("%-11s%s, %s", legacySSEOpName(name), XMMRegName(rm),
+           XMMRegName(dst));
       // Even though a "ps" instruction, vblendv is encoded with the "pd"
       // prefix.
       m_formatter.legacySSEPrefix(VEX_PD);
-      m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_3A, (RegisterID)rm,
-                              dst);
+      m_formatter.threeByteOp(opcode, ESCAPE_38, (RegisterID)rm, dst);
       return;
     }
 
-    spew("vblendvps  %s, %s, %s, %s", XMMRegName(mask), XMMRegName(rm),
+    spew("%-11s%s, %s, %s, %s", name, XMMRegName(mask), XMMRegName(rm),
          XMMRegName(src0), XMMRegName(dst));
     // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
-    m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_3A, mask,
-                             (RegisterID)rm, src0, dst);
+    m_formatter.vblendvOpVex(VEX_PD, vexOpcode, ESCAPE_3A, mask, (RegisterID)rm,
+                             src0, dst);
   }
 
-  void vblendvOpSimd(XMMRegisterID mask, int32_t offset, RegisterID base,
-                     XMMRegisterID src0, XMMRegisterID dst) {
+  void vblendvOpSimd(const char* name, ThreeByteOpcodeID opcode,
+                     ThreeByteOpcodeID vexOpcode, XMMRegisterID mask,
+                     int32_t offset, RegisterID base, XMMRegisterID src0,
+                     XMMRegisterID dst) {
     if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
-      spew("blendvps   " MEM_ob ", %s", ADDR_ob(offset, base), XMMRegName(dst));
+      spew("%-11s" MEM_ob ", %s", legacySSEOpName(name), ADDR_ob(offset, base),
+           XMMRegName(dst));
       // Even though a "ps" instruction, vblendv is encoded with the "pd"
       // prefix.
       m_formatter.legacySSEPrefix(VEX_PD);
-      m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_3A, offset, base,
-                              dst);
+      m_formatter.threeByteOp(opcode, ESCAPE_38, offset, base, dst);
       return;
     }
 
-    spew("vblendvps  %s, " MEM_ob ", %s, %s", XMMRegName(mask),
+    spew("%-11s%s, " MEM_ob ", %s, %s", name, XMMRegName(mask),
          ADDR_ob(offset, base), XMMRegName(src0), XMMRegName(dst));
     // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
-    m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_3A, mask,
-                             offset, base, src0, dst);
+    m_formatter.vblendvOpVex(VEX_PD, vexOpcode, ESCAPE_3A, mask, offset, base,
+                             src0, dst);
   }
 
   void shiftOpImmSimd(const char* name, TwoByteOpcodeID opcode,
@@ -5328,7 +5334,8 @@ class BaseAssembler : public GenericAssembler {
 
     spew("%-11s$%d, %s, %s", name, int32_t(imm), XMMRegName(src),
          XMMRegName(dst));
-    m_formatter.twoByteOpVex(VEX_PD, opcode, (RegisterID)dst, src,
+    // For shift instructions, destination is stored in vvvv field.
+    m_formatter.twoByteOpVex(VEX_PD, opcode, (RegisterID)src, dst,
                              (int)shiftKind);
     m_formatter.immediate8u(imm);
   }

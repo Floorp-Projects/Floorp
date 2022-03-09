@@ -31,12 +31,12 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             shell = mozpath.abspath("/bin/sh")
             return result.replace("CONFIG_SHELL=%s " % shell, "")
 
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser",
             get_value_for(["--enable-application=browser"]),
         )
 
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser " "MOZ_VTUNE=1",
             get_value_for(["--enable-application=browser", "MOZ_VTUNE=1"]),
         )
@@ -46,10 +46,10 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             mozconfig="ac_add_options --enable-application=browser",
         )
 
-        self.assertEquals("--enable-application=browser MOZ_VTUNE=1", value)
+        self.assertEqual("--enable-application=browser MOZ_VTUNE=1", value)
 
         # --disable-js-shell is the default, so it's filtered out.
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser",
             get_value_for(["--enable-application=browser", "--disable-js-shell"]),
         )
@@ -57,16 +57,16 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         # Normally, --without-foo would be filtered out because that's the
         # default, but since it is a (fake) old-configure option, it always
         # appears.
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser --without-foo",
             get_value_for(["--enable-application=browser", "--without-foo"]),
         )
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser --with-foo",
             get_value_for(["--enable-application=browser", "--with-foo"]),
         )
 
-        self.assertEquals(
+        self.assertEqual(
             "--enable-application=browser '--with-foo=foo bar'",
             get_value_for(["--enable-application=browser", "--with-foo=foo bar"]),
         )

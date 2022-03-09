@@ -273,4 +273,15 @@ var SyncedTabs = {
       return b.tabs[0].lastUsed - a.tabs[0].lastUsed;
     });
   },
+
+  recordSyncedTabsTelemetry(object, tabEvent, extraOptions) {
+    Services.telemetry.setEventRecordingEnabled("synced_tabs", true);
+    Services.telemetry.recordEvent(
+      "synced_tabs",
+      tabEvent,
+      object,
+      null,
+      extraOptions
+    );
+  },
 };

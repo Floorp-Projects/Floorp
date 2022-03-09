@@ -97,15 +97,14 @@ void Transpose8x8InPlace(int32_t* JXL_RESTRICT block) {
 template <ACType ac_type>
 void DequantLane(Vec<D> scaled_dequant_x, Vec<D> scaled_dequant_y,
                  Vec<D> scaled_dequant_b,
-                 const float* JXL_RESTRICT dequant_matrices, size_t dq_ofs,
-                 size_t size, size_t k, Vec<D> x_cc_mul, Vec<D> b_cc_mul,
+                 const float* JXL_RESTRICT dequant_matrices, size_t size,
+                 size_t k, Vec<D> x_cc_mul, Vec<D> b_cc_mul,
                  const float* JXL_RESTRICT biases, ACPtr qblock[3],
                  float* JXL_RESTRICT block) {
-  const auto x_mul = Load(d, dequant_matrices + dq_ofs + k) * scaled_dequant_x;
-  const auto y_mul =
-      Load(d, dequant_matrices + dq_ofs + size + k) * scaled_dequant_y;
+  const auto x_mul = Load(d, dequant_matrices + k) * scaled_dequant_x;
+  const auto y_mul = Load(d, dequant_matrices + size + k) * scaled_dequant_y;
   const auto b_mul =
-      Load(d, dequant_matrices + dq_ofs + 2 * size + k) * scaled_dequant_b;
+      Load(d, dequant_matrices + 2 * size + k) * scaled_dequant_b;
 
   Vec<DI> quantized_x_int;
   Vec<DI> quantized_y_int;
@@ -139,9 +138,8 @@ template <ACType ac_type>
 void DequantBlock(const AcStrategy& acs, float inv_global_scale, int quant,
                   float x_dm_multiplier, float b_dm_multiplier, Vec<D> x_cc_mul,
                   Vec<D> b_cc_mul, size_t kind, size_t size,
-                  const Quantizer& quantizer,
-                  const float* JXL_RESTRICT dequant_matrices,
-                  size_t covered_blocks, const size_t* sbx,
+                  const Quantizer& quantizer, size_t covered_blocks,
+                  const size_t* sbx,
                   const float* JXL_RESTRICT* JXL_RESTRICT dc_row,
                   size_t dc_stride, const float* JXL_RESTRICT biases,
                   ACPtr qblock[3], float* JXL_RESTRICT block) {
@@ -153,12 +151,12 @@ void DequantBlock(const AcStrategy& acs, float inv_global_scale, int quant,
   const auto scaled_dequant_y = Set(d, scaled_dequant_s);
   const auto scaled_dequant_b = Set(d, scaled_dequant_s * b_dm_multiplier);
 
-  const size_t dq_ofs = quantizer.DequantMatrixOffset(kind, 0);
+  const float* dequant_matrices = quantizer.DequantMatrix(kind, 0);
 
   for (size_t k = 0; k < covered_blocks * kDCTBlockSize; k += Lanes(d)) {
     DequantLane<ac_type>(scaled_dequant_x, scaled_dequant_y, scaled_dequant_b,
-                         dequant_matrices, dq_ofs, size, k, x_cc_mul, b_cc_mul,
-                         biases, qblock, block);
+                         dequant_matrices, size, k, x_cc_mul, b_cc_mul, biases,
+                         qblock, block);
   }
   for (size_t c = 0; c < 3; c++) {
     LowestFrequenciesFromDC(acs.Strategy(), dc_row[c] + sbx[c], dc_stride,
@@ -186,8 +184,6 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
   const size_t dc_stride = dec_state->shared->dc->PixelsPerRow();
 
   const float inv_global_scale = dec_state->shared->quantizer.InvGlobalScale();
-  const float* JXL_RESTRICT dequant_matrices =
-      dec_state->shared->quantizer.DequantMatrix(0, 0);
 
   const YCbCrChromaSubsampling& cs =
       dec_state->shared->frame_header.chroma_subsampling;
@@ -259,6 +255,8 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
     r[i] =
         Rect(block_rect.x0() >> hshift[i], block_rect.y0() >> vshift[i],
              block_rect.xsize() >> hshift[i], block_rect.ysize() >> vshift[i]);
+    JXL_ASSERT(r[i].IsInside({0, 0, dec_state->shared->dc->Plane(i).xsize(),
+                              dec_state->shared->dc->Plane(i).ysize()}));
   }
 
   for (size_t by = 0; by < ysize_blocks; ++by) {
@@ -426,7 +424,7 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
           dequant_block(
               acs, inv_global_scale, row_quant[bx], dec_state->x_dm_multiplier,
               dec_state->b_dm_multiplier, x_cc_mul, b_cc_mul, acs.RawStrategy(),
-              size, dec_state->shared->quantizer, dequant_matrices,
+              size, dec_state->shared->quantizer,
               acs.covered_blocks_y() * acs.covered_blocks_x(), sbx, dc_rows,
               dc_stride,
               dec_state->output_encoding_info.opsin_params.quant_biases, qblock,

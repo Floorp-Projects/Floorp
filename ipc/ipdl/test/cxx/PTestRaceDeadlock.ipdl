@@ -1,6 +1,9 @@
+include "mozilla/_ipdltest/TestRaceDeadlock.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestRaceDeadlockChild", ParentImpl="TestRaceDeadlockParent"]
 intr protocol PTestRaceDeadlock {
 both:
     async StartRace();

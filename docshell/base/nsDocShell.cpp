@@ -232,6 +232,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXULAppAPI.h"
 
+#include "ThirdPartyUtil.h"
 #include "BRNameMatchingPolicy.h"
 #include "GeckoProfiler.h"
 #include "mozilla/NullPrincipal.h"
@@ -391,7 +392,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mIsNavigating(false),
       mSuspendMediaWhenInactive(false),
       mForcedAutodetection(false),
-      mCheckingSessionHistory(false) {
+      mCheckingSessionHistory(false),
+      mNeedToReportActiveAfterLoadingBecomesActive(false) {
   // If no outer window ID was provided, generate a new one.
   if (aContentWindowID == 0) {
     mContentWindowID = nsContentUtils::GenerateWindowId();
@@ -1339,7 +1341,8 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
         mLoadGroup->AddRequest(channel, nullptr);
         SetCurrentURI(doc->GetDocumentURI(), channel,
                       /* aFireOnLocationChange */ true,
-                      /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
+                      /* aIsInitialAboutBlank */ false,
+                      /* aLocationFlags */ 0);
         mLoadGroup->RemoveRequest(channel, nullptr, NS_OK);
         mIsRestoringDocument = false;
       }
@@ -1577,7 +1580,8 @@ nsDocShell::SetCurrentURI(nsIURI* aURI) {
   // Note that securityUI will set STATE_IS_INSECURE, even if
   // the scheme of |aURI| is "https".
   SetCurrentURI(aURI, nullptr, /* aFireOnLocationChange */ true,
-                /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
+                /* aIsInitialAboutBlank */ false,
+                /* aLocationFlags */ 0);
   return NS_OK;
 }
 
@@ -4886,7 +4890,7 @@ void nsDocShell::ActivenessMaybeChanged() {
       // Update orientation when the top-level browsing context becomes active.
       if (isActive && mBrowsingContext->IsTop()) {
         // We only care about the top-level browsing context.
-        uint16_t orientation = mBrowsingContext->GetOrientationLock();
+        auto orientation = mBrowsingContext->GetOrientationLock();
         ScreenOrientation::UpdateActiveOrientationLock(orientation);
       }
 
@@ -5632,6 +5636,14 @@ nsresult nsDocShell::RefreshURIFromQueue() {
   return NS_OK;
 }
 
+static bool IsFollowupPartOfMultipart(nsIRequest* aRequest) {
+  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
+  bool firstPart = false;
+  return multiPartChannel &&
+         NS_SUCCEEDED(multiPartChannel->GetIsFirstPart(&firstPart)) &&
+         !firstPart;
+}
+
 nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
                            WindowGlobalChild* aWindowActor,
                            bool aIsTransientAboutBlank, bool aPersist,
@@ -5659,7 +5671,8 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
   }
 
-  if (!aIsTransientAboutBlank && mozilla::SessionHistoryInParent()) {
+  if (!aIsTransientAboutBlank && mozilla::SessionHistoryInParent() &&
+      !IsFollowupPartOfMultipart(aRequest)) {
     bool expired = false;
     uint32_t cacheKey = 0;
     nsCOMPtr<nsICacheInfoChannel> cacheChannel = do_QueryInterface(aRequest);
@@ -6743,7 +6756,8 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr,
                       /* aFireLocationChange */ true,
-                      /* aIsInitialAboutBlank */ true, /* aLocationFlags */ 0);
+                      /* aIsInitialAboutBlank */ true,
+                      /* aLocationFlags */ 0);
         rv = mIsBeingDestroyed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
       }
     }
@@ -7561,7 +7575,8 @@ nsresult nsDocShell::RestoreFromHistory() {
     // is still mLSHE or whether it's now mOSHE.
     nsCOMPtr<nsIURI> uri = origLSHE->GetURI();
     SetCurrentURI(uri, document->GetChannel(), /* aFireLocationChange */ true,
-                  /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
+                  /* aIsInitialAboutBlank */ false,
+                  /* aLocationFlags */ 0);
   }
 
   // This is the end of our CreateContentViewer() replacement.
@@ -8839,6 +8854,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   if (aLoadState->GetLoadingSessionHistoryInfo()) {
     mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(
         *aLoadState->GetLoadingSessionHistoryInfo());
+    mNeedToReportActiveAfterLoadingBecomesActive = false;
   }
 
   // Set the doc's URI according to the new history entry's URI.
@@ -9459,13 +9475,13 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // lock the orientation of the document to the document's default
   // orientation. We don't explicitly check for a top-level browsing context
   // here because orientation is only set on top-level browsing contexts.
-  if (mBrowsingContext->GetOrientationLock() != hal::eScreenOrientation_None) {
+  if (mBrowsingContext->GetOrientationLock() != hal::ScreenOrientation::None) {
     MOZ_ASSERT(mBrowsingContext->IsTop());
     MOZ_ALWAYS_SUCCEEDS(
-        mBrowsingContext->SetOrientationLock(hal::eScreenOrientation_None));
+        mBrowsingContext->SetOrientationLock(hal::ScreenOrientation::None));
     if (mBrowsingContext->IsActive()) {
       ScreenOrientation::UpdateActiveOrientationLock(
-          hal::eScreenOrientation_None);
+          hal::ScreenOrientation::None);
     }
   }
 
@@ -10116,6 +10132,14 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   return true;
 }
 
+bool nsDocShell::IsAboutBlankLoadOntoInitialAboutBlank(
+    nsIURI* aURI, bool aInheritPrincipal, nsIPrincipal* aPrincipalToInherit) {
+  return NS_IsAboutBlank(aURI) && aInheritPrincipal &&
+         (aPrincipalToInherit == GetInheritedPrincipal(false)) &&
+         (!mContentViewer || !mContentViewer->GetDocument() ||
+          mContentViewer->GetDocument()->IsInitialDocument());
+}
+
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                Maybe<uint32_t> aCacheKey,
                                nsIRequest** aRequest) {
@@ -10257,11 +10281,44 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                "DoURILoad thinks this is a document and InternalLoad does not");
   }
 
+  // We want to inherit aLoadState->PrincipalToInherit() when:
+  // 1. ChannelShouldInheritPrincipal returns true.
+  // 2. aLoadState->URI() is not data: URI, or data: URI is not
+  //    configured as unique opaque origin.
+  bool inheritPrincipal = false;
+
+  if (aLoadState->PrincipalToInherit()) {
+    bool isSrcdoc =
+        aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+    bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+        aLoadState->PrincipalToInherit(), aLoadState->URI(),
+        true,  // aInheritForAboutBlank
+        isSrcdoc);
+
+    inheritPrincipal = inheritAttrs && !SchemeIsData(aLoadState->URI());
+  }
+
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1736570
+  const bool isAboutBlankLoadOntoInitialAboutBlank =
+      IsAboutBlankLoadOntoInitialAboutBlank(aLoadState->URI(), inheritPrincipal,
+                                            aLoadState->PrincipalToInherit());
+
   // FIXME We still have a ton of codepaths that don't pass through
   //       DocumentLoadListener, so probably need to create session history info
   //       in more places.
   if (aLoadState->GetLoadingSessionHistoryInfo()) {
     SetLoadingSessionHistoryInfo(*aLoadState->GetLoadingSessionHistoryInfo());
+  } else if (isAboutBlankLoadOntoInitialAboutBlank &&
+             mozilla::SessionHistoryInParent()) {
+    // Materialize LoadingSessionHistoryInfo here, because DocumentChannel
+    // loads have it, and later history behavior depends on it existing.
+    UniquePtr<SessionHistoryInfo> entry = MakeUnique<SessionHistoryInfo>(
+        aLoadState->URI(), aLoadState->TriggeringPrincipal(),
+        aLoadState->PrincipalToInherit(),
+        aLoadState->PartitionedPrincipalToInherit(), aLoadState->Csp(),
+        mContentTypeHint);
+    mozilla::dom::LoadingSessionHistoryInfo info(*entry);
+    SetLoadingSessionHistoryInfo(info, true);
   }
 
   // open a channel for the url
@@ -10345,23 +10402,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     return NS_ERROR_FAILURE;
   }
 
-  // We want to inherit aLoadState->PrincipalToInherit() when:
-  // 1. ChannelShouldInheritPrincipal returns true.
-  // 2. aLoadState->URI() is not data: URI, or data: URI is not
-  //    configured as unique opaque origin.
-  bool inheritPrincipal = false;
-
-  if (aLoadState->PrincipalToInherit()) {
-    bool isSrcdoc =
-        aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
-    bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
-        aLoadState->PrincipalToInherit(), aLoadState->URI(),
-        true,  // aInheritForAboutBlank
-        isSrcdoc);
-
-    inheritPrincipal = inheritAttrs && !SchemeIsData(aLoadState->URI());
-  }
-
   uint32_t sandboxFlags = mBrowsingContext->GetSandboxFlags();
   nsSecurityFlags securityFlags =
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
@@ -10393,6 +10433,30 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                          Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
                          sandboxFlags);
   RefPtr<WindowContext> context = mBrowsingContext->GetCurrentWindowContext();
+
+  if (isAboutBlankLoadOntoInitialAboutBlank) {
+    // Match the DocumentChannel case where the default for third-partiness
+    // differs from the default in LoadInfo construction here.
+    // toolkit/components/antitracking/test/browser/browser_aboutblank.js
+    // fails without this.
+    BrowsingContext* top = mBrowsingContext->Top();
+    if (top == mBrowsingContext) {
+      // If we're at the top, this must be a window.open()ed
+      // window, and we can't be third-party relative to ourselves.
+      loadInfo->SetIsThirdPartyContextToTopWindow(false);
+    } else {
+      if (Document* topDoc = top->GetDocument()) {
+        bool thirdParty = false;
+        mozilla::Unused << topDoc->GetPrincipal()->IsThirdPartyPrincipal(
+            aLoadState->PrincipalToInherit(), &thirdParty);
+        loadInfo->SetIsThirdPartyContextToTopWindow(thirdParty);
+      } else {
+        // If top is in a different process, we have to be third-party relative
+        // to it.
+        loadInfo->SetIsThirdPartyContextToTopWindow(true);
+      }
+    }
+  }
 
   if (mLoadType != LOAD_ERROR_PAGE && context && context->IsInProcess() &&
       context->HasValidTransientUserGestureActivation()) {
@@ -10461,7 +10525,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                             currentUnstrippedURI);
 
   nsCOMPtr<nsIChannel> channel;
-  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI())) {
+  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI()) &&
+      !isAboutBlankLoadOntoInitialAboutBlank) {
     channel = DocumentChannel::CreateForDocument(aLoadState, loadInfo,
                                                  loadFlags, this, cacheKey,
                                                  uriModified, isXFOError);
@@ -11084,7 +11149,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 void nsDocShell::CollectWireframe() {
   if (mozilla::SessionHistoryInParent() &&
       StaticPrefs::browser_history_collectWireframes() &&
-      mBrowsingContext->IsTop() && mActiveEntry) {
+      mBrowsingContext->IsTopContent() && mActiveEntry) {
     RefPtr<Document> doc = mContentViewer->GetDocument();
     Nullable<Wireframe> wireframe;
     doc->GetWireframeWithoutFlushing(false, wireframe);
@@ -13541,13 +13606,16 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
 }
 
 void nsDocShell::SetLoadingSessionHistoryInfo(
-    const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo) {
+    const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo,
+    bool aNeedToReportActiveAfterLoadingBecomesActive) {
   // FIXME Would like to assert this, but can't yet.
   // MOZ_ASSERT(!mLoadingEntry);
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("Setting the loading entry on nsDocShell %p to %s", this,
            aLoadingInfo.mInfo.GetURI()->GetSpecOrDefault().get()));
   mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
+  mNeedToReportActiveAfterLoadingBecomesActive =
+      aNeedToReportActiveAfterLoadingBecomesActive;
 }
 
 void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
@@ -13570,9 +13638,16 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
     mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
     mLoadingEntry.swap(loadingEntry);
     if (!mActiveEntryIsLoadingFromSessionHistory) {
+      if (mNeedToReportActiveAfterLoadingBecomesActive) {
+        // Needed to pass various history length WPTs.
+        mBrowsingContext->SetActiveSessionHistoryEntry(
+            mozilla::Nothing(), mActiveEntry.get(), mLoadType,
+            /* aUpdatedCacheKey = */ 0, false);
+      }
       mBrowsingContext->IncrementHistoryEntryCountForBrowsingContext();
     }
   }
+  mNeedToReportActiveAfterLoadingBecomesActive = false;
 
   if (mActiveEntry) {
     if (aCacheKey != 0) {
@@ -13582,12 +13657,14 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
 
-    // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
-    // does require a non-null uri if this is for a refresh load of the same
-    // URI, but in that case mCurrentURI won't be null here.
-    mBrowsingContext->SessionHistoryCommit(*loadingEntry, loadType, mCurrentURI,
-                                           hadActiveEntry, aPersist, false,
-                                           aExpired, aCacheKey);
+    if (loadingEntry->mLoadId != UINT64_MAX) {
+      // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
+      // does require a non-null uri if this is for a refresh load of the same
+      // URI, but in that case mCurrentURI won't be null here.
+      mBrowsingContext->SessionHistoryCommit(
+          *loadingEntry, loadType, mCurrentURI, hadActiveEntry, aPersist, false,
+          aExpired, aCacheKey);
+    }
   }
 }
 

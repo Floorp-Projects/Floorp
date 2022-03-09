@@ -7,6 +7,7 @@
 #ifndef mozilla_net_BaseWebSocketChannel_h
 #define mozilla_net_BaseWebSocketChannel_h
 
+#include "mozilla/DataMutex.h"
 #include "nsIWebSocketChannel.h"
 #include "nsIWebSocketListener.h"
 #include "nsIProtocolHandler.h"
@@ -76,6 +77,9 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
   virtual bool IsEncrypted() const = 0;
 
+  already_AddRefed<nsIEventTarget> GetTargetThread();
+  bool IsOnTargetThread();
+
   class ListenerAndContextContainer final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ListenerAndContextContainer)
@@ -97,8 +101,12 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
-  nsCOMPtr<nsIEventTarget> mTargetThread;
   nsCOMPtr<nsITransportProvider> mServerTransportProvider;
+
+  // Used to ensure atomicity of mTargetThread.
+  // Set before AsyncOpen via RetargetDeliveryTo or in AsyncOpen, never changed after AsyncOpen
+  DataMutex<nsCOMPtr<nsIEventTarget>> mTargetThread{
+      "BaseWebSocketChannel::EventTargetMutex"};
 
   nsCString mProtocol;
   nsCString mOrigin;

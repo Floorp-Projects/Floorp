@@ -748,17 +748,19 @@ HttpObserverManager = {
       // errorCheck is called in ChannelWrapper::onStartRequest, we should check
       // the errorString after onStartRequest to make sure errors have a chance
       // to be processed before we fall back to a generic error string.
-      let onStart = function() {
-        channel.removeEventListener("start", onStart);
-        if (!channel.errorString) {
-          this.runChannelListener(channel, "onErrorOccurred", {
-            error:
-              this.activityErrorsMap.get(lastActivity) ||
-              `NS_ERROR_NET_UNKNOWN_${lastActivity}`,
-          });
-        }
-      };
-      channel.addEventListener("start", onStart);
+      channel.addEventListener(
+        "start",
+        () => {
+          if (!channel.errorString) {
+            this.runChannelListener(channel, "onErrorOccurred", {
+              error:
+                this.activityErrorsMap.get(lastActivity) ||
+                `NS_ERROR_NET_UNKNOWN_${lastActivity}`,
+            });
+          }
+        },
+        { once: true }
+      );
     } else if (
       lastActivity !== this.GOOD_LAST_ACTIVITY &&
       lastActivity !==

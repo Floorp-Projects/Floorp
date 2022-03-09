@@ -33,11 +33,6 @@ server.registerPathHandler("/", (request, response) => {
   response.write("ok");
 });
 
-Services.prefs.setBoolPref(
-  "extensions.webextensions.background-delayed-startup",
-  true
-);
-
 function promiseExtensionEvent(wrapper, event) {
   return new Promise(resolve => {
     wrapper.extension.once(event, resolve);
@@ -100,7 +95,7 @@ add_task(async function test_proxy_startup() {
   equal(1, proxiedRequests, "proxied request ok");
   equal(1, nonProxiedRequests, "non proxied request ok");
 
-  await promiseRestartManager();
+  await promiseRestartManager({ earlyStartup: false });
   await extension.awaitStartup();
 
   let events = trackEvents(extension);
@@ -137,7 +132,7 @@ add_task(async function test_proxy_startup() {
     "Should have gotten a background script event"
   );
 
-  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+  AddonTestUtils.notifyEarlyStartup();
   await new Promise(executeSoon);
 
   equal(

@@ -47,7 +47,7 @@ const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
 const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
-var AboutReader = function(actor, articlePromise) {
+var AboutReader = function(actor, articlePromise, docContentType = "document") {
   let win = actor.contentWindow;
   let url = this._getOriginalUrl(win);
   if (
@@ -128,6 +128,9 @@ var AboutReader = function(actor, articlePromise) {
   win.addEventListener("resize", this);
   win.addEventListener("wheel", this, { passive: false });
 
+  this.colorSchemeMediaList = win.matchMedia("(prefers-color-scheme: dark)");
+  this.colorSchemeMediaList.addEventListener("change", this);
+
   this._topScrollChange = this._topScrollChange.bind(this);
   this._intersectionObs = new win.IntersectionObserver(this._topScrollChange, {
     root: null,
@@ -164,8 +167,25 @@ var AboutReader = function(actor, articlePromise) {
       itemClass: value + "-button",
     };
   });
-
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
+
+  // If the UI improvements are not enabled, we will filter "Auto" from
+  // the list of color schemes available and ensure the current preference isn't set to
+  // "Auto"
+  this.readerImprovementsEnabled = Services.prefs.getBoolPref(
+    "reader.improvements_H12022.enabled",
+    false
+  );
+  if (!this.readerImprovementsEnabled) {
+    colorSchemeOptions = colorSchemeOptions.filter(function(value) {
+      return value.name !== "Auto";
+    });
+
+    if (Services.prefs.getCharPref("reader.color_scheme") === "auto") {
+      colorScheme = "light";
+    }
+  }
+
   this._setupSegmentedButton(
     "color-scheme-buttons",
     colorSchemeOptions,
@@ -218,7 +238,7 @@ var AboutReader = function(actor, articlePromise) {
     new NarrateControls(win, this._languagePromise);
   }
 
-  this._loadArticle();
+  this._loadArticle(docContentType);
 
   let dropdown = this._toolbarElement;
 
@@ -232,12 +252,13 @@ var AboutReader = function(actor, articlePromise) {
     ".light-button": "colorschemelight",
     ".dark-button": "colorschemedark",
     ".sepia-button": "colorschemesepia",
+    ".auto-button": "colorschemeauto",
   };
 
   for (let [selector, stringID] of Object.entries(elemL10nMap)) {
     dropdown
       .querySelector(selector)
-      .setAttribute(
+      ?.setAttribute(
         "title",
         gStrings.GetStringFromName("aboutReader.toolbar." + stringID)
       );
@@ -474,6 +495,19 @@ AboutReader.prototype = {
 
         delete this._intersectionObs;
         delete this._ctaIntersectionObserver;
+
+        break;
+
+      case "change":
+        // We should only be changing the color scheme in relation to a preference change
+        // if the user has the color scheme preference set to "Auto"
+        if (Services.prefs.getCharPref("reader.color_scheme") === "auto") {
+          let colorScheme = this.colorSchemeMediaList.matches
+            ? "dark"
+            : "light";
+
+          this._setColorScheme(colorScheme);
+        }
 
         break;
     }
@@ -743,8 +777,8 @@ AboutReader.prototype = {
   },
 
   _setColorScheme(newColorScheme) {
-    // "auto" is not a real color scheme
-    if (this._colorScheme === newColorScheme || newColorScheme === "auto") {
+    // There's nothing to change if the new color scheme is the same as our current scheme.
+    if (this._colorScheme === newColorScheme) {
       return;
     }
 
@@ -754,11 +788,16 @@ AboutReader.prototype = {
       bodyClasses.remove(this._colorScheme);
     }
 
-    this._colorScheme = newColorScheme;
+    if (newColorScheme === "auto") {
+      this._colorScheme = this.colorSchemeMediaList.matches ? "dark" : "light";
+    } else {
+      this._colorScheme = newColorScheme;
+    }
+
     bodyClasses.add(this._colorScheme);
   },
 
-  // Pref values include "dark", "light", and "sepia"
+  // Pref values include "dark", "light", "sepia", and "auto"
   _setColorSchemePref(colorSchemePref) {
     this._setColorScheme(colorSchemePref);
 
@@ -782,7 +821,7 @@ AboutReader.prototype = {
     AsyncPrefs.set("reader.font_type", this._fontType);
   },
 
-  async _loadArticle() {
+  async _loadArticle(docContentType = "document") {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
@@ -793,7 +832,10 @@ AboutReader.prototype = {
 
     if (!article) {
       try {
-        article = await ReaderMode.downloadAndParseDocument(url);
+        article = await ReaderMode.downloadAndParseDocument(
+          url,
+          docContentType
+        );
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -1009,7 +1051,17 @@ AboutReader.prototype = {
 
     this._domainElement.href = article.url;
     let articleUri = Services.io.newURI(article.url);
-    this._domainElement.textContent = this._stripHost(articleUri.host);
+
+    try {
+      this._domainElement.textContent = this._stripHost(articleUri.host);
+    } catch (ex) {
+      let url = this._actor.document.URL;
+      url = url.substring(url.indexOf("%2F") + 6);
+      url = url.substring(0, url.indexOf("%2F"));
+
+      this._domainElement.textContent = url;
+    }
+
     this._creditsElement.textContent = article.byline;
 
     this._titleElement.textContent = article.title;

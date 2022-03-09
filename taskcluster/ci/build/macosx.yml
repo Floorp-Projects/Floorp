@@ -51,7 +51,7 @@ macosx64/debug:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -80,7 +80,7 @@ macosx64-hybrid/plain:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -109,7 +109,7 @@ macosx64/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -139,7 +139,7 @@ macosx64-asan-fuzzing/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-llvm-symbolizer
             - macosx64-sdk-10.12
@@ -173,7 +173,7 @@ macosx64-fuzzing/debug:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -186,6 +186,7 @@ macosx64-x64-devedition/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: devedition
     index:
@@ -212,7 +213,7 @@ macosx64-x64-devedition/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
@@ -222,6 +223,7 @@ macosx64-aarch64-devedition/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: devedition
     index:
@@ -250,7 +252,7 @@ macosx64-aarch64-devedition/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - macosx64-sdk-11.0
             - sysroot-wasm32-wasi
 
@@ -415,7 +417,7 @@ macosx64-noopt/debug:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -446,7 +448,7 @@ macosx64-aarch64-noopt/debug:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-11.0
             - sysroot-wasm32-wasi
@@ -472,7 +474,7 @@ macosx64-add-on-devel/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -483,6 +485,7 @@ macosx64-x64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: firefox
     index:
@@ -505,7 +508,7 @@ macosx64-x64-shippable/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
@@ -515,6 +518,7 @@ macosx64-aarch64-shippable/opt:
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
+        upload-generated-sources: true
     shipping-phase: build
     shipping-product: firefox
     index:
@@ -540,7 +544,7 @@ macosx64-aarch64-shippable/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - macosx64-sdk-11.0
             - sysroot-wasm32-wasi
 
@@ -706,7 +710,7 @@ macosx64-ccov/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -736,7 +740,7 @@ macosx64-gcp/debug:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
@@ -767,7 +771,7 @@ macosx64-gcp/opt:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang-macosx-cross
+            - linux64-clang
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi

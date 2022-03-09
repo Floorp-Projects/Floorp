@@ -25,7 +25,7 @@ function ModuleGetExportedNames(exportStarSet = [])
     let module = this;
 
     // Step 4
-    if (callFunction(ArrayIncludes, exportStarSet, module))
+    if (callFunction(std_Array_includes, exportStarSet, module))
         return [];
 
     // Step 5
@@ -59,7 +59,7 @@ function ModuleGetExportedNames(exportStarSet = [])
                                      exportStarSet);
         for (let j = 0; j < starNames.length; j++) {
             let n = starNames[j];
-            if (n !== "default" && !callFunction(ArrayIncludes, exportedNames, n))
+            if (n !== "default" && !callFunction(std_Array_includes, exportedNames, n))
                 DefineDataProperty(exportedNames, namesCount++, n);
         }
     }
@@ -756,7 +756,7 @@ function GatherAsyncParentCompletions(module, execList = []) {
   while (module.asyncParentModules[i]) {
     const m = module.asyncParentModules[i];
     if (GetCycleRoot(m).status != MODULE_STATUS_EVALUATED_ERROR &&
-        !callFunction(ArrayIncludes, execList, m)) {
+        !callFunction(std_Array_includes, execList, m)) {
       assert(!m.evaluationError, "should not have evaluation error");
       assert(m.pendingAsyncDependencies > 0, "should have at least one dependency");
       UnsafeSetReservedSlot(m,

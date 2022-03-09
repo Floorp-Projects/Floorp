@@ -4,6 +4,9 @@
 
 // Test that dynamically generated <script> elements which contain source maps
 // will be shown in the debugger.
+
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-react-jsx.html");
 

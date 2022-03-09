@@ -241,10 +241,17 @@ TEST(TestStandardURL, From_test_standardurldotjs)
                             "1.2.3.4.5",   "010000000000000000",
                             "2+3",         "0.0.0.-1",
                             "1.2.3.4..",   "1..2",
-                            ".1.2.3.4"};
+                            ".1.2.3.4",    ".127"};
   for (auto& nonIPv4 : nonIPv4s) {
     nsCString encHost(nonIPv4);
     ASSERT_EQ(NS_ERROR_FAILURE, Test_NormalizeIPv4(encHost, result));
+  }
+
+  const char* oneOrNoDotsIPv4s[] = {"127", "127."};
+  for (auto& localIPv4 : oneOrNoDotsIPv4s) {
+    nsCString encHost(localIPv4);
+    ASSERT_EQ(NS_OK, Test_NormalizeIPv4(encHost, result));
+    ASSERT_TRUE(result.EqualsLiteral("0.0.0.127"));
   }
 }
 

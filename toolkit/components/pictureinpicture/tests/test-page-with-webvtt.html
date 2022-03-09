@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Picture-in-Picture tests</title>
+  <script type="text/javascript" src="click-event-helper.js"></script>
+</head>
+<style>
+  video {
+    display: block;
+    border: 1px solid black;
+  }
+</style>
+<body>
+  <h1>Video with controls</h1>
+  <video id="with-controls" src="test-video-long.mp4" controls width="400" height="225">
+    <track
+      id="track1"
+      kind="captions"
+      label="[test] en"
+      srclang="en"
+      src="test-webvtt-1.vtt"
+    />
+    <track
+    id="track2"
+    kind="subtitles"
+    label="[test] fr"
+    srclang="fr"
+    src="test-webvtt-2.vtt"
+    />
+    <track
+    id="track3"
+    kind="subtitles"
+    label="[test] eo"
+    srclang="eo"
+    src="test-webvtt-3.vtt"
+    />
+    <track
+    id="track4"
+    kind="subtitles"
+    label="[test] zh"
+    srclang="zh"
+    src="test-webvtt-4.vtt"
+    />
+    <track
+    id="track5"
+    kind="subtitles"
+    label="[test] es"
+    srclang="es"
+    src="test-webvtt-5.vtt"
+    />
+  </video>
+
+  <script>
+    function fireEvents() {
+      for (let videoID of ["with-controls"]) {
+        let video = document.getElementById(videoID);
+        let event = new CustomEvent("MozTogglePictureInPicture", { bubbles: true });
+        video.dispatchEvent(event);
+      }
+    }
+  </script>
+</body>
+</html>

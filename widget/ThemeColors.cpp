@@ -8,6 +8,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "ThemeDrawing.h"
+#include "nsNativeTheme.h"
 
 using namespace mozilla::gfx;
 
@@ -155,6 +156,30 @@ bool ThemeColors::ShouldBeHighContrast(const nsPresContext& aPc) {
   return aPc.GetBackgroundColorDraw() &&
          PreferenceSheet::PrefsFor(*aPc.Document())
              .NonNativeThemeShouldBeHighContrast();
+}
+
+ColorScheme ThemeColors::ColorSchemeForWidget(const nsIFrame* aFrame,
+                                              StyleAppearance aAppearance,
+                                              bool aHighContrast) {
+  if (!nsNativeTheme::IsWidgetScrollbarPart(aAppearance)) {
+    return LookAndFeel::ColorSchemeForFrame(aFrame);
+  }
+  // Scrollbars are a bit tricky. Their used color-scheme depends on whether the
+  // background they are on is light or dark.
+  //
+  // TODO(emilio): This heuristic effectively predates the color-scheme CSS
+  // property. Perhaps we should check whether the style or the document set
+  // `color-scheme` to something that isn't `normal`, and if so go through the
+  // code-path above.
+  if (aHighContrast) {
+    return ColorScheme::Light;
+  }
+  if (StaticPrefs::widget_disable_dark_scrollbar()) {
+    return ColorScheme::Light;
+  }
+  return nsNativeTheme::IsDarkBackground(const_cast<nsIFrame*>(aFrame))
+             ? ColorScheme::Dark
+             : ColorScheme::Light;
 }
 
 /*static*/

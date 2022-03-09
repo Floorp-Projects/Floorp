@@ -20,13 +20,7 @@ class ScreenHelperAndroid final : public ScreenManager::Helper {
   ScreenHelperAndroid();
   ~ScreenHelperAndroid();
 
-  static ScreenHelperAndroid* GetSingleton();
-
   void Refresh();
-  already_AddRefed<Screen> ScreenForId(uint32_t aScreenId);
-
- private:
-  nsTHashMap<uint32_t, RefPtr<Screen>> mScreens;
 };
 
 }  // namespace widget

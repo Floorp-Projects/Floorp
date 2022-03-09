@@ -164,7 +164,7 @@ action.Chain.prototype.emitMouseEvent = function(
 
   let mods;
   if (typeof modifiers != "undefined") {
-    mods = event.parseModifiers_(modifiers);
+    mods = event.parseModifiers_(modifiers, win);
   } else {
     mods = 0;
   }

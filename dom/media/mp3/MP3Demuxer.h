@@ -117,7 +117,7 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
 
   // Reads aSize bytes into aBuffer from the source starting at aOffset.
   // Returns the actual size read.
-  int32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
+  uint32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
 
   // Returns the average frame length derived from the previously parsed frames.
   double AverageFrameLength() const;
@@ -148,17 +148,17 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
   int64_t mFrameIndex;
 
   // Sum of parsed frames' lengths in bytes.
-  uint64_t mTotalFrameLen;
+  int64_t mTotalFrameLen;
 
   // Samples per frame metric derived from frame headers or 0 if none available.
   int32_t mSamplesPerFrame;
 
   // Samples per second metric derived from frame headers or 0 if none
   // available.
-  int32_t mSamplesPerSecond;
+  uint32_t mSamplesPerSecond;
 
   // Channel count derived from frame headers or 0 if none available.
-  int32_t mChannels;
+  uint32_t mChannels;
 
   // Audio track config info.
   UniquePtr<AudioInfo> mInfo;

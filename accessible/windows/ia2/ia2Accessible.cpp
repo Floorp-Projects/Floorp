@@ -576,14 +576,14 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
   if (!*aRanges) return E_OUTOFMEMORY;
 
   for (uint32_t idx = 0; idx < static_cast<uint32_t>(*aNRanges); idx++) {
-    RefPtr<IAccessible2> anchor;
-    ranges[idx].StartContainer()->GetNativeInterface(getter_AddRefs(anchor));
+    RefPtr<IAccessible2> anchor =
+        MsaaAccessible::GetFrom(ranges[idx].StartContainer());
     anchor.forget(&(*aRanges)[idx].anchor);
 
     (*aRanges)[idx].anchorOffset = ranges[idx].StartOffset();
 
-    RefPtr<IAccessible2> active;
-    ranges[idx].EndContainer()->GetNativeInterface(getter_AddRefs(active));
+    RefPtr<IAccessible2> active =
+        MsaaAccessible::GetFrom(ranges[idx].EndContainer());
     active.forget(&(*aRanges)[idx].active);
 
     (*aRanges)[idx].activeOffset = ranges[idx].EndOffset();

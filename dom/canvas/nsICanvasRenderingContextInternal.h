@@ -211,6 +211,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     return GetFrontBuffer(fb, webvr);
   }
 
+  void DoSecurityCheck(nsIPrincipal* aPrincipal, bool forceWriteOnly,
+                       bool CORSUsed);
+
   //
   // shmem support
   //

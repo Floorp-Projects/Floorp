@@ -46,11 +46,11 @@ cmd_bar = cmd_bar --baz
         parser = self.get_parser(config=config)
 
         args = parser.parse_args(["foo"])
-        self.assertEquals(args.command, "cmd_foo")
+        self.assertEqual(args.command, "cmd_foo")
 
         def assert_bar_baz(argv):
             args = parser.parse_args(argv)
-            self.assertEquals(args.command, "cmd_bar")
+            self.assertEqual(args.command, "cmd_bar")
             self.assertTrue(args.command_args.baz)
 
         # The following should all result in |cmd_bar --baz|

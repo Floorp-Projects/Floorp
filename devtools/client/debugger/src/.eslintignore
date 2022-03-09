@@ -1,0 +1,5 @@
+test/examples/**
+test/integration/**
+test/unit-sources/**
+**/fixtures/**
+test/mochitest/**

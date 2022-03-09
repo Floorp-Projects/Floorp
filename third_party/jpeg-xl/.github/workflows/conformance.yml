@@ -1,0 +1,125 @@
+# Copyright (c) the JPEG XL Project Authors. All rights reserved.
+#
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Workflow for running conformance tests.
+
+name: Conformance
+on:
+  push:
+    branches:
+      - main
+      - v*.*.x
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+    steps:
+    - name: Install build deps
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          ccache \
+          clang-7 \
+          cmake \
+          doxygen \
+          libbenchmark-dev \
+          libbenchmark-tools \
+          libbrotli-dev \
+          libgdk-pixbuf2.0-dev \
+          libgflags-dev \
+          libgif-dev \
+          libgtest-dev \
+          libgtk2.0-dev  \
+          libjpeg-dev \
+          libopenexr-dev \
+          libpng-dev \
+          libwebp-dev \
+          ninja-build \
+          pkg-config \
+          xvfb \
+          ${{ matrix.apt_pkgs }} \
+        #
+        echo "CC=clang-7" >> $GITHUB_ENV
+        echo "CXX=clang++-7" >> $GITHUB_ENV
+    - name: Checkout the jxl source
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+        fetch-depth: 2
+    - name: Git environment
+      id: git-env
+      run: |
+        echo "::set-output name=parent::$(git rev-parse ${{ github.sha }}^)"
+      shell: bash
+    - name: ccache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        # When the cache hits the key it is not updated, so if this is a rebuild
+        # of the same Pull Request it will reuse the cache if still around. For
+        # either Pull Requests or new pushes to main, this will use the parent
+        # hash as the starting point from the restore-keys entry.
+        key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.name }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.name }}
+    - name: Build
+      run: |
+        mkdir -p ${CCACHE_DIR}
+        echo "max_size = 200M" > ${CCACHE_DIR}/ccache.conf
+        ./ci.sh release -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DBUILD_TESTING=OFF
+        # Copy library to flatten the artifacts directory structure
+        cp build/libjxl_dec.so.0.7.0 build/tools/conformance
+      env:
+        SKIP_TEST: 1
+    - uses: actions/upload-artifact@v2
+      with:
+        name: conformance_binary
+        path: |
+          build/tools/conformance/djxl_conformance
+          build/tools/conformance/libjxl_dec.so.0.7.0
+    - name: ccache stats
+      run: ccache --show-stats
+
+  run:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 'main_level10' currently fails
+        name: [main_level5]
+    steps:
+    - name: Install deps
+      run: |
+        pip install numpy
+    - name: Checkout the conformance source
+      uses: actions/checkout@v2
+      with:
+        repository: libjxl/conformance
+        path: conformance
+    - name: Download and link conformance files
+      run: |
+        ${{ github.workspace }}/conformance/scripts/download_and_symlink.sh
+    - uses: actions/download-artifact@v2
+      with:
+        name: conformance_binary
+    - name: Run conformance tests
+      run: |
+        chmod +x djxl_conformance
+        ln -s libjxl_dec.so.0.7.0 libjxl_dec.so.0.7
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
+        python conformance/scripts/conformance.py \
+          --decoder=`pwd`/djxl_conformance \
+          --corpus=`pwd`/conformance/testcases/${{ matrix.name }}.txt

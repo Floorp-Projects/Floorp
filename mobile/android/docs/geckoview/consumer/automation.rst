@@ -11,7 +11,7 @@ Configuring GeckoView
 
 GeckoView and the underlying Gecko engine have many, many options, switches, and toggles "under the hood".  Automation (and to a lesser extent, debugging) can require configuring the Gecko engine to allow (or disallow) specific actions or features.
 
-Some such actions and features are controlled by the  `GeckoRuntimeSettings <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.html>`_ instance you configure in your consuming project.  For example, remote debugging web content via the Firefox Developer Tools is configured by `GeckoRuntimeSettings.Builder#remoteDebuggingEnabled <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#remoteDebuggingEnabled-boolean-)>`_
+Some such actions and features are controlled by the  `GeckoRuntimeSettings <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.html>`_ instance you configure in your consuming project.  For example, remote debugging web content via the Firefox Developer Tools is configured by `GeckoRuntimeSettings.Builder#remoteDebuggingEnabled <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#remoteDebuggingEnabled(boolean)>`_
 
 Not all actions and features have GeckoView API interfaces.  Generally, actions and features that do not have GeckoView API interfaces are not intended for broad usage.  Configuration for these types of things is controlled by:
 
@@ -122,4 +122,4 @@ To force GeckoView to never read configuration from a file, even when the embedd
 The empty path is recognized and no file I/O is performed.
 
 
-.. _GeckoRuntimeSettings.Builder#configFilePath: https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#configFilePath-java.lang.String-)
+.. _GeckoRuntimeSettings.Builder#configFilePath: https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#configFilePath(java.lang.String)

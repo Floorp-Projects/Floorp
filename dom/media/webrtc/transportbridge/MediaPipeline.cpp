@@ -260,7 +260,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mPc(aPc),
       mFilter(),
       mRtpParser(webrtc::RtpHeaderParser::CreateForTest().release()),
-      mPacketDumper(new PacketDumper(mPc)) {}
+      mPacketDumper(PacketDumper::GetPacketDumper(mPc)) {}
 
 MediaPipeline::~MediaPipeline() {
   MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
@@ -301,9 +301,6 @@ void MediaPipeline::DetachTransport_s() {
   mRtpSendEventListener.DisconnectIfExists();
   mSenderRtcpSendEventListener.DisconnectIfExists();
   mReceiverRtcpSendEventListener.DisconnectIfExists();
-
-  // Make sure any cycles are broken
-  mPacketDumper = nullptr;
 }
 
 void MediaPipeline::UpdateTransport_m(

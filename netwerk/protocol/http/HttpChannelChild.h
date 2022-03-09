@@ -359,6 +359,10 @@ class HttpChannelChild final : public PHttpChannelChild,
   // diverting callbacks to parent.
   uint8_t mSuspendSent : 1;
 
+  // True if this channel is a multi-part channel, and the first part
+  // is currently being processed.
+  uint8_t mIsFirstPartOfMultiPart : 1;
+
   // True if this channel is a multi-part channel, and the last part
   // is currently being processed.
   uint8_t mIsLastPartOfMultiPart : 1;

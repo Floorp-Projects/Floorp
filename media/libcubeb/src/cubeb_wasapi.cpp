@@ -1438,7 +1438,7 @@ wasapi_destroy(cubeb * context);
 HRESULT
 register_notification_client(cubeb_stream * stm)
 {
-  XASSERT(stm->device_enumerator);
+  XASSERT(stm->device_enumerator && !stm->notification_client);
 
   stm->notification_client.reset(new wasapi_endpoint_notification_client(
       stm->reconfigure_event, stm->role));
@@ -1456,7 +1456,7 @@ register_notification_client(cubeb_stream * stm)
 HRESULT
 unregister_notification_client(cubeb_stream * stm)
 {
-  XASSERT(stm->device_enumerator);
+  XASSERT(stm->device_enumerator && stm->notification_client);
 
   HRESULT hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(
       stm->notification_client.get());
@@ -1495,6 +1495,8 @@ get_endpoint(com_ptr<IMMDevice> & device, LPCWSTR devid)
 HRESULT
 register_collection_notification_client(cubeb * context)
 {
+  XASSERT(!context->device_collection_enumerator &&
+          !context->collection_notification_client);
   HRESULT hr = CoCreateInstance(
       __uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER,
       IID_PPV_ARGS(context->device_collection_enumerator.receive()));
@@ -1521,6 +1523,8 @@ register_collection_notification_client(cubeb * context)
 HRESULT
 unregister_collection_notification_client(cubeb * context)
 {
+  XASSERT(context->device_collection_enumerator &&
+          context->collection_notification_client);
   HRESULT hr = context->device_collection_enumerator
                    ->UnregisterEndpointNotificationCallback(
                        context->collection_notification_client.get());
@@ -1723,6 +1727,9 @@ stop_and_join_render_thread(cubeb_stream * stm)
 void
 wasapi_destroy(cubeb * context)
 {
+  XASSERT(!context->device_collection_enumerator &&
+          !context->collection_notification_client);
+
   if (context->device_ids) {
     cubeb_strings_destroy(context->device_ids);
   }
@@ -2492,8 +2499,8 @@ setup_wasapi_stream(cubeb_stream * stm)
 
   stm->resampler.reset(cubeb_resampler_create(
       stm, has_input(stm) ? &input_params : nullptr,
-      has_output(stm) ? &output_params : nullptr, target_sample_rate,
-      stm->data_callback, stm->user_ptr,
+      has_output(stm) && !stm->has_dummy_output ? &output_params : nullptr,
+      target_sample_rate, stm->data_callback, stm->user_ptr,
       stm->voice ? CUBEB_RESAMPLER_QUALITY_VOIP
                  : CUBEB_RESAMPLER_QUALITY_DESKTOP));
   if (!stm->resampler) {

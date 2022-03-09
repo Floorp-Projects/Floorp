@@ -114,7 +114,6 @@ void ClusterGroups(PassesEncoderState* enc_state) {
     return token_cost(tokens, num_contexts) - costs[i] - costs[j];
   };
   std::vector<size_t> out{max};
-  std::vector<size_t> old_map(ac.size());
   std::vector<float> dists(ac.size());
   size_t farthest = 0;
   for (size_t i = 0; i < ac.size(); i++) {
@@ -133,7 +132,6 @@ void ClusterGroups(PassesEncoderState* enc_state) {
       float d = dist(out.back(), i);
       if (d < dists[i]) {
         dists[i] = d;
-        old_map[i] = enc_state->histogram_idx[i];
         enc_state->histogram_idx[i] = out.size() - 1;
       }
       if (dists[i] > dists[farthest]) {
@@ -507,12 +505,17 @@ class LossyFrameEncoder {
     PassesSharedState& shared = enc_state_->shared;
 
     if (!enc_state_->cparams.max_error_mode) {
-      float x_qm_scale_steps[3] = {0.65f, 1.25f, 9.0f};
-      shared.frame_header.x_qm_scale = 1;
+      float x_qm_scale_steps[2] = {1.25f, 9.0f};
+      shared.frame_header.x_qm_scale = 2;
       for (float x_qm_scale_step : x_qm_scale_steps) {
         if (enc_state_->cparams.butteraugli_distance > x_qm_scale_step) {
           shared.frame_header.x_qm_scale++;
         }
+      }
+      if (enc_state_->cparams.butteraugli_distance < 0.299f) {
+        // Favor chromacity preservation for making images appear more
+        // faithful to original even with extreme (5-10x) zooming.
+        shared.frame_header.x_qm_scale++;
       }
     }
 
@@ -994,19 +997,20 @@ class LossyFrameEncoder {
  private:
   void ComputeAllCoeffOrders(const FrameDimensions& frame_dim) {
     PROFILER_FUNC;
+    // No coefficient reordering in Falcon or faster.
+    auto used_orders_info = ComputeUsedOrders(
+        enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
+        Rect(enc_state_->shared.raw_quant_field));
+    enc_state_->used_orders.clear();
     enc_state_->used_orders.resize(
-        enc_state_->progressive_splitter.GetNumPasses());
+        enc_state_->progressive_splitter.GetNumPasses(),
+        used_orders_info.second);
     for (size_t i = 0; i < enc_state_->progressive_splitter.GetNumPasses();
          i++) {
-      // No coefficient reordering in Falcon or faster.
-      if (enc_state_->cparams.speed_tier < SpeedTier::kFalcon) {
-        enc_state_->used_orders[i] = ComputeUsedOrders(
-            enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
-            Rect(enc_state_->shared.raw_quant_field));
-      }
       ComputeCoeffOrder(
           enc_state_->cparams.speed_tier, *enc_state_->coeffs[i],
           enc_state_->shared.ac_strategy, frame_dim, enc_state_->used_orders[i],
+          used_orders_info.first,
           &enc_state_->shared
                .coeff_orders[i * enc_state_->shared.coeff_order_size]);
     }

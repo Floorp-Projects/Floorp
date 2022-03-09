@@ -136,36 +136,6 @@ TEST_F(VsyncTester, CompositorGetVsyncNotifications) {
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
 }
 
-// Test that if we have vsync enabled, the parent refresh driver should get
-// notifications
-TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications) {
-  VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
-  globalDisplay.DisableVsync();
-  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
-
-  RefPtr<RefreshTimerVsyncDispatcher> vsyncDispatcher =
-      globalDisplay.GetRefreshTimerVsyncDispatcher();
-  ASSERT_TRUE(vsyncDispatcher != nullptr);
-
-  RefPtr<TestVsyncObserver> testVsyncObserver = new TestVsyncObserver();
-  vsyncDispatcher->SetParentRefreshTimer(testVsyncObserver);
-  ASSERT_TRUE(globalDisplay.IsVsyncEnabled());
-
-  testVsyncObserver->WaitForVsyncNotification();
-  ASSERT_TRUE(testVsyncObserver->DidGetVsyncNotification());
-  vsyncDispatcher->SetParentRefreshTimer(nullptr);
-
-  testVsyncObserver->ResetVsyncNotification();
-  testVsyncObserver->WaitForVsyncNotification();
-  ASSERT_FALSE(testVsyncObserver->DidGetVsyncNotification());
-
-  vsyncDispatcher = nullptr;
-  testVsyncObserver = nullptr;
-
-  globalDisplay.DisableVsync();
-  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
-}
-
 // Test that child refresh vsync observers get vsync notifications
 TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications) {
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
@@ -177,13 +147,13 @@ TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications) {
   ASSERT_TRUE(vsyncDispatcher != nullptr);
 
   RefPtr<TestVsyncObserver> testVsyncObserver = new TestVsyncObserver();
-  vsyncDispatcher->AddChildRefreshTimer(testVsyncObserver);
+  vsyncDispatcher->AddVsyncObserver(testVsyncObserver);
   ASSERT_TRUE(globalDisplay.IsVsyncEnabled());
 
   testVsyncObserver->WaitForVsyncNotification();
   ASSERT_TRUE(testVsyncObserver->DidGetVsyncNotification());
 
-  vsyncDispatcher->RemoveChildRefreshTimer(testVsyncObserver);
+  vsyncDispatcher->RemoveVsyncObserver(testVsyncObserver);
   testVsyncObserver->ResetVsyncNotification();
   testVsyncObserver->WaitForVsyncNotification();
   ASSERT_FALSE(testVsyncObserver->DidGetVsyncNotification());

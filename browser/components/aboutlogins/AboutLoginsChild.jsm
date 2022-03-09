@@ -32,7 +32,7 @@ const TELEMETRY_MIN_MS_BETWEEN_OPEN_MANAGEMENT = 5000;
 
 let gLastOpenManagementBrowserId = null;
 let gLastOpenManagementEventTime = Number.NEGATIVE_INFINITY;
-let gMasterPasswordPromise;
+let gPrimaryPasswordPromise;
 
 function recordTelemetryEvent(event) {
   try {
@@ -144,26 +144,26 @@ class AboutLoginsChild extends JSWindowActorChild {
         Services.focus.setFocus(element, Services.focus.FLAG_BYKEY);
       },
       /**
-       * Shows the Master Password prompt if enabled, or the
+       * Shows the Primary Password prompt if enabled, or the
        * OS auth dialog otherwise.
        * @param resolve Callback that is called with result of authentication.
        * @param messageId The string ID that corresponds to a string stored in aboutLogins.ftl.
        *                  This string will be displayed only when the OS auth dialog is used.
        */
-      async promptForMasterPassword(resolve, messageId) {
-        gMasterPasswordPromise = {
+      async promptForPrimaryPassword(resolve, messageId) {
+        gPrimaryPasswordPromise = {
           resolve,
         };
 
         that.sendAsyncMessage("AboutLogins:PrimaryPasswordRequest", messageId);
 
-        return gMasterPasswordPromise;
+        return gPrimaryPasswordPromise;
       },
       fileImportEnabled: Services.prefs.getBoolPref(
         "signon.management.page.fileImport.enabled"
       ),
       // Default to enabled just in case a search is attempted before we get a response.
-      masterPasswordEnabled: true,
+      primaryPasswordEnabled: true,
       passwordRevealVisible: true,
     };
     waivedContent.AboutLoginsUtils = Cu.cloneInto(
@@ -283,8 +283,8 @@ class AboutLoginsChild extends JSWindowActorChild {
       case "AboutLogins:ImportReportData":
         this.onImportReportData(message.data);
         break;
-      case "AboutLogins:MasterPasswordResponse":
-        this.onMasterPasswordResponse(message.data);
+      case "AboutLogins:PrimaryPasswordResponse":
+        this.onPrimaryPasswordResponse(message.data);
         break;
       case "AboutLogins:RemaskPassword":
         this.onRemaskPassword(message.data);
@@ -301,9 +301,9 @@ class AboutLoginsChild extends JSWindowActorChild {
     this.sendToContent("ImportReportData", data);
   }
 
-  onMasterPasswordResponse(data) {
-    if (gMasterPasswordPromise) {
-      gMasterPasswordPromise.resolve(data.result);
+  onPrimaryPasswordResponse(data) {
+    if (gPrimaryPasswordPromise) {
+      gPrimaryPasswordPromise.resolve(data.result);
       recordTelemetryEvent(data.telemetryEvent);
     }
   }
@@ -314,8 +314,8 @@ class AboutLoginsChild extends JSWindowActorChild {
 
   onSetup(data) {
     let waivedContent = Cu.waiveXrays(this.browsingContext.window);
-    waivedContent.AboutLoginsUtils.masterPasswordEnabled =
-      data.masterPasswordEnabled;
+    waivedContent.AboutLoginsUtils.primaryPasswordEnabled =
+      data.primaryPasswordEnabled;
     waivedContent.AboutLoginsUtils.passwordRevealVisible =
       data.passwordRevealVisible;
     waivedContent.AboutLoginsUtils.importVisible = data.importVisible;

@@ -42,7 +42,7 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   ~FetchEventOpProxyChild() = default;
 
   mozilla::ipc::IPCResult RecvPreloadResponse(
-      ParentToChildInternalResponse&& aResponse);
+      ParentToChildResponseWithTiming&& aResponse);
 
   void ActorDestroy(ActorDestroyReason) override;
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
+add_task(async () => {
   info(
     "Checking that the profiler can fetch the information about the active " +
       "configuration that is being used to power the profiler."
@@ -21,7 +21,7 @@ function run_test() {
     const threads = ["GeckoMain"];
     const features = ["js", "leaf"];
     const activeTabID = 123;
-    Services.profiler.StartProfiler(
+    await Services.profiler.StartProfiler(
       entries,
       interval,
       features,
@@ -66,7 +66,7 @@ function run_test() {
     const duration = 20;
 
     info("Restart the profiler with a new configuration.");
-    Services.profiler.StartProfiler(
+    await Services.profiler.StartProfiler(
       entries,
       interval,
       features,
@@ -105,11 +105,11 @@ function run_test() {
     );
   }
 
-  Services.profiler.StopProfiler();
+  await Services.profiler.StopProfiler();
 
   equal(
     Services.profiler.activeConfiguration,
     null,
     "When the profile is off, there is no active configuration."
   );
-}
+});

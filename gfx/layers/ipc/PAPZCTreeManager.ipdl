@@ -39,6 +39,7 @@ namespace layers {
  * lives in the main thread of the main or the content process. APZCTreeManagerParent
  * and APZCTreeManagerChild implement this protocol.
  */
+[ManualDealloc]
 protocol PAPZCTreeManager
 {
 manager PCompositorBridge;
@@ -51,8 +52,6 @@ parent:
   async ZoomToRect(ScrollableLayerGuid aGuid, ZoomTarget aZoomTarget, uint32_t Flags);
 
   async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
-
-  async AddInputBlockCallback(uint64_t aInputBlockId);
 
   async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
 
@@ -84,9 +83,6 @@ child:
                            Modifiers aModifiers);
 
   async CancelAutoscroll(ViewID aScrollId);
-
-  async CallInputBlockCallback(uint64_t aInputBlockId,
-                               APZHandledResult aHandledResult);
 };
 
 } // namespace gfx

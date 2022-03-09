@@ -7,6 +7,8 @@
 #ifndef vm_Caches_h
 #define vm_Caches_h
 
+#include "mozilla/Array.h"
+
 #include <iterator>
 #include <new>
 
@@ -78,6 +80,139 @@ struct EvalCacheHashPolicy {
 using EvalCache =
     GCHashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy>;
 
+// [SMDOC] Megamorphic Property Lookup Cache (MegamorphicCache)
+//
+// MegamorphicCache is a data structure used to speed up megamorphic property
+// lookups from JIT code. The same cache is currently used for both GetProp and
+// HasProp (in, hasOwnProperty) operations.
+//
+// This is implemented as a fixed-size array of entries. Lookups are performed
+// based on the receiver object's Shape + PropertyKey. If found in the cache,
+// the result of a lookup represents either:
+//
+// * A data property on the receiver or on its proto chain (stored as number of
+//   'hops' up the proto chain + the slot of the data property).
+//
+// * A missing property on the receiver or its proto chain.
+//
+// * A missing property on the receiver, but it might exist on the proto chain.
+//   This lets us optimize hasOwnProperty better.
+//
+// Collisions are handled by simply overwriting the previous entry stored in the
+// slot. This is sufficient to achieve a high hit rate on typical web workloads
+// while ensuring cache lookups are always fast and simple.
+//
+// Lookups always check the receiver object's shape (ensuring the properties and
+// prototype are unchanged). Because the cache also caches lookups on the proto
+// chain, Watchtower is used to invalidate the cache when prototype objects are
+// mutated. This is done by incrementing the cache's generation counter to
+// invalidate all entries.
+//
+// The cache is also invalidated on each major GC.
+class MegamorphicCache {
+ public:
+  class Entry {
+    // Receiver object's shape.
+    Shape* shape_ = nullptr;
+
+    // The atom or symbol property being accessed.
+    PropertyKey key_;
+
+    // This entry is valid iff the generation matches the cache's generation.
+    uint16_t generation_ = 0;
+
+    // Slot number of the data property.
+    static constexpr size_t MaxSlotNumber = UINT16_MAX;
+    uint16_t slot_ = 0;
+
+    // Number of hops on the proto chain to get to the holder object. If this is
+    // zero, the property exists on the receiver object. It can also be one of
+    // the sentinel values indicating a missing property lookup.
+    static constexpr size_t MaxHopsForDataProperty = UINT8_MAX - 2;
+    static constexpr size_t NumHopsForMissingProperty = UINT8_MAX - 1;
+    static constexpr size_t NumHopsForMissingOwnProperty = UINT8_MAX;
+    uint8_t numHops_ = 0;
+
+    friend class MegamorphicCache;
+
+   public:
+    void init(Shape* shape, PropertyKey key, uint16_t generation,
+              uint8_t numHops, uint16_t slot) {
+      shape_ = shape;
+      key_ = key;
+      generation_ = generation;
+      slot_ = slot;
+      numHops_ = numHops;
+      MOZ_ASSERT(slot_ == slot, "slot must fit in slot_");
+      MOZ_ASSERT(numHops_ == numHops, "numHops must fit in numHops_");
+    }
+    bool isMissingProperty() const {
+      return numHops_ == NumHopsForMissingProperty;
+    }
+    bool isMissingOwnProperty() const {
+      return numHops_ == NumHopsForMissingOwnProperty;
+    }
+    bool isDataProperty() const { return numHops_ <= MaxHopsForDataProperty; }
+    uint16_t numHops() const {
+      MOZ_ASSERT(isDataProperty());
+      return numHops_;
+    }
+    uint16_t slot() const {
+      MOZ_ASSERT(isDataProperty());
+      return slot_;
+    }
+  };
+
+ private:
+  static constexpr size_t NumEntries = 1024;
+  mozilla::Array<Entry, NumEntries> entries_;
+
+  // Generation counter used to invalidate all entries.
+  uint16_t generation_ = 0;
+
+  Entry& getEntry(Shape* shape, PropertyKey key) {
+    static_assert(mozilla::IsPowerOfTwo(NumEntries),
+                  "NumEntries must be a power-of-two for fast modulo");
+    uintptr_t hash = (uintptr_t(shape) ^ (uintptr_t(shape) >> 13)) +
+                     HashAtomOrSymbolPropertyKey(key);
+    return entries_[hash % NumEntries];
+  }
+
+ public:
+  void bumpGeneration() {
+    generation_++;
+    if (generation_ == 0) {
+      // Generation overflowed. Invalidate the whole cache.
+      for (size_t i = 0; i < NumEntries; i++) {
+        entries_[i].shape_ = nullptr;
+      }
+    }
+  }
+  bool lookup(Shape* shape, PropertyKey key, Entry** entryp) {
+    Entry& entry = getEntry(shape, key);
+    *entryp = &entry;
+    return (entry.shape_ == shape && entry.key_ == key &&
+            entry.generation_ == generation_);
+  }
+  void initEntryForMissingProperty(Entry* entry, Shape* shape,
+                                   PropertyKey key) {
+    entry->init(shape, key, generation_, Entry::NumHopsForMissingProperty, 0);
+  }
+  void initEntryForMissingOwnProperty(Entry* entry, Shape* shape,
+                                      PropertyKey key) {
+    entry->init(shape, key, generation_, Entry::NumHopsForMissingOwnProperty,
+                0);
+  }
+  void initEntryForDataProperty(Entry* entry, Shape* shape, PropertyKey key,
+                                size_t numHops, uint32_t slot) {
+    if (slot > Entry::MaxSlotNumber ||
+        numHops > Entry::MaxHopsForDataProperty) {
+      return;
+    }
+    entry->init(shape, key, generation_, numHops, slot);
+  }
+};
+
 // Cache for AtomizeString, mapping JSLinearString* to the corresponding
 // JSAtom*. Also used by nursery GC to de-duplicate strings to atoms.
 // Purged on minor and major GC.
@@ -121,6 +256,7 @@ class StringToAtomCache {
 
 class RuntimeCaches {
  public:
+  MegamorphicCache megamorphicCache;
   GSNCache gsnCache;
   UncompressedSourceCache uncompressedSourceCache;
   EvalCache evalCache;
@@ -143,6 +279,7 @@ class RuntimeCaches {
   void purgeForCompaction() {
     evalCache.clear();
     stringToAtomCache.purge();
+    megamorphicCache.bumpGeneration();
   }
 
   void purgeStencils() { delazificationCache.clearAndDisable(); }

@@ -135,9 +135,10 @@ LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
       mActor(nullptr),
       mInitLength(0),
       mLength(0),
-      mExactUsage(0),
+      mUsage(0),
       mPeakUsage(0),
       mLoadState(LoadState::Initial),
+      mHasOtherProcessDatabases(false),
       mHasOtherProcessObservers(false),
       mExplicit(false),
       mHasPendingStableStateCallback(false),
@@ -211,11 +212,12 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
     MOZ_ASSERT(loadState == LoadState::AllOrderedItems);
   }
 
-  mExactUsage = aInitInfo.initialUsage();
+  mUsage = aInitInfo.usage();
   mPeakUsage = aInitInfo.peakUsage();
 
   mLoadState = aInitInfo.loadState();
 
+  mHasOtherProcessDatabases = aInitInfo.hasOtherProcessDatabases();
   mHasOtherProcessObservers = aInitInfo.hasOtherProcessObservers();
 
   mExplicit = aExplicit;
@@ -510,7 +512,16 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
   } else {
     changed = true;
 
-    DebugOnly<nsresult> rv = UpdateUsage(-mExactUsage);
+    int64_t delta = 0;
+    for (const auto& entry : mValues) {
+      const nsAString& key = entry.GetKey();
+      const nsString& value = entry.GetData();
+
+      delta += -static_cast<int64_t>(key.Length()) -
+               static_cast<int64_t>(value.Length());
+    }
+
+    DebugOnly<nsresult> rv = UpdateUsage(delta);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     mValues.Clear();
@@ -572,16 +583,21 @@ nsresult LSSnapshot::End() {
 
   RefPtr<LSSnapshot> kungFuDeathGrip = this;
 
-  rv = Finish();
+  rv = Finish(/* aSync */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (NS_WARN_IF(!mActor->SendPing())) {
-    return NS_ERROR_FAILURE;
-  }
-
   return NS_OK;
+}
+
+int64_t LSSnapshot::GetUsage() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+
+  return mUsage;
 }
 
 void LSSnapshot::ScheduleStableStateCallback() {
@@ -878,13 +894,13 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mPeakUsage >= mExactUsage);
+  MOZ_ASSERT(mPeakUsage >= mUsage);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  int64_t newExactUsage = mExactUsage + aDelta;
-  if (newExactUsage > mPeakUsage) {
-    const int64_t minSize = newExactUsage - mPeakUsage;
+  int64_t newUsage = mUsage + aDelta;
+  if (newUsage > mPeakUsage) {
+    const int64_t minSize = newUsage - mPeakUsage;
 
     int64_t size;
     if (NS_WARN_IF(!mActor->SendIncreasePeakUsage(minSize, &size))) {
@@ -900,7 +916,7 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
     mPeakUsage += size;
   }
 
-  mExactUsage = newExactUsage;
+  mUsage = newUsage;
   return NS_OK;
 }
 
@@ -914,7 +930,8 @@ nsresult LSSnapshot::Checkpoint() {
     MOZ_ASSERT(mWriteAndNotifyInfos);
 
     if (!mWriteAndNotifyInfos->IsEmpty()) {
-      MOZ_ALWAYS_TRUE(mActor->SendCheckpointAndNotify(*mWriteAndNotifyInfos));
+      MOZ_ALWAYS_TRUE(
+          mActor->SendAsyncCheckpointAndNotify(*mWriteAndNotifyInfos));
 
       mWriteAndNotifyInfos->Clear();
     }
@@ -927,7 +944,7 @@ nsresult LSSnapshot::Checkpoint() {
 
       MOZ_ASSERT(!writeInfos.IsEmpty());
 
-      MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(writeInfos));
+      MOZ_ALWAYS_TRUE(mActor->SendAsyncCheckpoint(writeInfos));
 
       mWriteOptimizer->Reset();
     }
@@ -936,14 +953,18 @@ nsresult LSSnapshot::Checkpoint() {
   return NS_OK;
 }
 
-nsresult LSSnapshot::Finish() {
+nsresult LSSnapshot::Finish(bool aSync) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDatabase);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  MOZ_ALWAYS_TRUE(mActor->SendFinish());
+  if (aSync) {
+    MOZ_ALWAYS_TRUE(mActor->SendSyncFinish());
+  } else {
+    MOZ_ALWAYS_TRUE(mActor->SendAsyncFinish());
+  }
 
   mDatabase->NoteFinishedSnapshot(this);
 
@@ -997,7 +1018,22 @@ LSSnapshot::Run() {
 
   MOZ_ALWAYS_SUCCEEDS(Checkpoint());
 
-  if (mDirty || !Preferences::GetBool("dom.storage.snapshot_reusing")) {
+  // 1. The unused pre-incremented snapshot peak usage can't be undone when
+  //    there are other snapshots for the same database. We only add a pending
+  //    usage delta when a snapshot finishes and usage deltas are then applied
+  //    when the last database becomes inactive.
+  // 2. If there's a snapshot with pre-incremented peak usage, the next
+  //    snapshot will use that as a base for its usage.
+  // 3. When a task for given snapshot finishes, we try to reuse the snapshot
+  //    by only checkpointing the snapshot and delaying the finish by a timer.
+  // 4. If two or more tabs for the same origin use localStorage periodically
+  //    at the same time the usage gradually grows until it hits the quota
+  //    limit.
+  // 5. We prevent that from happening by finishing the snapshot immediatelly
+  //    if there are databases in other processess.
+
+  if (mDirty || mHasOtherProcessDatabases ||
+      !Preferences::GetBool("dom.storage.snapshot_reusing")) {
     MOZ_ALWAYS_SUCCEEDS(Finish());
   } else if (!mExplicit) {
     MOZ_ASSERT(mIdleTimer);

@@ -86,6 +86,10 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   nsIPrincipal* Principal() const { return mPrincipal; }
   void SetPrincipal(nsIPrincipal* aPrincipal) { mPrincipal = aPrincipal; }
 
+  // @return cached data, if available.
+  //         otherwise: if available, `mDataTransfer`'s transferable data.
+  //                    otherwise the data is retrieved from the clipboard (for
+  //                    paste events) or the drag session.
   already_AddRefed<nsIVariant> DataNoSecurityCheck();
   // Data may return null if the clipboard state has changed since the type was
   // detected.

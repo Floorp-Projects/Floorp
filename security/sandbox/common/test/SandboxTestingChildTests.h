@@ -23,7 +23,11 @@
 #    include <sys/syscall.h>
 #    include <sys/un.h>
 #    include "mozilla/ProcInfo_linux.h"
-#  endif  // XP_LINUX
+#    ifdef MOZ_X11
+#      include "X11/Xlib.h"
+#      include "X11UndefineNone.h"
+#    endif  // MOZ_X11
+#  endif    // XP_LINUX
 #  include <sys/socket.h>
 #  include <sys/stat.h>
 #  include <sys/types.h>
@@ -37,6 +41,17 @@
 
 #ifdef XP_WIN
 #  include <stdio.h>
+#  include <winternl.h>
+
+#  include "mozilla/DynamicallyLinkedFunctionPtr.h"
+#  include "nsAppDirectoryServiceDefs.h"
+#endif
+
+constexpr bool kIsDebug =
+#ifdef DEBUG
+    true;
+#else
+    false;
 #endif
 
 namespace mozilla {
@@ -58,6 +73,78 @@ static void RunTestsSched(SandboxTestingChild* child) {
   });
 }
 #endif  // XP_LINUX
+
+#ifdef XP_WIN
+/**
+ * Uses NtCreateFile directly to test file system brokering.
+ *
+ */
+static void FileTest(const nsCString& aName, const char* aSpecialDirName,
+                     const nsString& aRelativeFilePath, ACCESS_MASK aAccess,
+                     bool aExpectSuccess, SandboxTestingChild* aChild) {
+  static const StaticDynamicallyLinkedFunctionPtr<decltype(&NtCreateFile)>
+      pNtCreateFile(L"ntdll.dll", "NtCreateFile");
+  static const StaticDynamicallyLinkedFunctionPtr<decltype(&NtClose)> pNtClose(
+      L"ntdll.dll", "NtClose");
+
+  // Start the filename with the NT namespace
+  nsString testFilename(u"\\??\\"_ns);
+  nsString dirPath;
+  aChild->SendGetSpecialDirectory(nsDependentCString(aSpecialDirName),
+                                  &dirPath);
+  testFilename.Append(dirPath);
+  testFilename.AppendLiteral("\\");
+  testFilename.Append(aRelativeFilePath);
+
+  UNICODE_STRING uniFileName;
+  ::RtlInitUnicodeString(&uniFileName, testFilename.get());
+
+  OBJECT_ATTRIBUTES objectAttributes;
+  InitializeObjectAttributes(&objectAttributes, &uniFileName,
+                             OBJ_CASE_INSENSITIVE, nullptr, nullptr);
+
+  HANDLE fileHandle = INVALID_HANDLE_VALUE;
+  IO_STATUS_BLOCK ioStatusBlock = {};
+
+  ULONG createOptions = StringEndsWith(testFilename, u"\\"_ns) ||
+                                StringEndsWith(testFilename, u"/"_ns)
+                            ? FILE_DIRECTORY_FILE
+                            : FILE_NON_DIRECTORY_FILE;
+  NTSTATUS status = pNtCreateFile(
+      &fileHandle, aAccess, &objectAttributes, &ioStatusBlock, nullptr, 0, 0,
+      FILE_OPEN_IF, createOptions | FILE_SYNCHRONOUS_IO_NONALERT, nullptr, 0);
+
+  if (fileHandle != INVALID_HANDLE_VALUE) {
+    pNtClose(fileHandle);
+  }
+
+  nsCString accessString;
+  if ((aAccess & FILE_GENERIC_READ) == FILE_GENERIC_READ) {
+    accessString.AppendLiteral("r");
+  }
+  if ((aAccess & FILE_GENERIC_WRITE) == FILE_GENERIC_WRITE) {
+    accessString.AppendLiteral("w");
+  }
+  if ((aAccess & FILE_GENERIC_EXECUTE) == FILE_GENERIC_EXECUTE) {
+    accessString.AppendLiteral("e");
+  }
+
+  nsCString msgRelPath = NS_ConvertUTF16toUTF8(aRelativeFilePath);
+  for (size_t i = 0, j = 0; i < aRelativeFilePath.Length(); ++i, ++j) {
+    if (aRelativeFilePath[i] == u'\\') {
+      msgRelPath.Insert('\\', j++);
+    }
+  }
+
+  nsCString message;
+  message.AppendPrintf(
+      "Special dir: %s, file: %s, access: %s , returned status: %lx",
+      aSpecialDirName, msgRelPath.get(), accessString.get(), status);
+
+  aChild->SendReportTestResults(aName, aExpectSuccess == NT_SUCCESS(status),
+                                message);
+}
+#endif
 
 void RunTestsContent(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
@@ -183,7 +270,22 @@ void RunTestsContent(SandboxTestingChild* child) {
                        return fd;
                      });
   }
-#  endif  // XP_LINUX
+
+#    ifdef MOZ_X11
+  // Check that X11 access is blocked (bug 1129492).
+  // This will fail if security.sandbox.content.headless is turned off.
+  if (PR_GetEnv("DISPLAY")) {
+    Display* disp = XOpenDisplay(nullptr);
+
+    child->SendReportTestResults(
+        "x11_access"_ns, !disp,
+        disp ? "XOpenDisplay succeeded"_ns : "XOpenDisplay failed"_ns);
+    if (disp) {
+      XCloseDisplay(disp);
+    }
+  }
+#    endif  // MOZ_X11
+#  endif    // XP_LINUX
 
 #  ifdef XP_MACOSX
   // Test that content processes can not connect to the macOS window server.
@@ -200,9 +302,26 @@ void RunTestsContent(SandboxTestingChild* child) {
   }
 #  endif
 
-#else   // XP_UNIX
-  child->ReportNoTests();
-#endif  // XP_UNIX
+#elif XP_WIN
+  FileTest("read from chrome"_ns, NS_APP_USER_CHROME_DIR, u"sandboxTest.txt"_ns,
+           FILE_GENERIC_READ, true, child);
+  FileTest("read from profile via relative path"_ns, NS_APP_USER_CHROME_DIR,
+           u"..\\sandboxTest.txt"_ns, FILE_GENERIC_READ, false, child);
+  // The profile dir is the parent of the chrome dir.
+  FileTest("read from chrome using forward slash"_ns,
+           NS_APP_USER_PROFILE_50_DIR, u"chrome/sandboxTest.txt"_ns,
+           FILE_GENERIC_READ, false, child);
+
+  // Note: these only pass in DEBUG builds because we allow write access to the
+  // temp dir for certain test logs and that is where the profile is created.
+  FileTest("read from profile"_ns, NS_APP_USER_PROFILE_50_DIR,
+           u"sandboxTest.txt"_ns, FILE_GENERIC_READ, kIsDebug, child);
+  FileTest("read/write from chrome"_ns, NS_APP_USER_CHROME_DIR,
+           u"sandboxTest.txt"_ns, FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+           kIsDebug, child);
+#else
+    child->ReportNoTests();
+#endif
 }
 
 void RunTestsSocket(SandboxTestingChild* child) {

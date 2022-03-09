@@ -938,10 +938,8 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
     sLastCheckedForSmartCardChanges = now;
   }
 
-  // SECMOD_UpdateSlotList attempts to acquire the list lock as well,
-  // so we have to do this in two steps. The lock protects the list itself, so
-  // if we get our own owned references to the modules we're interested in,
-  // there's no thread safety concern here.
+  // SECMOD_UpdateSlotList attempts to acquire the list lock as well, so we
+  // have to do this in three steps.
   Vector<UniqueSECMODModule> modulesWithRemovableSlots;
   {
     AutoSECMODListReadLock secmodLock;
@@ -959,6 +957,9 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
   for (auto& module : modulesWithRemovableSlots) {
     // Best-effort.
     Unused << SECMOD_UpdateSlotList(module.get());
+  }
+  AutoSECMODListReadLock secmodLock;
+  for (auto& module : modulesWithRemovableSlots) {
     for (int i = 0; i < module->slotCount; i++) {
       // We actually don't care about the return value here - we just need to
       // call this to get NSS to update its view of this slot.
@@ -1540,6 +1541,7 @@ void nsNSSComponent::setValidationOptions(
     case CRLiteMode::Disabled:
     case CRLiteMode::TelemetryOnly:
     case CRLiteMode::Enforce:
+    case CRLiteMode::ConfirmRevocations:
       break;
     default:
       crliteMode = defaultCRLiteMode;
@@ -2163,7 +2165,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("IntermediatePreloadingHealerCallback"));
 
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("Exiting healer due to app shutdown"));
     return;
@@ -2192,7 +2194,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   // is a preloaded intermediate.
   for (CERTCertListNode* n = CERT_LIST_HEAD(softokenCertificates);
        !CERT_LIST_END(n, softokenCertificates); n = CERT_LIST_NEXT(n)) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;
@@ -2244,7 +2246,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
     }
   }
   for (const auto& certToDelete : certsToDelete) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;

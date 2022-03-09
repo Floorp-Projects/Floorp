@@ -62,6 +62,12 @@ bool Storage::StoragePrefIsEnabled() {
   return mozilla::Preferences::GetBool(kStorageEnabled);
 }
 
+int64_t Storage::GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
+                                  ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return 0;
+}
+
 bool Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal) {
   if (!StoragePrefIsEnabled()) {
     return false;

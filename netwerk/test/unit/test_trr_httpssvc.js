@@ -27,6 +27,11 @@ function setup() {
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
+  if (!gDNS) {
+    gDNS = Cc["@mozilla.org/network/dns-service;1"].getService(
+      Ci.nsIDNSService
+    );
+  }
   Services.prefs.setIntPref("network.trr.mode", 3);
 }
 

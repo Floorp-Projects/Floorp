@@ -158,6 +158,26 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWWaitForMigrationClose.bind(this), window, {
       defineAs: "AWWaitForMigrationClose",
     });
+
+    Cu.exportFunction(this.AWFinish.bind(this), window, {
+      defineAs: "AWFinish",
+    });
+
+    Cu.exportFunction(this.AWEnsureLangPackInstalled.bind(this), window, {
+      defineAs: "AWEnsureLangPackInstalled",
+    });
+
+    Cu.exportFunction(
+      this.AWNegotiateLangPackForLanguageMismatch.bind(this),
+      window,
+      {
+        defineAs: "AWNegotiateLangPackForLanguageMismatch",
+      }
+    );
+
+    Cu.exportFunction(this.AWSetRequestedLocales.bind(this), window, {
+      defineAs: "AWSetRequestedLocales",
+    });
   }
 
   /**
@@ -166,6 +186,20 @@ class AboutWelcomeChild extends JSWindowActorChild {
   wrapPromise(promise) {
     return new this.contentWindow.Promise((resolve, reject) =>
       promise.then(resolve, reject)
+    );
+  }
+
+  /**
+   * Clones the result of the query into the content window.
+   */
+  sendQueryAndCloneForContent(...sendQueryArgs) {
+    return this.wrapPromise(
+      (async () => {
+        return Cu.cloneInto(
+          await this.sendQuery(...sendQueryArgs),
+          this.contentWindow
+        );
+      })()
     );
   }
 
@@ -202,6 +236,11 @@ class AboutWelcomeChild extends JSWindowActorChild {
     let featureConfig = NimbusFeatures.aboutwelcome.getAllVariables();
     featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
     featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
+    if (featureConfig.languageMismatchEnabled) {
+      featureConfig.appAndSystemLocaleInfo = await this.sendQuery(
+        "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO"
+      );
+    }
     let defaults = AboutWelcomeDefaults.getDefaults();
     // FeatureConfig (from prefs or experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
@@ -267,6 +306,31 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetRegion() {
     return this.wrapPromise(this.sendQuery("AWPage:GET_REGION"));
+  }
+
+  AWFinish() {
+    this.contentWindow.location.href = "about:home";
+  }
+
+  AWEnsureLangPackInstalled(langPack) {
+    return this.sendQueryAndCloneForContent(
+      "AWPage:ENSURE_LANG_PACK_INSTALLED",
+      langPack
+    );
+  }
+
+  AWSetRequestedLocales(requestSystemLocales) {
+    return this.sendQueryAndCloneForContent(
+      "AWPage:SET_REQUESTED_LOCALES",
+      requestSystemLocales
+    );
+  }
+
+  AWNegotiateLangPackForLanguageMismatch(appAndSystemLocaleInfo) {
+    return this.sendQueryAndCloneForContent(
+      "AWPage:NEGOTIATE_LANGPACK",
+      appAndSystemLocaleInfo
+    );
   }
 
   /**

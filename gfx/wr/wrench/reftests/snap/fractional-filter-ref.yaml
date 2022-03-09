@@ -1,0 +1,13 @@
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 1920, 1200]
+      transform: translate(-45, 7)
+      items:
+      - type: stacking-context
+        filters: [opacity(0.9)]
+        items:
+          - text: "This should be pixel aligned!"
+            origin: 416.543499 160.008325
+            size: 16
+

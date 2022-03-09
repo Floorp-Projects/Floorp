@@ -1239,6 +1239,9 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
 #endif
 
     nsIFrame* frame = acc->GetFrame();
+    if (frame) {
+      acc->MaybeQueueCacheUpdateForStyleChanges();
+    }
 
     // LocalAccessible has no frame and it's not display:contents. Remove it.
     // As well as removing the a11y subtree, we must also remove Accessibles

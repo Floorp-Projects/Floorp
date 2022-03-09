@@ -14,6 +14,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Variant.h"
+#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsCSSProps.h"
@@ -52,17 +53,30 @@ struct AnimationEventInfo {
     event.mPseudoElement =
         nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
 
-    if ((aMessage == eAnimationCancel || aMessage == eAnimationEnd) &&
+    if ((aMessage == eAnimationCancel || aMessage == eAnimationEnd ||
+         aMessage == eAnimationIteration) &&
         profiler_thread_is_being_profiled_for_markers()) {
-      nsCString markerText;
+      nsAutoCString markerText;
       aAnimationName->ToUTF8String(markerText);
+
+      const TimeStamp startTime = [&] {
+        if (aMessage == eAnimationIteration) {
+          if (auto* effect = aAnimation->GetEffect()) {
+            return aScheduledEventTimeStamp -
+                   TimeDuration(effect->GetComputedTiming().mDuration);
+          }
+        }
+        return aScheduledEventTimeStamp -
+               TimeDuration::FromSeconds(aElapsedTime);
+      }();
+
       PROFILER_MARKER_TEXT(
-          "CSS animation", DOM,
+          aMessage == eAnimationIteration
+              ? ProfilerString8View("CSS animation iteration")
+              : ProfilerString8View("CSS animation"),
+          DOM,
           MarkerOptions(
-              MarkerTiming::Interval(
-                  aScheduledEventTimeStamp -
-                      TimeDuration::FromSeconds(aElapsedTime),
-                  aScheduledEventTimeStamp),
+              MarkerTiming::Interval(startTime, aScheduledEventTimeStamp),
               aAnimation->GetOwner()
                   ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
                   : MarkerInnerWindowId::NoId()),
@@ -91,7 +105,7 @@ struct AnimationEventInfo {
 
     if ((aMessage == eTransitionEnd || aMessage == eTransitionCancel) &&
         profiler_thread_is_being_profiled_for_markers()) {
-      nsCString markerText;
+      nsAutoCString markerText;
       markerText.Assign(nsCSSProps::GetStringValue(aProperty));
       if (aMessage == eTransitionCancel) {
         markerText.AppendLiteral(" (canceled)");

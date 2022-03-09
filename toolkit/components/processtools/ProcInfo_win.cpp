@@ -57,7 +57,6 @@ int GetCycleTimeFrequencyMHz() {
 }
 
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
-  FILETIME createTime, exitTime, kernelTime, userTime;
   int frequencyInMHz = GetCycleTimeFrequencyMHz();
   if (frequencyInMHz) {
     uint64_t cpuCycleCount;
@@ -70,6 +69,7 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
     return NS_OK;
   }
 
+  FILETIME createTime, exitTime, kernelTime, userTime;
   if (!GetProcessTimes(::GetCurrentProcess(), &createTime, &exitTime,
                        &kernelTime, &userTime)) {
     return NS_ERROR_FAILURE;

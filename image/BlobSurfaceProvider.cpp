@@ -163,7 +163,7 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
 
             for (auto& scaled : aScaledFonts) {
               Maybe<wr::FontInstanceKey> key =
-                  wrBridge->GetFontKeyForScaledFont(scaled, &aResources);
+                  wrBridge->GetFontKeyForScaledFont(scaled, aResources);
               if (key.isNothing()) {
                 validFonts = false;
                 break;

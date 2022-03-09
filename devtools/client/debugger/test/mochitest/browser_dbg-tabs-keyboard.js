@@ -4,11 +4,17 @@
 
 // Tests removing tabs with keyboard shortcuts
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1", "simple2");
+"use strict";
 
-  await selectSource(dbg, "simple1");
-  await selectSource(dbg, "simple2");
+add_task(async function() {
+  const dbg = await initDebugger(
+    "doc-scripts.html",
+    "simple1.js",
+    "simple2.js"
+  );
+
+  await selectSource(dbg, "simple1.js");
+  await selectSource(dbg, "simple2.js");
   is(countTabs(dbg), 2);
 
   pressKey(dbg, "close");

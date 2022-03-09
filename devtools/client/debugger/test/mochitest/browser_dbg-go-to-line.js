@@ -4,12 +4,14 @@
 
 // Test the "go to line" feature correctly responses to keyboard shortcuts.
 
+"use strict";
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
-  await selectSource(dbg, "long");
-  await waitForSelectedSource(dbg, "long");
+  await selectSource(dbg, "long.js");
+  await waitForSelectedSource(dbg, "long.js");
 
-  info('Test opening');
+  info("Test opening");
   pressKey(dbg, "goToLine");
   assertEnabled(dbg);
   is(
@@ -18,12 +20,12 @@ add_task(async function() {
     "The input area of 'go to line' box is focused"
   );
 
-  info('Test closing by the same keyboard shortcut');
+  info("Test closing by the same keyboard shortcut");
   pressKey(dbg, "goToLine");
   assertDisabled(dbg);
   is(findElement(dbg, "searchField"), null, "The 'go to line' box is closed");
 
-  info('Test closing by escape');
+  info("Test closing by escape");
   pressKey(dbg, "goToLine");
   assertEnabled(dbg);
 
@@ -31,7 +33,7 @@ add_task(async function() {
   assertDisabled(dbg);
   is(findElement(dbg, "searchField"), null, "The 'go to line' box is closed");
 
-  info('Test going to the correct line');
+  info("Test going to the correct line");
   pressKey(dbg, "goToLine");
   await waitForGoToLineBoxFocus(dbg);
   type(dbg, "66");

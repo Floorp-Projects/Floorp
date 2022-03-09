@@ -755,67 +755,63 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
 
 #undef CHILD_DIAGNOSTIC_ASSERT
 
-void TransportSecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
+void TransportSecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   MutexAutoLock guard(mMutex);
 
   int32_t errorCode = static_cast<int32_t>(mErrorCode);
 
-  WriteParam(aMsg, static_cast<uint32_t>(mSecurityState));
-  WriteParam(aMsg, errorCode);
-  WriteParam(aMsg, mServerCert);
-  WriteParam(aMsg, mCipherSuite);
-  WriteParam(aMsg, mProtocolVersion);
-  WriteParam(aMsg, static_cast<bool>(mIsDomainMismatch));
-  WriteParam(aMsg, static_cast<bool>(mIsNotValidAtThisTime));
-  WriteParam(aMsg, static_cast<bool>(mIsUntrusted));
-  WriteParam(aMsg, static_cast<bool>(mIsEV));
-  WriteParam(aMsg, static_cast<bool>(mHasIsEVStatus));
-  WriteParam(aMsg, static_cast<bool>(mHaveCipherSuiteAndProtocol));
-  WriteParam(aMsg, static_cast<bool>(mHaveCertErrorBits));
-  WriteParam(aMsg, mCertificateTransparencyStatus);
-  WriteParam(aMsg, mKeaGroup);
-  WriteParam(aMsg, mSignatureSchemeName);
-  WriteParam(aMsg, mSucceededCertChain);
-  WriteParam(aMsg, mFailedCertChain);
-  WriteParam(aMsg, mIsDelegatedCredential);
-  WriteParam(aMsg, mNPNCompleted);
-  WriteParam(aMsg, mNegotiatedNPN);
-  WriteParam(aMsg, mResumed);
-  WriteParam(aMsg, mIsBuiltCertChainRootBuiltInRoot);
-  WriteParam(aMsg, mIsAcceptedEch);
-  WriteParam(aMsg, mPeerId);
+  WriteParam(aWriter, static_cast<uint32_t>(mSecurityState));
+  WriteParam(aWriter, errorCode);
+  WriteParam(aWriter, mServerCert);
+  WriteParam(aWriter, mCipherSuite);
+  WriteParam(aWriter, mProtocolVersion);
+  WriteParam(aWriter, static_cast<bool>(mIsDomainMismatch));
+  WriteParam(aWriter, static_cast<bool>(mIsNotValidAtThisTime));
+  WriteParam(aWriter, static_cast<bool>(mIsUntrusted));
+  WriteParam(aWriter, static_cast<bool>(mIsEV));
+  WriteParam(aWriter, static_cast<bool>(mHasIsEVStatus));
+  WriteParam(aWriter, static_cast<bool>(mHaveCipherSuiteAndProtocol));
+  WriteParam(aWriter, static_cast<bool>(mHaveCertErrorBits));
+  WriteParam(aWriter, mCertificateTransparencyStatus);
+  WriteParam(aWriter, mKeaGroup);
+  WriteParam(aWriter, mSignatureSchemeName);
+  WriteParam(aWriter, mSucceededCertChain);
+  WriteParam(aWriter, mFailedCertChain);
+  WriteParam(aWriter, mIsDelegatedCredential);
+  WriteParam(aWriter, mNPNCompleted);
+  WriteParam(aWriter, mNegotiatedNPN);
+  WriteParam(aWriter, mResumed);
+  WriteParam(aWriter, mIsBuiltCertChainRootBuiltInRoot);
+  WriteParam(aWriter, mIsAcceptedEch);
+  WriteParam(aWriter, mPeerId);
 }
 
-bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
-                                               PickleIterator* aIter) {
+bool TransportSecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
   MutexAutoLock guard(mMutex);
 
   int32_t errorCode = 0;
 
-  if (!ReadParamAtomicHelper(aMsg, aIter, mSecurityState) ||
-      !ReadParam(aMsg, aIter, &errorCode) ||
-      !ReadParam(aMsg, aIter, &mServerCert) ||
-      !ReadParam(aMsg, aIter, &mCipherSuite) ||
-      !ReadParam(aMsg, aIter, &mProtocolVersion) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mIsDomainMismatch) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mIsNotValidAtThisTime) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mIsUntrusted) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mIsEV) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mHasIsEVStatus) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mHaveCipherSuiteAndProtocol) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mHaveCertErrorBits) ||
-      !ReadParam(aMsg, aIter, &mCertificateTransparencyStatus) ||
-      !ReadParam(aMsg, aIter, &mKeaGroup) ||
-      !ReadParam(aMsg, aIter, &mSignatureSchemeName) ||
-      !ReadParam(aMsg, aIter, &mSucceededCertChain) ||
-      !ReadParam(aMsg, aIter, &mFailedCertChain) ||
-      !ReadParam(aMsg, aIter, &mIsDelegatedCredential) ||
-      !ReadParam(aMsg, aIter, &mNPNCompleted) ||
-      !ReadParam(aMsg, aIter, &mNegotiatedNPN) ||
-      !ReadParam(aMsg, aIter, &mResumed) ||
-      !ReadParam(aMsg, aIter, &mIsBuiltCertChainRootBuiltInRoot) ||
-      !ReadParam(aMsg, aIter, &mIsAcceptedEch) ||
-      !ReadParam(aMsg, aIter, &mPeerId)) {
+  if (!ReadParamAtomicHelper(aReader, mSecurityState) ||
+      !ReadParam(aReader, &errorCode) || !ReadParam(aReader, &mServerCert) ||
+      !ReadParam(aReader, &mCipherSuite) ||
+      !ReadParam(aReader, &mProtocolVersion) ||
+      !ReadParamAtomicHelper(aReader, mIsDomainMismatch) ||
+      !ReadParamAtomicHelper(aReader, mIsNotValidAtThisTime) ||
+      !ReadParamAtomicHelper(aReader, mIsUntrusted) ||
+      !ReadParamAtomicHelper(aReader, mIsEV) ||
+      !ReadParamAtomicHelper(aReader, mHasIsEVStatus) ||
+      !ReadParamAtomicHelper(aReader, mHaveCipherSuiteAndProtocol) ||
+      !ReadParamAtomicHelper(aReader, mHaveCertErrorBits) ||
+      !ReadParam(aReader, &mCertificateTransparencyStatus) ||
+      !ReadParam(aReader, &mKeaGroup) ||
+      !ReadParam(aReader, &mSignatureSchemeName) ||
+      !ReadParam(aReader, &mSucceededCertChain) ||
+      !ReadParam(aReader, &mFailedCertChain) ||
+      !ReadParam(aReader, &mIsDelegatedCredential) ||
+      !ReadParam(aReader, &mNPNCompleted) ||
+      !ReadParam(aReader, &mNegotiatedNPN) || !ReadParam(aReader, &mResumed) ||
+      !ReadParam(aReader, &mIsBuiltCertChainRootBuiltInRoot) ||
+      !ReadParam(aReader, &mIsAcceptedEch) || !ReadParam(aReader, &mPeerId)) {
     return false;
   }
 

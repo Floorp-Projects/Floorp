@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared/downloads/downloads.inc.css
+@import "chrome://browser/skin/downloads/downloads.inc.css";
 
 /*** List items and similar elements in the summary ***/
 
@@ -11,10 +11,4 @@
   --downloads-item-font-size-factor: 0.9;
   --downloads-item-details-opacity: 0.6;
   --downloads-item-disabled-opacity: 0.6;
-}
-
-#downloadsPanel[keyfocus] :is(#downloadsListBox:focus > richlistitem[selected], #downloadsSummary:focus),
-.downloadButton:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
 }

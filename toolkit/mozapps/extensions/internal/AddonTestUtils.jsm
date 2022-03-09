@@ -21,11 +21,9 @@ const { FileUtils } = ChromeUtils.import(
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
@@ -136,80 +134,6 @@ var MockAsyncShutdown = {
 };
 
 AMscope.AsyncShutdown = MockAsyncShutdown;
-
-class MockBlocklist {
-  constructor(addons) {
-    if (ChromeUtils.getClassName(addons) === "Object") {
-      addons = new Map(Object.entries(addons));
-    }
-    this.addons = addons;
-    this.wrappedJSObject = this;
-
-    // Copy blocklist constants.
-    for (let [k, v] of Object.entries(Ci.nsIBlocklistService)) {
-      if (typeof v === "number") {
-        this[k] = v;
-      }
-    }
-
-    this._xpidb = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIDatabase.jsm",
-      null
-    );
-  }
-
-  get contractID() {
-    return "@mozilla.org/extensions/blocklist;1";
-  }
-
-  _reLazifyService() {
-    XPCOMUtils.defineLazyServiceGetter(Services, "blocklist", this.contractID);
-    ChromeUtils.defineModuleGetter(
-      this._xpidb,
-      "Blocklist",
-      "resource://gre/modules/Blocklist.jsm"
-    );
-  }
-
-  register() {
-    this.originalCID = MockRegistrar.register(this.contractID, this);
-    this._reLazifyService();
-    this._xpidb.Blocklist = this;
-  }
-
-  unregister() {
-    MockRegistrar.unregister(this.originalCID);
-    this._reLazifyService();
-  }
-
-  async getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    await new Promise(r => setTimeout(r, 150));
-    return (
-      this.addons.get(addon.id) || Ci.nsIBlocklistService.STATE_NOT_BLOCKED
-    );
-  }
-
-  async getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
-    let state = await this.getAddonBlocklistState(
-      addon,
-      appVersion,
-      toolkitVersion
-    );
-    if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
-      return {
-        state,
-        url: "http://example.com/",
-      };
-    }
-    return null;
-  }
-
-  recordAddonBlockChangeTelemetry(addon, reason) {}
-}
-
-MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI([
-  "nsIBlocklistService",
-]);
 
 class AddonsList {
   constructor(file) {
@@ -720,22 +644,6 @@ var AddonTestUtils = {
   },
 
   /**
-   * Overrides the blocklist service, and returns the given blocklist
-   * states for the given add-ons.
-   *
-   * @param {object|Map} addons
-   *        A mapping of add-on IDs to their blocklist states.
-   * @returns {MockBlocklist}
-   *        A mock blocklist service, which should be unregistered when
-   *        the test is complete.
-   */
-  overrideBlocklist(addons) {
-    let mock = new MockBlocklist(addons);
-    mock.register();
-    return mock;
-  },
-
-  /**
    * Load the data from the specified files into the *real* blocklist providers.
    * Loads using loadBlocklistRawData, which will treat this as an update.
    *
@@ -765,9 +673,7 @@ var AddonTestUtils = {
 
   /**
    * Load the following data into the *real* blocklist providers.
-   * While `overrideBlocklist` replaces the blocklist entirely with a mock
-   * that returns dummy data, this method instead loads data into the actual
-   * blocklist, fires update methods as would happen if this data came from
+   * Fires update methods as would happen if this data came from
    * an actual blocklist update, etc.
    *
    * @param {object} data
@@ -834,27 +740,36 @@ var AddonTestUtils = {
   /**
    * Starts up the add-on manager as if it was started by the application.
    *
-   * @param {string} [newVersion]
+   * @param {Object} params
+   *        The new params are in an object and new code should use that.
+   * @param {boolean} params.earlyStartup
+   *        Notifies early startup phase. default is true
+   * @param {boolean} params.lateStartup
+   *        Notifies late startup phase which ensures addons are started or
+   *        listeners are primed. default is true
+   * @param {boolean} params.newVersion
    *        If provided, the application version is changed to this string
    *        before the AddonManager is started.
-   * @param {string} [newPlatformVersion]
-   *        If provided, the platform version is changed to this string
-   *        before the AddonManager is started.  It will default to the appVersion
-   *        as that is how Firefox currently builds (app === platform).
    */
-  async promiseStartupManager(newVersion, newPlatformVersion = newVersion) {
+  async promiseStartupManager(params) {
     if (this.addonIntegrationService) {
       throw new Error(
         "Attempting to startup manager that was already started."
       );
     }
+    // Support old arguments
+    if (typeof params != "object") {
+      params = {
+        newVersion: arguments[0],
+      };
+    }
+    let { earlyStartup = true, lateStartup = true, newVersion } = params;
+
+    lateStartup = earlyStartup && lateStartup;
 
     if (newVersion) {
       this.appInfo.version = newVersion;
-    }
-
-    if (newPlatformVersion) {
-      this.appInfo.platformVersion = newPlatformVersion;
+      this.appInfo.platformVersion = newVersion;
     }
 
     // AddonListeners are removed when the addonManager is shutdown,
@@ -907,6 +822,12 @@ var AddonTestUtils = {
         addon => addon.startupPromise
       )
     );
+    if (earlyStartup) {
+      ExtensionTestCommon.notifyEarlyStartup();
+    }
+    if (lateStartup) {
+      ExtensionTestCommon.notifyLateStartup();
+    }
   },
 
   async promiseShutdownManager({
@@ -986,6 +907,8 @@ var AddonTestUtils = {
       "resource://gre/modules/addons/XPIProvider.jsm"
     );
 
+    ExtensionTestCommon.resetStartupPromises();
+
     if (shutdownError) {
       throw shutdownError;
     }
@@ -998,13 +921,34 @@ var AddonTestUtils = {
    * simulate an application upgrade (or downgrade) where the version
    * is changed to newVersion when re-started.
    *
-   * @param {string} [newVersion]
-   *        If provided, the application version is changed to this string
-   *        after the AddonManager is shut down, before it is re-started.
+   * @param {Object} params
+   *        The new params are in an object and new code should use that.
+   *        See promiseStartupManager for param details.
    */
-  async promiseRestartManager(newVersion) {
+  async promiseRestartManager(params) {
     await this.promiseShutdownManager({ clearOverrides: false });
-    await this.promiseStartupManager(newVersion);
+    await this.promiseStartupManager(params);
+  },
+
+  /**
+   * If promiseStartupManager is called with earlyStartup: false, then
+   * use this to notify early startup.
+   *
+   * @returns {Promise} resolves when notification is complete
+   */
+  notifyEarlyStartup() {
+    return ExtensionTestCommon.notifyEarlyStartup();
+  },
+
+  /**
+   * If promiseStartupManager is called with lateStartup: false, then
+   * use this to notify late startup.  You should also call early startup
+   * if necessary.
+   *
+   * @returns {Promise} resolves when notification is complete
+   */
+  notifyLateStartup() {
+    return ExtensionTestCommon.notifyLateStartup();
   },
 
   async loadAddonsList(flush = false) {
@@ -1745,10 +1689,14 @@ var AddonTestUtils = {
    * @param {Object} expectedInstallInfo
    *        The expected installTelemetryInfo properties
    *        (every property can be a primitive value or a regular expression).
+   * @param {string} [msg]
+   *        Optional assertion message suffix.
    */
-  checkInstallInfo(addonOrInstall, expectedInstallInfo) {
+  checkInstallInfo(addonOrInstall, expectedInstallInfo, msg = undefined) {
     const installInfo = addonOrInstall.installTelemetryInfo;
     const { Assert } = this.testScope;
+
+    msg = msg ? ` ${msg}` : "";
 
     for (const key of Object.keys(expectedInstallInfo)) {
       const actual = installInfo[key];
@@ -1758,10 +1706,14 @@ var AddonTestUtils = {
       if (expected && typeof expected.test == "function") {
         Assert.ok(
           expected.test(actual),
-          `${key} value "${actual}" has the value expected: "${expected}"`
+          `${key} value "${actual}" has the value expected "${expected}"${msg}`
         );
       } else {
-        Assert.deepEqual(actual, expected, `Got the expected value for ${key}`);
+        Assert.deepEqual(
+          actual,
+          expected,
+          `Got the expected value for ${key}${msg}`
+        );
       }
     }
   },

@@ -72,19 +72,27 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
    */
   @Override // IProcessManager
   public ISurfaceAllocator getSurfaceAllocator() {
-    final GeckoResult<Boolean> gpuReady = GeckoAppShell.ensureGpuProcessReady();
+    final GeckoResult<Boolean> gpuEnabled = GeckoAppShell.isGpuProcessEnabled();
 
     try {
       final GeckoResult<ISurfaceAllocator> allocator = new GeckoResult<>();
-      if (gpuReady.poll(1000)) {
-        // The GPU process is enabled and ready, so ask it for its surface allocator.
+      if (gpuEnabled.poll(1000)) {
+        // The GPU process is enabled, so look it up and ask it for its surface allocator.
         XPCOMEventTarget.runOnLauncherThread(
             () -> {
               final Selector selector = new Selector(GeckoProcessType.GPU);
               final GpuProcessConnection conn =
                   (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
-
-              allocator.complete(conn.getSurfaceAllocator());
+              if (conn != null) {
+                allocator.complete(conn.getSurfaceAllocator());
+              } else {
+                // If we cannot find a GPU process, it has probably been killed and not yet
+                // restarted. Return null here, and allow the caller to try again later.
+                // We definitely do *not* want to return the parent process allocator instead, as
+                // that will result in surfaces being allocated in the parent process, which
+                // therefore won't be usable when the GPU process is eventually launched.
+                allocator.complete(null);
+              }
             });
       } else {
         // The GPU process is disabled, so return the parent process allocator instance.
@@ -102,6 +110,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     final Selector selector = new Selector(GeckoProcessType.GPU);
     final GpuProcessConnection conn =
         (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
+    if (conn == null) {
+      return null;
+    }
     return conn.getCompositorSurfaceManager();
   }
 
@@ -307,7 +318,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     protected void onAppBackground() {
-      setPriorityLevel(PriorityLevel.BACKGROUND);
+      setPriorityLevel(PriorityLevel.IDLE);
     }
   }
 

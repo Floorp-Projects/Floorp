@@ -12,7 +12,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace psm {
 
-[RefCounted] sync protocol PIPCClientCerts
+sync protocol PIPCClientCerts
 {
   manager PBackground;
 

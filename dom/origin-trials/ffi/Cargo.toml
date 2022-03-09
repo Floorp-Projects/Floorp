@@ -1,0 +1,14 @@
+[package]
+name = "origin-trials-ffi"
+version = "0.1.0"
+edition = "2021"
+authors = [
+  "Emilio Cobos Álvarez <emilio@crisal.io>",
+]
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+origin-trial-token = "0.1"

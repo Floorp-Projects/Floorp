@@ -7,8 +7,7 @@
 <body>
 test1: clicking data: URI tries to navigate window<br/>
 <!-- postMessage will not be sent if data: URI is blocked -->
-<a id="testlink" href="data:text/html,<body><script
-window.opener.postMessage('test1','*');</script>toplevel data: URI navigations
+<a id="testlink" href="data:text/html,<body>toplevel data: URI navigations
 should be blocked</body>">click me</a>
 <script>
   document.getElementById('testlink').click();

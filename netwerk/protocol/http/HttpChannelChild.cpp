@@ -84,6 +84,7 @@ HttpChannelChild::HttpChannelChild()
       mKeptAlive(false),
       mIPCActorDeleted(false),
       mSuspendSent(false),
+      mIsFirstPartOfMultiPart(false),
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
@@ -460,6 +461,7 @@ void HttpChannelChild::OnStartRequest(
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
 
   mMultiPartID = aArgs.multiPartID();
+  mIsFirstPartOfMultiPart = aArgs.isFirstPartOfMultiPart();
   mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
 
   if (aArgs.overrideReferrerInfo()) {
@@ -2690,6 +2692,15 @@ HttpChannelChild::GetPartID(uint32_t* aPartID) {
 }
 
 NS_IMETHODIMP
+HttpChannelChild::GetIsFirstPart(bool* aIsFirstPart) {
+  if (!mMultiPartID) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsFirstPart = mIsFirstPartOfMultiPart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelChild::GetIsLastPart(bool* aIsLastPart) {
   if (!mMultiPartID) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2708,7 +2719,6 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
        aNewTarget));
 
   MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
-  MOZ_ASSERT(!mODATarget);
   MOZ_ASSERT(aNewTarget);
 
   NS_ENSURE_ARG(aNewTarget);
@@ -2746,6 +2756,7 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
   {
     MutexAutoLock lock(mEventTargetMutex);
+    MOZ_ASSERT(!mODATarget);
     mODATarget = aNewTarget;
   }
 
@@ -3016,7 +3027,11 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
     return;
   }
 
-  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild;
+  RefPtr<HttpBackgroundChannelChild> bgChild;
+  {
+    MutexAutoLock lock(mBgChildMutex);
+    bgChild = mBgChild;
+  }
   SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [bgChild]() {

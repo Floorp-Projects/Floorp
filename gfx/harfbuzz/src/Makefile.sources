@@ -25,6 +25,7 @@ HB_BASE_sources = \
 	hb-blob.cc \
 	hb-blob.hh \
 	hb-buffer-serialize.cc \
+	hb-buffer-verify.cc \
 	hb-buffer.cc \
 	hb-buffer.hh \
 	hb-cache.hh \
@@ -50,7 +51,6 @@ HB_BASE_sources = \
 	hb-map.cc \
 	hb-map.hh \
 	hb-meta.hh \
-	hb-ms-feature-ranges.cc \
 	hb-ms-feature-ranges.hh \
 	hb-mutex.hh \
 	hb-null.hh \

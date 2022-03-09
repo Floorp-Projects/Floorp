@@ -4,7 +4,6 @@
 
 import getMatches from "./get-matches";
 import { findSourceMatches } from "./project-search";
-import { workerUtils } from "devtools-utils";
-const { workerHandler } = workerUtils;
+import { workerHandler } from "devtools/client/shared/worker-utils";
 
 self.onmessage = workerHandler({ getMatches, findSourceMatches });

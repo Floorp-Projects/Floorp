@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1756118
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1756118: A removed ResizeObserver shouldn't keep the refresh driver ticking</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1756118">Mozilla Bug 1756118</a>
+<div id="display">
+  <div id="resizeMe"></div>
+</div>
+<pre id="test">
+<script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("need to allow time to pass so that we can " +
+                               "detect unwanted extra refresh driver ticks");
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+async function addAndRemoveResizeObserver(shouldResizeTarget) {
+  // Register a resize observer:
+  let ro = new ResizeObserver(function() { info("ResizeObserver callback"); });
+  ro.observe(resizeMe);
+
+  // double-rAF to flush pending paints:
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+
+  ok(gUtils.refreshDriverHasPendingTick,
+     "Expecting refresh driver to be ticking, with ResizeObserver registered");
+
+  // Unregister resize observer:
+  ro.unobserve(resizeMe);
+
+  // double-rAF to flush pending paints:
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+
+  // ...and importantly: make one additional change to the document.
+  // This causes a refresh driver tick, which in buggy builds causes
+  // the refresh driver to keep ticking indefinitely.  (In buggy builds, this
+  // bonus tick notifies our ResizeObserverController, and it never unregisters
+  // and hence keeps the refresh driver ticking from that point on.)
+  resizeMe.style.height = "100px";
+}
+
+async function expectTicksToStop() {
+  let didStopTicking = false;
+  // Note: The maximum loop count here is an arbitrary large value, just to let
+  // us gracefully handle edge cases where multiple setTimeouts resolve before
+  // a pending refresh driver tick.  Really, we just want to be sure the refresh
+  // driver *eventually* stops ticking, and we can do so gracefully by polling
+  // with some generous-but-finite number of checks here.
+  for (var i = 0; i < 100; i++) {
+    await new Promise(r => setTimeout(r, 8));
+    if(!gUtils.refreshDriverHasPendingTick) {
+      didStopTicking = true;
+      break;
+    }
+  }
+  ok(didStopTicking, "refresh driver should have eventually stopped ticking");
+}
+
+async function run() {
+  // By default, the refresh driver ticks on its own for some period of time
+  // after pageload.  Turn that off so we don't have to wait it out:
+  await SpecialPowers.pushPrefEnv({'set':
+                                   [['layout.keep_ticking_after_load_ms', 0]]});
+
+  // Start out with a double-rAF, to flush paints from pageload:
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+
+  await addAndRemoveResizeObserver(true);
+  await expectTicksToStop();
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -229,6 +229,15 @@ Status DoColorSpaceTransform(void* cms_data, const size_t thread,
     }
     xform_src = mutable_xform_src;
   }
+#else
+  if (t->channels_src == 4 && !t->skip_lcms) {
+    // LCMS does CMYK in a weird way: 0 = white, 100 = max ink
+    float* mutable_xform_src = t->buf_src.Row(thread);
+    for (size_t x = 0; x < xsize * 4; ++x) {
+      mutable_xform_src[x] = 100.f - 100.f * mutable_xform_src[x];
+    }
+    xform_src = mutable_xform_src;
+  }
 #endif
 
 #if JXL_CMS_VERBOSE >= 2
@@ -244,10 +253,13 @@ Status DoColorSpaceTransform(void* cms_data, const size_t thread,
     }  // else: in-place, no need to copy
   } else {
 #if JPEGXL_ENABLE_SKCMS
-    JXL_CHECK(skcms_Transform(
-        xform_src, skcms_PixelFormat_RGB_fff, skcms_AlphaFormat_Opaque,
-        &t->profile_src, buf_dst, skcms_PixelFormat_RGB_fff,
-        skcms_AlphaFormat_Opaque, &t->profile_dst, xsize));
+    JXL_CHECK(
+        skcms_Transform(xform_src,
+                        (t->channels_src == 4 ? skcms_PixelFormat_RGBA_ffff
+                                              : skcms_PixelFormat_RGB_fff),
+                        skcms_AlphaFormat_Opaque, &t->profile_src, buf_dst,
+                        skcms_PixelFormat_RGB_fff, skcms_AlphaFormat_Opaque,
+                        &t->profile_dst, xsize));
 #else   // JPEGXL_ENABLE_SKCMS
     cmsDoTransform(t->lcms_transform, xform_src, buf_dst,
                    static_cast<cmsUInt32Number>(xsize));
@@ -396,6 +408,9 @@ Status DecodeProfile(const cmsContext context, const PaddedBytes& icc,
 ColorSpace ColorSpaceFromProfile(const skcms_ICCProfile& profile) {
   switch (profile.data_color_space) {
     case skcms_Signature_RGB:
+    case skcms_Signature_CMYK:
+      // spec says CMYK is encoded as RGB (the kBlack extra channel signals that
+      // it is actually CMYK)
       return ColorSpace::kRGB;
     case skcms_Signature_Gray:
       return ColorSpace::kGray;
@@ -518,7 +533,8 @@ void DetectTransferFunction(const skcms_ICCProfile& profile,
 
 #else  // JPEGXL_ENABLE_SKCMS
 
-uint32_t Type32(const ColorEncoding& c) {
+uint32_t Type32(const ColorEncoding& c, bool cmyk) {
+  if (cmyk) return TYPE_CMYK_FLT;
   if (c.IsGray()) return TYPE_GRAY_FLT;
   return TYPE_RGB_FLT;
 }
@@ -531,6 +547,7 @@ uint32_t Type64(const ColorEncoding& c) {
 ColorSpace ColorSpaceFromProfile(const Profile& profile) {
   switch (cmsGetColorSpace(profile.get())) {
     case cmsSigRgbData:
+    case cmsSigCmykData:
       return ColorSpace::kRGB;
     case cmsSigGrayData:
       return ColorSpace::kGray;
@@ -826,6 +843,7 @@ Status ColorEncoding::SetFieldsFromICC() {
   }
 
   SetColorSpace(ColorSpaceFromProfile(profile));
+  cmyk_ = (profile.data_color_space == skcms_Signature_CMYK);
 
   CIExy wp_unadapted;
   JXL_RETURN_IF_ERROR(UnadaptedWhitePoint(profile, &wp_unadapted));
@@ -838,7 +856,7 @@ Status ColorEncoding::SetFieldsFromICC() {
   DetectTransferFunction(profile, this);
   // ICC and RenderingIntent have the same values (0..3).
   rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
-#else   // JPEGXL_ENABLE_SKCMS
+#else  // JPEGXL_ENABLE_SKCMS
 
   std::lock_guard<std::mutex> guard(LcmsMutex());
   const cmsContext context = GetContext();
@@ -851,8 +869,14 @@ Status ColorEncoding::SetFieldsFromICC() {
   if (rendering_intent32 > 3) {
     return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
   }
+  // ICC and RenderingIntent have the same values (0..3).
+  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 
   SetColorSpace(ColorSpaceFromProfile(profile));
+  if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) {
+    cmyk_ = true;
+    return true;
+  }
 
   const cmsCIEXYZ wp_unadapted = UnadaptedWhitePoint(context, profile, *this);
   JXL_RETURN_IF_ERROR(SetWhitePoint(CIExyFromXYZ(wp_unadapted)));
@@ -863,8 +887,6 @@ Status ColorEncoding::SetFieldsFromICC() {
   // Relies on color_space/white point/primaries being set already.
   DetectTransferFunction(context, profile, this);
 
-  // ICC and RenderingIntent have the same values (0..3).
-  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 #endif  // JPEGXL_ENABLE_SKCMS
 
   return true;
@@ -882,6 +904,7 @@ void ColorEncoding::DecideIfWantICC() {
   const cmsContext context = GetContext();
   Profile profile;
   if (!DecodeProfile(context, ICC(), &profile)) return;
+  if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) return;
   if (!MaybeCreateProfile(*this, &icc_new)) return;
   equivalent = ProfileEquivalentToICC(context, profile, icc_new, *this);
 #endif  // JPEGXL_ENABLE_SKCMS
@@ -1071,9 +1094,10 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #endif  // JPEGXL_ENABLE_SKCMS
 
   // Not including alpha channel (copied separately).
-  const size_t channels_src = c_src.Channels();
+  const size_t channels_src = (c_src.IsCMYK() ? 4 : c_src.Channels());
   const size_t channels_dst = c_dst.Channels();
-  JXL_CHECK(channels_src == channels_dst);
+  JXL_CHECK(channels_src == channels_dst ||
+            (channels_src == 4 && channels_dst == 3));
 #if JXL_CMS_VERBOSE
   printf("Channels: %" PRIuS "; Threads: %" PRIuS "\n", channels_src,
          num_threads);
@@ -1081,8 +1105,8 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 
 #if !JPEGXL_ENABLE_SKCMS
   // Type includes color space (XYZ vs RGB), so can be different.
-  const uint32_t type_src = Type32(c_src);
-  const uint32_t type_dst = Type32(c_dst);
+  const uint32_t type_src = Type32(c_src, channels_src == 4);
+  const uint32_t type_dst = Type32(c_dst, false);
   const uint32_t intent = static_cast<uint32_t>(c_dst.rendering_intent);
   // Use cmsFLAGS_NOCACHE to disable the 1-pixel cache and make calling
   // cmsDoTransform() thread-safe.
@@ -1110,7 +1134,7 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #if JPEGXL_ENABLE_SKCMS
   // SkiaCMS doesn't support grayscale float buffers, so we create space for RGB
   // float buffers anyway.
-  t->buf_src = ImageF(xsize * 3, num_threads);
+  t->buf_src = ImageF(xsize * (channels_src == 4 ? 4 : 3), num_threads);
   t->buf_dst = ImageF(xsize * 3, num_threads);
 #else
   t->buf_src = ImageF(xsize * channels_src, num_threads);

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared/customizableui/panelUI.inc.css
+@import "chrome://browser/skin/customizableui/panelUI.inc.css";
 
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
@@ -64,7 +64,7 @@
 }
 
 /* Add border-radius on Windows 7 */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-platform: windows-win7) {
   #BMB_bookmarksPopup menupopup::part(content) {
     border-radius: 3.5px;
   }

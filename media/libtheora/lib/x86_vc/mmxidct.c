@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: mmxidct.c 17446 2010-09-23 20:06:20Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -339,22 +339,19 @@ static void oc_idct8x8_slow(ogg_int16_t _y[64],ogg_int16_t _x[64]){
 #undef  Y
 #undef  X
   }
-  if(_x!=_y){
-    int i;
-    __asm pxor mm0,mm0;
-    for(i=0;i<4;i++){
-      ogg_int16_t *x;
-      x=_x+16*i;
+  __asm pxor mm0,mm0;
+  for(i=0;i<4;i++){
+    ogg_int16_t *x;
+    x=_x+16*i;
 #define X ecx
-      __asm{
-        mov X,x
-        movq [X+0x00],mm0
-        movq [X+0x08],mm0
-        movq [X+0x10],mm0
-        movq [X+0x18],mm0
-      }
-#undef  X
+    __asm{
+      mov X,x
+      movq [X+0x00],mm0
+      movq [X+0x08],mm0
+      movq [X+0x10],mm0
+      movq [X+0x18],mm0
     }
+#undef  X
   }
 }
 
@@ -547,18 +544,16 @@ static void oc_idct8x8_10(ogg_int16_t _y[64],ogg_int16_t _x[64]){
 #undef  Y
 #undef  X
   }
-  if(_x!=_y){
 #define X ecx
-    __asm{
-      pxor mm0,mm0;
-      mov X,_x
-      movq [X+0x00],mm0
-      movq [X+0x10],mm0
-      movq [X+0x20],mm0
-      movq [X+0x30],mm0
-    }
-#undef  X
+  __asm{
+    pxor mm0,mm0;
+    mov X,_x
+    movq [X+0x00],mm0
+    movq [X+0x10],mm0
+    movq [X+0x20],mm0
+    movq [X+0x30],mm0
   }
+#undef  X
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.

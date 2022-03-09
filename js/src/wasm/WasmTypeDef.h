@@ -134,6 +134,15 @@ class FuncType {
   bool canHaveJitEntry() const;
   bool canHaveJitExit() const;
 
+  bool hasInt64Arg() const {
+    for (ValType arg : args()) {
+      if (arg.kind() == ValType::Kind::I64) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool hasUnexposableArgOrRet() const {
     for (ValType arg : args()) {
       if (!arg.isExposable()) {
@@ -829,7 +838,7 @@ class TypeIdDesc {
 
   bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
 
-  size_t immediate() const {
+  uint32_t immediate() const {
     MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
     return bits_;
   }

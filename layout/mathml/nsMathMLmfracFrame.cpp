@@ -15,6 +15,7 @@
 #include "nsPresContext.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/MathMLElement.h"
 #include <algorithm>
 #include "gfxMathTable.h"

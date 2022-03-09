@@ -165,6 +165,9 @@
 #elif defined __aarch64__ || defined _M_ARM64
 #  define RETURN_INSTR 0xd65f03c0 /* ret */
 
+#elif defined __loongarch64
+#  define RETURN_INSTR 0x4c000020 /* jirl zero, ra, 0 */
+
 #elif defined __ia64
 struct ia64_instr {
   uint32_t mI[4];

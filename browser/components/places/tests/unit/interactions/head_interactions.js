@@ -8,6 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Interactions: "resource:///modules/Interactions.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -297,37 +299,50 @@ async function assertSnapshots(expected, options) {
  *   The expected snapshot group.
  */
 function assertSnapshotGroup(group, expected) {
-  if (expected.title != null) {
-    Assert.equal(group.title, expected.title, "Should have the expected title");
+  for (let [p, v] of Object.entries(expected)) {
+    let comparator = Assert.equal.bind(Assert);
+    if (v && typeof v == "object") {
+      comparator = Assert.deepEqual.bind(Assert);
+    }
+    comparator(group[p], v, `Should have the expected ${p} value`);
   }
-  if (expected.builder != null) {
-    Assert.equal(
-      group.builder,
-      expected.builder,
-      "Should have the expected builder"
-    );
+}
+
+/**
+ * Asserts that the list of snapshot groups match the expected values.
+ *
+ * @param {SnapshotGroup[]} received
+ *   The received snapshots.
+ * @param {SnapshotGroup[]} expected
+ *   The expected snapshots.
+ */
+async function assertSnapshotGroupList(received, expected) {
+  info(
+    `Found ${received.length} snapshot groups:\n ${JSON.stringify(received)}`
+  );
+  Assert.equal(
+    received.length,
+    expected.length,
+    "Should have the expected number of snapshots"
+  );
+  for (let i = 0; i < expected.length; i++) {
+    assertSnapshotGroup(received[i], expected[i]);
   }
-  if (expected.builderMetadata != null) {
-    Assert.deepEqual(
-      group.builderMetadata,
-      expected.builderMetadata,
-      "Should have the expected builderMetadata"
-    );
-  }
-  if (expected.snapshotCount != null) {
-    Assert.equal(
-      group.snapshotCount,
-      expected.snapshotCount,
-      "Should have the expected snapshotCount"
-    );
-  }
-  if (expected.lastAccessed != null) {
-    Assert.equal(
-      group.lastAccessed,
-      expected.lastAccessed,
-      "Should have the expected lastAccessed value"
-    );
-  }
+}
+
+/**
+ * Given a list of snapshot groups and a list of ids returns the groups in that
+ * order.
+ *
+ * @param {SnapshotGroup[]} list
+ *   The list of groups.
+ * @param {string[]} order
+ *   The ids of groups.
+ * @returns {SnapshotGroup[]} The list of groups in the order expected.
+ */
+function orderedGroups(list, order) {
+  let groups = Object.fromEntries(list.map(g => [g.id, g]));
+  return order.map(id => groups[id]);
 }
 
 /**
@@ -353,10 +368,7 @@ async function assertOverlappingSnapshots(expected, context) {
  *   @see SnapshotSelector.#context.
  */
 async function assertCommonReferrerSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryCommonReferrer(
-    context.url,
-    context.referrerUrl
-  );
+  let snapshots = await Snapshots.queryCommonReferrer(context.url);
 
   await assertSnapshotList(snapshots, expected);
 }
@@ -396,4 +408,17 @@ function assertSnapshotScores(combinedSnapshots, expectedSnapshots) {
       `Should have set the expected score for ${expectedSnapshots[i].url}`
     );
   }
+}
+
+/**
+ * Abstracts getting the right moz-page-thumb url depending on enabled features.
+ * @param {string} url
+ *  The page url to get a screenshot for.
+ * @returns {string} a moz-page-thumb:// url
+ */
+function getPageThumbURL(url) {
+  if (PlacesPreviews.enabled) {
+    return PlacesPreviews.getPageThumbURL(url);
+  }
+  return PageThumbs.getThumbnailURL(url);
 }

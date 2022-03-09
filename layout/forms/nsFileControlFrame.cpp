@@ -34,6 +34,7 @@
 #include "nsLayoutUtils.h"
 #include "nsTextNode.h"
 #include "nsTextFrame.h"
+#include "gfxContext.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

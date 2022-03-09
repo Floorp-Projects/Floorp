@@ -5,26 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BodyStream.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 
 namespace mozilla::dom {
 
 // UnderlyingSourceStartCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(UnderlyingSourceStartCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(UnderlyingSourceStartCallbackHelper)
-  tmp->mThisObj.set(nullptr);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(UnderlyingSourceStartCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSourceStartCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mThisObj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSourceStartCallbackHelper,
+                                         (mCallback), (mThisObj))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSourceStartCallbackHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSourceStartCallbackHelper)
@@ -45,23 +34,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSourcePullCallbackHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 // IDLUnderlyingSourcePullCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDLUnderlyingSourcePullCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    IDLUnderlyingSourcePullCallbackHelper, UnderlyingSourcePullCallbackHelper)
-  tmp->mThisObj.set(nullptr);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    IDLUnderlyingSourcePullCallbackHelper, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(
-    IDLUnderlyingSourcePullCallbackHelper, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mThisObj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(
+    IDLUnderlyingSourcePullCallbackHelper, UnderlyingSourcePullCallbackHelper,
+    (mCallback), (mThisObj))
 
 NS_IMPL_ADDREF_INHERITED(IDLUnderlyingSourcePullCallbackHelper,
                          UnderlyingSourcePullCallbackHelper)
@@ -96,26 +71,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSourceCancelCallbackHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 // IDLUnderlyingSourceCancelCallbackHelper
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDLUnderlyingSourceCancelCallbackHelper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(
     IDLUnderlyingSourceCancelCallbackHelper,
-    UnderlyingSourceCancelCallbackHelper)
-  tmp->mThisObj.set(nullptr);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    IDLUnderlyingSourceCancelCallbackHelper,
-    UnderlyingSourceCancelCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(
-    IDLUnderlyingSourceCancelCallbackHelper,
-    UnderlyingSourceCancelCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mThisObj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+    UnderlyingSourceCancelCallbackHelper, (mCallback), (mThisObj))
 
 NS_IMPL_ADDREF_INHERITED(IDLUnderlyingSourceCancelCallbackHelper,
                          UnderlyingSourceCancelCallbackHelper)

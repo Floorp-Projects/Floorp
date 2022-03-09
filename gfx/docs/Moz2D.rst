@@ -12,3 +12,5 @@ Gecko but we've slipped from this because C++/Gecko don't have a good
 mechanism for modularization/dependencies. That being said, we still try
 to keep the coupling with the rest of Gecko low for hygiene, simplicity
 and perhaps a more modular future.
+
+See also `Moz2D documentation on wiki <https://wiki.mozilla.org/Platform/GFX/Moz2D>`.

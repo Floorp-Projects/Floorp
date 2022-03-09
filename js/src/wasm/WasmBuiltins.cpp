@@ -270,29 +270,13 @@ const SymbolicAddressSignature SASigStructNew = {
     SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 #ifdef ENABLE_WASM_EXCEPTIONS
 const SymbolicAddressSignature SASigExceptionNew = {
-    SymbolicAddress::ExceptionNew,
-    _RoN,
-    _FailOnNullPtr,
-    3,
-    {_PTR, _I32, _I32, _END}};
+    SymbolicAddress::ExceptionNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigThrowException = {
     SymbolicAddress::ThrowException,
     _VOID,
     _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
-const SymbolicAddressSignature SASigConsumePendingException = {
-    SymbolicAddress::ConsumePendingException,
-    _I32,
-    _Infallible,
-    1,
-    {_PTR, _END}};
-const SymbolicAddressSignature SASigPushRefIntoExn = {
-    SymbolicAddress::PushRefIntoExn,
-    _VOID,
-    _FailOnNegI32,
-    3,
-    {_PTR, _RoN, _RoN, _END}};
 #endif
 const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _RoN,
@@ -560,23 +544,19 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         RootedAnyRef ref(cx, AnyRef::null());
         if (!BoxAnyRef(cx, exn, &ref)) {
           MOZ_ASSERT(cx->isThrowingOutOfMemory());
+          hasCatchableException = false;
           continue;
         }
 
-        iter.tls()->pendingException = ref.get().asJSObject();
+        MOZ_ASSERT(iter.tls() == iter.instance()->tlsData());
+        iter.instance()->setPendingException(ref);
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
         rfe->tlsData = iter.instance()->tlsData();
 
-        size_t offsetAdjustment = 0;
-        if (iter.frame()->callerIsTrampolineFP()) {
-          offsetAdjustment =
-              FrameWithTls::sizeOfTlsFields() + IndirectStubAdditionalAlignment;
-        }
         rfe->stackPointer =
-            (uint8_t*)(rfe->framePointer -
-                       (tryNote->framePushed + offsetAdjustment));
+            (uint8_t*)(rfe->framePointer - tryNote->framePushed);
         rfe->target = iter.instance()->codeBase(tier) + tryNote->entryPoint;
 
         // Make sure to clear trapping state if we got here due to a trap.
@@ -1293,21 +1273,13 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
 
 #if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
-      *abiType = Args_General_GeneralInt32Int32;
+      *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
       return FuncCast(Instance::exceptionNew, *abiType);
     case SymbolicAddress::ThrowException:
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
-    case SymbolicAddress::ConsumePendingException:
-      *abiType = Args_Int32_General;
-      MOZ_ASSERT(*abiType == ToABIType(SASigConsumePendingException));
-      return FuncCast(Instance::consumePendingException, *abiType);
-    case SymbolicAddress::PushRefIntoExn:
-      *abiType = Args_Int32_GeneralGeneralGeneral;
-      MOZ_ASSERT(*abiType == ToABIType(SASigPushRefIntoExn));
-      return FuncCast(Instance::pushRefIntoExn, *abiType);
 #endif
 
 #ifdef WASM_CODEGEN_DEBUG
@@ -1364,26 +1336,37 @@ bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
 }
 
 bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
-  // Some functions don't want to a thunk, because they already have one or
-  // they don't have frame info.
   switch (sym) {
-    case SymbolicAddress::HandleDebugTrap:        // GenerateDebugTrapStub
-    case SymbolicAddress::HandleThrow:            // GenerateThrowStub
-    case SymbolicAddress::HandleTrap:             // GenerateTrapExit
-    case SymbolicAddress::CallImport_General:     // GenerateImportInterpExit
-    case SymbolicAddress::CoerceInPlace_ToInt32:  // GenerateImportJitExit
-    case SymbolicAddress::CoerceInPlace_ToNumber:
-    case SymbolicAddress::CoerceInPlace_ToBigInt:
-    case SymbolicAddress::BoxValue_Anyref:
+    // No thunk, because these are data addresses
     case SymbolicAddress::InlineTypedObjectClass:
+      return false;
+
+    // No thunk, because they do their work within the activation
+    case SymbolicAddress::HandleDebugTrap:  // GenerateDebugTrapStub
+    case SymbolicAddress::HandleThrow:      // GenerateThrowStub
+    case SymbolicAddress::HandleTrap:       // GenerateTrapExit
+      return false;
+
+    // No thunk, because their caller manages the activation exit explicitly
+    case SymbolicAddress::CallImport_General:      // GenerateImportInterpExit
+    case SymbolicAddress::CoerceInPlace_ToInt32:   // GenerateImportJitExit
+    case SymbolicAddress::CoerceInPlace_ToNumber:  // GenerateImportJitExit
+    case SymbolicAddress::CoerceInPlace_ToBigInt:  // GenerateImportJitExit
+    case SymbolicAddress::BoxValue_Anyref:         // GenerateImportJitExit
+      return false;
+
 #ifdef WASM_CODEGEN_DEBUG
-    case SymbolicAddress::PrintI32:
+    // No thunk, because they call directly into C++ code that does not interact
+    // with the rest of the VM at all.
+    case SymbolicAddress::PrintI32:  // Debug stub printers
     case SymbolicAddress::PrintPtr:
     case SymbolicAddress::PrintF32:
     case SymbolicAddress::PrintF64:
-    case SymbolicAddress::PrintText:  // Used only in stubs
-#endif
+    case SymbolicAddress::PrintText:
       return false;
+#endif
+
+    // Everyone else gets a thunk to handle the exit from the activation
     case SymbolicAddress::ToInt32:
     case SymbolicAddress::DivI64:
     case SymbolicAddress::UDivI64:
@@ -1460,8 +1443,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 #ifdef ENABLE_WASM_EXCEPTIONS
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
-    case SymbolicAddress::ConsumePendingException:
-    case SymbolicAddress::PushRefIntoExn:
 #endif
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:
@@ -1471,6 +1452,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
       FOR_EACH_INTRINSIC(OP)
 #undef OP
       return true;
+
     case SymbolicAddress::Limit:
       break;
   }

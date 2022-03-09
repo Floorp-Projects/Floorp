@@ -36,12 +36,16 @@ UtilityProcessTest::StartProcess(JSContext* aCx,
           GetCurrentSerialEventTarget(), __func__,
           [promise, utilityProc]() {
             Maybe<int32_t> utilityPid = utilityProc->ProcessPid();
-            promise->MaybeResolve(*utilityPid);
+            if (utilityPid.isSome()) {
+              promise->MaybeResolve(*utilityPid);
+            } else {
+              promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+            }
           },
           [promise](nsresult aError) {
             MOZ_ASSERT_UNREACHABLE(
                 "UtilityProcessTest; failure to get Utility process");
-            promise->MaybeRejectWithUndefined();
+            promise->MaybeReject(aError);
           });
 
   promise.forget(aOutPromise);

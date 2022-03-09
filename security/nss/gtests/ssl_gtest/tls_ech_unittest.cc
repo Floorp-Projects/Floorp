@@ -2411,8 +2411,8 @@ TEST_F(TlsConnectStreamTls13, EchOuterExtensionsInCHOuter) {
                                       ssl_tls13_outer_extensions_xtn,
                                       outer_buf);
 
-  ConnectExpectAlert(server_, kTlsAlertUnsupportedExtension);
-  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT);
+  ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
 }
 

@@ -43,17 +43,17 @@ class SVGMaskFrame final : public SVGContainerFrame {
   NS_DECL_FRAMEARENA_HELPERS(SVGMaskFrame)
 
   struct MaskParams {
-    gfxContext* ctx;
+    gfx::DrawTarget* dt;
     nsIFrame* maskedFrame;
     const gfxMatrix& toUserSpace;
     float opacity;
     StyleMaskMode maskMode;
     imgDrawingParams& imgParams;
 
-    explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
+    explicit MaskParams(gfx::DrawTarget* aDt, nsIFrame* aMaskedFrame,
                         const gfxMatrix& aToUserSpace, float aOpacity,
                         StyleMaskMode aMaskMode, imgDrawingParams& aImgParams)
-        : ctx(aCtx),
+        : dt(aDt),
           maskedFrame(aMaskedFrame),
           toUserSpace(aToUserSpace),
           opacity(aOpacity),

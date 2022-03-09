@@ -7,6 +7,7 @@
 #include "VRProcessParent.h"
 #include "VRGPUChild.h"
 #include "VRProcessManager.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GPUChild.h"
@@ -22,7 +23,6 @@
 #include "VRThread.h"
 
 #include "nsAppRunner.h"  // for IToplevelProtocol
-#include "mozilla/ipc/ProtocolUtils.h"
 
 using std::string;
 using std::vector;
@@ -42,9 +42,7 @@ VRProcessParent::VRProcessParent(Listener* aListener)
   MOZ_COUNT_CTOR(VRProcessParent);
 }
 
-VRProcessParent::~VRProcessParent() {
-  MOZ_COUNT_DTOR(VRProcessParent);
-}
+VRProcessParent::~VRProcessParent() { MOZ_COUNT_DTOR(VRProcessParent); }
 
 bool VRProcessParent::Launch() {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
@@ -56,7 +54,8 @@ bool VRProcessParent::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
+      dom::ContentParent::ShouldSyncPreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }

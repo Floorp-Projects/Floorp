@@ -14,7 +14,7 @@ namespace myns {
     MyOtherData;
 };
 
-[RefCounted] sync protocol PMyManager {
+sync protocol PMyManager {
   manages PMyManaged;
   parent:
     async __delete__(nsString aNote);

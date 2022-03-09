@@ -237,17 +237,6 @@ mod tests {
     }
 
     #[test]
-    fn test_level_eq() {
-        assert_eq!(Level::Fatal, Level::Fatal);
-        assert_eq!(Level::Error, Level::Error);
-        assert_eq!(Level::Warn, Level::Warn);
-        assert_eq!(Level::Info, Level::Info);
-        assert_eq!(Level::Config, Level::Config);
-        assert_eq!(Level::Debug, Level::Debug);
-        assert_eq!(Level::Trace, Level::Trace);
-    }
-
-    #[test]
     fn test_level_from_log() {
         assert_eq!(Level::from(log::Level::Error), Level::Error);
         assert_eq!(Level::from(log::Level::Warn), Level::Warn);

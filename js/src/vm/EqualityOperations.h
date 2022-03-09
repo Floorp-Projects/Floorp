@@ -56,6 +56,17 @@ extern bool SameValueZeroLinear(const JS::Value& lval, const JS::Value& rval);
 extern bool SameValueZero(JSContext* cx, JS::Handle<JS::Value> v1,
                           JS::Handle<JS::Value> v2, bool* same);
 
+/*
+ * Whether strict equality of a JS::Value (with any other JS::Value) can be
+ * implemented by comparing the raw bits, Value::asRawBits().
+ *
+ * Note that this does not include Int32Value, because DoubleValue can store
+ * integers too.
+ */
+inline bool CanUseBitwiseCompareForStrictlyEqual(const JS::Value& v) {
+  return v.isObject() || v.isSymbol() || v.isNullOrUndefined() || v.isBoolean();
+}
+
 }  // namespace js
 
 #endif  // vm_EqualityOperations_h

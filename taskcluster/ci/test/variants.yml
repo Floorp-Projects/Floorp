@@ -79,6 +79,15 @@ fission:
             extra-options:
                 - "--setpref=fission.autostart=true"
 
+no-fission:
+    description: "{description} without fission enabled"
+    contact: jmaher
+    suffix: "nofis"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.autostart=false"
+
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
     contact: cpeterson
@@ -134,7 +143,6 @@ webrender-sw:
             extra-options:
                 - "--setpref=gfx.webrender.software=true"
 
-# TODO: After 2022-01-01, verify this variant is still needed.
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
     contact: jgilbert
@@ -143,16 +151,16 @@ webgl-ipc:
         mozharness:
             extra-options:
                 - "--setpref=webgl.out-of-process=true"
+                - "--setpref=security.sandbox.content.headless=true"
 
-devtools-no-eft-no-fission:
-    description: "{description} with DevTools EFT disabled and Fission disabled"
+devtools-no-eft:
+    description: "{description} with DevTools EFT disabled"
     contact: nchevobbe
-    suffix: "dt-no-eft-no-fis"
+    suffix: "dt-no-eft"
     merge:
         mozharness:
             extra-options:
                 - "--setpref=devtools.every-frame-target.enabled=false"
-                - "--setpref=fission.autostart=false"
 
 dynamic-first-party-isolation:
     description: "{description} with dFPI enabled"

@@ -41,6 +41,10 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
+    "dbg-actors.js",
+]
+
+EXTRA_JS_MODULES.backgroundtasks += [
     "BackgroundTask_exception.jsm",
     "BackgroundTask_failure.jsm",
     "BackgroundTask_success.jsm",
@@ -56,6 +60,8 @@ TESTING_JS_MODULES += [
 TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
     "tests/BackgroundTask_crash.jsm",
+    "tests/BackgroundTask_file_exists.jsm",
+    "tests/BackgroundTask_jsdebugger.jsm",
     "tests/BackgroundTask_policies.jsm",
     "tests/BackgroundTask_shouldnotprocessupdates.jsm",
     "tests/BackgroundTask_shouldprocessupdates.jsm",

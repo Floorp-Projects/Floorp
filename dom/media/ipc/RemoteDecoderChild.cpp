@@ -40,15 +40,17 @@ void RemoteDecoderChild::HandleRejectionError(
     GetManager()->RunWhenGPUProcessRecreated(NS_NewRunnableFunction(
         "RemoteDecoderChild::HandleRejectionError",
         [self, callback = std::move(aCallback)]() {
-          MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__);
+          MediaResult error(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR,
+                            __func__);
           callback(error);
         }));
     return;
   }
   // The RDD process is restarted on demand and asynchronously, we can
   // immediately inform the caller that a new decoder is needed. The RDD will
-  // then be restarted during the new decoder creation.
-  aCallback(MediaResult(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__));
+  // then be restarted during the new decoder creation by
+  aCallback(
+      MediaResult(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR, __func__));
 }
 
 // ActorDestroy is called if the channel goes down while waiting for a response.

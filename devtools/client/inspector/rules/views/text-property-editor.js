@@ -16,6 +16,10 @@ const {
   advanceValidate,
   blurOnMultipleProperties,
 } = require("devtools/client/inspector/shared/utils");
+const { throttle } = require("devtools/shared/throttle");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 
 loader.lazyRequireGetter(
   this,
@@ -33,6 +37,12 @@ loader.lazyRequireGetter(
   this,
   "findCssSelector",
   "devtools/shared/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm",
   true
 );
 
@@ -59,6 +69,17 @@ const ACTIONABLE_ELEMENTS_SELECTORS = [
   `.${ANGLE_SWATCH_CLASS}`,
   "a",
 ];
+
+/*
+ * Speeds at which we update the value when the user is dragging its mouse
+ * over a value.
+ */
+const SLOW_DRAGGING_SPEED = 0.1;
+const DEFAULT_DRAGGING_SPEED = 1;
+const FAST_DRAGGING_SPEED = 10;
+
+const DRAGGABLE_VALUE_CLASSNAME = "ruleview-propertyvalue-draggable";
+const IS_DRAGGING_CLASSNAME = "ruleview-propertyvalue-dragging";
 
 // In order to highlight the used fonts in font-family properties, we
 // retrieve the list of used fonts from the server. That always
@@ -104,6 +125,11 @@ function TextPropertyEditor(ruleEditor, property) {
   this.toolbox = this.ruleView.inspector.toolbox;
   this.telemetry = this.toolbox.telemetry;
 
+  this._isDragging = false;
+  this._hasDragged = false;
+  this._draggingController = null;
+  this._draggingValueCache = null;
+
   this.getGridlineNames = this.getGridlineNames.bind(this);
   this.update = this.update.bind(this);
   this.updatePropertyState = this.updatePropertyState.bind(this);
@@ -117,6 +143,11 @@ function TextPropertyEditor(ruleEditor, property) {
   this._onSwatchRevert = this._onSwatchRevert.bind(this);
   this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
   this._onValueDone = this._onValueDone.bind(this);
+
+  this._draggingOnMouseDown = this._draggingOnMouseDown.bind(this);
+  this._draggingOnMouseMove = throttle(this._draggingOnMouseMove, 30, this);
+  this._draggingOnMouseUp = this._draggingOnMouseUp.bind(this);
+  this._draggingOnKeydown = this._draggingOnKeydown.bind(this);
 
   this._create();
   this.update();
@@ -325,6 +356,10 @@ TextPropertyEditor.prototype = {
       });
 
       this.valueSpan.addEventListener("mouseup", event => {
+        // if we have dragged, we will handle the pending click in _draggingOnMouseUp instead
+        if (this._hasDragged) {
+          return;
+        }
         this._clickedElementOptions = null;
         this._hasPendingClick = false;
       });
@@ -338,6 +373,10 @@ TextPropertyEditor.prototype = {
           openContentLink(target.href);
         }
       });
+
+      if (this._isDraggableProperty(this.prop)) {
+        this._addDraggingCapability();
+      }
 
       editableField({
         start: this._onStartEditing,
@@ -689,7 +728,8 @@ TextPropertyEditor.prototype = {
     // Now that we have updated the property's value, we might have a pending
     // click on the value container. If we do, we have to trigger a click event
     // on the right element.
-    if (this._hasPendingClick) {
+    // If we are dragging, we don't need to handle the pending click
+    if (this._hasPendingClick && !this._isDragging) {
       this._hasPendingClick = false;
       let elToClick;
 
@@ -1130,6 +1170,13 @@ TextPropertyEditor.prototype = {
       return;
     }
 
+    // Check if unit of value changed to add dragging feature
+    if (this._isDraggableProperty(val)) {
+      this._addDraggingCapability();
+    } else {
+      this._removeDraggingCapacity();
+    }
+
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       session_id: this.toolbox.sessionId,
     });
@@ -1253,6 +1300,169 @@ TextPropertyEditor.prototype = {
       val.value,
       val.priority
     );
+  },
+
+  /**
+   * Check if the event passed has a "small increment" modifier
+   * Alt on macosx and ctrl on other OSs
+   *
+   * @param  {KeyboardEvent} event
+   * @returns {Boolean}
+   */
+  _hasSmallIncrementModifier: function(event) {
+    const modifier = AppConstants.platform === "macosx" ? "altKey" : "ctrlKey";
+    return event[modifier] === true;
+  },
+
+  /**
+   * Parses the value to check if it is a dimension
+   * e.g. if the input is "128px" it will return an object like
+   * { groups: { value: "128", unit: "px"}}
+   *
+   * @param  {String} value
+   * @returns {Object|null}
+   */
+  _parseDimension: function(value) {
+    // The regex handles values like +1, -1, 1e4, .4, 1.3e-4, 1.567
+    const cssDimensionRegex = /^(?<value>[+-]?(\d*\.)?\d+(e[+-]?\d+)?)(?<unit>(%|[a-zA-Z]+))$/;
+    return value.match(cssDimensionRegex);
+  },
+
+  /**
+   * Check if a textProperty value is supported to add the dragging feature
+   *
+   * @param  {TextProperty} textProperty
+   * @returns {Boolean}
+   */
+  _isDraggableProperty: function(textProperty) {
+    // temporary way of fixing the bug when editing inline styles
+    // otherwise the textPropertyEditor object is destroyed on each value edit
+    // See Bug 1755024
+    if (this.rule.domRule.type == ELEMENT_STYLE) {
+      return false;
+    }
+
+    const nbValues = textProperty.value.split(" ").length;
+    if (nbValues > 1) {
+      // we do not support values like "1px solid red" yet
+      // See 1755025
+      return false;
+    }
+
+    const dimensionMatchObj = this._parseDimension(textProperty.value);
+    return !!dimensionMatchObj;
+  },
+
+  _draggingOnMouseDown: function(event) {
+    this._isDragging = true;
+    this.valueSpan.setPointerCapture(event.pointerId);
+    this._draggingController = new AbortController();
+    const { signal } = this._draggingController;
+
+    // turn off user-select in CSS when we drag
+    this.valueSpan.classList.add(IS_DRAGGING_CLASSNAME);
+
+    const dimensionObj = this._parseDimension(this.prop.value);
+    const { value, unit } = dimensionObj.groups;
+    this._draggingValueCache = {
+      previousScreenX: event.screenX,
+      value: parseFloat(value),
+      unit,
+    };
+
+    this.valueSpan.addEventListener("mousemove", this._draggingOnMouseMove, {
+      signal,
+    });
+    this.valueSpan.addEventListener("mouseup", this._draggingOnMouseUp, {
+      signal,
+    });
+    this.valueSpan.addEventListener("keydown", this._draggingOnKeydown, {
+      signal,
+    });
+  },
+
+  _draggingOnMouseMove: function(event) {
+    if (!this._isDragging) {
+      return;
+    }
+
+    let draggingSpeed = DEFAULT_DRAGGING_SPEED;
+    if (event.shiftKey) {
+      draggingSpeed = FAST_DRAGGING_SPEED;
+    } else if (this._hasSmallIncrementModifier(event)) {
+      draggingSpeed = SLOW_DRAGGING_SPEED;
+    }
+
+    const { previousScreenX } = this._draggingValueCache;
+    const delta = (event.screenX - previousScreenX) * draggingSpeed;
+    this._draggingValueCache.previousScreenX = event.screenX;
+    this._draggingValueCache.value += delta;
+
+    if (delta == 0) {
+      return;
+    }
+
+    const { value, unit } = this._draggingValueCache;
+    // We use toFixed to avoid the case where value is too long, 9.00001px for example
+    const roundedValue = Number.isInteger(value) ? value : value.toFixed(1);
+    this.prop.setValue(roundedValue + unit, this.prop.priority);
+    this.ruleView.emitForTests("property-updated-by-dragging");
+    this._hasDragged = true;
+  },
+
+  _draggingOnMouseUp: function(event) {
+    if (!this._isDragging) {
+      return;
+    }
+    if (this._hasDragged) {
+      this.committed.value = this.prop.value;
+      this.prop.setEnabled(true);
+    }
+    this._onStopDragging(event);
+  },
+
+  _draggingOnKeydown: function(event) {
+    if (event.key == "Escape") {
+      this.prop.setValue(this.committed.value, this.committed.priority);
+      this._onStopDragging(event);
+      event.preventDefault();
+    }
+  },
+
+  _onStopDragging: function(event) {
+    // childHasDragged is used to stop the propagation of a click event when we
+    // release the mouse in the ruleview.
+    // The click event is not emitted when we have a pending click on the text property.
+    if (this._hasDragged && !this._hasPendingClick) {
+      this.ruleView.childHasDragged = true;
+    }
+    this._isDragging = false;
+    this._hasDragged = false;
+    this._draggingValueCache = null;
+    this.valueSpan.releasePointerCapture(event.pointerId);
+    this.valueSpan.classList.remove(IS_DRAGGING_CLASSNAME);
+    this._draggingController.abort();
+  },
+
+  /**
+   * add event listeners to add the ability to modify any size value
+   * by dragging the mouse horizontally
+   */
+  _addDraggingCapability: function() {
+    if (this.valueSpan.classList.contains(DRAGGABLE_VALUE_CLASSNAME)) {
+      return;
+    }
+    this.valueSpan.classList.add(DRAGGABLE_VALUE_CLASSNAME);
+    this.valueSpan.addEventListener("mousedown", this._draggingOnMouseDown);
+  },
+
+  _removeDraggingCapacity: function() {
+    if (!this.valueSpan.classList.contains(DRAGGABLE_VALUE_CLASSNAME)) {
+      return;
+    }
+    this._draggingController = null;
+    this.valueSpan.classList.remove(DRAGGABLE_VALUE_CLASSNAME);
+    this.valueSpan.removeEventListener("mousedown", this._draggingOnMouseDown);
   },
 
   /**

@@ -517,7 +517,7 @@ void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
 // check whether the text run needs to be explicitly composited in order to
 // support opacity.
 static bool HasSyntheticBoldOrColor(gfxFont* aFont) {
-  if (aFont->IsSyntheticBold()) {
+  if (aFont->ApplySyntheticBold()) {
     return true;
   }
   gfxFontEntry* fe = aFont->GetFontEntry();
@@ -2200,7 +2200,10 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
     } else {
       gfxFontEntry* fe = pfl->GetDefaultFontEntry();
       if (fe) {
-        return fe->FindOrMakeFont(&mStyle);
+        gfxFont* f = fe->FindOrMakeFont(&mStyle);
+        if (f) {
+          return f;
+        }
       }
     }
   }

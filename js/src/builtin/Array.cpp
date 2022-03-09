@@ -34,6 +34,7 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"
@@ -894,7 +895,7 @@ static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
   }
 
   return ClassMayResolveId(*obj->runtimeFromAnyThread()->commonNames,
-                           obj->getClass(), INT_TO_JSID(0), obj);
+                           obj->getClass(), PropertyKey::Int(0), obj);
 }
 
 /*
@@ -1018,7 +1019,7 @@ static MOZ_ALWAYS_INLINE bool IsArraySpecies(JSContext* cx,
     return true;
   }
 
-  jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
+  jsid speciesId = PropertyKey::Symbol(cx->wellKnownSymbols().species);
   JSFunction* getter;
   if (!GetGetterPure(cx, &ctor.toObject(), speciesId, &getter)) {
     return false;
@@ -1141,25 +1142,6 @@ static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-struct EmptySeparatorOp {
-  bool operator()(JSContext*, StringBuffer& sb) { return true; }
-};
-
-template <typename CharT>
-struct CharSeparatorOp {
-  const CharT sep;
-  explicit CharSeparatorOp(CharT sep) : sep(sep) {}
-  bool operator()(JSContext*, StringBuffer& sb) { return sb.append(sep); }
-};
-
-struct StringSeparatorOp {
-  HandleLinearString sep;
-
-  explicit StringSeparatorOp(HandleLinearString sep) : sep(sep) {}
-
-  bool operator()(JSContext* cx, StringBuffer& sb) { return sb.append(sep); }
-};
-
 template <typename SeparatorOp>
 static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
                                  HandleNativeObject obj, uint64_t length,
@@ -1215,7 +1197,7 @@ static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
     }
 
     // Steps 7.a, 7.e.
-    if (++(*numProcessed) != length && !sepOp(cx, sb)) {
+    if (++(*numProcessed) != length && !sepOp(sb)) {
       return false;
     }
   }
@@ -1257,7 +1239,7 @@ static bool ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj,
       }
 
       // Steps 7.a, 7.e.
-      if (++i != length && !sepOp(cx, sb)) {
+      if (++i != length && !sepOp(sb)) {
         return false;
       }
     }
@@ -1364,26 +1346,28 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
 
   // Various optimized versions of steps 6-7.
   if (seplen == 0) {
-    EmptySeparatorOp op;
-    if (!ArrayJoinKernel(cx, op, obj, length, sb)) {
+    auto sepOp = [](StringBuffer&) { return true; };
+    if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
       return false;
     }
   } else if (seplen == 1) {
     char16_t c = sepstr->latin1OrTwoByteChar(0);
     if (c <= JSString::MAX_LATIN1_CHAR) {
-      CharSeparatorOp<Latin1Char> op(c);
-      if (!ArrayJoinKernel(cx, op, obj, length, sb)) {
+      Latin1Char l1char = Latin1Char(c);
+      auto sepOp = [l1char](StringBuffer& sb) { return sb.append(l1char); };
+      if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
         return false;
       }
     } else {
-      CharSeparatorOp<char16_t> op(c);
-      if (!ArrayJoinKernel(cx, op, obj, length, sb)) {
+      auto sepOp = [c](StringBuffer& sb) { return sb.append(c); };
+      if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
         return false;
       }
     }
   } else {
-    StringSeparatorOp op(sepstr);
-    if (!ArrayJoinKernel(cx, op, obj, length, sb)) {
+    HandleLinearString sepHandle = sepstr;
+    auto sepOp = [sepHandle](StringBuffer& sb) { return sb.append(sepHandle); };
+    if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
       return false;
     }
   }
@@ -1529,7 +1513,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     }
 
     obj->setDenseElementHole(index);
-    return SuppressDeletedProperty(cx, obj, INT_TO_JSID(index));
+    return SuppressDeletedProperty(cx, obj, PropertyKey::Int(index));
   };
 
   RootedValue origlo(cx), orighi(cx);
@@ -2730,7 +2714,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   // Use dense storage for new indexed properties where possible.
   {
     uint32_t index = 0;
-    uint32_t limit = std::min<uint32_t>(count, JSID_INT_MAX);
+    uint32_t limit = std::min<uint32_t>(count, PropertyKey::IntMax);
     for (; index < limit; index++) {
       bool hole;
       if (!CheckForInterrupt(cx) ||
@@ -3815,6 +3799,450 @@ static const JSJitInfo array_splice_info = {
     JSVAL_TYPE_UNDEFINED,
 };
 
+enum class SearchKind {
+  // Specializes SearchElementDense for Array.prototype.indexOf/lastIndexOf.
+  // This means hole values are ignored and StrictlyEqual semantics are used.
+  IndexOf,
+  // Specializes SearchElementDense for Array.prototype.includes.
+  // This means hole values are treated as |undefined| and SameValueZero
+  // semantics are used.
+  Includes,
+};
+
+template <SearchKind Kind, typename Iter>
+static bool SearchElementDense(JSContext* cx, HandleValue val, Iter iterator,
+                               MutableHandleValue rval) {
+  // We assume here and in the iterator lambdas that nothing can trigger GC or
+  // move dense elements.
+  AutoCheckCannotGC nogc;
+
+  // Fast path for string values.
+  if (val.isString()) {
+    JSLinearString* str = val.toString()->ensureLinear(cx);
+    if (!str) {
+      return false;
+    }
+    const uint32_t strLen = str->length();
+    auto cmp = [str, strLen](JSContext* cx, const Value& element, bool* equal) {
+      if (!element.isString() || element.toString()->length() != strLen) {
+        *equal = false;
+        return true;
+      }
+      JSLinearString* s = element.toString()->ensureLinear(cx);
+      if (!s) {
+        return false;
+      }
+      *equal = EqualStrings(str, s);
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Fast path for numbers.
+  if (val.isNumber()) {
+    double dval = val.toNumber();
+    // For |includes|, two NaN values are considered equal, so we use a
+    // different implementation for NaN.
+    if (Kind == SearchKind::Includes && mozilla::IsNaN(dval)) {
+      auto cmp = [](JSContext*, const Value& element, bool* equal) {
+        *equal = (element.isDouble() && mozilla::IsNaN(element.toDouble()));
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+    auto cmp = [dval](JSContext*, const Value& element, bool* equal) {
+      *equal = (element.isNumber() && element.toNumber() == dval);
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Fast path for values where we can use a simple bitwise comparison.
+  if (CanUseBitwiseCompareForStrictlyEqual(val)) {
+    // For |includes| we need to treat hole values as |undefined| so we use a
+    // different path if searching for |undefined|.
+    if (Kind == SearchKind::Includes && val.isUndefined()) {
+      auto cmp = [](JSContext*, const Value& element, bool* equal) {
+        *equal = (element.isUndefined() || element.isMagic(JS_ELEMENTS_HOLE));
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+    uint64_t bits = val.asRawBits();
+    auto cmp = [bits](JSContext*, const Value& element, bool* equal) {
+      *equal = (bits == element.asRawBits());
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Generic implementation for the remaining types.
+  RootedValue elementRoot(cx);
+  auto cmp = [val, &elementRoot](JSContext* cx, const Value& element,
+                                 bool* equal) {
+    if (MOZ_UNLIKELY(element.isMagic(JS_ELEMENTS_HOLE))) {
+      // |includes| treats holes as |undefined|. For |indexOf| we have to ignore
+      // holes.
+      if constexpr (Kind == SearchKind::Includes) {
+        elementRoot.setUndefined();
+      } else {
+        static_assert(Kind == SearchKind::IndexOf);
+        *equal = false;
+        return true;
+      }
+    } else {
+      elementRoot = element;
+    }
+    // Note: |includes| uses SameValueZero, but that checks for NaN and then
+    // calls StrictlyEqual. Since we already handled NaN above, we can call
+    // StrictlyEqual directly.
+    MOZ_ASSERT(!val.isNumber());
+    return StrictlyEqual(cx, val, elementRoot, equal);
+  };
+  return iterator(cx, cmp, rval);
+}
+
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.1.3.14 Array.prototype.indexOf ( searchElement [ , fromIndex ] )
+bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Array.prototype.indexOf", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  uint64_t len;
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
+    return false;
+  }
+
+  // Step 3.
+  if (len == 0) {
+    args.rval().setInt32(-1);
+    return true;
+  }
+
+  // Steps 4-8.
+  uint64_t k = 0;
+  if (args.length() > 1) {
+    double n;
+    if (!ToInteger(cx, args[1], &n)) {
+      return false;
+    }
+
+    // Step 6.
+    if (n >= double(len)) {
+      args.rval().setInt32(-1);
+      return true;
+    }
+
+    // Steps 7-8.
+    if (n >= 0) {
+      k = uint64_t(n);
+    } else {
+      double d = double(len) + n;
+      if (d >= 0) {
+        k = uint64_t(d);
+      }
+    }
+  }
+
+  MOZ_ASSERT(k < len);
+
+  HandleValue searchElement = args.get(0);
+
+  // Steps 9 and 10 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t start = uint32_t(k);
+    uint32_t length =
+        std::min(nobj->getDenseInitializedLength(), uint32_t(len));
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, start, length](JSContext* cx, auto cmp,
+                                              MutableHandleValue rval) {
+      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
+                    "code assumes dense index fits in Int32Value");
+      for (uint32_t i = start; i < length; i++) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setInt32(int32_t(i));
+          return true;
+        }
+      }
+      rval.setInt32(-1);
+      return true;
+    };
+    return SearchElementDense<SearchKind::IndexOf>(cx, searchElement, iterator,
+                                                   args.rval());
+  }
+
+  // Step 9.
+  RootedValue v(cx);
+  for (; k < len; k++) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    bool hole;
+    if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+      return false;
+    }
+    if (hole) {
+      continue;
+    }
+
+    bool equal;
+    if (!StrictlyEqual(cx, v, searchElement, &equal)) {
+      return false;
+    }
+    if (equal) {
+      args.rval().setNumber(k);
+      return true;
+    }
+  }
+
+  // Step 10.
+  args.rval().setInt32(-1);
+  return true;
+}
+
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
+bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Array.prototype.lastIndexOf", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  uint64_t len;
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
+    return false;
+  }
+
+  // Step 3.
+  if (len == 0) {
+    args.rval().setInt32(-1);
+    return true;
+  }
+
+  // Steps 4-6.
+  uint64_t k = len - 1;
+  if (args.length() > 1) {
+    double n;
+    if (!ToInteger(cx, args[1], &n)) {
+      return false;
+    }
+
+    // Steps 5-6.
+    if (n < 0) {
+      double d = double(len) + n;
+      if (d < 0) {
+        args.rval().setInt32(-1);
+        return true;
+      }
+      k = uint64_t(d);
+    } else if (n < double(k)) {
+      k = uint64_t(n);
+    }
+  }
+
+  MOZ_ASSERT(k < len);
+
+  HandleValue searchElement = args.get(0);
+
+  // Steps 7 and 8 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, k + 1)) {
+    MOZ_ASSERT(k <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t initLen = nobj->getDenseInitializedLength();
+    if (initLen == 0) {
+      args.rval().setInt32(-1);
+      return true;
+    }
+
+    uint32_t end = std::min(uint32_t(k), initLen - 1);
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, end](JSContext* cx, auto cmp,
+                                    MutableHandleValue rval) {
+      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
+                    "code assumes dense index fits in int32_t");
+      for (int32_t i = int32_t(end); i >= 0; i--) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setInt32(int32_t(i));
+          return true;
+        }
+      }
+      rval.setInt32(-1);
+      return true;
+    };
+    return SearchElementDense<SearchKind::IndexOf>(cx, searchElement, iterator,
+                                                   args.rval());
+  }
+
+  // Step 7.
+  RootedValue v(cx);
+  for (int64_t i = int64_t(k); i >= 0; i--) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    bool hole;
+    if (!HasAndGetElement(cx, obj, uint64_t(i), &hole, &v)) {
+      return false;
+    }
+    if (hole) {
+      continue;
+    }
+
+    bool equal;
+    if (!StrictlyEqual(cx, v, searchElement, &equal)) {
+      return false;
+    }
+    if (equal) {
+      args.rval().setNumber(uint64_t(i));
+      return true;
+    }
+  }
+
+  // Step 8.
+  args.rval().setInt32(-1);
+  return true;
+}
+
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.1.3.13 Array.prototype.includes ( searchElement [ , fromIndex ] )
+bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Array.prototype.includes", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  uint64_t len;
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
+    return false;
+  }
+
+  // Step 3.
+  if (len == 0) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // Steps 4-7.
+  uint64_t k = 0;
+  if (args.length() > 1) {
+    double n;
+    if (!ToInteger(cx, args[1], &n)) {
+      return false;
+    }
+
+    if (n >= double(len)) {
+      args.rval().setBoolean(false);
+      return true;
+    }
+
+    // Steps 6-7.
+    if (n >= 0) {
+      k = uint64_t(n);
+    } else {
+      double d = double(len) + n;
+      if (d >= 0) {
+        k = uint64_t(d);
+      }
+    }
+  }
+
+  MOZ_ASSERT(k < len);
+
+  HandleValue searchElement = args.get(0);
+
+  // Steps 8 and 9 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t start = uint32_t(k);
+    uint32_t length =
+        std::min(nobj->getDenseInitializedLength(), uint32_t(len));
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, start, length](JSContext* cx, auto cmp,
+                                              MutableHandleValue rval) {
+      for (uint32_t i = start; i < length; i++) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setBoolean(true);
+          return true;
+        }
+      }
+      rval.setBoolean(false);
+      return true;
+    };
+    return SearchElementDense<SearchKind::Includes>(cx, searchElement, iterator,
+                                                    args.rval());
+  }
+
+  // Step 8.
+  RootedValue v(cx);
+  for (; k < len; k++) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    if (!GetArrayElement(cx, obj, k, &v)) {
+      return false;
+    }
+
+    bool equal;
+    if (!SameValueZero(cx, v, searchElement, &equal)) {
+      return false;
+    }
+    if (equal) {
+      args.rval().setBoolean(true);
+      return true;
+    }
+  }
+
+  // Step 9.
+  args.rval().setBoolean(false);
+  return true;
+}
+
 static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toSource_str, array_toSource, 0, 0),
     JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString", 0, 0),
@@ -3834,8 +4262,8 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("concat", "ArrayConcat", 1, 0),
     JS_INLINABLE_FN("slice", array_slice, 2, 0, ArraySlice),
 
-    JS_SELF_HOSTED_FN("lastIndexOf", "ArrayLastIndexOf", 1, 0),
-    JS_SELF_HOSTED_FN("indexOf", "ArrayIndexOf", 1, 0),
+    JS_FN("lastIndexOf", array_lastIndexOf, 1, 0),
+    JS_FN("indexOf", array_indexOf, 1, 0),
     JS_SELF_HOSTED_FN("forEach", "ArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("map", "ArrayMap", 1, 0),
     JS_SELF_HOSTED_FN("filter", "ArrayFilter", 1, 0),
@@ -3861,7 +4289,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("values", "$ArrayValues", 0, 0),
 
     /* ES7 additions */
-    JS_SELF_HOSTED_FN("includes", "ArrayIncludes", 2, 0),
+    JS_FN("includes", array_includes, 1, 0),
 
     /* ES2020 */
     JS_SELF_HOSTED_FN("flatMap", "ArrayFlatMap", 1, 0),
@@ -4148,8 +4576,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
   }
 #endif
 
-  RootedId id(cx, SYMBOL_TO_JSID(
-                      cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
+  RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));
   value.setObject(*unscopables);
   return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
 }
@@ -4348,8 +4775,8 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   }
 
   // Look up the '@@species' value on Array
-  Maybe<PropertyInfo> speciesProp =
-      arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+  Maybe<PropertyInfo> speciesProp = arrayCtor->lookup(
+      cx, PropertyKey::Symbol(cx->wellKnownSymbols().species));
   if (speciesProp.isNothing() || !arrayCtor->hasGetter(*speciesProp)) {
     return;
   }

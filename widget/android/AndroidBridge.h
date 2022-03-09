@@ -31,6 +31,7 @@ class AutoLocalJNIFrame;
 namespace hal {
 class BatteryInformation;
 class NetworkInformation;
+enum class ScreenOrientation : uint32_t;
 }  // namespace hal
 
 class AndroidBridge final {
@@ -79,11 +80,7 @@ class AndroidBridge final {
 
   void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
 
-  // These methods don't use a ScreenOrientation because it's an
-  // enum and that would require including the header which requires
-  // include IPC headers which requires including basictypes.h which
-  // requires a lot of changes...
-  uint32_t GetScreenOrientation();
+  hal::ScreenOrientation GetScreenOrientation();
   uint16_t GetScreenAngle();
 
   nsresult GetProxyForURI(const nsACString& aSpec, const nsACString& aScheme,

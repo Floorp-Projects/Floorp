@@ -20,6 +20,7 @@ namespace layers {
 /**
  * PTexture is the IPDL glue between a TextureClient and a TextureHost.
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTexture {
     manager PImageBridge or PCompositorBridge or PVideoBridge;
 

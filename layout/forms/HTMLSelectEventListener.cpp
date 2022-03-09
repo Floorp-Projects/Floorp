@@ -251,9 +251,22 @@ void HTMLSelectEventListener::Detach() {
 
   if (mIsCombobox) {
     mElement->RemoveMutationObserver(this);
-    nsContentUtils::AddScriptRunner(
-        new AsyncEventDispatcher(mElement, u"mozhidedropdown"_ns,
-                                 CanBubble::eYes, ChromeOnlyDispatch::eYes));
+    if (mElement->OpenInParentProcess()) {
+      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+          "HTMLSelectEventListener::Detach", [element = mElement] {
+            // Don't hide the dropdown if the element has another frame already,
+            // this prevents closing dropdowns on reframe, see bug 1440506.
+            //
+            // FIXME(emilio): The flush is needed to deal with reframes started
+            // from DOM node removal. But perhaps we can be a bit smarter here.
+            if (!element->IsCombobox() ||
+                !element->GetPrimaryFrame(FlushType::Frames)) {
+              nsContentUtils::DispatchChromeEvent(
+                  element->OwnerDoc(), ToSupports(element.get()),
+                  u"mozhidedropdown"_ns, CanBubble::eYes, Cancelable::eNo);
+            }
+          }));
+    }
   }
 }
 

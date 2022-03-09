@@ -273,7 +273,8 @@
     {
       "login": false,
       "name": "imdb",
-      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
+      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2",
+      "secondary_url": "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
     },
     {
       "login": false,
@@ -374,7 +375,16 @@
     {
       "login": false,
       "name": "twitch",
-      "test_url": "https://www.twitch.tv/videos/326804629",
+      "test_url": "https://www.twitch.tv/videos/894226211",
+      "secondary_url": "https://www.twitch.tv/gmashley",
+      "preferences": {
+         "media.autoplay.default": 5,
+         "media.autoplay.ask-permission": true,
+         "media.autoplay.blocking_policy": 1,
+         "media.autoplay.block-webaudio": true,
+         "media.allowed-to-play.enabled": false,
+         "media.block-autoplay-until-in-foreground": true
+       },
       "test_cmds":  [
         ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[1]/div/div/div[3]/div/button/div/div/div"],
         ["click.byXpathAndWait", "/html/body/div[3]/div/div/div/div/div/div[1]/div[2]/div/button/div/div"]
@@ -389,6 +399,7 @@
       "login": false,
       "name": "wikia",
       "test_url": "https://marvel.fandom.com/wiki/Black_Panther",
+      "secondary_url": "https://marvel.fandom.com/wiki/Celestials",
       "test_cmds":  [
         ["click.byXpathAndWait", "/html/body/div[6]/div/div/div[2]/div[1]"],
         ["click.byXpathAndWait", "/html/body/div[7]/div/div/div[2]/div[2]"]

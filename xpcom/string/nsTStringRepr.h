@@ -80,12 +80,12 @@ class nsTStringLengthStorage {
   // Implicit conversion and assignment from `size_t` which assert that the
   // value is in-range.
   MOZ_IMPLICIT constexpr nsTStringLengthStorage(size_t aLength)
-      : mLength(aLength) {
+      : mLength(static_cast<uint32_t>(aLength)) {
     MOZ_RELEASE_ASSERT(aLength <= kMax, "string is too large");
   }
   constexpr nsTStringLengthStorage& operator=(size_t aLength) {
     MOZ_RELEASE_ASSERT(aLength <= kMax, "string is too large");
-    mLength = aLength;
+    mLength = static_cast<uint32_t>(aLength);
     return *this;
   }
   MOZ_IMPLICIT constexpr operator size_t() const { return mLength; }

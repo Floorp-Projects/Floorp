@@ -408,21 +408,6 @@
         "WHERE id = OLD.place_id; "                                \
         "END")
 
-// This trigger removes orphan groups when snapshots are removed.
-#  define CREATE_PLACES_METADATA_SNAPSHOTS_GROUPS_AFTERDELETE_TRIGGER   \
-    nsLiteralCString(                                                   \
-        "CREATE TEMP TRIGGER "                                          \
-        "moz_places_metadata_groups_to_snapshots_afterdelete_trigger "  \
-        "AFTER DELETE ON moz_places_metadata_groups_to_snapshots "      \
-        "FOR EACH ROW "                                                 \
-        "BEGIN "                                                        \
-        "DELETE FROM moz_places_metadata_snapshots_groups "             \
-        "WHERE id = OLD.group_id AND NOT EXISTS ( "                     \
-        "SELECT group_id FROM moz_places_metadata_groups_to_snapshots " \
-        "WHERE group_id = OLD.group_id "                                \
-        "); "                                                           \
-        "END")
-
 // This trigger increments foreign_count when sessions are altered.
 #  define CREATE_PLACES_SESSION_TO_PLACE_AFTERINSERT_TRIGGER       \
     nsLiteralCString(                                              \

@@ -4,6 +4,9 @@
 
 // Test that service worker sources are still displayed after reloading the page
 // and that we can hit breakpoints in them.
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.windowless-service-workers", true);
   await pushPref("devtools.debugger.workers-visible", true);

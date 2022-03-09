@@ -1,9 +1,12 @@
 include protocol PTestShutdown;
 include protocol PTestShutdownSubsub;
 
+include "mozilla/_ipdltest/TestShutdown.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestShutdownSubChild", ParentImpl="TestShutdownSubParent"]
 intr protocol PTestShutdownSub {
     manager PTestShutdown;
     manages PTestShutdownSubsub;

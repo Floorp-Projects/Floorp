@@ -74,14 +74,24 @@ add_task(async function test_cancel_with_no_changes() {
       "The second bookmark should still exist"
     );
 
-    Assert.ok(
-      PlacesTransactions.undo.notCalled,
-      "undo should not have been called"
-    );
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.bookmarks.editDialog.delayedApply.enabled",
+        false
+      )
+    ) {
+      Assert.ok(
+        PlacesTransactions.undo.notCalled,
+        "undo should not have been called"
+      );
+    }
   });
 });
 
-add_task(async function test_cancel_with_changes() {
+add_task(async function test_cancel_with_changes_instantEditBookmark() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
+  });
   await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([bookmarks[1].guid]);
 
@@ -97,7 +107,7 @@ add_task(async function test_cancel_with_changes() {
           .getButton("accept");
         await TestUtils.waitForCondition(
           () => !acceptButton.disabled,
-          "The accept button should be enabled"
+          "InstantEditBookmark:The accept button should be enabled"
         );
 
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
@@ -110,15 +120,57 @@ add_task(async function test_cancel_with_changes() {
 
         // The dialog is instant apply.
         await promiseTitleChangeNotification;
-
-        // Ensure that the addition really is finished before we hit cancel.
-        await PlacesTestUtils.promiseAsyncUpdates();
       }
     );
 
     await TestUtils.waitForCondition(
       () => PlacesTransactions.undo.calledOnce,
-      "undo should have been called once."
+      "InstantEditBookmark: undo should have been called once."
+    );
+  });
+});
+
+add_task(async function test_cancel_with_changes_editBookmark() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
+  });
+  await withSidebarTree("bookmarks", async tree => {
+    tree.selectItems([bookmarks[1].guid]);
+
+    // Now open the bookmarks dialog and cancel it.
+    await withBookmarksDialog(
+      true,
+      function openDialog() {
+        tree.controller.doCommand("placesCmd_show:info");
+      },
+      async function test(dialogWin) {
+        let acceptButton = dialogWin.document
+          .getElementById("bookmarkpropertiesdialog")
+          .getButton("accept");
+        await TestUtils.waitForCondition(
+          () => !acceptButton.disabled,
+          "EditBookmark: The accept button should be enabled"
+        );
+
+        let namePicker = dialogWin.document.getElementById(
+          "editBMPanel_namePicker"
+        );
+        fillBookmarkTextField("editBMPanel_namePicker", "new_n", dialogWin);
+
+        // Ensure that value in field has changed
+        Assert.equal(
+          namePicker.value,
+          "new_n",
+          "EditBookmark: The title is the expected one."
+        );
+      }
+    );
+
+    let oldBookmark = await PlacesUtils.bookmarks.fetch(bookmarks[1].guid);
+    Assert.equal(
+      oldBookmark.title,
+      "n",
+      "EditBookmark: The title hasn't been changed"
     );
   });
 });

@@ -1383,7 +1383,7 @@ void gfxPlatformFontList::StartCmapLoading(uint32_t aGeneration,
   if (aGeneration != SharedFontList()->GetGeneration()) {
     return;
   }
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
   if (mLoadCmapsRunnable) {
@@ -2831,7 +2831,7 @@ void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
   if (aFamilyIndex >= list->NumFamilies()) {
@@ -2855,7 +2855,7 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
   fontlist::Face* face = static_cast<fontlist::Face*>(aFacePtr.ToPtr(list));
@@ -2875,7 +2875,7 @@ void gfxPlatformFontList::SetupFamilyCharMap(
   if (list->GetGeneration() != aGeneration) {
     return;
   }
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
 
@@ -2931,7 +2931,7 @@ bool gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
   if (list->GetGeneration() != aGeneration) {
     return false;
   }
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return false;
   }
   return InitOtherFamilyNames(aDefer);

@@ -461,7 +461,7 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
   // makes us suppress scrollbars in CreateAnonymousContent. But if this frame
   // initially had a non-'none' scrollbar-width and dynamically changed to
   // 'none', then we'll need to handle it here.
-  if (scrollbarStyle->StyleUIReset()->mScrollbarWidth ==
+  if (scrollbarStyle->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     mHScrollbar = ShowScrollbar::Never;
     mHScrollbarAllowedForScrollingVVInsideLV = false;
@@ -1111,7 +1111,7 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
   }
 
   const auto* styleForScrollbar = nsLayoutUtils::StyleForScrollbar(this);
-  if (styleForScrollbar->StyleUIReset()->mScrollbarWidth ==
+  if (styleForScrollbar->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     // Scrollbar shouldn't appear at all with "scrollbar-width: none".
     return 0;
@@ -2645,7 +2645,10 @@ void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const {
   }
 }
 
-void ScrollFrameHelper::InvalidateVerticalScrollbar() const {
+void ScrollFrameHelper::InvalidateScrollbars() const {
+  if (mHScrollbarBox) {
+    mHScrollbarBox->InvalidateFrameSubtree();
+  }
   if (mVScrollbarBox) {
     mVScrollbarBox->InvalidateFrameSubtree();
   }
@@ -4132,7 +4135,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Effectively we are double clipping to the viewport, at potentially
     // different async scales.
 
-    nsDisplayList resultList;
+    nsDisplayList resultList(aBuilder);
     set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
 
     if (blendCapture.CaptureContainsBlendMode()) {
@@ -4653,9 +4656,7 @@ nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
     if (auto pendingUpdate = presShell->GetPendingVisualScrollUpdate()) {
       return pendingUpdate->mVisualScrollOffset;
     }
-    if (presShell->IsVisualViewportOffsetSet()) {
-      return presShell->GetVisualViewportOffset();
-    }
+    return presShell->GetVisualViewportOffset();
   }
   return GetScrollPosition();
 }
@@ -5470,7 +5471,7 @@ auto ScrollFrameHelper::GetNeededAnonymousContent() const
     result += AnonymousContentType::HorizontalScrollbar;
     result += AnonymousContentType::VerticalScrollbar;
     // If scrollbar-width is none, don't generate scrollbars.
-  } else if (mOuter->StyleUIReset()->mScrollbarWidth !=
+  } else if (mOuter->StyleUIReset()->ScrollbarWidth() !=
              StyleScrollbarWidth::None) {
     nsIScrollableFrame* scrollable = do_QueryFrame(mOuter);
     ScrollStyles styles = scrollable->GetScrollStyles();
@@ -5636,6 +5637,10 @@ void ScrollFrameHelper::AppendAnonymousContentTo(
 }
 
 void ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData) {
+  if (mIsRoot) {
+    mOuter->PresShell()->ResetVisualViewportOffset();
+  }
+
   mAnchor.Destroy();
 
   if (mScrollbarActivity) {
@@ -5765,7 +5770,8 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
     return;
   }
 
-  if (mScrollbarActivity) {
+  if (mScrollbarActivity &&
+      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
@@ -6562,8 +6568,8 @@ bool ScrollFrameHelper::ReflowFinished() {
     MOZ_ASSERT(mIsRoot && mOuter->PresShell()->IsVisualViewportOffsetSet());
     mReclampVVOffsetInReflowFinished = false;
     AutoWeakFrame weakFrame(mOuter);
-    mOuter->PresShell()->SetVisualViewportOffset(GetVisualViewportOffset(),
-                                                 GetScrollPosition());
+    mOuter->PresShell()->SetVisualViewportOffset(
+        mOuter->PresShell()->GetVisualViewportOffset(), GetScrollPosition());
     NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   }
 
@@ -6946,7 +6952,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     nsPresContext* pc = aState.PresContext();
     auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
                               ->StyleUIReset()
-                              ->mScrollbarWidth;
+                              ->ScrollbarWidth();
     auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
                                                 nsITheme::Overlay::No);
     nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
@@ -7049,7 +7055,8 @@ void ScrollFrameHelper::SetCoordAttribute(Element* aElement, nsAtom* aAtom,
     return;
   }
 
-  if (mScrollbarActivity) {
+  if (mScrollbarActivity &&
+      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }

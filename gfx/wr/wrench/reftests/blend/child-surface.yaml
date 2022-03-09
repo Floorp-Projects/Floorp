@@ -1,0 +1,22 @@
+# verify that the clipping_rect of a child surface (caused by the identity filter)
+# is corrected used to select the backdrop for a mix-blend child surface
+---
+root:
+  items:
+    - type: stacking-context
+      filters: [identity]
+      items:
+      - type: stacking-context
+        blend-container: true
+        bounds: [0, 0, 100, 100]
+        items:
+          - type: rect
+            bounds: [0, 0, 100, 100]
+            color: [255, 0, 0]
+          - type: stacking-context
+            bounds: [0, 0, 100, 100]
+            mix-blend-mode: hue
+            items:
+              - type: rect
+                bounds: [0, 0, 100, 100]
+                color: [255, 255, 0]

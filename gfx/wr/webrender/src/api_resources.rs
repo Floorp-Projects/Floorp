@@ -6,8 +6,8 @@ use crate::api::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize};
 use crate::api::{BlobImageHandler, AsyncBlobImageRasterizer, BlobImageData, BlobImageParams};
 use crate::api::{BlobImageRequest, BlobImageDescriptor, BlobImageResources};
 use crate::api::{FontKey, FontTemplate, FontInstanceData, FontInstanceKey};
-use crate::api::SharedFontInstanceMap;
 use crate::api::units::*;
+use crate::glyph_rasterizer::SharedFontInstanceMap;
 use crate::render_api::{ResourceUpdate, TransactionMsg, AddFont};
 use crate::image_tiling::*;
 use crate::profiler;
@@ -131,6 +131,7 @@ impl ApiResources {
                     }
                 }
                 ResourceUpdate::AddFontInstance(ref instance) => {
+                    assert!(self.fonts.templates.contains_key(&instance.font_key));
                     // TODO(nical): Don't clone these.
                     self.fonts.instances.add_font_instance(
                         instance.key,

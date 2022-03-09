@@ -18,6 +18,18 @@ namespace mozilla::dom {
 
 class ReadableStreamDefaultTeePullAlgorithm;
 
+enum class TeeBranch : bool {
+  Branch1,
+  Branch2,
+};
+
+inline TeeBranch OtherTeeBranch(TeeBranch aBranch) {
+  if (aBranch == TeeBranch::Branch1) {
+    return TeeBranch::Branch2;
+  }
+  return TeeBranch::Branch1;
+}
+
 // A closure capturing the free variables in the ReadableStreamTee family of
 // algorithms.
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
@@ -26,8 +38,7 @@ struct TeeState : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TeeState)
 
-  static already_AddRefed<TeeState> Create(JSContext* aCx,
-                                           ReadableStream* aStream,
+  static already_AddRefed<TeeState> Create(ReadableStream* aStream,
                                            bool aCloneForBranch2,
                                            ErrorResult& aRv);
 
@@ -64,13 +75,12 @@ struct TeeState : public nsISupports {
   bool Canceled2() const { return mCanceled2; }
   void SetCanceled2(bool aCanceled2) { mCanceled2 = aCanceled2; }
 
-  void SetCanceled(size_t aStreamIndex, bool aCanceled) {
-    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
-    aStreamIndex == 1 ? SetCanceled1(aCanceled) : SetCanceled2(aCanceled);
+  void SetCanceled(TeeBranch aBranch, bool aCanceled) {
+    aBranch == TeeBranch::Branch1 ? SetCanceled1(aCanceled)
+                                  : SetCanceled2(aCanceled);
   }
-  bool Canceled(size_t aStreamIndex) {
-    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
-    return aStreamIndex == 1 ? Canceled1() : Canceled2();
+  bool Canceled(TeeBranch aBranch) {
+    return aBranch == TeeBranch::Branch1 ? Canceled1() : Canceled2();
   }
 
   JS::Value Reason1() const { return mReason1; }
@@ -79,9 +89,8 @@ struct TeeState : public nsISupports {
   JS::Value Reason2() const { return mReason2; }
   void SetReason2(JS::HandleValue aReason2) { mReason2 = aReason2; }
 
-  void SetReason(size_t aStreamIndex, JS::HandleValue aReason) {
-    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
-    aStreamIndex == 1 ? SetReason1(aReason) : SetReason2(aReason);
+  void SetReason(TeeBranch aBranch, JS::HandleValue aReason) {
+    aBranch == TeeBranch::Branch1 ? SetReason1(aReason) : SetReason2(aReason);
   }
 
   ReadableStream* Branch1() const { return mBranch1; }
@@ -109,24 +118,22 @@ struct TeeState : public nsISupports {
     return mPullAlgorithm;
   }
 
-  // Some code is better served by using an index into various internal slots to
+  // Some code is better served by using an enum into various internal slots to
   // avoid duplication: Here we provide alternative accessors for that case.
-  ReadableStream* Branch(size_t index) const {
-    MOZ_ASSERT(index == 1 || index == 2);
-    return index == 1 ? Branch1() : Branch2();
+  ReadableStream* Branch(TeeBranch aBranch) const {
+    return aBranch == TeeBranch::Branch1 ? Branch1() : Branch2();
   }
 
-  void SetReadAgainForBranch(size_t index, bool value) {
-    MOZ_ASSERT(index == 1 || index == 2);
-    if (index == 1) {
-      SetReadAgainForBranch1(value);
+  void SetReadAgainForBranch(TeeBranch aBranch, bool aValue) {
+    if (aBranch == TeeBranch::Branch1) {
+      SetReadAgainForBranch1(aValue);
       return;
     }
-    SetReadAgainForBranch2(value);
+    SetReadAgainForBranch2(aValue);
   }
 
  private:
-  TeeState(JSContext* aCx, ReadableStream* aStream, bool aCloneForBranch2);
+  TeeState(ReadableStream* aStream, bool aCloneForBranch2);
 
   // Implicit:
   RefPtr<ReadableStream> mStream;

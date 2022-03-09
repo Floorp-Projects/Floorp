@@ -138,11 +138,11 @@ ClipboardData nsRetrievalContextX11::WaitForClipboardData(
   return {};
 }
 
-ClipboardTargets nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextX11::GetTargets(%s)\n",
+ClipboardTargets nsRetrievalContextX11::GetTargetsImpl(
+    int32_t aWhichClipboard) {
+  LOGCLIP("nsRetrievalContextX11::GetTargetsImpl(%s)\n",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
-
   return WaitForClipboardData(ClipboardDataType::Targets, aWhichClipboard)
       .ExtractTargets();
 }

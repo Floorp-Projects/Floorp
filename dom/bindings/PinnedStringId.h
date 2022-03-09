@@ -25,7 +25,7 @@ class PinnedStringId {
   jsid id;
 
  public:
-  constexpr PinnedStringId() : id(JSID_VOID) {}
+  constexpr PinnedStringId() : id(JS::PropertyKey::Void()) {}
 
   bool init(JSContext* cx, const char* string) {
     JSString* str = JS_AtomizeAndPinString(cx, string);

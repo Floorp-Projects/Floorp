@@ -14,7 +14,6 @@
 #include "LiveResizeListener.h"
 #include "SwipeTracker.h"
 #include "TouchEvents.h"
-#include "WritingModes.h"
 #include "X11UndefineNone.h"
 #include "base/thread.h"
 #include "mozilla/ArrayUtils.h"
@@ -22,6 +21,7 @@
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
@@ -124,19 +124,6 @@ uint64_t AutoObserverNotifier::sObserverId = 0;
 // milliseconds.
 const uint32_t kAsyncDragDropTimeout = 1000;
 
-namespace mozilla::widget {
-
-void IMENotification::SelectionChangeDataBase::SetWritingMode(
-    const WritingMode& aWritingMode) {
-  mWritingMode = aWritingMode.mWritingMode.bits;
-}
-
-WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
-  return WritingMode(mWritingMode);
-}
-
-}  // namespace mozilla::widget
-
 NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 
 //-------------------------------------------------------------------------
@@ -145,12 +132,14 @@ NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 //
 //-------------------------------------------------------------------------
 
-nsBaseWidget::nsBaseWidget()
+nsBaseWidget::nsBaseWidget() : nsBaseWidget(eBorderStyle_none) {}
+
+nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
     : mWidgetListener(nullptr),
       mAttachedWidgetListener(nullptr),
       mPreviouslyAttachedWidgetListener(nullptr),
       mCompositorVsyncDispatcher(nullptr),
-      mBorderStyle(eBorderStyle_none),
+      mBorderStyle(aBorderStyle),
       mBounds(0, 0, 0, 0),
       mOriginalBounds(nullptr),
       mSizeMode(nsSizeMode_Normal),
@@ -1522,6 +1511,8 @@ nsresult nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void nsBaseWidget::SetResizeMargin(LayoutDeviceIntCoord aResizeMargin) {}
+
 uint32_t nsBaseWidget::GetMaxTouchPoints() const { return 0; }
 
 bool nsBaseWidget::HasPendingInputEvent() { return false; }
@@ -2195,7 +2186,7 @@ const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
 
 void nsIWidget::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {}
 
-bool nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
+bool nsIWidget::GetEditCommands(NativeKeyBindingsType aType,
                                 const WidgetKeyboardEvent& aEvent,
                                 nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aEvent.IsTrusted());

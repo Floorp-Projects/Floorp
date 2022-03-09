@@ -80,17 +80,6 @@ function bytesToString(bytes) {
   return String.fromCharCode.apply(null, bytes);
 }
 
-class CRLiteState {
-  constructor(subject, spkiHash, state) {
-    this.subject = subject;
-    this.spkiHash = spkiHash;
-    this.state = state;
-  }
-}
-CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([
-  "nsICRLiteState",
-]);
-
 class CRLiteCoverage {
   constructor(b64LogID, minTimestamp, maxTimestamp) {
     this.b64LogID = b64LogID;
@@ -437,40 +426,6 @@ class IntermediatePreloads {
 
     log.debug(`Removing ${deleted.length} Intermediate certificates`);
     await this.removeCerts(deleted);
-    let hasPriorCRLiteData = await hasPriorData(
-      Ci.nsICertStorage.DATA_TYPE_CRLITE
-    );
-    if (!hasPriorCRLiteData) {
-      deleted = [];
-      updated = [];
-      created = current;
-    }
-    const toAdd = created.concat(updated.map(u => u.new));
-    let entries = [];
-    for (let entry of deleted) {
-      entries.push(
-        new CRLiteState(
-          entry.subjectDN,
-          entry.pubKeyHash,
-          Ci.nsICertStorage.STATE_UNSET
-        )
-      );
-    }
-    for (let entry of toAdd) {
-      entries.push(
-        new CRLiteState(
-          entry.subjectDN,
-          entry.pubKeyHash,
-          entry.crlite_enrolled
-            ? Ci.nsICertStorage.STATE_ENFORCE
-            : Ci.nsICertStorage.STATE_UNSET
-        )
-      );
-    }
-    let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
-      Ci.nsICertStorage
-    );
-    await new Promise(resolve => certStorage.setCRLiteState(entries, resolve));
   }
 
   /**
@@ -687,9 +642,10 @@ class CRLiteFilters {
           );
         }
       }
+      let enrollment = filter.enrolledIssuers ? filter.enrolledIssuers : [];
 
       await new Promise(resolve => {
-        certList.setFullCRLiteFilter(filter.bytes, coverage, rv => {
+        certList.setFullCRLiteFilter(filter.bytes, enrollment, coverage, rv => {
           log.debug(`setFullCRLiteFilter: ${rv}`);
           resolve();
         });

@@ -80,6 +80,7 @@ function createSourceObject(filename, props = {}) {
   return {
     id: filename,
     url: makeSourceURL(filename),
+    thread: props.thread || "FakeThread",
     isBlackBoxed: !!props.isBlackBoxed,
     isPrettyPrinted: false,
     isExtension: false,

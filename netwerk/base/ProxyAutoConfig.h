@@ -104,11 +104,6 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
       std::function<void(nsresult aStatus, const nsACString& aResult)>&&
           aCallback) override;
 
-  bool WaitingForDNSResolve() const { return mWaitingForDNSResolve; }
-  void RegisterDNSResolveCallback(std::function<void(void)>&& aCallback) {
-    mDNSResolveCallbacks.AppendElement(std::move(aCallback));
-  }
-
  private:
   // allow 665ms for myipaddress dns queries. That's 95th percentile.
   const static unsigned int kTimeout = 665;
@@ -119,7 +114,6 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   bool SrcAddress(const NetAddr* remoteAddress, nsCString& localAddress);
   bool MyIPAddressTryHost(const nsCString& hostName, unsigned int timeout,
                           const JS::CallArgs& aArgs, bool* aResult);
-  void MaybeInvokeDNSResolveCallbacks();
 
   JSContextWrapper* mJSContext{nullptr};
   bool mJSNeedsSetup{false};
@@ -127,12 +121,10 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   nsCString mConcatenatedPACData;
   nsCString mPACURI;
   bool mIncludePath{false};
-  bool mWaitingForDNSResolve{false};
   uint32_t mExtraHeapSize{0};
   nsCString mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
-  nsTArray<std::function<void(void)>> mDNSResolveCallbacks;
 };
 
 class RemoteProxyAutoConfig : public ProxyAutoConfigBase {

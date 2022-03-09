@@ -167,6 +167,7 @@ config = {
             "--subsuite=devtools",
             "--chunk-by-runtime",
         ],
+        "mochitest-browser-a11y": ["--flavor=browser", "--subsuite=a11y"],
         "mochitest-a11y": ["--flavor=a11y", "--disable-e10s"],
         "mochitest-remote": ["--flavor=browser", "--subsuite=remote"],
     },

@@ -12,3 +12,12 @@ pref("permissions.memory_only", true);
 // For testing only: used to test that backgroundtask-specific prefs are
 // processed.  This just needs to be an unusual integer in the range 0..127.
 pref("test.backgroundtask_specific_pref.exitCode", 79);
+
+// Enable the browser toolbox by default.  The browser toolbox is available only
+// when launching the background task with `--jsdebugger` on the command line,
+// and an attacker who can launch background task processes with arbitrary
+// parameters and execution environment can already access this functionality,
+// so there's no need to restrict access via preferences.
+pref("devtools.chrome.enabled", true);
+pref("devtools.debugger.remote-enabled", true);
+pref("devtools.debugger.prompt-connection", false);

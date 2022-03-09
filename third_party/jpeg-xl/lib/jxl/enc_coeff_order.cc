@@ -27,16 +27,14 @@
 
 namespace jxl {
 
-uint32_t ComputeUsedOrders(const SpeedTier speed,
-                           const AcStrategyImage& ac_strategy,
-                           const Rect& rect) {
-  // Use default orders for small images.
-  if (ac_strategy.xsize() < 5 && ac_strategy.ysize() < 5) return 0;
-
+std::pair<uint32_t, uint32_t> ComputeUsedOrders(
+    const SpeedTier speed, const AcStrategyImage& ac_strategy,
+    const Rect& rect) {
   // Only uses DCT8 = 0, so bitfield = 1.
-  if (speed >= SpeedTier::kFalcon) return 1;
+  if (speed >= SpeedTier::kFalcon) return {1, 1};
 
   uint32_t ret = 0;
+  uint32_t ret_customize = 0;
   size_t xsize_blocks = rect.xsize();
   size_t ysize_blocks = rect.ysize();
   // TODO(veluca): precompute when doing DCT.
@@ -45,19 +43,22 @@ uint32_t ComputeUsedOrders(const SpeedTier speed,
     for (size_t bx = 0; bx < xsize_blocks; ++bx) {
       int ord = kStrategyOrder[acs_row[bx].RawStrategy()];
       // Do not customize coefficient orders for blocks bigger than 32x32.
+      ret |= 1u << ord;
       if (ord > 6) {
         continue;
       }
-      ret |= 1u << ord;
+      ret_customize |= 1u << ord;
     }
   }
-  return ret;
+  // Use default orders for small images.
+  if (ac_strategy.xsize() < 5 && ac_strategy.ysize() < 5) return {ret, 0};
+  return {ret, ret_customize};
 }
 
 void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
                        const AcStrategyImage& ac_strategy,
                        const FrameDimensions& frame_dim, uint32_t& used_orders,
-                       coeff_order_t* JXL_RESTRICT order) {
+                       uint16_t used_acs, coeff_order_t* JXL_RESTRICT order) {
   std::vector<int32_t> num_zeros(kCoeffOrderMaxSize);
   // If compressing at high speed and only using 8x8 DCTs, only consider a
   // subset of blocks.
@@ -144,6 +145,8 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
   };
   auto mem = hwy::AllocateAligned<PosAndCount>(AcStrategy::kMaxCoeffArea);
 
+  std::vector<coeff_order_t> natural_order_buffer;
+
   uint16_t computed = 0;
   for (uint8_t o = 0; o < AcStrategy::kNumValidStrategies; ++o) {
     uint8_t ord = kStrategyOrder[o];
@@ -151,17 +154,24 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
     computed |= 1 << ord;
     AcStrategy acs = AcStrategy::FromRawStrategy(o);
     size_t sz = kDCTBlockSize * acs.covered_blocks_x() * acs.covered_blocks_y();
+
+    // Do nothing for transforms that don't appear.
+    if ((1 << ord) & ~used_acs) continue;
+
+    if (natural_order_buffer.size() < sz) natural_order_buffer.resize(sz);
+    acs.ComputeNaturalCoeffOrder(natural_order_buffer.data());
+
     // Ensure natural coefficient order is not permuted if the order is
     // not transmitted.
     if ((1 << ord) & ~used_orders) {
       for (size_t c = 0; c < 3; c++) {
         size_t offset = CoeffOrderOffset(ord, c);
         JXL_DASSERT(CoeffOrderOffset(ord, c + 1) - offset == sz);
-        SetDefaultOrder(AcStrategy::FromRawStrategy(o), &order[offset]);
+        memcpy(&order[offset], natural_order_buffer.data(),
+               sz * sizeof(*order));
       }
       continue;
     }
-    const coeff_order_t* natural_coeff_order = acs.NaturalCoeffOrder();
 
     bool is_nondefault = false;
     for (uint8_t c = 0; c < 3; c++) {
@@ -171,7 +181,7 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
       JXL_DASSERT(CoeffOrderOffset(ord, c + 1) - offset == sz);
       float inv_sqrt_sz = 1.0f / std::sqrt(sz);
       for (size_t i = 0; i < sz; ++i) {
-        size_t pos = natural_coeff_order[i];
+        size_t pos = natural_order_buffer[i];
         pos_and_val[i].pos = pos;
         // We don't care for the exact number -> quantize number of zeros,
         // to get less permuted order.
@@ -188,7 +198,7 @@ void ComputeCoeffOrder(SpeedTier speed, const ACImage& acs,
       // Grab indices.
       for (size_t i = 0; i < sz; ++i) {
         order[offset + i] = pos_and_val[i].pos;
-        is_nondefault |= natural_coeff_order[i] != pos_and_val[i].pos;
+        is_nondefault |= natural_order_buffer[i] != pos_and_val[i].pos;
       }
     }
     if (!is_nondefault) {
@@ -232,12 +242,12 @@ void EncodePermutation(const coeff_order_t* JXL_RESTRICT order, size_t skip,
 
 namespace {
 void EncodeCoeffOrder(const coeff_order_t* JXL_RESTRICT order, AcStrategy acs,
-                      std::vector<Token>* tokens, coeff_order_t* order_zigzag) {
+                      std::vector<Token>* tokens, coeff_order_t* order_zigzag,
+                      std::vector<coeff_order_t>& natural_order_lut) {
   const size_t llf = acs.covered_blocks_x() * acs.covered_blocks_y();
   const size_t size = kDCTBlockSize * llf;
-  const coeff_order_t* natural_coeff_order_lut = acs.NaturalCoeffOrderLut();
   for (size_t i = 0; i < size; ++i) {
-    order_zigzag[i] = natural_coeff_order_lut[order[i]];
+    order_zigzag[i] = natural_order_lut[order[i]];
   }
   TokenizePermutation(order_zigzag, llf, size, tokens);
 }
@@ -250,15 +260,20 @@ void EncodeCoeffOrders(uint16_t used_orders,
   auto mem = hwy::AllocateAligned<coeff_order_t>(AcStrategy::kMaxCoeffArea);
   uint16_t computed = 0;
   std::vector<std::vector<Token>> tokens(1);
+  std::vector<coeff_order_t> natural_order_lut;
   for (uint8_t o = 0; o < AcStrategy::kNumValidStrategies; ++o) {
     uint8_t ord = kStrategyOrder[o];
     if (computed & (1 << ord)) continue;
     computed |= 1 << ord;
     if ((used_orders & (1 << ord)) == 0) continue;
     AcStrategy acs = AcStrategy::FromRawStrategy(o);
+    const size_t llf = acs.covered_blocks_x() * acs.covered_blocks_y();
+    const size_t size = kDCTBlockSize * llf;
+    if (natural_order_lut.size() < size) natural_order_lut.resize(size);
+    acs.ComputeNaturalCoeffOrderLut(natural_order_lut.data());
     for (size_t c = 0; c < 3; c++) {
       EncodeCoeffOrder(&order[CoeffOrderOffset(ord, c)], acs, &tokens[0],
-                       mem.get());
+                       mem.get(), natural_order_lut);
     }
   }
   // Do not write anything if no order is used.

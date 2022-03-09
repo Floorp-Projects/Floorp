@@ -1,9 +1,12 @@
 include protocol PTestPaintThread;
 
+include "mozilla/_ipdltest/TestOffMainThreadPainting.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
 // This is supposed to be analagous to PLayerTransaction.
+[ManualDealloc, ChildImpl="TestOffMainThreadPaintingChild", ParentImpl="TestOffMainThreadPaintingParent"]
 sync protocol PTestLayoutThread
 {
 parent:

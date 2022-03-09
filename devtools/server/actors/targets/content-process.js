@@ -152,10 +152,11 @@ const ContentProcessTargetActor = TargetActorMixin(
       return {
         actor: this.actorID,
         consoleActor: this._consoleActor.actorID,
-        threadActor: this.threadActor.actorID,
+        isXpcShellTarget: this.isXpcShellTarget,
         memoryActor: this.memoryActor.actorID,
         processID: Services.appinfo.processID,
         remoteType: Services.appinfo.remoteType,
+        threadActor: this.threadActor.actorID,
 
         traits: {
           networkMonitor: false,

@@ -8,6 +8,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIScreenManager.h"
 #include "prtime.h"
 
 namespace mozilla::dom {
@@ -62,8 +63,8 @@ void MouseEvent::InitMouseEvent(const nsAString& aType, bool aCanBubble,
       mouseEventBase->mButton = aButton;
       mouseEventBase->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey,
                                          aMetaKey);
-      mClientPoint.x = aClientX;
-      mClientPoint.y = aClientY;
+      mDefaultClientPoint.x = aClientX;
+      mDefaultClientPoint.y = aClientY;
       mouseEventBase->mRefPoint.x = aScreenX;
       mouseEventBase->mRefPoint.y = aScreenY;
 
@@ -222,102 +223,77 @@ void MouseEvent::GetRegion(nsAString& aRegion) {
   }
 }
 
-int32_t MouseEvent::ScreenX(CallerType aCallerType) {
+CSSIntPoint MouseEvent::ScreenPoint(CallerType aCallerType) const {
   if (mEvent->mFlags.mIsPositionless) {
-    return 0;
+    return {};
   }
 
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     // Sanitize to something sort of like client cooords, but not quite
     // (defaulting to (0,0) instead of our pre-specified client coords).
     return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                  CSSIntPoint(0, 0))
-        .x;
+                                  CSSIntPoint(0, 0));
   }
 
-  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).x;
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
 }
 
-int32_t MouseEvent::ScreenY(CallerType aCallerType) {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
-
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
-    // Sanitize to something sort of like client cooords, but not quite
-    // (defaulting to (0,0) instead of our pre-specified client coords).
-    return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                  CSSIntPoint(0, 0))
-        .y;
-  }
-
-  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
+LayoutDeviceIntPoint MouseEvent::ScreenPointLayoutDevicePix() const {
+  const CSSIntPoint point = ScreenPoint(CallerType::System);
+  auto scale = mPresContext ? mPresContext->CSSToDevPixelScale()
+                            : CSSToLayoutDeviceScale();
+  return LayoutDeviceIntPoint::Round(point * scale);
 }
 
-int32_t MouseEvent::PageX() const {
+DesktopIntPoint MouseEvent::ScreenPointDesktopPix() const {
+  const CSSIntPoint point = ScreenPoint(CallerType::System);
+  auto scale =
+      mPresContext
+          ? mPresContext->CSSToDevPixelScale() /
+                mPresContext->DeviceContext()->GetDesktopToDeviceScale()
+          : CSSToDesktopScale();
+  return DesktopIntPoint::Round(point * scale);
+}
+
+already_AddRefed<nsIScreen> MouseEvent::GetScreen() {
+  nsCOMPtr<nsIScreenManager> screenMgr =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (!screenMgr) {
+    return nullptr;
+  }
+  return screenMgr->ScreenForRect(
+      DesktopIntRect(ScreenPointDesktopPix(), DesktopIntSize(1, 1)));
+}
+
+CSSIntPoint MouseEvent::PagePoint() const {
   if (mEvent->mFlags.mIsPositionless) {
-    return 0;
+    return {};
   }
 
   if (mPrivateDataDuplicated) {
-    return mPagePoint.x;
+    return mPagePoint;
   }
 
   return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                              mClientPoint)
-      .x;
+                              mDefaultClientPoint);
 }
 
-int32_t MouseEvent::PageY() const {
+CSSIntPoint MouseEvent::ClientPoint() const {
   if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
-
-  if (mPrivateDataDuplicated) {
-    return mPagePoint.y;
-  }
-
-  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                              mClientPoint)
-      .y;
-}
-
-int32_t MouseEvent::ClientX() {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
+    return {};
   }
 
   return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                mClientPoint)
-      .x;
+                                mDefaultClientPoint);
 }
 
-int32_t MouseEvent::ClientY() {
+CSSIntPoint MouseEvent::OffsetPoint() const {
   if (mEvent->mFlags.mIsPositionless) {
-    return 0;
+    return {};
   }
 
-  return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                mClientPoint)
-      .y;
-}
-
-int32_t MouseEvent::OffsetX() {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
   return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                mClientPoint)
-      .x;
-}
-
-int32_t MouseEvent::OffsetY() {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
-  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                mClientPoint)
-      .y;
+                                mDefaultClientPoint);
 }
 
 bool MouseEvent::AltKey() { return mEvent->AsInputEvent()->IsAlt(); }

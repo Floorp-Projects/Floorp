@@ -4,7 +4,7 @@ UA Widgets
 Introduction
 ------------
 
-UA Widgets are intended to be a replacement of our usage of XBL bindings in web content. These widgets run JavaScript inside extended principal per-origin sandboxes. They insert their own DOM inside of a special, closed Shadow Root inaccessible to the page, called a UA Widget Shadow Root.
+User Agent Widgets (UA Widgets) are intended to be a replacement of our usage of XBL bindings in web content. These widgets run JavaScript inside extended principal per-origin sandboxes. They insert their own DOM inside of a special, closed Shadow Root inaccessible to the page, called a UA Widget Shadow Root.
 
 UA Widget lifecycle
 -------------------

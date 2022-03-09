@@ -3,23 +3,28 @@
   <g color="ghostwhite">
     <defs>
       <linearGradient id="linearGrad1" gradientUnits="objectBoundingBox" y1="0" x1="0" y2="1" x2="1" >
-      	<stop offset="000%" stop-color="orange" />
-      	<stop offset="033%" stop-color="red"    />
-      	<stop offset="050%" stop-color="gold"   />
-      	<stop offset="066%" stop-color="red"    />
-      	<stop offset="100%" stop-color="orange" />
+        <stop offset="000%" stop-color="orange" />
+        <stop offset="033%" stop-color="red"    />
+        <stop offset="050%" stop-color="gold"   />
+        <stop offset="066%" stop-color="red"    />
+        <stop offset="100%" stop-color="orange" />
       </linearGradient>
 
       <radialGradient id="radialGrad1" gradientUnits="objectBoundingBox" cx="0.5" cy="0.5" r="0.5" fx="0.15" fy="0.15" >
-      	<stop offset="000%" stop-color="orange" />
-      	<stop offset="033%" stop-color="red"    />
-      	<stop offset="050%" stop-color="gold"   />
-      	<stop offset="066%" stop-color="red"    />
-      	<stop offset="100%" stop-color="orange" />
+        <stop offset="000%" stop-color="orange" />
+        <stop offset="033%" stop-color="red"    />
+        <stop offset="050%" stop-color="gold"   />
+        <stop offset="066%" stop-color="red"    />
+        <stop offset="100%" stop-color="orange" />
       </radialGradient>
     </defs>
 
     <g>
+      <g id="foreign">
+        <foreignObject x="0" y="0" width="100" height="100">
+          <p xmlns="http://www.w3.org/1999/xhtml">Foo</p>
+        </foreignObject>
+      </g>
       <rect id="rect1" x="0" y="0" width="200" height="125" stroke="none" />
       <rect id="rect2" x="200" y="0" width="200" height="125" stroke="none" />
       <rect id="rect3" x="0" y="125" width="200" height="125" stroke="none" fill="currentColor"/>

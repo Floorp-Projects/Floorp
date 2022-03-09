@@ -4,6 +4,9 @@
 
 // The test has a lot of interactions between debugger and console panels which
 // might take more than 30s to complete on a slow machine.
+
+"use strict";
+
 requestLongerTimeout(2);
 
 // Tests that pretty-printing updates console messages.
@@ -12,9 +15,11 @@ add_task(async function() {
   invokeInTab("arithmetic");
 
   info("Switch to console and check message");
-  const minifiedLink = await waitForConsoleLink(dbg,
+  const minifiedLink = await waitForConsoleLink(
+    dbg,
     "arithmetic",
-    "math.min.js:3:73");
+    "math.min.js:3:73"
+  );
 
   info("Click on the link to open the debugger");
   minifiedLink.click();
@@ -43,20 +48,19 @@ add_task(async function() {
 
 async function waitForConsoleLink(dbg, messageText, linkText) {
   const { toolbox } = dbg;
-  const console = await toolbox.selectTool("webconsole");
+  await toolbox.selectTool("webconsole");
 
   return waitFor(async () => {
     // Wait until the message updates.
     const [message] = await findConsoleMessages(toolbox, messageText);
     if (!message) {
-      return false
+      return false;
     }
     const linkEl = message.querySelector(".frame-link-source");
     if (!linkEl) {
       return false;
     }
 
-    const linkText = linkEl.textContent;
-    return linkText == linkText ? linkEl : null;
+    return linkEl.textContent == linkText ? linkEl : false;
   });
 }

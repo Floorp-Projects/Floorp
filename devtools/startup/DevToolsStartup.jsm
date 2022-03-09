@@ -1145,6 +1145,20 @@ DevToolsStartup.prototype = {
       const listener = new SocketListener(devToolsServer, socketOptions);
       listener.open();
       dump("Started devtools server on " + portOrPath + "\n");
+
+      // Prevent leaks on shutdown.
+      const close = () => {
+        Services.obs.removeObserver(close, "quit-application");
+        dump("Stopped devtools server on " + portOrPath + "\n");
+        if (listener) {
+          listener.close();
+        }
+        if (devToolsServer) {
+          devToolsServer.destroy();
+        }
+        serverLoader.destroy();
+      };
+      Services.obs.addObserver(close, "quit-application");
     } catch (e) {
       dump("Unable to start devtools server on " + portOrPath + ": " + e);
     }
@@ -1228,6 +1242,7 @@ DevToolsStartup.prototype = {
     return this;
   },
 
+  // Keep `DevToolsStartup.helpInfo` synchronized with `BackgroundTasksManager.helpInfo`.
   /* eslint-disable max-len */
   helpInfo:
     "  --jsconsole        Open the Browser Console.\n" +

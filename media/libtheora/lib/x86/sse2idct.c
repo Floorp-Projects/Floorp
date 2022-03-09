@@ -208,6 +208,7 @@ const unsigned short __attribute__((aligned(16),used)) OC_IDCT_CONSTS[64]={
 
 static void oc_idct8x8_slow_sse2(ogg_int16_t _y[64],ogg_int16_t _x[64]){
   OC_ALIGN16(ogg_int16_t buf[16]);
+  int i;
   /*This routine accepts an 8x8 matrix pre-transposed.*/
   __asm__ __volatile__(
     /*Load rows 2, 3, 5, and 6 for the first stage of the iDCT.*/
@@ -230,19 +231,16 @@ static void oc_idct8x8_slow_sse2(ogg_int16_t _y[64],ogg_int16_t _x[64]){
     :[x]"m"(OC_CONST_ARRAY_OPERAND(ogg_int16_t,_x,64)),
      [c]"m"(OC_CONST_ARRAY_OPERAND(ogg_int16_t,OC_IDCT_CONSTS,128))
   );
-  if(_x!=_y){
-    int i;
-    __asm__ __volatile__("pxor %%xmm0,%%xmm0\n\t"::);
-    /*Clear input data for next block (decoder only).*/
-    for(i=0;i<2;i++){
-      __asm__ __volatile__(
-        "movdqa %%xmm0,"OC_MEM_OFFS(0x00,x)"\n\t"
-        "movdqa %%xmm0,"OC_MEM_OFFS(0x10,x)"\n\t"
-        "movdqa %%xmm0,"OC_MEM_OFFS(0x20,x)"\n\t"
-        "movdqa %%xmm0,"OC_MEM_OFFS(0x30,x)"\n\t"
-        :[x]"=m"(OC_ARRAY_OPERAND(ogg_int16_t,_x+i*32,32))
-      );
-    }
+  __asm__ __volatile__("pxor %%xmm0,%%xmm0\n\t"::);
+  /*Clear input data for next block (decoder only).*/
+  for(i=0;i<2;i++){
+    __asm__ __volatile__(
+      "movdqa %%xmm0,"OC_MEM_OFFS(0x00,x)"\n\t"
+      "movdqa %%xmm0,"OC_MEM_OFFS(0x10,x)"\n\t"
+      "movdqa %%xmm0,"OC_MEM_OFFS(0x20,x)"\n\t"
+      "movdqa %%xmm0,"OC_MEM_OFFS(0x30,x)"\n\t"
+      :[x]"=m"(OC_ARRAY_OPERAND(ogg_int16_t,_x+i*32,32))
+    );
   }
 }
 
@@ -411,17 +409,15 @@ static void oc_idct8x8_10_sse2(ogg_int16_t _y[64],ogg_int16_t _x[64]){
     :[x]"m"OC_CONST_ARRAY_OPERAND(ogg_int16_t,_x,64),
      [c]"m"(OC_CONST_ARRAY_OPERAND(ogg_int16_t,OC_IDCT_CONSTS,128))
   );
-  if(_x!=_y){
-    /*Clear input data for next block (decoder only).*/
-    __asm__ __volatile__(
-      "pxor %%mm0,%%mm0\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x20,x)"\n\t"
-      "movq %%mm0,"OC_MEM_OFFS(0x30,x)"\n\t"
-      :[x]"+m"(OC_ARRAY_OPERAND(ogg_int16_t,_x,28))
-    );
-  }
+  /*Clear input data for next block (decoder only).*/
+  __asm__ __volatile__(
+    "pxor %%mm0,%%mm0\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x00,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x10,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x20,x)"\n\t"
+    "movq %%mm0,"OC_MEM_OFFS(0x30,x)"\n\t"
+    :[x]"+m"(OC_ARRAY_OPERAND(ogg_int16_t,_x,28))
+  );
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.

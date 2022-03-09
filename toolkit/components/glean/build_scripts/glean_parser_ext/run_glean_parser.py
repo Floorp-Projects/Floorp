@@ -7,7 +7,6 @@
 import cpp
 import js
 import os
-import re
 import rust
 import sys
 
@@ -49,11 +48,7 @@ def get_parser_options(moz_app_version):
     app_version_major = moz_app_version.split(".", 1)[0]
     return {
         "allow_reserved": False,
-        "custom_is_expired": lambda expires: expires == "expired"
-        or expires != "never"
-        and int(expires) <= int(app_version_major),
-        "custom_validate_expires": lambda expires: expires in ("expired", "never")
-        or re.fullmatch(r"\d\d+", expires, flags=re.ASCII),
+        "expire_by_version": int(app_version_major),
     }
 
 

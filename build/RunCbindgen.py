@@ -14,7 +14,7 @@ import pytoml
 # Try to read the package name or otherwise assume same name as the crate path.
 def _get_crate_name(crate_path):
     try:
-        with open(mozpath.join(crate_path, "Cargo.toml")) as f:
+        with open(mozpath.join(crate_path, "Cargo.toml"), encoding="utf-8") as f:
             return pytoml.load(f)["package"]["name"]
     except Exception:
         return mozpath.basename(crate_path)

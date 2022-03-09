@@ -6115,10 +6115,10 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "116",
     "kind": "categorical",
     "labels": ["HitMemory", "HitDisk", "Miss"],
-    "bug_numbers": [1364235],
+    "bug_numbers": [1364235, 1590385, 1623098, 1649954, 1689257, 1754639],
     "releaseChannelCollection": "opt-out",
     "description": "Record hits and misses to the startup cache, with categories."
   },
@@ -6126,10 +6126,10 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "116",
     "kind": "categorical",
     "labels": ["Hit", "HitChild", "Miss"],
-    "bug_numbers": [1364235],
+    "bug_numbers": [1364235, 1590385, 1623098, 1649954, 1689257, 1754639],
     "releaseChannelCollection": "opt-out",
     "description": "Record hits and misses to the script preloader, with categories."
   },
@@ -6137,11 +6137,11 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "116",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
-    "bug_numbers": [1364235],
+    "bug_numbers": [1364235, 1590385, 1623098, 1649954, 1689257, 1754639],
     "releaseChannelCollection": "opt-out",
     "description": "Time spent waiting for off-thread compiles in the script preloader."
   },
@@ -7854,8 +7854,8 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["mconley@mozilla.com"],
-    "bug_numbers": [1340842, 1714255, 1730041],
-    "expires_in_version": "100",
+    "bug_numbers": [1340842, 1714255, 1730041, 1754640],
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -7865,8 +7865,8 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["mconley@mozilla.com"],
-    "bug_numbers": [1340842, 1714255, 1730041],
-    "expires_in_version": "100",
+    "bug_numbers": [1340842, 1714255, 1730041, 1754640],
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -8398,8 +8398,8 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["mconley@mozilla.com"],
-    "bug_numbers": [1622263, 1683101, 1714258, 1730042],
-    "expires_in_version": "100",
+    "bug_numbers": [1622263, 1683101, 1714258, 1730042, 1754641],
+    "expires_in_version": "106",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
@@ -10626,7 +10626,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
     "labels": [
@@ -10642,10 +10642,10 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["bvandyk@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "112",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
-    "bug_numbers": [1429986, 1570634, 1606206, 1689266]
+    "bug_numbers": [1429986, 1570634, 1606206, 1689266, 1754643]
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
@@ -11260,22 +11260,12 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["bvandyk@mozilla.com", "pehrsons@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "112",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303, 1754645],
     "description": "The length of time (in seconds) that a recording lasted. Recorded when a recorder stops"
-  },
-  "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "pehrsons@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
-    "description": "Records the type of timeout that happened while attempting to init the encoder. Audio = 0, Video = 1. Recorded immediately following a timeout"
   },
   "DEVTOOLS_ENTRY_POINT": {
     "record_in_processes": ["main"],
@@ -12095,7 +12085,7 @@
   "BROWSER_ATTRIBUTION_ERRORS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "100",
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["read_error", "decode_error", "write_error", "quarantine_error"],
     "description": "Count for the number of errors encountered trying to determine attribution data: on Windows, from the installers (stub and full); on macOS, from the quarantine database.",
@@ -13561,26 +13551,26 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "110",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145, 1570634, 1606206, 1685399, 1714303],
+    "bug_numbers": [1293145, 1570634, 1606206, 1685399, 1714303, 1754647],
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
+    "expires_in_version": "110",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668, 1570634, 1606206, 1685399]
+    "bug_numbers": [1289668, 1570634, 1606206, 1685399, 1754648]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["content"],
@@ -13605,18 +13595,6 @@
     "high": 10000,
     "n_buckets": 100,
     "bug_numbers": [1294349, 1570634, 1606206, 1689267]
-  },
-  "VIDEO_VP9_BENCHMARK_FPS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozill.com", "bryce@mozilla.com"],
-    "expires_in_version": "100",
-    "bug_numbers": [1230265, 1570634, 1606206, 1689267],
-    "kind": "linear",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "720p VP9 decode benchmark measurement in frames per second",
-    "releaseChannelCollection": "opt-out"
   },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
@@ -14170,30 +14148,6 @@
     "kind": "flag",
     "description": "Tracks situations when the user opts for auto-detecting the language of a page"
   },
-  "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed.",
-    "bug_numbers": [1714303]
-  },
-  "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 60,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1714303],
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
-  },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -14711,17 +14665,6 @@
     "keyed": true,
     "description": "OpenGL compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
     "bug_numbers": [1002846]
-  },
-  "WEBVTT_TRACK_KINDS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "enumerated",
-    "n_values": 10,
-    "bug_numbers": [1280644, 1570634, 1606206, 1689267],
-    "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
-    "releaseChannelCollection": "opt-out"
   },
   "BLINK_FILESYSTEM_USED": {
     "record_in_processes": ["main", "content"],
@@ -15899,38 +15842,26 @@
  "WEBAUTHN_CREATE_CREDENTIAL_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "100",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "rmf@mozilla.com"],
+    "expires_in_version": "112",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 100,
-    "bug_numbers": [1265472, 1558870, 1630155, 1689269],
+    "bug_numbers": [1265472, 1558870, 1630155, 1689269, 1754650],
     "description": "Time in milliseconds to complete a WebAuthn create credential."
   },
   "WEBAUTHN_GET_ASSERTION_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "100",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "rmf@mozilla.com"],
+    "expires_in_version": "112",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 100,
-    "bug_numbers": [1265472, 1558870, 1630155, 1689269],
+    "bug_numbers": [1265472, 1558870, 1630155, 1689269, 1754650],
     "description": "Time in milliseconds to complete a WebAuthn get assertion."
-  },
-  "VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozilla.com"],
-    "expires_in_version": "100",
-    "releaseChannelCollection": "opt-out",
-    "keyed": true,
-    "kind": "enumerated",
-    "n_values":  10,
-    "bug_numbers": [1393392, 1714303],
-    "description": "The runtime status, sent when a remote HW video decoder is shutdown, of previously-blacklisted driver: 0:remote HW-decoding and GPU process didn't crash, 1:remote HW-decoding and GPU process crashed. The histogram is keyed by the blacklisted driver name."
   },
   "FORM_FILLING_REQUIRED_TIME_MS": {
     "record_in_processes": ["main"],
@@ -16257,8 +16188,8 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["arthur@mozilla.com", "tanvi@mozilla.com", "tihuang@mozilla.com"],
-    "bug_numbers": [1533363, 1546796, 1546906, 1550756, 1572666, 1590124, 1621800, 1668604],
-    "expires_in_version": "91",
+    "bug_numbers": [1533363, 1546796, 1546906, 1550756, 1572666, 1590124, 1621800, 1668604, 1706842],
+    "expires_in_version": "never",
     "kind": "categorical",
     "n_values": 50,
     "labels": [
@@ -16406,21 +16337,6 @@
     "high": 1000,
     "n_buckets": 50,
     "description": "Time in milliseconds spent in the layout system per Refresh Driver tick."
-  },
-  "WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["nika@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "categorical",
-    "labels": [
-      "EnabledByAutostart",
-      "EnabledByUser",
-      "DisabledByAutostart",
-      "DisabledByUser"
-    ],
-    "bug_numbers": [1602903, 1656132, 1690329, 1730263],
-    "description": "Fission enabled status of individual windows in fission.autostart and non-fission.autostart profiles"
   },
   "COOKIE_PURGING_ORIGINS_PURGED": {
     "expires_in_version": "never",
@@ -16767,13 +16683,13 @@
   "L10N_DOCUMENT_INITIAL_TRANSLATION_TIME_US": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "100",
+    "expires_in_version": "120",
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 100,
     "description": "Time it took to perform initial translation of the document (in microseconds)",
-    "alert_emails": ["zbraniecki@mozilla.com"],
-    "bug_numbers": [1692064],
+    "alert_emails": ["nordzilla@mozilla.com"],
+    "bug_numbers": [1692064, 1754653],
     "keyed": true,
     "keys": [
       "browser_first_window",

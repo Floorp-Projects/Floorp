@@ -274,6 +274,15 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
   }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  for (TagDesc& tag : moduleEnv_->tags) {
+    if (!allocateGlobalBytes(sizeof(WasmTagObject*), sizeof(void*),
+                             &tag.globalDataOffset)) {
+      return false;
+    }
+  }
+#endif
+
   if (!isAsmJS()) {
     // Copy type definitions to metadata that are required at runtime,
     // allocating global data so that codegen can find the type id's at
@@ -479,6 +488,7 @@ bool ModuleGenerator::linkCallSites() {
     switch (callSite.kind()) {
       case CallSiteDesc::Import:
       case CallSiteDesc::Indirect:
+      case CallSiteDesc::IndirectFast:
       case CallSiteDesc::Symbolic:
         break;
       case CallSiteDesc::Func: {
@@ -581,9 +591,6 @@ void ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex,
       break;
     case CodeRange::Throw:
       // Jumped to by other stubs, so nothing to do.
-      break;
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("Indirect stub generates later - at runtime.");
       break;
     case CodeRange::FarJumpIsland:
     case CodeRange::BuiltinThunk:

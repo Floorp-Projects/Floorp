@@ -2001,14 +2001,6 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   }
   clone->initAtom(atom);
 
-  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    MOZ_ASSERT(fun->isExtended());
-    MOZ_ASSERT(fun->compartment() == cx->compartment());
-    for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++) {
-      clone->initExtendedSlot(i, fun->getExtendedSlot(i));
-    }
-  }
-
   return clone;
 }
 
@@ -2037,6 +2029,16 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
     clone->initEnvironment(enclosingEnv);
   }
 
+#ifdef DEBUG
+  // Assert extended slots don't need to be copied.
+  if (fun->isExtended()) {
+    for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++) {
+      MOZ_ASSERT(fun->getExtendedSlot(i).isUndefined());
+      MOZ_ASSERT(clone->getExtendedSlot(i).isUndefined());
+    }
+  }
+#endif
+
   return clone;
 }
 
@@ -2055,6 +2057,11 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(fun->native() == InstantiateAsmJS);
   MOZ_ASSERT(!fun->hasJitInfo());
   clone->initNative(InstantiateAsmJS, nullptr);
+
+  JSObject* moduleObj =
+      &fun->getExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT).toObject();
+  clone->initExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT,
+                          ObjectValue(*moduleObj));
 
   return clone;
 }

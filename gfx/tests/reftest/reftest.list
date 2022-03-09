@@ -20,7 +20,7 @@ fails-if(useDrawSnapshot) == 1501195.html 1501195-ref.html
 == 1519754.html 1519754-ref.html
 skip-if(!asyncPan) == 1524261.html 1524261-ref.html
 fuzzy-if(!useDrawSnapshot,14-14,44-95) == 1524353.html 1524353-ref.html
-fuzzy-if(!useDrawSnapshot,2-7,17500-36908) == 1523776.html 1523776-ref.html
+== 1523776.html 1523776-ref.html
 == bug1523410-translate-scale-snap.html bug1523410-translate-scale-snap-ref.html
 == 1523080.html 1523080-ref.html
 == 1616444-same-color-different-paths.html 1616444-same-color-different-paths-ref.html
@@ -28,7 +28,7 @@ skip-if(!asyncPan||Android) fuzzy-if(winWidget,54-94,2713-3419) fuzzy-if(cocoaWi
 pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == 1662062-1-no-blurry.html 1662062-1-ref.html
 # Bug 1715676: nsBulletFrame has been removed and the new rendering does not use PushRoundedRect that this test is for:
 # == 1681610.html 1681610-ref.html
-skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-897) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
+skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-1050) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
 fuzzy(64-99,512-523) == 1696439-1.html 1696439-1-ref.html
 random-if(gtkWidget) == 1722689-1.html 1722689-1-ref.html
 fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html

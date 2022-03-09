@@ -43,7 +43,7 @@ class ImageFactory {
                                              ProgressTracker* aProgressTracker,
                                              const nsCString& aMimeType,
                                              nsIURI* aURI, bool aIsMultiPart,
-                                             uint32_t aInnerWindowId);
+                                             uint64_t aInnerWindowId);
   /**
    * Creates a new image which isn't associated with a URI or loaded through
    * the usual image loading mechanism.
@@ -71,12 +71,12 @@ class ImageFactory {
   static already_AddRefed<Image> CreateRasterImage(
       nsIRequest* aRequest, ProgressTracker* aProgressTracker,
       const nsCString& aMimeType, nsIURI* aURI, uint32_t aImageFlags,
-      uint32_t aInnerWindowId);
+      uint64_t aInnerWindowId);
 
   static already_AddRefed<Image> CreateVectorImage(
       nsIRequest* aRequest, ProgressTracker* aProgressTracker,
       const nsCString& aMimeType, nsIURI* aURI, uint32_t aImageFlags,
-      uint32_t aInnerWindowId);
+      uint64_t aInnerWindowId);
 
   // This is a static factory class, so disallow instantiation.
   virtual ~ImageFactory() = 0;

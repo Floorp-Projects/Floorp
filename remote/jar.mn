@@ -23,8 +23,10 @@ remote.jar:
   content/shared/TabManager.jsm (shared/TabManager.jsm)
   content/shared/WebSocketConnection.jsm (shared/WebSocketConnection.jsm)
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
+  content/shared/listeners/BrowsingContextListener.jsm (shared/listeners/BrowsingContextListener.jsm)
   content/shared/listeners/ConsoleAPIListener.jsm (shared/listeners/ConsoleAPIListener.jsm)
   content/shared/listeners/ConsoleListener.jsm (shared/listeners/ConsoleListener.jsm)
+  content/shared/listeners/LoadListener.jsm (shared/listeners/LoadListener.jsm)
 
   # shared modules (messagehandler architecture)
   content/shared/messagehandler/Errors.jsm (shared/messagehandler/Errors.jsm)
@@ -47,6 +49,7 @@ remote.jar:
   content/shared/webdriver/Assert.jsm (shared/webdriver/Assert.jsm)
   content/shared/webdriver/Capabilities.jsm (shared/webdriver/Capabilities.jsm)
   content/shared/webdriver/Errors.jsm (shared/webdriver/Errors.jsm)
+  content/shared/webdriver/KeyData.jsm (shared/webdriver/KeyData.jsm)
   content/shared/webdriver/Session.jsm (shared/webdriver/Session.jsm)
 
   # imports from external folders

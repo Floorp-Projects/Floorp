@@ -4,860 +4,534 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GeckoProfiler.h"
-#include "LoadedScript.h"
-#include "ScriptLoadRequest.h"
-#include "ScriptTrace.h"
-#include "ModuleLoadRequest.h"
+#include "ScriptLoader.h"
+#include "ModuleLoader.h"
 
-#include "js/Array.h"  // JS::GetArrayLength
-#include "js/CompilationAndEvaluation.h"
-#include "js/ContextOptions.h"        // JS::ContextOptionsRef
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "jsapi.h"
+#include "js/ContextOptions.h"  // JS::ContextOptionsRef
+#include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::FinishDynamicModuleImport, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{DynamicImport,Metadata}Hook
 #include "js/OffThreadScriptCompilation.h"
-#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetElement
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/Realm.h"
 #include "js/SourceText.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/ModuleLoaderBase.h"
+#include "js/loader/ModuleLoadRequest.h"
+#include "xpcpublic.h"
+#include "GeckoProfiler.h"
+#include "nsIContent.h"
+#include "nsJSUtils.h"
 #include "mozilla/dom/AutoEntryScript.h"
-#include "mozilla/CycleCollectedJSContext.h"  // nsAutoMicroTask
-#include "nsContentUtils.h"
-#include "nsICacheInfoChannel.h"  //nsICacheInfoChannel
-#include "nsNetUtil.h"            // NS_NewURI
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
+#include "nsGlobalWindowInner.h"
+#include "nsIPrincipal.h"
+#include "mozilla/LoadInfo.h"
 
 using JS::SourceText;
+using namespace JS::loader;
 
 namespace mozilla::dom {
 
-LazyLogModule ModuleLoader::gCspPRLog("CSP");
-LazyLogModule ModuleLoader::gModuleLoaderLog("ModuleLoader");
-
 #undef LOG
 #define LOG(args) \
-  MOZ_LOG(ModuleLoader::gModuleLoaderLog, mozilla::LogLevel::Debug, args)
+  MOZ_LOG(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug, args)
 
 #define LOG_ENABLED() \
-  MOZ_LOG_TEST(ModuleLoader::gModuleLoaderLog, mozilla::LogLevel::Debug)
+  MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
 //////////////////////////////////////////////////////////////
-// ModuleLoader::mFetchingModules / ModuleLoader::mFetchingModules
+// DOM module loader Helpers
 //////////////////////////////////////////////////////////////
-
-inline void ImplCycleCollectionUnlink(
-    nsRefPtrHashtable<ModuleMapKey,
-                      mozilla::GenericNonExclusivePromise::Private>& aField) {
-  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
-    ImplCycleCollectionUnlink(iter.Key());
-
-    RefPtr<GenericNonExclusivePromise::Private> promise = iter.UserData();
-    if (promise) {
-      promise->Reject(NS_ERROR_ABORT, __func__);
-    }
-  }
-
-  aField.Clear();
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    nsRefPtrHashtable<ModuleMapKey,
-                      mozilla::GenericNonExclusivePromise::Private>& aField,
-    const char* aName, uint32_t aFlags = 0) {
-  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
-    ImplCycleCollectionTraverse(aCallback, iter.Key(), "mFetchingModules key",
-                                aFlags);
-  }
-}
-
-inline void ImplCycleCollectionUnlink(
-    nsRefPtrHashtable<ModuleMapKey, ModuleScript>& aField) {
-  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
-    ImplCycleCollectionUnlink(iter.Key());
-  }
-
-  aField.Clear();
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    nsRefPtrHashtable<ModuleMapKey, ModuleScript>& aField, const char* aName,
-    uint32_t aFlags = 0) {
-  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
-    ImplCycleCollectionTraverse(aCallback, iter.Key(), "mFetchedModules key",
-                                aFlags);
-    CycleCollectionNoteChild(aCallback, iter.UserData(), "mFetchedModules data",
-                             aFlags);
-  }
-}
-
-//////////////////////////////////////////////////////////////
-// ModuleLoader
-//////////////////////////////////////////////////////////////
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoader)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION(ModuleLoader, mFetchingModules, mFetchedModules,
-                         mDynamicImportRequests, mLoader)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoader)
-
-bool ModuleLoader::ModuleMapContainsURL(nsIURI* aURL,
-                                        nsIGlobalObject* aGlobal) const {
-  // Returns whether we have fetched, or are currently fetching, a module script
-  // for a URL.
-  ModuleMapKey key(aURL, aGlobal);
-  return mFetchingModules.Contains(key) || mFetchedModules.Contains(key);
-}
-
-void ModuleLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
-  // Update the module map to indicate that a module is currently being fetched.
-
-  MOZ_ASSERT(aRequest->IsLoading());
-  MOZ_ASSERT(
-      !ModuleMapContainsURL(aRequest->mURI, aRequest->GetWebExtGlobal()));
-  ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
-  mFetchingModules.InsertOrUpdate(
-      key, RefPtr<GenericNonExclusivePromise::Private>{});
-}
-
-void ModuleLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
-    ModuleLoadRequest* aRequest, nsresult aResult) {
-  // Update module map with the result of fetching a single module script.
-  //
-  // If any requests for the same URL are waiting on this one to complete, they
-  // will have ModuleLoaded or LoadFailed on them when the promise is
-  // resolved/rejected. This is set up in StartLoad.
-
-  LOG(
-      ("ScriptLoadRequest (%p): Module fetch finished (script == %p, result == "
-       "%u)",
-       aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
-
-  ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
-  RefPtr<GenericNonExclusivePromise::Private> promise;
-  if (!mFetchingModules.Remove(key, getter_AddRefs(promise))) {
-    LOG(("ScriptLoadRequest (%p): Key not found in mFetchingModules",
-         aRequest));
-    return;
-  }
-
-  RefPtr<ModuleScript> moduleScript(aRequest->mModuleScript);
-  MOZ_ASSERT(NS_FAILED(aResult) == !moduleScript);
-
-  mFetchedModules.InsertOrUpdate(key, RefPtr{moduleScript});
-
-  if (promise) {
-    if (moduleScript) {
-      LOG(("ScriptLoadRequest (%p):   resolving %p", aRequest, promise.get()));
-      promise->Resolve(true, __func__);
-    } else {
-      LOG(("ScriptLoadRequest (%p):   rejecting %p", aRequest, promise.get()));
-      promise->Reject(aResult, __func__);
-    }
-  }
-}
-
-RefPtr<GenericNonExclusivePromise> ModuleLoader::WaitForModuleFetch(
-    nsIURI* aURL, nsIGlobalObject* aGlobal) {
-  MOZ_ASSERT(ModuleMapContainsURL(aURL, aGlobal));
-
-  ModuleMapKey key(aURL, aGlobal);
-  if (auto entry = mFetchingModules.Lookup(key)) {
-    if (!entry.Data()) {
-      entry.Data() = new GenericNonExclusivePromise::Private(__func__);
-    }
-    return entry.Data();
-  }
-
-  RefPtr<ModuleScript> ms;
-  MOZ_ALWAYS_TRUE(mFetchedModules.Get(key, getter_AddRefs(ms)));
-  if (!ms) {
-    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                       __func__);
-  }
-
-  return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
-}
-
-ModuleScript* ModuleLoader::GetFetchedModule(nsIURI* aURL,
-                                             nsIGlobalObject* aGlobal) const {
-  if (LOG_ENABLED()) {
-    nsAutoCString url;
-    aURL->GetAsciiSpec(url);
-    LOG(("GetFetchedModule %s %p", url.get(), aGlobal));
-  }
-
-  bool found;
-  ModuleMapKey key(aURL, aGlobal);
-  ModuleScript* ms = mFetchedModules.GetWeak(key, &found);
-  MOZ_ASSERT(found);
-  return ms;
-}
-
-nsresult ModuleLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(!aRequest->mModuleScript);
-
-  nsresult rv = CreateModuleScript(aRequest);
-  MOZ_ASSERT(NS_FAILED(rv) == !aRequest->mModuleScript);
-
-  aRequest->ClearScriptSource();
-
-  if (NS_FAILED(rv)) {
-    aRequest->LoadFailed();
-    return rv;
-  }
-
-  if (!aRequest->mIsInline) {
-    SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
-  }
-
-  if (!aRequest->mModuleScript->HasParseError()) {
-    StartFetchingModuleDependencies(aRequest);
-  }
-
-  return NS_OK;
-}
-
-nsresult ModuleLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(!aRequest->mModuleScript);
-  MOZ_ASSERT(aRequest->mBaseURL);
-
-  LOG(("ScriptLoadRequest (%p): Create module script", aRequest));
-
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      mLoader->GetGlobalForRequest(aRequest);
-  if (!globalObject) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoMicroTask mt;
-
-  AutoAllowLegacyScriptExecution exemption;
-
-  AutoEntryScript aes(globalObject, "CompileModule", true);
-
-  nsresult rv;
-  {
-    JSContext* cx = aes.cx();
-    JS::Rooted<JSObject*> module(cx);
-    JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
-
-    JS::CompileOptions options(cx);
-    JS::RootedScript introductionScript(cx);
-    rv = mLoader->FillCompileOptionsForRequest(cx, aRequest, global, &options,
-                                               &introductionScript);
-
-    if (NS_SUCCEEDED(rv)) {
-      if (aRequest->mWasCompiledOMT) {
-        JS::Rooted<JS::InstantiationStorage> storage(cx);
-
-        RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
-            cx, aRequest->mOffThreadToken, storage.address());
-        if (stencil) {
-          JS::InstantiateOptions instantiateOptions(options);
-          module = JS::InstantiateModuleStencil(cx, instantiateOptions, stencil,
-                                                storage.address());
-        }
-
-        aRequest->mOffThreadToken = nullptr;
-        rv = module ? NS_OK : NS_ERROR_FAILURE;
-      } else {
-        MaybeSourceText maybeSource;
-        rv = aRequest->GetScriptSource(cx, &maybeSource);
-        if (NS_SUCCEEDED(rv)) {
-          rv = maybeSource.constructed<SourceText<char16_t>>()
-                   ? nsJSUtils::CompileModule(
-                         cx, maybeSource.ref<SourceText<char16_t>>(), global,
-                         options, &module)
-                   : nsJSUtils::CompileModule(
-                         cx, maybeSource.ref<SourceText<Utf8Unit>>(), global,
-                         options, &module);
-        }
-      }
-    }
-
-    MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
-
-    if (module) {
-      JS::RootedValue privateValue(cx);
-      JS::RootedScript moduleScript(cx, JS::GetModuleScript(module));
-      JS::InstantiateOptions instantiateOptions(options);
-      if (!JS::UpdateDebugMetadata(cx, moduleScript, instantiateOptions,
-                                   privateValue, nullptr, introductionScript,
-                                   nullptr)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
-    RefPtr<ModuleScript> moduleScript =
-        new ModuleScript(aRequest->mFetchOptions, aRequest->mBaseURL);
-    aRequest->mModuleScript = moduleScript;
-
-    if (!module) {
-      LOG(("ScriptLoadRequest (%p):   compilation failed (%d)", aRequest,
-           unsigned(rv)));
-
-      MOZ_ASSERT(aes.HasException());
-      JS::Rooted<JS::Value> error(cx);
-      if (!aes.StealException(&error)) {
-        aRequest->mModuleScript = nullptr;
-        return NS_ERROR_FAILURE;
-      }
-
-      moduleScript->SetParseError(error);
-      aRequest->ModuleErrored();
-      return NS_OK;
-    }
-
-    moduleScript->SetModuleRecord(module);
-
-    // Validate requested modules and treat failure to resolve module specifiers
-    // the same as a parse error.
-    rv = ModuleLoader::ResolveRequestedModules(aRequest, nullptr);
-    if (NS_FAILED(rv)) {
-      aRequest->ModuleErrored();
-      return NS_OK;
-    }
-  }
-
-  LOG(("ScriptLoadRequest (%p):   module script == %p", aRequest,
-       aRequest->mModuleScript.get()));
-
-  return rv;
-}
-
-nsresult ModuleLoader::HandleResolveFailure(
-    JSContext* aCx, LoadedScript* aScript, const nsAString& aSpecifier,
-    uint32_t aLineNumber, uint32_t aColumnNumber,
-    JS::MutableHandle<JS::Value> errorOut) {
-  JS::Rooted<JSString*> filename(aCx);
-  if (aScript) {
-    nsAutoCString url;
-    aScript->BaseURL()->GetAsciiSpec(url);
-    filename = JS_NewStringCopyZ(aCx, url.get());
-  } else {
-    filename = JS_NewStringCopyZ(aCx, "(unknown)");
-  }
-
-  if (!filename) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  AutoTArray<nsString, 1> errorParams;
-  errorParams.AppendElement(aSpecifier);
-
-  nsAutoString errorText;
-  nsresult rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "ModuleResolveFailure", errorParams,
-      errorText);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::Rooted<JSString*> string(aCx, JS_NewUCStringCopyZ(aCx, errorText.get()));
-  if (!string) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, aLineNumber,
-                       aColumnNumber, nullptr, string, JS::NothingHandleValue,
-                       errorOut)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-already_AddRefed<nsIURI> ModuleLoader::ResolveModuleSpecifier(
-    ScriptLoaderInterface* aLoader, LoadedScript* aScript,
-    const nsAString& aSpecifier) {
-  // The following module specifiers are allowed by the spec:
-  //  - a valid absolute URL
-  //  - a valid relative URL that starts with "/", "./" or "../"
-  //
-  // Bareword module specifiers are currently disallowed as these may be given
-  // special meanings in the future.
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpecifier);
-  if (NS_SUCCEEDED(rv)) {
-    return uri.forget();
-  }
-
-  if (rv != NS_ERROR_MALFORMED_URI) {
+static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
+  auto reportError = mozilla::MakeScopeExit([aCx]() {
+    JS_ReportErrorASCII(aCx, "No ScriptLoader found for the current context");
+  });
+
+  JS::Rooted<JSObject*> object(aCx, JS::CurrentGlobalOrNull(aCx));
+  if (!object) {
     return nullptr;
   }
 
-  if (!StringBeginsWith(aSpecifier, u"/"_ns) &&
-      !StringBeginsWith(aSpecifier, u"./"_ns) &&
-      !StringBeginsWith(aSpecifier, u"../"_ns)) {
+  nsIGlobalObject* global = xpc::NativeGlobal(object);
+  if (!global) {
     return nullptr;
   }
 
-  // Get the document's base URL if we don't have a referencing script here.
-  nsCOMPtr<nsIURI> baseURL;
-  if (aScript) {
-    baseURL = aScript->BaseURL();
+  nsGlobalWindowInner* innerWindow = nullptr;
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global)) {
+    innerWindow = nsGlobalWindowInner::Cast(win);
   } else {
-    baseURL = aLoader->GetBaseURI();
+    innerWindow = xpc::SandboxWindowOrNull(object, aCx);
   }
 
-  rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
-  if (NS_SUCCEEDED(rv)) {
-    return uri.forget();
+  if (!innerWindow) {
+    return nullptr;
   }
 
-  return nullptr;
+  Document* document = innerWindow->GetDocument();
+  if (!document) {
+    return nullptr;
+  }
+
+  ScriptLoader* loader = document->ScriptLoader();
+  if (!loader) {
+    return nullptr;
+  }
+
+  reportError.release();
+  return loader;
 }
 
-nsresult ModuleLoader::ResolveRequestedModules(ModuleLoadRequest* aRequest,
-                                               nsCOMArray<nsIURI>* aUrlsOut) {
-  ModuleScript* ms = aRequest->mModuleScript;
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(ms->ModuleRecord())) {
-    return NS_ERROR_FAILURE;
+static LoadedScript* GetLoadedScriptOrNull(
+    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate) {
+  if (aReferencingPrivate.isUndefined()) {
+    return nullptr;
   }
 
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
-  JS::Rooted<JSObject*> requestedModules(cx);
-  requestedModules = JS::GetRequestedModules(cx, moduleRecord);
-  MOZ_ASSERT(requestedModules);
-
-  uint32_t length;
-  if (!JS::GetArrayLength(cx, requestedModules, &length)) {
-    return NS_ERROR_FAILURE;
+  auto* script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
+  if (script->IsEventScript()) {
+    return nullptr;
   }
 
-  JS::Rooted<JS::Value> element(cx);
-  for (uint32_t i = 0; i < length; i++) {
-    if (!JS_GetElement(cx, requestedModules, i, &element)) {
-      return NS_ERROR_FAILURE;
-    }
+  MOZ_ASSERT_IF(
+      script->IsModuleScript(),
+      JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
+          aReferencingPrivate);
 
-    JS::Rooted<JSString*> str(cx, JS::GetRequestedModuleSpecifier(cx, element));
-    MOZ_ASSERT(str);
-
-    nsAutoJSString specifier;
-    if (!specifier.init(cx, str)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Let url be the result of resolving a module specifier given module script
-    // and requested.
-    ModuleLoader* requestModuleLoader = aRequest->mLoader;
-    nsCOMPtr<nsIURI> uri =
-        ResolveModuleSpecifier(requestModuleLoader->mLoader, ms, specifier);
-    if (!uri) {
-      uint32_t lineNumber = 0;
-      uint32_t columnNumber = 0;
-      JS::GetRequestedModuleSourcePos(cx, element, &lineNumber, &columnNumber);
-
-      JS::Rooted<JS::Value> error(cx);
-      nsresult rv = HandleResolveFailure(cx, ms, specifier, lineNumber,
-                                         columnNumber, &error);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      ms->SetParseError(error);
-      return NS_ERROR_FAILURE;
-    }
-
-    if (aUrlsOut) {
-      aUrlsOut->AppendElement(uri.forget());
-    }
-  }
-
-  return NS_OK;
+  return script;
 }
 
-void ModuleLoader::StartFetchingModuleDependencies(
-    ModuleLoadRequest* aRequest) {
-  LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
+//////////////////////////////////////////////////////////////
+// DOM module loader Host Hooks
+//////////////////////////////////////////////////////////////
+bool HostGetSupportedImportAssertions(JSContext* aCx,
+                                      JS::ImportAssertionVector& aValues) {
+  MOZ_ASSERT(aValues.empty());
 
-  if (aRequest->IsCanceled()) {
-    return;
-  }
-
-  MOZ_ASSERT(aRequest->mModuleScript);
-  MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
-  MOZ_ASSERT(!aRequest->IsReadyToRun());
-
-  auto visitedSet = aRequest->mVisitedSet;
-  MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
-
-  aRequest->mProgress = ModuleLoadRequest::Progress::eFetchingImports;
-
-  nsCOMArray<nsIURI> urls;
-  nsresult rv = ModuleLoader::ResolveRequestedModules(aRequest, &urls);
-  if (NS_FAILED(rv)) {
-    aRequest->mModuleScript = nullptr;
-    aRequest->ModuleErrored();
-    return;
-  }
-
-  // Remove already visited URLs from the list. Put unvisited URLs into the
-  // visited set.
-  int32_t i = 0;
-  while (i < urls.Count()) {
-    nsIURI* url = urls[i];
-    if (visitedSet->Contains(url)) {
-      urls.RemoveObjectAt(i);
-    } else {
-      visitedSet->PutEntry(url);
-      i++;
-    }
-  }
-
-  if (urls.Count() == 0) {
-    // There are no descendants to load so this request is ready.
-    aRequest->DependenciesLoaded();
-    return;
-  }
-
-  // For each url in urls, fetch a module script tree given url, module script's
-  // CORS setting, and module script's settings object.
-  nsTArray<RefPtr<GenericPromise>> importsReady;
-  for (auto* url : urls) {
-    RefPtr<GenericPromise> childReady =
-        StartFetchingModuleAndDependencies(aRequest, url);
-    importsReady.AppendElement(childReady);
-  }
-
-  // Wait for all imports to become ready.
-  RefPtr<GenericPromise::AllPromiseType> allReady =
-      GenericPromise::All(GetMainThreadSerialEventTarget(), importsReady);
-  allReady->Then(GetMainThreadSerialEventTarget(), __func__, aRequest,
-                 &ModuleLoadRequest::DependenciesLoaded,
-                 &ModuleLoadRequest::ModuleErrored);
-}
-
-RefPtr<GenericPromise> ModuleLoader::StartFetchingModuleAndDependencies(
-    ModuleLoadRequest* aParent, nsIURI* aURI) {
-  MOZ_ASSERT(aURI);
-
-  RefPtr<ModuleLoadRequest> childRequest =
-      ModuleLoadRequest::CreateStaticImport(aURI, aParent);
-
-  aParent->mImports.AppendElement(childRequest);
-
-  if (LOG_ENABLED()) {
-    nsAutoCString url1;
-    aParent->mURI->GetAsciiSpec(url1);
-
-    nsAutoCString url2;
-    aURI->GetAsciiSpec(url2);
-
-    LOG(("ScriptLoadRequest (%p): Start fetching dependency %p", aParent,
-         childRequest.get()));
-    LOG(("StartFetchingModuleAndDependencies \"%s\" -> \"%s\"", url1.get(),
-         url2.get()));
-  }
-
-  RefPtr<GenericPromise> ready = childRequest->mReady.Ensure(__func__);
-
-  nsresult rv = mLoader->StartModuleLoad(childRequest);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(!childRequest->mModuleScript);
-    LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
-         &childRequest->mReady));
-
-    mLoader->ReportErrorToConsole(childRequest, rv);
-    childRequest->mReady.Reject(rv, __func__);
-    return ready;
-  }
-
-  return ready;
-}
-
-void ModuleLoader::StartDynamicImport(ModuleLoadRequest* aRequest) {
-  LOG(("ScriptLoadRequest (%p): Start dynamic import", aRequest));
-
-  mDynamicImportRequests.AppendElement(aRequest);
-
-  nsresult rv = mLoader->StartModuleLoad(aRequest);
-  if (NS_FAILED(rv)) {
-    mLoader->ReportErrorToConsole(aRequest, rv);
-    FinishDynamicImportAndReject(aRequest, rv);
-  }
-}
-
-void ModuleLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                                nsresult aResult) {
-  AutoJSAPI jsapi;
-  MOZ_ASSERT(NS_FAILED(aResult));
-  MOZ_ALWAYS_TRUE(jsapi.Init(aRequest->mDynamicPromise));
-  FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
-}
-
-void ModuleLoader::FinishDynamicImport(
-    JSContext* aCx, ModuleLoadRequest* aRequest, nsresult aResult,
-    JS::Handle<JSObject*> aEvaluationPromise) {
-  // If aResult is a failed result, we don't have an EvaluationPromise. If it
-  // succeeded, evaluationPromise may still be null, but in this case it will
-  // be handled by rejecting the dynamic module import promise in the JSAPI.
-  MOZ_ASSERT_IF(NS_FAILED(aResult), !aEvaluationPromise);
-  LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
-       unsigned(aResult), JS_IsExceptionPending(aCx)));
-
-  // Complete the dynamic import, report failures indicated by aResult or as a
-  // pending exception on the context.
-
-  if (NS_FAILED(aResult) &&
-      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-    JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                           JSMSG_DYNAMIC_IMPORT_FAILED);
-  }
-
-  JS::Rooted<JS::Value> referencingScript(aCx,
-                                          aRequest->mDynamicReferencingPrivate);
-  JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
-  JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
-
-  JS::Rooted<JSObject*> moduleRequest(aCx,
-                                      JS::CreateModuleRequest(aCx, specifier));
-
-  JS::FinishDynamicModuleImport(aCx, aEvaluationPromise, referencingScript,
-                                moduleRequest, promise);
-
-  // FinishDynamicModuleImport clears any pending exception.
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
-  aRequest->ClearDynamicImport();
-}
-
-ModuleLoader::ModuleLoader(ScriptLoaderInterface* aLoader) : mLoader(aLoader) {
-  mLoader->EnsureModuleHooksInitialized();
-}
-
-ModuleLoader::~ModuleLoader() {
-  mDynamicImportRequests.CancelRequestsAndClear();
-
-  LOG(("ModuleLoader::~ModuleLoader %p", this));
-}
-
-void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsReadyToRun());
-  mLoader->ProcessLoadedModuleTree(aRequest);
-}
-
-JS::Value ModuleLoader::FindFirstParseError(ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest);
-
-  ModuleScript* moduleScript = aRequest->mModuleScript;
-  MOZ_ASSERT(moduleScript);
-
-  if (moduleScript->HasParseError()) {
-    return moduleScript->ParseError();
-  }
-
-  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
-    JS::Value error = FindFirstParseError(childRequest);
-    if (!error.isUndefined()) {
-      return error;
-    }
-  }
-
-  return JS::UndefinedValue();
-}
-
-bool ModuleLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
-  // Instantiate a top-level module and record any error.
-
-  MOZ_ASSERT(aRequest);
-  MOZ_ASSERT(aRequest->IsTopLevel());
-
-  LOG(("ScriptLoadRequest (%p): Instantiate module tree", aRequest));
-
-  ModuleScript* moduleScript = aRequest->mModuleScript;
-  MOZ_ASSERT(moduleScript);
-
-  JS::Value parseError = FindFirstParseError(aRequest);
-  if (!parseError.isUndefined()) {
-    moduleScript->SetErrorToRethrow(parseError);
-    LOG(("ScriptLoadRequest (%p):   found parse error", aRequest));
-    return true;
-  }
-
-  MOZ_ASSERT(moduleScript->ModuleRecord());
-
-  nsAutoMicroTask mt;
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
+  if (!aValues.reserve(1)) {
+    JS_ReportOutOfMemory(aCx);
     return false;
   }
 
-  JS::Rooted<JSObject*> module(jsapi.cx(), moduleScript->ModuleRecord());
-  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), module));
-
-  if (!ok) {
-    LOG(("ScriptLoadRequest (%p): Instantiate failed", aRequest));
-    MOZ_ASSERT(jsapi.HasException());
-    JS::RootedValue exception(jsapi.cx());
-    if (!jsapi.StealException(&exception)) {
-      return false;
-    }
-    MOZ_ASSERT(!exception.isUndefined());
-    moduleScript->SetErrorToRethrow(exception);
-  }
+  aValues.infallibleAppend(JS::ImportAssertion::Type);
 
   return true;
 }
 
-nsresult ModuleLoader::InitDebuggerDataForModuleTree(
-    JSContext* aCx, ModuleLoadRequest* aRequest) {
-  // JS scripts can be associated with a DOM element for use by the debugger,
-  // but preloading can cause scripts to be compiled before DOM script element
-  // nodes have been created. This method ensures that this association takes
-  // place before the first time a module script is run.
+// 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
+/**
+ * Implement the HostResolveImportedModule abstract operation.
+ *
+ * Resolve a module specifier string and look this up in the module
+ * map, returning the result. This is only called for previously
+ * loaded modules and always succeeds.
+ *
+ * @param aReferencingPrivate A JS::Value which is either undefined
+ *                            or contains a LoadedScript private pointer.
+ * @param aModuleRequest A module request object.
+ * @returns module This is set to the module found.
+ */
+JSObject* HostResolveImportedModule(JSContext* aCx,
+                                    JS::Handle<JS::Value> aReferencingPrivate,
+                                    JS::Handle<JSObject*> aModuleRequest) {
+  JS::Rooted<JSObject*> module(aCx);
 
-  MOZ_ASSERT(aRequest);
+  {
+    // LoadedScript should only live in this block, otherwise it will be a GC
+    // hazard
+    RefPtr<LoadedScript> script(
+        GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
-  ModuleScript* moduleScript = aRequest->mModuleScript;
-  if (moduleScript->DebuggerDataInitialized()) {
+    JS::Rooted<JSString*> specifierString(
+        aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
+    if (!specifierString) {
+      return nullptr;
+    }
+
+    // Let url be the result of resolving a module specifier given referencing
+    // module script and specifier.
+    nsAutoJSString string;
+    if (!string.init(aCx, specifierString)) {
+      return nullptr;
+    }
+
+    RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+    if (!loader) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIURI> uri =
+        ModuleLoaderBase::ResolveModuleSpecifier(loader, script, string);
+
+    // This cannot fail because resolving a module specifier must have been
+    // previously successful with these same two arguments.
+    MOZ_ASSERT(uri, "Failed to resolve previously-resolved module specifier");
+
+    // Use sandboxed global when doing a WebExtension content-script load.
+    nsCOMPtr<nsIGlobalObject> global;
+    if (BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(aCx))
+            ->ContentScriptAddonPolicy()) {
+      global = xpc::CurrentNativeGlobal(aCx);
+      MOZ_ASSERT(global);
+      MOZ_ASSERT(
+          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
+    }
+
+    // Let resolved module script be moduleMap[url]. (This entry must exist for
+    // us to have gotten to this point.)
+    ModuleScript* ms = loader->GetModuleLoader()->GetFetchedModule(uri, global);
+    MOZ_ASSERT(ms, "Resolved module not found in module map");
+    MOZ_ASSERT(!ms->HasParseError());
+    MOZ_ASSERT(ms->ModuleRecord());
+
+    module.set(ms->ModuleRecord());
+  }
+  return module;
+}
+
+bool HostPopulateImportMeta(JSContext* aCx,
+                            JS::Handle<JS::Value> aReferencingPrivate,
+                            JS::Handle<JSObject*> aMetaObject) {
+  RefPtr<ModuleScript> script =
+      static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(script->IsModuleScript());
+  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
+             aReferencingPrivate);
+
+  nsAutoCString url;
+  MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());
+  MOZ_ALWAYS_SUCCEEDS(script->BaseURL()->GetAsciiSpec(url));
+
+  JS::Rooted<JSString*> urlString(aCx, JS_NewStringCopyZ(aCx, url.get()));
+  if (!urlString) {
+    JS_ReportOutOfMemory(aCx);
+    return false;
+  }
+
+  return JS_DefineProperty(aCx, aMetaObject, "url", urlString,
+                           JSPROP_ENUMERATE);
+}
+
+bool HostImportModuleDynamically(JSContext* aCx,
+                                 JS::Handle<JS::Value> aReferencingPrivate,
+                                 JS::Handle<JSObject*> aModuleRequest,
+                                 JS::Handle<JSObject*> aPromise) {
+  RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
+
+  JS::Rooted<JSString*> specifierString(
+      aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
+  if (!specifierString) {
+    return false;
+  }
+
+  // Attempt to resolve the module specifier.
+  nsAutoJSString specifier;
+  if (!specifier.init(aCx, specifierString)) {
+    return false;
+  }
+
+  RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+  if (!loader) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri =
+      ModuleLoaderBase::ResolveModuleSpecifier(loader, script, specifier);
+  if (!uri) {
+    JS::Rooted<JS::Value> error(aCx);
+    nsresult rv = ModuleLoaderBase::HandleResolveFailure(aCx, script, specifier,
+                                                         0, 0, &error);
+    if (NS_FAILED(rv)) {
+      JS_ReportOutOfMemory(aCx);
+      return false;
+    }
+
+    JS_SetPendingException(aCx, error);
+    return false;
+  }
+
+  // Create a new top-level load request.
+  RefPtr<ScriptFetchOptions> options;
+  nsIURI* baseURL = nullptr;
+  nsCOMPtr<Element> element;
+  RefPtr<ScriptLoadContext> context;
+  if (script) {
+    options = script->GetFetchOptions();
+    baseURL = script->BaseURL();
+    nsCOMPtr<Element> element = script->GetScriptElement();
+    context = new ScriptLoadContext(element);
+  } else {
+    // We don't have a referencing script so fall back on using
+    // options from the document. This can happen when the user
+    // triggers an inline event handler, as there is no active script
+    // there.
+    Document* document = loader->GetDocument();
+
+    // Use the document's principal for all loads, except WebExtension
+    // content-scripts.
+    // Only remember the global for content-scripts as well.
+    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
+    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
+      principal = document->NodePrincipal();
+      MOZ_ASSERT(global);
+      global = nullptr;  // Null global is the usual case for most loads.
+    } else {
+      MOZ_ASSERT(
+          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
+    }
+
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
+    baseURL = document->GetDocBaseURI();
+    context = new ScriptLoadContext(nullptr);
+  }
+
+  RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
+      uri, options, baseURL, context, loader, aReferencingPrivate,
+      specifierString, aPromise);
+
+  loader->GetModuleLoader()->StartDynamicImport(request);
+  return true;
+}
+
+void DynamicImportPrefChangedCallback(const char* aPrefName, void* aClosure) {
+  bool enabled = Preferences::GetBool(aPrefName);
+  JS::ModuleDynamicImportHook hook =
+      enabled ? HostImportModuleDynamically : nullptr;
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSRuntime* rt = JS_GetRuntime(jsapi.cx());
+  JS::SetModuleDynamicImportHook(rt, hook);
+}
+
+//////////////////////////////////////////////////////////////
+// DOM module loader
+//////////////////////////////////////////////////////////////
+
+ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : ModuleLoaderBase(aLoader) {
+  EnsureModuleHooksInitialized();
+}
+
+void ModuleLoader::EnsureModuleHooksInitialized() {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSRuntime* rt = JS_GetRuntime(jsapi.cx());
+  if (JS::GetModuleResolveHook(rt)) {
+    return;
+  }
+
+  JS::SetModuleResolveHook(rt, HostResolveImportedModule);
+  JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
+  JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
+                                     HostReleaseTopLevelScript);
+  JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
+
+  Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
+                                       "javascript.options.dynamicImport",
+                                       (void*)nullptr);
+}
+
+ScriptLoader* ModuleLoader::GetScriptLoader() {
+  return static_cast<ScriptLoader*>(mLoader.get());
+}
+
+nsresult ModuleLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsLoading());
+  NS_ENSURE_TRUE(GetScriptLoader()->GetDocument(), NS_ERROR_NULL_POINTER);
+  aRequest->SetUnknownDataType();
+
+  // If this document is sandboxed without 'allow-scripts', abort.
+  if (GetScriptLoader()->GetDocument()->HasScriptsBlockedBySandbox()) {
     return NS_OK;
   }
 
-  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
-    nsresult rv = InitDebuggerDataForModuleTree(aCx, childRequest);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (LOG_ENABLED()) {
+    nsAutoCString url;
+    aRequest->mURI->GetAsciiSpec(url);
+    LOG(("ScriptLoadRequest (%p): Start Module Load (url = %s)", aRequest,
+         url.get()));
   }
 
-  JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
-  MOZ_ASSERT(module);
+  // To prevent dynamic code execution, content scripts can only
+  // load moz-extension URLs.
+  nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
+  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
+      !aRequest->mURI->SchemeIs("moz-extension")) {
+    return NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
+  }
 
-  // The script is now ready to be exposed to the debugger.
-  JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
-  JS::ExposeScriptToDebugger(aCx, script);
+  // Check whether the module has been fetched or is currently being fetched,
+  // and if so wait for it rather than starting a new fetch.
+  ModuleLoadRequest* request = aRequest->AsModuleRequest();
+  if (ModuleMapContainsURL(request->mURI,
+                           aRequest->GetLoadContext()->GetWebExtGlobal())) {
+    LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
+    WaitForModuleFetch(request->mURI,
+                       aRequest->GetLoadContext()->GetWebExtGlobal())
+        ->Then(GetMainThreadSerialEventTarget(), __func__, request,
+               &ModuleLoadRequest::ModuleLoaded,
+               &ModuleLoadRequest::LoadFailed);
+    return NS_OK;
+  }
 
-  moduleScript->SetDebuggerDataInitialized();
+  nsSecurityFlags securityFlags;
+
+  // According to the spec, module scripts have different behaviour to classic
+  // scripts and always use CORS. Only exception: Non linkable about: pages
+  // which load local module scripts.
+  if (GetScriptLoader()->IsAboutPageLoadingChromeURI(
+          aRequest, GetScriptLoader()->GetDocument())) {
+    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  } else {
+    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+    if (aRequest->CORSMode() == CORS_NONE ||
+        aRequest->CORSMode() == CORS_ANONYMOUS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    } else {
+      MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+    }
+  }
+
+  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+
+  // Delegate Shared Behavior to base ScriptLoader
+  nsresult rv = GetScriptLoader()->StartLoadInternal(aRequest, securityFlags);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We successfully started fetching a module so put its URL in the module
+  // map and mark it as fetching.
+  SetModuleFetchStarted(aRequest->AsModuleRequest());
+  LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
+
   return NS_OK;
 }
 
-void ModuleLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
-  if (aRequest->mModuleScript) {
-    if (!InstantiateModuleTree(aRequest)) {
-      aRequest->mModuleScript = nullptr;
+void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsReadyToRun());
+
+  if (aRequest->IsTopLevel()) {
+    if (aRequest->IsDynamicImport()) {
+      MOZ_ASSERT(aRequest->isInList());
+      RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
+      GetScriptLoader()->RunScriptWhenSafe(aRequest);
+    } else if (aRequest->GetLoadContext()->mIsInline &&
+               aRequest->GetLoadContext()->GetParserCreated() ==
+                   NOT_FROM_PARSER) {
+      MOZ_ASSERT(!aRequest->isInList());
+      GetScriptLoader()->RunScriptWhenSafe(aRequest);
+    } else {
+      GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
+      GetScriptLoader()->ProcessPendingRequests();
     }
   }
 
-  nsresult rv = NS_ERROR_FAILURE;
-  if (aRequest->mModuleScript) {
-    rv = EvaluateModule(aRequest);
-  }
-
-  if (NS_FAILED(rv)) {
-    FinishDynamicImportAndReject(aRequest, rv);
-  }
+  aRequest->GetLoadContext()->MaybeUnblockOnload();
 }
 
-nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
-                                      ScriptLoadRequest* aRequest) {
-  nsAutoMicroTask mt;
-  AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
-  JSContext* cx = aes.cx();
+nsresult ModuleLoader::CompileOrFinishModuleScript(
+    JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
+    ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModule) {
+  nsresult rv;
+  if (aRequest->GetLoadContext()->mWasCompiledOMT) {
+    JS::Rooted<JS::InstantiationStorage> storage(aCx);
 
-  nsAutoCString profilerLabelString;
-  aRequest->GetProfilerLabel(profilerLabelString);
-
-  LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
-  AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
-                            MarkerInnerWindowIdFromJSContext(cx),
-                            profilerLabelString);
-
-  // When a module is already loaded, it is not feched a second time and the
-  // mDataType of the request might remain set to DataType::Unknown.
-  MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
-
-  ModuleLoadRequest* request = aRequest->AsModuleRequest();
-  MOZ_ASSERT(request->mModuleScript);
-  MOZ_ASSERT(!request->mOffThreadToken);
-
-  ModuleScript* moduleScript = request->mModuleScript;
-  if (moduleScript->HasErrorToRethrow()) {
-    LOG(("ScriptLoadRequest (%p):   module has error to rethrow", aRequest));
-    JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
-    JS_SetPendingException(cx, error);
-    // For a dynamic import, the promise is rejected.  Otherwise an error
-    // is either reported by AutoEntryScript.
-    if (request->IsDynamicImport()) {
-      FinishDynamicImport(cx, request, NS_OK, nullptr);
+    RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
+        aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+    if (stencil) {
+      JS::InstantiateOptions instantiateOptions(aOptions);
+      aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil,
+                                               storage.address()));
     }
-    return NS_OK;
-  }
 
-  JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
-  MOZ_ASSERT(module);
-
-  nsresult rv = InitDebuggerDataForModuleTree(cx, request);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_evaluate_module");
-
-  JS::Rooted<JS::Value> rval(cx);
-
-  rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
-
-  if (NS_SUCCEEDED(rv)) {
-    // If we have an infinite loop in a module, which is stopped by the
-    // user, the module evaluation will fail, but we will not have an
-    // AutoEntryScript exception.
-    MOZ_ASSERT(!aes.HasException());
-  }
-
-  if (NS_FAILED(rv)) {
-    LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
-    // For a dynamic import, the promise is rejected.  Otherwise an error is
-    // either reported by AutoEntryScript.
-    rv = NS_OK;
-  }
-
-  JS::Rooted<JSObject*> aEvaluationPromise(cx);
-  if (rval.isObject()) {
-    // If the user cancels the evaluation on an infinite loop, we need
-    // to skip this step. In that case, ModuleEvaluate will not return a
-    // promise, rval will be undefined. We should treat it as a failed
-    // evaluation, and reject appropriately.
-    aEvaluationPromise.set(&rval.toObject());
-  }
-  if (request->IsDynamicImport()) {
-    FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+    aRequest->GetLoadContext()->mOffThreadToken = nullptr;
+    rv = aModule ? NS_OK : NS_ERROR_FAILURE;
   } else {
-    // If this is not a dynamic import, and if the promise is rejected,
-    // the value is unwrapped from the promise value.
-    if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-      LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
-      // For a dynamic import, the promise is rejected.  Otherwise an
-      // error is either reported by AutoEntryScript.
-      rv = NS_OK;
+    MaybeSourceText maybeSource;
+    rv = aRequest->GetScriptSource(aCx, &maybeSource);
+    if (NS_SUCCEEDED(rv)) {
+      rv = maybeSource.constructed<SourceText<char16_t>>()
+               ? nsJSUtils::CompileModule(
+                     aCx, maybeSource.ref<SourceText<char16_t>>(), aGlobal,
+                     aOptions, aModule)
+               : nsJSUtils::CompileModule(
+                     aCx, maybeSource.ref<SourceText<Utf8Unit>>(), aGlobal,
+                     aOptions, aModule);
     }
   }
-
-  TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(), "scriptloader_no_encode");
-  aRequest->mCacheInfo = nullptr;
   return rv;
 }
 
-nsresult ModuleLoader::EvaluateModule(ScriptLoadRequest* aRequest) {
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      mLoader->GetGlobalForRequest(aRequest);
-  if (!globalObject) {
-    return NS_ERROR_FAILURE;
-  }
+/* static */
+already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
+    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+    const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
+    ScriptLoadContext* aContext) {
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aFetchOptions, aIntegrity, aReferrer, aContext, true,
+      /* is top level */ false, /* is dynamic import */
+      aLoader->GetModuleLoader(),
+      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
-  return EvaluateModule(globalObject, aRequest);
+  return request.forget();
 }
 
-void ModuleLoader::CancelAndClearDynamicImports() {
-  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-       req = req->getNext()) {
-    req->Cancel();
-    // FinishDynamicImport must happen exactly once for each dynamic import
-    // request. If the load is aborted we do it when we remove the request
-    // from mDynamicImportRequests.
-    FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
-  }
-  mDynamicImportRequests.CancelRequestsAndClear();
+/* static */
+already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
+    nsIURI* aURI, ModuleLoadRequest* aParent) {
+  RefPtr<ScriptLoadContext> newContext =
+      new ScriptLoadContext(aParent->GetLoadContext()->mElement);
+  newContext->mIsInline = false;
+  // Propagated Parent values. TODO: allow child modules to use root module's
+  // script mode.
+  newContext->mScriptMode = aParent->GetLoadContext()->mScriptMode;
+
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, newContext,
+      false, /* is top level */
+      false, /* is dynamic import */
+      aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
+
+  return request.forget();
+}
+
+/* static */
+already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
+    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+    ScriptLoadContext* aContext, ScriptLoader* aLoader,
+    JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
+    JS::Handle<JSObject*> aPromise) {
+  MOZ_ASSERT(aSpecifier);
+  MOZ_ASSERT(aPromise);
+
+  aContext->mIsInline = false;
+  aContext->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
+
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
+      /* is top level */ true, /* is dynamic import */
+      aLoader->GetModuleLoader(),
+      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
+
+  request->mDynamicReferencingPrivate = aReferencingPrivate;
+  request->mDynamicSpecifier = aSpecifier;
+  request->mDynamicPromise = aPromise;
+
+  HoldJSObjects(request.get());
+
+  return request.forget();
+}
+
+ModuleLoader::~ModuleLoader() {
+  LOG(("ModuleLoader::~ModuleLoader %p", this));
+  mLoader = nullptr;
 }
 
 #undef LOG

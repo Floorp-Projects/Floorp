@@ -121,19 +121,20 @@ notification[type="critical"] > hbox > .messageImage {
 
 .messageCloseButton > .toolbarbutton-icon {
   padding: 6px;
-  /* Override width from close-icon.css */
-  width: 32px !important;
+  width: 32px;
   /* Close button needs to be clickable from the edge of the window */
   margin-inline-end: 8px;
 }
 
-.messageCloseButton:-moz-focusring {
+.messageCloseButton:focus-visible {
   /* Override the dotted outline from button.css */
   outline: none;
 }
 
-.messageCloseButton:-moz-focusring > .toolbarbutton-icon {
-  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+.messageCloseButton:focus-visible > .toolbarbutton-icon {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
+  border-radius: var(--toolbarbutton-border-radius, 4px);
 }
 
 .notification-button {
@@ -159,19 +160,14 @@ notification[type="critical"] > hbox > .messageImage {
   background-color: var(--notification-button-background-active);
 }
 
-.notification-button:-moz-focusring {
-  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+.notification-button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .notification-button.primary {
   background-color: var(--notification-primary-button-background);
-  /* Override button.css hover & active styles */
-  color: var(--notification-primary-button-text) !important;
-}
-
-.notification-button.primary:-moz-focusring {
-  outline: 4px solid rgba(0, 96, 223, 0.5);
-  outline-offset: -1px;
+  color: var(--notification-primary-button-text);
 }
 
 .notification-button.primary:not([disabled]):hover {

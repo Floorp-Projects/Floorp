@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test checking inline preview feature
+
+"use strict";
+
 add_task(async function() {
   await pushPref("devtools.debugger.features.inline-preview", true);
 
@@ -68,7 +71,7 @@ async function checkInlinePreview(dbg, fnName, inlinePreviews) {
   const values = findAllElements(dbg, "inlinePreviewValues");
 
   inlinePreviews.forEach((inlinePreview, index) => {
-    const { identifier, value, expandedValue } = inlinePreview;
+    const { identifier, value } = inlinePreview;
     is(
       labels[index].innerText,
       identifier,

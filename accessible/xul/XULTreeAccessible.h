@@ -50,9 +50,9 @@ class XULTreeAccessible : public AccessibleWrap {
   virtual Relation RelationByType(RelationType aType) const override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems) override;
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
   virtual uint32_t SelectedItemCount() override;
-  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
   virtual bool AddItemToSelection(uint32_t aIndex) override;
   virtual bool RemoveItemFromSelection(uint32_t aIndex) override;
@@ -158,6 +158,7 @@ class XULTreeItemAccessibleBase : public AccessibleWrap {
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
+  virtual bool HasPrimaryAction() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
   virtual bool DoAction(uint8_t aIndex) const override;
 

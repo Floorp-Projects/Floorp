@@ -50,12 +50,19 @@ const ignorePatterns = [
     .split("\n"),
   ...fs
     .readFileSync(
-      path.join(__dirname, "devtools", "client", "debugger", ".eslintignore")
+      path.join(
+        __dirname,
+        "devtools",
+        "client",
+        "debugger",
+        "src",
+        ".eslintignore"
+      )
     )
     .toString("utf-8")
     .split("\n")
     .filter(p => p && !p.startsWith("#"))
-    .map(p => `devtools/client/debugger/${p}`),
+    .map(p => `devtools/client/debugger/src/${p}`),
 ];
 
 module.exports = {
@@ -535,13 +542,6 @@ module.exports = {
       // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
       files: [
         "browser/base/content/test/sync/browser_fxa_web_channel.js",
-        "browser/components/customizableui/test/browser_1042100_default_placements_update.js",
-        "browser/components/customizableui/test/browser_1096763_seen_widgets_post_reset.js",
-        "browser/components/customizableui/test/browser_1161838_inserted_new_default_buttons.js",
-        "browser/components/customizableui/test/browser_989338_saved_placements_not_resaved.js",
-        "browser/components/customizableui/test/browser_currentset_post_reset.js",
-        "browser/components/customizableui/test/browser_panel_keyboard_navigation.js",
-        "browser/components/customizableui/test/browser_proton_toolbar_hide_toolbarbuttons.js",
         "browser/components/migration/tests/unit/test_Edge_db_migration.js",
         "browser/components/translation/test/unit/test_cld2.js",
         "browser/extensions/formautofill/test/unit/test_sync.js",

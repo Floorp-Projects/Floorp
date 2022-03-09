@@ -33,7 +33,7 @@ using nsContentPolicyType from "nsIContentPolicy.h";
 using mozilla::net::PreferredAlternativeDataDeliveryTypeIPC from "nsICacheInfoChannel.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 using nsILoadInfo::StoragePermissionState from "nsILoadInfo.h";
-using class mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
+using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 
 namespace mozilla {
 namespace net {

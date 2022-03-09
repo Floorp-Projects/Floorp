@@ -229,7 +229,7 @@ void GPUParent::NotifyDeviceReset() {
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
-    nsTArray<GfxInfoFeatureStatus>&& aFeatures) {
+    nsTArray<GfxInfoFeatureStatus>&& aFeatures, uint32_t aWrNamespace) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -346,7 +346,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 
   // Make sure to do this *after* we update gfxVars above.
   if (gfxVars::UseWebRender()) {
-    wr::RenderThread::Start();
+    wr::RenderThread::Start(aWrNamespace);
     image::ImageMemoryReporter::InitForWebRender();
   }
 #ifdef XP_WIN

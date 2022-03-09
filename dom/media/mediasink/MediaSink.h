@@ -67,6 +67,10 @@ class MediaSink {
   // Can be called in any state.
   virtual bool HasUnplayedFrames(TrackType aType) const = 0;
 
+  // Return the duration of data consumed but not played yet.
+  // Can be called in any state.
+  virtual media::TimeUnit UnplayedDuration(TrackType aType) const = 0;
+
   // Set volume of the audio track.
   // Do nothing if this sink has no audio track.
   // Can be called in any state.

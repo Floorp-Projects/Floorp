@@ -138,6 +138,7 @@ linux1804-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -171,6 +172,7 @@ linux-talos-flex:
 # Windows
 
 windows-7-tests:
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-webgpu
     - reftest
@@ -205,6 +207,7 @@ windows10-2004-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -304,6 +307,7 @@ macosx1100-64-jittests:
 macosx1100-64-qr-tests:
     - crashtest
     - jsreftest
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome-gpu
     - mochitest-media
@@ -325,6 +329,7 @@ macosx1015-64-qr-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -453,9 +458,11 @@ android-hw-browsertime-profiling:
 linux-tsan-tests:
     - crashtest
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-media
     - mochitest-plain
+    - mochitest-webgpu
     - reftest
     - web-platform-tests
     - web-platform-tests-reftest

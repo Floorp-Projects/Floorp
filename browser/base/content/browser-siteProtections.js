@@ -1098,12 +1098,6 @@ var gProtectionsHandler = {
       "tracking-protection-icon-box"
     ));
   },
-  get _protectionsIconBox() {
-    delete this._protectionsIconBox;
-    return (this._protectionsIconBox = document.getElementById(
-      "tracking-protection-icon-animatable-box"
-    ));
-  },
   get _protectionsPopupMultiView() {
     delete this._protectionsPopupMultiView;
     return (this._protectionsPopupMultiView = document.getElementById(

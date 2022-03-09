@@ -9,7 +9,7 @@ import os
 import sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, StructDecl
-from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor
+from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, StringLiteral
 from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
@@ -867,12 +867,19 @@ class GatherDecls(TcheckVisitor):
                         attr.name,
                     )
             elif isinstance(aspec, (list, tuple)):
-                if attr.value not in aspec:
+                if not any(
+                    isinstance(attr.value, s)
+                    if isinstance(s, type)
+                    else attr.value == s
+                    for s in aspec
+                ):
                     self.error(
                         attr.loc,
                         "invalid value for attribute `%s', expected one of: %s",
                         attr.name,
-                        ", ".join(str(s) for s in aspec),
+                        ", ".join(
+                            s.__name__ if isinstance(s, type) else str(s) for s in aspec
+                        ),
                     )
             elif callable(aspec):
                 if not aspec(attr.value):
@@ -916,9 +923,11 @@ class GatherDecls(TcheckVisitor):
             self.checkAttributes(
                 p.attributes,
                 {
-                    "RefCounted": None,
+                    "ManualDealloc": None,
                     "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
                     "NeedsOtherPid": None,
+                    "ChildImpl": ("virtual", StringLiteral),
+                    "ParentImpl": ("virtual", StringLiteral),
                 },
             )
 
@@ -935,7 +944,7 @@ class GatherDecls(TcheckVisitor):
                     qname,
                     p.nestedUpTo(),
                     p.sendSemantics,
-                    "RefCounted" in p.attributes,
+                    "ManualDealloc" not in p.attributes,
                     "NeedsOtherPid" in p.attributes,
                 ),
                 shortname=p.name,

@@ -25,8 +25,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDWrite, override)
   ScaledFontDWrite(IDWriteFontFace* aFontFace,
                    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                   bool aUseEmbeddedBitmap, bool aGDIForced,
-                   const gfxFontStyle* aStyle = nullptr);
+                   bool aUseEmbeddedBitmap, bool aUseMultistrikeBold,
+                   bool aGDIForced, const gfxFontStyle* aStyle);
 
   FontType GetType() const override { return FontType::DWRITE; }
 
@@ -52,9 +52,10 @@ class ScaledFontDWrite final : public ScaledFontBase {
   AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() const { return mUseEmbeddedBitmap; }
+  bool UseMultistrikeBold() const { return mUseMultistrikeBold; }
   bool ForceGDIMode() const { return mGDIForced; }
 
-  bool HasSyntheticBold() const {
+  bool HasBoldSimulation() const {
     return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
   }
 
@@ -64,6 +65,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
+  bool mUseMultistrikeBold = false;
   bool mGDIForced = false;
 
   cairo_font_face_t* CreateCairoFontFace(
@@ -77,14 +79,16 @@ class ScaledFontDWrite final : public ScaledFontBase {
   struct InstanceData {
     explicit InstanceData(ScaledFontDWrite* aScaledFont)
         : mUseEmbeddedBitmap(aScaledFont->mUseEmbeddedBitmap),
-          mApplySyntheticBold(aScaledFont->HasSyntheticBold()),
+          mUseBoldSimulation(aScaledFont->HasBoldSimulation()),
+          mUseMultistrikeBold(aScaledFont->UseMultistrikeBold()),
           mGDIForced(aScaledFont->mGDIForced) {}
 
     InstanceData(const wr::FontInstanceOptions* aOptions,
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
 
-    bool mUseEmbeddedBitmap;
-    bool mApplySyntheticBold;
+    bool mUseEmbeddedBitmap = false;
+    bool mUseBoldSimulation = false;
+    bool mUseMultistrikeBold = false;
     bool mGDIForced = false;
   };
 };

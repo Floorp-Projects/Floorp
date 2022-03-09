@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <string>
 #include <set>
+#include <iomanip>
 
 extern "C" {
 #include "nr_api.h"
@@ -10,12 +11,15 @@ extern "C" {
 #include "stun.h"
 }
 
+#include "logging.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/net/DNS.h"
 #include "stun_socket_filter.h"
 #include "nr_socket_prsock.h"
 
 namespace {
+
+MOZ_MTLOG_MODULE("mtransport")
 
 class NetAddrCompare {
  public:
@@ -81,6 +85,19 @@ class PendingSTUNRequest {
   const bool is_id_set_;
 };
 
+static uint16_t GetPortInfallible(const mozilla::net::NetAddr& aAddr) {
+  uint16_t result = 0;
+  (void)aAddr.GetPort(&result);
+  return result;
+}
+
+static std::ostream& operator<<(std::ostream& aStream, UINT12 aId) {
+  for (int octet : aId.octet) {
+    aStream << std::hex << std::setfill('0') << std::setw(2) << octet;
+  }
+  return aStream;
+}
+
 class STUNUDPSocketFilter : public nsISocketFilter {
  public:
   STUNUDPSocketFilter() : white_list_(), pending_requests_() {}
@@ -127,6 +144,9 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
     uint32_t len) {
   // Check white list
   if (white_list_.find(*remote_addr) != white_list_.end()) {
+    MOZ_MTLOG(ML_DEBUG, __func__ << this << " Address in whitelist: "
+                                 << remote_addr->ToString() << ":"
+                                 << GetPortInfallible(*remote_addr));
     return true;
   }
 
@@ -143,6 +163,12 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
       pending_requests_.erase(it);
       response_allowed_.erase(pending_req);
       white_list_.insert(*remote_addr);
+      MOZ_MTLOG(ML_DEBUG, __func__ << this
+                                   << " Allowing known STUN response, "
+                                      "remembering address in whitelist: "
+                                   << remote_addr->ToString() << ":"
+                                   << GetPortInfallible(*remote_addr)
+                                   << " id=" << msg->id);
       return true;
     }
   }
@@ -153,6 +179,12 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
     const nr_stun_message_header* msg =
         reinterpret_cast<const nr_stun_message_header*>(data);
     response_allowed_.insert(PendingSTUNRequest(*remote_addr, msg->id));
+    MOZ_MTLOG(
+        ML_DEBUG,
+        __func__ << this
+                 << " Allowing STUN request, will allow packets in return: "
+                 << remote_addr->ToString() << ":"
+                 << GetPortInfallible(*remote_addr) << " id=" << msg->id);
     return true;
   }
   // Lastly if we have send a STUN request to the destination of this
@@ -161,9 +193,21 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
   std::set<PendingSTUNRequest>::iterator it =
       pending_requests_.find(PendingSTUNRequest(*remote_addr));
   if (it != pending_requests_.end()) {
+    MOZ_MTLOG(
+        ML_DEBUG,
+        __func__
+            << this
+            << " Allowing packet from source while waiting for a response: "
+            << remote_addr->ToString() << ":"
+            << GetPortInfallible(*remote_addr));
     return true;
   }
 
+  MOZ_MTLOG(
+      ML_DEBUG,
+      __func__
+          << " Disallowing packet that is neither a STUN request or response: "
+          << remote_addr->ToString() << ":" << GetPortInfallible(*remote_addr));
   return false;
 }
 
@@ -172,6 +216,9 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
     uint32_t len) {
   // Check white list
   if (white_list_.find(*remote_addr) != white_list_.end()) {
+    MOZ_MTLOG(ML_DEBUG, __func__ << this << " Address in whitelist: "
+                                 << remote_addr->ToString() << ":"
+                                 << GetPortInfallible(*remote_addr));
     return true;
   }
 
@@ -182,6 +229,12 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
     const nr_stun_message_header* msg =
         reinterpret_cast<const nr_stun_message_header*>(data);
     pending_requests_.insert(PendingSTUNRequest(*remote_addr, msg->id));
+    MOZ_MTLOG(
+        ML_DEBUG,
+        __func__ << this
+                 << " Allowing STUN request, will allow packets in return: "
+                 << remote_addr->ToString() << ":"
+                 << GetPortInfallible(*remote_addr) << " id=" << msg->id);
     return true;
   }
 
@@ -196,10 +249,27 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
     if (it != response_allowed_.end()) {
       white_list_.insert(*remote_addr);
       response_allowed_.erase(it);
+      MOZ_MTLOG(ML_DEBUG, __func__ << this
+                                   << " Allowing known STUN response, "
+                                      "remembering address in whitelist: "
+                                   << remote_addr->ToString() << ":"
+                                   << GetPortInfallible(*remote_addr)
+                                   << " id=" << msg->id);
       return true;
     }
+
+    MOZ_MTLOG(ML_DEBUG,
+              __func__ << this << " Disallowing unknown STUN response: "
+                       << remote_addr->ToString() << ":"
+                       << GetPortInfallible(*remote_addr) << " id=" << msg->id);
+    return false;
   }
 
+  MOZ_MTLOG(
+      ML_DEBUG,
+      __func__
+          << " Disallowing packet that is neither a STUN request or response: "
+          << remote_addr->ToString() << ":" << GetPortInfallible(*remote_addr));
   return false;
 }
 

@@ -6,28 +6,16 @@
 include PPrintingTypes;
 include protocol PContent;
 include protocol PBrowser;
-include protocol PPrintSettingsDialog;
 include protocol PRemotePrintJob;
 
 namespace mozilla {
 namespace embedding {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PPrinting
 {
   manager PContent;
-  manages PPrintSettingsDialog;
   manages PRemotePrintJob;
-
-parent:
-  async ShowPrintDialog(PPrintSettingsDialog dialog,
-                        nullable PBrowser browser,
-                        PrintData settings);
-
-  async PPrintSettingsDialog();
-
-  sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,
-                         uint32_t flags)
-    returns(nsresult rv);
 
 child:
   async PRemotePrintJob();

@@ -81,6 +81,12 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
 
 MOCHITEST_MANIFESTS += [
     "test/mochitest.ini",
+    "test/mochitest_background_video.ini",
+    "test/mochitest_bugs.ini",
+    "test/mochitest_eme.ini",
+    "test/mochitest_media_recorder.ini",
+    "test/mochitest_seek.ini",
+    "test/mochitest_stream.ini",
     "webrtc/tests/mochitests/identity/mochitest.ini",
 ]
 
@@ -93,7 +99,12 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 if CONFIG["MOZ_WEBRTC"]:
-    MOCHITEST_MANIFESTS += ["webrtc/tests/mochitests/mochitest.ini"]
+    MOCHITEST_MANIFESTS += [
+        "webrtc/tests/mochitests/mochitest.ini",
+        "webrtc/tests/mochitests/mochitest_datachannel.ini",
+        "webrtc/tests/mochitests/mochitest_getusermedia.ini",
+        "webrtc/tests/mochitests/mochitest_peerconnection.ini",
+    ]
 
 XPIDL_SOURCES += [
     "nsIAudioDeviceInfo.idl",

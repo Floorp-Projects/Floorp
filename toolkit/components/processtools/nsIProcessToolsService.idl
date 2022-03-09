@@ -34,6 +34,14 @@ interface nsIProcessToolsService: nsISupports {
     void kill(in unsigned long long pid);
 
     /**
+     * Crash a process running on this system. Generates a SIGABRT on Linux and
+     * macOS, and a STATUS_ILLEGAL_INSTRUCTION on Windows.
+     *
+     * Does cause a crash report to be generated.
+     */
+    void crash(in unsigned long long pid);
+
+    /**
      * The pid for the current process.
      */
     readonly attribute unsigned long long pid;

@@ -94,7 +94,6 @@ class nsIInterfaceRequestor;
 class nsILoadGroup;
 class nsILoadInfo;
 class nsIObserver;
-class nsIParser;
 class nsIPluginTag;
 class nsIPrincipal;
 class nsIReferrerInfo;
@@ -112,6 +111,7 @@ class nsIURI;
 class nsIWidget;
 class nsIXPConnect;
 class nsNodeInfoManager;
+class nsParser;
 class nsPIWindowRoot;
 class nsPresContext;
 class nsStringBuffer;
@@ -128,7 +128,9 @@ class nsRefPtrHashKey;
 
 namespace IPC {
 class Message;
-}
+class MessageReader;
+class MessageWriter;
+}  // namespace IPC
 
 namespace JS {
 class Value;
@@ -361,7 +363,7 @@ class nsContentUtils {
    *the explanation o why the developer is using the legacy function as opposed
    *to nuanced preference.
    */
-  static bool ShouldResistFingerprinting(char* aChar);
+  static bool ShouldResistFingerprinting(const char* aChar);
 
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();
@@ -899,8 +901,7 @@ class nsContentUtils {
                                   const nsACString& aType);
 
   // Returns true if the pref exists and is not UNKNOWN_ACTION.
-  static bool HasExactSitePerm(nsIPrincipal* aPrincipal,
-                               const nsACString& aType);
+  static bool HasSitePerm(nsIPrincipal* aPrincipal, const nsACString& aType);
 
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(Document* aDoc1, Document* aDoc2);
@@ -3404,7 +3405,7 @@ class nsContentUtils {
   static UserInteractionObserver* sUserInteractionObserver;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
-  static nsIParser* sXMLFragmentParser;
+  static nsParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 
   /**

@@ -438,7 +438,7 @@ Maybe<layers::SurfaceDescriptor>
 SharedSurface_D3D11Interop::ToSurfaceDescriptor() {
   const auto format = gfx::SurfaceFormat::B8G8R8A8;
   return Some(layers::SurfaceDescriptorD3D10(
-      WindowsHandle(mData.dxgiHandle), format, mDesc.size,
+      WindowsHandle(mData.dxgiHandle), /* arrayIndex */ 0, format, mDesc.size,
       gfx::YUVColorSpace::Identity, gfx::ColorRange::FULL));
 }
 

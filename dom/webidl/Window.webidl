@@ -448,6 +448,11 @@ partial interface Window {
   [Replaceable, Throws, NeedsCallerType]
   readonly attribute double devicePixelRatio;
 
+  // Allows chrome code to convert desktop pixels to device pixels and vice
+  // versa. Useful for interacting with the screen manager.
+  [ChromeOnly, Throws]
+  readonly attribute double desktopToDeviceScale;
+
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
   [ChromeOnly, Throws]  readonly attribute long   scrollMinX;
@@ -813,9 +818,10 @@ partial interface Window {
 // Used to assign marks to appear on the scrollbar when
 // finding on a page.
 partial interface Window {
-  // The marks are values between 0 and scrollMaxY.
+  // The marks are values between 0 and scrollMaxX/scrollMaxY.
   [ChromeOnly]
-  void setScrollMarks(sequence<unsigned long> marks);
+  void setScrollMarks(sequence<unsigned long> marks,
+                      optional boolean onHorizontalScrollbar = false);
 };
 
 dictionary WindowPostMessageOptions : StructuredSerializeOptions {

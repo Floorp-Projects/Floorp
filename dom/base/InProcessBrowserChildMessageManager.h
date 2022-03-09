@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIScriptContext.h"
 #include "nsDocShell.h"
 #include "nsCOMArray.h"
 #include "nsWeakReference.h"

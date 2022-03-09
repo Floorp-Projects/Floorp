@@ -78,7 +78,7 @@ add_task(async function() {
   //   "resource://devtools/client/netmonitor/src/actions/messages.js",
   //   "resource://devtools/client/netmonitor/src/actions/search.js",
   //   "resource://devtools/client/netmonitor/src/workers/search/index.js",
-  //   "resource://devtools/client/netmonitor/src/workers/worker-utils.js",
+  //   "resource://devtools/client/shared/worker-utils",
   // ];
   // runDuplicatedModulesTest(loaders, allowedDupes);
 

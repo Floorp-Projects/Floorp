@@ -297,6 +297,24 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return aRawValue;
 }
 
+namespace mozilla::profiler {
+bool GetCpuTimeSinceThreadStartInNs(
+    uint64_t* aResult, const mozilla::profiler::PlatformData& aPlatformData) {
+  Maybe<clockid_t> maybeCid = aPlatformData.GetClockId();
+  if (MOZ_UNLIKELY(!maybeCid)) {
+    return false;
+  }
+
+  timespec t;
+  if (clock_gettime(*maybeCid, &t) != 0) {
+    return false;
+  }
+
+  *aResult = uint64_t(t.tv_sec) * 1'000'000'000u + uint64_t(t.tv_nsec);
+  return true;
+}
+}  // namespace mozilla::profiler
+
 static RunningTimes GetProcessRunningTimesDiff(
     PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
   AUTO_PROFILER_STATS(GetProcessRunningTimes);

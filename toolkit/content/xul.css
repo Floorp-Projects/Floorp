@@ -192,12 +192,10 @@ groupbox {
 
 /******** draggable elements *********/
 
-%ifndef MOZ_WIDGET_GTK
 titlebar,
 toolbar:not([nowindowdrag="true"], [customizing="true"]) {
   -moz-window-dragging: drag;
 }
-%endif
 
 /* The list below is non-comprehensive and will probably need some tweaking. */
 toolbaritem,
@@ -209,6 +207,7 @@ html|input,
 tab,
 radio,
 splitter,
+menu,
 menulist {
   -moz-window-dragging: no-drag;
 }
@@ -223,12 +222,12 @@ toolbox {
   -moz-box-orient: vertical;
 }
 
-%ifdef XP_MACOSX
-toolbar[type="menubar"] {
-  min-height: 0 !important;
-  border: 0 !important;
+@media (-moz-platform: macos) {
+  toolbar[type="menubar"] {
+    min-height: 0 !important;
+    border: 0 !important;
+  }
 }
-%endif
 
 toolbarspring {
   -moz-box-flex: 1000;
@@ -268,11 +267,9 @@ tooltip:not([position]) {
   margin-top: 21px;
 }
 
-% excluding Android here to work around bug 1637975:
-%ifndef ANDROID
 @supports -moz-bool-pref("xul.panel-animations.enabled") {
 @media (prefers-reduced-motion: no-preference) {
-%ifdef MOZ_WIDGET_COCOA
+@media (-moz-platform: macos) {
   /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
      instead of "transform" and "opacity" for these animations.
      The -moz-window* properties apply to the whole window including the window's
@@ -315,7 +312,9 @@ tooltip:not([position]) {
     -moz-window-opacity: 0;
     -moz-window-transform: none;
   }
-%else
+} /* end of macOS rules */
+
+@media not (-moz-platform: macos) {
   panel[type="arrow"]:not([animate="false"]) {
     opacity: 0;
     transform: translateY(-70px);
@@ -342,10 +341,9 @@ tooltip:not([position]) {
   panel[type="arrow"][animate][animate="cancel"] {
     transform: none;
   }
-%endif
+} /* end of non-macOS rules */
 }
 }
-%endif
 
 panel[type="arrow"][animating] {
   pointer-events: none;
@@ -479,9 +477,6 @@ search-textbox {
 
 /********** autocomplete textbox **********/
 
-/* SeaMonkey uses its own autocomplete and the toolkit's autocomplete widget */
-%ifndef MOZ_SUITE
-
 .autocomplete-richlistbox {
   -moz-user-focus: ignore;
   overflow-x: hidden !important;
@@ -492,8 +487,6 @@ search-textbox {
   -moz-box-align: center;
   overflow: clip;
 }
-
-%endif
 
 /* The following rule is here to fix bug 96899 (and now 117952).
    Somehow trees create a situation

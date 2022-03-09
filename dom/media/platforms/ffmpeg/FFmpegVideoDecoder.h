@@ -171,6 +171,14 @@ class FFmpegVideoDecoder<LIBAV_VER>
   // These images are buffers for ffmpeg in order to store decoded data when
   // using custom allocator for decoding. We want to explictly track all images
   // we allocate to ensure that we won't leak any of them.
+  //
+  // All images tracked by mAllocatedImages are used by ffmpeg,
+  // i.e. ffmpeg holds a reference to them and uses them in
+  // its internal decoding queue.
+  //
+  // When an image is removed from mAllocatedImages it's recycled
+  // for a new frame by AllocateTextueClientForImage() in
+  // FFmpegVideoDecoder::GetVideoBuffer().
   nsTHashSet<RefPtr<ImageBufferWrapper>> mAllocatedImages;
 #endif
 };
@@ -189,30 +197,11 @@ class ImageBufferWrapper final {
     MOZ_ASSERT(mDecoder);
   }
 
-  PlanarYCbCrImage* AsPlanarYCbCrImage() {
-    return mImage->AsPlanarYCbCrImage();
-  }
+  Image* AsImage() { return mImage; }
 
   void ReleaseBuffer() {
-    auto clear = MakeScopeExit([&]() {
-      auto* decoder = static_cast<FFmpegVideoDecoder<LIBAV_VER>*>(mDecoder);
-      decoder->ReleaseAllocatedImage(this);
-    });
-    if (!mImage) {
-      return;
-    }
-    PlanarYCbCrImage* image = mImage->AsPlanarYCbCrImage();
-    RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
-    // Usually the decoded video buffer would be locked when it is allocated,
-    // and gets unlocked when we create the video data via `DoDecode`. However,
-    // sometime the buffer won't be used for the decoded data (maybe just as
-    // an internal temporary usage?) so we will need to unlock the texture here
-    // before sending it back to recycle.
-    if (!texture) {
-      NS_WARNING("Failed to get the texture client during release!");
-    } else if (texture->IsLocked()) {
-      texture->Unlock();
-    }
+    auto* decoder = static_cast<FFmpegVideoDecoder<LIBAV_VER>*>(mDecoder);
+    decoder->ReleaseAllocatedImage(this);
   }
 
  private:

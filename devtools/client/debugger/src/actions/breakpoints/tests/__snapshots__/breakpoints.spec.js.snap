@@ -32,6 +32,7 @@ Array [
         "options": Object {},
         "originalText": "return a",
         "text": "return a",
+        "thread": "FakeThread",
       },
     ],
     "source": Object {
@@ -43,6 +44,7 @@ Array [
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "/examples/a",
+      "thread": "FakeThread",
       "url": "http://localhost:8000/examples/a",
     },
   },
@@ -78,6 +80,7 @@ Object {
   "options": Object {},
   "originalText": "function a() {",
   "text": "function a() {",
+  "thread": "FakeThread",
 }
 `;
 
@@ -113,6 +116,7 @@ Array [
         "options": Object {},
         "originalText": "",
         "text": "",
+        "thread": "FakeThread",
       },
     ],
     "source": Object {
@@ -124,6 +128,7 @@ Array [
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "/examples/a",
+      "thread": "FakeThread",
       "url": "http://localhost:8000/examples/a",
     },
   },

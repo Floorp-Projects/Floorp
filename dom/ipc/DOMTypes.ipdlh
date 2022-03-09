@@ -24,9 +24,10 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 [MoveOnly=data] using struct mozilla::SerializedStructuredCloneBuffer
   from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
-using class mozilla::dom::LoadingSessionHistoryInfo
+using struct mozilla::dom::LoadingSessionHistoryInfo
   from "mozilla/dom/SessionHistoryEntry.h";
 
+using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
 using LayoutDeviceIntRect from "Units.h";
 using DesktopIntRect from "Units.h";
 using DesktopToLayoutDeviceScale from "Units.h";
@@ -45,7 +46,7 @@ using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingCont
 [RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 [RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
 [RefCounted] using class nsIVariant from "nsIVariant.h";
-using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 [RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 
 namespace mozilla {
@@ -133,6 +134,8 @@ struct ScreenDetails {
   DesktopToLayoutDeviceScale contentsScaleFactor;
   CSSToLayoutDeviceScale defaultCSSScaleFactor;
   float dpi;
+  ScreenOrientation orientation;
+  uint16_t orientationAngle;
 };
 
 struct DimensionInfo

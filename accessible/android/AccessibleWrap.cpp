@@ -298,16 +298,34 @@ void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                              bool aInclusive) {
   a11y::Pivot pivot(RootAccessible());
   TraversalRule rule(aGranularity);
-  Accessible* maybeResult = aForward ? pivot.Next(this, rule, aInclusive)
-                                     : pivot.Prev(this, rule, aInclusive);
-  LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;
-  if (result && (result != this || aInclusive)) {
-    PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
-                                      : nsIAccessiblePivot::REASON_PREV;
-    RefPtr<AccEvent> event = new AccVCChangeEvent(
-        result->Document(), this, -1, -1, result, -1, -1, reason,
-        nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
-    nsEventShell::FireEvent(event);
+  Accessible* current = IsProxy() ? Proxy() : static_cast<Accessible*>(this);
+  Accessible* result = aForward ? pivot.Next(current, rule, aInclusive)
+                                : pivot.Prev(current, rule, aInclusive);
+
+  if (result && (result != current || aInclusive)) {
+    RefPtr<AccessibleWrap> newPosition =
+        result->IsRemote() ? WrapperFor(result->AsRemote())
+                           : static_cast<AccessibleWrap*>(result->AsLocal());
+
+    if (IPCAccessibilityActive()) {
+      // We are in the child process. Dispatch a virtual cursor
+      // change event that will be turned into an android
+      // accessibility focused changed event in the parent.
+      PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
+                                        : nsIAccessiblePivot::REASON_PREV;
+      LocalAccessible* localResult = result->AsLocal();
+      MOZ_ASSERT(localResult);
+      RefPtr<AccEvent> event = new AccVCChangeEvent(
+          localResult->Document(), this, -1, -1, localResult, -1, -1, reason,
+          nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
+      nsEventShell::FireEvent(event);
+    } else {
+      // We are in the parent process. Dispatch an accessibility focused
+      // event directly.
+      RefPtr<SessionAccessibility> sessionAcc =
+          SessionAccessibility::GetInstanceFor(result);
+      sessionAcc->SendAccessibilityFocusedEvent(newPosition);
+    }
   }
 }
 
@@ -356,14 +374,16 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   int32_t newOffset;
-  LocalAccessible* newAnchor = nullptr;
+  Accessible* newAnchorBase = nullptr;
   if (aForward) {
-    newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.NextText(this, &start, &end, pivotGranularity);
     newOffset = end;
   } else {
-    newAnchor = pivot.PrevText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.PrevText(this, &start, &end, pivotGranularity);
     newOffset = start;
   }
+  LocalAccessible* newAnchor =
+      newAnchorBase ? newAnchorBase->AsLocal() : nullptr;
 
   if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
     if (IsTextLeaf() && newAnchor == LocalParent()) {

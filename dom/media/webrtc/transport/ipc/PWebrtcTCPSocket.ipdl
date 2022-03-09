@@ -15,6 +15,7 @@ using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 namespace mozilla {
 namespace net {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PWebrtcTCPSocket
 {
   manager PNecko or PSocketProcess;

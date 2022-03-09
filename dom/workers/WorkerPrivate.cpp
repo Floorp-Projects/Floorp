@@ -3070,9 +3070,22 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
           }
         }
 
+        // We do not need the timeouts any more, they have been canceled
+        // by NotifyInternal(Killing) above if they were active.
+        UnlinkTimeouts();
+
         // Unroot the globals
-        data->mScope = nullptr;
-        data->mDebuggerScope = nullptr;
+        RefPtr<WorkerDebuggerGlobalScope> debugScope =
+            data->mDebuggerScope.forget();
+        RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
+        if (debugScope) {
+          MOZ_ASSERT(debugScope->mWorkerPrivate == this);
+          debugScope->mWorkerPrivate = nullptr;
+        }
+        if (scope) {
+          MOZ_ASSERT(scope->mWorkerPrivate == this);
+          scope->mWorkerPrivate = nullptr;
+        }
 
         return;
       }
@@ -4793,6 +4806,13 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
   if (now != actual_now) {
     LOG(TimeoutsLog(), ("Worker %p fudged timeout by %f ms.\n", this,
                         (now - actual_now).ToMilliseconds()));
+#ifdef DEBUG
+    double microseconds = (now - actual_now).ToMicroseconds();
+    uint32_t allowedEarlyFiringMicroseconds;
+    data->mTimer->GetAllowedEarlyFiringMicroseconds(
+        &allowedEarlyFiringMicroseconds);
+    MOZ_ASSERT(microseconds < allowedEarlyFiringMicroseconds);
+#endif
   }
 
   AutoTArray<TimeoutInfo*, 10> expiredTimeouts;
@@ -4919,9 +4939,9 @@ bool WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx) {
 
   double delta =
       (data->mTimeouts[0]->mTargetTime - TimeStamp::Now()).ToMilliseconds();
-  uint32_t delay =
-      delta > 0 ? static_cast<uint32_t>(std::min(delta, double(UINT32_MAX)))
-                : 0;
+  uint32_t delay = delta > 0 ? static_cast<uint32_t>(std::ceil(
+                                   std::min(delta, double(UINT32_MAX))))
+                             : 0;
 
   LOG(TimeoutsLog(),
       ("Worker %p scheduled timer for %d ms, %zu pending timeouts\n", this,
@@ -5362,7 +5382,6 @@ void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
 }
 
 PerformanceStorage* WorkerPrivate::GetPerformanceStorage() {
-  AssertIsOnMainThread();
   MOZ_ASSERT(mPerformanceStorage);
   return mPerformanceStorage;
 }

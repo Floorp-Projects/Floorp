@@ -8,6 +8,7 @@
 #define jit_BacktrackingAllocator_h
 
 #include "mozilla/Array.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
 #include "ds/PriorityQueue.h"
@@ -363,6 +364,14 @@ class SpillSet : public TempObject {
   void setAllocation(LAllocation alloc);
 };
 
+#ifdef JS_JITSPEW
+// See comment on LiveBundle::debugId_ just below.  This needs to be atomic
+// because TSan automation runs on debug builds will otherwise (correctly)
+// report a race.
+static mozilla::Atomic<uint32_t> LiveBundle_debugIdCounter =
+    mozilla::Atomic<uint32_t>{0};
+#endif
+
 // A set of live ranges which are all pairwise disjoint. The register allocator
 // attempts to find allocations for an entire bundle, and if it fails the
 // bundle will be broken into smaller ones which are allocated independently.
@@ -382,8 +391,19 @@ class LiveBundle : public TempObject {
   // will not be split.
   LiveBundle* spillParent_;
 
+#ifdef JS_JITSPEW
+  // This is used only for debug-printing bundles.  It gives them an
+  // identifiable identity in the debug output, which they otherwise wouldn't
+  // have.
+  uint32_t debugId_;
+#endif
+
   LiveBundle(SpillSet* spill, LiveBundle* spillParent)
-      : spill_(spill), spillParent_(spillParent) {}
+      : spill_(spill), spillParent_(spillParent) {
+#ifdef JS_JITSPEW
+    debugId_ = LiveBundle_debugIdCounter++;
+#endif
+  }
 
  public:
   static LiveBundle* FallibleNew(TempAllocator& alloc, SpillSet* spill,
@@ -421,6 +441,8 @@ class LiveBundle : public TempObject {
   LiveBundle* spillParent() const { return spillParent_; }
 
 #ifdef JS_JITSPEW
+  uint32_t debugId() const { return debugId_; }
+
   // Return a string describing this bundle.
   UniqueChars toString() const;
 #endif
@@ -764,7 +786,8 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
   bool compilingWasm() { return mir->outerInfo().compilingWasm(); }
 
-  void dumpVregs(const char* who);
+  void dumpLiveRangesByVReg(const char* who);
+  void dumpLiveRangesByBundle(const char* who);
 };
 
 }  // namespace jit

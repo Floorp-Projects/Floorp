@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDTD.h"
-#include "nsITokenizer.h"
 #include "nsIInputStream.h"
 #include "nsIParser.h"
 #include "nsCycleCollectionParticipant.h"
@@ -28,16 +27,19 @@ template <typename, size_t>
 class Array;
 }
 
-class nsExpatDriver : public nsIDTD, public nsITokenizer {
+class nsExpatDriver : public nsIDTD {
   virtual ~nsExpatDriver();
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_NSIDTD
-  NS_DECL_NSITOKENIZER
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsExpatDriver, nsIDTD)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsExpatDriver)
 
   nsExpatDriver();
+
+  nsresult Initialize(nsIURI* aURI, nsIContentSink* aSink);
+
+  nsresult ResumeParse(nsScanner& aScanner, bool aIsFinalChunk);
 
   int HandleExternalEntityRef(const char16_t* aOpenEntityNames,
                               const char16_t* aBase, const char16_t* aSystemId,
@@ -167,9 +169,6 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
 
   // Used to track if we're in the parser.
   bool mInParser;
-  // Whether we're sure that we won't be getting more buffers to parse from
-  // Necko
-  bool mIsFinalChunk;
 
   nsresult mInternalState;
 

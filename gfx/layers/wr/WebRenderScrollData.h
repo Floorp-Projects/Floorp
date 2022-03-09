@@ -328,20 +328,18 @@ template <>
 struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
   typedef mozilla::layers::WebRenderLayerScrollData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam);
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult);
+  static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
 template <>
 struct ParamTraits<mozilla::layers::WebRenderScrollData> {
   typedef mozilla::layers::WebRenderScrollData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam);
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult);
+  static bool Read(MessageReader* aReader, paramType* aResult);
 };
 
 }  // namespace IPC

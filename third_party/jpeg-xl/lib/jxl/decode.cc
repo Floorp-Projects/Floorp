@@ -850,8 +850,9 @@ void GetCurrentDimensions(const JxlDecoder* dec, size_t& xsize, size_t& ysize,
   xsize = dec->metadata.oriented_xsize(dec->keep_orientation || !oriented);
   ysize = dec->metadata.oriented_ysize(dec->keep_orientation || !oriented);
   if (!dec->coalescing) {
-    xsize = dec->frame_header->ToFrameDimensions().xsize;
-    ysize = dec->frame_header->ToFrameDimensions().ysize;
+    const auto frame_dim = dec->frame_header->ToFrameDimensions();
+    xsize = frame_dim.xsize_upsampled;
+    ysize = frame_dim.ysize_upsampled;
     if (!dec->keep_orientation && oriented &&
         static_cast<int>(dec->metadata.m.GetOrientation()) > 4) {
       std::swap(xsize, ysize);
@@ -1461,6 +1462,7 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec, const uint8_t* in,
         bool is_rgba = dec->image_out_format.num_channels == 4;
         dec->frame_dec->MaybeSetFloatCallback(
             [dec](const float* pixels, size_t x, size_t y, size_t num_pixels) {
+              JXL_DASSERT(num_pixels > 0);
               dec->image_out_callback(dec->image_out_opaque, x, y, num_pixels,
                                       pixels);
             },
@@ -2423,6 +2425,10 @@ JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec) {
     return JXL_DEC_ERROR;
   }
 
+  if (dec->jpeg_decoder.IsOutputSet() && dec->ib->jpeg_data != nullptr) {
+    return JXL_DEC_SUCCESS;
+  }
+
   if (dec->frame_dec->HasRGBBuffer()) {
     return JXL_DEC_SUCCESS;
   }
@@ -2671,9 +2677,11 @@ JxlDecoderStatus JxlDecoderGetFrameHeader(const JxlDecoder* dec,
   if (!dec->coalescing && dec->frame_header->custom_size_or_origin) {
     header->layer_info.crop_x0 = dec->frame_header->frame_origin.x0;
     header->layer_info.crop_y0 = dec->frame_header->frame_origin.y0;
+    header->layer_info.have_crop = JXL_TRUE;
   } else {
     header->layer_info.crop_x0 = 0;
     header->layer_info.crop_y0 = 0;
+    header->layer_info.have_crop = JXL_FALSE;
   }
   if (!dec->keep_orientation && !dec->coalescing) {
     // orient the crop offset

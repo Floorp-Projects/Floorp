@@ -36,6 +36,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsAppRunner.h"
 #include "nsIGfxInfo.h"
 #include "nsMathUtils.h"
@@ -64,6 +65,7 @@
 #  include <gdk/gdkwayland.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
+#  include "mozilla/widget/VAAPIUtils.h"
 #  include "mozilla/StaticPrefs_widget.h"
 #endif
 
@@ -106,10 +108,13 @@ gfxPlatformGtk::gfxPlatformGtk() {
     if (IsWaylandDisplay() || gfxConfig::IsEnabled(Feature::X11_EGL)) {
       gfxVars::SetUseEGL(true);
     }
-
     InitDmabufConfig();
     if (gfxConfig::IsEnabled(Feature::DMABUF)) {
       gfxVars::SetUseDMABuf(true);
+    }
+    InitVAAPIConfig();
+    if (gfxConfig::IsEnabled(Feature::VAAPI)) {
+      gfxVars::SetUseVAAPI(true);
     }
   }
 
@@ -212,6 +217,47 @@ void gfxPlatformGtk::InitDmabufConfig() {
     gfxVars::SetDrmRenderDevice(drmRenderDevice);
 
     if (!GetDMABufDevice()->Configure(failureId)) {
+      feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
+                           failureId);
+    }
+  }
+#else
+  feature.DisableByDefault(FeatureStatus::Unavailable,
+                           "Wayland support missing",
+                           "FEATURE_FAILURE_NO_WAYLAND"_ns);
+#endif
+}
+
+void gfxPlatformGtk::InitVAAPIConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::VAAPI);
+#ifdef MOZ_WAYLAND
+  feature.DisableByDefault(FeatureStatus::Disabled,
+                           "VAAPI is disabled by default",
+                           "FEATURE_VAAPI_DISABLED"_ns);
+
+  if (StaticPrefs::media_ffmpeg_vaapi_enabled()) {
+    feature.UserForceEnable("Force enabled by pref");
+  }
+
+  nsCString failureId;
+  int32_t status;
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_VAAPI, failureId,
+                                          &status))) {
+    feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                    "FEATURE_FAILURE_NO_GFX_INFO"_ns);
+  } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+    feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
+                    failureId);
+  }
+
+  if (!gfxVars::UseEGL()) {
+    feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
+                         "FEATURE_FAILURE_REQUIRES_EGL"_ns);
+  }
+
+  if (feature.IsEnabled()) {
+    if (!VAAPIIsSupported()) {
       feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
                            failureId);
     }
@@ -788,6 +834,7 @@ class GtkVsyncSource final : public VsyncSource {
           double remaining =
               (1000.f / 60.f) - (TimeStamp::Now() - lastVsync).ToMilliseconds();
           if (remaining > 0) {
+            AUTO_PROFILER_THREAD_SLEEP;
             PlatformThread::Sleep((int)remaining);
           }
         }

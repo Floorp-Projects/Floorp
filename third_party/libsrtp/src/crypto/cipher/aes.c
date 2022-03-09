@@ -1414,11 +1414,6 @@ static void aes_128_expand_encryption_key(const uint8_t *key,
 
     v128_copy_octet_string(&expanded_key->round[0], key);
 
-#if 0
-    debug_print(srtp_mod_aes_icm,
-                "expanded key[0]:  %s", v128_hex_string(&expanded_key->round[0]));
-#endif
-
     /* loop over round keys */
     for (i = 1; i < 11; i++) {
         /* munge first word of round key */
@@ -1445,11 +1440,6 @@ static void aes_128_expand_encryption_key(const uint8_t *key,
         expanded_key->round[i].v32[3] =
             expanded_key->round[i].v32[2] ^ expanded_key->round[i - 1].v32[3];
 
-#if 0
-        debug_print2(srtp_mod_aes_icm,
-                     "expanded key[%d]:  %s", i, v128_hex_string(&expanded_key->round[i]));
-#endif
-
         /* modify round constant */
         rc = gf2_8_shift(rc);
     }
@@ -1468,13 +1458,6 @@ static void aes_256_expand_encryption_key(const unsigned char *key,
 
     v128_copy_octet_string(&expanded_key->round[0], key);
     v128_copy_octet_string(&expanded_key->round[1], key + 16);
-
-#if 0
-    debug_print(srtp_mod_aes_icm,
-                "expanded key[0]:  %s", v128_hex_string(&expanded_key->round[0]));
-    debug_print(srtp_mod_aes_icm,
-                "expanded key[1]:  %s", v128_hex_string(&expanded_key->round[1]));
-#endif
 
     /* loop over rest of round keys */
     for (i = 2; i < 15; i++) {
@@ -1515,11 +1498,6 @@ static void aes_256_expand_encryption_key(const unsigned char *key,
 
         expanded_key->round[i].v32[3] =
             expanded_key->round[i].v32[2] ^ expanded_key->round[i - 2].v32[3];
-
-#if 0
-        debug_print2(srtp_mod_aes_icm,
-                     "expanded key[%d]:  %s", i, v128_hex_string(&expanded_key->round[i]));
-#endif
     }
 }
 
@@ -1796,7 +1774,7 @@ static inline void aes_inv_final_round(v128_t *state, const v128_t *round_key)
     v128_xor_eq(state, round_key);
 }
 
-#elif CPU_RISC
+#elif defined(CPU_RISC)
 
 static inline void aes_round(v128_t *state, const v128_t *round_key)
 {

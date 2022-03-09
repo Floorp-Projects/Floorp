@@ -53,16 +53,18 @@ void TestGC::Run(int aNumSlices) {
   CCReason neededCCAtStartOfGC =
       mScheduler.IsCCNeeded(Now(), SuspectedCCObjects());
 
-  mScheduler.NoteGCBegin();
+  mScheduler.NoteGCBegin(JS::GCReason::API);
 
   for (int slice = 0; slice < aNumSlices; slice++) {
     EXPECT_TRUE(mScheduler.InIncrementalGC());
     TimeStamp idleDeadline = Now() + kTenthSecond;
-    TimeDuration budget =
+    js::SliceBudget budget =
         mScheduler.ComputeInterSliceGCBudget(idleDeadline, Now());
-    EXPECT_NEAR(budget.ToSeconds(), 0.1, 1.e-6);
+    TimeDuration budgetDuration =
+        TimeDuration::FromMilliseconds(budget.timeBudget());
+    EXPECT_NEAR(budgetDuration.ToSeconds(), 0.1, 1.e-6);
     // Pretend the GC took exactly the budget.
-    AdvanceTime(budget);
+    AdvanceTime(budgetDuration);
 
     EXPECT_EQ(mScheduler.IsCCNeeded(Now(), SuspectedCCObjects()),
               neededCCAtStartOfGC);
@@ -123,7 +125,7 @@ void TestCC::TimerFires(int aNumSlices) {
         mScheduler.AdvanceCCRunner(idleDeadline, Now(), SuspectedCCObjects());
     // Should first see a series of ForgetSkippable actions.
     if (step.mAction != CCRunnerAction::ForgetSkippable ||
-        step.mRemoveChildless != KeepChildless) {
+        step.mParam.mRemoveChildless != KeepChildless) {
       break;
     }
     EXPECT_EQ(step.mYield, Yield);
@@ -136,7 +138,7 @@ void TestCC::TimerFires(int aNumSlices) {
         mScheduler.AdvanceCCRunner(idleDeadline, Now(), SuspectedCCObjects());
   }
   EXPECT_EQ(step.mAction, CCRunnerAction::ForgetSkippable);
-  EXPECT_EQ(step.mRemoveChildless, RemoveChildless);
+  EXPECT_EQ(step.mParam.mRemoveChildless, RemoveChildless);
   ForgetSkippable();
 
   TimeStamp idleDeadline = Now() + kOneSecond;

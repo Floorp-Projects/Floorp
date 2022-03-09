@@ -742,7 +742,8 @@ impl AlphaBatchBuilder {
             BlendMode::Advanced(_) |
             BlendMode::MultiplyDualSource |
             BlendMode::Screen |
-            BlendMode::Exclusion => {
+            BlendMode::Exclusion |
+            BlendMode::PlusLighter => {
                 self.alpha_batch_list
                     .set_params_and_get_batch(key, features, bounding_rect, z_id)
             }
@@ -952,8 +953,14 @@ impl BatchBuilder {
                                 render_tasks,
                             ).unwrap();
 
+                            let prim_rect = ctx.data_stores.get_local_prim_rect(
+                                child_prim_instance,
+                                &ctx.prim_store.pictures,
+                                ctx.surfaces,
+                            );
+
                             let prim_header = PrimitiveHeader {
-                                local_rect: pic.precise_local_rect,
+                                local_rect: prim_rect,
                                 local_clip_rect: child_prim_info.combined_local_clip_rect,
                                 specific_prim_address: GpuCacheAddress::INVALID,
                                 transform_id: transforms
@@ -963,11 +970,6 @@ impl BatchBuilder {
                                         ctx.spatial_tree,
                                     ),
                             };
-
-                            let raster_config = pic
-                                .raster_config
-                                .as_ref()
-                                .expect("BUG: 3d primitive was not assigned a surface");
 
                             let child_pic_task_id = pic
                                 .primary_render_task_id
@@ -988,7 +990,7 @@ impl BatchBuilder {
 
                             let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                 uv_rect_address.as_int(),
-                                if raster_config.establishes_raster_root { 1 } else { 0 },
+                                BrushFlags::PERSPECTIVE_INTERPOLATION.bits() as i32,
                                 0,
                                 child_clip_task_address.0 as i32,
                             ]);
@@ -1071,7 +1073,8 @@ impl BatchBuilder {
 
         let prim_rect = ctx.data_stores.get_local_prim_rect(
             prim_instance,
-            ctx.prim_store,
+            &ctx.prim_store.pictures,
+            ctx.surfaces,
         );
 
         let mut batch_features = BatchFeatures::empty();
@@ -1079,7 +1082,7 @@ impl BatchBuilder {
             batch_features |= BatchFeatures::REPETITION;
         }
 
-        if transform_kind != TransformedRectKind::AxisAligned {
+        if transform_kind != TransformedRectKind::AxisAligned || prim_instance.anti_aliased {
             batch_features |= BatchFeatures::ANTIALIASING;
         }
 
@@ -1538,13 +1541,6 @@ impl BatchBuilder {
                 let blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
-                let prim_header = PrimitiveHeader {
-                    local_rect: picture.precise_local_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
-                    specific_prim_address: prim_cache_address,
-                    transform_id,
-                };
-
                 match picture.context_3d {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(_), .. } => {
@@ -1561,16 +1557,51 @@ impl BatchBuilder {
                     Some(ref raster_config) => {
                         // If the child picture was rendered in local space, we can safely
                         // interpolate the UV coordinates with perspective correction.
-                        let brush_flags = if raster_config.establishes_raster_root {
-                            BrushFlags::PERSPECTIVE_INTERPOLATION
-                        } else {
-                            BrushFlags::empty()
-                        };
+                        let brush_flags = BrushFlags::PERSPECTIVE_INTERPOLATION;
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
 
+                        // If we are drawing with snapping enabled, the local rect of the prim must be in the raster
+                        // space, to avoid situations where there is a 180deg rotation in between the root and primitive
+                        // space not being correctly applied.
+                        let prim_header = if surface.surface_spatial_node_index == surface.raster_spatial_node_index {
+                            PrimitiveHeader {
+                                local_rect: prim_rect,
+                                local_clip_rect: prim_info.combined_local_clip_rect,
+                                specific_prim_address: prim_cache_address,
+                                transform_id,
+                            }
+                        } else {
+                            let map_local_to_raster = SpaceMapper::new_with_target(
+                                surface.raster_spatial_node_index,
+                                surface.surface_spatial_node_index,
+                                LayoutRect::max_rect(),
+                                ctx.spatial_tree,
+                            );
+
+                            let prim_rect = map_local_to_raster
+                                .map(&prim_rect)
+                                .unwrap();
+                            let local_clip_rect = map_local_to_raster
+                                .map(&prim_info.combined_local_clip_rect)
+                                .unwrap();
+                            let transform_id = transforms
+                                .get_id(
+                                    surface.raster_spatial_node_index,
+                                    root_spatial_node_index,
+                                    ctx.spatial_tree,
+                                );
+
+                            PrimitiveHeader {
+                                local_rect: prim_rect,
+                                local_clip_rect,
+                                specific_prim_address: prim_cache_address,
+                                transform_id,
+                            }
+                        };
+
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
-                            && surface.opaque_rect.contains_box(&surface.rect)
+                            && surface.is_opaque
                             && transform_kind == TransformedRectKind::AxisAligned;
 
                         let pic_task_id = picture.primary_render_task_id.unwrap();
@@ -1585,7 +1616,7 @@ impl BatchBuilder {
                             PictureCompositeMode::Filter(ref filter) => {
                                 assert!(filter.is_visible());
                                 match filter {
-                                    Filter::Blur(..) => {
+                                    Filter::Blur { .. } => {
                                         let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
                                             prim_info.clip_task_index,
                                             render_tasks,
@@ -1824,7 +1855,7 @@ impl BatchBuilder {
 
                                             // These filters are handled via different paths.
                                             Filter::ComponentTransfer |
-                                            Filter::Blur(..) |
+                                            Filter::Blur { .. } |
                                             Filter::DropShadows(..) |
                                             Filter::Opacity(..) => unreachable!(),
                                         };
@@ -2111,10 +2142,8 @@ impl BatchBuilder {
                                 };
 
                                 let prim_header = PrimitiveHeader {
-                                    local_rect: picture.precise_local_rect,
-                                    local_clip_rect: prim_info.combined_local_clip_rect,
                                     specific_prim_address: prim_cache_address,
-                                    transform_id,
+                                    ..prim_header
                                 };
 
                                 let prim_header_index = prim_headers.push(
@@ -3042,9 +3071,8 @@ impl BatchBuilder {
                 );
 
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
-                let backdrop_picture = &ctx.prim_store.pictures[backdrop_pic_index.0];
                 let prim_header = PrimitiveHeader {
-                    local_rect: backdrop_picture.precise_local_rect,
+                    local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     transform_id,
                     specific_prim_address: prim_cache_address,

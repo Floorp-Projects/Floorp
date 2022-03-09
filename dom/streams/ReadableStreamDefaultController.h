@@ -25,8 +25,7 @@
 #include "nsTArray.h"
 #include "nsISupportsBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
@@ -47,12 +46,12 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   explicit ReadableStreamDefaultController(nsIGlobalObject* aGlobal);
 
  protected:
-  ~ReadableStreamDefaultController();
+  ~ReadableStreamDefaultController() override;
 
  public:
-  virtual bool IsDefault() override { return true; }
-  virtual bool IsByte() override { return false; }
-  virtual ReadableStreamDefaultController* AsDefault() override { return this; }
+  bool IsDefault() override { return true; }
+  bool IsByte() override { return false; }
+  ReadableStreamDefaultController* AsDefault() override { return this; }
   ReadableByteStreamController* AsByte() override { return nullptr; }
 
   JSObject* WrapObject(JSContext* aCx,
@@ -67,13 +66,12 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
   void Error(JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelSteps(
       JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
-                                            ReadRequest* aReadRequest,
-                                            ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
+                                    ErrorResult& aRv) override;
 
-  virtual void ReleaseSteps() override;
+  void ReleaseSteps() override;
 
   // Internal Slot Accessors
   UnderlyingSourceCancelCallbackHelper* GetCancelAlgorithm() const {
@@ -126,8 +124,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   void SetStream(ReadableStream* aStream);
 
  private:
-  // Internal Slots: Public for ease of prototyping because
-  // of the reams of static methods that access internal slots.
+  // Internal Slots:
   RefPtr<UnderlyingSourceCancelCallbackHelper> mCancelAlgorithm;
   bool mCloseRequested = false;
   bool mPullAgain = false;
@@ -141,7 +138,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   RefPtr<ReadableStream> mStream;
 };
 
-MOZ_CAN_RUN_SCRIPT extern void SetUpReadableStreamDefaultController(
+MOZ_CAN_RUN_SCRIPT void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
@@ -150,32 +147,31 @@ MOZ_CAN_RUN_SCRIPT extern void SetUpReadableStreamDefaultController(
     double aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void
+MOZ_CAN_RUN_SCRIPT void
 SetupReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerEnqueue(
+MOZ_CAN_RUN_SCRIPT void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT void ReadableStreamDefaultControllerClose(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultReaderRead(
+MOZ_CAN_RUN_SCRIPT void ReadableStreamDefaultReaderRead(
     JSContext* aCx, ReadableStreamGenericReader* reader, ReadRequest* aRequest,
     ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerError(
+void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerClearAlgorithms(
+void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultController_h

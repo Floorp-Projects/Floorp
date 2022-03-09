@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -33,6 +35,13 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   module.init(QuickSuggestTestUtils._testScope);
   return module;
 });
+
+const DEFAULT_CONFIG = {
+  best_match: {
+    blocked_suggestion_ids: [],
+    min_search_string_length: 4,
+  },
+};
 
 const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
@@ -67,6 +76,10 @@ class QSTestUtils {
     return LEARN_MORE_URL;
   }
 
+  get BEST_MATCH_LEARN_MORE_URL() {
+    return UrlbarProviderQuickSuggest.bestMatchHelpUrl;
+  }
+
   get SCALARS() {
     return SCALARS;
   }
@@ -77,6 +90,11 @@ class QSTestUtils {
 
   get UPDATE_TOPIC() {
     return UPDATE_TOPIC;
+  }
+
+  get DEFAULT_CONFIG() {
+    // Return a clone so callers can modify it.
+    return Cu.cloneInto(DEFAULT_CONFIG, this);
   }
 
   /**
@@ -122,12 +140,14 @@ class QSTestUtils {
    * @param {array} [results]
    *   Array of quick suggest result objects. If not given, then this function
    *   won't set up any mock data.
+   * @param {object} [config]
+   *   Configuration object.
    * @returns {function}
    *   A cleanup function. You only need to call this function if you're in a
    *   browser chrome test and you did not also call `init`. You can ignore it
    *   otherwise.
    */
-  async ensureQuickSuggestInit(results = null) {
+  async ensureQuickSuggestInit(results = null, config = DEFAULT_CONFIG) {
     this.info?.(
       "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
     );
@@ -145,6 +165,9 @@ class QSTestUtils {
 
     if (results) {
       UrlbarQuickSuggest._addResults(results);
+    }
+    if (config) {
+      this.setConfig(config);
     }
 
     return cleanup;
@@ -170,6 +193,29 @@ class QSTestUtils {
     this.info?.("initNimbusFeature done");
 
     this.registerCleanupFunction(doCleanup);
+  }
+
+  /**
+   * Sets the quick suggest configuration. You should call this again with
+   * `DEFAULT_CONFIG` before your test finishes. See also `withConfig()`.
+   *
+   * @param {object} config
+   */
+  setConfig(config) {
+    UrlbarQuickSuggest._config = config;
+  }
+
+  /**
+   * Sets the quick suggest configuration, calls your callback, and restores the
+   * default configuration.
+   *
+   * @param {object} config
+   * @param {function} callback
+   */
+  async withConfig({ config, callback }) {
+    this.setConfig(config);
+    await callback();
+    this.setConfig(DEFAULT_CONFIG);
   }
 
   /**
@@ -199,48 +245,110 @@ class QSTestUtils {
    * Asserts a result is a quick suggest result.
    *
    * @param {string} url
-   *   The expected URL.
+   *   The expected URL. At least one of `url` and `originalUrl` must be given.
+   * @param {string} originalUrl
+   *   The expected original URL (the URL with an unreplaced timestamp
+   *   template). At least one of `url` and `originalUrl` must be given.
    * @param {object} window
    * @param {number} [index]
    *   The expected index of the quick suggest result. Pass -1 to use the index
    *   of the last result.
    * @param {boolean} [isSponsored]
    *   Whether the result is expected to be sponsored.
+   * @param {boolean} [isBestMatch]
+   *   Whether the result is expected to be a best match.
    * @returns {result}
    *   The quick suggest result.
    */
   async assertIsQuickSuggest({
     url,
+    originalUrl,
     window,
     index = -1,
     isSponsored = true,
+    isBestMatch = false,
   } = {}) {
+    this.Assert.ok(
+      url || originalUrl,
+      "At least one of url and originalUrl is specified"
+    );
+
     if (index < 0) {
-      index = UrlbarTestUtils.getResultCount(window) - 1;
-      this.Assert.greater(
-        index,
-        -1,
-        "Sanity check: Result count should be > 0"
-      );
+      let resultCount = UrlbarTestUtils.getResultCount(window);
+      if (isBestMatch) {
+        index = 1;
+        this.Assert.greater(
+          resultCount,
+          1,
+          "Sanity check: Result count should be > 1"
+        );
+      } else {
+        index = resultCount - 1;
+        this.Assert.greater(
+          resultCount,
+          0,
+          "Sanity check: Result count should be > 0"
+        );
+      }
     }
 
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-    this.Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
-    this.Assert.equal(details.isSponsored, isSponsored, "Result isSponsored");
-    this.Assert.equal(details.url, url, "Result URL");
-    this.Assert.equal(
-      details.displayed.action,
-      isSponsored ? "Sponsored" : "",
-      "Result action text"
+    let { result } = details;
+
+    this.info?.(
+      `Checking actual result at index ${index}: ` + JSON.stringify(result)
     );
 
-    let helpButton = details.element.row._elements.get("helpButton");
-    this.Assert.ok(helpButton, "The help button should be present");
     this.Assert.equal(
-      details.result.payload.helpUrl,
-      LEARN_MORE_URL,
-      "Result helpURL"
+      result.providerName,
+      "UrlbarProviderQuickSuggest",
+      "Result provider name is UrlbarProviderQuickSuggest"
     );
+    this.Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
+    this.Assert.equal(details.isSponsored, isSponsored, "Result isSponsored");
+    if (url) {
+      this.Assert.equal(details.url, url, "Result URL");
+    }
+    if (originalUrl) {
+      this.Assert.equal(
+        result.payload.originalUrl,
+        originalUrl,
+        "Result original URL"
+      );
+    }
+
+    this.Assert.equal(!!result.isBestMatch, isBestMatch, "Result isBestMatch");
+
+    let { row } = details.element;
+
+    let sponsoredElement = isBestMatch
+      ? row._elements.get("bottom")
+      : row._elements.get("action");
+    this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
+    this.Assert.equal(
+      sponsoredElement.textContent,
+      isSponsored ? "Sponsored" : "",
+      "Result sponsored label"
+    );
+
+    let helpButton = row._buttons.get("help");
+    this.Assert.ok(helpButton, "The help button should be present");
+    this.Assert.equal(result.payload.helpUrl, LEARN_MORE_URL, "Result helpURL");
+
+    let blockButton = row._buttons.get("block");
+    if (!isBestMatch) {
+      this.Assert.ok(
+        !blockButton,
+        "The block button is not present since the row is not a best match"
+      );
+    } else if (!UrlbarPrefs.get("bestMatch.blockingEnabled")) {
+      this.Assert.ok(
+        !blockButton,
+        "The block button is not present since blocking is disabled"
+      );
+    } else {
+      this.Assert.ok(blockButton, "The block button is present");
+    }
 
     return details;
   }
@@ -335,8 +443,14 @@ class QSTestUtils {
    *   The expected advertiser in the ping.
    * @param {number} [block_id]
    *   The expected block_id in the ping.
+   * @param {number} [is_clicked]
+   *   The expected is_clicked in the ping.
+   * @param {string} [match_type]
+   *   The expected match type, one of: "best-match", "firefox-suggest"
    * @param {string} [reporting_url]
    *   The expected reporting_url in the ping.
+   * @param {string} [request_id]
+   *   The expected request_id in the ping.
    * @param {string} [scenario]
    *   The quick suggest scenario, one of: "history", "offline", "online"
    */
@@ -345,7 +459,10 @@ class QSTestUtils {
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
+    is_clicked = false,
+    match_type = "firefox-suggest",
     reporting_url = "http://impression.reporting.test.com/",
+    request_id = null,
     scenario = "offline",
   }) {
     // Find the call for `QS_IMPRESSION`.
@@ -356,23 +473,17 @@ class QSTestUtils {
     this.Assert.equal(calls.length, 1, "Sent one impression ping");
 
     let payload = calls[0].args[0];
-
-    // Check payload properties that should match exactly.
-    let expectedPayload = {
+    this._assertPingPayload(payload, {
       advertiser,
       block_id,
+      is_clicked,
+      match_type,
       position: index + 1,
       reporting_url,
+      request_id,
       scenario,
-    };
-    let actualPayload = {};
-    for (let key of Object.keys(expectedPayload)) {
-      actualPayload[key] = payload[key];
-    }
-    this.Assert.deepEqual(actualPayload, expectedPayload, "Payload is correct");
-
-    // Check payload properties that don't need to match exactly.
-    this.Assert.ok(!!payload.context_id, "Should set the context_id");
+      context_id: actual => !!actual,
+    });
   }
 
   /**
@@ -402,8 +513,12 @@ class QSTestUtils {
    *   The expected advertiser in the ping.
    * @param {number} [block_id]
    *   The expected block_id in the ping.
+   * @param {string} [match_type]
+   *   The expected match type, one of: "best-match", "firefox-suggest"
    * @param {string} [reporting_url]
    *   The expected reporting_url in the ping.
+   * @param {string} [request_id]
+   *   The expected request_id in the ping.
    * @param {string} [scenario]
    *   The quick suggest scenario, one of: "history", "offline", "online"
    */
@@ -412,7 +527,9 @@ class QSTestUtils {
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
+    match_type = "firefox-suggest",
     reporting_url = "http://click.reporting.test.com/",
+    request_id = null,
     scenario = "offline",
   }) {
     // Find the call for `QS_SELECTION`.
@@ -423,23 +540,16 @@ class QSTestUtils {
     this.Assert.equal(calls.length, 1, "Sent one click ping");
 
     let payload = calls[0].args[0];
-
-    // Check payload properties that should match exactly.
-    let expectedPayload = {
+    this._assertPingPayload(payload, {
       advertiser,
       block_id,
+      match_type,
       position: index + 1,
       reporting_url,
+      request_id,
       scenario,
-    };
-    let actualPayload = {};
-    for (let key of Object.keys(expectedPayload)) {
-      actualPayload[key] = payload[key];
-    }
-    this.Assert.deepEqual(actualPayload, expectedPayload, "Payload is correct");
-
-    // Check payload properties that don't need to match exactly.
-    this.Assert.ok(!!payload.context_id, "Should set the context_id");
+      context_id: actual => !!actual,
+    });
   }
 
   /**
@@ -458,6 +568,40 @@ class QSTestUtils {
   }
 
   /**
+   * Helper for checking contextual services ping payloads.
+   *
+   * @param {object} actualPayload
+   *   The actual payload in the ping.
+   * @param {object} expectedPayload
+   *   An object describing the expected payload. Non-function values in this
+   *   object are checked for equality against the corresponding actual payload
+   *   values. Function values are called and passed the corresponding actual
+   *   values and should return true if the actual values are correct.
+   */
+  _assertPingPayload(actualPayload, expectedPayload) {
+    this.info?.("Checking ping payload: " + JSON.stringify(actualPayload));
+
+    this.Assert.equal(
+      Object.entries(actualPayload).length,
+      Object.entries(expectedPayload).length,
+      "Payload has expected number of properties"
+    );
+
+    for (let [key, expectedValue] of Object.entries(expectedPayload)) {
+      let actualValue = actualPayload[key];
+      if (typeof expectedValue == "function") {
+        this.Assert.ok(expectedValue(actualValue), "Payload property: " + key);
+      } else {
+        this.Assert.equal(
+          actualValue,
+          expectedValue,
+          "Payload property: " + key
+        );
+      }
+    }
+  }
+
+  /**
    * Asserts that URLs in a result's payload have the timestamp template
    * substring replaced with real timestamps.
    *
@@ -472,20 +616,20 @@ class QSTestUtils {
    *   }
    */
   assertTimestampsReplaced(result, urls) {
-    let template = "%YYYYMMDDHH%";
+    let { timestampTemplate, timestampLength } = UrlbarProviderQuickSuggest;
 
     // Parse the timestamp strings from each payload property and save them in
     // `urls[key].timestamp`.
     urls = { ...urls };
     for (let [key, url] of Object.entries(urls)) {
-      let index = url.indexOf(template);
+      let index = url.indexOf(timestampTemplate);
       this.Assert.ok(
         index >= 0,
-        `Timestamp template ${template} is in URL ${url} for key ${key}`
+        `Timestamp template ${timestampTemplate} is in URL ${url} for key ${key}`
       );
       let value = result.payload[key];
       this.Assert.ok(value, "Key is in result payload: " + key);
-      let timestamp = value.substring(index, index + template.length - 2);
+      let timestamp = value.substring(index, index + timestampLength);
 
       // Set `urls[key]` to an object that's helpful in the logged info message
       // below.
@@ -579,6 +723,63 @@ class QSTestUtils {
       this.info?.("Awaiting update after unenrolling in experiment");
       await unenrollUpdatePromise;
     };
+  }
+
+  /**
+   * Clears the Nimbus exposure event.
+   */
+  async clearExposureEvent() {
+    // Exposure event recording is queued to the idle thread, so wait for idle
+    // before we start so any events from previous tasks will have been recorded
+    // and won't interfere with this task.
+    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
+
+    Services.telemetry.clearEvents();
+    NimbusFeatures.urlbar._didSendExposureEvent = false;
+    UrlbarProviderQuickSuggest._recordedExposureEvent = false;
+  }
+
+  /**
+   * Asserts the Nimbus exposure event is recorded or not as expected.
+   *
+   * @param {boolean} expectedRecorded
+   *   Whether the event is expected to be recorded.
+   * @param {string} [branchSlug]
+   *   If the event is expected to be recorded, then this should be the name of
+   *   the experiment branch for which it was recorded.
+   */
+  async assertExposureEvent(expectedRecorded) {
+    this.Assert.equal(
+      UrlbarProviderQuickSuggest._recordedExposureEvent,
+      expectedRecorded,
+      "_recordedExposureEvent is correct"
+    );
+
+    let filter = {
+      category: "normandy",
+      method: "expose",
+      object: "nimbus_experiment",
+    };
+
+    let expectedEvents = [];
+    if (expectedRecorded) {
+      expectedEvents.push({
+        ...filter,
+        extra: {
+          branchSlug: "control",
+          featureId: "urlbar",
+        },
+      });
+    }
+
+    // The event recording is queued to the idle thread when the search starts,
+    // so likewise queue the assert to idle instead of doing it immediately.
+    await new Promise(resolve => {
+      Services.tm.idleDispatchToMainThread(() => {
+        TelemetryTestUtils.assertEvents(expectedEvents, filter);
+        resolve();
+      });
+    });
   }
 }
 

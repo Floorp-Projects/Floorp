@@ -477,6 +477,9 @@ this.LoginHelper = {
     this.usernameOnlyFormEnabled = Services.prefs.getBoolPref(
       "signon.usernameOnlyForm.enabled"
     );
+    this.usernameOnlyFormLookupThreshold = Services.prefs.getIntPref(
+      "signon.usernameOnlyForm.lookupThreshold"
+    );
     this.remoteRecipesEnabled = Services.prefs.getBoolPref(
       "signon.recipes.remoteRecipes.enabled"
     );
@@ -1505,6 +1508,8 @@ this.LoginHelper = {
       return await processor.processLoginsAndBuildSummary();
     } finally {
       this.importing = false;
+
+      Services.obs.notifyObservers(null, "passwordmgr-reload-all");
     }
   },
 
@@ -1573,9 +1578,9 @@ this.LoginHelper = {
   },
 
   /**
-   * Returns true if the user has a master password set and false otherwise.
+   * Returns true if the user has a primary password set and false otherwise.
    */
-  isMasterPasswordSet() {
+  isPrimaryPasswordSet() {
     let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
       Ci.nsIPK11TokenDB
     );
@@ -1584,7 +1589,7 @@ this.LoginHelper = {
   },
 
   /**
-   * Shows the Master Password prompt if enabled, or the
+   * Shows the Primary Password prompt if enabled, or the
    * OS auth dialog otherwise.
    * @param {Element} browser
    *        The <browser> that the prompt should be shown on
@@ -1603,7 +1608,7 @@ this.LoginHelper = {
     let isAuthorized = false;
     let telemetryEvent;
 
-    // This does no harm if master password isn't set.
+    // This does no harm if primary password isn't set.
     let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
       Ci.nsIPK11TokenDB
     );
@@ -1623,7 +1628,7 @@ this.LoginHelper = {
       };
     }
 
-    // Default to true if there is no master password and OS reauth is not available
+    // Default to true if there is no primary password and OS reauth is not available
     if (!token.hasPassword && !OSReauthEnabled) {
       isAuthorized = true;
       telemetryEvent = {
@@ -1636,7 +1641,7 @@ this.LoginHelper = {
         telemetryEvent,
       };
     }
-    // Use the OS auth dialog if there is no master password
+    // Use the OS auth dialog if there is no primary password
     if (!token.hasPassword && OSReauthEnabled) {
       let result = await OSKeyStore.ensureLoggedIn(
         messageText,
@@ -1656,10 +1661,10 @@ this.LoginHelper = {
         telemetryEvent,
       };
     }
-    // We'll attempt to re-auth via Master Password, force a log-out
+    // We'll attempt to re-auth via Primary Password, force a log-out
     token.checkPassword("");
 
-    // If a master password prompt is already open, just exit early and return false.
+    // If a primary password prompt is already open, just exit early and return false.
     // The user can re-trigger it after responding to the already open dialog.
     if (Services.logins.uiBusy) {
       isAuthorized = false;
@@ -1669,9 +1674,9 @@ this.LoginHelper = {
       };
     }
 
-    // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+    // So there's a primary password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
     try {
-      // Relogin and ask for the master password.
+      // Relogin and ask for the primary password.
       token.login(true); // 'true' means always prompt for token password. User will be prompted until
       // clicking 'Cancel' or entering the correct password.
     } catch (e) {

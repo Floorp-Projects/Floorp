@@ -32,9 +32,9 @@
   background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
 }
 
-:host(:not([native]):-moz-focusring) {
-  outline: 2px solid var(--focus-outline-color, -moz-accent-color);
-  outline-offset: var(--focus-outline-offset, 2px);
+:host(:not([native]):focus-visible) {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 #label-box:not([native]) {

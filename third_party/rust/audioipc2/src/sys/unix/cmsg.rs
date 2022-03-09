@@ -43,14 +43,19 @@ pub fn encode_handle(cmsg: &mut BytesMut, handle: RawFd) {
     }
 }
 
-// Decode one cmsghdr containing a handle, and adjust the `cmsg` buffer cursor past
-// the decoded handle.
-pub fn decode_handle(cmsg: &mut BytesMut) -> RawFd {
+// Decode one cmsghdr containing handle(s), and adjust the `cmsg` buffer cursor past
+// the decoded handle(s).
+// Note: ideally this would be a single handle, but due to buffering multiple
+// sendmsgs can coalesce into a single recvmsg.  On some (64-bit) systems, the
+// minimum alignment of the cmsghdr buffer provides capacity for 2 handles, so
+// this code must expect 1 or 2 handles per decode call.
+pub fn decode_handles(cmsg: &mut BytesMut) -> arrayvec::ArrayVec<RawFd, 2> {
+    let mut fds = arrayvec::ArrayVec::<RawFd, 2>::new();
     let b = cmsg.split_to(space(size_of::<i32>())).freeze();
-    // TODO: Clean this up to only expect a single fd per message.
     let fd = iterator(b).next().unwrap();
-    assert_eq!(fd.len(), 1);
-    fd[0]
+    assert!(fd.len() == 1 || fd.len() == 2);
+    fds.try_extend_from_slice(&fd).unwrap();
+    fds
 }
 
 fn iterator(c: Bytes) -> ControlMsgIter {

@@ -11,7 +11,6 @@ const _path = require("path");
 const mappings = {
   "./source-editor": "devtools/client/shared/sourceeditor/editor",
   "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
-  immutable: "devtools/client/shared/vendor/immutable",
   react: "devtools/client/shared/vendor/react",
   "react-dom": "devtools/client/shared/vendor/react-dom",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
@@ -42,7 +41,6 @@ function isRequire(t, node) {
 const VENDORS = [
   "classnames",
   "devtools-environment",
-  "devtools-utils",
   "fuzzaldrin-plus",
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",

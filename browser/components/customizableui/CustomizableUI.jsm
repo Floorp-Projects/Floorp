@@ -49,6 +49,8 @@ const kPrefSidebarButtonUsed = "browser.engagement.sidebar-button.has-used";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
+const global = this;
+
 var gDefaultTheme;
 var gSelectedTheme;
 
@@ -4628,6 +4630,34 @@ var CustomizableUI = {
 
   getCustomizationTarget(aElement) {
     return CustomizableUIInternal.getCustomizationTarget(aElement);
+  },
+
+  getTestOnlyInternalProp(aProp) {
+    if (
+      !Cu.isInAutomation ||
+      ![
+        "CustomizableUIInternal",
+        "gAreas",
+        "gFuturePlacements",
+        "gPalette",
+        "gPlacements",
+        "gSavedState",
+        "gSeenWidgets",
+        "kVersion",
+      ].includes(aProp)
+    ) {
+      return null;
+    }
+    return global[aProp];
+  },
+  setTestOnlyInternalProp(aProp, aValue) {
+    if (
+      !Cu.isInAutomation ||
+      !["gSavedState", "kVersion", "gDirty"].includes(aProp)
+    ) {
+      return;
+    }
+    global[aProp] = aValue;
   },
 };
 Object.freeze(CustomizableUI);

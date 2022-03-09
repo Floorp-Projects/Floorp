@@ -27,7 +27,7 @@
 }
 
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-platform: windows-win7) {
   @media (-moz-windows-default-theme) {
     #TabsToolbar {
       background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
@@ -50,8 +50,8 @@
   }
 }
 
-@media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
+@media (-moz-platform: windows-win7),
+       (-moz-platform: windows-win8) {
   @media (-moz-windows-compositor) {
     :root {
       background: transparent !important;
@@ -69,7 +69,7 @@
      These colors are copied from browser.css. */
   @media (-moz-windows-compositor: 0),
          (-moz-windows-default-theme: 0),
-         (-moz-os-version: windows-win8) {
+         (-moz-platform: windows-win8) {
     :root[tabsintitlebar] {
       color: CaptionText;
     }
@@ -97,7 +97,7 @@
     padding-top: 0 !important;
   }
 }
-@media (-moz-os-version: windows-win8) {
+@media (-moz-platform: windows-win8) {
   #navigator-toolbox {
     border-top: none !important;
   }

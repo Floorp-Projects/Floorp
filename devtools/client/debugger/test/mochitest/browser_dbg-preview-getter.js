@@ -5,11 +5,15 @@
 // This test checks if 'executing getter' in a preview correctly displays values.
 // Bug 1456441 - 'execute getter' not working in Preview
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-preview-getter.html", "preview-getter.js");
-  const source = findSource(dbg, "preview-getter.js");
+"use strict";
 
-  await loadAndAddBreakpoint(dbg, source.url, 5, 4);
+add_task(async function() {
+  const dbg = await initDebugger(
+    "doc-preview-getter.html",
+    "preview-getter.js"
+  );
+
+  await loadAndAddBreakpoint(dbg, "preview-getter.js", 5, 4);
   invokeInTab("funcA");
   await waitForPaused(dbg);
 
@@ -23,14 +27,30 @@ add_task(async function() {
   await clickElement(dbg, "previewPopupInvokeGetterButton");
   await waitForAllElements(dbg, "previewPopupObjectObject", 3);
 
-  const getterButtonEls = findAllElements(dbg, "previewPopupInvokeGetterButton");
-  const previewObjectNumberEls = findAllElements(dbg, "previewPopupObjectNumber");
-  const previewObjectObjectEls = findAllElements(dbg, "previewPopupObjectObject");
+  const getterButtonEls = findAllElements(
+    dbg,
+    "previewPopupInvokeGetterButton"
+  );
+  const previewObjectNumberEls = findAllElements(
+    dbg,
+    "previewPopupObjectNumber"
+  );
+  const previewObjectObjectEls = findAllElements(
+    dbg,
+    "previewPopupObjectObject"
+  );
 
   is(getterButtonEls.length, 0, "There are no getter buttons in the preview.");
-  is(previewObjectNumberEls.length, 2, "Getters were invoked and two numerical values are displayed as expected.");
-  is(previewObjectObjectEls.length, 3, "Getters were invoked and three object values are displayed as expected.");
+  is(
+    previewObjectNumberEls.length,
+    2,
+    "Getters were invoked and two numerical values are displayed as expected."
+  );
+  is(
+    previewObjectObjectEls.length,
+    3,
+    "Getters were invoked and three object values are displayed as expected."
+  );
 
   await closePreviewAtPos(dbg, 5, 8);
 });
-

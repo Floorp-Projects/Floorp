@@ -19,33 +19,29 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom += [
     "AutoEntryScript.h",
-    "LoadedScript.h",
     "ModuleLoader.h",
-    "ModuleMapKey.h",
     "ScriptDecoding.h",
     "ScriptElement.h",
-    "ScriptKind.h",
+    "ScriptLoadContext.h",
     "ScriptLoader.h",
-    "ScriptLoadRequest.h",
     "ScriptSettings.h",
+    "ScriptTrace.h",
 ]
 
 UNIFIED_SOURCES += [
     "AutoEntryScript.cpp",
-    "LoadedScript.cpp",
     "ModuleLoader.cpp",
-    "ModuleLoadRequest.cpp",
-    "ModuleMapKey.cpp",
     "nsIScriptElement.cpp",
     "ScriptElement.cpp",
+    "ScriptLoadContext.cpp",
     "ScriptLoader.cpp",
     "ScriptLoadHandler.cpp",
-    "ScriptLoadRequest.cpp",
     "ScriptSettings.cpp",
 ]
 
 LOCAL_INCLUDES += [
     "/dom/base",
+    "/js/loader",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

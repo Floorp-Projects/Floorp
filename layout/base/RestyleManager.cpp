@@ -464,18 +464,16 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
 static bool StateChangeMayAffectFrame(const Element& aElement,
                                       const nsIFrame& aFrame,
                                       EventStates aStates) {
+  const bool brokenChanged = aStates.HasState(NS_EVENT_STATE_BROKEN);
   if (aFrame.IsGeneratedContentFrame()) {
     if (aElement.IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage)) {
-      return aStates.HasState(NS_EVENT_STATE_BROKEN);
+      return brokenChanged;
     }
-
     // If it's other generated content, ignore LOADING/etc state changes on it.
     return false;
   }
 
-  const bool brokenChanged = aStates.HasState(NS_EVENT_STATE_BROKEN);
   const bool loadingChanged = aStates.HasState(NS_EVENT_STATE_LOADING);
-
   if (!brokenChanged && !loadingChanged) {
     return false;
   }
@@ -484,6 +482,11 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
     // Loading state doesn't affect <img>, see
     // `nsImageFrame::ShouldCreateImageFrameFor`.
     return brokenChanged;
+  }
+
+  if (aElement.IsSVGElement(nsGkAtoms::image)) {
+    // <image> gets an SVGImageFrame all the time.
+    return false;
   }
 
   return brokenChanged || loadingChanged;
@@ -738,7 +741,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   aFrame->SchedulePaint();
 
   // For relative positioning, we can simply update the frame rect
-  if (display->IsRelativelyPositionedStyle()) {
+  if (display->IsRelativelyOrStickyPositionedStyle()) {
     if (aFrame->IsGridItem()) {
       // A grid item's CB is its grid area, not the parent frame content area
       // as is assumed below.
@@ -763,7 +766,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         ssc->PositionContinuations(firstContinuation);
       }
     } else {
-      MOZ_ASSERT(StylePositionProperty::Relative == display->mPosition,
+      MOZ_ASSERT(display->IsRelativelyPositionedStyle(),
                  "Unexpected type of positioning");
       for (nsIFrame* cont = aFrame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
@@ -802,8 +805,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   RefPtr<gfxContext> rc =
       aFrame->PresShell()->CreateReferenceRenderingContext();
 
-  // Construct a bogus parent reflow input so that there's a usable
-  // containing block reflow input.
+  // Construct a bogus parent reflow input so that there's a usable reflow input
+  // for the containing block.
   nsIFrame* parentFrame = aFrame->GetParent();
   WritingMode parentWM = parentFrame->GetWritingMode();
   WritingMode frameWM = aFrame->GetWritingMode();

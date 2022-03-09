@@ -158,7 +158,7 @@ EXPORTS.mozilla.layout += [
 
 UNIFIED_SOURCES += [
     "AspectRatio.cpp",
-    "BlockReflowInput.cpp",
+    "BlockReflowState.cpp",
     "BRFrame.cpp",
     "ColumnSetWrapperFrame.cpp",
     "ColumnUtils.cpp",

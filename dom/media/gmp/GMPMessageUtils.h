@@ -65,25 +65,24 @@ template <>
 struct ParamTraits<GMPSimulcastStream> {
   typedef GMPSimulcastStream paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mWidth);
-    WriteParam(aMsg, aParam.mHeight);
-    WriteParam(aMsg, aParam.mNumberOfTemporalLayers);
-    WriteParam(aMsg, aParam.mMaxBitrate);
-    WriteParam(aMsg, aParam.mTargetBitrate);
-    WriteParam(aMsg, aParam.mMinBitrate);
-    WriteParam(aMsg, aParam.mQPMax);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mWidth);
+    WriteParam(aWriter, aParam.mHeight);
+    WriteParam(aWriter, aParam.mNumberOfTemporalLayers);
+    WriteParam(aWriter, aParam.mMaxBitrate);
+    WriteParam(aWriter, aParam.mTargetBitrate);
+    WriteParam(aWriter, aParam.mMinBitrate);
+    WriteParam(aWriter, aParam.mQPMax);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (ReadParam(aMsg, aIter, &(aResult->mWidth)) &&
-        ReadParam(aMsg, aIter, &(aResult->mHeight)) &&
-        ReadParam(aMsg, aIter, &(aResult->mNumberOfTemporalLayers)) &&
-        ReadParam(aMsg, aIter, &(aResult->mMaxBitrate)) &&
-        ReadParam(aMsg, aIter, &(aResult->mTargetBitrate)) &&
-        ReadParam(aMsg, aIter, &(aResult->mMinBitrate)) &&
-        ReadParam(aMsg, aIter, &(aResult->mQPMax))) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (ReadParam(aReader, &(aResult->mWidth)) &&
+        ReadParam(aReader, &(aResult->mHeight)) &&
+        ReadParam(aReader, &(aResult->mNumberOfTemporalLayers)) &&
+        ReadParam(aReader, &(aResult->mMaxBitrate)) &&
+        ReadParam(aReader, &(aResult->mTargetBitrate)) &&
+        ReadParam(aReader, &(aResult->mMinBitrate)) &&
+        ReadParam(aReader, &(aResult->mQPMax))) {
       return true;
     }
     return false;
@@ -101,41 +100,40 @@ template <>
 struct ParamTraits<GMPVideoCodec> {
   typedef GMPVideoCodec paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mGMPApiVersion);
-    WriteParam(aMsg, aParam.mCodecType);
-    WriteParam(aMsg, static_cast<const nsCString&>(
-                         nsDependentCString(aParam.mPLName)));
-    WriteParam(aMsg, aParam.mPLType);
-    WriteParam(aMsg, aParam.mWidth);
-    WriteParam(aMsg, aParam.mHeight);
-    WriteParam(aMsg, aParam.mStartBitrate);
-    WriteParam(aMsg, aParam.mMaxBitrate);
-    WriteParam(aMsg, aParam.mMinBitrate);
-    WriteParam(aMsg, aParam.mMaxFramerate);
-    WriteParam(aMsg, aParam.mFrameDroppingOn);
-    WriteParam(aMsg, aParam.mKeyFrameInterval);
-    WriteParam(aMsg, aParam.mQPMax);
-    WriteParam(aMsg, aParam.mNumberOfSimulcastStreams);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mGMPApiVersion);
+    WriteParam(aWriter, aParam.mCodecType);
+    WriteParam(aWriter, static_cast<const nsCString&>(
+                            nsDependentCString(aParam.mPLName)));
+    WriteParam(aWriter, aParam.mPLType);
+    WriteParam(aWriter, aParam.mWidth);
+    WriteParam(aWriter, aParam.mHeight);
+    WriteParam(aWriter, aParam.mStartBitrate);
+    WriteParam(aWriter, aParam.mMaxBitrate);
+    WriteParam(aWriter, aParam.mMinBitrate);
+    WriteParam(aWriter, aParam.mMaxFramerate);
+    WriteParam(aWriter, aParam.mFrameDroppingOn);
+    WriteParam(aWriter, aParam.mKeyFrameInterval);
+    WriteParam(aWriter, aParam.mQPMax);
+    WriteParam(aWriter, aParam.mNumberOfSimulcastStreams);
     for (uint32_t i = 0; i < aParam.mNumberOfSimulcastStreams; i++) {
-      WriteParam(aMsg, aParam.mSimulcastStream[i]);
+      WriteParam(aWriter, aParam.mSimulcastStream[i]);
     }
-    WriteParam(aMsg, aParam.mMode);
+    WriteParam(aWriter, aParam.mMode);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     // NOTE: make sure this matches any versions supported
-    if (!ReadParam(aMsg, aIter, &(aResult->mGMPApiVersion)) ||
+    if (!ReadParam(aReader, &(aResult->mGMPApiVersion)) ||
         aResult->mGMPApiVersion != kGMPVersion33) {
       return false;
     }
-    if (!ReadParam(aMsg, aIter, &(aResult->mCodecType))) {
+    if (!ReadParam(aReader, &(aResult->mCodecType))) {
       return false;
     }
 
     nsAutoCString plName;
-    if (!ReadParam(aMsg, aIter, &plName) ||
+    if (!ReadParam(aReader, &plName) ||
         plName.Length() > kGMPPayloadNameSize - 1) {
       return false;
     }
@@ -143,20 +141,20 @@ struct ParamTraits<GMPVideoCodec> {
     memset(aResult->mPLName + plName.Length(), 0,
            kGMPPayloadNameSize - plName.Length());
 
-    if (!ReadParam(aMsg, aIter, &(aResult->mPLType)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mWidth)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mHeight)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mStartBitrate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mMaxBitrate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mMinBitrate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mMaxFramerate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFrameDroppingOn)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mKeyFrameInterval))) {
+    if (!ReadParam(aReader, &(aResult->mPLType)) ||
+        !ReadParam(aReader, &(aResult->mWidth)) ||
+        !ReadParam(aReader, &(aResult->mHeight)) ||
+        !ReadParam(aReader, &(aResult->mStartBitrate)) ||
+        !ReadParam(aReader, &(aResult->mMaxBitrate)) ||
+        !ReadParam(aReader, &(aResult->mMinBitrate)) ||
+        !ReadParam(aReader, &(aResult->mMaxFramerate)) ||
+        !ReadParam(aReader, &(aResult->mFrameDroppingOn)) ||
+        !ReadParam(aReader, &(aResult->mKeyFrameInterval))) {
       return false;
     }
 
-    if (!ReadParam(aMsg, aIter, &(aResult->mQPMax)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mNumberOfSimulcastStreams))) {
+    if (!ReadParam(aReader, &(aResult->mQPMax)) ||
+        !ReadParam(aReader, &(aResult->mNumberOfSimulcastStreams))) {
       return false;
     }
 
@@ -165,12 +163,12 @@ struct ParamTraits<GMPVideoCodec> {
     }
 
     for (uint32_t i = 0; i < aResult->mNumberOfSimulcastStreams; i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mSimulcastStream[i]))) {
+      if (!ReadParam(aReader, &(aResult->mSimulcastStream[i]))) {
         return false;
       }
     }
 
-    if (!ReadParam(aMsg, aIter, &(aResult->mMode))) {
+    if (!ReadParam(aReader, &(aResult->mMode))) {
       return false;
     }
 

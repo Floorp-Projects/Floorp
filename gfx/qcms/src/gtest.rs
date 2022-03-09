@@ -6,6 +6,10 @@ mod gtest {
         transform_util::lut_inverse_interp16, Intent::Perceptual,
     };
     use libc::c_void;
+    #[cfg(all(target_arch = "arm", std_arch))]
+    use std::arch::is_arm_feature_detected;
+    #[cfg(all(target_arch = "aarch64", std_arch))]
+    use std::arch::is_aarch64_feature_detected;
     use std::ptr::null_mut;
 
     #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]

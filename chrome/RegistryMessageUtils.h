@@ -59,14 +59,13 @@ template <>
 struct ParamTraits<SerializedURI> {
   typedef SerializedURI paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.spec);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.spec);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsCString spec;
-    if (ReadParam(aMsg, aIter, &spec)) {
+    if (ReadParam(aReader, &spec)) {
       aResult->spec = spec;
       return true;
     }
@@ -78,25 +77,22 @@ template <>
 struct ParamTraits<ChromePackage> {
   typedef ChromePackage paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.package);
-    WriteParam(aMsg, aParam.contentBaseURI);
-    WriteParam(aMsg, aParam.localeBaseURI);
-    WriteParam(aMsg, aParam.skinBaseURI);
-    WriteParam(aMsg, aParam.flags);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.package);
+    WriteParam(aWriter, aParam.contentBaseURI);
+    WriteParam(aWriter, aParam.localeBaseURI);
+    WriteParam(aWriter, aParam.skinBaseURI);
+    WriteParam(aWriter, aParam.flags);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsCString package;
     SerializedURI contentBaseURI, localeBaseURI, skinBaseURI;
     uint32_t flags;
 
-    if (ReadParam(aMsg, aIter, &package) &&
-        ReadParam(aMsg, aIter, &contentBaseURI) &&
-        ReadParam(aMsg, aIter, &localeBaseURI) &&
-        ReadParam(aMsg, aIter, &skinBaseURI) &&
-        ReadParam(aMsg, aIter, &flags)) {
+    if (ReadParam(aReader, &package) && ReadParam(aReader, &contentBaseURI) &&
+        ReadParam(aReader, &localeBaseURI) &&
+        ReadParam(aReader, &skinBaseURI) && ReadParam(aReader, &flags)) {
       aResult->package = package;
       aResult->contentBaseURI = contentBaseURI;
       aResult->localeBaseURI = localeBaseURI;
@@ -119,22 +115,20 @@ template <>
 struct ParamTraits<SubstitutionMapping> {
   typedef SubstitutionMapping paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.scheme);
-    WriteParam(aMsg, aParam.path);
-    WriteParam(aMsg, aParam.resolvedURI);
-    WriteParam(aMsg, aParam.flags);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.scheme);
+    WriteParam(aWriter, aParam.path);
+    WriteParam(aWriter, aParam.resolvedURI);
+    WriteParam(aWriter, aParam.flags);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsCString scheme, path;
     SerializedURI resolvedURI;
     uint32_t flags;
 
-    if (ReadParam(aMsg, aIter, &scheme) && ReadParam(aMsg, aIter, &path) &&
-        ReadParam(aMsg, aIter, &resolvedURI) &&
-        ReadParam(aMsg, aIter, &flags)) {
+    if (ReadParam(aReader, &scheme) && ReadParam(aReader, &path) &&
+        ReadParam(aReader, &resolvedURI) && ReadParam(aReader, &flags)) {
       aResult->scheme = scheme;
       aResult->path = path;
       aResult->resolvedURI = resolvedURI;
@@ -155,18 +149,16 @@ template <>
 struct ParamTraits<OverrideMapping> {
   typedef OverrideMapping paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.originalURI);
-    WriteParam(aMsg, aParam.overrideURI);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.originalURI);
+    WriteParam(aWriter, aParam.overrideURI);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     SerializedURI originalURI;
     SerializedURI overrideURI;
 
-    if (ReadParam(aMsg, aIter, &originalURI) &&
-        ReadParam(aMsg, aIter, &overrideURI)) {
+    if (ReadParam(aReader, &originalURI) && ReadParam(aReader, &overrideURI)) {
       aResult->originalURI = originalURI;
       aResult->overrideURI = overrideURI;
       return true;

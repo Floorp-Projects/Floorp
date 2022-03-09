@@ -194,3 +194,53 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test document with dialog role and heading
+ */
+addAccessibleTask(
+  `<body role="dialog" aria-labelledby="h">
+    <h1 id="h">
+      We're building a richer search experience
+    </h1>
+  </body>`,
+  async (browser, accDoc) => {
+    let doc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    let docChildren = doc.getAttributeValue("AXChildren");
+    is(docChildren.length, 1, "The document contains a root group");
+
+    let rootGroup = docChildren[0];
+    is(
+      rootGroup.getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Is generated root group"
+    );
+
+    is(rootGroup.getAttributeValue("AXRole"), "AXGroup", "Inherits role");
+
+    is(
+      rootGroup.getAttributeValue("AXSubrole"),
+      "AXApplicationDialog",
+      "Inherits subrole"
+    );
+    let rootGroupChildren = rootGroup.getAttributeValue("AXChildren");
+    is(rootGroupChildren.length, 1, "Root group has one child");
+
+    is(
+      rootGroupChildren[0].getAttributeValue("AXRole"),
+      "AXHeading",
+      "Heading is child of root group"
+    );
+
+    // From bottom-up
+    let heading = getNativeInterface(accDoc, "h");
+    rootGroup = heading.getAttributeValue("AXParent");
+    is(
+      rootGroup.getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Parent is generated root group"
+    );
+  }
+);

@@ -19,10 +19,6 @@
   margin-inline-start: 4px;
 }
 
-#viewButton:-moz-focusring:not(:hover, [open]) {
-  outline: 1px dotted -moz-DialogText;
-}
-
 :root[uidensity=touch] #search-box,
 :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
   min-height: 32px;

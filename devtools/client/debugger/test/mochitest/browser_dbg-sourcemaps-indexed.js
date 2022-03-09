@@ -1,10 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-requestLongerTimeout(2);
 
 // Tests loading sourcemapped sources, setting breakpoints, and
 // stepping in them.
+
+"use strict";
+
+requestLongerTimeout(2);
 
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
@@ -16,7 +19,6 @@ add_task(async function() {
   );
   const {
     selectors: { getBreakpoint, getBreakpointCount },
-    getState
   } = dbg;
 
   ok(true, "Original sources exist");

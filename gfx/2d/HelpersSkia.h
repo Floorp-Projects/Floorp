@@ -29,7 +29,13 @@ static inline SkColorType GfxFormatToSkiaColorType(SurfaceFormat format) {
       return kRGB_565_SkColorType;
     case SurfaceFormat::A8:
       return kAlpha_8_SkColorType;
+    case SurfaceFormat::R8G8B8A8:
+      return kRGBA_8888_SkColorType;
+    case SurfaceFormat::A8R8G8B8:
+      MOZ_DIAGNOSTIC_ASSERT(false, "A8R8G8B8 unsupported by Skia");
+      return kRGBA_8888_SkColorType;
     default:
+      MOZ_DIAGNOSTIC_ASSERT(false, "Unknown surface format");
       return kRGBA_8888_SkColorType;
   }
 }

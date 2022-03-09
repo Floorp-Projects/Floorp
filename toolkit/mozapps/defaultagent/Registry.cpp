@@ -10,6 +10,9 @@
 #include <shlwapi.h>
 
 #include "common.h"
+#include "UtfConvert.h"
+
+#include "mozilla/Buffer.h"
 
 using WStringResult = mozilla::WindowsErrorResult<std::wstring>;
 
@@ -75,10 +78,9 @@ MaybeStringResult RegistryGetValueString(
   DWORD charCount = (wideDataSize / sizeof(wchar_t)) + 1;
 
   // Read the data from the registry into a wide string
-  mozilla::UniquePtr<wchar_t[]> wideData =
-      mozilla::MakeUnique<wchar_t[]>(charCount);
+  mozilla::Buffer<wchar_t> wideData(charCount);
   ls = RegGetValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
-                    RRF_RT_REG_SZ, nullptr, wideData.get(), &wideDataSize);
+                    RRF_RT_REG_SZ, nullptr, wideData.Elements(), &wideDataSize);
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
     LOG_ERROR(hr);
@@ -86,24 +88,10 @@ MaybeStringResult RegistryGetValueString(
   }
 
   // Convert to narrow string and return.
-  int narrowLen = WideCharToMultiByte(CP_UTF8, 0, wideData.get(), -1, nullptr,
-                                      0, nullptr, nullptr);
-  if (narrowLen == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
-  mozilla::UniquePtr<char[]> narrowOldValue =
-      mozilla::MakeUnique<char[]>(narrowLen);
-  int charsWritten =
-      WideCharToMultiByte(CP_UTF8, 0, wideData.get(), -1, narrowOldValue.get(),
-                          narrowLen, nullptr, nullptr);
-  if (charsWritten == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
-  return mozilla::Some(std::string(narrowOldValue.get()));
+  std::string narrowData;
+  MOZ_TRY_VAR(narrowData, Utf16ToUtf8(wideData.Elements()));
+
+  return mozilla::Some(narrowData);
 }
 
 VoidResult RegistrySetValueString(IsPrefixed isPrefixed,
@@ -121,26 +109,13 @@ VoidResult RegistrySetValueString(IsPrefixed isPrefixed,
   std::wstring keyName = MakeKeyName(subKey);
 
   // Convert the value from a narrow string to a wide string
-  int wideLen = MultiByteToWideChar(CP_UTF8, 0, newValue, -1, nullptr, 0);
-  if (wideLen == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
-  mozilla::UniquePtr<wchar_t[]> wideValue =
-      mozilla::MakeUnique<wchar_t[]>(wideLen);
-  int charsWritten =
-      MultiByteToWideChar(CP_UTF8, 0, newValue, -1, wideValue.get(), wideLen);
-  if (charsWritten == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
+  std::wstring wideValue;
+  MOZ_TRY_VAR(wideValue, Utf8ToUtf16(newValue));
 
   // Store the value
-  LSTATUS ls =
-      RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(), valueName.c_str(),
-                      REG_SZ, wideValue.get(), wideLen * sizeof(wchar_t));
+  LSTATUS ls = RegSetKeyValueW(HKEY_CURRENT_USER, keyName.c_str(),
+                               valueName.c_str(), REG_SZ, wideValue.c_str(),
+                               (wideValue.size() + 1) * sizeof(wchar_t));
   if (ls != ERROR_SUCCESS) {
     HRESULT hr = HRESULT_FROM_WIN32(ls);
     LOG_ERROR(hr);

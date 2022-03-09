@@ -171,10 +171,6 @@ var SearchTestUtils = {
   initXPCShellAddonManager(scope, usePrivilegedSignatures = false) {
     let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
     Services.prefs.setIntPref("extensions.enabledScopes", scopes);
-    Services.prefs.setBoolPref(
-      "extensions.webextensions.background-delayed-startup",
-      false
-    );
     // Only do this once.
     try {
       gTestScope.ExtensionTestUtils.init(scope);

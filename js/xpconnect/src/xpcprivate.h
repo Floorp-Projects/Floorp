@@ -337,6 +337,10 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
   virtual void BeforeProcessTask(bool aMightBlock) override;
   virtual void AfterProcessTask(uint32_t aNewRecursionDepth) override;
 
+  // Relay to the CCGCScheduler instead of queuing up an idle runnable
+  // (as is done for workers in CycleCollectedJSContext).
+  virtual void MaybePokeGC() override;
+
   ~XPCJSContext();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -516,11 +520,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     // fromMarkedLocation() is safe because the string is interned.
     return JS::HandleId::fromMarkedLocation(&mStrIDs[index]);
   }
-  JS::HandleValue GetStringJSVal(unsigned index) const {
-    MOZ_ASSERT(index < XPCJSContext::IDX_TOTAL_COUNT, "index out of range");
-    // fromMarkedLocation() is safe because the string is interned.
-    return JS::HandleValue::fromMarkedLocation(&mStrJSVals[index]);
-  }
   const char* GetStringName(unsigned index) const {
     MOZ_ASSERT(index < XPCJSContext::IDX_TOTAL_COUNT, "index out of range");
     return mStrings[index];
@@ -601,7 +600,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   static const char* const mStrings[XPCJSContext::IDX_TOTAL_COUNT];
   jsid mStrIDs[XPCJSContext::IDX_TOTAL_COUNT];
-  JS::Value mStrJSVals[XPCJSContext::IDX_TOTAL_COUNT];
 
   struct Hasher {
     using Key = RefPtr<mozilla::BasePrincipal>;
@@ -678,7 +676,7 @@ class MOZ_STACK_CLASS XPCCallContext final {
 
   explicit XPCCallContext(JSContext* cx, JS::HandleObject obj = nullptr,
                           JS::HandleObject funobj = nullptr,
-                          JS::HandleId id = JSID_VOIDHANDLE,
+                          JS::HandleId id = JS::VoidHandlePropertyKey,
                           unsigned argc = NO_ARGS, JS::Value* argv = nullptr,
                           JS::Value* rval = nullptr);
 
@@ -2361,7 +2359,7 @@ class MOZ_STACK_CLASS CreateObjectInOptions : public OptionsBase {
  public:
   explicit CreateObjectInOptions(JSContext* cx = xpc_GetSafeJSContext(),
                                  JSObject* options = nullptr)
-      : OptionsBase(cx, options), defineAs(cx, JSID_VOID) {}
+      : OptionsBase(cx, options), defineAs(cx, JS::PropertyKey::Void()) {}
 
   virtual bool Parse() override { return ParseId("defineAs", &defineAs); }
 
@@ -2373,7 +2371,7 @@ class MOZ_STACK_CLASS ExportFunctionOptions : public OptionsBase {
   explicit ExportFunctionOptions(JSContext* cx = xpc_GetSafeJSContext(),
                                  JSObject* options = nullptr)
       : OptionsBase(cx, options),
-        defineAs(cx, JSID_VOID),
+        defineAs(cx, JS::PropertyKey::Void()),
         allowCrossOriginArguments(false) {}
 
   virtual bool Parse() override {

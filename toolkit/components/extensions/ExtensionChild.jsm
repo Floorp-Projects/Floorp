@@ -160,13 +160,14 @@ Services.obs.addObserver(StrongPromise, "extensions-onMessage-witness");
 // Simple single-event emitter-like helper, exposes the EventManager api.
 class SimpleEventAPI extends EventManager {
   constructor(context, name) {
-    super({ context, name });
-    this.fires = new Set();
-    this.register = fire => {
-      this.fires.add(fire);
+    let fires = new Set();
+    let register = fire => {
+      fires.add(fire);
       fire.location = context.getCaller();
-      return () => this.fires.delete(fire);
+      return () => fires.delete(fire);
     };
+    super({ context, name, register });
+    this.fires = fires;
   }
   emit(...args) {
     return [...this.fires].map(fire => fire.asyncWithoutClone(...args));

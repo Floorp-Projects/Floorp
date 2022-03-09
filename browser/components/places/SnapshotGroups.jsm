@@ -11,6 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
@@ -32,6 +35,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @property {string} title
  *   The title of the group, this may be automatically generated or
  *   user assigned.
+ * @property {boolean} hidden
+ *   Whether the group is hidden or not.
  * @property {string} builder
  *   The builder that was used to create the group (e.g. "domain", "pinned").
  * @property {object} builderMetadata
@@ -88,31 +93,11 @@ const SnapshotGroups = new (class SnapshotGroups {
         );
         id = row[0].getResultByIndex(0);
 
-        // Construct the sql parameters for the urls
-        let params = {};
-        let SQLInFragment = [];
-        let i = 0;
-        for (let url of urls) {
-          params[`url${i}`] = url;
-          SQLInFragment.push(`hash(:url${i})`);
-          i++;
-        }
-        params.id = id;
-
-        await db.execute(
-          `
-          INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
-          SELECT :id, s.place_id
-          FROM moz_places h
-          JOIN moz_places_metadata_snapshots s
-          ON h.id = s.place_id
-          WHERE h.url_hash IN (${SQLInFragment.join(",")})
-        `,
-          params
-        );
+        await this.#insertUrls(db, id, urls);
       }
     );
 
+    this.#prefetchScreenshotForGroup(id).catch(console.error);
     Services.obs.notifyObservers(null, "places-snapshot-group-added");
     return id;
   }
@@ -121,24 +106,46 @@ const SnapshotGroups = new (class SnapshotGroups {
    * Modifies the metadata for a snapshot group.
    *
    * @param {SnapshotGroup} group
-   *   The details of the group to modify. If lastAccessed and SnapshotCount are specified, then they are ignored.
+   *   The partial details of the group to modify. Must include the group's id. Any other properties
+   *   update those properties of the group. If builder, imageUrl, lastAccessed or snapshotCount are
+   *   specified then they are ignored.
    */
   async updateMetadata(group) {
     await PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:updateMetadata",
-      db => {
-        return db.executeCached(
-          `
-        UPDATE moz_places_metadata_snapshots_groups
-        SET title = :title, builder = :builder, builder_data = :builder_data
-        WHERE id = :id
-      `,
-          {
-            id: group.id,
-            title: group.title,
-            builder: group.builder,
-            builder_data: JSON.stringify(group.builderMetadata),
+      async db => {
+        let params = { id: group.id };
+        let updates = {
+          title: group.title,
+          builder_data:
+            "builderMetadata" in group
+              ? JSON.stringify(group.builderMetadata)
+              : undefined,
+        };
+
+        if ("hidden" in group) {
+          updates.hidden = group.hidden ? 1 : 0;
+        }
+
+        let setters = [];
+        for (let [key, value] of Object.entries(updates)) {
+          if (value !== undefined) {
+            setters.push(`${key} = :${key}`);
+            params[key] = value;
           }
+        }
+
+        if (!setters.length) {
+          return;
+        }
+
+        await db.executeCached(
+          `
+            UPDATE moz_places_metadata_snapshots_groups
+            SET ${setters.join(", ")}
+            WHERE id = :id
+          `,
+          params
         );
       }
     );
@@ -148,6 +155,8 @@ const SnapshotGroups = new (class SnapshotGroups {
 
   /**
    * Modifies the urls for a snapshot group.
+   * Note: This API does not manage deleting of groups if the number of urls is
+   * 0. If there are no urls in the group, consider calling `delete()` instead.
    *
    * @param {number} id
    *   The id of the group to modify.
@@ -155,7 +164,22 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   An array of snapshot urls for the group. If the urls do not have associated snapshots, then they are ignored.
    */
   async updateUrls(id, urls) {
-    // TODO
+    await PlacesUtils.withConnectionWrapper(
+      "SnapshotsGroups.jsm:updateUrls",
+      async db => {
+        // Some entries need removing, others modifying or adding. The easiest
+        // way to do this is to remove the existing group information first and
+        // then add only what we need.
+        await db.executeCached(
+          `DELETE FROM moz_places_metadata_groups_to_snapshots WHERE group_id = :id`,
+          { id }
+        );
+
+        await this.#insertUrls(db, id, urls);
+      }
+    );
+
+    this.#prefetchScreenshotForGroup(id).catch(console.error);
     Services.obs.notifyObservers(null, "places-snapshot-group-updated");
   }
 
@@ -189,6 +213,8 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @param {number} [options.limit]
    *   A numerical limit to the number of snapshots to retrieve, defaults to 50.
    *   Use -1 to specify no limit.
+   * @param {boolean} [options.hidden]
+   *   Pass true to also return hidden groups.
    * @param {string} [options.builder]
    *   Limit searching snapshot groups to results from a particular builder.
    * @param {boolean} [options.skipMinimum]
@@ -198,10 +224,15 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @returns {SnapshotGroup[]}
    *   An array of snapshot groups, in descending order of last access time.
    */
-  async query({ limit = 50, builder = "", skipMinimum = false } = {}) {
+  async query({
+    limit = 50,
+    builder = undefined,
+    hidden = false,
+    skipMinimum = false,
+  } = {}) {
     let db = await PlacesUtils.promiseDBConnection();
 
-    let params = { builder };
+    let params = {};
     let sizeFragment = "";
     let limitFragment = "";
     if (!skipMinimum) {
@@ -213,13 +244,40 @@ const SnapshotGroups = new (class SnapshotGroups {
       limitFragment = "LIMIT :limit";
     }
 
+    let whereTerms = [];
+
+    if (builder) {
+      whereTerms.push("builder = :builder");
+      params.builder = builder;
+    }
+
+    if (!hidden) {
+      whereTerms.push("hidden = 0");
+    }
+
+    let where = whereTerms.length ? `WHERE ${whereTerms.join(" AND ")}` : "";
+
     let rows = await db.executeCached(
       `
-      SELECT g.id, g.title, g.builder, g.builder_data, COUNT(s.group_id) AS snapshot_count, MAX(sn.last_interaction_at) AS last_access
+      SELECT g.id, g.title, g.hidden, g.builder, g.builder_data,
+            COUNT(s.group_id) AS snapshot_count,
+            MAX(sn.last_interaction_at) AS last_access,
+            (SELECT group_concat(IFNULL(preview_image_url, ''), '|')
+                    || '|' ||
+                    group_concat(url, '|') FROM (
+              SELECT preview_image_url, url
+              FROM moz_places_metadata_snapshots sns
+              JOIN moz_places_metadata_groups_to_snapshots gs USING(place_id)
+              JOIN moz_places h ON h.id = gs.place_id
+              WHERE gs.group_id = g.id
+              ORDER BY sns.last_interaction_at ASC
+              LIMIT 2
+              )
+            ) AS image_urls
       FROM moz_places_metadata_snapshots_groups g
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
-      WHERE builder = :builder OR :builder = ""
+      ${where}
       GROUP BY g.id ${sizeFragment}
       ORDER BY last_access DESC
       ${limitFragment}
@@ -271,6 +329,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   Whether or not to sortDescending. Defaults to true.
    * @param {string} [sortBy]
    *   A string to choose what to sort the snapshots by, e.g. "last_interaction_at"
+   *   By default results are sorted by last_interaction_at.
    * @returns {Snapshots[]}
    *   An array of snapshots, in descending order of last interaction time
    */
@@ -281,29 +340,55 @@ const SnapshotGroups = new (class SnapshotGroups {
     sortDescending = true,
     sortBy = "last_interaction_at",
   } = {}) {
-    let db = await PlacesUtils.promiseDBConnection();
-    let urlRows = await db.executeCached(
-      `
-      SELECT h.url
-      FROM moz_places_metadata_groups_to_snapshots s
-      JOIN moz_places h ON h.id = s.place_id
-      WHERE s.group_id = :group_id
-      ORDER BY h.last_visit_date DESC
-    `,
-      { group_id: id }
-    );
-
-    let snapshots = [];
-    let urls = urlRows.map(row => row.getResultByName("url"));
-
-    let start = Math.max(0, startIndex);
-    let end = Math.min(urls.length, count + start);
-    for (let i = start; i < end; i++) {
-      let snapShot = await Snapshots.get(urls[i]);
-      snapshots.push(snapShot);
+    if (!["last_visit_date", "last_interaction_at"].includes(sortBy)) {
+      throw new Error("Unknown sortBy value");
     }
+    let start = Math.max(0, startIndex);
 
-    return snapshots;
+    let snapshots = await Snapshots.query({
+      limit: start + count,
+      group: id,
+      sortBy,
+      sortDescending,
+    });
+
+    let end = Math.min(snapshots.length, count + start);
+    return snapshots.slice(start, end);
+  }
+
+  /**
+   * Inserts a set of urls into the database for a given snapshot group.
+   *
+   * @param {object} db
+   *   The database connection to use.
+   * @param {number} id
+   *   The id of the group to add the urls to.
+   * @param {string[]} urls
+   *   An array of urls to insert for the group.
+   */
+  async #insertUrls(db, id, urls) {
+    // Construct the sql parameters for the urls
+    let params = {};
+    let SQLInFragment = [];
+    let i = 0;
+    for (let url of urls) {
+      params[`url${i}`] = url;
+      SQLInFragment.push(`hash(:url${i})`);
+      i++;
+    }
+    params.id = id;
+
+    await db.execute(
+      `
+      INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
+      SELECT :id, s.place_id
+      FROM moz_places h
+      JOIN moz_places_metadata_snapshots s
+      ON h.id = s.place_id
+      WHERE h.url_hash IN (${SQLInFragment.join(",")})
+    `,
+      params
+    );
   }
 
   /**
@@ -314,9 +399,37 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @returns {SnapshotGroup}
    */
   #translateSnapshotGroupRow(row) {
+    // Group image selection should be done in this order:
+    //   1. Oldest view in group featured image
+    //   2. Second Oldest View in group featured image
+    //   3. Oldest View in group screenshot
+    // To check for featured image existence we can refer to the
+    // moz_places.preview_image_url field, that includes the url of the featured
+    // image.
+    // TODO (MR2-1610): The features image is not cached yet, it should be
+    // cached by PlacesPreview as a replacement for the screenshot, when
+    // available.
+    // The query returns featured1|featured2|url1|url2
+    let imageUrls = row.getResultByName("image_urls")?.split("|");
+    let imageUrl = null;
+    if (imageUrls) {
+      imageUrl = imageUrls[0] || imageUrls[1];
+      if (!imageUrl && imageUrls[2]) {
+        // We don't have a featured image, thus use a moz-page-thumb screenshot.
+        imageUrl = imageUrls[2];
+        if (PlacesPreviews.enabled) {
+          imageUrl = PlacesPreviews.getPageThumbURL(imageUrl);
+        } else {
+          imageUrl = PageThumbs.getThumbnailURL(imageUrl);
+        }
+      }
+    }
+
     let snapshotGroup = {
       id: row.getResultByName("id"),
+      imageUrl,
       title: row.getResultByName("title"),
+      hidden: row.getResultByName("hidden") == 1,
       builder: row.getResultByName("builder"),
       builderMetadata: JSON.parse(row.getResultByName("builder_data")),
       snapshotCount: row.getResultByName("snapshot_count"),
@@ -324,5 +437,27 @@ const SnapshotGroups = new (class SnapshotGroups {
     };
 
     return snapshotGroup;
+  }
+
+  /**
+   * Prefetch a screenshot for the oldest snapshot in the group.
+   * @param {number} id
+   *   The id of the group to add the urls to.
+   */
+  async #prefetchScreenshotForGroup(id) {
+    let url = (
+      await this.getSnapshots({
+        id,
+        start: 0,
+        count: 1,
+        sortBy: "last_interaction_at",
+        sortDescending: false,
+      })
+    )[0].url;
+    if (PlacesPreviews.enabled) {
+      await PlacesPreviews.update(url);
+    } else {
+      await BackgroundPageThumbs.captureIfMissing(url);
+    }
   }
 })();

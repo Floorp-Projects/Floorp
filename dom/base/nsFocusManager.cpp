@@ -2124,20 +2124,15 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
 
   if (ShadowRoot* root = aElement->GetShadowRoot()) {
     if (root->DelegatesFocus()) {
-      // If focus target's shadow root is a shadow-including inclusive ancestor
-      // of the currently focused area of a top-level browsing context's DOM
-      // anchor, then return null.
-      //
-      // Note that the spec still uses the host, see
-      // https://github.com/whatwg/html/issues/7207
+      // If focus target is a shadow-including inclusive ancestor of the
+      // currently focused area of a top-level browsing context's DOM anchor,
+      // then return null.
       if (nsPIDOMWindowInner* innerWindow =
               aElement->OwnerDoc()->GetInnerWindow()) {
-        BrowsingContext* bc = innerWindow->GetBrowsingContext();
-        if (bc && bc->IsTop()) {
-          if (Element* focusedElement = innerWindow->GetFocusedElement()) {
-            if (focusedElement->IsShadowIncludingInclusiveDescendantOf(root)) {
-              return nullptr;
-            }
+        if (Element* focusedElement = innerWindow->GetFocusedElement()) {
+          if (focusedElement->IsShadowIncludingInclusiveDescendantOf(
+                  aElement)) {
+            return nullptr;
           }
         }
       }

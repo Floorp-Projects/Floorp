@@ -59,6 +59,7 @@ fuzzy(0-1,0-1600) random-if(Android) == blend-multiply.svg blend-multiply-ref.sv
 #skip-if(Android) == blend-soft-light.svg blend-soft-light-ref.svg
 skip == blend-difference-stacking.html blend-difference-stacking-ref.html # bug 1458353
 == active-transform-blend-mode.html active-transform-blend-mode-ref.html
+== active-clip-and-mask.html active-clip-and-mask-ref.html
 
 fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 
@@ -557,6 +558,10 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == use-02-extref.svg use-02-extref-ref.svg
 == use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
+
+test-pref(svg.use-element.graphics-element-restrictions,0) == use-restrictions.svg use-restrictions-not-restricted-ref.svg
+test-pref(svg.use-element.graphics-element-restrictions,1) != use-restrictions.svg use-restrictions-not-restricted-ref.svg
+test-pref(svg.use-element.graphics-element-restrictions,1) ref-pref(svg.use-element.graphics-element-restrictions,2) != use-restrictions.svg use-restrictions.svg
 
 == use-element-shadow-tree-rule-matching.html pass.svg
 == use-image-01.svg pass.svg

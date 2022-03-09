@@ -73,10 +73,12 @@ struct TlsData {
   //
   //   - Only non-null while unwinding the control stack from a wasm-exit stub.
   //     until the nearest enclosing Wasm try-catch or try-delegate block.
-  //   - Set by wasm::HandleThrow, unset by Instance::consumePendingException.
+  //   - Set by Instance::setPendingException, unset by JIT code.
   //   - If the unwind target is a `try-delegate`, it is unset by the delegated
   //     try-catch block or function body block.
   GCPtrObject pendingException;
+  // The tag of the pending exception.
+  GCPtrObject pendingExceptionTag;
 #endif
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
@@ -167,6 +169,23 @@ struct TableTls {
   // Pointer to the array of elements (which can have various representations).
   // For tables of anyref this is null.
   void* functionBase;
+};
+
+// Table element for TableRepr::Func which carries both the code pointer and
+// a tls pointer (and thus anything reachable through the tls, including the
+// instance).
+
+struct FunctionTableElem {
+  // The code to call when calling this element. The table ABI is the system
+  // ABI with the additional ABI requirements that:
+  //  - WasmTlsReg and any pinned registers have been loaded appropriately
+  //  - if this is a heterogeneous table that requires a signature check,
+  //    WasmTableCallSigReg holds the signature id.
+  void* code;
+
+  // The pointer to the callee's instance's TlsData. This must be loaded into
+  // WasmTlsReg before calling 'code'.
+  TlsData* tls;
 };
 
 }  // namespace wasm

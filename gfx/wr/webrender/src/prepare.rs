@@ -31,8 +31,7 @@ use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask};
 use crate::segment::SegmentBuilder;
-use crate::space::SpaceMapper;
-use crate::util::{clamp_to_scale_factor, pack_as_float, raster_rect_to_device_pixels};
+use crate::util::{clamp_to_scale_factor, pack_as_float};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
 
@@ -63,8 +62,6 @@ pub fn prepare_primitives(
             cluster.spatial_node_index,
             frame_context.spatial_tree,
         );
-
-        frame_state.surfaces[pic_context.surface_index.0].opaque_rect = PictureRect::zero();
 
         for prim_instance_index in cluster.prim_range() {
             // First check for coarse visibility (if this primitive was completely off-screen)
@@ -127,14 +124,6 @@ pub fn prepare_primitives(
                 prim_instances[prim_instance_index].clear_visibility();
             }
         }
-
-        if !cluster.opaque_rect.is_empty() {
-            let surface = &mut frame_state.surfaces[pic_context.surface_index.0];
-
-            if let Some(cluster_opaque_rect) = surface.map_local_to_surface.map_inner_bounds(&cluster.opaque_rect) {
-                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect);
-            }
-        }
     }
 }
 
@@ -159,8 +148,13 @@ fn prepare_prim_for_render(
     // For example, scrolling may affect the location of an item in
     // local space, which may force us to render this item on a larger
     // picture target, if being composited.
+    let mut is_passthrough = false;
     if let PrimitiveInstanceKind::Picture { pic_index, .. } = prim_instances[prim_instance_index].kind {
         let pic = &mut store.pictures[pic_index.0];
+
+        // TODO(gw): Plan to remove pictures with no composite mode, so that we don't need
+        //           to special case for pass through pictures.
+        is_passthrough = pic.composite_mode.is_none();
 
         match pic.take_context(
             pic_index,
@@ -203,32 +197,35 @@ fn prepare_prim_for_render(
 
     let prim_instance = &mut prim_instances[prim_instance_index];
 
-    let prim_rect = data_stores.get_local_prim_rect(
-        prim_instance,
-        store,
-    );
+    if !is_passthrough {
+        let prim_rect = data_stores.get_local_prim_rect(
+            prim_instance,
+            &store.pictures,
+            frame_state.surfaces,
+        );
 
-    if !update_clip_task(
-        prim_instance,
-        &prim_rect.min,
-        cluster.spatial_node_index,
-        pic_context.raster_spatial_node_index,
-        pic_context,
-        pic_state,
-        frame_context,
-        frame_state,
-        store,
-        data_stores,
-        scratch,
-    ) {
-        if prim_instance.is_chased() {
-            info!("\tconsidered invisible");
+        if !update_clip_task(
+            prim_instance,
+            &prim_rect.min,
+            cluster.spatial_node_index,
+            pic_context.raster_spatial_node_index,
+            pic_context,
+            pic_state,
+            frame_context,
+            frame_state,
+            store,
+            data_stores,
+            scratch,
+        ) {
+            if prim_instance.is_chased() {
+                info!("\tconsidered invisible");
+            }
+            return false;
         }
-        return false;
-    }
 
-    if prim_instance.is_chased() {
-        info!("\tconsidered visible and ready with local pos {:?}", prim_rect.min);
+        if prim_instance.is_chased() {
+            info!("\tconsidered visible and ready with local pos {:?}", prim_rect.min);
+        }
     }
 
     #[cfg(debug_assertions)]
@@ -268,7 +265,6 @@ fn prepare_interned_prim_for_render(
     let prim_spatial_node_index = cluster.spatial_node_index;
     let is_chased = prim_instance.is_chased();
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
-    let mut is_opaque = false;
 
     match &mut prim_instance.kind {
         PrimitiveInstanceKind::LineDecoration { data_handle, ref mut render_task, .. } => {
@@ -289,9 +285,27 @@ fn prepare_interned_prim_for_render(
             // If we have a cache key, it's a wavy / dashed / dotted line. Otherwise, it's
             // a simple solid line.
             if let Some(cache_key) = line_dec_data.cache_key.as_ref() {
-                // TODO(gw): Do we ever need / want to support scales for text decorations
-                //           based on the current transform?
-                let scale_factor = Scale::new(1.0) * device_pixel_scale;
+                // TODO(gw): These scale factors don't do a great job if the world transform
+                //           contains perspective
+                let scale = frame_context
+                    .spatial_tree
+                    .get_world_transform(prim_spatial_node_index)
+                    .scale_factors();
+
+                // Scale factors are normalized to a power of 2 to reduce the number of
+                // resolution changes.
+                // For frames with a changing scale transform round scale factors up to
+                // nearest power-of-2 boundary so that we don't keep having to redraw
+                // the content as it scales up and down. Rounding up to nearest
+                // power-of-2 boundary ensures we never scale up, only down --- avoiding
+                // jaggies. It also ensures we never scale down by more than a factor of
+                // 2, avoiding bad downscaling quality.
+                let scale_width = clamp_to_scale_factor(scale.0, false);
+                let scale_height = clamp_to_scale_factor(scale.1, false);
+                // Pick the maximum dimension as scale
+                let world_scale = LayoutToWorldScale::new(scale_width.max(scale_height));
+
+                let scale_factor = world_scale * Scale::new(1.0);
                 let mut task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
                 if task_size.width > MAX_LINE_DECORATION_RESOLUTION as i32 ||
                    task_size.height > MAX_LINE_DECORATION_RESOLUTION as i32 {
@@ -348,12 +362,7 @@ fn prepare_interned_prim_for_render(
                 .into_fast_transform();
             let prim_offset = prim_data.common.prim_rect.min.to_vector() - run.reference_frame_relative_offset;
 
-            let pic = &store.pictures[pic_context.pic_index.0];
             let surface = &frame_state.surfaces[pic_context.surface_index.0];
-            let root_scaling_factor = match pic.raster_config {
-                Some(ref raster_config) => raster_config.root_scaling_factor,
-                None => 1.0
-            };
 
             // If subpixel AA is disabled due to the backing surface the glyphs
             // are being drawn onto, disable it (unless we are using the
@@ -391,7 +400,6 @@ fn prepare_interned_prim_for_render(
                 &transform.to_transform().with_destination::<_>(),
                 surface,
                 prim_spatial_node_index,
-                root_scaling_factor,
                 allow_subpixel,
                 frame_context.fb_config.low_quality_pinch_zoom,
                 frame_state.resource_cache,
@@ -544,8 +552,6 @@ fn prepare_interned_prim_for_render(
                 frame_context.scene_properties,
             );
 
-            is_opaque = prim_data.common.opacity.is_opaque;
-
             write_segment(
                 *segment_instance_index,
                 frame_state,
@@ -564,7 +570,6 @@ fn prepare_interned_prim_for_render(
             let prim_data = &mut data_stores.yuv_image[*data_handle];
             let common_data = &mut prim_data.common;
             let yuv_image_data = &mut prim_data.kind;
-            is_opaque = true;
 
             common_data.may_need_repetition = false;
 
@@ -601,9 +606,6 @@ fn prepare_interned_prim_for_render(
                 frame_context,
                 &mut prim_instance.vis,
             );
-
-            // common_data.opacity.is_opaque is computed in the above update call.
-            is_opaque = common_data.opacity.is_opaque;
 
             write_segment(
                 image_instance.segment_instance_index,
@@ -777,12 +779,15 @@ fn prepare_interned_prim_for_render(
                 if let Picture3DContext::In { root_data: None, plane_splitter_index, .. } = pic.context_3d {
                     let dirty_rect = frame_state.current_dirty_region().combined;
                     let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
+                    let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
+                    let surface = &frame_state.surfaces[surface_index.0];
+                    let local_prim_rect = surface.local_rect.cast_unit();
 
                     PicturePrimitive::add_split_plane(
                         splitter,
                         frame_context.spatial_tree,
                         prim_spatial_node_index,
-                        pic.precise_local_rect,
+                        local_prim_rect,
                         &prim_instance.vis.combined_local_clip_rect,
                         dirty_rect,
                         plane_split_anchor,
@@ -842,26 +847,6 @@ fn prepare_interned_prim_for_render(
             }
         }
     };
-
-    // If the primitive is opaque, see if it can contribut to it's picture surface's opaque rect.
-
-    is_opaque = is_opaque && {
-        let clip = prim_instance.vis.clip_task_index;
-        clip == ClipTaskIndex::INVALID
-    };
-
-    is_opaque = is_opaque && !frame_context.spatial_tree.is_relative_transform_complex(
-        prim_spatial_node_index,
-        pic_context.raster_spatial_node_index,
-    );
-
-    if is_opaque {
-        let prim_local_rect = data_stores.get_local_prim_rect(
-            prim_instance,
-            store,
-        );
-        cluster.opaque_rect = crate::util::conservative_union_rect(&cluster.opaque_rect, &prim_local_rect);
-    }
 }
 
 
@@ -962,7 +947,6 @@ fn update_clip_task_for_brush(
     segments_store: &mut SegmentStorage,
     segment_instances_store: &mut SegmentInstanceStorage,
     clip_mask_instances: &mut Vec<ClipMaskKind>,
-    unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<ClipTaskIndex> {
     let segments = match instance.kind {
@@ -1078,14 +1062,11 @@ fn update_clip_task_for_brush(
         let clip_mask_kind = update_brush_segment_clip_task(
             &segments[0],
             Some(&instance.vis.clip_chain),
-            frame_state.current_dirty_region().combined,
             root_spatial_node_index,
             pic_context.surface_index,
-            pic_state,
             frame_context,
             frame_state,
             &mut data_stores.clip,
-            unclipped,
             device_pixel_scale,
         );
         clip_mask_instances.push(clip_mask_kind);
@@ -1122,14 +1103,11 @@ fn update_clip_task_for_brush(
             let clip_mask_kind = update_brush_segment_clip_task(
                 &segment,
                 segment_clip_chain.as_ref(),
-                frame_state.current_dirty_region().combined,
                 root_spatial_node_index,
                 pic_context.surface_index,
-                pic_state,
                 frame_context,
                 frame_state,
                 &mut data_stores.clip,
-                unclipped,
                 device_pixel_scale,
             );
             clip_mask_instances.push(clip_mask_kind);
@@ -1158,16 +1136,6 @@ pub fn update_clip_task(
         info!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_coverage_rect);
     }
 
-    // Get the device space rect for the primitive if it was unclipped.
-    let unclipped = match get_unclipped_device_rect(
-        instance.vis.clip_chain.pic_coverage_rect,
-        &pic_state.map_pic_to_raster,
-        device_pixel_scale,
-    ) {
-        Some(rect) => rect,
-        None => return false,
-    };
-
     build_segments_if_needed(
         instance,
         frame_state,
@@ -1192,7 +1160,6 @@ pub fn update_clip_task(
         &mut scratch.segments,
         &mut scratch.segment_instances,
         &mut scratch.clip_mask_instances,
-        &unclipped,
         device_pixel_scale,
     ) {
         if instance.is_chased() {
@@ -1203,13 +1170,11 @@ pub fn update_clip_task(
         // Get a minimal device space rect, clipped to the screen that we
         // need to allocate for the clip mask, as well as interpolated
         // snap offsets.
-        let unadjusted_device_rect = match get_clipped_device_rect(
-            &unclipped,
-            &pic_state.map_raster_to_world,
-            frame_state.current_dirty_region().combined,
-            device_pixel_scale,
+        let unadjusted_device_rect = match frame_state.surfaces[pic_context.surface_index.0].get_surface_rect(
+            &instance.vis.clip_chain.pic_coverage_rect,
+            frame_context.spatial_tree,
         ) {
-            Some(device_rect) => device_rect,
+            Some(rect) => rect,
             None => return false,
         };
 
@@ -1258,14 +1223,11 @@ pub fn update_clip_task(
 pub fn update_brush_segment_clip_task(
     segment: &BrushSegment,
     clip_chain: Option<&ClipChainInstance>,
-    world_clip_rect: WorldRect,
     root_spatial_node_index: SpatialNodeIndex,
     surface_index: SurfaceIndex,
-    pic_state: &mut PictureState,
     frame_context: &FrameBuildingContext,
     frame_state: &mut FrameBuildingState,
     clip_data_store: &mut ClipDataStore,
-    unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> ClipMaskKind {
     let clip_chain = match clip_chain {
@@ -1277,29 +1239,12 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_coverage_rect) {
-        Some(rect) => rect,
-        None => return ClipMaskKind::Clipped,
-    };
-
-    let segment_world_rect = match segment_world_rect.intersection(&world_clip_rect) {
-        Some(rect) => rect,
-        None => return ClipMaskKind::Clipped,
-    };
-
-    // Get a minimal device space rect, clipped to the screen that we
-    // need to allocate for the clip mask, as well as interpolated
-    // snap offsets.
-    let device_rect = match get_clipped_device_rect(
-        unclipped,
-        &pic_state.map_raster_to_world,
-        segment_world_rect,
-        device_pixel_scale,
+    let device_rect = match frame_state.surfaces[surface_index.0].get_surface_rect(
+        &clip_chain.pic_coverage_rect,
+        frame_context.spatial_tree,
     ) {
-        Some(info) => info,
-        None => {
-            return ClipMaskKind::Clipped;
-        }
+        Some(rect) => rect,
+        None => return ClipMaskKind::Clipped,
     };
 
     let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
@@ -1424,7 +1369,8 @@ fn build_segments_if_needed(
     // in the instance and primitive template.
     let prim_local_rect = data_stores.get_local_prim_rect(
         instance,
-        prim_store,
+        &prim_store.pictures,
+        frame_state.surfaces,
     );
 
     let segment_instance_index = match instance.kind {
@@ -1529,56 +1475,6 @@ fn build_segments_if_needed(
             *segment_instance_index = segment_instances_store.push(instance);
         };
     }
-}
-
-/// Retrieve the exact unsnapped device space rectangle for a primitive.
-fn get_unclipped_device_rect(
-    prim_rect: PictureRect,
-    map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
-    device_pixel_scale: DevicePixelScale,
-) -> Option<DeviceRect> {
-    let raster_rect = map_to_raster.map(&prim_rect)?;
-    let world_rect = raster_rect * Scale::new(1.0);
-    Some(world_rect * device_pixel_scale)
-}
-
-/// Given an unclipped device rect, try to find a minimal device space
-/// rect to allocate a clip mask for, by clipping to the screen. This
-/// function is very similar to picture::get_raster_rects. It is far from
-/// ideal, and should be refactored as part of the support for setting
-/// scale per-raster-root.
-fn get_clipped_device_rect(
-    unclipped: &DeviceRect,
-    map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
-    world_clip_rect: WorldRect,
-    device_pixel_scale: DevicePixelScale,
-) -> Option<DeviceRect> {
-    let unclipped_raster_rect = {
-        let world_rect = (*unclipped) * Scale::new(1.0);
-        let raster_rect = world_rect * device_pixel_scale.inverse();
-
-        raster_rect.cast_unit()
-    };
-
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
-
-    let clipped_world_rect = unclipped_world_rect.intersection(&world_clip_rect)?;
-
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
-
-    let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
-
-    // Ensure that we won't try to allocate a zero-sized clip render task.
-    if clipped_raster_rect.is_empty() {
-        return None;
-    }
-
-    let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect,
-        device_pixel_scale,
-    );
-
-    Some(clipped)
 }
 
 // Ensures that the size of mask render tasks are within MAX_MASK_SIZE.

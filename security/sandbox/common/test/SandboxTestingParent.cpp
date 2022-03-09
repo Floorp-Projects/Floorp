@@ -9,6 +9,8 @@
 #include "nsIObserverService.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/Services.h"
+#include "mozilla/SyncRunnable.h"
+#include "nsDirectoryServiceUtils.h"
 
 namespace mozilla {
 
@@ -103,6 +105,21 @@ mozilla::ipc::IPCResult SandboxTestingParent::RecvTestCompleted() {
         MOZ_RELEASE_ASSERT(observerService);
         observerService->NotifyObservers(nullptr, "sandbox-test-done", 0);
       }));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SandboxTestingParent::RecvGetSpecialDirectory(
+    const nsCString& aSpecialDirName, nsString* aDirPath) {
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "SandboxTestingParent::RecvGetSpecialDirectory", [&]() {
+        nsCOMPtr<nsIFile> dir;
+        NS_GetSpecialDirectory(aSpecialDirName.get(), getter_AddRefs(dir));
+        if (dir) {
+          dir->GetPath(*aDirPath);
+        }
+      });
+  SyncRunnable::DispatchToThread(GetMainThreadEventTarget(), runnable,
+                                 /*aForceDispatch*/ true);
   return IPC_OK();
 }
 

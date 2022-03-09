@@ -564,7 +564,8 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
       continue;
     }
     for (nsIFrame* child : list) {
-      aOverflowAreas.UnionWith(child->GetOverflowAreasRelativeToParent());
+      aOverflowAreas.UnionWith(
+          child->GetActualAndNormalOverflowAreasRelativeToParent());
     }
   }
 }
@@ -1620,18 +1621,26 @@ nsPoint nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(Event* aDOMEvent,
   return GetEventCoordinatesRelativeTo(event, RelativeTo{aFrame});
 }
 
+static bool IsValidCoordinateTypeEvent(const WidgetEvent* aEvent) {
+  if (!aEvent) {
+    return false;
+  }
+  return aEvent->mClass == eMouseEventClass ||
+         aEvent->mClass == eMouseScrollEventClass ||
+         aEvent->mClass == eWheelEventClass ||
+         aEvent->mClass == eDragEventClass ||
+         aEvent->mClass == eSimpleGestureEventClass ||
+         aEvent->mClass == ePointerEventClass ||
+         aEvent->mClass == eGestureNotifyEventClass ||
+         aEvent->mClass == eTouchEventClass ||
+         aEvent->mClass == eQueryContentEventClass;
+}
+
 nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                                                      RelativeTo aFrame) {
-  if (!aEvent || (aEvent->mClass != eMouseEventClass &&
-                  aEvent->mClass != eMouseScrollEventClass &&
-                  aEvent->mClass != eWheelEventClass &&
-                  aEvent->mClass != eDragEventClass &&
-                  aEvent->mClass != eSimpleGestureEventClass &&
-                  aEvent->mClass != ePointerEventClass &&
-                  aEvent->mClass != eGestureNotifyEventClass &&
-                  aEvent->mClass != eTouchEventClass &&
-                  aEvent->mClass != eQueryContentEventClass))
+  if (!IsValidCoordinateTypeEvent(aEvent)) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
 
   return GetEventCoordinatesRelativeTo(aEvent, aEvent->AsGUIEvent()->mRefPoint,
                                        aFrame);
@@ -1733,20 +1742,30 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
 }
 
 nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
-    nsPresContext* aPresContext, const WidgetEvent* aEvent) {
+    nsPresContext* aRootPresContext, const WidgetEvent* aEvent) {
+  if (!IsValidCoordinateTypeEvent(aEvent)) {
+    return nullptr;
+  }
+
+  const auto* guiEvent = aEvent->AsGUIEvent();
+  return GetPopupFrameForPoint(aRootPresContext, guiEvent->mWidget,
+                               guiEvent->mRefPoint);
+}
+
+nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
+    nsPresContext* aRootPresContext, nsIWidget* aWidget,
+    const mozilla::LayoutDeviceIntPoint& aPoint) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return nullptr;
   }
   nsTArray<nsIFrame*> popups;
   pm->GetVisiblePopups(popups);
-  uint32_t i;
   // Search from top to bottom
-  for (i = 0; i < popups.Length(); i++) {
-    nsIFrame* popup = popups[i];
-    if (popup->PresContext()->GetRootPresContext() == aPresContext &&
-        popup->ScrollableOverflowRect().Contains(
-            GetEventCoordinatesRelativeTo(aEvent, RelativeTo{popup}))) {
+  for (nsIFrame* popup : popups) {
+    if (popup->PresContext()->GetRootPresContext() == aRootPresContext &&
+        popup->ScrollableOverflowRect().Contains(GetEventCoordinatesRelativeTo(
+            aWidget, aPoint, RelativeTo{popup}))) {
       return popup;
     }
   }
@@ -1833,11 +1852,15 @@ void nsLayoutUtils::ConstrainToCoordValues(float& aStart, float& aSize) {
   // can't return a value greater than nscoord_MAX. If aSize is greater than
   // nscoord_MAX then we reduce it to nscoord_MAX while keeping the rect
   // centered:
-  if (aSize > float(nscoord_MAX)) {
+  if (MOZ_UNLIKELY(std::isnan(aSize))) {
+    // Can happen if aStart is -inf and aSize is +inf for example.
+    aStart = 0.0f;
+    aSize = float(nscoord_MAX);
+  } else if (aSize > float(nscoord_MAX)) {
     float excess = aSize - float(nscoord_MAX);
     excess /= 2;
     aStart += excess;
-    aSize = (float)nscoord_MAX;
+    aSize = float(nscoord_MAX);
   }
 }
 
@@ -1864,7 +1887,11 @@ void nsLayoutUtils::ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize) {
   aSize = max - aStart;
   // If the width if still greater than the max nscoord, then bring both
   // endpoints in by the same amount until it fits.
-  if (aSize > nscoord_MAX) {
+  if (MOZ_UNLIKELY(std::isnan(aSize))) {
+    // Can happen if aStart is -inf and aSize is +inf for example.
+    aStart = 0.0f;
+    aSize = nscoord_MAX;
+  } else if (aSize > nscoord_MAX) {
     gfxFloat excess = aSize - nscoord_MAX;
     excess /= 2;
 
@@ -2415,11 +2442,12 @@ nsLayoutUtils::TransformResult nsLayoutUtils::TransformRect(
                0.5f,
            std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame,
            std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame));
-  aRect.x = NSToCoordRound(toDevPixels.x / devPixelsPerAppUnitToFrame);
-  aRect.y = NSToCoordRound(toDevPixels.y / devPixelsPerAppUnitToFrame);
-  aRect.width = NSToCoordRound(toDevPixels.width / devPixelsPerAppUnitToFrame);
+  aRect.x = NSToCoordRoundWithClamp(toDevPixels.x / devPixelsPerAppUnitToFrame);
+  aRect.y = NSToCoordRoundWithClamp(toDevPixels.y / devPixelsPerAppUnitToFrame);
+  aRect.width =
+      NSToCoordRoundWithClamp(toDevPixels.width / devPixelsPerAppUnitToFrame);
   aRect.height =
-      NSToCoordRound(toDevPixels.height / devPixelsPerAppUnitToFrame);
+      NSToCoordRoundWithClamp(toDevPixels.height / devPixelsPerAppUnitToFrame);
   return TRANSFORM_SUCCEEDED;
 }
 
@@ -2503,7 +2531,7 @@ bool nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                nsDisplayListBuilderMode::TransformComputation,
                                false /*don't build caret*/);
   builder.BeginFrame();
-  nsDisplayList list;
+  nsDisplayList list(&builder);
   nsDisplayTransform* item =
       MakeDisplayItem<nsDisplayTransform>(&builder, aFrame, &list, nsRect());
   MOZ_ASSERT(item);
@@ -2698,7 +2726,7 @@ nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
   nsDisplayListBuilder builder(frame, nsDisplayListBuilderMode::EventDelivery,
                                false);
   builder.BeginFrame();
-  nsDisplayList list;
+  nsDisplayList list(&builder);
 
   if (aOptions.mBits.contains(FrameForPointOption::IgnorePaintSuppression)) {
     builder.IgnorePaintSuppression();
@@ -3040,7 +3068,7 @@ struct TemporaryDisplayListBuilder {
   TemporaryDisplayListBuilder(nsIFrame* aFrame,
                               nsDisplayListBuilderMode aBuilderMode,
                               const bool aBuildCaret)
-      : mBuilder(aFrame, aBuilderMode, aBuildCaret) {}
+      : mBuilder(aFrame, aBuilderMode, aBuildCaret), mList(&mBuilder) {}
 
   ~TemporaryDisplayListBuilder() { mList.DeleteAll(&mBuilder); }
 
@@ -3329,12 +3357,13 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         if (useRetainedBuilder) {
           retainedBuilder->ClearFramesWithProps();
           retainedBuilder->ClearReuseableDisplayItems();
+#ifdef DEBUG
           mozilla::RDLUtils::AssertFrameSubtreeUnmodified(
               builder->RootReferenceFrame());
+#endif
         }
 
         list->DeleteAll(builder);
-        list->RestoreState();
 
         builder->ClearRetainedWindowRegions();
         builder->ClearWillChangeBudgets();
@@ -3661,7 +3690,11 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
         nsLayoutUtils::TransformRect(outer, mRelativeTo, r);
       }
     } else {
-      r += outer->GetOffsetTo(mRelativeTo);
+      if (aFrame->PresContext() != mRelativeTo->PresContext()) {
+        r += outer->GetOffsetToCrossDoc(mRelativeTo);
+      } else {
+        r += outer->GetOffsetTo(mRelativeTo);
+      }
     }
     mCallback->AddRect(r);
   }
@@ -7067,6 +7100,11 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromOffscreenCanvas(
   result.mIntrinsicSize = size;
   result.mIsWriteOnly = aOffscreenCanvas->IsWriteOnly();
 
+  nsIGlobalObject* global = aOffscreenCanvas->GetParentObject();
+  if (global) {
+    result.mPrincipal = global->PrincipalOrNull();
+  }
+
   return result;
 }
 
@@ -8588,7 +8626,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     CSSPoint layoutScrollOffset =
         CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
     CSSPoint visualScrollOffset =
-        aIsRootContent && presShell->IsVisualViewportOffsetSet()
+        aIsRootContent
             ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
             : layoutScrollOffset;
     metrics.SetVisualScrollOffset(visualScrollOffset);
@@ -9201,7 +9239,9 @@ static nsSize ComputeMaxSizeForPartialPrerender(nsIFrame* aFrame,
   // so that the result bound's width and height would be pretty much same
   // as the one rotated by the inverse matrix.
   result = transform2D.TransformBounds(result);
-  return nsSize(result.width, result.height);
+  return nsSize(
+      result.width < (float)nscoord_MAX ? result.width : nscoord_MAX,
+      result.height < (float)nscoord_MAX ? result.height : nscoord_MAX);
 }
 
 /* static */

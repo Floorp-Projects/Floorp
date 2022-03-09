@@ -65,6 +65,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SwipeTracker.h"
 #include "mozilla/TouchEvents.h"
@@ -86,6 +87,8 @@
 #include <unknwn.h>
 #include <psapi.h>
 #include <rpc.h>
+#include <propvarutil.h>
+#include <propkey.h>
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
@@ -155,6 +158,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "nsNativeAppSupportWin.h"
 
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
@@ -173,7 +177,6 @@
 #  include "oleidl.h"
 #  include <winuser.h>
 #  include "nsAccessibilityService.h"
-#  include "mozilla/PresShell.h"
 #  include "mozilla/a11y/DocAccessible.h"
 #  include "mozilla/a11y/LazyInstantiator.h"
 #  include "mozilla/a11y/Platform.h"
@@ -185,7 +188,7 @@
 #include "nsIWinTaskbar.h"
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
-#include "nsIWindowsUIUtils.h"
+#include "WindowsUIUtils.h"
 
 #include "nsWindowDefs.h"
 
@@ -250,6 +253,7 @@ using namespace mozilla::plugins;
  * SECTION: nsWindow statics
  *
  **************************************************************/
+static const wchar_t kUser32LibName[] = L"user32.dll";
 
 bool nsWindow::sDropShadowEnabled = true;
 uint32_t nsWindow::sInstanceCount = 0;
@@ -290,6 +294,9 @@ bool nsWindow::sIsRestoringSession = false;
 bool nsWindow::sFirstTopLevelWindowCreated = false;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
+
+bool nsWindow::sTouchInjectInitialized = false;
+InjectTouchInputPtr nsWindow::sInjectTouchFuncPtr;
 
 static SystemTimeConverter<DWORD>& TimeConverter() {
   static SystemTimeConverter<DWORD> timeConverterSingleton;
@@ -632,69 +639,20 @@ class InitializeVirtualDesktopManagerTask : public Task {
  **************************************************************/
 
 nsWindow::nsWindow(bool aIsChildWindow)
-    : nsWindowBase(),
-      mResizeState(NOT_RESIZING),
+    : nsBaseWidget(eBorderStyle_default),
+      mBrush(::CreateSolidBrush(NSRGB_2_COLOREF(::GetSysColor(COLOR_BTNFACE)))),
       mIsChildWindow(aIsChildWindow),
+      mLastPaintEndTime(TimeStamp::Now()),
+      mCachedHitTestTime(TimeStamp::Now()),
+      mSizeConstraintsScale(GetDefaultScale().scale),
       mDesktopId("DesktopIdMutex") {
+  MOZ_ASSERT(mWindowType == eWindowType_child);
+
   if (!gInitializedVirtualDesktopManager) {
     TaskController::Get()->AddTask(
         MakeAndAddRef<InitializeVirtualDesktopManagerTask>());
     gInitializedVirtualDesktopManager = true;
   }
-
-  mIconSmall = nullptr;
-  mIconBig = nullptr;
-  mWnd = nullptr;
-  mLastKillFocusWindow = nullptr;
-  mTransitionWnd = nullptr;
-  mPaintDC = nullptr;
-  mPrevWndProc = nullptr;
-  mNativeDragTarget = nullptr;
-  mDeviceNotifyHandle = nullptr;
-  mInDtor = false;
-  mIsVisible = false;
-  mIsTopWidgetWindow = false;
-  mDisplayPanFeedback = false;
-  mTouchWindow = false;
-  mFutureMarginsToUse = false;
-  mCustomNonClient = false;
-  mHideChrome = false;
-  mFullscreenMode = false;
-  mMousePresent = false;
-  mSimulatedClientArea = false;
-  mDestroyCalled = false;
-  mIsEarlyBlankWindow = false;
-  mIsShowingPreXULSkeletonUI = false;
-  mResizable = false;
-  mHasTaskbarIconBeenCreated = false;
-  mMouseTransparent = false;
-  mPickerDisplayCount = 0;
-  mWindowType = eWindowType_child;
-  mBorderStyle = eBorderStyle_default;
-  mOldSizeMode = nsSizeMode_Normal;
-  mLastSizeMode = nsSizeMode_Normal;
-  mLastSize.width = 0;
-  mLastSize.height = 0;
-  mOldStyle = 0;
-  mOldExStyle = 0;
-  mPainting = 0;
-  mLastKeyboardLayout = 0;
-  mLastPaintEndTime = TimeStamp::Now();
-  mCachedHitTestPoint.x = 0;
-  mCachedHitTestPoint.y = 0;
-  mCachedHitTestTime = TimeStamp::Now();
-  mCachedHitTestResult = 0;
-  mTransparencyMode = eTransparencyOpaque;
-  memset(&mGlassMargins, 0, sizeof mGlassMargins);
-  DWORD background = ::GetSysColor(COLOR_BTNFACE);
-  mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(background));
-  mSendingSetText = false;
-  mDefaultScale = -1.0;  // not yet set, will be calculated on first use
-  mAspectRatio = 0.0;    // not yet set, will be calculated on first use
-
-  mTaskbarPreview = nullptr;
-
-  mCompositorWidgetDelegate = nullptr;
 
   // Global initialization
   if (!sInstanceCount) {
@@ -721,13 +679,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
       InkCollector::sInkCollector = new InkCollector();
     }
   }  // !sInstanceCount
-
-  mIdleService = nullptr;
-
-  mSizeConstraintsScale = GetDefaultScale().scale;
-  mMaxTextureSize = -1;  // Will be calculated when layer manager is created.
-
-  mRequestFxrOutputPending = false;
 
   sInstanceCount++;
 }
@@ -1022,6 +973,32 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (!mWnd) {
     NS_WARNING("nsWindow CreateWindowEx failed.");
     return NS_ERROR_FAILURE;
+  }
+
+  if (aInitData->mIsPrivate) {
+    if (Preferences::GetBool("browser.privacySegmentation.enabled", false)) {
+      RefPtr<IPropertyStore> pPropStore;
+      if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,
+                                              getter_AddRefs(pPropStore)))) {
+        PROPVARIANT pv;
+        nsAutoString aumid;
+        // make sure we're using the private browsing AUMID so that taskbar
+        // grouping works properly
+        Unused << NS_WARN_IF(
+            !mozilla::widget::WinTaskbar::GenerateAppUserModelID(aumid, true));
+        if (!FAILED(InitPropVariantFromString(aumid.get(), &pv))) {
+          if (!FAILED(pPropStore->SetValue(PKEY_AppUserModel_ID, pv))) {
+            pPropStore->Commit();
+          }
+
+          PropVariantClear(&pv);
+        }
+      }
+    }
+    HICON icon =
+        ::LoadIconW(::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_PBMODE));
+    SetBigIcon(icon);
+    SetSmallIcon(icon);
   }
 
   mDeviceNotifyHandle = InputDeviceUtils::RegisterNotification(mWnd);
@@ -1494,7 +1471,7 @@ nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner) {
   return static_cast<nsWindow*>(GetParentWindowBase(aIncludeOwner));
 }
 
-nsWindowBase* nsWindow::GetParentWindowBase(bool aIncludeOwner) {
+nsWindow* nsWindow::GetParentWindowBase(bool aIncludeOwner) {
   if (mIsTopWidgetWindow) {
     // Must use a flag instead of mWindowType to tell if the window is the
     // owned by the topmost widget, because a child window can be embedded
@@ -1530,7 +1507,7 @@ nsWindowBase* nsWindow::GetParentWindowBase(bool aIncludeOwner) {
     }
   }
 
-  return static_cast<nsWindowBase*>(widget);
+  return widget;
 }
 
 BOOL CALLBACK nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam) {
@@ -2864,33 +2841,34 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
       (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CYCAPTION, dpi) +
                         WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
                   : 0);
+  if (!mUseResizeMarginOverrides) {
+    // mHorResizeMargin is the size of the default NC areas on the
+    // left and right sides of our window.  It is calculated as
+    // the sum of:
+    //      SM_CXFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows
+    //
+    // If the window does not have a caption, mHorResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
+    mHorResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
 
-  // mHorResizeMargin is the size of the default NC areas on the
-  // left and right sides of our window.  It is calculated as
-  // the sum of:
-  //      SM_CXFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows
-  //
-  // If the window does not have a caption, mHorResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
-  mHorResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
-
-  // mVertResizeMargin is the size of the default NC area at the
-  // bottom of the window. It is calculated as the sum of:
-  //      SM_CYFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows.
-  //
-  // If the window does not have a caption, mVertResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
-  mVertResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
+    // mVertResizeMargin is the size of the default NC area at the
+    // bottom of the window. It is calculated as the sum of:
+    //      SM_CYFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows.
+    //
+    // If the window does not have a caption, mVertResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
+    mVertResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
+  }
 
   if (aSizeMode == nsSizeMode_Minimized) {
     // Use default frame size for minimized windows
@@ -3043,6 +3021,13 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   }
 
   return NS_OK;
+}
+
+void nsWindow::SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) {
+  mUseResizeMarginOverrides = true;
+  mHorResizeMargin = aResizeMargin;
+  mVertResizeMargin = aResizeMargin;
+  UpdateNonClientMargins();
 }
 
 void nsWindow::InvalidateNonClientRegion() {
@@ -5214,8 +5199,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         gfxDWriteFont::UpdateSystemTextVars();
         break;
       }
-      if (lParam) {
-        auto lParamString = reinterpret_cast<const wchar_t*>(lParam);
+      if (auto lParamString = reinterpret_cast<const wchar_t*>(lParam)) {
         if (!wcscmp(lParamString, L"ImmersiveColorSet")) {
           // This affects system colors (-moz-win-accentcolor), so gotta pass
           // the style flag.
@@ -5235,14 +5219,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
               !wcscmp(lParamString, L"ConvertibleSlateMode") ||
               !wcscmp(lParamString, L"SystemDockMode")) {
             NotifyThemeChanged(widget::ThemeChangeKind::MediaQueriesOnly);
-
-            if (IsWin10OrLater()) {
-              nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-                  do_GetService("@mozilla.org/windows-ui-utils;1"));
-              if (uiUtils) {
-                uiUtils->UpdateTabletModeState();
-              }
-            }
+            WindowsUIUtils::UpdateInTabletMode();
           }
         }
       }
@@ -5814,9 +5791,23 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
             wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT) {
           newWidth = rect->right - rect->left;
           newHeight = newWidth * mAspectRatio;
+          if (newHeight < mSizeConstraints.mMinSize.height) {
+            newHeight = mSizeConstraints.mMinSize.height;
+            newWidth = newHeight / mAspectRatio;
+          } else if (newHeight > mSizeConstraints.mMaxSize.height) {
+            newHeight = mSizeConstraints.mMaxSize.height;
+            newWidth = newHeight / mAspectRatio;
+          }
         } else {
           newHeight = rect->bottom - rect->top;
           newWidth = newHeight / mAspectRatio;
+          if (newWidth < mSizeConstraints.mMinSize.width) {
+            newWidth = mSizeConstraints.mMinSize.width;
+            newHeight = newWidth * mAspectRatio;
+          } else if (newWidth > mSizeConstraints.mMaxSize.width) {
+            newWidth = mSizeConstraints.mMaxSize.width;
+            newHeight = newWidth * mAspectRatio;
+          }
         }
 
         switch (wParam) {
@@ -6406,6 +6397,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     right = true;
   }
 
+  bool inResizeRegion = false;
   if (isResizable) {
     if (top) {
       testResult = HTTOP;
@@ -6423,6 +6415,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
       if (left) testResult = HTLEFT;
       if (right) testResult = HTRIGHT;
     }
+    inResizeRegion = (testResult != HTCLIENT);
   } else {
     if (top)
       testResult = HTCAPTION;
@@ -6443,19 +6436,24 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     mCachedHitTestPoint = {pt.x, pt.y};
     mCachedHitTestTime = TimeStamp::Now();
 
-    if (mDraggableRegion.Contains(pt.x, pt.y)) {
-      testResult = HTCAPTION;
-    } else if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x,
-                                                                   pt.y)) {
+    if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x, pt.y)) {
       testResult = HTMINBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt.x,
                                                                    pt.y)) {
       testResult = HTMAXBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt.x, pt.y)) {
       testResult = HTCLOSE;
-    } else {
-      testResult = HTCLIENT;
+    } else if (!inResizeRegion) {
+      // If we're in the resize region, avoid overriding that with either a
+      // drag or a client result; resize takes priority over either (but not
+      // over the window controls, which is why we check this after those).
+      if (mDraggableRegion.Contains(pt.x, pt.y)) {
+        testResult = HTCAPTION;
+      } else {
+        testResult = HTCLIENT;
+      }
     }
+
     mCachedHitTestResult = testResult;
   }
 
@@ -8703,4 +8701,332 @@ already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
 already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   nsCOMPtr<nsIWidget> window = new nsWindow(true);
   return window.forget();
+}
+
+// static
+bool nsWindow::InitTouchInjection() {
+  if (!sTouchInjectInitialized) {
+    // Initialize touch injection on the first call
+    HMODULE hMod = LoadLibraryW(kUser32LibName);
+    if (!hMod) {
+      return false;
+    }
+
+    InitializeTouchInjectionPtr func =
+        (InitializeTouchInjectionPtr)GetProcAddress(hMod,
+                                                    "InitializeTouchInjection");
+    if (!func) {
+      WinUtils::Log("InitializeTouchInjection not available.");
+      return false;
+    }
+
+    if (!func(TOUCH_INJECT_MAX_POINTS, TOUCH_FEEDBACK_DEFAULT)) {
+      WinUtils::Log("InitializeTouchInjection failure. GetLastError=%d",
+                    GetLastError());
+      return false;
+    }
+
+    sInjectTouchFuncPtr =
+        (InjectTouchInputPtr)GetProcAddress(hMod, "InjectTouchInput");
+    if (!sInjectTouchFuncPtr) {
+      WinUtils::Log("InjectTouchInput not available.");
+      return false;
+    }
+    sTouchInjectInitialized = true;
+  }
+  return true;
+}
+
+bool nsWindow::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
+                                POINTER_FLAGS aFlags, uint32_t aPressure,
+                                uint32_t aOrientation) {
+  if (aId > TOUCH_INJECT_MAX_POINTS) {
+    WinUtils::Log("Pointer ID exceeds maximum. See TOUCH_INJECT_MAX_POINTS.");
+    return false;
+  }
+
+  POINTER_TOUCH_INFO info{};
+
+  info.touchFlags = TOUCH_FLAG_NONE;
+  info.touchMask =
+      TOUCH_MASK_CONTACTAREA | TOUCH_MASK_ORIENTATION | TOUCH_MASK_PRESSURE;
+  info.pressure = aPressure;
+  info.orientation = aOrientation;
+
+  info.pointerInfo.pointerFlags = aFlags;
+  info.pointerInfo.pointerType = PT_TOUCH;
+  info.pointerInfo.pointerId = aId;
+  info.pointerInfo.ptPixelLocation.x = aPoint.x;
+  info.pointerInfo.ptPixelLocation.y = aPoint.y;
+
+  info.rcContact.top = info.pointerInfo.ptPixelLocation.y - 2;
+  info.rcContact.bottom = info.pointerInfo.ptPixelLocation.y + 2;
+  info.rcContact.left = info.pointerInfo.ptPixelLocation.x - 2;
+  info.rcContact.right = info.pointerInfo.ptPixelLocation.x + 2;
+
+  for (int i = 0; i < 3; i++) {
+    if (sInjectTouchFuncPtr(1, &info)) {
+      break;
+    }
+    DWORD error = GetLastError();
+    if (error == ERROR_NOT_READY && i < 2) {
+      // We sent it too quickly after the previous injection (see bug 1535140
+      // comment 10). On the first loop iteration we just yield (via Sleep(0))
+      // and try again. If it happens again on the second loop iteration we
+      // explicitly Sleep(1) and try again. If that doesn't work either we just
+      // error out.
+      ::Sleep(i);
+      continue;
+    }
+    WinUtils::Log("InjectTouchInput failure. GetLastError=%d", error);
+    return false;
+  }
+  return true;
+}
+
+void nsWindow::ChangedDPI() {
+  if (mWidgetListener) {
+    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
+      presShell->BackingScaleFactorChanged();
+    }
+  }
+}
+
+static Result<POINTER_FLAGS, nsresult> PointerStateToFlag(
+    nsWindow::TouchPointerState aPointerState, bool isUpdate) {
+  bool hover = aPointerState & nsWindow::TOUCH_HOVER;
+  bool contact = aPointerState & nsWindow::TOUCH_CONTACT;
+  bool remove = aPointerState & nsWindow::TOUCH_REMOVE;
+  bool cancel = aPointerState & nsWindow::TOUCH_CANCEL;
+
+  POINTER_FLAGS flags;
+  if (isUpdate) {
+    // We know about this pointer, send an update
+    flags = POINTER_FLAG_UPDATE;
+    if (hover) {
+      flags |= POINTER_FLAG_INRANGE;
+    } else if (contact) {
+      flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_INRANGE;
+    } else if (remove) {
+      flags = POINTER_FLAG_UP;
+    }
+
+    if (cancel) {
+      flags |= POINTER_FLAG_CANCELED;
+    }
+  } else {
+    // Missing init state, error out
+    if (remove || cancel) {
+      return Err(NS_ERROR_INVALID_ARG);
+    }
+
+    // Create a new pointer
+    flags = POINTER_FLAG_INRANGE;
+    if (contact) {
+      flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_DOWN;
+    }
+  }
+  return flags;
+}
+
+nsresult nsWindow::SynthesizeNativeTouchPoint(
+    uint32_t aPointerId, nsIWidget::TouchPointerState aPointerState,
+    LayoutDeviceIntPoint aPoint, double aPointerPressure,
+    uint32_t aPointerOrientation, nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "touchpoint");
+
+  if (StaticPrefs::apz_test_fails_with_native_injection() ||
+      !InitTouchInjection()) {
+    // If we don't have touch injection from the OS, or if we are running a test
+    // that cannot properly inject events to satisfy the OS requirements (see
+    // bug 1313170)  we can just fake it and synthesize the events from here.
+    MOZ_ASSERT(NS_IsMainThread());
+    if (aPointerState == TOUCH_HOVER) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!mSynthesizedTouchInput) {
+      mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
+    }
+
+    WidgetEventTime time = CurrentMessageWidgetEventTime();
+    LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+    MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
+        mSynthesizedTouchInput.get(), time.mTime, time.mTimeStamp, aPointerId,
+        aPointerState, pointInWindow, aPointerPressure, aPointerOrientation);
+    DispatchTouchInput(inputToDispatch);
+    return NS_OK;
+  }
+
+  // win api expects a value from 0 to 1024. aPointerPressure is a value
+  // from 0.0 to 1.0.
+  uint32_t pressure = (uint32_t)ceil(aPointerPressure * 1024);
+
+  // If we already know about this pointer id get it's record
+  return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
+    POINTER_FLAGS flags;
+    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    auto result = PointerStateToFlag(aPointerState, !!entry);
+    if (result.isOk()) {
+      flags = result.unwrap();
+    } else {
+      return result.unwrapErr();
+    }
+
+    if (!entry) {
+      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint,
+                                           PointerInfo::PointerType::TOUCH));
+    } else {
+      if (entry.Data()->mType != PointerInfo::PointerType::TOUCH) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (aPointerState & TOUCH_REMOVE) {
+        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
+        // so shouldn't leak.
+        entry.Remove();
+      }
+    }
+
+    return !InjectTouchPoint(aPointerId, aPoint, flags, pressure,
+                             aPointerOrientation)
+               ? NS_ERROR_UNEXPECTED
+               : NS_OK;
+  });
+}
+
+nsresult nsWindow::ClearNativeTouchSequence(nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "cleartouch");
+  if (!sTouchInjectInitialized) {
+    return NS_OK;
+  }
+
+  // cancel all input points
+  for (auto iter = mActivePointers.Iter(); !iter.Done(); iter.Next()) {
+    auto* info = iter.UserData();
+    if (info->mType != PointerInfo::PointerType::TOUCH) {
+      continue;
+    }
+    InjectTouchPoint(info->mPointerId, info->mPosition, POINTER_FLAG_CANCELED);
+    iter.Remove();
+  }
+
+  nsBaseWidget::ClearNativeTouchSequence(nullptr);
+
+  return NS_OK;
+}
+
+#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)
+static CreateSyntheticPointerDevicePtr CreateSyntheticPointerDevice;
+static DestroySyntheticPointerDevicePtr DestroySyntheticPointerDevice;
+static InjectSyntheticPointerInputPtr InjectSyntheticPointerInput;
+#endif
+static HSYNTHETICPOINTERDEVICE sSyntheticPenDevice;
+
+static bool InitPenInjection() {
+  if (sSyntheticPenDevice) {
+    return true;
+  }
+#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)
+  HMODULE hMod = LoadLibraryW(kUser32LibName);
+  if (!hMod) {
+    return false;
+  }
+  CreateSyntheticPointerDevice =
+      (CreateSyntheticPointerDevicePtr)GetProcAddress(
+          hMod, "CreateSyntheticPointerDevice");
+  if (!CreateSyntheticPointerDevice) {
+    WinUtils::Log("CreateSyntheticPointerDevice not available.");
+    return false;
+  }
+  DestroySyntheticPointerDevice =
+      (DestroySyntheticPointerDevicePtr)GetProcAddress(
+          hMod, "DestroySyntheticPointerDevice");
+  if (!DestroySyntheticPointerDevice) {
+    WinUtils::Log("DestroySyntheticPointerDevice not available.");
+    return false;
+  }
+  InjectSyntheticPointerInput = (InjectSyntheticPointerInputPtr)GetProcAddress(
+      hMod, "InjectSyntheticPointerInput");
+  if (!InjectSyntheticPointerInput) {
+    WinUtils::Log("InjectSyntheticPointerInput not available.");
+    return false;
+  }
+#endif
+  sSyntheticPenDevice =
+      CreateSyntheticPointerDevice(PT_PEN, 1, POINTER_FEEDBACK_DEFAULT);
+  return !!sSyntheticPenDevice;
+}
+
+nsresult nsWindow::SynthesizeNativePenInput(
+    uint32_t aPointerId, nsIWidget::TouchPointerState aPointerState,
+    LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
+    int32_t aTiltX, int32_t aTiltY, int32_t aButton, nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "peninput");
+  if (!InitPenInjection()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // win api expects a value from 0 to 1024. aPointerPressure is a value
+  // from 0.0 to 1.0.
+  uint32_t pressure = (uint32_t)ceil(aPressure * 1024);
+
+  // If we already know about this pointer id get it's record
+  return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
+    POINTER_FLAGS flags;
+    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    auto result = PointerStateToFlag(aPointerState, !!entry);
+    if (result.isOk()) {
+      flags = result.unwrap();
+    } else {
+      return result.unwrapErr();
+    }
+
+    if (!entry) {
+      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint,
+                                           PointerInfo::PointerType::PEN));
+    } else {
+      if (entry.Data()->mType != PointerInfo::PointerType::PEN) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (aPointerState & TOUCH_REMOVE) {
+        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
+        // so shouldn't leak.
+        entry.Remove();
+      }
+    }
+
+    POINTER_TYPE_INFO info{};
+
+    info.type = PT_PEN;
+    info.penInfo.pointerInfo.pointerType = PT_PEN;
+    info.penInfo.pointerInfo.pointerFlags = flags;
+    info.penInfo.pointerInfo.pointerId = aPointerId;
+    info.penInfo.pointerInfo.ptPixelLocation.x = aPoint.x;
+    info.penInfo.pointerInfo.ptPixelLocation.y = aPoint.y;
+
+    info.penInfo.penFlags = PEN_FLAG_NONE;
+    // PEN_FLAG_ERASER is not supported this way, unfortunately.
+    if (aButton == 2) {
+      info.penInfo.penFlags |= PEN_FLAG_BARREL;
+    }
+    info.penInfo.penMask = PEN_MASK_PRESSURE | PEN_MASK_ROTATION |
+                           PEN_MASK_TILT_X | PEN_MASK_TILT_Y;
+    info.penInfo.pressure = pressure;
+    info.penInfo.rotation = aRotation;
+    info.penInfo.tiltX = aTiltX;
+    info.penInfo.tiltY = aTiltY;
+
+    return InjectSyntheticPointerInput(sSyntheticPenDevice, &info, 1)
+               ? NS_OK
+               : NS_ERROR_UNEXPECTED;
+  });
+};
+
+bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
+                                   LRESULT* aRetValue) {
+  ModifierKeyState modKeyState;
+  NativeKey nativeKey(this, aAppCommandMsg, modKeyState);
+  bool consumed = nativeKey.HandleAppCommandMessage();
+  *aRetValue = consumed ? 1 : 0;
+  return consumed;
 }

@@ -212,6 +212,15 @@ void gfxSVGGlyphs::RenderGlyph(gfxContext* aContext, uint32_t aGlyphId,
       *aContextPaint, *glyph->OwnerDoc()->AsSVGDocument());
 
   SVGUtils::PaintSVGGlyph(glyph, aContext);
+
+#if DEBUG
+  // This will not have any effect, because we're about to restore the state
+  // via the aContextRestorer destructor, but it prevents debug builds from
+  // asserting if it turns out that PaintSVGGlyph didn't actually do anything.
+  // This happens if the SVG document consists of just an image, and the image
+  // hasn't finished loading yet so we can't draw it.
+  aContext->SetOp(gfx::CompositionOp::OP_OVER);
+#endif
 }
 
 bool gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId,

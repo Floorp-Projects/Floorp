@@ -12,11 +12,7 @@ import {
   makeReduceAllQuery,
 } from "../utils/resource";
 
-function resourceAsSourceActor({
-  breakpointPositions,
-  breakableLines,
-  ...sourceActor
-}) {
+function resourceAsSourceActor({ breakableLines, ...sourceActor }) {
   return sourceActor;
 }
 
@@ -60,36 +56,10 @@ export function getSourceActorsForThread(state, ids) {
   return sources;
 }
 
-const queryThreadsBySourceObject = makeReduceAllQuery(
-  actor => ({ thread: actor.thread, source: actor.source }),
-  actors =>
-    actors.reduce((acc, { source, thread }) => {
-      let sourceThreads = acc[source];
-      if (!sourceThreads) {
-        sourceThreads = [];
-        acc[source] = sourceThreads;
-      }
-
-      sourceThreads.push(thread);
-      return acc;
-    }, {})
-);
-
-// Used by threads selectors
-export function getAllThreadsBySource(state) {
-  return queryThreadsBySourceObject(state.sourceActors);
-}
-
 export function getSourceActorBreakableLines(state, id) {
   const { breakableLines } = getResource(state.sourceActors, id);
 
   return asSettled(breakableLines);
-}
-
-export function getSourceActorBreakpointColumns(state, id, line) {
-  const { breakpointPositions } = getResource(state.sourceActors, id);
-
-  return asSettled(breakpointPositions.get(line) || null);
 }
 
 // Used by sources selectors

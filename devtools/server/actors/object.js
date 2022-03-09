@@ -204,7 +204,7 @@ const proto = {
     }
 
     try {
-      return this.obj.getOwnPropertyNames().length;
+      return this.obj.getOwnPropertyNamesLength();
     } catch (err) {
       // The above can throw when the debuggee does not subsume the object's
       // compartment, or for some WrappedNatives like Cu.Sandbox.
@@ -660,10 +660,10 @@ const proto = {
   },
 
   /**
-   * Converts a Debugger API completion value record into an eqivalent
+   * Converts a Debugger API completion value record into an equivalent
    * object grip for use by the API.
    *
-   * See https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Conventions#completion-values
+   * See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/
    * for more specifics on the expected behavior.
    */
   _buildCompletion(value) {

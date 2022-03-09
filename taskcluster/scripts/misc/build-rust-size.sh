@@ -8,7 +8,7 @@ COMPRESS_EXT=zst
 case "$(uname -s)" in
 Linux)
     ;;
-MINGW*)
+MINGW*|MSYS*)
     UPLOAD_DIR=$PWD/public/build
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh

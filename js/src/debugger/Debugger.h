@@ -1591,7 +1591,7 @@ bool Debugger::observesGlobal(GlobalObject* global) const {
 
 [[nodiscard]] bool ReportObjectRequired(JSContext* cx);
 
-JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids);
+JSObject* IdVectorToArray(JSContext* cx, HandleIdVector ids);
 bool IsInterpretedNonSelfHostedFunction(JSFunction* fun);
 JSScript* GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun);
 ArrayObject* GetFunctionParameterNamesArray(JSContext* cx, HandleFunction fun);

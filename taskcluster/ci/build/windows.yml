@@ -48,7 +48,7 @@ win32/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -158,7 +158,7 @@ win64/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -265,7 +265,7 @@ win64-fuzzing/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -1027,7 +1027,7 @@ win64-asan/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -1083,7 +1083,7 @@ win64-asan/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -1149,7 +1149,7 @@ win64-asan-reporter-shippable/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -1200,7 +1200,7 @@ win64-asan-fuzzing/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm
@@ -1385,7 +1385,7 @@ win64-aarch64/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-win-cross
+            - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
             - linux64-nasm

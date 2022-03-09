@@ -22,7 +22,7 @@ add_task(async function() {
   await selectNode("div", inspector);
   const prop = getTextProperty(ruleView, 1, { color: "red" });
 
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Remove the first declaration");
   await removeProperty(ruleView, prop);
   info("Wait for change to be tracked");

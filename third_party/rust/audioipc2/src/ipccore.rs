@@ -25,6 +25,8 @@ use std::fmt::Debug;
 use crate::duplicate_platform_handle;
 #[cfg(unix)]
 use crate::sys::cmsg;
+#[cfg(unix)]
+use crate::PlatformHandle;
 
 const WAKE_TOKEN: Token = Token(!0);
 
@@ -201,7 +203,14 @@ impl EventLoop {
     // Each step may call `handle_event` on any registered connection that
     // has received readiness events from the poll wakeup.
     fn poll(&mut self) -> Result<bool> {
-        self.poll.poll(&mut self.events, None)?;
+        loop {
+            let r = self.poll.poll(&mut self.events, None);
+            match r {
+                Ok(()) => break,
+                Err(ref e) if interrupted(e) => continue,
+                Err(e) => return Err(e),
+            }
+        }
 
         for event in self.events.iter() {
             match event.token() {
@@ -600,7 +609,15 @@ where
         #[allow(unused_mut)]
         while let Some(mut item) = self.codec.decode(&mut inbound.buf)? {
             #[cfg(unix)]
-            item.receive_owned_message_handle(|| cmsg::decode_handle(&mut inbound.cmsg));
+            item.receive_owned_message_handle(|| {
+                if let Some(handle) = self.extra_handle.take() {
+                    unsafe { handle.into_raw() }
+                } else {
+                    let handles = cmsg::decode_handles(&mut inbound.cmsg);
+                    self.extra_handle = handles.get(1).map(|h| PlatformHandle::new(*h));
+                    handles[0]
+                }
+            });
             self.handler.consume(item)?;
         }
 
@@ -636,6 +653,8 @@ where
 struct FramedDriver<T: Handler> {
     codec: LengthDelimitedCodec<T::Out, T::In>,
     handler: T,
+    #[cfg(unix)]
+    extra_handle: Option<PlatformHandle>,
 }
 
 impl<T: Handler> FramedDriver<T> {
@@ -643,6 +662,8 @@ impl<T: Handler> FramedDriver<T> {
         FramedDriver {
             codec: Default::default(),
             handler,
+            #[cfg(unix)]
+            extra_handle: None,
         }
     }
 }
@@ -673,15 +694,27 @@ impl EventLoopThread {
             .stack_size(stack_size.unwrap_or(64 * 4096));
 
         let thread = builder.spawn(move || {
+            trace!("{}: event loop thread enter", event_loop.name);
             after_start();
             let _thread_exit_guard = scopeguard::guard((), |_| before_stop());
 
-            while event_loop.poll()? {
-                trace!("{}: event loop poll", event_loop.name);
-            }
+            let r = loop {
+                let start = std::time::Instant::now();
+                let r = event_loop.poll();
+                trace!(
+                    "{}: event loop poll r={:?}, took={}μs",
+                    event_loop.name,
+                    r,
+                    start.elapsed().as_micros()
+                );
+                match r {
+                    Ok(true) => continue,
+                    _ => break r,
+                }
+            };
 
-            trace!("{}: event loop shutdown", event_loop.name);
-            Ok(())
+            trace!("{}: event loop thread exit", event_loop.name);
+            r.map(|_| ())
         })?;
 
         Ok(EventLoopThread {

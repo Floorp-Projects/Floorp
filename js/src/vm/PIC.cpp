@@ -66,8 +66,8 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   disabled_ = true;
 
   // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
-  mozilla::Maybe<PropertyInfo> iterProp =
-      arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+  mozilla::Maybe<PropertyInfo> iterProp = arrayProto->lookup(
+      cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
   if (iterProp.isNothing() || !iterProp->isDataProperty()) {
     return true;
   }
@@ -154,7 +154,7 @@ bool js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx,
   }
 
   // Ensure array doesn't define @@iterator directly.
-  if (array->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator))) {
+  if (array->lookup(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator))) {
     return true;
   }
 

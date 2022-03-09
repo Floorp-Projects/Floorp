@@ -21,6 +21,18 @@ class PacerTest {
         mPacer(MakeRefPtr<Pacer<T>>(mTaskQueue, aDuplicationInterval)),
         mInterval(aDuplicationInterval) {}
 
+  // Helper for calling `mPacer->Enqueue(...)`. Dispatches an event to the
+  // current thread which will enqueue the event to make sure that any listeners
+  // registered by a call to `WaitFor(...)` have been registered before events
+  // start being processed on a background queue.
+  void EnqueueSoon(T aItem, TimeStamp aTime) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "PacerTest::EnqueueSoon",
+        [pacer = mPacer, aItem = std::move(aItem), aTime] {
+          pacer->Enqueue(std::move(aItem), aTime);
+        })));
+  }
+
   void TearDown() {
     mPacer->Shutdown()->Then(mTaskQueue, __func__,
                              [tq = mTaskQueue] { tq->BeginShutdown(); });
@@ -53,7 +65,7 @@ class PacerTestIntTenMsDuplication : public PacerTestInt {
 TEST_F(PacerTestIntLongDuplication, Single) {
   auto now = TimeStamp::Now();
   auto d1 = TimeDuration::FromMilliseconds(100);
-  mPacer->Enqueue(1, now + d1);
+  EnqueueSoon(1, now + d1);
 
   auto [i, time] = WaitFor(TakeN(mPacer->PacedItemEvent(), 1)).unwrap()[0];
   EXPECT_GE(TimeStamp::Now() - now, d1);
@@ -64,7 +76,7 @@ TEST_F(PacerTestIntLongDuplication, Single) {
 TEST_F(PacerTestIntLongDuplication, Past) {
   auto now = TimeStamp::Now();
   auto d1 = TimeDuration::FromMilliseconds(100);
-  mPacer->Enqueue(1, now - d1);
+  EnqueueSoon(1, now - d1);
 
   auto [i, time] = WaitFor(TakeN(mPacer->PacedItemEvent(), 1)).unwrap()[0];
   EXPECT_GE(TimeStamp::Now() - now, -d1);
@@ -77,9 +89,9 @@ TEST_F(PacerTestIntLongDuplication, TimeReset) {
   auto d1 = TimeDuration::FromMilliseconds(100);
   auto d2 = TimeDuration::FromMilliseconds(200);
   auto d3 = TimeDuration::FromMilliseconds(300);
-  mPacer->Enqueue(1, now + d1);
-  mPacer->Enqueue(2, now + d3);
-  mPacer->Enqueue(3, now + d2);
+  EnqueueSoon(1, now + d1);
+  EnqueueSoon(2, now + d3);
+  EnqueueSoon(3, now + d2);
 
   auto items = WaitFor(TakeN(mPacer->PacedItemEvent(), 2)).unwrap();
 
@@ -100,7 +112,7 @@ TEST_F(PacerTestIntLongDuplication, TimeReset) {
 TEST_F(PacerTestIntTenMsDuplication, SingleDuplication) {
   auto now = TimeStamp::Now();
   auto d1 = TimeDuration::FromMilliseconds(100);
-  mPacer->Enqueue(1, now + d1);
+  EnqueueSoon(1, now + d1);
 
   auto items = WaitFor(TakeN(mPacer->PacedItemEvent(), 2)).unwrap();
 
@@ -122,8 +134,8 @@ TEST_F(PacerTestIntTenMsDuplication, RacyDuplication1) {
   auto now = TimeStamp::Now();
   auto d1 = TimeDuration::FromMilliseconds(100);
   auto d2 = d1 + mInterval - TimeDuration::FromMicroseconds(1);
-  mPacer->Enqueue(1, now + d1);
-  mPacer->Enqueue(2, now + d2);
+  EnqueueSoon(1, now + d1);
+  EnqueueSoon(2, now + d2);
 
   auto items = WaitFor(TakeN(mPacer->PacedItemEvent(), 3)).unwrap();
 
@@ -151,8 +163,8 @@ TEST_F(PacerTestIntTenMsDuplication, RacyDuplication2) {
   auto now = TimeStamp::Now();
   auto d1 = TimeDuration::FromMilliseconds(100);
   auto d2 = d1 + mInterval + TimeDuration::FromMicroseconds(1);
-  mPacer->Enqueue(1, now + d1);
-  mPacer->Enqueue(2, now + d2);
+  EnqueueSoon(1, now + d1);
+  EnqueueSoon(2, now + d2);
 
   auto items = WaitFor(TakeN(mPacer->PacedItemEvent(), 3)).unwrap();
 

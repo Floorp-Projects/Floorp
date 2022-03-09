@@ -25,6 +25,8 @@
 #include "PresShell.h"
 #include "nsCocoaUtils.h"
 #include "nsIFrame.h"
+#include "nsPresContext.h"
+#include "nsDeviceContext.h"
 #include "nsCocoaFeatures.h"
 
 namespace mozilla {
@@ -246,13 +248,17 @@ static NSAppearance* NativeAppearanceForContent(nsIContent* aContent) {
   return NSAppearanceForColorScheme(LookAndFeel::ColorSchemeForFrame(f));
 }
 
-void NativeMenuMac::ShowAsContextMenu(const DesktopPoint& aPosition) {
+void NativeMenuMac::ShowAsContextMenu(nsPresContext* aPc, const CSSIntPoint& aPosition) {
+  auto cssToDesktopScale =
+      aPc->CSSToDevPixelScale() / aPc->DeviceContext()->GetDesktopToDeviceScale();
+  const DesktopPoint desktopPoint = aPosition * cssToDesktopScale;
+
   mMenu->PopupShowingEventWasSentAndApprovedExternally();
 
   NSMenu* menu = mMenu->NativeNSMenu();
   NSView* view = NativeViewForContent(mMenu->Content());
   NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
-  NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(aPosition);
+  NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(desktopPoint);
 
   // Let the MOZMenuOpeningCoordinator do the actual opening, so that this ShowAsContextMenu call
   // does not spawn a nested event loop, which would be surprising to our callers.

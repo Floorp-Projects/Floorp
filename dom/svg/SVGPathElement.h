@@ -33,6 +33,8 @@ class SVGPathElement final : public SVGPathElementBase {
                              JS::Handle<JSObject*> aGivenProto) override;
   explicit SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
+  virtual void GetAsSimplePath(SimplePath* aSimplePath) override;
+
  public:
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 

@@ -189,25 +189,39 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerGlobalScopeBase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                   DOMEventTargetHelper)
-  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSerialEventTarget)
   tmp->TraverseObjectsInGlobal(cb);
-  tmp->mWorkerPrivate->TraverseTimeouts(cb);
+  // If we already exited DoRunLoop of WorkerPrivate, we will find it
+  // nullptr and there is nothing left to do here on the WorkerPrivate,
+  // in particular the timeouts have already been canceled and unlinked.
+  if (tmp->mWorkerPrivate) {
+    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+    tmp->mWorkerPrivate->TraverseTimeouts(cb);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                 DOMEventTargetHelper)
-  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSerialEventTarget)
   tmp->UnlinkObjectsInGlobal();
-  tmp->mWorkerPrivate->UnlinkTimeouts();
+  // If we already exited DoRunLoop of WorkerPrivate, we will find it
+  // nullptr and there is nothing left to do here on the WorkerPrivate,
+  // in particular the timeouts have already been canceled and unlinked.
+  if (tmp->mWorkerPrivate) {
+    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+    tmp->mWorkerPrivate->UnlinkTimeouts();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WorkerGlobalScopeBase,
                                                DOMEventTargetHelper)
-  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+  // If we already exited DoRunLoop of WorkerPrivate, we will find it
+  // nullptr and there is nothing left to check here on the WorkerPrivate.
+  if (tmp->mWorkerPrivate) {
+    tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(WorkerGlobalScopeBase, DOMEventTargetHelper)
@@ -1251,6 +1265,20 @@ void WorkerDebuggerGlobalScope::RetrieveConsoleEvents(
   }
 
   console->RetrieveConsoleEvents(aCx, aEvents, aRv);
+}
+
+void WorkerDebuggerGlobalScope::ClearConsoleEvents(JSContext* aCx,
+                                                   ErrorResult& aRv) {
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (!scope) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<Console> console = scope->GetConsoleIfExists();
+  if (console) {
+    console->ClearStorage();
+  }
 }
 
 void WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,

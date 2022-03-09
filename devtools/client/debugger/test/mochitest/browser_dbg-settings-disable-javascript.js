@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 requestLongerTimeout(2);
 
 // Tests that using the Settings menu to enable and disable JavaScript
@@ -13,9 +15,14 @@ add_task(async function() {
   info("Waiting for source to load");
   await waitForSource(dbg, "simple1.js");
 
-  const waitForDevToolsReload = await watchForDevToolsReload(gBrowser.selectedBrowser);
+  const waitForDevToolsReload = await watchForDevToolsReload(
+    gBrowser.selectedBrowser
+  );
   info("Clicking the disable javascript button in the settings menu");
-  await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: false });
+  await toggleDebbuggerSettingsMenuItem(dbg, {
+    className: menuItemClassName,
+    isChecked: false,
+  });
 
   info("Waiting for reload triggered by disabling javascript");
   await waitForSourceCount(dbg, 0);
@@ -23,9 +30,18 @@ add_task(async function() {
   info("Wait for DevTools to be reloaded");
   await waitForDevToolsReload();
 
-  info("Clicking the disable javascript button in the settings menu to reenable JavaScript");
-  await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: true });
-  is(Services.prefs.getBoolPref("javascript.enabled"), true, "JavaScript is enabled");
+  info(
+    "Clicking the disable javascript button in the settings menu to reenable JavaScript"
+  );
+  await toggleDebbuggerSettingsMenuItem(dbg, {
+    className: menuItemClassName,
+    isChecked: true,
+  });
+  is(
+    Services.prefs.getBoolPref("javascript.enabled"),
+    true,
+    "JavaScript is enabled"
+  );
 
   info("Reloading page to ensure there are sources");
   await reload(dbg);

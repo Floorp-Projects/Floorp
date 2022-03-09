@@ -8,6 +8,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "sechash.h"
+#include "json.h"
 
 #include "databuffer.h"
 
@@ -16,14 +17,9 @@
 
 #include "pk11_signature_test.h"
 #include "pk11_rsapss_vectors.h"
+#include "testvectors_base/test-structs.h"
 
-#include "testvectors/rsa_pss_2048_sha256_mgf1_32-vectors.h"
-#include "testvectors/rsa_pss_2048_sha1_mgf1_20-vectors.h"
-#include "testvectors/rsa_pss_2048_sha256_mgf1_0-vectors.h"
-#include "testvectors/rsa_pss_3072_sha256_mgf1_32-vectors.h"
-#include "testvectors/rsa_pss_4096_sha256_mgf1_32-vectors.h"
-#include "testvectors/rsa_pss_4096_sha512_mgf1_32-vectors.h"
-#include "testvectors/rsa_pss_misc-vectors.h"
+extern std::string g_source_dir;
 
 namespace nss_test {
 
@@ -46,7 +42,7 @@ CK_MECHANISM_TYPE RsaPssMapCombo(SECOidTag hashOid) {
 }
 
 class Pkcs11RsaPssTestBase : public Pk11SignatureTest {
- protected:
+ public:
   Pkcs11RsaPssTestBase(SECOidTag hashOid, CK_RSA_PKCS_MGF_TYPE mgf, int sLen)
       : Pk11SignatureTest(CKM_RSA_PKCS_PSS, hashOid, RsaPssMapCombo(hashOid)) {
     pss_params_.hashAlg = PK11_AlgtagToMechanism(hashOid);
@@ -80,13 +76,183 @@ class Pkcs11RsaPssTest : public Pkcs11RsaPssTestBase {
       : Pkcs11RsaPssTestBase(SEC_OID_SHA1, CKG_MGF1_SHA1, SHA1_LENGTH) {}
 };
 
-class Pkcs11RsaPssTestWycheproof
-    : public Pkcs11RsaPssTestBase,
-      public ::testing::WithParamInterface<RsaPssTestVector> {
+class Pkcs11RsaPssTestWycheproof : public ::testing::Test {
  public:
-  Pkcs11RsaPssTestWycheproof()
-      : Pkcs11RsaPssTestBase(GetParam().hash_oid, GetParam().mgf_hash,
-                             GetParam().sLen) {}
+  Pkcs11RsaPssTestWycheproof() {}
+
+  void Run(const std::string& file) {
+    std::string basename = "rsa_pss_" + file + "_test.json";
+    std::string dir = ::g_source_dir + "/../common/wycheproof/source_vectors/";
+    std::cout << "Running tests from: " << basename << std::endl;
+
+    JsonReader r(dir + basename);
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "") {
+        break;
+      }
+      if (n == "algorithm") {
+        ASSERT_EQ("RSASSA-PSS", r.ReadString());
+      } else if (n == "generatorVersion") {
+        (void)r.ReadString();
+      } else if (n == "numberOfTests") {
+        (void)r.ReadInt();
+      } else if (n == "header") {
+        while (r.NextItemArray()) {
+          std::cout << r.ReadString() << std::endl;
+        }
+      } else if (n == "notes") {
+        while (r.NextItem()) {
+          std::string note = r.ReadLabel();
+          if (note == "") {
+            break;
+          }
+          std::cout << note << ": " << r.ReadString() << std::endl;
+        }
+      } else if (n == "schema") {
+        ASSERT_EQ("rsassa_pss_verify_schema.json", r.ReadString());
+      } else if (n == "testGroups") {
+        while (r.NextItemArray()) {
+          RunGroup(r);
+        }
+      }
+    }
+  }
+
+ private:
+  struct TestVector {
+    uint64_t id;
+    std::vector<uint8_t> msg;
+    std::vector<uint8_t> sig;
+    bool valid;
+  };
+
+  class Pkcs11RsaPssTestWrap : public Pkcs11RsaPssTestBase {
+   public:
+    Pkcs11RsaPssTestWrap(SECOidTag hash, CK_RSA_PKCS_MGF_TYPE mgf, int s_len)
+        : Pkcs11RsaPssTestBase(hash, mgf, s_len) {}
+
+    void TestBody() {}
+
+    void Verify(const Pkcs11SignatureTestParams& params, bool valid) {
+      Pk11SignatureTest::Verify(params, valid);
+    }
+  };
+
+  void ReadTests(JsonReader& r, std::vector<TestVector>* tests) {
+    while (r.NextItemArray()) {
+      TestVector t;
+      while (r.NextItem()) {
+        std::string n = r.ReadLabel();
+        if (n == "") {
+          break;
+        }
+        if (n == "tcId") {
+          t.id = r.ReadInt();
+        } else if (n == "comment") {
+          (void)r.ReadString();
+        } else if (n == "msg") {
+          t.msg = r.ReadHex();
+        } else if (n == "sig") {
+          t.sig = r.ReadHex();
+        } else if (n == "result") {
+          std::string s = r.ReadString();
+          t.valid = (s == "valid" || s == "acceptable");
+        } else if (n == "flags") {
+          while (r.NextItemArray()) {
+            (void)r.ReadString();
+          }
+        } else {
+          FAIL() << "unknown test entry attribute";
+        }
+      }
+      tests->push_back(t);
+    }
+  }
+
+  void RunTests(const std::vector<uint8_t>& public_key, SECOidTag hash,
+                CK_RSA_PKCS_MGF_TYPE mgf, int s_len,
+                const std::vector<TestVector>& tests) {
+    ASSERT_NE(0u, public_key.size());
+    ASSERT_NE(SEC_OID_UNKNOWN, hash);
+    ASSERT_NE(CKM_INVALID_MECHANISM, mgf);
+    ASSERT_NE(0u, tests.size());
+
+    for (auto& v : tests) {
+      std::cout << "Running tcid: " << v.id << std::endl;
+
+      Pkcs11RsaPssTestWrap test(hash, mgf, s_len);
+      Pkcs11SignatureTestParams params = {
+          DataBuffer(), DataBuffer(public_key.data(), public_key.size()),
+          DataBuffer(v.msg.data(), v.msg.size()),
+          DataBuffer(v.sig.data(), v.sig.size())};
+      test.Verify(params, v.valid);
+    }
+  }
+
+  void RunGroup(JsonReader& r) {
+    std::vector<uint8_t> public_key;
+    SECOidTag hash = SEC_OID_UNKNOWN;
+    CK_RSA_PKCS_MGF_TYPE mgf = CKM_INVALID_MECHANISM;
+    int s_len = 0;
+    std::vector<TestVector> tests;
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "") {
+        break;
+      }
+      if (n == "e" || n == "keyAsn" || n == "keyPem" || n == "n") {
+        (void)r.ReadString();
+      } else if (n == "keyDer") {
+        public_key = r.ReadHex();
+      } else if (n == "keysize") {
+        (void)r.ReadInt();
+      } else if (n == "mgf") {
+        std::string s = r.ReadString();
+        ASSERT_EQ(s, "MGF1");
+      } else if (n == "mgfSha") {
+        std::string s = r.ReadString();
+        if (s == "SHA-1") {
+          mgf = CKG_MGF1_SHA1;
+        } else if (s == "SHA-224") {
+          mgf = CKG_MGF1_SHA224;
+        } else if (s == "SHA-256") {
+          mgf = CKG_MGF1_SHA256;
+        } else if (s == "SHA-384") {
+          mgf = CKG_MGF1_SHA384;
+        } else if (s == "SHA-512") {
+          mgf = CKG_MGF1_SHA512;
+        } else {
+          FAIL() << "unsupported MGF hash";
+        }
+      } else if (n == "sLen") {
+        s_len = static_cast<unsigned int>(r.ReadInt());
+      } else if (n == "sha") {
+        std::string s = r.ReadString();
+        if (s == "SHA-1") {
+          hash = SEC_OID_SHA1;
+        } else if (s == "SHA-224") {
+          hash = SEC_OID_SHA224;
+        } else if (s == "SHA-256") {
+          hash = SEC_OID_SHA256;
+        } else if (s == "SHA-384") {
+          hash = SEC_OID_SHA384;
+        } else if (s == "SHA-512") {
+          hash = SEC_OID_SHA512;
+        } else {
+          FAIL() << "unsupported hash";
+        }
+      } else if (n == "type") {
+        ASSERT_EQ("RsassaPssVerify", r.ReadString());
+      } else if (n == "tests") {
+        ReadTests(r, &tests);
+      } else {
+        FAIL() << "unknown test group attribute: " << n;
+      }
+    }
+
+    RunTests(public_key, hash, mgf, s_len, tests);
+  }
 };
 
 TEST_F(Pkcs11RsaPssTest, GenerateAndSignAndVerify) {
@@ -213,33 +379,22 @@ static const Pkcs11SignatureTestParams kRsaPssVectors[] = {
 INSTANTIATE_TEST_SUITE_P(RsaPssSignVerify, Pkcs11RsaPssVectorTest,
                          ::testing::ValuesIn(kRsaPssVectors));
 
-TEST_P(Pkcs11RsaPssTestWycheproof, Verify) { Verify(GetParam()); }
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof2048RsaPssSha120Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss2048Sha120WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof2048RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss2048Sha25632WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof2048RsaPssSha2560Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss2048Sha2560WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof3072RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss3072Sha25632WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof4096RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss4096Sha25632WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(
-    Wycheproof4096RsaPssSha51232Test, Pkcs11RsaPssTestWycheproof,
-    ::testing::ValuesIn(kRsaPss4096Sha51232WycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofRsaPssMiscTest, Pkcs11RsaPssTestWycheproof,
-                         ::testing::ValuesIn(kRsaPssMiscWycheproofVectors));
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss2048Sha1) { Run("2048_sha1_mgf1_20"); }
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss2048Sha256_0) {
+  Run("2048_sha256_mgf1_0");
+}
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss2048Sha256_32) {
+  Run("2048_sha256_mgf1_32");
+}
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss3072Sha256) {
+  Run("3072_sha256_mgf1_32");
+}
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss4096Sha256) {
+  Run("4096_sha256_mgf1_32");
+}
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPss4096Sha512) {
+  Run("4096_sha512_mgf1_32");
+}
+TEST_F(Pkcs11RsaPssTestWycheproof, RsaPssMisc) { Run("misc"); }
 
 }  // namespace nss_test

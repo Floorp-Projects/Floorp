@@ -4,11 +4,6 @@
 
 "use strict";
 
-let CustomizableUIBSPass = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm",
-  null
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "HomePage",
@@ -40,7 +35,7 @@ async function testToolbarButtons(aActions) {
     "sidebar-button",
     "fxa-toolbar-menu-button",
   ];
-  let oldState = CustomizableUIBSPass.gSavedState;
+  let oldState = CustomizableUI.getTestOnlyInternalProp("gSavedState");
 
   Assert.equal(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion),
@@ -48,16 +43,19 @@ async function testToolbarButtons(aActions) {
     "Toolbar proton version is 0"
   );
 
-  let { CustomizableUIInternal } = CustomizableUIBSPass;
+  let CustomizableUIInternal = CustomizableUI.getTestOnlyInternalProp(
+    "CustomizableUIInternal"
+  );
 
-  CustomizableUIBSPass.gSavedState = {
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", {
     placements: {
       "nav-bar": defaultPlacements,
     },
-  };
+  });
   CustomizableUIInternal._updateForNewProtonVersion();
 
-  let navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  let navbarPlacements = CustomizableUI.getTestOnlyInternalProp("gSavedState")
+    .placements["nav-bar"];
   let includesHomeButton = navbarPlacements.includes("home-button");
   let includesLibraryButton = navbarPlacements.includes("library-button");
   let includesSidebarButton = navbarPlacements.includes("sidebar-button");
@@ -86,7 +84,7 @@ async function testToolbarButtons(aActions) {
   }
 
   // Cleanup
-  CustomizableUIBSPass.gSavedState = oldState;
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", oldState);
 }
 
 /**
@@ -184,7 +182,7 @@ add_task(async function testNullSavedState() {
   await SpecialPowers.pushPrefEnv({
     set: [[kPrefProtonToolbarVersion, 0]],
   });
-  let oldState = CustomizableUIBSPass.gSavedState;
+  let oldState = CustomizableUI.getTestOnlyInternalProp("gSavedState");
 
   Assert.equal(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion),
@@ -192,14 +190,16 @@ add_task(async function testNullSavedState() {
     "Toolbar proton version is 0"
   );
 
-  let { CustomizableUIInternal } = CustomizableUIBSPass;
+  let CustomizableUIInternal = CustomizableUI.getTestOnlyInternalProp(
+    "CustomizableUIInternal"
+  );
   CustomizableUIInternal.initialize();
 
   Assert.ok(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion) >= 1,
     "Toolbar proton version updated"
   );
-  let navbarPlacements = CustomizableUIBSPass.gAreas
+  let navbarPlacements = CustomizableUI.getTestOnlyInternalProp("gAreas")
     .get("nav-bar")
     .get("defaultPlacements");
   Assert.ok(
@@ -216,7 +216,7 @@ add_task(async function testNullSavedState() {
   );
 
   // Cleanup
-  CustomizableUIBSPass.gSavedState = oldState;
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", oldState);
   await SpecialPowers.popPrefEnv();
   // Re-initialize to prevent future test failures
   CustomizableUIInternal.initialize();
@@ -230,7 +230,7 @@ add_task(async function testNoNavbarPlacements() {
     set: [[kPrefProtonToolbarVersion, 0]],
   });
 
-  let oldState = CustomizableUIBSPass.gSavedState;
+  let oldState = CustomizableUI.getTestOnlyInternalProp("gSavedState");
 
   Assert.equal(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion),
@@ -238,17 +238,19 @@ add_task(async function testNoNavbarPlacements() {
     "Toolbar proton version is 0"
   );
 
-  let { CustomizableUIInternal } = CustomizableUIBSPass;
+  let CustomizableUIInternal = CustomizableUI.getTestOnlyInternalProp(
+    "CustomizableUIInternal"
+  );
 
-  CustomizableUIBSPass.gSavedState = {
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", {
     placements: { "widget-overflow-fixed-list": [] },
-  };
+  });
   CustomizableUIInternal._updateForNewProtonVersion();
 
   Assert.ok(true, "_updateForNewProtonVersion didn't throw");
 
   // Cleanup
-  CustomizableUIBSPass.gSavedState = oldState;
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", oldState);
 
   await SpecialPowers.popPrefEnv();
 });
@@ -261,7 +263,7 @@ add_task(async function testNullPlacements() {
     set: [[kPrefProtonToolbarVersion, 0]],
   });
 
-  let oldState = CustomizableUIBSPass.gSavedState;
+  let oldState = CustomizableUI.getTestOnlyInternalProp("gSavedState");
 
   Assert.equal(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion),
@@ -269,15 +271,17 @@ add_task(async function testNullPlacements() {
     "Toolbar proton version is 0"
   );
 
-  let { CustomizableUIInternal } = CustomizableUIBSPass;
+  let CustomizableUIInternal = CustomizableUI.getTestOnlyInternalProp(
+    "CustomizableUIInternal"
+  );
 
-  CustomizableUIBSPass.gSavedState = {};
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", {});
   CustomizableUIInternal._updateForNewProtonVersion();
 
   Assert.ok(true, "_updateForNewProtonVersion didn't throw");
 
   // Cleanup
-  CustomizableUIBSPass.gSavedState = oldState;
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", oldState);
 
   await SpecialPowers.popPrefEnv();
 });

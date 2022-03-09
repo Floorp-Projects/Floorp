@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 // This test can be really slow on debug platforms and should be split.
 requestLongerTimeout(3);
 
@@ -59,20 +61,14 @@ async function evalInConsoleAtPoint(
   { line, column },
   statements
 ) {
-  const filename = `${target}://./${fixture}/input.`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+  const url = `${target}://./${fixture}/input.js`;
+  const fnName = `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) =>
     c.toUpperCase()
   );
 
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    filename,
-    { line, column },
-    async () => {
-      await assertConsoleEval(dbg, statements);
-    }
-  );
+  await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
+    await assertConsoleEval(dbg, statements);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
@@ -80,7 +76,7 @@ async function evalInConsoleAtPoint(
 async function assertConsoleEval(dbg, statements) {
   const { hud } = await dbg.toolbox.selectTool("webconsole");
 
-  for (const [index, statement] of statements.entries()) {
+  for (const statement of statements.values()) {
     await dbg.client.evaluate(`window.TEST_RESULT = false;`);
     await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
 

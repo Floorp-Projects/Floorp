@@ -8,7 +8,6 @@ toolkit.jar:
 *  skin/classic/global/alert.css
    skin/classic/global/autocomplete.css
    skin/classic/global/button.css
-*  skin/classic/global/checkbox.css
 *  skin/classic/global/commonDialog.css
    skin/classic/global/dropmarker.css
 *  skin/classic/global/global.css
@@ -24,7 +23,6 @@ toolkit.jar:
    skin/classic/global/toolbar.css
    skin/classic/global/toolbarbutton.css
    skin/classic/global/tooltip.css
-*  skin/classic/global/tree.css
 
    skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
 

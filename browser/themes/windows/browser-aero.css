@@ -8,8 +8,8 @@
   --glass-shadow-color: hsla(240,5%,5%,0.3);
 }
 
-@media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
+@media (-moz-platform: windows-win7),
+       (-moz-platform: windows-win8) {
   @media (-moz-windows-classic: 0) {
     :root[sizemode="normal"] #toolbar-menubar:not([autohide="true"]) > #menubar-items,
     :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
@@ -43,8 +43,8 @@
 }
 
 @media (-moz-windows-compositor) {
-  @media not (-moz-os-version: windows-win7) {
-    @media not (-moz-os-version: windows-win8) {
+  @media not (-moz-platform: windows-win7) {
+    @media not (-moz-platform: windows-win8) {
       @media (-moz-windows-default-theme) {
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
@@ -241,8 +241,8 @@
     }
   }
 
-  @media (-moz-os-version: windows-win7),
-         (-moz-os-version: windows-win8) {
+  @media (-moz-platform: windows-win7),
+         (-moz-platform: windows-win8) {
     :root {
       background-color: transparent;
       appearance: auto;
@@ -267,7 +267,7 @@
     }
   }
 
-  @media (-moz-os-version: windows-win8) {
+  @media (-moz-platform: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
      * Borders for win7 are below, win10 only needs something like this when
      * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */

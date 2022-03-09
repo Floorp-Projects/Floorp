@@ -6,21 +6,29 @@
   </head>
 
   <body onload="runTests()">
+    <iframe id="subdomain"></iframe>
+    <iframe id="localhost"></iframe>
     <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
+    const filePath = "/tests/dom/midi/tests/file_midi_permission_gated.html";
+    // Generally this runs on example.com but with --enable-xorigin-tests it runs
+    // on example.org.
+    let subdomainURL = "https://test1." + location.host + filePath;
+    $("subdomain").src = subdomainURL;
+    // For some reason the mochitest server returns "Bad request" with localhost,
+    // but permits the loopback address. That's good enough for testing purposes.
+    $("localhost").src = "http://127.0.0.1:8888" + filePath;
+
+    function waitForMessage() {
+      return new Promise((resolve) => {
+        window.addEventListener("message", (e) => resolve(e.data), {once: true});
+      });
+    }
 
     async function runTests() {
       await SpecialPowers.pushPrefEnv({
         set: [["dom.webmidi.enabled", true]],
       });
-      ok(
-        await SpecialPowers.testPermission(
-          "midi",
-          SpecialPowers.Services.perms.UNKNOWN_ACTION,
-          document
-        ),
-        "midi value should have UNKNOWN permission"
-      );
       ok(
         await SpecialPowers.testPermission(
           "midi-sysex",
@@ -29,33 +37,65 @@
         ),
         "midi-sysex value should have UNKNOWN permission"
       );
+      ok(
+        await SpecialPowers.testPermission(
+          "midi-sysex",
+          SpecialPowers.Services.perms.UNKNOWN_ACTION,
+          subdomainURL
+        ),
+        "permission should also not be set for subdomain"
+      );
 
       // Gated permission should fail without addon installed.
-      try {
-        await navigator.requestMIDIAccess({ sysex: false });
-        ok(false, "MIDI Access Request gate failed");
-      } catch (ex) {
-        ok(true, "MIDI Access Request denied by default");
+      for (let sysex of [false, true]) {
+        try {
+          await navigator.requestMIDIAccess({ sysex });
+          ok(false, "MIDI Access Request gate failed");
+        } catch (ex) {
+          ok(true, "MIDI Access Request denied by default");
+        }
+      }
+
+      // Gated permission should prompt for localhost.
+      //
+      // Note: We don't appear to have good test machinery anymore for
+      // navigating prompts from a plain mochitest. If you uncomment the lines
+      // below and run the test interactively, it should pass. Given that this
+      // is a niche feature that's unlikely to break, it doesn't seem worth
+      // investing in complicated test infrastructure to check it in automation.
+      for (let sysex of [false, true]) {
+        // $("localhost").contentWindow.postMessage(sysex, "*");
+        // let response = await waitForMessage();
+        // is(response, "succeeded", "MIDI Access Request allowed for localhost");
       }
 
       // When an addon is installed, the permission is inserted.  Test
       // that the request succeeds after we insert the permission.
       await SpecialPowers.addPermission(
-        "midi",
+        "midi-sysex",
         SpecialPowers.Services.perms.ALLOW_ACTION,
         document
       );
 
       // Gated permission should allow access after addon inserted permission.
-      try {
-        await navigator.requestMIDIAccess({ sysex: false });
-        ok(true, "MIDI Access Request allowed");
-      } catch (ex) {
-        ok(false, "MIDI Access Request failed");
+      for (let sysex of [false, true]) {
+        try {
+          await navigator.requestMIDIAccess({ sysex });
+          ok(true, "MIDI Access Request allowed");
+        } catch (ex) {
+          ok(false, "MIDI Access Request failed");
+        }
       }
 
-      // Remove the permission
-      await SpecialPowers.removePermission("midi", document);
+      // Gated permission should also apply to subdomains.
+      for (let sysex of [false, true]) {
+        $("subdomain").contentWindow.postMessage(sysex, "*");
+        let response = await waitForMessage();
+        is(response, "succeeded", "MIDI Access Request allowed for subdomain");
+      }
+
+      // Remove the permission.
+      await SpecialPowers.removePermission("midi-sysex", document);
 
       SimpleTest.finish();
     }

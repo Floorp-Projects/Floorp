@@ -336,6 +336,7 @@
       "CREATE TABLE IF NOT EXISTS moz_places_metadata_snapshots_groups ( " \
       "  id INTEGER PRIMARY KEY, "                                         \
       "  title TEXT NOT NULL, "                                            \
+      "  hidden INTEGER DEFAULT 0 NOT NULL, "                              \
       "  builder TEXT NOT NULL, "                                          \
       "  builder_data TEXT "                                               \
       ")")

@@ -6,6 +6,21 @@
 
 const EXPORTED_SYMBOLS = ["isBrowsingContextCompatible"];
 
+function isExtensionContext(browsingContext) {
+  let principal;
+  if (browsingContext instanceof CanonicalBrowsingContext) {
+    principal = browsingContext.currentWindowGlobal.documentPrincipal;
+  } else {
+    principal = browsingContext.window.document.nodePrincipal;
+  }
+
+  // In practice, note that the principal will never be an expanded principal.
+  // The are only used for content scripts executed in a Sandbox, and do not
+  // have a browsing context on their own.
+  // But we still use this flag because there is no isAddonPrincipal flag.
+  return principal.isAddonOrExpandedAddonPrincipal;
+}
+
 function isParentProcess(browsingContext) {
   if (browsingContext instanceof CanonicalBrowsingContext) {
     return browsingContext.currentWindowGlobal.osPid === -1;
@@ -37,6 +52,10 @@ function isBrowsingContextCompatible(browsingContext, options = {}) {
     return false;
   }
 
-  // Skip privileged contexts until we support debugging Chrome context, see Bug 1713440.
-  return !isParentProcess(browsingContext);
+  // Skip:
+  // - extension contexts until we support debugging webextensions, see Bug 1755014.
+  // - privileged contexts until we support debugging Chrome context, see Bug 1713440.
+  return (
+    !isExtensionContext(browsingContext) && !isParentProcess(browsingContext)
+  );
 }

@@ -229,7 +229,6 @@ bool ContentPrincipal::SubsumesInternal(
   // explicitly setting document.domain then the other must also have
   // done so in order to be considered the same origin. This prevents
   // DNS spoofing based on document.domain (154930)
-  nsresult rv;
   if (aConsideration == ConsiderDocumentDomain) {
     // Get .domain on each principal.
     nsCOMPtr<nsIURI> thisDomain, otherDomain;
@@ -256,10 +255,7 @@ bool ContentPrincipal::SubsumesInternal(
   }
 
   // Compare uris.
-  bool isSameOrigin = false;
-  rv = aOther->IsSameOrigin(mURI, false, &isSameOrigin);
-  NS_ENSURE_SUCCESS(rv, false);
-  return isSameOrigin;
+  return aOther->IsSameOrigin(mURI);
 }
 
 NS_IMETHODIMP

@@ -61,282 +61,6 @@ const MODIFIER_NAME_LOOKUP = {
   Meta: "meta",
 };
 
-/** Map from raw key (codepoint) to normalized key value */
-const NORMALIZED_KEY_LOOKUP = {
-  "\uE000": "Unidentified",
-  "\uE001": "Cancel",
-  "\uE002": "Help",
-  "\uE003": "Backspace",
-  "\uE004": "Tab",
-  "\uE005": "Clear",
-  "\uE006": "Enter",
-  "\uE007": "Enter",
-  "\uE008": "Shift",
-  "\uE009": "Control",
-  "\uE00A": "Alt",
-  "\uE00B": "Pause",
-  "\uE00C": "Escape",
-  "\uE00D": " ",
-  "\uE00E": "PageUp",
-  "\uE00F": "PageDown",
-  "\uE010": "End",
-  "\uE011": "Home",
-  "\uE012": "ArrowLeft",
-  "\uE013": "ArrowUp",
-  "\uE014": "ArrowRight",
-  "\uE015": "ArrowDown",
-  "\uE016": "Insert",
-  "\uE017": "Delete",
-  "\uE018": ";",
-  "\uE019": "=",
-  "\uE01A": "0",
-  "\uE01B": "1",
-  "\uE01C": "2",
-  "\uE01D": "3",
-  "\uE01E": "4",
-  "\uE01F": "5",
-  "\uE020": "6",
-  "\uE021": "7",
-  "\uE022": "8",
-  "\uE023": "9",
-  "\uE024": "*",
-  "\uE025": "+",
-  "\uE026": ",",
-  "\uE027": "-",
-  "\uE028": ".",
-  "\uE029": "/",
-  "\uE031": "F1",
-  "\uE032": "F2",
-  "\uE033": "F3",
-  "\uE034": "F4",
-  "\uE035": "F5",
-  "\uE036": "F6",
-  "\uE037": "F7",
-  "\uE038": "F8",
-  "\uE039": "F9",
-  "\uE03A": "F10",
-  "\uE03B": "F11",
-  "\uE03C": "F12",
-  "\uE03D": "Meta",
-  "\uE040": "ZenkakuHankaku",
-  "\uE050": "Shift",
-  "\uE051": "Control",
-  "\uE052": "Alt",
-  "\uE053": "Meta",
-  "\uE054": "PageUp",
-  "\uE055": "PageDown",
-  "\uE056": "End",
-  "\uE057": "Home",
-  "\uE058": "ArrowLeft",
-  "\uE059": "ArrowUp",
-  "\uE05A": "ArrowRight",
-  "\uE05B": "ArrowDown",
-  "\uE05C": "Insert",
-  "\uE05D": "Delete",
-};
-
-/** Map from raw key (codepoint) to key location */
-const KEY_LOCATION_LOOKUP = {
-  "\uE007": 1,
-  "\uE008": 1,
-  "\uE009": 1,
-  "\uE00A": 1,
-  "\uE01A": 3,
-  "\uE01B": 3,
-  "\uE01C": 3,
-  "\uE01D": 3,
-  "\uE01E": 3,
-  "\uE01F": 3,
-  "\uE020": 3,
-  "\uE021": 3,
-  "\uE022": 3,
-  "\uE023": 3,
-  "\uE024": 3,
-  "\uE025": 3,
-  "\uE026": 3,
-  "\uE027": 3,
-  "\uE028": 3,
-  "\uE029": 3,
-  "\uE03D": 1,
-  "\uE050": 2,
-  "\uE051": 2,
-  "\uE052": 2,
-  "\uE053": 2,
-  "\uE054": 3,
-  "\uE055": 3,
-  "\uE056": 3,
-  "\uE057": 3,
-  "\uE058": 3,
-  "\uE059": 3,
-  "\uE05A": 3,
-  "\uE05B": 3,
-  "\uE05C": 3,
-  "\uE05D": 3,
-};
-
-const KEY_CODE_LOOKUP = {
-  "\uE00A": "AltLeft",
-  "\uE052": "AltRight",
-  "\uE015": "ArrowDown",
-  "\uE012": "ArrowLeft",
-  "\uE014": "ArrowRight",
-  "\uE013": "ArrowUp",
-  "`": "Backquote",
-  "~": "Backquote",
-  "\\": "Backslash",
-  "|": "Backslash",
-  "\uE003": "Backspace",
-  "[": "BracketLeft",
-  "{": "BracketLeft",
-  "]": "BracketRight",
-  "}": "BracketRight",
-  ",": "Comma",
-  "<": "Comma",
-  "\uE009": "ControlLeft",
-  "\uE051": "ControlRight",
-  "\uE017": "Delete",
-  ")": "Digit0",
-  "0": "Digit0",
-  "!": "Digit1",
-  "1": "Digit1",
-  "2": "Digit2",
-  "@": "Digit2",
-  "#": "Digit3",
-  "3": "Digit3",
-  $: "Digit4",
-  "4": "Digit4",
-  "%": "Digit5",
-  "5": "Digit5",
-  "6": "Digit6",
-  "^": "Digit6",
-  "&": "Digit7",
-  "7": "Digit7",
-  "*": "Digit8",
-  "8": "Digit8",
-  "(": "Digit9",
-  "9": "Digit9",
-  "\uE010": "End",
-  "\uE006": "Enter",
-  "+": "Equal",
-  "=": "Equal",
-  "\uE00C": "Escape",
-  "\uE031": "F1",
-  "\uE03A": "F10",
-  "\uE03B": "F11",
-  "\uE03C": "F12",
-  "\uE032": "F2",
-  "\uE033": "F3",
-  "\uE034": "F4",
-  "\uE035": "F5",
-  "\uE036": "F6",
-  "\uE037": "F7",
-  "\uE038": "F8",
-  "\uE039": "F9",
-  "\uE002": "Help",
-  "\uE011": "Home",
-  "\uE016": "Insert",
-  "<": "IntlBackslash",
-  ">": "IntlBackslash",
-  A: "KeyA",
-  a: "KeyA",
-  B: "KeyB",
-  b: "KeyB",
-  C: "KeyC",
-  c: "KeyC",
-  D: "KeyD",
-  d: "KeyD",
-  E: "KeyE",
-  e: "KeyE",
-  F: "KeyF",
-  f: "KeyF",
-  G: "KeyG",
-  g: "KeyG",
-  H: "KeyH",
-  h: "KeyH",
-  I: "KeyI",
-  i: "KeyI",
-  J: "KeyJ",
-  j: "KeyJ",
-  K: "KeyK",
-  k: "KeyK",
-  L: "KeyL",
-  l: "KeyL",
-  M: "KeyM",
-  m: "KeyM",
-  N: "KeyN",
-  n: "KeyN",
-  O: "KeyO",
-  o: "KeyO",
-  P: "KeyP",
-  p: "KeyP",
-  Q: "KeyQ",
-  q: "KeyQ",
-  R: "KeyR",
-  r: "KeyR",
-  S: "KeyS",
-  s: "KeyS",
-  T: "KeyT",
-  t: "KeyT",
-  U: "KeyU",
-  u: "KeyU",
-  V: "KeyV",
-  v: "KeyV",
-  W: "KeyW",
-  w: "KeyW",
-  X: "KeyX",
-  x: "KeyX",
-  Y: "KeyY",
-  y: "KeyY",
-  Z: "KeyZ",
-  z: "KeyZ",
-  "-": "Minus",
-  _: "Minus",
-  "\uE01A": "Numpad0",
-  "\uE05C": "Numpad0",
-  "\uE01B": "Numpad1",
-  "\uE056": "Numpad1",
-  "\uE01C": "Numpad2",
-  "\uE05B": "Numpad2",
-  "\uE01D": "Numpad3",
-  "\uE055": "Numpad3",
-  "\uE01E": "Numpad4",
-  "\uE058": "Numpad4",
-  "\uE01F": "Numpad5",
-  "\uE020": "Numpad6",
-  "\uE05A": "Numpad6",
-  "\uE021": "Numpad7",
-  "\uE057": "Numpad7",
-  "\uE022": "Numpad8",
-  "\uE059": "Numpad8",
-  "\uE023": "Numpad9",
-  "\uE054": "Numpad9",
-  "\uE024": "NumpadAdd",
-  "\uE026": "NumpadComma",
-  "\uE028": "NumpadDecimal",
-  "\uE05D": "NumpadDecimal",
-  "\uE029": "NumpadDivide",
-  "\uE007": "NumpadEnter",
-  "\uE024": "NumpadMultiply",
-  "\uE026": "NumpadSubtract",
-  "\uE03D": "OSLeft",
-  "\uE053": "OSRight",
-  "\uE01E": "PageDown",
-  "\uE01F": "PageUp",
-  ".": "Period",
-  ">": "Period",
-  '"': "Quote",
-  "'": "Quote",
-  ":": "Semicolon",
-  ";": "Semicolon",
-  "\uE008": "ShiftLeft",
-  "\uE050": "ShiftRight",
-  "/": "Slash",
-  "?": "Slash",
-  "\uE00D": "Space",
-  " ": "Space",
-  "\uE004": "Tab",
-};
-
 /** Represents possible values for a pointer-move origin. */
 action.PointerOrigin = {
   Viewport: "viewport",
@@ -944,15 +668,16 @@ action.processPointerAction = function(id, pointerParams, act) {
 /** Collect properties associated with KeyboardEvent */
 action.Key = class {
   constructor(rawKey) {
-    this.key = NORMALIZED_KEY_LOOKUP[rawKey] || rawKey;
-    this.code = KEY_CODE_LOOKUP[rawKey];
-    this.location = KEY_LOCATION_LOOKUP[rawKey] || 0;
+    const { key, code, location, printable } = event.getKeyData(rawKey);
+    this.key = key;
+    this.code = code;
+    this.location = location;
+    this.printable = printable;
     this.altKey = false;
     this.shiftKey = false;
     this.ctrlKey = false;
     this.metaKey = false;
     this.repeat = false;
-    this.isComposing = false;
     // keyCode will be computed by event.sendKeyDown
   }
 
@@ -1171,9 +896,16 @@ function toEvents(tickDuration, win) {
  */
 function dispatchKeyDown(a, inputState, win) {
   return new Promise(resolve => {
-    let keyEvent = new action.Key(a.value);
+    let value = a.value;
+    if (inputState.shift) {
+      value = event.getShiftedKey(value);
+    }
+
+    const keyEvent = new action.Key(value);
     keyEvent.repeat = inputState.isPressed(keyEvent.key);
+
     inputState.press(keyEvent.key);
+
     if (keyEvent.key in MODIFIER_NAME_LOOKUP) {
       inputState.setModState(keyEvent.key, true);
     }
@@ -1181,7 +913,7 @@ function dispatchKeyDown(a, inputState, win) {
     // Append a copy of |a| with keyUp subtype
     action.inputsToCancel.push(Object.assign({}, a, { subtype: action.KeyUp }));
     keyEvent.update(inputState);
-    event.sendKeyDown(a.value, keyEvent, win);
+    event.sendKeyDown(keyEvent, win);
 
     resolve();
   });
@@ -1202,7 +934,12 @@ function dispatchKeyDown(a, inputState, win) {
  */
 function dispatchKeyUp(a, inputState, win) {
   return new Promise(resolve => {
-    let keyEvent = new action.Key(a.value);
+    let value = a.value;
+    if (inputState.shift) {
+      value = event.getShiftedKey(value);
+    }
+
+    const keyEvent = new action.Key(value);
 
     if (!inputState.isPressed(keyEvent.key)) {
       resolve();
@@ -1215,7 +952,7 @@ function dispatchKeyUp(a, inputState, win) {
     inputState.release(keyEvent.key);
     keyEvent.update(inputState);
 
-    event.sendKeyUp(a.value, keyEvent, win);
+    event.sendKeyUp(keyEvent, win);
     resolve();
   });
 }

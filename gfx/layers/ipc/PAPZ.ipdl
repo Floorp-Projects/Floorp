@@ -7,6 +7,7 @@
 
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
+include "mozilla/layers/RemoteContentController.h";
 
 include protocol PCompositorBridge;
 
@@ -41,6 +42,7 @@ namespace layers {
  * are implemented. If a new method is needed then PAPZ, APZChild, and RemoteContentController
  * must be updated to handle it.
  */
+[ManualDealloc, ParentImpl="RemoteContentController"]
 sync protocol PAPZ
 {
   manager PCompositorBridge;

@@ -24,6 +24,10 @@
   padding: 0 6px;
 }
 
+#viewGroup:focus-visible > radio[focused="true"] > .radio-label-box {
+  outline: var(--default-focusring);
+}
+
 #topBar {
   border-bottom: 1px solid ThreeDShadow;
   padding-inline-start: 10px;

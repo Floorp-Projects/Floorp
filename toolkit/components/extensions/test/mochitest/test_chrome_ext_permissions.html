@@ -16,14 +16,6 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
   return async function() {
     function pageScript() {
       /* global PERMISSIONS */
-      /* eslint-disable mozilla/balanced-listeners */
-      window.addEventListener("keypress", () => {
-        browser.permissions.request(PERMISSIONS).then(result => {
-          browser.test.sendMessage("request.result", result);
-        }, {once: true});
-      });
-      /* eslint-enable mozilla/balanced-listeners */
-
       browser.test.onMessage.addListener(async msg => {
         if (msg == "set-cookie") {
           try {
@@ -41,6 +33,12 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
         } else if (msg == "remove") {
           browser.permissions.remove(PERMISSIONS).then(result => {
             browser.test.sendMessage("remove.result", result);
+          });
+        } else if (msg == "request") {
+          browser.test.withHandlingUserInput(() => {
+            browser.permissions.request(PERMISSIONS).then(result => {
+              browser.test.sendMessage("request.result", result);
+            });
           });
         }
       });
@@ -102,7 +100,6 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
 
     let url = await extension.awaitMessage("ready");
     let win = window.open();
-    let browserFrame = win.browsingContext.embedderElement;
     win.location.href = url;
     await extension.awaitMessage("page-ready");
 
@@ -123,8 +120,7 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
       is(result, false, "fetch() failed from content script due to lack of host permission");
     }
 
-    synthesizeKey("a", {}, browserFrame.contentWindow);
-    result = await extension.awaitMessage("request.result");
+    result = await call("request");
     is(result, true, "permissions.request() succeeded");
 
     // Using the cookies API from an extension page should succeed

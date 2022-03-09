@@ -10,6 +10,7 @@
 #include "js/PropertyAndElement.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
+#include "js/loader/ModuleMapKey.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -20,7 +21,6 @@
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/BodyStream.h"
-#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadIntoRequest.h"
@@ -31,12 +31,16 @@
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
+#include "mozilla/dom/ReadableStreamPipeTo.h"
 #include "mozilla/dom/ReadableStreamTee.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
+#include "mozilla/dom/WritableStream.h"
+#include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/dom/Promise-inl.h"
@@ -64,26 +68,14 @@ inline void ImplCycleCollectionUnlink(
   aReader = AsVariant(mozilla::Nothing());
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader,
-                                  mErrorAlgorithm, mNativeUnderlyingSource)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mStoredError.setNull();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader,
-                                    mErrorAlgorithm, mNativeUnderlyingSource)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStoredError)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(ReadableStream,
+                                                      (mGlobal, mController,
+                                                       mReader, mErrorAlgorithm,
+                                                       mNativeUnderlyingSource),
+                                                      (mStoredError))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStream)
@@ -178,7 +170,7 @@ already_AddRefed<ReadableStream> ReadableStream::Constructor(
       aUnderlyingSource.WasPassed() ? aUnderlyingSource.Value() : nullptr);
 
   // Step 2.
-  UnderlyingSource underlyingSourceDict;
+  RootedDictionary<UnderlyingSource> underlyingSourceDict(aGlobal.Context());
   if (underlyingSourceObj) {
     JS::RootedValue objValue(aGlobal.Context(),
                              JS::ObjectValue(*underlyingSourceObj));
@@ -470,14 +462,13 @@ already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-reader
 already_AddRefed<ReadableStreamDefaultReader>
-AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
-                                   ErrorResult& aRv) {
+AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1.
   RefPtr<ReadableStreamDefaultReader> reader =
       new ReadableStreamDefaultReader(aStream->GetParentObject());
 
   // Step 2.
-  SetUpReadableStreamDefaultReader(aCx, reader, aStream, aRv);
+  SetUpReadableStreamDefaultReader(reader, aStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -487,8 +478,7 @@ AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
 }
 
 // https://streams.spec.whatwg.org/#rs-get-reader
-void ReadableStream::GetReader(JSContext* aCx,
-                               const ReadableStreamGetReaderOptions& aOptions,
+void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
                                OwningReadableStreamReader& resultReader,
                                ErrorResult& aRv) {
   // Step 1. If options["mode"] does not exist,
@@ -496,7 +486,7 @@ void ReadableStream::GetReader(JSContext* aCx,
   if (!aOptions.mMode.WasPassed()) {
     RefPtr<ReadableStream> thisRefPtr = this;
     RefPtr<ReadableStreamDefaultReader> defaultReader =
-        AcquireReadableStreamDefaultReader(aCx, thisRefPtr, aRv);
+        AcquireReadableStreamDefaultReader(thisRefPtr, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -515,7 +505,7 @@ void ReadableStream::GetReader(JSContext* aCx,
 
   RefPtr<ReadableStream> thisRefPtr = this;
   RefPtr<ReadableStreamBYOBReader> byobReader =
-      AcquireReadableStreamBYOBReader(aCx, thisRefPtr, aRv);
+      AcquireReadableStreamBYOBReader(thisRefPtr, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -527,6 +517,47 @@ bool IsReadableStreamLocked(ReadableStream* aStream) {
   // Step 1 + 2.
   return aStream->Locked();
 }
+
+// https://streams.spec.whatwg.org/#rs-pipe-through
+MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> ReadableStream::PipeThrough(
+    const ReadableWritablePair& aTransform, const StreamPipeOptions& aOptions,
+    ErrorResult& aRv) {
+  // Step 1: If ! IsReadableStreamLocked(this) is true, throw a TypeError
+  // exception.
+  if (IsReadableStreamLocked(this)) {
+    aRv.ThrowTypeError("Cannot pipe from a locked stream.");
+    return nullptr;
+  }
+
+  // Step 2: If ! IsWritableStreamLocked(transform["writable"]) is true, throw a
+  // TypeError exception.
+  if (IsWritableStreamLocked(aTransform.mWritable)) {
+    aRv.ThrowTypeError("Cannot pipe to a locked stream.");
+    return nullptr;
+  }
+
+  // Step 3: Let signal be options["signal"] if it exists, or undefined
+  // otherwise.
+  RefPtr<AbortSignal> signal =
+      aOptions.mSignal.WasPassed() ? &aOptions.mSignal.Value() : nullptr;
+
+  // Step 4: Let promise be ! ReadableStreamPipeTo(this, transform["writable"],
+  // options["preventClose"], options["preventAbort"], options["preventCancel"],
+  // signal).
+  RefPtr<WritableStream> writable = aTransform.mWritable;
+  RefPtr<Promise> promise = ReadableStreamPipeTo(
+      this, writable, aOptions.mPreventClose, aOptions.mPreventAbort,
+      aOptions.mPreventCancel, signal, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 5: Set promise.[[PromiseIsHandled]] to true.
+  MOZ_ALWAYS_TRUE(promise->SetAnyPromiseIsHandled());
+
+  // Step 6: Return transform["readable"].
+  return do_AddRef(aTransform.mReadable.get());
+};
 
 // https://streams.spec.whatwg.org/#readable-stream-get-num-read-requests
 double ReadableStreamGetNumReadRequests(ReadableStream* aStream) {
@@ -652,7 +683,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
       : mTeeState(aTeeState), mIsCancel1(aIsCancel1) {}
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> CancelCallback(
+  already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override {
     // Step 1.
@@ -712,7 +743,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
   }
 
  protected:
-  ~ReadableStreamDefaultTeeCancelAlgorithm() = default;
+  ~ReadableStreamDefaultTeeCancelAlgorithm() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeCancelAlgorithm)
@@ -740,7 +771,7 @@ NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
 // Step 19.
 class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
-  ~ReadableStreamTeeClosePromiseHandler() = default;
+  ~ReadableStreamTeeClosePromiseHandler() override = default;
   RefPtr<TeeState> mTeeState;
 
  public:
@@ -793,8 +824,7 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 2. Implicit.
 
   // Steps 3-12 are contained in the construction of Tee State.
-  RefPtr<TeeState> teeState =
-      TeeState::Create(aCx, aStream, aCloneForBranch2, aRv);
+  RefPtr<TeeState> teeState = TeeState::Create(aStream, aCloneForBranch2, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -843,6 +873,37 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 20.
   aResult.AppendElement(teeState->Branch1());
   aResult.AppendElement(teeState->Branch2());
+}
+
+// https://streams.spec.whatwg.org/#rs-pipe-to
+already_AddRefed<Promise> ReadableStream::PipeTo(
+    WritableStream& aDestination, const StreamPipeOptions& aOptions,
+    ErrorResult& aRv) {
+  // Step 1. If !IsReadableStreamLocked(this) is true, return a promise rejected
+  // with a TypeError exception.
+  if (IsReadableStreamLocked(this)) {
+    aRv.ThrowTypeError("Cannot pipe from a locked stream.");
+    return nullptr;
+  }
+
+  // Step 2. If !IsWritableStreamLocked(destination) is true, return a promise
+  //         rejected with a TypeError exception.
+  if (IsWritableStreamLocked(&aDestination)) {
+    aRv.ThrowTypeError("Cannot pipe to a locked stream.");
+    return nullptr;
+  }
+
+  // Step 3. Let signal be options["signal"] if it exists, or undefined
+  // otherwise.
+  RefPtr<AbortSignal> signal =
+      aOptions.mSignal.WasPassed() ? &aOptions.mSignal.Value() : nullptr;
+
+  // Step 4. Return ! ReadableStreamPipeTo(this, destination,
+  // options["preventClose"], options["preventAbort"], options["preventCancel"],
+  // signal).
+  return ReadableStreamPipeTo(this, &aDestination, aOptions.mPreventClose,
+                              aOptions.mPreventAbort, aOptions.mPreventCancel,
+                              signal, aRv);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-tee
@@ -930,5 +991,4 @@ already_AddRefed<ReadableStream> ReadableStream::Create(
   return stream.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

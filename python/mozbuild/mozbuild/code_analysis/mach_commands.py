@@ -328,7 +328,7 @@ def check(
     command_context.activate_virtualenv()
     command_context.log_manager.enable_unstructured()
 
-    rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+    rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
     if rc != 0:
         return rc
 
@@ -512,7 +512,7 @@ def _get_current_version(command_context, clang_paths):
     return version_info
 
 
-def _is_version_eligible(command_context, clang_paths):
+def _is_version_eligible(command_context, clang_paths, log_error=True):
     version = _get_required_version(command_context)
     if version is None:
         return False
@@ -523,17 +523,20 @@ def _is_version_eligible(command_context, clang_paths):
     version = "clang-format version " + version
     if version in current_version:
         return True
-    command_context.log(
-        logging.ERROR,
-        "static-analysis",
-        {},
-        "ERROR: You're using an old or incorrect version ({}) of clang-format binary. "
-        "Please update to a more recent one (at least > {}) "
-        "by running: './mach bootstrap' ".format(
-            _get_current_version(command_context, clang_paths),
-            _get_required_version(command_context),
-        ),
-    )
+
+    if log_error:
+        command_context.log(
+            logging.ERROR,
+            "static-analysis",
+            {},
+            "ERROR: You're using an old or incorrect version ({}) of clang-format binary. "
+            "Please update to a more recent one (at least > {}) "
+            "by running: './mach bootstrap' ".format(
+                _get_current_version(command_context, clang_paths),
+                _get_required_version(command_context),
+            ),
+        )
+
     return False
 
 
@@ -688,7 +691,7 @@ def autotest(
         # Ensure that clang-tidy is present
         rc = not os.path.exists(clang_paths._clang_tidy_path)
     else:
-        rc, clang_paths = _get_clang_tools(
+        rc, clang_paths = get_clang_tools(
             command_context, force=force_download, verbose=verbose
         )
 
@@ -1027,7 +1030,7 @@ def install(
     verbose=False,
 ):
     command_context._set_log_level(verbose)
-    rc, _ = _get_clang_tools(
+    rc, _ = get_clang_tools(
         command_context,
         force=force,
         skip_cache=skip_cache,
@@ -1044,7 +1047,7 @@ def install(
 )
 def clear_cache(command_context, verbose=False):
     command_context._set_log_level(verbose)
-    rc, _ = _get_clang_tools(
+    rc, _ = get_clang_tools(
         command_context,
         force=True,
         download_if_needed=True,
@@ -1067,7 +1070,7 @@ def clear_cache(command_context, verbose=False):
 )
 def print_checks(command_context, verbose=False):
     command_context._set_log_level(verbose)
-    rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+    rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
 
     if rc != 0:
         return rc
@@ -1240,13 +1243,13 @@ def clang_format(
         if not _do_clang_tools_exist(clang_paths):
             print("clang-format: Unable to set locate clang-format tools.")
             return 1
+
+        if not _is_version_eligible(command_context, clang_paths):
+            return 1
     else:
-        rc, clang_paths = _get_clang_tools(command_context, verbose=verbose)
+        rc, clang_paths = get_clang_tools(command_context, verbose=verbose)
         if rc != 0:
             return rc
-
-    if not _is_version_eligible(command_context, clang_paths):
-        return 1
 
     if path is None:
         return _run_clang_format_diff(
@@ -1558,7 +1561,7 @@ def _do_clang_tools_exist(clang_paths):
     )
 
 
-def _get_clang_tools(
+def get_clang_tools(
     command_context,
     force=False,
     skip_cache=False,
@@ -1572,14 +1575,18 @@ def _get_clang_tools(
     if rc != 0:
         return rc, clang_paths
 
-    if _do_clang_tools_exist(clang_paths) and not force:
+    if (
+        _do_clang_tools_exist(clang_paths)
+        and _is_version_eligible(command_context, clang_paths, log_error=False)
+        and not force
+    ):
         return 0, clang_paths
 
     if os.path.isdir(clang_paths._clang_tools_path) and download_if_needed:
         # The directory exists, perhaps it's corrupted?  Delete it
         # and start from scratch.
         shutil.rmtree(clang_paths._clang_tools_path)
-        return _get_clang_tools(
+        return get_clang_tools(
             command_context,
             force=force,
             skip_cache=skip_cache,
@@ -1624,7 +1631,10 @@ def _get_clang_tools(
     # Change back the cwd
     os.chdir(currentWorkingDir)
 
-    return rc, clang_paths
+    if rc:
+        return rc, clang_paths
+
+    return 0 if _is_version_eligible(command_context, clang_paths) else 1, clang_paths
 
 
 def _get_clang_tools_from_source(command_context, clang_paths, filename):

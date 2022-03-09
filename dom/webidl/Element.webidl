@@ -13,6 +13,8 @@
  * liability, trademark and document use rules apply.
  */
 
+interface nsIScreen;
+
 [Exposed=Window]
 interface Element : Node {
   [Constant]
@@ -228,6 +230,12 @@ partial interface Element {
   readonly attribute long clientLeft;
   readonly attribute long clientWidth;
   readonly attribute long clientHeight;
+
+  // Return the screen coordinates of the element, in CSS pixels relative to
+  // the window's screen.
+  [ChromeOnly] readonly attribute long screenX;
+  [ChromeOnly] readonly attribute long screenY;
+  [ChromeOnly] readonly attribute nsIScreen? screen;
 
   // Mozilla specific stuff
   /* The minimum/maximum offset that the element can be scrolled to

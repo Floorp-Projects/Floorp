@@ -49,6 +49,7 @@
 #include "auth.h"
 #include "alloc.h"
 #include "err.h" /* for srtp_debug */
+#include "auth_test_cases.h"
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 
@@ -192,6 +193,9 @@ static srtp_err_status_t srtp_hmac_compute(void *statev,
     int i;
     unsigned int len;
 
+    debug_print(srtp_mod_hmac, "input: %s",
+                srtp_octet_string_hex_string(message, msg_octets));
+
     /* check tag length, return error if we can't provide the value expected */
     if (tag_len > SHA1_DIGEST_SIZE) {
         return srtp_err_status_bad_param;
@@ -217,41 +221,6 @@ static srtp_err_status_t srtp_hmac_compute(void *statev,
 
     return srtp_err_status_ok;
 }
-
-/* begin test case 0 */
-/* clang-format off */
-static const uint8_t srtp_hmac_test_case_0_key[SHA1_DIGEST_SIZE] = {
-    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
-    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
-    0x0b, 0x0b, 0x0b, 0x0b
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_hmac_test_case_0_data[8] = {
-    0x48, 0x69, 0x20, 0x54, 0x68, 0x65, 0x72, 0x65 /* "Hi There" */
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_hmac_test_case_0_tag[SHA1_DIGEST_SIZE] = {
-    0xb6, 0x17, 0x31, 0x86, 0x55, 0x05, 0x72, 0x64,
-    0xe2, 0x8b, 0xc0, 0xb6, 0xfb, 0x37, 0x8c, 0x8e,
-    0xf1, 0x46, 0xbe, 0x00
-};
-/* clang-format on */
-
-static const srtp_auth_test_case_t srtp_hmac_test_case_0 = {
-    sizeof(srtp_hmac_test_case_0_key),  /* octets in key            */
-    srtp_hmac_test_case_0_key,          /* key                      */
-    sizeof(srtp_hmac_test_case_0_data), /* octets in data           */
-    srtp_hmac_test_case_0_data,         /* data                     */
-    sizeof(srtp_hmac_test_case_0_tag),  /* octets in tag            */
-    srtp_hmac_test_case_0_tag,          /* tag                      */
-    NULL                                /* pointer to next testcase */
-};
-
-/* end test case 0 */
 
 static const char srtp_hmac_description[] =
     "hmac sha-1 authentication function";

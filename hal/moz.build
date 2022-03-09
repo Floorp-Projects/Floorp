@@ -11,6 +11,7 @@ EXPORTS.mozilla += [
     "Hal.h",
     "HalBatteryInformation.h",
     "HalImpl.h",
+    "HalIPCUtils.h",
     "HalNetworkInformation.h",
     "HalSandbox.h",
     "HalScreenConfiguration.h",
@@ -18,10 +19,6 @@ EXPORTS.mozilla += [
     "HalTypes.h",
     "HalWakeLock.h",
     "HalWakeLockInformation.h",
-]
-
-EXPORTS.mozilla.fallback += [
-    "fallback/FallbackScreenConfiguration.h",
 ]
 
 UNIFIED_SOURCES += [

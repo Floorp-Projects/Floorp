@@ -67,10 +67,13 @@ add_task(async function test_preexisting_crlite_data() {
     Ci.nsICertStorage
   );
   await new Promise(resolve => {
-    certStorage.hasPriorData(Ci.nsICertStorage.DATA_TYPE_CRLITE, (rv, _) => {
-      Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-      resolve();
-    });
+    certStorage.hasPriorData(
+      Ci.nsICertStorage.DATA_TYPE_CRLITE_FILTER_INCREMENTAL,
+      (rv, _) => {
+        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
+        resolve();
+      }
+    );
   });
   await checkCertErrorGenericAtTime(
     certdb,
@@ -153,8 +156,12 @@ function run_test() {
   stashFile.copyTo(securityStateDirectory, "crlite.stash");
   let coverageFile = do_get_file("test_crlite_preexisting/crlite.coverage");
   coverageFile.copyTo(securityStateDirectory, "crlite.coverage");
-  let certStorageFile = do_get_file("test_crlite_preexisting/data.safe.bin");
-  certStorageFile.copyTo(securityStateDirectory, "data.safe.bin");
+  let enrollmentFile = do_get_file("test_crlite_preexisting/crlite.enrollment");
+  enrollmentFile.copyTo(securityStateDirectory, "crlite.enrollment");
+  let certStorageFile = do_get_file(
+    "test_crlite_preexisting/crlite.enrollment"
+  );
+  certStorageFile.copyTo(securityStateDirectory, "crlite.enrollment");
 
   run_next_test();
 }

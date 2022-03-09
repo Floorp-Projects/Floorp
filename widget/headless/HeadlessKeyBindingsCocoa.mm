@@ -9,6 +9,7 @@
 #include "NativeKeyBindings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/WritingModes.h"
 
 namespace mozilla {
@@ -33,7 +34,7 @@ nsresult HeadlessKeyBindings::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-void HeadlessKeyBindings::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
+void HeadlessKeyBindings::GetEditCommands(NativeKeyBindingsType aType,
                                           const WidgetKeyboardEvent& aEvent,
                                           const Maybe<WritingMode>& aWritingMode,
                                           nsTArray<CommandInt>& aCommands) {

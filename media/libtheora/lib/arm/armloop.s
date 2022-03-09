@@ -11,16 +11,10 @@
 ;********************************************************************
 ; Original implementation:
 ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
-; last mod: $Id: armloop.s 17481 2010-10-03 22:49:42Z tterribe $
+; last mod: $Id$
 ;********************************************************************
 
 	AREA	|.text|, CODE, READONLY
-
-	; Explicitly specifying alignment here because some versions of
-	; gas don't align code correctly. See
-	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
-	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
-	ALIGN
 
 	GET	armopts.s
 

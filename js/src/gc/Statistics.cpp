@@ -62,6 +62,8 @@ static const char* ExplainGCOptions(JS::GCOptions options) {
       return "Normal";
     case JS::GCOptions::Shrink:
       return "Shrink";
+    case JS::GCOptions::Shutdown:
+      return "Shutdown";
   }
 
   MOZ_CRASH("Unexpected GCOptions value");

@@ -4,7 +4,7 @@
 
 use crate::browser::{Browser, LocalBrowser, RemoteBrowser};
 use crate::build;
-use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
+use crate::capabilities::{FirefoxCapabilities, FirefoxOptions, ProfileType};
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
     GeckoExtensionCommand, GeckoExtensionRoute, CHROME_ELEMENT_KEY,
@@ -145,6 +145,7 @@ impl MarionetteHandler {
                 // specified, we can pass 0 as the port and later read it back from
                 // the profile.
                 let can_use_profile: bool = options.android.is_none()
+                    && options.profile != ProfileType::Named
                     && !self.settings.connect_existing
                     && fx_capabilities
                         .browser_version(&capabilities)
@@ -464,8 +465,7 @@ impl MarionetteSession {
                 };
                 let page_load = try_opt!(
                     try_opt!(
-                        resp.result
-                            .get("pageLoad"),
+                        resp.result.get("pageLoad"),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
                     )
@@ -1173,7 +1173,7 @@ impl MarionetteConnection {
 
             let last_err;
 
-            if let Some(port) = browser.marionette_port() {
+            if let Some(port) = browser.marionette_port()? {
                 match MarionetteConnection::try_connect(host, port) {
                     Ok(stream) => {
                         debug!("Connection to Marionette established on {}:{}.", host, port);

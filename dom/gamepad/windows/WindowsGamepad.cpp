@@ -18,6 +18,7 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "nsWindowsHelpers.h"
 
 #include "mozilla/ArrayUtils.h"
 

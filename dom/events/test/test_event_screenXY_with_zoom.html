@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Event.screenX/Y on a zoomed page.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  #target {
+    width: 100px;
+    height: 100px;
+    background-color: blue;
+    /* We want synthesizeMouseAtCenter to click on the same point regardless of
+       zoom, so we achieve that by centering the target in our viewport */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+  }
+</style>
+<div id="target" style=""></div>
+<script>
+const target = document.getElementById("target");
+async function getScreenPositionOfTarget() {
+  return new Promise(resolve => {
+    target.addEventListener("click", function(e) {
+      resolve({ x: e.screenX, y: e.screenY });
+    }, { once: true });
+    synthesizeMouseAtCenter(target, {});
+  });
+}
+
+function getScreen() {
+  return {
+    width: screen.width,
+    height: screen.height,
+    top: screen.top,
+    left: screen.left,
+  };
+}
+
+add_task(async () => {
+  let pos = await getScreenPositionOfTarget();
+  let s = getScreen();
+
+  SpecialPowers.setFullZoom(window, 2);
+  let zoomedPos = await getScreenPositionOfTarget();
+  let zoomedScreen = getScreen();
+
+  info(`Original pos=${JSON.stringify(pos)} s=${JSON.stringify(s)}`);
+  info(`Zoomed pos=${JSON.stringify(zoomedPos)} s=${JSON.stringify(zoomedScreen)}`);
+
+  isfuzzy(pos.x, zoomedPos.x * 2, 1, "screenX coordinate");
+  isfuzzy(pos.y, zoomedPos.y * 2, 1, "screenY coordinate");
+
+  isfuzzy(s.top, zoomedScreen.top * 2, 1, "Screen.top");
+  isfuzzy(s.left, zoomedScreen.left * 2, 1, "Screen.left");
+  isfuzzy(s.width, zoomedScreen.width * 2, 1, "Screen.width");
+  isfuzzy(s.height, zoomedScreen.height * 2, 1, "Screen.height");
+
+  SpecialPowers.setFullZoom(window, 1);
+});
+</script>

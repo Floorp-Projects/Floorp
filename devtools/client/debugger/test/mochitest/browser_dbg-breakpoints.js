@@ -3,46 +3,51 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test enabling and disabling a breakpoint using the check boxes
+
+"use strict";
+
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 
   // Create two breakpoints
-  await selectSource(dbg, "simple2");
-  await addBreakpoint(dbg, "simple2", 3);
-  await addBreakpoint(dbg, "simple2", 5);
+  await selectSource(dbg, "simple2.js");
+  await addBreakpoint(dbg, "simple2.js", 3);
+  await addBreakpoint(dbg, "simple2.js", 5);
 
   // Disable the first one
   await disableBreakpoint(dbg, 0);
-  let bp1 = findBreakpoint(dbg, "simple2", 3);
-  let bp2 = findBreakpoint(dbg, "simple2", 5);
+  let bp1 = findBreakpoint(dbg, "simple2.js", 3);
+  let bp2 = findBreakpoint(dbg, "simple2.js", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
 
   // Disable and Re-Enable the second one
   await disableBreakpoint(dbg, 1);
   await enableBreakpoint(dbg, 1);
-  bp2 = findBreakpoint(dbg, "simple2", 5);
+  bp2 = findBreakpoint(dbg, "simple2.js", 5);
   is(bp2.disabled, false, "second breakpoint is enabled");
 
   // Cleanup
   await cleanupBreakpoints(dbg);
 
   // Test enabling and disabling a breakpoint using the context menu
-  await selectSource(dbg, "simple2");
-  await addBreakpoint(dbg, "simple2", 3);
-  await addBreakpoint(dbg, "simple2", 5);
+  await selectSource(dbg, "simple2.js");
+  await addBreakpoint(dbg, "simple2.js", 3);
+  await addBreakpoint(dbg, "simple2.js", 5);
 
-  assertEmptyLines(dbg, [1, 2]);
   assertBreakpointSnippet(dbg, 3, "return x + y;");
 
   rightClickElement(dbg, "breakpointItem", 2);
   await waitForContextMenu(dbg);
-  const disableBreakpointDispatch = waitForDispatch(dbg.store, "SET_BREAKPOINT");
+  const disableBreakpointDispatch = waitForDispatch(
+    dbg.store,
+    "SET_BREAKPOINT"
+  );
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableSelf);
   await disableBreakpointDispatch;
 
-  bp1 = findBreakpoint(dbg, "simple2", 3);
-  bp2 = findBreakpoint(dbg, "simple2", 5);
+  bp1 = findBreakpoint(dbg, "simple2.js", 3);
+  bp2 = findBreakpoint(dbg, "simple2.js", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
 
@@ -52,8 +57,8 @@ add_task(async function() {
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableSelf);
   await enableBreakpointDispatch;
 
-  bp1 = findBreakpoint(dbg, "simple2", 3);
-  bp2 = findBreakpoint(dbg, "simple2", 5);
+  bp1 = findBreakpoint(dbg, "simple2.js", 3);
+  bp2 = findBreakpoint(dbg, "simple2.js", 5);
   is(bp1.disabled, false, "first breakpoint is enabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
 
@@ -62,9 +67,9 @@ add_task(async function() {
 
   // Test creation of disabled breakpoint with shift-click
   await shiftClickElement(dbg, "gutter", 3);
-  await waitForBreakpoint(dbg, "simple2", 3);
+  await waitForBreakpoint(dbg, "simple2.js", 3);
 
-  const bp = findBreakpoint(dbg, "simple2", 3);
+  const bp = findBreakpoint(dbg, "simple2.js", 3);
   is(bp.disabled, true, "breakpoint is disabled");
 
   // Cleanup
@@ -92,6 +97,6 @@ async function enableBreakpoint(dbg, index) {
 async function cleanupBreakpoints(dbg) {
   clickElement(dbg, "gutter", 3);
   clickElement(dbg, "gutter", 5);
-  await waitForBreakpointRemoved(dbg, "simple2", 3);
-  await waitForBreakpointRemoved(dbg, "simple2", 5);
+  await waitForBreakpointRemoved(dbg, "simple2.js", 3);
+  await waitForBreakpointRemoved(dbg, "simple2.js", 5);
 }

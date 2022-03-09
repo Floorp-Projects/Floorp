@@ -1191,6 +1191,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsChangeHint CalcDifference(const nsStyleDisplay& aNewData,
                               const nsStylePosition& aOldPosition) const;
 
+  nsChangeHint CalcTransformPropertyDifference(
+      const nsStyleDisplay& aNewData) const;
+
   nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.
@@ -1476,9 +1479,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            mozilla::StylePositionProperty::Fixed == mPosition;
   }
 
-  bool IsRelativelyPositionedStyle() const {
+  bool IsRelativelyOrStickyPositionedStyle() const {
     return mozilla::StylePositionProperty::Relative == mPosition ||
            mozilla::StylePositionProperty::Sticky == mPosition;
+  }
+  bool IsRelativelyPositionedStyle() const {
+    return mozilla::StylePositionProperty::Relative == mPosition;
   }
   bool IsStickyPositionedStyle() const {
     return mozilla::StylePositionProperty::Sticky == mPosition;
@@ -1606,8 +1612,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   inline bool IsInlineOutside(const nsIFrame* aContextFrame) const;
   inline mozilla::StyleDisplay GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
+  inline bool IsRelativelyOrStickyPositioned(
+      const nsIFrame* aContextFrame) const;
+
+  // Note: In general, you'd want to call IsRelativelyOrStickyPositioned()
+  // unless you want to deal with "position:relative" and "position:sticky"
+  // differently.
   inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
   inline bool IsStickyPositioned(const nsIFrame* aContextFrame) const;
+
   inline bool IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const;
 
   // These methods are defined in nsStyleStructInlines.h.
@@ -1723,11 +1736,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
 
  private:
   mozilla::StyleUserSelect mUserSelect;  // Use ComputedStyle::UserSelect()
+  mozilla::StyleScrollbarWidth mScrollbarWidth;  // Use ScrollbarWidth()
 
  public:
   mozilla::StyleUserSelect ComputedUserSelect() const { return mUserSelect; }
 
-  mozilla::StyleScrollbarWidth mScrollbarWidth;
+  mozilla::StyleScrollbarWidth ScrollbarWidth() const {
+    if (MOZ_UNLIKELY(
+            mozilla::StaticPrefs::layout_css_scrollbar_width_thin_disabled())) {
+      if (mScrollbarWidth == mozilla::StyleScrollbarWidth::Thin) {
+        return mozilla::StyleScrollbarWidth::Auto;
+      }
+    }
+    return mScrollbarWidth;
+  }
+
   uint8_t mMozForceBrokenImageIcon;  // (0 if not forcing, otherwise forcing)
   mozilla::StyleImeMode mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;

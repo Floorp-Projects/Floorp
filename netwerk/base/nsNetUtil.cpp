@@ -2897,7 +2897,7 @@ static bool ShouldSecureUpgradeNoHSTS(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
     NS_ConvertUTF8toUTF16 reportScheme(scheme);
     AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-    uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+    uint64_t innerWindowId = aLoadInfo->GetInnerWindowID();
     CSP_LogLocalizedStr("upgradeInsecureRequest", params,
                         u""_ns,  // aSourceFile
                         u""_ns,  // aScriptSample
@@ -2931,7 +2931,7 @@ static bool ShouldSecureUpgradeNoHSTS(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     message.AppendLiteral(u"Mixed Content: ");
     message.Append(localizedMsg);
 
-    uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+    uint64_t innerWindowId = aLoadInfo->GetInnerWindowID();
     nsContentUtils::ReportToConsoleByWindowID(
         message, nsIScriptError::warningFlag, "Mixed Content Message"_ns,
         innerWindowId, aURI);

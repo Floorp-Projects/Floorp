@@ -15,7 +15,7 @@ pub use unix::SharedMem;
 pub use windows::SharedMem;
 
 #[derive(Copy, Clone)]
-pub struct SharedMemView {
+struct SharedMemView {
     ptr: *mut c_void,
     size: usize,
 }
@@ -228,10 +228,6 @@ mod unix {
             })
         }
 
-        pub unsafe fn unsafe_view(&self) -> SharedMemView {
-            self.view
-        }
-
         pub unsafe fn get_slice(&self, size: usize) -> Result<&[u8]> {
             self.view.get_slice(size)
         }
@@ -317,10 +313,6 @@ mod windows {
                 handle,
                 view: SharedMemView { ptr, size },
             })
-        }
-
-        pub unsafe fn unsafe_view(&self) -> SharedMemView {
-            self.view
         }
 
         pub unsafe fn get_slice(&self, size: usize) -> Result<&[u8]> {

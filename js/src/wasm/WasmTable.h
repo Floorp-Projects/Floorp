@@ -29,10 +29,10 @@ namespace wasm {
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
 //
-// A table of AnyRef holds JSObject pointers, which must be traced.
+// A table of FuncRef holds FunctionTableElems, which are (code*,tls*) pairs,
+// where the tls must be traced.
 //
-// A table of FuncRef holds two arrays of the same length which together create
-// (code*,tls*) pairs, where the tls must be traced.
+// A table of AnyRef holds JSObject pointers, which must be traced.
 
 // TODO/AnyRef-boxing: With boxed immediates and strings, JSObject* is no longer
 // the most appropriate representation for Cell::anyref.
@@ -45,24 +45,21 @@ class Table : public ShareableBase<Table> {
       JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
                               MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
                               SystemAllocPolicy>>;
-  using UniqueCodePtrArray = UniquePtr<void*[], JS::FreePolicy>;
-  using UniqueTlsPtrArray = UniquePtr<TlsData*[], JS::FreePolicy>;
+  using UniqueFuncRefArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
   WeakHeapPtrWasmTableObject maybeObject_;
   InstanceSet observers_;
-  UniqueCodePtrArray codePtrs_;  // either codePtrs_ + tlsPtrs_
-  UniqueTlsPtrArray tlsPtrs_;    //   have data,
-  TableAnyRefVector objects_;    //     or objects_, but not both
+  UniqueFuncRefArray functions_;  // either functions_ has data
+  TableAnyRefVector objects_;     //   or objects_, but not both
   const RefType elemType_;
   const bool isAsmJS_;
-  const bool isPublic_;
   uint32_t length_;
   const Maybe<uint32_t> maximum_;
 
   template <class>
   friend struct js::MallocProvider;
   Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-        UniqueCodePtrArray codePtrs, UniqueTlsPtrArray tlsPtrs);
+        UniqueFuncRefArray functions);
   Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
         TableAnyRefVector&& objects);
 
@@ -82,11 +79,6 @@ class Table : public ShareableBase<Table> {
     return isAsmJS_;
   }
 
-  bool isPublic() const {
-    MOZ_ASSERT(elemType_.isFunc());
-    return isPublic_;
-  }
-
   bool isFunction() const { return elemType().isFunc(); }
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
@@ -98,20 +90,11 @@ class Table : public ShareableBase<Table> {
   // get/fillAnyRef is allowed only on table-of-anyref.
   // setNull is allowed on either.
 
-#ifdef DEBUG
-  [[nodiscard]] bool isNull(uint32_t index) const;
-#endif
-
+  const FunctionTableElem& getFuncRef(uint32_t index) const;
   [[nodiscard]] bool getFuncRef(JSContext* cx, uint32_t index,
                                 MutableHandleFunction fun) const;
   void setFuncRef(uint32_t index, void* code, const Instance* instance);
-
-  // fillFuncRef returns false on OOM (which can happen when creating a stub for
-  // the function).  Once it starts writing entries, however, it will write all
-  // of them.
-  [[nodiscard]] bool fillFuncRef(Maybe<Tier> tier, uint32_t index,
-                                 uint32_t fillCount, FuncRef ref,
-                                 JSContext* cx);
+  void fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref, JSContext* cx);
 
   AnyRef getAnyRef(uint32_t index) const;
   void fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref);

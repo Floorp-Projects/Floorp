@@ -30,13 +30,17 @@ urlbar:
   description: The Address Bar
   hasExposure: true
   exposureDescription: >-
-    Exposure is sent once per browsing session after the first urlbar query is
-    made.
+    The timing of the exposure event depends on the experiment, but generally
+    the event is recorded once per app session when the user first encounters
+    the UI of the experiment in which they're enrolled.
   variables:
     bestMatchEnabled:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.enabled
-      description: Whether best match results are enabled
+      description: Gate for the best match feature. If false, the best match preferences UI and best match suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn best match suggestions on or off.
+    isBestMatchExperiment:
+      type: boolean
+      description: Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If false, the event will be recorded when the user first triggers any type of Suggest suggestion.
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants
@@ -57,7 +61,7 @@ urlbar:
     quickSuggestEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.enabled
-      description: Global toggle for the QuickSuggest feature
+      description: Gate for the Firefox Suggest feature as a whole. If false, the Firefox Suggest preferences UI and Suggest suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn suggestions on or off.
     quickSuggestNonSponsoredIndex:
       type: int
       fallbackPref: browser.urlbar.quicksuggest.nonSponsoredIndex
@@ -125,6 +129,12 @@ aboutwelcome:
       description: >-
         Should the urlbar should be focused when users first land on
         about:welcome?
+    languageMismatchEnabled:
+      type: boolean
+      fallbackPref: intl.multilingual.aboutWelcome.languageMismatchEnabled
+      description: >-
+        Suggest to change the language on about:welcome when there is a mismatch with
+        the OS.
     transitions:
       type: boolean
       description: Enable transition effect between screens
@@ -318,6 +328,10 @@ saveToPocket:
       type: boolean
       fallbackPref: extensions.pocket.refresh.emailButton.enabled
       description: Just for the new Pocket panels, enables the email signup button.
+    hideRecentSaves:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.hideRecentSaves.enabled
+      description: Hides the recently saved section in the home panel.
 password-autocomplete:
   description: A special autocomplete UI for password fields.
   hasExposure: false
@@ -485,3 +499,27 @@ pbNewtab:
   schema: >-
     browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
   variables: {}
+syncAfterTabChange:
+  description: "Schedule a sync after any tab change"
+  hasExposure: false
+  isEarlyStartup: false
+  variables:
+    syncDelayAfterTabChange:
+      type: int
+      fallbackPref: "services.sync.syncedTabs.syncDelayAfterTabChange"
+      description: >-
+        "How long to wait (in milliseconds) to schedule a sync after tab change"
+pictureinpicture:
+  description: Message for first time Picture-in-Picture users
+  hasExposure: true
+  exposureDescription: Exposure is sent when a user hovers over a video and Picture-in-Picture has not been used before
+  variables:
+    title:
+      type: string
+      description: The title to be used for the PiP toggle
+    message:
+      type: string
+      description: The message to be used in the PiP toggle
+    showIconOnly:
+      type: boolean
+      description: Whether to show the first time PiP toggle or show the PiP icon only

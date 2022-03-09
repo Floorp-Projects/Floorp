@@ -31,6 +31,63 @@ interface mozIStorageCompletionCallback;
 [scriptable, uuid(07b6b2f5-6d97-47b4-9584-e65bc467fe9e)]
 interface mozIStorageService : nsISupports {
   /**
+   * Open the database with default flags in default mode.
+   */
+  const unsigned long OPEN_DEFAULT = 0;
+
+  /**
+   * Open the database with a shared cache. The shared-cache mode
+   * is more memory-efficient when many connections to the same database
+   * are expected, though, the connections will contend the cache resource.
+   * When performance matters, working without a shared-cache will
+   * improve concurrency.  @see openUnsharedDatabase
+   */
+  const unsigned long OPEN_SHARED = 1 << 0;
+
+  /**
+   * Open the underlying database in read-only mode.
+   */
+  const unsigned long OPEN_READONLY = 1 << 1;
+
+  /**
+   * Allow simultaneous access to an asynchronous read-only database
+   * without any file locking.
+   *
+   * For synchronous database, the flag has no effect.
+   *
+   * Specifying the OPEN_IGNORE_LOCKING_MODE flag will automatically
+   * turn on the OPEN_READONLY flag.
+   */
+  const unsigned long OPEN_IGNORE_LOCKING_MODE = 1 << 2;
+
+  /**
+   * All optional connection object features are off.
+   */
+  const unsigned long CONNECTION_DEFAULT = 0;
+
+  /**
+   * Enable Interrupt-method for the synchronous connection object
+   * returned by openDatabase, openSpecialDatabase, openUnsharedDatabase
+   * or openDatabaseWithFileURL calls.
+   *
+   * When this flag is not set, Interrupt-method of a
+   * synchronous connection must not be used.
+   *
+   * Asynchronous connection is always interruptible and the flag
+   * does not change anything.
+   *
+   * The following are among the potential risks side effects of
+   * calling the Interrupt-method:
+   *   - new queries started on a different thread after the
+   *     interrupt call, but before its completion, are interrupted as if
+   *     they had been running prior to the interrupt call. Thus thread
+   *     synchronization is necessary.
+   *   - calls to close the database will wait until the interruption
+   *     finishes.
+   */
+  const unsigned long CONNECTION_INTERRUPTIBLE = 1 << 0;
+
+  /**
    * Open an asynchronous connection to a database.
    *
    * This method MUST be called from the main thread. The connection object
@@ -47,20 +104,17 @@ interface mozIStorageService : nsISupports {
    * string may be:
    * - "memory" to open an in-memory database.
    *
-   * @param aOptions A set of options (may be null). Options may contain:
-   * - bool shared (defaults to |false|).
-   *   -- If |true|, opens the database with a shared-cache. The
-   *     shared-cache mode is more memory-efficient when many
-   *     connections to the same database are expected, though, the
-   *     connections will contend the cache resource. In any cases
-   *     where performance matter, working without a shared-cache will
-   *     improve concurrency.  @see openUnsharedDatabase
+   * @param [optional] aOpenFlags
+   *        A set of flags to open the database with optional features.
+   *        Currently supports OPEN_SHARED, OPEN_READONLY and
+   *        OPEN_IGNORE_LOCKING_MODE flags.
+   *        For full details, please refer to the documentation of the flags.
    *
-   * - int growthIncrement (defaults to none).
-   *   -- Set the growth increment for the main database.  This hints SQLite to
-   *      grow the database file by a given chunk size and may reduce
-   *      filesystem fragmentation on large databases.
-   *      @see mozIStorageConnection::setGrowthIncrement
+   * @param [optional] aConnectionFlags
+   *        A set of flags to enable optional features for the returned
+   *        asynchronous connection object.
+   *        Currently supports CONNECTION_INTERRUPTIBLE flag.
+   *        For full details, please refer to the documentation of the flag.
    *
    * @param aCallback A callback that will receive the result of the operation.
    *  In case of error, it may receive as status:
@@ -71,13 +125,16 @@ interface mozIStorageService : nsISupports {
    *
    * @throws NS_ERROR_INVALID_ARG if |aDatabaseStore| is neither a file nor
    *         one of the special strings understood by this method, or if one of
-   *         the options passed through |aOptions| does not have the right type.
+   *         the options passed through |aOptions| does not have
+   *         the right type.
    * @throws NS_ERROR_NOT_SAME_THREAD if called from a thread other than the
    *         main thread.
    */
   void openAsyncDatabase(in nsIVariant aDatabaseStore,
-                         [optional] in nsIPropertyBag2 aOptions,
+                         [optional] in unsigned long aOpenFlags,
+                         [optional] in unsigned long aConnectionFlags,
                          in mozIStorageCompletionCallback aCallback);
+
   /**
    * Get a connection to a named special database storage.
    *
@@ -92,6 +149,12 @@ interface mozIStorageService : nsISupports {
    * a connection), then you must pick a name that's sufficiently unique within
    * the process to not collide with other mozStorage users.
    *
+   * @param [optional] aConnectionFlags
+   *        A set of flags to enable optional features for the returned
+   *        synchronous connection object.
+   *        Currently supports CONNECTION_INTERRUPTIBLE flag.
+   *        For full details, please refer to the documentation of the flag.
+   *
    * @see openDatabase for restrictions on how database connections may be
    * used. For the profile database, you should only access it from the main
    * thread since other callers may also have connections.
@@ -101,8 +164,10 @@ interface mozIStorageService : nsISupports {
    *
    * @throws NS_ERROR_INVALID_ARG if aStorageKey is invalid.
    */
-  mozIStorageConnection openSpecialDatabase(in ACString aStorageKey,
-                                            [optional] in ACString aName);
+  mozIStorageConnection openSpecialDatabase(
+      in ACString aStorageKey,
+      [optional] in ACString aName,
+      [optional] in unsigned long aConnectionFlags);
 
   /**
    * Open a connection to the specified file.
@@ -121,11 +186,16 @@ interface mozIStorageService : nsISupports {
    * a simple string compare to see if there is already a connection. Opening
    * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
    *
-   * The connection object returned by this function is not threadsafe. You must
-   * use it only from the thread you created it from.
+   * The connection object returned by this function is not threadsafe. You
+   * must use it only from the thread you created it from.
    *
    * @param aDatabaseFile
-   *        A nsIFile that represents the database that is to be opened..
+   *        A nsIFile that represents the database that is to be opened.
+   * @param [optional] aConnectionFlags
+   *        A set of flags to enable optional features for the returned
+   *        synchronous connection object.
+   *        Currently supports CONNECTION_INTERRUPTIBLE flag.
+   *        For full details, please refer to the documentation of the flag.
    *
    * @returns a mozIStorageConnection for the requested database file.
    *
@@ -134,7 +204,8 @@ interface mozIStorageService : nsISupports {
    * @throws NS_ERROR_FILE_CORRUPTED
    *         If the database file is corrupted.
    */
-  mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+  mozIStorageConnection openDatabase(
+      in nsIFile aDatabaseFile, [optional] in unsigned long aConnectionFlags);
 
   /**
    * Open a connection to the specified file that doesn't share a sqlite cache.
@@ -143,7 +214,8 @@ interface mozIStorageService : nsISupports {
    * may be memory inefficient with a large number of connections, in such a
    * case so you should use openDatabase instead.  On the other side, if cache
    * contention may be an issue, for instance when concurrency is important to
-   * ensure responsiveness, using unshared connections may be a performance win.
+   * ensure responsiveness, using unshared connections may be a
+   * performance win.
    *
    * ==========
    *   DANGER
@@ -154,11 +226,16 @@ interface mozIStorageService : nsISupports {
    * a simple string compare to see if there is already a connection. Opening
    * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
    *
-   * The connection object returned by this function is not threadsafe. You must
-   * use it only from the thread you created it from.
+   * The connection object returned by this function is not threadsafe. You
+   * must use it only from the thread you created it from.
    *
    * @param aDatabaseFile
    *        A nsIFile that represents the database that is to be opened.
+   * @param [optional] aConnectionFlags
+   *        A set of flags to enable optional features for the returned
+   *        synchronous connection object.
+   *        Currently supports CONNECTION_INTERRUPTIBLE flag.
+   *        For full details, please refer to the documentation of the flag.
    *
    * @returns a mozIStorageConnection for the requested database file.
    *
@@ -167,7 +244,8 @@ interface mozIStorageService : nsISupports {
    * @throws NS_ERROR_FILE_CORRUPTED
    *         If the database file is corrupted.
    */
-  mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
+  mozIStorageConnection openUnsharedDatabase(
+      in nsIFile aDatabaseFile, [optional] in unsigned long aConnectionFlags);
 
   /**
    * See openDatabase(). Exactly the same only initialized with a file URL.
@@ -179,9 +257,15 @@ interface mozIStorageService : nsISupports {
    * @param [optional] aTelemetryFilename
    *        The name to use for the database in telemetry. Only needed if the
    *        actual filename can contain sensitive information.
+   * @param [optional] aConnectionFlags
+   *        A set of flags to enable optional features for the returned
+   *        synchronous connection object.
+   *        Currently supports CONNECTION_INTERRUPTIBLE flag.
+   *        For full details, please refer to the documentation of the flag.
    */
-  mozIStorageConnection openDatabaseWithFileURL(in nsIFileURL aFileURL,
-                                                [optional] in ACString aTelemetryFilename);
+  mozIStorageConnection openDatabaseWithFileURL(
+      in nsIFileURL aFileURL, [optional] in ACString aTelemetryFilename,
+      [optional] in unsigned long aConnectionFlags);
 
   /*
    * Utilities
@@ -190,8 +274,8 @@ interface mozIStorageService : nsISupports {
   /**
    * Copies the specified database file to the specified parent directory with
    * the specified file name.  If the parent directory is not specified, it
-   * places the backup in the same directory as the current file.  This function
-   * ensures that the file being created is unique.
+   * places the backup in the same directory as the current file.  This
+   * function ensures that the file being created is unique.
    *
    * @param aDBFile
    *        The database file that will be backed up.

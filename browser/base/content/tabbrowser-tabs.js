@@ -18,6 +18,8 @@
       this.addEventListener("TabAttrModified", this);
       this.addEventListener("TabHide", this);
       this.addEventListener("TabShow", this);
+      this.addEventListener("TabPinned", this);
+      this.addEventListener("TabUnpinned", this);
       this.addEventListener("transitionend", this);
       this.addEventListener("dblclick", this);
       this.addEventListener("click", this);
@@ -142,6 +144,14 @@
 
     on_TabAttrModified(event) {
       if (
+        ["soundplaying", "muted", "activemedia-blocked", "sharing"].some(attr =>
+          event.detail.changed.includes(attr)
+        )
+      ) {
+        this.updateTabIndicatorAttr(event.target);
+      }
+
+      if (
         event.detail.changed.includes("soundplaying") &&
         event.target.hidden
       ) {
@@ -159,6 +169,14 @@
       if (event.target.soundPlaying) {
         this._hiddenSoundPlayingStatusChanged(event.target);
       }
+    }
+
+    on_TabPinned(event) {
+      this.updateTabIndicatorAttr(event.target);
+    }
+
+    on_TabUnpinned(event) {
+      this.updateTabIndicatorAttr(event.target);
     }
 
     on_transitionend(event) {
@@ -432,8 +450,7 @@
       // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
       // canvas size (in CSS pixels) to the window's backing resolution in order
       // to get a full-resolution drag image for use on HiDPI displays.
-      let windowUtils = window.windowUtils;
-      let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
+      let scale = window.devicePixelRatio;
       let canvas = this._dndCanvas;
       if (!canvas) {
         this._dndCanvas = canvas = document.createElementNS(
@@ -853,49 +870,63 @@
 
       // screen.availLeft et. al. only check the screen that this window is on,
       // but we want to look at the screen the tab is being dropped onto.
-      var screen = Cc["@mozilla.org/gfx/screenmanager;1"]
-        .getService(Ci.nsIScreenManager)
-        .screenForRect(
-          eX * window.devicePixelRatio,
-          eY * window.devicePixelRatio,
-          1,
-          1
-        );
-      var fullX = {},
-        fullY = {},
-        fullWidth = {},
-        fullHeight = {};
+      var screen = event.screen;
       var availX = {},
         availY = {},
         availWidth = {},
         availHeight = {};
-      // get full screen rect and available rect, both in desktop pix
-      screen.GetRectDisplayPix(fullX, fullY, fullWidth, fullHeight);
+      // Get available rect in desktop pixels.
       screen.GetAvailRectDisplayPix(availX, availY, availWidth, availHeight);
+      availX = availX.value;
+      availY = availY.value;
+      availWidth = availWidth.value;
+      availHeight = availHeight.value;
 
-      // scale factor to convert desktop pixels to CSS px
-      var scaleFactor =
-        screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
-      // synchronize CSS-px top-left coordinates with the screen's desktop-px
-      // coordinates, to ensure uniqueness across multiple screens
-      // (compare the equivalent adjustments in nsGlobalWindow::GetScreenXY()
-      // and related methods)
-      availX.value = (availX.value - fullX.value) * scaleFactor + fullX.value;
-      availY.value = (availY.value - fullY.value) * scaleFactor + fullY.value;
-      availWidth.value *= scaleFactor;
-      availHeight.value *= scaleFactor;
+      // Compute the final window size in desktop pixels ensuring that the new
+      // window entirely fits within `screen`.
+      let ourCssToDesktopScale =
+        window.devicePixelRatio / window.desktopToDeviceScale;
+      let screenCssToDesktopScale =
+        screen.defaultCSSScaleFactor / screen.contentsScaleFactor;
 
-      // ensure new window entirely within screen
-      var winWidth = Math.min(window.outerWidth, availWidth.value);
-      var winHeight = Math.min(window.outerHeight, availHeight.value);
+      // NOTE(emilio): Multiplying the sizes here for screenCssToDesktopScale
+      // means that we'll try to create a window that has the same amount of CSS
+      // pixels than our current window, not the same amount of device pixels.
+      // There are pros and cons of both conversions, though this matches the
+      // pre-existing intended behavior.
+      var winWidth = Math.min(
+        window.outerWidth * screenCssToDesktopScale,
+        availWidth
+      );
+      var winHeight = Math.min(
+        window.outerHeight * screenCssToDesktopScale,
+        availHeight
+      );
+
+      // This is slightly tricky: _dragData.offsetX/Y is an offset in CSS
+      // pixels. Since we're doing the sizing above based on those, we also need
+      // to apply the offset with pixels relative to the screen's scale rather
+      // than our scale.
       var left = Math.min(
-        Math.max(eX - draggedTab._dragData.offsetX, availX.value),
-        availX.value + availWidth.value - winWidth
+        Math.max(
+          eX * ourCssToDesktopScale -
+            draggedTab._dragData.offsetX * screenCssToDesktopScale,
+          availX
+        ),
+        availX + availWidth - winWidth
       );
       var top = Math.min(
-        Math.max(eY - draggedTab._dragData.offsetY, availY.value),
-        availY.value + availHeight.value - winHeight
+        Math.max(
+          eY * ourCssToDesktopScale -
+            draggedTab._dragData.offsetY * screenCssToDesktopScale,
+          availY
+        ),
+        availY + availHeight - winHeight
       );
+
+      // Convert back left and top to our CSS pixel space.
+      left /= ourCssToDesktopScale;
+      top /= ourCssToDesktopScale;
 
       delete draggedTab._dragData;
 
@@ -903,10 +934,23 @@
         // resize _before_ move to ensure the window fits the new screen.  if
         // the window is too large for its screen, the window manager may do
         // automatic repositioning.
+        //
+        // Since we're resizing before moving to our new screen, we need to use
+        // sizes relative to the current screen. If we moved, then resized, then
+        // we could avoid this special-case and share this with the else branch
+        // below...
+        winWidth /= ourCssToDesktopScale;
+        winHeight /= ourCssToDesktopScale;
+
         window.resizeTo(winWidth, winHeight);
         window.moveTo(left, top);
         window.focus();
       } else {
+        // We're opening a new window in a new screen, so make sure to use sizes
+        // relative to the new screen.
+        winWidth /= screenCssToDesktopScale;
+        winHeight /= screenCssToDesktopScale;
+
         let props = { screenX: left, screenY: top, suppressanimation: 1 };
         if (AppConstants.platform != "win") {
           props.outerWidth = winWidth;
@@ -2081,6 +2125,22 @@
       }
 
       CustomizableUI.removeListener(this);
+    }
+
+    updateTabIndicatorAttr(tab) {
+      const theseAttributes = ["soundplaying", "muted", "activemedia-blocked"];
+      const notTheseAttributes = ["pinned", "sharing", "crashed"];
+
+      if (notTheseAttributes.some(attr => tab.getAttribute(attr))) {
+        tab.removeAttribute("indicator-replaces-favicon");
+        return;
+      }
+
+      if (theseAttributes.some(attr => tab.getAttribute(attr))) {
+        tab.setAttribute("indicator-replaces-favicon", true);
+      } else {
+        tab.removeAttribute("indicator-replaces-favicon");
+      }
     }
   }
 

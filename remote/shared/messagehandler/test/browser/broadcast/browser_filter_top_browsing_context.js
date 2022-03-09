@@ -79,7 +79,7 @@ function sendBroadcastForTopBrowsingContext(
     "testBroadcast",
     {},
     {
-      type: CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT,
+      type: ContextDescriptorType.TopBrowsingContext,
       id: TabManager.getBrowserIdForBrowsingContext(topBrowsingContext),
     },
     rootMessageHandler

@@ -8,9 +8,12 @@
 
 #include "GeckoProfiler.h"
 #include "platform.h"
+#include "ProfilerControl.h"
 #include "ProfilerParent.h"
 
 #include "nsThreadUtils.h"
+
+#include <memory>
 
 namespace mozilla {
 
@@ -155,7 +158,7 @@ void ProfilerChild::ResetChunkManager() {
 }
 
 mozilla::ipc::IPCResult ProfilerChild::RecvStart(
-    const ProfilerInitParams& params) {
+    const ProfilerInitParams& params, StartResolver&& aResolve) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
@@ -167,11 +170,12 @@ mozilla::ipc::IPCResult ProfilerChild::RecvStart(
 
   SetupChunkManager();
 
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
-    const ProfilerInitParams& params) {
+    const ProfilerInitParams& params, EnsureStartedResolver&& aResolve) {
   nsTArray<const char*> filterArray;
   for (size_t i = 0; i < params.filters().Length(); ++i) {
     filterArray.AppendElement(params.filters()[i].get());
@@ -184,32 +188,66 @@ mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
 
   SetupChunkManager();
 
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvStop() {
+mozilla::ipc::IPCResult ProfilerChild::RecvStop(StopResolver&& aResolve) {
   ResetChunkManager();
   profiler_stop();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvPause() {
+mozilla::ipc::IPCResult ProfilerChild::RecvPause(PauseResolver&& aResolve) {
   profiler_pause();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvResume() {
+mozilla::ipc::IPCResult ProfilerChild::RecvResume(ResumeResolver&& aResolve) {
   profiler_resume();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvPauseSampling() {
+mozilla::ipc::IPCResult ProfilerChild::RecvPauseSampling(
+    PauseSamplingResolver&& aResolve) {
   profiler_pause_sampling();
+  aResolve(/* unused */ true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling() {
+mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling(
+    ResumeSamplingResolver&& aResolve) {
   profiler_resume_sampling();
+  aResolve(/* unused */ true);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ProfilerChild::RecvWaitOnePeriodicSampling(
+    WaitOnePeriodicSamplingResolver&& aResolve) {
+  std::shared_ptr<WaitOnePeriodicSamplingResolver> resolve =
+      std::make_shared<WaitOnePeriodicSamplingResolver>(std::move(aResolve));
+  if (!profiler_callback_after_sampling(
+          [self = RefPtr(this), resolve](SamplingState aSamplingState) mutable {
+            if (self->mDestroyed) {
+              return;
+            }
+            MOZ_RELEASE_ASSERT(self->mThread);
+            self->mThread->Dispatch(NS_NewRunnableFunction(
+                "nsProfiler::WaitOnePeriodicSampling result on main thread",
+                [resolve = std::move(resolve), aSamplingState]() {
+                  (*resolve)(aSamplingState ==
+                                 SamplingState::SamplingCompleted ||
+                             aSamplingState ==
+                                 SamplingState::NoStackSamplingCompleted);
+                }));
+          })) {
+    // Callback was not added (e.g., profiler is not running) and will never be
+    // invoked, so we need to resolve the promise here.
+    (*resolve)(false);
+  }
   return IPC_OK();
 }
 
@@ -298,15 +336,19 @@ void ProfilerChild::GatherProfileThreadFunction(
   using namespace mozilla::literals::ProportionValue_literals;  // For `1_pc`.
 
   auto writer = MakeUnique<SpliceableChunkedJSONWriter>();
-  profiler_get_profile_json(
-      *writer,
-      /* aSinceTime */ 0,
-      /* aIsShuttingDown */ false,
-      progressLogger.CreateSubLoggerFromTo(
-          1_pc,
-          "profiler_get_profile_json_into_lazily_allocated_buffer started",
-          99_pc,
-          "profiler_get_profile_json_into_lazily_allocated_buffer done"));
+  if (!profiler_get_profile_json(
+          *writer,
+          /* aSinceTime */ 0,
+          /* aIsShuttingDown */ false,
+          progressLogger.CreateSubLoggerFromTo(
+              1_pc,
+              "profiler_get_profile_json_into_lazily_allocated_buffer started",
+              99_pc,
+              "profiler_get_profile_json_into_lazily_allocated_buffer done"))) {
+    // Failed to get a profile (profiler not running?), reset the writer
+    // pointer, so that we'll send an empty string.
+    writer.reset();
+  }
 
   if (NS_WARN_IF(NS_FAILED(
           parameters->profilerChild->mThread->Dispatch(NS_NewRunnableFunction(
@@ -330,17 +372,26 @@ void ProfilerChild::GatherProfileThreadFunction(
                 // Shmem allocation and promise resolution must be made on the
                 // ProfilerChild thread, that's why this task was needed here.
                 mozilla::ipc::Shmem shmem;
-                writer->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
-                    [&](size_t allocationSize) -> char* {
-                      if (parameters->profilerChild->AllocShmem(
-                              allocationSize,
-                              mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
-                              &shmem)) {
-                        return shmem.get<char>();
-                      }
-                      return nullptr;
-                    });
-                writer = nullptr;
+                if (writer) {
+                  writer->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+                      [&](size_t allocationSize) -> char* {
+                        if (parameters->profilerChild->AllocShmem(
+                                allocationSize,
+                                mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
+                                &shmem)) {
+                          return shmem.get<char>();
+                        }
+                        return nullptr;
+                      });
+                  writer = nullptr;
+                } else {
+                  // No profile, send an empty string.
+                  if (parameters->profilerChild->AllocShmem(
+                          1, mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
+                          &shmem)) {
+                    shmem.get<char>()[0] = '\0';
+                  }
+                }
 
                 parameters->resolver(std::move(shmem));
               }))))) {

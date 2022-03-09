@@ -30,10 +30,6 @@ EXPORTS += [
     "SDKDeclarations.h",
 ]
 
-EXPORTS.mozilla.widget += [
-    "NativeMenuSupport.h",
-]
-
 UNIFIED_SOURCES += [
     "AppearanceOverride.mm",
     "GfxInfo.mm",

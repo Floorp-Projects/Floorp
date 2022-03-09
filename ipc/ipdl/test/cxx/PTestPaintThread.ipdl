@@ -1,8 +1,10 @@
+include "mozilla/_ipdltest/TestOffMainThreadPainting.h";
 
 namespace mozilla {
 namespace _ipdltest {
 
 // This is supposed to be analagous to PPaintingBridge.
+[ManualDealloc, ChildImpl="TestPaintThreadChild", ParentImpl="TestPaintThreadParent"]
 sync protocol PTestPaintThread
 {
 parent:

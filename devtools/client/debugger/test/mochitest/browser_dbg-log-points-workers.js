@@ -6,6 +6,8 @@
  * Tests that log points in a worker are correctly logged to the console
  */
 
+"use strict";
+
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
 

@@ -17,8 +17,7 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamGenericReader, mClosedPromise, mStream,
                          mGlobal)
@@ -57,8 +56,7 @@ JSObject* ReadableStreamDefaultReader::WrapObject(
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
-bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
-                                           ReadableStreamGenericReader* aReader,
+bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
                                            ReadableStream* aStream,
                                            ErrorResult& aRv) {
   // Step 1.
@@ -85,15 +83,20 @@ bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
 
       return true;
     // Step 5.
-    case ReadableStream::ReaderState::Errored:
+    case ReadableStream::ReaderState::Errored: {
       // Step 5.1 Implicit
       // Step 5.2
-      JS::RootedValue rootedError(aCx, aStream->StoredError());
+      JS::RootingContext* rcx = RootingCx();
+      JS::RootedValue rootedError(rcx, aStream->StoredError());
       aReader->ClosedPromise()->MaybeReject(rootedError);
 
       // Step 5.3
       aReader->ClosedPromise()->SetSettledPromiseIsHandled();
       return true;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown ReaderState");
+      return false;
   }
 }
 
@@ -118,8 +121,7 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
 
   // Step 2.
   RefPtr<ReadableStream> streamPtr = &aStream;
-  if (!ReadableStreamReaderGenericInitialize(aGlobal.Context(), reader,
-                                             streamPtr, aRv)) {
+  if (!ReadableStreamReaderGenericInitialize(reader, streamPtr, aRv)) {
     return nullptr;
   }
 
@@ -400,8 +402,7 @@ already_AddRefed<Promise> ReadableStreamGenericReader::Cancel(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-reader
-void SetUpReadableStreamDefaultReader(JSContext* aCx,
-                                      ReadableStreamDefaultReader* aReader,
+void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
                                       ReadableStream* aStream,
                                       ErrorResult& aRv) {
   // Step 1.
@@ -412,7 +413,7 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
   }
 
   // Step 2.
-  if (!ReadableStreamReaderGenericInitialize(aCx, aReader, aStream, aRv)) {
+  if (!ReadableStreamReaderGenericInitialize(aReader, aStream, aRv)) {
     return;
   }
 
@@ -420,5 +421,4 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
   aReader->ReadRequests().clear();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

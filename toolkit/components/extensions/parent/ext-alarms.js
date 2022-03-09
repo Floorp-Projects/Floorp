@@ -102,7 +102,7 @@ this.alarms = class extends ExtensionAPI {
     };
   }
 
-  primeListener(extension, event, fire) {
+  primeListener(event, fire) {
     if (event == "onAlarm") {
       return this.registerOnAlarm(fire);
     }

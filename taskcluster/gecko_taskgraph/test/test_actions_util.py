@@ -6,10 +6,11 @@
 import unittest
 import json
 from pprint import pprint
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch
 from mozunit import main, MockedOpen
+from taskgraph.util import taskcluster
 
 from gecko_taskgraph import actions, create
 from gecko_taskgraph.decision import read_artifact
@@ -17,7 +18,6 @@ from gecko_taskgraph.actions.util import (
     combine_task_graph_files,
     relativize_datestamps,
 )
-from gecko_taskgraph.util import taskcluster
 
 TASK_DEF = {
     "created": "2017-10-10T18:33:03.460Z",

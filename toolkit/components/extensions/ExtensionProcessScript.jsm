@@ -68,14 +68,14 @@ var pendingExtensions = new Map();
 var ExtensionManager;
 
 ExtensionManager = {
-  // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
+  // WeakMap<WebExtensionPolicy, Map<number, WebExtensionContentScript>>
   registeredContentScripts: new DefaultWeakMap(policy => new Map()),
 
   init() {
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
-    Services.cpmm.addMessageListener("Extension:RegisterContentScript", this);
+    Services.cpmm.addMessageListener("Extension:RegisterContentScripts", this);
     Services.cpmm.addMessageListener(
       "Extension:UnregisterContentScripts",
       this
@@ -246,38 +246,37 @@ ExtensionManager = {
           ExtensionUtils.flushJarCache(data.path);
           break;
 
-        case "Extension:RegisterContentScript": {
+        case "Extension:RegisterContentScripts": {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
             const registeredContentScripts = this.registeredContentScripts.get(
               policy
             );
-            const type =
-              "userScriptOptions" in data.options
-                ? "userScript"
-                : "contentScript";
 
-            if (registeredContentScripts.has(data.scriptId)) {
-              Cu.reportError(
-                new Error(
-                  `Registering ${type} ${data.scriptId} on ${data.id} more than once`
-                )
-              );
-            } else {
-              const script = new WebExtensionContentScript(
-                policy,
-                data.options
-              );
+            for (const { scriptId, options } of data.scripts) {
+              const type =
+                "userScriptOptions" in options ? "userScript" : "contentScript";
 
-              // If the script is a userScript, add the additional userScriptOptions
-              // property to the WebExtensionContentScript instance.
-              if (type === "userScript") {
-                script.userScriptOptions = data.options.userScriptOptions;
+              if (registeredContentScripts.has(scriptId)) {
+                Cu.reportError(
+                  new Error(
+                    `Registering ${type} ${scriptId} on ${data.id} more than once`
+                  )
+                );
+              } else {
+                const script = new WebExtensionContentScript(policy, options);
+
+                // If the script is a userScript, add the additional
+                // userScriptOptions property to the WebExtensionContentScript
+                // instance.
+                if (type === "userScript") {
+                  script.userScriptOptions = options.userScriptOptions;
+                }
+
+                policy.registerContentScript(script);
+                registeredContentScripts.set(scriptId, script);
               }
-
-              policy.registerContentScript(script);
-              registeredContentScripts.set(data.scriptId, script);
             }
           }
           break;

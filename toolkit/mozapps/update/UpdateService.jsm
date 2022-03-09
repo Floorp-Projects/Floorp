@@ -1842,6 +1842,27 @@ function updateIsAtLeastAsOldAsReadyUpdate(update) {
 }
 
 /**
+ * This function determines whether the error represented by the passed error
+ * code could potentially be recovered from or bypassed by updating without
+ * using the Maintenance Service (i.e. by showing a UAC prompt).
+ * We don't really want to show a UAC prompt, but it's preferable over the
+ * manual update doorhanger. So this function effectively distinguishes between
+ * which of those we should do if update staging failed. (The updater
+ * automatically falls back if the Maintenance Services fails, so this function
+ * doesn't handle that case)
+ *
+ * @param   An integer error code from the update.status file. Should be one of
+ *          the codes enumerated in updatererrors.h.
+ * @returns true if the code represents a Maintenance Service specific error.
+ *          Otherwise, false.
+ */
+function isServiceSpecificErrorCode(errorCode) {
+  return (
+    (errorCode >= 24 && errorCode <= 33) || (errorCode >= 49 && errorCode <= 58)
+  );
+}
+
+/**
  * Update Patch
  * @param   patch
  *          A <patch> element to initialize this object with
@@ -4388,6 +4409,17 @@ UpdateManager.prototype = {
         parts[1] == UNEXPECTED_STAGING_ERROR
       ) {
         update.state = getBestPendingState();
+        writeStatusFile(getReadyUpdateDir(), update.state);
+      } else if (isServiceSpecificErrorCode(parts[1])) {
+        // Sometimes when staging, we might encounter an error that is
+        // specific to the Maintenance Service. If this happens, we should try
+        // to update without the Service.
+        LOG(
+          `UpdateManager:refreshUpdateStatus - Encountered service specific ` +
+            `error code: ${parts[1]}. Will try installing update without the ` +
+            `Maintenance Service.`
+        );
+        update.state = STATE_PENDING;
         writeStatusFile(getReadyUpdateDir(), update.state);
       } else if (!handleUpdateFailure(update, parts[1])) {
         await handleFallbackToCompleteUpdate(true);

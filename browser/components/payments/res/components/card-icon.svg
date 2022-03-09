@@ -1,9 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32">
-  <rect x="0" y="0" width="48" height="32" rx="4" ry="4" fill="#000" fill-opacity="context-fill-opacity">
-  </rect>
-  <rect x="0" y="6" width="48" height="20" fill="#fff" fill-opacity="1">
-  </rect>
-</svg>

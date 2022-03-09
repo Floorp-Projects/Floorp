@@ -1083,7 +1083,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     }
   }
 
-  const Colors colors(aFrame);
+  const Colors colors(aFrame, aAppearance);
   DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   switch (aAppearance) {

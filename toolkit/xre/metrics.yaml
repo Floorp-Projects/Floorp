@@ -28,9 +28,10 @@ startup:
         - "Toolkit :: Startup and Profile System"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755049
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328#c1
     notification_emails:
       - jwatt@jwatt.org
       - mbalfanz@mozilla.com
-    expires: "100"
+    expires: 108

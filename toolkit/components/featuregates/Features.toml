@@ -113,16 +113,6 @@ bug-numbers = [1643027]
 is-public = true
 default-value = false
 
-[win32-lockdown]
-title = "experimental-features-win32k-lockdown"
-description = "experimental-features-win32k-lockdown-description"
-restart-required = true
-preference = "security.sandbox.content.win32k-disable"
-type = "boolean"
-bug-numbers = [1697865]
-is-public = true
-default-value = false
-
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
 description = "experimental-features-ime-search-description"

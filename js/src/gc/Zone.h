@@ -37,6 +37,7 @@ class JitZone;
 
 namespace gc {
 
+class FinalizationObservers;
 class ZoneList;
 
 using ZoneComponentFinder = ComponentFinder<JS::Zone>;
@@ -56,9 +57,6 @@ class ZoneAllCellIter;
 
 template <typename T>
 class ZoneCellIter;
-
-// A vector of FinalizationRecord objects, or CCWs to them.
-using FinalizationRecordVector = GCVector<HeapPtrObject, 1, ZoneAllocPolicy>;
 
 }  // namespace gc
 
@@ -107,28 +105,6 @@ class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
 
   MOZ_ALWAYS_INLINE JSString* lookup(BaseScript* script) const;
   MOZ_ALWAYS_INLINE void put(BaseScript* script, JSString* string);
-};
-
-// WeakRefHeapPtrVector is a GCVector of WeakRefObjects.
-class WeakRefHeapPtrVector
-    : public GCVector<js::HeapPtrObject, 1, js::ZoneAllocPolicy> {
- public:
-  using GCVector::GCVector;
-
-  // call in compacting, to update the target in each WeakRefObject.
-  void traceWeak(JSTracer* trc, JSObject* target);
-};
-
-// WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
-// WeakRef to the list of JS WeakRefs.
-class WeakRefMap
-    : public GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
-                       MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy> {
- public:
-  using GCHashMap::GCHashMap;
-  using Base = GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
-                         MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
-  void traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock);
 };
 
 }  // namespace js
@@ -288,19 +264,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Information about Shapes and BaseShapes.
   js::ZoneData<js::ShapeZone> shapeZone_;
 
-  // The set of all finalization registries in this zone.
-  using FinalizationRegistrySet =
-      GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
-                js::ZoneAllocPolicy>;
-  js::ZoneOrGCTaskData<FinalizationRegistrySet> finalizationRegistries_;
-
-  // A map from finalization registry targets to a list of finalization records
-  // representing registries that the target is registered with and their
-  // associated held values.
-  using FinalizationRecordMap =
-      GCHashMap<js::HeapPtrObject, js::gc::FinalizationRecordVector,
-                js::MovableCellHasher<js::HeapPtrObject>, js::ZoneAllocPolicy>;
-  js::ZoneOrGCTaskData<FinalizationRecordMap> finalizationRecordMap_;
+  // Information about finalization registries, created on demand.
+  js::ZoneOrGCTaskData<js::UniquePtr<js::gc::FinalizationObservers>>
+      finalizationObservers_;
 
   js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
 
@@ -318,8 +284,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<Zone*> listNext_;
   static Zone* const NotOnList;
   friend class js::gc::ZoneList;
-
-  js::ZoneOrGCTaskData<js::WeakRefMap> weakRefMap_;
 
   using KeptAliveSet =
       JS::GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
@@ -440,6 +404,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::jit::JitZone* jitZone() { return jitZone_; }
 
   void prepareForCompacting();
+
+  void traceRootsInMajorGC(JSTracer* trc);
 
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepUniqueIds();
@@ -636,18 +602,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void sweepEphemeronTablesAfterMinorGC();
 
-  FinalizationRegistrySet& finalizationRegistries() {
-    return finalizationRegistries_.ref();
+  js::gc::FinalizationObservers* finalizationObservers() {
+    return finalizationObservers_.ref().get();
   }
-
-  FinalizationRecordMap& finalizationRecordMap() {
-    return finalizationRecordMap_.ref();
-  }
+  bool ensureFinalizationObservers();
 
   bool isOnList() const;
   Zone* nextZone() const;
-
-  js::WeakRefMap& weakRefMap() { return weakRefMap_.ref(); }
 
   friend bool js::CurrentThreadCanAccessZone(Zone* zone);
   friend class js::gc::GCRuntime;

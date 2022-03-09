@@ -37,6 +37,11 @@ const extraDefinitions = [
   { name: "XPCOMUtils", writable: false },
   { name: "Task", writable: false },
   { name: "windowGlobalChild", writable: false },
+  // structuredClone is a new global that would be defined for the `browser`
+  // environment in ESLint, but only Firefox has implemented it currently and so
+  // it isn't in ESLint's globals yet.
+  // https://developer.mozilla.org/docs/Web/API/structuredClone
+  { name: "structuredClone", writable: false },
 ];
 
 // Some files in global-scripts.inc need mapping to specific locations.

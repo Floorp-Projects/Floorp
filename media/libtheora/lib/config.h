@@ -13,14 +13,17 @@
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 /* #undef HAVE_MACHINE_SOUNDCARD_H */
 
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* Abort if size exceeds 16384x16384 (for fuzzing only) */
+/* #undef HAVE_MEMORY_CONSTRAINT */
 
 /* Define to 1 if you have the <soundcard.h> header file. */
 /* #undef HAVE_SOUNDCARD_H */
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#define HAVE_STDIO_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -43,20 +46,20 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-/* #undef NO_MINUS_C_MINUS_O */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+/* #undef LT_OBJDIR */
 
 /* make use of arm asm optimization */
- 
+/* #undef OC_ARM_ASM */
 
 /* Define if assembler supports EDSP instructions */
-
+/* #undef OC_ARM_ASM_EDSP */
 
 /* Define if assembler supports ARMv6 media instructions */
-
+/* #undef OC_ARM_ASM_MEDIA */
 
 /* Define if compiler supports NEON instructions */
-
+/* #undef OC_ARM_ASM_NEON */
 
 /* make use of c64x+ asm optimization */
 /* #undef OC_C64X_ASM */
@@ -77,22 +80,24 @@
 #define PACKAGE_NAME "libtheora"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libtheora 1.2.0alpha1+svn"
+#define PACKAGE_STRING "libtheora 1.2.0alpha1+git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libtheora"
 
-/* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2.0alpha1+svn"
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "1.2.0alpha1+git"
+
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
 
 /* Define to exclude encode support from the build */
 /* #undef THEORA_DISABLE_ENCODE */
 
-/* Define to exclude floating point code from the build */
-/* #undef THEORA_DISABLE_FLOAT */
-
 /* Version number of package */
-#define VERSION "1.2.0alpha1+svn"
+#define VERSION "1.2.0alpha1+git"

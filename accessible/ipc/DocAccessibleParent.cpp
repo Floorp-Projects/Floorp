@@ -355,6 +355,13 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
   mCaretId = aID;
   mCaretOffset = aOffset;
   mIsCaretAtEndOfLine = aIsAtEndOfLine;
+  if (aIsSelectionCollapsed) {
+    // We don't fire selection events for collapsed selections, but we need to
+    // ensure we don't have a stale cached selection; e.g. when selecting
+    // forward and then unselecting backward.
+    mTextSelections.ClearAndRetainStorage();
+    mTextSelections.AppendElement(TextRangeData(aID, aID, aOffset, aOffset));
+  }
 
 #if defined(XP_WIN)
   ProxyCaretMoveEvent(proxy, aCaretRect);
@@ -589,10 +596,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
 
   return IPC_OK();
 }
+#endif  // !defined(XP_WIN)
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     const uint64_t& aID, nsTArray<TextRangeData>&& aSelection) {
-#  ifdef MOZ_WIDGET_COCOA
   if (mShutdown) {
     return IPC_OK();
   }
@@ -603,15 +610,31 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     return IPC_OK();
   }
 
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mTextSelections.ClearAndRetainStorage();
+    mTextSelections.AppendElements(aSelection);
+  }
+
+#ifdef MOZ_WIDGET_COCOA
   ProxyTextSelectionChangeEvent(target, aSelection);
+#else
+  ProxyEvent(target, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
+#endif
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return IPC_OK();
+  }
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = nsAccessibilityService::GetXPCDocument(this);
+  nsINode* node = nullptr;
+  bool fromUser = true;  // XXX fix me
+  RefPtr<xpcAccEvent> event =
+      new xpcAccEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED, xpcAcc,
+                      doc, node, fromUser);
+  nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
-#  else
-  return RecvEvent(aID, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
-#  endif
 }
-
-#endif
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvRoleChangedEvent(
     const a11y::role& aRole) {
@@ -1084,6 +1107,17 @@ DocAccessiblePlatformExtParent* DocAccessibleParent::GetPlatformExtension() {
 }
 
 #endif  // !defined(XP_WIN)
+
+void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
+  for (const auto& data : mTextSelections) {
+    aRanges->AppendElement(
+        TextRange(const_cast<DocAccessibleParent*>(this),
+                  const_cast<RemoteAccessible*>(GetAccessible(data.StartID())),
+                  data.StartOffset(),
+                  const_cast<RemoteAccessible*>(GetAccessible(data.EndID())),
+                  data.EndOffset()));
+  }
+}
 
 }  // namespace a11y
 }  // namespace mozilla

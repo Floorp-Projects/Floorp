@@ -56,6 +56,25 @@ function registerModulesProtocolHandler() {
   return true;
 }
 
+function locationsForBackgroundTaskNamed(name) {
+  const subModules = [
+    "resource:///modules", // App-specific first.
+    "resource://gre/modules", // Toolkit/general second.
+  ];
+
+  if (registerModulesProtocolHandler()) {
+    subModules.push("resource://testing-common"); // Test-only third.
+  }
+
+  let locations = [];
+  for (const subModule of subModules) {
+    let URI = `${subModule}/backgroundtasks/BackgroundTask_${name}.jsm`;
+    locations.push(URI);
+  }
+
+  return locations;
+}
+
 /**
  * Find a JSM named like `backgroundtasks/BackgroundTask_${name}.jsm`,
  * import it, and return the whole module.
@@ -69,17 +88,7 @@ function registerModulesProtocolHandler() {
  * not found.
  */
 function findBackgroundTaskModule(name) {
-  const subModules = [
-    "resource:///modules", // App-specific first.
-    "resource://gre/modules", // Toolkit/general second.
-  ];
-
-  if (registerModulesProtocolHandler()) {
-    subModules.push("resource://testing-common"); // Test-only third.
-  }
-
-  for (const subModule of subModules) {
-    let URI = `${subModule}/backgroundtasks/BackgroundTask_${name}.jsm`;
+  for (const URI of locationsForBackgroundTaskNamed(name)) {
     log.debug(`Looking for background task at URI: ${URI}`);
 
     try {
@@ -100,7 +109,76 @@ function findBackgroundTaskModule(name) {
   );
 }
 
-var BackgroundTasksManager = {
+class BackgroundTasksManager {
+  // Keep `BackgroundTasksManager.helpInfo` synchronized with `DevToolsStartup.helpInfo`.
+  /* eslint-disable max-len */
+  helpInfo =
+    "  --jsdebugger [<path>] Open the Browser Toolbox. Defaults to the local build\n" +
+    "                     but can be overridden by a firefox path.\n" +
+    "  --wait-for-jsdebugger Spin event loop until JS debugger connects.\n" +
+    "                     Enables debugging (some) application startup code paths.\n" +
+    "                     Only has an effect when `--jsdebugger` is also supplied.\n" +
+    "  --start-debugger-server [ws:][ <port> | <path> ] Start the devtools server on\n" +
+    "                     a TCP port or Unix domain socket path. Defaults to TCP port\n" +
+    "                     6000. Use WebSocket protocol if ws: prefix is specified.\n";
+  /* eslint-disable max-len */
+
+  handle(commandLine) {
+    const bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
+      Ci.nsIBackgroundTasks
+    );
+
+    if (!bts.isBackgroundTaskMode) {
+      log.info(`${Services.appinfo.processID}: !isBackgroundTaskMode, exiting`);
+      return;
+    }
+
+    const name = bts.backgroundTaskName();
+    log.info(
+      `${Services.appinfo.processID}: Preparing to run background task named '${name}'` +
+        ` (with ${commandLine.length} arguments)`
+    );
+
+    if (!("@mozilla.org/devtools/startup-clh;1" in Cc)) {
+      return;
+    }
+
+    // Check this before the devtools startup flow handles and removes it.
+    const CASE_INSENSITIVE = false;
+    if (
+      commandLine.findFlag("jsdebugger", CASE_INSENSITIVE) < 0 &&
+      commandLine.findFlag("start-debugger-server", CASE_INSENSITIVE) < 0
+    ) {
+      log.info(
+        `${Services.appinfo.processID}: No devtools flag found; not preparing devtools thread`
+      );
+      return;
+    }
+
+    const waitFlag =
+      commandLine.findFlag("wait-for-jsdebugger", CASE_INSENSITIVE) != -1;
+    if (waitFlag) {
+      function onDevtoolsThreadReady(subject, topic, data) {
+        log.info(
+          `${Services.appinfo.processID}: Setting breakpoints for background task named '${name}'` +
+            ` (with ${commandLine.length} arguments)`
+        );
+
+        const threadActor = subject.wrappedJSObject;
+        threadActor.setBreakpointOnLoad(locationsForBackgroundTaskNamed(name));
+
+        Services.obs.removeObserver(onDevtoolsThreadReady, topic);
+      }
+
+      Services.obs.addObserver(onDevtoolsThreadReady, "devtools-thread-ready");
+    }
+
+    const DevToolsStartup = Cc[
+      "@mozilla.org/devtools/startup-clh;1"
+    ].getService(Ci.nsICommandLineHandler);
+    DevToolsStartup.handle(commandLine);
+  }
+
   async runBackgroundTaskNamed(name, commandLine) {
     function addMarker(markerName) {
       return ChromeUtils.addProfilerMarker(markerName, undefined, name);
@@ -108,7 +186,8 @@ var BackgroundTasksManager = {
     addMarker("BackgroundTasksManager:AfterRunBackgroundTaskNamed");
 
     log.info(
-      `Running background task named '${name}' (with ${commandLine.length} arguments)`
+      `${Services.appinfo.processID}: Running background task named '${name}'` +
+        ` (with ${commandLine.length} arguments)`
     );
 
     let exitCode = BackgroundTasksManager.EXIT_CODE.NOT_FOUND;
@@ -149,8 +228,14 @@ var BackgroundTasksManager = {
     }
 
     return exitCode;
-  },
-};
+  }
+
+  classID = Components.ID("{4d48c536-e16f-4699-8f9c-add4f28f92f0}");
+  QueryInterface = ChromeUtils.generateQI([
+    "nsIBackgroundTasksManager",
+    "nsICommandLineHandler",
+  ]);
+}
 
 /**
  * Background tasks should standard exit code conventions where 0 denotes

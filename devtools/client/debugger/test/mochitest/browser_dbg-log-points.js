@@ -6,17 +6,22 @@
  * Tests that log points are correctly logged to the console
  */
 
+"use strict";
+
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
-  const dbg = await initDebugger("doc-script-switching.html", "switching-01");
+  const dbg = await initDebugger(
+    "doc-script-switching.html",
+    "script-switching-01.js"
+  );
 
-  const source = findSource(dbg, "switching-01");
-  await selectSource(dbg, "switching-01");
+  const source = findSource(dbg, "script-switching-01.js");
+  await selectSource(dbg, "script-switching-01.js");
 
   await getDebuggerSplitConsole(dbg);
 
   await altClickElement(dbg, "gutter", 7);
-  await waitForBreakpoint(dbg, "switching-01", 7);
+  await waitForBreakpoint(dbg, "script-switching-01.js", 7);
 
   await dbg.actions.addBreakpoint(
     getContext(dbg),

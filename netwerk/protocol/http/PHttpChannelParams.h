@@ -44,19 +44,18 @@ template <>
 struct ParamTraits<mozilla::net::RequestHeaderTuple> {
   typedef mozilla::net::RequestHeaderTuple paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mHeader);
-    WriteParam(aMsg, aParam.mValue);
-    WriteParam(aMsg, aParam.mMerge);
-    WriteParam(aMsg, aParam.mEmpty);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mHeader);
+    WriteParam(aWriter, aParam.mValue);
+    WriteParam(aWriter, aParam.mMerge);
+    WriteParam(aWriter, aParam.mEmpty);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mHeader) ||
-        !ReadParam(aMsg, aIter, &aResult->mValue) ||
-        !ReadParam(aMsg, aIter, &aResult->mMerge) ||
-        !ReadParam(aMsg, aIter, &aResult->mEmpty))
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mHeader) ||
+        !ReadParam(aReader, &aResult->mValue) ||
+        !ReadParam(aReader, &aResult->mMerge) ||
+        !ReadParam(aReader, &aResult->mEmpty))
       return false;
 
     return true;
@@ -67,17 +66,16 @@ template <>
 struct ParamTraits<mozilla::net::nsHttpAtom> {
   typedef mozilla::net::nsHttpAtom paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     // aParam.get() cannot be null.
     MOZ_ASSERT(aParam.get(), "null nsHTTPAtom value");
     nsAutoCString value(aParam.get());
-    WriteParam(aMsg, value);
+    WriteParam(aWriter, value);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     nsAutoCString value;
-    if (!ReadParam(aMsg, aIter, &value)) return false;
+    if (!ReadParam(aReader, &value)) return false;
 
     *aResult = mozilla::net::nsHttp::ResolveAtom(value);
     MOZ_ASSERT(aResult->get(), "atom table not initialized");
@@ -89,42 +87,40 @@ template <>
 struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry> {
   typedef mozilla::net::nsHttpHeaderArray::nsEntry paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     if (aParam.headerNameOriginal.IsEmpty()) {
-      WriteParam(aMsg, aParam.header);
+      WriteParam(aWriter, aParam.header);
     } else {
-      WriteParam(aMsg, aParam.headerNameOriginal);
+      WriteParam(aWriter, aParam.headerNameOriginal);
     }
-    WriteParam(aMsg, aParam.value);
+    WriteParam(aWriter, aParam.value);
     switch (aParam.variety) {
       case mozilla::net::nsHttpHeaderArray::eVarietyUnknown:
-        WriteParam(aMsg, (uint8_t)0);
+        WriteParam(aWriter, (uint8_t)0);
         break;
       case mozilla::net::nsHttpHeaderArray::eVarietyRequestOverride:
-        WriteParam(aMsg, (uint8_t)1);
+        WriteParam(aWriter, (uint8_t)1);
         break;
       case mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault:
-        WriteParam(aMsg, (uint8_t)2);
+        WriteParam(aWriter, (uint8_t)2);
         break;
       case mozilla::net::nsHttpHeaderArray::
           eVarietyResponseNetOriginalAndResponse:
-        WriteParam(aMsg, (uint8_t)3);
+        WriteParam(aWriter, (uint8_t)3);
         break;
       case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal:
-        WriteParam(aMsg, (uint8_t)4);
+        WriteParam(aWriter, (uint8_t)4);
         break;
       case mozilla::net::nsHttpHeaderArray::eVarietyResponse:
-        WriteParam(aMsg, (uint8_t)5);
+        WriteParam(aWriter, (uint8_t)5);
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint8_t variety;
     nsAutoCString header;
-    if (!ReadParam(aMsg, aIter, &header) ||
-        !ReadParam(aMsg, aIter, &aResult->value) ||
-        !ReadParam(aMsg, aIter, &variety))
+    if (!ReadParam(aReader, &header) || !ReadParam(aReader, &aResult->value) ||
+        !ReadParam(aReader, &variety))
       return false;
 
     mozilla::net::nsHttpAtom atom = mozilla::net::nsHttp::ResolveAtom(header);
@@ -168,15 +164,14 @@ template <>
 struct ParamTraits<mozilla::net::nsHttpHeaderArray> {
   typedef mozilla::net::nsHttpHeaderArray paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
     paramType& p = const_cast<paramType&>(aParam);
 
-    WriteParam(aMsg, p.mHeaders);
+    WriteParam(aWriter, p.mHeaders);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &aResult->mHeaders)) return false;
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    if (!ReadParam(aReader, &aResult->mHeaders)) return false;
 
     return true;
   }
@@ -186,35 +181,38 @@ template <>
 struct ParamTraits<mozilla::net::nsHttpRequestHead> {
   typedef mozilla::net::nsHttpRequestHead paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mHeaders);
-    WriteParam(aMsg, aParam.mMethod);
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
-    WriteParam(aMsg, aParam.mRequestURI);
-    WriteParam(aMsg, aParam.mPath);
-    WriteParam(aMsg, aParam.mOrigin);
-    WriteParam(aMsg, static_cast<uint8_t>(aParam.mParsedMethod));
-    WriteParam(aMsg, aParam.mHTTPS);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.Enter();
+    WriteParam(aWriter, aParam.mHeaders);
+    WriteParam(aWriter, aParam.mMethod);
+    WriteParam(aWriter, static_cast<uint32_t>(aParam.mVersion));
+    WriteParam(aWriter, aParam.mRequestURI);
+    WriteParam(aWriter, aParam.mPath);
+    WriteParam(aWriter, aParam.mOrigin);
+    WriteParam(aWriter, static_cast<uint8_t>(aParam.mParsedMethod));
+    WriteParam(aWriter, aParam.mHTTPS);
+    aParam.Exit();
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t version;
     uint8_t method;
-    if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
-        !ReadParam(aMsg, aIter, &aResult->mMethod) ||
-        !ReadParam(aMsg, aIter, &version) ||
-        !ReadParam(aMsg, aIter, &aResult->mRequestURI) ||
-        !ReadParam(aMsg, aIter, &aResult->mPath) ||
-        !ReadParam(aMsg, aIter, &aResult->mOrigin) ||
-        !ReadParam(aMsg, aIter, &method) ||
-        !ReadParam(aMsg, aIter, &aResult->mHTTPS)) {
+    aResult->Enter();
+    if (!ReadParam(aReader, &aResult->mHeaders) ||
+        !ReadParam(aReader, &aResult->mMethod) ||
+        !ReadParam(aReader, &version) ||
+        !ReadParam(aReader, &aResult->mRequestURI) ||
+        !ReadParam(aReader, &aResult->mPath) ||
+        !ReadParam(aReader, &aResult->mOrigin) ||
+        !ReadParam(aReader, &method) || !ReadParam(aReader, &aResult->mHTTPS)) {
+      aResult->Exit();
       return false;
     }
 
     aResult->mVersion = static_cast<mozilla::net::HttpVersion>(version);
     aResult->mParsedMethod =
         static_cast<mozilla::net::nsHttpRequestHead::ParsedMethodType>(method);
+    aResult->Exit();
     return true;
   }
 };
@@ -225,52 +223,56 @@ template <>
 struct ParamTraits<mozilla::net::nsHttpResponseHead> {
   typedef mozilla::net::nsHttpResponseHead paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mHeaders);
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
-    WriteParam(aMsg, aParam.mStatus);
-    WriteParam(aMsg, aParam.mStatusText);
-    WriteParam(aMsg, aParam.mContentLength);
-    WriteParam(aMsg, aParam.mContentType);
-    WriteParam(aMsg, aParam.mContentCharset);
-    WriteParam(aMsg, aParam.mHasCacheControl);
-    WriteParam(aMsg, aParam.mCacheControlPublic);
-    WriteParam(aMsg, aParam.mCacheControlPrivate);
-    WriteParam(aMsg, aParam.mCacheControlNoStore);
-    WriteParam(aMsg, aParam.mCacheControlNoCache);
-    WriteParam(aMsg, aParam.mCacheControlImmutable);
-    WriteParam(aMsg, aParam.mCacheControlStaleWhileRevalidateSet);
-    WriteParam(aMsg, aParam.mCacheControlStaleWhileRevalidate);
-    WriteParam(aMsg, aParam.mCacheControlMaxAgeSet);
-    WriteParam(aMsg, aParam.mCacheControlMaxAge);
-    WriteParam(aMsg, aParam.mPragmaNoCache);
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aParam.Enter();
+    WriteParam(aWriter, aParam.mHeaders);
+    WriteParam(aWriter, static_cast<uint32_t>(aParam.mVersion));
+    WriteParam(aWriter, aParam.mStatus);
+    WriteParam(aWriter, aParam.mStatusText);
+    WriteParam(aWriter, aParam.mContentLength);
+    WriteParam(aWriter, aParam.mContentType);
+    WriteParam(aWriter, aParam.mContentCharset);
+    WriteParam(aWriter, aParam.mHasCacheControl);
+    WriteParam(aWriter, aParam.mCacheControlPublic);
+    WriteParam(aWriter, aParam.mCacheControlPrivate);
+    WriteParam(aWriter, aParam.mCacheControlNoStore);
+    WriteParam(aWriter, aParam.mCacheControlNoCache);
+    WriteParam(aWriter, aParam.mCacheControlImmutable);
+    WriteParam(aWriter, aParam.mCacheControlStaleWhileRevalidateSet);
+    WriteParam(aWriter, aParam.mCacheControlStaleWhileRevalidate);
+    WriteParam(aWriter, aParam.mCacheControlMaxAgeSet);
+    WriteParam(aWriter, aParam.mCacheControlMaxAge);
+    WriteParam(aWriter, aParam.mPragmaNoCache);
+    aParam.Exit();
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
+  static bool Read(MessageReader* aReader, paramType* aResult) {
     uint32_t version;
-    if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
-        !ReadParam(aMsg, aIter, &version) ||
-        !ReadParam(aMsg, aIter, &aResult->mStatus) ||
-        !ReadParam(aMsg, aIter, &aResult->mStatusText) ||
-        !ReadParam(aMsg, aIter, &aResult->mContentLength) ||
-        !ReadParam(aMsg, aIter, &aResult->mContentType) ||
-        !ReadParam(aMsg, aIter, &aResult->mContentCharset) ||
-        !ReadParam(aMsg, aIter, &aResult->mHasCacheControl) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlPublic) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlPrivate) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlNoStore) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlNoCache) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlImmutable) ||
-        !ReadParam(aMsg, aIter,
-                   &aResult->mCacheControlStaleWhileRevalidateSet) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlStaleWhileRevalidate) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAgeSet) ||
-        !ReadParam(aMsg, aIter, &aResult->mCacheControlMaxAge) ||
-        !ReadParam(aMsg, aIter, &aResult->mPragmaNoCache))
+    aResult->Enter();
+    if (!ReadParam(aReader, &aResult->mHeaders) ||
+        !ReadParam(aReader, &version) ||
+        !ReadParam(aReader, &aResult->mStatus) ||
+        !ReadParam(aReader, &aResult->mStatusText) ||
+        !ReadParam(aReader, &aResult->mContentLength) ||
+        !ReadParam(aReader, &aResult->mContentType) ||
+        !ReadParam(aReader, &aResult->mContentCharset) ||
+        !ReadParam(aReader, &aResult->mHasCacheControl) ||
+        !ReadParam(aReader, &aResult->mCacheControlPublic) ||
+        !ReadParam(aReader, &aResult->mCacheControlPrivate) ||
+        !ReadParam(aReader, &aResult->mCacheControlNoStore) ||
+        !ReadParam(aReader, &aResult->mCacheControlNoCache) ||
+        !ReadParam(aReader, &aResult->mCacheControlImmutable) ||
+        !ReadParam(aReader, &aResult->mCacheControlStaleWhileRevalidateSet) ||
+        !ReadParam(aReader, &aResult->mCacheControlStaleWhileRevalidate) ||
+        !ReadParam(aReader, &aResult->mCacheControlMaxAgeSet) ||
+        !ReadParam(aReader, &aResult->mCacheControlMaxAge) ||
+        !ReadParam(aReader, &aResult->mPragmaNoCache)) {
+      aResult->Exit();
       return false;
+    }
 
     aResult->mVersion = static_cast<mozilla::net::HttpVersion>(version);
+    aResult->Exit();
     return true;
   }
 };

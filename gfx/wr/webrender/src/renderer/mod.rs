@@ -42,7 +42,7 @@ use api::ExternalImageId;
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{VoidPtrToSizeFn, PremultipliedColorF};
-use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
+use api::{RenderNotifier, ImageBufferKind};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
@@ -68,7 +68,7 @@ use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_cache::GlyphCache;
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer, SharedFontInstanceMap};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance, CopyInstance};
@@ -653,6 +653,7 @@ pub enum BlendMode {
     MultiplyDualSource,
     Screen,
     Exclusion,
+    PlusLighter,
 }
 
 impl BlendMode {
@@ -675,6 +676,8 @@ impl BlendMode {
             MixBlendMode::Screen => BlendMode::Screen,
             // Exclusion can be implemented as Cs + Cd - 2*Cs*Cd => Cs*(1-Cd) + Cd*(1-Cs)
             MixBlendMode::Exclusion => BlendMode::Exclusion,
+            // PlusLighter is basically a clamped add.
+            MixBlendMode::PlusLighter => BlendMode::PlusLighter,
             // Multiply can be implemented as Cs*Cd + Cs*(1-Ad) + Cd*(1-As) => Cs*(1-Ad) + Cd*(1 - SRC1=(As-Cs))
             MixBlendMode::Multiply if dual_source => BlendMode::MultiplyDualSource,
             // Otherwise, use advanced blend without coherency if available.
@@ -2958,6 +2961,9 @@ impl Renderer {
                         }
                         BlendMode::Exclusion => {
                             self.device.set_blend_mode_exclusion();
+                        }
+                        BlendMode::PlusLighter => {
+                            self.device.set_blend_mode_plus_lighter();
                         }
                     }
                     prev_blend_mode = batch.key.blend_mode;

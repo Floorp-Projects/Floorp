@@ -2420,8 +2420,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     }
     // We start or stop being a containing block for abspos descendants. This
     // also causes painting to change, as we'd become a pseudo-stacking context.
-    if (IsRelativelyPositionedStyle() !=
-        aNewData.IsRelativelyPositionedStyle()) {
+    if (IsRelativelyOrStickyPositionedStyle() !=
+        aNewData.IsRelativelyOrStickyPositionedStyle()) {
       hint |= nsChangeHint_UpdateContainingBlock | nsChangeHint_RepaintFrame;
     }
     if (IsPositionForcingStackingContext() !=
@@ -2560,28 +2560,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
      * comparisons but turn all the resulting change hints into
      * nsChangeHint_NeutralChange.
      */
-    nsChangeHint transformHint = nsChangeHint(0);
-
-    transformHint |= CompareTransformValues(mTransform, aNewData.mTransform);
-    transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
-    transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
-    transformHint |= CompareTransformValues(mScale, aNewData.mScale);
-    transformHint |= CompareMotionValues(*this, aNewData);
-
-    if (mTransformOrigin != aNewData.mTransformOrigin) {
-      transformHint |= nsChangeHint_UpdateTransformLayer |
-                       nsChangeHint_UpdatePostTransformOverflow;
-    }
-
-    if (mPerspectiveOrigin != aNewData.mPerspectiveOrigin ||
-        mTransformStyle != aNewData.mTransformStyle ||
-        mTransformBox != aNewData.mTransformBox) {
-      transformHint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
-    }
-
-    if (mBackfaceVisibility != aNewData.mBackfaceVisibility) {
-      transformHint |= nsChangeHint_RepaintFrame;
-    }
+    nsChangeHint transformHint = CalcTransformPropertyDifference(aNewData);
 
     if (transformHint) {
       if (HasTransformStyle()) {
@@ -2690,6 +2669,34 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   return hint;
+}
+
+nsChangeHint nsStyleDisplay::CalcTransformPropertyDifference(
+    const nsStyleDisplay& aNewData) const {
+  nsChangeHint transformHint = nsChangeHint(0);
+
+  transformHint |= CompareTransformValues(mTransform, aNewData.mTransform);
+  transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
+  transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
+  transformHint |= CompareTransformValues(mScale, aNewData.mScale);
+  transformHint |= CompareMotionValues(*this, aNewData);
+
+  if (mTransformOrigin != aNewData.mTransformOrigin) {
+    transformHint |= nsChangeHint_UpdateTransformLayer |
+                     nsChangeHint_UpdatePostTransformOverflow;
+  }
+
+  if (mPerspectiveOrigin != aNewData.mPerspectiveOrigin ||
+      mTransformStyle != aNewData.mTransformStyle ||
+      mTransformBox != aNewData.mTransformBox) {
+    transformHint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
+  }
+
+  if (mBackfaceVisibility != aNewData.mBackfaceVisibility) {
+    transformHint |= nsChangeHint_RepaintFrame;
+  }
+
+  return transformHint;
 }
 
 // --------------------

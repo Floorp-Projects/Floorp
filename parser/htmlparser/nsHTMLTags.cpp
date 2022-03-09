@@ -5,6 +5,7 @@
 
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
+#include "nsElementTable.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
@@ -72,6 +73,9 @@ nsresult nsHTMLTags::AddRefTable(void) {
     }
 
     MOZ_ASSERT(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH);
+
+    CheckElementTable();
+    TestTagTable();
 #endif
   }
 
