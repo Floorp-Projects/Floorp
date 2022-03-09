@@ -14,6 +14,7 @@ import json
 import os
 import platform
 import shutil
+import site
 import subprocess
 import sys
 from collections import OrderedDict
@@ -364,8 +365,7 @@ class MachSiteManager:
                     # automatically adds the virtualenv's "site-packages" to our scope, in
                     # addition to our first-party/vendored modules since they're specified
                     # in the "mach.pth" file.
-                    activate_path = self._virtualenv().activate_path
-                    exec(open(activate_path).read(), dict(__file__=activate_path))
+                    activate_virtualenv(self._virtualenv())
 
     def _build(self):
         if self._site_packages_source != SitePackagesSource.VENV:
@@ -552,8 +552,7 @@ class CommandSiteManager:
         self.ensure()
 
         with self._metadata.update_current_site(self._virtualenv.python_path):
-            activate_path = self._virtualenv.activate_path
-            exec(open(activate_path).read(), dict(__file__=activate_path))
+            activate_virtualenv(self._virtualenv)
 
     def install_pip_package(self, package):
         """Install a package via pip.
@@ -746,7 +745,6 @@ class PythonVirtualenv:
         else:
             self.bin_path = os.path.join(prefix, "bin")
             self.python_path = os.path.join(self.bin_path, "python")
-        self.activate_path = os.path.join(self.bin_path, "activate_this.py")
         self.prefix = prefix
 
     @functools.lru_cache(maxsize=None)
@@ -1133,8 +1131,6 @@ def _create_venv_with_pthfile(
         ]
     )
 
-    os.utime(target_venv.activate_path, None)
-
     site_packages_dir = target_venv.site_packages_dir()
     pthfile_contents = "\n".join(pthfile_lines)
     with open(os.path.join(site_packages_dir, PTH_FILENAME), "w") as f:
@@ -1145,7 +1141,6 @@ def _create_venv_with_pthfile(
             target_venv.pip_install([str(requirement.requirement)])
         target_venv.install_optional_packages(requirements.pypi_optional_requirements)
 
-    os.utime(target_venv.activate_path, None)
     metadata.write(is_finalized=True)
 
 
@@ -1156,9 +1151,7 @@ def _is_venv_up_to_date(
     requirements,
     expected_metadata,
 ):
-    if not os.path.exists(target_venv.prefix) or not os.path.exists(
-        target_venv.activate_path
-    ):
+    if not os.path.exists(target_venv.prefix):
         return False
 
     virtualenv_package = os.path.join(
@@ -1176,9 +1169,11 @@ def _is_venv_up_to_date(
     # * This file
     # * The `virtualenv` package
     # * Any of our requirements manifest files
-    activate_mtime = os.path.getmtime(target_venv.activate_path)
+    metadata_mtime = os.path.getmtime(
+        os.path.join(target_venv.prefix, METADATA_FILENAME)
+    )
     dep_mtime = max(os.path.getmtime(p) for p in deps)
-    if dep_mtime > activate_mtime:
+    if dep_mtime > metadata_mtime:
         return False
 
     try:
@@ -1203,6 +1198,18 @@ def _is_venv_up_to_date(
         return False
 
     return True
+
+
+def activate_virtualenv(virtualenv: PythonVirtualenv):
+    os.environ["PATH"] = os.pathsep.join(
+        [virtualenv.bin_path] + os.environ.get("PATH", "").split(os.pathsep)
+    )
+    os.environ["VIRTUAL_ENV"] = virtualenv.prefix
+
+    for path in (virtualenv.prefix, virtualenv.site_packages_dir()):
+        site.addsitedir(os.path.realpath(path))
+
+    sys.prefix = virtualenv.prefix
 
 
 def _mach_virtualenv_root(checkout_scoped_state_dir):
