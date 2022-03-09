@@ -22,7 +22,7 @@ job-defaults:
         symbol: Searchfox(idx)
         kind: build
         tier: 2
-    run-on-projects: []
+    run-on-projects: ['mozilla-central']
     optimization: null
 
 jobs:
