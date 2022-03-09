@@ -319,7 +319,7 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
     return;
   }
 
-  JSFreeOp fop(nullptr);
+  JSFreeOp* fop = TlsContext.get()->defaultFreeOp();
 
   // Sweep zones in order. The atoms zone must be finalized last as other
   // zones may have direct pointers into it.
@@ -335,7 +335,7 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
     // BackgroundFinalizePhases.
     for (auto phase : BackgroundFinalizePhases) {
       for (auto kind : phase.kinds) {
-        backgroundFinalize(&fop, zone, kind, &emptyArenas);
+        backgroundFinalize(fop, zone, kind, &emptyArenas);
       }
     }
 
