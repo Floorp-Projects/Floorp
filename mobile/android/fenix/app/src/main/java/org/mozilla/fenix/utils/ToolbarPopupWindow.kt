@@ -22,6 +22,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import java.lang.ref.WeakReference
 import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.databinding.BrowserToolbarPopupWindowBinding
 
 object ToolbarPopupWindow {
@@ -34,7 +35,8 @@ object ToolbarPopupWindow {
     ) {
         val context = view.get()?.context ?: return
         val clipboard = context.components.clipboardHandler
-        if (!copyVisible && !clipboard.containsURL()) return
+        val clipboardUrl = clipboard.getUrl()
+        if (!copyVisible && clipboardUrl == null) return
 
         val isCustomTabSession = customTabId != null
 
@@ -54,37 +56,41 @@ object ToolbarPopupWindow {
 
         binding.copy.isVisible = copyVisible
 
-        binding.paste.isVisible = clipboard.containsURL() && !isCustomTabSession
-        binding.pasteAndGo.isVisible =
-            clipboard.containsURL() && !isCustomTabSession
+        val showPaste = clipboardUrl != null && !isCustomTabSession
+        binding.paste.isVisible = showPaste
+        binding.pasteAndGo.isVisible = showPaste
 
-        binding.copy.setOnClickListener {
-            popupWindow.dismiss()
-            clipboard.text = getUrlForClipboard(
-                it.context.components.core.store,
-                customTabId
-            )
-
-            view.get()?.let {
-                FenixSnackbar.make(
-                    view = it,
-                    duration = Snackbar.LENGTH_SHORT,
-                    isDisplayedWithBrowserToolbar = true
+        if (copyVisible) {
+            binding.copy.setOnClickListener { copyView ->
+                popupWindow.dismiss()
+                clipboard.text = getUrlForClipboard(
+                    copyView.context.components.core.store,
+                    customTabId
                 )
-                    .setText(context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
-                    .show()
+
+                view.get()?.let { toolbarView ->
+                    FenixSnackbar.make(
+                        view = toolbarView,
+                        duration = Snackbar.LENGTH_SHORT,
+                        isDisplayedWithBrowserToolbar = true
+                    )
+                        .setText(context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
+                        .show()
+                }
+                context.components.analytics.metrics.track(Event.CopyUrlUsed)
             }
-            context.components.analytics.metrics.track(Event.CopyUrlUsed)
         }
 
-        binding.paste.setOnClickListener {
-            popupWindow.dismiss()
-            handlePaste(clipboard.text!!)
-        }
+        clipboardUrl?.let { url ->
+            binding.paste.setOnClickListener {
+                popupWindow.dismiss()
+                handlePaste(url)
+            }
 
-        binding.pasteAndGo.setOnClickListener {
-            popupWindow.dismiss()
-            handlePasteAndGo(clipboard.text!!)
+            binding.pasteAndGo.setOnClickListener {
+                popupWindow.dismiss()
+                handlePasteAndGo(url)
+            }
         }
 
         view.get()?.let {
@@ -109,5 +115,13 @@ object ToolbarPopupWindow {
             val selectedTab = store.state.selectedTab
             selectedTab?.readerState?.activeUrl ?: selectedTab?.content?.url
         }
+    }
+
+    private fun ClipboardHandler.getUrl(): String? {
+        if (containsURL()) {
+            text?.let { return it }
+            Logger("ToolbarPopupWindow").error("Clipboard contains URL but unable to read text")
+        }
+        return null
     }
 }
