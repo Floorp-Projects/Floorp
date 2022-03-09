@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v100
+- ⚠️ Changed [`GeckoSession.isOpen`][99.1] to `@UiThread`.
+
+[100.1]: {{javadoc_uri}}/GeckoSession.html#isOpen()
+
 ## v99
 - Removed deprecated `GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`.
   ([bug 1754244]({{bugzilla}}1754244))
@@ -1139,4 +1144,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9a66c9bcb58ffd198b90bb4f1845efe26dbb244b
+[api-version]: f4393a16a61b77f77a91788ac6e2bcf366a113b6

@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -486,6 +487,9 @@ public class GeckoSession {
           }
         }
 
+        // For .isOpen(), the linter is not smart enough to figure out we're asserting that we're on
+        // the UI thread.
+        @SuppressLint("WrongThread")
         @Override
         public void handleMessage(
             final NavigationDelegate delegate,
@@ -1271,8 +1275,9 @@ public class GeckoSession {
    * @see #open
    * @see #close
    */
-  @AnyThread
+  @UiThread
   public boolean isOpen() {
+    ThreadUtils.assertOnUiThread();
     return mWindow != null;
   }
 
