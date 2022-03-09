@@ -35,6 +35,7 @@ import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.share.DefaultShareController.Companion.ACTION_COPY_LINK_TO_CLIPBOARD
 import org.mozilla.fenix.share.ShareViewModel.Companion.RECENT_APPS_LIMIT
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.share.listadapters.SyncShareOption
@@ -100,7 +101,7 @@ class ShareViewModelTest {
         every { viewModel.buildAppsList(any(), any()) } returns appOptions
         viewModel.recentAppsStorage = storage
 
-        viewModel.loadDevicesAndApps()
+        viewModel.loadDevicesAndApps(testContext)
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
         verify {
@@ -111,7 +112,7 @@ class ShareViewModelTest {
         }
 
         assertEquals(1, viewModel.recentAppsList.asFlow().first().size)
-        assertEquals(0, viewModel.appsList.asFlow().first().size)
+        assertEquals(1, viewModel.appsList.asFlow().first().size)
     }
 
     @Test
@@ -160,6 +161,45 @@ class ShareViewModelTest {
             listOf(SyncShareOption.Reconnect),
             viewModel.buildDeviceList(fxaAccountManager)
         )
+    }
+
+    @Test
+    fun `GIVEN only one app THEN show copy to clipboard before the app`() = runBlockingTest {
+        val appOptions = listOf(
+            AppShareOption("Label", mockk(), "Package", "Activity")
+        )
+
+        val appEntity = mockk<RecentApp>()
+        every { appEntity.activityName } returns "Activity"
+        every { storage.updateDatabaseWithNewApps(appOptions.map { app -> app.packageName }) } just Runs
+        every { storage.getRecentAppsUpTo(RECENT_APPS_LIMIT) } returns emptyList()
+
+        every { viewModel.buildAppsList(any(), any()) } returns appOptions
+        viewModel.recentAppsStorage = storage
+
+        viewModel.loadDevicesAndApps(testContext)
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(0, viewModel.recentAppsList.asFlow().first().size)
+        assertEquals(2, viewModel.appsList.asFlow().first().size)
+        assertEquals(ACTION_COPY_LINK_TO_CLIPBOARD, viewModel.appsList.asFlow().first()[0].packageName)
+    }
+
+    @Test
+    fun `WHEN no app THEN at least have copy to clipboard as app`() = runBlockingTest {
+        val appEntity = mockk<RecentApp>()
+        every { appEntity.activityName } returns "Activity"
+        every { storage.getRecentAppsUpTo(RECENT_APPS_LIMIT) } returns emptyList()
+
+        every { viewModel.buildAppsList(any(), any()) } returns emptyList()
+        viewModel.recentAppsStorage = storage
+
+        viewModel.loadDevicesAndApps(testContext)
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(0, viewModel.recentAppsList.asFlow().first().size)
+        assertEquals(1, viewModel.appsList.asFlow().first().size)
+        assertEquals(ACTION_COPY_LINK_TO_CLIPBOARD, viewModel.appsList.asFlow().first()[0].packageName)
     }
 
     private fun createResolveInfo(

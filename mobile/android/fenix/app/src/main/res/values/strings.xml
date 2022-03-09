@@ -954,6 +954,10 @@
     <string name="share_link_all_apps_subheader">All actions</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Recently used</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Copy to clipboard</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Copied to clipboard</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Sign in to sync</string>
     <!-- An option from the share dialog to sign into sync -->

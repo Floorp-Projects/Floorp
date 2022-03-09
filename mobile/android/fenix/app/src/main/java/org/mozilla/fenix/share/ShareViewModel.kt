@@ -13,6 +13,7 @@ import android.net.Network
 import android.net.NetworkRequest
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.getSystemService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -23,8 +24,10 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
+import org.mozilla.fenix.share.DefaultShareController.Companion.ACTION_COPY_LINK_TO_CLIPBOARD
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 
@@ -79,7 +82,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
      * Load a list of devices and apps into [devicesList] and [appsList].
      * Should be called when the fragment is attached so the data can be fetched early.
      */
-    fun loadDevicesAndApps() {
+    fun loadDevicesAndApps(context: Context) {
         val networkRequest = NetworkRequest.Builder().build()
         connectivityManager?.registerNetworkCallback(networkRequest, networkCallback)
 
@@ -89,11 +92,17 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 type = "text/plain"
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            val shareAppsActivities = getIntentActivities(shareIntent, getApplication())
-            var apps = buildAppsList(shareAppsActivities, getApplication())
+            val shareAppsActivities = getIntentActivities(shareIntent, context)
+
+            var apps = buildAppsList(shareAppsActivities, context)
             recentAppsStorage.updateDatabaseWithNewApps(apps.map { app -> app.activityName })
             val recentApps = buildRecentAppsList(apps)
             apps = filterOutRecentApps(apps, recentApps)
+
+            // if copy app is available, prepend to the list of actions
+            getCopyApp(context)?.let {
+                apps = listOf(it) + apps
+            }
 
             recentAppsListLiveData.postValue(recentApps)
             appsListLiveData.postValue(apps)
@@ -102,6 +111,19 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(ioDispatcher) {
             val devices = buildDeviceList(fxaAccountManager)
             devicesListLiveData.postValue(devices)
+        }
+    }
+
+    private fun getCopyApp(context: Context): AppShareOption? {
+        val copyIcon = AppCompatResources.getDrawable(context, R.drawable.ic_share_clipboard)
+
+        return copyIcon?.let {
+            AppShareOption(
+                context.getString(R.string.share_copy_link_to_clipboard),
+                copyIcon,
+                ACTION_COPY_LINK_TO_CLIPBOARD,
+                ""
+            )
         }
     }
 
