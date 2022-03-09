@@ -201,7 +201,7 @@ dependencies {
 
     implementation Dependencies.google_material
 
-    implementation 'io.sentry:sentry-android:1.7.21'
+    implementation 'io.sentry:sentry-android:5.6.2'
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
     implementation("com.google.code.findbugs:jsr305:3.0.2")
@@ -235,6 +235,7 @@ dependencies {
     implementation "org.mozilla.components:feature-top-sites:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-sitepermissions:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:lib-crash-sentry:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-media:${AndroidComponents.VERSION}"
 
