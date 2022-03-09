@@ -6,16 +6,16 @@ use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimit
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace};
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
-use crate::batch::BatchFilter;
+use crate::batch::CommandBuffer;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
-use crate::frame_builder::FrameBuilderConfig;
+use crate::frame_builder::{FrameBuilderConfig};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
-use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
-use crate::prim_store::{ClipData, PictureIndex};
+use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo, TileKey};
+use crate::prim_store::ClipData;
 use crate::prim_store::gradient::{
     FastLinearGradientTask, RadialGradientTask,
     ConicGradientTask, LinearGradientTask,
@@ -166,14 +166,16 @@ pub struct ClipRegionTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
-    pub pic_index: PictureIndex,
     pub can_merge: bool,
     pub content_origin: DevicePoint,
     pub surface_spatial_node_index: SpatialNodeIndex,
+    pub raster_spatial_node_index: SpatialNodeIndex,
     pub device_pixel_scale: DevicePixelScale,
-    pub batch_filter: Option<BatchFilter>,
+    pub tile_key: Option<TileKey>,
+    pub clear_color: Option<ColorF>,
     pub scissor_rect: Option<DeviceIntRect>,
     pub valid_rect: Option<DeviceIntRect>,
+    pub cmd_buffer: Option<CommandBuffer>,
 }
 
 #[derive(Debug)]
@@ -380,13 +382,14 @@ impl RenderTaskKind {
     pub fn new_picture(
         size: DeviceIntSize,
         unclipped_size: DeviceSize,
-        pic_index: PictureIndex,
         content_origin: DevicePoint,
         surface_spatial_node_index: SpatialNodeIndex,
+        raster_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
-        batch_filter: Option<BatchFilter>,
+        tile_key: Option<TileKey>,
         scissor_rect: Option<DeviceIntRect>,
         valid_rect: Option<DeviceIntRect>,
+        clear_color: Option<ColorF>,
     ) -> Self {
         render_task_sanity_check(&size);
 
@@ -394,14 +397,16 @@ impl RenderTaskKind {
                         size.height as f32 >= unclipped_size.height;
 
         RenderTaskKind::Picture(PictureTask {
-            pic_index,
             content_origin,
             can_merge,
             surface_spatial_node_index,
+            raster_spatial_node_index,
             device_pixel_scale,
-            batch_filter,
+            tile_key,
             scissor_rect,
             valid_rect,
+            cmd_buffer: None,
+            clear_color,
         })
     }
 
