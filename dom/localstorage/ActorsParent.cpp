@@ -1580,10 +1580,10 @@ class Datastore final
   //////////////////////////////////////////////////////////////////////////////
   // Mutation Methods
   //
-  // These are only called during Snapshot::RecvAsyncCheckpoint
+  // These are only called during Snapshot::Checkpoint
 
   /**
-   * Used by Snapshot::RecvAsyncCheckpoint to set a key/value pair as part of an
+   * Used by Snapshot::Checkpoint to set a key/value pair as part of an
    * explicit batch.
    */
   void SetItem(Database* aDatabase, const nsString& aKey,
@@ -2023,6 +2023,11 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   // Reference counted.
   ~Snapshot();
 
+  mozilla::ipc::IPCResult Checkpoint(nsTArray<LSWriteInfo>&& aWriteInfos);
+
+  mozilla::ipc::IPCResult CheckpointAndNotify(
+      nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos);
+
   void Finish();
 
   // IPDL methods are only called by IPDL.
@@ -2034,6 +2039,12 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
       nsTArray<LSWriteInfo>&& aWriteInfos) override;
 
   mozilla::ipc::IPCResult RecvAsyncCheckpointAndNotify(
+      nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
+
+  mozilla::ipc::IPCResult RecvSyncCheckpoint(
+      nsTArray<LSWriteInfo>&& aWriteInfos) override;
+
+  mozilla::ipc::IPCResult RecvSyncCheckpointAndNotify(
       nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
 
   mozilla::ipc::IPCResult RecvAsyncFinish() override;
@@ -2449,6 +2460,19 @@ class PreloadedOp : public LSSimpleRequestBase {
  public:
   PreloadedOp(const LSSimpleRequestParams& aParams,
               const Maybe<ContentParentId>& aContentParentId);
+
+ private:
+  nsresult Start() override;
+
+  void GetResponse(LSSimpleRequestResponse& aResponse) override;
+};
+
+class GetStateOp : public LSSimpleRequestBase {
+  nsCString mOrigin;
+
+ public:
+  GetStateOp(const LSSimpleRequestParams& aParams,
+             const Maybe<ContentParentId>& aContentParentId);
 
  private:
   nsresult Start() override;
@@ -3464,6 +3488,14 @@ PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
           new PreloadedOp(aParams, contentParentId);
 
       actor = std::move(preloadedOp);
+
+      break;
+    }
+
+    case LSSimpleRequestParams::TLSSimpleRequestGetStateParams: {
+      RefPtr<GetStateOp> getStateOp = new GetStateOp(aParams, contentParentId);
+
+      actor = std::move(getStateOp);
 
       break;
     }
@@ -5696,7 +5728,7 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpoint(
+mozilla::ipc::IPCResult Snapshot::Checkpoint(
     nsTArray<LSWriteInfo>&& aWriteInfos) {
   AssertIsOnBackgroundThread();
   // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
@@ -5749,7 +5781,7 @@ mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpoint(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpointAndNotify(
+mozilla::ipc::IPCResult Snapshot::CheckpointAndNotify(
     nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
   AssertIsOnBackgroundThread();
   // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
@@ -5814,6 +5846,26 @@ mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpointAndNotify(
   mUsage = mDatastore->EndUpdateBatch(-1);
 
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpoint(
+    nsTArray<LSWriteInfo>&& aWriteInfos) {
+  return Checkpoint(std::move(aWriteInfos));
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpointAndNotify(
+    nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
+  return CheckpointAndNotify(std::move(aWriteAndNotifyInfos));
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvSyncCheckpoint(
+    nsTArray<LSWriteInfo>&& aWriteInfos) {
+  return Checkpoint(std::move(aWriteInfos));
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvSyncCheckpointAndNotify(
+    nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
+  return CheckpointAndNotify(std::move(aWriteAndNotifyInfos));
 }
 
 mozilla::ipc::IPCResult Snapshot::RecvAsyncFinish() {
@@ -7889,6 +7941,18 @@ bool LSSimpleRequestBase::VerifyRequestParams() {
       break;
     }
 
+    case LSSimpleRequestParams::TLSSimpleRequestGetStateParams: {
+      const LSSimpleRequestGetStateParams& params =
+          mParams.get_LSSimpleRequestGetStateParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(
+              params.principalInfo(), params.storagePrincipalInfo(), false))) {
+        return false;
+      }
+
+      break;
+    }
+
     default:
       MOZ_CRASH("Should never get here!");
   }
@@ -8041,6 +8105,60 @@ void PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse) {
   preloadedResponse.preloaded() = preloaded;
 
   aResponse = preloadedResponse;
+}
+
+/*******************************************************************************
+ * GetStateOp
+ ******************************************************************************/
+
+GetStateOp::GetStateOp(const LSSimpleRequestParams& aParams,
+                       const Maybe<ContentParentId>& aContentParentId)
+    : LSSimpleRequestBase(aParams, aContentParentId) {
+  MOZ_ASSERT(aParams.type() ==
+             LSSimpleRequestParams::TLSSimpleRequestGetStateParams);
+}
+
+nsresult GetStateOp::Start() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::StartingRequest);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
+
+  const LSSimpleRequestGetStateParams& params =
+      mParams.get_LSSimpleRequestGetStateParams();
+
+  const PrincipalInfo& storagePrincipalInfo = params.storagePrincipalInfo();
+
+  MOZ_ASSERT(
+      storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
+      storagePrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+  mOrigin = storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo
+                ? nsCString{QuotaManager::GetOriginForChrome()}
+                : QuotaManager::GetOriginFromValidatedPrincipalInfo(
+                      storagePrincipalInfo);
+
+  mState = State::SendingResults;
+  MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
+
+  return NS_OK;
+}
+
+void GetStateOp::GetResponse(LSSimpleRequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+  MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(MayProceed());
+
+  LSSimpleRequestGetStateResponse getStateResponse;
+
+  if (RefPtr<Datastore> datastore = GetDatastore(mOrigin)) {
+    if (!datastore->IsClosed()) {
+      getStateResponse.itemInfos() = datastore->GetOrderedItems().Clone();
+    }
+  }
+
+  aResponse = getStateResponse;
 }
 
 /*******************************************************************************

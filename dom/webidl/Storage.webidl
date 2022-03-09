@@ -66,6 +66,15 @@ partial interface Storage {
   void beginExplicitSnapshot();
 
   /**
+   * Checkpoints the explicitly begun snapshot. This is only useful for testing
+   * of snapshot re-using when multiple checkpoints are involved. There's no
+   * need to call this before `endExplicitSnapshot` because it checkpoints the
+   * snapshot before it's ended.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void checkpointExplicitSnapshot();
+
+  /**
    * Ends the explicitly begun snapshot and retains the underlying database.
    * Compare with `close` which also drops the reference to the database.
    */

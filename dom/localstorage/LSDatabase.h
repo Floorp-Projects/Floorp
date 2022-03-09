@@ -84,6 +84,8 @@ class LSDatabase final {
 
   nsresult BeginExplicitSnapshot(LSObject* aObject);
 
+  nsresult CheckpointExplicitSnapshot();
+
   nsresult EndExplicitSnapshot();
 
   bool HasSnapshot() const;
