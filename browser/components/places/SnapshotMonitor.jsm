@@ -94,6 +94,23 @@ const SnapshotMonitor = new (class SnapshotMonitor {
   }
 
   /**
+   * Returns a list of builder names which have a single group which is always
+   * displayed regardless of the minimum snapshot count for snapshot groups.
+   *
+   * @returns {string[]}
+   */
+  get skipMinimumSizeBuilders() {
+    let names = [];
+    for (let builder of this.#groupBuilders) {
+      let name = builder.skipMinimumSize;
+      if (name) {
+        names.push(builder.name);
+      }
+    }
+    return names;
+  }
+
+  /**
    * Performs initialization to add observers.
    */
   init() {

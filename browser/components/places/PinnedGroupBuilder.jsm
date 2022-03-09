@@ -25,6 +25,18 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
   #group = null;
 
   /**
+   * @type {string}
+   * The name of the builder recorded in the groups.
+   */
+  name = "pinned";
+
+  /**
+   * @type {boolean}
+   * This will cause the minimum snapshot size check to be skipped.
+   */
+  skipMinimumSize = true;
+
+  /**
    * Rebuilds the group from the complete list of snapshots.
    *
    * @param {Snapshot[]} snapshots
@@ -116,7 +128,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
     }
 
     let groups = await SnapshotGroups.query({
-      builder: "pinned",
+      builder: this.name,
       limit: -1,
       skipMinimum: true,
     });
