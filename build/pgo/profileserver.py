@@ -43,7 +43,7 @@ def get_crashreports(directory, name=None):
                 "$MOZ_FETCHES_DIR is not set in the environment"
             )
         stackwalk_binary = os.path.join(
-            fetches_dir, "minidump_stackwalk", "minidump_stackwalk"
+            fetches_dir, "minidump-stackwalk", "minidump-stackwalk"
         )
         if sys.platform == "win32":
             stackwalk_binary += ".exe"
