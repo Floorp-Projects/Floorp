@@ -45,7 +45,10 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     netflix: {
-      "https://*.netflix.com/*": { keyboardControls: ~KEYBOARD_CONTROLS.SEEK },
+      "https://*.netflix.com/*": {
+        keyboardControls: ~KEYBOARD_CONTROLS.SEEK,
+        videoWrapperScriptPath: "video-wrappers/netflix.js",
+      },
       "https://*.netflix.com/browse*": { policy: TOGGLE_POLICIES.HIDDEN },
       "https://*.netflix.com/latest*": { policy: TOGGLE_POLICIES.HIDDEN },
       "https://*.netflix.com/Kids*": { policy: TOGGLE_POLICIES.HIDDEN },
