@@ -12,13 +12,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -210,31 +209,37 @@ fun SyncedTabsSectionHeader(
  */
 @Composable
 fun SyncedTabsTabItem(tabTitleText: String, url: String, onClick: () -> Unit) {
-    Column(
+    Row(
         modifier = Modifier
             .clickable(
                 onClickLabel = tabTitleText,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp)
-            .defaultMinSize(minHeight = 56.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        PrimaryText(
-            text = tabTitleText,
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 16.sp,
-            maxLines = 1
+        Favicon(
+            url = url,
+            size = 24.dp,
         )
 
-        SecondaryText(
-            text = url,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 2.dp),
-            fontSize = 12.sp,
-            maxLines = 1
-        )
+        Spacer(modifier = Modifier.width(32.dp))
+
+        Column {
+            PrimaryText(
+                text = tabTitleText,
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 16.sp,
+                maxLines = 1,
+            )
+
+            SecondaryText(
+                text = url,
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 12.sp,
+                maxLines = 1,
+            )
+        }
     }
 }
 

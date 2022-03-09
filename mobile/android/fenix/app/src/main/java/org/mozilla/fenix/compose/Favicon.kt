@@ -45,12 +45,14 @@ fun Favicon(
     ) {
         Placeholder {
             Box(
-                modifier = Modifier.background(
-                    color = when (isSystemInDarkTheme()) {
-                        true -> PhotonColors.DarkGrey30
-                        false -> PhotonColors.LightGrey30
-                    }
-                )
+                modifier = Modifier
+                    .size(size)
+                    .background(
+                        color = when (isSystemInDarkTheme()) {
+                            true -> PhotonColors.DarkGrey30
+                            false -> PhotonColors.LightGrey30
+                        }
+                    )
             )
         }
 
