@@ -45,6 +45,7 @@ categories:
     testing_doc:
         - testing/testing-policy
         - testing/ci-configs
+        - testing/chrome-tests
         - testing/marionette
         - testing/geckodriver
         - testing/test-verification
