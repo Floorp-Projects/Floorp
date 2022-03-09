@@ -76,17 +76,17 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
    * Updates the domain snapshot groups based on the added and removed urls.
    *
    * @param {object} options
-   * @param {Set<string>} options.addedUrls
-   *   The added urls to handle in this update.
+   * @param {Set<object>} options.addedItems
+   *   The added items (url, userPersisted) to handle in this update.
    * @param {Set<string>} options.removedUrls
    *   The removed urls to handle in this update.
    */
-  async update({ addedUrls, removedUrls }) {
+  async update({ addedItems, removedUrls }) {
     await this.#maybeLoadGroups();
     // Update the groups with the changes, and keep a note of the changed
     // domains.
     let changedDomains = new Set();
-    for (let url of addedUrls.values()) {
+    for (let { url } of addedItems.values()) {
       let domain = this.#getDomain(url);
       if (!domain) {
         continue;
