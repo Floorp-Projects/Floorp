@@ -526,6 +526,11 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
     return nullptr;
   }
 
+  JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+  if (realm && JS::GetDebuggerObservesWasm(realm)) {
+    r->SetSkipWasmCaching();
+  }
+
   RefPtr<FetchObserver> observer;
   if (aInit.mObserve.WasPassed()) {
     observer = new FetchObserver(aGlobal, signalImpl);
