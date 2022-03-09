@@ -841,12 +841,7 @@ class GlobalScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  static GlobalScope* create(JSContext* cx, ScopeKind kind,
-                             Handle<RuntimeData*> data);
-
-  static GlobalScope* createEmpty(JSContext* cx, ScopeKind kind) {
-    return create(cx, kind, nullptr);
-  }
+  static GlobalScope* createEmpty(JSContext* cx, ScopeKind kind);
 
  private:
   static GlobalScope* createWithData(
