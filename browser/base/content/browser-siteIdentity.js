@@ -357,16 +357,6 @@ var gIdentityHandler = {
     );
     return this._httpsOnlyModeEnabledPBM;
   },
-  get _useGrayLockIcon() {
-    delete this._useGrayLockIcon;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_useGrayLockIcon",
-      "security.secure_connection_icon_color_gray",
-      false
-    );
-    return this._useGrayLockIcon;
-  },
 
   /**
    * Handles clicks on the "Clear Cookies and Site Data" button.
@@ -872,13 +862,6 @@ var gIdentityHandler = {
       );
     }
 
-    // Gray lock icon for secure connections if pref set
-    this._updateAttribute(
-      this._identityIcon,
-      "lock-icon-gray",
-      this._useGrayLockIcon
-    );
-
     // Push the appropriate strings out to the UI
     this._identityIcon.setAttribute("tooltiptext", tooltip);
 
@@ -1027,13 +1010,6 @@ var gIdentityHandler = {
     ) {
       ciphers = "weak";
     }
-
-    // Gray lock icon for secure connections if pref set
-    this._updateAttribute(
-      this._identityPopup,
-      "lock-icon-gray",
-      this._useGrayLockIcon
-    );
 
     // If HTTPS-Only Mode is enabled, check the permission status
     const privateBrowsingWindow = PrivateBrowsingUtils.isWindowPrivate(window);
