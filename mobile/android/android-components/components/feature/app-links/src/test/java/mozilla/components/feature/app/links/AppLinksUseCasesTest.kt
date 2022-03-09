@@ -93,6 +93,7 @@ class AppLinksUseCasesTest {
                     filter.addDataPath("test", 0)
                 }
             }
+            @Suppress("DEPRECATION") // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/11832
             packageManager.addResolveInfoForIntent(intent, resolveInfo)
             packageManager.addDrawableResolution(pkgName, android.R.drawable.btn_default, mock())
         }
