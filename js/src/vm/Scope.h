@@ -518,8 +518,7 @@ class LexicalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
-                                      uint32_t firstFrameSlot,
+  static void prepareForScopeCreation(ScopeKind kind, uint32_t firstFrameSlot,
                                       LexicalScope::ParserData* data,
                                       mozilla::Maybe<uint32_t>* envShape);
 
@@ -594,8 +593,7 @@ class ClassBodyScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
-                                      uint32_t firstFrameSlot,
+  static void prepareForScopeCreation(ScopeKind kind, uint32_t firstFrameSlot,
                                       ClassBodyScope::ParserData* data,
                                       mozilla::Maybe<uint32_t>* envShape);
 
@@ -709,10 +707,9 @@ class FunctionScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  static bool prepareForScopeCreation(JSContext* cx,
-                                      FunctionScope::ParserData* data,
+  static void prepareForScopeCreation(FunctionScope::ParserData* data,
                                       bool hasParameterExprs,
-                                      bool needsEnvironment, HandleFunction fun,
+                                      bool needsEnvironment,
                                       mozilla::Maybe<uint32_t>* envShape);
 
  private:
@@ -778,7 +775,7 @@ class VarScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
+  static void prepareForScopeCreation(ScopeKind kind,
                                       VarScope::ParserData* data,
                                       uint32_t firstFrameSlot,
                                       bool needsEnvironment,
@@ -928,7 +925,7 @@ class EvalScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
+  static void prepareForScopeCreation(ScopeKind scopeKind,
                                       EvalScope::ParserData* data,
                                       mozilla::Maybe<uint32_t>* envShape);
 
@@ -1015,9 +1012,7 @@ class ModuleScope : public Scope {
                                   RuntimeData, ParserData>;
 
  private:
-  static bool prepareForScopeCreation(JSContext* cx,
-                                      ModuleScope::ParserData* data,
-                                      HandleModuleObject module,
+  static void prepareForScopeCreation(ModuleScope::ParserData* data,
                                       mozilla::Maybe<uint32_t>* envShape);
 
   RuntimeData& data() { return *static_cast<RuntimeData*>(rawData()); }
