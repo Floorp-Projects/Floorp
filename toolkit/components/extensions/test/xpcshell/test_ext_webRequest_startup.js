@@ -333,13 +333,36 @@ add_task(async function test_persistent_listener_after_sideload_upgrade() {
 
   await promiseStartupManager();
   await extension.awaitStartup();
-  // Upgrades start the background when the extension is loaded, so
-  // primed listeners are cleared already and background events are
-  // already completed.
+  // Listeners are primed through sideload upgrade
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
-    primed: false,
-    persisted: true,
+    primed: true,
   });
+
+  let events = trackEvents(extension);
+
+  // Verify webRequest permission.
+  let policy = WebExtensionPolicy.getByID(id);
+  ok(policy.hasPermission("webRequest"), "addon webRequest permission added");
+
+  await testPersistentRequestStartup(extension, events, {
+    background: false,
+    delayedStart: false,
+    request: false,
+  });
+
+  ExtensionTestUtils.fetch(
+    "http://example.com/",
+    "http://example.com/data/file_sample.html"
+  );
+  await extension.awaitMessage("got-request");
+
+  await testPersistentRequestStartup(extension, events, {
+    background: true,
+    started: true,
+    request: false,
+  });
+
+  AddonTestUtils.notifyLateStartup();
 
   await extension.unload();
   await promiseShutdownManager();
@@ -453,13 +476,30 @@ add_task(
     let extension = ExtensionTestUtils.expectExtension(id);
     await promiseStartupManager();
     await extension.awaitStartup();
-    // Upgrades start the background when the extension is loaded, so
-    // primed listeners are cleared already and background events are
-    // already completed.
+    let events = trackEvents(extension);
     assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
-      primed: false,
-      persisted: true,
+      primed: true,
     });
+
+    await testPersistentRequestStartup(extension, events, {
+      background: false,
+      delayedStart: false,
+      request: false,
+    });
+
+    ExtensionTestUtils.fetch(
+      "http://example.com/",
+      "http://example.com/data/file_sample.html"
+    );
+    await extension.awaitMessage("got-request");
+
+    await testPersistentRequestStartup(extension, events, {
+      background: true,
+      started: true,
+      request: false,
+    });
+
+    AddonTestUtils.notifyLateStartup();
 
     await extension.unload();
 
@@ -511,12 +551,6 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
         { urls: ["http://example.com/data/file_sample.html"] },
         ["blocking"]
       );
-      browser.webRequest.onSendHeaders.addListener(
-        details => {
-          browser.test.sendMessage("got-sendheaders");
-        },
-        { urls: ["http://example.com/data/file_sample.html"] }
-      );
       // Force a staged updated.
       browser.runtime.onUpdateAvailable.addListener(async details => {
         if (details && details.version) {
@@ -542,46 +576,11 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     "http://example.com/",
   ];
   delete extensionData.manifest.optional_permissions;
-  extensionData.background = function() {
-    browser.webRequest.onBeforeRequest.addListener(
-      details => {
-        browser.test.sendMessage("got-request");
-      },
-      { urls: ["http://example.com/data/file_sample.html"] },
-      ["blocking"]
-    );
-    browser.webRequest.onBeforeSendHeaders.addListener(
-      details => {
-        browser.test.sendMessage("got-beforesendheaders");
-      },
-      { urls: ["http://example.com/data/file_sample.html"] }
-    );
-    browser.webRequest.onSendHeaders.addListener(
-      details => {
-        browser.test.sendMessage("got-sendheaders");
-      },
-      { urls: ["http://example.com/data/file_sample.html"] }
-    );
-    // Force a staged updated.
-    browser.runtime.onUpdateAvailable.addListener(async details => {
-      if (details && details.version) {
-        // This should be the version of the pending update.
-        browser.test.assertEq("2.0", details.version, "correct version");
-        browser.test.sendMessage("delay");
-      }
-    });
-  };
 
   await promiseStartupManager();
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
-    primed: false,
-  });
-  assertPersistentListeners(extension, "webRequest", "onBeforeSendHeaders", {
-    primed: false,
-  });
-  assertPersistentListeners(extension, "webRequest", "onSendHeaders", {
     primed: false,
   });
 
@@ -590,8 +589,6 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     "http://example.com/data/file_sample.html"
   );
   await extension.awaitMessage("got-request");
-  await extension.awaitMessage("got-beforesendheaders");
-  await extension.awaitMessage("got-sendheaders");
   ok(true, "Initial version received webRequest event");
 
   let addon = await AddonManager.getAddonByID(id);
@@ -615,22 +612,34 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
   // restarting allows upgrade to proceed
   await promiseStartupManager();
   await extension.awaitStartup();
-
-  // Upgrades start the background when the extension is loaded, so
-  // primed listeners are cleared already and background events are
-  // already completed.
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
-    primed: false,
-    persisted: true,
+    primed: true,
   });
-  // this was removed in the upgrade background, should not be persisted.
-  assertPersistentListeners(extension, "webRequest", "onBeforeSendHeaders", {
-    primed: false,
-    persisted: false,
+  let events = trackEvents(extension);
+
+  // Verify webRequest permission.
+  let policy = WebExtensionPolicy.getByID(id);
+  ok(
+    policy.hasPermission("webRequestBlocking"),
+    "addon webRequest permission added"
+  );
+
+  await testPersistentRequestStartup(extension, events, {
+    background: false,
+    delayedStart: false,
+    request: false,
   });
-  assertPersistentListeners(extension, "webRequest", "onSendHeaders", {
-    primed: false,
-    persisted: true,
+
+  ExtensionTestUtils.fetch(
+    "http://example.com/",
+    "http://example.com/data/file_sample.html"
+  );
+  await extension.awaitMessage("got-request");
+
+  await testPersistentRequestStartup(extension, events, {
+    background: true,
+    started: true,
+    request: false,
   });
 
   await extension.unload();
@@ -738,16 +747,35 @@ add_task(async function test_persistent_listener_after_permission_removal() {
 
   // restarting allows upgrade to proceed
   await promiseStartupManager({ lateStartup: false });
+  let events = trackEvents(extension);
   await extension.awaitStartup();
-  await extension.awaitMessage("loaded");
-
-  // Upgrades start the background when the extension is loaded, so
-  // primed listeners are cleared already and background events are
-  // already completed.
   assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
     primed: false,
     persisted: false,
   });
+
+  // Verify webRequest permission.
+  let policy = WebExtensionPolicy.getByID(id);
+  ok(
+    !policy.hasPermission("webRequest"),
+    "addon webRequest permission removed"
+  );
+
+  await ExtensionTestUtils.fetch(
+    "http://example.com/",
+    "http://example.com/data/file_sample.html"
+  );
+
+  await testPersistentRequestStartup(extension, events, {
+    background: false,
+    delayedStart: false,
+    request: false,
+  });
+
+  AddonTestUtils.notifyLateStartup();
+
+  await extension.awaitMessage("loaded");
+  ok(true, "Background page loaded");
 
   await extension.unload();
   await promiseShutdownManager();
