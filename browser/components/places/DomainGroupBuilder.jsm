@@ -25,6 +25,18 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
   #currentGroups = null;
 
   /**
+   * @type {string}
+   * The name of the builder recorded in the groups.
+   */
+  name = "domain";
+
+  /**
+   * @type {boolean}
+   * This will cause the minimum snapshot size check to be enforced.
+   */
+  skipMinimumSize = false;
+
+  /**
    * Rebuilds the domain groups from the complete list of snapshots.
    *
    * @param {Snapshot[]} snapshots
@@ -159,7 +171,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
     this.#currentGroups = new Map();
 
     let groups = await SnapshotGroups.query({
-      builder: "domain",
+      builder: this.name,
       limit: -1,
       skipMinimum: true,
     });
@@ -182,7 +194,7 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
   #generateDomainData(domain, url) {
     return {
       title: CommonNames.getURLName(new URL(url)),
-      builder: "domain",
+      builder: this.name,
       builderMetadata: {
         domain,
       },

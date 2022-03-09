@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
+  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -237,11 +238,16 @@ const SnapshotGroups = new (class SnapshotGroups {
     let db = await PlacesUtils.promiseDBConnection();
 
     let params = {};
-    let sizeFragment = "";
+    let sizeFragment = [];
     let limitFragment = "";
     if (!skipMinimum) {
-      sizeFragment = "HAVING snapshot_count >= :minGroupSize";
+      sizeFragment.push("HAVING snapshot_count >= :minGroupSize");
       params.minGroupSize = MIN_GROUP_SIZE;
+
+      for (let [i, name] of SnapshotMonitor.skipMinimumSizeBuilders.entries()) {
+        params[`name${i}`] = name;
+        sizeFragment.push(` OR (builder = :name${i} AND snapshot_count >= 1)`);
+      }
     }
     if (limit != -1) {
       params.limit = limit;
@@ -282,7 +288,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
       ${where}
-      GROUP BY g.id ${sizeFragment}
+      GROUP BY g.id ${sizeFragment.join(" ")}
       ORDER BY last_access DESC
       ${limitFragment}
         `,
