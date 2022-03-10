@@ -62,6 +62,7 @@ class CustomElementReactionsStack;
 class Document;
 class EventTarget;
 class MessageManagerGlobal;
+class ObservableArrayProxyHandler;
 class DedicatedWorkerGlobalScope;
 template <typename KeyType, typename ValueType>
 class Record;
@@ -3103,6 +3104,16 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
                              size_t aSlotIndex,
                              JS::MutableHandle<JSObject*> aBackingObj,
                              bool* aBackingObjCreated);
+
+// Unpacks backing object (ES Proxy exotic object) from the reserved slot of a
+// reflector for a observableArray attribute. If backing object does not exist,
+// creates backing object in the compartment of the reflector involved, making
+// this safe to use across compartments/via xrays. Return values of these
+// methods will always be in the context compartment.
+bool GetObservableArrayBackingObject(
+    JSContext* aCx, JS::Handle<JSObject*> aObj, size_t aSlotIndex,
+    JS::MutableHandle<JSObject*> aBackingObj, bool* aBackingObjCreated,
+    const ObservableArrayProxyHandler* aHandler);
 
 // Get the desired prototype object for an object construction from the given
 // CallArgs.  The CallArgs must be for a constructor call.  The
