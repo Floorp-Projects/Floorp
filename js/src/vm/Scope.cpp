@@ -133,7 +133,7 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
       JSAtom* name = bi.name();
-      cx->markAtom(name);
+      MOZ_ASSERT(AtomIsMarked(cx->zone(), name));
       id = NameToId(name->asPropertyName());
       if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
                                &mapLength, &objectFlags)) {
