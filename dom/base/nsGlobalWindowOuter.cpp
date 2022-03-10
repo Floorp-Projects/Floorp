@@ -39,6 +39,7 @@
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/ProxyHandlerUtils.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StorageNotifierService.h"
