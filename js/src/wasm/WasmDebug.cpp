@@ -29,7 +29,7 @@
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -6,7 +6,7 @@
 
 #include "vm/PIC.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"

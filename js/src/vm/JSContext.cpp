@@ -33,7 +33,7 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "irregexp/RegExpAPI.h"

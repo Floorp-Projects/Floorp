@@ -15,7 +15,7 @@
 #include "debugger/DebugAPI.h"    // for DebugAPI
 #include "debugger/Debugger.h"    // for JSBreakpointSite, Breakpoint
 #include "gc/Cell.h"              // for TenuredCell
-#include "gc/FreeOp.h"            // for JSFreeOp
+#include "gc/GCContext.h"         // for JSFreeOp
 #include "gc/GCEnum.h"            // for MemoryUse, MemoryUse::BreakpointSite
 #include "gc/Marking.h"           // for IsAboutToBeFinalized
 #include "gc/Zone.h"              // for Zone
@@ -29,8 +29,8 @@
 #include "vm/Runtime.h"           // for ReportOutOfMemory
 #include "vm/Stack.h"             // for ActivationIterator, Activation
 
-#include "gc/FreeOp-inl.h"            // for JSFreeOp::free_
 #include "gc/GC-inl.h"                // for ZoneCellIter
+#include "gc/GCContext-inl.h"         // for JSFreeOp::free_
 #include "gc/Marking-inl.h"           // for CheckGCThingAfterMovingGC
 #include "gc/WeakMap-inl.h"           // for WeakMap::remove
 #include "vm/BytecodeIterator-inl.h"  // for AllBytecodesIterable

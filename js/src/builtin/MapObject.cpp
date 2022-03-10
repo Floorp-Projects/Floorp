@@ -9,7 +9,7 @@
 #include "jsapi.h"
 
 #include "ds/OrderedHashTable.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/InlinableNatives.h"
 #include "js/MapAndSet.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions

@@ -15,7 +15,7 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
