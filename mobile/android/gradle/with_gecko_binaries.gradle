@@ -64,7 +64,7 @@ def getLlvmBinFolder() {
     // and return its parent directory.
     return project
         .file(new FileNameFinder()
-                  .getFileNames(ndkDirectory, "toolchains/llvm/prebuilt/**/bin/llvm-*")
+                  .getFileNames(ndkDirectory.toString(), "toolchains/llvm/prebuilt/**/bin/llvm-*")
                   .first())
         .parentFile
 }
