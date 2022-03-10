@@ -30,7 +30,8 @@
     },
     "infoLinkUrl": {
       "type": "string",
-      "description": "URL for the info section link."
+      "description": "URL for the info section link.",
+      "format": "moz-url-format"
     },
     "promoEnabled": {
       "type": "boolean",
@@ -59,7 +60,8 @@
     },
     "promoLinkUrl": {
       "type": "string",
-      "description": "URL for link in the promo box."
+      "description": "URL for link in the promo box.",
+      "format": "moz-url-format"
     },
     "promoLinkType": {
       "type": "string",
