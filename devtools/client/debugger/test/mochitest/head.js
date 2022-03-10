@@ -31,3 +31,68 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this
 );
+
+/**
+ * Helper function for `_loadAllIntegrationTests`.
+ *
+ * Implements this as a global method in order to please eslint.
+ * This will be used by modules loaded from "integration-tests" folder
+ * in order to register a new integration task, ran when executing `runAllIntegrationTests`.
+ */
+const integrationTasks = [];
+function addIntegrationTask(fun) {
+  integrationTasks.push(fun);
+}
+
+/**
+ * Helper function for `runAllIntegrationTests`.
+ *
+ * Loads all the modules from "integration-tests" folder and return
+ * all the task they implemented and registered by calling `addIntegrationTask`.
+ */
+function _loadAllIntegrationTests() {
+  const testsDir = getChromeDir(getResolvedURI(gTestPath));
+  testsDir.append("integration-tests");
+  const entries = testsDir.directoryEntries;
+  const urls = [];
+  while (entries.hasMoreElements()) {
+    const file = entries.nextFile;
+    const url = Services.io.newFileURI(file).spec;
+    if (url.endsWith(".js")) {
+      urls.push(url);
+    }
+  }
+
+  // We need to sort in order to run the test in a reliable order
+  urls.sort();
+
+  for (const url of urls) {
+    Services.scriptloader.loadSubScript(url, this);
+  }
+  return integrationTasks;
+}
+
+/**
+ * Method to be called by each integration tests which will
+ * run all the "integration tasks" implemented in files from the "integration-tests" folder.
+ * These files should call the `addIntegrationTask()` method to register something to run.
+ *
+ * @param {String} testFolder
+ *        Define what folder in "examples" folder to load before opening the debugger.
+ *        This is meant to be a versionized test folder with v1, v2, v3 folders.
+ *        (See createVersionizedHttpTestServer())
+ * @param {Object} env
+ *        Environment object passed down to each task to better know
+ *        which particular integration test is being run.
+ */
+async function runAllIntegrationTests(testFolder, env) {
+  const tasks = _loadAllIntegrationTests();
+
+  const testServer = createVersionizedHttpTestServer("examples/" + testFolder);
+  const testUrl = testServer.urlFor("index.html");
+
+  for (const task of tasks) {
+    info(` ==> Running integration task '${task.name}'`);
+    await task(testServer, testUrl, env);
+  }
+}
