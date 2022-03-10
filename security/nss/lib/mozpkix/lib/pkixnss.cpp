@@ -40,63 +40,181 @@ namespace mozilla { namespace pkix {
 namespace {
 
 Result
-VerifySignedDigest(const SignedDigest& sd,
-                   Input subjectPublicKeyInfo,
-                   SECOidTag pubKeyAlg,
-                   void* pkcs11PinArg)
+SubjectPublicKeyInfoToSECKEYPublicKey(Input subjectPublicKeyInfo,
+    ScopedSECKEYPublicKey& publicKey)
 {
-  SECOidTag digestAlg;
-  switch (sd.digestAlgorithm) {
-    case DigestAlgorithm::sha512: digestAlg = SEC_OID_SHA512; break;
-    case DigestAlgorithm::sha384: digestAlg = SEC_OID_SHA384; break;
-    case DigestAlgorithm::sha256: digestAlg = SEC_OID_SHA256; break;
-    case DigestAlgorithm::sha1: digestAlg = SEC_OID_SHA1; break;
-    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
-  }
-
-  SECItem subjectPublicKeyInfoSECItem =
-    UnsafeMapInputToSECItem(subjectPublicKeyInfo);
-  ScopedCERTSubjectPublicKeyInfo
-    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
+  SECItem subjectPublicKeyInfoSECItem(
+      UnsafeMapInputToSECItem(subjectPublicKeyInfo));
+  ScopedCERTSubjectPublicKeyInfo spki(
+      SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
   if (!spki) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-  ScopedSECKEYPublicKey
-    pubKey(SECKEY_ExtractPublicKey(spki.get()));
-  if (!pubKey) {
+  publicKey.reset(SECKEY_ExtractPublicKey(spki.get()));
+  if (!publicKey) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-
-  SECItem digestSECItem(UnsafeMapInputToSECItem(sd.digest));
-  SECItem signatureSECItem(UnsafeMapInputToSECItem(sd.signature));
-  SECStatus srv = VFY_VerifyDigestDirect(&digestSECItem, pubKey.get(),
-                                         &signatureSECItem, pubKeyAlg,
-                                         digestAlg, pkcs11PinArg);
-  if (srv != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-
   return Success;
 }
 
+Result
+VerifySignedData(SECKEYPublicKey* publicKey, CK_MECHANISM_TYPE mechanism,
+    SECItem* params, SECItem* signature, SECItem* data,
+    SECOidTag (&policyTags)[3], void* pkcs11PinArg)
+{
+  // Hash and signature algorithms can be disabled by policy in NSS. However,
+  // the policy engine in NSS is not currently sophisticated enough to, for
+  // example, infer that disabling SEC_OID_SHA1 (i.e. the hash algorithm SHA1)
+  // should also disable SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION. Thus, this
+  // implementation checks the signature algorithm, the hash algorithm, and the
+  // signature algorithm with the hash algorithm together.
+  for (size_t i = 0; i < sizeof(policyTags) / sizeof(policyTags[0]); i++) {
+    SECOidTag policyTag = policyTags[i];
+    uint32_t policyFlags;
+    if (NSS_GetAlgorithmPolicy(policyTag, &policyFlags) != SECSuccess) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    if (!(policyFlags & NSS_USE_ALG_IN_ANY_SIGNATURE)) {
+      return MapPRErrorCodeToResult(SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED);
+    }
+  }
+  SECStatus srv = PK11_VerifyWithMechanism(publicKey, mechanism, params,
+      signature, data, pkcs11PinArg);
+  if (srv != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  return Success;
+}
 } // namespace
 
 Result
-VerifyRSAPKCS1SignedDigestNSS(const SignedDigest& sd,
-                              Input subjectPublicKeyInfo,
-                              void* pkcs11PinArg)
+VerifyRSAPKCS1SignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo, void* pkcs11PinArg)
 {
-  return VerifySignedDigest(sd, subjectPublicKeyInfo,
-                            SEC_OID_PKCS1_RSA_ENCRYPTION, pkcs11PinArg);
+  ScopedSECKEYPublicKey publicKey;
+  Result rv = SubjectPublicKeyInfoToSECKEYPublicKey(subjectPublicKeyInfo,
+      publicKey);
+  if (rv != Success) {
+    return rv;
+  }
+  SECItem signatureItem(UnsafeMapInputToSECItem(signature));
+  SECItem dataItem(UnsafeMapInputToSECItem(data));
+  CK_MECHANISM_TYPE mechanism;
+  SECOidTag signaturePolicyTag = SEC_OID_PKCS1_RSA_ENCRYPTION;
+  SECOidTag hashPolicyTag;
+  SECOidTag combinedPolicyTag;
+  switch (digestAlgorithm) {
+    case DigestAlgorithm::sha512:
+      mechanism = CKM_SHA512_RSA_PKCS;
+      hashPolicyTag = SEC_OID_SHA512;
+      combinedPolicyTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
+      break;
+    case DigestAlgorithm::sha384:
+      mechanism = CKM_SHA384_RSA_PKCS;
+      hashPolicyTag = SEC_OID_SHA384;
+      combinedPolicyTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
+      break;
+    case DigestAlgorithm::sha256:
+      mechanism = CKM_SHA256_RSA_PKCS;
+      hashPolicyTag = SEC_OID_SHA256;
+      combinedPolicyTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+      break;
+    case DigestAlgorithm::sha1:
+      mechanism = CKM_SHA1_RSA_PKCS;
+      hashPolicyTag = SEC_OID_SHA1;
+      combinedPolicyTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+      break;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+  }
+  SECOidTag policyTags[3] =
+      { signaturePolicyTag, hashPolicyTag, combinedPolicyTag };
+  return VerifySignedData(publicKey.get(), mechanism, nullptr, &signatureItem,
+      &dataItem, policyTags, pkcs11PinArg);
 }
 
 Result
-VerifyECDSASignedDigestNSS(const SignedDigest& sd,
-                           Input subjectPublicKeyInfo,
-                           void* pkcs11PinArg)
+EncodedECDSASignatureToRawPoint(Input signature,
+    const ScopedSECKEYPublicKey& publicKey, ScopedSECItem& result) {
+  Input r;
+  Input s;
+  Result rv = der::ECDSASigValue(signature, r, s);
+  if (rv != Success) {
+    return Result::ERROR_BAD_SIGNATURE;
+  }
+  size_t signatureLength = SECKEY_SignatureLen(publicKey.get());
+  if (signatureLength == 0) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  if (signatureLength % 2 != 0) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  size_t coordinateLength = signatureLength / 2;
+  if (r.GetLength() > coordinateLength || s.GetLength() > coordinateLength) {
+    return Result::ERROR_BAD_SIGNATURE;
+  }
+  ScopedSECItem signatureItem(
+      SECITEM_AllocItem(nullptr, nullptr, signatureLength));
+  if (!signatureItem) {
+    return Result::FATAL_ERROR_NO_MEMORY;
+  }
+  memset(signatureItem->data, 0, signatureLength);
+  memcpy(signatureItem->data + (coordinateLength - r.GetLength()),
+      r.UnsafeGetData(), r.GetLength());
+  memcpy(signatureItem->data + (2 * coordinateLength - s.GetLength()),
+      s.UnsafeGetData(), s.GetLength());
+  result.swap(signatureItem);
+  return Success;
+}
+
+Result
+VerifyECDSASignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo, void* pkcs11PinArg)
 {
-  return VerifySignedDigest(sd, subjectPublicKeyInfo,
-                            SEC_OID_ANSIX962_EC_PUBLIC_KEY, pkcs11PinArg);
+  ScopedSECKEYPublicKey publicKey;
+  Result rv = SubjectPublicKeyInfoToSECKEYPublicKey(subjectPublicKeyInfo,
+      publicKey);
+  if (rv != Success) {
+    return rv;
+  }
+
+  ScopedSECItem signatureItem;
+  rv = EncodedECDSASignatureToRawPoint(signature, publicKey, signatureItem);
+  if (rv != Success) {
+    return rv;
+  }
+
+  SECItem dataItem(UnsafeMapInputToSECItem(data));
+  CK_MECHANISM_TYPE mechanism;
+  SECOidTag signaturePolicyTag = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+  SECOidTag hashPolicyTag;
+  SECOidTag combinedPolicyTag;
+  switch (digestAlgorithm) {
+    case DigestAlgorithm::sha512:
+      mechanism = CKM_ECDSA_SHA512;
+      hashPolicyTag = SEC_OID_SHA512;
+      combinedPolicyTag = SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE;
+      break;
+    case DigestAlgorithm::sha384:
+      mechanism = CKM_ECDSA_SHA384;
+      hashPolicyTag = SEC_OID_SHA384;
+      combinedPolicyTag = SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE;
+      break;
+    case DigestAlgorithm::sha256:
+      mechanism = CKM_ECDSA_SHA256;
+      hashPolicyTag = SEC_OID_SHA256;
+      combinedPolicyTag = SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE;
+      break;
+    case DigestAlgorithm::sha1:
+      mechanism = CKM_ECDSA_SHA1;
+      hashPolicyTag = SEC_OID_SHA1;
+      combinedPolicyTag = SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE;
+      break;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+  }
+  SECOidTag policyTags[3] =
+      { signaturePolicyTag, hashPolicyTag, combinedPolicyTag };
+  return VerifySignedData(publicKey.get(), mechanism, nullptr,
+      signatureItem.get(), &dataItem, policyTags, pkcs11PinArg);
 }
 
 Result
