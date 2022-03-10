@@ -256,18 +256,6 @@ Maybe<StereoMode> StereoModeFromBufferDescriptor(
   }
 }
 
-Maybe<gfx::ChromaSubsampling> ChromaSubsamplingFromBufferDescriptor(
-    const BufferDescriptor& aDescriptor) {
-  switch (aDescriptor.type()) {
-    case BufferDescriptor::TRGBDescriptor:
-      return Nothing();
-    case BufferDescriptor::TYCbCrDescriptor:
-      return Some(aDescriptor.get_YCbCrDescriptor().chromaSubsampling());
-    default:
-      MOZ_CRASH("GFX: ChromaSubsamplingFromBufferDescriptor");
-  }
-}
-
 uint8_t* GetYChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor) {
   return aBuffer + aDescriptor.yOffset();
 }
@@ -311,13 +299,16 @@ already_AddRefed<DataSourceSurface> DataSourceSurfaceFromYCbCrDescriptor(
   layers::PlanarYCbCrData ycbcrData;
   ycbcrData.mYChannel = GetYChannel(aBuffer, aDescriptor);
   ycbcrData.mYStride = aDescriptor.yStride();
+  ycbcrData.mYSize = aDescriptor.ySize();
   ycbcrData.mCbChannel = GetCbChannel(aBuffer, aDescriptor);
   ycbcrData.mCrChannel = GetCrChannel(aBuffer, aDescriptor);
   ycbcrData.mCbCrStride = aDescriptor.cbCrStride();
-  ycbcrData.mPictureRect = aDescriptor.display();
+  ycbcrData.mCbCrSize = aDescriptor.cbCrSize();
+  ycbcrData.mPicSize = size;
+  ycbcrData.mPicX = display.X();
+  ycbcrData.mPicY = display.Y();
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
   ycbcrData.mColorDepth = aDescriptor.colorDepth();
-  ycbcrData.mChromaSubsampling = aDescriptor.chromaSubsampling();
 
   gfx::ConvertYCbCrToRGB(ycbcrData, gfx::SurfaceFormat::B8G8R8X8, size,
                          map.mData, map.mStride);
@@ -334,24 +325,29 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                         int32_t aStride) {
   MOZ_ASSERT(aBuffer);
 
+  const gfx::IntRect display = aDescriptor.display();
+
   layers::PlanarYCbCrData ycbcrData;
   ycbcrData.mYChannel = GetYChannel(aBuffer, aDescriptor);
   ycbcrData.mYStride = aDescriptor.yStride();
+  ycbcrData.mYSize = aDescriptor.ySize();
   ycbcrData.mCbChannel = GetCbChannel(aBuffer, aDescriptor);
   ycbcrData.mCrChannel = GetCrChannel(aBuffer, aDescriptor);
   ycbcrData.mCbCrStride = aDescriptor.cbCrStride();
-  ycbcrData.mPictureRect = aDescriptor.display();
+  ycbcrData.mCbCrSize = aDescriptor.cbCrSize();
+  ycbcrData.mPicSize = display.Size();
+  ycbcrData.mPicX = display.X();
+  ycbcrData.mPicY = display.Y();
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
   ycbcrData.mColorDepth = aDescriptor.colorDepth();
-  ycbcrData.mChromaSubsampling = aDescriptor.chromaSubsampling();
 
   gfx::ConvertYCbCrToRGB(ycbcrData, aDestFormat, aDestSize, aDestBuffer,
                          aStride);
 }
 
 gfx::IntSize GetCroppedCbCrSize(const YCbCrDescriptor& aDescriptor) {
-  return ChromaSize(aDescriptor.display().Size(),
-                    aDescriptor.chromaSubsampling());
+  return gfx::GetCroppedCbCrSize(aDescriptor.ySize(), aDescriptor.cbCrSize(),
+                                 aDescriptor.display().Size());
 }
 
 }  // namespace ImageDataSerializer

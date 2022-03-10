@@ -210,9 +210,9 @@ bool GLBlitHelper::BlitImage(layers::D3D11YCbCrImage* const srcImage,
   const WindowsHandle handles[3] = {(WindowsHandle)data->mHandles[0],
                                     (WindowsHandle)data->mHandles[1],
                                     (WindowsHandle)data->mHandles[2]};
-  return BlitAngleYCbCr(handles, srcImage->mPictureRect, srcImage->YDataSize(),
-                        srcImage->CbCrDataSize(), srcImage->mColorSpace,
-                        destSize, destOrigin);
+  return BlitAngleYCbCr(handles, srcImage->mPictureRect, srcImage->mYSize,
+                        srcImage->mCbCrSize, srcImage->mColorSpace, destSize,
+                        destOrigin);
 }
 
 // -------------------------------------

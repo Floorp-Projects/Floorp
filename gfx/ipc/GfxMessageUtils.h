@@ -712,13 +712,6 @@ struct ParamTraits<mozilla::StereoMode>
                                       mozilla::StereoMode::MAX> {};
 
 template <>
-struct ParamTraits<mozilla::gfx::ChromaSubsampling>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::gfx::ChromaSubsampling,
-          mozilla::gfx::ChromaSubsampling::_First,
-          mozilla::gfx::ChromaSubsampling::_Last> {};
-
-template <>
 struct ParamTraits<mozilla::gfx::ImplicitlyCopyableFloatArray>
     : public ParamTraits<nsTArray<float>> {
   typedef mozilla::gfx::ImplicitlyCopyableFloatArray paramType;

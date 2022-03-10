@@ -62,14 +62,7 @@ class MOZ_RAII YCbCrTextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,
-                                     const gfx::IntSize& aYSize,
-                                     const gfx::IntSize& aCbCrSize,
                                      TextureFlags aTextureFlags);
-
-  YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,
-                                     TextureFlags aTextureFlags)
-      : YCbCrTextureClientAllocationHelper(
-            aData, aData.YDataSize(), aData.CbCrDataSize(), aTextureFlags) {}
 
   bool IsCompatible(TextureClient* aTextureClient) override;
 
@@ -78,8 +71,6 @@ class MOZ_RAII YCbCrTextureClientAllocationHelper
 
  protected:
   const PlanarYCbCrData& mData;
-  const gfx::IntSize mYSize;
-  const gfx::IntSize mCbCrSize;
 };
 
 /**

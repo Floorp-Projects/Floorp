@@ -421,7 +421,6 @@ class VideoData : public MediaData {
   typedef gfx::ColorDepth ColorDepth;
   typedef gfx::ColorRange ColorRange;
   typedef gfx::YUVColorSpace YUVColorSpace;
-  typedef gfx::ChromaSubsampling ChromaSubsampling;
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
   typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
@@ -446,7 +445,6 @@ class VideoData : public MediaData {
     YUVColorSpace mYUVColorSpace = YUVColorSpace::Identity;
     ColorDepth mColorDepth = ColorDepth::COLOR_8;
     ColorRange mColorRange = ColorRange::LIMITED;
-    ChromaSubsampling mChromaSubsampling = ChromaSubsampling::FULL;
   };
 
   // Constructs a VideoData object. If aImage is nullptr, creates a new Image
