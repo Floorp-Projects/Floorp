@@ -41,9 +41,8 @@ onmessage = async function(msg) {
         };
         reader.readAsArrayBuffer(fileContents);
       });
-      let profileDirPath = await PathUtils.getProfileDir();
       let installToDirPath = PathUtils.join(
-        profileDirPath,
+        await PathUtils.getProfileDir(),
         ...msg.data.relativeInstallPath
       );
       await IOUtils.makeDirectory(installToDirPath);

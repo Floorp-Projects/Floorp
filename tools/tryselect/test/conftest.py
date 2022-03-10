@@ -11,8 +11,8 @@ import yaml
 from unittest.mock import MagicMock
 from moztest.resolve import TestResolver
 from gecko_taskgraph.graph import Graph
-from gecko_taskgraph.task import Task
 from gecko_taskgraph.taskgraph import TaskGraph
+from taskgraph.task import Task
 
 from tryselect import push
 

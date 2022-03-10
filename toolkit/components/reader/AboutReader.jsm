@@ -1071,6 +1071,8 @@ AboutReader.prototype = {
     );
     this._doc.title = article.title;
 
+    this._containerElement.setAttribute("lang", article.lang);
+
     this._headerElement.classList.add("reader-show-element");
 
     let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(

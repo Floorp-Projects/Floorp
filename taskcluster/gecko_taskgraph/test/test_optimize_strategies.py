@@ -8,6 +8,7 @@ from time import mktime
 
 import pytest
 from mozunit import main
+from taskgraph.task import Task
 
 from gecko_taskgraph.optimize import project, registry
 from gecko_taskgraph.optimize.strategies import IndexSearch, SkipUnlessSchedules
@@ -18,7 +19,6 @@ from gecko_taskgraph.optimize.bugbug import (
     FALLBACK,
     SkipUnlessDebug,
 )
-from gecko_taskgraph.task import Task
 from gecko_taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 from gecko_taskgraph.util.bugbug import (
     BUGBUG_BASE_URL,

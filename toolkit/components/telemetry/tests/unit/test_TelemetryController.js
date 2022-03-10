@@ -60,8 +60,7 @@ const TEST_PING_TYPE = "test-ping-type";
 var gClientID = null;
 
 XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function() {
-  let profileDir = await PathUtils.getProfileDir();
-  return PathUtils.join(profileDir, "datareporting");
+  return PathUtils.join(PathUtils.profileDir, "datareporting");
 });
 
 function sendPing(aSendClientId, aSendEnvironment) {
@@ -621,7 +620,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
   const DEFAULT_DB_NAME = "healthreport.sqlite";
 
   // Check that we're able to remove a FHR DB with a custom name.
-  const profileDir = await PathUtils.getProfileDir();
+  const profileDir = PathUtils.profileDir;
   const CUSTOM_DB_PATHS = [
     PathUtils.join(profileDir, CUSTOM_DB_NAME),
     PathUtils.join(profileDir, CUSTOM_DB_NAME + "-wal"),

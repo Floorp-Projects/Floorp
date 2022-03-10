@@ -1,0 +1,19 @@
+{
+  "name": "sourcemaps-reload-uncompressed",
+  "version": "1.0.0",
+  "description": "Rebuild assets for sourcemaps-reload-uncompressed test, see README.md in the same folder",
+  "scripts": {
+    "pack": "cd v1 && webpack && cd ../v2 && webpack && cd ../v3 && webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-es2015": "^6.24.1",
+    "webpack": "^3.7.1"
+  }
+}

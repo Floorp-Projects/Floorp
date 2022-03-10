@@ -54,10 +54,7 @@ add_task(async function setup() {
     "_showRemovalOfSearchEngineNotificationBox"
   );
 
-  settingsFilePath = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    SETTINGS_FILENAME
-  );
+  settingsFilePath = PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME);
 
   Region._setHomeRegion("", false);
 

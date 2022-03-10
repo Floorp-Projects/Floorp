@@ -590,15 +590,13 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * for the flex item at the correct size, and hence can skip its final reflow
    * (but still need to move it to the right final position).
    *
-   * @param aReflowInput    The flex container's reflow input.
    * @param aItem           The flex item whose frame should be moved.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
    * @param aContainerSize  The flex container's size (required by some methods
    *                        that we call, to interpret aFramePos correctly).
    */
-  void MoveFlexItemToFinalPosition(const ReflowInput& aReflowInput,
-                                   const FlexItem& aItem,
+  void MoveFlexItemToFinalPosition(const FlexItem& aItem,
                                    mozilla::LogicalPoint& aFramePos,
                                    const nsSize& aContainerSize);
   /**
