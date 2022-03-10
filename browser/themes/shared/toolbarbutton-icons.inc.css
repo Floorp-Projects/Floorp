@@ -273,9 +273,6 @@ toolbar {
   list-style-image: url("chrome://global/skin/icons/print.svg");
 }
 
-%ifdef XP_MACOSX
-#restore-button,
-%endif
 #fullscreen-button {
   list-style-image: url("chrome://browser/skin/fullscreen.svg");
 }
