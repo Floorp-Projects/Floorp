@@ -256,6 +256,8 @@ static int bytes_for_internal_format(GLenum internal_format) {
       return 2;
     case GL_R16:
       return 2;
+    case GL_RG16:
+      return 4;
     default:
       debugf("internal format: %x\n", internal_format);
       assert(0);
@@ -279,6 +281,8 @@ static TextureFormat gl_format_to_texture_format(int type) {
       return TextureFormat::RG8;
     case GL_R16:
       return TextureFormat::R16;
+    case GL_RG16:
+      return TextureFormat::RG16;
     case GL_RGB_RAW_422_APPLE:
       return TextureFormat::YUV422;
     default:
@@ -1745,6 +1749,8 @@ GLenum internal_format_for_data(GLenum format, GLenum ty) {
     return GL_RGB_RAW_422_APPLE;
   } else if (format == GL_RED && ty == GL_UNSIGNED_SHORT) {
     return GL_R16;
+  } else if (format == GL_RG && ty == GL_UNSIGNED_SHORT) {
+    return GL_RG16;
   } else {
     debugf("unknown internal format for format %x, type %x\n", format, ty);
     assert(false);
