@@ -164,7 +164,8 @@ class nsHttpConnection final : public HttpConnectionBase,
                                                   nsHttpRequestHead* request,
                                                   nsACString& result,
                                                   bool h2ws);
-  void SetupSecondaryTLS(nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
+  void SetupSecondaryTLS(
+      nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
   void SetInSpdyTunnel(bool arg);
 
   // Check active connections for traffic (or not). SPDY connections send a
