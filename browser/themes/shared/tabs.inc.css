@@ -805,7 +805,7 @@
 	}
 }
 
-@media (-moz-os-version: windows-win7)
+@media (-moz-platform: windows-win7)
 {
 	:root:not([privatebrowsingmode=temporary]) #TabsToolbar:not(:-moz-lwtheme)
 	{

@@ -1217,9 +1217,9 @@
  }
  @media (-moz-windows-compositor)
  {
-   @media not (-moz-os-version: windows-win7)
+   @media not (-moz-platform: windows-win7)
    {
-     @media not (-moz-os-version: windows-win8)
+     @media not (-moz-platform: windows-win8)
      {
        @media (-moz-windows-default-theme)
        {

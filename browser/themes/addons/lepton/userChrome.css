@@ -42,7 +42,7 @@
   height: 40px;
 }
 @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
-  @media not (-moz-os-version: windows-win10){
+  @media not (-moz-platform: windows-win10){
     :root{ --uc-titlebar-padding: 0px !important }
   }
   .titlebar-buttonbox-container{ left:0; right: unset !important; }

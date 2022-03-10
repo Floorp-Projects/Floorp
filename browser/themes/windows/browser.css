@@ -58,15 +58,15 @@
  * illegible.
  */
 @media (-moz-windows-default-theme) {
-  @media not (-moz-os-version: windows-win7) {
+  @media not (-moz-platform: windows-win7) {
     #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
       color: ThreeDShadow;
     }
   }
 }
 
-@media not (-moz-os-version: windows-win7) {
-  @media not (-moz-os-version: windows-win8) {
+@media not (-moz-platform: windows-win7) {
+  @media not (-moz-platform: windows-win8) {
     /* On Windows 10, when temporarily showing the menu bar, make it at least as
      * tall as the tab bar such that the window controls don't appear to move up. */
     :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
@@ -79,7 +79,7 @@
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-platform: windows-win7) {
   :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
     padding-top: 4px;
@@ -99,7 +99,7 @@
 }
 
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-platform: windows-win7) {
   @media (-moz-windows-default-theme) {
     #TabsToolbar:not(:-moz-lwtheme) {
       background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
@@ -109,7 +109,7 @@
 
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0),
-       (-moz-os-version: windows-win8) {
+       (-moz-platform: windows-win8) {
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
@@ -231,8 +231,8 @@
   -moz-box-align: stretch;
 }
 
-@media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
+@media (-moz-platform: windows-win7),
+       (-moz-platform: windows-win8) {
   /* Preserve window control buttons position at the top of the button box. */
   .titlebar-buttonbox-container {
     -moz-box-align: start;
