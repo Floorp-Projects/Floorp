@@ -66,7 +66,7 @@ class SignatureParamsTrustDomain final : public TrustDomain {
     return Success;
   }
 
-  Result VerifyECDSASignedDigest(const SignedDigest&, Input) override {
+  Result VerifyECDSASignedData(Input, DigestAlgorithm, Input, Input) override {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
@@ -82,7 +82,8 @@ class SignatureParamsTrustDomain final : public TrustDomain {
     return Success;
   }
 
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest&, Input) override {
+  Result VerifyRSAPKCS1SignedData(Input, DigestAlgorithm, Input,
+                                  Input) override {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
@@ -216,8 +217,8 @@ bool CTLogVerifier::SignatureParametersMatch(const DigitallySigned& signature) {
       DigitallySigned::HashAlgorithm::SHA256, mSignatureAlgorithm);
 }
 
-static Result FasterVerifyECDSASignedDigestNSS(const SignedDigest& sd,
-                                               UniqueSECKEYPublicKey& pubkey) {
+static Result FasterVerifyECDSASignedDataNSS(Input data, Input signature,
+                                             UniqueSECKEYPublicKey& pubkey) {
   assert(pubkey);
   if (!pubkey) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -226,7 +227,7 @@ static Result FasterVerifyECDSASignedDigestNSS(const SignedDigest& sd,
   // expects the signature as only the two integers r and s (so no encoding -
   // just two series of bytes each half as long as SECKEY_SignatureLen(pubkey)).
   // DSAU_DecodeDerSigToLen converts from the former format to the latter.
-  SECItem derSignatureSECItem(UnsafeMapInputToSECItem(sd.signature));
+  SECItem derSignatureSECItem(UnsafeMapInputToSECItem(signature));
   size_t signatureLen = SECKEY_SignatureLen(pubkey.get());
   if (signatureLen == 0) {
     return MapPRErrorCodeToResult(PR_GetError());
@@ -236,47 +237,30 @@ static Result FasterVerifyECDSASignedDigestNSS(const SignedDigest& sd,
   if (!signatureSECItem) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-  SECItem digestSECItem(UnsafeMapInputToSECItem(sd.digest));
-  SECStatus srv = PK11_Verify(pubkey.get(), signatureSECItem.get(),
-                              &digestSECItem, nullptr);
+  SECItem dataSECItem(UnsafeMapInputToSECItem(data));
+  SECStatus srv =
+      PK11_VerifyWithMechanism(pubkey.get(), CKM_ECDSA_SHA256, nullptr,
+                               signatureSECItem.get(), &dataSECItem, nullptr);
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-
   return Success;
 }
 
 Result CTLogVerifier::VerifySignature(Input data, Input signature) {
-  uint8_t digest[SHA256_LENGTH];
-  Result rv = DigestBufNSS(data, DigestAlgorithm::sha256, digest,
-                           MOZILLA_CT_ARRAY_LENGTH(digest));
-  if (rv != Success) {
-    return rv;
-  }
-
-  SignedDigest signedDigest;
-  signedDigest.digestAlgorithm = DigestAlgorithm::sha256;
-  rv = signedDigest.digest.Init(digest, MOZILLA_CT_ARRAY_LENGTH(digest));
-  if (rv != Success) {
-    return rv;
-  }
-  rv = signedDigest.signature.Init(signature);
-  if (rv != Success) {
-    return rv;
-  }
-
   Input spki;
-  rv = BufferToInput(mSubjectPublicKeyInfo, spki);
+  Result rv = BufferToInput(mSubjectPublicKeyInfo, spki);
   if (rv != Success) {
     return rv;
   }
 
   switch (mSignatureAlgorithm) {
     case DigitallySigned::SignatureAlgorithm::RSA:
-      rv = VerifyRSAPKCS1SignedDigestNSS(signedDigest, spki, nullptr);
+      rv = VerifyRSAPKCS1SignedDataNSS(data, DigestAlgorithm::sha256, signature,
+                                       spki, nullptr);
       break;
     case DigitallySigned::SignatureAlgorithm::ECDSA:
-      rv = FasterVerifyECDSASignedDigestNSS(signedDigest, mPublicECKey);
+      rv = FasterVerifyECDSASignedDataNSS(data, signature, mPublicECKey);
       break;
     // We do not expect new values added to this enum any time soon,
     // so just listing all the available ones seems to be the easiest way

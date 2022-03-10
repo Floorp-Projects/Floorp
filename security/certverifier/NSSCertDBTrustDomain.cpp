@@ -161,15 +161,8 @@ static bool ShouldSkipSelfSignedNonTrustAnchor(TrustDomain& trustDomain,
   if (trust != TrustLevel::InheritsTrust) {
     return false;
   }
-  uint8_t digestBuf[MAX_DIGEST_SIZE_IN_BYTES];
-  pkix::der::PublicKeyAlgorithm publicKeyAlg;
-  SignedDigest signature;
-  if (DigestSignedData(trustDomain, cert.GetSignedData(), digestBuf,
-                       publicKeyAlg, signature) != Success) {
-    return false;
-  }
-  if (VerifySignedDigest(trustDomain, publicKeyAlg, signature,
-                         cert.GetSubjectPublicKeyInfo()) != Success) {
+  if (VerifySignedData(trustDomain, cert.GetSignedData(),
+                       cert.GetSubjectPublicKeyInfo()) != Success) {
     return false;
   }
   // This is a self-signed, non-trust-anchor certificate, so we shouldn't use it
@@ -1479,10 +1472,11 @@ Result NSSCertDBTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
   return Success;
 }
 
-Result NSSCertDBTrustDomain::VerifyRSAPKCS1SignedDigest(
-    const SignedDigest& signedDigest, Input subjectPublicKeyInfo) {
-  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                       mPinArg);
+Result NSSCertDBTrustDomain::VerifyRSAPKCS1SignedData(
+    Input data, DigestAlgorithm digestAlgorithm, Input signature,
+    Input subjectPublicKeyInfo) {
+  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
+                                     subjectPublicKeyInfo, mPinArg);
 }
 
 Result NSSCertDBTrustDomain::CheckECDSACurveIsAcceptable(
@@ -1497,10 +1491,11 @@ Result NSSCertDBTrustDomain::CheckECDSACurveIsAcceptable(
   return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
 }
 
-Result NSSCertDBTrustDomain::VerifyECDSASignedDigest(
-    const SignedDigest& signedDigest, Input subjectPublicKeyInfo) {
-  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                    mPinArg);
+Result NSSCertDBTrustDomain::VerifyECDSASignedData(
+    Input data, DigestAlgorithm digestAlgorithm, Input signature,
+    Input subjectPublicKeyInfo) {
+  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
+                                  subjectPublicKeyInfo, mPinArg);
 }
 
 Result NSSCertDBTrustDomain::CheckValidityIsAcceptable(
