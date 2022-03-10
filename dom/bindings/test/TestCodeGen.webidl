@@ -790,6 +790,13 @@ interface TestInterface {
   Promise<any> receivePromise();
   Promise<any> receiveAddrefedPromise();
 
+  // ObservableArray types
+  attribute ObservableArray<boolean> booleanObservableArray;
+  attribute ObservableArray<object> objectObservableArray;
+  attribute ObservableArray<any> anyObservableArray;
+  attribute ObservableArray<TestInterface> interfaceObservableArray;
+  attribute ObservableArray<long?> nullableObservableArray;
+
   // binaryNames tests
   [BinaryName="methodRenamedTo"]
   void methodRenamedFrom();
