@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1646751472958,
+      "derHash": "G095TXcNxuBdx6QVhFD4JZVy621Z3mZ6PD++CNoBJIE=",
+      "subject": "CN=Global Trust CA - OV (RSA),O=Global Digital Inc.,C=TW",
+      "subjectDN": "MFAxCzAJBgNVBAYTAlRXMRwwGgYDVQQKExNHbG9iYWwgRGlnaXRhbCBJbmMuMSMwIQYDVQQDExpHbG9iYWwgVHJ1c3QgQ0EgLSBPViAoUlNBKQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "136048afa3b294583ccc15f0a0a6102dcca6cc9bf7d5c19811460c54c4e79fce",
+        "size": 2089,
+        "filename": "K6VGZ_ktzZYufpj5GSQX1fCds5dLtjs5vlSRcV-Oe8U=.pem",
+        "location": "security-state-staging/intermediates/002c6e58-6238-435b-9b0d-7b0691d17ed4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "K6VGZ/ktzZYufpj5GSQX1fCds5dLtjs5vlSRcV+Oe8U=",
+      "crlite_enrolled": false,
+      "id": "d6d94677-fd6d-4901-bbae-6817f8abcd97",
+      "last_modified": 1646881071888
+    },
+    {
+      "schema": 1646750915615,
+      "derHash": "AgcFbRcsgL37bcRb6eWAiEYHjR5u7xtu1wJZqzMqZME=",
+      "subject": "CN=Cybertrust Japan SureServer CA G4,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MF4xCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEqMCgGA1UEAxMhQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIENBIEc0",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d14576fded8dc8bc2c5e4595b2e25160155f8f967c80541b129ff564174309bd",
+        "size": 1768,
+        "filename": "rS4Ex7fMz9dQhgdB6qjxP-jJJQwjIeb-7RhvvdO6xy8=.pem",
+        "location": "security-state-staging/intermediates/b6d9843d-8dea-45b8-acba-752b6481c4e7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rS4Ex7fMz9dQhgdB6qjxP+jJJQwjIeb+7RhvvdO6xy8=",
+      "crlite_enrolled": false,
+      "id": "354eb83b-1260-4775-bce0-910a0a18ed75",
+      "last_modified": 1646751472410
+    },
+    {
+      "schema": 1646750917043,
+      "derHash": "/s6a2nqknU/qnv8SNUIJWogMAE/Wkz+TZLArLjV06jg=",
+      "subject": "CN=Cybertrust Japan SureServer EV CA G3,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEtMCsGA1UEAxMkQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIEVWIENBIEcz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "442ad2ef3f029c8ae0616647479fbe53d99e0e9ed017c893d2b5952cbf146f8f",
+        "size": 1772,
+        "filename": "zJoepoy-7XeJoRmjbR7_i8oZ1WEujOKGTD9NNM0uWHM=.pem",
+        "location": "security-state-staging/intermediates/c3ae4321-0501-4974-bae5-2038e257036c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zJoepoy+7XeJoRmjbR7/i8oZ1WEujOKGTD9NNM0uWHM=",
+      "crlite_enrolled": false,
+      "id": "477f5a61-5c31-42a4-89b0-4e49b54028ef",
+      "last_modified": 1646751472400
+    },
+    {
       "schema": 1646513862226,
       "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
       "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
@@ -6641,24 +6695,6 @@
       "crlite_enrolled": true,
       "id": "1ebb8ae1-2451-4e9b-9bbf-440aa561b615",
       "last_modified": 1643540242002
-    },
-    {
-      "schema": 1643539719087,
-      "derHash": "G095TXcNxuBdx6QVhFD4JZVy621Z3mZ6PD++CNoBJIE=",
-      "subject": "CN=Global Trust CA - OV (RSA),O=Global Digital Inc.,C=TW",
-      "subjectDN": "MFAxCzAJBgNVBAYTAlRXMRwwGgYDVQQKExNHbG9iYWwgRGlnaXRhbCBJbmMuMSMwIQYDVQQDExpHbG9iYWwgVHJ1c3QgQ0EgLSBPViAoUlNBKQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "136048afa3b294583ccc15f0a0a6102dcca6cc9bf7d5c19811460c54c4e79fce",
-        "size": 2089,
-        "filename": "K6VGZ_ktzZYufpj5GSQX1fCds5dLtjs5vlSRcV-Oe8U=.pem",
-        "location": "security-state-staging/intermediates/002c6e58-6238-435b-9b0d-7b0691d17ed4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "K6VGZ/ktzZYufpj5GSQX1fCds5dLtjs5vlSRcV+Oe8U=",
-      "crlite_enrolled": true,
-      "id": "d6d94677-fd6d-4901-bbae-6817f8abcd97",
-      "last_modified": 1643540241992
     },
     {
       "schema": 1643539715644,
@@ -16507,24 +16543,6 @@
       "last_modified": 1576536533719
     },
     {
-      "schema": 1576535868368,
-      "derHash": "/s6a2nqknU/qnv8SNUIJWogMAE/Wkz+TZLArLjV06jg=",
-      "subject": "CN=Cybertrust Japan SureServer EV CA G3,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
-      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEtMCsGA1UEAxMkQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIEVWIENBIEcz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "442ad2ef3f029c8ae0616647479fbe53d99e0e9ed017c893d2b5952cbf146f8f",
-        "size": 1772,
-        "filename": "zJoepoy-7XeJoRmjbR7_i8oZ1WEujOKGTD9NNM0uWHM=.pem",
-        "location": "security-state-staging/intermediates/5a528d23-16fc-4550-b70f-7b7202891213.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zJoepoy+7XeJoRmjbR7/i8oZ1WEujOKGTD9NNM0uWHM=",
-      "crlite_enrolled": true,
-      "id": "9aa2bac0-292b-4549-8d79-e82841fe7262",
-      "last_modified": 1576536533695
-    },
-    {
       "schema": 1576535863986,
       "derHash": "sXdPmya04tX3UXE2AP/rFjs0y3oUwsB5cE6VNk+8ykk=",
       "subject": "CN=InCommon RSA Server CA,OU=InCommon,O=Internet2,L=Ann Arbor,ST=MI,C=US",
@@ -17387,24 +17405,6 @@
       "crlite_enrolled": false,
       "id": "6ed2cbdd-26bb-461a-81d7-712abefd1ddd",
       "last_modified": 1576536532726
-    },
-    {
-      "schema": 1576535524269,
-      "derHash": "AgcFbRcsgL37bcRb6eWAiEYHjR5u7xtu1wJZqzMqZME=",
-      "subject": "CN=Cybertrust Japan SureServer CA G4,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
-      "subjectDN": "MF4xCzAJBgNVBAYTAkpQMSMwIQYDVQQKExpDeWJlcnRydXN0IEphcGFuIENvLiwgTHRkLjEqMCgGA1UEAxMhQ3liZXJ0cnVzdCBKYXBhbiBTdXJlU2VydmVyIENBIEc0",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d14576fded8dc8bc2c5e4595b2e25160155f8f967c80541b129ff564174309bd",
-        "size": 1768,
-        "filename": "rS4Ex7fMz9dQhgdB6qjxP-jJJQwjIeb-7RhvvdO6xy8=.pem",
-        "location": "security-state-staging/intermediates/8d6e839e-9d33-48c2-a9d9-40c21c559dd4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rS4Ex7fMz9dQhgdB6qjxP+jJJQwjIeb+7RhvvdO6xy8=",
-      "crlite_enrolled": true,
-      "id": "278d6db3-b339-4446-8841-06784b687319",
-      "last_modified": 1576536532704
     },
     {
       "schema": 1576535518197,
