@@ -31,14 +31,21 @@ const TYPES = {
 exports.TYPES = TYPES;
 
 // Helper dictionaries, which will contain data specific to each resource type.
-// - `path` is the absolute path to the module defining the Resource Watcher class,
+// - `path` is the absolute path to the module defining the Resource Watcher class.
+//
 // Also see the attributes added by `augmentResourceDictionary` for each type:
 // - `watchers` is a weak map which will store Resource Watchers
 //    (i.e. devtools/server/actors/resources/ class instances)
 //    keyed by target actor -or- watcher actor.
 // - `WatcherClass` is a shortcut to the Resource Watcher module.
 //    Each module exports a Resource Watcher class.
-// These lists are specific for the parent process and each target type.
+//
+// These are several dictionaries, which depend how the resource watcher classes are instantiated.
+
+// Frame target resources are spawned via a BrowsingContext Target Actor.
+// Their watcher class receives a target actor as first argument.
+// They are instantiated for each observed BrowsingContext, from the content process where it runs.
+// They are meant to observe all resources related to a given Browsing Context.
 const FrameTargetResources = augmentResourceDictionary({
   [TYPES.CACHE_STORAGE]: {
     path: "devtools/server/actors/resources/storage-cache",
@@ -92,6 +99,11 @@ const FrameTargetResources = augmentResourceDictionary({
     path: "devtools/server/actors/resources/websockets",
   },
 });
+
+// Process target resources are spawned via a Process Target Actor.
+// Their watcher class receives a process target actor as first argument.
+// They are instantiated for each observed Process (parent and all content processes).
+// They are meant to observe all resources related to a given process.
 const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
@@ -110,6 +122,11 @@ const ProcessTargetResources = augmentResourceDictionary({
   },
 });
 
+// Worker target resources are spawned via a Worker Target Actor.
+// Their watcher class receives a worker target actor as first argument.
+// They are instantiated for each observed worker, from the worker thread.
+// They are meant to observe all resources related to a given worker.
+//
 // We'll only support a few resource types in Workers (console-message, source,
 // thread state, …) as error and platform messages are not supported since we need access
 // to Ci, which isn't available in worker context.
@@ -126,6 +143,11 @@ const WorkerTargetResources = augmentResourceDictionary({
   },
 });
 
+// Parent process resources are spawned via the Watcher Actor.
+// Their watcher class receives the watcher actor as first argument.
+// They are instantiated once per watcher from the parent process.
+// They are meant to observe all resources related to a given context designated by the Watcher (and its sessionContext)
+// they should be observed from the parent process.
 const ParentProcessResources = augmentResourceDictionary({
   [TYPES.NETWORK_EVENT]: {
     path: "devtools/server/actors/resources/network-events",
@@ -141,6 +163,15 @@ const ParentProcessResources = augmentResourceDictionary({
   },
 });
 
+// Root resources are spawned via the Root Actor.
+// Their watcher class receives the root actor as first argument.
+// They are instantiated only once from the parent process.
+// They are meant to observe anything easily observable from the parent process
+// that isn't related to any particular context/target.
+// This is especially useful when you need to observe something without having to instantiate a Watcher actor.
+const RootResources = augmentResourceDictionary({});
+exports.RootResources = RootResources;
+
 function augmentResourceDictionary(dict) {
   for (const resource of Object.values(dict)) {
     resource.watchers = new WeakMap();
@@ -154,15 +185,18 @@ function augmentResourceDictionary(dict) {
  * For a given actor, return the related dictionary defined just before,
  * that contains info about how to listen for a given resource type, from a given actor.
  *
- * @param Actor watcherOrTargetActor
- *        Either a WatcherActor or a TargetActor which can be listening to a resource.
+ * @param Actor rootOrWatcherOrTargetActor
+ *        Either a RootActor or WatcherActor or a TargetActor which can be listening to a resource.
  */
-function getResourceTypeDictionary(watcherOrTargetActor) {
-  const { typeName } = watcherOrTargetActor;
+function getResourceTypeDictionary(rootOrWatcherOrTargetActor) {
+  const { typeName } = rootOrWatcherOrTargetActor;
+  if (typeName == "root") {
+    return RootResources;
+  }
   if (typeName == "watcher") {
     return ParentProcessResources;
   }
-  const { targetType } = watcherOrTargetActor;
+  const { targetType } = rootOrWatcherOrTargetActor;
   return getResourceTypeDictionaryForTargetType(targetType);
 }
 
@@ -189,16 +223,16 @@ function getResourceTypeDictionaryForTargetType(targetType) {
  * For a given actor, return the object stored in one of the previous dictionary
  * that contains info about how to listen for a given resource type, from a given actor.
  *
- * @param Actor watcherOrTargetActor
- *        Either a WatcherActor or a TargetActor which can be listening to a resource.
+ * @param Actor rootOrWatcherOrTargetActor
+ *        Either a RootActor or WatcherActor or a TargetActor which can be listening to a resource.
  * @param String resourceType
  *        The resource type to be observed.
  */
-function getResourceTypeEntry(watcherOrTargetActor, resourceType) {
-  const dict = getResourceTypeDictionary(watcherOrTargetActor);
+function getResourceTypeEntry(rootOrWatcherOrTargetActor, resourceType) {
+  const dict = getResourceTypeDictionary(rootOrWatcherOrTargetActor);
   if (!(resourceType in dict)) {
     throw new Error(
-      `Unsupported resource type '${resourceType}' for ${watcherOrTargetActor.typeName}`
+      `Unsupported resource type '${resourceType}' for ${rootOrWatcherOrTargetActor.typeName}`
     );
   }
   return dict[resourceType];
@@ -208,43 +242,49 @@ function getResourceTypeEntry(watcherOrTargetActor, resourceType) {
  * Start watching for a new list of resource types.
  * This will also emit all already existing resources before resolving.
  *
- * @param Actor watcherOrTargetActor
- *        Either a WatcherActor or a TargetActor which can be listening to a resource.
- *        WatcherActor will be used for resources listened from the parent process,
- *        and TargetActor will be used for resources listened from the content process.
+ * @param Actor rootOrWatcherOrTargetActor
+ *        Either a RootActor or WatcherActor or a TargetActor which can be listening to a resource:
+ *        * RootActor will be used for resources observed from the parent process and aren't related to any particular
+ *        context/descriptor. They can be observed right away when connecting to the RDP server
+ *        without instantiating any actor other than the root actor.
+ *        * WatcherActor will be used for resources listened from the parent process.
+ *        * TargetActor will be used for resources listened from the content process.
  *        This actor:
  *          - defines what context to observe (browsing context, process, worker, ...)
  *            Via browsingContextID, windows, docShells attributes for the target actor.
  *            Via the `sessionContext` object for the watcher actor.
+ *            (only for Watcher and Target actors. Root actor is context-less.)
  *          - exposes `notifyResourceAvailable` method to be notified about the available resources
  * @param Array<String> resourceTypes
  *        List of all type of resource to listen to.
  */
-async function watchResources(watcherOrTargetActor, resourceTypes) {
+async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
   // If we are given a target actor, filter out the resource types supported by the target.
   // When using sharedData to pass types between processes, we are passing them for all target types.
-  const { targetType } = watcherOrTargetActor;
+  const { targetType } = rootOrWatcherOrTargetActor;
+  // Only target actors usecase will have a target type.
+  // For Root and Watcher we process the `resourceTypes` list unfiltered.
   if (targetType) {
     resourceTypes = getResourceTypesForTargetType(resourceTypes, targetType);
   }
   for (const resourceType of resourceTypes) {
     const { watchers, WatcherClass } = getResourceTypeEntry(
-      watcherOrTargetActor,
+      rootOrWatcherOrTargetActor,
       resourceType
     );
 
     // Ignore resources we're already listening to
-    if (watchers.has(watcherOrTargetActor)) {
+    if (watchers.has(rootOrWatcherOrTargetActor)) {
       continue;
     }
 
     const watcher = new WatcherClass();
-    await watcher.watch(watcherOrTargetActor, {
-      onAvailable: watcherOrTargetActor.notifyResourceAvailable,
-      onDestroyed: watcherOrTargetActor.notifyResourceDestroyed,
-      onUpdated: watcherOrTargetActor.notifyResourceUpdated,
+    await watcher.watch(rootOrWatcherOrTargetActor, {
+      onAvailable: rootOrWatcherOrTargetActor.notifyResourceAvailable,
+      onDestroyed: rootOrWatcherOrTargetActor.notifyResourceDestroyed,
+      onUpdated: rootOrWatcherOrTargetActor.notifyResourceUpdated,
     });
-    watchers.set(watcherOrTargetActor, watcher);
+    watchers.set(rootOrWatcherOrTargetActor, watcher);
   }
 }
 exports.watchResources = watchResources;
@@ -276,23 +316,23 @@ exports.hasResourceTypesForTargets = hasResourceTypesForTargets;
 /**
  * Stop watching for a list of resource types.
  *
- * @param Actor watcherOrTargetActor
+ * @param Actor rootOrWatcherOrTargetActor
  *        The related actor, already passed to watchResources.
  * @param Array<String> resourceTypes
  *        List of all type of resource to stop listening to.
  */
-function unwatchResources(watcherOrTargetActor, resourceTypes) {
+function unwatchResources(rootOrWatcherOrTargetActor, resourceTypes) {
   for (const resourceType of resourceTypes) {
     // Pull all info about this resource type from `Resources` global object
     const { watchers } = getResourceTypeEntry(
-      watcherOrTargetActor,
+      rootOrWatcherOrTargetActor,
       resourceType
     );
 
-    const watcher = watchers.get(watcherOrTargetActor);
+    const watcher = watchers.get(rootOrWatcherOrTargetActor);
     if (watcher) {
       watcher.destroy();
-      watchers.delete(watcherOrTargetActor);
+      watchers.delete(rootOrWatcherOrTargetActor);
     }
   }
 }
@@ -301,21 +341,21 @@ exports.unwatchResources = unwatchResources;
 /**
  * Stop watching for all watched resources on a given actor.
  *
- * @param Actor watcherOrTargetActor
+ * @param Actor rootOrWatcherOrTargetActor
  *        The related actor, already passed to watchResources.
  */
-function unwatchAllTargetResources(watcherOrTargetActor) {
+function unwatchAllResources(rootOrWatcherOrTargetActor) {
   for (const { watchers } of Object.values(
-    getResourceTypeDictionary(watcherOrTargetActor)
+    getResourceTypeDictionary(rootOrWatcherOrTargetActor)
   )) {
-    const watcher = watchers.get(watcherOrTargetActor);
+    const watcher = watchers.get(rootOrWatcherOrTargetActor);
     if (watcher) {
       watcher.destroy();
-      watchers.delete(watcherOrTargetActor);
+      watchers.delete(rootOrWatcherOrTargetActor);
     }
   }
 }
-exports.unwatchAllTargetResources = unwatchAllTargetResources;
+exports.unwatchAllResources = unwatchAllResources;
 
 /**
  * If we are watching for the given resource type,
