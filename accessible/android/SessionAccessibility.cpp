@@ -134,6 +134,22 @@ void SessionAccessibility::Click(int32_t aID) {
   FORWARD_ACTION_TO_ACCESSIBLE(DoAction, 0);
 }
 
+bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
+                                       bool aForward, bool aInclusive) {
+  RefPtr<SessionAccessibility> self(this);
+  bool ret = false;
+  nsAppShell::SyncRunEvent(
+      [this, self, aID, aGranularity, aForward, aInclusive, &ret] {
+        if (RootAccessibleWrap* rootAcc = GetRoot()) {
+          if (AccessibleWrap* acc = rootAcc->FindAccessibleById(aID)) {
+            ret = acc->PivotTo(aGranularity, aForward, aInclusive);
+          }
+        }
+      });
+
+  return ret;
+}
+
 void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
                                  bool aForward, bool aInclusive) {
   FORWARD_ACTION_TO_ACCESSIBLE(PivotTo, aGranularity, aForward, aInclusive);
