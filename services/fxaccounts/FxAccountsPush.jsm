@@ -85,8 +85,7 @@ FxAccountsPushService.prototype = {
       this.fxai = options.fxai;
     } else {
       let { fxAccounts } = ChromeUtils.import(
-        "resource://gre/modules/FxAccounts.jsm",
-        {}
+        "resource://gre/modules/FxAccounts.jsm"
       );
       this.fxai = fxAccounts._internal;
     }

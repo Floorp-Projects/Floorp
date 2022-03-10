@@ -10,8 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm",
-  {}
+  "resource://gre/modules/Log.jsm"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 XPCOMUtils.defineLazyModuleGetters(this, {

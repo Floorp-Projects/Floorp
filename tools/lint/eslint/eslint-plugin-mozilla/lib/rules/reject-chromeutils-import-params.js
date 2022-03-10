@@ -19,6 +19,13 @@ function isIdentifier(node, id) {
 }
 
 module.exports = function(context) {
+  function getRangeAfterArgToEnd(argNumber, args) {
+    let sourceCode = context.getSourceCode();
+    return [
+      sourceCode.getTokenAfter(args[argNumber]).range[0],
+      args.at(-1).range[1],
+    ];
+  }
   // ---------------------------------------------------------------------------
   // Public
   //  --------------------------------------------------------------------------
@@ -31,16 +38,14 @@ module.exports = function(context) {
         isIdentifier(callee.property, "import") &&
         node.arguments.length >= 2
       ) {
-        if (
-          node.arguments[1].type == "Literal" &&
-          node.arguments[1].raw == "null"
-        ) {
+        let targetObj = node.arguments[1];
+        if (targetObj.type == "Literal" && targetObj.raw == "null") {
           context.report(
             node,
             "ChromeUtils.import should not be called with (..., null) to " +
               "retrieve the JSM global object. Rely on explicit exports instead."
           );
-        } else if (node.arguments[1].type == "ThisExpression") {
+        } else if (targetObj.type == "ThisExpression") {
           context.report({
             node,
             message:
@@ -58,6 +63,27 @@ module.exports = function(context) {
                   return fixer.replaceText(
                     node,
                     `const { ${match[2]} } = ChromeUtils.import(${match[1]})`
+                  );
+                },
+              },
+            ],
+          });
+        } else if (
+          targetObj.type == "ObjectExpression" &&
+          targetObj.properties.length == 0
+        ) {
+          context.report({
+            node,
+            message:
+              "Passing an empty object to ChromeUtils.import is unnecessary",
+            suggest: [
+              {
+                desc:
+                  "Passing an empty object to ChromeUtils.import is " +
+                  "unnecessary - remove the empty object",
+                fix: fixer => {
+                  return fixer.removeRange(
+                    getRangeAfterArgToEnd(0, node.arguments)
                   );
                 },
               },

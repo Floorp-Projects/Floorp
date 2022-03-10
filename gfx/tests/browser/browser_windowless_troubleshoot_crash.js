@@ -39,10 +39,9 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   }
   ok(true, "not crashed");
 
-  var Troubleshoot = ChromeUtils.import(
-    "resource://gre/modules/Troubleshoot.jsm",
-    {}
-  ).Troubleshoot;
+  var { Troubleshoot } = ChromeUtils.import(
+    "resource://gre/modules/Troubleshoot.jsm"
+  );
   var data = await new Promise((resolve, reject) => {
     Troubleshoot.snapshot(data => {
       resolve(data);
