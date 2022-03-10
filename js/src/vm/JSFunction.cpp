@@ -1961,6 +1961,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
 
 static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
                                            HandleObject proto) {
+  MOZ_ASSERT(cx->realm() == fun->realm());
   MOZ_ASSERT(proto);
 
   const JSClass* clasp = fun->getClass();
@@ -1996,11 +1997,8 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   clone->setArgCount(fun->nargs());
   clone->setFlags(flags);
 
-  JSAtom* atom = fun->displayAtom();
-  if (atom) {
-    cx->markAtom(atom);
-  }
-  clone->initAtom(atom);
+  // Note: |clone| and |fun| are same-zone so we don't need to call markAtom.
+  clone->initAtom(fun->displayAtom());
 
   return clone;
 }
