@@ -15,7 +15,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable, ParserAtom
 #include "frontend/SharedContext.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Policy.h"
 #include "gc/Tracer.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*

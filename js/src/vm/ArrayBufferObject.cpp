@@ -59,7 +59,7 @@
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/JSAtom-inl.h"

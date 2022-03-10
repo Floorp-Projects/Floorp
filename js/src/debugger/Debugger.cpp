@@ -40,8 +40,8 @@
 #include "debugger/Source.h"              // for DebuggerSource
 #include "frontend/CompilationStencil.h"  // for CompilationStencil
 #include "frontend/Parser.h"              // for Parser
-#include "gc/FreeOp.h"                    // for JSFreeOp
 #include "gc/GC.h"                        // for IterateScripts
+#include "gc/GCContext.h"                 // for JSFreeOp
 #include "gc/GCMarker.h"                  // for GCMarker
 #include "gc/GCRuntime.h"                 // for GCRuntime, AutoEnterIteration
 #include "gc/HashUtil.h"                  // for DependentAddPtr

@@ -43,7 +43,7 @@
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"
 #include "gc/FinalizationObservers.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
 #include "js/PropertyAndElement.h"    // JS_DefineFunctions, JS_DefineProperties
@@ -68,7 +68,7 @@
 #  include "vm/TupleType.h"
 #endif
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

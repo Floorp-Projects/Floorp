@@ -21,7 +21,7 @@
 #include "vm/Realm.h"
 #include "vm/StaticStrings.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/StoreBuffer-inl.h"
 
 namespace js {

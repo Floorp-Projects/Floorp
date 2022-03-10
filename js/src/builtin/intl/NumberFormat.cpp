@@ -37,7 +37,7 @@
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "ds/Sort.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"

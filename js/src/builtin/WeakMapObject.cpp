@@ -7,7 +7,7 @@
 #include "builtin/WeakMapObject-inl.h"
 
 #include "builtin/WeakSetObject.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/WeakMap.h"

@@ -29,7 +29,7 @@
 #include "jsexn.h"
 
 #include "ds/IdValuePair.h"  // js::IdValuePair
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"

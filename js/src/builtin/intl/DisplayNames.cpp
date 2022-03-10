@@ -26,7 +26,7 @@
 #include "builtin/intl/StringAsciiChars.h"
 #include "builtin/String.h"
 #include "gc/AllocKind.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"

@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "gc/FinalizationObservers.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/GCLock.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"

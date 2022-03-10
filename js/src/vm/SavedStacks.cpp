@@ -17,7 +17,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
