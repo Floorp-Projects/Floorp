@@ -102,6 +102,7 @@ UNIFIED_SOURCES += [
     "DnsAndConnectSocket.cpp",
     "EarlyHintsService.cpp",
     "Http2Compression.cpp",
+    "Http2ConnectTransaction.cpp",
     "Http2Push.cpp",
     "Http2Session.cpp",
     "Http2Stream.cpp",
@@ -149,9 +150,10 @@ UNIFIED_SOURCES += [
     "PendingTransactionInfo.cpp",
     "PendingTransactionQueue.cpp",
     "QuicSocketControl.cpp",
+    "SocketWrapper.cpp",
     "SpeculativeTransaction.cpp",
+    "TLSFilterTransaction.cpp",
     "TRRServiceChannel.cpp",
-    "TunnelUtils.cpp",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
