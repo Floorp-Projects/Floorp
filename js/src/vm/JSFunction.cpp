@@ -810,6 +810,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     // can be matched as the 'PropertyName' grammar production.
     if (fun->explicitName() && !fun->isBoundFunction() &&
         (fun->kind() == FunctionFlags::NormalFunction ||
+         fun->kind() == FunctionFlags::Wasm ||
          fun->kind() == FunctionFlags::ClassConstructor)) {
       if (!out.append(' ')) {
         return nullptr;
