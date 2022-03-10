@@ -105,6 +105,26 @@ check_and_add_gcc_warning("-Wenum-compare-conditional")
 # catches unintentional switch case fallthroughs
 check_and_add_gcc_warning("-Wimplicit-fallthrough", cxx_compiler)
 
+# Enable some ObjC diagnostics that are only relevant when targeting macOS:
+with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
+    # catch redeclaration of ObjC method parameter name
+    check_and_add_gcc_warning("-Wduplicate-method-arg")
+
+    # catch multiple declarations of ObjC method found
+    check_and_add_gcc_warning("-Wduplicate-method-match")
+
+    # catch ObjC method with no return type specified
+    check_and_add_gcc_warning("-Wmissing-method-return-type")
+
+    # catch implicit conversions between ObjC BOOL and int
+    check_and_add_gcc_warning("-Wobjc-signed-char-bool")
+
+    # catch semicolon before ObjC method body
+    check_and_add_gcc_warning("-Wsemicolon-before-method-body")
+
+    # catch ObjC method parameter type not matching super class method
+    check_and_add_gcc_warning("-Wsuper-class-method-mismatch")
+
 # catches expressions used as a null pointer constant
 # XXX: at the time of writing, the version of clang used on the OS X test
 # machines has a bug that causes it to reject some valid files if both
