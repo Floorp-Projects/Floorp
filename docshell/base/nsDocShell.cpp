@@ -791,11 +791,6 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
       ("nsDocShell[%p]: loading %s with flags 0x%08x", this,
        aLoadState->URI()->GetSpecOrDefault().get(), aLoadState->LoadFlags()));
 
-  // Always clear mCheckingSessionHistory. MaybeHandleSubframeHistory uses it
-  // internally when querying session history information from the parent
-  // process.
-  mCheckingSessionHistory = false;
-
   if ((!aLoadState->LoadIsFromSessionHistory() &&
        !LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
                             LOAD_FLAGS_REPLACE_HISTORY)) ||
