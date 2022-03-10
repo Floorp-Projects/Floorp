@@ -377,7 +377,7 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
 
   bool isFullyOccluded = aState == mozilla::widget::OcclusionState::OCCLUDED;
   // When window is minimized, it is not set as fully occluded.
-  if (mFrameState.GetSizeMode() == nsSizeMode_Minimized) {
+  if (mFrameState->GetSizeMode() == nsSizeMode_Minimized) {
     isFullyOccluded = false;
   }
 
@@ -391,15 +391,15 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
 
   MOZ_LOG(gWindowsLog, LogLevel::Info,
           ("nsWindow::NotifyOcclusionState() mIsFullyOccluded %d "
-           "mFrameState.GetSizeMode() %d",
-           mIsFullyOccluded, mFrameState.GetSizeMode()));
+           "mFrameState->GetSizeMode() %d",
+           mIsFullyOccluded, mFrameState->GetSizeMode()));
 
   wr::DebugFlags flags{0};
   flags.bits = gfx::gfxVars::WebRenderDebugFlags();
   bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
   if (debugEnabled && mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->NotifyVisibilityUpdated(
-        mFrameState.GetSizeMode(), mIsFullyOccluded);
+        mFrameState->GetSizeMode(), mIsFullyOccluded);
   }
 
   if (mWidgetListener) {
@@ -420,7 +420,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
       bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
       if (debugEnabled && mCompositorWidgetDelegate) {
         mCompositorWidgetDelegate->NotifyVisibilityUpdated(
-            mFrameState.GetSizeMode(), mIsFullyOccluded);
+            mFrameState->GetSizeMode(), mIsFullyOccluded);
       }
     }
     return;
@@ -441,7 +441,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
   bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
   if (debugEnabled && mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->NotifyVisibilityUpdated(
-        mFrameState.GetSizeMode(), mIsFullyOccluded);
+        mFrameState->GetSizeMode(), mIsFullyOccluded);
   }
 }
 
