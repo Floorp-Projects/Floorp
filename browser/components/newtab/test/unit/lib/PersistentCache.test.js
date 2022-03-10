@@ -19,7 +19,7 @@ describe("PersistentCache", () => {
     };
     fakePathUtils = {
       join: sinon.stub().returns(filename),
-      getLocalProfileDir: sinon.stub().resolves("/"),
+      localProfileDir: "/",
     };
     reportErrorStub = sandbox.stub();
     globals.set("Cu", { reportError: reportErrorStub });
@@ -123,7 +123,11 @@ describe("PersistentCache", () => {
       );
     });
     it("throws when failing to get file path", async () => {
-      fakePathUtils.getLocalProfileDir.rejects(new Error());
+      Object.defineProperty(fakePathUtils, "localProfileDir", {
+        get() {
+          throw new Error();
+        },
+      });
 
       let rejected = false;
       try {
