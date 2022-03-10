@@ -14,9 +14,12 @@ using namespace layers;
 namespace gfx {
 
 VRLayerParent::VRLayerParent(uint32_t aVRDisplayID, const uint32_t aGroup)
-    : mIPCOpen(true), mVRDisplayID(aVRDisplayID), mGroup(aGroup) {}
+    : mIPCOpen(true), mDestroyed(false), mGroup(aGroup) {}
 
-VRLayerParent::~VRLayerParent() { MOZ_COUNT_DTOR(VRLayerParent); }
+VRLayerParent::~VRLayerParent() {
+  Destroy();
+  MOZ_COUNT_DTOR(VRLayerParent);
+}
 
 mozilla::ipc::IPCResult VRLayerParent::RecvDestroy() {
   Destroy();
@@ -26,12 +29,10 @@ mozilla::ipc::IPCResult VRLayerParent::RecvDestroy() {
 void VRLayerParent::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
 
 void VRLayerParent::Destroy() {
-  if (mVRDisplayID) {
+  if (!mDestroyed) {
     VRManager* vm = VRManager::Get();
     vm->RemoveLayer(this);
-    // 0 will never be a valid VRDisplayID; we can use it to indicate that
-    // we are destroyed and no longer associated with a display.
-    mVRDisplayID = 0;
+    mDestroyed = true;
   }
 
   if (mIPCOpen) {
@@ -42,7 +43,7 @@ void VRLayerParent::Destroy() {
 mozilla::ipc::IPCResult VRLayerParent::RecvSubmitFrame(
     const layers::SurfaceDescriptor& aTexture, const uint64_t& aFrameId,
     const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) {
-  if (mVRDisplayID) {
+  if (!mDestroyed) {
     VRManager* vm = VRManager::Get();
     vm->SubmitFrame(this, aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
   }
