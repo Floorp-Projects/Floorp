@@ -6,8 +6,6 @@
 import datetime
 import re
 
-from six import text_type
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 

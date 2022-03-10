@@ -27,7 +27,7 @@ job-defaults:
     run:
         command:
             task-reference:
-                /builds/worker/checkouts/src/taskcluster/scripts/are_dependencies_completed.py {dependencies}
+                /builds/worker/checkouts/vcs/taskcluster/scripts/are_dependencies_completed.py {dependencies}
         use-caches: false
         using: run-task
     notifications:

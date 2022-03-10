@@ -6,8 +6,6 @@
 import os
 import yaml
 
-from six import ensure_text
-
 from taskgraph.util.memoize import memoize
 
 
@@ -31,8 +29,7 @@ def get_components():
 
 def get_version():
     with open(os.path.join(PROJECT_DIR, "version.txt")) as fh:
-        version = fh.read().strip()
-    return ensure_text(version)
+        return fh.read().strip()
 
 
 def get_path(component):

@@ -31,15 +31,15 @@ job-defaults:
     artifact-template:
         type: file
         name: public/build/{artifact_file_name}
-        path: '/builds/worker/checkouts/src/{component_path}/build/maven/org/mozilla/components/{component}/{version}/{artifact_file_name}'
+        path: '/builds/worker/checkouts/vcs/{component_path}/build/maven/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     tests-artifact-template:
         type: directory
         name: public/reports/tests
-        path: '/builds/worker/checkouts/src/{component_path}/build/reports/tests'
+        path: '/builds/worker/checkouts/vcs/{component_path}/build/reports/tests'
     lint-artifact-template:
         type: file
         name: public/reports/lint-results-release.html
-        path: '/builds/worker/checkouts/src/{component_path}/build/reports/lint-results-release.html'
+        path: '/builds/worker/checkouts/vcs/{component_path}/build/reports/lint-results-release.html'
     text-artifact-template:
         type: file
         name: public/github/customCheckRunText.md
@@ -47,7 +47,7 @@ job-defaults:
     jacoco-coverage-template:
         type: directory
         name: public/reports/jacoco
-        path: '/builds/worker/checkouts/src/{component_path}/build/reports/jacoco'
+        path: '/builds/worker/checkouts/vcs/{component_path}/build/reports/jacoco'
     attributes:
         code-review:
             by-build-type:
