@@ -50,8 +50,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Εμφάνιση όλων των αποθηκευμένων σελιδοδεικτών</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Κουμπί εμφάνισης όλων των αποθηκευμένων σελιδοδεικτών</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Αφαίρεση</string>
@@ -133,8 +131,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Κουμπί «Εμφάνιση όλων των πρόσφατων καρτελών»</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Εμφάνιση όλων των πρόσφατων καρτελών</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Η αναζήτησή σας για «%1$s»</string>
@@ -157,8 +153,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Εμφάνιση όλων των προηγούμενων εξερευνήσεων</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Κουμπί «Εμφάνιση όλων των προηγούμενων εξερευνήσεων»</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -445,7 +439,7 @@
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Πατήστε το λογότυπο για αλλαγή ταπετσαρίας</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Αλλάξτε την ταπετσαρία πατώντας το λογότυπο της αρχικής σελίδας του Firefox</string>
+    <string name="wallpaper_tap_to_change_switch_label_1">Αλλαγή ταπετσαρίας από το λογότυπο του Firefox στην αρχική σελίδα</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Κάντε εναλλαγή και ενημέρωση της εικόνας χωρίς να φύγετε από την αρχική σελίδα.</string>
 
