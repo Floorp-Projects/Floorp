@@ -885,7 +885,8 @@ var FullScreen = {
 
 XPCOMUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
   let { PermissionUI } = ChromeUtils.import(
-    "resource:///modules/PermissionUI.jsm"
+    "resource:///modules/PermissionUI.jsm",
+    {}
   );
   return (
     Object.values(PermissionUI)

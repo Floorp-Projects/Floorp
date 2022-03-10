@@ -482,7 +482,7 @@
       if (this.isRemoteBrowser) {
         if (!this._remoteFinder) {
           let jsm = "resource://gre/modules/FinderParent.jsm";
-          let { FinderParent } = ChromeUtils.import(jsm);
+          let { FinderParent } = ChromeUtils.import(jsm, {});
           this._remoteFinder = new FinderParent(this);
         }
         return this._remoteFinder;
@@ -492,9 +492,8 @@
           return null;
         }
 
-        let { Finder } = ChromeUtils.import(
-          "resource://gre/modules/Finder.jsm"
-        );
+        let Finder = ChromeUtils.import("resource://gre/modules/Finder.jsm", {})
+          .Finder;
         this._finder = new Finder(this.docShell);
       }
       return this._finder;

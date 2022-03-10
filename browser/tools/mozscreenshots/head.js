@@ -36,8 +36,10 @@ async function setup() {
 
   let aAddon = await AddonManager.getAddonByID("mozscreenshots@mozilla.org");
   isnot(aAddon, null, "The mozscreenshots extension should be installed");
-  TestRunner = ChromeUtils.import("resource://mozscreenshots/TestRunner.jsm")
-    .TestRunner;
+  TestRunner = ChromeUtils.import(
+    "resource://mozscreenshots/TestRunner.jsm",
+    {}
+  ).TestRunner;
   TestRunner.initTest(this);
 }
 

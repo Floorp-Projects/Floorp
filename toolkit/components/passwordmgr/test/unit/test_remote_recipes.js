@@ -9,7 +9,8 @@
 "use strict";
 
 const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+  "resource://services-settings/remote-settings.js",
+  {}
 );
 
 const REMOTE_SETTINGS_COLLECTION = "password-recipes";

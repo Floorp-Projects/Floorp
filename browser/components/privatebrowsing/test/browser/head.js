@@ -20,11 +20,6 @@ ChromeUtils.defineModuleGetter(
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
 
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
@@ -61,6 +56,8 @@ async function openAboutPrivateBrowsing() {
 }
 
 function newDirectory() {
+  let FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {})
+    .FileUtils;
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir = tmpDir.clone();
   dir.append("testdir");
@@ -69,6 +66,8 @@ function newDirectory() {
 }
 
 function newFileInDirectory(aDir) {
+  let FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {})
+    .FileUtils;
   let file = aDir.clone();
   file.append("testfile");
   file.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_FILE);
