@@ -289,13 +289,14 @@ static already_AddRefed<VideoData> CreateVideoDataFromWebrtcVideoFrame(
 
   PlanarYCbCrData yCbCrData;
   yCbCrData.mYChannel = const_cast<uint8_t*>(i420->DataY());
+  yCbCrData.mYSize = gfx::IntSize(i420->width(), i420->height());
   yCbCrData.mYStride = i420->StrideY();
   yCbCrData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
   yCbCrData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
+  yCbCrData.mCbCrSize = gfx::IntSize(i420->ChromaWidth(), i420->ChromaHeight());
   MOZ_ASSERT(i420->StrideU() == i420->StrideV());
   yCbCrData.mCbCrStride = i420->StrideU();
-  yCbCrData.mPictureRect = gfx::IntRect(0, 0, i420->width(), i420->height());
-  yCbCrData.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+  yCbCrData.mPicSize = gfx::IntSize(i420->width(), i420->height());
 
   RefPtr<PlanarYCbCrImage> image =
       new RecyclingPlanarYCbCrImage(new BufferRecycleBin());

@@ -638,39 +638,26 @@ struct PlanarYCbCrData {
   // Luminance buffer
   uint8_t* mYChannel = nullptr;
   int32_t mYStride = 0;
+  gfx::IntSize mYSize = gfx::IntSize(0, 0);
   int32_t mYSkip = 0;
   // Chroma buffers
   uint8_t* mCbChannel = nullptr;
   uint8_t* mCrChannel = nullptr;
   int32_t mCbCrStride = 0;
+  gfx::IntSize mCbCrSize = gfx::IntSize(0, 0);
   int32_t mCbSkip = 0;
   int32_t mCrSkip = 0;
   // Picture region
-  gfx::IntRect mPictureRect = gfx::IntRect(0, 0, 0, 0);
+  uint32_t mPicX = 0;
+  uint32_t mPicY = 0;
+  gfx::IntSize mPicSize = gfx::IntSize(0, 0);
   StereoMode mStereoMode = StereoMode::MONO;
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
   gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::Default;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
-  gfx::ChromaSubsampling mChromaSubsampling = gfx::ChromaSubsampling::FULL;
 
-  // The cropped picture size of the Y channel.
-  gfx::IntSize YPictureSize() const { return mPictureRect.Size(); }
-
-  // The cropped picture size of the Cb/Cr channels.
-  gfx::IntSize CbCrPictureSize() const {
-    return mCbCrStride > 0 ? gfx::ChromaSize(YPictureSize(), mChromaSubsampling)
-                           : gfx::IntSize(0, 0);
-  }
-
-  // The total uncropped size of data in the Y channel.
-  gfx::IntSize YDataSize() const {
-    return gfx::IntSize(mPictureRect.XMost(), mPictureRect.YMost());
-  }
-
-  // The total uncropped size of data in the Cb/Cr channels.
-  gfx::IntSize CbCrDataSize() const {
-    return mCbCrStride > 0 ? gfx::ChromaSize(YDataSize(), mChromaSubsampling)
-                           : gfx::IntSize(0, 0);
+  gfx::IntRect GetPictureRect() const {
+    return gfx::IntRect(mPicX, mPicY, mPicSize.width, mPicSize.height);
   }
 
   static Maybe<PlanarYCbCrData> From(const SurfaceDescriptorBuffer&);
@@ -697,9 +684,12 @@ struct PlanarAlphaData {
  * 4:2:2 - CbCr width is half that of Y. Height is the same.
  * 4:2:0 - CbCr width and height is half that of Y.
  *
- * mChromaSubsampling specifies which YCbCr subsampling scheme to use.
+ * The color format is detected based on the height/width ratios
+ * defined above.
  *
- * The Image that is rendered is the picture region defined by mPictureRect.
+ * The Image that is rendered is the picture region defined by
+ * mPicX, mPicY and mPicSize. The size of the rendered image is
+ * mPicSize, not mYSize or mCbCrSize.
  *
  * mYSkip, mCbSkip, mCrSkip are added to support various output
  * formats from hardware decoder. They are per-pixel skips in the
@@ -709,7 +699,7 @@ struct PlanarAlphaData {
  * the mYChannel buffer looks like:
  *
  * |<----------------------- mYStride ----------------------------->|
- * |<----------------- YDataSize().width ---------->|
+ * |<----------------- mYSize.width --------------->|
  *  0   3   6   9   12  15  18  21                639             669
  * |----------------------------------------------------------------|
  * |Y___Y___Y___Y___Y___Y___Y___Y...                |%%%%%%%%%%%%%%%|
@@ -740,13 +730,7 @@ class PlanarYCbCrImage : public Image {
   /**
    * This will create an empty data buffers according to the input data's size.
    */
-  virtual bool CreateEmptyBuffer(const Data& aData, const gfx::IntSize& aYSize,
-                                 const gfx::IntSize& aCbCrSize) {
-    return false;
-  }
-  bool CreateEmptyBuffer(const Data& aData) {
-    return CreateEmptyBuffer(aData, aData.YDataSize(), aData.CbCrDataSize());
-  }
+  virtual bool CreateEmptyBuffer(const Data& aData) { return false; }
 
   /**
    * Ask this Image to not convert YUV to RGB during SetData, and make

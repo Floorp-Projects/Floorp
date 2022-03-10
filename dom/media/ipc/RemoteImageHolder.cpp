@@ -59,16 +59,20 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
   }
 
   PlanarYCbCrData pData;
+  pData.mYSize = descriptor.ySize();
   pData.mYStride = descriptor.yStride();
+  pData.mCbCrSize = descriptor.cbCrSize();
   pData.mCbCrStride = descriptor.cbCrStride();
   // default mYSkip, mCbSkip, mCrSkip because not held in YCbCrDescriptor
   pData.mYSkip = pData.mCbSkip = pData.mCrSkip = 0;
-  pData.mPictureRect = descriptor.display();
+  gfx::IntRect display = descriptor.display();
+  pData.mPicX = display.X();
+  pData.mPicY = display.Y();
+  pData.mPicSize = display.Size();
   pData.mStereoMode = descriptor.stereoMode();
   pData.mColorDepth = descriptor.colorDepth();
   pData.mYUVColorSpace = descriptor.yUVColorSpace();
   pData.mColorRange = descriptor.colorRange();
-  pData.mChromaSubsampling = descriptor.chromaSubsampling();
   pData.mYChannel = ImageDataSerializer::GetYChannel(buffer, descriptor);
   pData.mCbChannel = ImageDataSerializer::GetCbChannel(buffer, descriptor);
   pData.mCrChannel = ImageDataSerializer::GetCrChannel(buffer, descriptor);
