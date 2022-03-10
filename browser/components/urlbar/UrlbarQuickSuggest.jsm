@@ -4,11 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
-  "KeywordTree",
-  "ONBOARDING_CHOICE",
-  "UrlbarQuickSuggest",
-];
+const EXPORTED_SYMBOLS = ["ONBOARDING_CHOICE", "UrlbarQuickSuggest"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -66,7 +62,7 @@ const ONBOARDING_URI =
 const SUGGESTION_SCORE = 0.2;
 
 /**
- * Fetches the suggestions data from RemoteSettings and builds the tree
+ * Fetches the suggestions data from RemoteSettings and builds the structures
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
 class Suggestions {
@@ -127,11 +123,7 @@ class Suggestions {
   async query(phrase) {
     log.info("Handling query for", phrase);
     phrase = phrase.toLowerCase();
-    let resultID = this._tree.get(phrase);
-    if (resultID === null) {
-      return null;
-    }
-    let result = this._results.get(resultID);
+    let result = this._resultsByKeyword.get(phrase);
     if (!result) {
       return null;
     }
@@ -335,11 +327,9 @@ class Suggestions {
   // Configuration data synced from remote settings.
   _config = {};
 
-  // Maps from result IDs to the corresponding results.
-  _results = new Map();
-
-  // A tree that maps keywords to a result.
-  _tree = new KeywordTree();
+  // Maps from keywords to their corresponding results. Keywords are unique in
+  // the underlying data, so a keyword will only ever map to one result.
+  _resultsByKeyword = new Map();
 
   /**
    * Queues a task to ensure our remote settings client is initialized or torn
@@ -365,8 +355,8 @@ class Suggestions {
   }
 
   /**
-   * Queues a task to (re)create the results map and keyword tree from the
-   * remote settings data plus any other work that needs to be done on sync.
+   * Queues a task to populate the results map from the remote settings data
+   * plus any other work that needs to be done on sync.
    *
    * @param {object} [event]
    *   The event object passed to the "sync" event listener if you're calling
@@ -396,8 +386,7 @@ class Suggestions {
       log.debug("Got configuration:", configArray);
       this._config = configArray?.[0]?.configuration || {};
 
-      this._results = new Map();
-      this._tree = new KeywordTree();
+      this._resultsByKeyword.clear();
 
       for (let record of data) {
         let { buffer } = await this._rs.attachments.download(record, {
@@ -410,17 +399,16 @@ class Suggestions {
   }
 
   /**
-   * Adds a list of result objects to the results map and keyword tree. This
-   * method is also used by tests to set up mock suggestions.
+   * Adds a list of result objects to the results map. This method is also used
+   * by tests to set up mock suggestions.
    *
    * @param {array} results
    *   Array of result objects.
    */
   _addResults(results) {
     for (let result of results) {
-      this._results.set(result.id, result);
       for (let keyword of result.keywords) {
-        this._tree.set(keyword, result.id);
+        this._resultsByKeyword.set(keyword, result);
       }
     }
   }
@@ -444,168 +432,6 @@ class Suggestions {
       return null;
     }
     return this._rs.attachments.download(record);
-  }
-}
-
-// Token used as a key to store results within the Map, cannot be used
-// within a keyword.
-const RESULT_KEY = "^";
-
-/**
- * This is an implementation of a Map based Tree. We can store
- * multiple keywords that point to a single term, for example:
- *
- *   tree.add("headphones", "headphones");
- *   tree.add("headph", "headphones");
- *   tree.add("earphones", "headphones");
- *
- *   tree.get("headph") == "headphones"
- *
- * The tree can store multiple prefixes to a term efficiently
- * so ["hea", "head", "headp", "headph", "headpho", ...] wont lead
- * to duplication in memory. The tree will only return a result
- * for keywords that have been explcitly defined and not attempt
- * to guess based on prefix.
- *
- * Once a tree have been build, it can be flattened with `.flatten`
- * the tree can then be serialised and deserialised with `.toJSON`
- * and `.fromJSON`.
- */
-class KeywordTree {
-  constructor() {
-    this.tree = new Map();
-  }
-
-  /*
-   * Set a keyword for a result.
-   */
-  set(keyword, id) {
-    if (keyword.includes(RESULT_KEY)) {
-      throw new Error(`"${RESULT_KEY}" is reserved`);
-    }
-    let tree = this.tree;
-    for (let x = 0, c = ""; (c = keyword.charAt(x)); x++) {
-      let child = tree.get(c) || new Map();
-      tree.set(c, child);
-      tree = child;
-    }
-    tree.set(RESULT_KEY, id);
-  }
-
-  /**
-   * Get the result for a given phrase.
-   *
-   * @param {string} query
-   *   The query string.
-   * @returns {*}
-   *   The matching result in the tree or null if there isn't a match.
-   */
-  get(query) {
-    query = query.trimStart() + RESULT_KEY;
-    let node = this.tree;
-    let phrase = "";
-    while (phrase.length < query.length) {
-      // First, assume the tree isn't flattened and try to look up the next char
-      // in the query.
-      let key = query[phrase.length];
-      let child = node.get(key);
-      if (!child) {
-        // Not found, so fall back to looking through all of the node's keys.
-        key = null;
-        for (let childKey of node.keys()) {
-          let childPhrase = phrase + childKey;
-          if (childPhrase == query.substring(0, childPhrase.length)) {
-            key = childKey;
-            break;
-          }
-        }
-        if (!key) {
-          return null;
-        }
-        child = node.get(key);
-      }
-      node = child;
-      phrase += key;
-    }
-    if (phrase.length != query.length) {
-      return null;
-    }
-    // At this point, `node` is the found result.
-    return node;
-  }
-
-  /*
-   * We flatten the tree by combining consecutive single branch keywords
-   * with the same results into a longer keyword. so ["a", ["b", ["c"]]]
-   * becomes ["abc"], we need to be careful that the result matches so
-   * if a prefix search for "hello" only starts after 2 characters it will
-   * be flattened to ["he", ["llo"]].
-   */
-  flatten() {
-    this._flatten("", this.tree, null);
-  }
-
-  /**
-   * Recursive flatten() helper.
-   *
-   * @param {string} key
-   *   The key for `node` in `parent`.
-   * @param {Map} node
-   *   The currently visited node.
-   * @param {Map} parent
-   *   The parent of `node`, or null if `node` is the root.
-   */
-  _flatten(key, node, parent) {
-    // Flatten the node's children.  We need to store node.entries() in an array
-    // rather than iterating over them directly because _flatten() can modify
-    // them during iteration.
-    for (let [childKey, child] of [...node.entries()]) {
-      if (childKey != RESULT_KEY) {
-        this._flatten(childKey, child, node);
-      }
-    }
-    // If the node has a single child, then replace the node in `parent` with
-    // the child.
-    if (node.size == 1 && parent) {
-      parent.delete(key);
-      let childKey = [...node.keys()][0];
-      parent.set(key + childKey, node.get(childKey));
-    }
-  }
-
-  /*
-   * Turn a tree into a serialisable JSON object.
-   */
-  toJSONObject(map = this.tree) {
-    let tmp = {};
-    for (let [key, val] of map) {
-      if (val instanceof Map) {
-        tmp[key] = this.toJSONObject(val);
-      } else {
-        tmp[key] = val;
-      }
-    }
-    return tmp;
-  }
-
-  /*
-   * Build a tree from a serialisable JSON object that was built
-   * with `toJSON`.
-   */
-  fromJSON(json) {
-    this.tree = this.JSONObjectToMap(json);
-  }
-
-  JSONObjectToMap(obj) {
-    let map = new Map();
-    for (let key of Object.keys(obj)) {
-      if (typeof obj[key] == "object") {
-        map.set(key, this.JSONObjectToMap(obj[key]));
-      } else {
-        map.set(key, obj[key]);
-      }
-    }
-    return map;
   }
 }
 
