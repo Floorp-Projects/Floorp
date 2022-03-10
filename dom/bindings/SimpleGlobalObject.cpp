@@ -43,7 +43,7 @@ NS_INTERFACE_MAP_END
 
 static SimpleGlobalObject* GetSimpleGlobal(JSObject* global);
 
-static void SimpleGlobal_finalize(JSFreeOp* fop, JSObject* obj) {
+static void SimpleGlobal_finalize(JS::GCContext* gcx, JSObject* obj) {
   SimpleGlobalObject* globalObject = GetSimpleGlobal(obj);
   if (globalObject) {
     globalObject->ClearWrapper(obj);

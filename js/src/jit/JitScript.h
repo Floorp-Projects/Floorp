@@ -33,8 +33,6 @@ class JS_PUBLIC_API JSScript;
 class JS_PUBLIC_API JSTracer;
 struct JS_PUBLIC_API JSContext;
 
-class JSFreeOp;
-
 namespace JS {
 class Zone;
 }
@@ -468,7 +466,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // Methods to set baselineScript_ to a BaselineScript*, nullptr, or
   // BaselineDisabledScriptPtr.
   void setBaselineScriptImpl(JSScript* script, BaselineScript* baselineScript);
-  void setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
+  void setBaselineScriptImpl(JS::GCContext* gcx, JSScript* script,
                              BaselineScript* baselineScript);
 
  public:
@@ -487,17 +485,18 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     setBaselineScriptImpl(script, baselineScript);
     MOZ_ASSERT(hasBaselineScript());
   }
-  [[nodiscard]] BaselineScript* clearBaselineScript(JSFreeOp* fop,
+  [[nodiscard]] BaselineScript* clearBaselineScript(JS::GCContext* gcx,
                                                     JSScript* script) {
     BaselineScript* baseline = baselineScript();
-    setBaselineScriptImpl(fop, script, nullptr);
+    setBaselineScriptImpl(gcx, script, nullptr);
     return baseline;
   }
 
  private:
   // Methods to set ionScript_ to an IonScript*, nullptr, or one of the special
   // Ion{Disabled,Compiling}ScriptPtr values.
-  void setIonScriptImpl(JSFreeOp* fop, JSScript* script, IonScript* ionScript);
+  void setIonScriptImpl(JS::GCContext* gcx, JSScript* script,
+                        IonScript* ionScript);
   void setIonScriptImpl(JSScript* script, IonScript* ionScript);
 
  public:
@@ -517,9 +516,10 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     setIonScriptImpl(script, ionScript);
     MOZ_ASSERT(hasIonScript());
   }
-  [[nodiscard]] IonScript* clearIonScript(JSFreeOp* fop, JSScript* script) {
+  [[nodiscard]] IonScript* clearIonScript(JS::GCContext* gcx,
+                                          JSScript* script) {
     IonScript* ion = ionScript();
-    setIonScriptImpl(fop, script, nullptr);
+    setIonScriptImpl(gcx, script, nullptr);
     return ion;
   }
 

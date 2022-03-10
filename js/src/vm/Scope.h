@@ -39,7 +39,6 @@
 #include "wasm/WasmJS.h"    // WasmInstanceObject
 
 class JSAtom;
-class JSFreeOp;
 class JSFunction;
 class JSScript;
 class JSTracer;
@@ -416,7 +415,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   }
 
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

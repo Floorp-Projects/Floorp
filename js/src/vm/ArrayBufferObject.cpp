@@ -934,13 +934,13 @@ ArrayBufferObject::FreeInfo* ArrayBufferObject::freeInfo() const {
   return reinterpret_cast<FreeInfo*>(inlineDataPointer());
 }
 
-void ArrayBufferObject::releaseData(JSFreeOp* fop) {
+void ArrayBufferObject::releaseData(JS::GCContext* gcx) {
   switch (bufferKind()) {
     case INLINE_DATA:
       // Inline data doesn't require releasing.
       break;
     case MALLOCED:
-      fop->free_(this, dataPointer(), byteLength(),
+      gcx->free_(this, dataPointer(), byteLength(),
                  MemoryUse::ArrayBufferContents);
       break;
     case NO_DATA:
@@ -952,12 +952,12 @@ void ArrayBufferObject::releaseData(JSFreeOp* fop) {
       break;
     case MAPPED:
       gc::DeallocateMappedContent(dataPointer(), byteLength());
-      fop->removeCellMemory(this, associatedBytes(),
+      gcx->removeCellMemory(this, associatedBytes(),
                             MemoryUse::ArrayBufferContents);
       break;
     case WASM:
       WasmArrayRawBuffer::Release(dataPointer());
-      fop->removeCellMemory(this, byteLength(), MemoryUse::ArrayBufferContents);
+      gcx->removeCellMemory(this, byteLength(), MemoryUse::ArrayBufferContents);
       break;
     case EXTERNAL:
       if (freeInfo()->freeFunc) {
@@ -1608,8 +1608,8 @@ void ArrayBufferObject::addSizeOfExcludingThis(
 }
 
 /* static */
-void ArrayBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  obj->as<ArrayBufferObject>().releaseData(fop);
+void ArrayBufferObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  obj->as<ArrayBufferObject>().releaseData(gcx);
 }
 
 /* static */

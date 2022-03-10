@@ -79,7 +79,7 @@ class GetterSetter : public gc::TenuredCellWithGCPointer<JSObject> {
 
   void traceChildren(JSTracer* trc);
 
-  void finalize(JSFreeOp* fop) {
+  void finalize(JS::GCContext* gcx) {
     // Nothing to do.
   }
 };

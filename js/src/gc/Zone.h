@@ -301,7 +301,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   [[nodiscard]] bool init();
 
-  void destroy(JSFreeOp* fop);
+  void destroy(JS::GCContext* gcx);
 
   [[nodiscard]] bool findSweepGroupEdges(Zone* atomsZone);
 
@@ -313,7 +313,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     bool resetPretenuredAllocSites = false;
   };
 
-  void discardJitCode(JSFreeOp* fop,
+  void discardJitCode(JS::GCContext* gcx,
                       const DiscardOptions& options = DiscardOptions());
 
   void resetAllocSitesAndInvalidate(bool resetNurserySites,
@@ -405,7 +405,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepUniqueIds();
-  void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
+  void sweepCompartments(JS::GCContext* gcx, bool keepAtleastOne, bool lastGC);
 
   // Remove dead weak maps from gcWeakMapList_ and remove entries from the
   // remaining weak maps whose keys are dead.

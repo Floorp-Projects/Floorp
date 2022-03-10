@@ -34,9 +34,9 @@
 // can operate on one or more zones at a time. The browser uses roughly one zone
 // per tab.
 
-using JSDestroyZoneCallback = void (*)(JSFreeOp*, JS::Zone*);
+using JSDestroyZoneCallback = void (*)(JS::GCContext*, JS::Zone*);
 
-using JSDestroyCompartmentCallback = void (*)(JSFreeOp*, JS::Compartment*);
+using JSDestroyCompartmentCallback = void (*)(JS::GCContext*, JS::Compartment*);
 
 using JSSizeOfIncludingThisCompartmentCallback =
     size_t (*)(mozilla::MallocSizeOf, JS::Compartment*);

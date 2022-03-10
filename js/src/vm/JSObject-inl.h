@@ -78,7 +78,7 @@ js::NativeObject::calculateDynamicSlots(Shape* shape) {
                                shape->getObjectClass());
 }
 
-inline void JSObject::finalize(JSFreeOp* fop) {
+inline void JSObject::finalize(JS::GCContext* gcx) {
   js::probes::FinalizeObject(this);
 
 #ifdef DEBUG
@@ -94,7 +94,7 @@ inline void JSObject::finalize(JSFreeOp* fop) {
       clasp->isNativeObject() ? &as<js::NativeObject>() : nullptr;
 
   if (clasp->hasFinalize()) {
-    clasp->doFinalize(fop, this);
+    clasp->doFinalize(gcx, this);
   }
 
   if (!nobj) {
@@ -104,13 +104,13 @@ inline void JSObject::finalize(JSFreeOp* fop) {
   if (nobj->hasDynamicSlots()) {
     js::ObjectSlots* slotsHeader = nobj->getSlotsHeader();
     size_t size = js::ObjectSlots::allocSize(slotsHeader->capacity());
-    fop->free_(this, slotsHeader, size, js::MemoryUse::ObjectSlots);
+    gcx->free_(this, slotsHeader, size, js::MemoryUse::ObjectSlots);
   }
 
   if (nobj->hasDynamicElements()) {
     js::ObjectElements* elements = nobj->getElementsHeader();
     size_t size = elements->numAllocatedElements() * sizeof(js::HeapSlot);
-    fop->free_(this, nobj->getUnshiftedElementsHeader(), size,
+    gcx->free_(this, nobj->getUnshiftedElementsHeader(), size,
                js::MemoryUse::ObjectElements);
   }
 }

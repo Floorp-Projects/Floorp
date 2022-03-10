@@ -52,10 +52,10 @@ void DebugState::trace(JSTracer* trc) {
   }
 }
 
-void DebugState::finalize(JSFreeOp* fop) {
+void DebugState::finalize(JS::GCContext* gcx) {
   for (auto iter = breakpointSites_.iter(); !iter.done(); iter.next()) {
     WasmBreakpointSite* site = iter.get().value();
-    site->delete_(fop);
+    site->delete_(gcx);
   }
 }
 
@@ -138,7 +138,7 @@ bool DebugState::incrementStepperCount(JSContext* cx, uint32_t funcIndex) {
   return true;
 }
 
-void DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
+void DebugState::decrementStepperCount(JS::GCContext* gcx, uint32_t funcIndex) {
   const CodeRange& codeRange =
       codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
   MOZ_ASSERT(codeRange.isFunction());
@@ -153,7 +153,7 @@ void DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
   stepperCounters_.remove(p);
 
   AutoWritableJitCode awjc(
-      fop->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
+      gcx->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
       codeRange.end() - codeRange.begin());
 
   for (const CallSite& callSite : callSites(Tier::Debug)) {
@@ -235,17 +235,18 @@ bool DebugState::hasBreakpointSite(uint32_t offset) {
   return breakpointSites_.has(offset);
 }
 
-void DebugState::destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
+void DebugState::destroyBreakpointSite(JS::GCContext* gcx, Instance* instance,
                                        uint32_t offset) {
   WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
   MOZ_ASSERT(p);
-  fop->delete_(instance->objectUnbarriered(), p->value(),
+  gcx->delete_(instance->objectUnbarriered(), p->value(),
                MemoryUse::BreakpointSite);
   breakpointSites_.remove(p);
-  toggleBreakpointTrap(fop->runtime(), offset, false);
+  toggleBreakpointTrap(gcx->runtime(), offset, false);
 }
 
-void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
+void DebugState::clearBreakpointsIn(JS::GCContext* gcx,
+                                    WasmInstanceObject* instance,
                                     js::Debugger* dbg, JSObject* handler) {
   MOZ_ASSERT(instance);
 
@@ -267,11 +268,11 @@ void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
       MOZ_ASSERT(bp->site == site);
       if ((!dbg || bp->debugger == dbg) &&
           (!handler || bp->getHandler() == handler)) {
-        bp->delete_(fop);
+        bp->delete_(gcx);
       }
     }
     if (site->isEmpty()) {
-      fop->delete_(instance, site, MemoryUse::BreakpointSite);
+      gcx->delete_(instance, site, MemoryUse::BreakpointSite);
       e.removeFront();
     }
   }

@@ -28,7 +28,6 @@ class JS_PUBLIC_API JSAtom;
 struct JS_PUBLIC_API JSContext;
 struct JSClass;
 class JS_PUBLIC_API JSFunction;
-class JS_PUBLIC_API JSFreeOp;
 class JS_PUBLIC_API JSObject;
 struct JS_PUBLIC_API JSRuntime;
 class JS_PUBLIC_API JSScript;
@@ -42,6 +41,7 @@ class JS_PUBLIC_API TempAllocPolicy;
 
 namespace JS {
 
+class JS_PUBLIC_API GCContext;
 class JS_PUBLIC_API PropertyKey;
 
 typedef unsigned char Latin1Char;

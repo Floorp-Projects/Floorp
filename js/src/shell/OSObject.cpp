@@ -564,12 +564,12 @@ class FileObject : public NativeObject {
     return obj;
   }
 
-  static void finalize(JSFreeOp* fop, JSObject* obj) {
+  static void finalize(JS::GCContext* gcx, JSObject* obj) {
     FileObject* fileObj = &obj->as<FileObject>();
     RCFile* file = fileObj->rcFile();
-    fop->removeCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
+    gcx->removeCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
     if (file->release()) {
-      fop->deleteUntracked(file);
+      gcx->deleteUntracked(file);
     }
   }
 

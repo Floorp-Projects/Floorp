@@ -1021,10 +1021,10 @@ JSObject* GlobalObject::createAsyncIteratorPrototype(
   return proto;
 }
 
-void GlobalObject::releaseData(JSFreeOp* fop) {
+void GlobalObject::releaseData(JS::GCContext* gcx) {
   GlobalObjectData* data = maybeData();
   setReservedSlot(GLOBAL_DATA_SLOT, PrivateValue(nullptr));
-  fop->delete_(this, data, MemoryUse::GlobalObjectData);
+  gcx->delete_(this, data, MemoryUse::GlobalObjectData);
 }
 
 GlobalObjectData::GlobalObjectData(Zone* zone) : varNames(zone) {}

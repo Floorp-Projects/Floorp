@@ -127,7 +127,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   return true;
 }
 
-void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
+void JSScript::maybeReleaseJitScript(JS::GCContext* gcx) {
   MOZ_ASSERT(hasJitScript());
 
   if (zone()->jitZone()->keepJitScripts() || jitScript()->hasBaselineScript() ||
@@ -135,35 +135,35 @@ void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
     return;
   }
 
-  releaseJitScript(fop);
+  releaseJitScript(gcx);
 }
 
-void JSScript::releaseJitScript(JSFreeOp* fop) {
+void JSScript::releaseJitScript(JS::GCContext* gcx) {
   MOZ_ASSERT(hasJitScript());
   MOZ_ASSERT(!hasBaselineScript());
   MOZ_ASSERT(!hasIonScript());
 
-  fop->removeCellMemory(this, jitScript()->allocBytes(), MemoryUse::JitScript);
+  gcx->removeCellMemory(this, jitScript()->allocBytes(), MemoryUse::JitScript);
 
   JitScript::Destroy(zone(), jitScript());
   warmUpData_.clearJitScript();
-  updateJitCodeRaw(fop->runtime());
+  updateJitCodeRaw(gcx->runtime());
 }
 
-void JSScript::releaseJitScriptOnFinalize(JSFreeOp* fop) {
+void JSScript::releaseJitScriptOnFinalize(JS::GCContext* gcx) {
   MOZ_ASSERT(hasJitScript());
 
   if (hasIonScript()) {
-    IonScript* ion = jitScript()->clearIonScript(fop, this);
-    jit::IonScript::Destroy(fop, ion);
+    IonScript* ion = jitScript()->clearIonScript(gcx, this);
+    jit::IonScript::Destroy(gcx, ion);
   }
 
   if (hasBaselineScript()) {
-    BaselineScript* baseline = jitScript()->clearBaselineScript(fop, this);
-    jit::BaselineScript::Destroy(fop, baseline);
+    BaselineScript* baseline = jitScript()->clearBaselineScript(gcx, this);
+    jit::BaselineScript::Destroy(gcx, baseline);
   }
 
-  releaseJitScript(fop);
+  releaseJitScript(gcx);
 }
 
 void JitScript::CachedIonData::trace(JSTracer* trc) {
@@ -467,10 +467,10 @@ void JitScript::setBaselineScriptImpl(JSScript* script,
   setBaselineScriptImpl(rt->defaultFreeOp(), script, baselineScript);
 }
 
-void JitScript::setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
+void JitScript::setBaselineScriptImpl(JS::GCContext* gcx, JSScript* script,
                                       BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
-    fop->removeCellMemory(script, baselineScript_->allocBytes(),
+    gcx->removeCellMemory(script, baselineScript_->allocBytes(),
                           MemoryUse::BaselineScript);
     baselineScript_.set(script->zone(), nullptr);
   }
@@ -484,7 +484,7 @@ void JitScript::setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
   }
 
   script->resetWarmUpResetCounter();
-  script->updateJitCodeRaw(fop->runtime());
+  script->updateJitCodeRaw(gcx->runtime());
 }
 
 void JitScript::setIonScriptImpl(JSScript* script, IonScript* ionScript) {
@@ -492,14 +492,14 @@ void JitScript::setIonScriptImpl(JSScript* script, IonScript* ionScript) {
   setIonScriptImpl(rt->defaultFreeOp(), script, ionScript);
 }
 
-void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
+void JitScript::setIonScriptImpl(JS::GCContext* gcx, JSScript* script,
                                  IonScript* ionScript) {
   MOZ_ASSERT_IF(ionScript != IonDisabledScriptPtr,
                 !baselineScript()->hasPendingIonCompileTask());
 
   JS::Zone* zone = script->zone();
   if (hasIonScript()) {
-    fop->removeCellMemory(script, ionScript_->allocBytes(),
+    gcx->removeCellMemory(script, ionScript_->allocBytes(),
                           MemoryUse::IonScript);
     ionScript_.set(zone, nullptr);
   }
@@ -510,7 +510,7 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
     AddCellMemory(script, ionScript_->allocBytes(), MemoryUse::IonScript);
   }
 
-  script->updateJitCodeRaw(fop->runtime());
+  script->updateJitCodeRaw(gcx->runtime());
 }
 
 #ifdef JS_STRUCTURED_SPEW

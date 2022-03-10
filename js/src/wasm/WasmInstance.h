@@ -182,7 +182,7 @@ class Instance {
 
   JSString* createDisplayURL(JSContext* cx);
   WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
-  void destroyBreakpointSite(JSFreeOp* fop, uint32_t offset);
+  void destroyBreakpointSite(JS::GCContext* gcx, uint32_t offset);
 
   // about:memory reporting:
 

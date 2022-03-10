@@ -198,12 +198,12 @@ static bool MozDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
   return DisplayNames(cx, args, DisplayNamesOptions::EnableMozExtensions);
 }
 
-void js::DisplayNamesObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::DisplayNamesObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   if (mozilla::intl::DisplayNames* displayNames =
           obj->as<DisplayNamesObject>().getDisplayNames()) {
-    intl::RemoveICUCellMemory(fop, obj, DisplayNamesObject::EstimatedMemoryUse);
+    intl::RemoveICUCellMemory(gcx, obj, DisplayNamesObject::EstimatedMemoryUse);
     delete displayNames;
   }
 }
