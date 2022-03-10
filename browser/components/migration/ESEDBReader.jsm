@@ -21,8 +21,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
-    .ConsoleAPI;
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     maxLogLevelPref: "browser.esedbreader.loglevel",
     prefix: "ESEDBReader",

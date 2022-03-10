@@ -10,10 +10,9 @@ registerManifests(manifests);
 function run_test() {
   const uuidGenerator = Services.uuid;
 
-  let newAppInfo = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm",
-    {}
-  ).newAppInfo;
+  let { newAppInfo } = ChromeUtils.import(
+    "resource://testing-common/AppInfo.jsm"
+  );
   let XULAppInfo = newAppInfo({
     name: "XPCShell",
     ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",

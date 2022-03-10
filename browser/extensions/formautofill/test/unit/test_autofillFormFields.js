@@ -6,8 +6,7 @@
 "use strict";
 
 const { setTimeout, clearTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm",
-  {}
+  "resource://gre/modules/Timer.jsm"
 );
 
 var FormAutofillHandler, OSKeyStore;
