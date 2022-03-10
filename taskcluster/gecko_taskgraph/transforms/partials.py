@@ -5,6 +5,8 @@
 Transform the partials task into an actual task description.
 """
 
+from taskgraph.util.taskcluster import get_artifact_prefix
+
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
@@ -12,7 +14,6 @@ from gecko_taskgraph.util.attributes import (
 )
 from gecko_taskgraph.util.partials import get_builds
 from gecko_taskgraph.util.platforms import architecture
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.util.treeherder import inherit_treeherder_from_dep
 
 import logging

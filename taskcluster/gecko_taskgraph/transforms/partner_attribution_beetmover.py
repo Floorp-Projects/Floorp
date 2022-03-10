@@ -5,6 +5,11 @@
 Transform the beetmover task into an actual task description.
 """
 
+from collections import defaultdict
+from copy import deepcopy
+
+from taskgraph.util.taskcluster import get_artifact_prefix
+from voluptuous import Any, Required, Optional
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
@@ -25,12 +30,7 @@ from gecko_taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_beetmover_bucket_scope,
 )
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.transforms.task import task_description_schema
-from voluptuous import Any, Required, Optional
-
-from collections import defaultdict
-from copy import deepcopy
 
 
 beetmover_description_schema = schema.extend(

@@ -5,7 +5,8 @@
 Defines artifacts to sign before repackage.
 """
 
-from gecko_taskgraph.util.taskcluster import get_artifact_path
+from taskgraph.util.taskcluster import get_artifact_path
+
 from gecko_taskgraph.util.declarative_artifacts import get_geckoview_upstream_artifacts
 
 
