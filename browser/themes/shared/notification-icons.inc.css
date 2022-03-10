@@ -424,8 +424,7 @@
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-%ifdef XP_MACOSX
-@media (min-resolution: 1.1dppx) {
+@media (-moz-platform: macos) and (min-resolution: 1.1dppx) {
   .translation-icon {
     list-style-image: url(chrome://browser/skin/translation-16@2x.png);
     -moz-image-region: rect(0px, 32px, 32px, 0px);
@@ -435,7 +434,6 @@
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
 }
-%endif
 
 /* UPDATE */
 .popup-notification-icon[popupid="update-available"],
