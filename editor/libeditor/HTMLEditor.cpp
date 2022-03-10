@@ -4773,7 +4773,9 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
                                  nsIContent& aContentToRemove) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  const uint32_t removingNodeLength = aContentToRemove.Length();
+  const uint32_t removingContentLength = aContentToRemove.Length();
+  const Maybe<uint32_t> removingContentIndex =
+      aContentToRemove.ComputeIndexInParentNode();
 
   // Remember all selection points.
   // XXX Do we need to restore all types of selections by ourselves?  Normal
@@ -4816,13 +4818,13 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
               atRemovingNode.Offset() < savingRange.mStartOffset &&
               savingRange.mStartOffset <= atNodeToKeep.Offset()) {
             savingRange.mStartContainer = &aContentToRemove;
-            savingRange.mStartOffset = removingNodeLength;
+            savingRange.mStartOffset = removingContentLength;
           }
           if (savingRange.mEndContainer == atNodeToKeep.GetContainer() &&
               atRemovingNode.Offset() < savingRange.mEndOffset &&
               savingRange.mEndOffset <= atNodeToKeep.Offset()) {
             savingRange.mEndContainer = &aContentToRemove;
-            savingRange.mEndOffset = removingNodeLength;
+            savingRange.mEndOffset = removingContentLength;
           }
         }
 
@@ -4832,21 +4834,24 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   }
 
   // OK, ready to do join now.
-  // If it's a text node, just shuffle around some text.
-  if (aContentToKeep.IsText() && aContentToRemove.IsText()) {
-    nsAutoString rightText;
-    nsAutoString leftText;
-    aContentToKeep.AsText()->GetData(rightText);
-    aContentToRemove.AsText()->GetData(leftText);
-    leftText += rightText;
-    IgnoredErrorResult ignoredError;
-    DoSetText(MOZ_KnownLive(*aContentToKeep.AsText()), leftText, ignoredError);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+  nsresult rv = [&]() MOZ_CAN_RUN_SCRIPT {
+    // If it's a text node, just shuffle around some text.
+    if (aContentToKeep.IsText() && aContentToRemove.IsText()) {
+      nsAutoString rightText;
+      nsAutoString leftText;
+      aContentToKeep.AsText()->GetData(rightText);
+      aContentToRemove.AsText()->GetData(leftText);
+      leftText += rightText;
+      IgnoredErrorResult ignoredError;
+      DoSetText(MOZ_KnownLive(*aContentToKeep.AsText()), leftText,
+                ignoredError);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "EditorBase::DoSetText() failed, but ignored");
+      return NS_OK;
     }
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "EditorBase::DoSetText() failed, but ignored");
-  } else {
     // Otherwise it's an interior node, so shuffle around the children.
     nsCOMPtr<nsINodeList> childNodes = aContentToRemove.ChildNodes();
     MOZ_ASSERT(childNodes);
@@ -4874,12 +4879,28 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
         firstChild = std::move(childNode);
       }
     }
-  }
+    return NS_OK;
+  }();
 
   // Delete the extra node.
-  aContentToRemove.Remove();
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_SUCCEEDED(rv)) {
+    aContentToRemove.Remove();
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+  }
+
+  if (MOZ_LIKELY(removingContentIndex.isSome())) {
+    DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
+        EditorRawDOMPoint(&aContentToKeep, std::min(removingContentLength,
+                                                    aContentToKeep.Length())),
+        aContentToRemove, *removingContentIndex,
+        JoinNodesDirection::LeftNodeIntoRightNode);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
+  }
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    return rv;
   }
 
   const bool allowedTransactionsToChangeSelection =
@@ -4913,14 +4934,14 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     if (savedRange.mStartContainer == &aContentToRemove) {
       savedRange.mStartContainer = &aContentToKeep;
     } else if (savedRange.mStartContainer == &aContentToKeep) {
-      savedRange.mStartOffset += removingNodeLength;
+      savedRange.mStartOffset += removingContentLength;
     }
 
     // Check to see if we joined nodes where selection ends.
     if (savedRange.mEndContainer == &aContentToRemove) {
       savedRange.mEndContainer = &aContentToKeep;
     } else if (savedRange.mEndContainer == &aContentToKeep) {
-      savedRange.mEndOffset += removingNodeLength;
+      savedRange.mEndOffset += removingContentLength;
     }
 
     const RefPtr<nsRange> newRange = nsRange::Create(
@@ -4947,8 +4968,8 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
 
   if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
-    DebugOnly<nsresult> rvIgnored =
-        SelectionRef().CollapseInLimiter(&aContentToKeep, removingNodeLength);
+    DebugOnly<nsresult> rvIgnored = SelectionRef().CollapseInLimiter(
+        &aContentToKeep, removingContentLength);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
