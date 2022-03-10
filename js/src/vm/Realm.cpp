@@ -342,7 +342,7 @@ void Realm::traceWeakGlobalEdge(JSTracer* trc) {
   // If the global is dead, free its GlobalObjectData.
   auto result = TraceWeakEdge(trc, &global_, "Realm::global_");
   if (result.isDead()) {
-    result.initialTarget()->releaseData(runtime_->defaultFreeOp());
+    result.initialTarget()->releaseData(runtime_->gcContext());
   }
 }
 
@@ -408,7 +408,7 @@ void Realm::setAllocationMetadataBuilder(
     const js::AllocationMetadataBuilder* builder) {
   // Clear any jitcode in the runtime, which behaves differently depending on
   // whether there is a creation callback.
-  ReleaseAllJITCode(runtime_->defaultFreeOp());
+  ReleaseAllJITCode(runtime_->gcContext());
 
   allocationMetadataBuilder_ = builder;
 }

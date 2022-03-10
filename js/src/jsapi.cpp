@@ -1259,7 +1259,7 @@ JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
   }
 
   JSRuntime* rt = obj->runtimeFromAnyThread();
-  rt->defaultFreeOp()->removeCellMemory(obj, nbytes, js::MemoryUse(use));
+  rt->gcContext()->removeCellMemory(obj, nbytes, js::MemoryUse(use));
 }
 
 #undef JS_AddRoot
@@ -4057,18 +4057,18 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       if (value == 1) {
         jit::JitOptions.baselineInterpreter = true;
       } else if (value == 0) {
-        ReleaseAllJITCode(rt->defaultFreeOp());
+        ReleaseAllJITCode(rt->gcContext());
         jit::JitOptions.baselineInterpreter = false;
       }
       break;
     case JSJITCOMPILER_BASELINE_ENABLE:
       if (value == 1) {
         jit::JitOptions.baselineJit = true;
-        ReleaseAllJITCode(rt->defaultFreeOp());
+        ReleaseAllJITCode(rt->gcContext());
         JitSpew(js::jit::JitSpew_BaselineScripts, "Enable baseline");
       } else if (value == 0) {
         jit::JitOptions.baselineJit = false;
-        ReleaseAllJITCode(rt->defaultFreeOp());
+        ReleaseAllJITCode(rt->gcContext());
         JitSpew(js::jit::JitSpew_BaselineScripts, "Disable baseline");
       }
       break;

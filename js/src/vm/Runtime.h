@@ -726,7 +726,7 @@ struct JSRuntime {
   js::WriteOnceData<js::PropertyName*> emptyString;
 
  public:
-  JS::GCContext* defaultFreeOp() { return &gc.mainThreadFreeOp.ref(); }
+  JS::GCContext* gcContext() { return &gc.mainThreadContext.ref(); }
 
 #if !JS_HAS_INTL_API
   /* Number localization, used by jsnum.cpp. */

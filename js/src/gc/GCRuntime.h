@@ -924,7 +924,7 @@ class GCRuntime {
   // Embedders can use this zone however they wish.
   MainThreadData<JS::Zone*> systemZone;
 
-  MainThreadData<JS::GCContext> mainThreadFreeOp;
+  MainThreadData<JS::GCContext> mainThreadContext;
 
  private:
   // All zones in the runtime, except the atoms zone.

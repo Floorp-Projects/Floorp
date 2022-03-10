@@ -380,7 +380,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
-      mainThreadFreeOp(rt, true),
+      mainThreadContext(rt, true),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
@@ -813,7 +813,7 @@ bool GCRuntime::init(uint32_t maxbytes) {
   if (!TlsGCContext.init()) {
     return false;
   }
-  TlsGCContext.set(&mainThreadFreeOp.ref());
+  TlsGCContext.set(&mainThreadContext.ref());
 
   {
     AutoLockGCBgAlloc lock(this);
@@ -2081,7 +2081,7 @@ void GCRuntime::purgeRuntime() {
     zone->purgeAtomCache();
     zone->externalStringCache().purge();
     zone->functionToStringCache().purge();
-    zone->shapeZone().purgeShapeCaches(rt->defaultFreeOp());
+    zone->shapeZone().purgeShapeCaches(rt->gcContext());
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
@@ -2347,7 +2347,7 @@ void GCRuntime::discardJITCodeForGC() {
       options.discardJitScripts = true;
       options.resetNurseryAllocSites = resetNurserySites;
       options.resetPretenuredAllocSites = resetPretenuredSites;
-      zone->discardJitCode(rt->defaultFreeOp(), options);
+      zone->discardJitCode(rt->gcContext(), options);
     } else if (resetNurserySites || resetPretenuredSites) {
       zone->resetAllocSitesAndInvalidate(resetNurserySites,
                                          resetPretenuredSites);
@@ -2396,13 +2396,13 @@ void GCRuntime::purgePropMapTablesForShrinkingGC() {
     for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
          map.next()) {
       if (map->asLinked()->hasTable()) {
-        map->asLinked()->purgeTable(rt->defaultFreeOp());
+        map->asLinked()->purgeTable(rt->gcContext());
       }
     }
     for (auto map = zone->cellIterUnsafe<DictionaryPropMap>(); !map.done();
          map.next()) {
       if (map->asLinked()->hasTable()) {
-        map->asLinked()->purgeTable(rt->defaultFreeOp());
+        map->asLinked()->purgeTable(rt->gcContext());
       }
     }
   }
@@ -2858,7 +2858,7 @@ void GCRuntime::maybeStopPretenuring() {
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();
       zone->setPreservingCode(false);
-      zone->discardJitCode(rt->defaultFreeOp());
+      zone->discardJitCode(rt->gcContext());
       zone->setPreservingCode(preserving);
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
@@ -3271,7 +3271,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         // remove and free dead zones, compartments and realms.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
-        sweepZones(rt->defaultFreeOp(), destroyingRuntime);
+        sweepZones(rt->gcContext(), destroyingRuntime);
       }
 
       MOZ_ASSERT(!startedCompacting);
@@ -3325,7 +3325,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   MOZ_ASSERT(safeToYield);
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
-  MOZ_ASSERT(!rt->defaultFreeOp()->hasJitCodeToPoison());
+  MOZ_ASSERT(!rt->gcContext()->hasJitCodeToPoison());
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {
