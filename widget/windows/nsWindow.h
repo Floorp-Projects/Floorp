@@ -52,6 +52,7 @@
 #include "nsIUserIdleServiceInternal.h"
 
 #include "IMMHandler.h"
+#include "CheckInvariantWrapper.h"
 
 /**
  * Forward class definitions
@@ -465,6 +466,8 @@ class nsWindow final : public nsBaseWidget {
 
     nsSizeMode GetSizeMode() const;
 
+    void CheckInvariant() const;
+
    private:
     void SetSizeModeInternal(nsSizeMode aMode);
 
@@ -763,7 +766,7 @@ class nsWindow final : public nsBaseWidget {
   DWORD_PTR mOldExStyle = 0;
   nsNativeDragTarget* mNativeDragTarget = nullptr;
   HKL mLastKeyboardLayout = 0;
-  FrameState mFrameState;
+  mozilla::CheckInvariantWrapper<FrameState> mFrameState;
   WindowHook mWindowHook;
   uint32_t mPickerDisplayCount = 0;
   HICON mIconSmall = nullptr;
