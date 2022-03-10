@@ -107,7 +107,8 @@ class TranslationChild extends JSWindowActorChild {
 
     let engine = Services.prefs.getCharPref("browser.translation.engine");
     let importScope = ChromeUtils.import(
-      `resource:///modules/translation/${engine}Translator.jsm`
+      `resource:///modules/translation/${engine}Translator.jsm`,
+      {}
     );
     let translator = new importScope[engine + "Translator"](
       translationDocument,
