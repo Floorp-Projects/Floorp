@@ -464,7 +464,7 @@ bool JitScript::ensureHasCachedIonData(JSContext* cx, HandleScript script) {
 void JitScript::setBaselineScriptImpl(JSScript* script,
                                       BaselineScript* baselineScript) {
   JSRuntime* rt = script->runtimeFromMainThread();
-  setBaselineScriptImpl(rt->defaultFreeOp(), script, baselineScript);
+  setBaselineScriptImpl(rt->gcContext(), script, baselineScript);
 }
 
 void JitScript::setBaselineScriptImpl(JS::GCContext* gcx, JSScript* script,
@@ -489,7 +489,7 @@ void JitScript::setBaselineScriptImpl(JS::GCContext* gcx, JSScript* script,
 
 void JitScript::setIonScriptImpl(JSScript* script, IonScript* ionScript) {
   JSRuntime* rt = script->runtimeFromMainThread();
-  setIonScriptImpl(rt->defaultFreeOp(), script, ionScript);
+  setIonScriptImpl(rt->gcContext(), script, ionScript);
 }
 
 void JitScript::setIonScriptImpl(JS::GCContext* gcx, JSScript* script,

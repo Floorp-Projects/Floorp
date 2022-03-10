@@ -159,7 +159,7 @@ static MOZ_ALWAYS_INLINE SharedPropMap* PropMapChildReadBarrier(
     // The map we've found is unreachable and due to be finalized, so
     // remove our weak reference to it and don't use it.
     MOZ_ASSERT(parent->isMarkedAny());
-    parent->removeChild(zone->runtimeFromMainThread()->defaultFreeOp(), child);
+    parent->removeChild(zone->runtimeFromMainThread()->gcContext(), child);
     return nullptr;
   }
 

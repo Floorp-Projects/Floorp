@@ -536,7 +536,7 @@ void BaselineScript::Destroy(JS::GCContext* gcx, BaselineScript* script) {
 
 void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
     const js::jit::BaselineScript* script) {
-  BaselineScript::Destroy(rt_->defaultFreeOp(),
+  BaselineScript::Destroy(rt_->gcContext(),
                           const_cast<BaselineScript*>(script));
 }
 

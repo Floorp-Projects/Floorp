@@ -5107,7 +5107,7 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
 
   // Only release JIT code for the current runtime because there's no good
   // way to discard code for other runtimes.
-  ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+  ReleaseAllJITCode(cx->runtime()->gcContext());
 
   JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
 

@@ -84,8 +84,7 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   // increment the reference counter for each activation that appear on the
   // stack. As the bailed frame is one of them, we have to decrement it now.
   if (frame.ionScript()->invalidated()) {
-    frame.ionScript()->decrementInvalidationCount(
-        cx->runtime()->defaultFreeOp());
+    frame.ionScript()->decrementInvalidationCount(cx->runtime()->gcContext());
   }
 
   // NB: Commentary on how |lastProfilingFrame| is set from bailouts.
@@ -177,7 +176,7 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
 #endif
   }
 
-  frame.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
+  frame.ionScript()->decrementInvalidationCount(cx->runtime()->gcContext());
 
   // Make the frame being bailed out the top profiled frame.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(

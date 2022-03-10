@@ -963,7 +963,7 @@ void IonScript::Destroy(JS::GCContext* gcx, IonScript* script) {
 
 void JS::DeletePolicy<js::jit::IonScript>::operator()(
     const js::jit::IonScript* script) {
-  IonScript::Destroy(rt_->defaultFreeOp(), const_cast<IonScript*>(script));
+  IonScript::Destroy(rt_->gcContext(), const_cast<IonScript*>(script));
 }
 
 void IonScript::purgeICs(Zone* zone) {
@@ -2488,7 +2488,7 @@ static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
   // Null out the JitScript's IonScript pointer. The caller is responsible for
   // destroying the IonScript using the invalidation count mechanism.
   DebugOnly<IonScript*> clearedIonScript =
-      script->jitScript()->clearIonScript(cx->defaultFreeOp(), script);
+      script->jitScript()->clearIonScript(cx->gcContext(), script);
   MOZ_ASSERT(clearedIonScript == ionScript);
 
   // Wait for the scripts to get warm again before doing another
@@ -2532,7 +2532,7 @@ void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
     return;
   }
 
-  JS::GCContext* gcx = cx->defaultFreeOp();
+  JS::GCContext* gcx = cx->gcContext();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     InvalidateActivation(gcx, iter, false);
   }

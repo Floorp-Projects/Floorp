@@ -508,7 +508,7 @@ void ArrayBufferObject::detach(JSContext* cx,
   }
 
   if (buffer->dataPointer()) {
-    buffer->releaseData(cx->runtime()->defaultFreeOp());
+    buffer->releaseData(cx->runtime()->gcContext());
     buffer->setDataPointer(BufferContents::createNoData());
   }
 

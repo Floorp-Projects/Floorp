@@ -714,7 +714,7 @@ JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
   MOZ_ASSERT(!IsForwarded(obj));
 
   const JSClass* jsClass = JS::GetClass(obj);
-  jsClass->doFinalize(cx->defaultFreeOp(), obj);
+  jsClass->doFinalize(cx->gcContext(), obj);
 }
 
 JS_PUBLIC_API void js::gc::SetPerformanceHint(JSContext* cx,
