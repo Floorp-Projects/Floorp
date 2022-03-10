@@ -52,6 +52,7 @@
 #include "nsIUserIdleServiceInternal.h"
 
 #include "IMMHandler.h"
+#include "CheckInvariantWrapper.h"
 
 /**
  * Forward class definitions
@@ -193,6 +194,7 @@ class nsWindow final : public nsBaseWidget {
   void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget* aWidget,
                    bool aActivate) override;
   void SetSizeMode(nsSizeMode aMode) override;
+  nsSizeMode SizeMode() override;
   void GetWorkspaceID(nsAString& workspaceID) override;
   void MoveToWorkspace(const nsAString& workspaceID) override;
   void SuppressAnimation(bool aSuppress) override;
@@ -452,6 +454,30 @@ class nsWindow final : public nsBaseWidget {
     PointerType mType;
   };
 
+  class FrameState {
+   public:
+    explicit FrameState(nsWindow* aWindow);
+
+    void ConsumePreXULSkeletonState(bool aWasMaximized);
+    void EnsureSizeMode(nsSizeMode aMode);
+    void EnsureFullscreenMode(bool aFullScreen);
+    void OnFrameChanging();
+    void OnFrameChanged();
+
+    nsSizeMode GetSizeMode() const;
+
+    void CheckInvariant() const;
+
+   private:
+    void SetSizeModeInternal(nsSizeMode aMode);
+
+    nsSizeMode mSizeMode = nsSizeMode_Normal;
+    nsSizeMode mLastSizeMode = nsSizeMode_Normal;
+    nsSizeMode mOldSizeMode = nsSizeMode_Normal;
+    bool mFullscreenMode = false;
+    nsWindow* mWindow;
+  };
+
   // A magic number to identify the FAKETRACKPOINTSCROLLABLE window created
   // when the trackpoint hack is enabled.
   enum { eFakeTrackPointScrollableID = 0x46545053 };
@@ -616,8 +642,6 @@ class nsWindow final : public nsBaseWidget {
                                        const WinPointerInfo& aPointerInfo,
                                        mozilla::MouseButton aButton);
 
-  void SetSizeModeInternal(nsSizeMode aMode);
-
   static bool IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 
@@ -659,6 +683,9 @@ class nsWindow final : public nsBaseWidget {
   bool InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
                         POINTER_FLAGS aFlags, uint32_t aPressure = 1024,
                         uint32_t aOrientation = 90);
+
+  void OnFullscreenWillChange(bool aFullScreen);
+  void OnFullscreenChanged(bool aFullScreen);
 
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
@@ -727,7 +754,6 @@ class nsWindow final : public nsBaseWidget {
   bool mDisplayPanFeedback = false;
   bool mHideChrome = false;
   bool mIsRTL;
-  bool mFullscreenMode = false;
   bool mMousePresent = false;
   bool mSimulatedClientArea = false;
   bool mDestroyCalled = false;
@@ -740,8 +766,7 @@ class nsWindow final : public nsBaseWidget {
   DWORD_PTR mOldExStyle = 0;
   nsNativeDragTarget* mNativeDragTarget = nullptr;
   HKL mLastKeyboardLayout = 0;
-  nsSizeMode mOldSizeMode = nsSizeMode_Normal;
-  nsSizeMode mLastSizeMode = nsSizeMode_Normal;
+  mozilla::CheckInvariantWrapper<FrameState> mFrameState;
   WindowHook mWindowHook;
   uint32_t mPickerDisplayCount = 0;
   HICON mIconSmall = nullptr;

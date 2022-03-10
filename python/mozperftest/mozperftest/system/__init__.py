@@ -27,4 +27,6 @@ def pick_system(env, flavor, mach_cmd):
         )
     if flavor == "mobile-browser":
         return Layers(env, mach_cmd, (Profile, ProxyRunner, AndroidDevice))
+    if flavor == "webpagetest":
+        return Layers(env, mach_cmd, (Profile,))
     raise NotImplementedError(flavor)

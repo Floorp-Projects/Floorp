@@ -290,6 +290,10 @@ class WebConsoleWrapper {
     store.dispatch(actions.evaluateExpression(expression));
   }
 
+  dispatchUpdateInstantEvaluationResultForCurrentExpression() {
+    store.dispatch(actions.updateInstantEvaluationResultForCurrentExpression());
+  }
+
   /**
    * Returns a Promise that resolves once any async dispatch is finally dispatched.
    */

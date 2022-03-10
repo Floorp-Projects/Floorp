@@ -18,7 +18,7 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/SharedIntlData.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
@@ -140,11 +140,11 @@ bool js::intl_Collator(JSContext* cx, unsigned argc, Value* vp) {
   return Collator(cx, args);
 }
 
-void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::CollatorObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   if (mozilla::intl::Collator* coll = obj->as<CollatorObject>().getCollator()) {
-    intl::RemoveICUCellMemory(fop, obj, CollatorObject::EstimatedMemoryUse);
+    intl::RemoveICUCellMemory(gcx, obj, CollatorObject::EstimatedMemoryUse);
     delete coll;
   }
 }

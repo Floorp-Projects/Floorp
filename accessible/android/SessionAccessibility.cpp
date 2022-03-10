@@ -25,6 +25,7 @@
 #include "mozilla/widget/GeckoViewSupport.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #ifdef DEBUG
 #  include <android/log.h>
@@ -90,6 +91,10 @@ void SessionAccessibility::Init() {
   Settings::Init();
 }
 
+bool SessionAccessibility::IsCacheEnabled() {
+  return StaticPrefs::accessibility_cache_enabled_AtStartup();
+}
+
 mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
   java::GeckoBundle::GlobalRef ret = nullptr;
   RefPtr<SessionAccessibility> self(this);
@@ -127,6 +132,22 @@ void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
 
 void SessionAccessibility::Click(int32_t aID) {
   FORWARD_ACTION_TO_ACCESSIBLE(DoAction, 0);
+}
+
+bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
+                                       bool aForward, bool aInclusive) {
+  RefPtr<SessionAccessibility> self(this);
+  bool ret = false;
+  nsAppShell::SyncRunEvent(
+      [this, self, aID, aGranularity, aForward, aInclusive, &ret] {
+        if (RootAccessibleWrap* rootAcc = GetRoot()) {
+          if (AccessibleWrap* acc = rootAcc->FindAccessibleById(aID)) {
+            ret = acc->PivotTo(aGranularity, aForward, aInclusive);
+          }
+        }
+      });
+
+  return ret;
 }
 
 void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,

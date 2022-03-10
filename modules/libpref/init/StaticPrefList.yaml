@@ -7589,7 +7589,7 @@
 # Is support for caching an grid item's block axis measurement enabled?
 - name: layout.css.grid-item-baxis-measurement.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for CSS masonry layout enabled?
@@ -12971,6 +12971,11 @@
 - name: widget.windows.window_occlusion_tracking_session_lock.enabled
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
+- name: widget.windows.hide_cursor_when_typing
+  type: bool
+  value: false
   mirror: always
 #endif
 

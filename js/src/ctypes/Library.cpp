@@ -31,7 +31,7 @@ namespace js::ctypes {
 *******************************************************************************/
 
 namespace Library {
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
 static bool Close(JSContext* cx, unsigned argc, Value* vp);
 static bool Declare(JSContext* cx, unsigned argc, Value* vp);
@@ -222,7 +222,9 @@ static void UnloadLibrary(JSObject* obj) {
   }
 }
 
-void Library::Finalize(JSFreeOp* fop, JSObject* obj) { UnloadLibrary(obj); }
+void Library::Finalize(JS::GCContext* gcx, JSObject* obj) {
+  UnloadLibrary(obj);
+}
 
 bool Library::Open(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);

@@ -14,8 +14,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
-#include "gc/FreeOp.h"
 #include "gc/GC.h"
+#include "gc/GCContext.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
@@ -233,25 +233,25 @@ struct MOZ_RAII AutoStopVerifyingBarriers {
 #endif /* JS_GC_ZEAL */
 
 class MOZ_RAII AutoPoisonFreedJitCode {
-  JSFreeOp* const fop;
+  JS::GCContext* const gcx;
 
  public:
-  explicit AutoPoisonFreedJitCode(JSFreeOp* fop) : fop(fop) {}
-  ~AutoPoisonFreedJitCode() { fop->poisonJitCode(); }
+  explicit AutoPoisonFreedJitCode(JS::GCContext* gcx) : gcx(gcx) {}
+  ~AutoPoisonFreedJitCode() { gcx->poisonJitCode(); }
 };
 
 // Set/restore the performing GC flag for the current thread.
 class MOZ_RAII AutoSetThreadIsPerformingGC {
-  JSFreeOp* fop;
+  JS::GCContext* gcx;
   bool prev;
 
  public:
   AutoSetThreadIsPerformingGC()
-      : fop(TlsFreeOp.get()), prev(fop->isCollecting_) {
-    fop->isCollecting_ = true;
+      : gcx(TlsGCContext.get()), prev(gcx->isCollecting_) {
+    gcx->isCollecting_ = true;
   }
 
-  ~AutoSetThreadIsPerformingGC() { fop->isCollecting_ = prev; }
+  ~AutoSetThreadIsPerformingGC() { gcx->isCollecting_ = prev; }
 };
 
 class MOZ_RAII AutoSetThreadGCUse {
@@ -260,23 +260,23 @@ class MOZ_RAII AutoSetThreadGCUse {
   explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr) {}
 #else
   explicit AutoSetThreadGCUse(GCUse use, JS::Zone* sweepZone = nullptr)
-      : fop(TlsFreeOp.get()),
-        prevUse(fop->gcUse_),
-        prevZone(fop->gcSweepZone_) {
-    MOZ_ASSERT(fop->isCollecting());
+      : gcx(TlsGCContext.get()),
+        prevUse(gcx->gcUse_),
+        prevZone(gcx->gcSweepZone_) {
+    MOZ_ASSERT(gcx->isCollecting());
     MOZ_ASSERT_IF(sweepZone, use == GCUse::Sweeping);
-    fop->gcUse_ = use;
-    fop->gcSweepZone_ = sweepZone;
+    gcx->gcUse_ = use;
+    gcx->gcSweepZone_ = sweepZone;
   }
 
   ~AutoSetThreadGCUse() {
-    fop->gcUse_ = prevUse;
-    fop->gcSweepZone_ = prevZone;
-    MOZ_ASSERT_IF(fop->gcUse() == GCUse::None, !fop->gcSweepZone());
+    gcx->gcUse_ = prevUse;
+    gcx->gcSweepZone_ = prevZone;
+    MOZ_ASSERT_IF(gcx->gcUse() == GCUse::None, !gcx->gcSweepZone());
   }
 
  private:
-  JSFreeOp* fop;
+  JS::GCContext* gcx;
   GCUse prevUse;
   JS::Zone* prevZone;
 #endif

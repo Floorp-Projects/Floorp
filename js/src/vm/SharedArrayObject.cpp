@@ -10,7 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/AtomicOperations.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
@@ -332,10 +332,10 @@ SharedArrayRawBuffer* SharedArrayBufferObject::rawBufferObject() const {
   return reinterpret_cast<SharedArrayRawBuffer*>(v.toPrivate());
 }
 
-void SharedArrayBufferObject::Finalize(JSFreeOp* fop, JSObject* obj) {
+void SharedArrayBufferObject::Finalize(JS::GCContext* gcx, JSObject* obj) {
   // Must be foreground finalizable so that we can account for the object.
-  MOZ_ASSERT(fop->onMainThread());
-  fop->runtime()->decSABCount();
+  MOZ_ASSERT(gcx->onMainThread());
+  gcx->runtime()->decSABCount();
 
   SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
 

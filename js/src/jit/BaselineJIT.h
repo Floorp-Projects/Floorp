@@ -311,7 +311,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
                              size_t debugTrapEntries, size_t resumeEntries,
                              size_t traceLoggerToggleOffsetEntries);
 
-  static void Destroy(JSFreeOp* fop, BaselineScript* script);
+  static void Destroy(JS::GCContext* gcx, BaselineScript* script);
 
   void trace(JSTracer* trc);
 
@@ -431,7 +431,7 @@ bool CanBaselineInterpretScript(JSScript* script);
 bool BaselineCompileFromBaselineInterpreter(JSContext* cx, BaselineFrame* frame,
                                             uint8_t** res);
 
-void FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script);
+void FinishDiscardBaselineScript(JS::GCContext* gcx, JSScript* script);
 
 void AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf,
                            size_t* data);

@@ -437,7 +437,7 @@ if use_minidump:
     }.get(platform.system())
 
     injector_lib = resolve_path((DIR.fetches,), "injector", injector_basename)
-    stackwalk = resolve_path((DIR.fetches,), "minidump_stackwalk", "minidump_stackwalk")
+    stackwalk = resolve_path((DIR.fetches,), "minidump-stackwalk", "minidump-stackwalk")
     if stackwalk is not None:
         env.setdefault("MINIDUMP_STACKWALK", stackwalk)
     dump_syms = resolve_path((DIR.fetches,), "dump_syms", "dump_syms")

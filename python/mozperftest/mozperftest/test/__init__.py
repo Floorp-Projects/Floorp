@@ -4,11 +4,12 @@
 from mozperftest.test.browsertime import BrowsertimeRunner
 from mozperftest.test.androidlog import AndroidLog
 from mozperftest.test.xpcshell import XPCShell
+from mozperftest.test.webpagetest import WebPageTest
 from mozperftest.layers import Layers
 
 
 def get_layers():
-    return BrowsertimeRunner, AndroidLog, XPCShell
+    return BrowsertimeRunner, AndroidLog, XPCShell, WebPageTest
 
 
 def pick_test(env, flavor, mach_cmd):
@@ -18,5 +19,7 @@ def pick_test(env, flavor, mach_cmd):
         return Layers(env, mach_cmd, (BrowsertimeRunner,))
     if flavor == "mobile-browser":
         return Layers(env, mach_cmd, (BrowsertimeRunner, AndroidLog))
+    if flavor == "webpagetest":
+        return Layers(env, mach_cmd, (WebPageTest,))
 
     raise NotImplementedError(flavor)

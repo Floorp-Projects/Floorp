@@ -450,8 +450,8 @@ inline T* MovingTracer::onEdge(T* thing) {
 }
 
 void Zone::prepareForCompacting() {
-  JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
-  discardJitCode(fop);
+  JS::GCContext* gcx = runtimeFromMainThread()->gcContext();
+  discardJitCode(gcx);
 }
 
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
@@ -787,7 +787,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
 
   zone->externalStringCache().purge();
   zone->functionToStringCache().purge();
-  zone->shapeZone().purgeShapeCaches(rt->defaultFreeOp());
+  zone->shapeZone().purgeShapeCaches(rt->gcContext());
   rt->caches().stringToAtomCache.purge();
 
   // Iterate through all cells that can contain relocatable pointers to update

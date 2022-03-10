@@ -160,7 +160,7 @@ struct ShapeZone {
 
   explicit ShapeZone(Zone* zone);
 
-  void purgeShapeCaches(JSFreeOp* fop);
+  void purgeShapeCaches(JS::GCContext* gcx);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* initialPropMapTable, size_t* shapeTables);

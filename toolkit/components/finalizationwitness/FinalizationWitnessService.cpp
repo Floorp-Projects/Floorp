@@ -93,7 +93,7 @@ already_AddRefed<FinalizationEvent> ExtractFinalizationEvent(
  * Unless method Forget() has been called, the finalizer displays an error
  * message.
  */
-void Finalize(JSFreeOp* fop, JSObject* objSelf) {
+void Finalize(JS::GCContext* gcx, JSObject* objSelf) {
   RefPtr<FinalizationEvent> event = ExtractFinalizationEvent(objSelf);
   if (event == nullptr || gShuttingDown) {
     // NB: event will be null if Forget() has been called

@@ -656,7 +656,7 @@ void NukeAllWrappersForRealm(
 
 }  // namespace xpc
 
-static void CompartmentDestroyedCallback(JSFreeOp* fop,
+static void CompartmentDestroyedCallback(JS::GCContext* gcx,
                                          JS::Compartment* compartment) {
   // NB - This callback may be called in JS_DestroyContext, which happens
   // after the XPCJSRuntime has been torn down.
@@ -831,7 +831,7 @@ void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
 }
 
 /* static */
-void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
+void XPCJSRuntime::FinalizeCallback(JS::GCContext* gcx, JSFinalizeStatus status,
                                     void* data) {
   XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
   if (!self) {
@@ -2728,7 +2728,7 @@ static void GetRealmNameCallback(JSContext* cx, Realm* realm, char* buf,
   memcpy(buf, name.get(), name.Length() + 1);
 }
 
-static void DestroyRealm(JSFreeOp* fop, JS::Realm* realm) {
+static void DestroyRealm(JS::GCContext* gcx, JS::Realm* realm) {
   // Get the current compartment private into an AutoPtr (which will do the
   // cleanup for us), and null out the private field.
   mozilla::UniquePtr<RealmPrivate> priv(RealmPrivate::Get(realm));

@@ -101,7 +101,7 @@ void CheckGlobalLock<Lock, Helper>::check() const {
 
   switch (Lock) {
     case GlobalLock::GCLock:
-      TlsFreeOp.get()
+      TlsGCContext.get()
           ->runtimeFromAnyThread()
           ->gc.assertCurrentThreadHasLockedGC();
       break;

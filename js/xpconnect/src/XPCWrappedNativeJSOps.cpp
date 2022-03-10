@@ -565,7 +565,7 @@ bool XPC_WN_Shared_Enumerate(JSContext* cx, HandleObject obj) {
 
 enum WNHelperType { WN_NOHELPER, WN_HELPER };
 
-static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
+static void WrappedNativeFinalize(JS::GCContext* gcx, JSObject* obj,
                                   WNHelperType helperType) {
   const JSClass* clazz = JS::GetClass(obj);
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
@@ -577,7 +577,7 @@ static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
   }
 
   if (helperType == WN_HELPER) {
-    wrapper->GetScriptable()->Finalize(wrapper, fop, obj);
+    wrapper->GetScriptable()->Finalize(wrapper, gcx, obj);
   }
   wrapper->FlatJSObjectFinalized();
 }
@@ -592,8 +592,8 @@ static size_t WrappedNativeObjectMoved(JSObject* obj, JSObject* old) {
   return 0;
 }
 
-void XPC_WN_NoHelper_Finalize(JSFreeOp* fop, JSObject* obj) {
-  WrappedNativeFinalize(fop, obj, WN_NOHELPER);
+void XPC_WN_NoHelper_Finalize(JS::GCContext* gcx, JSObject* obj) {
+  WrappedNativeFinalize(gcx, obj, WN_NOHELPER);
 }
 
 /*
@@ -761,8 +761,8 @@ bool XPC_WN_Helper_HasInstance(JSContext* cx, HandleObject obj,
   POST_HELPER_STUB
 }
 
-void XPC_WN_Helper_Finalize(JSFreeOp* fop, JSObject* obj) {
-  WrappedNativeFinalize(fop, obj, WN_HELPER);
+void XPC_WN_Helper_Finalize(JS::GCContext* gcx, JSObject* obj) {
+  WrappedNativeFinalize(gcx, obj, WN_HELPER);
 }
 
 bool XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id,
@@ -1013,11 +1013,11 @@ static bool XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-static void XPC_WN_Proto_Finalize(JSFreeOp* fop, JSObject* obj) {
+static void XPC_WN_Proto_Finalize(JS::GCContext* gcx, JSObject* obj) {
   // This can be null if xpc shutdown has already happened
   XPCWrappedNativeProto* p = XPCWrappedNativeProto::Get(obj);
   if (p) {
-    p->JSProtoObjectFinalized(fop, obj);
+    p->JSProtoObjectFinalized(gcx, obj);
   }
 }
 
@@ -1152,7 +1152,7 @@ static bool XPC_WN_TearOff_Resolve(JSContext* cx, HandleObject obj, HandleId id,
       resolvedp);
 }
 
-static void XPC_WN_TearOff_Finalize(JSFreeOp* fop, JSObject* obj) {
+static void XPC_WN_TearOff_Finalize(JS::GCContext* gcx, JSObject* obj) {
   XPCWrappedNativeTearOff* p = XPCWrappedNativeTearOff::Get(obj);
   if (!p) {
     return;

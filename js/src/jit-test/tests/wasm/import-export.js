@@ -780,3 +780,19 @@ assertEq(e.call(), 1090);
     for (var i = 0; i < 20; i++)
         assertEq(g.i2.exports.test(), 147);
 })();
+
+// The name presented in toString and as the fn.name property is the index of the
+// function within the module.  See bug 1714505 for analysis.
+
+var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
+(module
+  (func (export "myfunc") (result i32)
+    (i32.const 1337))
+  (func $hi (result i32)
+    (i32.const 3))
+  (func $abracadabra (export "bletch") (result i32)
+    (i32.const -1)))`)))
+assertEq(String(ins.exports.myfunc), "function 0() {\n    [native code]\n}")
+assertEq(ins.exports.myfunc.name, "0");
+assertEq(String(ins.exports.bletch), "function 2() {\n    [native code]\n}")
+assertEq(ins.exports.bletch.name, "2")

@@ -14,7 +14,7 @@ const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class Command extends Module {
+class CommandModule extends Module {
   destroy() {}
 
   /**
@@ -48,4 +48,4 @@ class Command extends Module {
   }
 }
 
-const command = Command;
+const command = CommandModule;

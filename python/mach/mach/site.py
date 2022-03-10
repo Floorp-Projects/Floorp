@@ -14,6 +14,7 @@ import json
 import os
 import platform
 import shutil
+import site
 import subprocess
 import sys
 from collections import OrderedDict
@@ -364,8 +365,7 @@ class MachSiteManager:
                     # automatically adds the virtualenv's "site-packages" to our scope, in
                     # addition to our first-party/vendored modules since they're specified
                     # in the "mach.pth" file.
-                    activate_path = self._virtualenv().activate_path
-                    exec(open(activate_path).read(), dict(__file__=activate_path))
+                    activate_virtualenv(self._virtualenv())
 
     def _build(self):
         if self._site_packages_source != SitePackagesSource.VENV:
@@ -524,6 +524,14 @@ class CommandSiteManager:
         first to ensure that the virtualenv doesn't have obsolete references or packages.
         """
         if not self._up_to_date():
+            active_site = MozSiteMetadata.from_runtime()
+            if active_site.site_name == self._site_name:
+                raise Exception(
+                    f'The "{self._site_name}" site is out-of-date, even though it has '
+                    f"already been activated. Was it modified while this Mach process "
+                    f"was running?"
+                )
+
             _create_venv_with_pthfile(
                 self._topsrcdir,
                 self._virtualenv,
@@ -544,8 +552,7 @@ class CommandSiteManager:
         self.ensure()
 
         with self._metadata.update_current_site(self._virtualenv.python_path):
-            activate_path = self._virtualenv.activate_path
-            exec(open(activate_path).read(), dict(__file__=activate_path))
+            activate_virtualenv(self._virtualenv)
 
     def install_pip_package(self, package):
         """Install a package via pip.
@@ -655,6 +662,25 @@ class CommandSiteManager:
             # When Mach is using the system environment, add it next.
             stdlib_paths = self._metadata.original_python.stdlib_paths()
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
+
+            # When a virtualenv is activated, it implicitly adds some paths to the
+            # sys.path. When this function is run from such an activated virtualenv,
+            # we don't want to include its paths in the pthfile because they'd be
+            # redundant - so, scrub them.
+            # Note that some platforms include just a site's $site-packages-dir to the
+            # sys.path, while other platforms (such as Windows) add the $prefix as well.
+            # We can catch these cases by matching all paths that start with $prefix.
+            prefix_normalized = os.path.normcase(
+                os.path.normpath(self._virtualenv.prefix)
+            )
+            system_sys_path = [
+                p
+                for p in system_sys_path
+                if not os.path.normcase(os.path.normpath(p)).startswith(
+                    prefix_normalized
+                )
+            ]
+
             lines.extend(system_sys_path)
         elif mach_site_packages_source == SitePackagesSource.VENV:
             # When Mach is using its on-disk virtualenv, add its site-packages directory.
@@ -677,34 +703,17 @@ class CommandSiteManager:
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
             lines.extend(system_sys_path)
         elif self._site_packages_source == SitePackagesSource.VENV:
-            # The virtualenv will implicitly include itself to the sys.path, so we
-            # should avoid having our sys.path-retention add it a second time.
-            # Note that some platforms include just a site's $site-packages-dir to the
-            # sys.path, while other platforms (such as Windows) add the $prefix as well.
-            # We can catch these cases by pruning all paths that start with $prefix.
-            prefix_normalized = os.path.normcase(
-                os.path.normpath(self._virtualenv.prefix)
-            )
-            lines = [
-                line
-                for line in lines
-                if not os.path.normcase(os.path.normpath(line)).startswith(
-                    prefix_normalized
-                )
-            ]
+            # Finally, ensure that pip-installed packages are the lowest-priority
+            # source to import from.
             lines.extend(_deprioritize_venv_packages(self._virtualenv))
 
         # De-duplicate
         lines = list(OrderedDict.fromkeys(lines))
 
         # Note that an on-disk virtualenv is always created for commands, even if they
-        # are using the system as their site-packages source. Also note that, in such
-        # a case, we aren't "deprioritizing" the venv_packages. This is because:
-        # * There should be no risk of breakage, since *nothing* should be "pip install"-d
-        #   into the virtualenv, and
-        # * There's nontrivial complexity in purging the virtualenv's site-packages from
-        #   the sys.path after activation, but since it isn't doing any harm in staying,
-        #   we leave it.
+        # are using the system as their site-packages source. This is to support use
+        # cases where a fresh Python process must be created, but it also must have
+        # access to <site>'s 1st- and 3rd-party packages.
         return lines
 
     def _up_to_date(self):
@@ -738,7 +747,6 @@ class PythonVirtualenv:
         else:
             self.bin_path = os.path.join(prefix, "bin")
             self.python_path = os.path.join(self.bin_path, "python")
-        self.activate_path = os.path.join(self.bin_path, "activate_this.py")
         self.prefix = prefix
 
     @functools.lru_cache(maxsize=None)
@@ -1125,8 +1133,6 @@ def _create_venv_with_pthfile(
         ]
     )
 
-    os.utime(target_venv.activate_path, None)
-
     site_packages_dir = target_venv.site_packages_dir()
     pthfile_contents = "\n".join(pthfile_lines)
     with open(os.path.join(site_packages_dir, PTH_FILENAME), "w") as f:
@@ -1137,7 +1143,6 @@ def _create_venv_with_pthfile(
             target_venv.pip_install([str(requirement.requirement)])
         target_venv.install_optional_packages(requirements.pypi_optional_requirements)
 
-    os.utime(target_venv.activate_path, None)
     metadata.write(is_finalized=True)
 
 
@@ -1148,9 +1153,7 @@ def _is_venv_up_to_date(
     requirements,
     expected_metadata,
 ):
-    if not os.path.exists(target_venv.prefix) or not os.path.exists(
-        target_venv.activate_path
-    ):
+    if not os.path.exists(target_venv.prefix):
         return False
 
     virtualenv_package = os.path.join(
@@ -1168,9 +1171,11 @@ def _is_venv_up_to_date(
     # * This file
     # * The `virtualenv` package
     # * Any of our requirements manifest files
-    activate_mtime = os.path.getmtime(target_venv.activate_path)
+    metadata_mtime = os.path.getmtime(
+        os.path.join(target_venv.prefix, METADATA_FILENAME)
+    )
     dep_mtime = max(os.path.getmtime(p) for p in deps)
-    if dep_mtime > activate_mtime:
+    if dep_mtime > metadata_mtime:
         return False
 
     try:
@@ -1195,6 +1200,18 @@ def _is_venv_up_to_date(
         return False
 
     return True
+
+
+def activate_virtualenv(virtualenv: PythonVirtualenv):
+    os.environ["PATH"] = os.pathsep.join(
+        [virtualenv.bin_path] + os.environ.get("PATH", "").split(os.pathsep)
+    )
+    os.environ["VIRTUAL_ENV"] = virtualenv.prefix
+
+    for path in (virtualenv.prefix, virtualenv.site_packages_dir()):
+        site.addsitedir(os.path.realpath(path))
+
+    sys.prefix = virtualenv.prefix
 
 
 def _mach_virtualenv_root(checkout_scoped_state_dir):

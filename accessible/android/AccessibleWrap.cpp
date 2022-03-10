@@ -294,7 +294,7 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return false;
 }
 
-void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
+bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                              bool aInclusive) {
   a11y::Pivot pivot(RootAccessible());
   TraversalRule rule(aGranularity);
@@ -326,7 +326,11 @@ void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
           SessionAccessibility::GetInstanceFor(result);
       sessionAcc->SendAccessibilityFocusedEvent(newPosition);
     }
+
+    return true;
   }
+
+  return false;
 }
 
 void AccessibleWrap::ExploreByTouch(float aX, float aY) {

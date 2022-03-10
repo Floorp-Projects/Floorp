@@ -49,7 +49,6 @@
 #include "wasm/WasmValType.h"
 #include "wasm/WasmValue.h"
 
-class JSFreeOp;
 class JSObject;
 class JSTracer;
 struct JSContext;
@@ -220,7 +219,7 @@ class WasmModuleObject : public NativeObject {
   static const unsigned MODULE_SLOT = 0;
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static bool imports(JSContext* cx, unsigned argc, Value* vp);
   static bool exports(JSContext* cx, unsigned argc, Value* vp);
   static bool customSections(JSContext* cx, unsigned argc, Value* vp);
@@ -256,7 +255,7 @@ class WasmGlobalObject : public NativeObject {
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
-  static void finalize(JSFreeOp*, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
 
   static bool typeImpl(JSContext* cx, const CallArgs& args);
@@ -302,7 +301,7 @@ class WasmInstanceObject : public NativeObject {
   static bool exportsGetterImpl(JSContext* cx, const CallArgs& args);
   static bool exportsGetter(JSContext* cx, unsigned argc, Value* vp);
   bool isNewborn() const;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
 
   // ExportMap maps from function index to exported function object.
@@ -369,7 +368,7 @@ class WasmMemoryObject : public NativeObject {
   static const unsigned ISHUGE_SLOT = 2;
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
   static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
   static bool typeImpl(JSContext* cx, const CallArgs& args);
@@ -445,7 +444,7 @@ class WasmTableObject : public NativeObject {
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
   bool isNewborn() const;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
   static bool lengthGetterImpl(JSContext* cx, const CallArgs& args);
   static bool lengthGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -493,7 +492,7 @@ class WasmTagObject : public NativeObject {
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
-  static void finalize(JSFreeOp*, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static bool typeImpl(JSContext* cx, const CallArgs& args);
   static bool type(JSContext* cx, unsigned argc, Value* vp);
 
@@ -528,7 +527,7 @@ class WasmExceptionObject : public NativeObject {
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   // Named isMethod instead of is to avoid name conflict.
   static bool isMethod(JSContext* cx, unsigned argc, Value* vp);
   static bool isImpl(JSContext* cx, const CallArgs& args);

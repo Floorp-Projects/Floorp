@@ -10,7 +10,7 @@ const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class CommandWindowGlobalOnly extends Module {
+class CommandWindowGlobalOnlyModule extends Module {
   destroy() {}
 
   /**
@@ -44,4 +44,4 @@ class CommandWindowGlobalOnly extends Module {
   }
 }
 
-const commandwindowglobalonly = CommandWindowGlobalOnly;
+const commandwindowglobalonly = CommandWindowGlobalOnlyModule;

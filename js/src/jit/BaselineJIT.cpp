@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #include "debugger/DebugAPI.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/PublicIterators.h"
 #include "jit/AutoWritableJitCode.h"
 #include "jit/BaselineCodeGen.h"
@@ -527,16 +527,16 @@ void BaselineScript::trace(JSTracer* trc) {
   TraceEdge(trc, &method_, "baseline-method");
 }
 
-void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
+void BaselineScript::Destroy(JS::GCContext* gcx, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonCompileTask());
 
   // This allocation is tracked by JSScript::setBaselineScriptImpl.
-  fop->deleteUntracked(script);
+  gcx->deleteUntracked(script);
 }
 
 void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
     const js::jit::BaselineScript* script) {
-  BaselineScript::Destroy(rt_->defaultFreeOp(),
+  BaselineScript::Destroy(rt_->gcContext(),
                           const_cast<BaselineScript*>(script));
 }
 
@@ -959,13 +959,13 @@ void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
   toggleCodeCoverageInstrumentationUnchecked(enable);
 }
 
-void jit::FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script) {
+void jit::FinishDiscardBaselineScript(JS::GCContext* gcx, JSScript* script) {
   MOZ_ASSERT(script->hasBaselineScript());
   MOZ_ASSERT(!script->jitScript()->active());
 
   BaselineScript* baseline =
-      script->jitScript()->clearBaselineScript(fop, script);
-  BaselineScript::Destroy(fop, baseline);
+      script->jitScript()->clearBaselineScript(gcx, script);
+  BaselineScript::Destroy(gcx, baseline);
 }
 
 void jit::AddSizeOfBaselineData(JSScript* script,

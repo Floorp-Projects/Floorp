@@ -2459,24 +2459,26 @@ class EventManager {
     for (let [module, moduleEntry] of extension.persistentListeners) {
       for (let [event, listeners] of moduleEntry) {
         for (let [key, listener] of listeners) {
-          let { primed } = listener;
-          // When a primed listener is renewed, primed is set to null
-          // When a new listener has beed added, primed is undefined.
-          // In both cases, we do not want to clear the persisted listener data.
-          if (!primed) {
+          let { primed, added } = listener;
+          // When a primed listener is added or renewed during initial
+          // background execution we set an added flag.  If it was primed
+          // when added, primed is set to null.
+          if (added) {
             continue;
           }
 
-          // When a primed listener was not renewed, primed will still be truthy.
-          // These need to be cleared on shutdown (important for event pages), but
-          // we only clear the persisted listener data after the startup of a background.
-          // Release any pending events and unregister the primed handler.
-          listener.primed = null;
+          if (primed) {
+            // When a primed listener was not renewed, primed will still be truthy.
+            // These need to be cleared on shutdown (important for event pages), but
+            // we only clear the persisted listener data after the startup of a background.
+            // Release any pending events and unregister the primed handler.
+            listener.primed = null;
 
-          for (let evt of primed.pendingEvents) {
-            evt.reject(new Error("listener not re-registered"));
+            for (let evt of primed.pendingEvents) {
+              evt.reject(new Error("listener not re-registered"));
+            }
+            primed.unregister();
           }
-          primed.unregister();
 
           // Clear any persisted events that were not renewed, should typically
           // only be done at the end of the background page load.
@@ -2497,7 +2499,8 @@ class EventManager {
     extension.persistentListeners
       .get(module)
       .get(event)
-      .set(key, { params: args });
+      // when writing, only args are written, other properties are dropped
+      .set(key, { params: args, added: true });
     EventManager._writePersistentListeners(extension);
   }
 
@@ -2607,6 +2610,7 @@ class EventManager {
             evt.resolve(fire.async(...evt.args));
           }
         }
+        listener.added = true;
 
         recordStartupData = false;
         this.remove.set(callback, () => {

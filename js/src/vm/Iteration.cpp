@@ -23,7 +23,7 @@
 #include "builtin/Array.h"
 #include "builtin/SelfHostingDefines.h"
 #include "ds/Sort.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -1230,10 +1230,10 @@ void PropertyIteratorObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-void PropertyIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void PropertyIteratorObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   if (NativeIterator* ni =
           obj->as<PropertyIteratorObject>().getNativeIterator()) {
-    fop->free_(obj, ni, ni->allocationSize(), MemoryUse::NativeIterator);
+    gcx->free_(obj, ni, ni->allocationSize(), MemoryUse::NativeIterator);
   }
 }
 

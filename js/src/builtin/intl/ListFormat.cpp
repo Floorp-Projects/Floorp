@@ -15,7 +15,7 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
@@ -125,13 +125,13 @@ static bool ListFormat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void js::ListFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::ListFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   mozilla::intl::ListFormat* lf =
       obj->as<ListFormatObject>().getListFormatSlot();
   if (lf) {
-    intl::RemoveICUCellMemory(fop, obj, ListFormatObject::EstimatedMemoryUse);
+    intl::RemoveICUCellMemory(gcx, obj, ListFormatObject::EstimatedMemoryUse);
     delete lf;
   }
 }

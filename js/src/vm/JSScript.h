@@ -1058,7 +1058,7 @@ class ScriptSourceObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 
   static ScriptSourceObject* create(JSContext* cx, ScriptSource* source);
 
@@ -1576,7 +1576,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
 
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(data_);
@@ -1818,9 +1818,9 @@ class JSScript : public js::BaseScript {
   /* Ensure the script has a JitScript. */
   inline bool ensureHasJitScript(JSContext* cx, js::jit::AutoKeepJitScripts&);
 
-  void maybeReleaseJitScript(JSFreeOp* fop);
-  void releaseJitScript(JSFreeOp* fop);
-  void releaseJitScriptOnFinalize(JSFreeOp* fop);
+  void maybeReleaseJitScript(JS::GCContext* gcx);
+  void releaseJitScript(JS::GCContext* gcx);
+  void releaseJitScriptOnFinalize(JS::GCContext* gcx);
 
   inline js::jit::BaselineScript* baselineScript() const;
   inline js::jit::IonScript* ionScript() const;

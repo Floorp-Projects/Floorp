@@ -6,9 +6,9 @@
 #ifndef SplitNodeTransaction_h
 #define SplitNodeTransaction_h
 
-#include "mozilla/EditorDOMPoint.h"  // for RangeBoundary, EditorRawDOMPoint
-#include "mozilla/EditTransactionBase.h"  // for EditTxn, etc.
-#include "nsCOMPtr.h"                     // for nsCOMPtr
+#include "EditTransactionBase.h"  // for EditorTransactionBase
+
+#include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
 #include "nsISupportsImpl.h"  // for NS_DECL_ISUPPORTS_INHERITED
@@ -17,6 +17,10 @@
 namespace mozilla {
 
 class HTMLEditor;
+class SplitNodeResult;
+
+template <typename PT, typename CT>
+class EditorDOMPointBase;
 
 /**
  * A transaction that splits a node into two identical nodes, with the children
@@ -30,15 +34,14 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
  public:
   /**
-   * Creates a transaction to create a new node (left node) identical to an
-   * existing node (right node), and split the contents between the same point
-   * in both nodes.
+   * Creates a transaction to create a new node identical to an existing node,
+   * and split the contents between the same point in both nodes.
    *
    * @param aHTMLEditor             The provider of core editing operations.
    * @param aStartOfRightContent    The point to split.  Its container will be
-   *                                the right node, i.e., become the new node's
-   *                                next sibling.  And the point will be start
-   *                                of the right node.
+   *                                will be split, and its previous sibling will
+   *                                be cloned new node.  And the point will be
+   *                                start of the right node.
    */
   template <typename PT, typename CT>
   static already_AddRefed<SplitNodeTransaction> Create(
@@ -54,7 +57,13 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
-  nsIContent* GetNewLeftContent() const { return mNewLeftContent; }
+  nsIContent* GetSplitContent() const { return mSplitContent; }
+  nsIContent* GetNewContent() const { return mNewContent; }
+  nsINode* GetParentNode() const { return mParentNode; }
+
+  // The split offset.  At undoing, this is recomputed with tracking the
+  // first child of mSplitContent.
+  uint32_t SplitOffset() const { return mSplitOffset; }
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const SplitNodeTransaction& aTransaction);
@@ -62,17 +71,24 @@ class SplitNodeTransaction final : public EditTransactionBase {
  protected:
   virtual ~SplitNodeTransaction() = default;
 
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  DoTransactionInternal(HTMLEditor& aHTMLEditor, nsIContent& aSplittingContent,
+                        nsIContent& aNewContent, uint32_t aSplitOffset);
+
   RefPtr<HTMLEditor> mHTMLEditor;
 
-  // The container is existing right node (will be split).
-  // The point referring this is start of the right node after it's split.
-  EditorDOMPoint mStartOfRightContent;
+  // The node which should be parent of both mNewContent and mSplitContent.
+  nsCOMPtr<nsINode> mParentNode;
 
-  // The node we create when splitting mExistingRightContent.
-  nsCOMPtr<nsIContent> mNewLeftContent;
+  // The node we create when splitting mSplitContent.
+  nsCOMPtr<nsIContent> mNewContent;
 
-  // The parent shared by mExistingRightContent and mNewLeftContent.
-  nsCOMPtr<nsINode> mContainerParentNode;
+  // The content node which we split.
+  nsCOMPtr<nsIContent> mSplitContent;
+
+  // The offset where we split in mSplitContent.  This is required for doing and
+  // redoing.  Therefore, this is updated when undoing.
+  uint32_t mSplitOffset;
 };
 
 }  // namespace mozilla

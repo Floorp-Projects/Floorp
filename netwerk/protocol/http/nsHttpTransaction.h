@@ -43,7 +43,7 @@ class nsHttpHeaderArray;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 class NullHttpTransaction;
-class SpdyConnectTransaction;
+class Http2ConnectTransaction;
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -154,7 +154,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetHttpTrailers(nsCString& aTrailers);
 
   bool IsWebsocketUpgrade();
-  void SetH2WSTransaction(SpdyConnectTransaction*);
+  void SetH2WSTransaction(Http2ConnectTransaction*);
 
   void OnProxyConnectComplete(int32_t aResponseCode) override;
   void SetFlat407Headers(const nsACString& aHeaders);
@@ -522,7 +522,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   } mEarlyDataDisposition{EARLY_NONE};
 
   // H2 websocket support
-  RefPtr<SpdyConnectTransaction> mH2WSTransaction;
+  RefPtr<Http2ConnectTransaction> mH2WSTransaction;
 
   HttpTrafficCategory mTrafficCategory{HttpTrafficCategory::eInvalid};
   bool mThroughCaptivePortal;

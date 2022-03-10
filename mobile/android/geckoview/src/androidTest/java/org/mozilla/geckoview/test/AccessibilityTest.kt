@@ -1257,6 +1257,94 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Button has correct text", buttonNode.text.toString(), equalTo("Submit"))
     }
 
+
+    private fun testAccessibilityFocusIframe(page: String) {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        mainSession.loadTestPath(page)
+        waitForInitialFocus(true)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Label has text", node.text.toString(), equalTo("Some stuff "))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("heading has correct content", node.text as String, equalTo("Hello, world!"))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Label has text", node.text.toString(), equalTo("Some stuff "))
+            }
+        })
+    }
+
+    @Test fun testRemoteAccessibilityFocusIframe() {
+        // TODO: Bug 1758540
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        testAccessibilityFocusIframe(REMOTE_IFRAME);
+    }
+
+    @Test fun testLocalAccessibilityFocusIframe() {
+        testAccessibilityFocusIframe(LOCAL_IFRAME);
+    }
+
+    private fun testIframeTree(page: String) {
+        mainSession.loadTestPath(page)
+        waitForInitialFocus()
+
+        val rootNode = createNodeInfo(View.NO_ID)
+        assertThat("Document has 2 children", rootNode.childCount, equalTo(2))
+
+        val labelNode = createNodeInfo(rootNode.getChildId(0))
+        assertThat("First node has text", labelNode.text.toString(), equalTo("Some stuff "))
+
+        val iframeNode = createNodeInfo(rootNode.getChildId(1))
+        assertThat("iframe has vieIdwResourceName of 'iframe'", iframeNode.viewIdResourceName, equalTo("iframe"))
+        assertThat("iframe has 1 child", iframeNode.childCount, equalTo(1))
+
+        val innerDocNode = createNodeInfo(iframeNode.getChildId(0))
+        assertThat("Inner doc has one child", innerDocNode.childCount, equalTo(1))
+
+        val section = createNodeInfo(innerDocNode.getChildId(0))
+        assertThat("section has one child", innerDocNode.childCount, equalTo(1))
+
+        val node = createNodeInfo(section.getChildId(0))
+        assertThat("Text node has text", node.text as String, equalTo("Hello, world!"))
+    }
+
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
+    @Test fun testRemoteIframeTree() {
+        // TODO: Bug 1758540
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        testAccessibilityFocusIframe(REMOTE_IFRAME);
+    }
+
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
+    @Test fun testLocalIframeTree() {
+        testAccessibilityFocusIframe(LOCAL_IFRAME);
+    }
+
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testCollection() {
         loadTestPage("test-collection")

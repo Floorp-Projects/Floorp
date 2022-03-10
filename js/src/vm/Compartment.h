@@ -348,7 +348,7 @@ class JS::Compartment {
  public:
   explicit Compartment(JS::Zone* zone, bool invisibleToDebugger);
 
-  void destroy(JSFreeOp* fop);
+  void destroy(JS::GCContext* gcx);
 
   [[nodiscard]] inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
@@ -420,7 +420,8 @@ class JS::Compartment {
   static void traceIncomingCrossCompartmentEdgesForZoneGC(
       JSTracer* trc, EdgeSelector whichEdges);
 
-  void sweepRealms(JSFreeOp* fop, bool keepAtleastOne, bool destroyingRuntime);
+  void sweepRealms(JS::GCContext* gcx, bool keepAtleastOne,
+                   bool destroyingRuntime);
   void sweepAfterMinorGC(JSTracer* trc);
   void traceCrossCompartmentObjectWrapperEdges(JSTracer* trc);
 

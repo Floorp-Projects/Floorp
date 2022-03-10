@@ -750,17 +750,28 @@
           }
         }
       } else if (draggedTab) {
-        let newIndex = this._getDropIndex(event, false);
-        let newTabs = [];
-        for (let tab of movingTabs) {
-          let newTab = gBrowser.adoptTab(tab, newIndex++, tab == draggedTab);
-          newTabs.push(newTab);
+        // Move the tabs. To avoid multiple tab-switches in the original window,
+        // the selected tab should be adopted last.
+        let dropIndex = this._getDropIndex(event, false);
+        let newIndex = dropIndex;
+        let selectedIndex = -1;
+        for (let i = 0; i < movingTabs.length; ++i) {
+          let tab = movingTabs[i];
+          if (tab.selected) {
+            selectedIndex = i;
+          } else {
+            gBrowser.adoptTab(tab, newIndex++, tab == draggedTab);
+          }
+        }
+        if (selectedIndex >= 0) {
+          let tab = movingTabs[selectedIndex];
+          gBrowser.adoptTab(tab, dropIndex + selectedIndex, tab == draggedTab);
         }
 
         // Restore tab selection
         gBrowser.addRangeToMultiSelectedTabs(
-          newTabs[0],
-          newTabs[newTabs.length - 1]
+          gBrowser.tabs[dropIndex],
+          gBrowser.tabs[dropIndex + movingTabs.length - 1]
         );
       } else {
         // Pass true to disallow dropping javascript: or data: urls

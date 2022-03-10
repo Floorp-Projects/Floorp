@@ -492,7 +492,7 @@ typedef enum JSFinalizeStatus {
   JSFINALIZE_COLLECTION_END
 } JSFinalizeStatus;
 
-typedef void (*JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status,
+typedef void (*JSFinalizeCallback)(JS::GCContext* gcx, JSFinalizeStatus status,
                                    void* data);
 
 typedef void (*JSWeakPointerZonesCallback)(JSTracer* trc, void* data);

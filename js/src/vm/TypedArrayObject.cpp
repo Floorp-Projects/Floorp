@@ -153,7 +153,7 @@ void TypedArrayObject::assertZeroLengthArrayData() const {
 }
 #endif
 
-void TypedArrayObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void TypedArrayObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   TypedArrayObject* curObj = &obj->as<TypedArrayObject>();
 
@@ -173,7 +173,7 @@ void TypedArrayObject::finalize(JSFreeOp* fop, JSObject* obj) {
   // Free the data slot pointer if it does not point into the old JSObject.
   if (!curObj->hasInlineElements()) {
     size_t nbytes = RoundUp(curObj->byteLength(), sizeof(Value));
-    fop->free_(obj, curObj->elements(), nbytes, MemoryUse::TypedArrayElements);
+    gcx->free_(obj, curObj->elements(), nbytes, MemoryUse::TypedArrayElements);
   }
 }
 
