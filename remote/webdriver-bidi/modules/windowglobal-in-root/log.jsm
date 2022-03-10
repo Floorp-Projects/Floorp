@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
 });
 
-class Log extends Module {
+class LogModule extends Module {
   destroy() {}
 }
 
-const log = Log;
+const log = LogModule;

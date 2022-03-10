@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/Navigate.jsm",
 });
 
-class BrowsingContext extends Module {
+class BrowsingContextModule extends Module {
   #contextListener;
 
   /**
@@ -141,4 +141,4 @@ class BrowsingContext extends Module {
   }
 }
 
-const browsingContext = BrowsingContext;
+const browsingContext = BrowsingContextModule;
