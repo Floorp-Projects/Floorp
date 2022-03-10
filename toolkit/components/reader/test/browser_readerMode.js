@@ -375,3 +375,22 @@ add_task(async function test_reader_view_element_attribute_transform() {
   );
   await waitForPageshow;
 });
+
+add_task(async function test_reader_mode_lang() {
+  let url = TEST_PATH + "readerModeArticle.html";
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+
+  await promiseTabLoadEvent(tab, url);
+  await TestUtils.waitForCondition(() => !readerButton.hidden);
+
+  // Switch page into reader mode.
+  let promiseTabLoad = promiseTabLoadEvent(tab);
+  readerButton.click();
+  await promiseTabLoad;
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let container = content.document.querySelector(".container");
+    is(container.lang, "en");
+  });
+});
