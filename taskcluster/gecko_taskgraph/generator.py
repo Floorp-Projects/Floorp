@@ -9,13 +9,13 @@ import copy
 import attr
 from taskgraph.config import GraphConfig
 from taskgraph.parameters import parameters_loader
+from taskgraph.task import Task
 from taskgraph.util.yaml import load_yaml
 
 from . import filter_tasks
 from .graph import Graph
 from .morph import morph
 from .optimize import optimize_task_graph
-from .task import Task
 from .taskgraph import TaskGraph
 from .transforms.base import TransformSequence, TransformConfig
 from .util.python_path import find_object

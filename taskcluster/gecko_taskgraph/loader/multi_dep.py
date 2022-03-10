@@ -5,9 +5,9 @@
 
 import copy
 
+from taskgraph.task import Task
 from voluptuous import Required
 
-from ..task import Task
 from ..util.attributes import sorted_unique_list
 from ..util.schema import Schema
 

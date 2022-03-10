@@ -9,12 +9,12 @@ import unittest
 
 import pytest
 from mozunit import main
+from taskgraph.task import Task
 
 from gecko_taskgraph import target_tasks
 from gecko_taskgraph import try_option_syntax
 from gecko_taskgraph.graph import Graph
 from gecko_taskgraph.taskgraph import TaskGraph
-from gecko_taskgraph.task import Task
 
 
 class FakeTryOptionSyntax:
