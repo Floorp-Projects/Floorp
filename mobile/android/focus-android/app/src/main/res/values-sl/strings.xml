@@ -491,7 +491,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Dobrodošli v %su!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Zasebno brskanje na višjem nivoju, kadar ga želite</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Kjer inkognito sreča nevidno</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s je brskalnik, ki zasebnost postavlja na prvo mesto. Izredno zmogljiva zaščita pred sledenjem in piškotki je vgrajena.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Brskajte, kot da se nikoli ni zgodilo</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Zasebnost, ki ustreza vsaki situaciji</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Če želite spremeniti brskanje, lahko v nastavitvah zahtevate več ali manj zasebnosti.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Začnite z brskanjem</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Zasebno brskanje na višjem nivoju. Zavračajte oglase in drugo vsebino, ki vam lahko sledi prek strani, in pohitrite svoje brskanje.</string>
@@ -914,4 +943,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Zapri</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Znebite se svojih osebnih podatkov, zgodovine brskanja in drugih podatkov te seje z dotikom gumba za smeti. Poskusite!</string>
+
+</resources>
