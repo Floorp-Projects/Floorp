@@ -19,12 +19,12 @@ from collections import defaultdict
 
 from slugid import nice as slugid
 from taskgraph.graph import Graph
+from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.parameterization import (
     resolve_task_references,
     resolve_timestamps,
 )
 
-from gecko_taskgraph.taskgraph import TaskGraph
 from gecko_taskgraph.util.python_path import import_sibling_modules
 
 logger = logging.getLogger(__name__)

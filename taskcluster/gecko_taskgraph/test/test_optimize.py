@@ -10,10 +10,10 @@ import pytest
 from mozunit import main
 from taskgraph.graph import Graph
 from taskgraph.task import Task
+from taskgraph.taskgraph import TaskGraph
 
 from gecko_taskgraph import optimize
 from gecko_taskgraph.optimize import OptimizationStrategy, All, Any, Not
-from gecko_taskgraph.taskgraph import TaskGraph
 
 
 class Remove(OptimizationStrategy):

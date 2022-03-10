@@ -7,9 +7,9 @@ import pytest
 from taskgraph.graph import Graph
 from taskgraph.parameters import Parameters
 from taskgraph.task import Task
+from taskgraph.taskgraph import TaskGraph
 
 from gecko_taskgraph import morph
-from gecko_taskgraph.taskgraph import TaskGraph
 
 from mozunit import main
 
