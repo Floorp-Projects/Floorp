@@ -56,6 +56,7 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
     b.mPlanes[i].mSkip = 0;
   }
 
+  b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
   b.mYUVColorSpace =
       DefaultColorSpace({decodedFrame->Width(), decodedFrame->Height()});
 
