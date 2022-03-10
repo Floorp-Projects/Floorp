@@ -31,4 +31,7 @@
 // slot for the unforgeable holder is needed.
 #define DOM_INTERFACE_PROTO_SLOTS_BASE 0
 
+// The slot index of backing list stored in observable array exotic object.
+#define OBSERVABLE_ARRAY_BACKING_LIST_OBJECT_SLOT 1
+
 #endif /* mozilla_dom_DOMSlots_h */

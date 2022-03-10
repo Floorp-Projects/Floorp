@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_ProxyHandlerUtils_h
 #define mozilla_dom_ProxyHandlerUtils_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"

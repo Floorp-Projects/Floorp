@@ -141,9 +141,13 @@ class ObjectOpResult {
   JS_PUBLIC_API bool failNoNamedSetter();
   JS_PUBLIC_API bool failNoIndexedSetter();
   JS_PUBLIC_API bool failNotDataDescriptor();
+  JS_PUBLIC_API bool failInvalidDescriptor();
 
   // Careful: This case has special handling in Object.defineProperty.
   JS_PUBLIC_API bool failCantDefineWindowNonConfigurable();
+
+  JS_PUBLIC_API bool failBadArrayLength();
+  JS_PUBLIC_API bool failBadIndex();
 
   uint32_t failureCode() const {
     MOZ_ASSERT(!ok());
