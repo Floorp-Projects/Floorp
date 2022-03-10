@@ -2061,16 +2061,18 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
       EndEntityOrCA endEntityOrCA, unsigned int modulusSizeInBits) override {
     return Success;
   }
-  virtual mozilla::pkix::Result VerifyRSAPKCS1SignedDigest(
-      const SignedDigest& signedDigest, Input subjectPublicKeyInfo) override {
+  virtual mozilla::pkix::Result VerifyRSAPKCS1SignedData(
+      Input data, DigestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
     return Success;
   }
   virtual mozilla::pkix::Result CheckECDSACurveIsAcceptable(
       EndEntityOrCA endEntityOrCA, NamedCurve curve) override {
     return Success;
   }
-  virtual mozilla::pkix::Result VerifyECDSASignedDigest(
-      const SignedDigest& signedDigest, Input subjectPublicKeyInfo) override {
+  virtual mozilla::pkix::Result VerifyECDSASignedData(
+      Input data, DigestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
     return Success;
   }
   virtual mozilla::pkix::Result CheckValidityIsAcceptable(
