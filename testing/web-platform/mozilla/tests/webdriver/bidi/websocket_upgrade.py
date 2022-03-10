@@ -1,13 +1,6 @@
 import pytest
 
-from http.client import HTTPConnection
-
-
-def put_required_headers(conn):
-    conn.putheader("Connection", "upgrade")
-    conn.putheader("Upgrade", "websocket")
-    conn.putheader("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==")
-    conn.putheader("Sec-WebSocket-Version", "13")
+from . import connect, get_host
 
 
 @pytest.mark.parametrize(
@@ -57,32 +50,62 @@ def put_required_headers(conn):
         "ipv6 address with a different port than RemoteAgent",
     ],
 )
-@pytest.mark.capabilities({"webSocketUrl": True})
-def test_host_header(session, hostname, port_type, status):
-    websocket_url = session.capabilities["webSocketUrl"]
-    url = websocket_url.replace("ws:", "http:")
-    _, _, real_host, path = url.split("/", 3)
-    _, remote_agent_port = real_host.split(":")
+def test_host_header(browser, hostname, port_type, status):
+    # Request a default browser
+    current_browser = browser()
+    remote_agent_port = current_browser.remote_agent_port
+    test_host = get_host(hostname, port_type, remote_agent_port)
 
-    def get_host():
-        if port_type == "default_port":
-            return hostname
-        elif port_type == "remote_agent_port":
-            return hostname + ":" + remote_agent_port
-        elif port_type == "wrong_port":
-            wrong_port = str(int(remote_agent_port) + 1)
-            return hostname + ":" + wrong_port
+    response = connect(remote_agent_port, host=test_host)
+    assert response.status == status
 
-    conn = HTTPConnection(real_host)
 
-    conn.putrequest("GET", url, skip_host=True)
+@pytest.mark.parametrize(
+    "hostname, port_type, status",
+    [
+        # Allowed hosts
+        ("testhost", "remote_agent_port", 101),
+        ("testhost", "default_port", 101),
+        ("testhost", "wrong_port", 400),
+        # IP addresses
+        ("192.168.8.1", "remote_agent_port", 101),
+        ("192.168.8.1", "default_port", 101),
+        ("[fdf8:f535:82e4::53]", "remote_agent_port", 101),
+        ("[fdf8:f535:82e4::53]", "default_port", 101),
+        ("127.0.0.1", "remote_agent_port", 101),
+        ("127.0.0.1", "default_port", 101),
+        ("[::1]", "remote_agent_port", 101),
+        ("[::1]", "default_port", 101),
+        # Localhost
+        ("localhost", "remote_agent_port", 400),
+        ("localhost", "default_port", 400),
+    ],
+    ids=[
+        # Allowed hosts
+        "allowed host with same port as RemoteAgent",
+        "allowed host with default port",
+        "allowed host with wrong port",
+        # IP addresses
+        "ipv4 address with same port as RemoteAgent",
+        "ipv4 address with default port",
+        "ipv6 address with same port as RemoteAgent",
+        "ipv6 address with default port",
+        "127.0.0.1 (loopback) with same port as RemoteAgent",
+        "127.0.0.1 (loopback) with default port",
+        "[::1] (ipv6 loopback) with same port as RemoteAgent",
+        "[::1] (ipv6 loopback) with default port",
+        # Localhost
+        "localhost with same port as RemoteAgent",
+        "localhost with default port",
+    ],
+)
+def test_allowed_hosts(browser, hostname, port_type, status):
+    # Request a browser with custom allowed hosts.
+    current_browser = browser({"remote.hosts.allowed": "testhost"})
+    remote_agent_port = current_browser.remote_agent_port
+    test_host = get_host(hostname, port_type, remote_agent_port)
 
-    conn.putheader("Host", get_host())
-    put_required_headers(conn)
-    conn.endheaders()
-
-    response = conn.getresponse()
-
+    response = connect(remote_agent_port, host=test_host)
     assert response.status == status
 
 
@@ -95,21 +118,29 @@ def test_host_header(session, hostname, port_type, status):
         ("http://localhost:1234", 400),
     ],
 )
-@pytest.mark.capabilities({"webSocketUrl": True})
-def test_origin_header(session, origin, status):
-    websocket_url = session.capabilities["webSocketUrl"]
-    url = websocket_url.replace("ws:", "http:")
-    _, _, real_host, path = url.split("/", 3)
+def test_origin_header(browser, origin, status):
+    # Request a default browser.
+    current_browser = browser()
+    remote_agent_port = current_browser.remote_agent_port
+    response = connect(remote_agent_port, origin=origin)
+    assert response.status == status
 
-    conn = HTTPConnection(real_host)
-    conn.putrequest("GET", url)
 
-    if origin is not None:
-        conn.putheader("Origin", origin)
-
-    put_required_headers(conn)
-    conn.endheaders()
-
-    response = conn.getresponse()
-
+@pytest.mark.parametrize(
+    "origin, status",
+    [
+        (None, 101),
+        ("", 400),
+        ("sometext", 400),
+        ("http://localhost:1234", 101),
+        ("https://localhost:1234", 400),
+    ],
+)
+def test_allowed_origins(browser, origin, status):
+    # Request a browser with custom allowed origins.
+    current_browser = browser(
+        {"remote.origins.allowed": "http://localhost:1234"},
+    )
+    remote_agent_port = current_browser.remote_agent_port
+    response = connect(remote_agent_port, origin=origin)
     assert response.status == status
