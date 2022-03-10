@@ -414,6 +414,9 @@ class WebConsoleUI {
    *        object by the page itself.
    */
   async handleNavigated({ hasNativeConsoleAPI }) {
+    // Updates instant evaluation on page navigation
+    this.wrapper.dispatchUpdateInstantEvaluationResultForCurrentExpression();
+
     // Wait for completion of any async dispatch before notifying that the console
     // is fully updated after a page reload
     await this.wrapper.waitAsyncDispatches();
