@@ -955,16 +955,21 @@ public class SessionAccessibility {
 
   private boolean pivot(
       final int id, final String granularity, final boolean forward, final boolean inclusive) {
+    if (!forward && id == View.NO_ID) {
+      // If attempting to pivot backwards from the root view, return false.
+      return false;
+    }
+
+    if (nativeProvider.isCacheEnabled()) {
+      return cachedPivot(id, granularity, forward, inclusive);
+    }
+
     final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
     if (forward && id == mLastAccessibilityFocusable) {
       return false;
     }
 
     if (!forward) {
-      if (id == View.NO_ID) {
-        return false;
-      }
-
       if (id == mFirstAccessibilityFocusable) {
         sendEvent(
             AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED,
@@ -977,6 +982,20 @@ public class SessionAccessibility {
 
     nativeProvider.pivotNative(id, gran, forward, inclusive);
     return true;
+  }
+
+  private boolean cachedPivot(
+      final int id, final String granularity, final boolean forward, final boolean inclusive) {
+    final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
+    final boolean success = nativeProvider.cachedPivotNative(id, gran, forward, inclusive);
+    if (!success && !forward) {
+      // If we failed to pivot backwards set the root view as the a11y focus.
+      sendEvent(
+          AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
+      return true;
+    }
+
+    return success;
   }
 
   /* package */ final class NativeProvider extends JNIObject {
@@ -1005,6 +1024,10 @@ public class SessionAccessibility {
 
     @WrapForJNI(dispatchTo = "gecko", stubName = "Pivot")
     public native void pivotNative(int id, int granularity, boolean forward, boolean inclusive);
+
+    @WrapForJNI(dispatchTo = "current", stubName = "CachedPivot")
+    public native boolean cachedPivotNative(
+        int id, int granularity, boolean forward, boolean inclusive);
 
     @WrapForJNI(dispatchTo = "gecko")
     public native void exploreByTouch(int id, float x, float y);
