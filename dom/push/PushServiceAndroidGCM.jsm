@@ -37,7 +37,8 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyGetter(this, "Log", () => {
   return ChromeUtils.import(
-    "resource://gre/modules/AndroidLog.jsm"
+    "resource://gre/modules/AndroidLog.jsm",
+    {}
   ).AndroidLog.bind("Push");
 });
 

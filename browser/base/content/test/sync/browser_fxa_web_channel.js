@@ -3,7 +3,7 @@
  */
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
 ChromeUtils.defineModuleGetter(

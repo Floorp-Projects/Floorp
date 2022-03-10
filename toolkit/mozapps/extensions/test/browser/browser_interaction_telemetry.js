@@ -1,5 +1,6 @@
 const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+  "resource://testing-common/AddonTestUtils.jsm",
+  {}
 );
 
 AddonTestUtils.initMochitest(this);

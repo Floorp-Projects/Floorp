@@ -150,9 +150,10 @@ var FormAutofill = {
     scope.debug = debug;
 
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
-      let { ConsoleAPI } = ChromeUtils.import(
-        "resource://gre/modules/Console.jsm"
-      );
+      let ConsoleAPI = ChromeUtils.import(
+        "resource://gre/modules/Console.jsm",
+        {}
+      ).ConsoleAPI;
       return new ConsoleAPI({
         maxLogLevelPref: "extensions.formautofill.loglevel",
         prefix: logPrefix,

@@ -83,9 +83,10 @@ add_task(async function test_add() {
 
 add_task(async function test_diacritics() {
   const diacritic_engine = "Foo \u2661";
-  let { Preferences } = ChromeUtils.import(
-    "resource://gre/modules/Preferences.jsm"
-  );
+  let Preferences = ChromeUtils.import(
+    "resource://gre/modules/Preferences.jsm",
+    {}
+  ).Preferences;
 
   Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
   await SearchTestUtils.promiseNewSearchEngine(
