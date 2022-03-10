@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import print_function
 
-import os, sys
+import os
+import sys
 import glob
 import argparse
 import traceback
@@ -52,6 +53,17 @@ class TestHarness(object):
             self.test_pass(msg)
         else:
             self.test_fail(msg + " | Got %s expected %s" % (a, b))
+
+    def should_throw(self, parser, code, msg):
+        parser = parser.reset()
+        threw = False
+        try:
+            parser.parse(code)
+            parser.finish()
+        except:
+            threw = True
+
+        self.ok(threw, "Should have thrown: %s" % msg)
 
 
 def run_tests(tests, verbose):
