@@ -7,6 +7,8 @@ Transform the {partials,mar}-signing task into an actual task description.
 
 import os
 
+from taskgraph.util.taskcluster import get_artifact_prefix
+
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
@@ -16,7 +18,6 @@ from gecko_taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
 )
 from gecko_taskgraph.util.partials import get_partials_artifacts_from_params
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.util.treeherder import join_symbol, inherit_treeherder_from_dep
 
 import logging
