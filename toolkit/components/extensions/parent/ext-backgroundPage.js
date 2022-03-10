@@ -321,10 +321,12 @@ this.backgroundPage = class extends ExtensionAPI {
     // Persistent backgrounds are started immediately except during APP_STARTUP.
     // Non-persistent backgrounds must be started immediately for new install or enable
     // to initialize the addon and create the persisted listeners.
+    // updateReason is set when an extension is updated during APP_STARTUP.
     if (
       isInStartup &&
       (extension.testNoDelayedStartup ||
-        extension.startupReason !== "APP_STARTUP")
+        extension.startupReason !== "APP_STARTUP" ||
+        extension.updateReason)
     ) {
       return this.build();
     }
@@ -369,8 +371,8 @@ this.backgroundPage = class extends ExtensionAPI {
     await this.primeBackground();
 
     ExtensionParent.browserStartupPromise.then(() => {
-      // If the background has been created earlier than session restore,
-      // we do not want to continue with creating it here.
+      // Return early if the background was created in the first
+      // primeBackground call.  This happens for install, upgrade, downgrade.
       if (this.bgInstance) {
         return;
       }
