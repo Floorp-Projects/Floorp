@@ -103,6 +103,10 @@
     <color name="fx_mobile_icon_color_accent_pink">@color/photonPink60</color>
     <color name="fx_mobile_icon_color_accent_green">@color/photonGreen60</color>
     <color name="fx_mobile_icon_color_accent_yellow">@color/photonYellow60</color>
+    <!-- Action Primary Icon -->
+    <color name="fx_mobile_icon_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <!-- Action Secondary Icon -->
+    <color name="fx_mobile_icon_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet50</color>
     <!-- Reader, ETP Shield -->
