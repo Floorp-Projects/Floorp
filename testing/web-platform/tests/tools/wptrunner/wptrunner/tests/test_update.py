@@ -189,6 +189,7 @@ def test_update_1():
 
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get("expected", default_run_info) == "FAIL"
 
 
@@ -227,6 +228,7 @@ def test_update_known_intermittent_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == ["PASS", "FAIL"]
 
@@ -250,6 +252,7 @@ def test_update_known_intermittent_2():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == "FAIL"
 
@@ -291,6 +294,7 @@ def test_update_existing_known_intermittent():
 
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == ["PASS", "ERROR", "FAIL"]
 
@@ -337,6 +341,7 @@ def test_update_remove_previous_intermittent():
 
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == ["PASS", "ERROR"]
 
@@ -372,6 +377,7 @@ def test_update_new_test_with_intermittent():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test("test.htm") is None
     assert len(new_manifest.get_test(test_id).children) == 1
     assert new_manifest.get_test(test_id).children[0].get(
@@ -401,6 +407,7 @@ def test_update_expected_tie_resolution():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == ["PASS", "FAIL"]
 
@@ -442,6 +449,7 @@ def test_update_reorder_expected():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == ["PASS", "FAIL"]
 
@@ -476,11 +484,13 @@ def test_update_and_preserve_unchanged_expected_intermittent():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
 
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "android"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get(
         "expected", run_info_1) == ["PASS", "FAIL"]
     assert new_manifest.get_test(test_id).get(
@@ -506,6 +516,7 @@ def test_update_test_with_intermittent_to_one_expected_status():
 
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == "ERROR"
 
@@ -534,11 +545,13 @@ def test_update_intermittent_with_conditions():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
 
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "android"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get(
         "expected", run_info_1) == ["PASS", "TIMEOUT", "FAIL"]
 
@@ -567,11 +580,13 @@ def test_update_and_remove_intermittent_with_conditions():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
 
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "android"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get(
         "expected", run_info_1) == ["PASS", "TIMEOUT"]
 
@@ -606,6 +621,7 @@ def test_update_intermittent_full():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
     assert new_manifest.get_test(test_id).children[0].get(
@@ -655,8 +671,10 @@ def test_update_intermittent_full_remove():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == ["FAIL", "TIMEOUT"]
     assert new_manifest.get_test(test_id).children[0].get(
@@ -693,8 +711,10 @@ def test_full_update():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -726,6 +746,7 @@ def test_full_orphan():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert len(new_manifest.get_test(test_id).children[0].children) == 0
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", default_run_info) == "FAIL"
@@ -783,6 +804,7 @@ def test_update_reorder_expected_full_conditions():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
     assert new_manifest.get_test(test_id).children[0].get(
@@ -828,8 +850,36 @@ def test_new_subtest():
     updated = update(tests, log)
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get("expected", default_run_info) == "FAIL"
     assert new_manifest.get_test(test_id).children[1].get("expected", default_run_info) == "FAIL"
+
+
+def test_update_subtest():
+    tests = [("path/to/test.htm", [test_id], "testharness", b"""[test.htm]
+  expected:
+    if os == "linux": [OK, ERROR]
+  [test1]
+    expected: FAIL""")]
+
+    log = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "FAIL",
+                                      "known_intermittent": []}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test2",
+                                      "status": "FAIL",
+                                      "expected": "PASS",
+                                      "known_intermittent": []}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK",
+                                   "known_intermittent": ["ERROR"]})])
+    updated = update(tests, log)
+    new_manifest = updated[0][1]
+    assert not new_manifest.is_empty
+    assert new_manifest.modified
+    assert new_manifest.get_test(test_id).children[0].get("expected", default_run_info) == "FAIL"
 
 
 def test_update_multiple_0():
@@ -859,6 +909,7 @@ def test_update_multiple_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"debug": False, "os": "osx"})
     run_info_2 = default_run_info.copy()
@@ -896,6 +947,7 @@ def test_update_multiple_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "osx"})
     run_info_2 = default_run_info.copy()
@@ -943,6 +995,7 @@ def test_update_multiple_2():
     run_info_2.update({"debug": True, "os": "osx"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -983,6 +1036,7 @@ def test_update_multiple_3():
     run_info_2.update({"debug": True, "os": "osx"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -1023,6 +1077,7 @@ def test_update_ignore_existing():
     run_info_2.update({"debug": False, "os": "osx"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -1045,6 +1100,7 @@ def test_update_new_test():
     run_info_1 = default_run_info.copy()
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test("test.htm") is None
     assert len(new_manifest.get_test(test_id).children) == 1
     assert new_manifest.get_test(test_id).children[0].get(
@@ -1167,6 +1223,7 @@ def test_update_full():
     run_info_2.update({"debug": True, "os": "osx"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test("test.js") is None
     assert len(new_manifest.get_test(test_id).children) == 1
     assert new_manifest.get_test(test_id).children[0].get(
@@ -1210,6 +1267,7 @@ def test_update_full_unknown():
     run_info_2.update({"release_or_beta": True})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -1266,6 +1324,7 @@ def test_update_default():
     new_manifest = updated[0][1]
 
     assert new_manifest.is_empty
+    assert new_manifest.modified
 
 
 def test_update_default_1():
@@ -1285,6 +1344,7 @@ def test_update_default_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
 
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
@@ -1292,6 +1352,7 @@ def test_update_default_1():
     run_info_2.update({"os": "win"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get(
         "expected", run_info_1) == "TIMEOUT"
     assert new_manifest.get_test(test_id).get(
@@ -1315,6 +1376,7 @@ def test_update_default_2():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
 
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "mac"})
@@ -1322,6 +1384,7 @@ def test_update_default_2():
     run_info_2.update({"os": "win"})
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get(
         "expected", run_info_1) == "TIMEOUT"
     assert new_manifest.get_test(test_id).get(
@@ -1346,6 +1409,7 @@ def test_update_assertion_count_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get("max-asserts") == "7"
     assert new_manifest.get_test(test_id).get("min-asserts") == "2"
 
@@ -1368,6 +1432,7 @@ def test_update_assertion_count_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get("max-asserts") == "4"
     assert new_manifest.get_test(test_id).has_key("min-asserts") is False
 
@@ -1418,6 +1483,7 @@ def test_update_assertion_count_3():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get("max-asserts") == "8"
     assert new_manifest.get_test(test_id).get("min-asserts") == "2"
 
@@ -1447,6 +1513,7 @@ def test_update_assertion_count_4():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get_test(test_id).get("max-asserts") == "8"
     assert new_manifest.get_test(test_id).has_key("min-asserts") is False
 
@@ -1463,6 +1530,7 @@ def test_update_lsan_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("lsan-allowed") == ["foo"]
 
 
@@ -1481,6 +1549,7 @@ lsan-allowed: [foo]""")]
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("lsan-allowed") == ["baz", "foo"]
 
 
@@ -1501,6 +1570,7 @@ lsan-allowed: [foo]"""),
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("lsan-allowed") == ["baz"]
 
 
@@ -1521,6 +1591,7 @@ def test_update_lsan_3():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("lsan-allowed") == ["baz", "foo"]
 
 
@@ -1573,6 +1644,7 @@ def test_update_leak_total_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("leak-threshold") == ['default:51200']
 
 
@@ -1620,6 +1692,7 @@ leak-total: 100""")]
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.get("leak-threshold") == ['default:51200']
 
 
@@ -1641,6 +1714,7 @@ leak-total: 110""")]
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    assert new_manifest.modified
     assert new_manifest.has_key("leak-threshold") is False
 
 

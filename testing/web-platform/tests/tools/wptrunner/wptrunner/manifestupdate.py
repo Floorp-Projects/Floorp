@@ -202,7 +202,7 @@ class TestNode(ManifestItem):
         self._from_file = True
         self.new_disabled = False
         self.has_result = False
-        self.modified = False
+        self._modified = False
         self.update_properties = UpdateProperties(
             self,
             expected=ExpectedUpdate,
@@ -239,6 +239,16 @@ class TestNode(ManifestItem):
     def id(self):
         """The id of the test represented by this TestNode"""
         return urljoin(self.parent.url, self.name)
+
+    @property
+    def modified(self):
+        if self._modified:
+            return self._modified
+        return any(child.modified for child in self.children)
+
+    @modified.setter
+    def modified(self, value):
+        self._modified = value
 
     def disabled(self, run_info):
         """Boolean indicating whether this test is disabled when run in an
