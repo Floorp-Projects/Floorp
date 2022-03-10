@@ -482,6 +482,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* Prevent window controls from overlapping the nav bar's shadow on the tab
  * bar. */
 #TabsToolbar > .titlebar-buttonbox-container {
+  margin-top: -1.9em;
   margin-bottom: var(--tabs-navbar-shadow-size);
 }
 
