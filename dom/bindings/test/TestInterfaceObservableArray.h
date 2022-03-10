@@ -65,6 +65,36 @@ class TestInterfaceObservableArray final : public nsISupports,
   void OnDeleteObservableArrayInterface(TestInterfaceObservableArray* aValue,
                                         uint32_t aIndex, ErrorResult& aRv);
 
+  bool BooleanElementAtInternal(uint32_t aIndex, ErrorResult& aRv);
+  void ObjectElementAtInternal(JSContext* aCx, uint32_t aIndex,
+                               JS::MutableHandle<JSObject*> aValue,
+                               ErrorResult& aRv);
+  already_AddRefed<TestInterfaceObservableArray> InterfaceElementAtInternal(
+      uint32_t aIndex, ErrorResult& aRv);
+
+  void BooleanReplaceElementAtInternal(uint32_t aIndex, bool aValue,
+                                       ErrorResult& aRv);
+  void ObjectReplaceElementAtInternal(JSContext* aCx, uint32_t aIndex,
+                                      JS::Handle<JSObject*> aValue,
+                                      ErrorResult& aRv);
+  void InterfaceReplaceElementAtInternal(uint32_t aIndex,
+                                         TestInterfaceObservableArray& aValue,
+                                         ErrorResult& aRv);
+
+  void BooleanAppendElementInternal(bool aValue, ErrorResult& aRv);
+  void ObjectAppendElementInternal(JSContext* aCx, JS::Handle<JSObject*> aValue,
+                                   ErrorResult& aRv);
+  void InterfaceAppendElementInternal(TestInterfaceObservableArray& aValue,
+                                      ErrorResult& aRv);
+
+  void BooleanRemoveLastElementInternal(ErrorResult& aRv);
+  void ObjectRemoveLastElementInternal(ErrorResult& aRv);
+  void InterfaceRemoveLastElementInternal(ErrorResult& aRv);
+
+  uint32_t BooleanLengthInternal(ErrorResult& aRv);
+  uint32_t ObjectLengthInternal(ErrorResult& aRv);
+  uint32_t InterfaceLengthInternal(ErrorResult& aRv);
+
  private:
   explicit TestInterfaceObservableArray(
       nsPIDOMWindowInner* aParent, const ObservableArrayCallbacks& aCallbacks);

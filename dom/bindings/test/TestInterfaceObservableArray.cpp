@@ -131,4 +131,95 @@ void TestInterfaceObservableArray::OnDeleteObservableArrayInterface(
   }
 }
 
+bool TestInterfaceObservableArray::BooleanElementAtInternal(uint32_t aIndex,
+                                                            ErrorResult& aRv) {
+  return TestInterfaceObservableArray_Binding::ObservableArrayBooleanHelpers::
+      ElementAt(this, aIndex, aRv);
+}
+
+void TestInterfaceObservableArray::ObjectElementAtInternal(
+    JSContext* aCx, uint32_t aIndex, JS::MutableHandle<JSObject*> aValue,
+    ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayObjectHelpers::ElementAt(
+      this, aCx, aIndex, aValue, aRv);
+}
+
+already_AddRefed<TestInterfaceObservableArray>
+TestInterfaceObservableArray::InterfaceElementAtInternal(uint32_t aIndex,
+                                                         ErrorResult& aRv) {
+  return TestInterfaceObservableArray_Binding::ObservableArrayInterfaceHelpers::
+      ElementAt(this, aIndex, aRv);
+}
+
+void TestInterfaceObservableArray::BooleanReplaceElementAtInternal(
+    uint32_t aIndex, bool aValue, ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayBooleanHelpers::
+      ReplaceElementAt(this, aIndex, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::ObjectReplaceElementAtInternal(
+    JSContext* aCx, uint32_t aIndex, JS::Handle<JSObject*> aValue,
+    ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayObjectHelpers::
+      ReplaceElementAt(this, aIndex, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::InterfaceReplaceElementAtInternal(
+    uint32_t aIndex, TestInterfaceObservableArray& aValue, ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayInterfaceHelpers::
+      ReplaceElementAt(this, aIndex, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::BooleanAppendElementInternal(
+    bool aValue, ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayBooleanHelpers::
+      AppendElement(this, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::ObjectAppendElementInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aValue, ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayObjectHelpers::
+      AppendElement(this, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::InterfaceAppendElementInternal(
+    TestInterfaceObservableArray& aValue, ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayInterfaceHelpers::
+      AppendElement(this, aValue, aRv);
+}
+
+void TestInterfaceObservableArray::BooleanRemoveLastElementInternal(
+    ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayBooleanHelpers::
+      RemoveLastElement(this, aRv);
+}
+
+void TestInterfaceObservableArray::ObjectRemoveLastElementInternal(
+    ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayObjectHelpers::
+      RemoveLastElement(this, aRv);
+}
+
+void TestInterfaceObservableArray::InterfaceRemoveLastElementInternal(
+    ErrorResult& aRv) {
+  TestInterfaceObservableArray_Binding::ObservableArrayInterfaceHelpers::
+      RemoveLastElement(this, aRv);
+}
+
+uint32_t TestInterfaceObservableArray::BooleanLengthInternal(ErrorResult& aRv) {
+  return TestInterfaceObservableArray_Binding::ObservableArrayBooleanHelpers::
+      Length(this, aRv);
+}
+
+uint32_t TestInterfaceObservableArray::ObjectLengthInternal(ErrorResult& aRv) {
+  return TestInterfaceObservableArray_Binding::ObservableArrayObjectHelpers::
+      Length(this, aRv);
+}
+
+uint32_t TestInterfaceObservableArray::InterfaceLengthInternal(
+    ErrorResult& aRv) {
+  return TestInterfaceObservableArray_Binding::ObservableArrayInterfaceHelpers::
+      Length(this, aRv);
+}
+
 }  // namespace mozilla::dom
