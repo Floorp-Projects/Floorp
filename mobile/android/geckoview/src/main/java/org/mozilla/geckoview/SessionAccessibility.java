@@ -992,6 +992,9 @@ public class SessionAccessibility {
     }
 
     @WrapForJNI(dispatchTo = "current")
+    public native boolean isCacheEnabled();
+
+    @WrapForJNI(dispatchTo = "current")
     public native GeckoBundle getNodeInfo(int id);
 
     @WrapForJNI(dispatchTo = "gecko")
