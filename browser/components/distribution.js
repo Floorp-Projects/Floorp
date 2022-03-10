@@ -24,6 +24,11 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 function DistributionCustomizer() {}
 
@@ -112,6 +117,19 @@ DistributionCustomizer.prototype = {
     let language = this._locale.split("-")[0];
     this.__defineGetter__("_language", () => language);
     return this._language;
+  },
+
+  async _removeDistributionBookmarks() {
+    await PlacesUtils.bookmarks.fetch(
+      { guidPrefix: this.BOOKMARK_GUID_PREFIX },
+      bookmark => PlacesUtils.bookmarks.remove(bookmark).catch()
+    );
+    await PlacesUtils.bookmarks.fetch(
+      { guidPrefix: this.FOLDER_GUID_PREFIX },
+      folder => {
+        PlacesUtils.bookmarks.remove(folder).catch();
+      }
+    );
   },
 
   async _parseBookmarksSection(parentGuid, section) {
@@ -278,7 +296,30 @@ DistributionCustomizer.prototype = {
 
   _bookmarksApplied: false,
   async applyBookmarks() {
-    await this._doApplyBookmarks();
+    let prefs = Services.prefs
+      .getChildList("distribution.yandex")
+      .concat(Services.prefs.getChildList("distribution.mailru"))
+      .concat(Services.prefs.getChildList("distribution.okru"));
+    if (prefs.length) {
+      let extensionIDs = [
+        "sovetnik-yandex@yandex.ru",
+        "vb@yandex.ru",
+        "ntp-mail@corp.mail.ru",
+        "ntp-okru@corp.mail.ru",
+      ];
+      for (let extensionID of extensionIDs) {
+        let addon = await AddonManager.getAddonByID(extensionID);
+        if (addon) {
+          await addon.disable();
+        }
+      }
+      for (let pref of prefs) {
+        Services.prefs.clearUserPref(pref);
+      }
+      await this._removeDistributionBookmarks();
+    } else {
+      await this._doApplyBookmarks();
+    }
     this._bookmarksApplied = true;
     this._checkCustomizationComplete();
   },
@@ -372,6 +413,16 @@ DistributionCustomizer.prototype = {
     // separate because they are "special" (read: required)
 
     defaults.set("distribution.id", distroID);
+
+    if (
+      distroID.startsWith("yandex") ||
+      distroID.startsWith("mailru") ||
+      distroID.startsWith("okru")
+    ) {
+      this.__defineGetter__("_ini", () => null);
+      return this._checkCustomizationComplete();
+    }
+
     defaults.set(
       "distribution.version",
       this._ini.getString("Global", "version")
