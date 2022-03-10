@@ -82,14 +82,14 @@ SessionHistoryInfo::SessionHistoryInfo(
 }
 
 SessionHistoryInfo::SessionHistoryInfo(
-    nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aLoadType,
+    nsIChannel* aChannel, uint32_t aLoadType,
     nsIPrincipal* aPartitionedPrincipalToInherit,
     nsIContentSecurityPolicy* aCsp) {
-  aNewChannel->GetURI(getter_AddRefs(mURI));
+  aChannel->GetURI(getter_AddRefs(mURI));
   mLoadType = aLoadType;
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  aNewChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
 
   loadInfo->GetResultPrincipalURI(getter_AddRefs(mResultPrincipalURI));
   loadInfo->GetTriggeringPrincipal(
@@ -100,16 +100,16 @@ SessionHistoryInfo::SessionHistoryInfo(
   mSharedState.Get()->mPartitionedPrincipalToInherit =
       aPartitionedPrincipalToInherit;
   mSharedState.Get()->mCsp = aCsp;
-  aNewChannel->GetContentType(mSharedState.Get()->mContentType);
-  aOldChannel->GetOriginalURI(getter_AddRefs(mOriginalURI));
+  aChannel->GetContentType(mSharedState.Get()->mContentType);
+  aChannel->GetOriginalURI(getter_AddRefs(mOriginalURI));
 
   uint32_t loadFlags;
-  aNewChannel->GetLoadFlags(&loadFlags);
+  aChannel->GetLoadFlags(&loadFlags);
   mLoadReplace = !!(loadFlags & nsIChannel::LOAD_REPLACE);
 
   MaybeUpdateTitleFromURI();
 
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel)) {
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
     mReferrerInfo = httpChannel->GetReferrerInfo();
   }
 }

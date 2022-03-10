@@ -2163,6 +2163,13 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   }
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
 
+  if (mHaveVisibleRedirect && GetDocumentBrowsingContext() &&
+      mLoadingSessionHistoryInfo) {
+    mLoadingSessionHistoryInfo =
+        GetDocumentBrowsingContext()->ReplaceLoadingSessionHistoryEntryForLoad(
+            mLoadingSessionHistoryInfo.get(), mChannel);
+  }
+
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
 
   // Enforce CSP frame-ancestors and x-frame-options checks which
@@ -2543,12 +2550,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   }
 
   if (GetDocumentBrowsingContext()) {
-    if (mLoadingSessionHistoryInfo) {
-      mLoadingSessionHistoryInfo =
-          GetDocumentBrowsingContext()
-              ->ReplaceLoadingSessionHistoryEntryForLoad(
-                  mLoadingSessionHistoryInfo.get(), aOldChannel, aNewChannel);
-    }
     if (!net::ChannelIsPost(aOldChannel)) {
       AddURIVisit(aOldChannel, 0);
 
