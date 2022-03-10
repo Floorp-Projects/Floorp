@@ -8,6 +8,7 @@
 #include "js/Proxy.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ProxyHandlerUtils.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"

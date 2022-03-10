@@ -18194,6 +18194,10 @@ class CGBindingRoot(CGThing):
             d.concrete and d.proxy for d in descriptors
         )
 
+        bindingHeaders["mozilla/dom/ProxyHandlerUtils.h"] = any(
+            d.concrete and d.proxy for d in descriptors
+        )
+
         bindingHeaders["js/String.h"] = any(
             d.needsMissingPropUseCounters for d in descriptors
         )

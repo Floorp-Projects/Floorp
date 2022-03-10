@@ -45,6 +45,7 @@ EXPORTS.mozilla.dom += [
     "Nullable.h",
     "PinnedStringId.h",
     "PrimitiveConversions.h",
+    "ProxyHandlerUtils.h",
     "Record.h",
     "RemoteObjectProxy.h",
     "RootedDictionary.h",
