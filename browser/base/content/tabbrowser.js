@@ -63,6 +63,7 @@
 
       XPCOMUtils.defineLazyModuleGetters(this, {
         E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+        PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
       });
       XPCOMUtils.defineLazyServiceGetters(this, {
         MacSharingService: [
@@ -5290,7 +5291,8 @@
         (aBrowser == this.selectedBrowser &&
           window.windowState != window.STATE_MINIMIZED &&
           !window.isFullyOccluded) ||
-        this._printPreviewBrowsers.has(aBrowser)
+        this._printPreviewBrowsers.has(aBrowser) ||
+        this.PictureInPicture.isOriginatingBrowser(aBrowser)
       );
     },
 
