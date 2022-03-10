@@ -256,7 +256,7 @@ DebuggerFrame* DebuggerFrame::create(
 
   if (maybeGenerator) {
     if (!DebuggerFrame::setGeneratorInfo(cx, frame, maybeGenerator)) {
-      frame->freeFrameIterData(cx->runtime()->gcContext());
+      frame->freeFrameIterData(cx->gcContext());
       return nullptr;
     }
   }
@@ -791,7 +791,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
         return false;
       }
     } else if (!handler && prior) {
-      frame->decrementStepperCounter(cx->runtime()->gcContext(), referent);
+      frame->decrementStepperCounter(cx->gcContext(), referent);
     }
   } else if (frame->isSuspended()) {
     RootedScript script(cx, frame->generatorInfo()->generatorScript());
@@ -801,7 +801,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
         return false;
       }
     } else if (!handler && prior) {
-      frame->decrementStepperCounter(cx->runtime()->gcContext(), script);
+      frame->decrementStepperCounter(cx->gcContext(), script);
     }
   } else {
     // If the frame is entirely dead, we still allow setting the onStep
@@ -1191,7 +1191,7 @@ bool DebuggerFrame::replaceFrameIterData(JSContext* cx, const FrameIter& iter) {
   if (!data) {
     return false;
   }
-  freeFrameIterData(cx->runtime()->gcContext());
+  freeFrameIterData(cx->gcContext());
   setFrameIterData(data);
   return true;
 }

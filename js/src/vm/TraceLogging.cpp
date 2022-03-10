@@ -1274,7 +1274,7 @@ void TraceLoggerThreadState::enableTextId(JSContext* cx, uint32_t textId) {
     return;
   }
 
-  ReleaseAllJITCode(cx->runtime()->gcContext());
+  ReleaseAllJITCode(cx->gcContext());
 
   enabledTextIds[textId] = true;
   if (textId == TraceLogger_Engine) {
@@ -1297,7 +1297,7 @@ void TraceLoggerThreadState::disableTextId(JSContext* cx, uint32_t textId) {
     return;
   }
 
-  ReleaseAllJITCode(cx->runtime()->gcContext());
+  ReleaseAllJITCode(cx->gcContext());
 
   enabledTextIds[textId] = false;
   if (textId == TraceLogger_Engine) {
