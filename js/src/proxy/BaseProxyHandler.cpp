@@ -406,7 +406,7 @@ JS_PUBLIC_API void js::NukeNonCCWProxy(JSContext* cx, HandleObject proxy) {
 
   // The proxy is about to be replaced, so we need to do any necessary
   // cleanup first.
-  proxy->as<ProxyObject>().handler()->finalize(cx->defaultFreeOp(), proxy);
+  proxy->as<ProxyObject>().handler()->finalize(cx->gcContext(), proxy);
 
   proxy->as<ProxyObject>().nuke();
 

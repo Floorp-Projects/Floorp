@@ -87,7 +87,7 @@ void GeckoProfilerRuntime::enable(bool enabled) {
    * Ensure all future generated code will be instrumented, or that all
    * currently instrumented code is discarded
    */
-  ReleaseAllJITCode(rt->defaultFreeOp());
+  ReleaseAllJITCode(rt->gcContext());
 
   // This function is called when the Gecko profiler makes a new Sampler
   // (and thus, a new circular buffer). Set all current entries in the

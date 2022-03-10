@@ -681,7 +681,7 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     }
 
     auto terminateDebuggerFrameGuard = MakeScopeExit([&] {
-      terminateDebuggerFrame(cx->defaultFreeOp(), this, frame, referent);
+      terminateDebuggerFrame(cx->gcContext(), this, frame, referent);
     });
 
     if (genObj) {
@@ -735,7 +735,7 @@ bool Debugger::getFrame(JSContext* cx, Handle<AbstractGeneratorObject*> genObj,
   }
 
   if (!p.add(cx, generatorFrames, genObj, result)) {
-    terminateDebuggerFrame(cx->runtime()->defaultFreeOp(), this, result,
+    terminateDebuggerFrame(cx->runtime()->gcContext(), this, result,
                            NullFramePtr());
     return false;
   }
@@ -3170,7 +3170,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
 
   AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 
-  JS::GCContext* gcx = cx->runtime()->defaultFreeOp();
+  JS::GCContext* gcx = cx->runtime()->gcContext();
 
   Vector<JSScript*> scripts(cx);
 
@@ -4465,7 +4465,7 @@ bool Debugger::CallData::removeDebuggee() {
   ExecutionObservableRealms obs(cx);
 
   if (dbg->debuggees.has(global)) {
-    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, nullptr,
+    dbg->removeDebuggeeGlobal(cx->runtime()->gcContext(), global, nullptr,
                               FromSweep::No);
 
     // Only update the realm if there are no Debuggers left, as it's
@@ -4488,7 +4488,7 @@ bool Debugger::CallData::removeAllDebuggees() {
 
   for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
     Rooted<GlobalObject*> global(cx, e.front());
-    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, &e,
+    dbg->removeDebuggeeGlobal(cx->runtime()->gcContext(), global, &e,
                               FromSweep::No);
 
     // See note about adding to the observable set in removeDebuggee.
@@ -4574,7 +4574,7 @@ bool Debugger::CallData::getNewestFrame() {
 }
 
 bool Debugger::CallData::clearAllBreakpoints() {
-  JS::GCContext* gcx = cx->defaultFreeOp();
+  JS::GCContext* gcx = cx->gcContext();
   Breakpoint* nextbp;
   for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = nextbp) {
     nextbp = bp->nextInDebugger();
@@ -6483,7 +6483,7 @@ bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
 /* static */
 void Debugger::suspendGeneratorDebuggerFrames(JSContext* cx,
                                               AbstractFramePtr frame) {
-  JS::GCContext* gcx = cx->runtime()->defaultFreeOp();
+  JS::GCContext* gcx = cx->runtime()->gcContext();
   forEachOnStackDebuggerFrame(
       frame, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
         dbg->frames.remove(frame);
@@ -6502,7 +6502,7 @@ void Debugger::suspendGeneratorDebuggerFrames(JSContext* cx,
 
 /* static */
 void Debugger::terminateDebuggerFrames(JSContext* cx, AbstractFramePtr frame) {
-  JS::GCContext* gcx = cx->runtime()->defaultFreeOp();
+  JS::GCContext* gcx = cx->runtime()->gcContext();
 
   forEachOnStackOrSuspendedDebuggerFrame(
       cx, frame, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
@@ -6513,8 +6513,8 @@ void Debugger::terminateDebuggerFrames(JSContext* cx, AbstractFramePtr frame) {
   // script is about to be destroyed. Remove any breakpoints in it.
   if (frame.isEvalFrame()) {
     RootedScript script(cx, frame.script());
-    DebugScript::clearBreakpointsIn(cx->runtime()->defaultFreeOp(), script,
-                                    nullptr, nullptr);
+    DebugScript::clearBreakpointsIn(cx->runtime()->gcContext(), script, nullptr,
+                                    nullptr);
   }
 }
 

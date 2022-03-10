@@ -266,7 +266,7 @@ void js::ForOfPIC::Chain::reset(JSContext* cx) {
 void js::ForOfPIC::Chain::eraseChain(JSContext* cx) {
   // Should never need to clear the chain of a disabled stub.
   MOZ_ASSERT(!disabled_);
-  freeAllStubs(cx->defaultFreeOp());
+  freeAllStubs(cx->gcContext());
 }
 
 // Trace the pointers stored directly on the stub.

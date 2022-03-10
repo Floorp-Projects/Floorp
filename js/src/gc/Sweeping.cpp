@@ -2230,7 +2230,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   AutoMajorGCProfilerEntry s(this);
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
 
-  JS::GCContext* gcx = rt->defaultFreeOp();
+  JS::GCContext* gcx = rt->gcContext();
   AutoPoisonFreedJitCode pjc(gcx);
 
   // Don't trigger pre-barriers when finalizing.
@@ -2310,7 +2310,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
     AutoLockStoreBuffer lock(&storeBuffer());
-    callFinalizeCallbacks(rt->defaultFreeOp(), JSFINALIZE_COLLECTION_END);
+    callFinalizeCallbacks(rt->gcContext(), JSFINALIZE_COLLECTION_END);
 
     if (allCCVisibleZonesWereCollected()) {
       grayBitsValid = true;
