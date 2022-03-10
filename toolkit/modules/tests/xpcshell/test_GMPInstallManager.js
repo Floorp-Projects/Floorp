@@ -953,16 +953,13 @@ add_task(async function test_GMPExtractor_paths() {
     !extractedPaths[0].includes("verified_contents.json"),
     "verified_contents.json should not be on extracted path"
   );
-  let extractedDir = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath
-  );
+  let extractedDir = PathUtils.join(PathUtils.profileDir, relativeExtractPath);
   Assert.ok(
     await IOUtils.exists(extractedDir),
     "Extraction should have created a directory"
   );
   let extractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
+    PathUtils.profileDir,
     relativeExtractPath,
     "dummy_file.txt"
   );
@@ -971,7 +968,7 @@ add_task(async function test_GMPExtractor_paths() {
     "Extraction should have created dummy_file.txt"
   );
   let unextractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
+    PathUtils.profileDir,
     relativeExtractPath,
     "verified_contents.json"
   );

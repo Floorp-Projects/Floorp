@@ -192,9 +192,9 @@ async function initProfileAge(profile) {
  * @param {string} profile The path to the profile directory.
  * @return {Promise<ProfileAgeImpl>} Resolves to the ProfileAgeImpl.
  */
-async function ProfileAge(profile) {
+function ProfileAge(profile) {
   if (!profile) {
-    profile = await PathUtils.getProfileDir();
+    profile = PathUtils.profileDir;
   }
 
   if (PROFILES.has(profile)) {
