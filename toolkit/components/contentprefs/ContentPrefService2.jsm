@@ -1164,10 +1164,7 @@ ContentPrefService2.prototype = {
   },
 
   async _getConnection(aAttemptNum = 0) {
-    let path = PathUtils.join(
-      await PathUtils.getProfileDir(),
-      "content-prefs.sqlite"
-    );
+    let path = PathUtils.join(PathUtils.profileDir, "content-prefs.sqlite");
     let conn;
     let resetAndRetry = async e => {
       if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
