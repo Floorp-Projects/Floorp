@@ -16291,6 +16291,7 @@ class CGDescriptor(CGThing):
                     cgThings.append(
                         CGObservableArrayProxyHandlerGenerator(descriptor, m)
                     )
+                    cgThings.append(CGObservableArrayHelperGenerator(descriptor, m))
                 if m.getExtendedAttribute("Unscopable"):
                     assert not m.isStatic()
                     unscopableNames.append(m.identifier.name)
@@ -18172,11 +18173,19 @@ class CGBindingRoot(CGThing):
 
             return any(hasCrossOriginProperty(m) for m in desc.interface.members)
 
+        def descriptorHasObservableArrayTypes(desc):
+            def hasObservableArrayTypes(m):
+                return m.isAttr() and m.type.isObservableArray()
+
+            return any(hasObservableArrayTypes(m) for m in desc.interface.members)
+
         bindingDeclareHeaders["mozilla/dom/RemoteObjectProxy.h"] = any(
             descriptorHasCrossOriginProperties(d) for d in descriptors
         )
         bindingDeclareHeaders["jsapi.h"] = any(
-            descriptorHasCrossOriginProperties(d) for d in descriptors
+            descriptorHasCrossOriginProperties(d)
+            or descriptorHasObservableArrayTypes(d)
+            for d in descriptors
         )
         bindingDeclareHeaders["js/TypeDecls.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
@@ -22000,7 +22009,7 @@ class CGIterableMethodGenerator(CGGeneric):
         )
 
 
-def getObservableArrayBackingObject(descriptor, attr):
+def getObservableArrayBackingObject(descriptor, attr, errorReturn="return false;\n"):
     """
     Generate code to get/create a JS backing list for an observableArray attribute
     from the declaration slot.
@@ -22014,7 +22023,7 @@ def getObservableArrayBackingObject(descriptor, attr):
         bool created = false;
         if (!GetObservableArrayBackingObject(cx, obj, ${slot},
                 &backingObj, &created, ${namespace}::ObservableArrayProxyHandler::getInstance())) {
-          return false;
+          $*{errorReturn}
         }
         if (created) {
           PreserveWrapper(self);
@@ -22025,6 +22034,7 @@ def getObservableArrayBackingObject(descriptor, attr):
         """,
         namespace=toBindingNamespace(MakeNativeName(attr.identifier.name)),
         slot=memberReservedSlot(attr, descriptor),
+        errorReturn=errorReturn,
         selfType=descriptor.nativeType,
     )
 
@@ -22361,6 +22371,284 @@ class CGObservableArraySetterGenerator(CGGeneric):
                 getBackingObject=getBackingObject,
             ),
         )
+
+
+class CGObservableArrayHelperFunctionGenerator(CGHelperFunctionGenerator):
+    """
+    Generates code to allow C++ to perform operations on backing objects. Gets
+    a context from the binding wrapper, turns arguments into JS::Values (via
+    CallbackMember/CGNativeMember argument conversion), then uses
+    MethodBodyGenerator to generate the body.
+    """
+
+    class MethodBodyGenerator(CGThing):
+        """
+        Creates methods body for observable array attribute. It is expected that all
+        methods will be have a maplike/setlike object attached. Unwrapping/wrapping
+        will be taken care of by the usual method generation machinery in
+        CGMethodCall/CGPerSignatureCall. Functionality is filled in here instead of
+        using CGCallGenerator.
+        """
+
+        def __init__(
+            self,
+            descriptor,
+            attr,
+            methodName,
+            helperGenerator,
+            needsIndexArg,
+        ):
+            assert attr.isAttr()
+            assert attr.type.isObservableArray()
+
+            CGThing.__init__(self)
+            self.helperGenerator = helperGenerator
+            self.cgRoot = CGList([])
+
+            self.cgRoot.append(
+                CGGeneric(
+                    getObservableArrayBackingObject(
+                        descriptor,
+                        attr,
+                        dedent(
+                            """
+                            aRv.Throw(NS_ERROR_UNEXPECTED);
+                            return%s;
+                            """
+                            % helperGenerator.getDefaultRetval()
+                        ),
+                    )
+                )
+            )
+
+            # Generates required code for the method. Method descriptions included
+            # in definitions below. Throw if we don't have a method to fill in what
+            # we're looking for.
+            try:
+                methodGenerator = getattr(self, methodName)
+            except AttributeError:
+                raise TypeError(
+                    "Missing observable array method definition '%s'" % methodName
+                )
+            # Method generator returns tuple, containing:
+            #
+            # - a list of CGThings representing setup code for preparing to call
+            #   the JS API function
+            # - JS API function name
+            # - a list of arguments needed for the JS API function we're calling
+            # - a list of CGThings representing code needed before return.
+            (setupCode, funcName, arguments, returnCode) = methodGenerator()
+
+            # Append the list of setup code CGThings
+            self.cgRoot.append(CGList(setupCode))
+            # Create the JS API call
+            if needsIndexArg:
+                arguments.insert(0, "aIndex")
+            self.cgRoot.append(
+                CGWrapper(
+                    CGGeneric(
+                        fill(
+                            """
+                            aRv.MightThrowJSException();
+                            if (!${funcName}(${args})) {
+                              aRv.StealExceptionFromJSContext(cx);
+                              return${retval};
+                            }
+                            """,
+                            funcName=funcName,
+                            args=", ".join(["cx", "backingObj"] + arguments),
+                            retval=helperGenerator.getDefaultRetval(),
+                        )
+                    )
+                )
+            )
+            # Append code before return
+            self.cgRoot.append(CGList(returnCode))
+
+        def elementat(self):
+            setupCode = []
+            if not self.helperGenerator.needsScopeBody():
+                setupCode.append(CGGeneric("JS::Rooted<JS::Value> result(cx);\n"))
+            returnCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        if (result.isUndefined()) {
+                          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_GetElement", ["&result"], returnCode)
+
+        def replaceelementat(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        if (aIndex > length) {
+                          aRv.ThrowRangeError("Invalid index");
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_SetElement", ["argv[0]"], [])
+
+        def appendelement(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_SetElement", ["length", "argv[0]"], [])
+
+        def removelastelement(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        if (length == 0) {
+                          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS::SetArrayLength", ["length - 1"], [])
+
+        def length(self):
+            return (
+                [CGGeneric("uint32_t retVal;\n")],
+                "JS::GetArrayLength",
+                ["&retVal"],
+                [],
+            )
+
+        def define(self):
+            return self.cgRoot.define()
+
+    def __init__(
+        self,
+        descriptor,
+        attr,
+        name,
+        returnType=BuiltinTypes[IDLBuiltinType.Types.void],
+        needsResultConversion=True,
+        needsIndexArg=False,
+        needsValueArg=False,
+    ):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        self.attr = attr
+        self.needsIndexArg = needsIndexArg
+
+        args = []
+        if needsValueArg:
+            args.append(FakeArgument(attr.type.inner, "aValue"))
+
+        CGHelperFunctionGenerator.__init__(
+            self,
+            descriptor,
+            name,
+            args,
+            returnType,
+            needsResultConversion,
+        )
+
+    def getArgs(self, returnType, argList):
+        if self.needsIndexArg:
+            argList = [
+                FakeArgument(BuiltinTypes[IDLBuiltinType.Types.unsigned_long], "aIndex")
+            ] + argList
+        return CGHelperFunctionGenerator.getArgs(self, returnType, argList)
+
+    def getCall(self):
+        return CGObservableArrayHelperFunctionGenerator.MethodBodyGenerator(
+            self.descriptorProvider,
+            self.attr,
+            self.name.lower(),
+            self,
+            self.needsIndexArg,
+        ).define()
+
+
+class CGObservableArrayHelperGenerator(CGNamespace):
+    """
+    Declares and defines convenience methods for accessing backing object for
+    observable array type. Generates function signatures, un/packs
+    backing objects from slot, etc.
+    """
+
+    def __init__(self, descriptor, attr):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+
+        namespace = "%sHelpers" % MakeNativeName(attr.identifier.name)
+        helpers = [
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "ElementAt",
+                returnType=attr.type.inner,
+                needsIndexArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "ReplaceElementAt",
+                needsIndexArg=True,
+                needsValueArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "AppendElement",
+                needsValueArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "RemoveLastElement",
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "Length",
+                returnType=BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
+                needsResultConversion=False,
+            ),
+        ]
+        CGNamespace.__init__(self, namespace, CGList(helpers, "\n"))
 
 
 class GlobalGenRoots:

@@ -27,4 +27,40 @@ interface TestInterfaceObservableArray {
   attribute ObservableArray<boolean> observableArrayBoolean;
   attribute ObservableArray<object> observableArrayObject;
   attribute ObservableArray<TestInterfaceObservableArray> observableArrayInterface;
+
+  // Tests for C++ helper function
+  [Throws]
+  boolean booleanElementAtInternal(unsigned long index);
+  [Throws]
+  TestInterfaceObservableArray interfaceElementAtInternal(unsigned long index);
+  [Throws]
+  object objectElementAtInternal(unsigned long index);
+
+  [Throws]
+  void booleanReplaceElementAtInternal(unsigned long index, boolean value);
+  [Throws]
+  void interfaceReplaceElementAtInternal(unsigned long index, TestInterfaceObservableArray value);
+  [Throws]
+  void objectReplaceElementAtInternal(unsigned long index, object value);
+
+  [Throws]
+  void booleanAppendElementInternal(boolean value);
+  [Throws]
+  void interfaceAppendElementInternal(TestInterfaceObservableArray value);
+  [Throws]
+  void objectAppendElementInternal(object value);
+
+  [Throws]
+  void booleanRemoveLastElementInternal();
+  [Throws]
+  void interfaceRemoveLastElementInternal();
+  [Throws]
+  void objectRemoveLastElementInternal();
+
+  [Throws]
+  unsigned long booleanLengthInternal();
+  [Throws]
+  unsigned long interfaceLengthInternal();
+  [Throws]
+  unsigned long objectLengthInternal();
 };
