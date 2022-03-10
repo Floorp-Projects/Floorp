@@ -181,8 +181,10 @@ add_task(async function test_delete_snapshot() {
 add_task(async function deleteKeyframesDb() {
   Services.prefs.setIntPref(VERSION_PREF, 0);
 
-  let profileDir = await PathUtils.getProfileDir();
-  let pathToKeyframes = PathUtils.join(profileDir, "keyframes.sqlite");
+  let pathToKeyframes = PathUtils.join(
+    PathUtils.profileDir,
+    "keyframes.sqlite"
+  );
 
   try {
     let db = await Sqlite.openConnection({

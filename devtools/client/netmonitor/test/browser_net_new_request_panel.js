@@ -11,7 +11,7 @@ add_task(async function() {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Resetting the pref
-  await pushPref("devtools.netmonitor.features.newEditAndResendState", "");
+  await pushPref("devtools.netmonitor.customRequest", "");
 
   const { monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
@@ -77,7 +77,7 @@ add_task(async function() {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Resetting the pref
-  await pushPref("devtools.netmonitor.features.newEditAndResendState", "");
+  await pushPref("devtools.netmonitor.customRequest", "");
 
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
@@ -129,7 +129,7 @@ add_task(async function() {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Resetting the pref
-  await pushPref("devtools.netmonitor.features.newEditAndResendState", "");
+  await pushPref("devtools.netmonitor.customRequest", "");
 
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
@@ -178,7 +178,7 @@ add_task(async function() {
   // Turn on the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Resetting the pref
-  await pushPref("devtools.netmonitor.features.newEditAndResendState", "");
+  await pushPref("devtools.netmonitor.customRequest", "");
 
   const { monitor, tab } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,

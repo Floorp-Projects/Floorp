@@ -8,7 +8,7 @@
 
 namespace glsl {
 
-enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8, RG8, R16, YUV422 };
+enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8, RG8, R16, RG16, YUV422 };
 
 enum TextureFilter { NEAREST, LINEAR };
 

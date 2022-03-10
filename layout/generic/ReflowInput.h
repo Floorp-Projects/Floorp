@@ -849,7 +849,16 @@ struct ReflowInput : public SizeComputationInput {
       mozilla::WritingMode aWM, nsIFrame* aFrame,
       const mozilla::LogicalSize& aCBSize);
 
-  // If a relatively positioned element, adjust the position appropriately.
+  // If aFrame is a relatively or sticky positioned element, adjust aPosition
+  // appropriately.
+  //
+  // @param aComputedOffsets aFrame's relative offset, either from the cached
+  //        nsIFrame::ComputedOffsetProperty() or ComputedPhysicalOffsets().
+  //        Note: This parameter is used only when aFrame is relatively
+  //        positioned, not sticky positioned.
+  // @param aPosition [in/out] Pass aFrame's normal position (pre-relative
+  //        positioning), and this method will update it to indicate aFrame's
+  //        actual position.
   static void ApplyRelativePositioning(nsIFrame* aFrame,
                                        const nsMargin& aComputedOffsets,
                                        nsPoint* aPosition);

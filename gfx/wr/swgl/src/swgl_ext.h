@@ -1035,7 +1035,7 @@ template <typename S0, typename S1>
 static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
                                            ivec2 uv1,
                                            const YUVMatrix& rgb_from_ycbcr,
-                                           UNUSED int rescaleFactor) {
+                                           int rescaleFactor) {
   switch (sampler1->format) {
     case TextureFormat::RG8: {
       assert(sampler0->format == TextureFormat::R8);
@@ -1050,6 +1050,21 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
       auto planar = textureLinearPlanarRGBA8(sampler1, uv1);
       return convertYUV(rgb_from_ycbcr, y, lowHalf(planar.ba),
                         highHalf(planar.rg));
+    }
+    case TextureFormat::RG16: {
+      assert(sampler0->format == TextureFormat::R16);
+      // The rescaling factor represents how many bits to add to renormalize the
+      // texture to 16 bits, and so the color depth is actually 16 minus the
+      // rescaling factor.
+      // Need to right shift the sample by the amount of bits over 8 it
+      // occupies. On output from textureLinearUnpackedR16, we have lost 1 bit
+      // of precision at the low end already, hence 1 is subtracted from the
+      // color depth.
+      int colorDepth = 16 - rescaleFactor;
+      int rescaleBits = (colorDepth - 1) - 8;
+      auto y = textureLinearUnpackedR16(sampler0, uv0) >> rescaleBits;
+      auto uv = textureLinearUnpackedRG16(sampler1, uv1) >> rescaleBits;
+      return rgb_from_ycbcr.convert(zip(y, y), uv);
     }
     default:
       assert(false);

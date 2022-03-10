@@ -17,25 +17,8 @@ from taskgraph.util.taskcluster import (
     get_task_url,
 )
 
-from gecko_taskgraph.task import Task
-
 
 logger = logging.getLogger(__name__)
-
-
-def get_artifact_prefix(task):
-    prefix = None
-    if isinstance(task, dict):
-        prefix = task.get("attributes", {}).get("artifact_prefix")
-    elif isinstance(task, Task):
-        prefix = task.attributes.get("artifact_prefix")
-    else:
-        raise Exception(f"Can't find artifact-prefix of non-task: {task}")
-    return prefix or "public/build"
-
-
-def get_artifact_path(task, path):
-    return f"{get_artifact_prefix(task)}/{path}"
 
 
 def insert_index(index_path, task_id, data=None, use_proxy=False):

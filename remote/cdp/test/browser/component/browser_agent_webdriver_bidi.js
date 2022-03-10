@@ -4,8 +4,10 @@
 "use strict";
 
 add_agent_task(async function remoteWebDriverBiDiActivePortFile() {
-  const profileDir = await PathUtils.getProfileDir();
-  const portFile = PathUtils.join(profileDir, "WebDriverBiDiActivePort");
+  const portFile = PathUtils.join(
+    PathUtils.profileDir,
+    "WebDriverBiDiActivePort"
+  );
 
   const port = getNonAtomicFreePort();
 

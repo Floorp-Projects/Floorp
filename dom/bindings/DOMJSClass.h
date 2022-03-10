@@ -113,6 +113,8 @@ static const uint32_t WorkerDebuggerGlobalScope = 1u << 4;
 static const uint32_t WorkletGlobalScope = 1u << 5;
 static const uint32_t AudioWorkletGlobalScope = 1u << 6;
 static const uint32_t PaintWorkletGlobalScope = 1u << 7;
+
+static constexpr uint32_t kCount = 8;
 }  // namespace GlobalNames
 
 struct PrefableDisablers {
@@ -147,14 +149,15 @@ struct PrefableDisablers {
   // Index into the array of StaticPrefs
   const WebIDLPrefIndex prefIndex;
 
-  // A boolean indicating whether a Secure Context is required.
-  const bool secureContext;
-
-  // An origin trial controlling the feature.
-  const OriginTrial trial;
-
   // Bitmask of global names that we should not be exposed in.
-  const uint16_t nonExposedGlobals;
+  const uint16_t nonExposedGlobals : GlobalNames::kCount;
+
+  // A boolean indicating whether a Secure Context is required.
+  const uint16_t secureContext : 1;
+
+  // An origin trial controlling the feature. This can be made a bitfield too if
+  // needed.
+  const OriginTrial trial;
 
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of

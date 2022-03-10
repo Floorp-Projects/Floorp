@@ -17,9 +17,8 @@ function waitForNewWindow() {
 }
 
 add_task(async function setup() {
-  let tmpDir = await PathUtils.getTempDir();
-  tmpDir = PathUtils.join(
-    tmpDir,
+  let tmpDir = PathUtils.join(
+    PathUtils.tempDir,
     "testsavedir" + Math.floor(Math.random() * 2 ** 32)
   );
   // Create this dir if it doesn't exist (ignores existing dirs)

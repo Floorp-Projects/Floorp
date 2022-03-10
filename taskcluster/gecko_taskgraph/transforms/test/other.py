@@ -8,7 +8,7 @@ import re
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 from mozbuild.util import ReadOnlyDict
-from taskgraph.util.taskcluster import get_index_url
+from taskgraph.util.taskcluster import get_artifact_path, get_index_url
 from voluptuous import (
     Any,
     Optional,
@@ -19,7 +19,6 @@ from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
 from gecko_taskgraph.util.attributes import keymatch
 from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
-from gecko_taskgraph.util.taskcluster import get_artifact_path
 from gecko_taskgraph.util.platforms import platform_family
 from gecko_taskgraph.util.schema import (
     resolve_keyed_by,
@@ -339,29 +338,29 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-87",
             ],
             "linux.*": [
-                "linux64-chromedriver-96",
                 "linux64-chromedriver-97",
                 "linux64-chromedriver-98",
+                "linux64-chromedriver-99",
             ],
             "macosx.*": [
-                "mac64-chromedriver-96",
                 "mac64-chromedriver-97",
                 "mac64-chromedriver-98",
+                "mac64-chromedriver-99",
             ],
             "windows.*aarch64.*": [
-                "win32-chromedriver-96",
                 "win32-chromedriver-97",
                 "win32-chromedriver-98",
+                "win32-chromedriver-99",
             ],
             "windows.*-32.*": [
-                "win32-chromedriver-96",
                 "win32-chromedriver-97",
                 "win32-chromedriver-98",
+                "win32-chromedriver-99",
             ],
             "windows.*-64.*": [
-                "win32-chromedriver-96",
                 "win32-chromedriver-97",
                 "win32-chromedriver-98",
+                "win32-chromedriver-99",
             ],
         }
 

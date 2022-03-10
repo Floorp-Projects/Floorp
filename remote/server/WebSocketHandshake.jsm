@@ -18,8 +18,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
+  Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
   return CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
@@ -29,18 +32,65 @@ XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
 });
 
-// TODO(ato): Merge this with httpd.js so that we can respond to both HTTP/1.1
-// as well as WebSocket requests on the same server.
+XPCOMUtils.defineLazyGetter(this, "allowedHosts", () => {
+  if (Services.prefs.prefHasUserValue("remote.hosts.allowed")) {
+    const allowedHostsPref = Services.prefs.getCharPref("remote.hosts.allowed");
+    return allowedHostsPref.split(",");
+  }
 
-// Well-known localhost loopback addresses.
-const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
+  // If no value is set for remote.hosts.allowed, select allowed hosts based on
+  // the RemoteAgent server host.
+  const hostUri = Services.io.newURI(`https://${RemoteAgent.host}`);
 
-// This should only be used by the CDP browser mochitests which create a
-// websocket handshake with a non-null origin.
-let nullOriginAllowed = false;
-function allowNullOrigin(allowed) {
-  nullOriginAllowed = allowed;
-}
+  // If the server is bound to a hostname, not an IP address, return it as
+  // allowed host.
+  if (!isIPAddress(hostUri)) {
+    return [RemoteAgent.host];
+  }
+
+  // Following Bug 1220810 localhost is guaranteed to resolve to a loopback
+  // address (127.0.0.1 or ::1) unless network.proxy.allow_hijacking_localhost
+  // is set to true, which should not be the case.
+  const loopbackAddresses = ["127.0.0.1", "[::1]"];
+
+  // If the server is bound to an IP address and this IP address is a localhost
+  // loopback address, return localhost as allowed host.
+  if (loopbackAddresses.includes(RemoteAgent.host)) {
+    return ["localhost"];
+  }
+
+  // Otherwise return an empty array.
+  return [];
+});
+
+/**
+ * Allowed origins are exposed through 2 separate getters because while most
+ * of the values should be valid URIs, `null` is also a valid origin and cannot
+ * be converted to a URI. Call sites interested in checking for null should use
+ * `allowedOrigins`, those interested in URIs should use `allowedOriginURIs`.
+ */
+XPCOMUtils.defineLazyGetter(this, "allowedOrigins", () =>
+  Services.prefs.getCharPref("remote.origins.allowed", "").split(",")
+);
+
+XPCOMUtils.defineLazyGetter(this, "allowedOriginURIs", () => {
+  return allowedOrigins
+    .map(origin => {
+      try {
+        const originURI = Services.io.newURI(origin);
+        // Make sure to read host/port/scheme as those getters could throw for
+        // invalid URIs.
+        return {
+          host: originURI.host,
+          port: originURI.port,
+          scheme: originURI.scheme,
+        };
+      } catch (e) {
+        return null;
+      }
+    })
+    .filter(uri => uri !== null);
+});
 
 /**
  * Write a string of bytes to async output stream
@@ -104,45 +154,64 @@ function isIPAddress(uri) {
   return false;
 }
 
+function isHostValid(hostHeader) {
+  try {
+    // Might throw both when calling newURI or when accessing the host/port.
+    const hostUri = Services.io.newURI(`https://${hostHeader}`);
+    const { host, port } = hostUri;
+    const isHostnameValid = isIPAddress(hostUri) || allowedHosts.includes(host);
+    // For nsIURI a port value of -1 corresponds to the protocol's default port.
+    const isPortValid = [-1, RemoteAgent.port].includes(port);
+    return isHostnameValid && isPortValid;
+  } catch (e) {
+    return false;
+  }
+}
+
+function isOriginValid(originHeader) {
+  if (originHeader === undefined) {
+    // Always accept no origin header.
+    return true;
+  }
+
+  // Special case "null" origins, used for privacy sensitive or opaque origins.
+  if (originHeader === "null") {
+    return allowedOrigins.includes("null");
+  }
+
+  try {
+    // Extract the host, port and scheme from the provided origin header.
+    const { host, port, scheme } = Services.io.newURI(originHeader);
+    // Check if any allowed origin matches the provided host, port and scheme.
+    return allowedOriginURIs.some(
+      uri => uri.host === host && uri.port === port && uri.scheme === scheme
+    );
+  } catch (e) {
+    // Reject invalid origin headers
+    return false;
+  }
+}
+
 /**
  * Process the WebSocket handshake headers and return the key to be sent in
  * Sec-WebSocket-Accept response header.
  */
 function processRequest({ requestLine, headers }) {
-  // Enable origin header checks only if BiDi is enabled to avoid regressions
-  // for existing CDP consumers.
-  // TODO: Remove after Bug 1750689 until we can specify custom hosts & origins.
-  if (RemoteAgent.webDriverBiDi) {
-    const origin = headers.get("origin");
-
-    // A "null" origin is exceptionally allowed in browser mochitests.
-    const isTestOrigin = origin === "null" && nullOriginAllowed;
-    if (headers.has("origin") && !isTestOrigin) {
-      throw new Error(
-        `The handshake request has incorrect Origin header ${origin}`
-      );
-    }
-  }
-
-  const hostHeader = headers.get("host");
-
-  let hostUri, host, port;
-  try {
-    // Might throw both when calling newURI or when accessing the host/port.
-    hostUri = Services.io.newURI(`https://${hostHeader}`);
-    ({ host, port } = hostUri);
-  } catch (e) {
+  if (!isOriginValid(headers.get("origin"))) {
+    logger.debug(
+      `Incorrect Origin header, allowed origins: [${allowedOrigins}]`
+    );
     throw new Error(
-      `The handshake request Host header must be a well-formed host: ${hostHeader}`
+      `The handshake request has incorrect Origin header ${headers.get(
+        "origin"
+      )}`
     );
   }
 
-  const isHostnameValid = LOOPBACKS.includes(host) || isIPAddress(hostUri);
-  // For nsIURI a port value of -1 corresponds to the protocol's default port.
-  const isPortValid = port === -1 || port == RemoteAgent.port;
-  if (!isHostnameValid || !isPortValid) {
+  if (!isHostValid(headers.get("host"))) {
+    logger.debug(`Incorrect Host header, allowed hosts: [${allowedHosts}]`);
     throw new Error(
-      `The handshake request has incorrect Host header ${hostHeader}`
+      `The handshake request has incorrect Host header ${headers.get("host")}`
     );
   }
 

@@ -829,7 +829,7 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
   Assert.deepEqual(
     doc.l10n.getAttributes(controlledDesc),
     {
-      id: "extension-controlled-web-notifications",
+      id: "extension-controlling-web-notifications",
       args: {
         name: "TestExtension",
       },
@@ -918,7 +918,7 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
     },
   };
   let jsonFileName = "extension-settings.json";
-  let storePath = PathUtils.join(await PathUtils.getProfileDir(), jsonFileName);
+  let storePath = PathUtils.join(PathUtils.profileDir, jsonFileName);
 
   await IOUtils.writeUTF8(storePath, JSON.stringify(storeData));
 
@@ -987,7 +987,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
       Assert.deepEqual(
         doc.l10n.getAttributes(controlledDesc),
         {
-          id: "extension-controlled-websites-content-blocking-all-trackers",
+          id: "extension-controlling-websites-content-blocking-all-trackers",
           args: {
             name: "set_tp",
           },
@@ -1109,7 +1109,7 @@ add_task(async function testExtensionControlledPasswordManager() {
       Assert.deepEqual(
         gBrowser.contentDocument.l10n.getAttributes(controlledDesc),
         {
-          id: "extension-controlled-password-saving",
+          id: "extension-controlling-password-saving",
           args: {
             name: "testPasswordManagerExtension",
           },
@@ -1183,7 +1183,7 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   function expectedConnectionSettingsMessage(doc, isControlled) {
     return isControlled
-      ? "extension-controlled-proxy-config"
+      ? "extension-controlling-proxy-config"
       : "network-proxy-connection-description";
   }
 
@@ -1223,7 +1223,7 @@ add_task(async function testExtensionControlledProxyConfig() {
         Assert.deepEqual(
           doc.l10n.getAttributes(controlledDesc),
           {
-            id: "extension-controlled-proxy-config",
+            id: "extension-controlling-proxy-config",
             args: {
               name: "set_proxy",
             },

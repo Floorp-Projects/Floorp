@@ -128,7 +128,7 @@ class HTTPCustomRequestPanel extends Component {
     };
 
     Services.prefs.setCharPref(
-      "devtools.netmonitor.features.newEditAndResendState",
+      "devtools.netmonitor.customRequest",
       JSON.stringify(this.state)
     );
 
@@ -152,7 +152,7 @@ class HTTPCustomRequestPanel extends Component {
     const persistedState = this.getStateFromPref();
 
     Services.prefs.setCharPref(
-      "devtools.netmonitor.features.newEditAndResendState",
+      "devtools.netmonitor.customRequest",
       JSON.stringify({ ...persistedState, ...nextState })
     );
   }
@@ -160,9 +160,7 @@ class HTTPCustomRequestPanel extends Component {
   getStateFromPref() {
     try {
       return JSON.parse(
-        Services.prefs.getCharPref(
-          "devtools.netmonitor.features.newEditAndResendState"
-        )
+        Services.prefs.getCharPref("devtools.netmonitor.customRequest")
       );
     } catch (_) {
       return {};

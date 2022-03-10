@@ -699,8 +699,10 @@ const Snapshots = new (class Snapshots {
       if (dbVersion < 1) {
         try {
           // Delete legacy keyframes.sqlite DB.
-          let profileDir = await PathUtils.getProfileDir();
-          let pathToKeyframes = PathUtils.join(profileDir, "keyframes.sqlite");
+          let pathToKeyframes = PathUtils.join(
+            PathUtils.profileDir,
+            "keyframes.sqlite"
+          );
           await IOUtils.remove(pathToKeyframes);
         } catch (ex) {
           console.warn(`Failed to delete keyframes.sqlite: ${ex}`);

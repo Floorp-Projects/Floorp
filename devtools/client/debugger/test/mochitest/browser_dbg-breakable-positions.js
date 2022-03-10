@@ -4,7 +4,9 @@
 
 "use strict";
 
-const testServer = createVersionizedHttpTestServer("sourcemaps-reload");
+const testServer = createVersionizedHttpTestServer(
+  "examples/sourcemaps-reload-uncompressed"
+);
 const TEST_URL = testServer.urlFor("index.html");
 
 // getTokenFromPosition pauses 0.5s for each line,

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const testServer = createVersionizedHttpTestServer("sourcemaps-reload");
+const testServer = createVersionizedHttpTestServer(
+  "examples/sourcemaps-reload-uncompressed"
+);
 const TEST_URL = testServer.urlFor("index.html");
 
 // Assert the behavior of the gutter that grays out non-breakable lines

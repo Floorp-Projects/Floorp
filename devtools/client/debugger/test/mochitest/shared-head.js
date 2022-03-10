@@ -2287,7 +2287,7 @@ function createVersionizedHttpTestServer(testFolderName) {
     if (request.path == "/" || request.path == "/index.html") {
       response.setHeader("Content-Type", "text/html");
     }
-    const url = `${URL_ROOT}examples/${testFolderName}/v${currentVersion}${request.path}`;
+    const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}`;
     info(`[test-http-server] serving: ${url}`);
     const content = await fetch(url);
     const text = await content.text();

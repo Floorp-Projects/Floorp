@@ -7,11 +7,12 @@ from datetime import datetime, timedelta
 from functools import partial
 
 import pytest
+from mozunit import main
+from taskgraph.task import Task
+
 from gecko_taskgraph import graph, optimize
 from gecko_taskgraph.optimize import OptimizationStrategy, All, Any, Not
 from gecko_taskgraph.taskgraph import TaskGraph
-from gecko_taskgraph.task import Task
-from mozunit import main
 
 
 class Remove(OptimizationStrategy):

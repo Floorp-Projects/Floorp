@@ -24,10 +24,7 @@ const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 registerCleanupFunction(async function() {
   // Remove the distribution dir, even if the test failed, otherwise all
   // next tests will use it.
-  let folderPath = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    "distribution"
-  );
+  let folderPath = PathUtils.join(PathUtils.profileDir, "distribution");
   await IOUtils.remove(folderPath, { ignoreAbsent: true, recursive: true });
   Assert.ok(!(await IOUtils.exists(folderPath)));
   Services.prefs.clearUserPref("distribution.testing.loadFromProfile");

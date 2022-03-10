@@ -91,10 +91,7 @@ var TestRunner = {
       "mozscreenshots",
       new Date().toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS,
     ];
-    let screenshotPath = PathUtils.join(
-      await PathUtils.getTempDir(),
-      ...subDirs
-    );
+    let screenshotPath = PathUtils.join(PathUtils.tempDir, ...subDirs);
 
     const MOZ_UPLOAD_DIR = env.get("MOZ_UPLOAD_DIR");
     const GECKO_HEAD_REPOSITORY = env.get("GECKO_HEAD_REPOSITORY");
