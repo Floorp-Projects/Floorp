@@ -165,11 +165,12 @@ variable can be used:
 
 There's a couple restrictions here:
 
-* ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` only applies to the top-level ``"mach"`` site and the
-  ``"build"`` site. All other sites will use ``pip install`` at run-time as needed.
+* ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` only applies to the top-level ``"mach"`` site,
+   the ``"common"`` site and the ``"build"`` site. All other sites will use ``pip install`` at
+   run-time as needed.
 
 * ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="system"`` is not allowed when using any site other
-  than ``"mach"`` or ``"build"``, because:
+  than ``"mach"``, ``"common"`` or ``"build"``, because:
 
   * As described in :ref:`package-compatibility` below, packages used by Mach are still
     in scope when commands are run, and
