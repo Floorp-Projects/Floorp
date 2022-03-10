@@ -3179,8 +3179,7 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
   if (!graph) {
     nsISerialEventTarget* mainThread;
     if (aWindow) {
-      mainThread =
-          aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other);
+      mainThread = aWindow->EventTargetFor(TaskCategory::Other);
     } else {
       // Uncommon case, only for some old configuration of webspeech.
       mainThread = GetMainThreadSerialEventTarget();
