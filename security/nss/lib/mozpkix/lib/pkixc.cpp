@@ -110,10 +110,11 @@ class CodeSigningTrustDomain final : public TrustDomain {
     return Success;
   }
 
-  virtual Result VerifyRSAPKCS1SignedDigest(
-      const SignedDigest& signedDigest, Input subjectPublicKeyInfo) override {
-    return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                         nullptr);
+  virtual Result VerifyRSAPKCS1SignedData(
+      Input data, DigestAlgorithm digestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
+    return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
+        subjectPublicKeyInfo, nullptr);
   }
 
   virtual Result CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
@@ -128,10 +129,11 @@ class CodeSigningTrustDomain final : public TrustDomain {
     return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
   }
 
-  virtual Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                         Input subjectPublicKeyInfo) override {
-    return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                      nullptr);
+  virtual Result VerifyECDSASignedData(
+      Input data, DigestAlgorithm digestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
+    return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
+        subjectPublicKeyInfo, nullptr);
   }
 
   virtual Result CheckValidityIsAcceptable(Time notBefore, Time notAfter,
