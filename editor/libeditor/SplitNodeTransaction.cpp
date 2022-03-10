@@ -5,9 +5,11 @@
 
 #include "SplitNodeTransaction.h"
 
+#include "EditorDOMPoint.h"  // for EditorRawDOMPoint
+#include "HTMLEditor.h"      // for HTMLEditor
 #include "HTMLEditUtils.h"
-#include "mozilla/EditorDOMPoint.h"  // for RangeBoundary, EditorRawDOMPoint
-#include "mozilla/HTMLEditor.h"      // for HTMLEditor
+#include "SelectionState.h"  // for AutoTrackDOMPoint and RangeUpdater
+
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Selection.h"
@@ -39,7 +41,13 @@ template <typename PT, typename CT>
 SplitNodeTransaction::SplitNodeTransaction(
     HTMLEditor& aHTMLEditor,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
-    : mHTMLEditor(&aHTMLEditor), mStartOfRightContent(aStartOfRightContent) {
+    : mHTMLEditor(&aHTMLEditor),
+      mSplitContent(aStartOfRightContent.GetContainerAsContent()),
+      mSplitOffset(aStartOfRightContent.Offset()) {
+  // printf("SplitNodeTransaction size: %zu\n", sizeof(SplitNodeTransaction));
+  static_assert(sizeof(SplitNodeTransaction) <= 64,
+                "Transaction classes may be created a lot and may be alive "
+                "long so that keep the foot print smaller as far as possible");
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
   MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsSplittableNode(
       *aStartOfRightContent.ContainerAsContent()));
@@ -47,23 +55,26 @@ SplitNodeTransaction::SplitNodeTransaction(
 
 std::ostream& operator<<(std::ostream& aStream,
                          const SplitNodeTransaction& aTransaction) {
-  aStream << "{ mStartOfRightContent=" << aTransaction.mStartOfRightContent;
-  aStream << ", mNewLeftContent=" << aTransaction.mNewLeftContent.get();
-  if (aTransaction.mNewLeftContent) {
-    aStream << " (" << *aTransaction.mNewLeftContent << ")";
+  aStream << "{ mParentNode=" << aTransaction.mParentNode.get();
+  if (aTransaction.mParentNode) {
+    aStream << " (" << *aTransaction.mParentNode << ")";
   }
-  aStream << ", mContainerParentNode="
-          << aTransaction.mContainerParentNode.get();
-  if (aTransaction.mContainerParentNode) {
-    aStream << " (" << *aTransaction.mContainerParentNode << ")";
+  aStream << ", mNewContent=" << aTransaction.mNewContent.get();
+  if (aTransaction.mNewContent) {
+    aStream << " (" << *aTransaction.mNewContent << ")";
   }
-  aStream << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
+  aStream << ", mSplitContent=" << aTransaction.mSplitContent.get();
+  if (aTransaction.mSplitContent) {
+    aStream << " (" << *aTransaction.mSplitContent << ")";
+  }
+  aStream << ", mSplitOffset=" << aTransaction.mSplitOffset
+          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
   return aStream;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
-                                   mHTMLEditor, mStartOfRightContent,
-                                   mContainerParentNode, mNewLeftContent)
+                                   mHTMLEditor, mParentNode, mSplitContent,
+                                   mNewContent)
 
 NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
@@ -75,51 +86,49 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
           ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) ||
-      NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mSplitContent))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  MOZ_ASSERT(mStartOfRightContent.IsSetAndValid());
+  MOZ_ASSERT(mSplitOffset <= mSplitContent->Length());
 
   // Create a new node
-  ErrorResult error;
+  IgnoredErrorResult error;
   // Don't use .downcast directly because AsContent has an assertion we want
-  nsCOMPtr<nsINode> cloneOfRightContainer =
-      mStartOfRightContent.GetContainer()->CloneNode(false, error);
-  if (error.Failed()) {
+  nsCOMPtr<nsINode> newNode = mSplitContent->CloneNode(false, error);
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("nsINode::CloneNode() failed");
     return error.StealNSResult();
   }
-  if (NS_WARN_IF(!cloneOfRightContainer)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  mNewLeftContent = cloneOfRightContainer->AsContent();
-
-  mContainerParentNode = mStartOfRightContent.GetContainerParent();
-  if (!mContainerParentNode) {
-    NS_WARNING("Right container was an orphan node");
+  mNewContent = newNode->AsContent();
+  mParentNode = mSplitContent->GetParentNode();
+  if (!mParentNode) {
+    NS_WARNING("The splitting content was an orphan node");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
-  OwningNonNull<nsINode> containerParentNode = *mContainerParentNode;
-  EditorDOMPoint startOfRightContent(mStartOfRightContent);
-
-  if (RefPtr<Element> startOfRightNode =
-          startOfRightContent.GetContainerAsElement()) {
-    nsresult rv = htmlEditor->MarkElementDirty(*startOfRightNode);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+  const OwningNonNull<nsIContent> splittingContent = *mSplitContent;
+  if (Element* const splittingElement = Element::FromNode(splittingContent)) {
+    // MOZ_KnownLive(*splittingElement): it's grabbed by splittingContent
+    nsresult rv =
+        htmlEditor->MarkElementDirty(MOZ_KnownLive(*splittingElement));
+    if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
       return EditorBase::ToGenericNSResult(rv);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::MarkElementDirty() failed, but ignored");
   }
 
-  SplitNodeResult splitNodeResult =
-      htmlEditor->DoSplitNode(startOfRightContent, newLeftContent);
-  if (splitNodeResult.Failed()) {
+  // MOZ_KnownLive(*mNewContent): it's grabbed by newNode
+  SplitNodeResult splitNodeResult = htmlEditor->DoSplitNode(
+      EditorDOMPoint(splittingContent,
+                     std::min(mSplitOffset, splittingContent->Length())),
+      MOZ_KnownLive(*mNewContent));
+  if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
     NS_WARNING("HTMLEditor::DoSplitNode() failed");
     return splitNodeResult.Rv();
   }
@@ -145,21 +154,28 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
           ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mNewLeftContent) ||
-      NS_WARN_IF(!mContainerParentNode) ||
-      NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mNewContent) ||
+                   NS_WARN_IF(!mParentNode) || NS_WARN_IF(!mSplitContent))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // This assumes Do inserted the new node in front of the prior existing node
-  // XXX Perhaps, we should reset mStartOfRightNode with current first child
-  //     of the right node.
-  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  OwningNonNull<nsIContent> containerContent =
-      *mStartOfRightContent.ContainerAsContent();
-  OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
-  nsresult rv = htmlEditor->DoJoinNodes(containerContent, newLeftContent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
+  const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
+  const OwningNonNull<nsIContent> keepingContent = *mSplitContent;
+  const OwningNonNull<nsIContent> removingContent = *mNewContent;
+  nsresult rv;
+  EditorDOMPoint joinedPoint(keepingContent, 0u);
+  {
+    AutoTrackDOMPoint trackJoinedPoint(htmlEditor->RangeUpdaterRef(),
+                                       &joinedPoint);
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    // TODO: Adjust split offset for redo here in a following patch.
+    // mSplitOffset = joinedPoint.Offset();
+  } else {
+    NS_WARNING("HTMLEditor::DoJoinNodes() failed");
+  }
   return rv;
 }
 
@@ -172,20 +188,18 @@ NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
           ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(!mNewLeftContent) ||
-                   NS_WARN_IF(!mContainerParentNode) ||
-                   NS_WARN_IF(!mStartOfRightContent.IsInContentNode()) ||
-                   NS_WARN_IF(!mHTMLEditor))) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mNewContent) || NS_WARN_IF(!mParentNode) ||
+                   NS_WARN_IF(!mSplitContent) || NS_WARN_IF(!mHTMLEditor))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
-  const OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
-  EditorDOMPoint startOfRightContent(mStartOfRightContent);
-
-  if (RefPtr<Element> existingElement =
-          mStartOfRightContent.GetContainerAsElement()) {
-    nsresult rv = htmlEditor->MarkElementDirty(*existingElement);
+  const OwningNonNull<nsIContent> newContent = *mNewContent;
+  const OwningNonNull<nsIContent> splittingContent = *mSplitContent;
+  if (Element* const splittingElement = Element::FromNode(splittingContent)) {
+    // MOZ_KnownLive(*splittingElement): it's grabbed by splittingContent
+    nsresult rv =
+        htmlEditor->MarkElementDirty(MOZ_KnownLive(*splittingElement));
     if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
       return EditorBase::ToGenericNSResult(rv);
     }
@@ -194,11 +208,9 @@ NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   }
 
   SplitNodeResult splitNodeResult = htmlEditor->DoSplitNode(
-      EditorDOMPoint(
-          startOfRightContent.ContainerAsContent(),
-          std::min(startOfRightContent.Offset(),
-                   startOfRightContent.ContainerAsContent()->Length())),
-      newLeftContent);
+      EditorDOMPoint(splittingContent,
+                     std::min(mSplitOffset, splittingContent->Length())),
+      newContent);
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
                        "HTMLEditor::DoSplitNode() failed");
   return splitNodeResult.Rv();

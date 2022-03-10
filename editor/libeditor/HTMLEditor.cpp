@@ -4317,31 +4317,25 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  // XXX Unfortunately, storing offset of the split point in
-  //     SplitNodeTransaction is necessary for now.  We should fix this
-  //     in a follow up bug.
-  Unused << aStartOfRightNode.Offset();
-
   RefPtr<SplitNodeTransaction> transaction =
       SplitNodeTransaction::Create(*this, aStartOfRightNode);
   nsresult rv = DoTransactionInternal(transaction);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
-  nsCOMPtr<nsIContent> newLeftContent = transaction->GetNewLeftContent();
-  NS_WARNING_ASSERTION(newLeftContent, "Failed to create a new left node");
-
-  if (newLeftContent) {
+  nsCOMPtr<nsIContent> newContent = transaction->GetNewContent();
+  nsCOMPtr<nsIContent> splitContent = transaction->GetSplitContent();
+  if (MOZ_LIKELY(NS_SUCCEEDED(rv) && newContent && splitContent)) {
     // XXX Some other transactions manage range updater by themselves.
     //     Why doesn't SplitNodeTransaction do it?
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-        *aStartOfRightNode.ContainerAsContent(), aStartOfRightNode.Offset(),
-        *newLeftContent, SplitNodeDirection::LeftNodeIsNewOne);
+        *splitContent, transaction->SplitOffset(), *newContent,
+        SplitNodeDirection::LeftNodeIsNewOne);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
     TopLevelEditSubActionDataRef().DidSplitContent(
-        *this, *aStartOfRightNode.ContainerAsContent(), *newLeftContent,
+        *this, *splitContent, *newContent,
         SplitNodeDirection::LeftNodeIsNewOne);
   }
 
@@ -4353,10 +4347,9 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
     return SplitNodeResult(rv);
   }
 
-  MOZ_ASSERT(newLeftContent);
-  MOZ_ASSERT(aStartOfRightNode.GetContainerAsContent());
-  return SplitNodeResult(std::move(newLeftContent),
-                         aStartOfRightNode.ContainerAsContent(),
+  MOZ_ASSERT(newContent);
+  MOZ_ASSERT(splitContent);
+  return SplitNodeResult(std::move(newContent), std::move(splitContent),
                          SplitNodeDirection::LeftNodeIsNewOne);
 }
 
