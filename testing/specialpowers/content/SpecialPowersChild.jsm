@@ -2017,6 +2017,10 @@ class SpecialPowersChild extends JSWindowActorChild {
       grantActiveTab(tabId) {
         sp.sendAsyncMessage("SPExtensionGrantActiveTab", { id, tabId });
       },
+
+      terminateBackground() {
+        return sp.sendQuery("SPExtensionTerminateBackground", { id });
+      },
     };
 
     this.sendAsyncMessage("SPLoadExtension", { ext, id });
