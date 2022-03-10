@@ -1279,7 +1279,8 @@ already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
     const gfx::IntSize& aYSize, uint32_t aYStride,
     const gfx::IntSize& aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
     gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-    gfx::ColorRange aColorRange, TextureFlags aTextureFlags) {
+    gfx::ColorRange aColorRange, gfx::ChromaSubsampling aSubsampling,
+    TextureFlags aTextureFlags) {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }
@@ -1290,7 +1291,8 @@ already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
 
   TextureData* data = BufferTextureData::CreateForYCbCr(
       aAllocator, aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride,
-      aStereoMode, aColorDepth, aYUVColorSpace, aColorRange, aTextureFlags);
+      aStereoMode, aColorDepth, aYUVColorSpace, aColorRange, aSubsampling,
+      aTextureFlags);
   if (!data) {
     return nullptr;
   }
@@ -1703,17 +1705,17 @@ bool UpdateYCbCrTextureClient(TextureClient* aTexture,
       BytesPerPixel(SurfaceFormatForColorDepth(aData.mColorDepth));
   MappedYCbCrTextureData srcData;
   srcData.y.data = aData.mYChannel;
-  srcData.y.size = aData.mYSize;
+  srcData.y.size = aData.YDataSize();
   srcData.y.stride = aData.mYStride;
   srcData.y.skip = aData.mYSkip;
   srcData.y.bytesPerPixel = bytesPerPixel;
   srcData.cb.data = aData.mCbChannel;
-  srcData.cb.size = aData.mCbCrSize;
+  srcData.cb.size = aData.CbCrDataSize();
   srcData.cb.stride = aData.mCbCrStride;
   srcData.cb.skip = aData.mCbSkip;
   srcData.cb.bytesPerPixel = bytesPerPixel;
   srcData.cr.data = aData.mCrChannel;
-  srcData.cr.size = aData.mCbCrSize;
+  srcData.cr.size = aData.CbCrDataSize();
   srcData.cr.stride = aData.mCbCrStride;
   srcData.cr.skip = aData.mCrSkip;
   srcData.cr.bytesPerPixel = bytesPerPixel;

@@ -960,7 +960,6 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
 
   data.mYChannel = static_cast<uint8_t*>(aPicture->data[0]);
   data.mYStride = aPicture->stride[0];
-  data.mYSize = gfx::IntSize(aPicture->p.w, aPicture->p.h);
   data.mYSkip = aPicture->stride[0] - aPicture->p.w;
   data.mCbChannel = static_cast<uint8_t*>(aPicture->data[1]);
   data.mCrChannel = static_cast<uint8_t*>(aPicture->data[2]);
@@ -968,17 +967,14 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
 
   switch (aPicture->p.layout) {
     case DAV1D_PIXEL_LAYOUT_I400:  // Monochrome, so no Cb or Cr channels
-      data.mCbCrSize = gfx::IntSize(0, 0);
       break;
     case DAV1D_PIXEL_LAYOUT_I420:
-      data.mCbCrSize =
-          gfx::IntSize((aPicture->p.w + 1) / 2, (aPicture->p.h + 1) / 2);
+      data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
       break;
     case DAV1D_PIXEL_LAYOUT_I422:
-      data.mCbCrSize = gfx::IntSize((aPicture->p.w + 1) / 2, aPicture->p.h);
+      data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH;
       break;
     case DAV1D_PIXEL_LAYOUT_I444:
-      data.mCbCrSize = gfx::IntSize(aPicture->p.w, aPicture->p.h);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown pixel layout");
@@ -986,9 +982,7 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
 
   data.mCbSkip = aPicture->stride[1] - aPicture->p.w;
   data.mCrSkip = aPicture->stride[1] - aPicture->p.w;
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = data.mYSize;
+  data.mPictureRect = IntRect(0, 0, aPicture->p.w, aPicture->p.h);
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aPicture->p.bpc);
 
@@ -1059,24 +1053,26 @@ AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
 
   data.mYChannel = aImage->planes[AOM_PLANE_Y];
   data.mYStride = aImage->stride[AOM_PLANE_Y];
-  data.mYSize = gfx::IntSize(aom_img_plane_width(aImage, AOM_PLANE_Y),
-                             aom_img_plane_height(aImage, AOM_PLANE_Y));
   data.mYSkip =
       aImage->stride[AOM_PLANE_Y] - aom_img_plane_width(aImage, AOM_PLANE_Y);
   data.mCbChannel = aImage->planes[AOM_PLANE_U];
   data.mCrChannel = aImage->planes[AOM_PLANE_V];
   data.mCbCrStride = aImage->stride[AOM_PLANE_U];
-  data.mCbCrSize = gfx::IntSize(aom_img_plane_width(aImage, AOM_PLANE_U),
-                                aom_img_plane_height(aImage, AOM_PLANE_U));
   data.mCbSkip =
       aImage->stride[AOM_PLANE_U] - aom_img_plane_width(aImage, AOM_PLANE_U);
   data.mCrSkip =
       aImage->stride[AOM_PLANE_V] - aom_img_plane_width(aImage, AOM_PLANE_V);
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = gfx::IntSize(aImage->d_w, aImage->d_h);
+  data.mPictureRect = gfx::IntRect(0, 0, aImage->d_w, aImage->d_h);
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aImage->bit_depth);
+
+  if (aImage->x_chroma_shift == 1 && aImage->y_chroma_shift == 1) {
+    data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+  } else if (aImage->x_chroma_shift == 1 && aImage->y_chroma_shift == 0) {
+    data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH;
+  } else if (aImage->x_chroma_shift != 0 || aImage->y_chroma_shift != 0) {
+    MOZ_ASSERT_UNREACHABLE("unexpected chroma shifts");
+  }
 
   MOZ_ASSERT(aImage->bit_depth == BitDepthForColorDepth(data.mColorDepth));
 
@@ -1382,24 +1378,25 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
            static_cast<uint8_t>(decodedData.mColorRange)));
 
   // Technically it's valid but we don't handle it now (Bug 1682318).
-  if (decodedData.mAlpha && decodedData.mAlpha->mSize != decodedData.mYSize) {
+  if (decodedData.mAlpha &&
+      decodedData.mAlpha->mSize != decodedData.YDataSize()) {
     return AsVariant(NonDecoderResult::AlphaYSizeMismatch);
   }
 
   if (parsedImageSize.isNothing()) {
     MOZ_LOG(sAVIFLog, LogLevel::Error,
             ("[this=%p] Using decoded image size: %d x %d", this,
-             decodedData.mPicSize.width, decodedData.mPicSize.height));
-    PostSize(decodedData.mPicSize.width, decodedData.mPicSize.height,
+             decodedData.mPictureRect.width, decodedData.mPictureRect.height));
+    PostSize(decodedData.mPictureRect.width, decodedData.mPictureRect.height,
              orientation);
     AccumulateCategorical(LABELS_AVIF_ISPE::absent);
-  } else if (decodedData.mPicSize.width != parsedImageSize->width ||
-             decodedData.mPicSize.height != parsedImageSize->height) {
+  } else if (decodedData.mPictureRect.width != parsedImageSize->width ||
+             decodedData.mPictureRect.height != parsedImageSize->height) {
     MOZ_LOG(sAVIFLog, LogLevel::Error,
             ("[this=%p] Metadata image size doesn't match decoded image size: "
              "(%d x %d) != (%d x %d)",
              this, parsedImageSize->width, parsedImageSize->height,
-             decodedData.mPicSize.width, decodedData.mPicSize.height));
+             decodedData.mPictureRect.width, decodedData.mPictureRect.height));
     AccumulateCategorical(LABELS_AVIF_ISPE::bitstream_mismatch);
     return AsVariant(NonDecoderResult::MetadataImageSizeMismatch);
   } else {
@@ -1437,7 +1434,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     AccumulateCategorical(LABELS_AVIF_ALPHA::absent);
   }
 
-  IntSize rgbSize = decodedData.mPicSize;
+  IntSize rgbSize = decodedData.mPictureRect.Size();
   MOZ_ASSERT(
       rgbSize ==
       GetImageMetadata().GetOrientation().ToUnoriented(Size()).ToUnknownSize());

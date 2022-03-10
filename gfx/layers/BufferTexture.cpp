@@ -143,7 +143,8 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
     const gfx::IntSize& aYSize, uint32_t aYStride,
     const gfx::IntSize& aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
     gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-    gfx::ColorRange aColorRange, TextureFlags aTextureFlags) {
+    gfx::ColorRange aColorRange, gfx::ChromaSubsampling aSubsampling,
+    TextureFlags aTextureFlags) {
   uint32_t bufSize = ImageDataSerializer::ComputeYCbCrBufferSize(
       aYSize, aYStride, aCbCrSize, aCbCrStride);
   if (bufSize == 0) {
@@ -157,9 +158,10 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
                                            aCbCrSize.height, yOffset, cbOffset,
                                            crOffset);
 
-  YCbCrDescriptor descriptor = YCbCrDescriptor(
-      aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride, yOffset, cbOffset,
-      crOffset, aStereoMode, aColorDepth, aYUVColorSpace, aColorRange);
+  YCbCrDescriptor descriptor =
+      YCbCrDescriptor(aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride,
+                      yOffset, cbOffset, crOffset, aStereoMode, aColorDepth,
+                      aYUVColorSpace, aColorRange, aSubsampling);
 
   return CreateInternal(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr, descriptor,
@@ -216,6 +218,11 @@ Maybe<gfx::ColorDepth> BufferTextureData::GetColorDepth() const {
 
 Maybe<StereoMode> BufferTextureData::GetStereoMode() const {
   return ImageDataSerializer::StereoModeFromBufferDescriptor(mDescriptor);
+}
+
+Maybe<gfx::ChromaSubsampling> BufferTextureData::GetChromaSubsampling() const {
+  return ImageDataSerializer::ChromaSubsamplingFromBufferDescriptor(
+      mDescriptor);
 }
 
 gfx::SurfaceFormat BufferTextureData::GetFormat() const {

@@ -53,46 +53,42 @@ static ImageBitmapFormat GetImageBitmapFormatFromPlanarYCbCrData(
     layers::PlanarYCbCrData const* aData) {
   MOZ_ASSERT(aData);
 
+  auto ySize = aData->YDataSize();
+  auto cbcrSize = aData->CbCrDataSize();
   media::Interval<uintptr_t> YInterval(
       uintptr_t(aData->mYChannel),
-      uintptr_t(aData->mYChannel) + aData->mYSize.height * aData->mYStride),
-      CbInterval(uintptr_t(aData->mCbChannel),
-                 uintptr_t(aData->mCbChannel) +
-                     aData->mCbCrSize.height * aData->mCbCrStride),
-      CrInterval(uintptr_t(aData->mCrChannel),
-                 uintptr_t(aData->mCrChannel) +
-                     aData->mCbCrSize.height * aData->mCbCrStride);
+      uintptr_t(aData->mYChannel) + ySize.height * aData->mYStride),
+      CbInterval(
+          uintptr_t(aData->mCbChannel),
+          uintptr_t(aData->mCbChannel) + cbcrSize.height * aData->mCbCrStride),
+      CrInterval(
+          uintptr_t(aData->mCrChannel),
+          uintptr_t(aData->mCrChannel) + cbcrSize.height * aData->mCbCrStride);
   if (aData->mYSkip == 0 && aData->mCbSkip == 0 &&
       aData->mCrSkip == 0) {  // Possibly three planes.
     if (!YInterval.Intersects(CbInterval) &&
         !CbInterval.Intersects(CrInterval)) {  // Three planes.
-      if (aData->mYSize.height == aData->mCbCrSize.height) {
-        if (aData->mYSize.width == aData->mCbCrSize.width) {
+      switch (aData->mChromaSubsampling) {
+        case ChromaSubsampling::FULL:
           return ImageBitmapFormat::YUV444P;
-        }
-        if (((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
+        case ChromaSubsampling::HALF_WIDTH:
           return ImageBitmapFormat::YUV422P;
-        }
-      } else if (((aData->mYSize.height + 1) / 2) == aData->mCbCrSize.height) {
-        if (((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
+        case ChromaSubsampling::HALF_WIDTH_AND_HEIGHT:
           return ImageBitmapFormat::YUV420P;
-        }
+        default:
+          break;
       }
     }
-  } else if (aData->mYSkip == 0 && aData->mCbSkip == 1 &&
-             aData->mCrSkip == 1) {  // Possibly two planes.
+  } else if (aData->mYSkip == 0 && aData->mCbSkip == 1 && aData->mCrSkip == 1 &&
+             aData->mChromaSubsampling ==
+                 ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {  // Possibly two
+                                                              // planes.
     if (!YInterval.Intersects(CbInterval) &&
         aData->mCbChannel == aData->mCrChannel - 1) {  // Two planes.
-      if (((aData->mYSize.height + 1) / 2) == aData->mCbCrSize.height &&
-          ((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
-        return ImageBitmapFormat::YUV420SP_NV12;  // Y-Cb-Cr
-      }
+      return ImageBitmapFormat::YUV420SP_NV12;         // Y-Cb-Cr
     } else if (!YInterval.Intersects(CrInterval) &&
                aData->mCrChannel == aData->mCbChannel - 1) {  // Two planes.
-      if (((aData->mYSize.height + 1) / 2) == aData->mCbCrSize.height &&
-          ((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
-        return ImageBitmapFormat::YUV420SP_NV21;  // Y-Cr-Cb
-      }
+      return ImageBitmapFormat::YUV420SP_NV21;                // Y-Cr-Cb
     }
   }
 
