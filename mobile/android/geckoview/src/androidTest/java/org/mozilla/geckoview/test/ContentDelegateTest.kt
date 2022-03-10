@@ -369,6 +369,16 @@ class ContentDelegateTest : BaseSessionTest() {
                 // PointerIcon has no compare method.
             }
         })
+
+        val delegate = mainSession.contentDelegate
+        mainSession.contentDelegate = null
+        mainSession.evaluateJS("document.body.style.cursor = 'text'")
+        for (i in 51..70) {
+            mainSession.synthesizeMouseMove(i, 50)
+            // No wait function since we remove content delegate.
+            mainSession.waitForJS("new Promise(resolve => window.setTimeout(resolve, 100))")
+        }
+        mainSession.contentDelegate = delegate
     }
 
     /**

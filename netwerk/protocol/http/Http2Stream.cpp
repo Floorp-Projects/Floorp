@@ -19,7 +19,7 @@
 #include "Http2Session.h"
 #include "Http2Stream.h"
 #include "Http2Push.h"
-#include "TunnelUtils.h"
+#include "Http2ConnectTransaction.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Telemetry.h"
@@ -340,8 +340,8 @@ nsresult Http2Stream::WriteSegments(nsAHttpSegmentWriter* writer,
     // established that can be meaningfully giving this signal
     bool doBuffer = true;
     if (mIsTunnel) {
-      RefPtr<SpdyConnectTransaction> qiTrans(
-          mTransaction->QuerySpdyConnectTransaction());
+      RefPtr<Http2ConnectTransaction> qiTrans(
+          mTransaction->QueryHttp2ConnectTransaction());
       if (qiTrans) {
         doBuffer = qiTrans->ConnectedReadyForInput();
       }
@@ -577,8 +577,8 @@ nsresult Http2Stream::GenerateOpen() {
 
   nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
   if (head->IsConnect()) {
-    SpdyConnectTransaction* scTrans =
-        mTransaction->QuerySpdyConnectTransaction();
+    Http2ConnectTransaction* scTrans =
+        mTransaction->QueryHttp2ConnectTransaction();
     MOZ_ASSERT(scTrans);
     if (scTrans->IsWebsocket()) {
       mIsWebsocket = true;
@@ -1644,8 +1644,8 @@ void Http2Stream::ClearTransactionsBlockedOnTunnel() {
 }
 
 void Http2Stream::MapStreamToPlainText() {
-  RefPtr<SpdyConnectTransaction> qiTrans(
-      mTransaction->QuerySpdyConnectTransaction());
+  RefPtr<Http2ConnectTransaction> qiTrans(
+      mTransaction->QueryHttp2ConnectTransaction());
   MOZ_ASSERT(qiTrans);
   mPlainTextTunnel = true;
   qiTrans->ForcePlainText();
@@ -1653,8 +1653,8 @@ void Http2Stream::MapStreamToPlainText() {
 
 bool Http2Stream::MapStreamToHttpConnection(const nsACString& aFlat407Headers,
                                             int32_t aHttpResponseCode) {
-  RefPtr<SpdyConnectTransaction> qiTrans(
-      mTransaction->QuerySpdyConnectTransaction());
+  RefPtr<Http2ConnectTransaction> qiTrans(
+      mTransaction->QueryHttp2ConnectTransaction());
   MOZ_ASSERT(qiTrans);
 
   return qiTrans->MapStreamToHttpConnection(

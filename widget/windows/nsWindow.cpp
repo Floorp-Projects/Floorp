@@ -158,6 +158,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsNativeAppSupportWin.h"
 
 #include "nsIGfxInfo.h"
@@ -619,6 +620,59 @@ class InitializeVirtualDesktopManagerTask : public Task {
   }
 };
 
+static BOOL GetMouseVanishSystemPref(bool aShouldUpdate) {
+  static bool sInitialized = false;
+  static BOOL sMouseVanishSystemPref = FALSE;
+
+  if (!sInitialized || aShouldUpdate) {
+    BOOL ok = ::SystemParametersInfo(SPI_GETMOUSEVANISH, 0,
+                                     &sMouseVanishSystemPref, 0);
+    if (!ok) {
+      // Getting system pref failed so just use user pref.
+      sMouseVanishSystemPref =
+          StaticPrefs::widget_windows_hide_cursor_when_typing();
+    }
+    sInitialized = true;
+  }
+
+  return sMouseVanishSystemPref;
+}
+
+static bool IsMouseVanishKey(WPARAM aVirtKey) {
+  switch (aVirtKey) {
+    case VK_SHIFT:
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+    case VK_CONTROL:
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+    case VK_MENU:
+    case VK_LMENU:
+    case VK_RMENU:
+    case VK_LWIN:
+    case VK_RWIN:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Hide/unhide the cursor if the correct Windows and Firefox settings are set.
+ */
+static void MaybeHideCursor(bool aShouldHide) {
+  static bool sIsHidden = false;
+  bool shouldHide = aShouldHide &&
+                    StaticPrefs::widget_windows_hide_cursor_when_typing() &&
+                    GetMouseVanishSystemPref(false);
+
+  if (shouldHide != sIsHidden) {
+    [[maybe_unused]] int count = ::ShowCursor(aShouldHide ? FALSE : TRUE);
+    MOZ_ASSERT(count == (aShouldHide ? -1 : 0));
+    sIsHidden = shouldHide;
+  }
+}
+
 }  // namespace mozilla
 
 /**************************************************************
@@ -641,6 +695,7 @@ class InitializeVirtualDesktopManagerTask : public Task {
 nsWindow::nsWindow(bool aIsChildWindow)
     : nsBaseWidget(eBorderStyle_default),
       mBrush(::CreateSolidBrush(NSRGB_2_COLOREF(::GetSysColor(COLOR_BTNFACE)))),
+      mFrameState(std::in_place, this),
       mIsChildWindow(aIsChildWindow),
       mLastPaintEndTime(TimeStamp::Now()),
       mCachedHitTestTime(TimeStamp::Now()),
@@ -943,8 +998,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // If we successfully consumed the pre-XUL skeleton UI, just update
       // our internal state to match what is currently being displayed.
       mIsVisible = true;
-      mSizeMode = WasPreXULSkeletonUIMaximized() ? nsSizeMode_Maximized
-                                                 : nsSizeMode_Normal;
+      mFrameState->ConsumePreXULSkeletonState(WasPreXULSkeletonUIMaximized());
 
       // These match the margins set in browser-tabsintitlebar.js with
       // default prefs on Windows. Bug 1673092 tracks lining this up with
@@ -1620,7 +1674,7 @@ void nsWindow::Show(bool bState) {
         // cursor.
         SetCursor(Cursor{eCursor_standard});
 
-        switch (mSizeMode) {
+        switch (mFrameState->GetSizeMode()) {
           case nsSizeMode_Fullscreen:
             ::ShowWindow(mWnd, SW_SHOW);
             break;
@@ -2271,42 +2325,6 @@ static UINT GetCurrentShowCmd(HWND aWnd) {
   return pl.showCmd;
 }
 
-void nsWindow::SetSizeModeInternal(nsSizeMode aMode) {
-  // save the requested state
-  mLastSizeMode = mSizeMode;
-  nsBaseWidget::SetSizeMode(aMode);
-  if (mIsVisible) {
-    switch (aMode) {
-      case nsSizeMode_Fullscreen:
-        ::ShowWindow(mWnd, SW_SHOW);
-        break;
-
-      case nsSizeMode_Maximized:
-        ::ShowWindow(mWnd, SW_MAXIMIZE);
-        break;
-
-      case nsSizeMode_Minimized:
-        ::ShowWindow(mWnd, SW_MINIMIZE);
-        break;
-
-      default:
-        // Don't call ::ShowWindow if we're trying to "restore" a window that is
-        // already in a normal state.  Prevents a bug where snapping to one side
-        // of the screen and then minimizing would cause Windows to forget our
-        // window's correct restored position/size.
-        if (GetCurrentShowCmd(mWnd) != SW_SHOWNORMAL) {
-          ::ShowWindow(mWnd, SW_RESTORE);
-        }
-    }
-  }
-
-  // we activate here to ensure that the right child window is focused
-  if (mIsVisible &&
-      (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
-    DispatchFocusToTopLevelWindow(true);
-  }
-}
-
 // Maximize, minimize or restore the window.
 void nsWindow::SetSizeMode(nsSizeMode aMode) {
   // If we are still displaying a maximized pre-XUL skeleton UI, ignore the
@@ -2317,24 +2335,10 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
-  // Let's not try and do anything if we're already in that state.
-  // (This is needed to prevent problems when calling window.minimize(), which
-  // calls us directly, and then the OS triggers another call to us.)
-  if (aMode == mSizeMode) return;
-
-  if (aMode == nsSizeMode_Fullscreen) {
-    MakeFullScreen(true);
-  } else if ((mSizeMode == nsSizeMode_Fullscreen) &&
-             (aMode == nsSizeMode_Normal)) {
-    // If we are in fullscreen mode, minimize should work like normal and
-    // return us to fullscreen mode when unminimized. Maximize isn't really
-    // available and won't do anything. "Restore" should do the same thing as
-    // requesting to end fullscreen.
-    MakeFullScreen(false);
-  } else {
-    SetSizeModeInternal(aMode);
-  }
+  mFrameState->EnsureSizeMode(aMode);
 }
+
+nsSizeMode nsWindow::SizeMode() { return mFrameState->GetSizeMode(); }
 
 void DoGetWorkspaceID(HWND aWnd, nsAString* aWorkspaceID) {
   RefPtr<IVirtualDesktopManager> desktopManager = gVirtualDesktopManager;
@@ -2456,7 +2460,7 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
 
   screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
                            getter_AddRefs(screen));
-  if (mSizeMode != nsSizeMode_Fullscreen) {
+  if (mFrameState->GetSizeMode() != nsSizeMode_Fullscreen) {
     // For normalized windows, use the desktop work area.
     nsresult rv = screen->GetAvailRectDisplayPix(&left, &top, &width, &height);
     if (NS_FAILED(rv)) {
@@ -2817,7 +2821,7 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
   if (!mCustomNonClient) return false;
 
   if (aSizeMode == -1) {
-    aSizeMode = mSizeMode;
+    aSizeMode = mFrameState->GetSizeMode();
   }
 
   bool hasCaption = (mBorderStyle & (eBorderStyle_all | eBorderStyle_title |
@@ -3665,27 +3669,13 @@ void nsWindow::CleanupFullscreenTransition() {
   mTransitionWnd = nullptr;
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
-  if (mFullscreenMode == aFullScreen) {
-    return NS_OK;
-  }
-
+void nsWindow::OnFullscreenWillChange(bool aFullScreen) {
   if (mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
+}
 
-  mFullscreenMode = aFullScreen;
-  if (aFullScreen) {
-    mOldSizeMode = mSizeMode;
-    SetSizeModeInternal(nsSizeMode_Fullscreen);
-  } else {
-    if (mSizeMode != mOldSizeMode) {
-      SetSizeModeInternal(mOldSizeMode);
-    }
-
-    MOZ_ASSERT(mSizeMode == mOldSizeMode);
-  }
-
+void nsWindow::OnFullscreenChanged(bool aFullScreen) {
   // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
   nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
 
@@ -3696,16 +3686,15 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
 
   // If we are going fullscreen, the window size continues to change
   // and the window will be reflow again then.
-  UpdateNonClientMargins(mSizeMode, /* Reflow */ !aFullScreen);
+  UpdateNonClientMargins(mFrameState->GetSizeMode(), /* Reflow */ !aFullScreen);
 
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
 
-  if (mIsVisible && !aFullScreen && mSizeMode == nsSizeMode_Normal) {
-    MOZ_ASSERT(mSizeMode == mOldSizeMode);
-
+  if (mIsVisible && !aFullScreen &&
+      mFrameState->GetSizeMode() == nsSizeMode_Normal) {
     // Ensure the window exiting fullscreen get activated. Window
     // activation might be bypassed in SetSizeMode.
     DispatchFocusToTopLevelWindow(true);
@@ -3716,12 +3705,15 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
     taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
   }
 
-  OnSizeModeChange(mSizeMode);
+  OnSizeModeChange(mFrameState->GetSizeMode());
 
   if (mWidgetListener) {
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
+}
 
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
+  mFrameState->EnsureFullscreenMode(aFullScreen);
   return NS_OK;
 }
 
@@ -4102,7 +4094,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     WinCompositorWidgetInitData initData(
         reinterpret_cast<uintptr_t>(mWnd),
         reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
-        mTransparencyMode, mSizeMode);
+        mTransparencyMode, mFrameState->GetSizeMode());
     // If we're not using the compositor, the options don't actually matter.
     CompositorOptions options(false, false);
     mBasicLayersSurface =
@@ -5223,6 +5215,12 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           }
         }
       }
+
+      // SPI_GETMOUSEVANISH sends WM_SETTINGCHANGE when changed but does
+      // not include identifiers in the parameters.  WM_SETTINGCHANGE docs
+      // recommend updating all cached settings when this message is received
+      // anyway.
+      GetMouseVanishSystemPref(true);
     } break;
 
     case WM_DEVICECHANGE: {
@@ -5355,7 +5353,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       // let the dwm handle nc painting on glass
       // Never allow native painting if we are on fullscreen
-      if (mSizeMode != nsSizeMode_Fullscreen &&
+      if (mFrameState->GetSizeMode() != nsSizeMode_Fullscreen &&
           gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled())
         break;
 
@@ -5457,6 +5455,10 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN: {
+      if (IsMouseVanishKey(wParam)) {
+        MaybeHideCursor(true);
+      }
+
       MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
       result = ProcessKeyDownMessage(nativeMsg, nullptr);
       DispatchPendingEvents();
@@ -5472,6 +5474,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MOUSEMOVE: {
+      MaybeHideCursor(false);
+
       LPARAM lParamScreen = lParamToScreen(lParam);
       mSimulatedClientArea = IsSimulatedClientArea(GET_X_LPARAM(lParamScreen),
                                                    GET_Y_LPARAM(lParamScreen));
@@ -5508,6 +5512,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_NCMOUSEMOVE: {
+      MaybeHideCursor(false);
+
       LPARAM lParamClient = lParamToClient(lParam);
       if (IsSimulatedClientArea(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
         if (!sIsInMouseCapture) {
@@ -5534,6 +5540,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_LBUTTONDOWN: {
+      MaybeHideCursor(false);
+
       result =
           DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                              MouseButton::ePrimary, MOUSE_INPUT_SOURCE(),
@@ -5642,8 +5650,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (lParam != -1 && !result && mCustomNonClient &&
           mDraggableRegion.Contains(GET_X_LPARAM(pos), GET_Y_LPARAM(pos))) {
         // Blank area hit, throw up the system menu.
-        DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, GET_X_LPARAM(lParam),
-                          GET_Y_LPARAM(lParam));
+        DisplaySystemMenu(mWnd, mFrameState->GetSizeMode(), mIsRTL,
+                          GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         result = true;
       }
     } break;
@@ -5652,6 +5660,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_POINTERDOWN:
     case WM_POINTERUP:
     case WM_POINTERUPDATE:
+      MaybeHideCursor(false);
       result = OnPointerEvents(msg, wParam, lParam);
       if (result) {
         DispatchPendingEvents();
@@ -5670,12 +5679,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_LBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                                   MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDOWN:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5688,12 +5699,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONDOWN:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDown, 0, lParamToClient(lParam), false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5706,6 +5719,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCMBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDoubleClick, 0, lParamToClient(lParam),
                              false, MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
@@ -5713,6 +5727,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_RBUTTONDOWN:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE(),
@@ -5729,6 +5744,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_RBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDoubleClick, wParam, lParam, false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE());
@@ -5736,6 +5752,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCRBUTTONDOWN:
+      MaybeHideCursor(false);
       result =
           DispatchMouseEvent(eMouseDown, 0, lParamToClient(lParam), false,
                              MouseButton::eSecondary, MOUSE_INPUT_SOURCE());
@@ -5750,6 +5767,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCRBUTTONDBLCLK:
+      MaybeHideCursor(false);
       result = DispatchMouseEvent(eMouseDoubleClick, 0, lParamToClient(lParam),
                                   false, MouseButton::eSecondary,
                                   MOUSE_INPUT_SOURCE());
@@ -5766,6 +5784,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_XBUTTONUP:
     case WM_NCXBUTTONDOWN:
     case WM_NCXBUTTONUP:
+      MaybeHideCursor(false);
+
       *aRetValue = TRUE;
       switch (GET_XBUTTON_WPARAM(wParam)) {
         case XBUTTON1:
@@ -5939,10 +5959,13 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     // events are fired. Instead, set either the sJustGotActivate or
     // gJustGotDeactivate flags and activate/deactivate once the focus
     // events arrive.
-    case WM_ACTIVATE:
-      if (mWidgetListener) {
-        int32_t fActive = LOWORD(wParam);
+    case WM_ACTIVATE: {
+      int32_t fActive = LOWORD(wParam);
+      if (!fActive) {
+        MaybeHideCursor(false);
+      }
 
+      if (mWidgetListener) {
         if (WA_INACTIVE == fActive) {
           // when minimizing a window, the deactivation and focus events will
           // be fired in the reverse order. Instead, just deactivate right away.
@@ -5973,7 +5996,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
       }
-      break;
+    } break;
 
     case WM_MOUSEACTIVATE:
       // A popup with a parent owner should not be activated when clicked but
@@ -6076,18 +6099,19 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SYSCOMMAND: {
       WPARAM filteredWParam = (wParam & 0xFFF0);
-      if (mSizeMode == nsSizeMode_Fullscreen && filteredWParam == SC_RESTORE &&
+      if (mFrameState->GetSizeMode() == nsSizeMode_Fullscreen &&
+          filteredWParam == SC_RESTORE &&
           GetCurrentShowCmd(mWnd) != SW_SHOWMINIMIZED) {
-        MakeFullScreen(false);
+        mFrameState->EnsureFullscreenMode(false);
         result = true;
       }
 
       // Handle the system menu manually when we're in full screen mode
       // so we can set the appropriate options.
       if (filteredWParam == SC_KEYMENU && lParam == VK_SPACE &&
-          mSizeMode == nsSizeMode_Fullscreen) {
-        DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, MOZ_SYSCONTEXT_X_POS,
-                          MOZ_SYSCONTEXT_Y_POS);
+          mFrameState->GetSizeMode() == nsSizeMode_Fullscreen) {
+        DisplaySystemMenu(mWnd, mFrameState->GetSizeMode(), mIsRTL,
+                          MOZ_SYSCONTEXT_X_POS, MOZ_SYSCONTEXT_Y_POS);
         result = true;
       }
     } break;
@@ -6322,7 +6346,8 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg) {
  **************************************************************/
 
 int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
-  if (mSizeMode == nsSizeMode_Minimized || mSizeMode == nsSizeMode_Fullscreen) {
+  if (mFrameState->GetSizeMode() == nsSizeMode_Minimized ||
+      mFrameState->GetSizeMode() == nsSizeMode_Fullscreen) {
     return HTCLIENT;
   }
 
@@ -6347,7 +6372,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
                                       eBorderStyle_default)) > 0
                          ? true
                          : false;
-  if (mSizeMode == nsSizeMode_Maximized) isResizable = false;
+  if (mFrameState->GetSizeMode() == nsSizeMode_Maximized) isResizable = false;
 
   // Ensure being accessible to borders of window.  Even if contents are in
   // this area, the area must behave as border.
@@ -6360,11 +6385,12 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
       std::max(mHorResizeMargin - mNonClientOffset.left,
                kResizableBorderMinSize));
 
-  bool allowContentOverride = mSizeMode == nsSizeMode_Maximized ||
-                              (mx >= winRect.left + nonClientSize.left &&
-                               mx <= winRect.right - nonClientSize.right &&
-                               my >= winRect.top + nonClientSize.top &&
-                               my <= winRect.bottom - nonClientSize.bottom);
+  bool allowContentOverride =
+      mFrameState->GetSizeMode() == nsSizeMode_Maximized ||
+      (mx >= winRect.left + nonClientSize.left &&
+       mx <= winRect.right - nonClientSize.right &&
+       my >= winRect.top + nonClientSize.top &&
+       my <= winRect.bottom - nonClientSize.bottom);
 
   // The border size.  If there is no content under mouse cursor, the border
   // size should be larger than the values in system settings.  Otherwise,
@@ -6655,20 +6681,31 @@ nsresult nsWindow::SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
   return NS_OK;
 }
 
-/**************************************************************
- *
- * SECTION: OnXXX message handlers
- *
- * For message handlers that need to be broken out or
- * implemented in specific platform code.
- *
- **************************************************************/
-
-void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
-  if (wp == nullptr) return;
-
+static void MaybeLogSizeMode(nsSizeMode aMode) {
 #ifdef WINSTATE_DEBUG_OUTPUT
-  if (mWnd == WinUtils::GetTopLevelHWND(mWnd)) {
+  switch (aMode) {
+    case nsSizeMode_Normal:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Normal\n"));
+      break;
+    case nsSizeMode_Minimized:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Minimized\n"));
+      break;
+    case nsSizeMode_Maximized:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Maximized\n"));
+      break;
+    default:
+      MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** SizeMode: ??????\n"));
+      break;
+  }
+#endif
+}
+
+static void MaybeLogPosChanged(HWND aWnd, WINDOWPOS* wp) {
+#ifdef WINSTATE_DEBUG_OUTPUT
+  if (aWnd == WinUtils::GetTopLevelHWND(aWnd)) {
     MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** OnWindowPosChanged: [  top] "));
   } else {
     MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** OnWindowPosChanged: [child] "));
@@ -6694,77 +6731,45 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
   }
   MOZ_LOG(gWindowsLog, LogLevel::Info, ("\n"));
 #endif
+}
+
+/**************************************************************
+ *
+ * SECTION: OnXXX message handlers
+ *
+ * For message handlers that need to be broken out or
+ * implemented in specific platform code.
+ *
+ **************************************************************/
+
+void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
+  if (wp == nullptr) return;
+
+  MaybeLogPosChanged(mWnd, wp);
 
   // Handle window size mode changes
-  if (wp->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+  if (wp->flags & SWP_FRAMECHANGED) {
     // Bug 566135 - Windows theme code calls show window on SW_SHOWMINIMIZED
     // windows when fullscreen games disable desktop composition. If we're
     // minimized and not being activated, ignore the event and let windows
     // handle it.
-    if (mSizeMode == nsSizeMode_Minimized && (wp->flags & SWP_NOACTIVATE))
+    if (mFrameState->GetSizeMode() == nsSizeMode_Minimized &&
+        (wp->flags & SWP_NOACTIVATE)) {
       return;
-
-    WINDOWPLACEMENT pl;
-    pl.length = sizeof(pl);
-    ::GetWindowPlacement(mWnd, &pl);
-
-    nsSizeMode previousSizeMode = mSizeMode;
-
-    // Windows has just changed the size mode of this window. The call to
-    // SizeModeChanged will trigger a call into SetSizeMode where we will
-    // set the min/max window state again or for nsSizeMode_Normal, call
-    // SetWindow with a parameter of SW_RESTORE. There's no need however as
-    // this window's mode has already changed. Updating mSizeMode here
-    // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
-    // to window docking. (bug 489258)
-    if (pl.showCmd == SW_SHOWMAXIMIZED)
-      mSizeMode =
-          (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
-    else if (pl.showCmd == SW_SHOWMINIMIZED)
-      mSizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      mSizeMode = nsSizeMode_Fullscreen;
-    else
-      mSizeMode = nsSizeMode_Normal;
-
-#ifdef WINSTATE_DEBUG_OUTPUT
-    switch (mSizeMode) {
-      case nsSizeMode_Normal:
-        MOZ_LOG(gWindowsLog, LogLevel::Info,
-                ("*** mSizeMode: nsSizeMode_Normal\n"));
-        break;
-      case nsSizeMode_Minimized:
-        MOZ_LOG(gWindowsLog, LogLevel::Info,
-                ("*** mSizeMode: nsSizeMode_Minimized\n"));
-        break;
-      case nsSizeMode_Maximized:
-        MOZ_LOG(gWindowsLog, LogLevel::Info,
-                ("*** mSizeMode: nsSizeMode_Maximized\n"));
-        break;
-      default:
-        MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** mSizeMode: ??????\n"));
-        break;
     }
-#endif
 
-    if (mSizeMode != previousSizeMode) OnSizeModeChange(mSizeMode);
+    mFrameState->OnFrameChanged();
 
-    // If window was restored, window activation was bypassed during the
-    // SetSizeMode call originating from OnWindowPosChanging to avoid saving
-    // pre-restore attributes. Force activation now to get correct attributes.
-    if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal)
-      DispatchFocusToTopLevelWindow(true);
-
-    mLastSizeMode = mSizeMode;
-
-    // Skip window size change events below on minimization.
-    if (mSizeMode == nsSizeMode_Minimized) return;
+    if (mFrameState->GetSizeMode() == nsSizeMode_Minimized) {
+      // Skip window size change events below on minimization.
+      return;
+    }
   }
 
   // Notify visibility change when window is activated.
   if (!(wp->flags & SWP_NOACTIVATE) && NeedsToTrackWindowOcclusionState()) {
     WinWindowOcclusionTracker::Get()->OnWindowVisibilityChanged(
-        this, mSizeMode != nsSizeMode_Minimized);
+        this, mFrameState->GetSizeMode() != nsSizeMode_Minimized);
   }
 
   // Handle window position changes
@@ -6840,7 +6845,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
     }
 
     // If a maximized window is resized, recalculate the non-client margins.
-    if (mSizeMode == nsSizeMode_Maximized) {
+    if (mFrameState->GetSizeMode() == nsSizeMode_Maximized) {
       if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
         // gecko resize event already sent by UpdateNonClientMargins.
         return;
@@ -6875,32 +6880,15 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
   // margins to normal mode.
-  if ((info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) &&
-      mSizeMode != nsSizeMode_Fullscreen) {
-    WINDOWPLACEMENT pl;
-    pl.length = sizeof(pl);
-    ::GetWindowPlacement(mWnd, &pl);
-    nsSizeMode sizeMode;
-    if (pl.showCmd == SW_SHOWMAXIMIZED)
-      sizeMode =
-          (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
-    else if (pl.showCmd == SW_SHOWMINIMIZED)
-      sizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      sizeMode = nsSizeMode_Fullscreen;
-    else
-      sizeMode = nsSizeMode_Normal;
-
-    OnSizeModeChange(sizeMode);
-
-    UpdateNonClientMargins(sizeMode, false);
+  if (info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) {
+    mFrameState->OnFrameChanging();
   }
 
   // Force fullscreen. This works around a bug in Windows 10 1809 where
   // using fullscreen when a window is "snapped" causes a spurious resize
   // smaller than the full screen, see bug 1482920.
-  if (mSizeMode == nsSizeMode_Fullscreen && !(info->flags & SWP_NOMOVE) &&
-      !(info->flags & SWP_NOSIZE)) {
+  if (mFrameState->GetSizeMode() == nsSizeMode_Fullscreen &&
+      !(info->flags & SWP_NOMOVE) && !(info->flags & SWP_NOSIZE)) {
     nsCOMPtr<nsIScreenManager> screenmgr =
         do_GetService(sScreenManagerContractID);
     if (screenmgr) {
@@ -7488,7 +7476,8 @@ void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
   }
   mDefaultScale = -1.0;  // force recomputation of scale factor
 
-  if (mResizeState != RESIZING && mSizeMode == nsSizeMode_Normal) {
+  if (mResizeState != RESIZING &&
+      mFrameState->GetSizeMode() == nsSizeMode_Normal) {
     // Limit the position (if not in the middle of a drag-move) & size,
     // if it would overflow the destination screen
     nsCOMPtr<nsIScreenManager> sm = do_GetService(sScreenManagerContractID);
@@ -7641,9 +7630,9 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode) {
 
   if (parent->mIsVisible) {
     style |= WS_VISIBLE;
-    if (parent->mSizeMode == nsSizeMode_Maximized) {
+    if (parent->mFrameState->GetSizeMode() == nsSizeMode_Maximized) {
       style |= WS_MAXIMIZE;
-    } else if (parent->mSizeMode == nsSizeMode_Minimized) {
+    } else if (parent->mFrameState->GetSizeMode() == nsSizeMode_Minimized) {
       style |= WS_MINIMIZE;
     }
   }
@@ -8680,7 +8669,7 @@ void nsWindow::GetCompositorWidgetInitData(
   *aInitData = WinCompositorWidgetInitData(
       reinterpret_cast<uintptr_t>(mWnd),
       reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
-      mTransparencyMode, mSizeMode);
+      mTransparencyMode, mFrameState->GetSizeMode());
 }
 
 bool nsWindow::SynchronouslyRepaintOnResize() {
@@ -9029,4 +9018,176 @@ bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
   bool consumed = nativeKey.HandleAppCommandMessage();
   *aRetValue = consumed ? 1 : 0;
   return consumed;
+}
+
+static nsSizeMode GetSizeModeForWindowFrame(HWND aWnd, bool aFullscreenMode) {
+  WINDOWPLACEMENT pl;
+  pl.length = sizeof(pl);
+  ::GetWindowPlacement(aWnd, &pl);
+
+  if (pl.showCmd == SW_SHOWMINIMIZED) {
+    return nsSizeMode_Minimized;
+  } else if (aFullscreenMode) {
+    return nsSizeMode_Fullscreen;
+  } else if (pl.showCmd == SW_SHOWMAXIMIZED) {
+    return nsSizeMode_Maximized;
+  } else {
+    return nsSizeMode_Normal;
+  }
+}
+
+static void ShowWindowWithMode(HWND aWnd, nsSizeMode aMode) {
+  // This will likely cause a callback to
+  // nsWindow::FrameState::{OnFrameChanging() and OnFrameChanged()}
+  switch (aMode) {
+    case nsSizeMode_Fullscreen:
+      ::ShowWindow(aWnd, SW_SHOW);
+      break;
+
+    case nsSizeMode_Maximized:
+      ::ShowWindow(aWnd, SW_MAXIMIZE);
+      break;
+
+    case nsSizeMode_Minimized:
+      ::ShowWindow(aWnd, SW_MINIMIZE);
+      break;
+
+    default:
+      // Don't call ::ShowWindow if we're trying to "restore" a window that is
+      // already in a normal state.  Prevents a bug where snapping to one side
+      // of the screen and then minimizing would cause Windows to forget our
+      // window's correct restored position/size.
+      if (GetCurrentShowCmd(aWnd) != SW_SHOWNORMAL) {
+        ::ShowWindow(aWnd, SW_RESTORE);
+      }
+  }
+}
+
+nsWindow::FrameState::FrameState(nsWindow* aWindow) : mWindow(aWindow) {}
+
+nsSizeMode nsWindow::FrameState::GetSizeMode() const { return mSizeMode; }
+
+void nsWindow::FrameState::CheckInvariant() const {
+  MOZ_ASSERT(mSizeMode >= 0 && mSizeMode < nsSizeMode_Invalid);
+  MOZ_ASSERT(mLastSizeMode >= 0 && mLastSizeMode < nsSizeMode_Invalid);
+  MOZ_ASSERT(mOldSizeMode >= 0 && mOldSizeMode < nsSizeMode_Invalid);
+  MOZ_ASSERT(mWindow);
+
+  // We should never observe fullscreen sizemode unless fullscreen is enabled
+  MOZ_ASSERT_IF(mSizeMode == nsSizeMode_Fullscreen, mFullscreenMode);
+  MOZ_ASSERT_IF(!mFullscreenMode, mSizeMode != nsSizeMode_Fullscreen);
+
+  // Something went wrong if we somehow saved fullscreen mode when we are
+  // changing into fullscreen mode
+  MOZ_ASSERT(mOldSizeMode != nsSizeMode_Fullscreen);
+}
+
+void nsWindow::FrameState::ConsumePreXULSkeletonState(bool aWasMaximized) {
+  mSizeMode = aWasMaximized ? nsSizeMode_Maximized : nsSizeMode_Normal;
+}
+
+void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
+  if (mSizeMode == aMode) {
+    return;
+  }
+
+  if (aMode == nsSizeMode_Fullscreen) {
+    EnsureFullscreenMode(true);
+  } else if ((mSizeMode == nsSizeMode_Fullscreen) &&
+             (aMode == nsSizeMode_Normal)) {
+    // If we are in fullscreen mode, minimize should work like normal and
+    // return us to fullscreen mode when unminimized. Maximize isn't really
+    // available and won't do anything. "Restore" should do the same thing as
+    // requesting to end fullscreen.
+    EnsureFullscreenMode(false);
+  } else {
+    SetSizeModeInternal(aMode);
+  }
+}
+
+void nsWindow::FrameState::EnsureFullscreenMode(bool aFullScreen) {
+  if (mFullscreenMode == aFullScreen) {
+    return;
+  }
+
+  mWindow->OnFullscreenWillChange(aFullScreen);
+
+  mFullscreenMode = aFullScreen;
+  if (aFullScreen) {
+    mOldSizeMode = mSizeMode;
+    SetSizeModeInternal(nsSizeMode_Fullscreen);
+  } else {
+    SetSizeModeInternal(mOldSizeMode);
+  }
+
+  mWindow->OnFullscreenChanged(aFullScreen);
+}
+
+void nsWindow::FrameState::OnFrameChanging() {
+  if (mSizeMode == nsSizeMode_Fullscreen) {
+    return;
+  }
+
+  WINDOWPLACEMENT pl;
+  pl.length = sizeof(pl);
+  ::GetWindowPlacement(mWindow->mWnd, &pl);
+
+  const nsSizeMode newSizeMode =
+      GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
+
+  mWindow->OnSizeModeChange(newSizeMode);
+
+  mWindow->UpdateNonClientMargins(newSizeMode, false);
+}
+
+void nsWindow::FrameState::OnFrameChanged() {
+  if (mSizeMode == nsSizeMode_Fullscreen) {
+    return;
+  }
+
+  const nsSizeMode previousSizeMode = mSizeMode;
+
+  // Windows has just changed the size mode of this window. The call to
+  // SizeModeChanged will trigger a call into SetSizeMode where we will
+  // set the min/max window state again or for nsSizeMode_Normal, call
+  // SetWindow with a parameter of SW_RESTORE. There's no need however as
+  // this window's mode has already changed. Updating SizeMode here
+  // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
+  // to window docking. (bug 489258)
+  mSizeMode = GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
+
+  MaybeLogSizeMode(mSizeMode);
+
+  if (mSizeMode != previousSizeMode) {
+    mWindow->OnSizeModeChange(mSizeMode);
+  }
+
+  // If window was restored, window activation was bypassed during the
+  // SetSizeMode call originating from OnWindowPosChanging to avoid saving
+  // pre-restore attributes. Force activation now to get correct attributes.
+  if (mLastSizeMode != mSizeMode) {
+    if (mSizeMode == nsSizeMode_Normal) {
+      mWindow->DispatchFocusToTopLevelWindow(true);
+    }
+    mLastSizeMode = mSizeMode;
+  }
+}
+
+void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
+  if (mSizeMode == aMode) {
+    return;
+  }
+
+  mLastSizeMode = mSizeMode;
+  mSizeMode = aMode;
+
+  if (mWindow->mIsVisible) {
+    ShowWindowWithMode(mWindow->mWnd, aMode);
+  }
+
+  // we activate here to ensure that the right child window is focused
+  if (mWindow->mIsVisible &&
+      (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
+    mWindow->DispatchFocusToTopLevelWindow(true);
+  }
 }

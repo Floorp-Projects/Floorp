@@ -2521,7 +2521,7 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window && aElement);
   nsCOMPtr<nsPIDOMWindowInner> innerWindow = window->GetCurrentInnerWindow();
-  NS_ENSURE_STATE(window);
+  NS_ENSURE_STATE(innerWindow);
 
   nsCOMPtr<nsICSSDeclaration> decl;
   {

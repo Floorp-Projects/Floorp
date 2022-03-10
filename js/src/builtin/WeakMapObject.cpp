@@ -7,7 +7,7 @@
 #include "builtin/WeakMapObject-inl.h"
 
 #include "builtin/WeakSetObject.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/WeakMap.h"
@@ -189,9 +189,9 @@ static void WeakCollection_trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static void WeakCollection_finalize(JSFreeOp* fop, JSObject* obj) {
+static void WeakCollection_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (ObjectValueWeakMap* map = obj->as<WeakCollectionObject>().getMap()) {
-    fop->delete_(obj, map, MemoryUse::WeakMapObject);
+    gcx->delete_(obj, map, MemoryUse::WeakMapObject);
   }
 }
 

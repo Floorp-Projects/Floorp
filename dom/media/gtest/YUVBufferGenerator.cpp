@@ -46,7 +46,7 @@ Image* YUVBufferGenerator::CreateI420Image() {
   PlanarYCbCrImage* image =
       new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
   PlanarYCbCrData data;
-  data.mPicSize = mImageSize;
+  data.mPictureRect = gfx::IntRect(0, 0, mImageSize.width, mImageSize.height);
 
   const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
   const uint32_t halfWidth = (mImageSize.width + 1) / 2;
@@ -56,8 +56,6 @@ Image* YUVBufferGenerator::CreateI420Image() {
   // Y plane.
   uint8_t* y = mSourceBuffer.Elements();
   data.mYChannel = y;
-  data.mYSize.width = mImageSize.width;
-  data.mYSize.height = mImageSize.height;
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
@@ -73,10 +71,9 @@ Image* YUVBufferGenerator::CreateI420Image() {
 
   // CrCb plane vectors.
   data.mCbCrStride = halfWidth;
-  data.mCbCrSize.width = halfWidth;
-  data.mCbCrSize.height = halfHeight;
+  data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
-  data.mYUVColorSpace = DefaultColorSpace(data.mYSize);
+  data.mYUVColorSpace = DefaultColorSpace(mImageSize);
 
   image->CopyData(data);
   return image;
@@ -85,17 +82,13 @@ Image* YUVBufferGenerator::CreateI420Image() {
 Image* YUVBufferGenerator::CreateNV12Image() {
   NVImage* image = new NVImage();
   PlanarYCbCrData data;
-  data.mPicSize = mImageSize;
+  data.mPictureRect = gfx::IntRect(0, 0, mImageSize.width, mImageSize.height);
 
   const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
-  const uint32_t halfWidth = (mImageSize.width + 1) / 2;
-  const uint32_t halfHeight = (mImageSize.height + 1) / 2;
 
   // Y plane.
   uint8_t* y = mSourceBuffer.Elements();
   data.mYChannel = y;
-  data.mYSize.width = mImageSize.width;
-  data.mYSize.height = mImageSize.height;
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
@@ -111,8 +104,7 @@ Image* YUVBufferGenerator::CreateNV12Image() {
 
   // 4:2:0.
   data.mCbCrStride = mImageSize.width;
-  data.mCbCrSize.width = halfWidth;
-  data.mCbCrSize.height = halfHeight;
+  data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
   image->SetData(data);
   return image;
@@ -121,17 +113,13 @@ Image* YUVBufferGenerator::CreateNV12Image() {
 Image* YUVBufferGenerator::CreateNV21Image() {
   NVImage* image = new NVImage();
   PlanarYCbCrData data;
-  data.mPicSize = mImageSize;
+  data.mPictureRect = gfx::IntRect(0, 0, mImageSize.width, mImageSize.height);
 
   const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
-  const uint32_t halfWidth = (mImageSize.width + 1) / 2;
-  const uint32_t halfHeight = (mImageSize.height + 1) / 2;
 
   // Y plane.
   uint8_t* y = mSourceBuffer.Elements();
   data.mYChannel = y;
-  data.mYSize.width = mImageSize.width;
-  data.mYSize.height = mImageSize.height;
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
@@ -147,10 +135,9 @@ Image* YUVBufferGenerator::CreateNV21Image() {
 
   // 4:2:0.
   data.mCbCrStride = mImageSize.width;
-  data.mCbCrSize.width = halfWidth;
-  data.mCbCrSize.height = halfHeight;
+  data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
-  data.mYUVColorSpace = DefaultColorSpace(data.mYSize);
+  data.mYUVColorSpace = DefaultColorSpace(mImageSize);
 
   image->SetData(data);
   return image;

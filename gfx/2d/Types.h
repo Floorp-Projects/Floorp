@@ -507,6 +507,27 @@ static inline uint32_t RescalingFactorForColorDepth(ColorDepth aColorDepth) {
   return factor;
 }
 
+enum class ChromaSubsampling : uint8_t {
+  FULL,
+  HALF_WIDTH,
+  HALF_WIDTH_AND_HEIGHT,
+  _First = FULL,
+  _Last = HALF_WIDTH_AND_HEIGHT,
+};
+
+template <typename T>
+static inline T ChromaSize(const T& aYSize, ChromaSubsampling aSubsampling) {
+  switch (aSubsampling) {
+    case ChromaSubsampling::FULL:
+      return aYSize;
+    case ChromaSubsampling::HALF_WIDTH:
+      return T((aYSize.width + 1) / 2, aYSize.height);
+    case ChromaSubsampling::HALF_WIDTH_AND_HEIGHT:
+      return T((aYSize.width + 1) / 2, (aYSize.height + 1) / 2);
+  }
+  MOZ_CRASH("bad ChromaSubsampling");
+}
+
 enum class FilterType : int8_t {
   BLEND = 0,
   TRANSFORM,

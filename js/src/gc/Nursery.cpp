@@ -17,7 +17,7 @@
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/Memory.h"
@@ -1395,7 +1395,7 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();
       zone->setPreservingCode(false);
-      zone->discardJitCode(rt->defaultFreeOp());
+      zone->discardJitCode(rt->gcContext());
       zone->setPreservingCode(preserving);
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
@@ -1876,39 +1876,39 @@ bool js::Nursery::isSubChunkMode() const {
 }
 
 void js::Nursery::sweepMapAndSetObjects() {
-  auto fop = runtime()->defaultFreeOp();
+  auto gcx = runtime()->gcContext();
 
   for (auto mapobj : mapsWithNurseryMemory_) {
-    MapObject::sweepAfterMinorGC(fop, mapobj);
+    MapObject::sweepAfterMinorGC(gcx, mapobj);
   }
   mapsWithNurseryMemory_.clearAndFree();
 
   for (auto setobj : setsWithNurseryMemory_) {
-    SetObject::sweepAfterMinorGC(fop, setobj);
+    SetObject::sweepAfterMinorGC(gcx, setobj);
   }
   setsWithNurseryMemory_.clearAndFree();
 }
 
 JS_PUBLIC_API void JS::EnableNurseryStrings(JSContext* cx) {
   AutoEmptyNursery empty(cx);
-  ReleaseAllJITCode(cx->defaultFreeOp());
+  ReleaseAllJITCode(cx->gcContext());
   cx->runtime()->gc.nursery().enableStrings();
 }
 
 JS_PUBLIC_API void JS::DisableNurseryStrings(JSContext* cx) {
   AutoEmptyNursery empty(cx);
-  ReleaseAllJITCode(cx->defaultFreeOp());
+  ReleaseAllJITCode(cx->gcContext());
   cx->runtime()->gc.nursery().disableStrings();
 }
 
 JS_PUBLIC_API void JS::EnableNurseryBigInts(JSContext* cx) {
   AutoEmptyNursery empty(cx);
-  ReleaseAllJITCode(cx->defaultFreeOp());
+  ReleaseAllJITCode(cx->gcContext());
   cx->runtime()->gc.nursery().enableBigInts();
 }
 
 JS_PUBLIC_API void JS::DisableNurseryBigInts(JSContext* cx) {
   AutoEmptyNursery empty(cx);
-  ReleaseAllJITCode(cx->defaultFreeOp());
+  ReleaseAllJITCode(cx->gcContext());
   cx->runtime()->gc.nursery().disableBigInts();
 }

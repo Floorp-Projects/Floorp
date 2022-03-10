@@ -26,7 +26,7 @@
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
 #include "js/experimental/Intl.h"     // JS::AddMozDateTimeFormatConstructor
@@ -183,8 +183,8 @@ bool js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
   return DateTimeFormat(cx, args, true, DateTimeFormatOptions::Standard);
 }
 
-void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::DateTimeFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   auto* dateTimeFormat = &obj->as<DateTimeFormatObject>();
   mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
@@ -193,14 +193,14 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   if (df) {
     intl::RemoveICUCellMemory(
-        fop, obj, DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+        gcx, obj, DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
 
     delete df;
   }
 
   if (dif) {
     intl::RemoveICUCellMemory(
-        fop, obj, DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
+        gcx, obj, DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
 
     delete dif;
   }

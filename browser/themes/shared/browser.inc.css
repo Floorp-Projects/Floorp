@@ -655,11 +655,10 @@ menupopup::part(drop-indicator) {
 }
 
 /* ENABLE DEVTOOLS POPUP */
-
-#enable-devtools-popup {
-%if defined(XP_MACOSX) || defined(XP_WIN)
-  font-size: 1.18em;
-%endif
+@media (-moz-platform: macos), (-moz-platform: windows) {
+  #enable-devtools-popup {
+    font-size: 1.18em;
+  }
 }
 
 #sharing-tabs-warning-panel > hbox[type="window"] > vbox > label > #sharing-warning-screen-panel-header,

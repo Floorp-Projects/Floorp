@@ -2660,7 +2660,7 @@ void JS::StartPCCountProfiling(JSContext* cx) {
     ReleaseScriptCounts(rt);
   }
 
-  ReleaseAllJITCode(rt->defaultFreeOp());
+  ReleaseAllJITCode(rt->gcContext());
 
   rt->profilingScripts = true;
 }
@@ -2673,7 +2673,7 @@ void JS::StopPCCountProfiling(JSContext* cx) {
   }
   MOZ_ASSERT(!rt->scriptAndCountsVector);
 
-  ReleaseAllJITCode(rt->defaultFreeOp());
+  ReleaseAllJITCode(rt->gcContext());
 
   auto* vec = cx->new_<PersistentRooted<ScriptAndCountsVector>>(
       cx, ScriptAndCountsVector());

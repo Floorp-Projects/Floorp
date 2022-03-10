@@ -356,7 +356,7 @@ class JS_PUBLIC_API BaseProxyHandler {
   virtual bool boxedValue_unbox(JSContext* cx, JS::HandleObject proxy,
                                 JS::MutableHandleValue vp) const;
   virtual void trace(JSTracer* trc, JSObject* proxy) const;
-  virtual void finalize(JSFreeOp* fop, JSObject* proxy) const;
+  virtual void finalize(JS::GCContext* gcx, JSObject* proxy) const;
   virtual size_t objectMoved(JSObject* proxy, JSObject* old) const;
 
   // Allow proxies, wrappers in particular, to specify callability at runtime.

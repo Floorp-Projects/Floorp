@@ -6,7 +6,7 @@
 
 #include "vm/RegExpStatics.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 
 #include "vm/NativeObject-inl.h"
 

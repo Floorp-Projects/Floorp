@@ -1209,6 +1209,31 @@ nscoord nsImageFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return iSize.valueOr(0);
 }
 
+void nsImageFrame::ReflowChildren(nsPresContext* aPresContext,
+                                  const ReflowInput& aReflowInput,
+                                  const LogicalSize& aImageSize) {
+  for (nsIFrame* child : mFrames) {
+    ReflowOutput childDesiredSize(aReflowInput);
+    WritingMode wm = GetWritingMode();
+    // Shouldn't be hard to support if we want, but why bother.
+    MOZ_ASSERT(
+        wm == child->GetWritingMode(),
+        "We don't expect mismatched writing-modes in content we control");
+    nsReflowStatus childStatus;
+
+    LogicalPoint childOffset(wm);
+    ReflowInput childReflowInput(aPresContext, aReflowInput, child, aImageSize);
+    const nsSize containerSize = aImageSize.GetPhysicalSize(wm);
+    ReflowChild(child, aPresContext, childDesiredSize, childReflowInput, wm,
+                childOffset, containerSize, ReflowChildFlags::Default,
+                childStatus);
+
+    FinishReflowChild(child, aPresContext, childDesiredSize, &childReflowInput,
+                      wm, childOffset, containerSize,
+                      ReflowChildFlags::Default);
+  }
+}
+
 void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) {
@@ -1295,6 +1320,9 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     MaybeDecodeForPredictedSize();
   }
   FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
+
+  // Reflow the child frames. Our children can't affect our size in any way.
+  ReflowChildren(aPresContext, aReflowInput, aMetrics.Size(GetWritingMode()));
 
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) && !mReflowCallbackPosted) {
     mReflowCallbackPosted = true;
@@ -2326,6 +2354,8 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplaySelectionOverlay(aBuilder, aLists.Content(),
                             nsISelectionDisplay::DISPLAY_IMAGES);
   }
+
+  BuildDisplayListForNonBlockChildren(aBuilder, aLists);
 }
 
 bool nsImageFrame::ShouldDisplaySelection() {
@@ -2398,6 +2428,19 @@ bool nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
     }
   }
   return status;
+}
+
+bool nsImageFrame::IsLeafDynamic() const {
+  if (mKind != Kind::ImageElement) {
+    // Image frames created for "content: url()" could have an author-controlled
+    // shadow root, we want to be a regular leaf for those.
+    return true;
+  }
+  // For elements that create image frames, calling attachShadow() will throw,
+  // so the only ShadowRoot we could ever have is a UA widget.
+  const auto* shadow = mContent->AsElement()->GetShadowRoot();
+  MOZ_ASSERT_IF(shadow, shadow->IsUAWidget());
+  return !shadow;
 }
 
 nsresult nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,

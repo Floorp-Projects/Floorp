@@ -6,16 +6,22 @@
 
 #ctrlTab-panel {
   appearance: none;
-%ifdef XP_MACOSX
-  -moz-window-shadow: none;
-%endif
   --panel-background: hsla(0,0%,40%,.85);
   --panel-color: white;
   --panel-border-color: transparent;
   --panel-padding: 20px 10px 10px;
-%ifndef XP_MACOSX
-  font-weight: bold;
-%endif
+}
+
+@media (-moz-platform: macos) {
+  #ctrlTab-panel {
+    -moz-window-shadow: none;
+  }
+}
+
+@media not (-moz-platform: macos) {
+  #ctrlTab-panel {
+    font-weight: bold;
+  }
 }
 
 .ctrlTab-preview,

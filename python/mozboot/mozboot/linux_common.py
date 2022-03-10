@@ -99,7 +99,7 @@ class MinidumpStackwalkInstall(object):
         pass
 
     def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump_stackwalk")
+        self.install_toolchain_artifact("minidump-stackwalk")
 
 
 class MobileAndroidBootstrapper(object):

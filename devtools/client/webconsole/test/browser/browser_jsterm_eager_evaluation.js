@@ -348,4 +348,20 @@ add_task(async function() {
     "Pref was changed"
   );
   ok(true, "Eager evaluation element is no longer displayed");
+
+  // reset the preference
+  await pushPref(EAGER_EVALUATION_PREF, true);
+});
+
+// Test that the console instant evaluation is updated on page navigation
+add_task(async function() {
+  const start_uri = "data:text/html, Start uri";
+  const new_uri = "data:text/html, Test console refresh instant value";
+  const hud = await openNewTabAndConsole(start_uri);
+
+  setInputValue(hud, "globalThis.location.href");
+  await waitForEagerEvaluationResult(hud, `"${start_uri}"`);
+
+  await navigateTo(new_uri);
+  await waitForEagerEvaluationResult(hud, `"${new_uri}"`);
 });

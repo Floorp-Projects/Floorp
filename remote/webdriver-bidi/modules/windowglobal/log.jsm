@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
-class Log extends Module {
+class LogModule extends Module {
   #consoleAPIListener;
   #consoleMessageListener;
 
@@ -212,4 +212,4 @@ class Log extends Module {
   }
 }
 
-const log = Log;
+const log = LogModule;

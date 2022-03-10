@@ -259,17 +259,14 @@ static void AllocateSolidColorFrame(layers::PlanarYCbCrData& aData, int aWidth,
   memset(frame + yLen + cbLen, aCr, crLen);
 
   aData.mYChannel = frame;
-  aData.mYSize = IntSize(aWidth, aHeight);
   aData.mYStride = aWidth;
   aData.mCbCrStride = aWidth >> 1;
   aData.mCbChannel = frame + yLen;
   aData.mCrChannel = aData.mCbChannel + cbLen;
-  aData.mCbCrSize = IntSize(aWidth >> 1, aHeight >> 1);
-  aData.mPicX = 0;
-  aData.mPicY = 0;
-  aData.mPicSize = IntSize(aWidth, aHeight);
+  aData.mPictureRect = IntRect(0, 0, aWidth, aHeight);
   aData.mStereoMode = StereoMode::MONO;
   aData.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+  aData.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 }
 
 static void ReleaseFrame(layers::PlanarYCbCrData& aData) {

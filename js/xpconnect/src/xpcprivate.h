@@ -544,7 +544,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void GCSliceCallback(JSContext* cx, JS::GCProgress progress,
                               const JS::GCDescription& desc);
   static void DoCycleCollectionCallback(JSContext* cx);
-  static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
+  static void FinalizeCallback(JS::GCContext* gcx, JSFinalizeStatus status,
                                void* data);
   static void WeakPointerZonesCallback(JSTracer* trc, void* data);
   static void WeakPointerCompartmentCallback(JSTracer* trc,
@@ -1238,7 +1238,7 @@ class XPCWrappedNativeProto final {
 
   nsIXPCScriptable* GetScriptable() const { return mScriptable; }
 
-  void JSProtoObjectFinalized(JSFreeOp* fop, JSObject* obj);
+  void JSProtoObjectFinalized(JS::GCContext* gcx, JSObject* obj);
   void JSProtoObjectMoved(JSObject* obj, const JSObject* old);
 
   static XPCWrappedNativeProto* Get(JSObject* obj);

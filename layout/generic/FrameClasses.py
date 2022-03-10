@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # Frame class definitions, used to generate FrameIdList.h and FrameTypeList.h
 
-from FrameClass import Frame, AbstractFrame, LEAF, NOT_LEAF
+from FrameClass import Frame, AbstractFrame, LEAF, NOT_LEAF, DYNAMIC_LEAF
 
 FRAME_CLASSES = [
     Frame("BRFrame", "Br", LEAF),
@@ -41,7 +41,7 @@ FRAME_CLASSES = [
     Frame("nsHTMLScrollFrame", "Scroll", NOT_LEAF),
     Frame("nsImageBoxFrame", "ImageBox", LEAF),
     Frame("nsImageControlFrame", "ImageControl", LEAF),
-    Frame("nsImageFrame", "Image", LEAF),
+    Frame("nsImageFrame", "Image", DYNAMIC_LEAF),
     Frame("nsInlineFrame", "Inline", NOT_LEAF),
     Frame("nsLeafBoxFrame", "LeafBox", LEAF),
     Frame("nsListControlFrame", "ListControl", NOT_LEAF),

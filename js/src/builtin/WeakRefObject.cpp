@@ -123,7 +123,7 @@ void WeakRefObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 /* static */
-void WeakRefObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void WeakRefObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   // The target is cleared when the target's zone is swept and that always
   // happens before this object is finalized because of the CCW from the target
   // zone to this object. If the CCW is nuked, the target is cleared in

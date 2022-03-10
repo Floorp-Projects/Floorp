@@ -72,7 +72,7 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative* wrapper,
 
 #if !((XPC_MAP_FLAGS)&XPC_SCRIPTABLE_WANT_FINALIZE)
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Finalize(nsIXPConnectWrappedNative* wrapper,
-                                          JSFreeOp* fop, JSObject* obj) {
+                                          JS::GCContext* gcx, JSObject* obj) {
   NS_ERROR("never called");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

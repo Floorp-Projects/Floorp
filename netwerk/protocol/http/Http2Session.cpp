@@ -41,6 +41,7 @@
 #include "CachePushChecker.h"
 #include "LoadContextInfo.h"
 #include "nsQueryObject.h"
+#include "Http2ConnectTransaction.h"
 
 namespace mozilla {
 namespace net {
@@ -794,7 +795,7 @@ void Http2Session::IncrementConcurrent(Http2Stream* stream) {
 
   nsAHttpTransaction* trans = stream->Transaction();
   if (!trans || !trans->IsNullTransaction() ||
-      trans->QuerySpdyConnectTransaction()) {
+      trans->QueryHttp2ConnectTransaction()) {
     MOZ_ASSERT(!stream->CountAsActive());
     stream->SetCountAsActive(true);
     ++mConcurrent;
@@ -4068,7 +4069,7 @@ void Http2Session::CreateTunnel(nsHttpTransaction* trans,
   // to the correct security callbacks
 
   RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
-  RefPtr<SpdyConnectTransaction> connectTrans = new SpdyConnectTransaction(
+  RefPtr<Http2ConnectTransaction> connectTrans = new Http2ConnectTransaction(
       clone, aCallbacks, trans->Caps(), trans, this, false);
   DebugOnly<bool> rv =
       AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false,
@@ -4604,7 +4605,7 @@ void Http2Session::CreateWebsocketStream(
   MOZ_ASSERT(ci);
 
   RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
-  RefPtr<SpdyConnectTransaction> connectTrans = new SpdyConnectTransaction(
+  RefPtr<Http2ConnectTransaction> connectTrans = new Http2ConnectTransaction(
       clone, aCallbacks, trans->Caps(), trans, this, true);
   DebugOnly<bool> rv =
       AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false,

@@ -1176,7 +1176,7 @@ static nsIPrincipal* GetExpandoObjectPrincipal(JSObject* expandoObject) {
   return static_cast<nsIPrincipal*>(v.toPrivate());
 }
 
-static void ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj) {
+static void ExpandoObjectFinalize(JS::GCContext* gcx, JSObject* obj) {
   // Release the principal.
   nsIPrincipal* principal = GetExpandoObjectPrincipal(obj);
   NS_RELEASE(principal);

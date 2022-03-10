@@ -233,11 +233,11 @@ class TestingMixin(
                 if raise_on_failure:
                     raise
 
-        # If no symbols URL can be determined let minidump_stackwalk query the symbols.
+        # If no symbols URL can be determined let minidump-stackwalk query the symbols.
         # As of now this only works for Nightly and release builds.
         if not self.symbols_url:
             self.warning(
-                "No symbols_url found. Let minidump_stackwalk query for symbols."
+                "No symbols_url found. Let minidump-stackwalk query for symbols."
             )
 
         return self.symbols_url
@@ -664,15 +664,15 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
         if "MOZ_FETCHES_DIR" in os.environ:
             minidump_stackwalk_path = os.path.join(
                 os.environ["MOZ_FETCHES_DIR"],
-                "minidump_stackwalk",
-                "minidump_stackwalk",
+                "minidump-stackwalk",
+                "minidump-stackwalk",
             )
 
             if self.platform_name() in ("win32", "win64"):
                 minidump_stackwalk_path += ".exe"
 
         if not minidump_stackwalk_path or not os.path.isfile(minidump_stackwalk_path):
-            self.error("minidump_stackwalk path was not fetched?")
+            self.error("minidump-stackwalk path was not fetched?")
             # don't burn the job but we should at least turn them orange so it is caught
             self.record_status(TBPL_WARNING, WARNING)
             return None

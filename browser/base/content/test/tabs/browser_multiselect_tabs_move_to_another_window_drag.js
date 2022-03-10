@@ -72,3 +72,47 @@ add_task(async function test() {
   BrowserTestUtils.closeWindow(newWindow);
   BrowserTestUtils.removeTab(tab4);
 });
+
+add_task(async function test_laziness() {
+  const params = { createLazyBrowser: true };
+  const url = "http://mochi.test:8888/?";
+  const tab1 = BrowserTestUtils.addTab(gBrowser, url + "1", params);
+  const tab2 = BrowserTestUtils.addTab(gBrowser, url + "2");
+  const tab3 = BrowserTestUtils.addTab(gBrowser, url + "3", params);
+
+  await BrowserTestUtils.switchTab(gBrowser, tab2);
+  await triggerClickOn(tab1, { ctrlKey: true });
+  await triggerClickOn(tab3, { ctrlKey: true });
+
+  is(gBrowser.selectedTab, tab2, "Tab2 is selected");
+  is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
+  ok(tab1.multiselected, "Tab1 is multiselected");
+  ok(tab2.multiselected, "Tab2 is multiselected");
+  ok(tab3.multiselected, "Tab3 is multiselected");
+  ok(!tab1.linkedPanel, "Tab1 is lazy");
+  ok(tab2.linkedPanel, "Tab2 is not lazy");
+  ok(!tab3.linkedPanel, "Tab3 is lazy");
+
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const gBrowser2 = win2.gBrowser;
+  is(gBrowser2.tabs.length, 1, "Second window has 1 tab");
+
+  await dragAndDrop(tab2, gBrowser2.tabs[0], false, win2);
+  await TestUtils.waitForCondition(
+    () => gBrowser2.tabs.length == 4,
+    "Moved tabs into second window"
+  );
+  is(gBrowser2.tabs[1].linkedBrowser.currentURI.spec, url + "1");
+  is(gBrowser2.tabs[2].linkedBrowser.currentURI.spec, url + "2");
+  is(gBrowser2.tabs[3].linkedBrowser.currentURI.spec, url + "3");
+  is(gBrowser2.selectedTab, gBrowser2.tabs[2], "Tab2 is selected");
+  is(gBrowser2.multiSelectedTabsCount, 3, "Three multiselected tabs");
+  ok(gBrowser2.tabs[1].multiselected, "Tab1 is multiselected");
+  ok(gBrowser2.tabs[2].multiselected, "Tab2 is multiselected");
+  ok(gBrowser2.tabs[3].multiselected, "Tab3 is multiselected");
+  ok(!gBrowser2.tabs[1].linkedPanel, "Tab1 is lazy");
+  ok(gBrowser2.tabs[2].linkedPanel, "Tab2 is not lazy");
+  ok(!gBrowser2.tabs[3].linkedPanel, "Tab3 is lazy");
+
+  await BrowserTestUtils.closeWindow(win2);
+});

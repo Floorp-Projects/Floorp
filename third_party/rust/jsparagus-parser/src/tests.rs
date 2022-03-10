@@ -429,7 +429,7 @@ fn test_numbers_large() {
     assert_same_number("0xfffffffffffff", 4503599627370495.0);
     assert_not_implemented("0x10000000000000");
 
-    assert_not_implemented("4.9406564584124654417656879286822e-324");
+    assert_same_number("4.9406564584124654417656879286822e-324", 5e-324);
 }
 
 #[test]

@@ -171,6 +171,12 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
     b.mPlanes[2].mWidth = mTheoraInfo.frame_width >> hdec;
     b.mPlanes[2].mSkip = 0;
 
+    if (vdec) {
+      b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+    } else if (hdec) {
+      b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH;
+    }
+
     b.mYUVColorSpace =
         DefaultColorSpace({mTheoraInfo.frame_width, mTheoraInfo.frame_height});
 

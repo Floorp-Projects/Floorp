@@ -9,7 +9,7 @@
 #include "jsapi.h"
 
 #include "ds/OrderedHashTable.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/InlinableNatives.h"
 #include "js/MapAndSet.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
@@ -313,16 +313,16 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
   return iterobj;
 }
 
-void MapIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void MapIteratorObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
   auto range = MapIteratorObjectRange(&obj->as<NativeObject>());
-  MOZ_ASSERT(!fop->runtime()->gc.nursery().isInside(range));
+  MOZ_ASSERT(!gcx->runtime()->gc.nursery().isInside(range));
 
   // Bug 1560019: Malloc memory associated with MapIteratorObjects is not
   // currently tracked.
-  fop->deleteUntracked(range);
+  gcx->deleteUntracked(range);
 }
 
 size_t MapIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -712,18 +712,18 @@ size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
   return size;
 }
 
-void MapObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void MapObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   if (ValueMap* map = obj->as<MapObject>().getData()) {
-    fop->delete_(obj, map, MemoryUse::MapObjectTable);
+    gcx->delete_(obj, map, MemoryUse::MapObjectTable);
   }
 }
 
 /* static */
-void MapObject::sweepAfterMinorGC(JSFreeOp* fop, MapObject* mapobj) {
+void MapObject::sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj) {
   bool wasInsideNursery = IsInsideNursery(mapobj);
   if (wasInsideNursery && !IsForwarded(mapobj)) {
-    finalize(fop, mapobj);
+    finalize(gcx, mapobj);
     return;
   }
 
@@ -1118,16 +1118,16 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
   return iterobj;
 }
 
-void SetIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void SetIteratorObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
   auto range = SetIteratorObjectRange(&obj->as<NativeObject>());
-  MOZ_ASSERT(!fop->runtime()->gc.nursery().isInside(range));
+  MOZ_ASSERT(!gcx->runtime()->gc.nursery().isInside(range));
 
   // Bug 1560019: Malloc memory associated with SetIteratorObjects is not
   // currently tracked.
-  fop->deleteUntracked(range);
+  gcx->deleteUntracked(range);
 }
 
 size_t SetIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
@@ -1385,19 +1385,19 @@ size_t SetObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
   return size;
 }
 
-void SetObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void SetObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
-    fop->delete_(obj, set, MemoryUse::MapObjectTable);
+    gcx->delete_(obj, set, MemoryUse::MapObjectTable);
   }
 }
 
 /* static */
-void SetObject::sweepAfterMinorGC(JSFreeOp* fop, SetObject* setobj) {
+void SetObject::sweepAfterMinorGC(JS::GCContext* gcx, SetObject* setobj) {
   bool wasInsideNursery = IsInsideNursery(setobj);
   if (wasInsideNursery && !IsForwarded(setobj)) {
-    finalize(fop, setobj);
+    finalize(gcx, setobj);
     return;
   }
 

@@ -48,7 +48,7 @@ static void SetImageToGreenPixel(PlanarYCbCrImage* aImage) {
   data.mCbChannel = greenPixel + 1;
   data.mCrChannel = greenPixel + 2;
   data.mYStride = data.mCbCrStride = 1;
-  data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
+  data.mPictureRect = gfx::IntRect(0, 0, 1, 1);
   data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
   aImage->CopyData(data);
 }

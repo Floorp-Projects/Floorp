@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "TunnelUtils.h"
+#include "TLSFilterTransaction.h"
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
@@ -164,7 +164,8 @@ class nsHttpConnection final : public HttpConnectionBase,
                                                   nsHttpRequestHead* request,
                                                   nsACString& result,
                                                   bool h2ws);
-  void SetupSecondaryTLS(nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
+  void SetupSecondaryTLS(
+      nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
   void SetInSpdyTunnel(bool arg);
 
   // Check active connections for traffic (or not). SPDY connections send a
@@ -267,7 +268,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsCOMPtr<nsIInputStream> mRequestStream;
 
   RefPtr<TLSFilterTransaction> mTLSFilter;
-  nsWeakPtr mWeakTrans;  // SpdyConnectTransaction *
+  nsWeakPtr mWeakTrans;  // Http2ConnectTransaction *
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
 

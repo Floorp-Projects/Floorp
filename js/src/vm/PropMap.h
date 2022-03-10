@@ -616,8 +616,8 @@ class SharedPropMap : public PropMap {
   MOZ_ALWAYS_INLINE bool shouldConvertToDictionaryForAdd() const;
 
   void fixupAfterMovingGC();
-  inline void sweep(JSFreeOp* fop);
-  inline void finalize(JSFreeOp* fop);
+  inline void sweep(JS::GCContext* gcx);
+  inline void finalize(JS::GCContext* gcx);
 
   static inline void getPrevious(MutableHandle<SharedPropMap*> map,
                                  uint32_t* mapLength);
@@ -629,7 +629,7 @@ class SharedPropMap : public PropMap {
   inline TreeData& treeDataRef();
   inline const TreeData& treeDataRef() const;
 
-  void removeChild(JSFreeOp* fop, SharedPropMap* child);
+  void removeChild(JS::GCContext* gcx, SharedPropMap* child);
 
   uint32_t lastUsedSlot(uint32_t mapLength) const {
     return getPropertyInfo(mapLength - 1).maybeSlot();
@@ -793,7 +793,7 @@ class LinkedPropMap final : public PropMap {
     return data_.table;
   }
 
-  void purgeTable(JSFreeOp* fop);
+  void purgeTable(JS::GCContext* gcx);
 
   void purgeTableCache() {
     if (data_.table) {
@@ -944,7 +944,7 @@ class DictionaryPropMap final : public PropMap {
   const DictionaryPropMap* asDictionary() const = delete;
 
   void fixupAfterMovingGC() {}
-  inline void finalize(JSFreeOp* fop);
+  inline void finalize(JS::GCContext* gcx);
 
   DictionaryPropMap* previous() const {
     return static_cast<DictionaryPropMap*>(linkedData_.previous.get());

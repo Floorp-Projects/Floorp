@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
 });
 
-class Session extends Module {
+class SessionModule extends Module {
   destroy() {}
 
   /**
@@ -194,4 +194,4 @@ class Session extends Module {
 }
 
 // To export the class as lower-case
-const session = Session;
+const session = SessionModule;

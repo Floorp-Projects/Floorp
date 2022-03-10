@@ -352,7 +352,8 @@ static const JSPropertySpec ReadableByteStreamController_properties[] = {
 static const JSFunctionSpec ReadableByteStreamController_methods[] = {
     JS_FS_END};
 
-static void ReadableByteStreamControllerFinalize(JSFreeOp* fop, JSObject* obj) {
+static void ReadableByteStreamControllerFinalize(JS::GCContext* gcx,
+                                                 JSObject* obj) {
   ReadableByteStreamController& controller =
       obj->as<ReadableByteStreamController>();
 

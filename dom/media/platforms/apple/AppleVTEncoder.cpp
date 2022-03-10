@@ -518,6 +518,11 @@ CVPixelBufferRef AppleVTEncoder::CreateCVPixelBuffer(const Image* aSource) {
   OSType format = MapPixelFormat(mConfig.mSourcePixelFormat).ref();
   size_t numPlanes = NumberOfPlanes(mConfig.mSourcePixelFormat);
   const PlanarYCbCrImage::Data* yuv = image->GetData();
+  if (!yuv) {
+    return nullptr;
+  }
+  auto ySize = yuv->YDataSize();
+  auto cbcrSize = yuv->CbCrDataSize();
   void* addresses[3] = {};
   size_t widths[3] = {};
   size_t heights[3] = {};
@@ -525,20 +530,20 @@ CVPixelBufferRef AppleVTEncoder::CreateCVPixelBuffer(const Image* aSource) {
   switch (numPlanes) {
     case 3:
       addresses[2] = yuv->mCrChannel;
-      widths[2] = yuv->mCbCrSize.width;
-      heights[2] = yuv->mCbCrSize.height;
+      widths[2] = cbcrSize.width;
+      heights[2] = cbcrSize.height;
       strides[2] = yuv->mCbCrStride;
       [[fallthrough]];
     case 2:
       addresses[1] = yuv->mCbChannel;
-      widths[1] = yuv->mCbCrSize.width;
-      heights[1] = yuv->mCbCrSize.height;
+      widths[1] = cbcrSize.width;
+      heights[1] = cbcrSize.height;
       strides[1] = yuv->mCbCrStride;
       [[fallthrough]];
     case 1:
       addresses[0] = yuv->mYChannel;
-      widths[0] = yuv->mYSize.width;
-      heights[0] = yuv->mYSize.height;
+      widths[0] = ySize.width;
+      heights[0] = ySize.height;
       strides[0] = yuv->mYStride;
       break;
     default:
@@ -548,9 +553,9 @@ CVPixelBufferRef AppleVTEncoder::CreateCVPixelBuffer(const Image* aSource) {
   CVPixelBufferRef buffer = nullptr;
   image->AddRef();  // Grip input buffers.
   CVReturn rv = CVPixelBufferCreateWithPlanarBytes(
-      kCFAllocatorDefault, yuv->mPicSize.width, yuv->mPicSize.height, format,
-      nullptr /* dataPtr */, 0 /* dataSize */, numPlanes, addresses, widths,
-      heights, strides, ReleaseImage /* releaseCallback */,
+      kCFAllocatorDefault, yuv->mPictureRect.width, yuv->mPictureRect.height,
+      format, nullptr /* dataPtr */, 0 /* dataSize */, numPlanes, addresses,
+      widths, heights, strides, ReleaseImage /* releaseCallback */,
       image /* releaseRefCon */, nullptr /* pixelBufferAttributes */, &buffer);
   if (rv == kCVReturnSuccess) {
     return buffer;

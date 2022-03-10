@@ -1035,11 +1035,6 @@ impl InstructionWriter {
         self.write_u24(resume_index);
     }
 
-    pub fn gosub(&mut self, forward_offset: BytecodeOffsetDiff) {
-        self.emit_op(Opcode::Gosub);
-        self.write_bytecode_offset_diff(forward_offset);
-    }
-
     pub fn finally(&mut self) {
         self.emit_op(Opcode::Finally);
     }

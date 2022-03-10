@@ -311,7 +311,8 @@ void UntrustedModulesProcessor::Enqueue(
 
   MutexAutoLock lock(mUnprocessedMutex);
 
-  Unused << mUnprocessedModuleLoads.emplaceBack(std::move(aModLoadInfo));
+  mUnprocessedModuleLoads.insertBack(
+      new UnprocessedModuleLoadInfoContainer(std::move(aModLoadInfo)));
 
   ScheduleNonEmptyQueueProcessing(lock);
 }
@@ -327,7 +328,8 @@ void UntrustedModulesProcessor::Enqueue(ModuleLoadInfoVec&& aEvents) {
   MutexAutoLock lock(mUnprocessedMutex);
 
   for (auto& event : aEvents) {
-    Unused << mUnprocessedModuleLoads.emplaceBack(std::move(event));
+    mUnprocessedModuleLoads.insertBack(
+        new UnprocessedModuleLoadInfoContainer(std::move(event)));
   }
 
   ScheduleNonEmptyQueueProcessing(lock);
@@ -580,33 +582,14 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-UntrustedModulesProcessor::LoadsVec
-UntrustedModulesProcessor::ExtractLoadingEventsToProcess(size_t aMaxLength) {
-  LoadsVec loadsToProcess;
+UnprocessedModuleLoads UntrustedModulesProcessor::ExtractLoadingEventsToProcess(
+    size_t aMaxLength) {
+  UnprocessedModuleLoads loadsToProcess;
 
   MutexAutoLock lock(mUnprocessedMutex);
   CancelScheduledProcessing(lock);
 
-  // The potential size of mProcessedModuleLoads if all of the unprocessed
-  // events are from third-party modules.
-  const size_t newDataLength =
-      mProcessedModuleLoads.mNumEvents + mUnprocessedModuleLoads.length();
-  if (newDataLength <= aMaxLength) {
-    loadsToProcess.swap(mUnprocessedModuleLoads);
-  } else {
-    // To prevent mProcessedModuleLoads from exceeding |aMaxLength|,
-    // we process the first items in the mUnprocessedModuleLoads,
-    // leaving the the remaining events for the next time.
-    const size_t capacity =
-        aMaxLength > mProcessedModuleLoads.mNumEvents
-            ? (aMaxLength - mProcessedModuleLoads.mNumEvents)
-            : 0;
-    auto moveRangeBegin = mUnprocessedModuleLoads.begin();
-    auto moveRangeEnd = moveRangeBegin + capacity;
-    Unused << loadsToProcess.moveAppend(moveRangeBegin, moveRangeEnd);
-    mUnprocessedModuleLoads.erase(moveRangeBegin, moveRangeEnd);
-  }
-
+  loadsToProcess.splice(0, mUnprocessedModuleLoads, 0, aMaxLength);
   return loadsToProcess;
 }
 
@@ -620,9 +603,9 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     return;
   }
 
-  LoadsVec loadsToProcess =
+  UnprocessedModuleLoads loadsToProcess =
       ExtractLoadingEventsToProcess(UntrustedModulesData::kMaxEvents);
-  if (!IsReadyForBackgroundProcessing() || loadsToProcess.empty()) {
+  if (!IsReadyForBackgroundProcessing() || loadsToProcess.isEmpty()) {
     return;
   }
 
@@ -639,7 +622,9 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   uint32_t sanitizationFailures = 0;
   uint32_t trustTestFailures = 0;
 
-  for (glue::EnhancedModuleLoadInfo& entry : loadsToProcess) {
+  for (UnprocessedModuleLoadInfoContainer* container : loadsToProcess) {
+    glue::EnhancedModuleLoadInfo& entry = container->mInfo;
+
     if (!IsReadyForBackgroundProcessing()) {
       return;
     }
@@ -779,9 +764,9 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
   AssertRunningOnLazyIdleThread();
   MOZ_ASSERT(!XRE_IsParentProcess());
 
-  LoadsVec loadsToProcess =
+  UnprocessedModuleLoads loadsToProcess =
       ExtractLoadingEventsToProcess(UntrustedModulesData::kMaxEvents);
-  if (loadsToProcess.empty()) {
+  if (loadsToProcess.isEmpty()) {
     // Nothing to process
     return GetModulesTrustPromise::CreateAndResolve(Nothing(), __func__);
   }
@@ -794,7 +779,9 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
   nsTHashtable<nsStringCaseInsensitiveHashKey> moduleNtPathSet;
 
   // Build a set of modules to be processed by the parent
-  for (glue::EnhancedModuleLoadInfo& entry : loadsToProcess) {
+  for (UnprocessedModuleLoadInfoContainer* container : loadsToProcess) {
+    glue::EnhancedModuleLoadInfo& entry = container->mInfo;
+
     if (!IsReadyForBackgroundProcessing()) {
       return GetModulesTrustPromise::CreateAndReject(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
@@ -875,7 +862,7 @@ void UntrustedModulesProcessor::CompleteProcessing(
   ModulesMap& modules = aModulesAndLoads.mModMapResult.ref().mModules;
   const uint32_t& trustTestFailures =
       aModulesAndLoads.mModMapResult.ref().mTrustTestFailures;
-  LoadsVec& loads = aModulesAndLoads.mLoads;
+  UnprocessedModuleLoads& loads = aModulesAndLoads.mLoads;
 
   if (modules.IsEmpty() && !trustTestFailures) {
     // No data, nothing to save.
@@ -894,7 +881,8 @@ void UntrustedModulesProcessor::CompleteProcessing(
   uint32_t sanitizationFailures = 0;
 
   if (!modules.IsEmpty()) {
-    for (auto&& item : loads) {
+    for (UnprocessedModuleLoadInfoContainer* container : loads) {
+      glue::EnhancedModuleLoadInfo& item = container->mInfo;
       if (!IsReadyForBackgroundProcessing()) {
         return;
       }

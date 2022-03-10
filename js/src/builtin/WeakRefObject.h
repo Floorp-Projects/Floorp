@@ -31,7 +31,7 @@ class WeakRefObject : public NativeObject {
 
   [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* op, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
 

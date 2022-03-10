@@ -224,7 +224,7 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                       size_t length,
                                       HandleObject proto = nullptr);
 
-  static void Finalize(JSFreeOp* fop, JSObject* obj);
+  static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
   static void addSizeOfExcludingThis(JSObject* obj,
                                      mozilla::MallocSizeOf mallocSizeOf,

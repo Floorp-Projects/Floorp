@@ -217,7 +217,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/ClearEdgesTracer.h"
 #include "gc/FindSCCs.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
@@ -291,16 +291,16 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
-MOZ_THREAD_LOCAL(JSFreeOp*) js::TlsFreeOp;
+MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
-JSFreeOp::JSFreeOp(JSRuntime* runtime, bool isMainThread)
+JS::GCContext::GCContext(JSRuntime* runtime, bool isMainThread)
     : runtime_(runtime), isMainThread_(isMainThread) {
   MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(runtime));
 }
 
-JSFreeOp::~JSFreeOp() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+JS::GCContext::~GCContext() { MOZ_ASSERT(!hasJitCodeToPoison()); }
 
-void JSFreeOp::poisonJitCode() {
+void JS::GCContext::poisonJitCode() {
   if (hasJitCodeToPoison()) {
     jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
     jitPoisonRanges.clearAndFree();
@@ -380,7 +380,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
-      mainThreadFreeOp(rt, true),
+      mainThreadContext(rt, true),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
@@ -810,10 +810,10 @@ bool GCRuntime::init(uint32_t maxbytes) {
   MOZ_ASSERT(SystemPageSize());
   Arena::checkLookupTables();
 
-  if (!TlsFreeOp.init()) {
+  if (!TlsGCContext.init()) {
     return false;
   }
-  TlsFreeOp.set(&mainThreadFreeOp.ref());
+  TlsGCContext.set(&mainThreadContext.ref());
 
   {
     AutoLockGCBgAlloc lock(this);
@@ -902,7 +902,7 @@ void GCRuntime::finish() {
   FreeChunkPool(availableChunks_.ref());
   FreeChunkPool(emptyChunks_.ref());
 
-  TlsFreeOp.set(nullptr);
+  TlsGCContext.set(nullptr);
 
   gcprobes::Finish(this);
 
@@ -1297,10 +1297,10 @@ void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
   EraseCallback(finalizeCallbacks.ref(), callback);
 }
 
-void GCRuntime::callFinalizeCallbacks(JSFreeOp* fop,
+void GCRuntime::callFinalizeCallbacks(JS::GCContext* gcx,
                                       JSFinalizeStatus status) const {
   for (auto& p : finalizeCallbacks.ref()) {
-    p.op(fop, status, p.data);
+    p.op(gcx, status, p.data);
   }
 }
 
@@ -1916,40 +1916,40 @@ void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
   std::swap(buffersToFreeAfterMinorGC.ref(), buffers);
 }
 
-void Realm::destroy(JSFreeOp* fop) {
-  JSRuntime* rt = fop->runtime();
+void Realm::destroy(JS::GCContext* gcx) {
+  JSRuntime* rt = gcx->runtime();
   if (auto callback = rt->destroyRealmCallback) {
-    callback(fop, this);
+    callback(gcx, this);
   }
   if (principals()) {
     JS_DropPrincipals(rt->mainContextFromOwnThread(), principals());
   }
   // Bug 1560019: Malloc memory associated with a zone but not with a specific
   // GC thing is not currently tracked.
-  fop->deleteUntracked(this);
+  gcx->deleteUntracked(this);
 }
 
-void Compartment::destroy(JSFreeOp* fop) {
-  JSRuntime* rt = fop->runtime();
+void Compartment::destroy(JS::GCContext* gcx) {
+  JSRuntime* rt = gcx->runtime();
   if (auto callback = rt->destroyCompartmentCallback) {
-    callback(fop, this);
+    callback(gcx, this);
   }
   // Bug 1560019: Malloc memory associated with a zone but not with a specific
   // GC thing is not currently tracked.
-  fop->deleteUntracked(this);
+  gcx->deleteUntracked(this);
   rt->gc.stats().sweptCompartment();
 }
 
-void Zone::destroy(JSFreeOp* fop) {
+void Zone::destroy(JS::GCContext* gcx) {
   MOZ_ASSERT(compartments().empty());
-  JSRuntime* rt = fop->runtime();
+  JSRuntime* rt = gcx->runtime();
   if (auto callback = rt->destroyZoneCallback) {
-    callback(fop, this);
+    callback(gcx, this);
   }
   // Bug 1560019: Malloc memory associated with a zone but not with a specific
   // GC thing is not currently tracked.
-  fop->deleteUntracked(this);
-  fop->runtime()->gc.stats().sweptZone();
+  gcx->deleteUntracked(this);
+  gcx->runtime()->gc.stats().sweptZone();
 }
 
 /*
@@ -1961,7 +1961,7 @@ void Zone::destroy(JSFreeOp* fop) {
  * sweepCompartments from deleting every compartment. Instead, it preserves an
  * arbitrary compartment in the zone.
  */
-void Zone::sweepCompartments(JSFreeOp* fop, bool keepAtleastOne,
+void Zone::sweepCompartments(JS::GCContext* gcx, bool keepAtleastOne,
                              bool destroyingRuntime) {
   MOZ_ASSERT(!compartments().empty());
   MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
@@ -1977,13 +1977,13 @@ void Zone::sweepCompartments(JSFreeOp* fop, bool keepAtleastOne,
      * still true, meaning all the other compartments were deleted.
      */
     bool keepAtleastOneRealm = read == end && keepAtleastOne;
-    comp->sweepRealms(fop, keepAtleastOneRealm, destroyingRuntime);
+    comp->sweepRealms(gcx, keepAtleastOneRealm, destroyingRuntime);
 
     if (!comp->realms().empty()) {
       *write++ = comp;
       keepAtleastOne = false;
     } else {
-      comp->destroy(fop);
+      comp->destroy(gcx);
     }
   }
   compartments().shrinkTo(write - compartments().begin());
@@ -1991,7 +1991,7 @@ void Zone::sweepCompartments(JSFreeOp* fop, bool keepAtleastOne,
   MOZ_ASSERT_IF(destroyingRuntime, compartments().empty());
 }
 
-void Compartment::sweepRealms(JSFreeOp* fop, bool keepAtleastOne,
+void Compartment::sweepRealms(JS::GCContext* gcx, bool keepAtleastOne,
                               bool destroyingRuntime) {
   MOZ_ASSERT(!realms().empty());
   MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
@@ -2011,7 +2011,7 @@ void Compartment::sweepRealms(JSFreeOp* fop, bool keepAtleastOne,
       *write++ = realm;
       keepAtleastOne = false;
     } else {
-      realm->destroy(fop);
+      realm->destroy(gcx);
     }
   }
   realms().shrinkTo(write - realms().begin());
@@ -2019,7 +2019,7 @@ void Compartment::sweepRealms(JSFreeOp* fop, bool keepAtleastOne,
   MOZ_ASSERT_IF(destroyingRuntime, realms().empty());
 }
 
-void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
+void GCRuntime::sweepZones(JS::GCContext* gcx, bool destroyingRuntime) {
   MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
 
   if (numActiveZoneIters) {
@@ -2043,13 +2043,13 @@ void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
       if (zoneIsDead) {
         AutoSetThreadIsSweeping threadIsSweeping(zone);
         zone->arenas.checkEmptyFreeLists();
-        zone->sweepCompartments(fop, false, destroyingRuntime);
+        zone->sweepCompartments(gcx, false, destroyingRuntime);
         MOZ_ASSERT(zone->compartments().empty());
         MOZ_ASSERT(zone->rttValueObjects().empty());
-        zone->destroy(fop);
+        zone->destroy(gcx);
         continue;
       }
-      zone->sweepCompartments(fop, true, destroyingRuntime);
+      zone->sweepCompartments(gcx, true, destroyingRuntime);
     }
     *write++ = zone;
   }
@@ -2081,7 +2081,7 @@ void GCRuntime::purgeRuntime() {
     zone->purgeAtomCache();
     zone->externalStringCache().purge();
     zone->functionToStringCache().purge();
-    zone->shapeZone().purgeShapeCaches(rt->defaultFreeOp());
+    zone->shapeZone().purgeShapeCaches(rt->gcContext());
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
@@ -2347,7 +2347,7 @@ void GCRuntime::discardJITCodeForGC() {
       options.discardJitScripts = true;
       options.resetNurseryAllocSites = resetNurserySites;
       options.resetPretenuredAllocSites = resetPretenuredSites;
-      zone->discardJitCode(rt->defaultFreeOp(), options);
+      zone->discardJitCode(rt->gcContext(), options);
     } else if (resetNurserySites || resetPretenuredSites) {
       zone->resetAllocSitesAndInvalidate(resetNurserySites,
                                          resetPretenuredSites);
@@ -2396,13 +2396,13 @@ void GCRuntime::purgePropMapTablesForShrinkingGC() {
     for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
          map.next()) {
       if (map->asLinked()->hasTable()) {
-        map->asLinked()->purgeTable(rt->defaultFreeOp());
+        map->asLinked()->purgeTable(rt->gcContext());
       }
     }
     for (auto map = zone->cellIterUnsafe<DictionaryPropMap>(); !map.done();
          map.next()) {
       if (map->asLinked()->hasTable()) {
-        map->asLinked()->purgeTable(rt->defaultFreeOp());
+        map->asLinked()->purgeTable(rt->gcContext());
       }
     }
   }
@@ -2858,7 +2858,7 @@ void GCRuntime::maybeStopPretenuring() {
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();
       zone->setPreservingCode(false);
-      zone->discardJitCode(rt->defaultFreeOp());
+      zone->discardJitCode(rt->gcContext());
       zone->setPreservingCode(preserving);
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
@@ -3271,7 +3271,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         // remove and free dead zones, compartments and realms.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
-        sweepZones(rt->defaultFreeOp(), destroyingRuntime);
+        sweepZones(rt->gcContext(), destroyingRuntime);
       }
 
       MOZ_ASSERT(!startedCompacting);
@@ -3325,7 +3325,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   MOZ_ASSERT(safeToYield);
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
-  MOZ_ASSERT(!rt->defaultFreeOp()->hasJitCodeToPoison());
+  MOZ_ASSERT(!rt->gcContext()->hasJitCodeToPoison());
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {

@@ -24,6 +24,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
   size_t bytesPerRow = aSurface->GetBytesPerRow();
   size_t ioWidth = aSurface->GetDevicePixelWidth();
   size_t ioHeight = aSurface->GetDevicePixelHeight();
+  IntSize size((int32_t)ioWidth, (int32_t)ioHeight);
   SurfaceFormat ioFormat = aSurface->GetFormat();
 
   if ((ioFormat == SurfaceFormat::NV12 || ioFormat == SurfaceFormat::YUV422) &&
@@ -37,8 +38,8 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
           ? SurfaceFormat::B8G8R8X8
           : SurfaceFormat::B8G8R8A8;
 
-  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
-      IntSize::Truncate(ioWidth, ioHeight), format);
+  RefPtr<DataSourceSurface> dataSurface =
+      Factory::CreateDataSourceSurface(size, format);
   if (NS_WARN_IF(!dataSurface)) {
     return nullptr;
   }
@@ -77,23 +78,20 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
     PlanarYCbCrData data;
     data.mYChannel = (uint8_t*)aSurface->GetBaseAddressOfPlane(0);
     data.mYStride = aSurface->GetBytesPerRow(0);
-    data.mYSize = IntSize::Truncate(ioWidth, ioHeight);
     data.mCbChannel = cbPlane.get();
     data.mCrChannel = crPlane.get();
     data.mCbCrStride = cbCrWidth;
-    data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
-    data.mPicSize = data.mYSize;
+    data.mPictureRect = IntRect(IntPoint(0, 0), size);
     data.mYUVColorSpace = aSurface->GetYUVColorSpace();
     data.mColorRange = aSurface->IsFullRange() ? gfx::ColorRange::FULL
                                                : gfx::ColorRange::LIMITED;
+    data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
-    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8,
-                      IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData,
+    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, size, mappedSurface.mData,
                       mappedSurface.mStride);
   } else if (ioFormat == SurfaceFormat::YUV422) {
     if (ioWidth == ALIGNED_32(ioWidth)) {
       // Optimization when width is aligned to 32.
-      IntSize size = IntSize::Truncate(ioWidth, ioHeight);
       libyuv::ConvertToARGB((uint8_t*)aSurface->GetBaseAddress(),
                             0 /* not used */, mappedSurface.mData,
                             mappedSurface.mStride, 0, 0, size.width,
@@ -144,18 +142,16 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
       PlanarYCbCrData data;
       data.mYChannel = ALIGNEDPTR_32(yPlane.get());
       data.mYStride = cbCrStride * 2;
-      data.mYSize = IntSize::Truncate(ioWidth, ioHeight);
       data.mCbChannel = ALIGNEDPTR_32(cbPlane.get());
       data.mCrChannel = ALIGNEDPTR_32(crPlane.get());
       data.mCbCrStride = cbCrStride;
-      data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
-      data.mPicSize = data.mYSize;
+      data.mPictureRect = IntRect(IntPoint(0, 0), size);
       data.mYUVColorSpace = aSurface->GetYUVColorSpace();
       data.mColorRange = aSurface->IsFullRange() ? gfx::ColorRange::FULL
                                                  : gfx::ColorRange::LIMITED;
+      data.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH;
 
-      ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8,
-                        IntSize::Truncate(ioWidth, ioHeight),
+      ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, size,
                         mappedSurface.mData, mappedSurface.mStride);
     }
   } else {
