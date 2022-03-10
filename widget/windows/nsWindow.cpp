@@ -6748,20 +6748,22 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
   MaybeLogPosChanged(mWnd, wp);
 
   // Handle window size mode changes
-  if (wp->flags & SWP_FRAMECHANGED &&
-      mFrameState.GetSizeMode() != nsSizeMode_Fullscreen) {
+  if (wp->flags & SWP_FRAMECHANGED) {
     // Bug 566135 - Windows theme code calls show window on SW_SHOWMINIMIZED
     // windows when fullscreen games disable desktop composition. If we're
     // minimized and not being activated, ignore the event and let windows
     // handle it.
     if (mFrameState.GetSizeMode() == nsSizeMode_Minimized &&
-        (wp->flags & SWP_NOACTIVATE))
+        (wp->flags & SWP_NOACTIVATE)) {
       return;
+    }
 
     mFrameState.OnFrameChanged();
 
-    // Skip window size change events below on minimization.
-    if (mFrameState.GetSizeMode() == nsSizeMode_Minimized) return;
+    if (mFrameState.GetSizeMode() == nsSizeMode_Minimized) {
+      // Skip window size change events below on minimization.
+      return;
+    }
   }
 
   // Notify visibility change when window is activated.
@@ -6878,8 +6880,7 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
   // margins to normal mode.
-  if ((info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) &&
-      mFrameState.GetSizeMode() != nsSizeMode_Fullscreen) {
+  if (info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) {
     mFrameState.OnFrameChanging();
   }
 
@@ -9019,6 +9020,49 @@ bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
   return consumed;
 }
 
+static nsSizeMode GetSizeModeForWindowFrame(HWND aWnd, bool aFullscreenMode) {
+  WINDOWPLACEMENT pl;
+  pl.length = sizeof(pl);
+  ::GetWindowPlacement(aWnd, &pl);
+
+  if (pl.showCmd == SW_SHOWMINIMIZED) {
+    return nsSizeMode_Minimized;
+  } else if (aFullscreenMode) {
+    return nsSizeMode_Fullscreen;
+  } else if (pl.showCmd == SW_SHOWMAXIMIZED) {
+    return nsSizeMode_Maximized;
+  } else {
+    return nsSizeMode_Normal;
+  }
+}
+
+static void ShowWindowWithMode(HWND aWnd, nsSizeMode aMode) {
+  // This will likely cause a callback to
+  // nsWindow::FrameState::{OnFrameChanging() and OnFrameChanged()}
+  switch (aMode) {
+    case nsSizeMode_Fullscreen:
+      ::ShowWindow(aWnd, SW_SHOW);
+      break;
+
+    case nsSizeMode_Maximized:
+      ::ShowWindow(aWnd, SW_MAXIMIZE);
+      break;
+
+    case nsSizeMode_Minimized:
+      ::ShowWindow(aWnd, SW_MINIMIZE);
+      break;
+
+    default:
+      // Don't call ::ShowWindow if we're trying to "restore" a window that is
+      // already in a normal state.  Prevents a bug where snapping to one side
+      // of the screen and then minimizing would cause Windows to forget our
+      // window's correct restored position/size.
+      if (GetCurrentShowCmd(aWnd) != SW_SHOWNORMAL) {
+        ::ShowWindow(aWnd, SW_RESTORE);
+      }
+  }
+}
+
 nsWindow::FrameState::FrameState(nsWindow* aWindow) : mWindow(aWindow) {}
 
 nsSizeMode nsWindow::FrameState::GetSizeMode() const { return mSizeMode; }
@@ -9028,10 +9072,7 @@ void nsWindow::FrameState::ConsumePreXULSkeletonState(bool aWasMaximized) {
 }
 
 void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
-  // Let's not try and do anything if we're already in that state.
-  // (This is needed to prevent problems when calling window.minimize(), which
-  // calls us directly, and then the OS triggers another call to us.)
-  if (aMode == mSizeMode) {
+  if (mSizeMode == aMode) {
     return;
   }
 
@@ -9061,42 +9102,35 @@ void nsWindow::FrameState::EnsureFullscreenMode(bool aFullScreen) {
     mOldSizeMode = mSizeMode;
     SetSizeModeInternal(nsSizeMode_Fullscreen);
   } else {
-    if (mSizeMode != mOldSizeMode) {
-      SetSizeModeInternal(mOldSizeMode);
-    }
-
-    MOZ_ASSERT(mSizeMode == mOldSizeMode);
+    SetSizeModeInternal(mOldSizeMode);
   }
 
   mWindow->OnFullscreenChanged(aFullScreen);
 }
 
 void nsWindow::FrameState::OnFrameChanging() {
+  if (mSizeMode == nsSizeMode_Fullscreen) {
+    return;
+  }
+
   WINDOWPLACEMENT pl;
   pl.length = sizeof(pl);
   ::GetWindowPlacement(mWindow->mWnd, &pl);
 
-  nsSizeMode sizeMode;
-  if (pl.showCmd == SW_SHOWMAXIMIZED)
-    sizeMode = (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
-  else if (pl.showCmd == SW_SHOWMINIMIZED)
-    sizeMode = nsSizeMode_Minimized;
-  else if (mFullscreenMode)
-    sizeMode = nsSizeMode_Fullscreen;
-  else
-    sizeMode = nsSizeMode_Normal;
+  const nsSizeMode newSizeMode =
+      GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
 
-  mWindow->OnSizeModeChange(sizeMode);
+  mWindow->OnSizeModeChange(newSizeMode);
 
-  mWindow->UpdateNonClientMargins(sizeMode, false);
+  mWindow->UpdateNonClientMargins(newSizeMode, false);
 }
 
 void nsWindow::FrameState::OnFrameChanged() {
-  WINDOWPLACEMENT pl;
-  pl.length = sizeof(pl);
-  ::GetWindowPlacement(mWindow->mWnd, &pl);
+  if (mSizeMode == nsSizeMode_Fullscreen) {
+    return;
+  }
 
-  nsSizeMode previousSizeMode = mSizeMode;
+  const nsSizeMode previousSizeMode = mSizeMode;
 
   // Windows has just changed the size mode of this window. The call to
   // SizeModeChanged will trigger a call into SetSizeMode where we will
@@ -9105,15 +9139,7 @@ void nsWindow::FrameState::OnFrameChanged() {
   // this window's mode has already changed. Updating SizeMode here
   // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
   // to window docking. (bug 489258)
-  if (pl.showCmd == SW_SHOWMAXIMIZED) {
-    mSizeMode = mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized;
-  } else if (pl.showCmd == SW_SHOWMINIMIZED) {
-    mSizeMode = nsSizeMode_Minimized;
-  } else if (mFullscreenMode) {
-    mSizeMode = nsSizeMode_Fullscreen;
-  } else {
-    mSizeMode = nsSizeMode_Normal;
-  }
+  mSizeMode = GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
 
   MaybeLogSizeMode(mSizeMode);
 
@@ -9124,40 +9150,24 @@ void nsWindow::FrameState::OnFrameChanged() {
   // If window was restored, window activation was bypassed during the
   // SetSizeMode call originating from OnWindowPosChanging to avoid saving
   // pre-restore attributes. Force activation now to get correct attributes.
-  if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal) {
-    mWindow->DispatchFocusToTopLevelWindow(true);
+  if (mLastSizeMode != mSizeMode) {
+    if (mSizeMode == nsSizeMode_Normal) {
+      mWindow->DispatchFocusToTopLevelWindow(true);
+    }
+    mLastSizeMode = mSizeMode;
   }
-
-  mLastSizeMode = mSizeMode;
 }
 
 void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
-  // save the requested state
+  if (mSizeMode == aMode) {
+    return;
+  }
+
   mLastSizeMode = mSizeMode;
   mSizeMode = aMode;
+
   if (mWindow->mIsVisible) {
-    switch (aMode) {
-      case nsSizeMode_Fullscreen:
-        ::ShowWindow(mWindow->mWnd, SW_SHOW);
-        break;
-
-      case nsSizeMode_Maximized:
-        ::ShowWindow(mWindow->mWnd, SW_MAXIMIZE);
-        break;
-
-      case nsSizeMode_Minimized:
-        ::ShowWindow(mWindow->mWnd, SW_MINIMIZE);
-        break;
-
-      default:
-        // Don't call ::ShowWindow if we're trying to "restore" a window that is
-        // already in a normal state.  Prevents a bug where snapping to one side
-        // of the screen and then minimizing would cause Windows to forget our
-        // window's correct restored position/size.
-        if (GetCurrentShowCmd(mWindow->mWnd) != SW_SHOWNORMAL) {
-          ::ShowWindow(mWindow->mWnd, SW_RESTORE);
-        }
-    }
+    ShowWindowWithMode(mWindow->mWnd, aMode);
   }
 
   // we activate here to ensure that the right child window is focused
