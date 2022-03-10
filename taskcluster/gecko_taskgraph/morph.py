@@ -25,9 +25,9 @@ import re
 
 
 from slugid import nice as slugid
+from taskgraph.graph import Graph
 from taskgraph.task import Task
 
-from .graph import Graph
 from .taskgraph import TaskGraph
 from .util.attributes import release_level
 from .util.workertypes import get_worker_type

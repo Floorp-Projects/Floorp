@@ -6,11 +6,11 @@
 import unittest
 
 from taskgraph.config import GraphConfig
+from taskgraph.graph import Graph
 from taskgraph.task import Task
 from unittest import mock
 
 from gecko_taskgraph import create
-from gecko_taskgraph.graph import Graph
 from gecko_taskgraph.taskgraph import TaskGraph
 
 from mozunit import main

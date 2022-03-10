@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from mozunit import main
+from taskgraph.graph import Graph
 
 from gecko_taskgraph.generator import load_tasks_for_kind
 from gecko_taskgraph import (
     generator,
-    graph,
 )
 
 from conftest import (
@@ -33,7 +33,7 @@ def test_kind_ordering(maketgg):
 def test_full_task_set(maketgg):
     "The full_task_set property has all tasks"
     tgg = maketgg()
-    assert tgg.full_task_set.graph == graph.Graph(
+    assert tgg.full_task_set.graph == Graph(
         {"_fake-t-0", "_fake-t-1", "_fake-t-2"}, set()
     )
     assert sorted(tgg.full_task_set.tasks.keys()) == sorted(
@@ -44,7 +44,7 @@ def test_full_task_set(maketgg):
 def test_full_task_graph(maketgg):
     "The full_task_graph property has all tasks, and links"
     tgg = maketgg()
-    assert tgg.full_task_graph.graph == graph.Graph(
+    assert tgg.full_task_graph.graph == Graph(
         {"_fake-t-0", "_fake-t-1", "_fake-t-2"},
         {
             ("_fake-t-1", "_fake-t-0", "prev"),
@@ -59,14 +59,14 @@ def test_full_task_graph(maketgg):
 def test_target_task_set(maketgg):
     "The target_task_set property has the targeted tasks"
     tgg = maketgg(["_fake-t-1"])
-    assert tgg.target_task_set.graph == graph.Graph({"_fake-t-1"}, set())
+    assert tgg.target_task_set.graph == Graph({"_fake-t-1"}, set())
     assert set(tgg.target_task_set.tasks.keys()) == {"_fake-t-1"}
 
 
 def test_target_task_graph(maketgg):
     "The target_task_graph property has the targeted tasks and deps"
     tgg = maketgg(["_fake-t-1"])
-    assert tgg.target_task_graph.graph == graph.Graph(
+    assert tgg.target_task_graph.graph == Graph(
         {"_fake-t-0", "_fake-t-1"}, {("_fake-t-1", "_fake-t-0", "prev")}
     )
     assert sorted(tgg.target_task_graph.tasks.keys()) == sorted(
@@ -108,7 +108,7 @@ def test_optimized_task_graph(maketgg):
     "The optimized task graph contains task ids"
     tgg = maketgg(["_fake-t-2"])
     tid = tgg.label_to_taskid
-    assert tgg.optimized_task_graph.graph == graph.Graph(
+    assert tgg.optimized_task_graph.graph == Graph(
         {tid["_fake-t-0"], tid["_fake-t-1"], tid["_fake-t-2"]},
         {
             (tid["_fake-t-1"], tid["_fake-t-0"], "prev"),
