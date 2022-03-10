@@ -10,7 +10,7 @@ const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class Event extends Module {
+class EventModule extends Module {
   destroy() {}
 
   /**
@@ -32,4 +32,4 @@ class Event extends Module {
   }
 }
 
-const event = Event;
+const event = EventModule;
