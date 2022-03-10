@@ -12,7 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/PublicIterators.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AlignmentMaskAnalysis.h"
@@ -634,10 +634,10 @@ void JitCode::traceChildren(JSTracer* trc) {
   }
 }
 
-void JitCode::finalize(JSFreeOp* fop) {
+void JitCode::finalize(JS::GCContext* gcx) {
   // If this jitcode had a bytecode map, it must have already been removed.
 #ifdef DEBUG
-  JSRuntime* rt = fop->runtime();
+  JSRuntime* rt = gcx->runtime();
   if (hasBytecodeMap_) {
     MOZ_ASSERT(rt->jitRuntime()->hasJitcodeGlobalTable());
     MOZ_ASSERT(!rt->jitRuntime()->getJitcodeGlobalTable()->lookup(raw()));
@@ -653,7 +653,7 @@ void JitCode::finalize(JSFreeOp* fop) {
   // With W^X JIT code, reprotecting memory for each JitCode instance is
   // slow, so we record the ranges and poison them later all at once. It's
   // safe to ignore OOM here, it just means we won't poison the code.
-  if (fop->appendJitPoisonRange(JitPoisonRange(pool_, raw() - headerSize_,
+  if (gcx->appendJitPoisonRange(JitPoisonRange(pool_, raw() - headerSize_,
                                                headerSize_ + bufferSize_))) {
     pool_->addRef();
   }
@@ -940,7 +940,7 @@ const OsiIndex* IonScript::getOsiIndex(uint8_t* retAddr) const {
   return getOsiIndex(disp);
 }
 
-void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
+void IonScript::Destroy(JS::GCContext* gcx, IonScript* script) {
   // Make sure there are no pointers into the IonScript's nursery objects list
   // in the store buffer. Because this can be called during sweeping when
   // discarding JIT code, we have to lock the store buffer when we find an
@@ -952,18 +952,18 @@ void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
       continue;
     }
     if (lock.isNothing()) {
-      lock.emplace(&fop->runtime()->gc.storeBuffer());
+      lock.emplace(&gcx->runtime()->gc.storeBuffer());
     }
     script->nurseryObjects()[i] = HeapPtrObject();
   }
 
   // This allocation is tracked by JSScript::setIonScriptImpl.
-  fop->deleteUntracked(script);
+  gcx->deleteUntracked(script);
 }
 
 void JS::DeletePolicy<js::jit::IonScript>::operator()(
     const js::jit::IonScript* script) {
-  IonScript::Destroy(rt_->defaultFreeOp(), const_cast<IonScript*>(script));
+  IonScript::Destroy(rt_->gcContext(), const_cast<IonScript*>(script));
 }
 
 void IonScript::purgeICs(Zone* zone) {
@@ -2299,7 +2299,7 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-static void InvalidateActivation(JSFreeOp* fop,
+static void InvalidateActivation(JS::GCContext* gcx,
                                  const JitActivationIterator& activations,
                                  bool invalidateAll) {
   JitSpew(JitSpew_IonInvalidate, "BEGIN invalidating activation");
@@ -2463,7 +2463,7 @@ static void InvalidateActivation(JSFreeOp* fop,
   JitSpew(JitSpew_IonInvalidate, "END invalidating activation");
 }
 
-void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
+void jit::InvalidateAll(JS::GCContext* gcx, Zone* zone) {
   // The caller should previously have cancelled off thread compilation.
 #ifdef DEBUG
   for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
@@ -2477,7 +2477,7 @@ void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     if (iter->compartment()->zone() == zone) {
       JitSpew(JitSpew_IonInvalidate, "Invalidating all frames for GC");
-      InvalidateActivation(fop, iter, true);
+      InvalidateActivation(gcx, iter, true);
     }
   }
 }
@@ -2488,7 +2488,7 @@ static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
   // Null out the JitScript's IonScript pointer. The caller is responsible for
   // destroying the IonScript using the invalidation count mechanism.
   DebugOnly<IonScript*> clearedIonScript =
-      script->jitScript()->clearIonScript(cx->defaultFreeOp(), script);
+      script->jitScript()->clearIonScript(cx->gcContext(), script);
   MOZ_ASSERT(clearedIonScript == ionScript);
 
   // Wait for the scripts to get warm again before doing another
@@ -2532,9 +2532,9 @@ void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
     return;
   }
 
-  JSFreeOp* fop = cx->defaultFreeOp();
+  JS::GCContext* gcx = cx->gcContext();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
-    InvalidateActivation(fop, iter, false);
+    InvalidateActivation(gcx, iter, false);
   }
 
   // Drop the references added above. If a script was never active, its
@@ -2554,7 +2554,7 @@ void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
       ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
 
-    ionScript->decrementInvalidationCount(fop);
+    ionScript->decrementInvalidationCount(gcx);
     numInvalidations--;
   }
 
@@ -2622,18 +2622,18 @@ void jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses,
   Invalidate(cx, scripts, resetUses, cancelOffThread);
 }
 
-void jit::FinishInvalidation(JSFreeOp* fop, JSScript* script) {
+void jit::FinishInvalidation(JS::GCContext* gcx, JSScript* script) {
   if (!script->hasIonScript()) {
     return;
   }
 
   // In all cases, null out jitScript->ionScript_ to avoid re-entry.
-  IonScript* ion = script->jitScript()->clearIonScript(fop, script);
+  IonScript* ion = script->jitScript()->clearIonScript(gcx, script);
 
   // If this script has Ion code on the stack, invalidated() will return
   // true. In this case we have to wait until destroying it.
   if (!ion->invalidated()) {
-    jit::IonScript::Destroy(fop, ion);
+    jit::IonScript::Destroy(gcx, ion);
   }
 }
 

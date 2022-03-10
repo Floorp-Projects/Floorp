@@ -438,7 +438,7 @@ class JSObject
   MOZ_ALWAYS_INLINE JSNative callHook() const;
   MOZ_ALWAYS_INLINE JSNative constructHook() const;
 
-  MOZ_ALWAYS_INLINE void finalize(JSFreeOp* fop);
+  MOZ_ALWAYS_INLINE void finalize(JS::GCContext* gcx);
 
  public:
   static bool nonNativeSetProperty(JSContext* cx, js::HandleObject obj,

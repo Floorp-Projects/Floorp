@@ -99,7 +99,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
     js::gc::PostWriteBarrierImpl<BigInt>(cellp, prev, next);
   }
 
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
   js::HashNumber hash() const;
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfExcludingThisInNursery(mozilla::MallocSizeOf mallocSizeOf) const;

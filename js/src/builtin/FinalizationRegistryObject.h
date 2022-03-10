@@ -171,7 +171,7 @@ class FinalizationRegistrationsObject : public NativeObject {
   void* privatePtr() const;
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 using FinalizationRecordVector =
@@ -218,7 +218,7 @@ class FinalizationRegistryObject : public NativeObject {
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 // Contains information about the cleanup callback and the records queued to
@@ -266,7 +266,7 @@ class FinalizationQueueObject : public NativeObject {
   static bool doCleanup(JSContext* cx, unsigned argc, Value* vp);
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 }  // namespace js

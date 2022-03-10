@@ -41,7 +41,7 @@ extern void TraceRuntime(JSTracer* trc);
 // Trace roots but don't evict the nursery first; used from DumpHeap.
 extern void TraceRuntimeWithoutEviction(JSTracer* trc);
 
-extern void ReleaseAllJITCode(JSFreeOp* op);
+extern void ReleaseAllJITCode(JS::GCContext* gcx);
 
 extern void PrepareForDebugGC(JSRuntime* rt);
 

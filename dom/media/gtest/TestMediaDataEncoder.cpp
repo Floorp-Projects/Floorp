@@ -56,20 +56,20 @@ class MediaDataEncoderTest : public testing::Test {
     int16_t mColorStep = 4;
 
     void Init(const gfx::IntSize& aSize) {
-      mYUV.mPicSize = aSize;
+      mYUV.mPictureRect = gfx::IntRect(0, 0, aSize.width, aSize.height);
       mYUV.mYStride = aSize.width;
-      mYUV.mYSize = aSize;
-      mYUV.mCbCrStride = aSize.width / 2;
-      mYUV.mCbCrSize = gfx::IntSize(aSize.width / 2, aSize.height / 2);
-      size_t bufferSize = mYUV.mYStride * mYUV.mYSize.height +
-                          mYUV.mCbCrStride * mYUV.mCbCrSize.height +
-                          mYUV.mCbCrStride * mYUV.mCbCrSize.height;
+      mYUV.mCbCrStride = (aSize.width + 1) / 2;
+      mYUV.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+      auto ySize = mYUV.YDataSize();
+      auto cbcrSize = mYUV.CbCrDataSize();
+      size_t bufferSize =
+          mYUV.mYStride * ySize.height + 2 * mYUV.mCbCrStride * cbcrSize.height;
       mBuffer = MakeUnique<uint8_t[]>(bufferSize);
       std::fill_n(mBuffer.get(), bufferSize, 0x7F);
       mYUV.mYChannel = mBuffer.get();
-      mYUV.mCbChannel = mYUV.mYChannel + mYUV.mYStride * mYUV.mYSize.height;
-      mYUV.mCrChannel =
-          mYUV.mCbChannel + mYUV.mCbCrStride * mYUV.mCbCrSize.height;
+      mYUV.mCbChannel = mYUV.mYChannel + mYUV.mYStride * ySize.height;
+      mYUV.mCrChannel = mYUV.mCbChannel + mYUV.mCbCrStride * cbcrSize.height;
+      mYUV.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
       mRecycleBin = new layers::BufferRecycleBin();
     }
 
@@ -119,8 +119,8 @@ class MediaDataEncoderTest : public testing::Test {
     }
 
     void Draw(const size_t aIndex) {
-      DrawChessboard(mYUV.mYChannel, mYUV.mYSize.width, mYUV.mYSize.height,
-                     aIndex << 1);
+      auto ySize = mYUV.YDataSize();
+      DrawChessboard(mYUV.mYChannel, ySize.width, ySize.height, aIndex << 1);
       int16_t color = mYUV.mCbChannel[0] + mColorStep;
       if (color > 255 || color < 0) {
         mColorStep = -mColorStep;

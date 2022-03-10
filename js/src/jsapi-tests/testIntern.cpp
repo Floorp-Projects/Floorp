@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
@@ -42,10 +42,10 @@ BEGIN_TEST(testPinAcrossGC) {
   return true;
 }
 
-static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
+static void FinalizeCallback(JS::GCContext* gcx, JSFinalizeStatus status,
                              void* data) {
   if (status == JSFINALIZE_GROUP_START) {
-    sw.strOk = js::gc::IsMarkedUnbarriered(fop->runtime(), sw.str);
+    sw.strOk = js::gc::IsMarkedUnbarriered(gcx->runtime(), sw.str);
   }
 }
 END_TEST(testPinAcrossGC)

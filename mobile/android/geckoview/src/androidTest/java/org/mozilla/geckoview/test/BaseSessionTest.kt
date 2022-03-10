@@ -115,6 +115,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val CONTEXT_MENU_VIDEO_HTML_PATH = "/assets/www/context_menu_video.html"
         const val CONTEXT_MENU_BLOB_FULL_HTML_PATH = "/assets/www/context_menu_blob_full.html"
         const val CONTEXT_MENU_BLOB_BUFFERED_HTML_PATH = "/assets/www/context_menu_blob_buffered.html"
+        const val REMOTE_IFRAME = "/assets/www/accessibility/test-remote-iframe.html"
+        const val LOCAL_IFRAME = "/assets/www/accessibility/test-local-iframe.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST

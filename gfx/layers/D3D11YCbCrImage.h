@@ -70,15 +70,21 @@ class D3D11YCbCrImage : public Image {
 
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
+  gfx::IntSize GetYSize() const {
+    return {mPictureRect.XMost(), mPictureRect.YMost()};
+  }
+  gfx::IntSize GetCbCrSize() const {
+    return ChromaSize(GetYSize(), mChromaSubsampling);
+  }
+
  private:
   const DXGIYCbCrTextureData* GetData() const;
 
-  gfx::IntSize mYSize;
-  gfx::IntSize mCbCrSize;
   gfx::IntRect mPictureRect;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mColorSpace;
   gfx::ColorRange mColorRange;
+  gfx::ChromaSubsampling mChromaSubsampling;
   RefPtr<TextureClient> mTextureClient;
 };
 

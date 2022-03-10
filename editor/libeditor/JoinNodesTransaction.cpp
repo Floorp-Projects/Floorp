@@ -125,10 +125,6 @@ nsresult JoinNodesTransaction::DoTransactionInternal(
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> removingContent = *mRemovedContent;
   const OwningNonNull<nsIContent> keepingContent = *mKeepingContent;
-  // FYI: ComputeIndexInParentNode() never returns Nothing here because it's not
-  //      being removed (i.e., it's in the parent child node chain).
-  const uint32_t removingContentOffset =
-      *removingContent->ComputeIndexInParentNode();
   nsresult rv;
   // Let's try to get actual joined point with the tacker.
   EditorDOMPoint joinNodesPoint(mKeepingContent, 0u);
@@ -137,13 +133,6 @@ nsresult JoinNodesTransaction::DoTransactionInternal(
                                          &joinNodesPoint);
     rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
-
-    DebugOnly<nsresult> rvIgnored =
-        htmlEditor->RangeUpdaterRef().SelAdjJoinNodes(
-            CreateJoinedPoint<EditorRawDOMPoint>(), removingContent,
-            removingContentOffset, JoinNodesDirection::LeftNodeIntoRightNode);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }
   // Adjust join node offset to the actual offset where the original first
   // content of the right node is.

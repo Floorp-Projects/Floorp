@@ -24,7 +24,7 @@
 #include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -133,7 +133,7 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
       JSAtom* name = bi.name();
-      cx->markAtom(name);
+      MOZ_ASSERT(AtomIsMarked(cx->zone(), name));
       id = NameToId(name->asPropertyName());
       if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
                                &mapLength, &objectFlags)) {
@@ -362,10 +362,10 @@ uint32_t Scope::environmentChainLength() const {
   return length;
 }
 
-void Scope::finalize(JSFreeOp* fop) {
+void Scope::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(CurrentThreadIsGCFinalizing());
-  applyScopeDataTyped([this, fop](auto data) {
-    fop->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
+  applyScopeDataTyped([this, gcx](auto data) {
+    gcx->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
   });
   setHeaderPtr(nullptr);
 }

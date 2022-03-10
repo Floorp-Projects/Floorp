@@ -84,6 +84,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   }
   void Reflow(nsPresContext*, ReflowOutput&, const ReflowInput&,
               nsReflowStatus&) override;
+  bool IsLeafDynamic() const override;
 
   nsresult GetContentForEvent(mozilla::WidgetEvent*,
                               nsIContent** aContent) final;
@@ -211,6 +212,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
       : nsImageFrame(aStyle, aPresContext, kClassID, aKind) {}
 
   nsImageFrame(ComputedStyle*, nsPresContext* aPresContext, ClassID, Kind);
+
+  void ReflowChildren(nsPresContext*, const ReflowInput&,
+                      const mozilla::LogicalSize& aImageSize);
 
  protected:
   nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)

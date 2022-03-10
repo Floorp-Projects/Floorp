@@ -61,7 +61,7 @@ class RemoteAccessibleWrap : public AccessibleWrap {
   virtual bool GetSelectionBounds(int32_t* aStartOffset,
                                   int32_t* aEndOffset) override;
 
-  virtual void PivotTo(int32_t aGranularity, bool aForward,
+  virtual bool PivotTo(int32_t aGranularity, bool aForward,
                        bool aInclusive) override;
 
   virtual void NavigateText(int32_t aGranularity, int32_t aStartOffset,

@@ -1645,7 +1645,7 @@ static constexpr uint32_t HistogramObjectDataSlot = 0;
 static constexpr uint32_t HistogramObjectSlotCount =
     HistogramObjectDataSlot + 1;
 
-void internal_JSHistogram_finalize(JSFreeOp*, JSObject*);
+void internal_JSHistogram_finalize(JS::GCContext*, JSObject*);
 
 static const JSClassOps sJSHistogramClassOps = {nullptr, /* addProperty */
                                                 nullptr, /* delProperty */
@@ -2038,7 +2038,7 @@ nsresult internal_WrapAndReturnHistogram(HistogramID id, JSContext* cx,
   return NS_OK;
 }
 
-void internal_JSHistogram_finalize(JSFreeOp*, JSObject* obj) {
+void internal_JSHistogram_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (!obj || JS::GetClass(obj) != &sJSHistogramClass) {
     MOZ_ASSERT_UNREACHABLE("Should have the right JS class.");
     return;
@@ -2070,7 +2070,7 @@ void internal_JSHistogram_finalize(JSFreeOp*, JSObject* obj) {
 
 namespace {
 
-void internal_JSKeyedHistogram_finalize(JSFreeOp*, JSObject*);
+void internal_JSKeyedHistogram_finalize(JS::GCContext*, JSObject*);
 
 static const JSClassOps sJSKeyedHistogramClassOps = {
     nullptr, /* addProperty */
@@ -2389,7 +2389,7 @@ nsresult internal_WrapAndReturnKeyedHistogram(
   return NS_OK;
 }
 
-void internal_JSKeyedHistogram_finalize(JSFreeOp*, JSObject* obj) {
+void internal_JSKeyedHistogram_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (!obj || JS::GetClass(obj) != &sJSKeyedHistogramClass) {
     MOZ_ASSERT_UNREACHABLE("Should have the right JS class.");
     return;

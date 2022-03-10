@@ -572,16 +572,16 @@ void RegExpShared::discardJitCode() {
   tables.clearAndFree();
 }
 
-void RegExpShared::finalize(JSFreeOp* fop) {
+void RegExpShared::finalize(JS::GCContext* gcx) {
   for (auto& comp : compilationArray) {
     if (comp.byteCode) {
       size_t length = comp.byteCodeLength();
-      fop->free_(this, comp.byteCode, length, MemoryUse::RegExpSharedBytecode);
+      gcx->free_(this, comp.byteCode, length, MemoryUse::RegExpSharedBytecode);
     }
   }
   if (namedCaptureIndices_) {
     size_t length = numNamedCaptures() * sizeof(uint32_t);
-    fop->free_(this, namedCaptureIndices_, length,
+    gcx->free_(this, namedCaptureIndices_, length,
                MemoryUse::RegExpSharedNamedCaptureData);
   }
   tables.~JitCodeTables();

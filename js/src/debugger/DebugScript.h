@@ -85,7 +85,7 @@ class DebugScript {
   }
 
   void trace(JSTracer* trc);
-  void delete_(JSFreeOp* fop, DebugScriptObject* owner);
+  void delete_(JS::GCContext* gcx, DebugScriptObject* owner);
 
   static DebugScript* get(JSScript* script);
   static DebugScript* getOrCreate(JSContext* cx, HandleScript script);
@@ -95,11 +95,11 @@ class DebugScript {
   static JSBreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
                                                      HandleScript script,
                                                      jsbytecode* pc);
-  static void destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
+  static void destroyBreakpointSite(JS::GCContext* gcx, JSScript* script,
                                     jsbytecode* pc);
 
-  static void clearBreakpointsIn(JSFreeOp* fop, JSScript* script, Debugger* dbg,
-                                 JSObject* handler);
+  static void clearBreakpointsIn(JS::GCContext* gcx, JSScript* script,
+                                 Debugger* dbg, JSObject* handler);
 
 #ifdef DEBUG
   static uint32_t getStepperCount(JSScript* script);
@@ -113,7 +113,7 @@ class DebugScript {
    */
   [[nodiscard]] static bool incrementStepperCount(JSContext* cx,
                                                   HandleScript script);
-  static void decrementStepperCount(JSFreeOp* fop, JSScript* script);
+  static void decrementStepperCount(JS::GCContext* gcx, JSScript* script);
 
   /*
    * Increment or decrement the generator observer count. If the count is
@@ -123,7 +123,8 @@ class DebugScript {
    */
   [[nodiscard]] static bool incrementGeneratorObserverCount(
       JSContext* cx, HandleScript script);
-  static void decrementGeneratorObserverCount(JSFreeOp* fop, JSScript* script);
+  static void decrementGeneratorObserverCount(JS::GCContext* gcx,
+                                              JSScript* script);
 };
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
@@ -145,7 +146,7 @@ class DebugScriptObject : public NativeObject {
   static const JSClassOps classOps_;
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 // A weak map from JSScripts to DebugScriptObjects.

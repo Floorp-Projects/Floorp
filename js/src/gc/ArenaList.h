@@ -329,7 +329,7 @@ class ArenaLists {
   bool relocateArenas(Arena*& relocatedListOut, JS::GCReason reason,
                       js::SliceBudget& sliceBudget, gcstats::Statistics& stats);
 
-  void queueForegroundObjectsForSweep(JSFreeOp* fop);
+  void queueForegroundObjectsForSweep(JS::GCContext* gcx);
   void queueForegroundThingsForSweep();
 
   Arena* takeSweptEmptyArenas();

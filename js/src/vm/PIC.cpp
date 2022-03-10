@@ -6,7 +6,7 @@
 
 #include "vm/PIC.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -266,7 +266,7 @@ void js::ForOfPIC::Chain::reset(JSContext* cx) {
 void js::ForOfPIC::Chain::eraseChain(JSContext* cx) {
   // Should never need to clear the chain of a disabled stub.
   MOZ_ASSERT(!disabled_);
-  freeAllStubs(cx->defaultFreeOp());
+  freeAllStubs(cx->gcContext());
 }
 
 // Trace the pointers stored directly on the stub.
@@ -288,30 +288,30 @@ void js::ForOfPIC::Chain::trace(JSTracer* trc) {
   TraceEdge(trc, &canonicalNextFunc_,
             "ForOfPIC ArrayIterator.prototype.next builtin.");
 
-  JSFreeOp* fop = TlsFreeOp.get();
+  JS::GCContext* gcx = TlsGCContext.get();
   if (trc->isMarkingTracer()) {
     // Free all the stubs in the chain.
-    freeAllStubs(fop);
+    freeAllStubs(gcx);
   }
 }
 
-static void ForOfPIC_finalize(JSFreeOp* fop, JSObject* obj) {
+static void ForOfPIC_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (ForOfPIC::Chain* chain =
           ForOfPIC::fromJSObject(&obj->as<NativeObject>())) {
-    chain->finalize(fop, obj);
+    chain->finalize(gcx, obj);
   }
 }
 
-void js::ForOfPIC::Chain::finalize(JSFreeOp* fop, JSObject* obj) {
-  freeAllStubs(fop);
-  fop->delete_(obj, this, MemoryUse::ForOfPIC);
+void js::ForOfPIC::Chain::finalize(JS::GCContext* gcx, JSObject* obj) {
+  freeAllStubs(gcx);
+  gcx->delete_(obj, this, MemoryUse::ForOfPIC);
 }
 
-void js::ForOfPIC::Chain::freeAllStubs(JSFreeOp* fop) {
+void js::ForOfPIC::Chain::freeAllStubs(JS::GCContext* gcx) {
   Stub* stub = stubs_;
   while (stub) {
     Stub* next = stub->next();
-    fop->delete_(picObject_, stub, MemoryUse::ForOfPICStub);
+    gcx->delete_(picObject_, stub, MemoryUse::ForOfPICStub);
     stub = next;
   }
   stubs_ = nullptr;

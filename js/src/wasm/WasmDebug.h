@@ -75,7 +75,7 @@ class DebugState {
   DebugState(const Code& code, const Module& module);
 
   void trace(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
 
   const Bytes& bytecode() const { return module_->debugBytecode(); }
 
@@ -102,9 +102,9 @@ class DebugState {
                                                 Instance* instance,
                                                 uint32_t offset);
   bool hasBreakpointSite(uint32_t offset);
-  void destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
+  void destroyBreakpointSite(JS::GCContext* gcx, Instance* instance,
                              uint32_t offset);
-  void clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
+  void clearBreakpointsIn(JS::GCContext* gcx, WasmInstanceObject* instance,
                           js::Debugger* dbg, JSObject* handler);
 
   // When the Code is debug-enabled, single-stepping mode can be toggled on
@@ -112,7 +112,7 @@ class DebugState {
 
   bool stepModeEnabled(uint32_t funcIndex) const;
   [[nodiscard]] bool incrementStepperCount(JSContext* cx, uint32_t funcIndex);
-  void decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex);
+  void decrementStepperCount(JS::GCContext* gcx, uint32_t funcIndex);
 
   // Stack inspection helpers.
 

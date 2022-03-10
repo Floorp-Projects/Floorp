@@ -209,6 +209,10 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
 
   void SetSkipServiceWorker() { mSkipServiceWorker = true; }
 
+  bool SkipWasmCaching() const { return mSkipWasmCaching; }
+
+  void SetSkipWasmCaching() { mSkipWasmCaching = true; }
+
   bool IsSynchronous() const { return mSynchronous; }
 
   RequestMode Mode() const { return mMode; }
@@ -409,6 +413,7 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   bool mMozErrors = false;
   nsCString mFragment;
   bool mSkipServiceWorker = false;
+  bool mSkipWasmCaching = false;
   bool mSynchronous = false;
   bool mUnsafeRequest = false;
   bool mUseURLCredentials = false;

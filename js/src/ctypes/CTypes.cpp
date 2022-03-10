@@ -37,7 +37,7 @@
 #include "jsnum.h"
 
 #include "ctypes/Library.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
@@ -142,7 +142,7 @@ static bool ConstructBasic(JSContext* cx, HandleObject obj,
                            const CallArgs& args);
 
 static void Trace(JSTracer* trc, JSObject* obj);
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
 bool IsCType(HandleValue v);
 bool IsCTypeOrProto(HandleValue v);
@@ -248,7 +248,7 @@ bool IsVariadicGetter(JSContext* cx, const JS::CallArgs& args);
 
 namespace CClosure {
 static void Trace(JSTracer* trc, JSObject* obj);
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
 // libffi callback
 static void ClosureStub(ffi_cif* cif, void* result, void** args,
@@ -269,7 +269,7 @@ struct ArgClosure : public ScriptEnvironmentPreparer::Closure {
 }  // namespace CClosure
 
 namespace CData {
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
 bool ValueGetter(JSContext* cx, const JS::CallArgs& args);
 bool ValueSetter(JSContext* cx, const JS::CallArgs& args);
@@ -391,7 +391,7 @@ static JSObject* GetCType(JSContext* cx, JSObject* obj);
 /*
  * Perform finalization of a |CDataFinalizer|
  */
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 
 /*
  * Return the Value contained by this finalizer.
@@ -415,7 +415,7 @@ bool ToString(JSContext* cx, JSObject* obj, const CallArgs& args,
 bool ToSource(JSContext* cx, JSObject* obj, const CallArgs& args,
               bool isUnsigned);
 
-static void Finalize(JSFreeOp* fop, JSObject* obj);
+static void Finalize(JS::GCContext* gcx, JSObject* obj);
 }  // namespace Int64Base
 
 namespace Int64 {
@@ -4452,15 +4452,15 @@ JSObject* CType::DefineBuiltin(JSContext* cx, HandleObject ctypesObj,
   return typeObj;
 }
 
-static void FinalizeFFIType(JSFreeOp* fop, JSObject* obj, const Value& slot,
-                            size_t elementCount) {
+static void FinalizeFFIType(JS::GCContext* gcx, JSObject* obj,
+                            const Value& slot, size_t elementCount) {
   ffi_type* ffiType = static_cast<ffi_type*>(slot.toPrivate());
   size_t size = elementCount * sizeof(ffi_type*);
-  fop->free_(obj, ffiType->elements, size, MemoryUse::CTypeFFITypeElements);
-  fop->delete_(obj, ffiType, MemoryUse::CTypeFFIType);
+  gcx->free_(obj, ffiType->elements, size, MemoryUse::CTypeFFITypeElements);
+  gcx->delete_(obj, ffiType, MemoryUse::CTypeFFIType);
 }
 
-void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
+void CType::Finalize(JS::GCContext* gcx, JSObject* obj) {
   // Make sure our TypeCode slot is legit. If it's not, bail.
   Value slot = JS::GetReservedSlot(obj, SLOT_TYPECODE);
   if (slot.isUndefined()) {
@@ -4474,7 +4474,7 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
       slot = JS::GetReservedSlot(obj, SLOT_FNINFO);
       if (!slot.isUndefined()) {
         auto fninfo = static_cast<FunctionInfo*>(slot.toPrivate());
-        fop->delete_(obj, fninfo, MemoryUse::CTypeFunctionInfo);
+        gcx->delete_(obj, fninfo, MemoryUse::CTypeFunctionInfo);
       }
       break;
     }
@@ -4487,14 +4487,14 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
       if (!slot.isUndefined()) {
         auto info = static_cast<FieldInfoHash*>(slot.toPrivate());
         fieldCount = info->count();
-        fop->delete_(obj, info, MemoryUse::CTypeFieldInfo);
+        gcx->delete_(obj, info, MemoryUse::CTypeFieldInfo);
       }
 
       // Free the ffi_type info.
       Value slot = JS::GetReservedSlot(obj, SLOT_FFITYPE);
       if (!slot.isUndefined()) {
         size_t elementCount = fieldCount != 0 ? fieldCount + 1 : 2;
-        FinalizeFFIType(fop, obj, slot, elementCount);
+        FinalizeFFIType(gcx, obj, slot, elementCount);
       }
 
       // Free the ffi_type info.
@@ -4506,7 +4506,7 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
       Value slot = JS::GetReservedSlot(obj, SLOT_FFITYPE);
       if (!slot.isUndefined()) {
         size_t elementCount = ArrayType::GetLength(obj);
-        FinalizeFFIType(fop, obj, slot, elementCount);
+        FinalizeFFIType(gcx, obj, slot, elementCount);
       }
       break;
     }
@@ -7358,7 +7358,7 @@ void CClosure::Trace(JSTracer* trc, JSObject* obj) {
   TraceNullableEdge(trc, &cinfo->thisObj, "thisObj");
 }
 
-void CClosure::Finalize(JSFreeOp* fop, JSObject* obj) {
+void CClosure::Finalize(JS::GCContext* gcx, JSObject* obj) {
   // Make sure our ClosureInfo slot is legit. If it's not, bail.
   Value slot = JS::GetReservedSlot(obj, SLOT_CLOSUREINFO);
   if (slot.isUndefined()) {
@@ -7366,7 +7366,7 @@ void CClosure::Finalize(JSFreeOp* fop, JSObject* obj) {
   }
 
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(slot.toPrivate());
-  fop->delete_(obj, cinfo, MemoryUse::CClosureInfo);
+  gcx->delete_(obj, cinfo, MemoryUse::CClosureInfo);
 }
 
 void CClosure::ClosureStub(ffi_cif* cif, void* result, void** args,
@@ -7612,7 +7612,7 @@ JSObject* CData::Create(JSContext* cx, HandleObject typeObj,
                         options);
 }
 
-void CData::Finalize(JSFreeOp* fop, JSObject* obj) {
+void CData::Finalize(JS::GCContext* gcx, JSObject* obj) {
   // Delete our buffer, and the data it contains if we own it.
   Value slot = JS::GetReservedSlot(obj, SLOT_OWNS);
   if (slot.isUndefined()) {
@@ -7630,9 +7630,9 @@ void CData::Finalize(JSFreeOp* fop, JSObject* obj) {
   if (owns) {
     JSObject* typeObj = &JS::GetReservedSlot(obj, SLOT_CTYPE).toObject();
     size_t size = CType::GetSize(typeObj);
-    fop->free_(obj, *buffer, size, MemoryUse::CDataBuffer);
+    gcx->free_(obj, *buffer, size, MemoryUse::CDataBuffer);
   }
-  fop->delete_(obj, buffer, MemoryUse::CDataBufferPtr);
+  gcx->delete_(obj, buffer, MemoryUse::CDataBufferPtr);
 }
 
 JSObject* CData::GetCType(JSObject* dataObj) {
@@ -8638,7 +8638,7 @@ bool CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, Value* vp) {
  * finalizer, cleans up the Private memory and releases all
  * strong references.
  */
-void CDataFinalizer::Finalize(JSFreeOp* fop, JSObject* obj) {
+void CDataFinalizer::Finalize(JS::GCContext* gcx, JSObject* obj) {
   CDataFinalizer::Private* p = GetFinalizerPrivate(obj);
 
   if (!p) {
@@ -8709,14 +8709,14 @@ JSObject* Int64Base::Construct(JSContext* cx, HandleObject proto, uint64_t data,
   return result;
 }
 
-void Int64Base::Finalize(JSFreeOp* fop, JSObject* obj) {
+void Int64Base::Finalize(JS::GCContext* gcx, JSObject* obj) {
   Value slot = JS::GetReservedSlot(obj, SLOT_INT64);
   if (slot.isUndefined()) {
     return;
   }
 
   uint64_t* buffer = static_cast<uint64_t*>(slot.toPrivate());
-  fop->delete_(obj, buffer, MemoryUse::CTypesInt64);
+  gcx->delete_(obj, buffer, MemoryUse::CTypesInt64);
 }
 
 uint64_t Int64Base::GetInt(JSObject* obj) {

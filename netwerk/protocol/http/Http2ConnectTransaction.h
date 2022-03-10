@@ -4,17 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_TLSFilterTransaction_h
-#define mozilla_net_TLSFilterTransaction_h
+#ifndef mozilla_net_Http2ConnectTransaction_h
+#define mozilla_net_Http2ConnectTransaction_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
 #include "nsAHttpTransaction.h"
+#include "nsHttpConnectionInfo.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsINamed.h"
 #include "nsISocketTransport.h"
-#include "nsITimer.h"
 #include "NullHttpTransaction.h"
 #include "mozilla/TimeStamp.h"
 #include "prio.h"
@@ -42,45 +39,45 @@ spdy session inside the tunnel.
   nsHttpConnection::OnSocketReadable()
   SpdySession::WriteSegment()
   SpdyStream::WriteSegment (tunnel stream)
-  SpdyConnectTransaction::WriteSegment
+  Http2ConnectTransaction::WriteSegment
   SpdyStream::OnWriteSegment(tunnel stream)
   SpdySession::OnWriteSegment()
   SpdySession::NetworkRead()
   nsHttpConnection::OnWriteSegment (real socket)
   realSocketIn->Read() return data from network
 
-now pop the stack back up to SpdyConnectTransaction::WriteSegment, the data
+now pop the stack back up to Http2ConnectTransaction::WriteSegment, the data
 that has been read is stored mInputData
 
-  SpdyConnectTransaction.mTunneledConn::OnInputStreamReady(mTunnelStreamIn)
-  SpdyConnectTransaction.mTunneledConn::OnSocketReadable()
+  Http2ConnectTransaction.mTunneledConn::OnInputStreamReady(mTunnelStreamIn)
+  Http2ConnectTransaction.mTunneledConn::OnSocketReadable()
   TLSFilterTransaction::WriteSegment()
   nsHttpTransaction::WriteSegment(real http transaction)
   TLSFilterTransaction::OnWriteSegment() removes tls on way back up stack
-  SpdyConnectTransaction.mTunneledConn::OnWriteSegment()
+  Http2ConnectTransaction.mTunneledConn::OnWriteSegment()
   // gets data from mInputData
-  SpdyConnectTransaction.mTunneledConn.mTunnelStreamIn->Read()
+  Http2ConnectTransaction.mTunneledConn.mTunnelStreamIn->Read()
 
 The output path works similarly:
   nsHttpConnection::OnOutputStreamReady (real socket)
   nsHttpConnection::OnSocketWritable()
   SpdySession::ReadSegments (locates tunnel)
   SpdyStream::ReadSegments (tunnel stream)
-  SpdyConnectTransaction::ReadSegments()
-  SpdyConnectTransaction.mTunneledConn::OnOutputStreamReady (tunnel connection)
-  SpdyConnectTransaction.mTunneledConn::OnSocketWritable (tunnel connection)
+  Http2ConnectTransaction::ReadSegments()
+  Http2ConnectTransaction.mTunneledConn::OnOutputStreamReady (tunnel connection)
+  Http2ConnectTransaction.mTunneledConn::OnSocketWritable (tunnel connection)
   TLSFilterTransaction::ReadSegment()
   nsHttpTransaction::ReadSegment (real http transaction generates plaintext on
                                   way down)
   TLSFilterTransaction::OnReadSegment (BUF and LEN gets encrypted here on way
                                        down)
-  SpdyConnectTransaction.mTunneledConn::OnReadSegment (BUF and LEN)
+  Http2ConnectTransaction.mTunneledConn::OnReadSegment (BUF and LEN)
                                                       (tunnel connection)
-  SpdyConnectTransaction.mTunneledConn.mTunnelStreamOut->Write(BUF, LEN) ..
+  Http2ConnectTransaction.mTunneledConn.mTunnelStreamOut->Write(BUF, LEN) ..
                                                      get stored in mOutputData
 
-Now pop the stack back up to SpdyConnectTransaction::ReadSegment(), where it has
-the encrypted text available in mOutputData
+Now pop the stack back up to Http2ConnectTransaction::ReadSegment(), where it
+has the encrypted text available in mOutputData
 
   SpdyStream->OnReadSegment(BUF,LEN) from mOutputData. Tunnel stream
   SpdySession->OnReadSegment() // encrypted data gets put in a data frame
@@ -94,126 +91,20 @@ struct PRSocketOptionData;
 namespace mozilla {
 namespace net {
 
-class nsHttpRequestHead;
-class NullHttpTransaction;
-class TLSFilterTransaction;
-
-class NudgeTunnelCallback : public nsISupports {
- public:
-  virtual nsresult OnTunnelNudged(TLSFilterTransaction*) = 0;
-};
-
-#define NS_DECL_NUDGETUNNELCALLBACK \
-  nsresult OnTunnelNudged(TLSFilterTransaction*) override;
-
-class TLSFilterTransaction final : public nsAHttpTransaction,
-                                   public nsAHttpSegmentReader,
-                                   public nsAHttpSegmentWriter,
-                                   public nsITimerCallback,
-                                   public nsINamed {
-  ~TLSFilterTransaction();
-
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSAHTTPTRANSACTION
-  NS_DECL_NSAHTTPSEGMENTREADER
-  NS_DECL_NSAHTTPSEGMENTWRITER
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
-
-  TLSFilterTransaction(nsAHttpTransaction* aWrappedTransaction,
-                       const char* tlsHost, int32_t tlsPort,
-                       nsAHttpSegmentReader* reader,
-                       nsAHttpSegmentWriter* writer);
-
-  const nsAHttpTransaction* Transaction() const { return mTransaction.get(); }
-  [[nodiscard]] nsresult CommitToSegmentSize(uint32_t size,
-                                             bool forceCommitment) override;
-  [[nodiscard]] nsresult GetTransactionSecurityInfo(nsISupports**) override;
-  [[nodiscard]] nsresult NudgeTunnel(NudgeTunnelCallback* callback);
-  [[nodiscard]] nsresult SetProxiedTransaction(
-      nsAHttpTransaction* aTrans,
-      nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
-  void newIODriver(nsIAsyncInputStream* aSocketIn,
-                   nsIAsyncOutputStream* aSocketOut,
-                   nsIAsyncInputStream** outSocketIn,
-                   nsIAsyncOutputStream** outSocketOut);
-
-  // nsAHttpTransaction overloads
-  bool IsNullTransaction() override;
-  NullHttpTransaction* QueryNullTransaction() override;
-  nsHttpTransaction* QueryHttpTransaction() override;
-  SpdyConnectTransaction* QuerySpdyConnectTransaction() override;
-  [[nodiscard]] nsresult WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
-                                            uint32_t count,
-                                            uint32_t* countWritten,
-                                            bool* again) override;
-
-  bool HasDataToRecv();
-
- private:
-  [[nodiscard]] nsresult StartTimerCallback();
-  void Cleanup();
-  int32_t FilterOutput(const char* aBuf, int32_t aAmount);
-  int32_t FilterInput(char* aBuf, int32_t aAmount);
-
-  static PRStatus GetPeerName(PRFileDesc* fd, PRNetAddr* addr);
-  static PRStatus GetSocketOption(PRFileDesc* fd, PRSocketOptionData* aOpt);
-  static PRStatus SetSocketOption(PRFileDesc* fd,
-                                  const PRSocketOptionData* data);
-  static int32_t FilterWrite(PRFileDesc* fd, const void* buf, int32_t amount);
-  static int32_t FilterRead(PRFileDesc* fd, void* buf, int32_t amount);
-  static int32_t FilterSend(PRFileDesc* fd, const void* buf, int32_t amount,
-                            int flags, PRIntervalTime timeout);
-  static int32_t FilterRecv(PRFileDesc* fd, void* buf, int32_t amount,
-                            int flags, PRIntervalTime timeout);
-  static PRStatus FilterClose(PRFileDesc* fd);
-
- private:
-  RefPtr<nsAHttpTransaction> mTransaction;
-  nsWeakPtr mWeakTrans;  // SpdyConnectTransaction *
-  nsCOMPtr<nsISupports> mSecInfo;
-  nsCOMPtr<nsITimer> mTimer;
-  RefPtr<NudgeTunnelCallback> mNudgeCallback;
-
-  // buffered network output, after encryption
-  UniquePtr<char[]> mEncryptedText;
-  uint32_t mEncryptedTextUsed;
-  uint32_t mEncryptedTextSize;
-
-  PRFileDesc* mFD;
-  nsAHttpSegmentReader* mSegmentReader;
-  nsAHttpSegmentWriter* mSegmentWriter;
-
-  nsresult mFilterReadCode;
-  int32_t mFilterReadAmount;
-  // Set only when we are calling PR_Write from inside OnReadSegment.  Prevents
-  // calling back to OnReadSegment from inside FilterOutput.
-  bool mInOnReadSegment;
-  bool mForce;
-  nsresult mReadSegmentReturnValue;
-  // Before Close() is called this is NS_ERROR_UNEXPECTED, in Close() we either
-  // take the reason, if it is a failure, or we change to
-  // NS_ERROR_BASE_STREAM_CLOSE.  This is returned when Write/ReadSegments is
-  // called after Close, when we don't have mTransaction any more.
-  nsresult mCloseReason;
-  uint32_t mNudgeCounter;
-};
-
 class SocketTransportShim;
 class InputStreamShim;
 class OutputStreamShim;
 class nsHttpConnection;
 
-class SpdyConnectTransaction final : public NullHttpTransaction {
+class Http2ConnectTransaction final : public NullHttpTransaction {
  public:
-  SpdyConnectTransaction(nsHttpConnectionInfo* ci,
-                         nsIInterfaceRequestor* callbacks, uint32_t caps,
-                         nsHttpTransaction* trans, nsAHttpConnection* session,
-                         bool isWebsocket);
-  ~SpdyConnectTransaction();
+  Http2ConnectTransaction(nsHttpConnectionInfo* ci,
+                          nsIInterfaceRequestor* callbacks, uint32_t caps,
+                          nsHttpTransaction* trans, nsAHttpConnection* session,
+                          bool isWebsocket);
+  ~Http2ConnectTransaction();
 
-  SpdyConnectTransaction* QuerySpdyConnectTransaction() override {
+  Http2ConnectTransaction* QueryHttp2ConnectTransaction() override {
     return this;
   }
 
@@ -299,4 +190,4 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_TLSFilterTransaction_h
+#endif  // mozilla_net_Http2ConnectTransaction_h

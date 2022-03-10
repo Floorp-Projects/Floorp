@@ -95,10 +95,10 @@ already_AddRefed<TextureClient> ImageClient::CreateTextureClientForImage(
       return nullptr;
     }
     texture = TextureClient::CreateForYCbCr(
-        aKnowsCompositor, data->GetPictureRect(), data->mYSize, data->mYStride,
-        data->mCbCrSize, data->mCbCrStride, data->mStereoMode,
+        aKnowsCompositor, data->mPictureRect, data->YDataSize(), data->mYStride,
+        data->CbCrDataSize(), data->mCbCrStride, data->mStereoMode,
         data->mColorDepth, data->mYUVColorSpace, data->mColorRange,
-        TextureFlags::DEFAULT);
+        data->mChromaSubsampling, TextureFlags::DEFAULT);
     if (!texture) {
       return nullptr;
     }

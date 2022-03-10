@@ -81,11 +81,11 @@ SharedPlanarYCbCrImage::GetAsSourceSurface() {
 }
 
 bool SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData) {
-  // If mTextureClient has not already been allocated (through Allocate(aData))
-  // allocate it. This code path is slower than the one used when Allocate has
-  // been called since it will trigger a full copy.
-  PlanarYCbCrData data = aData;
-  if (!mTextureClient && !Allocate(data)) {
+  // If mTextureClient has not already been allocated by CreateEmptyBuffer,
+  // allocate it. This code path is slower than the one used when
+  // CreateEmptyBuffer has been called since it will trigger a full copy.
+  if (!mTextureClient &&
+      !CreateEmptyBuffer(aData, aData.YDataSize(), aData.CbCrDataSize())) {
     return false;
   }
 
@@ -108,22 +108,19 @@ bool SharedPlanarYCbCrImage::AdoptData(const Data& aData) {
   return false;
 }
 
-bool SharedPlanarYCbCrImage::CreateEmptyBuffer(const Data& aData) {
-  auto data = aData;
-  return Allocate(data);
-}
-
 bool SharedPlanarYCbCrImage::IsValid() const {
   return mTextureClient && mTextureClient->IsValid();
 }
 
-bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
+bool SharedPlanarYCbCrImage::CreateEmptyBuffer(const PlanarYCbCrData& aData,
+                                               const gfx::IntSize& aYSize,
+                                               const gfx::IntSize& aCbCrSize) {
   MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
 
   TextureFlags flags =
       mCompositable ? mCompositable->GetTextureFlags() : TextureFlags::DEFAULT;
   {
-    YCbCrTextureClientAllocationHelper helper(aData, flags);
+    YCbCrTextureClientAllocationHelper helper(aData, aYSize, aCbCrSize, flags);
     mTextureClient = RecycleAllocator()->CreateOrRecycle(helper);
   }
 
@@ -143,22 +140,15 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
     MOZ_CRASH("GFX: Cannot lock or borrow mapped YCbCr");
   }
 
-  aData.mYChannel = mapped.y.data;
-  aData.mCbChannel = mapped.cb.data;
-  aData.mCrChannel = mapped.cr.data;
-
   // copy some of aData's values in mData (most of them)
-  mData.mYChannel = aData.mYChannel;
-  mData.mCbChannel = aData.mCbChannel;
-  mData.mCrChannel = aData.mCrChannel;
-  mData.mYSize = aData.mYSize;
-  mData.mCbCrSize = aData.mCbCrSize;
-  mData.mPicX = aData.mPicX;
-  mData.mPicY = aData.mPicY;
-  mData.mPicSize = aData.mPicSize;
+  mData.mYChannel = mapped.y.data;
+  mData.mCbChannel = mapped.cb.data;
+  mData.mCrChannel = mapped.cr.data;
+  mData.mPictureRect = aData.mPictureRect;
   mData.mStereoMode = aData.mStereoMode;
   mData.mYUVColorSpace = aData.mYUVColorSpace;
   mData.mColorDepth = aData.mColorDepth;
+  mData.mChromaSubsampling = aData.mChromaSubsampling;
   // those members are not always equal to aData's, due to potentially different
   // packing.
   mData.mYSkip = 0;
@@ -171,9 +161,9 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   // will try to manage this memory without knowing it belongs to a
   // shmem.
   mBufferSize = ImageDataSerializer::ComputeYCbCrBufferSize(
-      mData.mYSize, mData.mYStride, mData.mCbCrSize, mData.mCbCrStride);
-  mSize = mData.mPicSize;
-  mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
+      aYSize, mData.mYStride, aCbCrSize, mData.mCbCrStride);
+  mSize = mData.mPictureRect.Size();
+  mOrigin = mData.mPictureRect.TopLeft();
 
   mTextureClient->Unlock();
 

@@ -222,7 +222,7 @@ class RegExpShared
 
   void traceChildren(JSTracer* trc);
   void discardJitCode();
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
 
   static size_t offsetOfSource() { return offsetOfHeaderPtr(); }
 

@@ -9,7 +9,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"

@@ -17,7 +17,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
@@ -400,8 +400,8 @@ const JSClass SavedFrame::protoClass_ = {
     JS_PS_END};
 
 /* static */
-void SavedFrame::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void SavedFrame::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   JSPrincipals* p = obj->as<SavedFrame>().getPrincipals();
   if (p) {
     JSRuntime* rt = obj->runtimeFromMainThread();

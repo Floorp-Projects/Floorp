@@ -423,7 +423,7 @@ class alignas(ArenaSize) Arena {
   inline size_t& atomBitmapStart();
 
   template <typename T>
-  size_t finalize(JSFreeOp* fop, AllocKind thingKind, size_t thingSize);
+  size_t finalize(JS::GCContext* gcx, AllocKind thingKind, size_t thingSize);
 
   static void staticAsserts();
   static void checkLookupTables();

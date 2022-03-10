@@ -22,7 +22,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Rooting.h"
 #include "js/HashTable.h"
@@ -200,7 +200,7 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   BaseShape& operator=(const BaseShape& other) = delete;
 
  public:
-  void finalize(JSFreeOp* fop) {}
+  void finalize(JS::GCContext* gcx) {}
 
   BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto);
 
@@ -458,8 +458,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   void dump() const;
 #endif
 
-  inline void purgeCache(JSFreeOp* fop);
-  inline void finalize(JSFreeOp* fop);
+  inline void purgeCache(JS::GCContext* gcx);
+  inline void finalize(JS::GCContext* gcx);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Shape;
 

@@ -38,28 +38,6 @@ const int kFractionMask = ((1 << kFractionBits) - 1);
 
 // clang-format off
 
-YUVType TypeFromSize(int ywidth,
-                     int yheight,
-                     int cbcrwidth,
-                     int cbcrheight)
-{
-  if (ywidth == cbcrwidth && yheight == cbcrheight) {
-    return YV24;
-  }
-  else if ((ywidth + 1) / 2 == cbcrwidth && yheight == cbcrheight) {
-    return YV16;
-  }
-  else if ((ywidth + 1) / 2 == cbcrwidth && (yheight + 1) / 2 == cbcrheight) {
-    return YV12;
-  }
-  else if (cbcrwidth == 0 && cbcrheight == 0) {
-    return Y8;
-  }
-  else {
-    MOZ_CRASH("Can't determine YUV type from size");
-  }
-}
-
 libyuv::FourCC FourCCFromYUVType(YUVType aYUVType) {
   switch (aYUVType) {
     case YV24: return libyuv::FOURCC_I444;

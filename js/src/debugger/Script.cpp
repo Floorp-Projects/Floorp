@@ -1984,7 +1984,7 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     if (!cx_->zone()->new_<Breakpoint>(dbg_, debuggerObject_, site, handler_)) {
-      site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
+      site->destroyIfEmpty(cx_->runtime()->gcContext());
       return false;
     }
     AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
@@ -2013,7 +2013,7 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     if (!cx_->zone()->new_<Breakpoint>(dbg_, debuggerObject_, site, handler_)) {
-      site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
+      site->destroyIfEmpty(cx_->runtime()->gcContext());
       return false;
     }
     AddCellMemory(wasmInstance, sizeof(Breakpoint), MemoryUse::Breakpoint);
@@ -2118,8 +2118,8 @@ class DebuggerScript::ClearBreakpointMatcher {
       return false;
     }
 
-    DebugScript::clearBreakpointsIn(cx_->runtime()->defaultFreeOp(), script,
-                                    dbg_, handler_);
+    DebugScript::clearBreakpointsIn(cx_->runtime()->gcContext(), script, dbg_,
+                                    handler_);
     return true;
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
@@ -2138,7 +2138,7 @@ class DebuggerScript::ClearBreakpointMatcher {
       return false;
     }
 
-    instance.debug().clearBreakpointsIn(cx_->runtime()->defaultFreeOp(),
+    instance.debug().clearBreakpointsIn(cx_->runtime()->gcContext(),
                                         instanceObj, dbg_, handler_);
     return true;
   }
