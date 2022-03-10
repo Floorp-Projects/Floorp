@@ -275,6 +275,12 @@ template <typename T>
   return ToJSValue(aCx, *aArgument.get(), aValue);
 }
 
+template <typename T>
+[[nodiscard]] bool ToJSValue(JSContext* aCx, const OwningNonNull<T>& aArgument,
+                             JS::MutableHandle<JS::Value> aValue) {
+  return ToJSValue(aCx, *aArgument.get(), aValue);
+}
+
 // Accept WebIDL dictionaries
 template <class T>
 [[nodiscard]] std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, bool>
