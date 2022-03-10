@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var onIframeOnload = function() {
+    var iframe = window.document.getElementById('applicationIframe');
+    opener.is(iframe.contentWindow.location.search, "?iframe", "Should have loaded the iframe");
+    window.close();
+    opener.SimpleTest.finish();
+}
+
+var onPageOnload = function() {
+    if (location.search == "?iframe") {
+      return;
+    }
+    if(!window.name) {
+        window.name = 'file_bug1758664.html';
+        window.location.reload();
+        return;
+    }
+    var iframe = window.document.getElementById('applicationIframe');
+    iframe.addEventListener('load', onIframeOnload);
+    iframe.src = "file_bug1758664.html?iframe";
+}
+window.document.addEventListener("DOMContentLoaded", onPageOnload);
+
+</script>
+</head>
+<body>
+    <iframe id="applicationIframe"></iframe>
+</body>
+</html>
