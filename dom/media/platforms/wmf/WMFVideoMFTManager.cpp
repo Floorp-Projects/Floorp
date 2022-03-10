@@ -682,6 +682,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     b.mPlanes[2].mSkip = 1;
   }
 
+  b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+
   // YuvColorSpace
   b.mYUVColorSpace =
       mColorSpace.refOr(DefaultColorSpace({videoWidth, videoHeight}));

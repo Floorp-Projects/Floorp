@@ -237,6 +237,12 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
   b.mPlanes[2].mHeight = (aPicture.p.h + ss_ver) >> ss_ver;
   b.mPlanes[2].mWidth = (aPicture.p.w + ss_hor) >> ss_hor;
 
+  if (ss_ver) {
+    b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
+  } else if (ss_hor) {
+    b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH;
+  }
+
   // Timestamp, duration and offset used here are wrong.
   // We need to take those values from the decoder. Latest
   // dav1d version allows for that.

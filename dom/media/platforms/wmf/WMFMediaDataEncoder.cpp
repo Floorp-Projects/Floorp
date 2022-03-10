@@ -278,8 +278,10 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder<T>::ConvertToNV12InputSample(
   const PlanarYCbCrImage* image = aData->mImage->AsPlanarYCbCrImage();
   MOZ_ASSERT(image);
   const PlanarYCbCrData* yuv = image->GetData();
-  size_t yLength = yuv->mYStride * yuv->mYSize.height;
-  size_t length = yLength + (yuv->mCbCrStride * yuv->mCbCrSize.height * 2);
+  auto ySize = yuv->YDataSize();
+  auto cbcrSize = yuv->CbCrDataSize();
+  size_t yLength = yuv->mYStride * ySize.height;
+  size_t length = yLength + (yuv->mCbCrStride * cbcrSize.height * 2);
 
   RefPtr<IMFSample> input;
   HRESULT hr = mEncoder->CreateInputSample(&input, length);
@@ -295,12 +297,11 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder<T>::ConvertToNV12InputSample(
   LockBuffer lockBuffer(buffer);
   NS_ENSURE_TRUE(SUCCEEDED(lockBuffer.Result()), nullptr);
 
-  bool ok =
-      libyuv::I420ToNV12(yuv->mYChannel, yuv->mYStride, yuv->mCbChannel,
-                         yuv->mCbCrStride, yuv->mCrChannel, yuv->mCbCrStride,
-                         lockBuffer.Data(), yuv->mYStride,
-                         lockBuffer.Data() + yLength, yuv->mCbCrStride * 2,
-                         yuv->mYSize.width, yuv->mYSize.height) == 0;
+  bool ok = libyuv::I420ToNV12(
+                yuv->mYChannel, yuv->mYStride, yuv->mCbChannel,
+                yuv->mCbCrStride, yuv->mCrChannel, yuv->mCbCrStride,
+                lockBuffer.Data(), yuv->mYStride, lockBuffer.Data() + yLength,
+                yuv->mCbCrStride * 2, ySize.width, ySize.height) == 0;
   NS_ENSURE_TRUE(ok, nullptr);
 
   hr = input->SetSampleTime(UsecsToHNs(aData->mTime.ToMicroseconds()));
