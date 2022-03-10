@@ -4326,14 +4326,6 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
   nsCOMPtr<nsIContent> newContent = transaction->GetNewContent();
   nsCOMPtr<nsIContent> splitContent = transaction->GetSplitContent();
   if (MOZ_LIKELY(NS_SUCCEEDED(rv) && newContent && splitContent)) {
-    // XXX Some other transactions manage range updater by themselves.
-    //     Why doesn't SplitNodeTransaction do it?
-    DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-        *splitContent, transaction->SplitOffset(), *newContent,
-        SplitNodeDirection::LeftNodeIsNewOne);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "RangeUpdater::SelAdjSplitNode() failed, but ignored");
-
     TopLevelEditSubActionDataRef().DidSplitContent(
         *this, *splitContent, *newContent,
         SplitNodeDirection::LeftNodeIsNewOne);
@@ -4452,6 +4444,9 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
 
 SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                                         nsIContent& aNewNode) {
+  // Ensure computing the offset if it's intialized with a child content node.
+  Unused << aStartOfRightNode.Offset();
+
   // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
   //     operation after modifying DOM node with JS.
   if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
@@ -4658,6 +4653,12 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                      aStartOfRightNode.GetContainer()))) {
     return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
+      *aStartOfRightNode.ContainerAsContent(), aStartOfRightNode.Offset(),
+      aNewNode, SplitNodeDirection::LeftNodeIsNewOne);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
   return SplitNodeResult(&aNewNode, aStartOfRightNode.ContainerAsContent(),
                          SplitNodeDirection::LeftNodeIsNewOne);
