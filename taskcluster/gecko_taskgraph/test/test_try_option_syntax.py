@@ -6,10 +6,10 @@
 import unittest
 
 from mozunit import main
+from taskgraph.graph import Graph
 from taskgraph.task import Task
 
 from gecko_taskgraph.try_option_syntax import TryOptionSyntax, parse_message
-from gecko_taskgraph.graph import Graph
 from gecko_taskgraph.taskgraph import TaskGraph
 
 
