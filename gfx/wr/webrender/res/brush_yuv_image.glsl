@@ -55,9 +55,9 @@ void brush_vs(
 #ifdef SWGL_DRAW_SPAN
     // swgl_commitTextureLinearYUV needs to know the color space specifier and
     // also needs to know how many bits of scaling are required to normalize
-    // HDR textures.
+    // HDR textures. Note that MSB HDR formats don't need renormalization.
     vRescaleFactor = 0;
-    if (prim.channel_bit_depth > 8) {
+    if (prim.channel_bit_depth > 8 && prim.yuv_format != YUV_FORMAT_P010) {
         vRescaleFactor = 16 - prim.channel_bit_depth;
     }
     // Since SWGL rescales filtered YUV values to 8bpc before yuv->rgb
