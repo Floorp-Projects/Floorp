@@ -1987,6 +1987,45 @@ button {
   margin: 20px 0;
 }
 
+.stp_tag_picker .stp_tag_picker_tags {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px;
+  border: 1px solid #8F8F9D;
+  border-radius: 4px;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 1em;
+  line-height: 1.2em;
+  color: #15141A;
+  margin-bottom: 10px;
+}
+.stp_tag_picker .stp_tag_picker_tag {
+  background: #F0F0F4;
+  border-radius: 4px;
+  color: #15141A;
+  display: inline-block;
+  font-size: 0.7em;
+  font-style: normal;
+  line-height: 1em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-inline-end: 8px;
+  padding: 4px 8px;
+  transition: background-color 200ms ease-in-out;
+}
+.stp_tag_picker .stp_tag_picker_tag_remove {
+  padding: 5px;
+  color: #5B5B66;
+  font-weight: 400;
+}
+.stp_tag_picker .stp_tag_picker_tag_duplicate {
+  background-color: #bbb;
+}
+.stp_tag_picker .stp_tag_picker_input {
+  flex-grow: 1;
+}
+
 .stp_popular_topics {
   padding: 0;
 }

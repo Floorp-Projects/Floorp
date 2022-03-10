@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 861:
+/***/ 503:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -1192,7 +1192,71 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/TagPicker/TagPicker.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function TagPicker(props) {
+  const [tags, setTags] = (0,react.useState)(props.tags);
+  const [duplicateTag, setDuplicateTag] = (0,react.useState)(null);
+
+  let handleKeyDown = e => {
+    // Enter tag on comma or enter keypress
+    if (e.keyCode === 188 || e.keyCode === 13) {
+      let tag = e.target.value.trim();
+      e.preventDefault();
+      e.target.value = ``; // Clear out input
+
+      addTag(tag);
+    }
+  };
+
+  let addTag = tag => {
+    let newDuplicateTag = tags.find(item => item === tag);
+
+    if (!tag.length) {
+      return;
+    }
+
+    if (!newDuplicateTag) {
+      setTags([...tags, tag]);
+    } else {
+      setDuplicateTag(newDuplicateTag);
+      setTimeout(() => {
+        setDuplicateTag(null);
+      }, 1000);
+    }
+  };
+
+  let removeTag = index => {
+    let updatedTags = tags.slice(0); // Shallow copied array
+
+    updatedTags.splice(index, 1);
+    setTags(updatedTags);
+  };
+
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker"
+  }, /*#__PURE__*/react.createElement("p", null, "Add Tags:"), /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker_tags"
+  }, tags.map((tag, i) => /*#__PURE__*/react.createElement("div", {
+    className: `stp_tag_picker_tag${duplicateTag === tag ? ` stp_tag_picker_tag_duplicate` : ``}`
+  }, tag, /*#__PURE__*/react.createElement("button", {
+    onClick: () => removeTag(i),
+    className: `stp_tag_picker_tag_remove`
+  }, "X"))), /*#__PURE__*/react.createElement("input", {
+    className: "stp_tag_picker_input",
+    type: "text",
+    onKeyDown: e => handleKeyDown(e),
+    maxlength: "25"
+  })));
+}
+
+/* harmony default export */ const TagPicker_TagPicker = (TagPicker);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+
 
 
 
@@ -1266,6 +1330,10 @@ StyleGuideOverlay.prototype = {
         url: "https://example.org",
         alt: "Alt Text"
       }]
+    }), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "TagPicker"), /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
+      tags: [`futurism`, `politics`, `mozilla`]
     }), /*#__PURE__*/react.createElement("h3", null, "Typography:"), /*#__PURE__*/react.createElement("h2", {
       className: "header_large"
     }, ".header_large"), /*#__PURE__*/react.createElement("h3", {
@@ -1524,7 +1592,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(861)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(503)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
