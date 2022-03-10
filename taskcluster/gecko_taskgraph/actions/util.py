@@ -14,6 +14,7 @@ import jsone
 import requests
 from requests.exceptions import HTTPError
 from slugid import nice as slugid
+from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import (
     find_task_id,
     get_artifact,
@@ -26,7 +27,6 @@ from taskgraph.util.taskcluster import (
 
 from gecko_taskgraph import create
 from gecko_taskgraph.decision import read_artifact, write_artifact, rename_artifact
-from gecko_taskgraph.taskgraph import TaskGraph
 from gecko_taskgraph.optimize import optimize_task_graph
 from gecko_taskgraph.util.taskcluster import trigger_hook
 from gecko_taskgraph.util.taskgraph import find_decision_task
