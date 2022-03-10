@@ -501,8 +501,20 @@ static bool IsYUV420Sampling(const AVPixelFormat& aFormat) {
 }
 
 layers::TextureClient*
-FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
+FFmpegVideoDecoder<LIBAV_VER>::AllocateTextueClientForImage(
     struct AVCodecContext* aCodecContext, PlanarYCbCrImage* aImage) {
+  layers::PlanarYCbCrData data =
+      CreateEmptyPlanarYCbCrData(aCodecContext, mInfo);
+  // Allocate a shmem buffer for image.
+  if (!aImage->CreateEmptyBuffer(data)) {
+    return nullptr;
+  }
+  return aImage->GetTextureClient(mImageAllocator);
+}
+
+layers::PlanarYCbCrData
+FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
+    struct AVCodecContext* aCodecContext, const VideoInfo& aInfo) {
   MOZ_ASSERT(
       IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt));
 
@@ -532,39 +544,42 @@ FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
   // plane Cb/Cr
   // width 1280 height  720 -> adjusted-width 1280 adjusted-height 736
   layers::PlanarYCbCrData data;
-  const auto yDims =
+  auto paddedYSize =
       gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
-  auto paddedYSize = yDims;
   mLib->avcodec_align_dimensions(aCodecContext, &paddedYSize.width,
                                  &paddedYSize.height);
-  data.mYStride = paddedYSize.Width() * bytesPerChannel;
+  data.mYSize = gfx::IntSize{paddedYSize.Width(), paddedYSize.Height()};
+  data.mYStride = data.mYSize.Width() * bytesPerChannel;
 
   MOZ_ASSERT(
       IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt));
+  const auto yDims =
+      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
   auto uvDims = yDims;
   if (IsYUV420Sampling(aCodecContext->pix_fmt)) {
     uvDims.width = (uvDims.width + 1) / 2;
     uvDims.height = (uvDims.height + 1) / 2;
-    data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
   }
   auto paddedCbCrSize = uvDims;
   mLib->avcodec_align_dimensions(aCodecContext, &paddedCbCrSize.width,
                                  &paddedCbCrSize.height);
-  data.mCbCrStride = paddedCbCrSize.Width() * bytesPerChannel;
+  data.mCbCrSize =
+      gfx::IntSize{paddedCbCrSize.Width(), paddedCbCrSize.Height()};
+  data.mCbCrStride = data.mCbCrSize.Width() * bytesPerChannel;
 
   // Setting other attributes
-  data.mPictureRect = gfx::IntRect(
-      mInfo.ScaledImageRect(aCodecContext->width, aCodecContext->height)
-          .TopLeft(),
-      gfx::IntSize(aCodecContext->width, aCodecContext->height));
-  data.mStereoMode = mInfo.mStereoMode;
+  data.mPicSize = gfx::IntSize{aCodecContext->width, aCodecContext->height};
+  const gfx::IntRect picture =
+      aInfo.ScaledImageRect(data.mPicSize.Width(), data.mPicSize.Height());
+  data.mPicX = picture.x;
+  data.mPicY = picture.y;
+  data.mStereoMode = aInfo.mStereoMode;
   if (aCodecContext->colorspace != AVCOL_SPC_UNSPECIFIED) {
     data.mYUVColorSpace =
         TransferAVColorSpaceToYUVColorSpace(aCodecContext->colorspace);
   } else {
-    data.mYUVColorSpace = mInfo.mColorSpace
-                              ? *mInfo.mColorSpace
-                              : DefaultColorSpace(data.mPictureRect.Size());
+    data.mYUVColorSpace = aInfo.mColorSpace ? *aInfo.mColorSpace
+                                            : DefaultColorSpace(data.mPicSize);
   }
   data.mColorDepth = GetColorDepth(aCodecContext->pix_fmt);
   data.mColorRange = aCodecContext->color_range == AVCOL_RANGE_JPEG
@@ -573,16 +588,10 @@ FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
   FFMPEG_LOGV(
       "Created plane data, YSize=(%d, %d), CbCrSize=(%d, %d), "
       "CroppedYSize=(%d, %d), CroppedCbCrSize=(%d, %d), ColorDepth=%hhu",
-      paddedYSize.Width(), paddedYSize.Height(), paddedCbCrSize.Width(),
-      paddedCbCrSize.Height(), data.YPictureSize().Width(),
-      data.YPictureSize().Height(), data.CbCrPictureSize().Width(),
-      data.CbCrPictureSize().Height(), static_cast<uint8_t>(data.mColorDepth));
-
-  // Allocate a shmem buffer for image.
-  if (!aImage->CreateEmptyBuffer(data, paddedYSize, paddedCbCrSize)) {
-    return nullptr;
-  }
-  return aImage->GetTextureClient(mImageAllocator);
+      data.mYSize.Width(), data.mYSize.Height(), data.mCbCrSize.Width(),
+      data.mCbCrSize.Height(), data.mPicSize.Width(), data.mPicSize.Height(),
+      uvDims.Width(), uvDims.Height(), static_cast<uint8_t>(data.mColorDepth));
+  return data;
 }
 
 int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
@@ -646,7 +655,7 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   }
 
   RefPtr<layers::TextureClient> texture =
-      AllocateTextureClientForImage(aCodecContext, image);
+      AllocateTextueClientForImage(aCodecContext, image);
   if (!texture) {
     FFMPEG_LOG("Failed to allocate a texture client");
     return AVERROR(EINVAL);
@@ -990,7 +999,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
              || mCodecContext->pix_fmt == AV_PIX_FMT_YUV422P12LE
 #endif
   ) {
-    b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH;
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
     if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV422P10LE) {
@@ -1002,7 +1010,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     }
 #endif
   } else {
-    b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
     if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV420P10LE) {

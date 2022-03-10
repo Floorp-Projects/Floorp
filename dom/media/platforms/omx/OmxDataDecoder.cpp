@@ -937,8 +937,6 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
   b.mPlanes[2].mStride = (stride + 1) / 2;
   b.mPlanes[2].mSkip = 0;
 
-  b.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
-
   VideoInfo info(*mTrackInfo->GetAsVideoInfo());
 
   auto maybeColorSpace = info.mColorSpace;

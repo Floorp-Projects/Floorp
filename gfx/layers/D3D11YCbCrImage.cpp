@@ -27,11 +27,13 @@ D3D11YCbCrImage::~D3D11YCbCrImage() {}
 bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
                               ImageContainer* aContainer,
                               const PlanarYCbCrData& aData) {
-  mPictureRect = aData.mPictureRect;
+  mPictureRect = IntRect(aData.mPicX, aData.mPicY, aData.mPicSize.width,
+                         aData.mPicSize.height);
+  mYSize = aData.mYSize;
+  mCbCrSize = aData.mCbCrSize;
   mColorDepth = aData.mColorDepth;
   mColorSpace = aData.mYUVColorSpace;
   mColorRange = aData.mColorRange;
-  mChromaSubsampling = Data.mChromaSubsampling;
 
   D3D11YCbCrRecycleAllocator* allocator =
       aContainer->GetD3D11YCbCrRecycleAllocator(aAllocator);
@@ -88,13 +90,13 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   AutoLockD3D11Texture lockCr(textureCr);
 
   ctx->UpdateSubresource(textureY, 0, nullptr, aData.mYChannel, aData.mYStride,
-                         aData.mYStride * aData.YDataSize().height);
+                         aData.mYStride * aData.mYSize.height);
   ctx->UpdateSubresource(textureCb, 0, nullptr, aData.mCbChannel,
                          aData.mCbCrStride,
-                         aData.mCbCrStride * aData.CbCrDataSize().height);
+                         aData.mCbCrStride * aData.mCbCrSize.height);
   ctx->UpdateSubresource(textureCr, 0, nullptr, aData.mCrChannel,
                          aData.mCbCrStride,
-                         aData.mCbCrStride * aData.CbCrDataSize().height);
+                         aData.mCbCrStride * aData.mCbCrSize.height);
 
   return true;
 }
@@ -237,13 +239,16 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
 
   MOZ_ASSERT(mapCb.RowPitch == mapCr.RowPitch);
 
-  data.mPictureRect = mPictureRect;
+  data.mPicX = mPictureRect.X();
+  data.mPicY = mPictureRect.Y();
+  data.mPicSize = mPictureRect.Size();
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = mColorDepth;
   data.mYUVColorSpace = mColorSpace;
   data.mColorRange = mColorRange;
-  data.mChromaSubsampling = mChromaSubsampling;
   data.mYSkip = data.mCbSkip = data.mCrSkip = 0;
+  data.mYSize = mYSize;
+  data.mCbCrSize = mCbCrSize;
   data.mYChannel = static_cast<uint8_t*>(mapY.pData);
   data.mYStride = mapY.RowPitch;
   data.mCbChannel = static_cast<uint8_t*>(mapCb.pData);
@@ -327,9 +332,9 @@ class AutoCheckLockD3D11Texture final {
 DXGIYCbCrTextureAllocationHelper::DXGIYCbCrTextureAllocationHelper(
     const PlanarYCbCrData& aData, TextureFlags aTextureFlags,
     ID3D11Device* aDevice)
-    : ITextureClientAllocationHelper(
-          gfx::SurfaceFormat::YUV, aData.mPictureRect.Size(),
-          BackendSelector::Content, aTextureFlags, ALLOC_DEFAULT),
+    : ITextureClientAllocationHelper(gfx::SurfaceFormat::YUV, aData.mPicSize,
+                                     BackendSelector::Content, aTextureFlags,
+                                     ALLOC_DEFAULT),
       mData(aData),
       mDevice(aDevice) {}
 
@@ -339,9 +344,9 @@ bool DXGIYCbCrTextureAllocationHelper::IsCompatible(
 
   DXGIYCbCrTextureData* dxgiData =
       aTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
-  if (!dxgiData || aTextureClient->GetSize() != mData.mPictureRect.Size() ||
-      dxgiData->GetYSize() != mData.YDataSize() ||
-      dxgiData->GetCbCrSize() != mData.CbCrDataSize() ||
+  if (!dxgiData || aTextureClient->GetSize() != mData.mPicSize ||
+      dxgiData->GetYSize() != mData.mYSize ||
+      dxgiData->GetCbCrSize() != mData.mCbCrSize ||
       dxgiData->GetColorDepth() != mData.mColorDepth ||
       dxgiData->GetYUVColorSpace() != mData.mYUVColorSpace) {
     return false;
@@ -373,12 +378,10 @@ bool DXGIYCbCrTextureAllocationHelper::IsCompatible(
 
 already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
     KnowsCompositor* aAllocator) {
-  auto ySize = mData.YDataSize();
-  auto cbcrSize = mData.CbCrDataSize();
   CD3D11_TEXTURE2D_DESC newDesc(mData.mColorDepth == gfx::ColorDepth::COLOR_8
                                     ? DXGI_FORMAT_R8_UNORM
                                     : DXGI_FORMAT_R16_UNORM,
-                                ySize.width, ySize.height, 1, 1);
+                                mData.mYSize.width, mData.mYSize.height, 1, 1);
   // WebRender requests keyed mutex
   if (mDevice == gfx::DeviceManagerDx::Get()->GetCompositorDevice() &&
       !gfxVars::UseWebRender()) {
@@ -406,8 +409,8 @@ already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
   hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  newDesc.Width = cbcrSize.width;
-  newDesc.Height = cbcrSize.height;
+  newDesc.Width = mData.mCbCrSize.width;
+  newDesc.Height = mData.mCbCrSize.height;
 
   RefPtr<ID3D11Texture2D> textureCb;
   hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCb));
@@ -421,9 +424,10 @@ already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr;
 
   return TextureClient::CreateWithData(
-      DXGIYCbCrTextureData::Create(
-          textureY, textureCb, textureCr, mData.mPictureRect.Size(), ySize,
-          cbcrSize, mData.mColorDepth, mData.mYUVColorSpace, mData.mColorRange),
+      DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr,
+                                   mData.mPicSize, mData.mYSize,
+                                   mData.mCbCrSize, mData.mColorDepth,
+                                   mData.mYUVColorSpace, mData.mColorRange),
       mTextureFlags, forwarder);
 }
 

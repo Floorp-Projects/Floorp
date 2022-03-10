@@ -107,8 +107,11 @@ class FFmpegVideoDecoder<LIBAV_VER>
   }
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
-  layers::TextureClient* AllocateTextureClientForImage(
+  layers::TextureClient* AllocateTextueClientForImage(
       struct AVCodecContext* aCodecContext, layers::PlanarYCbCrImage* aImage);
+
+  layers::PlanarYCbCrData CreateEmptyPlanarYCbCrData(
+      struct AVCodecContext* aCodecContext, const VideoInfo& aInfo);
 
   gfx::IntSize GetAlignmentVideoFrameSize(struct AVCodecContext* aCodecContext,
                                           int32_t aWidth,
@@ -174,7 +177,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   // its internal decoding queue.
   //
   // When an image is removed from mAllocatedImages it's recycled
-  // for a new frame by AllocateTextureClientForImage() in
+  // for a new frame by AllocateTextueClientForImage() in
   // FFmpegVideoDecoder::GetVideoBuffer().
   nsTHashSet<RefPtr<ImageBufferWrapper>> mAllocatedImages;
 #endif

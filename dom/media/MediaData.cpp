@@ -262,19 +262,22 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
 
   PlanarYCbCrData data;
   data.mYChannel = Y.mData;
+  data.mYSize = IntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
   data.mYSkip = Y.mSkip;
   data.mCbChannel = Cb.mData;
   data.mCrChannel = Cr.mData;
+  data.mCbCrSize = IntSize(Cb.mWidth, Cb.mHeight);
   data.mCbCrStride = Cb.mStride;
   data.mCbSkip = Cb.mSkip;
   data.mCrSkip = Cr.mSkip;
-  data.mPictureRect = aPicture;
+  data.mPicX = aPicture.x;
+  data.mPicY = aPicture.y;
+  data.mPicSize = aPicture.Size();
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;
   data.mColorDepth = aBuffer.mColorDepth;
   data.mColorRange = aBuffer.mColorRange;
-  data.mChromaSubsampling = aBuffer.mChromaSubsampling;
   return data;
 }
 

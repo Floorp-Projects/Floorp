@@ -169,8 +169,8 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   auto bufferDesc = descriptor.get_SurfaceDescriptorBuffer();
   ASSERT_EQ(bufferDesc.desc().type(), BufferDescriptor::TYCbCrDescriptor);
   auto ycbcrDesc = bufferDesc.desc().get_YCbCrDescriptor();
-  ASSERT_EQ(ycbcrDesc.ySize(), ycbcrData.YDataSize());
-  ASSERT_EQ(ycbcrDesc.cbCrSize(), ycbcrData.CbCrDataSize());
+  ASSERT_EQ(ycbcrDesc.ySize(), ycbcrData.mYSize);
+  ASSERT_EQ(ycbcrDesc.cbCrSize(), ycbcrData.mCbCrSize);
   ASSERT_EQ(ycbcrDesc.stereoMode(), ycbcrData.mStereoMode);
 
   // host deserialization
@@ -234,17 +234,20 @@ TEST(Layers, TextureYCbCrSerialization)
   clientData.mYChannel = ySurface->Data();
   clientData.mCbChannel = cbSurface->Data();
   clientData.mCrChannel = crSurface->Data();
-  clientData.mPictureRect = IntRect(IntPoint(0, 0), ySurface->GetSize());
+  clientData.mYSize = ySurface->GetSize();
+  clientData.mPicSize = ySurface->GetSize();
+  clientData.mCbCrSize = cbSurface->GetSize();
   clientData.mYStride = ySurface->Stride();
   clientData.mCbCrStride = cbSurface->Stride();
   clientData.mStereoMode = StereoMode::MONO;
   clientData.mYUVColorSpace = YUVColorSpace::BT601;
   clientData.mColorDepth = ColorDepth::COLOR_8;
-  clientData.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
   clientData.mYSkip = 0;
   clientData.mCbSkip = 0;
   clientData.mCrSkip = 0;
   clientData.mCrSkip = 0;
+  clientData.mPicX = 0;
+  clientData.mPicX = 0;
 
   uint32_t namespaceId = 1;
   ImageBridgeChild::InitSameProcess(namespaceId);
@@ -268,11 +271,10 @@ TEST(Layers, TextureYCbCrSerialization)
   }
 
   RefPtr<TextureClient> client = TextureClient::CreateForYCbCr(
-      imageBridge, clientData.mPictureRect, clientData.YDataSize(),
-      clientData.mYStride, clientData.CbCrDataSize(), clientData.mCbCrStride,
+      imageBridge, clientData.GetPictureRect(), clientData.mYSize,
+      clientData.mYStride, clientData.mCbCrSize, clientData.mCbCrStride,
       StereoMode::MONO, ColorDepth::COLOR_8, YUVColorSpace::BT601,
-      ColorRange::LIMITED, clientData.mChromaSubsampling,
-      TextureFlags::DEALLOCATE_CLIENT);
+      ColorRange::LIMITED, TextureFlags::DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
 
