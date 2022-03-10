@@ -49,26 +49,24 @@ static already_AddRefed<TextureClient> CreateYCbCrTextureClientWithBackend(
   clientData.mYChannel = ySurface->Data();
   clientData.mCbChannel = cbSurface->Data();
   clientData.mCrChannel = crSurface->Data();
-  clientData.mYSize = ySurface->GetSize();
-  clientData.mPicSize = ySurface->GetSize();
-  clientData.mCbCrSize = cbSurface->GetSize();
+  clientData.mPictureRect = IntRect(IntPoint(0, 0), ySurface->GetSize());
   clientData.mYStride = ySurface->Stride();
   clientData.mCbCrStride = cbSurface->Stride();
   clientData.mStereoMode = StereoMode::MONO;
+  clientData.mChromaSubsampling = ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
   clientData.mYSkip = 0;
   clientData.mCbSkip = 0;
   clientData.mCrSkip = 0;
   clientData.mCrSkip = 0;
-  clientData.mPicX = 0;
-  clientData.mPicX = 0;
 
   // Create YCbCrTexture for basic backend.
   if (aLayersBackend == LayersBackend::LAYERS_BASIC) {
     return TextureClient::CreateForYCbCr(
-        nullptr, clientData.GetPictureRect(), clientData.mYSize,
-        clientData.mYStride, clientData.mCbCrSize, clientData.mCbCrStride,
+        nullptr, clientData.mPictureRect, clientData.YDataSize(),
+        clientData.mYStride, clientData.CbCrDataSize(), clientData.mCbCrStride,
         StereoMode::MONO, gfx::ColorDepth::COLOR_8, gfx::YUVColorSpace::BT601,
-        gfx::ColorRange::LIMITED, TextureFlags::DEALLOCATE_CLIENT);
+        gfx::ColorRange::LIMITED, clientData.mChromaSubsampling,
+        TextureFlags::DEALLOCATE_CLIENT);
   }
 
   if (data) {

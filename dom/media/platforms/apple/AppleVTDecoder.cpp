@@ -412,6 +412,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     buffer.mPlanes[2].mHeight = (height + 1) / 2;
     buffer.mPlanes[2].mSkip = 0;
 
+    buffer.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     buffer.mYUVColorSpace = mColorSpace;
     buffer.mColorRange = mColorRange;
 

@@ -12,9 +12,6 @@
 namespace mozilla {
 namespace gfx {
 
-IntSize GetCroppedCbCrSize(const IntSize& aYSize, const IntSize& aCbCrSize,
-                           const IntSize& aDisplaySize);
-
 void
 GetYCbCrToRGBDestFormatAndSize(const layers::PlanarYCbCrData& aData,
                                SurfaceFormat& aSuggestedFormat,
