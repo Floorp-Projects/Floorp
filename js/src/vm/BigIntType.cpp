@@ -110,7 +110,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/JSContext-inl.h"
 

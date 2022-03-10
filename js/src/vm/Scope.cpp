@@ -24,7 +24,7 @@
 #include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/Shape-inl.h"
 

@@ -17,7 +17,7 @@
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/Memory.h"

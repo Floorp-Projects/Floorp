@@ -217,7 +217,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/ClearEdgesTracer.h"
 #include "gc/FindSCCs.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"

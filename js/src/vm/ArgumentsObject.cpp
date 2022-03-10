@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "util/BitArray.h"

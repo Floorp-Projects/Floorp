@@ -12,7 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/PublicIterators.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AlignmentMaskAnalysis.h"

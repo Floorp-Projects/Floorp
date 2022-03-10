@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_FreeOp_inl_h
-#define gc_FreeOp_inl_h
+#ifndef gc_GCContext_inl_h
+#define gc_GCContext_inl_h
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 
 #include "gc/ZoneAllocator.h"
 #include "js/RefCounted.h"
@@ -32,4 +32,4 @@ inline void JSFreeOp::removeCellMemory(Cell* cell, size_t nbytes,
   RemoveCellMemory(cell, nbytes, use, isCollecting());
 }
 
-#endif  // gc_JSFreeOp_inl_h
+#endif  // gc_GCContext_inl_h

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_FreeOp_h
-#define gc_FreeOp_h
+#ifndef gc_GCContext_h
+#define gc_GCContext_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/ThreadLocal.h"
@@ -246,4 +246,4 @@ inline bool CurrentThreadIsPerformingGC() {
 
 }  // namespace js
 
-#endif  // gc_FreeOp_h
+#endif  // gc_GCContext_h

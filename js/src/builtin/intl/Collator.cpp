@@ -18,7 +18,7 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/SharedIntlData.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"

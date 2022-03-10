@@ -37,7 +37,7 @@
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/StencilXdr.h"   // XDRStencilEncoder
 #include "gc/AllocKind.h"          // gc::InitialHeap
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRHealth.h"
 #include "jit/Invalidation.h"

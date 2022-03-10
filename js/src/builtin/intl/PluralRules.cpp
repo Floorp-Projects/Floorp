@@ -15,7 +15,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "vm/GlobalObject.h"

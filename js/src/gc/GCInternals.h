@@ -14,8 +14,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
-#include "gc/FreeOp.h"
 #include "gc/GC.h"
+#include "gc/GCContext.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"

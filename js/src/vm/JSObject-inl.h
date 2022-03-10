@@ -17,7 +17,7 @@
 #include "vm/PropertyResult.h"
 #include "vm/TypedArrayObject.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty

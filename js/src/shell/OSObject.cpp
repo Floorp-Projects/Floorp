@@ -33,7 +33,7 @@
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
 
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array

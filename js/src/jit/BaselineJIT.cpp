@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #include "debugger/DebugAPI.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/PublicIterators.h"
 #include "jit/AutoWritableJitCode.h"
 #include "jit/BaselineCodeGen.h"

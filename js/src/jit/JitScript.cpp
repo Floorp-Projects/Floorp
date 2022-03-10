@@ -23,7 +23,7 @@
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JSScript.h"
 
-#include "gc/FreeOp-inl.h"
+#include "gc/GCContext-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/JSScript-inl.h"
 

@@ -37,7 +37,7 @@
 #include "jsnum.h"
 
 #include "ctypes/Library.h"
-#include "gc/FreeOp.h"
+#include "gc/GCContext.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
