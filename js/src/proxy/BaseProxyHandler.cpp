@@ -358,7 +358,7 @@ bool BaseProxyHandler::isArray(JSContext* cx, HandleObject proxy,
 
 void BaseProxyHandler::trace(JSTracer* trc, JSObject* proxy) const {}
 
-void BaseProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const {}
+void BaseProxyHandler::finalize(JS::GCContext* gcx, JSObject* proxy) const {}
 
 size_t BaseProxyHandler::objectMoved(JSObject* proxy, JSObject* old) const {
   return 0;

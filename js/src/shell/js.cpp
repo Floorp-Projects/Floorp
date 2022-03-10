@@ -4434,7 +4434,7 @@ struct WorkerInput {
       : parentRuntime(parentRuntime), chars(std::move(chars)), length(length) {}
 };
 
-static void DestroyShellCompartmentPrivate(JSFreeOp* fop,
+static void DestroyShellCompartmentPrivate(JS::GCContext* gcx,
                                            JS::Compartment* compartment) {
   auto priv = static_cast<ShellCompartmentPrivate*>(
       JS_GetCompartmentPrivate(compartment));
@@ -5376,7 +5376,7 @@ class XDRBufferObject : public NativeObject {
     return !getReservedSlot(VECTOR_SLOT).isUndefined();
   }
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 /*static */ const JSClassOps XDRBufferObject::classOps_ = {
@@ -5419,10 +5419,10 @@ XDRBufferObject* XDRBufferObject::create(JSContext* cx,
   return bufObj;
 }
 
-void XDRBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void XDRBufferObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   XDRBufferObject* buf = &obj->as<XDRBufferObject>();
   if (buf->hasData()) {
-    fop->delete_(buf, buf->data(), buf->data()->length(),
+    gcx->delete_(buf, buf->data(), buf->data()->length(),
                  MemoryUse::XDRBufferElements);
   }
 }
@@ -7854,7 +7854,7 @@ class StreamCacheEntryObject : public NativeObject {
   static const JSClassOps classOps_;
   static const JSPropertySpec properties_;
 
-  static void finalize(JSFreeOp*, JSObject* obj) {
+  static void finalize(JS::GCContext* gcx, JSObject* obj) {
     obj->as<StreamCacheEntryObject>().cache().Release();
   }
 

@@ -3894,7 +3894,7 @@ static bool StreamsAreEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
 static unsigned finalizeCount = 0;
 
-static void finalize_counter_finalize(JSFreeOp* fop, JSObject* obj) {
+static void finalize_counter_finalize(JS::GCContext* gcx, JSObject* obj) {
   ++finalizeCount;
 }
 
@@ -4663,7 +4663,7 @@ class CloneBufferObject : public NativeObject {
     return CallNonGenericMethod<is, getCloneBufferAsArrayBuffer_impl>(cx, args);
   }
 
-  static void Finalize(JSFreeOp* fop, JSObject* obj) {
+  static void Finalize(JS::GCContext* gcx, JSObject* obj) {
     obj->as<CloneBufferObject>().discard();
   }
 };
@@ -5026,7 +5026,7 @@ class ShapeSnapshotObject : public NativeObject {
 
   static ShapeSnapshotObject* create(JSContext* cx, HandleObject obj);
 
-  static void finalize(JSFreeOp* fop, JSObject* obj) {
+  static void finalize(JS::GCContext* gcx, JSObject* obj) {
     if (obj->as<ShapeSnapshotObject>().hasSnapshot()) {
       js_delete(&obj->as<ShapeSnapshotObject>().snapshot());
     }

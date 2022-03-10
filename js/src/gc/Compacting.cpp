@@ -450,8 +450,8 @@ inline T* MovingTracer::onEdge(T* thing) {
 }
 
 void Zone::prepareForCompacting() {
-  JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
-  discardJitCode(fop);
+  JS::GCContext* gcx = runtimeFromMainThread()->defaultFreeOp();
+  discardJitCode(gcx);
 }
 
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {

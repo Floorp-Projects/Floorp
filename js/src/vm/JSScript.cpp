@@ -127,7 +127,7 @@ void js::BaseScript::setEnclosingScope(Scope* enclosingScope) {
   warmUpData_.initEnclosingScope(enclosingScope);
 }
 
-void js::BaseScript::finalize(JSFreeOp* fop) {
+void js::BaseScript::finalize(JS::GCContext* gcx) {
   // Scripts with bytecode may have optional data stored in per-runtime or
   // per-zone maps. Note that a failed compilation must not have entries since
   // the script itself will not be marked as having bytecode.
@@ -141,7 +141,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
     script->destroyScriptCounts();
   }
 
-  fop->runtime()->geckoProfiler().onScriptFinalized(this);
+  gcx->runtime()->geckoProfiler().onScriptFinalized(this);
 
 #ifdef MOZ_VTUNE
   if (zone()->scriptVTuneIdMap) {
@@ -155,7 +155,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
 #ifdef JS_CACHEIR_SPEW
     maybeUpdateWarmUpCount(script);
 #endif
-    script->releaseJitScriptOnFinalize(fop);
+    script->releaseJitScriptOnFinalize(gcx);
   }
 
 #ifdef JS_CACHEIR_SPEW
@@ -169,7 +169,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
     size_t size = data_->allocationSize();
     AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
                  MemCheckKind::MakeNoAccess);
-    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
+    gcx->free_(this, data_, size, MemoryUse::ScriptPrivateData);
   }
 
   freeSharedData();
@@ -692,13 +692,13 @@ void JSScript::resetScriptCounts() {
   }
 }
 
-void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void ScriptSourceObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
   sso->source()->Release();
 
   // Clear the private value, calling the release hook if necessary.
-  sso->setPrivate(fop->runtime(), UndefinedValue());
+  sso->setPrivate(gcx->runtime(), UndefinedValue());
 }
 
 static const JSClassOps ScriptSourceObjectClassOps = {

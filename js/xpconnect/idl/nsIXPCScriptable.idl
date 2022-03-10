@@ -25,7 +25,7 @@ interface nsIXPConnectWrappedNative;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(JS::Value);
-[ptr] native JSFreeOpPtr(JSFreeOp);
+[ptr] native JSGCContextPtr(JS::GCContext);
 [ref] native JSCallArgsRef(const JS::CallArgs);
 [ptr] native JSClassPtr(const JSClass);
       native JSMutableHandleIdVector(JS::MutableHandleIdVector);
@@ -82,7 +82,7 @@ interface nsIXPCScriptable : nsISupports
                     out boolean resolvedp);
 
     void   finalize(in nsIXPConnectWrappedNative wrapper,
-                    in JSFreeOpPtr fop, in JSObjectPtr obj);
+                    in JSGCContextPtr gcx, in JSObjectPtr obj);
 
     boolean call(in nsIXPConnectWrappedNative wrapper,
                 in JSContextPtr cx, in JSObjectPtr obj,

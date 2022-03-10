@@ -302,7 +302,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return *runtime_->wellKnownSymbols;
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
-  JSFreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }
+  JS::GCContext* defaultFreeOp() { return runtime_->defaultFreeOp(); }
   uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
   uintptr_t stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }

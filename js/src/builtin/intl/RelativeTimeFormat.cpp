@@ -132,12 +132,12 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::RelativeTimeFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   if (mozilla::intl::RelativeTimeFormat* rtf =
           obj->as<RelativeTimeFormatObject>().getRelativeTimeFormatter()) {
-    intl::RemoveICUCellMemory(fop, obj,
+    intl::RemoveICUCellMemory(gcx, obj,
                               RelativeTimeFormatObject::EstimatedMemoryUse);
 
     // This was allocated using `new` in mozilla::intl::RelativeTimeFormat,

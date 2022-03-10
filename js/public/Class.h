@@ -291,7 +291,7 @@ typedef bool (*JSMayResolveOp)(const JSAtomState& names, jsid id,
  * from other live objects or from GC roots.  Obviously, finalizers must never
  * store a reference to obj.
  */
-typedef void (*JSFinalizeOp)(JSFreeOp* fop, JSObject* obj);
+typedef void (*JSFinalizeOp)(JS::GCContext* gcx, JSObject* obj);
 
 /**
  * Check whether v is an instance of obj.  Return false on error or exception,
@@ -652,9 +652,9 @@ struct alignas(js::gc::JSClassAlignBytes) JSClass {
   // The special treatment of |finalize| and |trace| is necessary because if we
   // assign either of those hooks to a local variable and then call it -- as is
   // done with the other hooks -- the GC hazard analysis gets confused.
-  void doFinalize(JSFreeOp* fop, JSObject* obj) const {
+  void doFinalize(JS::GCContext* gcx, JSObject* obj) const {
     MOZ_ASSERT(cOps && cOps->finalize);
-    cOps->finalize(fop, obj);
+    cOps->finalize(gcx, obj);
   }
   void doTrace(JSTracer* trc, JSObject* obj) const {
     MOZ_ASSERT(cOps && cOps->trace);

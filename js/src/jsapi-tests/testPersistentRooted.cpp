@@ -12,7 +12,7 @@ struct BarkWhenTracedClass {
   static int traceCount;
 
   static const JSClass class_;
-  static void finalize(JSFreeOp* fop, JSObject* obj) { finalizeCount++; }
+  static void finalize(JS::GCContext* gcx, JSObject* obj) { finalizeCount++; }
   static void trace(JSTracer* trc, JSObject* obj) { traceCount++; }
   static void reset() {
     finalizeCount = 0;

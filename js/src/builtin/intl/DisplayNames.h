@@ -15,13 +15,13 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"  // JSClass, JSClassOps, js::ClassSpec
+#include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/List.h"
 #include "vm/NativeObject.h"
 
 struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSFreeOp;
 
 namespace mozilla::intl {
 class DisplayNames;
@@ -62,7 +62,7 @@ class DisplayNamesObject : public NativeObject {
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 /**

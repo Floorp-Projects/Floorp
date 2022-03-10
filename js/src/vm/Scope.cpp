@@ -362,10 +362,10 @@ uint32_t Scope::environmentChainLength() const {
   return length;
 }
 
-void Scope::finalize(JSFreeOp* fop) {
+void Scope::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(CurrentThreadIsGCFinalizing());
-  applyScopeDataTyped([this, fop](auto data) {
-    fop->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
+  applyScopeDataTyped([this, gcx](auto data) {
+    gcx->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
   });
   setHeaderPtr(nullptr);
 }

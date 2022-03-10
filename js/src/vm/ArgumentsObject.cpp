@@ -1015,14 +1015,14 @@ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-void ArgumentsObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void ArgumentsObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (argsobj.data()) {
-    fop->free_(&argsobj, argsobj.maybeRareData(),
+    gcx->free_(&argsobj, argsobj.maybeRareData(),
                RareArgumentsData::bytesRequired(argsobj.initialLength()),
                MemoryUse::RareArgumentsData);
-    fop->free_(&argsobj, argsobj.data(),
+    gcx->free_(&argsobj, argsobj.data(),
                ArgumentsData::bytesRequired(argsobj.data()->numArgs),
                MemoryUse::ArgumentsData);
   }

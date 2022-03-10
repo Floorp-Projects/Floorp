@@ -172,7 +172,7 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
 #define IMPLEMENT_ERROR_CLASS_MAYBE_WASM_TRAP(name) \
   IMPLEMENT_ERROR_CLASS_CORE(name, ErrorObject::RESERVED_SLOTS_MAYBE_WASM_TRAP)
 
-static void exn_finalize(JSFreeOp* fop, JSObject* obj);
+static void exn_finalize(JS::GCContext* gcx, JSObject* obj);
 
 static const JSClassOps ErrorObjectClassOps = {
     nullptr,       // addProperty
@@ -200,10 +200,10 @@ const JSClass ErrorObject::classes[JSEXN_ERROR_LIMIT] = {
     IMPLEMENT_ERROR_CLASS(CompileError), IMPLEMENT_ERROR_CLASS(LinkError),
     IMPLEMENT_ERROR_CLASS_MAYBE_WASM_TRAP(RuntimeError)};
 
-static void exn_finalize(JSFreeOp* fop, JSObject* obj) {
+static void exn_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport()) {
     // Bug 1560019: This allocation is not currently tracked.
-    fop->deleteUntracked(report);
+    gcx->deleteUntracked(report);
   }
 }
 

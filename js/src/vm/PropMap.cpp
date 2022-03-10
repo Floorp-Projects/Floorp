@@ -878,7 +878,7 @@ void SharedPropMap::fixupAfterMovingGC() {
   }
 }
 
-void SharedPropMap::removeChild(JSFreeOp* fop, SharedPropMap* child) {
+void SharedPropMap::removeChild(JS::GCContext* gcx, SharedPropMap* child) {
   SharedPropMapAndIndex& parentRef = child->treeDataRef().parent;
   MOZ_ASSERT(parentRef.map() == this);
 
@@ -913,13 +913,13 @@ void SharedPropMap::removeChild(JSFreeOp* fop, SharedPropMap* child) {
     SharedPropMapAndIndex remainingChild = r.front();
     childrenRef.setSingleChild(remainingChild);
     clearHasChildrenSet();
-    fop->delete_(this, set, MemoryUse::PropMapChildren);
+    gcx->delete_(this, set, MemoryUse::PropMapChildren);
   }
 }
 
-void LinkedPropMap::purgeTable(JSFreeOp* fop) {
+void LinkedPropMap::purgeTable(JS::GCContext* gcx) {
   MOZ_ASSERT(hasTable());
-  fop->delete_(this, data_.table, MemoryUse::PropMapTable);
+  gcx->delete_(this, data_.table, MemoryUse::PropMapTable);
   data_.table = nullptr;
 }
 

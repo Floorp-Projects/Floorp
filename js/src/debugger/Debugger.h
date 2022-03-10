@@ -792,7 +792,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   [[nodiscard]] bool addDebuggeeGlobal(JSContext* cx,
                                        Handle<GlobalObject*> obj);
-  void removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
+  void removeDebuggeeGlobal(JS::GCContext* gcx, GlobalObject* global,
                             WeakGlobalObjectSet::Enum* debugEnum,
                             FromSweep fromSweep);
 
@@ -918,7 +918,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * had on-stack data or a 'frames' entry and has never had an onStep handler.
    */
   static void terminateDebuggerFrame(
-      JSFreeOp* fop, Debugger* dbg, DebuggerFrame* dbgFrame,
+      JS::GCContext* gcx, Debugger* dbg, DebuggerFrame* dbgFrame,
       AbstractFramePtr frame, FrameMap::Enum* maybeFramesEnum = nullptr,
       GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
 
@@ -1360,7 +1360,7 @@ struct Handler {
   virtual void hold(JSObject* owner) = 0;
 
   /* Report that this Handler is no longer held by owner. See comment above. */
-  virtual void drop(JSFreeOp* fop, JSObject* owner) = 0;
+  virtual void drop(JS::GCContext* gcx, JSObject* owner) = 0;
 
   /*
    * Trace the reference to the handler. This method will be called by the
@@ -1429,7 +1429,7 @@ class BreakpointSite {
  protected:
   BreakpointSite() = default;
   virtual ~BreakpointSite() = default;
-  void finalize(JSFreeOp* fop);
+  void finalize(JS::GCContext* gcx);
   virtual gc::Cell* owningCell() = 0;
 
  public:
@@ -1438,10 +1438,10 @@ class BreakpointSite {
 
   bool isEmpty() const;
   virtual void trace(JSTracer* trc);
-  virtual void remove(JSFreeOp* fop) = 0;
-  void destroyIfEmpty(JSFreeOp* fop) {
+  virtual void remove(JS::GCContext* gcx) = 0;
+  void destroyIfEmpty(JS::GCContext* gcx) {
     if (isEmpty()) {
-      remove(fop);
+      remove(gcx);
     }
   }
   virtual Realm* realm() const = 0;
@@ -1511,14 +1511,14 @@ class Breakpoint {
    * it does not check for now-empty BreakpointSites, unneeded DebugScripts, or
    * the like.
    */
-  void delete_(JSFreeOp* fop);
+  void delete_(JS::GCContext* gcx);
 
   /**
    * Remove this breakpoint. Unlink it from its Debugger's and BreakpointSite's
    * lists, and if the BreakpointSite is now empty, clean that up and update JIT
    * code as necessary.
    */
-  void remove(JSFreeOp* fop);
+  void remove(JS::GCContext* gcx);
 
   Breakpoint* nextInDebugger();
   Breakpoint* nextInSite();
@@ -1534,8 +1534,8 @@ class JSBreakpointSite : public BreakpointSite {
   JSBreakpointSite(JSScript* script, jsbytecode* pc);
 
   void trace(JSTracer* trc) override;
-  void delete_(JSFreeOp* fop);
-  void remove(JSFreeOp* fop) override;
+  void delete_(JS::GCContext* gcx);
+  void remove(JS::GCContext* gcx) override;
   Realm* realm() const override;
 
  private:
@@ -1551,8 +1551,8 @@ class WasmBreakpointSite : public BreakpointSite {
   WasmBreakpointSite(WasmInstanceObject* instanceObject, uint32_t offset);
 
   void trace(JSTracer* trc) override;
-  void delete_(JSFreeOp* fop);
-  void remove(JSFreeOp* fop) override;
+  void delete_(JS::GCContext* gcx);
+  void remove(JS::GCContext* gcx) override;
   Realm* realm() const override;
 
  private:
