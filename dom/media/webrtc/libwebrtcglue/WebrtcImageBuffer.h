@@ -29,11 +29,11 @@ class ImageBuffer : public webrtc::VideoFrameBuffer {
     }
     const layers::PlanarYCbCrData* data = image->GetData();
     rtc::scoped_refptr<webrtc::I420BufferInterface> buf =
-        webrtc::WrapI420Buffer(data->mPicSize.width, data->mPicSize.height,
-                               data->mYChannel, data->mYStride,
-                               data->mCbChannel, data->mCbCrStride,
-                               data->mCrChannel, data->mCbCrStride,
-                               rtc::KeepRefUntilDone(image.get()));
+        webrtc::WrapI420Buffer(
+            data->mPictureRect.width, data->mPictureRect.height,
+            data->mYChannel, data->mYStride, data->mCbChannel,
+            data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
+            rtc::KeepRefUntilDone(image.get()));
     return buf;
   }
 

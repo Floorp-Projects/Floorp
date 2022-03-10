@@ -511,20 +511,16 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
   }
 
   PlanarYCbCrData yuvData;
-  yuvData.mYSize = yuvDesc.ySize();
   yuvData.mYStride = AssertedCast<int32_t>(yuvDesc.yStride());
-  yuvData.mCbCrSize = yuvDesc.cbCrSize();
   yuvData.mCbCrStride = AssertedCast<int32_t>(yuvDesc.cbCrStride());
   // default mYSkip, mCbSkip, mCrSkip because not held in YCbCrDescriptor
   yuvData.mYSkip = yuvData.mCbSkip = yuvData.mCrSkip = 0;
-  gfx::IntRect display = yuvDesc.display();
-  yuvData.mPicX = display.X();
-  yuvData.mPicY = display.Y();
-  yuvData.mPicSize = display.Size();
+  yuvData.mPictureRect = yuvDesc.display();
   yuvData.mStereoMode = yuvDesc.stereoMode();
   yuvData.mColorDepth = yuvDesc.colorDepth();
   yuvData.mYUVColorSpace = yuvDesc.yUVColorSpace();
   yuvData.mColorRange = yuvDesc.colorRange();
+  yuvData.mChromaSubsampling = yuvDesc.chromaSubsampling();
 
   const auto GetPlanePtr = [&](const uint32_t beginOffset,
                                const gfx::IntSize size,
@@ -541,22 +537,22 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
     return (buffer->begin() + beginOffset).get();
   };
   yuvData.mYChannel =
-      GetPlanePtr(yuvDesc.yOffset(), yuvData.mYSize, yuvData.mYStride);
+      GetPlanePtr(yuvDesc.yOffset(), yuvDesc.ySize(), yuvData.mYStride);
   yuvData.mCbChannel =
-      GetPlanePtr(yuvDesc.cbOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+      GetPlanePtr(yuvDesc.cbOffset(), yuvDesc.cbCrSize(), yuvData.mCbCrStride);
   yuvData.mCrChannel =
-      GetPlanePtr(yuvDesc.crOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+      GetPlanePtr(yuvDesc.crOffset(), yuvDesc.cbCrSize(), yuvData.mCbCrStride);
 
   if (yuvData.mYSkip || yuvData.mCbSkip || yuvData.mCrSkip ||
-      yuvData.mYSize.width < 0 || yuvData.mYSize.height < 0 ||
-      yuvData.mCbCrSize.width < 0 || yuvData.mCbCrSize.height < 0 ||
+      yuvDesc.ySize().width < 0 || yuvDesc.ySize().height < 0 ||
+      yuvDesc.cbCrSize().width < 0 || yuvDesc.cbCrSize().height < 0 ||
       yuvData.mYStride < 0 || yuvData.mCbCrStride < 0 || !yuvData.mYChannel ||
       !yuvData.mCbChannel || !yuvData.mCrChannel) {
     gfxCriticalError() << "Unusual PlanarYCbCrData: " << yuvData.mYSkip << ","
                        << yuvData.mCbSkip << "," << yuvData.mCrSkip << ", "
-                       << yuvData.mYSize.width << "," << yuvData.mYSize.height
-                       << ", " << yuvData.mCbCrSize.width << ","
-                       << yuvData.mCbCrSize.height << ", " << yuvData.mYStride
+                       << yuvDesc.ySize().width << "," << yuvDesc.ySize().height
+                       << ", " << yuvDesc.cbCrSize().width << ","
+                       << yuvDesc.cbCrSize().height << ", " << yuvData.mYStride
                        << "," << yuvData.mCbCrStride << ", "
                        << yuvData.mYChannel << "," << yuvData.mCbChannel << ","
                        << yuvData.mCrChannel;
@@ -581,16 +577,18 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
   MOZ_ASSERT(pdata->mYSkip == 0 && pdata->mCbSkip == 0 && pdata->mCrSkip == 0,
              "YCbCrDescriptor doesn't hold skip values");
 
+  auto ySize = pdata->YDataSize();
+  auto cbcrSize = pdata->CbCrDataSize();
   uint32_t yOffset;
   uint32_t cbOffset;
   uint32_t crOffset;
-  ImageDataSerializer::ComputeYCbCrOffsets(
-      pdata->mYStride, pdata->mYSize.height, pdata->mCbCrStride,
-      pdata->mCbCrSize.height, yOffset, cbOffset, crOffset);
+  ImageDataSerializer::ComputeYCbCrOffsets(pdata->mYStride, ySize.height,
+                                           pdata->mCbCrStride, cbcrSize.height,
+                                           yOffset, cbOffset, crOffset);
 
   uint32_t bufferSize = ImageDataSerializer::ComputeYCbCrBufferSize(
-      pdata->mYSize, pdata->mYStride, pdata->mCbCrSize, pdata->mCbCrStride,
-      yOffset, cbOffset, crOffset);
+      ySize, pdata->mYStride, cbcrSize, pdata->mCbCrStride, yOffset, cbOffset,
+      crOffset);
 
   aSdBuffer.data() = aAllocate(bufferSize);
 
@@ -612,16 +610,16 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
   }
 
   aSdBuffer.desc() = YCbCrDescriptor(
-      pdata->GetPictureRect(), pdata->mYSize, pdata->mYStride, pdata->mCbCrSize,
-      pdata->mCbCrStride, yOffset, cbOffset, crOffset, pdata->mStereoMode,
-      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange);
+      pdata->mPictureRect, ySize, pdata->mYStride, cbcrSize, pdata->mCbCrStride,
+      yOffset, cbOffset, crOffset, pdata->mStereoMode, pdata->mColorDepth,
+      pdata->mYUVColorSpace, pdata->mColorRange, pdata->mChromaSubsampling);
 
-  CopyPlane(buffer + yOffset, pdata->mYChannel, pdata->mYSize, pdata->mYStride,
+  CopyPlane(buffer + yOffset, pdata->mYChannel, ySize, pdata->mYStride,
             pdata->mYSkip);
-  CopyPlane(buffer + cbOffset, pdata->mCbChannel, pdata->mCbCrSize,
-            pdata->mCbCrStride, pdata->mCbSkip);
-  CopyPlane(buffer + crOffset, pdata->mCrChannel, pdata->mCbCrSize,
-            pdata->mCbCrStride, pdata->mCrSkip);
+  CopyPlane(buffer + cbOffset, pdata->mCbChannel, cbcrSize, pdata->mCbCrStride,
+            pdata->mCbSkip);
+  CopyPlane(buffer + crOffset, pdata->mCrChannel, cbcrSize, pdata->mCbCrStride,
+            pdata->mCrSkip);
   return NS_OK;
 }
 
@@ -682,9 +680,11 @@ static void CopyPlane(uint8_t* aDst, const uint8_t* aSrc,
 bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
   // update buffer size
   // Use uint32_t throughout to match AllocateBuffer's param and mBufferSize
+  auto ySize = aData.YDataSize();
+  auto cbcrSize = aData.CbCrDataSize();
   const auto checkedSize =
-      CheckedInt<uint32_t>(aData.mCbCrStride) * aData.mCbCrSize.height * 2 +
-      CheckedInt<uint32_t>(aData.mYStride) * aData.mYSize.height;
+      CheckedInt<uint32_t>(aData.mCbCrStride) * cbcrSize.height * 2 +
+      CheckedInt<uint32_t>(aData.mYStride) * ySize.height;
 
   if (!checkedSize.isValid()) return false;
 
@@ -699,20 +699,19 @@ bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
 
   mData = aData;
   mData.mYChannel = mBuffer.get();
-  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-  mData.mCrChannel =
-      mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
+  mData.mCbChannel = mData.mYChannel + mData.mYStride * ySize.height;
+  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * cbcrSize.height;
   mData.mYSkip = mData.mCbSkip = mData.mCrSkip = 0;
 
-  CopyPlane(mData.mYChannel, aData.mYChannel, aData.mYSize, aData.mYStride,
+  CopyPlane(mData.mYChannel, aData.mYChannel, ySize, aData.mYStride,
             aData.mYSkip);
-  CopyPlane(mData.mCbChannel, aData.mCbChannel, aData.mCbCrSize,
-            aData.mCbCrStride, aData.mCbSkip);
-  CopyPlane(mData.mCrChannel, aData.mCrChannel, aData.mCbCrSize,
-            aData.mCbCrStride, aData.mCrSkip);
+  CopyPlane(mData.mCbChannel, aData.mCbChannel, cbcrSize, aData.mCbCrStride,
+            aData.mCbSkip);
+  CopyPlane(mData.mCrChannel, aData.mCrChannel, cbcrSize, aData.mCbCrStride,
+            aData.mCrSkip);
 
-  mSize = aData.mPicSize;
-  mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
+  mSize = aData.mPictureRect.Size();
+  mOrigin = aData.mPictureRect.TopLeft();
   return true;
 }
 
@@ -723,8 +722,8 @@ gfxImageFormat PlanarYCbCrImage::GetOffscreenFormat() const {
 
 bool PlanarYCbCrImage::AdoptData(const Data& aData) {
   mData = aData;
-  mSize = aData.mPicSize;
-  mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
+  mSize = aData.mPictureRect.Size();
+  mOrigin = aData.mPictureRect.TopLeft();
   return true;
 }
 
@@ -776,7 +775,7 @@ NVImage::~NVImage() {
 
 IntSize NVImage::GetSize() const { return mSize; }
 
-IntRect NVImage::GetPictureRect() const { return mData.GetPictureRect(); }
+IntRect NVImage::GetPictureRect() const { return mData.mPictureRect; }
 
 already_AddRefed<SourceSurface> NVImage::GetAsSourceSurface() {
   if (mSourceSurface) {
@@ -786,31 +785,30 @@ already_AddRefed<SourceSurface> NVImage::GetAsSourceSurface() {
 
   // Convert the current NV12 or NV21 data to YUV420P so that we can follow the
   // logics in PlanarYCbCrImage::GetAsSourceSurface().
-  const int bufferLength = mData.mYSize.height * mData.mYStride +
-                           mData.mCbCrSize.height * mData.mCbCrSize.width * 2;
+  auto ySize = mData.YDataSize();
+  auto cbcrSize = mData.CbCrDataSize();
+  const int bufferLength =
+      ySize.height * mData.mYStride + cbcrSize.height * cbcrSize.width * 2;
   UniquePtr<uint8_t[]> buffer(new uint8_t[bufferLength]);
 
   Data aData = mData;
-  aData.mCbCrStride = aData.mCbCrSize.width;
+  aData.mCbCrStride = cbcrSize.width;
   aData.mCbSkip = 0;
   aData.mCrSkip = 0;
   aData.mYChannel = buffer.get();
-  aData.mCbChannel = aData.mYChannel + aData.mYSize.height * aData.mYStride;
-  aData.mCrChannel =
-      aData.mCbChannel + aData.mCbCrSize.height * aData.mCbCrStride;
+  aData.mCbChannel = aData.mYChannel + ySize.height * aData.mYStride;
+  aData.mCrChannel = aData.mCbChannel + cbcrSize.height * aData.mCbCrStride;
 
   if (mData.mCbChannel < mData.mCrChannel) {  // NV12
     libyuv::NV12ToI420(mData.mYChannel, mData.mYStride, mData.mCbChannel,
                        mData.mCbCrStride, aData.mYChannel, aData.mYStride,
                        aData.mCbChannel, aData.mCbCrStride, aData.mCrChannel,
-                       aData.mCbCrStride, aData.mYSize.width,
-                       aData.mYSize.height);
+                       aData.mCbCrStride, ySize.width, ySize.height);
   } else {  // NV21
     libyuv::NV21ToI420(mData.mYChannel, mData.mYStride, mData.mCrChannel,
                        mData.mCbCrStride, aData.mYChannel, aData.mYStride,
                        aData.mCbChannel, aData.mCbCrStride, aData.mCrChannel,
-                       aData.mCbCrStride, aData.mYSize.width,
-                       aData.mYSize.height);
+                       aData.mCbCrStride, ySize.width, ySize.height);
   }
 
   // The logics in PlanarYCbCrImage::GetAsSourceSurface().
@@ -856,8 +854,8 @@ bool NVImage::SetData(const Data& aData) {
   // Calculate buffer size
   // Use uint32_t throughout to match AllocateBuffer's param and mBufferSize
   const auto checkedSize =
-      CheckedInt<uint32_t>(aData.mYSize.height) * aData.mYStride +
-      CheckedInt<uint32_t>(aData.mCbCrSize.height) * aData.mCbCrStride;
+      CheckedInt<uint32_t>(aData.YDataSize().height) * aData.mYStride +
+      CheckedInt<uint32_t>(aData.CbCrDataSize().height) * aData.mCbCrStride;
 
   if (!checkedSize.isValid()) return false;
 
@@ -879,7 +877,7 @@ bool NVImage::SetData(const Data& aData) {
   mData.mCrChannel = mData.mYChannel + (aData.mCrChannel - aData.mYChannel);
 
   // Update mSize.
-  mSize = aData.mPicSize;
+  mSize = aData.mPictureRect.Size();
 
   // Copy the input data into mBuffer.
   // This copies the y-channel and the interleaving CbCr-channel.

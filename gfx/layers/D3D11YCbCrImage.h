@@ -73,12 +73,11 @@ class D3D11YCbCrImage : public Image {
  private:
   const DXGIYCbCrTextureData* GetData() const;
 
-  gfx::IntSize mYSize;
-  gfx::IntSize mCbCrSize;
   gfx::IntRect mPictureRect;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mColorSpace;
   gfx::ColorRange mColorRange;
+  gfx::ChromaSubsampling mChromaSubsampling;
   RefPtr<TextureClient> mTextureClient;
 };
 

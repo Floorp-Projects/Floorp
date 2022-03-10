@@ -52,35 +52,30 @@ already_AddRefed<Image> VideoFrame::CreateBlackImage(
     return nullptr;
   }
 
-  int len = ((aSize.width * aSize.height) * 3 / 2);
+  gfx::IntSize cbcrSize((aSize.width + 1) / 2, (aSize.height + 1) / 2);
+  int yLen = aSize.width * aSize.height;
+  int cbcrLen = cbcrSize.width * cbcrSize.height;
 
   // Generate a black image.
-  auto frame = MakeUnique<uint8_t[]>(len);
-  int y = aSize.width * aSize.height;
+  auto frame = MakeUnique<uint8_t[]>(yLen + 2 * cbcrLen);
   // Fill Y plane.
-  memset(frame.get(), 0x10, y);
+  memset(frame.get(), 0x10, yLen);
   // Fill Cb/Cr planes.
-  memset(frame.get() + y, 0x80, (len - y));
-
-  const uint8_t lumaBpp = 8;
-  const uint8_t chromaBpp = 4;
+  memset(frame.get() + yLen, 0x80, 2 * cbcrLen);
 
   layers::PlanarYCbCrData data;
   data.mYChannel = frame.get();
-  data.mYSize = gfx::IntSize(aSize.width, aSize.height);
-  data.mYStride = (int32_t)(aSize.width * lumaBpp / 8.0);
-  data.mCbCrStride = (int32_t)(aSize.width * chromaBpp / 8.0);
-  data.mCbChannel = frame.get() + aSize.height * data.mYStride;
-  data.mCrChannel = data.mCbChannel + aSize.height * data.mCbCrStride / 2;
-  data.mCbCrSize = gfx::IntSize(aSize.width / 2, aSize.height / 2);
-  data.mPicX = 0;
-  data.mPicY = 0;
-  data.mPicSize = gfx::IntSize(aSize.width, aSize.height);
+  data.mYStride = aSize.width;
+  data.mCbCrStride = cbcrSize.width;
+  data.mCbChannel = frame.get() + yLen;
+  data.mCrChannel = data.mCbChannel + cbcrLen;
+  data.mPictureRect = gfx::IntRect(0, 0, aSize.width, aSize.height);
   data.mStereoMode = StereoMode::MONO;
   data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
   // This could be made FULL once bug 1568745 is complete. A black pixel being
   // 0x00, 0x80, 0x80
   data.mColorRange = gfx::ColorRange::LIMITED;
+  data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
   // Copies data, so we can free data.
   if (!image->CopyData(data)) {
