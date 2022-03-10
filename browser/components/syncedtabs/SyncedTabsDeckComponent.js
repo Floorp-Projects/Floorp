@@ -30,12 +30,11 @@ let { getChromeWindow } = ChromeUtils.import(
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
 let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm",
-  {}
+  "resource://gre/modules/Log.jsm"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = ["SyncedTabsDeckComponent"];
