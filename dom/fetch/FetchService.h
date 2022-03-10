@@ -5,7 +5,6 @@
 #define _mozilla_dom_FetchService_h
 
 #include "nsIChannel.h"
-#include "nsIObserver.h"
 #include "nsTHashMap.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
@@ -42,10 +41,9 @@ using FetchServiceResponsePromise =
  * the FetchServiceResponsePromise would be resolved or rejected. The promise
  * consumers can set callbacks to handle the Fetch result.
  */
-class FetchService final : public nsIObserver {
+class FetchService final {
  public:
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSIOBSERVER;
+  NS_INLINE_DECL_REFCOUNTING(FetchService)
 
   static already_AddRefed<FetchService> GetInstance();
 
@@ -114,15 +112,10 @@ class FetchService final : public nsIObserver {
 
   ~FetchService();
 
-  nsresult RegisterNetworkObserver();
-  nsresult UnregisterNetworkObserver();
-
   // This is a container to manage the generated fetches.
   nsTHashMap<nsRefPtrHashKey<FetchServiceResponsePromise>,
              RefPtr<FetchInstance> >
       mFetchInstanceTable;
-  bool mObservingNetwork{false};
-  bool mOffline{false};
 };
 
 }  // namespace mozilla::dom
