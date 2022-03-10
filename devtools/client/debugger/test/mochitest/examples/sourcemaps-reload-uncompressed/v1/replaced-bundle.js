@@ -74,10 +74,11 @@ module.exports = __webpack_require__(1);
 /* 1 */
 /***/ (function(module, exports) {
 
-window.newOriginal = function newOriginal() {
-  console.log("New original");
+// Add two comment lines, to match the one from new-original.js and have same
+// breakpoint positions..............................
+window.removedOriginal = function removedOriginal() {
+  console.log("Removed original");
 };
-window.newOriginal();
 
 /***/ })
 /******/ ]);
