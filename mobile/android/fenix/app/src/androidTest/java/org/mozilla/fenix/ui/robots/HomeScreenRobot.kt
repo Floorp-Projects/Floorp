@@ -41,9 +41,11 @@ import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matchers
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -80,6 +82,24 @@ class HomeScreenRobot {
     fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
     fun verifyNoTabsOpened() = assertNoTabsOpened()
     fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
+
+    fun verifyWallpaperImageApplied(isEnabled: Boolean) {
+        if (isEnabled) {
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector().resourceId("$packageName:id/wallpaperImageView")
+                ).waitForExists(waitingTimeShort)
+            )
+        } else {
+            assertFalse(
+                mDevice.findObject(
+                    UiSelector().resourceId("$packageName:id/wallpaperImageView")
+                ).waitForExists(waitingTimeShort)
+            )
+        }
+
+        mDevice.findObject(UiSelector())
+    }
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
@@ -158,6 +178,8 @@ class HomeScreenRobot {
             )
         ).click()
     }
+
+    fun clickFirefoxLogo() = homepageWordmark.click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -390,8 +412,9 @@ private fun assertHomePrivateBrowsingButton() =
     privateBrowsingButton()
         .check(matches(isDisplayed()))
 
-private fun assertHomeWordmark() = onView(ViewMatchers.withResourceName("wordmark"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private val homepageWordmark = onView(ViewMatchers.withResourceName("wordmark"))
+private fun assertHomeWordmark() =
+    homepageWordmark.check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertHomeToolbar() = onView(ViewMatchers.withResourceName("toolbar"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

@@ -12,8 +12,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -34,14 +37,39 @@ class SettingsSubMenuHomepageRobot {
     }
 
     fun clickJumpBackInButton() = jumpBackInButton().click()
+
     fun clickRecentBookmarksButton() = recentBookmarksButton().click()
+
     fun clickStartOnHomepageButton() = homepageButton().click()
+
     fun clickStartOnLastTabButton() = lastTabButton().click()
+
+    fun openWallpapersMenu() = wallpapersMenuButton.click()
+
+    fun selectWallpaper(wallpaperName: String) =
+        mDevice.findObject(UiSelector().description(wallpaperName)).click()
+
+    fun verifySnackBarText(expectedText: String) =
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .textContains(expectedText)
+            ).waitForExists(waitingTimeShort)
+        )
 
     class Transition {
 
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             goBackButton().click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
+        fun clickSnackBarViewButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            val snackBarButton = mDevice.findObject(UiSelector().text("VIEW"))
+            snackBarButton.waitForExists(waitingTimeShort)
+            snackBarButton.click()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
@@ -113,3 +141,5 @@ private fun assertLastTabButton() =
     lastTabButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertHomepageAfterFourHoursButton() =
     homepageAfterFourHoursButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private val wallpapersMenuButton = onView(withText("Wallpapers"))

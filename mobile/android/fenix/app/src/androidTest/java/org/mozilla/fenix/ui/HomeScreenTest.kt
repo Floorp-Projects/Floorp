@@ -10,6 +10,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -140,6 +141,21 @@ class HomeScreenTest {
             verifyKeyboardVisibility()
         }.dismissSearchBar {
             verifyWelcomeHeader()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun tapLogoToChangeWallpaperTest() {
+        homeScreen {
+            clickFirefoxLogo()
+            verifyWallpaperImageApplied(true)
+            clickFirefoxLogo()
+            verifyWallpaperImageApplied(true)
+            clickFirefoxLogo()
+            verifyWallpaperImageApplied(true)
+            clickFirefoxLogo()
+            verifyWallpaperImageApplied(false)
         }
     }
 }
