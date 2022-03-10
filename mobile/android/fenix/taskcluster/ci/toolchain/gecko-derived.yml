@@ -35,7 +35,7 @@ linux64-geckodriver:
 
 linux64-minidump-stackwalk:
     attributes:
-        toolchain-artifact: public/build/minidump_stackwalk.tar.zst
+        toolchain-artifact: public/build/minidump-stackwalk.tar.zst
     description: "minidump-stackwalk toolchain"
     run:
         index-search:
