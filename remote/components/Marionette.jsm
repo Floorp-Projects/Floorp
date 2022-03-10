@@ -297,8 +297,10 @@ class MarionetteParentProcess {
       logger.debug("Marionette is listening");
 
       // Write Marionette port to MarionetteActivePort file within the profile.
-      const profileDir = await PathUtils.getProfileDir();
-      this._activePortPath = PathUtils.join(profileDir, "MarionetteActivePort");
+      this._activePortPath = PathUtils.join(
+        PathUtils.profileDir,
+        "MarionetteActivePort"
+      );
 
       const data = `${this.server.port}`;
       try {

@@ -46,8 +46,7 @@ add_agent_task(async function remoteListeningNotification() {
 });
 
 add_agent_task(async function remoteDevToolsActivePortFile() {
-  const profileDir = await PathUtils.getProfileDir();
-  const portFile = PathUtils.join(profileDir, "DevToolsActivePort");
+  const portFile = PathUtils.join(PathUtils.profileDir, "DevToolsActivePort");
 
   const port = getNonAtomicFreePort();
 
