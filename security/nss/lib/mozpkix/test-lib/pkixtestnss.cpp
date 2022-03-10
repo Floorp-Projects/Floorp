@@ -335,21 +335,21 @@ GenerateDSSKeyPair()
 }
 
 Result
-TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                            Input subjectPublicKeyInfo)
+TestVerifyECDSASignedData(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                    nullptr);
+  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
+      subjectPublicKeyInfo, nullptr);
 }
 
 Result
-TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                               Input subjectPublicKeyInfo)
+TestVerifyRSAPKCS1SignedData(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                       nullptr);
+  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
+      subjectPublicKeyInfo, nullptr);
 }
 
 Result
