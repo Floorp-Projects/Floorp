@@ -3366,8 +3366,13 @@ class nsIFrame : public nsQueryFrame {
   bool IsLeaf() const {
     MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
     FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
+    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
+      return IsLeafDynamic();
+    }
     return bits & eFrameClassBitsLeaf;
   }
+
+  virtual bool IsLeafDynamic() const { return false; }
 
   /**
    * Marks all display items created by this frame as needing a repaint,
@@ -5413,6 +5418,7 @@ class nsIFrame : public nsQueryFrame {
   enum FrameClassBits {
     eFrameClassBitsNone = 0x0,
     eFrameClassBitsLeaf = 0x1,
+    eFrameClassBitsDynamicLeaf = 0x2,
   };
   // Maps mClass to IsLeaf() flags.
   static const FrameClassBits sFrameClassBits[
