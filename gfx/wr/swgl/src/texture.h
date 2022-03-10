@@ -160,6 +160,21 @@ vec4 texelFetchR16(S sampler, ivec2 P) {
   return vec4(fetchOffsetsR16(sampler, offset), 0.0f, 0.0f, 1.0f);
 }
 
+template <typename S>
+SI vec4 fetchOffsetsRG16(S sampler, I32 offset) {
+  U32 pixels = {sampler->buf[offset.x], sampler->buf[offset.y],
+                sampler->buf[offset.z], sampler->buf[offset.w]};
+  Float r = cast(pixels & 0xFFFF) * (1.0f / 65535.0f);
+  Float g = cast(pixels >> 16) * (1.0f / 65535.0f);
+  return vec4(r, g, 0.0f, 1.0f);
+}
+
+template <typename S>
+vec4 texelFetchRG16(S sampler, ivec2 P) {
+  I32 offset = P.x + P.y * sampler->stride;
+  return fetchOffsetsRG16(sampler, offset);
+}
+
 SI vec4 fetchOffsetsFloat(const uint32_t* buf, I32 offset) {
   return pixel_float_to_vec4(*(Float*)&buf[offset.x], *(Float*)&buf[offset.y],
                              *(Float*)&buf[offset.z], *(Float*)&buf[offset.w]);
@@ -212,6 +227,8 @@ vec4 texelFetch(sampler2D sampler, ivec2 P, int lod) {
       return texelFetchRG8(sampler, P);
     case TextureFormat::R16:
       return texelFetchR16(sampler, P);
+    case TextureFormat::RG16:
+      return texelFetchRG16(sampler, P);
     case TextureFormat::YUV422:
       return texelFetchYUV422(sampler, P);
     default:
@@ -301,6 +318,8 @@ vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
       return texelFetchRG8(sampler, P);
     case TextureFormat::R16:
       return texelFetchR16(sampler, P);
+    case TextureFormat::RG16:
+      return texelFetchRG16(sampler, P);
     case TextureFormat::YUV422:
       return texelFetchYUV422(sampler, P);
     default:
@@ -710,6 +729,104 @@ vec4 textureLinearR16(S sampler, vec2 P) {
   return vec4(r * (1.0f / 32767.0f), 0.0f, 0.0f, 1.0f);
 }
 
+// Samples RG16 texture with linear filtering and returns results packed as
+// signed I16. One bit of precision is shifted away from the bottom end to
+// accommodate the sign bit, so only 15 bits of precision is left.
+template <typename S>
+static inline V8<int16_t> textureLinearUnpackedRG16(S sampler, ivec2 i) {
+  assert(sampler->format == TextureFormat::R16);
+
+  ivec2 frac = i;
+  i >>= 7;
+
+  I32 row0 = computeRow(sampler, i);
+  I32 row1 = row0 + computeNextRowOffset(sampler, i);
+
+  I16 fracx =
+      CONVERT(
+          ((frac.x & (i.x >= 0)) | (i.x > int32_t(sampler->width) - 2)) & 0x7F,
+          I16)
+      << 8;
+  I16 fracy = computeFracY(frac) << 8;
+
+  // Sample the 2x16 bit data for both rows
+  auto a0 = unaligned_load<V4<uint16_t>>(&sampler->buf[row0.x]);
+  auto b0 = unaligned_load<V4<uint16_t>>(&sampler->buf[row0.y]);
+  auto ab0 = CONVERT(combine(a0, b0) >> 1, V8<int16_t>);
+  auto c0 = unaligned_load<V4<uint16_t>>(&sampler->buf[row0.z]);
+  auto d0 = unaligned_load<V4<uint16_t>>(&sampler->buf[row0.w]);
+  auto cd0 = CONVERT(combine(c0, d0) >> 1, V8<int16_t>);
+
+  auto a1 = unaligned_load<V4<uint16_t>>(&sampler->buf[row1.x]);
+  auto b1 = unaligned_load<V4<uint16_t>>(&sampler->buf[row1.y]);
+  auto ab1 = CONVERT(combine(a1, b1) >> 1, V8<int16_t>);
+  auto c1 = unaligned_load<V4<uint16_t>>(&sampler->buf[row1.z]);
+  auto d1 = unaligned_load<V4<uint16_t>>(&sampler->buf[row1.w]);
+  auto cd1 = CONVERT(combine(c1, d1) >> 1, V8<int16_t>);
+
+  // The samples occupy 15 bits and the fraction occupies 15 bits, so that when
+  // they are multiplied together, the new scaled sample will fit in the high
+  // 14 bits of the result. It is left shifted once to make it 15 bits again
+  // for the final multiply.
+#if USE_SSE2
+  ab0 += bit_cast<V8<int16_t>>(_mm_mulhi_epi16(ab1 - ab0, fracy.xxxxyyyy)) << 1;
+  cd0 += bit_cast<V8<int16_t>>(_mm_mulhi_epi16(cd1 - cd0, fracy.zzzzwwww)) << 1;
+#elif USE_NEON
+  // NEON has a convenient instruction that does both the multiply and the
+  // doubling, so doesn't need an extra shift.
+  ab0 += bit_cast<V8<int16_t>>(vqrdmulhq_s16(ab1 - ab0, fracy.xxxxyyyy));
+  cd0 += bit_cast<V8<int16_t>>(vqrdmulhq_s16(cd1 - cd0, fracy.zzzzwwww));
+#else
+  ab0 += CONVERT((CONVERT(ab1 - ab0, V8<int32_t>) *
+                  CONVERT(fracy.xxxxyyyy, V8<int32_t>)) >>
+                     16,
+                 V8<int16_t>)
+         << 1;
+  cd0 += CONVERT((CONVERT(cd1 - cd0, V8<int32_t>) *
+                  CONVERT(fracy.zzzzwwww, V8<int32_t>)) >>
+                     16,
+                 V8<int16_t>)
+         << 1;
+#endif
+
+  // ab = a.rgRG,b.rgRG
+  // cd = c.rgRG,d.rgRG
+  // ... ac = a.rg,c.rg,a.RG,c.RG
+  // ... bd = b.rg,d.rg,b.RG,d.RG
+  auto ac = zip2Low(ab0, cd0);
+  auto bd = zip2High(ab0, cd0);
+  // a.rg,b.rg,c.rg,d.rg
+  // a.RG,b.RG,c.RG,d.RG
+  auto abcdl = zip2Low(ac, bd);
+  auto abcdh = zip2High(ac, bd);
+  // Blend columns
+#if USE_SSE2
+  abcdl += bit_cast<V8<int16_t>>(_mm_mulhi_epi16(abcdh - abcdl, fracx.xxyyzzww))
+           << 1;
+#elif USE_NEON
+  abcdl += bit_cast<V8<int16_t>>(vqrdmulhq_s16(abcdh - abcdl, fracx.xxyyzzww));
+#else
+  abcdl += CONVERT((CONVERT(abcdh - abcdl, V8<int32_t>) *
+                    CONVERT(fracx.xxyyzzww, V8<int32_t>)) >>
+                       16,
+                   V8<int16_t>)
+           << 1;
+#endif
+
+  return abcdl;
+}
+
+template <typename S>
+vec4 textureLinearRG16(S sampler, vec2 P) {
+  assert(sampler->format == TextureFormat::RG16);
+
+  ivec2 i(linearQuantize(P, 128, sampler));
+  auto rg = bit_cast<V4<int32_t>>(textureLinearUnpackedRG16(sampler, i));
+  auto r = cast(rg & 0xFFFF) * (1.0f / 32767.0f);
+  auto g = cast(rg >> 16) * (1.0f / 32767.0f);
+  return vec4(r, g, 0.0f, 1.0f);
+}
+
 using PackedRGBA32F = V16<float>;
 using WideRGBA32F = V16<float>;
 
@@ -854,6 +971,8 @@ SI vec4 texture(sampler2D sampler, vec2 P) {
         return textureLinearRG8(sampler, P);
       case TextureFormat::R16:
         return textureLinearR16(sampler, P);
+      case TextureFormat::RG16:
+        return textureLinearRG16(sampler, P);
       case TextureFormat::YUV422:
         return textureLinearYUV422(sampler, P);
       default:
@@ -878,6 +997,8 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
         return textureLinearRG8(sampler, P);
       case TextureFormat::R16:
         return textureLinearR16(sampler, P);
+      case TextureFormat::RG16:
+        return textureLinearRG16(sampler, P);
       case TextureFormat::YUV422:
         return textureLinearYUV422(sampler, P);
       default:

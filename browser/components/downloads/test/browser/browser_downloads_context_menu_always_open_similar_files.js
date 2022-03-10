@@ -39,10 +39,7 @@ async function createDownloadFile() {
   info("Setting path for download file");
   // Set target for download file. Otherwise, file will default to .file instead of txt
   // when we prepare our downloads - particularly in task_addDownloads().
-  let targetPath = PathUtils.join(
-    await PathUtils.getTempDir(),
-    "downloaded.txt"
-  );
+  let targetPath = PathUtils.join(PathUtils.tempDir, "downloaded.txt");
   let target = new FileUtils.File(targetPath);
   target.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   downloads.push({

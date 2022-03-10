@@ -8,6 +8,9 @@ Transform the repackage task into an actual task description.
 
 import copy
 
+from taskgraph.util.taskcluster import get_artifact_prefix
+from voluptuous import Required, Optional, Extra
+
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -15,11 +18,9 @@ from gecko_taskgraph.util.schema import (
     optionally_keyed_by,
     resolve_keyed_by,
 )
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.util.platforms import archive_format, architecture
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 from gecko_taskgraph.transforms.job import job_description_schema
-from voluptuous import Required, Optional, Extra
 
 
 packaging_description_schema = schema.extend(

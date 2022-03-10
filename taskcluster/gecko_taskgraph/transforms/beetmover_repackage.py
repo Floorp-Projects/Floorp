@@ -5,6 +5,10 @@
 Transform the beetmover task into an actual task description.
 """
 
+import logging
+
+from taskgraph.util.taskcluster import get_artifact_prefix
+from voluptuous import Required, Optional
 
 from gecko_taskgraph.loader.multi_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
@@ -22,12 +26,8 @@ from gecko_taskgraph.util.scriptworker import (
     get_beetmover_bucket_scope,
     get_beetmover_action_scope,
 )
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
 from gecko_taskgraph.util.treeherder import replace_group, inherit_treeherder_from_dep
 from gecko_taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
-
-import logging
 
 logger = logging.getLogger(__name__)
 

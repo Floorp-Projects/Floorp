@@ -197,9 +197,8 @@ function parseRanges(ranges) {
 
 print.printToFile = async function(browser, settings) {
   // Create a unique filename for the temporary PDF file
-  const tempDir = await PathUtils.getTempDir();
   const filePath = await IOUtils.createUniqueFile(
-    tempDir,
+    PathUtils.tempDir,
     "marionette.pdf",
     0o600
   );

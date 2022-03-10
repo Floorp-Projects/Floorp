@@ -124,7 +124,7 @@ function settingNameToL10nID(settingName) {
       `Unknown extension controlled setting name: ${settingName}`
     );
   }
-  return `extension-controlled-${extensionControlledL10nKeys[settingName]}`;
+  return `extension-controlling-${extensionControlledL10nKeys[settingName]}`;
 }
 
 /**

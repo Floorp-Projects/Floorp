@@ -692,6 +692,7 @@ def collect_vcs_options(args, project, name):
     head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
     revision = os.environ.get('%s_HEAD_REV' % env_prefix)
     ref = os.environ.get('%s_HEAD_REF' % env_prefix)
+    pip_requirements = os.environ.get('%s_PIP_REQUIREMENTS' % env_prefix)
     private_key_secret = os.environ.get('%s_SSH_SECRET_NAME' % env_prefix)
 
     store_path = os.environ.get('HG_STORE_PATH')
@@ -701,6 +702,9 @@ def collect_vcs_options(args, project, name):
         checkout = os.path.abspath(os.path.expanduser(checkout))
     if store_path:
         store_path = os.path.abspath(os.path.expanduser(store_path))
+
+    if pip_requirements:
+        pip_requirements = os.path.join(checkout, pip_requirements)
 
     # Some callers set the base repository to mozilla-central for historical
     # reasons. Switch to mozilla-unified because robustcheckout works best
@@ -721,6 +725,7 @@ def collect_vcs_options(args, project, name):
         'ref': ref,
         'repo-type': repo_type,
         'ssh-secret-name': private_key_secret,
+        'pip-requirements': pip_requirements,
     }
 
 
@@ -790,6 +795,22 @@ def vcs_checkout_from_args(options, *, hgmo_fingerprint):
             pass
 
     os.environ['%s_HEAD_REV' % options['env-prefix']] = revision
+
+
+def install_pip_requirements(repositories):
+    """Install pip requirements files from specified repositories, if necessary."""
+    requirements = [
+        r['pip-requirements'] for r in repositories
+        if r['pip-requirements']
+    ]
+    if not requirements:
+        return
+
+    cmd = [sys.executable, '-mpip', 'install', '--require-hashes']
+    for path in requirements:
+        cmd.extend(['-r', path])
+
+    run_required_command(b'pip-install', cmd)
 
 
 def maybe_run_resource_monitoring():
@@ -1066,6 +1087,10 @@ def main(args):
 
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
+
+        # Install Python requirements after fetches in case tasks want to use
+        # fetches to grab dependencies.
+        install_pip_requirements(repositories)
 
         resource_process = maybe_run_resource_monitoring()
 

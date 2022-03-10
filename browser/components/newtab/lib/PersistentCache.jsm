@@ -54,10 +54,7 @@ this.PersistentCache = class PersistentCache {
       (this._cache = new Promise(async (resolve, reject) => {
         let filepath;
         try {
-          filepath = PathUtils.join(
-            await PathUtils.getLocalProfileDir(),
-            this._filename
-          );
+          filepath = PathUtils.join(PathUtils.localProfileDir, this._filename);
         } catch (error) {
           reject(error);
           return;
@@ -86,10 +83,7 @@ this.PersistentCache = class PersistentCache {
    * Persist the cache to file.
    */
   async _persist(data) {
-    const filepath = PathUtils.join(
-      await PathUtils.getLocalProfileDir(),
-      this._filename
-    );
+    const filepath = PathUtils.join(PathUtils.localProfileDir, this._filename);
     await IOUtils.writeJSON(filepath, data, {
       tmpPath: `${filepath}.tmp`,
     });

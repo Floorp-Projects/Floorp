@@ -100,13 +100,17 @@ def _get_optimizations(target_task_graph, strategies):
     return optimizations
 
 
-def _log_optimization(verb, opt_counts):
+def _log_optimization(verb, opt_counts, opt_reasons=None):
+    if opt_reasons:
+        message = "optimize: {label} {action} because of {reason}"
+        for label, (action, reason) in opt_reasons.items():
+            logger.debug(message.format(label=label, action=action, reason=reason))
+
     if opt_counts:
         logger.info(
-            "{} {} during optimization.".format(
-                verb.title(),
-                ", ".join(f"{c} tasks by {b}" for b, c in sorted(opt_counts.items())),
-            )
+            f"{verb.title()} "
+            + ", ".join(f"{c} tasks by {b}" for b, c in sorted(opt_counts.items()))
+            + " during optimization."
         )
     else:
         logger.info(f"No tasks {verb} during optimization")
@@ -117,27 +121,118 @@ def remove_tasks(target_task_graph, params, optimizations, do_not_optimize):
     Implement the "Removing Tasks" phase, returning a set of task labels of all removed tasks.
     """
     opt_counts = defaultdict(int)
+    opt_reasons = {}
     removed = set()
-    reverse_links_dict = target_task_graph.graph.reverse_links_dict()
+    dependents_of = target_task_graph.graph.reverse_links_dict()
+    tasks = target_task_graph.tasks
+    prune_candidates = set()
 
+    # Traverse graph so dependents (child nodes) are guaranteed to be processed
+    # first.
     for label in target_task_graph.graph.visit_preorder():
+        # Dependents that can be pruned away (shouldn't cause this task to run).
+        # Only dependents that either:
+        #   A) Explicitly reference this task in their 'if_dependencies' list, or
+        #   B) Don't have an 'if_dependencies' attribute (i.e are in 'prune_candidates'
+        #      because they should be removed but have prune_deps themselves)
+        # should be considered.
+        prune_deps = {
+            l
+            for l in dependents_of[label]
+            if l in prune_candidates
+            if not tasks[l].if_dependencies or label in tasks[l].if_dependencies
+        }
+
+        def _keep(reason):
+            """Mark a task as being kept in the graph. Also recursively removes
+            any dependents from `prune_candidates`, assuming they should be
+            kept because of this task.
+            """
+            opt_reasons[label] = ("kept", reason)
+
+            # Removes dependents that were in 'prune_candidates' from a task
+            # that ended up being kept (and therefore the dependents should
+            # also be kept).
+            queue = list(prune_deps)
+            while queue:
+                l = queue.pop()
+
+                # If l is a prune_dep of multiple tasks it could be queued up
+                # multiple times. Guard against it being already removed.
+                if l not in prune_candidates:
+                    continue
+
+                # If a task doesn't set 'if_dependencies' itself (rather it was
+                # added to 'prune_candidates' due to one of its depenendents),
+                # then we shouldn't remove it.
+                if not tasks[l].if_dependencies:
+                    continue
+
+                prune_candidates.remove(l)
+                queue.extend([r for r in dependents_of[l] if r in prune_candidates])
+
+        def _remove(reason):
+            """Potentially mark a task as being removed from the graph. If the
+            task has dependents that can be pruned, add this task to
+            `prune_candidates` rather than removing it.
+            """
+            if prune_deps:
+                # If there are prune_deps, unsure if we can remove this task yet.
+                prune_candidates.add(label)
+            else:
+                opt_reasons[label] = ("removed", reason)
+                opt_counts[reason] += 1
+                removed.add(label)
+
         # if we're not allowed to optimize, that's easy..
         if label in do_not_optimize:
+            _keep("do not optimize")
             continue
 
-        # if there are remaining tasks depending on this one, do not remove..
-        if any(l not in removed for l in reverse_links_dict[label]):
+        # If there are remaining tasks depending on this one, do not remove.
+        if any(
+            l for l in dependents_of[label] if l not in removed and l not in prune_deps
+        ):
+            _keep("dependent tasks")
             continue
 
-        # call the optimization strategy
-        task = target_task_graph.tasks[label]
+        # Call the optimization strategy.
+        task = tasks[label]
         opt_by, opt, arg = optimizations(label)
         if opt.should_remove_task(task, params, arg):
-            removed.add(label)
-            opt_counts[opt_by] += 1
+            _remove(opt_by)
             continue
 
-    _log_optimization("removed", opt_counts)
+        # Some tasks should only run if their dependency was also run. Since we
+        # haven't processed dependencies yet, we add them to a list of
+        # candidate tasks for pruning.
+        if task.if_dependencies:
+            opt_reasons[label] = ("kept", opt_by)
+            prune_candidates.add(label)
+        else:
+            _keep(opt_by)
+
+    if prune_candidates:
+        reason = "if-dependencies pruning"
+        for label in prune_candidates:
+            # There's an edge case where a triangle graph can cause a
+            # dependency to stay in 'prune_candidates' when the dependent
+            # remains. Do a final check to ensure we don't create any bad
+            # edges.
+            dependents = any(
+                d
+                for d in dependents_of[label]
+                if d not in prune_candidates
+                if d not in removed
+            )
+            if dependents:
+                opt_reasons[label] = ("kept", "dependent tasks")
+                continue
+            removed.add(label)
+            opt_counts[reason] += 1
+            opt_reasons[label] = ("removed", reason)
+
+    _log_optimization("removed", opt_counts, opt_reasons)
     return removed
 
 

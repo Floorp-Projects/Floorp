@@ -5,8 +5,9 @@
 
 import unittest
 
+from taskgraph.task import Task
+
 from gecko_taskgraph.graph import Graph
-from gecko_taskgraph.task import Task
 from gecko_taskgraph.taskgraph import TaskGraph
 from mozunit import main
 

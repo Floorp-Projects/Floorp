@@ -117,9 +117,8 @@ var PlacesBackups = {
       if (this._backupFolder) {
         return this._backupFolder;
       }
-      let profileDir = await PathUtils.getProfileDir();
       let backupsDirPath = PathUtils.join(
-        profileDir,
+        PathUtils.profileDir,
         this.profileRelativeFolderPath
       );
       await IOUtils.makeDirectory(backupsDirPath);
@@ -306,8 +305,7 @@ var PlacesBackups = {
     );
 
     let backupFolderPath = await this.getBackupFolder();
-    let profileDir = await PathUtils.getProfileDir();
-    if (profileDir == backupFolderPath) {
+    if (PathUtils.profileDir == backupFolderPath) {
       // We are creating a backup in the default backups folder,
       // so just update the internal cache.
       if (!this._backupFiles) {

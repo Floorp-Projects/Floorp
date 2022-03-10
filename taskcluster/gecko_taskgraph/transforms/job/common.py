@@ -8,7 +8,7 @@ consistency.
 """
 
 
-from gecko_taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.taskcluster import get_artifact_prefix
 
 SECRET_SCOPE = "secrets:get:project/releng/{trust_domain}/{kind}/level-{level}/{secret}"
 
