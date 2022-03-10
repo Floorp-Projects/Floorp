@@ -41,7 +41,8 @@
 #include "sslerr.h"
 #include "sslt.h"
 #include "NSSErrorsService.h"
-#include "TunnelUtils.h"
+#include "Http2ConnectTransaction.h"
+#include "TLSFilterTransaction.h"
 #include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
@@ -689,8 +690,8 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
     rv = mTLSFilter->SetProxiedTransaction(trans, baseTrans);
     NS_ENSURE_SUCCESS(rv, rv);
     if (mTransaction->ConnectionInfo()->UsingConnect()) {
-      SpdyConnectTransaction* trans =
-          baseTrans ? baseTrans->QuerySpdyConnectTransaction() : nullptr;
+      Http2ConnectTransaction* trans =
+          baseTrans ? baseTrans->QueryHttp2ConnectTransaction() : nullptr;
       if (trans && !trans->IsWebsocket()) {
         // If we are here, the tunnel is already established. Let the
         // transaction know that proxy connect is successful.
@@ -2038,14 +2039,14 @@ nsresult nsHttpConnection::OnSocketReadable() {
 }
 
 void nsHttpConnection::SetupSecondaryTLS(
-    nsAHttpTransaction* aSpdyConnectTransaction) {
+    nsAHttpTransaction* aHttp2ConnectTransaction) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!mTLSFilter);
   LOG(
       ("nsHttpConnection %p SetupSecondaryTLS %s %d "
-       "aSpdyConnectTransaction=%p\n",
+       "aHttp2ConnectTransaction=%p\n",
        this, mConnInfo->Origin(), mConnInfo->OriginPort(),
-       aSpdyConnectTransaction));
+       aHttp2ConnectTransaction));
 
   nsHttpConnectionInfo* ci = nullptr;
   if (mTransaction) {
@@ -2062,7 +2063,7 @@ void nsHttpConnection::SetupSecondaryTLS(
   if (mTransaction) {
     mTransaction = mTLSFilter;
   }
-  mWeakTrans = do_GetWeakReference(aSpdyConnectTransaction);
+  mWeakTrans = do_GetWeakReference(aHttp2ConnectTransaction);
 }
 
 void nsHttpConnection::SetInSpdyTunnel(bool arg) {
