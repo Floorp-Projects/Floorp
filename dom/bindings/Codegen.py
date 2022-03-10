@@ -19204,7 +19204,7 @@ class CGBindingImplClass(CGClass):
                 if not m.isStatic() or not skipStaticMethods:
                     appendMethod(m)
             elif m.isAttr():
-                if m.isMaplikeOrSetlikeAttr():
+                if m.isMaplikeOrSetlikeAttr() or m.type.isObservableArray():
                     # Handled by generated code already
                     continue
                 self.methodDecls.append(cgGetter(descriptor, m))
@@ -19367,6 +19367,42 @@ class CGBindingImplClass(CGClass):
         return self._deps
 
 
+class CGExampleObservableArrayCallback(CGNativeMember):
+    def __init__(self, descriptor, attr, callbackName):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        CGNativeMember.__init__(
+            self,
+            descriptor,
+            attr,
+            self.makeNativeName(attr, callbackName),
+            (
+                BuiltinTypes[IDLBuiltinType.Types.void],
+                [
+                    FakeArgument(attr.type.inner, "aValue"),
+                    FakeArgument(
+                        BuiltinTypes[IDLBuiltinType.Types.unsigned_long], "aIndex"
+                    ),
+                ],
+            ),
+            ["needsErrorResult"],
+        )
+
+    def declare(self, cgClass):
+        assert self.member.isAttr()
+        assert self.member.type.isObservableArray()
+        return CGNativeMember.declare(self, cgClass)
+
+    def define(self, cgClass):
+        return ""
+
+    @staticmethod
+    def makeNativeName(attr, callbackName):
+        assert attr.isAttr()
+        nativeName = MakeNativeName(attr.identifier.name)
+        return "On" + callbackName + nativeName
+
+
 class CGExampleClass(CGBindingImplClass):
     """
     Codegen for the actual example class implementation for this descriptor
@@ -19423,6 +19459,15 @@ class CGExampleClass(CGBindingImplClass):
             decorators = ""
         else:
             decorators = "final"
+
+        for m in descriptor.interface.members:
+            if m.isAttr() and m.type.isObservableArray():
+                self.methodDecls.append(
+                    CGExampleObservableArrayCallback(descriptor, m, "Set")
+                )
+                self.methodDecls.append(
+                    CGExampleObservableArrayCallback(descriptor, m, "Delete")
+                )
 
         CGClass.__init__(
             self,
