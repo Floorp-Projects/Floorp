@@ -16,27 +16,27 @@
   border-bottom: 1px solid var(--sidebar-border-color);
 }
 
-%ifndef MOZ_WIDGET_GTK
-% We don't let the splitter overlap the sidebar on Linux since the sidebar's
-% scrollbar is too narrow on Linux.
-.sidebar-splitter {
-  appearance: none;
-  border: 0 solid;
-  border-inline-end-width: 1px;
-  border-color: var(--sidebar-border-color);
-  min-width: 1px;
-  width: 4px;
-  background-image: none !important;
-  background-color: transparent;
-  margin-inline-start: -4px;
-  position: relative;
-}
+@media not (-moz-platform: linux) {
+  /* We don't let the splitter overlap the sidebar on Linux since the sidebar's
+  scrollbar is too narrow on Linux. */
+  .sidebar-splitter {
+    appearance: none;
+    border: 0 solid;
+    border-inline-end-width: 1px;
+    border-color: var(--sidebar-border-color);
+    min-width: 1px;
+    width: 4px;
+    background-image: none !important;
+    background-color: transparent;
+    margin-inline-start: -4px;
+    position: relative;
+  }
 
-#sidebar-box[positionend] + .sidebar-splitter {
-  border-inline-width: 1px 0;
-  margin-inline: 0 -4px;
+  #sidebar-box[positionend] + .sidebar-splitter {
+    border-inline-width: 1px 0;
+    margin-inline: 0 -4px;
+  }
 }
-%endif
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
