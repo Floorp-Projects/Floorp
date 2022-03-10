@@ -2120,7 +2120,7 @@ class CGGetWrapperCacheHook(CGAbstractClassHook):
         )
 
 
-def finalizeHook(descriptor, hookName, freeOp, obj):
+def finalizeHook(descriptor, hookName, gcx, obj):
     finalize = "JS::SetReservedSlot(%s, DOM_OBJECT_SLOT, JS::UndefinedValue());\n" % obj
     if descriptor.interface.getExtendedAttribute("LegacyOverrideBuiltIns"):
         finalize += fill(
@@ -2148,7 +2148,7 @@ def finalizeHook(descriptor, hookName, freeOp, obj):
     if descriptor.wrapperCache:
         finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.isGlobal():
-        finalize += "mozilla::dom::FinalizeGlobal(%s, %s);\n" % (freeOp, obj)
+        finalize += "mozilla::dom::FinalizeGlobal(%s, %s);\n" % (gcx, obj)
     finalize += fill(
         """
         if (size_t mallocBytes = BindingJSObjectMallocBytes(self)) {
@@ -2168,7 +2168,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
     """
 
     def __init__(self, descriptor):
-        args = [Argument("JSFreeOp*", "fop"), Argument("JSObject*", "obj")]
+        args = [Argument("JS::GCContext*", "gcx"), Argument("JSObject*", "obj")]
         CGAbstractClassHook.__init__(self, descriptor, FINALIZE_HOOK_NAME, "void", args)
 
     def generate_code(self):
@@ -15637,7 +15637,7 @@ class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
 
 class CGDOMJSProxyHandler_finalize(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument("JSFreeOp*", "fop"), Argument("JSObject*", "proxy")]
+        args = [Argument("JS::GCContext*", "gcx"), Argument("JSObject*", "proxy")]
         ClassMethod.__init__(
             self, "finalize", "void", args, virtual=True, override=True, const=True
         )

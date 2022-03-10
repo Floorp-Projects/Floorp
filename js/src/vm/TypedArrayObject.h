@@ -142,7 +142,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool isOriginalByteLengthGetter(Native native);
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   /* Initialization bits */

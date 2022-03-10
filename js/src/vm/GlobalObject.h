@@ -292,7 +292,7 @@ class GlobalObject : public NativeObject {
   void traceData(JSTracer* trc, GlobalObject* global) {
     data().trace(trc, global);
   }
-  void releaseData(JSFreeOp* fop);
+  void releaseData(JS::GCContext* gcx);
 
   void addSizeOfData(mozilla::MallocSizeOf mallocSizeOf,
                      JS::ClassInfo* info) const {

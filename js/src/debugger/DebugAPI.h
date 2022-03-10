@@ -112,13 +112,13 @@ class DebugAPI {
   // debuggee edges at a point where the parties concerned are all still
   // initialized. This does not update edges to moved GC things which is handled
   // via the other trace methods.
-  static void sweepAll(JSFreeOp* fop);
+  static void sweepAll(JS::GCContext* gcx);
 
   // Add sweep group edges due to the presence of any debuggers.
   [[nodiscard]] static bool findSweepGroupEdges(JSRuntime* rt);
 
   // Remove the debugging information associated with a script.
-  static void removeDebugScript(JSFreeOp* fop, JSScript* script);
+  static void removeDebugScript(JS::GCContext* gcx, JSScript* script);
 
   // Delete a Zone's debug script map. Called when a zone is destroyed.
   static void deleteDebugScriptMap(DebugScriptMap* map);

@@ -129,13 +129,13 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void js::PluralRulesObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->onMainThread());
+void js::PluralRulesObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
 
   auto* pluralRules = &obj->as<PluralRulesObject>();
   if (mozilla::intl::PluralRules* pr = pluralRules->getPluralRules()) {
     intl::RemoveICUCellMemory(
-        fop, obj, PluralRulesObject::UPluralRulesEstimatedMemoryUse);
+        gcx, obj, PluralRulesObject::UPluralRulesEstimatedMemoryUse);
     delete pr;
   }
 }

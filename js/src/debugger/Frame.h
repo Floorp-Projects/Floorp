@@ -50,7 +50,7 @@ class ScriptedOnStepHandler final : public OnStepHandler {
   explicit ScriptedOnStepHandler(JSObject* object);
   virtual JSObject* object() const override;
   virtual void hold(JSObject* owner) override;
-  virtual void drop(JSFreeOp* fop, JSObject* owner) override;
+  virtual void drop(JS::GCContext* gcx, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
@@ -83,7 +83,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
   explicit ScriptedOnPopHandler(JSObject* object);
   virtual JSObject* object() const override;
   virtual void hold(JSObject* owner) override;
-  virtual void drop(JSFreeOp* fop, JSObject* owner) override;
+  virtual void drop(JS::GCContext* gcx, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
@@ -242,7 +242,7 @@ class DebuggerFrame : public NativeObject {
    * function will not otherwise disturb generatorFrames. Passing the enum
    * allows this function to be used while iterating over generatorFrames.
    */
-  void clearGeneratorInfo(JSFreeOp* fop);
+  void clearGeneratorInfo(JS::GCContext* gcx);
 
   /*
    * Called after a generator/async frame is resumed, before exposing this
@@ -261,7 +261,7 @@ class DebuggerFrame : public NativeObject {
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 
   static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
   [[nodiscard]] static bool requireScriptReferent(JSContext* cx,
@@ -275,18 +275,18 @@ class DebuggerFrame : public NativeObject {
                                              AbstractFramePtr referent);
   [[nodiscard]] bool incrementStepperCounter(JSContext* cx,
                                              HandleScript script);
-  void decrementStepperCounter(JSFreeOp* fop, JSScript* script);
-  void decrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
+  void decrementStepperCounter(JS::GCContext* gcx, JSScript* script);
+  void decrementStepperCounter(JS::GCContext* gcx, AbstractFramePtr referent);
 
   FrameIter::Data* frameIterData() const;
   void setFrameIterData(FrameIter::Data*);
-  void freeFrameIterData(JSFreeOp* fop);
+  void freeFrameIterData(JS::GCContext* gcx);
 
  public:
   FrameIter getFrameIter(JSContext* cx);
 
-  void terminate(JSFreeOp* fop, AbstractFramePtr frame);
-  void suspend(JSFreeOp* fop);
+  void terminate(JS::GCContext* gcx, AbstractFramePtr frame);
+  void suspend(JS::GCContext* gcx);
 
   [[nodiscard]] bool replaceFrameIterData(JSContext* cx, const FrameIter&);
 

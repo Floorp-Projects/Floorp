@@ -61,7 +61,7 @@ extern JS_PUBLIC_API void* GetRealmPrivate(Realm* realm);
 // Set the "private data" internal field of the given Realm.
 extern JS_PUBLIC_API void SetRealmPrivate(Realm* realm, void* data);
 
-typedef void (*DestroyRealmCallback)(JSFreeOp* fop, Realm* realm);
+typedef void (*DestroyRealmCallback)(JS::GCContext* gcx, Realm* realm);
 
 // Set the callback SpiderMonkey calls just before garbage-collecting a realm.
 // Embeddings can use this callback to free private data associated with the

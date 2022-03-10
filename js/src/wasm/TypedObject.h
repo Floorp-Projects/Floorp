@@ -79,7 +79,7 @@ class RttValue : public NativeObject {
   }
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 using MutableHandleRttValue = MutableHandle<RttValue*>;
@@ -199,7 +199,7 @@ class OutlineTypedObject : public TypedObject {
   static gc::AllocKind allocKind();
 
   static void obj_trace(JSTracer* trc, JSObject* object);
-  static void obj_finalize(JSFreeOp* fop, JSObject* object);
+  static void obj_finalize(JS::GCContext* gcx, JSObject* object);
 };
 
 // Helper to mark all locations that assume the type of the array length header

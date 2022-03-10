@@ -292,7 +292,7 @@ class alignas(8) IonScript final : public TrailingArray {
                         size_t osiIndices, size_t icEntries, size_t runtimeSize,
                         size_t safepointsSize);
 
-  static void Destroy(JSFreeOp* fop, IonScript* script);
+  static void Destroy(JS::GCContext* gcx, IonScript* script);
 
   void trace(JSTracer* trc);
 
@@ -423,11 +423,11 @@ class alignas(8) IonScript final : public TrailingArray {
 
   size_t invalidationCount() const { return invalidationCount_; }
   void incrementInvalidationCount() { invalidationCount_++; }
-  void decrementInvalidationCount(JSFreeOp* fop) {
+  void decrementInvalidationCount(JS::GCContext* gcx) {
     MOZ_ASSERT(invalidationCount_);
     invalidationCount_--;
     if (!invalidationCount_) {
-      Destroy(fop, this);
+      Destroy(gcx, this);
     }
   }
   IonCompilationId compilationId() const { return compilationId_; }

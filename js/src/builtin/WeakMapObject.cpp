@@ -189,9 +189,9 @@ static void WeakCollection_trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static void WeakCollection_finalize(JSFreeOp* fop, JSObject* obj) {
+static void WeakCollection_finalize(JS::GCContext* gcx, JSObject* obj) {
   if (ObjectValueWeakMap* map = obj->as<WeakCollectionObject>().getMap()) {
-    fop->delete_(obj, map, MemoryUse::WeakMapObject);
+    gcx->delete_(obj, map, MemoryUse::WeakMapObject);
   }
 }
 

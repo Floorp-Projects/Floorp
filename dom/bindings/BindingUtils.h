@@ -2815,7 +2815,7 @@ class GetCCParticipant<T, true> {
   static constexpr nsCycleCollectionParticipant* Get() { return nullptr; }
 };
 
-void FinalizeGlobal(JSFreeOp* aFop, JSObject* aObj);
+void FinalizeGlobal(JS::GCContext* aGcx, JSObject* aObj);
 
 bool ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
                    JS::Handle<jsid> aId, bool* aResolvedp);

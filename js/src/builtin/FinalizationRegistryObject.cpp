@@ -137,9 +137,10 @@ void FinalizationRegistrationsObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 /* static */
-void FinalizationRegistrationsObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void FinalizationRegistrationsObject::finalize(JS::GCContext* gcx,
+                                               JSObject* obj) {
   auto* self = &obj->as<FinalizationRegistrationsObject>();
-  fop->delete_(obj, self->records(), MemoryUse::FinalizationRecordVector);
+  gcx->delete_(obj, self->records(), MemoryUse::FinalizationRecordVector);
 }
 
 inline WeakFinalizationRecordVector*
@@ -313,14 +314,14 @@ void FinalizationRegistryObject::traceWeak(JSTracer* trc) {
 }
 
 /* static */
-void FinalizationRegistryObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void FinalizationRegistryObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   auto registry = &obj->as<FinalizationRegistryObject>();
 
   // The queue's flag should have been updated by
   // GCRuntime::sweepFinalizationRegistries.
   MOZ_ASSERT_IF(registry->queue(), !registry->queue()->hasRegistry());
 
-  fop->delete_(obj, registry->registrations(),
+  gcx->delete_(obj, registry->registrations(),
                MemoryUse::FinalizationRegistryRegistrations);
 }
 
@@ -715,10 +716,10 @@ void FinalizationQueueObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 /* static */
-void FinalizationQueueObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void FinalizationQueueObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   auto queue = &obj->as<FinalizationQueueObject>();
 
-  fop->delete_(obj, queue->recordsToBeCleanedUp(),
+  gcx->delete_(obj, queue->recordsToBeCleanedUp(),
                MemoryUse::FinalizationRegistryRecordVector);
 }
 

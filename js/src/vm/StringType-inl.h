@@ -469,47 +469,47 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
                                     js::gc::DefaultHeap);
 }
 
-MOZ_ALWAYS_INLINE void JSString::finalize(JSFreeOp* fop) {
+MOZ_ALWAYS_INLINE void JSString::finalize(JS::GCContext* gcx) {
   /* FatInline strings are in a different arena. */
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_ATOM);
 
   if (isLinear()) {
-    asLinear().finalize(fop);
+    asLinear().finalize(gcx);
   } else {
     MOZ_ASSERT(isRope());
   }
 }
 
-inline void JSLinearString::finalize(JSFreeOp* fop) {
+inline void JSLinearString::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_ATOM);
 
   if (!isInline() && !isDependent()) {
-    fop->free_(this, nonInlineCharsRaw(), allocSize(),
+    gcx->free_(this, nonInlineCharsRaw(), allocSize(),
                js::MemoryUse::StringContents);
   }
 }
 
-inline void JSFatInlineString::finalize(JSFreeOp* fop) {
+inline void JSFatInlineString::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(isInline());
 
   // Nothing to do.
 }
 
-inline void js::FatInlineAtom::finalize(JSFreeOp* fop) {
+inline void js::FatInlineAtom::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(JSString::isAtom());
   MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_ATOM);
 
   // Nothing to do.
 }
 
-inline void JSExternalString::finalize(JSFreeOp* fop) {
+inline void JSExternalString::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(JSString::isExternal());
 
   size_t nbytes = length() * sizeof(char16_t);
-  fop->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
+  gcx->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
 
   callbacks()->finalize(const_cast<char16_t*>(rawTwoByteChars()));
 }

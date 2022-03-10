@@ -102,7 +102,7 @@ constexpr size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
 void AddICUCellMemory(JSObject* obj, size_t nbytes);
 
-void RemoveICUCellMemory(JSFreeOp* fop, JSObject* obj, size_t nbytes);
+void RemoveICUCellMemory(JS::GCContext* gcx, JSObject* obj, size_t nbytes);
 }  // namespace intl
 
 }  // namespace js

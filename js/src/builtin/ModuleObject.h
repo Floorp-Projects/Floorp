@@ -34,7 +34,6 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/ProxyObject.h"    // ProxyObject
 
-class JSFreeOp;
 class JSScript;
 class JSTracer;
 
@@ -243,7 +242,7 @@ class ModuleNamespaceObject : public ProxyObject {
              HandleValue receiver, ObjectOpResult& result) const override;
 
     void trace(JSTracer* trc, JSObject* proxy) const override;
-    void finalize(JSFreeOp* fop, JSObject* proxy) const override;
+    void finalize(JS::GCContext* gcx, JSObject* proxy) const override;
 
     static const char family;
   };
@@ -416,7 +415,7 @@ class ModuleObject : public NativeObject {
   static const JSClassOps classOps_;
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 
   bool hasImportBindings() const;
 };

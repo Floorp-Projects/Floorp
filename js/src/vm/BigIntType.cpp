@@ -178,11 +178,11 @@ void BigInt::initializeDigitsToZero() {
   std::uninitialized_fill_n(digs.begin(), digs.Length(), 0);
 }
 
-void BigInt::finalize(JSFreeOp* fop) {
+void BigInt::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(isTenured());
   if (hasHeapDigits()) {
     size_t size = digitLength() * sizeof(Digit);
-    fop->free_(this, heapDigits_, size, js::MemoryUse::BigIntDigits);
+    gcx->free_(this, heapDigits_, size, js::MemoryUse::BigIntDigits);
   }
 }
 

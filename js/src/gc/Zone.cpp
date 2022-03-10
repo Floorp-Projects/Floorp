@@ -139,9 +139,9 @@ void ZoneAllocPolicy::decMemory(size_t nbytes) {
   // Unfortunately we don't have enough context here to know whether we're being
   // called on behalf of the collector so we have to do a TLS lookup to find
   // out.
-  JSFreeOp* fop = TlsFreeOp.get();
+  JS::GCContext* gcx = TlsGCContext.get();
   zone_->decNonGCMemory(this, nbytes, MemoryUse::ZoneAllocPolicy,
-                        fop->isCollecting());
+                        gcx->isCollecting());
 }
 
 JS::Zone::Zone(JSRuntime* rt, Kind kind)
@@ -390,7 +390,7 @@ void Zone::checkStringWrappersAfterMovingGC() {
 }
 #endif
 
-void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
+void Zone::discardJitCode(JS::GCContext* gcx, const DiscardOptions& options) {
   if (!jitZone()) {
     return;
   }
@@ -419,7 +419,7 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
   }
 
   // Invalidate all Ion code in this zone.
-  jit::InvalidateAll(fop, this);
+  jit::InvalidateAll(gcx, this);
 
   for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
     jit::JitScript* jitScript = base->maybeJitScript();
@@ -428,12 +428,12 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
     }
 
     JSScript* script = base->asJSScript();
-    jit::FinishInvalidation(fop, script);
+    jit::FinishInvalidation(gcx, script);
 
     // Discard baseline script if it's not marked as active.
     if (options.discardBaselineCode) {
       if (jitScript->hasBaselineScript() && !jitScript->active()) {
-        jit::FinishDiscardBaselineScript(fop, script);
+        jit::FinishDiscardBaselineScript(gcx, script);
       }
     }
 
@@ -450,12 +450,12 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
     if (options.discardJitScripts) {
-      script->maybeReleaseJitScript(fop);
+      script->maybeReleaseJitScript(gcx);
       jitScript = script->maybeJitScript();
       if (!jitScript) {
         // Try to discard the ScriptCounts too.
         if (!script->realm()->collectCoverageForDebug() &&
-            !fop->runtime()->profilingScripts) {
+            !gcx->runtime()->profilingScripts) {
           script->destroyScriptCounts();
         }
         continue;

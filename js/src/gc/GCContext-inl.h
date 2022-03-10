@@ -12,7 +12,8 @@
 #include "gc/ZoneAllocator.h"
 #include "js/RefCounted.h"
 
-inline void JSFreeOp::free_(Cell* cell, void* p, size_t nbytes, MemoryUse use) {
+inline void JS::GCContext::free_(Cell* cell, void* p, size_t nbytes,
+                                 MemoryUse use) {
   if (p) {
     removeCellMemory(cell, nbytes, use);
     js_free(p);
@@ -20,15 +21,16 @@ inline void JSFreeOp::free_(Cell* cell, void* p, size_t nbytes, MemoryUse use) {
 }
 
 template <class T>
-inline void JSFreeOp::release(Cell* cell, T* p, size_t nbytes, MemoryUse use) {
+inline void JS::GCContext::release(Cell* cell, T* p, size_t nbytes,
+                                   MemoryUse use) {
   if (p) {
     removeCellMemory(cell, nbytes, use);
     p->Release();
   }
 }
 
-inline void JSFreeOp::removeCellMemory(Cell* cell, size_t nbytes,
-                                       MemoryUse use) {
+inline void JS::GCContext::removeCellMemory(Cell* cell, size_t nbytes,
+                                            MemoryUse use) {
   RemoveCellMemory(cell, nbytes, use, isCollecting());
 }
 
