@@ -265,7 +265,7 @@ var DownloadIntegration = {
 
     this._store = new DownloadStore(
       list,
-      PathUtils.join(await PathUtils.getProfileDir(), "downloads.json")
+      PathUtils.join(PathUtils.profileDir, "downloads.json")
     );
     this._store.onsaveitem = this.shouldPersistDownload.bind(this);
 
