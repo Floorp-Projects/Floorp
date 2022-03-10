@@ -15,7 +15,7 @@
 #include "js/Class.h"                   // JSClassOps, JSClass
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/TypeDecls.h"
-#include "vm/NativeObject.h"            // NativeObject
+#include "vm/NativeObject.h"  // NativeObject
 
 class JSObject;
 
