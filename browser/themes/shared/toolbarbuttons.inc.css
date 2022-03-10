@@ -20,10 +20,6 @@
   --toolbarbutton-height: 0;
 }
 
-:root {
-  --toolbarbutton-focus-outline: var(--focus-outline);
-}
-
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 3px;
   --toolbarbutton-inner-padding: 6px;
@@ -188,30 +184,25 @@ toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active)
 }
 
 /* Keyboard focus styling */
-#PersonalToolbar .toolbarbutton-1:-moz-focusring,
-findbar toolbarbutton.tabbable:-moz-focusring,
-toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring,
-toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
-toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
-toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
+#PersonalToolbar .toolbarbutton-1:focus-visible,
+findbar toolbarbutton.tabbable:focus-visible,
+toolbarbutton.bookmark-item:not(.subviewbutton):focus-visible,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-icon,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-text,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
   color: inherit;
-  outline: var(--toolbarbutton-focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
-:root[uidensity=compact] findbar toolbarbutton.tabbable:-moz-focusring,
-:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
-:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
-:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
-  outline-offset: calc(var(--focus-outline-width) * -1 - 1px);
+:root[uidensity=compact] findbar toolbarbutton.tabbable:focus-visible,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-icon,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-text,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
+  outline-offset: calc(var(--focus-outline-inset) - 1px);
 }
 
-#PersonalToolbar .toolbarbutton-1:-moz-focusring,
-toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring {
-  outline-offset: -2px;
-}
-
-toolbar .toolbarbutton-1:-moz-focusring {
+toolbar .toolbarbutton-1:focus-visible {
   outline: none;
 }
 

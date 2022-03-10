@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-
-%define buttonStateHover :not([disabled],[open],:active):is(:hover)
-%define menuStateHover :not([disabled],:active)[_moz-menuactive]
-%define buttonStateActive :not([disabled]):is([open],:hover:active)
-%define menuStateActive :not([disabled])[_moz-menuactive]:active
-%define menuStateMenuActive :not([disabled])[_moz-menuactive]
-%define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
-
 :root {
   --panel-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-item-active-bgcolor: var(--button-active-bgcolor);
@@ -188,6 +179,7 @@ toolbarseparator + .panel-subview-body,
 
 .panel-info-button {
   appearance: none;
+  color: inherit;
   padding: 0;
   margin-inline-end: 4px;
   border-radius: var(--toolbarbutton-border-radius);
@@ -394,7 +386,7 @@ panelview[id^=PanelUI-webext-] {
   min-width: calc(var(--menu-panel-width) + 32px);
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
+panelview .toolbaritem-combined-buttons > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -652,7 +644,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 :root {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-color.svg);
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar.svg);
 }
 
 :root[fxastatus="not_configured"] {
@@ -660,11 +652,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 
-/* Hide the FxA toolbar button when its in the nav-bar, until in use */
-:root[fxastatus="not_configured"] #widget-overflow-list > #fxa-toolbar-menu-button,
-:root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
-  display: block;
-}
 
 #fxa-avatar-image,
 #PanelUI-fxa-menu-account-settings-button {
@@ -678,14 +665,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .PanelUI-fxa-service-description-label,
 .PanelUI-remotetabs-instruction-label {
-  /* Use 'lighter' font for this to de-emphasize it compared to the title.
-   * We use 300 on Linux because 100 is too light (lacks contrast with
-   * the background) for some fonts in combination with anti-aliasing. */
-%if defined(XP_MACOSX) || defined(XP_WIN)
+  /* Use 'lighter' font for this to de-emphasize it compared to the title. */
   font-weight: lighter;
-%else
-  font-weight: 300;
-%endif
+}
+
+@media (-moz-platform: linux) {
+  .PanelUI-fxa-service-description-label,
+  .PanelUI-remotetabs-instruction-label {
+    /* Use 300 on Linux because 100 is too light (lacks contrast with
+     * the background) for some fonts in combination with anti-aliasing. */
+    font-weight: 300;
+  }
 }
 
 #fxa-menu-header-title {
@@ -1018,7 +1008,8 @@ panelview .toolbarbutton-1,
   padding: 4px;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton:is(@buttonStateHover@, @buttonStateActive@) {
+/* hover and active color changes are applied to child elements not the button itself */
+#appMenu-zoom-controls2 > .subviewbutton:not([disabled]):is(:hover, :hover:active) {
   color: unset;
   background-color: unset;
 }
@@ -1037,7 +1028,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, stroke;
   fill: var(--button-color);
   /* the stroke color is used to fill the circle in the icon */
-  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
+  stroke: var(--button-bgcolor);
   border-radius: 50%;
   padding: 0;
 }
@@ -1049,24 +1040,24 @@ panelview .toolbarbutton-1,
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   padding: 1px;
-  background-color: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
+  background-color: var(--button-bgcolor);
 }
 
-#appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
-#appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
+#appMenu-zoomReset-button2:not([disabled]):hover > .toolbarbutton-text,
+#appMenu-fullscreen-button2:not([disabled]):hover > .toolbarbutton-icon {
   background-color: var(--panel-item-hover-bgcolor);
 }
-#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2:not([disabled]):hover > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2:not([disabled]):hover > .toolbarbutton-icon {
   stroke: var(--panel-item-hover-bgcolor);
 }
 
-#appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
-#appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
+#appMenu-zoomReset-button2:not([disabled]):active:hover > .toolbarbutton-text,
+#appMenu-fullscreen-button2:not([disabled]):active:hover > .toolbarbutton-icon {
   background-color: var(--panel-item-active-bgcolor);
 }
-#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2:not([disabled]):active:hover > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2:not([disabled]):active:hover > .toolbarbutton-icon {
   stroke: var(--panel-item-active-bgcolor);
 }
 
@@ -1223,42 +1214,63 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-panelview .toolbarbutton-1:focus-visible,
-toolbarbutton.subviewbutton:focus-visible,
-.widget-overflow-list .toolbarbutton-1:focus-visible,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:focus-visible {
+:is(
+  panelview .toolbarbutton-1,
+  toolbarbutton.subviewbutton,
+  .widget-overflow-list .toolbarbutton-1,
+  panelview .toolbaritem-combined-buttons > toolbarbutton
+):focus-visible {
   outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+  outline-offset: var(--focus-outline-inset);
 }
 
-panelview .toolbarbutton-1@buttonStateHover@,
-toolbarbutton.subviewbutton@buttonStateHover@,
-menu.subviewbutton@menuStateHover@,
-#PlacesToolbar menuitem@menuStateHover@,
-#PlacesToolbar menu@menuStateHover@,
-menuitem.subviewbutton@menuStateHover@,
-.widget-overflow-list .toolbarbutton-1@buttonStateHover@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+/* hover styles for not-disabled, not-active buttons */
+:is(
+  panelview .toolbarbutton-1,
+  toolbarbutton.subviewbutton,
+  .widget-overflow-list .toolbarbutton-1,
+  panelview .toolbaritem-combined-buttons > toolbarbutton
+):not([disabled]):hover {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
+}
+
+/* hovered-and-active styles for not-disabled buttons */
+:is(
+  panelview .toolbarbutton-1,
+  toolbarbutton.subviewbutton,
+  .widget-overflow-list .toolbarbutton-1,
+  panelview .toolbaritem-combined-buttons > toolbarbutton
+):not([disabled]):hover:active {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive] {
+  color: inherit;
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive]:active {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 .subview-subheader {
   font-size: 11px;
   padding-block: 4px;
-}
-
-panelview .toolbarbutton-1@buttonStateActive@,
-toolbarbutton.subviewbutton@buttonStateActive@,
-menu.subviewbutton@menuStateActive@,
-#PlacesToolbar menuitem@menuStateActive@,
-#PlacesToolbar menu@menuStateActive@,
-menuitem.subviewbutton@menuStateActive@,
-.widget-overflow-list .toolbarbutton-1@buttonStateActive@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 #PlacesToolbar menuitem,
@@ -1367,7 +1379,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+panelview .toolbaritem-combined-buttons > toolbarbutton {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
@@ -1385,7 +1397,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   display: none;
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:not(.toolbarbutton-1)[disabled] {
+panelview .toolbaritem-combined-buttons > toolbarbutton:not(.toolbarbutton-1)[disabled] {
   opacity: 0.4;
   /* Override toolbarbutton.css which sets the color to GrayText */
   color: inherit;
@@ -1396,7 +1408,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   min-width: calc(5ch + var(--toolbarbutton-inner-padding) * 2);
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@ > separator {
+panelview .toolbaritem-combined-buttons > separator {
   appearance: none;
   -moz-box-align: stretch;
   margin: .5em 0;
@@ -1408,7 +1420,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   transition-timing-function: ease;
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@:hover > separator {
+panelview .toolbaritem-combined-buttons:hover > separator {
   margin: 0;
 }
 
@@ -1503,13 +1515,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border: 1px solid transparent;
 }
 
-.subviewradio@buttonStateHover@ {
+.subviewradio:hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-.subviewradio[selected],
-.subviewradio[selected]:hover,
-.subviewradio@buttonStateActive@ {
+.subviewradio:is([selected], [selected]:hover, :hover:active) {
   background-color: var(--button-active-bgcolor);
 }
 
@@ -1943,8 +1953,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #fff;
   /* Set custom hover/focus/active states on the info button,
      to make them more visible on the header background */
-  --arrowpanel-dimmed: #0003;
-  --arrowpanel-dimmed-further: #0005;
+  --panel-item-hover-bgcolor: #0005;
   --panel-item-active-bgcolor: #0007;
 }
 
