@@ -23,7 +23,6 @@ class VRLayerParent : public PVRLayerParent {
       const layers::SurfaceDescriptor& aTexture, const uint64_t& aFrameId,
       const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) override;
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
-  uint32_t GetDisplayID() const { return mVRDisplayID; }
   uint32_t GetGroup() const { return mGroup; }
 
  protected:
@@ -34,7 +33,7 @@ class VRLayerParent : public PVRLayerParent {
 
   bool mIPCOpen;
 
-  uint32_t mVRDisplayID;
+  bool mDestroyed;
   gfx::Rect mLeftEyeRect;
   gfx::Rect mRightEyeRect;
   uint32_t mGroup;
