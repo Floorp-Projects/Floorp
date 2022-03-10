@@ -10,7 +10,7 @@ const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class RootOnly extends Module {
+class RootOnlyModule extends Module {
   destroy() {}
 
   /**
@@ -22,4 +22,4 @@ class RootOnly extends Module {
   }
 }
 
-const rootOnly = RootOnly;
+const rootOnly = RootOnlyModule;
