@@ -148,6 +148,9 @@ var PictureInPicture = {
   // Maps PiP player windows to their originating content's browser
   weakWinToBrowser: new WeakMap(),
 
+  // Maps a browser to the number of PiP windows it has
+  browserWeakMap: new WeakMap(),
+
   /**
    * Returns the player window if one exists and if it hasn't yet been closed.
    *
@@ -173,12 +176,39 @@ var PictureInPicture = {
     }
   },
 
+  /**
+   * Increase the count of PiP windows for a given browser
+   * @param browser The browser to increase PiP count in browserWeakMap
+   */
+  addPiPBrowserToWeakMap(browser) {
+    let count = this.browserWeakMap.has(browser)
+      ? this.browserWeakMap.get(browser)
+      : 0;
+    this.browserWeakMap.set(browser, count + 1);
+  },
+
+  /**
+   * Decrease the count of PiP windows for a given browser.
+   * If the count becomes 0, we will remove the browser from the WeakMap
+   * @param browser The browser to decrease PiP count in browserWeakMap
+   */
+  removePiPBrowserFromWeakMap(browser) {
+    let count = this.browserWeakMap.get(browser);
+    if (count <= 1) {
+      this.browserWeakMap.delete(browser);
+    } else {
+      this.browserWeakMap.set(browser, count - 1);
+    }
+  },
+
   onPipSwappedBrowsers(event) {
     let otherTab = event.detail;
     if (otherTab) {
       for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
         if (this.weakWinToBrowser.get(win) === event.target.linkedBrowser) {
           this.weakWinToBrowser.set(win, otherTab.linkedBrowser);
+          this.removePiPBrowserFromWeakMap(event.target.linkedBrowser);
+          this.addPiPBrowserToWeakMap(otherTab.linkedBrowser);
         }
       }
       otherTab.addEventListener("TabSwapPictureInPicture", this);
@@ -285,6 +315,8 @@ var PictureInPicture = {
     if (!win) {
       return;
     }
+    this.removePiPBrowserFromWeakMap(this.weakWinToBrowser.get(win));
+
     await this.closePipWindow(win);
     gCloseReasons.set(win, reason);
   },
@@ -335,6 +367,7 @@ var PictureInPicture = {
     gNextWindowID++;
 
     this.weakWinToBrowser.set(win, browser);
+    this.addPiPBrowserToWeakMap(browser);
 
     Services.prefs.setBoolPref(
       "media.videocontrols.picture-in-picture.video-toggle.has-used",
@@ -717,6 +750,18 @@ var PictureInPicture = {
 
   hideToggle() {
     Services.prefs.setBoolPref(TOGGLE_ENABLED_PREF, false);
+  },
+
+  /**
+   * This is used in AsyncTabSwitcher.jsm and tabbrowser.js to check if the browser
+   * currently has a PiP window.
+   * If the browser has a PiP window we want to keep the browser in an active state because
+   * the browser is still partially visible.
+   * @param browser The browser to check if it has a PiP window
+   * @returns true if browser has PiP window else false
+   */
+  isOriginatingBrowser(browser) {
+    return this.browserWeakMap.has(browser);
   },
 
   moveToggle() {
