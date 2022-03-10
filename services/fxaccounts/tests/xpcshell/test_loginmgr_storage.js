@@ -91,8 +91,7 @@ add_task(async function test_simple() {
 
   // This should have stored stuff in both the .json file in the profile
   // dir, and the login dir.
-  let profileDir = await PathUtils.getProfileDir();
-  let path = PathUtils.join(profileDir, "signedInUser.json");
+  let path = PathUtils.join(PathUtils.profileDir, "signedInUser.json");
   let data = await CommonUtils.readJSON(path);
 
   Assert.strictEqual(
@@ -190,8 +189,7 @@ add_task(async function test_MPLocked() {
 
   // This should have stored stuff in the .json, and the login manager stuff
   // will not exist.
-  let profileDir = await PathUtils.getProfileDir();
-  let path = PathUtils.join(profileDir, "signedInUser.json");
+  let path = PathUtils.join(PathUtils.profileDir, "signedInUser.json");
   let data = await CommonUtils.readJSON(path);
 
   Assert.strictEqual(
