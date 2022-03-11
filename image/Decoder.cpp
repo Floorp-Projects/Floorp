@@ -171,7 +171,7 @@ LexerResult Decoder::Decode(IResumable* aOnResume /* = nullptr */) {
 
   LexerResult lexerResult(TerminalState::FAILURE);
   {
-    AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_ImageDecoding);
+    AUTO_PROFILER_LABEL_CATEGORY_PAIR_RELEVANT_FOR_JS(GRAPHICS_ImageDecoding);
     AutoRecordDecoderTelemetry telemetry(this);
 
     lexerResult = DoDecode(*mIterator, aOnResume);

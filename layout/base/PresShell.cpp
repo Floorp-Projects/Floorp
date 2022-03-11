@@ -6257,7 +6257,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     uri = contentRoot->GetDocumentURI();
   }
   url = uri ? uri->GetSpecOrDefault() : "N/A"_ns;
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("PresShell::Paint", GRAPHICS, url);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS("Paint", GRAPHICS, url);
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
@@ -9417,7 +9417,7 @@ bool PresShell::ScheduleReflowOffTimer() {
 bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                          OverflowChangedTracker* aOverflowTracker) {
   [[maybe_unused]] nsIURI* uri = mDocument->GetDocumentURI();
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
       "Reflow", LAYOUT_Reflow, uri ? uri->GetSpecOrDefault() : "N/A"_ns);
 
   LAYOUT_TELEMETRY_RECORD_BASE(Reflow);
