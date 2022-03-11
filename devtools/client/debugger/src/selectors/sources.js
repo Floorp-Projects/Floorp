@@ -24,7 +24,7 @@ import {
 import { stripQuery } from "../utils/url";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
-import { asSettled, isFulfilled } from "../utils/async-value";
+import { isFulfilled } from "../utils/async-value";
 
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
@@ -34,20 +34,12 @@ import {
   getSourceActor,
   getSourceActors,
   getBreakableLinesForSourceActors,
-} from "../selectors/source-actors";
-import { getAllThreads } from "../selectors/threads";
+} from "./source-actors";
+import { getSourceTextContent } from "./sources-content";
+import { getAllThreads } from "./threads";
 
 // This is used by tabs selectors
-export const resourceAsSourceBase = memoizeResourceShallow(
-  ({ content, ...source }) => source
-);
-
-const resourceAsSourceWithContent = memoizeResourceShallow(
-  ({ content, ...source }) => ({
-    ...source,
-    content: asSettled(content),
-  })
-);
+export const resourceAsSourceBase = memoizeResourceShallow(source => source);
 
 export function getSourceInSources(sources, id) {
   return hasResource(sources, id)
@@ -79,9 +71,7 @@ function getSourcesByURLInSources(sources, urls, url) {
   if (!url || !urls[url]) {
     return [];
   }
-  return urls[url].map(id =>
-    getMappedResource(sources, id, resourceAsSourceBase)
-  );
+  return urls[url].map(id => getSourceInSources(sources, id));
 }
 
 function getSourcesByURL(state, url) {
@@ -179,10 +169,6 @@ export function getSources(state) {
   return state.sources.sources;
 }
 
-export function getSourcesEpoch(state) {
-  return state.sources.epoch;
-}
-
 function getUrls(state) {
   return state.sources.urls;
 }
@@ -230,30 +216,6 @@ export const getSelectedSource = createSelector(
   }
 );
 
-export const getSelectedSourceWithContent = createSelector(
-  getSelectedLocation,
-  getSources,
-  (selectedLocation, sources) => {
-    const source =
-      selectedLocation &&
-      getSourceInSources(sources, selectedLocation.sourceId);
-    return source
-      ? getMappedResource(sources, source.id, resourceAsSourceWithContent)
-      : null;
-  }
-);
-export function getSourceWithContent(state, id) {
-  return getMappedResource(
-    state.sources.sources,
-    id,
-    resourceAsSourceWithContent
-  );
-}
-export function getSourceContent(state, id) {
-  const { content } = getResource(state.sources.sources, id);
-  return asSettled(content);
-}
-
 // This is used by tests and pause reducers
 export function getSelectedSourceId(state) {
   const source = getSelectedSource(state);
@@ -300,7 +262,7 @@ const queryAllDisplayedSources = makeShallowQuery({
 });
 
 function getAllDisplayedSources(state) {
-  return queryAllDisplayedSources(state.sources.sources, {
+  return queryAllDisplayedSources(getSources(state), {
     sourcesWithUrls: state.sources.sourcesWithUrls,
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
     chromeAndExtensionsEnabled: state.sources.chromeAndExtensionsEnabled,
@@ -324,7 +286,7 @@ const getDisplayedSourceIDs = createSelector(
 );
 
 export const getDisplayedSources = createSelector(
-  state => state.sources.sources,
+  getSources,
   getDisplayedSourceIDs,
   (sources, idsByThread) => {
     const result = {};
@@ -382,7 +344,7 @@ export function isSourceWithMap(state, id) {
 }
 
 export function canPrettyPrintSource(state, id) {
-  const source = getSourceWithContent(state, id);
+  const source = getSource(state, id);
   if (
     !source ||
     isPretty(source) ||
@@ -392,8 +354,8 @@ export function canPrettyPrintSource(state, id) {
     return false;
   }
 
-  const sourceContent =
-    source.content && isFulfilled(source.content) ? source.content.value : null;
+  const content = getSourceTextContent(state, id);
+  const sourceContent = content && isFulfilled(content) ? content.value : null;
 
   if (!sourceContent || !isJavaScript(source, sourceContent)) {
     return false;
@@ -456,11 +418,6 @@ export const getSelectedBreakableLines = createSelector(
   },
   breakableLines => new Set(breakableLines || [])
 );
-
-export function isSourceLoadingOrLoaded(state, sourceId) {
-  const { content } = getResource(state.sources.sources, sourceId);
-  return content !== null;
-}
 
 export function getBlackBoxRanges(state) {
   return state.sources.blackboxedRanges;

@@ -28,7 +28,8 @@ import {
 import {
   getActiveSearch,
   getSelectedLocation,
-  getSelectedSourceWithContent,
+  getSelectedSource,
+  getSelectedSourceTextContent,
   getConditionalPanelLocation,
   getSymbols,
   getIsCurrentThreadPaused,
@@ -382,6 +383,7 @@ class Editor extends PureComponent {
     const {
       cx,
       selectedSource,
+      selectedSourceTextContent,
       breakpointActions,
       editorActions,
       isPaused,
@@ -412,7 +414,7 @@ class Editor extends PureComponent {
     if (target.classList.contains("CodeMirror-linenumber")) {
       const lineText = getLineText(
         sourceId,
-        selectedSource.content,
+        selectedSourceTextContent,
         line
       ).trim();
 
@@ -516,20 +518,24 @@ class Editor extends PureComponent {
   }
 
   shouldScrollToLocation(nextProps, editor) {
-    const { selectedLocation, selectedSource } = this.props;
+    const {
+      selectedLocation,
+      selectedSource,
+      selectedSourceTextContent,
+    } = this.props;
     if (
       !editor ||
       !nextProps.selectedSource ||
       !nextProps.selectedLocation ||
       !nextProps.selectedLocation.line ||
-      !nextProps.selectedSource.content
+      !nextProps.selectedSourceTextContent
     ) {
       return false;
     }
 
     const isFirstLoad =
-      (!selectedSource || !selectedSource.content) &&
-      nextProps.selectedSource.content;
+      (!selectedSource || !selectedSourceTextContent) &&
+      nextProps.selectedSourceTextContent;
     const locationChanged = selectedLocation !== nextProps.selectedLocation;
     const symbolsChanged = nextProps.symbols != this.props.symbols;
 
@@ -566,7 +572,7 @@ class Editor extends PureComponent {
   }
 
   setText(props, editor) {
-    const { selectedSource, symbols } = props;
+    const { selectedSource, selectedSourceTextContent, symbols } = props;
 
     if (!editor) {
       return;
@@ -577,12 +583,12 @@ class Editor extends PureComponent {
       return this.clearEditor();
     }
 
-    if (!selectedSource.content) {
+    if (!selectedSourceTextContent?.value) {
       return showLoading(editor);
     }
 
-    if (selectedSource.content.state === "rejected") {
-      let { value } = selectedSource.content;
+    if (selectedSourceTextContent.state === "rejected") {
+      let { value } = selectedSourceTextContent;
       if (typeof value !== "string") {
         value = "Unexpected source error";
       }
@@ -593,7 +599,7 @@ class Editor extends PureComponent {
     return showSourceText(
       editor,
       selectedSource,
-      selectedSource.content.value,
+      selectedSourceTextContent.value,
       symbols
     );
   }
@@ -712,12 +718,13 @@ Editor.contextTypes = {
 };
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSourceWithContent(state);
+  const selectedSource = getSelectedSource(state);
 
   return {
     cx: getThreadContext(state),
     selectedLocation: getSelectedLocation(state),
     selectedSource,
+    selectedSourceTextContent: getSelectedSourceTextContent(state),
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedSource),
