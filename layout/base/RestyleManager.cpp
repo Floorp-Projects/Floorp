@@ -3171,6 +3171,7 @@ static void VerifyFlatTree(const nsIContent& aContent) {
 #endif
 
 void RestyleManager::ProcessPendingRestyles() {
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Styles", LAYOUT);
 #ifdef DEBUG
   if (auto* root = mPresContext->Document()->GetRootElement()) {
     VerifyFlatTree(*root);

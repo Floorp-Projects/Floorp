@@ -1982,6 +1982,8 @@ void nsRefreshDriver::RunFullscreenSteps() {
 }
 
 void nsRefreshDriver::UpdateIntersectionObservations(TimeStamp aNowTime) {
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Compute intersections", LAYOUT);
+
   AutoTArray<RefPtr<Document>, 32> documents;
 
   if (mPresContext->Document()->HasIntersectionObservers()) {
@@ -2268,7 +2270,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     UpdateThrottledState();
   }
 
-  AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("RefreshDriver tick", LAYOUT);
 
   nsAutoCString profilerStr;
   if (profiler_thread_is_being_profiled_for_markers()) {
