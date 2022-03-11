@@ -6933,7 +6933,21 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
               &paraAtom == nsGkAtoms::br ? *nsGkAtoms::p
                                          : MOZ_KnownLive(paraAtom),
               atHeader.NextPoint(),
-              [](Element& aDivOrParagraphElement) -> nsresult {
+              // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+              [&](Element& aDivOrParagraphElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                // We don't make inserting new <br> element undoable
+                // because removing the new element from the DOM tree
+                // gets same result for the user.
+                Result<RefPtr<Element>, nsresult> brElementOrError =
+                    InsertBRElement(
+                        WithTransaction::No,
+                        EditorDOMPoint(&aDivOrParagraphElement, 0u));
+                if (brElementOrError.isErr()) {
+                  NS_WARNING(
+                      "HTMLEditor::InsertBRElement(WithTransaction::No) "
+                      "failed");
+                  return brElementOrError.unwrapErr();
+                }
                 return NS_OK;
               });
       if (maybeNewParagraphElement.isErr()) {
@@ -6942,17 +6956,6 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
         return maybeNewParagraphElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewParagraphElement.inspect());
-
-      // Append a <br> to it
-      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-          InsertBRElement(
-              WithTransaction::Yes,
-              EditorDOMPoint(maybeNewParagraphElement.inspect(), 0u));
-      if (resultOfInsertingBRElement.isErr()) {
-        NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return resultOfInsertingBRElement.unwrapErr();
-      }
-      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
 
       // Set selection to before the break
       nsresult rv = CollapseSelectionToStartOf(
