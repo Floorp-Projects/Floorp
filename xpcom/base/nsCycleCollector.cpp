@@ -3370,6 +3370,8 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
                                SliceBudget& aBudget,
                                nsICycleCollectorListener* aManualListener,
                                bool aPreferShorterSlices) {
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Incremental CC", GCCC);
+
   CheckThreadSafety();
 
   // This can legitimately happen in a few cases. See bug 383651.
@@ -3853,8 +3855,6 @@ void nsCycleCollector_forgetSkippable(js::SliceBudget& aBudget,
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->mCollector);
-
-  AUTO_PROFILER_LABEL("nsCycleCollector_forgetSkippable", GCCC);
 
   TimeLog timeLog;
   data->mCollector->ForgetSkippable(aBudget, aRemoveChildlessNodes,
