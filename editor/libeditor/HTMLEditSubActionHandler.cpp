@@ -3055,7 +3055,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     Result<RefPtr<Element>, nsresult> newListItemElementOrError =
         CreateAndInsertElementWithTransaction(
             aListItemElementTagName,
-            EditorDOMPoint(newListElementOrError.inspect(), 0));
+            EditorDOMPoint(newListElementOrError.inspect(), 0),
+            [](Element& aListItemElement) -> nsresult { return NS_OK; });
     if (newListItemElementOrError.isErr()) {
       NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return EditActionResult(newListItemElementOrError.unwrapErr());
@@ -3207,7 +3208,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           Result<RefPtr<Element>, nsresult> maybeNewListElement =
               CreateAndInsertElementWithTransaction(
                   aListElementTagName,
-                  splitListItemParentResult.AtNextContent<EditorDOMPoint>());
+                  splitListItemParentResult.AtNextContent<EditorDOMPoint>(),
+                  [](Element& aListElement) -> nsresult { return NS_OK; });
           if (maybeNewListElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
@@ -5678,8 +5680,9 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   // XXX Don't insert the new `<div>` element until we set `align` attribute
   //     for avoiding running mutation event listeners.
   Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-      CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
-                                            EditorDOMPoint(&aBlockElement, 0));
+      CreateAndInsertElementWithTransaction(
+          *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0),
+          [](Element& aDivElement) -> nsresult { return NS_OK; });
   if (maybeNewDivElement.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
@@ -6915,10 +6918,13 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
       nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
       Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
-          CreateAndInsertElementWithTransaction(&paraAtom == nsGkAtoms::br
-                                                    ? *nsGkAtoms::p
-                                                    : MOZ_KnownLive(paraAtom),
-                                                atHeader.NextPoint());
+          CreateAndInsertElementWithTransaction(
+              &paraAtom == nsGkAtoms::br ? *nsGkAtoms::p
+                                         : MOZ_KnownLive(paraAtom),
+              atHeader.NextPoint(),
+              [](Element& aDivOrParagraphElement) -> nsresult {
+                return NS_OK;
+              });
       if (maybeNewParagraphElement.isErr()) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
@@ -7346,10 +7352,11 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
     nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
     // We want a wrapper even if we separate with <br>
     Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
-        CreateAndInsertElementWithTransaction(&paraAtom == nsGkAtoms::br
-                                                  ? *nsGkAtoms::p
-                                                  : MOZ_KnownLive(paraAtom),
-                                              atNextSiblingOfLeftList);
+        CreateAndInsertElementWithTransaction(
+            &paraAtom == nsGkAtoms::br ? *nsGkAtoms::p
+                                       : MOZ_KnownLive(paraAtom),
+            atNextSiblingOfLeftList,
+            [](Element& aDivOrParagraphElement) -> nsresult { return NS_OK; });
     if (maybeNewParagraphElement.isErr()) {
       NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return maybeNewParagraphElement.unwrapErr();
@@ -7432,8 +7439,8 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
                                         itemOffset + 1u);
           Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
               CreateAndInsertElementWithTransaction(
-                  MOZ_KnownLive(*nextDefinitionListItemTagName),
-                  atNextListItem);
+                  MOZ_KnownLive(*nextDefinitionListItemTagName), atNextListItem,
+                  [](Element& aListItemElement) -> nsresult { return NS_OK; });
           if (maybeNewListItemElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
@@ -8068,7 +8075,9 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
   }
 
   Result<RefPtr<Element>, nsresult> newElementOrError =
-      CreateAndInsertElementWithTransaction(aTagName, splitPoint);
+      CreateAndInsertElementWithTransaction(
+          aTagName, splitPoint,
+          [](Element& aNewElement) -> nsresult { return NS_OK; });
   if (MOZ_UNLIKELY(newElementOrError.isErr())) {
     NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
     return newElementOrError;
@@ -9769,7 +9778,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
             CreateAndInsertElementWithTransaction(
                 MOZ_KnownLive(*ULOrOLOrDLTagName),
-                EditorDOMPoint::AtEndOf(targetDivElement));
+                EditorDOMPoint::AtEndOf(targetDivElement),
+                [](Element& aListElement) -> nsresult { return NS_OK; });
         if (maybeNewListElement.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
@@ -9850,7 +9860,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
             CreateAndInsertElementWithTransaction(
                 MOZ_KnownLive(*containerName),
-                EditorDOMPoint::AtEndOf(targetDivElement));
+                EditorDOMPoint::AtEndOf(targetDivElement),
+                [](Element& aListElement) -> nsresult { return NS_OK; });
         if (maybeNewListElement.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
