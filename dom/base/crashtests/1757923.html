@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      class CustomElement extends HTMLElement {
+        constructor () {
+          super();
+        }
+      }
+
+      let element = document.createElement("custom-element");
+      customElements.define("custom-element", CustomElement);
+      customElements.upgrade(element);
+
+      const internals = element.attachInternals();
+      element = undefined;
+      SpecialPowers.forceGC();
+      SpecialPowers.forceCC();
+      internals.shadowRoot;
+    </script>
+  </head>
+</html>
