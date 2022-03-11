@@ -728,14 +728,23 @@ class nsFrameSelection final {
   nsFrameSelection(mozilla::PresShell* aPresShell, nsIContent* aLimiter,
                    bool aAccessibleCaretEnabled);
 
-  void StartBatchChanges();
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   /**
+   * @param aRequesterFuncName function name which wants to start the batch.
+   * This won't be stored nor exposed to selection listeners etc, used only for
+   * logging.
+   */
+  void StartBatchChanges(const char* aRequesterFuncName);
+
+  /**
+   * @param aRequesterFuncName function name which wants to end the batch.
+   * This won't be stored nor exposed to selection listeners etc, used only for
+   * logging.
    * @param aReasons potentially multiple of the reasons defined in
    * nsISelectionListener.idl
    */
-  void EndBatchChanges(int16_t aReasons = nsISelectionListener::NO_REASON);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void EndBatchChanges(
+      const char* aRequesterFuncName,
+      int16_t aReasons = nsISelectionListener::NO_REASON);
 
   mozilla::PresShell* GetPresShell() const { return mPresShell; }
 

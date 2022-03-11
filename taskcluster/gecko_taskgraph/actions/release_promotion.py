@@ -7,6 +7,7 @@ import json
 import os
 
 from taskgraph.parameters import Parameters
+from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import get_artifact
 
 from gecko_taskgraph.actions.registry import register_callback_action
@@ -21,7 +22,6 @@ from gecko_taskgraph.util.partners import (
     get_partner_url_config,
     get_token,
 )
-from gecko_taskgraph.taskgraph import TaskGraph
 from gecko_taskgraph.decision import taskgraph_decision
 from gecko_taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS, release_level
 

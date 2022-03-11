@@ -926,8 +926,12 @@ void MacroAssembler::replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
 // Splat
 
 void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
-  vpinsrq(0, src.reg, dest, dest);
-  vpinsrq(1, src.reg, dest, dest);
+  vmovq(src.reg, dest);
+  if (HasAVX2()) {
+    vbroadcastq(Operand(dest), dest);
+  } else {
+    vpunpcklqdq(dest, dest, dest);
+  }
 }
 
 // ========================================================================

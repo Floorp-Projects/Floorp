@@ -225,6 +225,12 @@ class MockExtension {
         return OS.File.remove(this.file.path);
       });
   }
+
+  terminateBackground() {
+    return this._extensionPromise.then(extension => {
+      return extension.terminateBackground();
+    });
+  }
 }
 
 function provide(obj, keys, value, override = false) {

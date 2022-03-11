@@ -8,11 +8,12 @@ from functools import partial
 
 import pytest
 from mozunit import main
+from taskgraph.graph import Graph
 from taskgraph.task import Task
+from taskgraph.taskgraph import TaskGraph
 
-from gecko_taskgraph import graph, optimize
+from gecko_taskgraph import optimize
 from gecko_taskgraph.optimize import OptimizationStrategy, All, Any, Not
-from gecko_taskgraph.taskgraph import TaskGraph
 
 
 class Remove(OptimizationStrategy):
@@ -66,7 +67,7 @@ def make_task(
 def make_graph(*tasks_and_edges, **kwargs):
     tasks = {t.label: t for t in tasks_and_edges if isinstance(t, Task)}
     edges = {e for e in tasks_and_edges if not isinstance(e, Task)}
-    tg = TaskGraph(tasks, graph.Graph(set(tasks), edges))
+    tg = TaskGraph(tasks, Graph(set(tasks), edges))
 
     if kwargs.get("deps", True):
         # set dependencies based on edges
@@ -79,7 +80,7 @@ def make_graph(*tasks_and_edges, **kwargs):
 def make_opt_graph(*tasks_and_edges):
     tasks = {t.task_id: t for t in tasks_and_edges if isinstance(t, Task)}
     edges = {e for e in tasks_and_edges if not isinstance(e, Task)}
-    return TaskGraph(tasks, graph.Graph(set(tasks), edges))
+    return TaskGraph(tasks, Graph(set(tasks), edges))
 
 
 def make_triangle(deps=True, **opts):

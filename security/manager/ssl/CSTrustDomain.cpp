@@ -145,10 +145,12 @@ Result CSTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
   return Success;
 }
 
-Result CSTrustDomain::VerifyRSAPKCS1SignedDigest(
-    const SignedDigest& signedDigest, Input subjectPublicKeyInfo) {
-  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                       nullptr);
+Result CSTrustDomain::VerifyRSAPKCS1SignedData(Input data,
+                                               DigestAlgorithm digestAlgorithm,
+                                               Input signature,
+                                               Input subjectPublicKeyInfo) {
+  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
+                                     subjectPublicKeyInfo, nullptr);
 }
 
 Result CSTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
@@ -163,10 +165,12 @@ Result CSTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
   return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
 }
 
-Result CSTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                              Input subjectPublicKeyInfo) {
-  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                    nullptr);
+Result CSTrustDomain::VerifyECDSASignedData(Input data,
+                                            DigestAlgorithm digestAlgorithm,
+                                            Input signature,
+                                            Input subjectPublicKeyInfo) {
+  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
+                                  subjectPublicKeyInfo, nullptr);
 }
 
 Result CSTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,

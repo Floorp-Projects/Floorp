@@ -28,6 +28,7 @@
         'pkixder_universal_types_tests.cpp',
         'pkixgtest.cpp',
         'pkixnames_tests.cpp',
+        'pkixnss_tests.cpp',
         'pkixocsp_CreateEncodedOCSPRequest_tests.cpp',
         'pkixocsp_VerifyEncodedOCSPResponse.cpp',
       ],

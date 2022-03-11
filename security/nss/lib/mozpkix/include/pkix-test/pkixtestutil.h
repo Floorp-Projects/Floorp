@@ -279,10 +279,11 @@ TestKeyPair* GenerateDSSKeyPair();
 inline void DeleteTestKeyPair(TestKeyPair* keyPair) { delete keyPair; }
 typedef std::unique_ptr<TestKeyPair> ScopedTestKeyPair;
 
-Result TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                   Input subjectPublicKeyInfo);
-Result TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                      Input subjectPublicKeyInfo);
+Result TestVerifyECDSASignedData(Input data, DigestAlgorithm digestAlgorithm,
+                                 Input signature, Input subjectPublicKeyInfo);
+Result TestVerifyRSAPKCS1SignedData(Input data, DigestAlgorithm digestAlgorithm,
+                                    Input signature,
+                                    Input subjectPublicKeyInfo);
 Result TestDigestBuf(Input item, DigestAlgorithm digestAlg,
                      /*out*/ uint8_t* digestBuf, size_t digestBufLen);
 

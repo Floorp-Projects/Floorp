@@ -135,9 +135,9 @@ class EverythingFailsByDefaultTrustDomain : public TrustDomain {
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
-  Result VerifyECDSASignedDigest(const SignedDigest&, Input) override {
+  Result VerifyECDSASignedData(Input, DigestAlgorithm, Input, Input) override {
     ADD_FAILURE();
-    return NotReached("VerifyECDSASignedDigest should not be called",
+    return NotReached("VerifyECDSASignedData should not be called",
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
@@ -148,9 +148,10 @@ class EverythingFailsByDefaultTrustDomain : public TrustDomain {
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest&, Input) override {
+  Result VerifyRSAPKCS1SignedData(Input, DigestAlgorithm, Input,
+                                  Input) override {
     ADD_FAILURE();
-    return NotReached("VerifyRSAPKCS1SignedDigest should not be called",
+    return NotReached("VerifyRSAPKCS1SignedData should not be called",
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
@@ -187,9 +188,11 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain {
     return Success;
   }
 
-  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                 Input subjectPublicKeyInfo) override {
-    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
+  Result VerifyECDSASignedData(Input data, DigestAlgorithm digestAlgorithm,
+                               Input signature,
+                               Input subjectPublicKeyInfo) override {
+    return TestVerifyECDSASignedData(data, digestAlgorithm, signature,
+                                     subjectPublicKeyInfo);
   }
 
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA,
@@ -197,9 +200,11 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain {
     return Success;
   }
 
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                    Input subjectPublicKeyInfo) override {
-    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  Result VerifyRSAPKCS1SignedData(Input data, DigestAlgorithm digestAlgorithm,
+                                  Input signature,
+                                  Input subjectPublicKeyInfo) override {
+    return TestVerifyRSAPKCS1SignedData(data, digestAlgorithm, signature,
+                                        subjectPublicKeyInfo);
   }
 
   Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA,

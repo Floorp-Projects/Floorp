@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -649,8 +650,7 @@ class AsyncTabSwitcher {
     let numPending = 0;
     let numWarming = 0;
     for (let [tab, state] of this.tabState) {
-      // Skip print preview browsers since they shouldn't affect tab switching.
-      if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+      if (!this.shouldDeactivateDocShell(tab.linkedBrowser)) {
         continue;
       }
 
@@ -726,7 +726,7 @@ class AsyncTabSwitcher {
 
     // Unload any tabs that can be unloaded.
     for (let [tab, state] of this.tabState) {
-      if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+      if (!this.shouldDeactivateDocShell(tab.linkedBrowser)) {
         continue;
       }
 
@@ -852,8 +852,7 @@ class AsyncTabSwitcher {
   onSizeModeOrOcclusionStateChange() {
     if (this.minimizedOrFullyOccluded) {
       for (let [tab, state] of this.tabState) {
-        // Skip print preview browsers since they shouldn't affect tab switching.
-        if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+        if (!this.shouldDeactivateDocShell(tab.linkedBrowser)) {
           continue;
         }
 
@@ -913,6 +912,19 @@ class AsyncTabSwitcher {
     if (ourTab) {
       this.setTabStateNoAction(ourTab, otherState);
     }
+  }
+
+  /**
+   * Check if the browser should be deactivated. If the browser is a print preivew or
+   * PiP browser then we won't deactive it.
+   * @param browser The browser to check if it should be deactivated
+   * @returns false if a print preview or PiP browser else true
+   */
+  shouldDeactivateDocShell(browser) {
+    return !(
+      this.tabbrowser._printPreviewBrowsers.has(browser) ||
+      PictureInPicture.isOriginatingBrowser(browser)
+    );
   }
 
   shouldActivateDocShell(browser) {
@@ -1220,6 +1232,8 @@ class AsyncTabSwitcher {
       let linkedBrowser = tab.linkedBrowser;
       let isActive = linkedBrowser && linkedBrowser.docShellIsActive;
       let isRendered = linkedBrowser && linkedBrowser.renderLayers;
+      let isPiP =
+        linkedBrowser && PictureInPicture.isOriginatingBrowser(linkedBrowser);
 
       if (tab === this.lastVisibleTab) {
         tabString += "V";
@@ -1252,6 +1266,9 @@ class AsyncTabSwitcher {
       }
       if (isRendered) {
         extraStates += "R";
+      }
+      if (isPiP) {
+        extraStates += "P";
       }
       if (extraStates != "") {
         tabString += `(${extraStates})`;

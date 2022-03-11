@@ -1216,6 +1216,12 @@ class SpecialPowersParent extends JSWindowActorParent {
           });
         }
 
+        case "SPExtensionTerminateBackground": {
+          let id = aMessage.data.id;
+          let extension = this._extensions.get(id);
+          return extension.terminateBackground();
+        }
+
         case "SetAsDefaultAssertHandler": {
           defaultAssertHandler = this;
           return undefined;

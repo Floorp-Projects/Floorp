@@ -5,6 +5,26 @@
  :root {
     --min-font-size: 14px;
     --max-font-size: 40px;
+    --texttracks-bottom: calc(0.066 * 100vh);
+    /*
+     * Move text tracks if they visually overlap with pip player controls
+     * New text tracks position is determined by adding together:
+     *  1) bottom distance of #controls
+     *  2) height of #controls-bottom,
+     *  3) border size of player controls buttons
+     *  4) hardcoded px value (to ensure consistent distance, regardless of pip window size)
+     * NOTE: if changing player.css values, change values here too.
+     */
+    --resize-margin: 5px;
+    --player-controls-height: calc(100% - 2 * var(--resize-margin));
+    --player-controls-bottom-distance: calc(100vh - var(--player-controls-height));
+    --player-controls-button-height: 10vmax;
+    --player-controls-button-max-height: 32px;
+    --player-controls-button-min-height: 16px;
+    --player-controls-button-outline-width: 2px;
+    --player-bottom-controls-height: clamp(var(--player-controls-button-min-height), var(--player-controls-button-height), var(--player-controls-button-max-height));
+    --distance-from-player-controls: 20px;
+    --texttracks-bottom-overlapped: calc(var(--player-controls-button-outline-width) + var(--player-controls-bottom-distance) + var(--player-bottom-controls-height) + var(--distance-from-player-controls));
  }
 
  #texttracks {
@@ -20,16 +40,28 @@
     transform: translateX(-50%);
     padding: 8px;
     max-width: calc(0.66 * 100vw);
-    bottom: calc(0.066 * 100vh);
+    bottom: var(--texttracks-bottom);
     font-size: clamp(var(--min-font-size), calc(0.066 * 100vh), var(--max-font-size));
     line-height: clamp(14.4px, calc(0.08 * 100vh), 57.6px);
     white-space: pre-line;
     width: max-content;
     font-family: sans-serif;
+    transition: bottom 0.3s;
+    transition-delay: 0.1s;
+ }
+
+ #texttracks[overlap-video-controls] {
+     bottom: var(--texttracks-bottom-overlapped)
  }
 
  #texttracks:empty {
      visibility: hidden;
+ }
+
+ @media (prefers-reduced-motion) {
+    #texttracks {
+        transition: none;
+    }
  }
 
 @media screen and (max-width: 319px) {
