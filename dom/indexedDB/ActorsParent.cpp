@@ -21498,41 +21498,39 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mActorDestroyed);
 
-  if (NS_WARN_IF(!IndexedDatabaseManager::Get() || !QuotaManager::Get())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+  if (NS_WARN_IF(!IndexedDatabaseManager::Get())) {
+    return IPC_FAIL(this, "No IndexedDatabaseManager active!");
+  }
+
+  if (NS_WARN_IF(!QuotaManager::Get())) {
+    return IPC_FAIL(this, "No QuotaManager active!");
   }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "IndexedDatabaseManager is not InTestingMode!");
   }
 
   if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "PersistenceType is not valid!");
   }
 
   if (NS_WARN_IF(aOrigin.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Origin is empty!");
   }
 
   if (NS_WARN_IF(aDatabaseName.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "DatabaseName is empty!");
   }
 
   if (NS_WARN_IF(aFileId == 0)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No FileId!");
   }
 
   nsresult rv =
       DispatchAndReturnFileReferences(aPersistenceType, aOrigin, aDatabaseName,
                                       aFileId, aRefCnt, aDBRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "DispatchAndReturnFileReferences failed!");
   }
 
   return IPC_OK();
