@@ -2765,7 +2765,8 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   void FakeActorDestroyed() { mActorDestroyed.EnsureFlipped(); }
 #endif
 
-  bool RecvCommit(Maybe<int64_t> aLastRequest);
+  mozilla::ipc::IPCResult RecvCommit(IProtocol* aActor,
+                                     const Maybe<int64_t> aLastRequest);
 
   bool RecvAbort(nsresult aResultCode);
 
@@ -10272,19 +10273,20 @@ void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
   MaybeCommitOrAbort();
 }
 
-bool TransactionBase::RecvCommit(const Maybe<int64_t> aLastRequest) {
+mozilla::ipc::IPCResult TransactionBase::RecvCommit(
+    IProtocol* aActor, const Maybe<int64_t> aLastRequest) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(
+        aActor, "Attempt to commit an already comitted/aborted transaction!");
   }
 
   mCommitOrAbortReceived.Flip();
   mLastRequestBeforeCommit.init(aLastRequest);
-
   MaybeCommitOrAbort();
-  return true;
+
+  return IPC_OK();
 }
 
 bool TransactionBase::RecvAbort(nsresult aResultCode) {
@@ -11133,10 +11135,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvCommit(
     const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit(aLastRequest)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvCommit(this, aLastRequest);
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvAbort(
@@ -11380,10 +11379,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCommit(
     const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit(aLastRequest)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvCommit(this, aLastRequest);
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvAbort(
