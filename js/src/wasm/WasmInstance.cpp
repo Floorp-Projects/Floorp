@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmInstance.h"
+#include "wasm/WasmInstance-inl.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -39,6 +39,8 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmCode.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"

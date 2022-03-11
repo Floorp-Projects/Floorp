@@ -20,6 +20,9 @@
 
 #include "mozilla/Maybe.h"
 
+#include "js/Value.h"
+
+#include "wasm/TypedObject.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSerialize.h"
