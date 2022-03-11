@@ -64,6 +64,7 @@
 #include "nsLinebreakConverter.h"
 #include "nsLiteralString.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 #include "nsRange.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -2485,10 +2486,15 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
           [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
-                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, false);
+                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
+                aBlockquoteElement.IsInComposedDoc());
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                "Element::SetAttr(nsGkAtoms::type, cite) failed, but ignored");
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::type, \"cite\", %s) "
+                    "failed, but ignored",
+                    aBlockquoteElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             return NS_OK;
           });
   if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
@@ -2892,10 +2898,15 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
           *nsGkAtoms::span, [](Element& aSpanElement) {
             // Add an attribute on the pre node so we'll know it's a quotation.
             DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
-                kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns, false);
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                                 "Element::SetAttr(nsGkAtoms::mozquote, "
-                                 "\"true\", false) failed");
+                kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns,
+                aSpanElement.IsInComposedDoc());
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::mozquote, \"true\", %s) "
+                    "failed",
+                    aSpanElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             // Allow wrapping on spans so long lines get wrapped to the screen.
             if (aSpanElement.GetParent() &&
                 aSpanElement.GetParent()->IsHTMLElement(nsGkAtoms::body)) {
@@ -3151,16 +3162,26 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
           [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             // Try to set type=cite.  Ignore it if this fails.
             DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
-                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, false);
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                                 "Element::SetAttr(nsGkAtoms::type, "
-                                 "\"cite\", false) failed, but ignored");
+                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
+                aBlockquoteElement.IsInComposedDoc());
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::type, \"cite\", %s) failed, "
+                    "but ignored",
+                    aBlockquoteElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             if (!aCitation.IsEmpty()) {
               DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
-                  kNameSpaceID_None, nsGkAtoms::cite, aCitation, false);
-              NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                                   "Element::SetAttr(nsGkAtoms::cite, "
-                                   "\"...\", false) failed, but ignored");
+                  kNameSpaceID_None, nsGkAtoms::cite, aCitation,
+                  aBlockquoteElement.IsInComposedDoc());
+              NS_WARNING_ASSERTION(
+                  NS_SUCCEEDED(rvIgnored),
+                  nsPrintfCString(
+                      "Element::SetAttr(nsGkAtoms::cite, \"...\", %s) failed, "
+                      "but ignored",
+                      aBlockquoteElement.IsInComposedDoc() ? "true" : "false")
+                      .get());
             }
             return NS_OK;
           });

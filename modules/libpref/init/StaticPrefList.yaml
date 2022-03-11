@@ -4422,6 +4422,13 @@
   value: true
   mirror: always
 
+# Whether editor initializes attributes and/or child nodes of newly inserting
+# element before or after connecting to the DOM tree.
+- name: editor.initialize_element_before_connect
+  type: bool
+  value: true
+  mirror: always
+
 # Delay to mask last input character in password fields.
 # If negative value, to use platform's default behavior.
 # If 0, no delay to mask password.

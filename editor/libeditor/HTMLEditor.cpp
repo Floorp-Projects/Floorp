@@ -473,21 +473,29 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
       CreateAndInsertElement(
           WithTransaction::Yes, *nsGkAtoms::meta,
           EditorDOMPoint(primaryHeadElement, 0), [&](Element& aMetaElement) {
-            DebugOnly<nsresult> rvIgnored =
-                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                                     u"Content-Type"_ns, false);
+            DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
+                aMetaElement.IsInComposedDoc());
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
-                "failed, but ignored");
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
+                    "%s) failed, but ignored",
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             rvIgnored =
                 aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::content,
                                      u"text/html;charset="_ns +
                                          NS_ConvertASCIItoUTF16(aCharacterSet),
-                                     false);
+                                     aMetaElement.IsInComposedDoc());
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                "Element::SetAttr(nsGkAtoms::content) failed, but ignored");
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::content, "
+                    "\"text/html;charset=%s\", %s) failed, but ignored",
+                    nsPromiseFlatCString(aCharacterSet).get(),
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             return NS_OK;
           });
   if (maybeNewMetaElement.isErr()) {
@@ -2975,9 +2983,8 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
   //       CreatElementTransaction since we can use InsertNodeTransaction
   //       instead.
 
-  RefPtr<Element> newElement;
   nsresult rv;
-  newElement = CreateHTMLContent(&aTagName);
+  RefPtr<Element> newElement = CreateHTMLContent(&aTagName);
   NS_WARNING_ASSERTION(newElement, "EditorBase::CreateHTMLContent() failed");
   if (MOZ_LIKELY(newElement)) {
     rv = MarkElementDirty(*newElement);
@@ -2988,11 +2995,13 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "EditorBase::MarkElementDirty() failed, but ignored");
-      rv = aInitializer(*newElement);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
-      if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
-                       NS_WARN_IF(Destroyed()))) {
-        rv = NS_ERROR_EDITOR_DESTROYED;
+      if (StaticPrefs::editor_initialize_element_before_connect()) {
+        rv = aInitializer(*newElement);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+        if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
+                         NS_WARN_IF(Destroyed()))) {
+          rv = NS_ERROR_EDITOR_DESTROYED;
+        }
       }
       if (NS_SUCCEEDED(rv)) {
         RefPtr<InsertNodeTransaction> transaction =
@@ -3044,6 +3053,18 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
 
   if (NS_FAILED(rv)) {
     return Err(rv);
+  }
+
+  if (!StaticPrefs::editor_initialize_element_before_connect() && newElement) {
+    rv = aInitializer(*newElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+    if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
+                     NS_WARN_IF(Destroyed()))) {
+      rv = NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_FAILED(rv)) {
+      return Err(rv);
+    }
   }
 
   return newElement;
