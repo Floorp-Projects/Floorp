@@ -47,12 +47,6 @@ const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
   "firefox-suggest";
 
-const SCALARS = {
-  IMPRESSION: "contextual.services.quicksuggest.impression",
-  CLICK: "contextual.services.quicksuggest.click",
-  HELP: "contextual.services.quicksuggest.help",
-};
-
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
 const UPDATE_TOPIC = "firefox-suggest-update";
@@ -81,7 +75,7 @@ class QSTestUtils {
   }
 
   get SCALARS() {
-    return SCALARS;
+    return UrlbarProviderQuickSuggest.telemetryScalars;
   }
 
   get TELEMETRY_EVENT_CATEGORY() {
@@ -390,7 +384,7 @@ class QSTestUtils {
    */
   assertScalars(expectedIndexesByScalarName) {
     let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-    for (let scalarName of Object.values(SCALARS)) {
+    for (let scalarName of Object.values(this.SCALARS)) {
       if (scalarName in expectedIndexesByScalarName) {
         TelemetryTestUtils.assertKeyedScalar(
           scalars,
