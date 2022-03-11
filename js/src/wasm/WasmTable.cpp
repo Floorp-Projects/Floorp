@@ -163,7 +163,7 @@ bool Table::getFuncRef(JSContext* cx, uint32_t index,
                                           codeRange.funcIndex(), fun);
 }
 
-void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
+void Table::setFuncRef(uint32_t index, void* code, Instance* instance) {
   MOZ_ASSERT(isFunction());
 
   FunctionTableElem& elem = functions_[index];
@@ -173,7 +173,7 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
 
   if (!isAsmJS_) {
     elem.code = code;
-    elem.tls = instance->tlsData();
+    elem.tls = instance;
     MOZ_ASSERT(elem.tls->instance()->objectUnbarriered()->isTenured(),
                "no postWriteBarrier (Table::set)");
   } else {

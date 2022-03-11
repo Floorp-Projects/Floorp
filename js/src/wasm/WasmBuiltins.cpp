@@ -555,7 +555,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
-        rfe->tlsData = iter.instance()->tlsData();
+        rfe->tlsData = iter.instance();
 
         rfe->stackPointer =
             (uint8_t*)(rfe->framePointer - tryNote->framePushed);

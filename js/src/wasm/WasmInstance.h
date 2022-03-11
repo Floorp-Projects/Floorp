@@ -264,9 +264,6 @@ class alignas(16) Instance {
   JS::Realm* realm() const { return realm_; }
   bool debugEnabled() const { return !!maybeDebug_; }
   DebugState& debug() { return *maybeDebug_; }
-  Instance* tlsData() const {
-    return reinterpret_cast<Instance*>(const_cast<Instance*>(this));
-  }
   uint8_t* globalData() const { return (uint8_t*)&globalArea_; }
   const SharedTableVector& tables() const { return tables_; }
   SharedMem<uint8_t*> memoryBase() const;

@@ -1606,7 +1606,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   GenPrintf(DebugChannel::Function, masm, "\n");
 
   // Load tls; from now on, WasmTlsReg is live.
-  masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
+  masm.movePtr(ImmPtr(&inst), WasmTlsReg);
   masm.storePtr(WasmTlsReg,
                 Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
   masm.loadWasmPinnedRegsFromTls();
