@@ -18,6 +18,7 @@
 #include "TraversalRule.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -201,6 +202,9 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
 }
 
 void DocAccessibleWrap::CacheViewport(bool aCachePivotBoundaries) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
   mCachePivotBoundaries |= aCachePivotBoundaries;
   if (VirtualViewID() == kNoID && !mCacheRefreshTimer) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mCacheRefreshTimer),
@@ -225,6 +229,10 @@ DocAccessibleWrap* DocAccessibleWrap::GetTopLevelContentDoc(
 }
 
 void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+
   mFocusPath.Clear();
   if (IPCAccessibilityActive()) {
     DocAccessibleChild* ipcDoc = IPCDoc();
@@ -263,6 +271,10 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
 }
 
 void DocAccessibleWrap::UpdateFocusPathBounds() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+
   if (!mFocusPath.Count()) {
     return;
   }

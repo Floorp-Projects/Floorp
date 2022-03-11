@@ -28,6 +28,7 @@
 
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 // icu TRUE conflicting with java::sdk::Boolean::TRUE()
 // https://searchfox.org/mozilla-central/rev/ce02064d8afc8673cef83c92896ee873bd35e7ae/intl/icu/source/common/unicode/umachine.h#265
@@ -213,6 +214,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
       if (state & states::BUSY) {
         sessionAcc->SendWindowStateChangedEvent(accessible);
+        if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+          sessionAcc->SendWindowContentChangedEvent();
+        }
       }
       break;
     }
@@ -227,6 +231,12 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       AccAnnouncementEvent* event = downcast_accEvent(aEvent);
       sessionAcc->SendAnnouncementEvent(accessible, event->Announcement(),
                                         event->Priority());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_REORDER: {
+      if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+        sessionAcc->SendWindowContentChangedEvent();
+      }
       break;
     }
     default:
