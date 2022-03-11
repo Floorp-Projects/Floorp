@@ -824,7 +824,7 @@ public class SessionAccessibility {
     }
 
     final GeckoBundle cachedBundle = getMostRecentBundle(sourceId);
-    if (cachedBundle == null && sourceId != View.NO_ID) {
+    if (cachedBundle == null && sourceId != View.NO_ID && !nativeProvider.isCacheEnabled()) {
       // Suppress events from non cached nodes.
       return;
     }
@@ -833,11 +833,19 @@ public class SessionAccessibility {
     event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
     event.setSource(mView, sourceId);
     event.setEnabled(true);
-    if (className == CLASSNAME_UNKNOWN && cachedBundle != null) {
-      event.setClassName(getClassName(cachedBundle.getInt("className")));
-    } else {
-      event.setClassName(getClassName(className));
+
+    int eventClassName = className;
+    if (eventClassName == CLASSNAME_UNKNOWN) {
+      if (cachedBundle != null) {
+        eventClassName = cachedBundle.getInt("className");
+      } else if (nativeProvider.isCacheEnabled()) {
+        final GeckoBundle bundle = nativeProvider.getNodeInfo(sourceId);
+        if (bundle != null) {
+          eventClassName = bundle.getInt("className");
+        }
+      }
     }
+    event.setClassName(getClassName(eventClassName));
 
     if (eventData != null) {
       if (eventData.containsKey("text")) {
