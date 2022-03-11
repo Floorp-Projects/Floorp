@@ -2483,7 +2483,7 @@ bool WasmInstanceObject::getExportedFunction(
   fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
                        ObjectValue(*instanceObj));
 
-  void* tlsData = instanceObj->instance().tlsData();
+  void* tlsData = &instanceObj->instance();
   fun->setExtendedSlot(FunctionExtended::WASM_TLSDATA_SLOT,
                        PrivateValue(tlsData));
 

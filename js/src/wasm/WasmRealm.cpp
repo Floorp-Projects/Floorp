@@ -138,13 +138,13 @@ void wasm::Realm::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf,
 void wasm::InterruptRunningCode(JSContext* cx) {
   auto runtimeInstances = cx->runtime()->wasmInstances.lock();
   for (Instance* instance : runtimeInstances.get()) {
-    instance->tlsData()->setInterrupt();
+    instance->setInterrupt();
   }
 }
 
 void wasm::ResetInterruptState(JSContext* cx) {
   auto runtimeInstances = cx->runtime()->wasmInstances.lock();
   for (Instance* instance : runtimeInstances.get()) {
-    instance->tlsData()->resetInterrupt(cx);
+    instance->resetInterrupt(cx);
   }
 }

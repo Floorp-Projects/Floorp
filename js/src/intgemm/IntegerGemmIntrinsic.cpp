@@ -86,7 +86,7 @@ int32_t js::intgemm::IntrI8PrepareB(wasm::Instance* instance,
                                     uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8PrepareB.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsB, ROWS_B_MULTIPLIER) ||
@@ -127,7 +127,7 @@ int32_t js::intgemm::IntrI8PrepareBFromTransposed(
     uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8PrepareBFromTransposed.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsB, ROWS_B_MULTIPLIER) ||
@@ -168,7 +168,7 @@ int32_t js::intgemm::IntrI8PrepareBFromQuantizedTransposed(
     uint32_t rowsB, uint32_t colsB, uint32_t outputMatrixB, uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8PrepareBFromQuantizedTransposed.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsB, ROWS_B_MULTIPLIER) ||
@@ -211,7 +211,7 @@ int32_t js::intgemm::IntrI8PrepareA(wasm::Instance* instance,
                                     uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8PrepareA.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsA, ROWS_A_MULTIPLIER) ||
@@ -251,7 +251,7 @@ int32_t js::intgemm::IntrI8PrepareBias(
     uint32_t colsB, uint32_t inputBias, uint32_t output, uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8PrepareBias.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsB, ROWS_B_MULTIPLIER) ||
@@ -301,7 +301,7 @@ int32_t js::intgemm::IntrI8MultiplyAndAddBias(
     uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8MultiplyAndAddBias.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsA, ROWS_A_MULTIPLIER) ||
@@ -360,7 +360,7 @@ int32_t js::intgemm::IntrI8SelectColumnsOfB(wasm::Instance* instance,
                                             uint32_t output, uint8_t* memBase) {
   MOZ_ASSERT(wasm::SASigIntrI8SelectColumnsOfB.failureMode ==
              wasm::FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->cx();
 
   // Size checks for matricies
   if (!CheckMatrixDimension(cx, rowsB, ROWS_B_MULTIPLIER) ||
