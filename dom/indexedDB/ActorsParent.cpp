@@ -11673,13 +11673,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   if (NS_WARN_IF(!aIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No Index id!");
   }
 
   const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
@@ -11689,34 +11687,29 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
   MOZ_ASSERT(dbMetadata->mNextIndexId > 0);
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested ObjectStoreId does not match next ID!");
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested IndexId does not match next ID!");
   }
 
   SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForObjectStoreId failed!");
   }
 
   SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
       GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForIndexId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundIndexMetadata->mCommonMetadata.name() = aName;
@@ -11727,7 +11720,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   renameOp->DispatchToConnectionPool();
