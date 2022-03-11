@@ -17,6 +17,7 @@ EXTRA_PATHS = (
     "python/mozversioncontrol",
     "testing/mozbase/mozfile",
     "third_party/python/jsmin",
+    "third_party/python/six",
 )
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 
