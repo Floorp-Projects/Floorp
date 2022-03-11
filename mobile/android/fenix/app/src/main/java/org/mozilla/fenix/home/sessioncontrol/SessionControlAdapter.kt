@@ -117,7 +117,9 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
         override fun contentsSameAs(other: AdapterItem): Boolean {
             (other as? CollectionItem)?.let {
-                return it.expanded == this.expanded && it.collection.title == this.collection.title
+                return it.expanded == this.expanded &&
+                    it.collection.title == this.collection.title &&
+                    it.collection.tabs == this.collection.tabs
             } ?: return false
         }
     }
