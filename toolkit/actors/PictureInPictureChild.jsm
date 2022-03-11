@@ -76,6 +76,9 @@ const TOGGLE_HIDING_TIMEOUT_MS = 2000;
 // If you change this, also change VideoControlsWidget.SEEK_TIME_SECS:
 const SEEK_TIME_SECS = 5;
 
+// If you change bottom position in texttracks.css, also change this
+const TEXT_TRACKS_STYLE_BOTTOM_MULTIPLIER = 0.066;
+
 // The ToggleChild does not want to capture events from the PiP
 // windows themselves. This set contains all currently open PiP
 // players' content windows
@@ -1298,6 +1301,51 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * Moves the text tracks container position above the pip window's video controls
+   * if their positions visually overlap. Since pip controls are within the parent
+   * process, we determine if pip video controls and text tracks visually overlap by
+   * comparing their relative positions with DOMRect.
+   *
+   * If overlap is found, set attribute "overlap-video-controls" to move text tracks
+   * and define a new relative bottom position according to pip window size and the
+   * position of video controls.
+   *  @param {Object} data args needed to determine if text tracks must be moved
+   */
+  moveTextTracks(data) {
+    const {
+      isFullscreen,
+      isVideoControlsShowing,
+      playerBottomControlsDOMRect,
+    } = data;
+    let textTracks = this.document.getElementById("texttracks");
+    const originatingWindow = this.getWeakVideo().ownerGlobal;
+    const isReducedMotionEnabled = originatingWindow.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (isFullscreen || isReducedMotionEnabled) {
+      textTracks.removeAttribute("overlap-video-controls");
+      return;
+    }
+
+    if (isVideoControlsShowing) {
+      let playerVideoRect = textTracks.parentElement.getBoundingClientRect();
+      let isOverlap =
+        playerVideoRect.bottom -
+          TEXT_TRACKS_STYLE_BOTTOM_MULTIPLIER * playerVideoRect.height >
+        playerBottomControlsDOMRect.top;
+
+      if (isOverlap) {
+        textTracks.setAttribute("overlap-video-controls", true);
+      } else {
+        textTracks.removeAttribute("overlap-video-controls");
+      }
+    } else {
+      textTracks.removeAttribute("overlap-video-controls");
+    }
+  }
+
+  /**
    * Updates the text content for the container that holds and displays text tracks
    * on the pip window.
    * @param textTrackCues {TextTrackCueList|null}
@@ -1588,6 +1636,22 @@ class PictureInPictureChild extends JSWindowActorChild {
         this.keyDown(message.data);
         break;
       }
+      case "PictureInPicture:EnterFullscreen":
+      case "PictureInPicture:ExitFullscreen": {
+        let textTracks = this.document.getElementById("texttracks");
+        if (textTracks) {
+          this.moveTextTracks(message.data);
+        }
+        break;
+      }
+      case "PictureInPicture:ShowVideoControls":
+      case "PictureInPicture:HideVideoControls": {
+        let textTracks = this.document.getElementById("texttracks");
+        if (textTracks) {
+          this.moveTextTracks(message.data);
+        }
+        break;
+      }
     }
   }
 
@@ -1789,6 +1853,8 @@ class PictureInPictureChild extends JSWindowActorChild {
     // we can load text tracks without having to constantly
     // access the parent process.
     textTracks.id = "texttracks";
+    // When starting pip, player controls are expected to appear.
+    textTracks.setAttribute("overlap-video-controls", true);
     doc.body.appendChild(playerVideo);
     doc.body.appendChild(textTracks);
     // Load text tracks stylesheet
