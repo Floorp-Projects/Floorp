@@ -2948,7 +2948,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
     WithTransaction aWithTransaction, nsAtom& aTagName,
     const EditorDOMPoint& aPointToInsert,
-    std::function<nsresult(Element&)>&& aInitializer) {
+    const std::function<nsresult(Element&)>& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
