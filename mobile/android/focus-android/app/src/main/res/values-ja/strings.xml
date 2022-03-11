@@ -157,7 +157,7 @@
     <string name="preference_category_web_content">ウェブコンテンツ</string>
 
     <!-- Preference category: stealth settings for while switching apps -->
-    <string name="preference_category_switching_apps">アプリを切り替え</string>
+    <string name="preference_category_switching_apps">アプリの切り替え</string>
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">一般</string>
