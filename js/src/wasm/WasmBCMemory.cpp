@@ -230,7 +230,7 @@ void BaseCompiler::pushHeapBase() {
 void BaseCompiler::pushHeapBase() {
   RegPtr heapBase = need<RegPtr>();
   fr.loadTlsPtr(heapBase);
-  masm.loadPtr(Address(heapBase, offsetof(TlsData, memoryBase)), heapBase);
+  masm.loadPtr(Address(heapBase, TlsData::offsetOfMemoryBase()), heapBase);
   push(RegPtrToRegIntptr(heapBase));
 }
 #endif
@@ -306,14 +306,14 @@ void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr tls, RegI32 ptr,
   // If the memory's max size is known to be smaller than 64K pages exactly,
   // we can use a 32-bit check and avoid extension and wrapping.
   masm.wasmBoundsCheck32(Assembler::Below, ptr,
-                         Address(tls, offsetof(TlsData, boundsCheckLimit)), ok);
+                         Address(tls, TlsData::offsetOfBoundsCheckLimit()), ok);
 }
 
 void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr,
                                                 Label* ok) {
   // Any Spectre mitigation will appear to update the ptr64 register.
   masm.wasmBoundsCheck64(Assembler::Below, ptr,
-                         Address(tls, offsetof(TlsData, boundsCheckLimit)), ok);
+                         Address(tls, TlsData::offsetOfBoundsCheckLimit()), ok);
 }
 
 void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr,
@@ -466,7 +466,7 @@ void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
   }
 #elif defined(JS_CODEGEN_X86)
   MOZ_ASSERT(temp.isInvalid());
-  masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
+  masm.addPtr(Address(tls, TlsData::offsetOfMemoryBase()), ptr);
   Operand srcAddr(ptr, access->offset());
 
   if (dest.tag == AnyReg::I64) {
@@ -575,7 +575,7 @@ void BaseCompiler::executeStore(MemoryAccessDesc* access, AccessCheck* check,
   masm.wasmStore(*access, src.any(), dstAddr);
 #elif defined(JS_CODEGEN_X86)
   MOZ_ASSERT(temp.isInvalid());
-  masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
+  masm.addPtr(Address(tls, TlsData::offsetOfMemoryBase()), ptr);
   Operand dstAddr(ptr, access->offset());
 
   if (access->type() == Scalar::Int64) {
@@ -894,7 +894,7 @@ Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                 RegIndexType ptr) {
   MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
   prepareMemoryAccess(access, check, tls, ptr);
-  masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ToRegister(ptr));
+  masm.addPtr(Address(tls, TlsData::offsetOfMemoryBase()), ToRegister(ptr));
   // At this point, 64-bit offsets will have been resolved.
   return Address(ToRegister(ptr), access->offset());
 }

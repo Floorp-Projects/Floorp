@@ -325,7 +325,7 @@ CraneliftFuncCompileInput::CraneliftFuncCompileInput(
       index(func.index),
       offset_in_module(func.lineOrBytecode) {}
 
-static_assert(offsetof(TlsData, boundsCheckLimit) == sizeof(void*),
+static_assert(TlsData::offsetOfBoundsCheckLimit() == sizeof(void*),
               "fix make_heap() in wasm2clif.rs");
 
 CraneliftStaticEnvironment::CraneliftStaticEnvironment()
@@ -361,12 +361,12 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       v128_enabled(false),
       static_memory_bound(0),
       memory_guard_size(0),
-      memory_base_tls_offset(offsetof(TlsData, memoryBase)),
-      instance_tls_offset(offsetof(TlsData, instance)),
-      interrupt_tls_offset(offsetof(TlsData, interrupt)),
-      cx_tls_offset(offsetof(TlsData, cx)),
+      memory_base_tls_offset(TlsData::offsetOfMemoryBase()),
+      instance_tls_offset(TlsData::offsetOfInstance()),
+      interrupt_tls_offset(TlsData::offsetOfInterrupt()),
+      cx_tls_offset(TlsData::offsetOfCx()),
       realm_cx_offset(JSContext::offsetOfRealm()),
-      realm_tls_offset(offsetof(TlsData, realm)),
+      realm_tls_offset(TlsData::offsetOfRealm()),
       realm_func_import_tls_offset(offsetof(FuncImportTls, realm)),
       size_of_wasm_frame(sizeof(wasm::Frame)) {
 }

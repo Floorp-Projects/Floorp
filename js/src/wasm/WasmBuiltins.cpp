@@ -380,7 +380,7 @@ static bool WasmHandleDebugTrap() {
   JSContext* cx = TlsContext.get();  // Cold code
   JitActivation* activation = CallingActivation(cx);
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = GetNearestEffectiveTls(fp)->instance;
+  Instance* instance = GetNearestEffectiveTls(fp)->instance();
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
@@ -779,7 +779,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
                                       Value* argv) {
   JSContext* cx = TlsContext.get();  // Cold code
 
-  const Code& code = tlsData->instance->code();
+  const Code& code = tlsData->instance()->code();
   const FuncExport& fe =
       code.metadata(code.stableTier()).funcExports[funcExportIndex];
 
