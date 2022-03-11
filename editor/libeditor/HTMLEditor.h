@@ -4477,18 +4477,25 @@ class HTMLEditor final : public EditorBase,
    */
   class MOZ_RAII AutoTransactionBatch final {
    public:
-    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(HTMLEditor& aHTMLEditor)
-        : mHTMLEditor(aHTMLEditor) {
-      MOZ_KnownLive(mHTMLEditor).BeginTransactionInternal();
+    /**
+     * @param aRequesterFuncName function name which wants to end the batch.
+     * This won't be stored nor exposed to selection listeners etc, used only
+     * for logging. This MUST be alive when the destructor runs.
+     */
+    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(
+        HTMLEditor& aHTMLEditor, const char* aRequesterFuncName)
+        : mHTMLEditor(aHTMLEditor), mRequesterFuncName(aRequesterFuncName) {
+      MOZ_KnownLive(mHTMLEditor).BeginTransactionInternal(mRequesterFuncName);
     }
 
     MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatch() {
-      MOZ_KnownLive(mHTMLEditor).EndTransactionInternal();
+      MOZ_KnownLive(mHTMLEditor).EndTransactionInternal(mRequesterFuncName);
     }
 
    protected:
     // The lifetime must be guaranteed by the creator of this instance.
     MOZ_KNOWN_LIVE HTMLEditor& mHTMLEditor;
+    const char* const mRequesterFuncName;
   };
 
   RefPtr<TypeInState> mTypeInState;
