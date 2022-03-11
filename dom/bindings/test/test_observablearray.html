@@ -1,0 +1,523 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test Observable Array Type</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+/* global TestInterfaceObservableArray */
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+});
+
+add_task(function testObservableArray_length() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, true, true, true, true];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 5, "length of observable array should be 5");
+
+  [
+    // [length, shouldThrow, expectedResult]
+    ["invalid", true, false],
+    [b.length + 1, false, false],
+    [b.length, false, true],
+    [b.length - 1, false, true],
+    [0, false, true],
+  ].forEach(function([length, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    let shouldSuccess = !shouldThrow && expectedResult;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    deleteCallbackTests = null;
+    if (shouldSuccess) {
+      let deleteCallbackIndex = b.length - 1;
+      deleteCallbackTests = function(_value, _index) {
+        info(`delete callback for ${_index}`);
+        is(_value, oldValues[deleteCallbackIndex], "deleteCallbackTests: test value argument");
+        is(_index, deleteCallbackIndex, "deleteCallbackTests: test index argument");
+        deleteCallbackIndex--;
+      };
+    }
+
+    // Test
+    info(`setting length to ${length}`);
+    try {
+      b.length = length;
+      ok(!shouldThrow, `setting length should throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting length throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback should not be called");
+    is(deleteCallbackCount, shouldSuccess ? (oldLen - length) : 0, "deleteCallback count");
+    isDeeply(b, shouldSuccess ? oldValues.slice(0, length) : oldValues, "property values");
+    is(b.length, shouldSuccess ? length : oldLen, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_length_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (value) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, true, false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 5, "length of observable array should be 5");
+
+  // Initialize
+  setCallbackCount = 0;
+  deleteCallbackCount = 0;
+
+  // Test
+  info(`setting length to 0`);
+  try {
+    b.length = 0;
+    ok(false, `setting length should throw`);
+  } catch(e) {
+    ok(true, `setting length throws ${e}`);
+  }
+  is(setCallbackCount, 0, "setCallback should not be called");
+  is(deleteCallbackCount, 4, "deleteCallback should be called");
+  isDeeply(b, [true, true], "property values");
+  is(b.length, 2, `length of observable array`);
+});
+
+add_task(function testObservableArray_setter() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [
+    // [values, shouldThrow]
+    ["invalid", true],
+    [[1,[],{},"invalid"], false],
+    [[0,NaN,null,undefined,""], false],
+    [[true,true], false],
+    [[false,false,false], false],
+  ].forEach(function([values, shouldThrow]) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = null;
+    deleteCallbackTests = null;
+    if (!shouldThrow) {
+      let setCallbackIndex = 0;
+      setCallbackTests = function(_value, _index) {
+        info(`set callback for ${_index}`);
+        is(_value, !!values[setCallbackIndex], "setCallbackTests: test value argument");
+        is(_index, setCallbackIndex, "setCallbackTests: test index argument");
+        setCallbackIndex++;
+      };
+
+      let deleteCallbackIndex = b.length - 1;
+      deleteCallbackTests = function(_value, _index) {
+        info(`delete callback for ${_index}`);
+        is(_value, oldValues[deleteCallbackIndex], "deleteCallbackTests: test value argument");
+        is(_index, deleteCallbackIndex, "deleteCallbackTests: test index argument");
+        deleteCallbackIndex--;
+      };
+    }
+
+    // Test
+    info(`setting value to ${JSON.stringify(values)}`);
+    try {
+      m.observableArrayBoolean = values;
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, shouldThrow ? 0 : values.length, "setCallback count");
+    is(deleteCallbackCount, oldLen, "deleteCallback should be called");
+    isDeeply(b, shouldThrow ? [] : values.map(v => !!v), "property values");
+    is(b.length, shouldThrow ? 0 : values.length, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_setter_invalid_item() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setInterfaceCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteInterfaceCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+
+  let b = m.observableArrayInterface;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [
+    // [values, shouldThrow]
+    [[m,m,m,m], false],
+    [["invalid"], true],
+    [[m,m], false],
+    [[m,"invalid"], true],
+    [[m,m,m], false],
+  ].forEach(function([values, shouldThrow]) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    let setCallbackIndex = 0;
+    setCallbackTests = function(_value, _index) {
+      info(`set callback for ${_index}`);
+      is(_value, values[setCallbackIndex], "setCallbackTests: test value argument");
+      is(_index, setCallbackIndex, "setCallbackTests: test index argument");
+      setCallbackIndex++;
+    };
+    let deleteCallbackIndex = b.length - 1;
+    deleteCallbackTests = function(_value, _index) {
+      info(`delete callback for ${_index}`);
+      is(_value, oldValues[deleteCallbackIndex], "deleteCallbackTests: test value argument");
+      is(_index, deleteCallbackIndex, "deleteCallbackTests: test index argument");
+      deleteCallbackIndex--;
+    };
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting value to ${values}`);
+    try {
+      m.observableArrayInterface = values;
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, shouldThrow ? 0 : values.length, "setCallback count");
+    is(deleteCallbackCount, shouldThrow ? 0 : oldLen, "deleteCallback should be called");
+    isDeeply(b, shouldThrow ? oldValues : values, "property values");
+    is(b.length, shouldThrow ? oldLen : values.length, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_setter_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (index >= 3) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (value) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 3");
+
+  [
+    // [values, shouldThrow, expectedLength, expectedSetCbCount, expectedDeleteCbCount]
+    [[false,false], false, 2, 2, 3],
+    [[false,true,false,false], true, 3, 4, 2],
+    [[false,false,true], true, 2, 0, 2],
+  ].forEach(function([values, shouldThrow, expectedLength, expectedSetCbCount,
+                      expectedDeleteCbCount]) {
+    // Initialize
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting value to ${values}`);
+    try {
+      m.observableArrayBoolean = values;
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting length throws ${e}`);
+    }
+    is(setCallbackCount, expectedSetCbCount, "setCallback should be called");
+    is(deleteCallbackCount, expectedDeleteCbCount, "deleteCallback should be called");
+    is(b.length, expectedLength, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_indexed_setter() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [
+    // [index, value, expectedResult]
+    [b.length + 1, false, false],
+    [b.length, false, true],
+    [b.length + 1, false, true],
+    [b.length + 1, true, true],
+  ].forEach(function([index, value, expectedResult]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      info(`set callback for ${_index}`);
+      is(_value, value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+    deleteCallbackTests = function(_value, _index) {
+      info(`delete callback for ${_index}`);
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`setting value of property ${index} to ${value}`);
+    try {
+      b[index] = value;
+      ok(true, `setting value should not throw`);
+    } catch(e) {
+      ok(false, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, expectedResult ? 1 : 0, "setCallback should be called");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback should be called");
+    is(b[index], expectedResult ? value : oldValue, `property value`);
+    is(b.length, expectedResult ? Math.max(oldLen, index + 1) : oldLen, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_indexed_setter_invalid() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setInterfaceCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteInterfaceCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+
+  let b = m.observableArrayInterface;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [
+    // [index, value, shouldThrow]
+    [b.length, "invalid", true],
+    [b.length, m, false],
+    [b.length + 1, m, false],
+    [b.length + 1, "invalid", true],
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      info(`set callback for ${_index}`);
+      is(_value, value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+    deleteCallbackTests = function(_value, _index) {
+      info(`delete callback for ${_index}`);
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`setting value of property ${index} to ${value}`);
+    try {
+      b[index] = value;
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, shouldThrow ? 0 : 1, "setCallback count");
+    is(deleteCallbackCount, ((oldLen > index) && !shouldThrow) ? 1 : 0, "deleteCallback count");
+    is(b[index], shouldThrow ? oldValue : value, `property value`);
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_indexed_setter_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (value) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (index < 2) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 3");
+
+  [
+    // [index, value, shouldThrow]
+    [b.length, true, true],
+    [b.length, false, false],
+    [b.length, true, true],
+    [0, false, true],
+    [0, true, true]
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting value of property ${index} to ${value}`);
+    try {
+      b[index] = value;
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, (shouldThrow && index < 2) ? 0 : 1, "setCallback should be called");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback should be called");
+    is(b[index], shouldThrow ? oldValue : value, "property value");
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_object() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let callbackIndex = 0;
+
+  let values = [
+    {property1: false, property2: "property2"},
+    {property1: [], property2: 2},
+  ];
+
+  let m = new TestInterfaceObservableArray({
+    setObjectCallback(value, index) {
+      setCallbackCount++;
+      is(index, callbackIndex++, "setCallbackTests: test index argument");
+      isDeeply(values[index], value, "setCallbackTests: test value argument");
+    },
+    deleteObjectCallback(value, index) {
+      deleteCallbackCount++;
+    },
+  });
+
+  m.observableArrayObject = values;
+
+  let b = m.observableArrayObject;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+  is(setCallbackCount, values.length, "setCallback should be called");
+  is(deleteCallbackCount, 0, "deleteCallback should not be called");
+
+  for(let i = 0; i < values.length; i++) {
+    isDeeply(values[i], b[i], `check index ${i}`);
+  }
+});
+</script>
+</body>
+</html>

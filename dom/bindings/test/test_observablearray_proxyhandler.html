@@ -1,0 +1,859 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test Observable Array Type</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+/* global TestInterfaceObservableArray */
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+});
+
+add_task(function testObservableArrayExoticObjects_defineProperty() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, true, true];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 0");
+
+  // Test length
+  [
+    // [descriptor, shouldThrow, expectedResult]
+    // Invalid descriptor
+    [{configurable: true, value: 0}, false, false],
+    [{enumerable: true, value: 0}, false, false],
+    [{writable: false, value: 0}, false, false],
+    [{get: ()=>{}}, false, false],
+    [{set: ()=>{}}, false, false],
+    [{get: ()=>{}, set: ()=>{}}, false, false],
+    [{get: ()=>{}, value: 0}, true],
+    // Invalid length value
+    [{value: 1.9}, true],
+    [{value: "invalid"}, true],
+    [{value: {}}, true],
+    // length value should not greater than current length
+    [{value: b.length + 1}, false, false],
+    // descriptor without value
+    [{configurable: false, enumerable: false, writable: true}, false, true],
+    // Success
+    [{value: b.length}, false, true],
+    [{value: b.length - 1}, false, true],
+    [{value: 0}, false, true],
+  ].forEach(function([descriptor, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldLen = b.length;
+    let oldValues = b.slice();
+    let deleteCallbackIndex = oldLen - 1;
+    let success = expectedResult && "value" in descriptor;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = null;
+    deleteCallbackTests = function(_value, _index) {
+      is(_value, oldValues[deleteCallbackIndex], "deleteCallbackTests: test value argument");
+      is(_index, deleteCallbackIndex, "deleteCallbackTests: test index argument");
+      deleteCallbackIndex--;
+    };
+
+    // Test
+    info(`defining "length" property with ${JSON.stringify(descriptor)}`);
+    try {
+      is(Reflect.defineProperty(b, "length", descriptor), expectedResult,
+         `Reflect.defineProperty should return ${expectedResult}`);
+      ok(!shouldThrow, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, success ? oldLen - descriptor.value : 0, "deleteCallback count");
+    isDeeply(b, success ? oldValues.slice(0, descriptor.value) : oldValues, "property values");
+    is(b.length, success ? descriptor.value : oldLen, "length of observable array");
+  });
+
+  // Test indexed value
+  [
+    // [index, descriptor, shouldThrow, expectedResult]
+    // Invalid descriptor
+    [0, {configurable: false, value: true}, false, false],
+    [0, {enumerable: false, value: true}, false, false],
+    [0, {writable: false, value: true}, false, false],
+    [0, {get: ()=>{}}, false, false],
+    [0, {set: ()=>{}}, false, false],
+    [0, {get: ()=>{}, set: ()=>{}}, false, false],
+    [0, {get: ()=>{}, value: true}, true],
+    // Index could not greater than last index + 1.
+    [b.length + 1, {configurable: true, enumerable: true, value: true}, false, false],
+    // descriptor without value
+    [b.length, {configurable: true, enumerable: true}, false, true],
+    // Success
+    [b.length, {configurable: true, enumerable: true, value: true}, false, true],
+    [b.length + 1, {configurable: true, enumerable: true, value: true}, false, true],
+  ].forEach(function([index, descriptor, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldLen = b.length;
+    let oldValue = b[index];
+    let success = expectedResult && "value" in descriptor;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      is(_value, descriptor.value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+    deleteCallbackTests = function(_value, _index) {
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`defining ${index} property with ${JSON.stringify(descriptor)}`);
+    try {
+      is(Reflect.defineProperty(b, index, descriptor), expectedResult,
+         `Reflect.defineProperty should return ${expectedResult}`);
+      ok(!shouldThrow, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, success ? 1 : 0, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], success ? descriptor.value : oldValue, "property value");
+    is(b.length, success ? Math.max(index + 1, oldLen) : oldLen, "length of observable array");
+  });
+
+  // Test other property
+  [
+    // [property, descriptor, shouldThrow, expectedResult]
+    ["prop1", {configurable: false, value: "value1"}, false, true],
+    ["prop1", {configurable: true, value: "value2"}, false, false],
+    ["prop2", {enumerable: false, value: 5}, false, true],
+    ["prop3", {enumerable: false, value: []}, false, true],
+    ["prop4", {enumerable: false, value: {}}, false, true],
+    ["prop5", {get: ()=>{}, value: true}, true, false],
+    ["prop6", {get: ()=>{}, set: ()=>{}}, false, true],
+  ].forEach(function([property, descriptor, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldValue = b[property];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = null;
+    deleteCallbackTests = null;
+
+    // Test
+    info(`defining ${property} property with ${JSON.stringify(descriptor)}`);
+    try {
+      is(Reflect.defineProperty(b, property, descriptor), expectedResult,
+         `Reflect.defineProperty should return ${expectedResult}`);
+      ok(!shouldThrow, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 0, "deleteCallback count");
+    is(b[property], expectedResult ? descriptor.value : oldValue, "property value");
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_defineProperty_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  const minLen = 3;
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (value) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (index < minLen) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, false, false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 5, "length of observable array should be 3");
+
+  // Test length
+  [
+    // [length, shouldThrow]
+    [b.length, false],
+    [b.length - 1, false],
+    [0, true],
+  ].forEach(function([length, shouldThrow]) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    let descriptor = {value: length};
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`defining "length" property with ${JSON.stringify(descriptor)}`);
+    try {
+      ok(Reflect.defineProperty(b, "length", descriptor),
+         "Reflect.defineProperty should return true");
+      ok(!shouldThrow, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, oldLen - (shouldThrow ? minLen - 1 : length), "deleteCallback count");
+    isDeeply(b, oldValues.slice(0, shouldThrow ? minLen : length), "property values");
+    is(b.length, shouldThrow ? minLen : length, "length of observable array");
+  });
+
+  // Test indexed value
+  [
+    // [index, value, shouldThrow]
+    [b.length, true, true],
+    [b.length, false, false],
+    [b.length + 1, false, false],
+    [b.length + 1, true, true],
+    [0, true, true],
+    [0, false, true],
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    let descriptor = {configurable: true, enumerable: true, value};
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`defining ${index} property with ${JSON.stringify(descriptor)}`);
+    try {
+      ok(Reflect.defineProperty(b, index, descriptor), "Reflect.defineProperty should return true");
+      ok(!shouldThrow, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, (index < minLen) ? 0 : 1, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], shouldThrow ? oldValue : value, "property value");
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), "length of observable array");
+  });
+
+  // Test other property
+  [
+    // [property, descriptor, expectedResult]
+    ["prop1", {configurable: false, value: "value1"}, true],
+    ["prop1", {configurable: true, value: "value2"}, false],
+    ["prop2", {enumerable: false, value: 5}, true],
+    ["prop3", {enumerable: false, value: []}, true],
+    ["prop4", {enumerable: false, value: {}}, true],
+  ].forEach(function([property, descriptor, expectedResult]) {
+    // Initialize
+    let oldValue = b[property];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`defining ${property} property with ${JSON.stringify(descriptor)}`);
+    try {
+      is(Reflect.defineProperty(b, property, descriptor), expectedResult,
+         `Reflect.defineProperty should return ${expectedResult}`);
+      ok(true, "Reflect.defineProperty should not throw");
+    } catch(e) {
+      ok(false, `Reflect.defineProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 0, "deleteCallback count");
+    is(b[property], expectedResult ? descriptor.value : oldValue, "property value");
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_deleteProperty() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, true];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Test length
+  setCallbackCount = 0;
+  deleteCallbackCount = 0;
+  info("deleting length property");
+  ok(!Reflect.deleteProperty(b, "length"), "test result of deleting length property");
+  is(setCallbackCount, 0, "setCallback should not be called");
+  is(deleteCallbackCount, 0, "deleteCallback should not be called");
+  is(b.length, 2, "length should still be 2");
+
+  // Test indexed value
+  [
+    // [index, expectedResult]
+    [2, false],
+    [0, false],
+    [1, true],
+  ].forEach(function([index, expectedResult]) {
+    // Initialize
+    let oldLen = b.length;
+    let oldValue = b[index];
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    deleteCallbackTests = function(_value, _index) {
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`deleting ${index} property`);
+    is(Reflect.deleteProperty(b, index), expectedResult,
+       `Reflect.deleteProperty should return ${expectedResult}`);
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, expectedResult ? 1 : 0, "deleteCallback count");
+    is(b[index], expectedResult ? undefined : oldValue, "property value");
+    is(b.length, expectedResult ? oldLen - 1 : oldLen,
+       "length of observable array");
+  });
+
+  // Test other property
+  [
+    // [property, value]
+    ["prop1", "value1"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+  ].forEach(function([property, value]) {
+    // Initialize
+    b[property] = value;
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    deleteCallbackTests = null;
+
+    // Test
+    info(`deleting ${property} property`);
+    is(b[property], value, `property value should be ${value} before deleting`);
+    ok(Reflect.deleteProperty(b, property), "Reflect.deleteProperty should return true");
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 0, "deleteCallback count");
+    is(b[property], undefined, "property value should be undefined after deleting");
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_deleteProperty_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (value) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Test indexed value
+  let index = b.length;
+  while (index--) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`deleting index ${index}`);
+    try {
+      ok(Reflect.deleteProperty(b, index), "Reflect.deleteProperty should return true");
+      ok(!oldValue, "Reflect.deleteProperty should not throw");
+    } catch(e) {
+      ok(oldValue, `Reflect.deleteProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 1, "deleteCallback count");
+    is(b[index], oldValue ? oldValue : undefined, "property value");
+    is(b.length, oldValue ? oldLen : oldLen - 1, "length of observable array");
+  }
+
+  // Test other property
+  [
+    // [property, value]
+    ["prop1", "value1"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+    ["prop5", false],
+  ].forEach(function([property, value]) {
+    // Initialize
+    b[property] = value;
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`deleting ${property} property`);
+    is(b[property], value, `property value should be ${JSON.stringify(value)} before deleting`);
+    try {
+      ok(Reflect.deleteProperty(b, property), `Reflect.deleteProperty should return true`);
+      ok(true, "Reflect.deleteProperty should not throw");
+    } catch(e) {
+      ok(false, `Reflect.deleteProperty throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 0, "deleteCallback count");
+    is(b[property], undefined, `property value should be undefined after deleting`);
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_get() {
+  let m = new TestInterfaceObservableArray();
+  m.observableArrayBoolean = [true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Test length
+  is(Reflect.get(b, "length"), 2, "test result of getting length property");
+
+  // Test indexed value
+  is(Reflect.get(b, 0), true, "test result of getting index 0");
+  is(Reflect.get(b, 1), false, "test result of getting index 1");
+  is(Reflect.get(b, 2), undefined, "test result of getting index 2");
+
+  // Test other property
+  [
+    // [property, value]
+    ["prop1", "value1"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+  ].forEach(function([property, value]) {
+    is(Reflect.get(b, property), undefined, `test ${property} property before setting property value`);
+    b[property] = value;
+    is(Reflect.get(b, property), value, `test ${property} property after setting property value`);
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_getOwnPropertyDescriptor() {
+  function TestDescriptor(object, property, exist, configurable, enumerable,
+                          writable, value) {
+    let descriptor = Reflect.getOwnPropertyDescriptor(object, property);
+    if (!exist) {
+      is(descriptor, undefined, `descriptor of ${property} property should be undefined`);
+      return;
+    }
+
+    is(descriptor.configurable, configurable, `test descriptor of ${property} property (configurable)`);
+    is(descriptor.enumerable, enumerable, `test descriptor of ${property} property (enumerable)`);
+    is(descriptor.writable, writable, `test descriptor of ${property} property (writable)`);
+    is(descriptor.value, value, `test descriptor of ${property} property (value)`);
+  }
+
+  let m = new TestInterfaceObservableArray();
+  m.observableArrayBoolean = [true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Test length
+  TestDescriptor(b, "length", true, false /* configurable */,
+                 false /* enumerable */, true /* writable */ , 2 /* value */);
+
+  // Test indexed value
+  TestDescriptor(b, 0, true, true /* configurable */, true /* enumerable */,
+                 true /* writable */ , true /* value */);
+  TestDescriptor(b, 1, true, true /* configurable */, true /* enumerable */,
+                 true /* writable */ , false /* value */);
+  TestDescriptor(b, 2, false);
+
+  // Test other property
+  [
+    // [property, value, configurable, enumerable, writable]
+    ["prop1", "value1", true, true, true],
+    ["prop2", 5, true, true, false],
+    ["prop3", [], true, false, false],
+    ["prop4", {}, false, false, false],
+  ].forEach(function([property, value, configurable, enumerable, writable]) {
+    Object.defineProperty(b, property, {
+      value,
+      configurable,
+      enumerable,
+      writable,
+    });
+    TestDescriptor(b, property, true, configurable, enumerable, writable , value);
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_has() {
+  let m = new TestInterfaceObservableArray();
+  m.observableArrayBoolean = [true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Test length
+  ok(Reflect.has(b, "length"), `test length property`);
+
+  // Test indexed value
+  ok(Reflect.has(b, 0), `test 0 property`);
+  ok(Reflect.has(b, 1), `test 1 property`);
+  ok(!Reflect.has(b, 2), `test 2 property`);
+
+  // Test other property
+  [
+    // [property, value]
+    ["prop1", "value1"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+  ].forEach(function([property, value]) {
+    ok(!Reflect.has(b, property), `test ${property} property before setting property value`);
+    b[property] = value;
+    ok(Reflect.has(b, property), `test ${property} property after setting property value`);
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_ownKeys() {
+  let m = new TestInterfaceObservableArray();
+  m.observableArrayBoolean = [true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 2, "length of observable array should be 2");
+
+  // Add other properties
+  b.prop1 = "value1";
+  b.prop2 = 5;
+  b.prop3 = [];
+  b.prop4 = {};
+
+  let keys = Reflect.ownKeys(b);
+  SimpleTest.isDeeply(keys, ["0", "1", "length", "prop1", "prop2", "prop3", "prop4"], `test property keys`);
+});
+
+add_task(function testObservableArrayExoticObjects_preventExtensions() {
+  let m = new TestInterfaceObservableArray();
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  // Test preventExtensions
+  ok(Reflect.isExtensible(b), "test isExtensible before preventExtensions");
+  ok(!Reflect.preventExtensions(b), "test preventExtensions");
+  ok(Reflect.isExtensible(b), "test isExtensible after preventExtensions");
+});
+
+add_task(function testObservableArrayExoticObjects_set() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, true, true];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 3");
+
+  // Test length
+  [
+    // [length, shouldThrow, expectedResult]
+    // Invalid length value
+    [1.9, true],
+    ['invalid', true],
+    [{}, true],
+    // length value should not greater than current length
+    [b.length + 1, false, false],
+    // Success
+    [b.length, false, true],
+    [b.length - 1, false, true],
+    [0, false, true],
+  ].forEach(function([length, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldLen = b.length;
+    let oldValues = b.slice();
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = null;
+    let deleteCallbackIndex = oldLen - 1;
+    deleteCallbackTests = function(_value, _index) {
+      is(_value, oldValues[deleteCallbackIndex], "deleteCallbackTests: test value argument");
+      is(_index, deleteCallbackIndex, "deleteCallbackTests: test index argument");
+      deleteCallbackIndex--;
+    };
+
+    // Test
+    info(`setting "length" property value to ${length}`);
+    try {
+      is(Reflect.set(b, "length", length), expectedResult, `Reflect.set should return ${expectedResult}`);
+      ok(!shouldThrow, "Reflect.set should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.set throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, expectedResult ? oldLen - length : 0, "deleteCallback count");
+    isDeeply(b, expectedResult ? oldValues.slice(0, length) : oldValues, "property values");
+    is(b.length, expectedResult ? length : oldLen, "length of observable array");
+  });
+
+  // Test indexed value
+  [
+    // [index, value, shouldThrow, expectedResult]
+    // Index could not greater than last index.
+    [b.length + 1, true, false, false],
+    // Success
+    [b.length, true, false, true],
+    [b.length + 1, true, false, true],
+  ].forEach(function([index, value, shouldThrow, expectedResult]) {
+    // Initialize
+    let oldLen = b.length;
+    let oldValue = b[index];
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      is(_value, value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+    deleteCallbackTests = function(_value, _index) {
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`setting ${index} property to ${value}`);
+    try {
+      is(Reflect.set(b, index, value), expectedResult, `Reflect.set should return ${expectedResult}`);
+      ok(!shouldThrow, "Reflect.set should not throw");
+    } catch(e) {
+      ok(shouldThrow, `Reflect.set throws ${e}`);
+    }
+    is(setCallbackCount, expectedResult ? 1 : 0, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], expectedResult ? value : oldValue, "property value");
+    is(b.length, expectedResult ? Math.max(index + 1, oldLen) : oldLen, "length of observable array");
+  });
+
+  // Test other property
+  [
+    // [property, value]
+    ["prop1", "value1"],
+    ["prop1", "value2"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+  ].forEach(function([property, value]) {
+    // Initialize
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = null;
+    deleteCallbackTests = null;
+
+    // Test
+    info(`setting ${property} property to ${value}`);
+    ok(Reflect.set(b, property, value), "Reflect.defineProperty should return true");
+    is(setCallbackCount, 0, "setCallback count");
+    is(deleteCallbackCount, 0, "deleteCallback count");
+    is(b[property], value, "property value");
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_set_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  const minLen = 3;
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (value) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (index < minLen) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, false, false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 5, "length of observable array should be 3");
+
+  // Test length
+  [
+    // [value, shouldThrow]
+    [b.length, false],
+    [b.length - 1, false],
+    [0, true],
+  ].forEach(function([length, shouldThrow]) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting "length" property to ${length}`);
+    try {
+      ok(Reflect.set(b, "length", length), "Reflect.set should return true");
+      ok(!shouldThrow, `Reflect.set should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `Reflect.set throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback should not be called");
+    is(deleteCallbackCount, oldLen - (shouldThrow ? minLen - 1 : length), "deleteCallback count");
+    isDeeply(b, oldValues.slice(0, shouldThrow ? minLen : length), "property values");
+    is(b.length, shouldThrow ? minLen : length, "length of observable array");
+  });
+
+  // Test indexed value
+  [
+    // [index, value, shouldThrow]
+    [b.length, true, true],
+    [b.length, false, false],
+    [b.length + 1, false, false],
+    [b.length + 1, true, true],
+    [0, false, true],
+    [0, true, true],
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting ${index} property to ${value}`);
+    try {
+      ok(Reflect.set(b, index, value), "Reflect.set should return true");
+      ok(!shouldThrow, `Reflect.set should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `Reflect.set throws ${e}`);
+    }
+    is(setCallbackCount, (index < minLen) ? 0 : 1, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], shouldThrow ? oldValue : value, "property value");
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), "length of observable array");
+  });
+
+  // Test other property
+  [
+    ["prop1", "value1"],
+    ["prop1", "value2"],
+    ["prop2", 5],
+    ["prop3", []],
+    ["prop4", {}],
+  ].forEach(function([property, value]) {
+    // Initialize
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting ${property} property to ${JSON.stringify(value)}`);
+    try {
+      ok(Reflect.set(b, property, value), "Reflect.set should return true");
+      ok(true, `Reflect.set should not throw`);
+    } catch(e) {
+      ok(false, `Reflect.set throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback should not be called");
+    is(deleteCallbackCount, 0, "deleteCallback should be called");
+    is(b[property], value, "property value");
+    is(b.length, oldLen, "length of observable array");
+  });
+});
+
+add_task(function testObservableArrayExoticObjects_invalidtype() {
+  let m = new TestInterfaceObservableArray();
+  let i = m.observableArrayInterface;
+  ok(Array.isArray(i), "Observable array should be an array type");
+  is(i.length, 0, "length should be 0");
+
+  [true, "invalid"].forEach(function(value) {
+    SimpleTest.doesThrow(() => {
+      let descriptor = {configurable: true, enumerable: true, writable: true, value};
+      Reflect.defineProperty(i, i.length, descriptor);
+    }, `defining ${i.length} property with ${JSON.stringify(value)} should throw`);
+
+    SimpleTest.doesThrow(() => {
+      Reflect.set(i, i.length, value);
+    }, `setting ${i.length} property to ${JSON.stringify(value)} should throw`);
+  });
+
+  is(i.length, 0, "length should still be 0");
+});
+</script>
+</body>
+</html>

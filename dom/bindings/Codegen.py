@@ -214,6 +214,7 @@ def idlTypeNeedsCallContext(type, descriptor=None, allowTreatNonCallableAsNull=F
         or type.isCallback()
         or type.isDictionary()
         or type.isRecord()
+        or type.isObservableArray()
     ):
         # These can all throw if a primitive is passed in, at the very least.
         # There are some rare cases when we know we have an object, but those
@@ -1467,6 +1468,8 @@ class CGHeaders(CGWrapper):
                 # Also add headers for the type the record is
                 # parametrized over, if needed.
                 addHeadersForType((t.inner, dictionary))
+            elif unrolled.isObservableArray():
+                bindingHeaders.add("mozilla/dom/ObservableArrayProxyHandler.h")
 
         for t in getAllTypes(
             descriptors + callbackDescriptors, dictionaries, callbacks
@@ -2145,6 +2148,20 @@ def finalizeHook(descriptor, hookName, gcx, obj):
             """,
             obj=obj,
         )
+    for m in descriptor.interface.members:
+        if m.isAttr() and m.type.isObservableArray():
+            finalize += fill(
+                """
+                {
+                  JS::Value val = JS::GetReservedSlot(obj, ${slot});
+                  if (!val.isUndefined()) {
+                    JSObject* obj = &val.toObject();
+                    js::SetProxyReservedSlot(obj, OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT, JS::UndefinedValue());
+                  }
+                }
+                """,
+                slot=memberReservedSlot(m, descriptor),
+            )
     if descriptor.wrapperCache:
         finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.isGlobal():
@@ -5855,15 +5872,16 @@ def getJSToNativeConversionInfo(
 
     assert not (isEnforceRange and isClamp)  # These are mutually exclusive
 
-    if type.isSequence():
+    if type.isSequence() or type.isObservableArray():
         assert not isEnforceRange and not isClamp and not isAllowShared
 
         if failureCode is None:
             notSequence = (
-                'cx.ThrowErrorMessage<MSG_CONVERSION_ERROR>("%s", "sequence");\n'
+                'cx.ThrowErrorMessage<MSG_CONVERSION_ERROR>("%s", "%s");\n'
                 "%s"
                 % (
                     firstCap(sourceDescription),
+                    "sequence" if type.isSequence() else "observable array",
                     exceptionCode,
                 )
             )
@@ -8350,6 +8368,12 @@ def getWrapTemplateForType(
         # NB: setObject{,OrNull}(..., some-object-type) calls JS_WrapValue(), so is fallible
         return (head + setter(toValue % result, wrapAsType=type), False)
 
+    if type.isObservableArray():
+        # This first argument isn't used at all for now, the attribute getter
+        # for ObservableArray type are generated in getObservableArrayGetterBody
+        # instead.
+        return "", False
+
     if not (
         type.isUnion()
         or type.isPrimitive()
@@ -9509,6 +9533,9 @@ class CGPerSignatureCall(CGThing):
                         idlNode.identifier.name,
                     )
                 )
+        elif idlNode.isAttr() and idlNode.type.isObservableArray():
+            assert setter
+            cgThings.append(CGObservableArraySetterGenerator(descriptor, idlNode))
         else:
             context = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
             if getter:
@@ -10482,17 +10509,15 @@ class CGSetterCall(CGPerSignatureCall):
 
     def wrap_return_value(self):
         attr = self.idlNode
+        clearSlot = ""
         if self.descriptor.wrapperCache and attr.slotIndices is not None:
             if attr.getExtendedAttribute("StoreInSlot"):
-                args = "cx, self"
-            else:
+                clearSlot = "%s(cx, self);\n" % MakeClearCachedValueNativeName(
+                    self.idlNode
+                )
+            elif attr.getExtendedAttribute("Cached"):
                 args = "self"
-            clearSlot = "%s(%s);\n" % (
-                MakeClearCachedValueNativeName(self.idlNode),
-                args,
-            )
-        else:
-            clearSlot = ""
+                clearSlot = "%s(self);\n" % MakeClearCachedValueNativeName(self.idlNode)
 
         # We have no return value
         return "\n" "%s" "return true;\n" % clearSlot
@@ -11210,6 +11235,13 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             return prefix + getMaplikeOrSetlikeSizeGetterBody(
                 self.descriptor, self.attr
             )
+
+        if self.attr.type.isObservableArray():
+            assert not self.attr.getExtendedAttribute("CrossOriginReadable")
+            # If the attribute is observableArray, due to having to unpack the
+            # backing object from the slot, this requires its own generator.
+            return prefix + getObservableArrayGetterBody(self.descriptor, self.attr)
+
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor, self.attr)
         type = self.attr.type
         if self.attr.getExtendedAttribute("CrossOriginReadable"):
@@ -11457,6 +11489,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                 nativeType=self.descriptor.nativeType,
                 call=call,
             )
+
         return prefix + fill(
             """
             auto* self = static_cast<${nativeType}*>(void_self);
@@ -11809,8 +11842,13 @@ class CGMemberJITInfo(CGThing):
                 and infallibleForMember(self.member, self.member.type, self.descriptor)
             )
             isAlwaysInSlot = self.member.getExtendedAttribute("StoreInSlot")
+
             if self.member.slotIndices is not None:
-                assert isAlwaysInSlot or self.member.getExtendedAttribute("Cached")
+                assert (
+                    isAlwaysInSlot
+                    or self.member.getExtendedAttribute("Cached")
+                    or self.member.type.isObservableArray()
+                )
                 isLazilyCachedInSlot = not isAlwaysInSlot
                 slotIndex = memberReservedSlot(self.member, self.descriptor)
                 # We'll statically assert that this is not too big in
@@ -12033,6 +12071,8 @@ class CGMemberJITInfo(CGThing):
                 CGMemberJITInfo.getSingleReturnType, u.flatMemberTypes, ""
             )
         if t.isDictionary():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isObservableArray():
             return "JSVAL_TYPE_OBJECT"
         if not t.isPrimitive():
             raise TypeError("No idea what type " + str(t) + " is.")
@@ -15745,18 +15785,20 @@ class CGDOMJSProxyHandler_getElements(ClassMethod):
         )
 
 
-class CGDOMJSProxyHandler_getInstance(ClassMethod):
-    def __init__(self):
+class CGJSProxyHandler_getInstance(ClassMethod):
+    def __init__(self, type):
+        self.type = type
         ClassMethod.__init__(
-            self, "getInstance", "const DOMProxyHandler*", [], static=True
+            self, "getInstance", "const %s*" % self.type, [], static=True
         )
 
     def getBody(self):
-        return dedent(
+        return fill(
             """
-            static const DOMProxyHandler instance;
+            static const ${type} instance;
             return &instance;
-            """
+            """,
+            type=self.type,
         )
 
 
@@ -16048,7 +16090,7 @@ class CGDOMJSProxyHandler(CGClass):
             CGDOMJSProxyHandler_className(descriptor),
             CGDOMJSProxyHandler_finalizeInBackground(descriptor),
             CGDOMJSProxyHandler_finalize(descriptor),
-            CGDOMJSProxyHandler_getInstance(),
+            CGJSProxyHandler_getInstance("DOMProxyHandler"),
             CGDOMJSProxyHandler_delete(descriptor),
         ]
         constructors = [
@@ -16245,6 +16287,11 @@ class CGDescriptor(CGThing):
             elif m.isMaplikeOrSetlike():
                 cgThings.append(CGMaplikeOrSetlikeHelperGenerator(descriptor, m))
             elif m.isAttr():
+                if m.type.isObservableArray():
+                    cgThings.append(
+                        CGObservableArrayProxyHandlerGenerator(descriptor, m)
+                    )
+                    cgThings.append(CGObservableArrayHelperGenerator(descriptor, m))
                 if m.getExtendedAttribute("Unscopable"):
                     assert not m.isStatic()
                     unscopableNames.append(m.identifier.name)
@@ -18126,11 +18173,19 @@ class CGBindingRoot(CGThing):
 
             return any(hasCrossOriginProperty(m) for m in desc.interface.members)
 
+        def descriptorHasObservableArrayTypes(desc):
+            def hasObservableArrayTypes(m):
+                return m.isAttr() and m.type.isObservableArray()
+
+            return any(hasObservableArrayTypes(m) for m in desc.interface.members)
+
         bindingDeclareHeaders["mozilla/dom/RemoteObjectProxy.h"] = any(
             descriptorHasCrossOriginProperties(d) for d in descriptors
         )
         bindingDeclareHeaders["jsapi.h"] = any(
-            descriptorHasCrossOriginProperties(d) for d in descriptors
+            descriptorHasCrossOriginProperties(d)
+            or descriptorHasObservableArrayTypes(d)
+            for d in descriptors
         )
         bindingDeclareHeaders["js/TypeDecls.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
@@ -18191,6 +18246,10 @@ class CGBindingRoot(CGThing):
         )
 
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
+            d.concrete and d.proxy for d in descriptors
+        )
+
+        bindingHeaders["mozilla/dom/ProxyHandlerUtils.h"] = any(
             d.concrete and d.proxy for d in descriptors
         )
 
@@ -19145,7 +19204,7 @@ class CGBindingImplClass(CGClass):
                 if not m.isStatic() or not skipStaticMethods:
                     appendMethod(m)
             elif m.isAttr():
-                if m.isMaplikeOrSetlikeAttr():
+                if m.isMaplikeOrSetlikeAttr() or m.type.isObservableArray():
                     # Handled by generated code already
                     continue
                 self.methodDecls.append(cgGetter(descriptor, m))
@@ -19308,6 +19367,42 @@ class CGBindingImplClass(CGClass):
         return self._deps
 
 
+class CGExampleObservableArrayCallback(CGNativeMember):
+    def __init__(self, descriptor, attr, callbackName):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        CGNativeMember.__init__(
+            self,
+            descriptor,
+            attr,
+            self.makeNativeName(attr, callbackName),
+            (
+                BuiltinTypes[IDLBuiltinType.Types.void],
+                [
+                    FakeArgument(attr.type.inner, "aValue"),
+                    FakeArgument(
+                        BuiltinTypes[IDLBuiltinType.Types.unsigned_long], "aIndex"
+                    ),
+                ],
+            ),
+            ["needsErrorResult"],
+        )
+
+    def declare(self, cgClass):
+        assert self.member.isAttr()
+        assert self.member.type.isObservableArray()
+        return CGNativeMember.declare(self, cgClass)
+
+    def define(self, cgClass):
+        return ""
+
+    @staticmethod
+    def makeNativeName(attr, callbackName):
+        assert attr.isAttr()
+        nativeName = MakeNativeName(attr.identifier.name)
+        return "On" + callbackName + nativeName
+
+
 class CGExampleClass(CGBindingImplClass):
     """
     Codegen for the actual example class implementation for this descriptor
@@ -19364,6 +19459,15 @@ class CGExampleClass(CGBindingImplClass):
             decorators = ""
         else:
             decorators = "final"
+
+        for m in descriptor.interface.members:
+            if m.isAttr() and m.type.isObservableArray():
+                self.methodDecls.append(
+                    CGExampleObservableArrayCallback(descriptor, m, "Set")
+                )
+                self.methodDecls.append(
+                    CGExampleObservableArrayCallback(descriptor, m, "Delete")
+                )
 
         CGClass.__init__(
             self,
@@ -21451,7 +21555,7 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
 
     def appendBoolResult(self):
         if self.helperImpl:
-            return ([CGGeneric()], ["&aRetVal"], [])
+            return ([CGGeneric("bool retVal;\n")], ["&retVal"], [])
         return ([CGGeneric("bool result;\n")], ["&result"], [])
 
     def forEach(self):
@@ -21528,7 +21632,7 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
         code = []
         # We don't need to create the result variable because it'll be created elsewhere
         # for JSObject Get method
-        if not self.helperImpl or not self.helperImpl.handleJSObjectGetHelper():
+        if not self.helperImpl or not self.helperImpl.needsScopeBody():
             code = [
                 CGGeneric(
                     dedent(
@@ -21597,19 +21701,20 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
         return self.cgRoot.define()
 
 
-class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
+class CGHelperFunctionGenerator(CallbackMember):
     """
-    Generates code to allow C++ to perform operations on backing objects. Gets
-    a context from the binding wrapper, turns arguments into JS::Values (via
+    Generates code to allow C++ to perform operations. Gets a context from the
+    binding wrapper, turns arguments into JS::Values (via
     CallbackMember/CGNativeMember argument conversion), then uses
-    CGMaplikeOrSetlikeMethodGenerator to generate the body.
-
+    getCall to generate the body for getting result, and maybe convert the
+    result into return type (via CallbackMember/CGNativeMember result
+    conversion)
     """
 
     class HelperFunction(CGAbstractMethod):
         """
         Generates context retrieval code and rooted JSObject for interface for
-        CGMaplikeOrSetlikeMethodGenerator to use
+        method generator to use
         """
 
         def __init__(self, descriptor, name, args, code, returnType):
@@ -21622,31 +21727,14 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
     def __init__(
         self,
         descriptor,
-        maplikeOrSetlike,
         name,
-        needsKeyArg=False,
-        needsValueArg=False,
-        needsValueTypeReturn=False,
-        needsBoolReturn=False,
+        args,
+        returnType=BuiltinTypes[IDLBuiltinType.Types.void],
+        needsResultConversion=True,
     ):
-        assert not (needsValueTypeReturn and needsBoolReturn)
-        args = []
-        self.maplikeOrSetlike = maplikeOrSetlike
-        self.needsBoolReturn = needsBoolReturn
-        self.needsValueTypeReturn = needsValueTypeReturn
+        assert returnType.isType()
+        self.needsResultConversion = needsResultConversion
 
-        returnType = (
-            BuiltinTypes[IDLBuiltinType.Types.void]
-            if not self.needsValueTypeReturn
-            else maplikeOrSetlike.valueType
-        )
-
-        if needsKeyArg:
-            args.append(FakeArgument(maplikeOrSetlike.keyType, "aKey"))
-        if needsValueArg:
-            assert needsKeyArg
-            assert not needsValueTypeReturn
-            args.append(FakeArgument(maplikeOrSetlike.valueType, "aValue"))
         # Run CallbackMember init function to generate argument conversion code.
         # wrapScope is set to 'obj' when generating maplike or setlike helper
         # functions, as we don't have access to the CallbackPreserveColor
@@ -21658,26 +21746,21 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             descriptor,
             False,
             wrapScope="obj",
-            passJSBitsAsNeeded=self.handleJSObjectGetHelper(),
+            passJSBitsAsNeeded=typeNeedsCx(returnType),
         )
 
-        if self.needsValueTypeReturn:
-            finalReturnType = self.returnType
-        elif needsBoolReturn:
-            finalReturnType = "bool"
-        else:
-            finalReturnType = "void"
         # Wrap CallbackMember body code into a CGAbstractMethod to make
         # generation easier.
-        self.implMethod = CGMaplikeOrSetlikeHelperFunctionGenerator.HelperFunction(
-            descriptor, name, self.args, self.body, finalReturnType
+        self.implMethod = CGHelperFunctionGenerator.HelperFunction(
+            descriptor, name, self.args, self.body, self.returnType
         )
 
     def getCallSetup(self):
-        # If handleJSObjectGetHelper is true, it means the caller will provide a JSContext,
-        # so we don't need to create JSContext and enter UnprivilegedJunkScopeOrWorkerGlobal here.
+        # If passJSBitsAsNeeded is true, it means the caller will provide a
+        # JSContext, so we don't need to create JSContext and enter
+        # UnprivilegedJunkScopeOrWorkerGlobal here.
         code = "MOZ_ASSERT(self);\n"
-        if not self.handleJSObjectGetHelper():
+        if not self.passJSBitsAsNeeded:
             code += dedent(
                 """
                 AutoJSAPI jsapi;
@@ -21711,21 +21794,12 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             % self.getDefaultRetval()
         )
 
-        # For the JSObject Get method, we'd like wrap the inner code in a scope such that
-        # the code can use the same realm. So here we are creating the result variable
-        # outside of the scope.
-        if self.handleJSObjectGetHelper():
-            code += dedent(
-                """
-                JS::Rooted<JS::Value> result(cx);
-                """
-            )
-        else:
-            code += dedent(
-                """
-                JSAutoRealm reflectorRealm(cx, obj);
-                """
-            )
+        # We'd like wrap the inner code in a scope such that the code can use the
+        # same realm. So here we are creating the result variable outside of the
+        # scope.
+        if self.needsScopeBody():
+            code += "JS::Rooted<JS::Value> result(cx);\n"
+
         return code
 
     def getArgs(self, returnType, argList):
@@ -21735,20 +21809,15 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
         return [Argument(self.descriptorProvider.nativeType + "*", "self")] + args
 
     def needsScopeBody(self):
-        return self.handleJSObjectGetHelper()
+        return self.passJSBitsAsNeeded
 
     def getArgvDeclFailureCode(self):
         return "aRv.Throw(NS_ERROR_UNEXPECTED);\n"
 
-    def handleJSObjectGetHelper(self):
-        return self.needsValueTypeReturn and self.maplikeOrSetlike.valueType.isObject()
-
     def getResultConversion(self):
-        if self.needsBoolReturn:
-            return "return aRetVal;\n"
-        elif self.needsValueTypeReturn:
+        if self.needsResultConversion:
             code = ""
-            if self.handleJSObjectGetHelper():
+            if self.needsScopeBody():
                 code = dedent(
                     """
                     if (!JS_WrapValue(cx, &result)) {
@@ -21761,7 +21830,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             failureCode = dedent("aRv.Throw(NS_ERROR_UNEXPECTED);\nreturn nullptr;\n")
 
             exceptionCode = None
-            if self.maplikeOrSetlike.valueType.isPrimitive():
+            if self.retvalType.isPrimitive():
                 exceptionCode = dedent(
                     "aRv.NoteJSContextException(cx);\nreturn%s;\n"
                     % self.getDefaultRetval()
@@ -21774,34 +21843,26 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
                 isDefinitelyObject=True,
                 exceptionCode=exceptionCode,
             )
-        return "return;\n"
+
+        assignRetval = string.Template(
+            self.getRetvalInfo(self.retvalType, False)[2]
+        ).substitute(
+            {
+                "declName": "retVal",
+            }
+        )
+        return assignRetval
 
     def getRvalDecl(self):
-        if self.needsBoolReturn:
-            return "bool aRetVal;\n"
-        elif self.handleJSObjectGetHelper():
-            return "JSAutoRealm reflectorRealm(cx, obj);\n"
-        return ""
+        # hack to make sure we put JSAutoRealm inside the body scope
+        return "JSAutoRealm reflectorRealm(cx, obj);\n"
 
     def getArgcDecl(self):
         # Don't need argc for anything.
         return None
 
-    def getDefaultRetval(self):
-        if self.needsBoolReturn:
-            return " false"
-        elif self.needsValueTypeReturn:
-            return CallbackMember.getDefaultRetval(self)
-        return ""
-
     def getCall(self):
-        return CGMaplikeOrSetlikeMethodGenerator(
-            self.descriptorProvider,
-            self.maplikeOrSetlike,
-            self.name.lower(),
-            self.needsValueTypeReturn,
-            helperImpl=self,
-        ).define()
+        assert False  # Override me!
 
     def getPrettyName(self):
         return self.name
@@ -21811,6 +21872,61 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
 
     def define(self):
         return self.implMethod.define()
+
+
+class CGMaplikeOrSetlikeHelperFunctionGenerator(CGHelperFunctionGenerator):
+    """
+    Generates code to allow C++ to perform operations on backing objects. Gets
+    a context from the binding wrapper, turns arguments into JS::Values (via
+    CallbackMember/CGNativeMember argument conversion), then uses
+    CGMaplikeOrSetlikeMethodGenerator to generate the body.
+    """
+
+    def __init__(
+        self,
+        descriptor,
+        maplikeOrSetlike,
+        name,
+        needsKeyArg=False,
+        needsValueArg=False,
+        needsValueTypeReturn=False,
+        needsBoolReturn=False,
+        needsResultConversion=True,
+    ):
+        self.maplikeOrSetlike = maplikeOrSetlike
+        self.needsValueTypeReturn = needsValueTypeReturn
+
+        args = []
+        if needsKeyArg:
+            args.append(FakeArgument(maplikeOrSetlike.keyType, "aKey"))
+        if needsValueArg:
+            assert needsKeyArg
+            assert not needsValueTypeReturn
+            args.append(FakeArgument(maplikeOrSetlike.valueType, "aValue"))
+
+        returnType = BuiltinTypes[IDLBuiltinType.Types.void]
+        if needsBoolReturn:
+            returnType = BuiltinTypes[IDLBuiltinType.Types.boolean]
+        elif needsValueTypeReturn:
+            returnType = maplikeOrSetlike.valueType
+
+        CGHelperFunctionGenerator.__init__(
+            self,
+            descriptor,
+            name,
+            args,
+            returnType,
+            needsResultConversion,
+        )
+
+    def getCall(self):
+        return CGMaplikeOrSetlikeMethodGenerator(
+            self.descriptorProvider,
+            self.maplikeOrSetlike,
+            self.name.lower(),
+            self.needsValueTypeReturn,
+            helperImpl=self,
+        ).define()
 
 
 class CGMaplikeOrSetlikeHelperGenerator(CGNamespace):
@@ -21839,6 +21955,7 @@ class CGMaplikeOrSetlikeHelperGenerator(CGNamespace):
                 "Delete",
                 needsKeyArg=True,
                 needsBoolReturn=True,
+                needsResultConversion=False,
             ),
             CGMaplikeOrSetlikeHelperFunctionGenerator(
                 descriptor,
@@ -21846,6 +21963,7 @@ class CGMaplikeOrSetlikeHelperGenerator(CGNamespace):
                 "Has",
                 needsKeyArg=True,
                 needsBoolReturn=True,
+                needsResultConversion=False,
             ),
         ]
         if self.maplikeOrSetlike.isMaplike():
@@ -21934,6 +22052,648 @@ class CGIterableMethodGenerator(CGGeneric):
                 itrMethod=methodName.title(),
             ),
         )
+
+
+def getObservableArrayBackingObject(descriptor, attr, errorReturn="return false;\n"):
+    """
+    Generate code to get/create a JS backing list for an observableArray attribute
+    from the declaration slot.
+    """
+    assert attr.isAttr()
+    assert attr.type.isObservableArray()
+
+    return fill(
+        """
+        JS::Rooted<JSObject*> backingObj(cx);
+        bool created = false;
+        if (!GetObservableArrayBackingObject(cx, obj, ${slot},
+                &backingObj, &created, ${namespace}::ObservableArrayProxyHandler::getInstance())) {
+          $*{errorReturn}
+        }
+        if (created) {
+          PreserveWrapper(self);
+          js::SetProxyReservedSlot(backingObj,
+                                   OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT,
+                                   JS::PrivateValue(self));
+        }
+        """,
+        namespace=toBindingNamespace(MakeNativeName(attr.identifier.name)),
+        slot=memberReservedSlot(attr, descriptor),
+        errorReturn=errorReturn,
+        selfType=descriptor.nativeType,
+    )
+
+
+def getObservableArrayGetterBody(descriptor, attr):
+    """
+    Creates the body for the getter method of an observableArray attribute.
+    """
+    assert attr.type.isObservableArray()
+    return fill(
+        """
+        if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+          JS_ReportErrorASCII(cx, "Accessing from Xray wrapper is not supported.");
+          return false;
+        }
+        $*{getBackingObj}
+        MOZ_ASSERT(!JS_IsExceptionPending(cx));
+        args.rval().setObject(*backingObj);
+        return true;
+        """,
+        getBackingObj=getObservableArrayBackingObject(descriptor, attr),
+    )
+
+
+class CGObservableArrayProxyHandler_callback(ClassMethod):
+    """
+    Base class for declaring and defining the hook methods for ObservableArrayProxyHandler
+    subclasses to get the interface native object from backing object and calls
+    its On{Set|Delete}* callback.
+
+     * 'callbackType': "Set" or "Delete".
+     * 'invalidTypeFatal' (optional): If True, we don't expect the type
+                                      conversion would fail, so generate the
+                                      assertion code if type conversion fails.
+    """
+
+    def __init__(
+        self, descriptor, attr, name, args, callbackType, invalidTypeFatal=False
+    ):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        assert callbackType in ["Set", "Delete"]
+        self.descriptor = descriptor
+        self.attr = attr
+        self.innertype = attr.type.inner
+        self.callbackType = callbackType
+        self.invalidTypeFatal = invalidTypeFatal
+        ClassMethod.__init__(
+            self,
+            name,
+            "bool",
+            args,
+            visibility="protected",
+            virtual=True,
+            override=True,
+            const=True,
+        )
+
+    def preConversion(self):
+        """
+        The code to run before the conversion steps.
+        """
+        return ""
+
+    def preCallback(self):
+        """
+        The code to run before calling the callback.
+        """
+        return ""
+
+    def postCallback(self):
+        """
+        The code to run after calling the callback, all subclasses should override
+        this to generate the return values.
+        """
+        assert False  # Override me!
+
+    def getBody(self):
+        exceptionCode = (
+            fill(
+                """
+                MOZ_ASSERT_UNREACHABLE("The item in ObservableArray backing list is not ${innertype}?");
+                return false;
+                """,
+                innertype=self.innertype,
+            )
+            if self.invalidTypeFatal
+            else None
+        )
+        convertType = instantiateJSToNativeConversion(
+            getJSToNativeConversionInfo(
+                self.innertype,
+                self.descriptor,
+                sourceDescription="Element in ObservableArray backing list",
+                exceptionCode=exceptionCode,
+            ),
+            {
+                "declName": "decl",
+                "holderName": "holder",
+                "val": "aValue",
+            },
+        )
+        callbackArgs = ["decl", "aIndex", "rv"]
+        if typeNeedsCx(self.innertype):
+            callbackArgs.insert(0, "cx")
+        return fill(
+            """
+            MOZ_ASSERT(IsObservableArrayProxy(aProxy));
+            $*{preConversion}
+
+            BindingCallContext cx(aCx, "ObservableArray ${name}");
+            $*{convertType}
+
+            $*{preCallback}
+            JS::Value val = js::GetProxyReservedSlot(aProxy, OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT);
+            auto* interface = static_cast<${ifaceType}*>(val.toPrivate());
+            MOZ_ASSERT(interface);
+
+            ErrorResult rv;
+            MOZ_KnownLive(interface)->${methodName}(${callbackArgs});
+            $*{postCallback}
+            """,
+            preConversion=self.preConversion(),
+            name=self.name,
+            convertType=convertType.define(),
+            preCallback=self.preCallback(),
+            ifaceType=self.descriptor.nativeType,
+            methodName="On%s%s"
+            % (self.callbackType, MakeNativeName(self.attr.identifier.name)),
+            callbackArgs=", ".join(callbackArgs),
+            postCallback=self.postCallback(),
+        )
+
+
+class CGObservableArrayProxyHandler_OnDeleteItem(
+    CGObservableArrayProxyHandler_callback
+):
+    """
+    Declares and defines the hook methods for ObservableArrayProxyHandler
+    subclasses to get the interface native object from backing object and calls
+    its OnDelete* callback.
+    """
+
+    def __init__(self, descriptor, attr):
+        args = [
+            Argument("JSContext*", "aCx"),
+            Argument("JS::HandleObject", "aProxy"),
+            Argument("JS::HandleValue", "aValue"),
+            Argument("uint32_t", "aIndex"),
+        ]
+        CGObservableArrayProxyHandler_callback.__init__(
+            self,
+            descriptor,
+            attr,
+            "OnDeleteItem",
+            args,
+            "Delete",
+            True,
+        )
+
+    def postCallback(self):
+        return dedent(
+            """
+            return !rv.MaybeSetPendingException(cx);
+            """
+        )
+
+
+class CGObservableArrayProxyHandler_SetIndexedValue(
+    CGObservableArrayProxyHandler_callback
+):
+    """
+    Declares and defines the hook methods for ObservableArrayProxyHandler
+    subclasses to run the setting the indexed value steps.
+    """
+
+    def __init__(self, descriptor, attr):
+        args = [
+            Argument("JSContext*", "aCx"),
+            Argument("JS::HandleObject", "aProxy"),
+            Argument("JS::HandleObject", "aBackingList"),
+            Argument("uint32_t", "aIndex"),
+            Argument("JS::HandleValue", "aValue"),
+            Argument("JS::ObjectOpResult&", "aResult"),
+        ]
+        CGObservableArrayProxyHandler_callback.__init__(
+            self,
+            descriptor,
+            attr,
+            "SetIndexedValue",
+            args,
+            "Set",
+        )
+
+    def preConversion(self):
+        return dedent(
+            """
+            uint32_t oldLen;
+            if (!JS::GetArrayLength(aCx, aBackingList, &oldLen)) {
+              return false;
+            }
+
+            if (aIndex > oldLen) {
+              return aResult.failBadIndex();
+            }
+            """
+        )
+
+    def preCallback(self):
+        return dedent(
+            """
+            if (aIndex < oldLen) {
+              JS::RootedValue value(aCx);
+              if (!JS_GetElement(aCx, aBackingList, aIndex, &value)) {
+                return false;
+              }
+
+              if (!OnDeleteItem(aCx, aProxy, value, aIndex)) {
+                return false;
+              }
+            }
+
+            """
+        )
+
+    def postCallback(self):
+        return dedent(
+            """
+            if (rv.MaybeSetPendingException(cx)) {
+              return false;
+            }
+
+            if (!JS_SetElement(aCx, aBackingList, aIndex, aValue)) {
+              return false;
+            }
+
+            return aResult.succeed();
+            """
+        )
+
+
+class CGObservableArrayProxyHandler(CGThing):
+    """
+    A class for declaring a ObservableArrayProxyHandler.
+    """
+
+    def __init__(self, descriptor, attr):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        methods = [
+            # The item stored in backing object should always be converted successfully.
+            CGObservableArrayProxyHandler_OnDeleteItem(descriptor, attr),
+            CGObservableArrayProxyHandler_SetIndexedValue(descriptor, attr),
+            CGJSProxyHandler_getInstance("ObservableArrayProxyHandler"),
+        ]
+        parentClass = "mozilla::dom::ObservableArrayProxyHandler"
+        self.proxyHandler = CGClass(
+            "ObservableArrayProxyHandler",
+            bases=[ClassBase(parentClass)],
+            constructors=[],
+            methods=methods,
+        )
+
+    def declare(self):
+        # Our class declaration should happen when we're defining
+        return ""
+
+    def define(self):
+        return self.proxyHandler.declare() + "\n" + self.proxyHandler.define()
+
+
+class CGObservableArrayProxyHandlerGenerator(CGNamespace):
+    """
+    Declares and defines convenience methods for accessing backing list objects
+    for observable array attribute. Generates function signatures, un/packs
+    backing list objects from slot, etc.
+    """
+
+    def __init__(self, descriptor, attr):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        namespace = toBindingNamespace(MakeNativeName(attr.identifier.name))
+        proxyHandler = CGObservableArrayProxyHandler(descriptor, attr)
+        CGNamespace.__init__(self, namespace, proxyHandler)
+
+
+class CGObservableArraySetterGenerator(CGGeneric):
+    """
+    Creates setter for an observableArray attributes.
+    """
+
+    def __init__(self, descriptor, attr):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        getBackingObject = getObservableArrayBackingObject(descriptor, attr)
+        setElement = dedent(
+            """
+            if (!JS_SetElement(cx, backingObj, i, val)) {
+              return false;
+            }
+            """
+        )
+        conversion = wrapForType(
+            attr.type.inner,
+            descriptor,
+            {
+                "result": "arg0.ElementAt(i)",
+                "successCode": setElement,
+                "jsvalRef": "val",
+                "jsvalHandle": "&val",
+            },
+        )
+        CGGeneric.__init__(
+            self,
+            fill(
+                """
+                if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+                  JS_ReportErrorASCII(cx, "Accessing from Xray wrapper is not supported.");
+                  return false;
+                }
+
+                ${getBackingObject}
+                const ObservableArrayProxyHandler* handler = GetObservableArrayProxyHandler(backingObj);
+                if (!handler->SetLength(cx, backingObj, 0)) {
+                  return false;
+                }
+
+                JS::Rooted<JS::Value> val(cx);
+                for (size_t i = 0; i < arg0.Length(); i++) {
+                  $*{conversion}
+                }
+                """,
+                conversion=conversion,
+                getBackingObject=getBackingObject,
+            ),
+        )
+
+
+class CGObservableArrayHelperFunctionGenerator(CGHelperFunctionGenerator):
+    """
+    Generates code to allow C++ to perform operations on backing objects. Gets
+    a context from the binding wrapper, turns arguments into JS::Values (via
+    CallbackMember/CGNativeMember argument conversion), then uses
+    MethodBodyGenerator to generate the body.
+    """
+
+    class MethodBodyGenerator(CGThing):
+        """
+        Creates methods body for observable array attribute. It is expected that all
+        methods will be have a maplike/setlike object attached. Unwrapping/wrapping
+        will be taken care of by the usual method generation machinery in
+        CGMethodCall/CGPerSignatureCall. Functionality is filled in here instead of
+        using CGCallGenerator.
+        """
+
+        def __init__(
+            self,
+            descriptor,
+            attr,
+            methodName,
+            helperGenerator,
+            needsIndexArg,
+        ):
+            assert attr.isAttr()
+            assert attr.type.isObservableArray()
+
+            CGThing.__init__(self)
+            self.helperGenerator = helperGenerator
+            self.cgRoot = CGList([])
+
+            self.cgRoot.append(
+                CGGeneric(
+                    getObservableArrayBackingObject(
+                        descriptor,
+                        attr,
+                        dedent(
+                            """
+                            aRv.Throw(NS_ERROR_UNEXPECTED);
+                            return%s;
+                            """
+                            % helperGenerator.getDefaultRetval()
+                        ),
+                    )
+                )
+            )
+
+            # Generates required code for the method. Method descriptions included
+            # in definitions below. Throw if we don't have a method to fill in what
+            # we're looking for.
+            try:
+                methodGenerator = getattr(self, methodName)
+            except AttributeError:
+                raise TypeError(
+                    "Missing observable array method definition '%s'" % methodName
+                )
+            # Method generator returns tuple, containing:
+            #
+            # - a list of CGThings representing setup code for preparing to call
+            #   the JS API function
+            # - JS API function name
+            # - a list of arguments needed for the JS API function we're calling
+            # - a list of CGThings representing code needed before return.
+            (setupCode, funcName, arguments, returnCode) = methodGenerator()
+
+            # Append the list of setup code CGThings
+            self.cgRoot.append(CGList(setupCode))
+            # Create the JS API call
+            if needsIndexArg:
+                arguments.insert(0, "aIndex")
+            self.cgRoot.append(
+                CGWrapper(
+                    CGGeneric(
+                        fill(
+                            """
+                            aRv.MightThrowJSException();
+                            if (!${funcName}(${args})) {
+                              aRv.StealExceptionFromJSContext(cx);
+                              return${retval};
+                            }
+                            """,
+                            funcName=funcName,
+                            args=", ".join(["cx", "backingObj"] + arguments),
+                            retval=helperGenerator.getDefaultRetval(),
+                        )
+                    )
+                )
+            )
+            # Append code before return
+            self.cgRoot.append(CGList(returnCode))
+
+        def elementat(self):
+            setupCode = []
+            if not self.helperGenerator.needsScopeBody():
+                setupCode.append(CGGeneric("JS::Rooted<JS::Value> result(cx);\n"))
+            returnCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        if (result.isUndefined()) {
+                          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_GetElement", ["&result"], returnCode)
+
+        def replaceelementat(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        if (aIndex > length) {
+                          aRv.ThrowRangeError("Invalid index");
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_SetElement", ["argv[0]"], [])
+
+        def appendelement(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS_SetElement", ["length", "argv[0]"], [])
+
+        def removelastelement(self):
+            setupCode = [
+                CGGeneric(
+                    fill(
+                        """
+                        uint32_t length;
+                        aRv.MightThrowJSException();
+                        if (!JS::GetArrayLength(cx, backingObj, &length)) {
+                          aRv.StealExceptionFromJSContext(cx);
+                          return${retval};
+                        }
+                        if (length == 0) {
+                          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+                          return${retval};
+                        }
+                        """,
+                        retval=self.helperGenerator.getDefaultRetval(),
+                    )
+                )
+            ]
+            return (setupCode, "JS::SetArrayLength", ["length - 1"], [])
+
+        def length(self):
+            return (
+                [CGGeneric("uint32_t retVal;\n")],
+                "JS::GetArrayLength",
+                ["&retVal"],
+                [],
+            )
+
+        def define(self):
+            return self.cgRoot.define()
+
+    def __init__(
+        self,
+        descriptor,
+        attr,
+        name,
+        returnType=BuiltinTypes[IDLBuiltinType.Types.void],
+        needsResultConversion=True,
+        needsIndexArg=False,
+        needsValueArg=False,
+    ):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+        self.attr = attr
+        self.needsIndexArg = needsIndexArg
+
+        args = []
+        if needsValueArg:
+            args.append(FakeArgument(attr.type.inner, "aValue"))
+
+        CGHelperFunctionGenerator.__init__(
+            self,
+            descriptor,
+            name,
+            args,
+            returnType,
+            needsResultConversion,
+        )
+
+    def getArgs(self, returnType, argList):
+        if self.needsIndexArg:
+            argList = [
+                FakeArgument(BuiltinTypes[IDLBuiltinType.Types.unsigned_long], "aIndex")
+            ] + argList
+        return CGHelperFunctionGenerator.getArgs(self, returnType, argList)
+
+    def getCall(self):
+        return CGObservableArrayHelperFunctionGenerator.MethodBodyGenerator(
+            self.descriptorProvider,
+            self.attr,
+            self.name.lower(),
+            self,
+            self.needsIndexArg,
+        ).define()
+
+
+class CGObservableArrayHelperGenerator(CGNamespace):
+    """
+    Declares and defines convenience methods for accessing backing object for
+    observable array type. Generates function signatures, un/packs
+    backing objects from slot, etc.
+    """
+
+    def __init__(self, descriptor, attr):
+        assert attr.isAttr()
+        assert attr.type.isObservableArray()
+
+        namespace = "%sHelpers" % MakeNativeName(attr.identifier.name)
+        helpers = [
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "ElementAt",
+                returnType=attr.type.inner,
+                needsIndexArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "ReplaceElementAt",
+                needsIndexArg=True,
+                needsValueArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "AppendElement",
+                needsValueArg=True,
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "RemoveLastElement",
+            ),
+            CGObservableArrayHelperFunctionGenerator(
+                descriptor,
+                attr,
+                "Length",
+                returnType=BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
+                needsResultConversion=False,
+            ),
+        ]
+        CGNamespace.__init__(self, namespace, CGList(helpers, "\n"))
 
 
 class GlobalGenRoots:

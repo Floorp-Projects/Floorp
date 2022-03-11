@@ -100,54 +100,23 @@ Result DecodeAndVerifySignedTreeHead(
     return rv;
   }
 
-  SECOidTag unusedDigestAlgorithmId;
-  size_t digestAlgorithmLength;
-  rv = GetDigestAlgorithmLengthAndIdentifier(
-      digestAlgorithm, digestAlgorithmLength, unusedDigestAlgorithmId);
-  if (rv != Success) {
-    return rv;
-  }
-
-  uint8_t digestBuf[MAX_DIGEST_SIZE_IN_BYTES];
-  rv = DigestBufNSS(signedDataInput, digestAlgorithm, digestBuf,
-                    digestAlgorithmLength);
-  if (rv != Success) {
-    return rv;
-  }
-
-  Input digestInput;
-  rv = digestInput.Init(digestBuf, digestAlgorithmLength);
-  if (rv != Success) {
-    return rv;
-  }
-
   Input signatureInput;
   rv = ReadVariableBytes<kSTHSignatureLengthBytes>(reader, signatureInput);
   if (rv != Success) {
     return rv;
   }
 
-  SignedDigest signedDigest = {digestInput, digestAlgorithm, signatureInput};
   switch (publicKeyAlgorithm) {
     case der::PublicKeyAlgorithm::ECDSA:
-      rv = VerifyECDSASignedDigestNSS(signedDigest, signerSubjectPublicKeyInfo,
-                                      nullptr);
+      rv = VerifyECDSASignedDataNSS(signedDataInput, digestAlgorithm,
+                                    signatureInput, signerSubjectPublicKeyInfo,
+                                    nullptr);
       break;
     case der::PublicKeyAlgorithm::RSA_PKCS1:
-    case der::PublicKeyAlgorithm::Uninitialized:
     default:
       return Result::FATAL_ERROR_INVALID_ARGS;
   }
   if (rv != Success) {
-    // VerifyECDSASignedDigestNSS eventually calls VFY_VerifyDigestDirect, which
-    // can set the PR error code to SEC_ERROR_PKCS7_KEYALG_MISMATCH if the type
-    // of key decoded from the SPKI does not match the given signature
-    // algorithm. mozilla::pkix does not have a corresponding Result value and
-    // turns this error code into Result::ERROR_UNKNOWN_ERROR. Since this is
-    // uninformative, we'll turn that result into a bad signature error.
-    if (rv == Result::ERROR_UNKNOWN_ERROR) {
-      return Result::ERROR_BAD_SIGNATURE;
-    }
     return rv;
   }
 

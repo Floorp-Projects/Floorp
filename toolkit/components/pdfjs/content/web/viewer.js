@@ -14110,8 +14110,8 @@ document.mozL10n.setExternalLocalizerServices({
     return FirefoxCom.requestSync("getLocale", null);
   },
 
-  getStrings(key) {
-    return FirefoxCom.requestSync("getStrings", key);
+  getStrings() {
+    return FirefoxCom.requestSync("getStrings", null);
   }
 
 });
@@ -14123,13 +14123,14 @@ document.mozL10n.setExternalLocalizerServices({
 
 
 (function (window) {
-  var gLanguage = "";
-  var gExternalLocalizerServices = null;
-  var gReadyState = "loading";
+  let gL10nData = null;
+  let gLanguage = "";
+  let gExternalLocalizerServices = null;
+  let gReadyState = "loading";
 
   function getL10nData(key) {
-    var response = gExternalLocalizerServices.getStrings(key);
-    var data = JSON.parse(response);
+    gL10nData ||= gExternalLocalizerServices.getStrings();
+    const data = gL10nData?.[key];
 
     if (!data) {
       console.warn("[l10n] #" + key + " missing for [" + gLanguage + "]");

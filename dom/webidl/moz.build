@@ -1107,6 +1107,7 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "TestInterfaceJS.webidl",
         "TestInterfaceJSDictionaries.webidl",
         "TestInterfaceJSMaplikeSetlikeIterable.webidl",
+        "TestInterfaceObservableArray.webidl",
     ]
 
 WEBIDL_FILES += [

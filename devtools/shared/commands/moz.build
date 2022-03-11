@@ -6,6 +6,7 @@ DIRS += [
     "inspected-window",
     "inspector",
     "resource",
+    "root-resource",
     "script",
     "target",
     "target-configuration",

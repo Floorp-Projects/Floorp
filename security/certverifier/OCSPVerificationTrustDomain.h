@@ -38,16 +38,18 @@ class OCSPVerificationTrustDomain : public mozilla::pkix::TrustDomain {
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
       unsigned int modulusSizeInBits) override;
 
-  virtual Result VerifyRSAPKCS1SignedDigest(
-      const mozilla::pkix::SignedDigest& signedDigest,
+  virtual Result VerifyRSAPKCS1SignedData(
+      mozilla::pkix::Input data, mozilla::pkix::DigestAlgorithm digestAlgorithm,
+      mozilla::pkix::Input signature,
       mozilla::pkix::Input subjectPublicKeyInfo) override;
 
   virtual Result CheckECDSACurveIsAcceptable(
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
       mozilla::pkix::NamedCurve curve) override;
 
-  virtual Result VerifyECDSASignedDigest(
-      const mozilla::pkix::SignedDigest& signedDigest,
+  virtual Result VerifyECDSASignedData(
+      mozilla::pkix::Input data, mozilla::pkix::DigestAlgorithm digestAlgorithm,
+      mozilla::pkix::Input signature,
       mozilla::pkix::Input subjectPublicKeyInfo) override;
 
   virtual Result DigestBuf(mozilla::pkix::Input item,

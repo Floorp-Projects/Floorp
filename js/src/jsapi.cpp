@@ -265,6 +265,18 @@ JS_PUBLIC_API bool JS::ObjectOpResult::failNotDataDescriptor() {
   return fail(JSMSG_NOT_DATA_DESCRIPTOR);
 }
 
+JS_PUBLIC_API bool JS::ObjectOpResult::failInvalidDescriptor() {
+  return fail(JSMSG_INVALID_DESCRIPTOR);
+}
+
+JS_PUBLIC_API bool JS::ObjectOpResult::failBadArrayLength() {
+  return fail(JSMSG_BAD_ARRAY_LENGTH);
+}
+
+JS_PUBLIC_API bool JS::ObjectOpResult::failBadIndex() {
+  return fail(JSMSG_BAD_INDEX);
+}
+
 JS_PUBLIC_API int64_t JS_Now() { return PRMJ_Now(); }
 
 JS_PUBLIC_API Value JS_GetEmptyStringValue(JSContext* cx) {

@@ -727,7 +727,7 @@ const windowGlobalTargetPrototype = {
 
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
-    Resources.unwatchAllTargetResources(this);
+    Resources.unwatchAllResources(this);
   },
 
   /**

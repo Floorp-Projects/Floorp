@@ -995,13 +995,37 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   // useRegisterAtStart is applied for both operands and no need for ReuseInput.
 
   switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16AvgrU:
+    case wasm::SimdOp::I16x8AvgrU:
+    case wasm::SimdOp::I8x16Add:
+    case wasm::SimdOp::I8x16AddSatS:
+    case wasm::SimdOp::I8x16AddSatU:
+    case wasm::SimdOp::I8x16Sub:
+    case wasm::SimdOp::I8x16SubSatS:
+    case wasm::SimdOp::I8x16SubSatU:
+    case wasm::SimdOp::I16x8Mul:
+    case wasm::SimdOp::I16x8MinS:
+    case wasm::SimdOp::I16x8MinU:
+    case wasm::SimdOp::I16x8MaxS:
+    case wasm::SimdOp::I16x8MaxU:
     case wasm::SimdOp::I32x4Add:
     case wasm::SimdOp::I32x4Sub:
     case wasm::SimdOp::I32x4Mul:
+    case wasm::SimdOp::I32x4MinS:
+    case wasm::SimdOp::I32x4MinU:
+    case wasm::SimdOp::I32x4MaxS:
+    case wasm::SimdOp::I32x4MaxU:
+    case wasm::SimdOp::I64x2Add:
+    case wasm::SimdOp::I64x2Sub:
+    case wasm::SimdOp::I64x2Mul:
     case wasm::SimdOp::F32x4Add:
     case wasm::SimdOp::F32x4Sub:
     case wasm::SimdOp::F32x4Mul:
     case wasm::SimdOp::F32x4Div:
+    case wasm::SimdOp::F64x2Add:
+    case wasm::SimdOp::F64x2Sub:
+    case wasm::SimdOp::F64x2Mul:
+    case wasm::SimdOp::F64x2Div:
     case wasm::SimdOp::F32x4Eq:
     case wasm::SimdOp::F32x4Ne:
     case wasm::SimdOp::F32x4Lt:
@@ -1022,6 +1046,11 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::F32x4Max:
     case wasm::SimdOp::F64x2Min:
     case wasm::SimdOp::F64x2Max:
+    case wasm::SimdOp::I8x16NarrowI16x8S:
+    case wasm::SimdOp::I8x16NarrowI16x8U:
+    case wasm::SimdOp::I16x8NarrowI32x4S:
+    case wasm::SimdOp::I16x8NarrowI32x4U:
+    case wasm::SimdOp::I32x4DotI16x8S:
       if (isThreeOpAllowed()) {
         auto* lir = new (alloc())
             LWasmBinarySimd128(op, useRegisterAtStart(lhs),
@@ -1472,9 +1501,15 @@ void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
       defineReuseInput(lir, ins, LWasmReplaceInt64LaneSimd128::LhsDest);
     }
   } else {
-    auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
-        useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()));
-    defineReuseInput(lir, ins, LWasmReplaceLaneSimd128::LhsDest);
+    if (isThreeOpAllowed()) {
+      auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
+          useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()));
+      define(lir, ins);
+    } else {
+      auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
+          useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()));
+      defineReuseInput(lir, ins, LWasmReplaceLaneSimd128::LhsDest);
+    }
   }
 #else
   MOZ_CRASH("No SIMD");

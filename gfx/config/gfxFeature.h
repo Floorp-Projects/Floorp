@@ -40,6 +40,7 @@ namespace gfx {
   _(DMABUF, Feature, "DMABUF")                                           \
   _(WINDOW_OCCLUSION, Feature, "WINDOW_OCCLUSION")                       \
   _(VAAPI, Feature, "VA-API video decoding")                             \
+  _(VIDEO_OVERLAY, Feature, "video overlay")                             \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

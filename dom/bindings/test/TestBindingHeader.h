@@ -848,6 +848,24 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   Promise* ReceivePromise();
   already_AddRefed<Promise> ReceiveAddrefedPromise();
 
+  // ObservableArray types
+  void OnDeleteBooleanObservableArray(bool, uint32_t, ErrorResult&);
+  void OnSetBooleanObservableArray(bool, uint32_t, ErrorResult&);
+  void OnDeleteObjectObservableArray(JSContext*, JS::Handle<JSObject*>,
+                                     uint32_t, ErrorResult&);
+  void OnSetObjectObservableArray(JSContext*, JS::Handle<JSObject*>, uint32_t,
+                                  ErrorResult&);
+  void OnDeleteAnyObservableArray(JSContext*, JS::Handle<JS::Value>, uint32_t,
+                                  ErrorResult&);
+  void OnSetAnyObservableArray(JSContext*, JS::Handle<JS::Value>, uint32_t,
+                               ErrorResult&);
+  void OnDeleteInterfaceObservableArray(TestInterface*, uint32_t, ErrorResult&);
+  void OnSetInterfaceObservableArray(TestInterface*, uint32_t, ErrorResult&);
+  void OnDeleteNullableObservableArray(const Nullable<int>&, uint32_t,
+                                       ErrorResult&);
+  void OnSetNullableObservableArray(const Nullable<int>&, uint32_t,
+                                    ErrorResult&);
+
   // binaryNames tests
   void MethodRenamedTo();
   void MethodRenamedTo(int8_t);
