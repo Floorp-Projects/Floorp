@@ -38,7 +38,7 @@ struct ExportArg {
   uint64_t hi;
 };
 
-using ExportFuncPtr = int32_t (*)(ExportArg*, TlsData*);
+using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
 
 // FuncImportTls describes the region of wasm global memory allocated in the
 // instance's thread-local storage for a function import. This is accessed
@@ -50,9 +50,9 @@ struct FuncImportTls {
   // thunk into JIT code.
   void* code;
 
-  // The callee's TlsData pointer, which must be loaded to WasmTlsReg (along
+  // The callee's Instance pointer, which must be loaded to WasmTlsReg (along
   // with any pinned registers) before calling 'code'.
-  TlsData* tls;
+  Instance* tls;
 
   // The callee function's realm.
   JS::Realm* realm;
@@ -88,9 +88,9 @@ struct FunctionTableElem {
   //    WasmTableCallSigReg holds the signature id.
   void* code;
 
-  // The pointer to the callee's instance's TlsData. This must be loaded into
+  // The pointer to the callee's instance's Instance. This must be loaded into
   // WasmTlsReg before calling 'code'.
-  TlsData* tls;
+  Instance* tls;
 };
 
 }  // namespace wasm
