@@ -3147,7 +3147,23 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   Result<RefPtr<Element>, nsresult> blockquoteElementOrError =
       DeleteSelectionAndCreateElement(
           *nsGkAtoms::blockquote,
-          [](Element& aBlockquoteElement) -> nsresult { return NS_OK; });
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            // Try to set type=cite.  Ignore it if this fails.
+            DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, false);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                                 "Element::SetAttr(nsGkAtoms::type, "
+                                 "\"cite\", false) failed, but ignored");
+            if (!aCitation.IsEmpty()) {
+              DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
+                  kNameSpaceID_None, nsGkAtoms::cite, aCitation, false);
+              NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                                   "Element::SetAttr(nsGkAtoms::cite, "
+                                   "\"...\", false) failed, but ignored");
+            }
+            return NS_OK;
+          });
   if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
                    NS_WARN_IF(Destroyed()))) {
     NS_WARNING(
@@ -3158,27 +3174,6 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   }
   MOZ_ASSERT(blockquoteElementOrError.inspect());
 
-  // Try to set type=cite.  Ignore it if this fails.
-  DebugOnly<nsresult> rvIgnored = blockquoteElementOrError.inspect()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, true);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "Element::SetAttr(nsGkAtoms::type, cite) failed, but ignored");
-
-  if (!aCitation.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored = blockquoteElementOrError.inspect()->SetAttr(
-        kNameSpaceID_None, nsGkAtoms::cite, aCitation, true);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "Element::SetAttr(nsGkAtoms::cite) failed, but ignored");
-  }
-
   // Set the selection inside the blockquote so aQuotedText will go there:
   rv = CollapseSelectionTo(
       EditorRawDOMPoint(blockquoteElementOrError.inspect(), 0u));
@@ -3188,6 +3183,8 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
 
+  // TODO: We should insert text at specific point rather than at selection.
+  //       Then, we can do this before inserting the <blockquote> element.
   if (aInsertHTML) {
     rv = LoadHTML(aQuotedText);
     if (NS_WARN_IF(Destroyed())) {
