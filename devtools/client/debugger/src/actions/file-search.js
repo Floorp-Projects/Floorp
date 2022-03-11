@@ -14,7 +14,8 @@ import { renderWasmText } from "../utils/wasm";
 import { getMatches } from "../workers/search";
 
 import {
-  getSelectedSourceWithContent,
+  getSelectedSourceId,
+  getSelectedSourceTextContent,
   getFileSearchModifiers,
   getFileSearchQuery,
   getFileSearchResults,
@@ -29,8 +30,8 @@ import { isFulfilled } from "../utils/async-value";
 
 export function doSearch(cx, query, editor) {
   return ({ getState, dispatch }) => {
-    const selectedSource = getSelectedSourceWithContent(getState());
-    if (!selectedSource || !selectedSource.content) {
+    const sourceTextContent = getSelectedSourceTextContent(getState());
+    if (!sourceTextContent) {
       return;
     }
 
@@ -41,10 +42,11 @@ export function doSearch(cx, query, editor) {
 
 export function doSearchForHighlight(query, editor, line, ch) {
   return async ({ getState, dispatch }) => {
-    const selectedSource = getSelectedSourceWithContent(getState());
-    if (!selectedSource?.content) {
+    const sourceTextContent = getSelectedSourceTextContent(getState());
+    if (!sourceTextContent) {
       return;
     }
+
     dispatch(searchContentsForHighlight(query, editor, line, ch));
   };
 }
@@ -81,18 +83,17 @@ export function updateSearchResults(cx, characterIndex, line, matches) {
 export function searchContents(cx, query, editor, focusFirstResult = true) {
   return async ({ getState, dispatch }) => {
     const modifiers = getFileSearchModifiers(getState());
-    const selectedSource = getSelectedSourceWithContent(getState());
+    const sourceTextContent = getSelectedSourceTextContent(getState());
 
     if (
       !editor ||
-      !selectedSource ||
-      !selectedSource.content ||
-      !isFulfilled(selectedSource.content) ||
+      !sourceTextContent ||
+      !isFulfilled(sourceTextContent) ||
       !modifiers
     ) {
       return;
     }
-    const selectedContent = selectedSource.content.value;
+    const selectedContent = sourceTextContent.value;
 
     const ctx = { ed: editor, cm: editor.codeMirror };
 
@@ -103,7 +104,8 @@ export function searchContents(cx, query, editor, focusFirstResult = true) {
 
     let text;
     if (selectedContent.type === "wasm") {
-      text = renderWasmText(selectedSource.id, selectedContent).join("\n");
+      const selectedSourceId = getSelectedSourceId(getState());
+      text = renderWasmText(selectedSourceId, selectedContent).join("\n");
     } else {
       text = selectedContent.value;
     }
@@ -124,15 +126,9 @@ export function searchContents(cx, query, editor, focusFirstResult = true) {
 export function searchContentsForHighlight(query, editor, line, ch) {
   return async ({ getState, dispatch }) => {
     const modifiers = getFileSearchModifiers(getState());
-    const selectedSource = getSelectedSourceWithContent(getState());
+    const sourceTextContent = getSelectedSourceTextContent(getState());
 
-    if (
-      !query ||
-      !editor ||
-      !selectedSource ||
-      !selectedSource.content ||
-      !modifiers
-    ) {
+    if (!query || !editor || !sourceTextContent || !modifiers) {
       return;
     }
 

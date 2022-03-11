@@ -19,7 +19,7 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakableLines(dbg, "index.html", 20, [[17], [18]]);
+  await assertBreakableLines(dbg, "index.html", 22, [[17], [18]]);
 
   info("Assert breakable lines of the first original source file, original.js");
   // The length of original.js is longer than the test file
@@ -74,11 +74,8 @@ function shouldLineBeBreakable(breakableLines, line) {
 
 async function assertBreakableLines(dbg, file, numberOfLines, breakableLines) {
   await selectSource(dbg, file);
-  const editorLines = dbg.win.document.querySelectorAll(
-    ".CodeMirror-lines .CodeMirror-code > div"
-  );
   is(
-    editorLines.length,
+    getCM(dbg).lineCount(),
     numberOfLines,
     `We show the expected number of lines in CodeMirror for ${file}`
   );

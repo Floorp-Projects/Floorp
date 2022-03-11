@@ -37,17 +37,13 @@ function getSourceContent(name, type = "js") {
 }
 
 export function getSource(name, type) {
-  return getSourceWithContent(name, type);
-}
-
-export function getSourceWithContent(name, type) {
   const { value: text, contentType } = getSourceContent(name, type);
 
   return makeMockSourceAndContent(undefined, name, contentType, text);
 }
 
 export function populateSource(name, type) {
-  const { content, ...source } = getSourceWithContent(name, type);
+  const { content, ...source } = getSource(name, type);
   setSource({
     id: source.id,
     text: content.value,

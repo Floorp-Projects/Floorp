@@ -4,7 +4,8 @@
 
 import {
   hasInScopeLines,
-  getSourceWithContent,
+  getSource,
+  getSourceTextContent,
   getVisibleSelectedFrame,
 } from "../../selectors";
 
@@ -28,7 +29,8 @@ function getOutOfScopeLines(outOfScopeLocations) {
 }
 
 async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
-  const source = getSourceWithContent(getState(), location.sourceId);
+  const source = getSource(getState(), location.sourceId);
+  const sourceTextContent = getSourceTextContent(getState(), source.id);
 
   let locations = null;
   if (location.line && source && !source.isWasm) {
@@ -37,9 +39,9 @@ async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
 
   const linesOutOfScope = getOutOfScopeLines(locations);
   const sourceNumLines =
-    !source.content || !isFulfilled(source.content)
+    !sourceTextContent || !isFulfilled(sourceTextContent)
       ? 0
-      : getSourceLineCount(source.content.value);
+      : getSourceLineCount(sourceTextContent.value);
 
   const noLinesOutOfScope =
     linesOutOfScope == null || linesOutOfScope.size == 0;
@@ -72,9 +74,12 @@ export function setInScopeLines(cx) {
     }
 
     const { location } = visibleFrame;
-    const { content } = getSourceWithContent(getState(), location.sourceId);
+    const sourceTextContent = getSourceTextContent(
+      getState(),
+      location.sourceId
+    );
 
-    if (hasInScopeLines(getState(), location) || !content) {
+    if (hasInScopeLines(getState(), location) || !sourceTextContent) {
       return;
     }
 

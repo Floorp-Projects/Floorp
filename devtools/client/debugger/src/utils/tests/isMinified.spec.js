@@ -13,6 +13,6 @@ describe("isMinified", () => {
       undefined,
       "function base(boo) {\n}"
     );
-    expect(isMinified(sourceWithContent)).toBe(true);
+    expect(isMinified(sourceWithContent, sourceWithContent.content)).toBe(true);
   });
 });

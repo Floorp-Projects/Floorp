@@ -7,7 +7,8 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import actions from "../../actions";
 import {
-  getSelectedSourceWithContent,
+  getSelectedSource,
+  getSelectedSourceTextContent,
   getPrettySource,
   getPaneCollapse,
   getContext,
@@ -59,13 +60,14 @@ class SourceFooter extends PureComponent {
       selectedSource,
       canPrettyPrint,
       togglePrettyPrint,
+      sourceLoaded,
     } = this.props;
 
     if (!selectedSource) {
       return;
     }
 
-    if (!selectedSource.content && selectedSource.isPrettyPrinted) {
+    if (!sourceLoaded && selectedSource.isPrettyPrinted) {
       return (
         <div className="action" key="pretty-loader">
           <AccessibleImage className="loader spin" />
@@ -78,7 +80,6 @@ class SourceFooter extends PureComponent {
     }
 
     const tooltip = L10N.getStr("sourceTabs.prettyPrint");
-    const sourceLoaded = !!selectedSource.content;
 
     const type = "prettyPrint";
     return (
@@ -98,8 +99,7 @@ class SourceFooter extends PureComponent {
   }
 
   blackBoxButton() {
-    const { cx, selectedSource, toggleBlackBox } = this.props;
-    const sourceLoaded = selectedSource?.content;
+    const { cx, selectedSource, toggleBlackBox, sourceLoaded } = this.props;
 
     if (!selectedSource) {
       return;
@@ -235,11 +235,13 @@ class SourceFooter extends PureComponent {
 }
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSourceWithContent(state);
+  const selectedSource = getSelectedSource(state);
+  const sourceTextContent = getSelectedSourceTextContent(state);
 
   return {
     cx: getContext(state),
     selectedSource,
+    sourceLoaded: !!sourceTextContent,
     mappedSource: getGeneratedSource(state, selectedSource),
     prettySource: getPrettySource(
       state,

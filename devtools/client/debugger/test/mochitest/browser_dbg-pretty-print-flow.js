@@ -13,8 +13,9 @@ add_task(async function() {
   await selectSource(dbg, "pretty.js", 4, 8);
 
   prettyPrint(dbg);
+  info("Wait for a second tab to be displayed with the pretty printed source");
   await waitForTabCounts(dbg, 2);
-  await waitForElementWithSelector(dbg, selectors.prettyPrintLoader);
+  info("Wait for the pretty printed source to be selected on a different line");
   await waitForSelectedLocation(dbg, 5);
 });
 

@@ -10,6 +10,7 @@
 import expressions, { initialExpressionState } from "./expressions";
 import sourceActors from "./source-actors";
 import sources, { initialSourcesState } from "./sources";
+import sourcesContent, { initialSourcesContentState } from "./sources-content";
 import tabs, { initialTabState } from "./tabs";
 import breakpoints, { initialBreakpointsState } from "./breakpoints";
 import pendingBreakpoints from "./pending-breakpoints";
@@ -34,9 +35,15 @@ import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 import { createInitial } from "../utils/resource";
 
+/**
+ * Note that this is only used by jest tests.
+ *
+ * Production is using loadInitialState() in main.js
+ */
 export function initialState() {
   return {
     sources: initialSourcesState(),
+    sourcesContent: initialSourcesContentState(),
     expressions: initialExpressionState(),
     sourceActors: createInitial(),
     tabs: initialTabState(),
@@ -61,6 +68,7 @@ export function initialState() {
 export default {
   expressions,
   sourceActors,
+  sourcesContent,
   sources,
   tabs,
   breakpoints,
