@@ -26,7 +26,8 @@ class InProcessCompositorSession final : public CompositorSession {
       nsBaseWidget* baseWidget, WebRenderLayerManager* aLayerManager,
       const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
       const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
-      const gfx::IntSize& aSurfaceSize, uint32_t aNamespace);
+      const gfx::IntSize& aSurfaceSize, uint32_t aNamespace,
+      uint64_t aInnerWindowId);
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;

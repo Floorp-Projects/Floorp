@@ -275,6 +275,7 @@ void SessionAccessibility::SendScrollingEvent(AccessibleWrap* aAccessible,
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_SCROLLED, virtualViewId,
       aAccessible->AndroidClass(), eventInfo);
+  SendWindowContentChangedEvent();
 }
 
 void SessionAccessibility::SendWindowContentChangedEvent() {
@@ -485,7 +486,6 @@ void SessionAccessibility::UpdateCachedBounds(
   }
 
   mSessionAccessibility->UpdateCachedBounds(infos);
-  SendWindowContentChangedEvent();
 }
 
 void SessionAccessibility::UpdateAccessibleFocusBoundaries(

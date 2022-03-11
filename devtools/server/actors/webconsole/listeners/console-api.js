@@ -44,6 +44,9 @@ class ConsoleAPIListener {
     this.addonId = addonId;
     this.excludeMessagesBoundToWindow = excludeMessagesBoundToWindow;
     this.matchExactWindow = matchExactWindow;
+    if (this.window) {
+      this.innerWindowId = WebConsoleUtils.getInnerWindowId(this.window);
+    }
   }
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
@@ -148,7 +151,7 @@ class ConsoleAPIListener {
 
       if (this.window) {
         const matchesWindow = this.matchExactWindow
-          ? WebConsoleUtils.getInnerWindowId(this.window) === message.innerID
+          ? this.innerWindowId === message.innerID
           : WebConsoleUtils.getInnerWindowIDsForFrames(this.window).includes(
               message.innerID
             );
@@ -203,12 +206,10 @@ class ConsoleAPIListener {
     // for filtering based on privacy.
     if (!this.window) {
       messages = ConsoleAPIStorage.getEvents();
+    } else if (this.matchExactWindow) {
+      messages = ConsoleAPIStorage.getEvents(this.innerWindowId);
     } else {
-      const ids = this.matchExactWindow
-        ? [WebConsoleUtils.getInnerWindowId(this.window)]
-        : WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
-
-      ids.forEach(id => {
+      WebConsoleUtils.getInnerWindowIDsForFrames(this.window).forEach(id => {
         messages = messages.concat(ConsoleAPIStorage.getEvents(id));
       });
     }

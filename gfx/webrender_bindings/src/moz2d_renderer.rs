@@ -824,7 +824,7 @@ impl Moz2dBlobImageHandler {
                     if !unscaled_fonts.contains(&instance.font_key) {
                         unscaled_fonts.push(instance.font_key);
                         if !unsafe { HasFontData(instance.font_key) } {
-                            let template = resources.get_font_data(instance.font_key);
+                            let template = resources.get_font_data(instance.font_key).unwrap();
                             match template {
                                 FontTemplate::Raw(ref data, ref index) => unsafe {
                                     AddFontData(instance.font_key, data.as_ptr(), data.len(), *index, data);

@@ -203,6 +203,7 @@ tps_result\.json
 # Ignore Visual Studio/Visual Studio Code workspace files.
 \.vs/
 \.vscode/(?!extensions\.json|tasks\.json)
+\.user$
 
 # https://bz.mercurial-scm.org/show_bug.cgi?id=5322
 ^comm/

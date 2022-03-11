@@ -4,20 +4,16 @@
 "use strict";
 
 const { FxAccountsPairingFlow } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsPairing.jsm",
-  {}
+  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm",
-  {}
+  "resource://gre/modules/EventEmitter.jsm"
 );
 const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm",
-  {}
+  "resource://gre/modules/PromiseUtils.jsm"
 );
 const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js",
-  {}
+  "resource://services-crypto/utils.js"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.jsm",

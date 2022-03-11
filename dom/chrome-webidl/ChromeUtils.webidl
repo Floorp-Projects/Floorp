@@ -61,6 +61,15 @@ dictionary InteractionData {
   unsigned long scrollingDistanceInPixels = 0;
 };
 
+dictionary FormAutofillConfidences {
+  double ccNumber = 0;
+  double ccName = 0;
+  double ccType = 0;
+  double ccExp = 0;
+  double ccExpMonth = 0;
+  double ccExpYear = 0;
+};
+
 /**
  * A collection of static utility methods that are only exposed to system code.
  * This is exposed in all the system globals where we can expose stuff by
@@ -605,6 +614,8 @@ partial namespace ChromeUtils {
   [Throws]
   Promise<InteractionData> collectScrollingData();
 
+  [Throws]
+  sequence<FormAutofillConfidences> getFormAutofillConfidences(sequence<Element> elements);
 };
 
 /*

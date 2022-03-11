@@ -298,30 +298,32 @@ toolbar[customizing] #whats-new-menu-button {
  * popup window.) */
 :root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer),
 %endif
-%ifndef MOZ_WIDGET_COCOA
-%ifndef MOZ_WIDGET_GTK
-:root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
-%endif
-%endif
 :root:not([chromemargin], [inFullscreen]) .titlebar-buttonbox-container,
 :root[inFullscreen] .titlebar-spacer,
 :root:not([tabsintitlebar]) .titlebar-spacer {
   display: none;
 }
-%ifdef MOZ_WIDGET_GTK
-@media (-moz-gtk-csd-reversed-placement: 0) {
-  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
-  :root[gtktiledwindow=true] .titlebar-spacer[type="pre-tabs"] {
+
+@media (-moz-platform: windows) {
+  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"] {
     display: none;
   }
 }
-@media (-moz-gtk-csd-reversed-placement) {
-  :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"],
-  :root[gtktiledwindow=true] .titlebar-spacer[type="post-tabs"] {
-    display: none;
+
+@media (-moz-platform: linux) {
+  @media (-moz-gtk-csd-reversed-placement: 0) {
+    :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
+    :root[gtktiledwindow=true] .titlebar-spacer[type="pre-tabs"] {
+      display: none;
+    }
+  }
+  @media (-moz-gtk-csd-reversed-placement) {
+    :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"],
+    :root[gtktiledwindow=true] .titlebar-spacer[type="post-tabs"] {
+      display: none;
+    }
   }
 }
-%endif
 
 :root:not([sizemode=maximized], [sizemode=fullscreen]) .titlebar-restore,
 :root:is([sizemode=maximized], [sizemode=fullscreen]) .titlebar-max {
@@ -365,21 +367,19 @@ toolbarpaletteitem {
   -moz-box-ordinal-group: 1000;
 }
 
-%ifdef XP_MACOSX
+@media (-moz-platform: macos) {
+  @media not (-moz-mac-rtl) {
+    .titlebar-buttonbox-container:-moz-locale-dir(ltr) {
+      -moz-box-ordinal-group: 0;
+    }
+  }
 
-@media not (-moz-mac-rtl) {
-  .titlebar-buttonbox-container:-moz-locale-dir(ltr) {
-    -moz-box-ordinal-group: 0;
+  @media (-moz-mac-rtl) {
+    .titlebar-buttonbox-container:-moz-locale-dir(rtl) {
+      -moz-box-ordinal-group: 0;
+    }
   }
 }
-
-@media (-moz-mac-rtl) {
-  .titlebar-buttonbox-container:-moz-locale-dir(rtl) {
-    -moz-box-ordinal-group: 0;
-  }
-}
-
-%endif
 
 :root[inDOMFullscreen] #navigator-toolbox,
 :root[inDOMFullscreen] #fullscr-toggler,
@@ -528,11 +528,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-box-flex: 1;
 }
 
-%ifdef XP_MACOSX
-:root[inFullscreen="true"] {
-  padding-top: 0; /* override drawintitlebar="true" */
+@media (-moz-platform: macos) {
+  :root[inFullscreen="true"] {
+    padding-top: 0; /* override drawintitlebar="true" */
+  }
 }
-%endif
 
 /* Hide menu elements intended for keyboard access support */
 #main-menubar[openedwithkey=false] .show-only-for-keyboard {
@@ -1046,7 +1046,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 
 @supports -moz-bool-pref("xul.panel-animations.enabled") {
 @media (prefers-reduced-motion: no-preference) {
-%ifdef MOZ_WIDGET_COCOA
+@media (-moz-platform: macos) {
   /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
      instead of "transform" and "opacity" for these animations.
      The -moz-window* properties apply to the whole window including the window's
@@ -1089,7 +1089,8 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
     -moz-window-opacity: 0;
     -moz-window-transform: none;
   }
-%else
+}
+@media not (-moz-platform: macos) {
   #BMB_bookmarksPopup:not([animate="false"]) {
     opacity: 0;
     transform: translateY(-70px);
@@ -1116,7 +1117,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   #BMB_bookmarksPopup[animate][animate="cancel"] {
     transform: none;
   }
-%endif
+}
 }
 }
 

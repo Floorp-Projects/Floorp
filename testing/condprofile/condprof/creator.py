@@ -52,6 +52,7 @@ class ProfileCreator:
         force_new,
         env,
         skip_logs=False,
+        remote_test_root="/sdcard/test_root/",
     ):
         self.env = env
         self.scenario = scenario
@@ -60,6 +61,7 @@ class ProfileCreator:
         self.changelog = changelog
         self.force_new = force_new
         self.skip_logs = skip_logs
+        self.remote_test_root = remote_test_root
         self.customization_data = get_customization(customization)
         self.tmp_dir = None
 
@@ -90,7 +92,9 @@ class ProfileCreator:
             logger.info("Skipping (ignored platform in that customization)")
             return
 
-        with self.env.get_device(2828, verbose=True) as device:
+        with self.env.get_device(
+            2828, verbose=True, remote_test_root=self.remote_test_root
+        ) as device:
             try:
                 with self.env.get_browser():
                     metadata = await self.build_profile(device, headless)

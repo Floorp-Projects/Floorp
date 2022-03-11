@@ -34,6 +34,7 @@ add_task(async function test_registerContentScripts_runAt() {
               js: ["script-idle.js"],
               matches: ["http://*/*/file_sample.html"],
               runAt: "document_idle",
+              persistAcrossSessions: false,
             },
           ],
         },
@@ -45,6 +46,7 @@ add_task(async function test_registerContentScripts_runAt() {
               js: ["script-idle-default.js"],
               matches: ["http://*/*/file_sample.html"],
               // `runAt` defaults to `document_idle`.
+              persistAcrossSessions: false,
             },
           ],
         },
@@ -56,6 +58,7 @@ add_task(async function test_registerContentScripts_runAt() {
               js: ["script-end.js"],
               matches: ["http://*/*/file_sample.html"],
               runAt: "document_end",
+              persistAcrossSessions: false,
             },
           ],
         },
@@ -67,6 +70,7 @@ add_task(async function test_registerContentScripts_runAt() {
               js: ["script-start.js"],
               matches: ["http://*/*/file_sample.html"],
               runAt: "document_start",
+              persistAcrossSessions: false,
             },
           ],
         },
@@ -94,6 +98,7 @@ add_task(async function test_registerContentScripts_runAt() {
             js: ["script-idle.js"],
             matches: ["http://*/*/file_sample.html"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-idle-default",
@@ -101,6 +106,7 @@ add_task(async function test_registerContentScripts_runAt() {
             js: ["script-idle-default.js"],
             matches: ["http://*/*/file_sample.html"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-end",
@@ -108,6 +114,7 @@ add_task(async function test_registerContentScripts_runAt() {
             js: ["script-end.js"],
             matches: ["http://*/*/file_sample.html"],
             runAt: "document_end",
+            persistAcrossSessions: false,
           },
           {
             id: "script-start",
@@ -115,6 +122,7 @@ add_task(async function test_registerContentScripts_runAt() {
             js: ["script-start.js"],
             matches: ["http://*/*/file_sample.html"],
             runAt: "document_start",
+            persistAcrossSessions: false,
           },
         ]),
         JSON.stringify(scripts),
@@ -201,6 +209,7 @@ add_task(async function test_register_and_unregister() {
         id: "a-script",
         js: ["script.js"],
         matches: ["http://*/*/file_sample.html"],
+        persistAcrossSessions: false,
       };
 
       let results = await Promise.allSettled([
@@ -246,6 +255,7 @@ add_task(async function test_register_and_unregister_multiple_times() {
             id: "a-script",
             js: ["script-1.js"],
             matches: ["http://*/*/file_sample.html"],
+            persistAcrossSessions: false,
           },
         ]),
         browser.scripting.unregisterContentScripts(),
@@ -254,6 +264,7 @@ add_task(async function test_register_and_unregister_multiple_times() {
             id: "a-script",
             js: ["script-2.js"],
             matches: ["http://*/*/file_sample.html"],
+            persistAcrossSessions: false,
           },
         ]),
         browser.scripting.unregisterContentScripts(),
@@ -262,6 +273,7 @@ add_task(async function test_register_and_unregister_multiple_times() {
             id: "a-script",
             js: ["script-3.js"],
             matches: ["http://*/*/file_sample.html"],
+            persistAcrossSessions: false,
           },
         ]),
       ]);

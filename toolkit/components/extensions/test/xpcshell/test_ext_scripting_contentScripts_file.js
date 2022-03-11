@@ -36,6 +36,7 @@ add_task(async function test_registered_content_script_with_files() {
           id,
           js: [`${id}.js`],
           matches,
+          persistAcrossSessions: false,
         }))
       );
 

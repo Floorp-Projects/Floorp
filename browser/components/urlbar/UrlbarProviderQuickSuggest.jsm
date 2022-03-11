@@ -45,10 +45,23 @@ const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
 const TELEMETRY_REMOTE_SETTINGS_LATENCY =
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
-const TELEMETRY_SCALAR_IMPRESSION =
-  "contextual.services.quicksuggest.impression";
-const TELEMETRY_SCALAR_CLICK = "contextual.services.quicksuggest.click";
-const TELEMETRY_SCALAR_HELP = "contextual.services.quicksuggest.help";
+const TELEMETRY_SCALARS = {
+  IMPRESSION: "contextual.services.quicksuggest.impression",
+  IMPRESSION_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.impression_sponsored_bestmatch",
+  IMPRESSION_NONSPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.impression_nonsponsored_bestmatch",
+  CLICK: "contextual.services.quicksuggest.click",
+  CLICK_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.click_sponsored_bestmatch",
+  CLICK_NONSPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.click_nonsponsored_bestmatch",
+  HELP: "contextual.services.quicksuggest.help",
+  HELP_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.help_sponsored_bestmatch",
+  HELP_NONSPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.help_nonsponsored_bestmatch",
+};
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
@@ -114,6 +127,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get timestampLength() {
     return TIMESTAMP_LENGTH;
+  }
+
+  get telemetryScalars() {
+    return { ...TELEMETRY_SCALARS };
   }
 
   /**
@@ -442,22 +459,50 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // add 1 to the 0-based resultIndex.
     let telemetryResultIndex = resultIndex + 1;
 
-    // impression scalar
+    // impression scalars
     Services.telemetry.keyedScalarAdd(
-      TELEMETRY_SCALAR_IMPRESSION,
+      TELEMETRY_SCALARS.IMPRESSION,
       telemetryResultIndex,
       1
     );
-
-    if (details.selIndex == resultIndex) {
-      // click or help scalar
+    if (result.isBestMatch) {
       Services.telemetry.keyedScalarAdd(
-        details.selType == "help"
-          ? TELEMETRY_SCALAR_HELP
-          : TELEMETRY_SCALAR_CLICK,
+        result.payload.isSponsored
+          ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH
+          : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH,
         telemetryResultIndex,
         1
       );
+    }
+
+    if (details.selIndex == resultIndex) {
+      // click or help scalars
+      Services.telemetry.keyedScalarAdd(
+        details.selType == "help"
+          ? TELEMETRY_SCALARS.HELP
+          : TELEMETRY_SCALARS.CLICK,
+        telemetryResultIndex,
+        1
+      );
+      if (result.isBestMatch) {
+        if (details.selType == "help") {
+          Services.telemetry.keyedScalarAdd(
+            result.payload.isSponsored
+              ? TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH
+              : TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH,
+            telemetryResultIndex,
+            1
+          );
+        } else {
+          Services.telemetry.keyedScalarAdd(
+            result.payload.isSponsored
+              ? TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH
+              : TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH,
+            telemetryResultIndex,
+            1
+          );
+        }
+      }
     }
 
     // Send the custom impression and click pings

@@ -162,7 +162,7 @@
 namespace js {
 namespace wasm {
 
-struct TlsData;
+class Instance;
 
 // Bit set as the lowest bit of a frame pointer, used in two different mutually
 // exclusive situations:
@@ -264,12 +264,12 @@ class FrameWithTls : public Frame {
   // addresses than Frame and at lower addresses than the TLS fields.
 
   // The TLS area MUST be two pointers exactly.
-  TlsData* calleeTls_;
-  TlsData* callerTls_;
+  Instance* calleeTls_;
+  Instance* callerTls_;
 
  public:
-  TlsData* calleeTls() { return calleeTls_; }
-  TlsData* callerTls() { return callerTls_; }
+  Instance* calleeTls() { return calleeTls_; }
+  Instance* callerTls() { return callerTls_; }
 
   constexpr static uint32_t sizeOf() {
     return sizeof(wasm::FrameWithTls) + js::jit::ShadowStackSpace;

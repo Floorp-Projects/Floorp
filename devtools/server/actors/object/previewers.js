@@ -22,6 +22,37 @@ loader.lazyRequireGetter(
 // collections, etc.
 const OBJECT_PREVIEW_MAX_ITEMS = 10;
 
+const ERROR_CLASSNAMES = new Set([
+  "Error",
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+  "InternalError",
+  "AggregateError",
+  "CompileError",
+  "DebuggeeWouldRun",
+  "LinkError",
+  "RuntimeError",
+]);
+const ARRAY_LIKE_CLASSNAMES = new Set([
+  "DOMStringList",
+  "DOMTokenList",
+  "CSSRuleList",
+  "MediaList",
+  "StyleSheetList",
+  "NamedNodeMap",
+  "FileList",
+  "NodeList",
+]);
+const OBJECT_WITH_URL_CLASSNAMES = new Set([
+  "CSSImportRule",
+  "CSSStyleSheet",
+  "Location",
+]);
+
 /**
  * Functions for adding information to ObjectActor grips for the purpose of
  * having customized output. This object holds arrays mapped by
@@ -34,6 +65,8 @@ const OBJECT_PREVIEW_MAX_ITEMS = 10;
  *   - the raw JS object after calling Debugger.Object.unsafeDereference(). This
  *   argument is only provided if the object is safe for reading properties and
  *   executing methods. See DevToolsUtils.isSafeJSObject().
+ *   - the object class (result of objectActor.obj.class). This is passed so we don't have
+ *   to access it on each previewer, which can add some overhead.
  *
  * Functions must return false if they cannot provide preview
  * information for the debugger object, or true otherwise.
@@ -441,8 +474,6 @@ function wrappedPrimitivePreviewer(
   grip,
   rawObj
 ) {
-  const { obj, hooks } = objectActor;
-
   let v = null;
   try {
     v = classObj.prototype.valueOf.call(rawObj);
@@ -455,12 +486,9 @@ function wrappedPrimitivePreviewer(
     return false;
   }
 
-  const canHandle = GenericObject(
-    objectActor,
-    grip,
-    rawObj,
-    className === "String"
-  );
+  const { obj, hooks } = objectActor;
+
+  const canHandle = GenericObject(objectActor, grip, rawObj, className);
   if (!canHandle) {
     return false;
   }
@@ -471,12 +499,15 @@ function wrappedPrimitivePreviewer(
   return true;
 }
 
-function GenericObject(
-  objectActor,
-  grip,
-  rawObj,
-  specialStringBehavior = false
-) {
+/**
+ * @param {ObjectActor} objectActor
+ * @param {Object} grip: The grip built by the objectActor, for which we need to populate
+ *                       the `preview` property.
+ * @param {*} rawObj: The native js object
+ * @param {String} className: objectActor.obj.class
+ * @returns
+ */
+function GenericObject(objectActor, grip, rawObj, className) {
   const { obj, hooks } = objectActor;
   if (grip.preview || grip.displayString || hooks.getGripDepth() > 1) {
     return false;
@@ -485,22 +516,14 @@ function GenericObject(
   const preview = (grip.preview = {
     kind: "Object",
     ownProperties: Object.create(null),
-    ownSymbols: [],
-    privateProperties: [],
   });
 
   const names = ObjectUtils.getPropNamesFromObject(obj, rawObj);
-  const privatePropertiesSymbols = ObjectUtils.getSafePrivatePropertiesSymbols(
-    obj
-  );
-  const symbols = ObjectUtils.getSafeOwnPropertySymbols(obj);
-
   preview.ownPropertiesLength = names.length;
-  preview.ownSymbolsLength = symbols.length;
-  preview.privatePropertiesLength = privatePropertiesSymbols.length;
 
   let length,
     i = 0;
+  let specialStringBehavior = className === "String";
   if (specialStringBehavior) {
     length = DevToolsUtils.getProperty(obj, "length");
     if (typeof length != "number") {
@@ -527,30 +550,42 @@ function GenericObject(
     }
   }
 
-  // Retrieve private properties, which are represented as non-enumerable Symbols
-  for (const privateProperty of privatePropertiesSymbols) {
-    if (
-      !privateProperty.description ||
-      !privateProperty.description.startsWith("#")
-    ) {
-      continue;
-    }
-    const descriptor = objectActor._propertyDescriptor(privateProperty);
-    if (!descriptor) {
-      continue;
-    }
+  if (i === OBJECT_PREVIEW_MAX_ITEMS) {
+    return true;
+  }
 
-    preview.privateProperties.push(
-      Object.assign(
-        {
-          descriptor,
-        },
-        hooks.createValueGrip(privateProperty)
-      )
-    );
+  const privatePropertiesSymbols = ObjectUtils.getSafePrivatePropertiesSymbols(
+    obj
+  );
+  if (privatePropertiesSymbols.length > 0) {
+    preview.privatePropertiesLength = privatePropertiesSymbols.length;
+    preview.privateProperties = [];
 
-    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
-      break;
+    // Retrieve private properties, which are represented as non-enumerable Symbols
+    for (const privateProperty of privatePropertiesSymbols) {
+      if (
+        !privateProperty.description ||
+        !privateProperty.description.startsWith("#")
+      ) {
+        continue;
+      }
+      const descriptor = objectActor._propertyDescriptor(privateProperty);
+      if (!descriptor) {
+        continue;
+      }
+
+      preview.privateProperties.push(
+        Object.assign(
+          {
+            descriptor,
+          },
+          hooks.createValueGrip(privateProperty)
+        )
+      );
+
+      if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
     }
   }
 
@@ -558,23 +593,29 @@ function GenericObject(
     return true;
   }
 
-  for (const symbol of symbols) {
-    const descriptor = objectActor._propertyDescriptor(symbol, true);
-    if (!descriptor) {
-      continue;
-    }
+  const symbols = ObjectUtils.getSafeOwnPropertySymbols(obj);
+  if (symbols.length > 0) {
+    preview.ownSymbolsLength = symbols.length;
+    preview.ownSymbols = [];
 
-    preview.ownSymbols.push(
-      Object.assign(
-        {
-          descriptor,
-        },
-        hooks.createValueGrip(symbol)
-      )
-    );
+    for (const symbol of symbols) {
+      const descriptor = objectActor._propertyDescriptor(symbol, true);
+      if (!descriptor) {
+        continue;
+      }
 
-    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
-      break;
+      preview.ownSymbols.push(
+        Object.assign(
+          {
+            descriptor,
+          },
+          hooks.createValueGrip(symbol)
+        )
+      );
+
+      if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
     }
   }
 
@@ -582,10 +623,13 @@ function GenericObject(
     return true;
   }
 
-  preview.safeGetterValues = objectActor._findSafeGetterValues(
+  const safeGetterValues = objectActor._findSafeGetterValues(
     Object.keys(preview.ownProperties),
     OBJECT_PREVIEW_MAX_ITEMS - i
   );
+  if (Object.keys(safeGetterValues).length) {
+    preview.safeGetterValues = safeGetterValues;
+  }
 
   return true;
 }
@@ -622,57 +666,47 @@ previewers.Object = [
     return true;
   },
 
-  function Error({ obj, hooks }, grip) {
-    switch (obj.class) {
-      case "Error":
-      case "EvalError":
-      case "RangeError":
-      case "ReferenceError":
-      case "SyntaxError":
-      case "TypeError":
-      case "URIError":
-      case "InternalError":
-      case "AggregateError":
-      case "CompileError":
-      case "DebuggeeWouldRun":
-      case "LinkError":
-      case "RuntimeError":
-        // The name and/or message could be getters, and even if it's unsafe, we do want
-        // to show it to the user (See Bug 1710694).
-        const name = DevToolsUtils.getProperty(obj, "name", true);
-        const msg = DevToolsUtils.getProperty(obj, "message", true);
-        const stack = DevToolsUtils.getProperty(obj, "stack");
-        const fileName = DevToolsUtils.getProperty(obj, "fileName");
-        const lineNumber = DevToolsUtils.getProperty(obj, "lineNumber");
-        const columnNumber = DevToolsUtils.getProperty(obj, "columnNumber");
-
-        grip.preview = {
-          kind: "Error",
-          name: hooks.createValueGrip(name),
-          message: hooks.createValueGrip(msg),
-          stack: hooks.createValueGrip(stack),
-          fileName: hooks.createValueGrip(fileName),
-          lineNumber: hooks.createValueGrip(lineNumber),
-          columnNumber: hooks.createValueGrip(columnNumber),
-        };
-
-        const errorHasCause = obj.getOwnPropertyNames().includes("cause");
-        if (errorHasCause) {
-          grip.preview.cause = hooks.createValueGrip(
-            DevToolsUtils.getProperty(obj, "cause", true)
-          );
-        }
-
-        return true;
-      default:
-        return false;
-    }
-  },
-
-  function CSSMediaRule({ obj, hooks }, grip, rawObj) {
-    if (isWorker || !rawObj || obj.class != "CSSMediaRule") {
+  function Error(objectActor, grip, rawObj, className) {
+    if (!ERROR_CLASSNAMES.has(className)) {
       return false;
     }
+
+    const { hooks, obj } = objectActor;
+
+    // The name and/or message could be getters, and even if it's unsafe, we do want
+    // to show it to the user (See Bug 1710694).
+    const name = DevToolsUtils.getProperty(obj, "name", true);
+    const msg = DevToolsUtils.getProperty(obj, "message", true);
+    const stack = DevToolsUtils.getProperty(obj, "stack");
+    const fileName = DevToolsUtils.getProperty(obj, "fileName");
+    const lineNumber = DevToolsUtils.getProperty(obj, "lineNumber");
+    const columnNumber = DevToolsUtils.getProperty(obj, "columnNumber");
+
+    grip.preview = {
+      kind: "Error",
+      name: hooks.createValueGrip(name),
+      message: hooks.createValueGrip(msg),
+      stack: hooks.createValueGrip(stack),
+      fileName: hooks.createValueGrip(fileName),
+      lineNumber: hooks.createValueGrip(lineNumber),
+      columnNumber: hooks.createValueGrip(columnNumber),
+    };
+
+    const errorHasCause = obj.getOwnPropertyNames().includes("cause");
+    if (errorHasCause) {
+      grip.preview.cause = hooks.createValueGrip(
+        DevToolsUtils.getProperty(obj, "cause", true)
+      );
+    }
+
+    return true;
+  },
+
+  function CSSMediaRule(objectActor, grip, rawObj, className) {
+    if (!rawObj || className != "CSSMediaRule" || isWorker) {
+      return false;
+    }
+    const { hooks } = objectActor;
     grip.preview = {
       kind: "ObjectWithText",
       text: hooks.createValueGrip(rawObj.conditionText),
@@ -680,10 +714,11 @@ previewers.Object = [
     return true;
   },
 
-  function CSSStyleRule({ obj, hooks }, grip, rawObj) {
-    if (isWorker || !rawObj || obj.class != "CSSStyleRule") {
+  function CSSStyleRule(objectActor, grip, rawObj, className) {
+    if (!rawObj || className != "CSSStyleRule" || isWorker) {
       return false;
     }
+    const { hooks } = objectActor;
     grip.preview = {
       kind: "ObjectWithText",
       text: hooks.createValueGrip(rawObj.selectorText),
@@ -691,20 +726,17 @@ previewers.Object = [
     return true;
   },
 
-  function ObjectWithURL({ obj, hooks }, grip, rawObj) {
+  function ObjectWithURL(objectActor, grip, rawObj, className) {
     if (isWorker || !rawObj) {
       return false;
     }
 
     const isWindow = Window.isInstance(rawObj);
-    if (
-      obj.class != "CSSImportRule" &&
-      obj.class != "CSSStyleSheet" &&
-      obj.class != "Location" &&
-      !isWindow
-    ) {
+    if (!OBJECT_WITH_URL_CLASSNAMES.has(className) && !isWindow) {
       return false;
     }
+
+    const { hooks } = objectActor;
 
     let url;
     if (isWindow && rawObj.location) {
@@ -723,26 +755,17 @@ previewers.Object = [
     return true;
   },
 
-  function ArrayLike({ obj, hooks }, grip, rawObj) {
+  function ArrayLike(objectActor, grip, rawObj, className) {
     if (
-      isWorker ||
       !rawObj ||
-      (obj.class != "DOMStringList" &&
-        obj.class != "DOMTokenList" &&
-        obj.class != "CSSRuleList" &&
-        obj.class != "MediaList" &&
-        obj.class != "StyleSheetList" &&
-        obj.class != "NamedNodeMap" &&
-        obj.class != "FileList" &&
-        obj.class != "NodeList")
+      !ARRAY_LIKE_CLASSNAMES.has(className) ||
+      typeof rawObj.length != "number" ||
+      isWorker
     ) {
       return false;
     }
 
-    if (typeof rawObj.length != "number") {
-      return false;
-    }
-
+    const { obj, hooks } = objectActor;
     grip.preview = {
       kind: "ArrayLike",
       length: rawObj.length,
@@ -766,15 +789,16 @@ previewers.Object = [
     return true;
   },
 
-  function CSSStyleDeclaration({ obj, hooks }, grip, rawObj) {
+  function CSSStyleDeclaration(objectActor, grip, rawObj, className) {
     if (
-      isWorker ||
       !rawObj ||
-      (obj.class != "CSSStyleDeclaration" && obj.class != "CSS2Properties")
+      (className != "CSSStyleDeclaration" && className != "CSS2Properties") ||
+      isWorker
     ) {
       return false;
     }
 
+    const { hooks } = objectActor;
     grip.preview = {
       kind: "MapLike",
       size: rawObj.length,
@@ -791,15 +815,17 @@ previewers.Object = [
     return true;
   },
 
-  function DOMNode({ obj, hooks }, grip, rawObj) {
+  function DOMNode(objectActor, grip, rawObj, className) {
     if (
-      isWorker ||
-      obj.class == "Object" ||
+      className == "Object" ||
       !rawObj ||
-      !Node.isInstance(rawObj)
+      !Node.isInstance(rawObj) ||
+      isWorker
     ) {
       return false;
     }
+
+    const { obj, hooks } = objectActor;
 
     const preview = (grip.preview = {
       kind: "DOMNode",
@@ -851,11 +877,12 @@ previewers.Object = [
     return true;
   },
 
-  function DOMEvent({ obj, hooks }, grip, rawObj) {
-    if (isWorker || !rawObj || !Event.isInstance(rawObj)) {
+  function DOMEvent(objectActor, grip, rawObj) {
+    if (!rawObj || !Event.isInstance(rawObj) || isWorker) {
       return false;
     }
 
+    const { obj, hooks } = objectActor;
     const preview = (grip.preview = {
       kind: "DOMEvent",
       type: rawObj.type,
@@ -916,11 +943,12 @@ previewers.Object = [
     return true;
   },
 
-  function DOMException({ obj, hooks }, grip, rawObj) {
-    if (isWorker || !rawObj || obj.class !== "DOMException") {
+  function DOMException(objectActor, grip, rawObj, className) {
+    if (!rawObj || className !== "DOMException" || isWorker) {
       return false;
     }
 
+    const { hooks } = objectActor;
     grip.preview = {
       kind: "DOMException",
       name: hooks.createValueGrip(rawObj.name),
@@ -935,13 +963,8 @@ previewers.Object = [
     return true;
   },
 
-  function Object(objectActor, grip, rawObj) {
-    return GenericObject(
-      objectActor,
-      grip,
-      rawObj,
-      /* specialStringBehavior = */ false
-    );
+  function Object(objectActor, grip, rawObj, className) {
+    return GenericObject(objectActor, grip, rawObj, className);
   },
 ];
 

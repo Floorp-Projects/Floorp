@@ -24,7 +24,7 @@
 #include "wasm/WasmFrameIter.h"  // js::wasm::{RegisterState,StartUnwinding,UnwindState}
 #include "wasm/WasmInstance.h"  // js::wasm::Instance
 #include "wasm/WasmProcess.h"   // js::wasm::LookupCode
-#include "wasm/WasmTlsData.h"   // js::wasm::TlsData
+#include "wasm/WasmTlsData.h"   // js::wasm::Instance
 
 #include "vm/Realm-inl.h"  // js::~AutoRealm
 
@@ -233,7 +233,7 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   void* pc = unwindState.pc;
   const wasm::Frame* fp = wasm::Frame::fromUntaggedWasmExitFP(unwindState.fp);
 
-  const wasm::Code& code = wasm::GetNearestEffectiveTls(fp)->instance->code();
+  const wasm::Code& code = wasm::GetNearestEffectiveTls(fp)->code();
   MOZ_RELEASE_ASSERT(&code == wasm::LookupCode(pc));
 
   // If the frame was unwound, the bytecodeOffset must be recovered from the

@@ -17,8 +17,7 @@ let { getChromeWindow } = ChromeUtils.import(
 );
 
 let log = ChromeUtils.import(
-  "resource://gre/modules/Log.jsm",
-  {}
+  "resource://gre/modules/Log.jsm"
 ).Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = ["TabListView"];

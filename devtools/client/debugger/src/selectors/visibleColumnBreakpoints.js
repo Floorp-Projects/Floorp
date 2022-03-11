@@ -8,10 +8,10 @@ import {
   getViewport,
   getSource,
   getSelectedSource,
-  getSelectedSourceWithContent,
+  getSelectedSourceTextContent,
   getBreakpointPositions,
   getBreakpointPositionsForSource,
-} from "../selectors";
+} from "./index";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedLocations } from "../utils/location";
@@ -126,7 +126,8 @@ export function getColumnBreakpoints(
   positions,
   breakpoints,
   viewport,
-  selectedSource
+  selectedSource,
+  selectedSourceTextContent
 ) {
   if (!positions || !selectedSource) {
     return [];
@@ -140,7 +141,11 @@ export function getColumnBreakpoints(
   const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
   positions = filterByLineCount(positions, selectedSource);
   positions = filterVisible(positions, selectedSource, viewport);
-  positions = filterInLine(positions, selectedSource, selectedSource.content);
+  positions = filterInLine(
+    positions,
+    selectedSource,
+    selectedSourceTextContent
+  );
   positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
 
   return formatPositions(positions, selectedSource, breakpointMap);
@@ -167,7 +172,8 @@ export const visibleColumnBreakpoints = createSelector(
   getVisibleBreakpointPositions,
   getVisibleBreakpoints,
   getViewport,
-  getSelectedSourceWithContent,
+  getSelectedSource,
+  getSelectedSourceTextContent,
   getColumnBreakpoints
 );
 

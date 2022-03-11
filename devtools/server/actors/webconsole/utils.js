@@ -5,11 +5,12 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const CONSOLE_WORKER_IDS = (exports.CONSOLE_WORKER_IDS = [
+
+const CONSOLE_WORKER_IDS = (exports.CONSOLE_WORKER_IDS = new Set([
   "SharedWorker",
   "ServiceWorker",
   "Worker",
-]);
+]));
 
 var WebConsoleUtils = {
   /**
@@ -19,8 +20,8 @@ var WebConsoleUtils = {
    * @return string
    */
   getWorkerType: function(message) {
-    const id = message ? message.innerID : null;
-    return CONSOLE_WORKER_IDS[CONSOLE_WORKER_IDS.indexOf(id)] || null;
+    const innerID = message?.innerID;
+    return CONSOLE_WORKER_IDS.has(innerID) ? innerID : null;
   },
 
   /**

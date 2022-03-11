@@ -3,7 +3,7 @@
 var LabelUtils;
 add_task(async function() {
   ({ LabelUtils } = ChromeUtils.import(
-    "resource://autofill/FormAutofillHeuristics.jsm"
+    "resource://autofill/FormAutofillUtils.jsm"
   ));
 });
 

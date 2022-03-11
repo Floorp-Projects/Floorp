@@ -60,7 +60,7 @@ async function invokeAndAssertBreakpoints(dbg) {
 
 function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
   const { location } = dbg.selectors.getVisibleSelectedFrame();
-  const selectedSource = dbg.selectors.getSelectedSourceWithContent();
+  const selectedSource = dbg.selectors.getSelectedSource();
 
   is(location.sourceId, selectedSource.id, `Correct selected sourceId`);
   ok(selectedSource.url.includes(url), "Correct url");

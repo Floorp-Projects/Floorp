@@ -833,12 +833,7 @@ rawPackets.set(`throw Object`, {
               "value": "cucumber"
             }
           },
-          "ownSymbols": [],
-          "privateProperties": [],
-          "ownPropertiesLength": 1,
-          "ownSymbolsLength": 0,
-          "privatePropertiesLength": 0,
-          "safeGetterValues": {}
+          "ownPropertiesLength": 1
         }
       },
       "actorID": "server0.conn4.windowGlobal2147483651/obj40"
@@ -2193,12 +2188,7 @@ rawPackets.set(`Promise reject Object`, {
               "value": "cucumber"
             }
           },
-          "ownSymbols": [],
-          "privateProperties": [],
-          "ownPropertiesLength": 1,
-          "ownSymbolsLength": 0,
-          "privatePropertiesLength": 0,
-          "safeGetterValues": {}
+          "ownPropertiesLength": 1
         }
       },
       "actorID": "server0.conn4.windowGlobal2147483651/obj76"

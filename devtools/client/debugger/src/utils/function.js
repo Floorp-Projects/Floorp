@@ -6,7 +6,7 @@ import { isFulfilled } from "./async-value";
 import { findClosestFunction } from "./ast";
 import { correctIndentation } from "./indentation";
 
-export function findFunctionText(line, source, symbols) {
+export function findFunctionText(line, source, sourceTextContent, symbols) {
   const func = findClosestFunction(symbols, {
     sourceId: source.id,
     line,
@@ -16,9 +16,9 @@ export function findFunctionText(line, source, symbols) {
   if (
     source.isWasm ||
     !func ||
-    !source.content ||
-    !isFulfilled(source.content) ||
-    source.content.value.type !== "text"
+    !sourceTextContent ||
+    !isFulfilled(sourceTextContent) ||
+    sourceTextContent.value.type !== "text"
   ) {
     return null;
   }
@@ -26,7 +26,7 @@ export function findFunctionText(line, source, symbols) {
   const {
     location: { start, end },
   } = func;
-  const lines = source.content.value.value.split("\n");
+  const lines = sourceTextContent.value.value.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);
   const lastLine = lines[end.line - 1].slice(0, end.column);
   const middle = lines.slice(start.line, end.line - 1);

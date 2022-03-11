@@ -24,7 +24,7 @@
 #include "vm/FrameIter.h"             // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/Opcodes.h"
-#include "wasm/WasmInstance.h"
+#include "wasm/WasmProcess.h"
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Compartment-inl.h"

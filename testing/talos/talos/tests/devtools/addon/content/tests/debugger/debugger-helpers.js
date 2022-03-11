@@ -179,8 +179,14 @@ function selectSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const source = dbg.selectors.getSelectedSourceWithContent(state);
-      if (!source || !source.content) {
+      const source = dbg.selectors.getSelectedSource(state);
+      if (!source) {
+        return false;
+      }
+      const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
+        state
+      );
+      if (!sourceTextContent) {
         return false;
       }
 

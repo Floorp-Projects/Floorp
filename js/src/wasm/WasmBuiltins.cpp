@@ -39,6 +39,7 @@
 #include "vm/ErrorObject.h"
 #include "wasm/TypedObject.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
@@ -46,6 +47,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ErrorObject-inl.h"
 #include "vm/Stack-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace jit;
@@ -378,7 +380,7 @@ static bool WasmHandleDebugTrap() {
   JSContext* cx = TlsContext.get();  // Cold code
   JitActivation* activation = CallingActivation(cx);
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = GetNearestEffectiveTls(fp)->instance;
+  Instance* instance = GetNearestEffectiveTls(fp);
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
@@ -548,12 +550,12 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
           continue;
         }
 
-        MOZ_ASSERT(iter.tls() == iter.instance()->tlsData());
+        MOZ_ASSERT(iter.tls() == iter.instance());
         iter.instance()->setPendingException(ref);
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
-        rfe->tlsData = iter.instance()->tlsData();
+        rfe->tlsData = iter.instance();
 
         rfe->stackPointer =
             (uint8_t*)(rfe->framePointer - tryNote->framePushed);
@@ -690,8 +692,8 @@ static void* WasmHandleTrap() {
     case Trap::CheckInterrupt:
       return CheckInterrupt(cx, activation);
     case Trap::StackOverflow: {
-      // TlsData::setInterrupt() causes a fake stack overflow. Since
-      // TlsData::setInterrupt() is called racily, it's possible for a real
+      // Instance::setInterrupt() causes a fake stack overflow. Since
+      // Instance::setInterrupt() is called racily, it's possible for a real
       // stack overflow to trap, followed by a racy call to setInterrupt().
       // Thus, we must check for a real stack overflow first before we
       // CheckInterrupt() and possibly resume execution.
@@ -773,11 +775,11 @@ static void* BoxValue_Anyref(Value* rawVal) {
   return result.get().forCompiledCode();
 }
 
-static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
+static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* tlsData,
                                       Value* argv) {
   JSContext* cx = TlsContext.get();  // Cold code
 
-  const Code& code = tlsData->instance->code();
+  const Code& code = tlsData->code();
   const FuncExport& fe =
       code.metadata(code.stableTier()).funcExports[funcExportIndex];
 

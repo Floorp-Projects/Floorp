@@ -50,8 +50,9 @@
           return null;
         }
 
-        let Finder = ChromeUtils.import("resource://gre/modules/Finder.jsm", {})
-          .Finder;
+        let { Finder } = ChromeUtils.import(
+          "resource://gre/modules/Finder.jsm"
+        );
         this._finder = new Finder(this.docShell);
       }
       return this._finder;
