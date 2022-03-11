@@ -232,7 +232,7 @@ void FlushAllChildData(
   }
 
   if (RefPtr<UtilityProcessManager> utilityManager =
-          UtilityProcessManager::GetSingleton()) {
+          UtilityProcessManager::GetIfExists()) {
     if (UtilityProcessParent* utilityParent =
             utilityManager->GetProcessParent()) {
       promises.EmplaceBack(utilityParent->SendFlushFOGData());
