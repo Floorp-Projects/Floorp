@@ -11775,7 +11775,7 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
   if (!StartCursor(aActor, aParams)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartCursor failed!");
   }
   return IPC_OK();
 }
