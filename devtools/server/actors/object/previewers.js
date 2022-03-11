@@ -485,19 +485,10 @@ function GenericObject(
   const preview = (grip.preview = {
     kind: "Object",
     ownProperties: Object.create(null),
-    ownSymbols: [],
-    privateProperties: [],
   });
 
   const names = ObjectUtils.getPropNamesFromObject(obj, rawObj);
-  const privatePropertiesSymbols = ObjectUtils.getSafePrivatePropertiesSymbols(
-    obj
-  );
-  const symbols = ObjectUtils.getSafeOwnPropertySymbols(obj);
-
   preview.ownPropertiesLength = names.length;
-  preview.ownSymbolsLength = symbols.length;
-  preview.privatePropertiesLength = privatePropertiesSymbols.length;
 
   let length,
     i = 0;
@@ -527,30 +518,42 @@ function GenericObject(
     }
   }
 
-  // Retrieve private properties, which are represented as non-enumerable Symbols
-  for (const privateProperty of privatePropertiesSymbols) {
-    if (
-      !privateProperty.description ||
-      !privateProperty.description.startsWith("#")
-    ) {
-      continue;
-    }
-    const descriptor = objectActor._propertyDescriptor(privateProperty);
-    if (!descriptor) {
-      continue;
-    }
+  if (i === OBJECT_PREVIEW_MAX_ITEMS) {
+    return true;
+  }
 
-    preview.privateProperties.push(
-      Object.assign(
-        {
-          descriptor,
-        },
-        hooks.createValueGrip(privateProperty)
-      )
-    );
+  const privatePropertiesSymbols = ObjectUtils.getSafePrivatePropertiesSymbols(
+    obj
+  );
+  if (privatePropertiesSymbols.length > 0) {
+    preview.privatePropertiesLength = privatePropertiesSymbols.length;
+    preview.privateProperties = [];
 
-    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
-      break;
+    // Retrieve private properties, which are represented as non-enumerable Symbols
+    for (const privateProperty of privatePropertiesSymbols) {
+      if (
+        !privateProperty.description ||
+        !privateProperty.description.startsWith("#")
+      ) {
+        continue;
+      }
+      const descriptor = objectActor._propertyDescriptor(privateProperty);
+      if (!descriptor) {
+        continue;
+      }
+
+      preview.privateProperties.push(
+        Object.assign(
+          {
+            descriptor,
+          },
+          hooks.createValueGrip(privateProperty)
+        )
+      );
+
+      if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
     }
   }
 
@@ -558,23 +561,29 @@ function GenericObject(
     return true;
   }
 
-  for (const symbol of symbols) {
-    const descriptor = objectActor._propertyDescriptor(symbol, true);
-    if (!descriptor) {
-      continue;
-    }
+  const symbols = ObjectUtils.getSafeOwnPropertySymbols(obj);
+  if (symbols.length > 0) {
+    preview.ownSymbolsLength = symbols.length;
+    preview.ownSymbols = [];
 
-    preview.ownSymbols.push(
-      Object.assign(
-        {
-          descriptor,
-        },
-        hooks.createValueGrip(symbol)
-      )
-    );
+    for (const symbol of symbols) {
+      const descriptor = objectActor._propertyDescriptor(symbol, true);
+      if (!descriptor) {
+        continue;
+      }
 
-    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
-      break;
+      preview.ownSymbols.push(
+        Object.assign(
+          {
+            descriptor,
+          },
+          hooks.createValueGrip(symbol)
+        )
+      );
+
+      if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
     }
   }
 
@@ -582,10 +591,13 @@ function GenericObject(
     return true;
   }
 
-  preview.safeGetterValues = objectActor._findSafeGetterValues(
+  const safeGetterValues = objectActor._findSafeGetterValues(
     Object.keys(preview.ownProperties),
     OBJECT_PREVIEW_MAX_ITEMS - i
   );
+  if (Object.keys(safeGetterValues).length) {
+    preview.safeGetterValues = safeGetterValues;
+  }
 
   return true;
 }
