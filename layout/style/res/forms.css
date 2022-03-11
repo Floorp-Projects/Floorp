@@ -262,10 +262,12 @@ select:-moz-select-list-box {
   vertical-align: text-bottom;
   appearance: auto;
   -moz-default-appearance: listbox;
-%ifdef XP_MACOSX
-  /* TODO(emilio): See if this is still necessary with the non-native theme */
-  scrollbar-width: thin;
-%endif
+}
+
+@media (-moz-platform: macos) {
+  select:-moz-select-list-box {
+    scrollbar-width: thin;
+  }
 }
 
 select > button {
@@ -394,13 +396,13 @@ optgroup:before {
   content: attr(label);
 }
 
-%ifdef ANDROID
-/* These elements are handled by the prompt module. */
-select option,
-select optgroup {
-  pointer-events: none;
+@media (-moz-platform: android) {
+  /* These elements are handled by the prompt module. */
+  select option,
+  select optgroup {
+    pointer-events: none;
+  }
 }
-%endif
 
 *|*::-moz-dropdown-list {
   content: inherit;
@@ -913,16 +915,6 @@ input[type=number]::-moz-number-spin-box {
   max-width: 100%;
   overflow: clip;
 }
-
-%ifdef XP_WIN
-@media not (-moz-non-native-content-theme) {
-  input[type=number]::-moz-number-spin-box {
-    /* The Window's Theme's spin buttons have a very narrow minimum width, so
-     * make it something reasonable. */
-    width: 16px;
-  }
-}
-%endif
 
 input[type=number]::-moz-number-spin-up {
   writing-mode: horizontal-tb;
