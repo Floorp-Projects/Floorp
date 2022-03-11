@@ -1507,7 +1507,7 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   CreateAndInsertElement(WithTransaction aWithTransaction, nsAtom& aTagName,
                          const EditorDOMPoint& aPointToInsert,
-                         std::function<nsresult(Element&)>&& aInitializer);
+                         const std::function<nsresult(Element&)>& aInitializer);
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
@@ -1544,12 +1544,18 @@ class HTMLEditor final : public EditorBase,
    *                            Whether <br> element should be deleted or
    *                            kept if and only if a <br> element follows
    *                            split point.
+   * @param aInitializer        A function to initialize the new element before
+   *                            connecting the element into the DOM tree.
+   *                            Note that this should not touch outside given
+   *                            element because doing it would break range
+   *                            updater's result.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
-      BRElementNextToSplitPoint aBRElementNextToSplitPoint);
+      BRElementNextToSplitPoint aBRElementNextToSplitPoint,
+      const std::function<nsresult(Element&)>& aInitializer);
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
