@@ -127,8 +127,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
-    var showTopFrecentSites by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
+    /**
+     * Indicates whether or not top sites should be shown on the home screen.
+     */
+    var showTopSitesFeature by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_top_sites),
         featureFlag = true,
         default = { homescreenSections[HomeScreenSection.TOP_SITES] == true },
     )

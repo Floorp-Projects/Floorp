@@ -262,10 +262,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // we can prevent with this.
                         components.core.topSitesStorage.getTopSites(
                             totalSites = components.settings.topSitesMaxLimit,
-                            frecencyConfig = if (components.settings.showTopFrecentSites)
-                                FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
-                            else
-                                null,
+                            frecencyConfig = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES,
                             providerConfig = TopSitesProviderConfig(
                                 showProviderTopSites = components.settings.showContileFeature,
                                 maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD
@@ -758,7 +755,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
                 CustomizeHome.jumpBackIn.set(settings.showRecentTabsFeature)
                 CustomizeHome.recentlySaved.set(settings.showRecentBookmarksFeature)
-                CustomizeHome.mostVisitedSites.set(settings.showTopFrecentSites)
+                CustomizeHome.mostVisitedSites.set(settings.showTopSitesFeature)
                 CustomizeHome.recentlyVisited.set(settings.historyMetadataUIFeature)
                 CustomizeHome.pocket.set(settings.showPocketRecommendationsFeature)
             }

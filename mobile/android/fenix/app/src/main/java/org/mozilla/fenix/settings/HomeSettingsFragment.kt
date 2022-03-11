@@ -34,8 +34,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupPreferences() {
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_top_frecent_sites).apply {
-            isChecked = context.settings().showTopFrecentSites
+        requirePreference<SwitchPreference>(R.string.pref_key_show_top_sites).apply {
+            isChecked = context.settings().showTopSitesFeature
             onPreferenceChangeListener = CustomizeHomeMetricsUpdater()
         }
 

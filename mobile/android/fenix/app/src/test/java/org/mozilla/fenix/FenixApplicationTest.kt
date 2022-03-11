@@ -137,7 +137,7 @@ class FenixApplicationTest {
         every { settings.signedInFxaAccount } returns true
         every { settings.showRecentTabsFeature } returns true
         every { settings.showRecentBookmarksFeature } returns true
-        every { settings.showTopFrecentSites } returns true
+        every { settings.showTopSitesFeature } returns true
         every { settings.historyMetadataUIFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true

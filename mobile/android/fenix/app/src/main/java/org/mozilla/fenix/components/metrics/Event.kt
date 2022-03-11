@@ -400,7 +400,7 @@ sealed class Event {
         val context: Context
     ) : Event() {
         private val telemetryAllowMap = mapOf(
-            context.getString(R.string.pref_key_enable_top_frecent_sites) to "most_visited_sites",
+            context.getString(R.string.pref_key_show_top_sites) to "most_visited_sites",
             context.getString(R.string.pref_key_recent_tabs) to "jump_back_in",
             context.getString(R.string.pref_key_recent_bookmarks) to "recently_saved",
             context.getString(R.string.pref_key_history_metadata_feature) to "recently_visited",
