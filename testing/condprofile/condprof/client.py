@@ -128,6 +128,7 @@ def get_profile(
     task_id=None,
     download_cache=True,
     repo="mozilla-central",
+    remote_test_root="/sdcard/test_root/",
 ):
     """Extract a conditioned profile in the target directory.
 
