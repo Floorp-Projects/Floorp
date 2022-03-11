@@ -287,10 +287,12 @@ void WinWebAuthnManager::Register(
         break;
     }
 
+    if (extra.Extensions().Length() > (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
+      nsresult aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+      MaybeAbortRegister(aTransactionId, aError);
+      return;
+    }
     for (const WebAuthnExtension& ext : extra.Extensions()) {
-      MOZ_ASSERT(cExtensions <
-                 (int)(sizeof(rgExtension) / sizeof(rgExtension[0])));
-
       if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
         HmacCreateSecret =
             ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret() == true;
