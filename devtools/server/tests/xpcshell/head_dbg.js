@@ -917,6 +917,7 @@ function threadFrontTest(test, options = {}) {
       server,
       targetFront,
       commands,
+      isWorkerServer: server === WorkerDevToolsServer,
     };
     if (waitForFinish) {
       // Use dispatchToMainThread so that the test function does not have to
