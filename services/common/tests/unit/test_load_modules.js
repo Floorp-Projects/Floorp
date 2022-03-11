@@ -18,7 +18,7 @@ function expectImportsToSucceed(mm, base = MODULE_BASE) {
     let resource = base + m;
     let succeeded = false;
     try {
-      ChromeUtils.import(resource, {});
+      ChromeUtils.import(resource);
       succeeded = true;
     } catch (e) {}
 
@@ -33,7 +33,7 @@ function expectImportsToFail(mm, base = MODULE_BASE) {
     let resource = base + m;
     let succeeded = false;
     try {
-      ChromeUtils.import(resource, {});
+      ChromeUtils.import(resource);
       succeeded = true;
     } catch (e) {}
 

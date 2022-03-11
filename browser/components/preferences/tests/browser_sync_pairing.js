@@ -3,13 +3,9 @@
 
 "use strict";
 
-const { UIState } = ChromeUtils.import(
-  "resource://services-sync/UIState.jsm",
-  {}
-);
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 const { FxAccountsPairingFlow } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsPairing.jsm",
-  {}
+  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 
 // Use sinon for mocking.

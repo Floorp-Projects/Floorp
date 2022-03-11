@@ -4,8 +4,7 @@
 function run_test() {
   let profd = do_get_profile();
   var SessionFile = ChromeUtils.import(
-    "resource:///modules/sessionstore/SessionFile.jsm",
-    {}
+    "resource:///modules/sessionstore/SessionFile.jsm"
   ).SessionFile;
 
   let sourceSession = do_get_file("data/sessionstore_invalid.js");

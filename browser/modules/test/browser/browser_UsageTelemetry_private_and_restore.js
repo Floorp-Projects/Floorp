@@ -120,10 +120,9 @@ add_task(async function test_sessionRestore() {
   };
 
   // Save the current session.
-  let SessionStore = ChromeUtils.import(
-    "resource:///modules/sessionstore/SessionStore.jsm",
-    {}
-  ).SessionStore;
+  let { SessionStore } = ChromeUtils.import(
+    "resource:///modules/sessionstore/SessionStore.jsm"
+  );
 
   // Load the custom state and wait for SSTabRestored, as we want to make sure
   // that the URI counting code was hit.

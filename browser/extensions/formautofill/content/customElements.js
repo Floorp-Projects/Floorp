@@ -278,8 +278,7 @@
       this.setAttribute("formautofillattached", "true");
 
       let { AppConstants } = ChromeUtils.import(
-        "resource://gre/modules/AppConstants.jsm",
-        {}
+        "resource://gre/modules/AppConstants.jsm"
       );
 
       let buttonTextBundleKey;

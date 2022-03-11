@@ -7,8 +7,7 @@ const { LoginRelatedRealmsParent } = ChromeUtils.import(
   "resource://gre/modules/LoginRelatedRealms.jsm"
 );
 const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js",
-  {}
+  "resource://services-settings/remote-settings.js"
 );
 
 const REMOTE_SETTINGS_COLLECTION = "websites-with-shared-credential-backends";

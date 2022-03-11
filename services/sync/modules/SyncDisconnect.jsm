@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
 this.EXPORTED_SYMBOLS = ["SyncDisconnectInternal", "SyncDisconnect"];
@@ -32,7 +32,7 @@ this.SyncDisconnectInternal = {
 
   // mocked by tests.
   getWeave() {
-    return ChromeUtils.import("resource://services-sync/main.js", {}).Weave;
+    return ChromeUtils.import("resource://services-sync/main.js").Weave;
   },
 
   // Returns a promise that resolves when we are not syncing, waiting until

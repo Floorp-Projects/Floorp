@@ -5,7 +5,7 @@ reject-chromeutils-import-params
 largely deprecated.
 
 The use of object destructuring is preferred over the second parameter being
-``this``.
+``this`` or ``{}``.
 
 Using explicit exports is preferred over the second parameter being ``null``.
 
@@ -16,6 +16,7 @@ Examples of incorrect code for this rule:
 
     ChromeUtils.import("resource://gre/modules/Services.jsm", this);
     ChromeUtils.import("resource://gre/modules/Services.jsm", null);
+    ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 Examples of correct code for this rule:
 ---------------------------------------
