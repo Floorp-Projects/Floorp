@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Google"
+  },
+  "extensionDescription": {
+    "message": "Google Search"
+  },
+  "searchUrl": {
+    "message": "https://www.google.com.tr/search"
+  },
+  "searchForm": {
+    "message": "https://www.google.com.tr/search?q={searchTerms}"
+  },
+  "suggestUrl": {
+    "message": "https://www.google.com.tr/complete/search?q={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "q={searchTerms}"
+  }
+}
