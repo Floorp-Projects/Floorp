@@ -1218,7 +1218,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
   }
 
-  AUTO_PROFILER_TRACING_MARKER("Paint", "SetDisplayList", GRAPHICS);
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  uint64_t innerWindowId = cbp ? cbp->GetInnerWindowId() : 0;
+  AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID("Paint", "SetDisplayList",
+                                             GRAPHICS, innerWindowId);
   UpdateFwdTransactionId(aFwdTransactionId);
 
   // This ensures that destroy operations are always processed. It is not safe
@@ -2201,10 +2204,12 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
       wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
       IsRootWebRenderBridgeParent());
 
-  AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  uint64_t innerWindowId = cbp ? cbp->GetInnerWindowId() : 0;
+  AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID("Paint", "CompositeToTarget",
+                                             GRAPHICS, innerWindowId);
 
   bool paused = true;
-  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (cbp) {
     paused = cbp->IsPaused();
   }
@@ -2212,7 +2217,8 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   if (paused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
     mCompositionOpportunityId = mCompositionOpportunityId.Next();
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS, {},
+    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
+                         MarkerInnerWindowId(innerWindowId),
                          paused ? "Paused"_ns : "No display list"_ns);
     return;
   }
@@ -2232,7 +2238,8 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
       }
     }
 
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS, {},
+    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
+                         MarkerInnerWindowId(innerWindowId),
                          "Too many pending frames");
     return;
   }
@@ -2264,9 +2271,11 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     // Skip WR render during paused state.
     if (cbp->IsPaused()) {
       TimeStamp now = TimeStamp::Now();
-      PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
-                           MarkerTiming::InstantAt(now),
-                           "CompositorBridgeParent is paused");
+      PROFILER_MARKER_TEXT(
+          "SkippedComposite", GRAPHICS,
+          MarkerOptions(MarkerInnerWindowId(cbp->GetInnerWindowId()),
+                        MarkerTiming::InstantAt(now)),
+          "CompositorBridgeParent is paused");
       cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
                                   now);
       return;

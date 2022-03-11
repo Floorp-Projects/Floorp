@@ -306,6 +306,11 @@ class MOZ_RAII AutoProfilerTracing {
   AutoProfilerTracing PROFILER_RAII(categoryString, markerName,                \
                                     geckoprofiler::category::categoryPair,     \
                                     mozilla::Nothing())
+#define AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID(                        \
+    categoryString, markerName, categoryPair, innerWindowId)               \
+  AutoProfilerTracing PROFILER_RAII(categoryString, markerName,            \
+                                    geckoprofiler::category::categoryPair, \
+                                    mozilla::Some(innerWindowId))
 #define AUTO_PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName, \
                                               categoryPair, docShell)     \
   AutoProfilerTracing PROFILER_RAII(                                      \
