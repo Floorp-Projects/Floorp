@@ -138,6 +138,7 @@ add_task(
           id: "a-script",
           js: ["script.js"],
           matches: ["http://*/*/*.html"],
+          persistAcrossSessions: false,
         };
 
         await browser.scripting.registerContentScripts([script]);

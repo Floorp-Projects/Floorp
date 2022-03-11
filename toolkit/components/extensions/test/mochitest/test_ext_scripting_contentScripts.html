@@ -52,6 +52,7 @@ add_task(async function test_validate_registerContentScripts_params() {
             {
               id: "script",
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "js must be specified.",
@@ -63,6 +64,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script",
               js: [],
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "js must be specified.",
@@ -73,6 +75,7 @@ add_task(async function test_validate_registerContentScripts_params() {
             {
               id: "script",
               js: ["script.js"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "matches must be specified.",
@@ -84,6 +87,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script",
               js: ["script.js"],
               matches: [],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "matches must be specified.",
@@ -95,6 +99,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script",
               js: ["script.js"],
               matches: [""],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid url pattern: ",
@@ -106,6 +111,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script",
               js: ["script.js"],
               matches: ["not-a-pattern"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid url pattern: not-a-pattern",
@@ -117,6 +123,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script",
               js: ["script.js"],
               matches: ["*://mochi.test/*", "not-a-pattern"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid url pattern: not-a-pattern",
@@ -129,6 +136,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
               excludeMatches: [""],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid url pattern: ",
@@ -141,6 +149,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
               excludeMatches: ["not-a-pattern"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid url pattern: not-a-pattern",
@@ -152,11 +161,13 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "script-1",
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
             {
               id: "script-1",
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: `Attempt to register content script with id "script-1" more than once.`,
@@ -168,6 +179,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "",
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid content script id.",
@@ -179,6 +191,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               id: "_foo",
               js: ["script.js"],
               matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
             },
           ],
           expectedError: "Invalid content script id.",
@@ -208,6 +221,62 @@ add_task(async function test_validate_registerContentScripts_params() {
   await extension.unload();
 });
 
+add_task(async function test_validate_registerContentScripts_persistAcrossSessions() {
+  let extension = makeExtension({
+    async background() {
+      const TEST_CASES = [
+        {
+          title: "no persistAcrossSessions option",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+            },
+          ],
+          expectedError: /Property "persistAcrossSessions" is required/,
+        },
+        {
+          title: "persistAcrossSessions: true",
+          params: [
+            {
+              id: "script",
+              js: ["script.js"],
+              matches: ["*://mochi.test/*"],
+              persistAcrossSessions: true,
+            },
+          ],
+          expectedError: /persistAcrossSessions: Invalid value true/,
+        },
+      ];
+
+      for (const { title, params, expectedError } of TEST_CASES) {
+        try {
+          browser.scripting.registerContentScripts(params);
+          browser.test.fail("registration should not be allowed");
+        } catch (err) {
+          browser.test.assertTrue(
+            expectedError.test(err.message),
+            `${title} - got expected error`
+          );
+        }
+      }
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered script");
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});
+
 add_task(async function test_registerContentScripts_with_already_registered_id() {
   let extension = makeExtension({
     async background() {
@@ -215,6 +284,7 @@ add_task(async function test_registerContentScripts_with_already_registered_id()
         id: "script-1",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       };
 
       await browser.scripting.registerContentScripts([script]);
@@ -273,6 +343,7 @@ add_task(async function test_getRegisteredContentScripts() {
         id: "a-script",
         js: ["script.js"],
         matches: ["<all_urls>"],
+        persistAcrossSessions: false,
       };
 
       await browser.scripting.registerContentScripts([aScript]);
@@ -321,6 +392,7 @@ add_task(async function test_registerContentScripts_js() {
               id: "script-1",
               js: ["script-1.js"],
               matches: ["*://test1.example.com/*"],
+              persistAcrossSessions: false,
             }
           ],
         },
@@ -335,6 +407,7 @@ add_task(async function test_registerContentScripts_js() {
                 "*://example.org/*",
               ],
               allFrames: true,
+              persistAcrossSessions: false,
             }
           ],
         },
@@ -350,6 +423,7 @@ add_task(async function test_registerContentScripts_js() {
               ],
               allFrames: true,
               excludeMatches: ["*://test1.example.com/*"],
+              persistAcrossSessions: false,
             }
           ],
         },
@@ -360,6 +434,7 @@ add_task(async function test_registerContentScripts_js() {
               id: "script-4",
               js: ["script-4-1.js", "script-4-2.js"],
               matches: ["*://test1.example.com/*"],
+              persistAcrossSessions: false,
             }
           ],
         },
@@ -372,6 +447,7 @@ add_task(async function test_registerContentScripts_js() {
               js: ["/script-5.js"],
               matches: ["*://test1.example.com/*"],
               excludeMatches: [],
+              persistAcrossSessions: false,
             }
           ],
         },
@@ -413,6 +489,7 @@ add_task(async function test_registerContentScripts_js() {
             js: ["script-1.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-2",
@@ -423,6 +500,7 @@ add_task(async function test_registerContentScripts_js() {
               "*://example.org/*",
             ],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-3",
@@ -434,6 +512,7 @@ add_task(async function test_registerContentScripts_js() {
               "*://example.org/*",
             ],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-4",
@@ -441,6 +520,7 @@ add_task(async function test_registerContentScripts_js() {
             js: ["script-4-1.js", "script-4-2.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
           {
             id: "script-5",
@@ -449,6 +529,7 @@ add_task(async function test_registerContentScripts_js() {
             js: ["script-5.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
         ]),
         JSON.stringify(scripts),
@@ -566,6 +647,7 @@ add_task(async function test_registerContentScripts_are_not_unregistered() {
             id: "a-script",
             js: ["script.js"],
             matches: ["*://test1.example.com/*"],
+            persistAcrossSessions: false,
           },
         ]);
 
@@ -609,6 +691,7 @@ add_task(async function test_scripts_dont_run_after_shutdown() {
           id: "script-that-should-not-run",
           js: ["script.js"],
           matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
         },
       ]);
 
@@ -631,6 +714,7 @@ add_task(async function test_scripts_dont_run_after_shutdown() {
           id: "this-script-should-run",
           js: ["script.js"],
           matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
         },
       ]);
 
@@ -672,6 +756,7 @@ add_task(async function test_registerContentScripts_with_wrong_matches() {
           id: "script-that-should-not-run",
           js: ["script.js"],
           matches: ["*://mozilla.org/*"],
+          persistAcrossSessions: false,
         },
       ]);
 
@@ -694,6 +779,7 @@ add_task(async function test_registerContentScripts_with_wrong_matches() {
           id: "this-script-should-run",
           js: ["script.js"],
           matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
         },
       ]);
 
@@ -731,6 +817,7 @@ add_task(async function test_registerContentScripts_twice_with_same_id() {
         id: "script-that-should-not-run",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       };
 
       const results = await Promise.allSettled([
@@ -778,6 +865,7 @@ add_task(async function test_getRegisteredContentScripts_during_a_registration()
           id: "a-script",
           js: ["script.js"],
           matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
         },
       ]);
 
@@ -790,6 +878,7 @@ add_task(async function test_getRegisteredContentScripts_during_a_registration()
             js: ["script.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
+            persistAcrossSessions: false,
           },
         ]),
         JSON.stringify(scripts),
@@ -855,16 +944,19 @@ add_task(async function test_unregisterContentScripts() {
         id: "script-1",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       };
       const script2 = {
         id: "script-2",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       }
       const script3 = {
         id: "script-3",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       }
 
       let res = await browser.scripting.registerContentScripts([
@@ -928,6 +1020,7 @@ add_task(async function test_unregisterContentScripts_twice_with_same_id() {
         id: "script-to-unregister",
         js: ["script.js"],
         matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
       };
 
       await browser.scripting.registerContentScripts([script]);
