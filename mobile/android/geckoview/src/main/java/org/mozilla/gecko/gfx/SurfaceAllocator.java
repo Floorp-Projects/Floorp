@@ -81,9 +81,13 @@ import org.mozilla.gecko.process.GeckoServiceChildProcess;
       }
 
       final GeckoSurface surface = sAllocator.acquireSurface(width, height, singleBufferMode);
+      if (surface == null) {
+        Log.w(LOGTAG, "Failed to acquire GeckoSurface: RemoteSurfaceAllocator returned null");
+        return null;
+      }
       sSurfaces.put(surface.getHandle(), surface);
 
-      if (surface != null && !surface.inProcess()) {
+      if (!surface.inProcess()) {
         sAllocator.configureSync(surface.initSyncSurface(width, height));
       }
       return surface;
