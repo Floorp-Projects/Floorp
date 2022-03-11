@@ -11599,13 +11599,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   if (NS_WARN_IF(!aIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No Index id!");
   }
   {
     const auto& dbMetadata = GetDatabase().Metadata();
@@ -11613,13 +11611,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     MOZ_ASSERT(dbMetadata.mNextIndexId > 0);
 
     if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Requested ObjectStoreId does not match next ID!");
     }
 
     if (NS_WARN_IF(aIndexId >= dbMetadata.mNextIndexId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Requested IndexId does not match next ID!");
     }
   }
 
@@ -11627,21 +11623,18 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForObjectStoreId failed!");
   }
 
   SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
       GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForIndexId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundIndexMetadata->mDeleted.Flip();
@@ -11666,7 +11659,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
