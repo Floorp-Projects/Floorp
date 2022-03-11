@@ -5,15 +5,12 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 import logging
-
-from six import text_type, ensure_text
 
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Any, Optional, Required, Schema
+from voluptuous import Optional, Required, Schema
 
 from fenix_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 
@@ -22,13 +19,13 @@ logger = logging.getLogger(__name__)
 beetmover_description_schema = Schema(
     {
         # unique name to describe this beetmover task, defaults to {dep.label}-beetmover
-        Required("name"): text_type,
+        Required("name"): str,
         Required("worker"): {"upstream-artifacts": [dict]},
         # treeherder is allowed here to override any defaults we use for beetmover.
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("attributes"): task_description_schema["attributes"],
         Optional("dependencies"): task_description_schema["dependencies"],
-        Optional("run-on-tasks-for"): [text_type],
+        Optional("run-on-tasks-for"): [str],
         Optional("bucket-scope"): optionally_keyed_by("level", "build-type", str),
     }
 )
@@ -43,25 +40,23 @@ def make_task_description(config, tasks):
         attributes = task["attributes"]
 
         label = "beetmover-{}".format(task["name"])
-        description = (
-            "Beetmover submission for build type '{build_type}'".format(
-                build_type=attributes.get("build-type"),
-            )
+        description = "Beetmover submission for build type '{build_type}'".format(
+            build_type=attributes.get("build-type"),
         )
 
         if task.get("locale"):
             attributes["locale"] = task["locale"]
 
         resolve_keyed_by(
-            task, 
+            task,
             "bucket-scope",
-            item_name=task['name'],
+            item_name=task["name"],
             **{
-                'build-type': task['attributes']['build-type'],
-                'level': config.params["level"]
+                "build-type": task["attributes"]["build-type"],
+                "level": config.params["level"],
             }
         )
-        bucket_scope = task.pop('bucket-scope')
+        bucket_scope = task.pop("bucket-scope")
 
         task = {
             "label": label,
@@ -85,10 +80,10 @@ def make_task_description(config, tasks):
 def craft_release_properties(config, task):
     params = config.params
     return {
-        "app-name": ensure_text(params["project"]),
-        "app-version": ensure_text(params["version"]),
-        "branch": ensure_text(params["project"]),
-        "build-id": ensure_text(params["moz_build_date"]),
+        "app-name": str(params["project"]),
+        "app-version": str(params["version"]),
+        "branch": str(params["project"]),
+        "build-id": str(params["moz_build_date"]),
         "hash-type": "sha512",
         "platform": "android",
     }

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import itertools
 import os
 from copy import deepcopy
@@ -44,7 +42,7 @@ def generate_beetmover_upstream_artifacts(
         **{
             "release-type": config.params["release_type"],
             "platform": platform,
-        }
+        },
     )
     map_config = deepcopy(cached_load_yaml(job["attributes"]["artifact_map"]))
     upstream_artifacts = list()
@@ -153,7 +151,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         **{
             "release-type": config.params["release_type"],
             "platform": platform,
-        }
+        },
     )
     map_config = deepcopy(cached_load_yaml(job["attributes"]["artifact_map"]))
     base_artifact_prefix = map_config.get(
@@ -176,9 +174,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         map_config,
         "s3_bucket_paths",
         job["label"],
-        **{
-            "build-type": job["attributes"]["build-type"]
-        }
+        **{"build-type": job["attributes"]["build-type"]},
     )
 
     for locale, dep in sorted(itertools.product(locales, dependencies)):
@@ -218,12 +214,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
                 "pretty_name",
                 "checksums_path",
             ]:
-                resolve_keyed_by(
-                    file_config,
-                    field,
-                    job["label"],
-                    locale=locale
-                )
+                resolve_keyed_by(file_config, field, job["label"], locale=locale)
 
             # This format string should ideally be in the configuration file,
             # but this would mean keeping variable names in sync between code + config.
@@ -271,20 +262,16 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
 
         version = read_version_file()
         upload_date = datetime.fromtimestamp(config.params["build_date"])
-        
+
         if job["attributes"]["build-type"] == "nightly":
             folder_prefix = upload_date.strftime("%Y/%m/%Y-%m-%d-%H-%M-%S-")
             # TODO: Remove this when version.txt has versioning fixed
-            version = version.split('-')[0]
+            version = version.split("-")[0]
         else:
             folder_prefix = f"{version}/android/"
 
         kwargs.update(
-            {
-                "locale": locale,
-                "version": version,
-                "folder_prefix": folder_prefix
-            }
+            {"locale": locale, "version": version, "folder_prefix": folder_prefix}
         )
         kwargs.update(**platforms)
         paths = jsone.render(paths, kwargs)

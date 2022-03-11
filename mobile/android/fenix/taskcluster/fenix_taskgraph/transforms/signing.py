@@ -6,8 +6,6 @@ Apply some defaults and minor modifications to the jobs defined in the build
 kind.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
@@ -24,12 +22,13 @@ def resolve_keys(config, tasks):
                 key,
                 item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'level': config.params["level"],
-                    'tasks-for': config.params["tasks_for"],
+                    "build-type": task["attributes"]["build-type"],
+                    "level": config.params["level"],
+                    "tasks-for": config.params["tasks_for"],
                 }
             )
         yield task
+
 
 @transforms.add
 def set_worker_type(config, tasks):
@@ -38,7 +37,14 @@ def set_worker_type(config, tasks):
         if (
             str(config.params["level"]) == "3"
             and task["attributes"]["build-type"]
-            in ("nightly", "beta", "release", "android-test-nightly", "beta-mozillaonline", "release-mozillaonline")
+            in (
+                "nightly",
+                "beta",
+                "release",
+                "android-test-nightly",
+                "beta-mozillaonline",
+                "release-mozillaonline",
+            )
             and config.params["tasks_for"] in ("cron", "action")
         ):
             worker_type = "signing"
@@ -50,13 +56,18 @@ def set_worker_type(config, tasks):
 def set_signing_type(config, tasks):
     for task in tasks:
         signing_type = "dep-signing"
-        if (
-            str(config.params["level"]) == "3"
-            and config.params["tasks_for"] in ("cron", "action")
+        if str(config.params["level"]) == "3" and config.params["tasks_for"] in (
+            "cron",
+            "action",
         ):
             if task["attributes"]["build-type"] in ("beta", "release"):
                 signing_type = "fennec-production-signing"
-            elif task["attributes"]["build-type"] in ("nightly", "android-test-nightly", "beta-mozillaonline", "release-mozillaonline"):
+            elif task["attributes"]["build-type"] in (
+                "nightly",
+                "android-test-nightly",
+                "beta-mozillaonline",
+                "release-mozillaonline",
+            ):
                 signing_type = "production-signing"
         task.setdefault("worker", {})["signing-type"] = signing_type
         yield task
@@ -66,11 +77,9 @@ def set_signing_type(config, tasks):
 def set_index(config, tasks):
     for task in tasks:
         index = {}
-        if (
-            config.params["tasks_for"] in ("cron", "action")
-            and task["attributes"]["build-type"]
-            in ("nightly", "debut", "nightly-simulation", "beta", "release")
-        ):
+        if config.params["tasks_for"] in ("cron", "action") and task["attributes"][
+            "build-type"
+        ] in ("nightly", "debut", "nightly-simulation", "beta", "release"):
             index["type"] = "signing"
         task["index"] = index
         yield task
