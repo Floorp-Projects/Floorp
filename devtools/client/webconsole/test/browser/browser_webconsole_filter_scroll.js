@@ -57,6 +57,11 @@ add_task(async function() {
   info("Scroll up");
   outputContainer.scrollTop = 0;
 
+  info("Wait for the layout to stabilize");
+  await new Promise(r =>
+    window.requestAnimationFrame(() => TestUtils.executeSoon(r))
+  );
+
   await setFilterState(hud, { text: "init-9" });
   onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
   await onMessagesFiltered;
