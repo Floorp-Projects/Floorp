@@ -3,33 +3,61 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-linux
+    worker-type: b-linux-large
     worker:
         max-run-time: 1800
     run:
-        script: repack-llvm-symbolizer.sh
+        script: build-llvm-symbolizer.sh
         toolchain-artifact: public/build/llvm-symbolizer.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-clang-13-stage1
 
 linux64-llvm-symbolizer:
     description: "llvm-symbolizer for Linux"
     treeherder:
         symbol: TL(llvm-symbolizer)
+    run:
+        arguments:
+            - x86_64-unknown-linux-gnu
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+            - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-toolchain-sysroot
 
 macosx64-llvm-symbolizer:
     description: "llvm-symbolizer for macOS x64"
     treeherder:
         symbol: TM(llvm-symbolizer)
+    run:
+        arguments:
+            - x86_64-apple-darwin
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+            - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
-            - macosx64-clang
+            - macosx64-sdk-11.0
 
 win64-llvm-symbolizer:
     description: "llvm-symbolizer for Windows"
     treeherder:
         symbol: TW64(llvm-symbolizer)
-    fetches:
-        toolchain:
-            - win64-clang
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments:
+            - x86_64-pc-windows-msvc
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+            - taskcluster/scripts/misc/build-llvm-common.sh
+            - taskcluster/scripts/misc/tooltool-download.sh
+        tooltool-downloads: internal
