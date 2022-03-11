@@ -7349,6 +7349,40 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  impression_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has viewed non-sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar. The
+      key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  impression_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has viewed sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar. The
+      key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   click:
     bug_numbers:
       - 1693927
@@ -7366,6 +7400,41 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  click_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on
+      non-sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar (not including the help button). The key is the 1-based index of
+      each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  click_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar (not
+      including the help button). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   help:
     bug_numbers:
       - 1693927
@@ -7378,6 +7447,42 @@ contextual.services.quicksuggest:
     keyed: true
     notification_emails:
       - najiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  help_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on the help
+      button in non-sponsored Firefox Suggest best match (a.k.a. top pick)
+      results in the urlbar (not including the help button). The key is the
+      1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  help_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on the help
+      button in sponsored Firefox Suggest best match (a.k.a. top pick) results
+      in the urlbar (not including the help button). The key is the 1-based
+      index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
