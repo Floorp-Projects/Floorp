@@ -2635,14 +2635,11 @@ mozilla::ipc::IPCResult BackgroundRequestChild::RecvPreprocess(
     }
 
     default:
-      MOZ_CRASH("Unknown params type!");
+      return IPC_FAIL(this, "Unknown params type!");
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendContinue(rv)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
+    QM_WARNONLY_TRY(OkIf(SendContinue(rv)));
   }
 
   return IPC_OK();
