@@ -293,24 +293,24 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 
 #ifdef JS_CODEGEN_X86
 void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  MOZ_ASSERT(TlsData::sizeOfBaselineScratch() >= 8);
   MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
   fr.loadTlsPtr(regForTls);
-  masm.store32(r.low, Address(regForTls, offsetof(TlsData, baselineScratch)));
+  masm.store32(r.low, Address(regForTls, TlsData::offsetOfBaselineScratch()));
   masm.store32(r.high,
-               Address(regForTls, offsetof(TlsData, baselineScratch) + 4));
+               Address(regForTls, TlsData::offsetOfBaselineScratch() + 4));
 }
 
 void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  MOZ_ASSERT(TlsData::sizeOfBaselineScratch() >= 8);
   fr.loadTlsPtr(regForTls);
   if (regForTls == r.low) {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+    masm.load32(Address(regForTls, TlsData::offsetOfBaselineScratch() + 4),
                 r.high);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
+    masm.load32(Address(regForTls, TlsData::offsetOfBaselineScratch()), r.low);
   } else {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+    masm.load32(Address(regForTls, TlsData::offsetOfBaselineScratch()), r.low);
+    masm.load32(Address(regForTls, TlsData::offsetOfBaselineScratch() + 4),
                 r.high);
   }
 }
@@ -1423,7 +1423,7 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
 
 void BaseCompiler::loadTag(RegPtr tlsData, uint32_t tagIndex, RegRef tagDst) {
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  size_t offset = offsetof(TlsData, globalArea) + tagDesc.globalDataOffset;
+  size_t offset = TlsData::offsetOfGlobalArea() + tagDesc.globalDataOffset;
   masm.loadPtr(Address(tlsData, offset), tagDst);
 }
 
@@ -1431,14 +1431,14 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   RegPtr pendingAddr = RegPtr(PreBarrierReg);
   needPtr(pendingAddr);
   masm.computeEffectiveAddress(
-      Address(WasmTlsReg, offsetof(TlsData, pendingException)), pendingAddr);
+      Address(WasmTlsReg, TlsData::offsetOfPendingException()), pendingAddr);
   *exnDst = needRef();
   masm.loadPtr(Address(pendingAddr, 0), *exnDst);
   emitBarrieredClear(pendingAddr);
 
   *tagDst = needRef();
   masm.computeEffectiveAddress(
-      Address(WasmTlsReg, offsetof(TlsData, pendingExceptionTag)), pendingAddr);
+      Address(WasmTlsReg, TlsData::offsetOfPendingExceptionTag()), pendingAddr);
   masm.loadPtr(Address(pendingAddr, 0), *tagDst);
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
@@ -1888,7 +1888,7 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 // Global variable access.
 
 Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp) {
-  uint32_t globalToTlsOffset = offsetof(TlsData, globalArea) + global.offset();
+  uint32_t globalToTlsOffset = TlsData::offsetOfGlobalArea() + global.offset();
   fr.loadTlsPtr(tmp);
   if (global.isIndirect()) {
     masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);

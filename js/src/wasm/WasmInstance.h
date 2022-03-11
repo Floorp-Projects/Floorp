@@ -111,7 +111,7 @@ class Instance {
   bool debugEnabled() const { return !!maybeDebug_; }
   DebugState& debug() { return *maybeDebug_; }
   TlsData* tlsData() const { return tlsData_.get(); }
-  uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
+  uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea_; }
   const SharedTableVector& tables() const { return tables_; }
   SharedMem<uint8_t*> memoryBase() const;
   WasmMemoryObject* memory() const;

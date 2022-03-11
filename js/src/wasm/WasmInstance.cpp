@@ -327,7 +327,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
                              int32_t argc, uint64_t* argv) {
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return instance->callImport(cx, funcImportIndex, argc, argv);
 }
 
@@ -338,7 +338,7 @@ Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
 template <typename ValT, typename PtrT>
 static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
                            int64_t timeout_ns) {
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
 
   if (!instance->memory()->isShared()) {
     ReportTrapError(cx, JSMSG_WASM_NONSHARED_WAIT);
@@ -407,7 +407,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
 
 template <typename PtrT>
 static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
 
   // The alignment guard is not in the wasm spec as of 2017-11-02, but is
   // considered likely to appear, as 4-byte alignment is required for WAKE by
@@ -460,7 +460,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(SASigMemoryGrowM32.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(!instance->isAsmJS());
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   RootedWasmMemoryObject memory(cx, instance->memory_);
 
   // It is safe to cast to uint32_t, as all limits have been checked inside
@@ -468,7 +468,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   uint32_t ret = uint32_t(WasmMemoryObject::grow(memory, uint64_t(delta), cx));
 
   // If there has been a moving grow, this Instance should have been notified.
-  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase ==
+  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase_ ==
                      instance->memory_->buffer().dataPointerEither());
 
   return ret;
@@ -479,13 +479,13 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(SASigMemoryGrowM64.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(!instance->isAsmJS());
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   RootedWasmMemoryObject memory(cx, instance->memory_);
 
   uint64_t ret = WasmMemoryObject::grow(memory, delta, cx);
 
   // If there has been a moving grow, this Instance should have been notified.
-  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase ==
+  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase_ ==
                      instance->memory_->buffer().dataPointerEither());
 
   return ret;
@@ -496,7 +496,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
 
   // This invariant must hold when running Wasm code. Assert it here so we can
   // write tests for cross-realm calls.
-  DebugOnly<JSContext*> cx = instance->tlsData()->cx;
+  DebugOnly<JSContext*> cx = instance->tlsData()->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
   Pages pages = instance->memory()->volatilePages();
@@ -512,7 +512,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
 
   // This invariant must hold when running Wasm code. Assert it here so we can
   // write tests for cross-realm calls.
-  DebugOnly<JSContext*> cx = instance->tlsData()->cx;
+  DebugOnly<JSContext*> cx = instance->tlsData()->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
   Pages pages = instance->memory()->volatilePages();
@@ -584,7 +584,7 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
                                            uint32_t srcByteOffset, uint32_t len,
                                            uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopyM32.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryCopy(cx, dstByteOffset, srcByteOffset, len, memBase);
 }
 
@@ -594,7 +594,7 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
                                                  uint32_t len,
                                                  uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopySharedM32.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryCopyShared(cx, dstByteOffset, srcByteOffset, len, memBase);
 }
 
@@ -603,7 +603,7 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
                                            uint64_t srcByteOffset, uint64_t len,
                                            uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopyM64.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryCopy(cx, dstByteOffset, srcByteOffset, len, memBase);
 }
 
@@ -613,7 +613,7 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
                                                  uint64_t len,
                                                  uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopySharedM64.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryCopyShared(cx, dstByteOffset, srcByteOffset, len, memBase);
 }
 
@@ -666,7 +666,7 @@ inline int32_t MemoryFillShared(JSContext* cx, I byteOffset, uint32_t value,
                                            uint32_t byteOffset, uint32_t value,
                                            uint32_t len, uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFillM32.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryFill(cx, byteOffset, value, len, memBase);
 }
 
@@ -675,7 +675,7 @@ inline int32_t MemoryFillShared(JSContext* cx, I byteOffset, uint32_t value,
                                                  uint32_t value, uint32_t len,
                                                  uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFillSharedM32.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryFillShared(cx, byteOffset, value, len, memBase);
 }
 
@@ -683,7 +683,7 @@ inline int32_t MemoryFillShared(JSContext* cx, I byteOffset, uint32_t value,
                                            uint64_t byteOffset, uint32_t value,
                                            uint64_t len, uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFillM64.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryFill(cx, byteOffset, value, len, memBase);
 }
 
@@ -692,7 +692,7 @@ inline int32_t MemoryFillShared(JSContext* cx, I byteOffset, uint32_t value,
                                                  uint32_t value, uint64_t len,
                                                  uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFillSharedM64.failureMode == FailureMode::FailOnNegI32);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryFillShared(cx, byteOffset, value, len, memBase);
 }
 
@@ -768,7 +768,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryInit(cx, instance, dstOffset, srcOffset, len,
                     instance->passiveDataSegments_[segIndex]);
 }
@@ -781,7 +781,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   return MemoryInit(cx, instance, dstOffset, srcOffset, len,
                     instance->passiveDataSegments_[segIndex]);
 }
@@ -796,7 +796,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
                                          uint32_t srcTableIndex) {
   MOZ_ASSERT(SASigTableCopy.failureMode == FailureMode::FailOnNegI32);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   const SharedTable& srcTable = instance->tables()[srcTableIndex];
   uint32_t srcTableLen = srcTable->length();
 
@@ -907,7 +907,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                      "ensured by validation");
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   if (!instance->passiveElemSegments_[segIndex]) {
     if (len == 0 && srcOffset == 0) {
       return 0;
@@ -951,7 +951,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                          uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableFill.failureMode == FailureMode::FailOnNegI32);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   Table& table = *instance->tables()[tableIndex];
 
   // Bounds check and deal with arithmetic overflow.
@@ -979,7 +979,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                       uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   const Table& table = *instance->tables()[tableIndex];
   if (index >= table.length()) {
     ReportTrapError(cx, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
@@ -1005,7 +1005,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                           uint32_t delta, uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableGrow.failureMode == FailureMode::Infallible);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   RootedAnyRef ref(cx, AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
@@ -1031,7 +1031,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                         void* value, uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableSet.failureMode == FailureMode::FailOnNegI32);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   Table& table = *instance->tables()[tableIndex];
 
   if (index >= table.length()) {
@@ -1061,7 +1061,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
 /* static */ void* Instance::refFunc(Instance* instance, uint32_t funcIndex) {
   MOZ_ASSERT(SASigRefFunc.failureMode == FailureMode::FailOnInvalidRef);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
 
   Tier tier = instance->code().bestTier();
   const MetadataTier& metadataTier = instance->metadata(tier);
@@ -1149,7 +1149,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                         gc::Cell** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   cx->runtime()->gc.storeBuffer().putCell(
       reinterpret_cast<JSObject**>(location));
 }
@@ -1161,7 +1161,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   if (*location == nullptr || !gc::IsInsideNursery(*location)) {
     return;
   }
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   cx->runtime()->gc.storeBuffer().putCell(
       reinterpret_cast<JSObject**>(location));
 }
@@ -1178,7 +1178,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
 /* static */ void* Instance::structNew(Instance* instance, void* structDescr) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   Rooted<RttValue*> rttValue(cx, (RttValue*)structDescr);
   MOZ_ASSERT(rttValue);
   return TypedObject::createStruct(cx, rttValue);
@@ -1187,7 +1187,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 /* static */ void* Instance::arrayNew(Instance* instance, uint32_t length,
                                       void* arrayDescr) {
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
   MOZ_ASSERT(rttValue);
   return TypedObject::createArray(cx, rttValue, length);
@@ -1196,7 +1196,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 #ifdef ENABLE_WASM_EXCEPTIONS
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
   RootedObject stack(cx, nullptr);
@@ -1209,7 +1209,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                               JSObject* exn) {
   MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNegI32);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   RootedValue exnVal(cx, UnboxAnyRef(AnyRef::fromJSObject(exn)));
   cx->setPendingException(exnVal, nullptr);
 
@@ -1227,7 +1227,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return 0;
   }
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
 
   ASSERT_ANYREF_IS_JSOBJECT;
   RootedTypedObject ref(
@@ -1240,7 +1240,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 /* static */ void* Instance::rttSub(Instance* instance, void* rttParentPtr,
                                     void* rttSubCanonPtr) {
   MOZ_ASSERT(SASigRttSub.failureMode == FailureMode::FailOnNullPtr);
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
 
   ASSERT_ANYREF_IS_JSOBJECT;
   RootedRttValue parentRtt(
@@ -1258,7 +1258,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                             uint32_t len, uint8_t* memBase) {
   MOZ_ASSERT(SASigIntrI8VecMul.failureMode == FailureMode::FailOnNegI32);
 
-  JSContext* cx = instance->tlsData()->cx;
+  JSContext* cx = instance->tlsData()->cx();
   const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
   size_t memLen = rawBuf->byteLength();
 
@@ -1330,21 +1330,21 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 #endif
   MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-  tlsData()->memoryBase =
+  tlsData()->memoryBase_ =
       memory_ ? memory_->buffer().dataPointerEither().unwrap() : nullptr;
   size_t limit = memory_ ? memory_->boundsCheckLimit() : 0;
 #if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
   // We assume that the limit is a 32-bit quantity
   MOZ_ASSERT(limit <= UINT32_MAX);
 #endif
-  tlsData()->boundsCheckLimit = limit;
-  tlsData()->instance = this;
-  tlsData()->realm = realm_;
-  tlsData()->cx = cx;
-  tlsData()->valueBoxClass = &WasmValueBox::class_;
+  tlsData()->boundsCheckLimit_ = limit;
+  tlsData()->instance_ = this;
+  tlsData()->realm_ = realm_;
+  tlsData()->cx_ = cx;
+  tlsData()->valueBoxClass_ = &WasmValueBox::class_;
   tlsData()->resetInterrupt(cx);
-  tlsData()->jumpTable = code_->tieringJumpTable();
-  tlsData()->addressOfNeedsIncrementalBarrier =
+  tlsData()->jumpTable_ = code_->tieringJumpTable();
+  tlsData()->addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
   // Initialize function imports in the tls data
@@ -1392,8 +1392,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     MOZ_ASSERT(tagObjs[i] != nullptr);
     tagTls(td) = tagObjs[i];
   }
-  tlsData()->pendingException = nullptr;
-  tlsData()->pendingExceptionTag = nullptr;
+  tlsData()->pendingException_ = nullptr;
+  tlsData()->pendingExceptionTag_ = nullptr;
 #endif
 
   // Add observer if our memory base may grow
@@ -1559,7 +1559,7 @@ Instance::~Instance() {
 
   // Any pending exceptions should have been consumed.
 #ifdef ENABLE_WASM_EXCEPTIONS
-  MOZ_ASSERT(!tlsData()->pendingException);
+  MOZ_ASSERT(!tlsData()->pendingException_);
 #endif
 }
 
@@ -1632,9 +1632,9 @@ void Instance::tracePrivate(JSTracer* trc) {
 #endif
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  TraceNullableEdge(trc, &tlsData()->pendingException,
+  TraceNullableEdge(trc, &tlsData()->pendingException_,
                     "wasm pending exception value");
-  TraceNullableEdge(trc, &tlsData()->pendingExceptionTag,
+  TraceNullableEdge(trc, &tlsData()->pendingExceptionTag_,
                     "wasm pending exception tag");
 #endif
 
@@ -1757,7 +1757,7 @@ WasmMemoryObject* Instance::memory() const { return memory_; }
 
 SharedMem<uint8_t*> Instance::memoryBase() const {
   MOZ_ASSERT(metadata().usesMemory());
-  MOZ_ASSERT(tlsData()->memoryBase == memory_->buffer().dataPointerEither());
+  MOZ_ASSERT(tlsData()->memoryBase_ == memory_->buffer().dataPointerEither());
   return memory_->buffer().dataPointerEither();
 }
 
@@ -2107,7 +2107,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
 
   // Ensure pending exception is cleared before and after (below) call.
 #ifdef ENABLE_WASM_EXCEPTIONS
-  MOZ_ASSERT(!tlsData()->pendingException);
+  MOZ_ASSERT(!tlsData()->pendingException_);
 #endif
 
   {
@@ -2121,7 +2121,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  MOZ_ASSERT(!tlsData()->pendingException);
+  MOZ_ASSERT(!tlsData()->pendingException_);
 #endif
 
   if (isAsmJS() && args.isConstructing()) {
@@ -2158,8 +2158,8 @@ static JSObject* GetExceptionTag(JSObject* exn) {
 }
 
 void Instance::setPendingException(HandleAnyRef exn) {
-  tlsData()->pendingException = exn.get().asJSObject();
-  tlsData()->pendingExceptionTag = GetExceptionTag(exn.get().asJSObject());
+  tlsData()->pendingException_ = exn.get().asJSObject();
+  tlsData()->pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
 }
 #endif
 
@@ -2225,13 +2225,13 @@ void Instance::onMovingGrowMemory() {
   MOZ_ASSERT(!memory_->isShared());
 
   ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
-  tlsData()->memoryBase = buffer.dataPointer();
+  tlsData()->memoryBase_ = buffer.dataPointer();
   size_t limit = memory_->boundsCheckLimit();
 #if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
   // We assume that the limit is a 32-bit quantity
   MOZ_ASSERT(limit <= UINT32_MAX);
 #endif
-  tlsData()->boundsCheckLimit = limit;
+  tlsData()->boundsCheckLimit_ = limit;
 }
 
 void Instance::onMovingGrowTable(const Table* theTable) {
