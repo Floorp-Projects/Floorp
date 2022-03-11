@@ -49,6 +49,21 @@ sealed class RecentTab {
     data class Tab(val state: TabSessionState) : RecentTab()
 
     /**
+     * A tab that was recently viewed on a synced device.
+     *
+     * @param deviceDisplayName The device the tab was viewed on.
+     * @param title The title of the tab.
+     * @param url The url of the tab.
+     * @param previewImageUrl The url used to retrieve the preview image of the tab.
+     */
+    data class SyncedTab(
+        val deviceDisplayName: String,
+        val title: String,
+        val url: String,
+        val previewImageUrl: String?,
+    ) : RecentTab()
+
+    /**
      * A search term group that was recently viewed
      *
      * @param searchTerm The search term that was recently viewed. Forced to start with uppercase.
