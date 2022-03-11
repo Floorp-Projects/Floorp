@@ -39,6 +39,7 @@ const EXPRESSIONS_BY_FILE = {
     ["NegZeroGrip", `1 / -Infinity`],
   ]),
   "undefined.js": new Map([["Undefined", `undefined`]]),
+  "window.js": new Map([["Window", `window`]]),
   // XXX: File a bug blocking Bug 1671400 for enabling automatic generation for one of
   // the following file.
   // "accessible.js",
@@ -65,7 +66,6 @@ const EXPRESSIONS_BY_FILE = {
   // "stylesheet.js",
   // "symbol.js",
   // "text-node.js",
-  // "window.js",
 };
 
 add_task(async function() {
