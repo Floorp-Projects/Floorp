@@ -28,6 +28,7 @@
 #include "wasm/WasmTlsData.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace js::jit;

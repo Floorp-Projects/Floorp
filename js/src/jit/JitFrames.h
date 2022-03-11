@@ -17,9 +17,13 @@
 #include "js/Id.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
+
+namespace wasm {
+struct TlsData;
+}
+
 namespace jit {
 
 enum class FrameType;

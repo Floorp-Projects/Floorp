@@ -3700,6 +3700,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest);
 
+  void loadWasmPinnedRegsFromTls();
+
   // This function takes care of loading the callee's TLS and pinned regs but
   // it is the caller's responsibility to save/restore TLS or pinned regs.
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,

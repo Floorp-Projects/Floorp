@@ -25,6 +25,7 @@
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/Realm.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
 
 #if defined(XP_WIN)

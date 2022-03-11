@@ -20,6 +20,7 @@
 
 #include "vm/EnvironmentObject.h"
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTlsData.h"
