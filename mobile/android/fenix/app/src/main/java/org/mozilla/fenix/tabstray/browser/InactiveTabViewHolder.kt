@@ -79,6 +79,14 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
         init {
             binding.root.context.metrics.track(Event.TabsTrayAutoCloseDialogSeen)
+
+            binding.message.text = with(binding.root.context) {
+                getString(
+                    R.string.tab_tray_inactive_auto_close_body_2,
+                    getString(R.string.app_name)
+                )
+            }
+
             binding.closeButton.setOnClickListener {
                 interactor.onCloseClicked()
             }
