@@ -30,6 +30,7 @@
 #include "jit/Disassemble.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRuntime.h"
+#include "jit/Registers.h"
 #include "js/ForOfIterator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
@@ -62,6 +63,16 @@ using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 
 using CheckedU32 = CheckedInt<uint32_t>;
+
+// Instance must be aligned at least as much as any of the integer, float,
+// or SIMD values that we'd like to store in it.
+static_assert(alignof(Instance) >=
+  std::max(sizeof(Registers::RegisterContent), sizeof(FloatRegisters::RegisterContent)));
+
+// The globalArea must be aligned at least as much as an instance. This is
+// guaranteed to be sufficient for all data types we care about, including
+// SIMD values. See the above assertion.
+static_assert(Instance::offsetOfGlobalArea() % alignof(Instance) == 0);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1292,7 +1303,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-                   SharedCode code, UniqueTlsData tlsDataIn,
+                   SharedCode code,
                    HandleWasmMemoryObject memory, SharedTableVector&& tables,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
@@ -1304,7 +1315,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       preBarrierCode_(
           cx->runtime()->jitRuntime()->preBarrier(MIRType::Object).value),
       code_(std::move(code)),
-      tlsData_(std::move(tlsDataIn)),
       memory_(memory),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug))
@@ -1313,6 +1323,31 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       hasGcTypes_(false)
 #endif
 {
+}
+
+Instance* Instance::create(JSContext* cx, HandleWasmInstanceObject object,
+                           SharedCode code, uint32_t globalDataLength,
+                           HandleWasmMemoryObject memory,
+                           SharedTableVector&& tables,
+                           UniqueDebugState maybeDebug) {
+  void* base = js_calloc(alignof(Instance) + offsetof(Instance, globalArea_) +
+                         globalDataLength);
+  if (!base) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  void* aligned = (void*)AlignBytes(uintptr_t(base), alignof(Instance));
+
+  auto* instance =
+      new (aligned) Instance(cx, object, code, memory,
+                             std::move(tables), std::move(maybeDebug));
+  instance->allocatedBase_ = base;
+  return instance;
+}
+
+void Instance::destroy(Instance* instance) {
+  instance->~Instance();
+  js_free(instance->allocatedBase_);
 }
 
 bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
@@ -1561,6 +1596,24 @@ Instance::~Instance() {
 #ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!tlsData()->pendingException_);
 #endif
+}
+
+void Instance::setInterrupt() {
+  interrupt_ = true;
+  stackLimit_ = UINTPTR_MAX;
+}
+
+bool Instance::isInterrupted() const {
+  return interrupt_ || stackLimit_ == UINTPTR_MAX;
+}
+
+void Instance::resetInterrupt(JSContext* cx) {
+  interrupt_ = false;
+  stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+}
+
+void Instance::setPendingException(JSObject* pendingException) {
+  pendingException_ = pendingException;
 }
 
 size_t Instance::memoryMappedSize() const {
@@ -2350,7 +2403,6 @@ void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                              Table::SeenSet* seenTables, size_t* code,
                              size_t* data) const {
   *data += mallocSizeOf(this);
-  *data += mallocSizeOf(tlsData_.get());
   for (const SharedTable& table : tables_) {
     *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
   }
