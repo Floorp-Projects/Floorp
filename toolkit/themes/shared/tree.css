@@ -35,6 +35,12 @@ treechildren::-moz-tree-row(multicol, odd) {
   background-color: -moz-oddtreerow;
 }
 
+@media (-moz-windows-default-theme) {
+  treechildren::-moz-tree-row(hover) {
+    background-color: hsla(0,0%,50%,.15);
+  }
+}
+
 treechildren::-moz-tree-row(selected) {
   background-color: -moz-cellhighlight;
 }
@@ -223,12 +229,6 @@ html|input.tree-input {
 }
 
 @media (-moz-platform: windows) {
-  @media (-moz-windows-default-theme) {
-    treechildren::-moz-tree-row(hover) {
-      background-color: hsla(0,0%,50%,.15);
-    }
-  }
-
   /* ::::: sort direction indicator :::::  */
 
   .treecol-sortdirection {
