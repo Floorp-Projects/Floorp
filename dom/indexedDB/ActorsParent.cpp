@@ -213,6 +213,28 @@ class nsPtrHashKey;
 #  define IDB_MOBILE
 #endif
 
+// Helper macros to reduce assertion verbosity
+// AUUF == ASSERT_UNREACHABLE_UNLESS_FUZZING
+#ifdef DEBUG
+#  ifdef FUZZING
+#    define NS_AUUF_OR_WARN(...) NS_WARNING(__VA_ARGS__)
+#  else
+#    define NS_AUUF_OR_WARN(...) MOZ_ASSERT(false, __VA_ARGS__)
+#  endif
+#  define NS_AUUF_OR_WARN_IF(cond) \
+    [](bool aCond) {               \
+      if (MOZ_UNLIKELY(aCond)) {   \
+        NS_AUUF_OR_WARN(#cond);    \
+      }                            \
+      return aCond;                \
+    }((cond))
+#else
+#  define NS_AUUF_OR_WARN(...) \
+    do {                       \
+    } while (false)
+#  define NS_AUUF_OR_WARN_IF(cond) static_cast<bool>(cond)
+#endif
+
 namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
@@ -6782,10 +6804,10 @@ already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
     return nullptr;
   }
 
-  if (NS_WARN_IF(!aLoggingInfo.nextTransactionSerialNumber()) ||
-      NS_WARN_IF(!aLoggingInfo.nextVersionChangeTransactionSerialNumber()) ||
-      NS_WARN_IF(!aLoggingInfo.nextRequestSerialNumber())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aLoggingInfo.nextTransactionSerialNumber()) ||
+      NS_AUUF_OR_WARN_IF(
+          !aLoggingInfo.nextVersionChangeTransactionSerialNumber()) ||
+      NS_AUUF_OR_WARN_IF(!aLoggingInfo.nextRequestSerialNumber())) {
     return nullptr;
   }
 
@@ -9300,25 +9322,23 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   MOZ_ASSERT(commonParams);
 
   const DatabaseMetadata& metadata = commonParams->metadata();
-  if (NS_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
     return nullptr;
   }
 
   const PrincipalInfo& principalInfo = commonParams->principalInfo();
-  if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(principalInfo.type() ==
+                         PrincipalInfo::TNullPrincipalInfo)) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
-                 metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(
+          principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
+          metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
     return nullptr;
   }
 
@@ -9863,15 +9883,13 @@ bool Database::VerifyRequestParams(const DatabaseRequestParams& aParams) const {
 
   switch (aParams.type()) {
     case DatabaseRequestParams::TCreateFileParams: {
-      if (NS_WARN_IF(mFileHandleDisabled)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mFileHandleDisabled)) {
         return false;
       }
 
       const CreateFileParams& params = aParams.get_CreateFileParams();
 
-      if (NS_WARN_IF(params.name().IsEmpty())) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(params.name().IsEmpty())) {
         return false;
       }
 
@@ -9947,8 +9965,7 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   bool trustParams = !BackgroundParent::IsOtherProcessActor(backgroundActor);
 #endif
 
-  if (NS_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
     return nullptr;
   }
 
@@ -10007,21 +10024,20 @@ Database::AllocPBackgroundIDBTransactionParent(
     return nullptr;
   }
 
-  if (NS_WARN_IF(aObjectStoreNames.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(aObjectStoreNames.IsEmpty())) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(aMode != IDBTransaction::Mode::ReadOnly &&
-                 aMode != IDBTransaction::Mode::ReadWrite &&
-                 aMode != IDBTransaction::Mode::ReadWriteFlush &&
-                 aMode != IDBTransaction::Mode::Cleanup)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(aMode != IDBTransaction::Mode::ReadOnly &&
+                         aMode != IDBTransaction::Mode::ReadWrite &&
+                         aMode != IDBTransaction::Mode::ReadWriteFlush &&
+                         aMode != IDBTransaction::Mode::Cleanup)) {
     return nullptr;
   }
 
   // If this is a readwrite transaction to a chrome database make sure the child
   // has write access.
+  // XXX: Maybe add NS_AUUF_OR_WARN_IF also here, see bug 1758875
   if (NS_WARN_IF((aMode == IDBTransaction::Mode::ReadWrite ||
                   aMode == IDBTransaction::Mode::ReadWriteFlush ||
                   aMode == IDBTransaction::Mode::Cleanup) &&
@@ -10033,8 +10049,7 @@ Database::AllocPBackgroundIDBTransactionParent(
   const ObjectStoreTable& objectStores = mMetadata->mObjectStores;
   const uint32_t nameCount = aObjectStoreNames.Length();
 
-  if (NS_WARN_IF(nameCount > objectStores.Count())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(nameCount > objectStores.Count())) {
     return nullptr;
   }
 
@@ -10048,8 +10063,7 @@ Database::AllocPBackgroundIDBTransactionParent(
             if (lastName) {
               // Make sure that this name is sorted properly and not a
               // duplicate.
-              if (NS_WARN_IF(name <= lastName.ref())) {
-                MOZ_CRASH_UNLESS_FUZZING();
+              if (NS_AUUF_OR_WARN_IF(name <= lastName.ref())) {
                 return Err(NS_ERROR_FAILURE);
               }
             }
@@ -10064,7 +10078,7 @@ Database::AllocPBackgroundIDBTransactionParent(
                                       !value->mDeleted;
                              });
             if (foundIt == objectStores.cend()) {
-              MOZ_CRASH_UNLESS_FUZZING();
+              MOZ_ASSERT_UNLESS_FUZZING(false, "ObjectStore not found.");
               return Err(NS_ERROR_FAILURE);
             }
 
@@ -10402,8 +10416,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreAddParams: {
       const ObjectStoreAddPutParams& params =
           aParams.get_ObjectStoreAddParams().commonParams();
-      if (NS_WARN_IF(!VerifyRequestParams(params))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params))) {
         return false;
       }
       break;
@@ -10412,8 +10425,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStorePutParams: {
       const ObjectStoreAddPutParams& params =
           aParams.get_ObjectStorePutParams().commonParams();
-      if (NS_WARN_IF(!VerifyRequestParams(params))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params))) {
         return false;
       }
       break;
@@ -10423,12 +10435,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const ObjectStoreGetParams& params = aParams.get_ObjectStoreGetParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10439,12 +10449,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetKeyParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10455,12 +10463,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetAllParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10471,23 +10477,20 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetAllKeysParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
     }
 
     case RequestParams::TObjectStoreDeleteParams: {
-      if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                     mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                     mMode != IDBTransaction::Mode::Cleanup &&
-                     mMode != IDBTransaction::Mode::VersionChange)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                             mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                             mMode != IDBTransaction::Mode::Cleanup &&
+                             mMode != IDBTransaction::Mode::VersionChange)) {
         return false;
       }
 
@@ -10495,23 +10498,20 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreDeleteParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
     }
 
     case RequestParams::TObjectStoreClearParams: {
-      if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                     mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                     mMode != IDBTransaction::Mode::Cleanup &&
-                     mMode != IDBTransaction::Mode::VersionChange)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                             mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                             mMode != IDBTransaction::Mode::Cleanup &&
+                             mMode != IDBTransaction::Mode::VersionChange)) {
         return false;
       }
 
@@ -10519,8 +10519,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreClearParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       break;
@@ -10531,12 +10530,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreCountParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10546,18 +10543,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetParams& params = aParams.get_IndexGetParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10567,18 +10561,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetKeyParams& params = aParams.get_IndexGetKeyParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10588,18 +10579,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetAllParams& params = aParams.get_IndexGetAllParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10609,18 +10597,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetAllKeysParams& params = aParams.get_IndexGetAllKeysParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10630,18 +10615,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexCountParams& params = aParams.get_IndexCountParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10661,25 +10643,20 @@ bool TransactionBase::VerifyRequestParams(
   // XXX Check more here?
 
   if (aParams.isOnly()) {
-    if (NS_WARN_IF(aParams.lower().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.lower().IsUnset())) {
       return false;
     }
-    if (NS_WARN_IF(!aParams.upper().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!aParams.upper().IsUnset())) {
       return false;
     }
-    if (NS_WARN_IF(aParams.lowerOpen())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.lowerOpen())) {
       return false;
     }
-    if (NS_WARN_IF(aParams.upperOpen())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.upperOpen())) {
       return false;
     }
-  } else if (NS_WARN_IF(aParams.lower().IsUnset() &&
-                        aParams.upper().IsUnset())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  } else if (NS_AUUF_OR_WARN_IF(aParams.lower().IsUnset() &&
+                                aParams.upper().IsUnset())) {
     return false;
   }
 
@@ -10690,22 +10667,19 @@ bool TransactionBase::VerifyRequestParams(
     const ObjectStoreAddPutParams& aParams) const {
   AssertIsOnBackgroundThread();
 
-  if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                 mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                 mMode != IDBTransaction::Mode::VersionChange)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                         mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                         mMode != IDBTransaction::Mode::VersionChange)) {
     return false;
   }
 
   SafeRefPtr<FullObjectStoreMetadata> objMetadata =
       GetMetadataForObjectStoreId(aParams.objectStoreId());
-  if (NS_WARN_IF(!objMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!objMetadata)) {
     return false;
   }
 
-  if (NS_WARN_IF(!aParams.cloneInfo().data().data.Size())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aParams.cloneInfo().data().data.Size())) {
     return false;
   }
 
@@ -10714,36 +10688,30 @@ bool TransactionBase::VerifyRequestParams(
       aParams.key().IsUnset()) {
     const SerializedStructuredCloneWriteInfo& cloneInfo = aParams.cloneInfo();
 
-    if (NS_WARN_IF(!cloneInfo.offsetToKeyProp())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!cloneInfo.offsetToKeyProp())) {
       return false;
     }
 
-    if (NS_WARN_IF(cloneInfo.data().data.Size() < sizeof(uint64_t))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(cloneInfo.data().data.Size() < sizeof(uint64_t))) {
       return false;
     }
 
-    if (NS_WARN_IF(cloneInfo.offsetToKeyProp() >
-                   (cloneInfo.data().data.Size() - sizeof(uint64_t)))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(cloneInfo.offsetToKeyProp() >
+                           (cloneInfo.data().data.Size() - sizeof(uint64_t)))) {
       return false;
     }
-  } else if (NS_WARN_IF(aParams.cloneInfo().offsetToKeyProp())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  } else if (NS_AUUF_OR_WARN_IF(aParams.cloneInfo().offsetToKeyProp())) {
     return false;
   }
 
   for (const auto& updateInfo : aParams.indexUpdateInfos()) {
     SafeRefPtr<FullIndexMetadata> indexMetadata =
         GetMetadataForIndexId(*objMetadata, updateInfo.indexId());
-    if (NS_WARN_IF(!indexMetadata)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
       return false;
     }
 
-    if (NS_WARN_IF(updateInfo.value().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(updateInfo.value().IsUnset())) {
       return false;
     }
 
@@ -10756,41 +10724,36 @@ bool TransactionBase::VerifyRequestParams(
 
     switch (fileAddInfo.type()) {
       case StructuredCloneFileBase::eBlob:
-        if (NS_WARN_IF(
+        if (NS_AUUF_OR_WARN_IF(
                 file.type() !=
                 DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
-          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
-        if (NS_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
           return false;
         }
         break;
 
       case StructuredCloneFileBase::eMutableFile: {
-        if (NS_WARN_IF(file.type() !=
-                       DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(
+                file.type() !=
+                DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
           return false;
         }
 
-        if (NS_WARN_IF(mDatabase->IsFileHandleDisabled())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(mDatabase->IsFileHandleDisabled())) {
           return false;
         }
 
         auto mutableFile =
             static_cast<MutableFile*>(file.get_PBackgroundMutableFileParent());
 
-        if (NS_WARN_IF(!mutableFile)) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(!mutableFile)) {
           return false;
         }
 
         const Database& database = mutableFile->GetDatabase();
-        if (NS_WARN_IF(database.Id() != mDatabase->Id())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(database.Id() != mDatabase->Id())) {
           return false;
         }
 
@@ -10801,7 +10764,7 @@ bool TransactionBase::VerifyRequestParams(
       case StructuredCloneFileBase::eWasmBytecode:
       case StructuredCloneFileBase::eWasmCompiled:
       case StructuredCloneFileBase::eEndGuard:
-        MOZ_CRASH_UNLESS_FUZZING();
+        MOZ_ASSERT_UNLESS_FUZZING(false, "Unsupported.");
         return false;
 
       default:
@@ -10817,8 +10780,7 @@ bool TransactionBase::VerifyRequestParams(
   AssertIsOnBackgroundThread();
 
   if (aParams.isSome()) {
-    if (NS_WARN_IF(!VerifyRequestParams(aParams.ref()))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(aParams.ref()))) {
       return false;
     }
   }
@@ -10869,13 +10831,11 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   aTrustParams = false;
 #endif
 
-  if (!aTrustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aTrustParams && !VerifyRequestParams(aParams))) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCommitOrAbortReceived)) {
     return nullptr;
   }
 
@@ -11002,13 +10962,11 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
   const auto& commonParams = GetCommonOpenCursorParams(aParams);
   objectStoreMetadata =
       GetMetadataForObjectStoreId(commonParams.objectStoreId());
-  if (NS_WARN_IF(!objectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
     return nullptr;
   }
-  if (aTrustParams &&
-      NS_WARN_IF(!VerifyRequestParams(commonParams.optionalKeyRange()))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (aTrustParams && NS_AUUF_OR_WARN_IF(!VerifyRequestParams(
+                          commonParams.optionalKeyRange()))) {
     return nullptr;
   }
   direction = commonParams.direction();
@@ -11019,14 +10977,12 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
     const auto& commonIndexParams = GetCommonIndexOpenCursorParams(aParams);
     indexMetadata = GetMetadataForIndexId(*objectStoreMetadata,
                                           commonIndexParams.indexId());
-    if (NS_WARN_IF(!indexMetadata)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
       return nullptr;
     }
   }
 
-  if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCommitOrAbortReceived)) {
     return nullptr;
   }
 
@@ -11839,14 +11795,13 @@ bool Cursor<CursorType>::VerifyRequestParams(
   }
 #endif
 
-  if (NS_WARN_IF((*this->mObjectStoreMetadata)->mDeleted)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF((*this->mObjectStoreMetadata)->mDeleted)) {
     return false;
   }
 
   if constexpr (IsIndexCursor) {
-    if (this->mIndexMetadata && NS_WARN_IF((*this->mIndexMetadata)->mDeleted)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(this->mIndexMetadata &&
+                           (*this->mIndexMetadata)->mDeleted)) {
       return false;
     }
   }
@@ -11860,16 +11815,14 @@ bool Cursor<CursorType>::VerifyRequestParams(
         switch (mDirection) {
           case IDBCursorDirection::Next:
           case IDBCursorDirection::Nextunique:
-            if (NS_WARN_IF(key <= sortKey)) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key <= sortKey)) {
               return false;
             }
             break;
 
           case IDBCursorDirection::Prev:
           case IDBCursorDirection::Prevunique:
-            if (NS_WARN_IF(key >= sortKey)) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key >= sortKey)) {
               return false;
             }
             break;
@@ -11890,19 +11843,17 @@ bool Cursor<CursorType>::VerifyRequestParams(
         MOZ_ASSERT(!primaryKey.IsUnset());
         switch (mDirection) {
           case IDBCursorDirection::Next:
-            if (NS_WARN_IF(key < sortKey ||
-                           (key == sortKey &&
-                            primaryKey <= aPosition.mObjectStoreKey))) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key < sortKey ||
+                                   (key == sortKey &&
+                                    primaryKey <= aPosition.mObjectStoreKey))) {
               return false;
             }
             break;
 
           case IDBCursorDirection::Prev:
-            if (NS_WARN_IF(key > sortKey ||
-                           (key == sortKey &&
-                            primaryKey >= aPosition.mObjectStoreKey))) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key > sortKey ||
+                                   (key == sortKey &&
+                                    primaryKey >= aPosition.mObjectStoreKey))) {
               return false;
             }
             break;
@@ -11915,8 +11866,7 @@ bool Cursor<CursorType>::VerifyRequestParams(
     }
 
     case CursorRequestParams::TAdvanceParams:
-      if (NS_WARN_IF(!aParams.get_AdvanceParams().count())) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!aParams.get_AdvanceParams().count())) {
         return false;
       }
       break;
@@ -11934,8 +11884,7 @@ bool Cursor<CursorType>::Start(const OpenCursorParams& aParams) {
   MOZ_ASSERT(aParams.type() == ToOpenCursorParamsType(CursorType));
   MOZ_ASSERT(this->mObjectStoreMetadata);
 
-  if (NS_WARN_IF(mCurrentlyRunningOp)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCurrentlyRunningOp)) {
     return false;
   }
 
