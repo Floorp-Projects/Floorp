@@ -11124,10 +11124,8 @@ mozilla::ipc::IPCResult NormalTransaction::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  IProtocol* const mgr = Manager();
-  if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBTransactionParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
