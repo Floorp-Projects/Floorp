@@ -5,16 +5,16 @@
 
 #include "WSRunObject.h"
 
+#include "EditorDOMPoint.h"
+#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
+#include "SelectionState.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RangeUtils.h"
-#include "mozilla/SelectionState.h"
 #include "mozilla/StaticPrefs_dom.h"     // for StaticPrefs::dom_*
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
 #include "mozilla/InternalMutationEvent.h"
@@ -842,11 +842,11 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
   }
 
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      aHTMLEditor.InsertBRElementWithTransaction(pointToInsert,
-                                                 nsIEditor::eNone);
+      aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
+                                  pointToInsert, nsIEditor::eNone);
   NS_WARNING_ASSERTION(
       resultOfInsertingBRElement.isOk(),
-      "HTMLEditor::InsertBRElementWithTransaction(eNone) failed");
+      "HTMLEditor::InsertBRElement(WithTransaction::Yes, eNone) failed");
   MOZ_ASSERT_IF(resultOfInsertingBRElement.isOk(),
                 resultOfInsertingBRElement.inspect());
   return resultOfInsertingBRElement;
@@ -3078,10 +3078,11 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           // when they type 2 spaces.
 
           Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-              aHTMLEditor.InsertBRElementWithTransaction(
-                  atEndOfVisibleWhiteSpaces);
+              aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
+                                          atEndOfVisibleWhiteSpaces);
           if (resultOfInsertingBRElement.isErr()) {
-            NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+            NS_WARNING(
+                "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
             return resultOfInsertingBRElement.unwrapErr();
           }
           MOZ_ASSERT(resultOfInsertingBRElement.inspect());
