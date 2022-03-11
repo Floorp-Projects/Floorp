@@ -1128,6 +1128,13 @@ this.FormAutofillUtils = {
       this.localizeAttributeForElement(element, "data-localization-region");
     }
   },
+
+  CC_FATHOM_NONE: 0,
+  CC_FATHOM_JS: 1,
+  CC_FATHOM_NATIVE: 2,
+  isFathomCreditCardsEnabled() {
+    return this.ccHeuristicsMode != this.CC_FATHOM_NONE;
+  },
 };
 
 const LabelUtils = {
@@ -1260,4 +1267,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "_reauthEnabledByUser",
   "extensions.formautofill.reauth.enabled",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsMode",
+  "extensions.formautofill.creditCards.heuristics.mode",
+  0
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsThreshold",
+  "extensions.formautofill.creditCards.heuristics.confidenceThreshold",
+  "0.5",
+  null,
+  pref => parseFloat(pref)
 );

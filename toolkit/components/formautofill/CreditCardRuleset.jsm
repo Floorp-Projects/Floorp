@@ -931,13 +931,24 @@ const biases = [
 // overwritten, which means, we can't have different coefficient for the same rule on
 // different types. To workaround this issue, we create a new ruleset for each type.
 this.creditCardRulesets = {
-  "cc-name": makeRuleset([...coefficients["cc-name"]], biases),
-  "cc-number": makeRuleset([...coefficients["cc-number"]], biases),
-  "cc-exp-month": makeRuleset([...coefficients["cc-exp-month"]], biases),
-  "cc-exp-year": makeRuleset([...coefficients["cc-exp-year"]], biases),
-  "cc-exp": makeRuleset([...coefficients["cc-exp"]], biases),
-  "cc-type": makeRuleset([...coefficients["cc-type"]], biases),
+  init() {
+    for (const type of this.types) {
+      this[type] = makeRuleset([...coefficients[type]], biases);
+    }
+  },
+
+  get types() {
+    return [
+      "cc-name",
+      "cc-number",
+      "cc-exp-month",
+      "cc-exp-year",
+      "cc-exp",
+      "cc-type",
+    ];
+  },
 };
+this.creditCardRulesets.init();
 
 FathomHeuristicsRegExp = {
   RULES: {

@@ -8,7 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillHeuristics"];
+var EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "FieldScanner"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -26,7 +26,8 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-  creditCardRuleset: "resource://autofill/CreditCardRuleset.jsm",
+  creditCardRulesets: "resource://autofill/CreditCardRuleset.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
@@ -192,6 +193,7 @@ class FieldScanner {
     }
     return { mergeNextNFields, createNewSection };
   }
+
   _classifySections() {
     let fieldDetails = this._sections[0].fieldDetails;
     this._sections = [];
@@ -315,7 +317,7 @@ class FieldScanner {
       throw new Error("Try to push the non-existing element info.");
     }
     let element = this._elements[elementIndex];
-    let info = FormAutofillHeuristics.getInfo(element);
+    let info = FormAutofillHeuristics.getInfo(element, this);
     let fieldInfo = {
       section: info ? info.section : "",
       addressType: info ? info.addressType : "",
@@ -452,6 +454,117 @@ class FieldScanner {
 
   elementExisting(index) {
     return index < this._elements.length;
+  }
+
+  /**
+   * Using Fathom, say what kind of CC field an element is most likely to be.
+   * This function deoesn't only run fathom on the passed elements. It also
+   * runs fathom for all elements in the FieldScanner for optimization purpose.
+   *
+   * @param {HTMLElement} element
+   * @param {Array} fields
+   * @returns {Array} A tuple of [field name, probability] describing the
+   *   highest-confidence classification
+   */
+  getFathomField(element, fields) {
+    if (!fields.length) {
+      return null;
+    }
+
+    if (!this._fathomConfidences?.get(element)) {
+      this._fathomConfidences = new Map();
+
+      let elements = [];
+      if (this._elements?.includes(element)) {
+        elements = this._elements;
+      } else {
+        elements = [element];
+      }
+
+      // This should not throw unless we run into an OOM situation, at which
+      // point we have worse problems and this failing is not a big deal.
+      let confidences = FieldScanner.getFormAutofillConfidences(elements);
+      for (let i = 0; i < elements.length; i++) {
+        this._fathomConfidences.set(elements[i], confidences[i]);
+      }
+    }
+
+    let elementConfidences = this._fathomConfidences.get(element);
+    if (!elementConfidences) {
+      return null;
+    }
+
+    let highestField = null;
+    let highestConfidence = FormAutofillUtils.ccHeuristicsThreshold; // Start with a threshold of 0.5
+    for (let [key, value] of Object.entries(elementConfidences)) {
+      if (!fields.includes(key)) {
+        // ignore field that we don't care
+        continue;
+      }
+
+      if (value > highestConfidence) {
+        highestConfidence = value;
+        highestField = key;
+      }
+    }
+
+    return highestField;
+  }
+
+  /**
+   * @param {Array} elements Array of elements that we want to get result from fathom cc rules
+   * @returns {object} Fathom confidence keyed by field-type.
+   */
+  static getFormAutofillConfidences(elements) {
+    if (
+      FormAutofillUtils.ccHeuristicsMode == FormAutofillUtils.CC_FATHOM_NATIVE
+    ) {
+      let confidences = ChromeUtils.getFormAutofillConfidences(elements);
+      // Transform the field name to
+      const fieldNameMap = {
+        ccNumber: "cc-number",
+        ccName: "cc-name",
+        ccType: "cc-type",
+        ccExp: "cc-exp",
+        ccExpMonth: "cc-exp-month",
+        ccExpYear: "cc-exp-year",
+      };
+      return confidences.map(c => {
+        let result = {};
+        for (let [fieldName, confidence] of Object.entries(c)) {
+          result[fieldNameMap[fieldName]] = confidence;
+        }
+        return result;
+      });
+    }
+
+    return elements.map(element => {
+      /**
+       * Return how confident our ML model is that `element` is a field of the
+       * given type.
+       *
+       * @param {string} fieldName The Fathom type to check against. This is
+       *   conveniently the same as the autocomplete attribute value that means
+       *   the same thing.
+       * @returns {number} Confidence in range [0, 1]
+       */
+      function confidence(fieldName) {
+        const ruleset = creditCardRulesets[fieldName];
+        const fnodes = ruleset.against(element).get(fieldName);
+
+        // fnodes is either 0 or 1 item long, since we ran the ruleset
+        // against a single element:
+        return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
+      }
+
+      // Bang the element against the ruleset for every type of field:
+      let confidences = {};
+      creditCardRulesets.types.map(fieldName => {
+        confidences[fieldName] = confidence(fieldName);
+      });
+
+      return confidences;
+    });
   }
 }
 
@@ -770,6 +883,12 @@ this.FormAutofillHeuristics = {
       return false;
     }
 
+    // The heuristic below should be covered by fathom rules, so we can skip doing
+    // it.
+    if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
+      return true;
+    }
+
     const element = detail.elementWeakRef.get();
 
     // If we didn't auto-discover type field, check every select for options that
@@ -976,7 +1095,7 @@ this.FormAutofillHeuristics = {
     return this._regexpList[this._regExpTableHashValue(b0, b1, b2)] || null;
   },
 
-  _getRegExpList(isAutoCompleteOff, elementTagName) {
+  _getPossibleFieldNames(isAutoCompleteOff, elementTagName) {
     let isSelectElem = elementTagName == "SELECT";
     let regExpListCache = this._getRegExpListCache(
       isAutoCompleteOff,
@@ -1029,54 +1148,7 @@ this.FormAutofillHeuristics = {
     return regexps;
   },
 
-  /**
-   * Using Fathom, say what kind of CC field an element is most likely to be.
-   *
-   * @param {HTMLElement} element
-   * @returns {Array} A tuple of [field name, probability] describing the
-   *   highest-confidence classification
-   */
-  _topFathomField(element) {
-    // Field names are also the names of Fathom ruleset types:
-    const fieldNames = [
-      "cc-name",
-      "cc-number",
-      "cc-exp-month",
-      "cc-exp-year",
-      "cc-exp",
-      "cc-type",
-    ];
-
-    /**
-     * Return how confident our ML model is that `element` is a field of the
-     * given type.
-     *
-     * @param {string} fieldName The Fathom type to check against. This is
-     *   conveniently the same as the autocomplete attribute value that means
-     *   the same thing.
-     * @returns {number} Confidence in range [0, 1]
-     */
-    function confidence(fieldName) {
-      const fnodes = creditCardRuleset.against(element).get(fieldName);
-      // fnodes is either 0 or 1 item long, since we ran the ruleset
-      // against a single element:
-      return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
-    }
-
-    // Bang the element against the ruleset for every type of field:
-    const fieldsAndConfidences = fieldNames.map(fieldName => [
-      fieldName,
-      confidence(fieldName),
-    ]);
-
-    // Sort descending by confidence:
-    fieldsAndConfidences.sort(
-      ([_1, confidence1], [_2, confidence2]) => confidence2 - confidence1
-    );
-    return fieldsAndConfidences[0];
-  },
-
-  getInfo(element) {
+  getInfo(element, sacnner) {
     function infoRecordWithFieldName(fieldName) {
       return {
         fieldName,
@@ -1115,20 +1187,31 @@ this.FormAutofillHeuristics = {
       return infoRecordWithFieldName("email");
     }
 
-    // See if Fathom is confident in anything, and return it if so:
-    const [mostConfidentFieldName, mostConfidentScore] = this._topFathomField(
-      element
+    let fields = this._getPossibleFieldNames(
+      isAutoCompleteOff,
+      element.tagName
     );
-    if (mostConfidentScore > 0.5) {
-      return infoRecordWithFieldName(mostConfidentFieldName);
+
+    if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
+      // We don't care fields that are not supported by fathom
+      let fathomFields = fields.filter(r =>
+        creditCardRulesets.types.includes(r)
+      );
+      let fathomField = sacnner.getFathomField(element, fathomFields);
+      // At this point, use fathom's recommendation if it has one
+      if (fathomField) {
+        return infoRecordWithFieldName(fathomField);
+      }
+
+      // TODO: Do we want to run old heuristics for fields that fathom isn't confident?
+      // Since Fathom isn't confident, try the old heuristics. I've removed all
+      // the CC-specific ones, so this should be almost a mutually exclusive
+      // set of fields.
+      fields = fields.filter(r => !creditCardRulesets.types.includes(r));
     }
 
-    // Since Fathom isn't confident, try the old heuristics. I've removed all
-    // the CC-specific ones, so this should be almost a mutually exclusive
-    // set of fields.
-    let regexps = this._getRegExpList(isAutoCompleteOff, element.tagName);
-    if (regexps.length) {
-      let matchedFieldName = this._findMatchedFieldName(element, regexps);
+    if (fields.length) {
+      let matchedFieldName = this._findMatchedFieldName(element, fields);
       if (matchedFieldName) {
         return infoRecordWithFieldName(matchedFieldName);
       }
