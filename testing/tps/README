@@ -13,12 +13,15 @@ This script will create a virtalenv and install TPS into it.
 
 You must then activate the virtualenv by executing:
 
--  (linux): source /path/to/virtualenv/Scripts/activate
+-  (mac/linux): source /path/to/virtualenv/Scripts/activate
 -  (win): /path/to/virtualenv/Scripts/activate.bat
 
 TPS can then be run by executing:
 
   runtps --binary=/path/to/firefox
+
+> Note: You can run the tps tests in headless mode by using `MOZ_HEADLESS=1`. This will make
+> your computer somewhat useable while the tests are running.
 
 When you are done with TPS, you can deactivate the virtualenv by executing
 `deactivate`
@@ -38,7 +41,12 @@ Firefox Accounts
 To create a test account for using the Firefox Account authentication perform the
 following steps:
 
-1. Go to a URL like http://restmail.net/mail/%account_prefix%@restmail.net
+> Note: Currently, the TPS tests rely on how restmail returns the verification code
+> You should use restmail or something very similar.
+> Gmail and other providers might give a `The request was blocked for security reasons`
+
+1. Go to the URL: http://restmail.net/mail/%account_prefix%@restmail.net
+  - Replace `%account_prefix%` with your own test name
 2. Go to https://accounts.firefox.com/signup?service=sync&context=fx_desktop_v1
 3. Sign in with the previous chosen email address and a password
 4. Go back to the Restmail URL, reload the page
