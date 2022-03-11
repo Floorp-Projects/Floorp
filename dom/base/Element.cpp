@@ -1050,9 +1050,8 @@ already_AddRefed<nsIScreen> Element::GetScreen() {
   }
   nsPresContext* pc = frame->PresContext();
   const CSSIntRect rect = frame->GetScreenRect();
-  DesktopRect desktopRect =
-      rect * pc->CSSToDevPixelScale() /
-      pc->DeviceContext()->GetDesktopToDeviceScale();
+  DesktopRect desktopRect = rect * pc->CSSToDevPixelScale() /
+                            pc->DeviceContext()->GetDesktopToDeviceScale();
   return screenMgr->ScreenForRect(DesktopIntRect::Round(desktopRect));
 }
 
@@ -3013,12 +3012,18 @@ void Element::DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const {
 }
 #endif
 
-void Element::Describe(nsAString& aOutDescription) const {
+void Element::Describe(nsAString& aOutDescription, bool aShort) const {
   aOutDescription.Append(mNodeInfo->QualifiedName());
   aOutDescription.AppendPrintf("@%p", (void*)this);
 
   uint32_t index, count = mAttrs.AttrCount();
   for (index = 0; index < count; index++) {
+    if (aShort) {
+      const nsAttrName* name = mAttrs.AttrNameAt(index);
+      if (!name->Equals(nsGkAtoms::id) && !name->Equals(nsGkAtoms::_class)) {
+        continue;
+      }
+    }
     aOutDescription.Append(' ');
     nsAutoString attributeDescription;
     DescribeAttribute(index, attributeDescription);
