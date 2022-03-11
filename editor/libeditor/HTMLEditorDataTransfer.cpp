@@ -2479,25 +2479,31 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // Remove Selection and create `<blockquote type="cite">` now.
   // XXX Why don't we insert the `<blockquote>` into the DOM tree after
   //     pasting the content in clipboard into it?
-  RefPtr<Element> newBlockquoteElement =
-      DeleteSelectionAndCreateElement(*nsGkAtoms::blockquote);
-  if (!newBlockquoteElement) {
+  Result<RefPtr<Element>, nsresult> blockquoteElementOrError =
+      DeleteSelectionAndCreateElement(
+          *nsGkAtoms::blockquote,
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, false);
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                "Element::SetAttr(nsGkAtoms::type, cite) failed, but ignored");
+            return NS_OK;
+          });
+  if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
+                   NS_WARN_IF(Destroyed()))) {
     NS_WARNING(
         "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
         "failed");
-    return NS_ERROR_FAILURE;
+    return Destroyed() ? NS_ERROR_EDITOR_DESTROYED
+                       : blockquoteElementOrError.unwrapErr();
   }
-  DebugOnly<nsresult> rvIgnored = newBlockquoteElement->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, true);
-  if (NS_WARN_IF(Destroyed())) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "Element::SetAttr(nsGkAtoms::type, cite) failed, but ignored");
+  MOZ_ASSERT(blockquoteElementOrError.inspect());
 
   // Collapse Selection in the new `<blockquote>` element.
-  rv = CollapseSelectionToStartOf(*newBlockquoteElement);
+  rv = CollapseSelectionToStartOf(
+      MOZ_KnownLive(*blockquoteElementOrError.inspect()));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::CollapseSelectionToStartOf() failed");
     return rv;
@@ -2881,26 +2887,30 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // We could use 100vw, but 98vw avoids a horizontal scroll bar where possible.
   // All this is done to wrap overlong lines to the screen and not to the
   // container element, the width-restricted body.
-  RefPtr<Element> newSpanElement =
-      DeleteSelectionAndCreateElement(*nsGkAtoms::span);
-  NS_WARNING_ASSERTION(
-      newSpanElement,
-      "HTMLEditor::DeleteSelectionAndCreateElement() failed, but ignored");
+  Result<RefPtr<Element>, nsresult> spanElementOrError =
+      DeleteSelectionAndCreateElement(
+          *nsGkAtoms::span,
+          [](Element& aSpanElement) -> nsresult { return NS_OK; });
+  NS_WARNING_ASSERTION(spanElementOrError.isOk(),
+                       "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::"
+                       "span) failed, but ignored");
 
   // If this succeeded, then set selection inside the pre
   // so the inserted text will end up there.
   // If it failed, we don't care what the return value was,
   // but we'll fall through and try to insert the text anyway.
-  if (newSpanElement) {
+  if (spanElementOrError.isOk()) {
+    MOZ_ASSERT(spanElementOrError.inspect());
     // Add an attribute on the pre node so we'll know it's a quotation.
-    DebugOnly<nsresult> rvIgnored = newSpanElement->SetAttr(
+    DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
         kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "Element::SetAttr(nsGkAtoms::mozquote, true) failed");
     // Allow wrapping on spans so long lines get wrapped to the screen.
-    nsCOMPtr<nsINode> parentNode = newSpanElement->GetParentNode();
+    nsCOMPtr<nsINode> parentNode =
+        spanElementOrError.inspect()->GetParentNode();
     if (parentNode && parentNode->IsHTMLElement(nsGkAtoms::body)) {
-      DebugOnly<nsresult> rvIgnored = newSpanElement->SetAttr(
+      DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
           kNameSpaceID_None, nsGkAtoms::style,
           nsLiteralString(
               u"white-space: pre-wrap; display: block; width: 98vw;"),
@@ -2909,16 +2919,17 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
           NS_SUCCEEDED(rvIgnored),
           "Element::SetAttr(nsGkAtoms::style) failed, but ignored");
     } else {
-      DebugOnly<nsresult> rvIgnored =
-          newSpanElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                                  u"white-space: pre-wrap;"_ns, true);
+      DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
+          kNameSpaceID_None, nsGkAtoms::style, u"white-space: pre-wrap;"_ns,
+          true);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "Element::SetAttr(nsGkAtoms::style) failed, but ignored");
     }
 
     // and set the selection inside it:
-    rv = CollapseSelectionToStartOf(*newSpanElement);
+    rv = CollapseSelectionToStartOf(
+        MOZ_KnownLive(*spanElementOrError.inspect()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -2942,13 +2953,13 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   }
 
   // XXX Why don't we check this before inserting the quoted text?
-  if (!newSpanElement) {
+  if (spanElementOrError.isErr()) {
     return NS_OK;
   }
 
   // Set the selection to just after the inserted node:
   EditorRawDOMPoint afterNewSpanElement(
-      EditorRawDOMPoint::After(*newSpanElement));
+      EditorRawDOMPoint::After(*spanElementOrError.inspect()));
   NS_WARNING_ASSERTION(
       afterNewSpanElement.IsSet(),
       "Failed to set after the new <span> element, but ignored");
@@ -2966,7 +2977,7 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // That's okay because the routines that use aAddCites
   // don't need to know the inserted node.
   if (aNodeInserted) {
-    newSpanElement.forget(aNodeInserted);
+    spanElementOrError.unwrap().forget(aNodeInserted);
   }
 
   return NS_OK;
@@ -3131,20 +3142,22 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
     }
   }
 
-  RefPtr<Element> newBlockquoteElement =
-      DeleteSelectionAndCreateElement(*nsGkAtoms::blockquote);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (!newBlockquoteElement) {
+  Result<RefPtr<Element>, nsresult> blockquoteElementOrError =
+      DeleteSelectionAndCreateElement(
+          *nsGkAtoms::blockquote,
+          [](Element& aBlockquoteElement) -> nsresult { return NS_OK; });
+  if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
+                   NS_WARN_IF(Destroyed()))) {
     NS_WARNING(
         "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
         "failed");
-    return NS_ERROR_FAILURE;
+    return Destroyed() ? NS_ERROR_EDITOR_DESTROYED
+                       : blockquoteElementOrError.unwrapErr();
   }
+  MOZ_ASSERT(blockquoteElementOrError.inspect());
 
   // Try to set type=cite.  Ignore it if this fails.
-  DebugOnly<nsresult> rvIgnored = newBlockquoteElement->SetAttr(
+  DebugOnly<nsresult> rvIgnored = blockquoteElementOrError.inspect()->SetAttr(
       kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns, true);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
@@ -3154,7 +3167,7 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
       "Element::SetAttr(nsGkAtoms::type, cite) failed, but ignored");
 
   if (!aCitation.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored = newBlockquoteElement->SetAttr(
+    DebugOnly<nsresult> rvIgnored = blockquoteElementOrError.inspect()->SetAttr(
         kNameSpaceID_None, nsGkAtoms::cite, aCitation, true);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -3165,7 +3178,8 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   }
 
   // Set the selection inside the blockquote so aQuotedText will go there:
-  rv = CollapseSelectionTo(EditorRawDOMPoint(newBlockquoteElement, 0));
+  rv = CollapseSelectionTo(
+      EditorRawDOMPoint(blockquoteElementOrError.inspect(), 0u));
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3193,14 +3207,9 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
     }
   }
 
-  // XXX Why don't we check this before inserting aQuotedText?
-  if (!newBlockquoteElement) {
-    return NS_OK;
-  }
-
   // Set the selection to just after the inserted node:
   EditorRawDOMPoint afterNewBlockquoteElement(
-      EditorRawDOMPoint::After(newBlockquoteElement));
+      EditorRawDOMPoint::After(blockquoteElementOrError.inspect()));
   NS_WARNING_ASSERTION(
       afterNewBlockquoteElement.IsSet(),
       "Failed to set after new <blockquote> element, but ignored");
@@ -3215,7 +3224,7 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   }
 
   if (aNodeInserted) {
-    newBlockquoteElement.forget(aNodeInserted);
+    blockquoteElementOrError.unwrap().forget(aNodeInserted);
   }
 
   return NS_OK;

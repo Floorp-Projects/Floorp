@@ -5052,33 +5052,32 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
   return rv;
 }
 
-already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
-    nsAtom& aTag) {
+Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
+    nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsresult rv = DeleteSelectionAndPrepareToCreateNode();
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
-    return nullptr;
+    return Err(rv);
   }
 
   EditorDOMPoint pointToInsert(SelectionRef().AnchorRef());
   if (!pointToInsert.IsSet()) {
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
-  Result<RefPtr<Element>, nsresult> maybeNewElement = CreateAndInsertElement(
-      WithTransaction::Yes, aTag, pointToInsert,
-      [](Element& aNewElement) -> nsresult { return NS_OK; });
-  if (maybeNewElement.isErr()) {
+  Result<RefPtr<Element>, nsresult> newElementOrError = CreateAndInsertElement(
+      WithTransaction::Yes, aTag, pointToInsert, aInitializer);
+  if (newElementOrError.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return nullptr;
+    return newElementOrError;
   }
-  MOZ_ASSERT(maybeNewElement.inspect());
+  MOZ_ASSERT(newElementOrError.inspect());
 
   // We want the selection to be just after the new node
   EditorRawDOMPoint afterNewElement(
-      EditorRawDOMPoint::After(maybeNewElement.inspect()));
+      EditorRawDOMPoint::After(newElementOrError.inspect()));
   MOZ_ASSERT(afterNewElement.IsSetAndValid());
   IgnoredErrorResult ignoredError;
   SelectionRef().CollapseInLimiter(afterNewElement, ignoredError);
@@ -5087,9 +5086,9 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
     // XXX Even if it succeeded to create new element, this returns error
     //     when Selection.Collapse() fails something.  This could occur with
     //     mutation observer or mutation event listener.
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
-  return maybeNewElement.unwrap().forget();
+  return newElementOrError;
 }
 
 nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
