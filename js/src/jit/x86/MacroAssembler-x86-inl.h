@@ -1176,8 +1176,9 @@ void MacroAssembler::replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
 }
 
 void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
-  replaceLaneInt64x2(0, src, dest);
-  replaceLaneInt64x2(1, src, dest);
+  vmovd(src.low, dest);
+  vpinsrd(1, src.high, dest, dest);
+  vpunpcklqdq(dest, dest, dest);
 }
 
 // ========================================================================
