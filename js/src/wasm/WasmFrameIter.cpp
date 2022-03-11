@@ -75,7 +75,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
-    code_ = &tls_->instance()->code();
+    code_ = &tls_->code();
     MOZ_ASSERT(code_ == LookupCode(unwoundPC));
 
     codeRange_ = code_->lookupFuncRange(unwoundPC);
@@ -221,7 +221,7 @@ void WasmFrameIter::popFrame() {
     tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
   }
 
-  MOZ_ASSERT(code_ == &tls()->instance()->code());
+  MOZ_ASSERT(code_ == &tls()->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
 
   MOZ_ASSERT(!done());
@@ -294,7 +294,7 @@ unsigned WasmFrameIter::computeLine(uint32_t* column) const {
 
 Instance* WasmFrameIter::instance() const {
   MOZ_ASSERT(!done());
-  return tls_->instance();
+  return tls_;
 }
 
 void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
@@ -1418,7 +1418,6 @@ void ProfilingFrameIterator::operator++() {
 
   MOZ_ASSERT(code_ ==
              &GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(callerFP_))
-                  ->instance()
                   ->code());
 
   switch (codeRange_->kind()) {
