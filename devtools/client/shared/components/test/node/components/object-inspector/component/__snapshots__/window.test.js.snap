@@ -19,15 +19,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
         Object {
           "contents": Object {
             "value": Object {
-              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+              "actor": "server1.conn3.obj198",
               "class": "Window",
               "extensible": true,
               "frozen": false,
-              "isError": false,
-              "ownPropertyLength": 806,
+              "ownPropertyLength": 887,
               "preview": Object {
                 "kind": "ObjectWithURL",
-                "url": "data:text/html;charset=utf-8,stub generation",
+                "url": "about:newtab",
               },
               "sealed": false,
               "type": "object",
@@ -50,15 +49,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
           Object {
             "contents": Object {
               "value": Object {
-                "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                "actor": "server1.conn3.obj198",
                 "class": "Window",
                 "extensible": true,
                 "frozen": false,
-                "isError": false,
-                "ownPropertyLength": 806,
+                "ownPropertyLength": 887,
                 "preview": Object {
                   "kind": "ObjectWithURL",
-                  "url": "data:text/html;charset=utf-8,stub generation",
+                  "url": "about:newtab",
                 },
                 "sealed": false,
                 "type": "object",
@@ -92,15 +90,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
             Object {
               "contents": Object {
                 "value": Object {
-                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                  "actor": "server1.conn3.obj198",
                   "class": "Window",
                   "extensible": true,
                   "frozen": false,
-                  "isError": false,
-                  "ownPropertyLength": 806,
+                  "ownPropertyLength": 887,
                   "preview": Object {
                     "kind": "ObjectWithURL",
-                    "url": "data:text/html;charset=utf-8,stub generation",
+                    "url": "about:newtab",
                   },
                   "sealed": false,
                   "type": "object",
@@ -157,15 +154,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -205,15 +201,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -241,15 +236,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                     Object {
                       "contents": Object {
                         "value": Object {
-                          "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                          "actor": "server1.conn3.obj198",
                           "class": "Window",
                           "extensible": true,
                           "frozen": false,
-                          "isError": false,
-                          "ownPropertyLength": 806,
+                          "ownPropertyLength": 887,
                           "preview": Object {
                             "kind": "ObjectWithURL",
-                            "url": "data:text/html;charset=utf-8,stub generation",
+                            "url": "about:newtab",
                           },
                           "sealed": false,
                           "type": "object",
@@ -276,15 +270,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                       Object {
                         "contents": Object {
                           "value": Object {
-                            "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                            "actor": "server1.conn3.obj198",
                             "class": "Window",
                             "extensible": true,
                             "frozen": false,
-                            "isError": false,
-                            "ownPropertyLength": 806,
+                            "ownPropertyLength": 887,
                             "preview": Object {
                               "kind": "ObjectWithURL",
-                              "url": "data:text/html;charset=utf-8,stub generation",
+                              "url": "about:newtab",
                             },
                             "sealed": false,
                             "type": "object",
@@ -313,15 +306,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -352,7 +344,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                     </span>
                     <span
                       className="objectBox objectBox-Window"
-                      data-link-actor-id="server0.conn0.windowGlobal2147483651/obj35"
+                      data-link-actor-id="server1.conn3.obj198"
                       title={null}
                     >
                       <span
@@ -396,15 +388,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
             Object {
               "contents": Object {
                 "value": Object {
-                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                  "actor": "server1.conn3.obj198",
                   "class": "Window",
                   "extensible": true,
                   "frozen": false,
-                  "isError": false,
-                  "ownPropertyLength": 806,
+                  "ownPropertyLength": 887,
                   "preview": Object {
                     "kind": "ObjectWithURL",
-                    "url": "data:text/html;charset=utf-8,stub generation",
+                    "url": "about:newtab",
                   },
                   "sealed": false,
                   "type": "object",
@@ -439,15 +430,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
               Object {
                 "contents": Object {
                   "value": Object {
-                    "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                    "actor": "server1.conn3.obj198",
                     "class": "Window",
                     "extensible": true,
                     "frozen": false,
-                    "isError": false,
-                    "ownPropertyLength": 806,
+                    "ownPropertyLength": 887,
                     "preview": Object {
                       "kind": "ObjectWithURL",
-                      "url": "data:text/html;charset=utf-8,stub generation",
+                      "url": "about:newtab",
                     },
                     "sealed": false,
                     "type": "object",
@@ -501,15 +491,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -544,15 +533,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -613,15 +601,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                     Object {
                       "contents": Object {
                         "value": Object {
-                          "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                          "actor": "server1.conn3.obj198",
                           "class": "Window",
                           "extensible": true,
                           "frozen": false,
-                          "isError": false,
-                          "ownPropertyLength": 806,
+                          "ownPropertyLength": 887,
                           "preview": Object {
                             "kind": "ObjectWithURL",
-                            "url": "data:text/html;charset=utf-8,stub generation",
+                            "url": "about:newtab",
                           },
                           "sealed": false,
                           "type": "object",
@@ -671,15 +658,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                             Object {
                               "contents": Object {
                                 "value": Object {
-                                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                                  "actor": "server1.conn3.obj198",
                                   "class": "Window",
                                   "extensible": true,
                                   "frozen": false,
-                                  "isError": false,
-                                  "ownPropertyLength": 806,
+                                  "ownPropertyLength": 887,
                                   "preview": Object {
                                     "kind": "ObjectWithURL",
-                                    "url": "data:text/html;charset=utf-8,stub generation",
+                                    "url": "about:newtab",
                                   },
                                   "sealed": false,
                                   "type": "object",
@@ -723,15 +709,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -768,15 +753,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                           Object {
                             "contents": Object {
                               "value": Object {
-                                "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                                "actor": "server1.conn3.obj198",
                                 "class": "Window",
                                 "extensible": true,
                                 "frozen": false,
-                                "isError": false,
-                                "ownPropertyLength": 806,
+                                "ownPropertyLength": 887,
                                 "preview": Object {
                                   "kind": "ObjectWithURL",
-                                  "url": "data:text/html;charset=utf-8,stub generation",
+                                  "url": "about:newtab",
                                 },
                                 "sealed": false,
                                 "type": "object",
@@ -815,15 +799,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                             Object {
                               "contents": Object {
                                 "value": Object {
-                                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                                  "actor": "server1.conn3.obj198",
                                   "class": "Window",
                                   "extensible": true,
                                   "frozen": false,
-                                  "isError": false,
-                                  "ownPropertyLength": 806,
+                                  "ownPropertyLength": 887,
                                   "preview": Object {
                                     "kind": "ObjectWithURL",
-                                    "url": "data:text/html;charset=utf-8,stub generation",
+                                    "url": "about:newtab",
                                   },
                                   "sealed": false,
                                   "type": "object",
@@ -871,15 +854,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -924,15 +906,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -966,15 +947,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                     Object {
                       "contents": Object {
                         "value": Object {
-                          "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                          "actor": "server1.conn3.obj198",
                           "class": "Window",
                           "extensible": true,
                           "frozen": false,
-                          "isError": false,
-                          "ownPropertyLength": 806,
+                          "ownPropertyLength": 887,
                           "preview": Object {
                             "kind": "ObjectWithURL",
-                            "url": "data:text/html;charset=utf-8,stub generation",
+                            "url": "about:newtab",
                           },
                           "sealed": false,
                           "type": "object",
@@ -1003,15 +983,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                           Object {
                             "contents": Object {
                               "value": Object {
-                                "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                                "actor": "server1.conn3.obj198",
                                 "class": "Window",
                                 "extensible": true,
                                 "frozen": false,
-                                "isError": false,
-                                "ownPropertyLength": 806,
+                                "ownPropertyLength": 887,
                                 "preview": Object {
                                   "kind": "ObjectWithURL",
-                                  "url": "data:text/html;charset=utf-8,stub generation",
+                                  "url": "about:newtab",
                                 },
                                 "sealed": false,
                                 "type": "object",
@@ -1048,15 +1027,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -1087,7 +1065,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                     </span>
                     <span
                       className="objectBox objectBox-Window"
-                      data-link-actor-id="server0.conn0.windowGlobal2147483651/obj35"
+                      data-link-actor-id="server1.conn3.obj198"
                       title={null}
                     >
                       <span
@@ -1128,15 +1106,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
         Object {
           "contents": Object {
             "value": Object {
-              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+              "actor": "server1.conn3.obj198",
               "class": "Window",
               "extensible": true,
               "frozen": false,
-              "isError": false,
-              "ownPropertyLength": 806,
+              "ownPropertyLength": 887,
               "preview": Object {
                 "kind": "ObjectWithURL",
-                "url": "data:text/html;charset=utf-8,stub generation",
+                "url": "about:newtab",
               },
               "sealed": false,
               "type": "object",
@@ -1160,15 +1137,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
           Object {
             "contents": Object {
               "value": Object {
-                "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                "actor": "server1.conn3.obj198",
                 "class": "Window",
                 "extensible": true,
                 "frozen": false,
-                "isError": false,
-                "ownPropertyLength": 806,
+                "ownPropertyLength": 887,
                 "preview": Object {
                   "kind": "ObjectWithURL",
-                  "url": "data:text/html;charset=utf-8,stub generation",
+                  "url": "about:newtab",
                 },
                 "sealed": false,
                 "type": "object",
@@ -1203,15 +1179,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
             Object {
               "contents": Object {
                 "value": Object {
-                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                  "actor": "server1.conn3.obj198",
                   "class": "Window",
                   "extensible": true,
                   "frozen": false,
-                  "isError": false,
-                  "ownPropertyLength": 806,
+                  "ownPropertyLength": 887,
                   "preview": Object {
                     "kind": "ObjectWithURL",
-                    "url": "data:text/html;charset=utf-8,stub generation",
+                    "url": "about:newtab",
                   },
                   "sealed": false,
                   "type": "object",
@@ -1268,15 +1243,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -1316,15 +1290,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -1353,15 +1326,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     Object {
                       "contents": Object {
                         "value": Object {
-                          "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                          "actor": "server1.conn3.obj198",
                           "class": "Window",
                           "extensible": true,
                           "frozen": false,
-                          "isError": false,
-                          "ownPropertyLength": 806,
+                          "ownPropertyLength": 887,
                           "preview": Object {
                             "kind": "ObjectWithURL",
-                            "url": "data:text/html;charset=utf-8,stub generation",
+                            "url": "about:newtab",
                           },
                           "sealed": false,
                           "type": "object",
@@ -1388,15 +1360,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                       Object {
                         "contents": Object {
                           "value": Object {
-                            "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                            "actor": "server1.conn3.obj198",
                             "class": "Window",
                             "extensible": true,
                             "frozen": false,
-                            "isError": false,
-                            "ownPropertyLength": 806,
+                            "ownPropertyLength": 887,
                             "preview": Object {
                               "kind": "ObjectWithURL",
-                              "url": "data:text/html;charset=utf-8,stub generation",
+                              "url": "about:newtab",
                             },
                             "sealed": false,
                             "type": "object",
@@ -1425,15 +1396,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -1464,7 +1434,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     </span>
                     <span
                       className="objectBox objectBox-Window"
-                      data-link-actor-id="server0.conn0.windowGlobal2147483651/obj35"
+                      data-link-actor-id="server1.conn3.obj198"
                       title={null}
                     >
                       <span
@@ -1505,15 +1475,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
         Object {
           "contents": Object {
             "value": Object {
-              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+              "actor": "server1.conn3.obj198",
               "class": "Window",
               "extensible": true,
               "frozen": false,
-              "isError": false,
-              "ownPropertyLength": 806,
+              "ownPropertyLength": 887,
               "preview": Object {
                 "kind": "ObjectWithURL",
-                "url": "data:text/html;charset=utf-8,stub generation",
+                "url": "about:newtab",
               },
               "sealed": false,
               "type": "object",
@@ -1537,15 +1506,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
           Object {
             "contents": Object {
               "value": Object {
-                "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                "actor": "server1.conn3.obj198",
                 "class": "Window",
                 "extensible": true,
                 "frozen": false,
-                "isError": false,
-                "ownPropertyLength": 806,
+                "ownPropertyLength": 887,
                 "preview": Object {
                   "kind": "ObjectWithURL",
-                  "url": "data:text/html;charset=utf-8,stub generation",
+                  "url": "about:newtab",
                 },
                 "sealed": false,
                 "type": "object",
@@ -1591,15 +1559,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
             Object {
               "contents": Object {
                 "value": Object {
-                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                  "actor": "server1.conn3.obj198",
                   "class": "Window",
                   "extensible": true,
                   "frozen": false,
-                  "isError": false,
-                  "ownPropertyLength": 806,
+                  "ownPropertyLength": 887,
                   "preview": Object {
                     "kind": "ObjectWithURL",
-                    "url": "data:text/html;charset=utf-8,stub generation",
+                    "url": "about:newtab",
                   },
                   "sealed": false,
                   "type": "object",
@@ -1624,15 +1591,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
             Object {
               "contents": Object {
                 "value": Object {
-                  "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                  "actor": "server1.conn3.obj198",
                   "class": "Window",
                   "extensible": true,
                   "frozen": false,
-                  "isError": false,
-                  "ownPropertyLength": 806,
+                  "ownPropertyLength": 887,
                   "preview": Object {
                     "kind": "ObjectWithURL",
-                    "url": "data:text/html;charset=utf-8,stub generation",
+                    "url": "about:newtab",
                   },
                   "sealed": false,
                   "type": "object",
@@ -1683,15 +1649,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                 Object {
                   "contents": Object {
                     "value": Object {
-                      "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                      "actor": "server1.conn3.obj198",
                       "class": "Window",
                       "extensible": true,
                       "frozen": false,
-                      "isError": false,
-                      "ownPropertyLength": 806,
+                      "ownPropertyLength": 887,
                       "preview": Object {
                         "kind": "ObjectWithURL",
-                        "url": "data:text/html;charset=utf-8,stub generation",
+                        "url": "about:newtab",
                       },
                       "sealed": false,
                       "type": "object",
@@ -1731,15 +1696,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -1772,15 +1736,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     Object {
                       "contents": Object {
                         "value": Object {
-                          "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                          "actor": "server1.conn3.obj198",
                           "class": "Window",
                           "extensible": true,
                           "frozen": false,
-                          "isError": false,
-                          "ownPropertyLength": 806,
+                          "ownPropertyLength": 887,
                           "preview": Object {
                             "kind": "ObjectWithURL",
-                            "url": "data:text/html;charset=utf-8,stub generation",
+                            "url": "about:newtab",
                           },
                           "sealed": false,
                           "type": "object",
@@ -1807,15 +1770,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                       Object {
                         "contents": Object {
                           "value": Object {
-                            "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                            "actor": "server1.conn3.obj198",
                             "class": "Window",
                             "extensible": true,
                             "frozen": false,
-                            "isError": false,
-                            "ownPropertyLength": 806,
+                            "ownPropertyLength": 887,
                             "preview": Object {
                               "kind": "ObjectWithURL",
-                              "url": "data:text/html;charset=utf-8,stub generation",
+                              "url": "about:newtab",
                             },
                             "sealed": false,
                             "type": "object",
@@ -1844,15 +1806,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                         Object {
                           "contents": Object {
                             "value": Object {
-                              "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                              "actor": "server1.conn3.obj198",
                               "class": "Window",
                               "extensible": true,
                               "frozen": false,
-                              "isError": false,
-                              "ownPropertyLength": 806,
+                              "ownPropertyLength": 887,
                               "preview": Object {
                                 "kind": "ObjectWithURL",
-                                "url": "data:text/html;charset=utf-8,stub generation",
+                                "url": "about:newtab",
                               },
                               "sealed": false,
                               "type": "object",
@@ -1883,7 +1844,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     </span>
                     <span
                       className="objectBox objectBox-Window"
-                      data-link-actor-id="server0.conn0.windowGlobal2147483651/obj35"
+                      data-link-actor-id="server1.conn3.obj198"
                       title={null}
                     >
                       <span
@@ -1915,15 +1876,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                   "parent": Object {
                     "contents": Object {
                       "value": Object {
-                        "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                        "actor": "server1.conn3.obj198",
                         "class": "Window",
                         "extensible": true,
                         "frozen": false,
-                        "isError": false,
-                        "ownPropertyLength": 806,
+                        "ownPropertyLength": 887,
                         "preview": Object {
                           "kind": "ObjectWithURL",
-                          "url": "data:text/html;charset=utf-8,stub generation",
+                          "url": "about:newtab",
                         },
                         "sealed": false,
                         "type": "object",
@@ -1989,15 +1949,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                       "parent": Object {
                         "contents": Object {
                           "value": Object {
-                            "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                            "actor": "server1.conn3.obj198",
                             "class": "Window",
                             "extensible": true,
                             "frozen": false,
-                            "isError": false,
-                            "ownPropertyLength": 806,
+                            "ownPropertyLength": 887,
                             "preview": Object {
                               "kind": "ObjectWithURL",
-                              "url": "data:text/html;charset=utf-8,stub generation",
+                              "url": "about:newtab",
                             },
                             "sealed": false,
                             "type": "object",
@@ -2035,15 +1994,14 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                       Object {
                         "contents": Object {
                           "value": Object {
-                            "actor": "server0.conn0.windowGlobal2147483651/obj35",
+                            "actor": "server1.conn3.obj198",
                             "class": "Window",
                             "extensible": true,
                             "frozen": false,
-                            "isError": false,
-                            "ownPropertyLength": 806,
+                            "ownPropertyLength": 887,
                             "preview": Object {
                               "kind": "ObjectWithURL",
-                              "url": "data:text/html;charset=utf-8,stub generation",
+                              "url": "about:newtab",
                             },
                             "sealed": false,
                             "type": "object",
