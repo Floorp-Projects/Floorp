@@ -87,9 +87,7 @@ class ElementInternals final : public nsIFormControl,
   ~ElementInternals() = default;
 
   // It's a target element which is a custom element.
-  // It's safe to use raw pointer because it will be reset via
-  // CustomElementData::Unlink when mTarget is released or unlinked.
-  HTMLElement* mTarget;
+  RefPtr<HTMLElement> mTarget;
 
   // The form that contains the target element.
   // It's safe to use raw pointer because it will be reset via
