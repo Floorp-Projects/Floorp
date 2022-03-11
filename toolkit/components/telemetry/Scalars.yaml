@@ -2096,21 +2096,6 @@ preferences:
       - 'firefox'
     record_in_processes:
       - main
-  read_user_js:
-    bug_numbers:
-      - 1367813
-    description: >-
-      Set to true if user.js exists and was read.
-    expires: "62"
-    kind: boolean
-    notification_emails:
-      - bsmedberg@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
   search_query:
     bug_numbers:
       - 1359306
