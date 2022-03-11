@@ -11,7 +11,6 @@ if (
   self.addEventListener("connect", function(e) {
     const port = e.ports[0];
     workerReply(port);
-    self.close();
   });
 } else if (self.WorkerGlobalScope && self instanceof self.WorkerGlobalScope) {
   self.addEventListener("message", workerReply(self));
