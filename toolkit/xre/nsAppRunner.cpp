@@ -712,10 +712,7 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
     return nsIXULRuntime::ContentWin32kLockdownState::DisabledByE10S;
   }
 
-  // Win32k lockdown is available on Win8+, but we are initially limiting it to
-  // Windows 10 v1709 (build 16299) or later. Before this COM initialization
-  // currently fails if user32.dll has loaded before it is called.
-  if (!IsWin10FallCreatorsUpdateOrLater()) {
+  if (!IsWin8OrLater()) {
     return nsIXULRuntime::ContentWin32kLockdownState::
         OperatingSystemNotSupported;
   }
