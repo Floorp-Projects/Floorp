@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::{FontKey, FontInstanceKey, IdNamespace};
 use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::internal_types::{FrameId, FrameStamp, FastHashMap};
 use crate::resource_cache::ResourceClassCache;
@@ -132,19 +133,42 @@ impl GlyphCache {
         self.glyph_key_caches = FastHashMap::default();
     }
 
-    pub fn clear_fonts<F>(&mut self, key_fun: F)
-    where
-        for<'r> F: Fn(&'r &FontInstance) -> bool,
-    {
+    pub fn delete_font_instances(
+        &mut self,
+        instance_keys: &[FontInstanceKey],
+        glyph_rasterizer: &mut GlyphRasterizer,
+    ) {
         self.glyph_key_caches.retain(|k, cache| {
-            let should_clear = key_fun(&k);
-            if !should_clear {
-                return true;
+            if instance_keys.contains(&k.instance_key) {
+                cache.clear_glyphs();
+                glyph_rasterizer.delete_font_instance(k);
+                false
+            } else {
+                true
             }
+        });
+    }
 
-            cache.clear_glyphs();
-            false
-        })
+    pub fn delete_fonts(&mut self, font_keys: &[FontKey]) {
+        self.glyph_key_caches.retain(|k, cache| {
+            if font_keys.contains(&k.font_key) {
+                cache.clear_glyphs();
+                false
+            } else {
+                true
+            }
+        });
+    }
+
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) {
+        self.glyph_key_caches.retain(|k, cache| {
+            if k.font_key.0 == namespace {
+                cache.clear_glyphs();
+                false
+            } else {
+                true
+            }
+        });
     }
 
     /// Clear out evicted entries from glyph key caches.

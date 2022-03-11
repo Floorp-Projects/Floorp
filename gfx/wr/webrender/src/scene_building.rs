@@ -52,7 +52,7 @@ use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance}
 use crate::clip::{PolygonDataHandle};
 use crate::spatial_tree::{SceneSpatialTree, SpatialNodeIndex, get_external_scroll_offset};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
-use crate::glyph_rasterizer::{FontInstance, SharedFontInstanceMap};
+use crate::glyph_rasterizer::{FontInstance, SharedFontResources};
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
@@ -387,7 +387,7 @@ pub struct SceneBuilder<'a> {
     scene: &'a Scene,
 
     /// The map of all font instances.
-    font_instances: SharedFontInstanceMap,
+    fonts: SharedFontResources,
 
     /// The data structure that converts between ClipId/SpatialId and the various
     /// index types that the SpatialTree uses.
@@ -481,7 +481,7 @@ pub struct SceneBuilder<'a> {
 impl<'a> SceneBuilder<'a> {
     pub fn build(
         scene: &Scene,
-        font_instances: SharedFontInstanceMap,
+        fonts: SharedFontResources,
         view: &SceneView,
         frame_builder_config: &FrameBuilderConfig,
         interners: &mut Interners,
@@ -509,7 +509,7 @@ impl<'a> SceneBuilder<'a> {
         let mut builder = SceneBuilder {
             scene,
             spatial_tree,
-            font_instances,
+            fonts,
             config: *frame_builder_config,
             id_to_index_mapper_stack: Vec::new(),
             hit_testing_scene: HitTestingScene::new(&stats.hit_test_stats),
@@ -3300,12 +3300,12 @@ impl<'a> SceneBuilder<'a> {
         let offset = self.current_offset(spatial_node_index);
 
         let text_run = {
-            let instance_map = self.font_instances.lock().unwrap();
-            let font_instance = match instance_map.get(font_instance_key) {
+            let shared_key = self.fonts.instance_keys.map_key(font_instance_key);
+            let font_instance = match self.fonts.instances.get_font_instance(shared_key) {
                 Some(instance) => instance,
                 None => {
                     warn!("Unknown font instance key");
-                    debug!("key={:?}", font_instance_key);
+                    debug!("key={:?} shared={:?}", font_instance_key, shared_key);
                     return;
                 }
             };
@@ -3328,7 +3328,7 @@ impl<'a> SceneBuilder<'a> {
             }
 
             let font = FontInstance::new(
-                Arc::clone(font_instance),
+                font_instance,
                 (*text_color).into(),
                 render_mode,
                 flags,
