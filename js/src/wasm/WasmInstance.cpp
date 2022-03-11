@@ -1426,8 +1426,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     MOZ_ASSERT(tagObjs[i] != nullptr);
     tagTls(td) = tagObjs[i];
   }
-  tlsData()->pendingException_ = nullptr;
-  tlsData()->pendingExceptionTag_ = nullptr;
+  pendingException_ = nullptr;
+  pendingExceptionTag_ = nullptr;
 #endif
 
   // Add observer if our memory base may grow
@@ -1686,7 +1686,7 @@ void Instance::tracePrivate(JSTracer* trc) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   TraceNullableEdge(trc, &pendingException_,
                     "wasm pending exception value");
-  TraceNullableEdge(trc, &tlsData()->pendingExceptionTag_,
+  TraceNullableEdge(trc, &pendingExceptionTag_,
                     "wasm pending exception tag");
 #endif
 
@@ -2210,8 +2210,8 @@ static JSObject* GetExceptionTag(JSObject* exn) {
 }
 
 void Instance::setPendingException(HandleAnyRef exn) {
-  tlsData()->pendingException_ = exn.get().asJSObject();
-  tlsData()->pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
+  pendingException_ = exn.get().asJSObject();
+  pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
 }
 #endif
 

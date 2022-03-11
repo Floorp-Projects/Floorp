@@ -130,10 +130,11 @@ class DebugFrame {
   static DebugFrame* from(Frame* fp);
   Frame& frame() { return frame_; }
   uint32_t funcIndex() const { return funcIndex_; }
-  Instance* instance() const;
-  GlobalObject* global() const;
+  Instance* instance();
+  const Instance* instance() const;
+  GlobalObject* global();
   bool hasGlobal(const GlobalObject* global) const;
-  JSObject* environmentChain() const;
+  JSObject* environmentChain();
   bool getLocal(uint32_t localIndex, JS::MutableHandleValue vp);
 
   // The return value must be written from the unboxed representation in the
