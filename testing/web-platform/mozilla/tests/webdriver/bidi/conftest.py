@@ -2,7 +2,7 @@ import os
 import time
 
 import pytest
-from mozprofile import Preferences, create_profile
+from mozprofile import Profile
 from mozrunner import FirefoxRunner
 
 
@@ -13,17 +13,7 @@ class Browser:
 
         # Prepare temporary profile
         profile_arg, profile_folder = firefox_options["args"]
-        self.profile = create_profile(app="firefox")
-
-        # Copy the preferences from the testing profile to the temporary profile.
-        # Reusing the same profile and merely updating preferences was causing
-        # intermittent failures.
-        # TODO: Use Profile.clone once Bug 1758797 is fixed.
-        prefs = {}
-        prefs.update(Preferences.read_prefs(os.path.join(profile_folder, "prefs.js")))
-        prefs.update(Preferences.read_prefs(os.path.join(profile_folder, "user.js")))
-        self.profile.set_preferences(prefs)
-
+        self.profile = Profile.clone(profile_folder)
         if self.extra_prefs:
             self.profile.set_preferences(self.extra_prefs)
 
