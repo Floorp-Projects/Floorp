@@ -184,10 +184,7 @@ add_task(async function test_submit_creditCard_new() {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
-        let promiseShown = BrowserTestUtils.waitForEvent(
-          PopupNotifications.panel,
-          "popupshown"
-        );
+        let promiseShown = promiseNotificationShown();
         let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
 
         await SpecialPowers.spawn(browser, [], async function() {
@@ -367,10 +364,7 @@ add_task(async function test_submit_creditCard_update() {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
-        let promiseShown = BrowserTestUtils.waitForEvent(
-          PopupNotifications.panel,
-          "popupshown"
-        );
+        let promiseShown = promiseNotificationShown();
         let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
 
         await openPopupOn(browser, "form #cc-name");

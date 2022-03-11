@@ -12,10 +12,7 @@ add_task(async function test_submit_creditCard_cancel_saving() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -59,10 +56,7 @@ add_task(async function test_submit_creditCard_saved() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
@@ -215,10 +209,7 @@ add_task(async function test_iframe_unload_save_card() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       let iframeBC = browser.browsingContext.children[0];
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await SpecialPowers.spawn(iframeBC, [], async function() {
@@ -276,10 +267,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -417,10 +405,7 @@ add_task(async function test_submit_creditCard_never_save() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -469,10 +454,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -565,10 +547,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -605,10 +584,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -664,10 +640,7 @@ add_task(async function test_update_autofill_form_name() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -732,10 +705,7 @@ add_task(async function test_update_autofill_form_exp_date() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -797,10 +767,7 @@ add_task(async function test_create_new_autofill_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -914,10 +881,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
@@ -970,10 +934,7 @@ add_task(async function test_submit_third_party_creditCard_logo() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [amexCard], async function(card) {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -1018,10 +979,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [amexCard], async function(card) {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -1062,10 +1020,7 @@ add_task(async function test_submit_generic_creditCard_logo() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [genericCard], async function(card) {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -1110,10 +1065,7 @@ add_task(async function test_update_generic_creditCard_logo() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+      let promiseShown = promiseNotificationShown();
       await SpecialPowers.spawn(browser, [genericCard], async function(card) {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
