@@ -19,163 +19,16 @@
 #ifndef wasm_tls_data_h
 #define wasm_tls_data_h
 
-#include "mozilla/Atomics.h"
-
 #include <stdint.h>
 
 #include "NamespaceImports.h"
 
 #include "js/Utility.h"
+#include "wasm/WasmInstance.h"
 #include "wasm/WasmTypeDecls.h"
 
 namespace js {
 namespace wasm {
-
-using mozilla::Atomic;
-
-class Instance;
-
-// TLS data for a single module instance.
-//
-// Every WebAssembly function expects to be passed a hidden TLS pointer argument
-// in WasmTlsReg. The TLS pointer argument points to a TlsData struct.
-// Compiled functions expect that the TLS pointer does not change for the
-// lifetime of the thread.
-//
-// There is a TlsData per module instance per thread, so inter-module calls need
-// to pass the TLS pointer appropriate for the callee module.
-//
-// After the TlsData struct follows the module's declared TLS variables.
-
-struct TlsData;
-struct TlsDataDeleter {
-  void operator()(TlsData* tlsData);
-};
-using UniqueTlsData = UniquePtr<TlsData, TlsDataDeleter>;
-
-struct TlsData {
-  static constexpr size_t offsetOfMemoryBase() {
-    return offsetof(TlsData, memoryBase_);
-  }
-  static constexpr size_t offsetOfBoundsCheckLimit() {
-    return offsetof(TlsData, boundsCheckLimit_);
-  }
-  static constexpr size_t offsetOfInstance() {
-    return offsetof(TlsData, instance_);
-  }
-  static constexpr size_t offsetOfRealm() { return offsetof(TlsData, realm_); }
-  static constexpr size_t offsetOfCx() { return offsetof(TlsData, cx_); }
-  static constexpr size_t offsetOfValueBoxClass() {
-    return offsetof(TlsData, valueBoxClass_);
-  }
-  static constexpr size_t offsetOfPendingException() {
-    return offsetof(TlsData, pendingException_);
-  }
-  static constexpr size_t offsetOfPendingExceptionTag() {
-    return offsetof(TlsData, pendingExceptionTag_);
-  }
-  static constexpr size_t offsetOfStackLimit() {
-    return offsetof(TlsData, stackLimit_);
-  }
-  static constexpr size_t offsetOfInterrupt() {
-    return offsetof(TlsData, interrupt_);
-  }
-  static constexpr size_t offsetOfAddressOfNeedsIncrementalBarrier() {
-    return offsetof(TlsData, addressOfNeedsIncrementalBarrier_);
-  }
-  static constexpr size_t offsetOfJumpTable() {
-    return offsetof(TlsData, jumpTable_);
-  }
-  static constexpr size_t offsetOfBaselineScratch() {
-    return offsetof(TlsData, baselineScratch_);
-  }
-  static constexpr size_t sizeOfBaselineScratch() {
-    return sizeof(baselineScratch_);
-  }
-  static constexpr size_t offsetOfGlobalArea() {
-    return offsetof(TlsData, globalArea_);
-  }
-
-  static UniqueTlsData create(uint32_t globalDataLength);
-
-  // Methods to set, test and clear the interrupt fields. Both interrupt
-  // fields are Relaxed and so no consistency/ordering can be assumed.
-  void setInterrupt();
-  bool isInterrupted() const;
-  void resetInterrupt(JSContext* cx);
-
-  JSContext* cx() const { return cx_; }
-
-  Instance* instance() const { return instance_; }
-
- protected:
-  friend class Instance;
-  friend struct TlsDataDeleter;
-
-  // Pointer to the base of the default memory (or null if there is none).
-  uint8_t* memoryBase_;
-
-  // Bounds check limit in bytes (or zero if there is no memory).  This is
-  // 64-bits on 64-bit systems so as to allow for heap lengths up to and beyond
-  // 4GB, and 32-bits on 32-bit systems, where heaps are limited to 2GB.
-  //
-  // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
-  uintptr_t boundsCheckLimit_;
-
-  // Pointer to the Instance that contains this TLS data.
-  Instance* instance_;
-
-  // Equal to instance->realm_.
-  JS::Realm* realm_;
-
-  // The containing JSContext.
-  JSContext* cx_;
-
-  // The class_ of WasmValueBox, this is a per-process value.
-  const JSClass* valueBoxClass_;
-
-#ifdef ENABLE_WASM_EXCEPTIONS
-  // The pending exception that was found during stack unwinding after a throw.
-  //
-  //   - Only non-null while unwinding the control stack from a wasm-exit stub.
-  //     until the nearest enclosing Wasm try-catch or try-delegate block.
-  //   - Set by Instance::setPendingException, unset by JIT code.
-  //   - If the unwind target is a `try-delegate`, it is unset by the delegated
-  //     try-catch block or function body block.
-  GCPtrObject pendingException_;
-  // The tag of the pending exception.
-  GCPtrObject pendingExceptionTag_;
-#endif
-
-  // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
-  // but can be racily set to trigger immediate trap as an opportunity to
-  // CheckForInterrupt without an additional branch.
-  Atomic<uintptr_t, mozilla::Relaxed> stackLimit_;
-
-  // Set to 1 when wasm should call CheckForInterrupt.
-  Atomic<uint32_t, mozilla::Relaxed> interrupt_;
-
-  const JS::shadow::Zone::BarrierState* addressOfNeedsIncrementalBarrier_;
-
-  // Pointer that should be freed (due to padding before the TlsData).
-  void* allocatedBase_;
-
-  // When compiling with tiering, the jumpTable has one entry for each
-  // baseline-compiled function.
-  void** jumpTable_;
-
-  // General scratch storage for the baseline compiler, which can't always use
-  // the stack for this.
-  uint32_t baselineScratch_[2];
-
-  // The globalArea must be the last field.  Globals for the module start here
-  // and are inline in this structure.  16-byte alignment is required for SIMD
-  // data.
-  MOZ_ALIGNED_DECL(16, char globalArea_);
-};
-
-static const size_t TlsDataAlign = 16;  // = Simd128DataSize
-static_assert(TlsData::offsetOfGlobalArea() % TlsDataAlign == 0, "aligned");
 
 // ExportArg holds the unboxed operands to the wasm entry trampoline which can
 // be called through an ExportFuncPtr.

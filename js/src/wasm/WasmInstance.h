@@ -19,6 +19,7 @@
 #ifndef wasm_instance_h
 #define wasm_instance_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/Barrier.h"
@@ -28,17 +29,25 @@
 #include "wasm/WasmExprType.h"   // for ResultType
 #include "wasm/WasmLog.h"        // for PrintCallback
 #include "wasm/WasmShareable.h"  // for SeenSet
-#include "wasm/WasmTlsData.h"    // for UniqueTlsData
 #include "wasm/WasmTypeDecls.h"
+#include "wasm/WasmValue.h"
 
 namespace js {
 
+class SharedArrayRawBuffer;
 class WasmBreakpointSite;
 
 namespace wasm {
 
+using mozilla::Atomic;
+
 class FuncImport;
 class WasmFrameIter;
+
+struct FuncImportTls;
+struct TableTls;
+struct TableDesc;
+struct TagDesc;
 
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
@@ -51,22 +60,105 @@ class WasmFrameIter;
 // those instances are being debugged. Instances that are being debugged own
 // their code.
 
-class Instance {
-  JS::Realm* const realm_;
+struct TlsData;
+
+class alignas(16) Instance {
+  // Pointer to the base of the default memory (or null if there is none).
+  uint8_t* memoryBase_;
+
+  // Bounds check limit in bytes (or zero if there is no memory).  This is
+  // 64-bits on 64-bit systems so as to allow for heap lengths up to and beyond
+  // 4GB, and 32-bits on 32-bit systems, where heaps are limited to 2GB.
+  //
+  // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
+  uintptr_t boundsCheckLimit_;
+
+  // Pointer to the Instance that contains this TLS data.
+  Instance* instance_;
+
+  // The containing JS::Realm.
+  JS::Realm* realm_;
+
+  // The containing JSContext.
+  JSContext* cx_;
+
+  // The class_ of WasmValueBox, this is a per-process value.
+  const JSClass* valueBoxClass_;
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // The pending exception that was found during stack unwinding after a throw.
+  //
+  //   - Only non-null while unwinding the control stack from a wasm-exit stub.
+  //     until the nearest enclosing Wasm try-catch or try-delegate block.
+  //   - Set by wasm::HandleThrow, unset by Instance::consumePendingException.
+  //   - If the unwind target is a `try-delegate`, it is unset by the delegated
+  //     try-catch block or function body block.
+  GCPtrObject pendingException_;
+  // The tag object of the pending exception.
+  GCPtrObject pendingExceptionTag_;
+#endif
+
+  // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
+  // but can be racily set to trigger immediate trap as an opportunity to
+  // CheckForInterrupt without an additional branch.
+  Atomic<uintptr_t, mozilla::Relaxed> stackLimit_;
+
+  // Set to 1 when wasm should call CheckForInterrupt.
+  Atomic<uint32_t, mozilla::Relaxed> interrupt_;
+
+  const JS::shadow::Zone::BarrierState* addressOfNeedsIncrementalBarrier_;
+
+  // Pointer that should be freed (due to padding before the TlsData).
+  void* allocatedBase_;
+
+  // When compiling with tiering, the jumpTable has one entry for each
+  // baseline-compiled function.
+  void** jumpTable_;
+
+  // General scratch storage for the baseline compiler, which can't always use
+  // the stack for this.
+  uint32_t baselineScratch_[2];
+
+  // Weak pointer to WasmInstanceObject that owns this instance
   WeakHeapPtrWasmInstanceObject object_;
+
+  // Address of the JitRuntime's arguments rectifier trampoline
   void* jsJitArgsRectifier_;
+
+  // Address of the JitRuntime's exception handler trampoline
   void* jsJitExceptionHandler_;
+
+  // Address of the JitRuntime's object prebarrier trampoline
   void* preBarrierCode_;
+
+  // The wasm::Code for this instance
   const SharedCode code_;
-  const UniqueTlsData tlsData_;
+
+  // The memory for this instance, if any
   const GCPtrWasmMemoryObject memory_;
+
+  // The tables for this instance, if any
   const SharedTableVector tables_;
+
+  // Passive data segments for use with bulk memory instructions
   DataSegmentVector passiveDataSegments_;
+
+  // Passive elem segments for use with bulk memory instructions
   ElemSegmentVector passiveElemSegments_;
+
+  // The wasm::DebugState for this instance, if any
   const UniqueDebugState maybeDebug_;
+
 #ifdef ENABLE_WASM_GC
+  // A flag to control whether a pass to trace types in global data is
+  // necessary or not. Purely an optimization
   bool hasGcTypes_;
 #endif
+
+  // The globalArea must be the last field.  Globals for the module start here
+  // and are inline in this structure.  16-byte alignment is required for SIMD
+  // data.
+  MOZ_ALIGNED_DECL(16, char globalArea_);
 
   // Internal helpers:
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
@@ -83,11 +175,19 @@ class Instance {
   bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc,
                   uint64_t* argv);
 
- public:
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
-           UniqueTlsData tlsData, HandleWasmMemoryObject memory,
+           HandleWasmMemoryObject memory,
            SharedTableVector&& tables, UniqueDebugState maybeDebug);
   ~Instance();
+
+ public:
+  static Instance* create(JSContext* cx, HandleWasmInstanceObject object,
+                          SharedCode code, uint32_t globalDataLength,
+                          HandleWasmMemoryObject memory,
+                          SharedTableVector&& tables,
+                          UniqueDebugState maybeDebug);
+  static void destroy(Instance* instance);
+
   bool init(JSContext* cx, const JSFunctionVector& funcImports,
             const ValVector& globalImportValues,
             const WasmGlobalObjectVector& globalObjs,
@@ -107,25 +207,44 @@ class Instance {
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
 
-  JS::Realm* realm() const { return realm_; }
-  bool debugEnabled() const { return !!maybeDebug_; }
-  DebugState& debug() { return *maybeDebug_; }
-  TlsData* tlsData() const { return tlsData_.get(); }
-  uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea_; }
-  const SharedTableVector& tables() const { return tables_; }
-  SharedMem<uint8_t*> memoryBase() const;
-  WasmMemoryObject* memory() const;
-  size_t memoryMappedSize() const;
-  SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
-  bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
-
-  const Code& code() const { return *code_; }
-  inline const CodeTier& code(Tier t) const;
-  inline uint8_t* codeBase(Tier t) const;
-  inline const MetadataTier& metadata(Tier t) const;
-  inline const Metadata& metadata() const;
-  inline bool isAsmJS() const;
-
+  static constexpr size_t offsetOfMemoryBase() {
+    return offsetof(Instance, memoryBase_);
+  }
+  static constexpr size_t offsetOfBoundsCheckLimit() {
+    return offsetof(Instance, boundsCheckLimit_);
+  }
+  static constexpr size_t offsetOfInstance() {
+    return offsetof(Instance, instance_);
+  }
+  static constexpr size_t offsetOfRealm() { return offsetof(Instance, realm_); }
+  static constexpr size_t offsetOfCx() { return offsetof(Instance, cx_); }
+  static constexpr size_t offsetOfValueBoxClass() {
+    return offsetof(Instance, valueBoxClass_);
+  }
+  static constexpr size_t offsetOfPendingException() {
+    return offsetof(Instance, pendingException_);
+  }
+  static constexpr size_t offsetOfPendingExceptionTag() {
+    return offsetof(Instance, pendingExceptionTag_);
+  }
+  static constexpr size_t offsetOfStackLimit() {
+    return offsetof(Instance, stackLimit_);
+  }
+  static constexpr size_t offsetOfInterrupt() {
+    return offsetof(Instance, interrupt_);
+  }
+  static constexpr size_t offsetOfAddressOfNeedsIncrementalBarrier() {
+    return offsetof(Instance, addressOfNeedsIncrementalBarrier_);
+  }
+  static constexpr size_t offsetOfJumpTable() {
+    return offsetof(Instance, jumpTable_);
+  }
+  static constexpr size_t offsetOfBaselineScratch() {
+    return offsetof(Instance, baselineScratch_);
+  }
+  static constexpr size_t sizeOfBaselineScratch() {
+    return sizeof(baselineScratch_);
+  }
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
   }
@@ -135,6 +254,40 @@ class Instance {
   static constexpr size_t offsetOfPreBarrierCode() {
     return offsetof(Instance, preBarrierCode_);
   }
+  static constexpr size_t offsetOfGlobalArea() {
+    return offsetof(Instance, globalArea_);
+  }
+
+  Instance* instance() const { return const_cast<Instance*>(this); }
+  JSContext* cx() const { return cx_; }
+  JS::Realm* realm() const { return realm_; }
+  bool debugEnabled() const { return !!maybeDebug_; }
+  DebugState& debug() { return *maybeDebug_; }
+  TlsData* tlsData() const {
+    return reinterpret_cast<TlsData*>(const_cast<Instance*>(this));
+  }
+  uint8_t* globalData() const { return (uint8_t*)&globalArea_; }
+  const SharedTableVector& tables() const { return tables_; }
+  SharedMem<uint8_t*> memoryBase() const;
+  WasmMemoryObject* memory() const;
+  size_t memoryMappedSize() const;
+  SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
+  bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
+
+  // Methods to set, test and clear the interrupt fields. Both interrupt
+  // fields are Relaxed and so no consistency/ordering can be assumed.
+  void setInterrupt();
+  bool isInterrupted() const;
+  void resetInterrupt(JSContext* cx);
+
+  void setPendingException(JSObject* pendingException);
+
+  const Code& code() const { return *code_; }
+  inline const CodeTier& code(Tier t) const;
+  inline uint8_t* codeBase(Tier t) const;
+  inline const MetadataTier& metadata(Tier t) const;
+  inline const Metadata& metadata() const;
+  inline bool isAsmJS() const;
 
   // This method returns a pointer to the GC object that owns this Instance.
   // Instances may be reached via weak edges (e.g., Realm::instances_)
@@ -283,7 +436,18 @@ class Instance {
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 };
 
-using UniqueInstance = UniquePtr<Instance>;
+// TLS data for a single module instance.
+//
+// Every WebAssembly function expects to be passed a hidden TLS pointer argument
+// in WasmTlsReg. The TLS pointer argument points to a TlsData struct.
+// Compiled functions expect that the TLS pointer does not change for the
+// lifetime of the thread.
+//
+// There is a TlsData per module instance per thread, so inter-module calls need
+// to pass the TLS pointer appropriate for the callee module.
+//
+// After the TlsData struct follows the module's declared TLS variables.
+struct TlsData : public Instance {};
 
 bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
                       Maybe<char*> stackResultsLoc, MutableHandleValue rval,

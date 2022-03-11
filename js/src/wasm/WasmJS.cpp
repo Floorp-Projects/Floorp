@@ -1952,7 +1952,9 @@ void WasmInstanceObject::finalize(JS::GCContext* gcx, JSObject* obj) {
     if (instance.instance().debugEnabled()) {
       instance.instance().debug().finalize(gcx);
     }
-    gcx->delete_(obj, &instance.instance(), MemoryUse::WasmInstanceInstance);
+    Instance::destroy(&instance.instance());
+    gcx->removeCellMemory(obj, sizeof(Instance),
+                          MemoryUse::WasmInstanceInstance);
   }
 }
 
@@ -2048,15 +2050,9 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(obj->isNewborn());
 
     // Create this just before constructing Instance to avoid rooting hazards.
-    UniqueTlsData tlsData = TlsData::create(globalDataLength);
-    if (!tlsData) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    // Root the Instance via WasmInstanceObject before any possible GC.
-    instance = cx->new_<Instance>(cx, obj, code, std::move(tlsData), memory,
-                                  std::move(tables), std::move(maybeDebug));
+    instance = Instance::create(cx, obj, code, globalDataLength, memory,
+                                std::move(tables),
+                                std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
