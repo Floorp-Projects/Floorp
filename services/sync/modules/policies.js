@@ -282,7 +282,6 @@ SyncScheduler.prototype = {
     Svc.Obs.add("weave:service:logout:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
-    Svc.Obs.add("weave:service:ready", this);
     Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Obs.add("weave:service:start-over", this);
@@ -449,14 +448,6 @@ SyncScheduler.prototype = {
         Status.backoffInterval = interval;
         Status.minimumNextSync = Date.now() + requested_interval;
         this._log.debug("Fuzzed minimum next sync: " + Status.minimumNextSync);
-        break;
-      case "weave:service:ready":
-        // Applications can specify this preference if they want autoconnect
-        // to happen after a fixed delay.
-        let delay = Svc.Prefs.get("autoconnectDelay");
-        if (delay) {
-          this.delayedAutoConnect(delay);
-        }
         break;
       case "weave:engine:sync:applied":
         let numItems = subject.succeeded;
@@ -768,36 +759,12 @@ SyncScheduler.prototype = {
     this.scheduleNextSync(interval, { why: "client-backoff-schedule" });
   },
 
-  /**
-   * Automatically start syncing after the given delay (in seconds).
-   *
-   * Applications can define the `services.sync.autoconnectDelay` preference
-   * to have this called automatically during start-up with the pref value as
-   * the argument. Alternatively, they can call it themselves to control when
-   * Sync should first start to sync.
-   */
-  delayedAutoConnect: function delayedAutoConnect(delay) {
-    if (this.service._checkSetup() == STATUS_OK) {
-      CommonUtils.namedTimer(
-        this.autoConnect,
-        delay * 1000,
-        this,
-        "_autoTimer"
-      );
-    }
-  },
-
   autoConnect: function autoConnect() {
     if (this.service._checkSetup() == STATUS_OK && !this.service._checkSync()) {
       // Schedule a sync based on when a previous sync was scheduled.
       // scheduleNextSync() will do the right thing if that time lies in
       // the past.
       this.scheduleNextSync(this.nextSync - Date.now(), { why: "startup" });
-    }
-
-    // Once autoConnect is called we no longer need _autoTimer.
-    if (this._autoTimer) {
-      this._autoTimer.clear();
     }
   },
 
