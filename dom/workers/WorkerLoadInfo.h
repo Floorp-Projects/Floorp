@@ -9,6 +9,7 @@
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/OriginTrials.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -130,6 +131,7 @@ struct WorkerLoadInfoData {
 
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   uint32_t mPrincipalHashValue;
+  OriginTrials mTrials;
   bool mFromWindow;
   bool mEvalAllowed;
   bool mReportCSPViolations;

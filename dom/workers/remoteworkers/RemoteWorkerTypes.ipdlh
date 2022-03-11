@@ -16,6 +16,7 @@ include "mozilla/dom/ReferrerInfoUtils.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::StorageAccess from "mozilla/StorageAccess.h";
+using mozilla::OriginTrials from "mozilla/OriginTrialsIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -71,6 +72,8 @@ struct RemoteWorkerData
   StorageAccess storageAccess;
 
   bool isThirdPartyContextToTopWindow;
+
+  OriginTrials originTrials;
 
   OptionalServiceWorkerData serviceWorkerData;
 

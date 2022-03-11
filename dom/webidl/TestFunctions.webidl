@@ -15,8 +15,7 @@ interface WrapperCachedNonISupportsTestInterface {
   [Pref="dom.webidl.test1"] constructor();
 };
 
-[Trial="TestTrial",
- Exposed=Window]
+[Trial="TestTrial", Exposed=*]
 interface TestTrialInterface {
   constructor();
 };
