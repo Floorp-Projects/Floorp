@@ -6064,6 +6064,63 @@ EditorBase::AutoEditActionDataSetter::~AutoEditActionDataSetter() {
       "mTopLevelEditSubActionData.mSelectedRange should've been cleared");
 }
 
+void EditorBase::AutoEditActionDataSetter::UpdateSelectionCache(
+    Selection& aSelection) {
+  MOZ_ASSERT(aSelection.GetType() == SelectionType::eNormal);
+
+  if (mSelection == &aSelection) {
+    return;
+  }
+
+  AutoEditActionDataSetter& topLevelEditActionData =
+      [&]() -> AutoEditActionDataSetter& {
+    for (AutoEditActionDataSetter* editActionData = this;;
+         editActionData = editActionData->mParentData) {
+      if (!editActionData->mParentData) {
+        return *editActionData;
+      }
+    }
+    MOZ_ASSERT_UNREACHABLE("You do something wrong");
+  }();
+
+  // Keep grabbing the old selection in the top level edit action data until the
+  // all owners end handling it.
+  if (mSelection) {
+    topLevelEditActionData.mRetiredSelections.AppendElement(*mSelection);
+  }
+
+  // If the old selection is in batch, we should end the batch which
+  // `EditorBase::BeginUpdateViewBatch` started.
+  if (mEditorBase.mUpdateCount && mSelection) {
+    mSelection->EndBatchChanges();
+  }
+
+  Selection* previousSelection = mSelection;
+  mSelection = &aSelection;
+  for (AutoEditActionDataSetter* parentActionData = mParentData;
+       parentActionData; parentActionData = parentActionData->mParentData) {
+    if (!parentActionData->mSelection) {
+      continue;
+    }
+    // Skip scanning mRetiredSelections if we've already handled the selection
+    // previous time.
+    if (parentActionData->mSelection != previousSelection) {
+      if (!topLevelEditActionData.mRetiredSelections.Contains(
+              OwningNonNull<Selection>(*parentActionData->mSelection))) {
+        topLevelEditActionData.mRetiredSelections.AppendElement(
+            *parentActionData->mSelection);
+      }
+      previousSelection = parentActionData->mSelection;
+    }
+    parentActionData->mSelection = &aSelection;
+  }
+
+  // Restart the batching in the new selection.
+  if (mEditorBase.mUpdateCount) {
+    aSelection.StartBatchChanges();
+  }
+}
+
 void EditorBase::AutoEditActionDataSetter::SetColorData(
     const nsAString& aData) {
   MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),

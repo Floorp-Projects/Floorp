@@ -1303,17 +1303,7 @@ class EditorBase : public nsIEditor,
       return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
     }
 
-    void UpdateSelectionCache(Selection& aSelection) {
-      MOZ_ASSERT(aSelection.GetType() == SelectionType::eNormal);
-
-      AutoEditActionDataSetter* actionData = this;
-      while (actionData) {
-        if (actionData->mSelection) {
-          actionData->mSelection = &aSelection;
-        }
-        actionData = actionData->mParentData;
-      }
-    }
+    void UpdateSelectionCache(Selection& aSelection);
 
    private:
     bool IsBeforeInputEventEnabled() const;
@@ -1377,6 +1367,7 @@ class EditorBase : public nsIEditor,
 
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
+    nsTArray<OwningNonNull<Selection>> mRetiredSelections;
     nsCOMPtr<nsIPrincipal> mPrincipal;
     // EditAction may be nested, for example, a command may be executed
     // from mutation event listener which is run while editor changes
