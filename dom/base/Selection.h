@@ -74,12 +74,25 @@ class Selection final : public nsSupportsWeakReference,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Selection)
 
-  // match this up with EndbatchChanges. will stop ui updates while multiple
-  // selection methods are called
-  void StartBatchChanges();
+  /**
+   * Match this up with EndbatchChanges. will stop ui updates while multiple
+   * selection methods are called
+   *
+   * @param aDetails string to explian why this is called.  This won't be
+   * stored nor exposed to selection listeners etc.  Just for logging.
+   */
+  void StartBatchChanges(const char* aDetails);
 
-  // match this up with StartBatchChanges
-  void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
+  /**
+   * Match this up with StartBatchChanges
+   *
+   * @param aDetails string to explian why this is called.  This won't be
+   * stored nor exposed to selection listeners etc.  Just for logging.
+   * @param aReasons potentially multiple of the reasons defined in
+   * nsISelectionListener.idl
+   */
+  void EndBatchChanges(const char* aDetails,
+                       int16_t aReason = nsISelectionListener::NO_REASON);
 
   /**
    * NotifyAutoCopy() starts to notify AutoCopyListener of selection changes.
@@ -938,24 +951,36 @@ class Selection final : public nsSupportsWeakReference,
 // Stack-class to turn on/off selection batching.
 class MOZ_STACK_CLASS SelectionBatcher final {
  private:
-  RefPtr<Selection> mSelection;
-  int16_t mReason;
+  const RefPtr<Selection> mSelection;
+  const int16_t mReasons;
+  const char* const mRequesterFuncName;
 
  public:
-  explicit SelectionBatcher(Selection& aSelectionRef)
-      : SelectionBatcher(&aSelectionRef) {}
+  /**
+   * @param aRequesterFuncName function name which wants the selection batch.
+   * This won't be stored nor exposed to selection listeners etc, used only for
+   * logging.  This MUST be living when the destructor runs.
+   */
+  // TODO: Mark these constructors `MOZ_CAN_RUN_SCRIPT` because the destructor
+  //       may run script via nsISelectionListener.
+  explicit SelectionBatcher(Selection& aSelectionRef,
+                            const char* aRequesterFuncName,
+                            int16_t aReasons = nsISelectionListener::NO_REASON)
+      : SelectionBatcher(&aSelectionRef, aRequesterFuncName, aReasons) {}
   explicit SelectionBatcher(Selection* aSelection,
-                            int16_t aReason = nsISelectionListener::NO_REASON) {
-    mSelection = aSelection;
-    mReason = aReason;
+                            const char* aRequesterFuncName,
+                            int16_t aReasons = nsISelectionListener::NO_REASON)
+      : mSelection(aSelection),
+        mReasons(aReasons),
+        mRequesterFuncName(aRequesterFuncName) {
     if (mSelection) {
-      mSelection->StartBatchChanges();
+      mSelection->StartBatchChanges(mRequesterFuncName);
     }
   }
 
   ~SelectionBatcher() {
     if (mSelection) {
-      mSelection->EndBatchChanges(mReason);
+      mSelection->EndBatchChanges(mRequesterFuncName, mReasons);
     }
   }
 };
