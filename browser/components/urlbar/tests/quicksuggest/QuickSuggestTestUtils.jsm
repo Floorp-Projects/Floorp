@@ -50,6 +50,7 @@ const LEARN_MORE_URL =
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
 const UPDATE_TOPIC = "firefox-suggest-update";
+const UPDATE_SKIPPED_TOPIC = "firefox-suggest-update-skipped";
 
 // On `init`, the following properties and methods are copied from the test
 // scope to the `TestUtils` object so they can be easily accessed. Be careful
@@ -84,6 +85,10 @@ class QSTestUtils {
 
   get UPDATE_TOPIC() {
     return UPDATE_TOPIC;
+  }
+
+  get UPDATE_SKIPPED_TOPIC() {
+    return UPDATE_SKIPPED_TOPIC;
   }
 
   get DEFAULT_CONFIG() {
@@ -691,10 +696,12 @@ class QSTestUtils {
     // enrollments, but tests can trigger lots of updates back to back.
     await this.waitForScenarioUpdated();
 
-    // This notification signals that pref updates due to enrollment are done.
-    let updatePromise = TestUtils.topicObserved(
-      QuickSuggestTestUtils.UPDATE_TOPIC
-    );
+    // These notifications signal either that pref updates due to enrollment are
+    // done or that updates weren't necessary.
+    let updatePromise = Promise.race([
+      TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
+      TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
+    ]);
 
     let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
       enabled: true,
@@ -709,9 +716,11 @@ class QSTestUtils {
     return async () => {
       // The same pref updates will be triggered by unenrollment, so wait for
       // them again.
-      let unenrollUpdatePromise = TestUtils.topicObserved(
-        QuickSuggestTestUtils.UPDATE_TOPIC
-      );
+      let unenrollUpdatePromise = Promise.race([
+        TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
+        TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
+      ]);
+
       this.info?.("Awaiting experiment cleanup");
       await doExperimentCleanup();
       this.info?.("Awaiting update after unenrolling in experiment");
