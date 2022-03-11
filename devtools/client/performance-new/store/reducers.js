@@ -31,10 +31,7 @@ function recordingState(state = "not-yet-known", action) {
         return state;
       }
 
-      const { isActive, isLockedForPrivateBrowsing } = action;
-      if (isLockedForPrivateBrowsing) {
-        return "locked-by-private-browsing";
-      }
+      const { isActive } = action;
       if (isActive) {
         return "recording";
       }
@@ -58,7 +55,6 @@ function recordingState(state = "not-yet-known", action) {
           // Wait for the profiler to tell us that it has started.
           return "recording";
 
-        case "locked-by-private-browsing":
         case "recording":
           // These state cases don't make sense to happen, and means we have a logical
           // fallacy somewhere.
@@ -78,10 +74,8 @@ function recordingState(state = "not-yet-known", action) {
           return "available-to-record";
 
         case "request-to-start-recording":
-        // Highly unlikely, but someone stopped the recorder, this is fine.
-        // Do nothing (fallthrough).
-        case "locked-by-private-browsing":
-          // The profiler is already locked, so we know about this already.
+          // Highly unlikely, but someone stopped the recorder, this is fine.
+          // Do nothing.
           return state;
 
         case "recording":
@@ -94,33 +88,6 @@ function recordingState(state = "not-yet-known", action) {
         default:
           throw new Error("Unhandled recording state");
       }
-
-    case "REPORT_PRIVATE_BROWSING_STARTED":
-      switch (state) {
-        case "request-to-get-profile-and-stop-profiler":
-        // This one is a tricky case. Go ahead and act like nothing went wrong, maybe
-        // it will resolve correctly? (fallthrough)
-        case "request-to-stop-profiler":
-        case "available-to-record":
-        case "not-yet-known":
-          return "locked-by-private-browsing";
-
-        case "request-to-start-recording":
-        case "recording":
-          return "locked-by-private-browsing";
-
-        case "locked-by-private-browsing":
-          // Do nothing
-          return state;
-
-        default:
-          throw new Error("Unhandled recording state");
-      }
-
-    case "REPORT_PRIVATE_BROWSING_STOPPED":
-      // No matter the state, go ahead and set this as ready to record. This should
-      // be the only logical state to go into.
-      return "available-to-record";
 
     case "REQUESTING_TO_START_RECORDING":
       return "request-to-start-recording";
@@ -150,7 +117,6 @@ function recordingState(state = "not-yet-known", action) {
 function recordingUnexpectedlyStopped(recState, state = false, action) {
   switch (action.type) {
     case "REPORT_PROFILER_STOPPED":
-    case "REPORT_PRIVATE_BROWSING_STARTED":
       if (
         recState === "recording" ||
         recState == "request-to-start-recording"
