@@ -64,3 +64,63 @@ add_task(async function test_on_updated() {
 
   await extension.unload();
 });
+
+add_task(async function test_on_updated_eventpage() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+  const theme = ExtensionTestUtils.loadExtension({
+    manifest: {
+      theme: {
+        images: {
+          theme_frame: "image1.png",
+        },
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "watcher@mochitest" } },
+      background: { persistent: false },
+    },
+    background() {
+      browser.theme.onUpdated.addListener(updateInfo => {
+        browser.test.sendMessage("theme-updated", updateInfo);
+      });
+    },
+  });
+
+  await extension.startup();
+  assertPersistentListeners(extension, "theme", "onUpdated", {
+    primed: false,
+  });
+
+  await extension.terminateBackground();
+  assertPersistentListeners(extension, "theme", "onUpdated", {
+    primed: true,
+  });
+
+  info("Testing update event on static theme startup");
+  let updatedPromise = extension.awaitMessage("theme-updated");
+  await theme.startup();
+  const { theme: receivedTheme, windowId } = await updatedPromise;
+  Assert.ok(!windowId, "No window id in static theme update event");
+  Assert.ok(
+    receivedTheme.images.theme_frame.includes("image1.png"),
+    "Theme theme_frame image should be applied"
+  );
+  await theme.unload();
+  await extension.awaitMessage("theme-updated");
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});

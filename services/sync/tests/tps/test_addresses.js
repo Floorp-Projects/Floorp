@@ -78,4 +78,5 @@ Phase("phase3", [
   [Sync],
   [Addresses.verify, address1_after],
   [Addresses.verify, address2],
+  [Sync],
 ]);

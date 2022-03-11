@@ -125,7 +125,7 @@ static const BTSignedTreeHeadTestParams BT_SIGNED_TREE_HEAD_TEST_PARAMS[] = {
      Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {ValidSTH::kSPKIHex, pkix::DigestAlgorithm::sha512,
      pkix::der::PublicKeyAlgorithm::ECDSA, ValidSecp521r1SHA512STH::kSTHHex,
-     Result::ERROR_BAD_DER, 0, 0, nullptr},
+     Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {SignatureCoversLogIDSTH::kSPKIHex, pkix::DigestAlgorithm::sha256,
      pkix::der::PublicKeyAlgorithm::ECDSA, SignatureCoversLogIDSTH::kSTHHex,
      Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
@@ -134,7 +134,7 @@ static const BTSignedTreeHeadTestParams BT_SIGNED_TREE_HEAD_TEST_PARAMS[] = {
      Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {WrongSigningKeySTH::kSPKIHex, pkix::DigestAlgorithm::sha256,
      pkix::der::PublicKeyAlgorithm::ECDSA, WrongSigningKeySTH::kSTHHex,
-     Result::ERROR_BAD_DER, 0, 0, nullptr},
+     Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {MissingLogIDSTH::kSPKIHex, pkix::DigestAlgorithm::sha256,
      pkix::der::PublicKeyAlgorithm::ECDSA, MissingLogIDSTH::kSTHHex,
      Result::ERROR_BAD_DER, 0, 0, nullptr},
@@ -170,10 +170,10 @@ static const BTSignedTreeHeadTestParams BT_SIGNED_TREE_HEAD_TEST_PARAMS[] = {
      Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {RSASignerECSPKISTH::kSPKIHex, pkix::DigestAlgorithm::sha256,
      pkix::der::PublicKeyAlgorithm::ECDSA, RSASignerECSPKISTH::kSTHHex,
-     Result::ERROR_BAD_DER, 0, 0, nullptr},
+     Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
     {ECSignerRSASPKISTH::kSPKIHex, pkix::DigestAlgorithm::sha256,
      pkix::der::PublicKeyAlgorithm::ECDSA, ECSignerRSASPKISTH::kSTHHex,
-     Result::ERROR_BAD_SIGNATURE, 0, 0, nullptr},
+     Result::ERROR_INVALID_KEY, 0, 0, nullptr},
 };
 
 TEST_P(BTSignedTreeHeadTest, BTSignedTreeHeadSimpleTest) {

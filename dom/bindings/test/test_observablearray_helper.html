@@ -1,0 +1,376 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test Helpers of Observable Array Type</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+/* global TestInterfaceObservableArray */
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+});
+
+add_task(function testObservableArray_helper_elementAt() {
+  let m = new TestInterfaceObservableArray();
+
+  [
+    // [values, property, helper]
+    [[true, false], "observableArrayBoolean", m.booleanElementAtInternal.bind(m)],
+    [[new TestInterfaceObservableArray(), new TestInterfaceObservableArray()],
+      "observableArrayInterface", m.interfaceElementAtInternal.bind(m)],
+    [[{property: "test"}, {property: 2}], "observableArrayObject",
+     m.objectElementAtInternal.bind(m)],
+  ].forEach(function([values, property, helper]) {
+    m[property] = values;
+
+    let t = m[property];
+    ok(Array.isArray(t), "observable array should be an array type");
+    is(t.length, values.length, "length of observable array");
+
+    for (let i = 0; i < values.length; i++) {
+      isDeeply(values[i], helper(i), `check index ${i}`);
+    }
+
+    SimpleTest.doesThrow(() => {
+      helper(values.length);
+    }, `getting element outside the range should throw`);
+  });
+});
+
+add_task(function testObservableArray_helper_replaceElementAt() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [
+    // [index, value, shouldThrow]
+    [b.length + 1, false, true],
+    [b.length, false, false],
+    [b.length + 1, false, false],
+    [b.length + 1, true, false],
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      info(`set callback for ${_index}`);
+      is(_value, value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+    deleteCallbackTests = function(_value, _index) {
+      info(`delete callback for ${_index}`);
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`setting value of property ${index} to ${value}`);
+    try {
+      m.booleanReplaceElementAtInternal(index, value);
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, shouldThrow ? 0 : 1, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], shouldThrow ? oldValue : value, `property value`);
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_helper_replaceElementAt_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (value) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (index < 2) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 3");
+
+  [
+    // [index, value, shouldThrow]
+    [b.length, true, true],
+    [b.length, false, false],
+    [b.length, true, true],
+    [0, false, true],
+    [0, true, true]
+  ].forEach(function([index, value, shouldThrow]) {
+    // Initialize
+    let oldValue = b[index];
+    let oldLen = b.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`setting value of property ${index} to ${value}`);
+    try {
+      m.booleanReplaceElementAtInternal(index, value);
+      ok(!shouldThrow, `setting value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `setting value throws ${e}`);
+    }
+    is(setCallbackCount, (shouldThrow && index < 2) ? 0 : 1, "setCallback count");
+    is(deleteCallbackCount, (oldLen > index) ? 1 : 0, "deleteCallback count");
+    is(b[index], shouldThrow ? oldValue : value, "property value");
+    is(b.length, shouldThrow ? oldLen : Math.max(oldLen, index + 1), `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_helper_appendElement() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let setCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (typeof setCallbackTests === 'function') {
+        setCallbackTests(value, index);
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+    },
+  });
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array should be 0");
+
+  [true, false, true, false].forEach(function(value) {
+    // Initialize
+    let oldLen = b.length;
+    let index = oldLen;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    setCallbackTests = function(_value, _index) {
+      info(`set callback for ${_index}`);
+      is(_value, value, "setCallbackTests: test value argument");
+      is(_index, index, "setCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`append ${value}`);
+    try {
+      m.booleanAppendElementInternal(value);
+      ok(true, `appending value should not throw`);
+    } catch(e) {
+      ok(false, `appending value throws ${e}`);
+    }
+    is(setCallbackCount, 1, "setCallback should be called");
+    is(deleteCallbackCount, 0, "deleteCallback should not be called");
+    is(b[index], value, `property value`);
+    is(b.length, oldLen + 1, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_helper_appendElement_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+      if (value) {
+        throw new Error("setBooleanCallback");
+      }
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+    },
+  });
+  m.observableArrayBoolean = [false, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 3, "length of observable array should be 3");
+
+  [true, false, true, false].forEach(function(value) {
+    // Initialize
+    let oldLen = b.length;
+    let index = oldLen;
+    let oldValue = b[index];
+    let shouldThrow = value;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`append ${value}`);
+    try {
+      m.booleanAppendElementInternal(value);
+      ok(!shouldThrow, `appending value should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `appending value throws ${e}`);
+    }
+    is(setCallbackCount, 1, "setCallback should be called");
+    is(deleteCallbackCount, 0, "deleteCallback should not be called");
+    is(b[index], shouldThrow ? oldValue : value, "property value");
+    is(b.length, shouldThrow ? oldLen : oldLen + 1, `length of observable array`);
+  });
+});
+
+add_task(function testObservableArray_helper_removeLastElement() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+  let deleteCallbackTests = null;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (typeof deleteCallbackTests === 'function') {
+        deleteCallbackTests(value, index);
+      }
+    },
+  });
+  m.observableArrayBoolean = [true, false, true, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 4, "length of observable array should be 4");
+
+  let oldValues = b.slice();
+  while (oldValues.length) {
+    // Initialize
+    let oldValue = oldValues.pop();
+    let index = oldValues.length;
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+    deleteCallbackTests = function(_value, _index) {
+      info(`delete callback for ${_index}`);
+      is(_value, oldValue, "deleteCallbackTests: test value argument");
+      is(_index, index, "deleteCallbackTests: test index argument");
+    };
+
+    // Test
+    info(`remove last element`);
+    try {
+      m.booleanRemoveLastElementInternal();
+      ok(true, `removing last element should not throw`);
+    } catch(e) {
+      ok(false, `removing last element throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback should not be called");
+    is(deleteCallbackCount, 1, "deleteCallback should be called");
+    isDeeply(b, oldValues, `property value`);
+    is(b.length, oldValues.length, `length of observable array`);
+  }
+
+  // test when array is empty
+  setCallbackCount = 0;
+  deleteCallbackCount = 0;
+  SimpleTest.doesThrow(() => {
+    m.booleanRemoveLastElementInternal();
+  }, `removing last element should throw when array is empty`);
+  is(setCallbackCount, 0, "setCallback should not be called");
+  is(deleteCallbackCount, 0, "deleteCallback should not be called");
+  is(b.length, 0, `length of observable array`);
+});
+
+add_task(function testObservableArray_helper_removeLastElement_callback_throw() {
+  let setCallbackCount = 0;
+  let deleteCallbackCount = 0;
+
+  let m = new TestInterfaceObservableArray({
+    setBooleanCallback(value, index) {
+      setCallbackCount++;
+    },
+    deleteBooleanCallback(value, index) {
+      deleteCallbackCount++;
+      if (value) {
+        throw new Error("deleteBooleanCallback");
+      }
+    },
+  });
+  m.observableArrayBoolean = [false, true, false, false];
+
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 4, "length of observable array should be 4");
+
+  let shouldThrow = false;
+  while (!shouldThrow && b.length) {
+    // Initialize
+    let oldValues = b.slice();
+    let oldLen = b.length;
+    shouldThrow = oldValues[oldLen - 1];
+    setCallbackCount = 0;
+    deleteCallbackCount = 0;
+
+    // Test
+    info(`remove last element`);
+    try {
+      m.booleanRemoveLastElementInternal();
+      ok(!shouldThrow, `removing last element should not throw`);
+    } catch(e) {
+      ok(shouldThrow, `removing last element throws ${e}`);
+    }
+    is(setCallbackCount, 0, "setCallback should not be called");
+    is(deleteCallbackCount, 1, "deleteCallback should be called");
+    isDeeply(b, shouldThrow ? oldValues : oldValues.slice(0, oldLen - 1), `property value`);
+    is(b.length, shouldThrow ? oldLen : oldLen - 1, `length of observable array`);
+  }
+});
+
+add_task(function testObservableArray_helper_length() {
+  let m = new TestInterfaceObservableArray();
+  let b = m.observableArrayBoolean;
+  ok(Array.isArray(b), "observable array should be an array type");
+  is(b.length, 0, "length of observable array");
+
+  [
+    [false, true, false, true],
+    [true, false],
+    [false, true, false],
+  ].forEach(function(values) {
+    m.observableArrayBoolean = values;
+    is(b.length, m.booleanLengthInternal(), "length helper function");
+  });
+});
+</script>
+</body>
+</html>

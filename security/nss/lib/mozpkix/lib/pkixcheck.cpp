@@ -117,11 +117,6 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
       // for any curve that we support, the chances of us encountering a curve
       // during path building is too low to be worth bothering with.
       break;
-    case der::PublicKeyAlgorithm::Uninitialized:
-    {
-      assert(false);
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
     MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 

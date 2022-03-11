@@ -228,11 +228,13 @@ Result AppTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
   return Success;
 }
 
-Result AppTrustDomain::VerifyRSAPKCS1SignedDigest(
-    const SignedDigest& signedDigest, Input subjectPublicKeyInfo) {
+Result AppTrustDomain::VerifyRSAPKCS1SignedData(Input data,
+                                                DigestAlgorithm digestAlgorithm,
+                                                Input signature,
+                                                Input subjectPublicKeyInfo) {
   // TODO: We should restrict signatures to SHA-256 or better.
-  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                       nullptr);
+  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
+                                     subjectPublicKeyInfo, nullptr);
 }
 
 Result AppTrustDomain::CheckECDSACurveIsAcceptable(
@@ -247,10 +249,12 @@ Result AppTrustDomain::CheckECDSACurveIsAcceptable(
   return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
 }
 
-Result AppTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                               Input subjectPublicKeyInfo) {
-  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
-                                    nullptr);
+Result AppTrustDomain::VerifyECDSASignedData(Input data,
+                                             DigestAlgorithm digestAlgorithm,
+                                             Input signature,
+                                             Input subjectPublicKeyInfo) {
+  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
+                                  subjectPublicKeyInfo, nullptr);
 }
 
 Result AppTrustDomain::CheckValidityIsAcceptable(

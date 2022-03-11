@@ -631,7 +631,7 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
   // want to send a single selectionchange event to the document, so we
   // batch the selectionchange events, such that a single event fires after
   // the AutoHideSelectionChanges destructor has been run.
-  SelectionBatcher selectionBatcher(SelectionRef());
+  SelectionBatcher selectionBatcher(SelectionRef(), __FUNCTION__);
   AutoHideSelectionChanges hideSelection(SelectionRef());
   nsAutoScriptBlocker scriptBlocker;
 

@@ -7,12 +7,12 @@ import logging
 
 import requests
 from requests.exceptions import HTTPError
+from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import get_artifact_from_index, get_task_definition
 
 from .registry import register_callback_action
 from .util import create_tasks, combine_task_graph_files
 from gecko_taskgraph.util.taskgraph import find_decision_task
-from gecko_taskgraph.taskgraph import TaskGraph
 
 PUSHLOG_TMPL = "{}/json-pushes?version=2&startID={}&endID={}"
 INDEX_TMPL = "gecko.v2.{}.pushlog-id.{}.decision"

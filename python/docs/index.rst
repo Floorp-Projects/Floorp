@@ -4,7 +4,6 @@ Using third-party Python packages
 
 Mach and its associated commands have a variety of 3rd-party Python dependencies. Many of these
 are vendored in ``third_party/python``, while others are installed at runtime via ``pip``.
-Dependencies with "native code" are handled on a machine-by-machine basis.
 
 The dependencies of Mach itself can be found at ``build/mach_virtualenv_packages.txt``. Mach commands
 may have additional dependencies which are specified at ``build/<site>_virtualenv_packages.txt``.
@@ -35,6 +34,11 @@ There's two ways of using 3rd-party Python dependencies:
   be installed using ``pip``. This is the recommended technique for adding new Python dependencies.
 * :ref:`Vendor the source of the Python package in-tree <python-vendor>`. Dependencies of the Mach
   core logic or of building Firefox itself must be vendored.
+
+.. note::
+
+    For dependencies that meet both restrictions (dependency of Mach/build, *and* has
+    native code), see the :ref:`mach-and-build-native-dependencies` section below.
 
 .. note::
 
@@ -112,6 +116,105 @@ Next, add that package and any new transitive dependencies (you'll see them adde
     DoS against PyPI or a random package maintainer removing an old tarball to delay
     a Firefox chemspill. Therefore, packages required by Mach core logic or for building
     Firefox itself must be vendored.
+
+.. _mach-and-build-native-dependencies:
+
+Mach/Build Native 3rd-party Dependencies
+========================================
+
+There are cases where Firefox is built without being able to ``pip install``, but where
+native 3rd party Python dependencies enable optional functionality. This can't be solved
+by vendoring the platform-specific libraries, as then each one would have to be stored
+multiple times in-tree according to how many platforms we wish to support.
+
+Instead, this is solved by pre-installing such native packages onto the host system
+in advance, then having Mach attempt to use such packages directly from the system.
+This feature is only viable in very specific environments, as the system Python packages
+have to be compatible with Mach's vendored packages.
+
+.. note:
+
+    All of these native build-specific dependencies **MUST** be optional requirements
+    as to support the "no strings attached" builds that only use vendored packages.
+
+To control this behaviour, the ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` environment
+variable can be used:
+
+.. list-table:: ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE``
+    :header-rows: 1
+
+    * - ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE``
+      - Behaviour
+    * - ``"pip"``
+      - Mach will ``pip install`` all needed dependencies from PyPI at runtime into a Python
+        virtual environment that's reused in future Mach invocations.
+    * - ``"none"``
+      - Mach will perform the build using only vendored packages. No Python virtual environment
+        will be created for Mach.
+    * - ``"system"``
+      - Mach will use the host system's Python packages as part of doing the build. This option
+        allows the usage of native Python packages without leaning on a ``pip install`` at
+        build-time. This is generally slower because the system Python packages have to
+        be asserted to be compatible with Mach. Additionally, dependency lockfiles are ignored,
+        so there's higher risk of breakage. Finally, as with ``"none"``, no Python virtualenv
+        environment is created for Mach.
+    * - ``<unset>``
+      - Same behaviour as ``"pip"`` if ``MOZ_AUTOMATION`` isn't set. Otherwise, uses
+        the same behaviour as ``"system"`` if any needed native Python packages can be found in
+        the system Python.
+
+There's a couple restrictions here:
+
+* ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` only applies to the top-level ``"mach"`` site,
+   the ``"common"`` site and the ``"build"`` site. All other sites will use ``pip install`` at
+   run-time as needed.
+
+* ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="system"`` is not allowed when using any site other
+  than ``"mach"``, ``"common"`` or ``"build"``, because:
+
+  * As described in :ref:`package-compatibility` below, packages used by Mach are still
+    in scope when commands are run, and
+  * The host system is practically guaranteed to be incompatible with commands' dependency
+    lockfiles.
+
+The ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` environment variable fits into the following use
+cases:
+
+Mozilla CI Builds
+~~~~~~~~~~~~~~~~~
+
+We need access to the native packages of ``zstandard`` and ``psutil`` to extract archives and
+get OS information respectively. Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="system"``.
+
+Mozilla CI non-Build Tasks
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We generally don't want to create a Mach virtual environment, but it's ok to ``pip install``
+for specific command sites as needed. Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="none"``.
+
+Downstream CI Builds
+~~~~~~~~~~~~~~~~~~~~
+
+Sometimes these builds happen in sandboxed, network-less environments, and usually these builds
+don't need any of the behaviour enabled by installing native Python dependencies.
+Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="none"``.
+
+Gentoo Builds
+~~~~~~~~~~~~~
+
+When installing Firefox via the package manager, Gentoo generally builds it from source rather than
+distributing a compiled binary artifact. Accordingly, users doing a build of Firefox in this
+context don't want stray files created in ``~/.mozbuild`` or unnecessary ``pip install`` calls.
+Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="none"``.
+
+Firefox Developers
+~~~~~~~~~~~~~~~~~~
+
+Leave ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` unset so that all Mach commands can be run,
+Python dependency lockfiles are respected, and optional behaviour is enabled by installing
+native packages.
+
+.. _package-compatibility:
 
 Package compatibility
 =====================

@@ -15,10 +15,10 @@ from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
 from taskgraph.parameters import ParameterMismatch, parameters_loader
+from taskgraph.taskgraph import TaskGraph
 
 import gecko_taskgraph
 from gecko_taskgraph.generator import TaskGraphGenerator
-from gecko_taskgraph.taskgraph import TaskGraph
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)

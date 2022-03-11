@@ -4,6 +4,7 @@ import Header from "../components/Header/Header";
 import ArticleList from "../components/ArticleList/ArticleList";
 import Button from "../components/Button/Button";
 import PopularTopics from "../components/PopularTopics/PopularTopics";
+import TagPicker from "../components/TagPicker/TagPicker";
 
 var StyleGuideOverlay = function(options) {};
 
@@ -71,6 +72,8 @@ StyleGuideOverlay.prototype = {
             },
           ]}
         />
+        <h4 className="stp_styleguide_h4">TagPicker</h4>
+        <TagPicker tags={[`futurism`, `politics`, `mozilla`]} />
         <h3>Typography:</h3>
         <h2 className="header_large">.header_large</h2>
         <h3 className="header_medium">.header_medium</h3>

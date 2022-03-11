@@ -608,4 +608,58 @@ OptionalVersion(Reader& input, /*out*/ Version& version)
   });
 }
 
+// From RFC 5480 Appendix A:
+// ECDSA-Sig-Value ::= SEQUENCE {
+//   r  INTEGER,
+//   s  INTEGER
+// }
+Result
+ECDSASigValue(Input ecdsaSignature, /*out*/ Input& r, /*out*/ Input& s) {
+  Reader rAndS;
+  Result rv = ExpectTagAndGetValueAtEnd(ecdsaSignature, SEQUENCE, rAndS);
+  if (rv != Success) {
+    return rv;
+  }
+
+  Input rInput;
+  Input::size_type rSignificantBytes;
+  rv = PositiveInteger(rAndS, rInput, &rSignificantBytes);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader rReader(rInput);
+  // Address potential leading 0 byte due to DER encoding.
+  if (rSignificantBytes + 1 == rInput.GetLength()) {
+    rv = rReader.Skip(1);
+    if (rv != Success) {
+      return rv;
+    }
+  }
+  rv = rReader.SkipToEnd(r);
+  if (rv != Success) {
+    return rv;
+  }
+
+  Input sInput;
+  Input::size_type sSignificantBytes;
+  rv = PositiveInteger(rAndS, sInput, &sSignificantBytes);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader sReader(sInput);
+  // Address potential leading 0 byte due to DER encoding.
+  if (sSignificantBytes + 1 == sInput.GetLength()) {
+    rv = sReader.Skip(1);
+    if (rv != Success) {
+      return rv;
+    }
+  }
+  rv = sReader.SkipToEnd(s);
+  if (rv != Success) {
+    return rv;
+  }
+
+  return End(rAndS);
+}
+
 } } } // namespace mozilla::pkix::der

@@ -4,17 +4,31 @@
     <iframe id="foo"></iframe> 
     <script type="text/javascript">
     function loaded() {
-      var n = document.getElementById('foo');
+        dump("459443-1.html: Entering loaded()\n");
+        var n = document.getElementById('foo');
+
+        // Just to detect if/when the iframe might be firing its load event
+        // before we set up its final className-clearing load event handler:
+        n.addEventListener("load",
+                           function() {
+                               dump("459443-1.html: Entering n initial " +
+                                    "no-op load callback\n");});
+
         var f = n.contentWindow;
         f.document.open();
         f.document.write('');
         f.onload = function() {
+          dump("459443-1.html: Entering f.onload callback\n");
           f.document.designMode = 'on';
           setTimeout(function() {
+            dump("459443-1.html: Entering setTimeout callback\n");
             f.document.designMode='on';
             f.location = 'data:text/html;charset=utf-8,<body>FAIL<script>document.body.innerHTML="PASS"<\/script>';
             n.addEventListener("load",
-                               function() { document.documentElement.className = ''; });
+                               function() {
+                                   dump("459443-1.html: Entering n final " +
+                                        "load callback; clearing className\n");
+                                   document.documentElement.className = ''; });
           }, 0);
         };
         f.document.close();

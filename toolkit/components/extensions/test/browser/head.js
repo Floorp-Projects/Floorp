@@ -1,6 +1,6 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition, loadTestSubscript, backgroundColorSetOnRoot */
+   waitForTransition, loadTestSubscript, backgroundColorSetOnRoot, assertPersistentListeners */
 
 "use strict";
 
@@ -120,4 +120,58 @@ function backgroundColorSetOnRoot() {
     return false;
   }
   return os.windowsVersion < 10;
+}
+
+// Persistent Listener test functionality
+
+function getPersistentListeners(extWrapper, apiNs, apiEvent) {
+  let policy = WebExtensionPolicy.getByID(extWrapper.id);
+  const { persistentListeners } = policy.extension;
+  if (
+    !persistentListeners?.size > 0 ||
+    !persistentListeners.get(apiNs)?.has(apiEvent)
+  ) {
+    return [];
+  }
+
+  return Array.from(
+    persistentListeners
+      .get(apiNs)
+      .get(apiEvent)
+      .values()
+  );
+}
+
+function assertPersistentListeners(
+  extWrapper,
+  apiNs,
+  apiEvent,
+  { primed, persisted = true }
+) {
+  if (primed && !persisted) {
+    throw new Error(
+      "Inconsistent assertion, can't assert a primed listener if it is not persisted"
+    );
+  }
+
+  let listenersInfo = getPersistentListeners(extWrapper, apiNs, apiEvent);
+  Assert.equal(
+    persisted,
+    !!listenersInfo?.length,
+    `Got a persistent listener for ${apiNs}.${apiEvent}`
+  );
+  for (const info of listenersInfo) {
+    if (primed) {
+      Assert.ok(
+        info.primed,
+        `${apiNs}.${apiEvent} listener expected to be primed`
+      );
+    } else {
+      Assert.equal(
+        info.primed,
+        undefined,
+        `${apiNs}.${apiEvent} listener expected to not be primed`
+      );
+    }
+  }
 }

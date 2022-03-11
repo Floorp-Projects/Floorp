@@ -24,7 +24,7 @@
     "test_addon_restartless_xpi.js": {"disabled": "Bug 1498974"},
     "test_addon_webext_xpi.js": {"disabled": "Bug 1498974"},
     "test_addon_reconciling.js": {"disabled": "Bug 1498974"},
-    "test_addon_wipe.js": {},
+    "test_addon_wipe.js": {"disabled": "Bug 1498974"},
     "test_existing_bookmarks.js": {},
     "test_addresses.js": {},
     "test_creditcards.js": {},
