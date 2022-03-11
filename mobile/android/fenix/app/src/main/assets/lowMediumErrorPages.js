@@ -18,11 +18,17 @@ function parseQuery(queryString) {
  * Updates the HTML elements based on the queryMap
  */
 function injectValues(queryMap) {
+    const tryAgainButton = document.getElementById('errorTryAgain');
+    const continueHttpButton = document.getElementById("continueHttp");
+    const backFromHttpButton = document.getElementById('backFromHttp');
+
     // Go through each element and inject the values
     document.title = queryMap.title;
+    tryAgainButton.innerHTML = queryMap.button;
+    continueHttpButton.innerHTML = queryMap.continueHttpButton;
+    backFromHttpButton.innerHTML = queryMap.badCertGoBack;
     document.getElementById('errorTitleText').innerHTML = queryMap.title;
     document.getElementById('errorShortDesc').innerHTML = queryMap.description;
-    document.getElementById('errorTryAgain').innerHTML = queryMap.button;
     document.getElementById('advancedButton').innerHTML = queryMap.badCertAdvanced;
     document.getElementById('badCertTechnicalInfo').innerHTML = queryMap.badCertTechInfo;
     document.getElementById('advancedPanelBackButton').innerHTML = queryMap.badCertGoBack;
@@ -34,6 +40,15 @@ function injectValues(queryMap) {
         errorImage.remove();
     } else  {
         errorImage.src = "resource://android/assets/" + queryMap.image;
+    }
+
+    if (queryMap.showContinueHttp === "true") {
+       // On the "HTTPS-Only" error page "Try again" doesn't make sense since reloading the page
+       // will just show an error page again.
+       tryAgainButton.style.display = 'none';
+    } else {
+        continueHttpButton.style.display = 'none';
+        backFromHttpButton.style.display = 'none';
     }
 };
 
@@ -104,13 +119,16 @@ async function acceptAndContinue(temporary) {
 document.addEventListener('DOMContentLoaded', function () {
     if (window.history.length == 1) {
         document.getElementById('advancedPanelBackButton').style.display = 'none';
+        document.getElementById('backFromHttp').style.display = 'none';
     } else {
         document.getElementById('advancedPanelBackButton').addEventListener('click', () => window.history.back());
+        document.getElementById('backFromHttp').addEventListener('click', () => window.history.back());
     }
 
     document.getElementById('errorTryAgain').addEventListener('click', () => window.location.reload());
     document.getElementById('advancedButton').addEventListener('click', toggleAdvancedAndScroll);
     document.getElementById('advancedPanelAcceptButton').addEventListener('click', () => acceptAndContinue(true));
+    document.getElementById('continueHttp').addEventListener('click', () => document.reloadWithHttpsOnlyException());
 });
 
 parseQuery(document.documentURI);
