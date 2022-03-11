@@ -75,7 +75,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
-    code_ = &tls_->instance->code();
+    code_ = &tls_->instance()->code();
     MOZ_ASSERT(code_ == LookupCode(unwoundPC));
 
     codeRange_ = code_->lookupFuncRange(unwoundPC);
@@ -221,7 +221,7 @@ void WasmFrameIter::popFrame() {
     tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
   }
 
-  MOZ_ASSERT(code_ == &tls()->instance->code());
+  MOZ_ASSERT(code_ == &tls()->instance()->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
 
   MOZ_ASSERT(!done());
@@ -294,7 +294,7 @@ unsigned WasmFrameIter::computeLine(uint32_t* column) const {
 
 Instance* WasmFrameIter::instance() const {
   MOZ_ASSERT(!done());
-  return tls_->instance;
+  return tls_->instance();
 }
 
 void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
@@ -394,7 +394,7 @@ static constexpr unsigned SetJitEntryFP = PushedRetAddr + SetFP - PushedFP;
 
 static void LoadActivation(MacroAssembler& masm, const Register& dest) {
   // WasmCall pushes a JitActivation.
-  masm.loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+  masm.loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfCx()), dest);
   masm.loadPtr(Address(dest, JSContext::offsetOfActivation()), dest);
 }
 
@@ -723,7 +723,7 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   // See comment block in WasmCompile.cpp for an explanation tiering.
   if (tier1FuncIndex) {
     Register scratch = ABINonArgReg0;
-    masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);
+    masm.loadPtr(Address(WasmTlsReg, TlsData::offsetOfJumpTable()), scratch);
     masm.jump(Address(scratch, *tier1FuncIndex * sizeof(uintptr_t)));
   }
 
@@ -1418,7 +1418,8 @@ void ProfilingFrameIterator::operator++() {
 
   MOZ_ASSERT(code_ ==
              &GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(callerFP_))
-                  ->instance->code());
+                  ->instance()
+                  ->code());
 
   switch (codeRange_->kind()) {
     case CodeRange::Function:

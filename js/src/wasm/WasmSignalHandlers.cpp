@@ -522,7 +522,7 @@ struct AutoHandlingTrap {
   // though, the containing JSContext is the same.
 
   auto* frame = reinterpret_cast<Frame*>(ContextToFP(context));
-  Instance* instance = GetNearestEffectiveTls(frame)->instance;
+  Instance* instance = GetNearestEffectiveTls(frame)->instance();
   MOZ_RELEASE_ASSERT(&instance->code() == &segment.code() ||
                      trap == Trap::IndirectCallBadSig);
 
@@ -997,7 +997,8 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
   }
 
   Instance& instance =
-      *GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(regs.fp))->instance;
+      *GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(regs.fp))
+           ->instance();
   MOZ_ASSERT(&instance.code() == &segment.code());
 
   switch (trap) {
@@ -1010,7 +1011,7 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
     case Trap::IndirectCallToNull:
       // Null pointer plus the appropriate offset.
       if (addr !=
-          reinterpret_cast<uint8_t*>(offsetof(wasm::TlsData, memoryBase))) {
+          reinterpret_cast<uint8_t*>(wasm::TlsData::offsetOfMemoryBase())) {
         return false;
       }
       break;

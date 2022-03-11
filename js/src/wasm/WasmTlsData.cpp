@@ -25,30 +25,34 @@
 using namespace js;
 using namespace js::wasm;
 
-UniqueTlsData wasm::CreateTlsData(uint32_t globalDataLength) {
-  void* allocatedBase = js_calloc(TlsDataAlign + offsetof(TlsData, globalArea) +
-                                  globalDataLength);
+UniqueTlsData wasm::TlsData::create(uint32_t globalDataLength) {
+  void* allocatedBase = js_calloc(
+      TlsDataAlign + offsetof(TlsData, globalArea_) + globalDataLength);
   if (!allocatedBase) {
     return nullptr;
   }
 
   auto* tlsData = reinterpret_cast<TlsData*>(
       AlignBytes(uintptr_t(allocatedBase), TlsDataAlign));
-  tlsData->allocatedBase = allocatedBase;
+  tlsData->allocatedBase_ = allocatedBase;
 
   return UniqueTlsData(tlsData);
 }
 
+void wasm::TlsDataDeleter::operator()(TlsData* tlsData) {
+  js_free(tlsData->allocatedBase_);
+}
+
 void TlsData::setInterrupt() {
-  interrupt = true;
-  stackLimit = UINTPTR_MAX;
+  interrupt_ = true;
+  stackLimit_ = UINTPTR_MAX;
 }
 
 bool TlsData::isInterrupted() const {
-  return interrupt || stackLimit == UINTPTR_MAX;
+  return interrupt_ || stackLimit_ == UINTPTR_MAX;
 }
 
 void TlsData::resetInterrupt(JSContext* cx) {
-  interrupt = false;
-  stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+  interrupt_ = false;
+  stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
 }

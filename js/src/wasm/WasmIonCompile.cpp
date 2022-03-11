@@ -1077,7 +1077,7 @@ class FunctionCompiler {
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                             offsetof(wasm::TlsData, memoryBase),
+                             wasm::TlsData::offsetOfMemoryBase(),
                              MIRType::Pointer, aliases);
     curBlock_->add(load);
 #endif
@@ -1109,7 +1109,7 @@ class FunctionCompiler {
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                                   offsetof(wasm::TlsData, boundsCheckLimit),
+                                   wasm::TlsData::offsetOfBoundsCheckLimit(),
                                    type, aliases);
     curBlock_->add(load);
     return load;
@@ -1686,7 +1686,7 @@ class FunctionCompiler {
       if (v->type() == MIRType::RefOrNull) {
         valueAddr = MWasmDerivedPointer::New(
             alloc(), tlsPointer_,
-            offsetof(wasm::TlsData, globalArea) + globalDataOffset);
+            wasm::TlsData::offsetOfGlobalArea() + globalDataOffset);
         curBlock_->add(valueAddr);
         store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
                                    AliasSet::WasmGlobalVar);
@@ -2668,7 +2668,7 @@ class FunctionCompiler {
 
   MDefinition* loadPendingException() {
     MWasmLoadTls* exn = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
+        alloc(), tlsPointer_, wasm::TlsData::offsetOfPendingException(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(exn);
     return exn;
@@ -2676,7 +2676,7 @@ class FunctionCompiler {
 
   MDefinition* loadPendingExceptionTag() {
     MWasmLoadTls* tag = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingExceptionTag),
+        alloc(), tlsPointer_, wasm::TlsData::offsetOfPendingExceptionTag(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(tag);
     return tag;
@@ -2685,7 +2685,7 @@ class FunctionCompiler {
   void clearPendingExceptionState() {
     // Clear the pending exception object
     auto* exceptionLoc = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, offsetof(TlsData, pendingException));
+        alloc(), tlsPointer_, TlsData::offsetOfPendingException());
     curBlock_->add(exceptionLoc);
     auto* null = nullRefConstant();
     auto* clearException =
@@ -2696,7 +2696,7 @@ class FunctionCompiler {
 
     // Clear the pending exception tag object
     auto* exceptionTagLoc = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, offsetof(TlsData, pendingExceptionTag));
+        alloc(), tlsPointer_, TlsData::offsetOfPendingExceptionTag());
     curBlock_->add(exceptionTagLoc);
     auto* clearExceptionTag =
         MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagLoc, null,

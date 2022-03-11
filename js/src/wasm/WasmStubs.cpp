@@ -643,7 +643,7 @@ static void UnboxAnyrefIntoValue(MacroAssembler& masm, Register tls,
   masm.storeValue(JSVAL_TYPE_OBJECT, src, dst);
   // Spectre mitigations: see comment above about efficiency.
   masm.branchTestObjClass(Assembler::Equal, src,
-                          Address(tls, offsetof(TlsData, valueBoxClass)),
+                          Address(tls, TlsData::offsetOfValueBoxClass()),
                           scratch, src, &mustUnbox);
   masm.jump(&done);
 
@@ -680,7 +680,7 @@ static void UnboxAnyrefIntoValueReg(MacroAssembler& masm, Register tls,
   masm.moveValue(TypedOrValueRegister(MIRType::Object, AnyRegister(src)), dst);
   // Spectre mitigations: see comment above about efficiency.
   masm.branchTestObjClass(Assembler::Equal, src,
-                          Address(tls, offsetof(TlsData, valueBoxClass)),
+                          Address(tls, TlsData::offsetOfValueBoxClass()),
                           scratch, src, &mustUnbox);
   masm.jump(&done);
 
@@ -928,11 +928,11 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
   masm.freeStack(frameSize);
   MoveSPForJitABI(masm);
 
-  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), ScratchIonEntry);
+  masm.loadPtr(Address(WasmTlsReg, TlsData::offsetOfCx()), ScratchIonEntry);
   masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry,
                                  ExitFrameType::WasmGenericJitEntry);
 
-  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)),
+  masm.loadPtr(Address(WasmTlsReg, TlsData::offsetOfInstance()),
                ScratchIonEntry);
   masm.loadPtr(
       Address(ScratchIonEntry, Instance::offsetOfJSJitExceptionHandler()),
@@ -2129,7 +2129,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   ABIArgMIRTypeIter i(invokeArgTypes);
 
   // argument 0: Instance*
-  Address instancePtr(WasmTlsReg, offsetof(TlsData, instance));
+  Address instancePtr(WasmTlsReg, TlsData::offsetOfInstance());
   if (i->kind() == ABIArg::GPR) {
     masm.loadPtr(instancePtr, i->gpr());
   } else {
@@ -2485,7 +2485,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   {
     // Call the arguments rectifier.
     masm.bind(&rectify);
-    masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)), callee);
+    masm.loadPtr(Address(WasmTlsReg, TlsData::offsetOfInstance()), callee);
     masm.loadPtr(Address(callee, Instance::offsetOfJSJitArgsRectifier()),
                  callee);
     masm.jump(&rejoinBeforeCall);
