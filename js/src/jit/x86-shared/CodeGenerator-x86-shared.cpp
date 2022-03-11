@@ -2333,73 +2333,73 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.bitwiseNotAndSimd128(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16AvgrU:
-      masm.unsignedAverageInt8x16(rhs, lhsDest);
+      masm.unsignedAverageInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8AvgrU:
-      masm.unsignedAverageInt16x8(rhs, lhsDest);
+      masm.unsignedAverageInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16Add:
-      masm.addInt8x16(rhs, lhsDest);
+      masm.addInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16AddSatS:
-      masm.addSatInt8x16(rhs, lhsDest);
+      masm.addSatInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16AddSatU:
-      masm.unsignedAddSatInt8x16(rhs, lhsDest);
+      masm.unsignedAddSatInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16Sub:
-      masm.subInt8x16(rhs, lhsDest);
+      masm.subInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16SubSatS:
-      masm.subSatInt8x16(rhs, lhsDest);
+      masm.subSatInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16SubSatU:
-      masm.unsignedSubSatInt8x16(rhs, lhsDest);
+      masm.unsignedSubSatInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16MinS:
-      masm.minInt8x16(rhs, lhsDest);
+      masm.minInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16MinU:
-      masm.unsignedMinInt8x16(rhs, lhsDest);
+      masm.unsignedMinInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16MaxS:
-      masm.maxInt8x16(rhs, lhsDest);
+      masm.maxInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16MaxU:
-      masm.unsignedMaxInt8x16(rhs, lhsDest);
+      masm.unsignedMaxInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8Add:
-      masm.addInt16x8(rhs, lhsDest);
+      masm.addInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8AddSatS:
-      masm.addSatInt16x8(rhs, lhsDest);
+      masm.addSatInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8AddSatU:
-      masm.unsignedAddSatInt16x8(rhs, lhsDest);
+      masm.unsignedAddSatInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8Sub:
-      masm.subInt16x8(rhs, lhsDest);
+      masm.subInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8SubSatS:
-      masm.subSatInt16x8(rhs, lhsDest);
+      masm.subSatInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8SubSatU:
-      masm.unsignedSubSatInt16x8(rhs, lhsDest);
+      masm.unsignedSubSatInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8Mul:
-      masm.mulInt16x8(rhs, lhsDest);
+      masm.mulInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8MinS:
-      masm.minInt16x8(rhs, lhsDest);
+      masm.minInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8MinU:
-      masm.unsignedMinInt16x8(rhs, lhsDest);
+      masm.unsignedMinInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8MaxS:
-      masm.maxInt16x8(rhs, lhsDest);
+      masm.maxInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8MaxU:
-      masm.unsignedMaxInt16x8(rhs, lhsDest);
+      masm.unsignedMaxInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4Add:
       masm.addInt32x4(lhs, rhs, dest);
@@ -2411,25 +2411,25 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.mulInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4MinS:
-      masm.minInt32x4(rhs, lhsDest);
+      masm.minInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4MinU:
-      masm.unsignedMinInt32x4(rhs, lhsDest);
+      masm.unsignedMinInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4MaxS:
-      masm.maxInt32x4(rhs, lhsDest);
+      masm.maxInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4MaxU:
-      masm.unsignedMaxInt32x4(rhs, lhsDest);
+      masm.unsignedMaxInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I64x2Add:
-      masm.addInt64x2(rhs, lhsDest);
+      masm.addInt64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I64x2Sub:
-      masm.subInt64x2(rhs, lhsDest);
+      masm.subInt64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I64x2Mul:
-      masm.mulInt64x2(lhsDest, rhs, lhsDest, temp1);
+      masm.mulInt64x2(lhs, rhs, dest, temp1);
       break;
     case wasm::SimdOp::F32x4Add:
       masm.addFloat32x4(lhs, rhs, dest);
@@ -2450,16 +2450,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.maxFloat32x4(lhs, rhs, dest, temp1, temp2);
       break;
     case wasm::SimdOp::F64x2Add:
-      masm.addFloat64x2(rhs, lhsDest);
+      masm.addFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2Sub:
-      masm.subFloat64x2(rhs, lhsDest);
+      masm.subFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2Mul:
-      masm.mulFloat64x2(rhs, lhsDest);
+      masm.mulFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2Div:
-      masm.divFloat64x2(rhs, lhsDest);
+      masm.divFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2Min:
       masm.minFloat64x2(lhs, rhs, dest, temp1, temp2);
@@ -2474,16 +2474,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.swizzleInt8x16Relaxed(rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16NarrowI16x8S:
-      masm.narrowInt16x8(rhs, lhsDest);
+      masm.narrowInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16NarrowI16x8U:
-      masm.unsignedNarrowInt16x8(rhs, lhsDest);
+      masm.unsignedNarrowInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8NarrowI32x4S:
-      masm.narrowInt32x4(rhs, lhsDest);
+      masm.narrowInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8NarrowI32x4U:
-      masm.unsignedNarrowInt32x4(rhs, lhsDest);
+      masm.unsignedNarrowInt32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16Eq:
       masm.compareInt8x16(Assembler::Equal, rhs, lhsDest);
@@ -2638,7 +2638,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.pseudoMinFloat64x2(lhsDest, rhs);
       break;
     case wasm::SimdOp::I32x4DotI16x8S:
-      masm.widenDotInt16x8(rhs, lhsDest);
+      masm.widenDotInt16x8(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I16x8ExtmulLowI8x16S:
       masm.extMulLowInt8x16(rhs, lhsDest);
