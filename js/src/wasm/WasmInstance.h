@@ -64,6 +64,10 @@ struct TagDesc;
 // but have now been unified. Extant references to 'TlsData' will be cleaned
 // up over time.
 class alignas(16) Instance {
+  // NOTE: The first fields of Instance are reserved for commonly accessed data
+  // from the JIT, such that they have as small an offset as possible. See the
+  // next note for the end of this region.
+
   // Pointer to the base of the default memory (or null if there is none).
   uint8_t* memoryBase_;
 
@@ -79,9 +83,6 @@ class alignas(16) Instance {
 
   // The containing JSContext.
   JSContext* cx_;
-
-  // The class_ of WasmValueBox, this is a per-process value.
-  const JSClass* valueBoxClass_;
 
 #ifdef ENABLE_WASM_EXCEPTIONS
   // The pending exception that was found during stack unwinding after a throw.
@@ -104,11 +105,21 @@ class alignas(16) Instance {
   // Set to 1 when wasm should call CheckForInterrupt.
   Atomic<uint32_t, mozilla::Relaxed> interrupt_;
 
+  // The address of the realm()->zone()->needsIncrementalBarrier(). This is
+  // specific to this instance and not a process wide field, and so it cannot
+  // be linked into code.
   const JS::shadow::Zone::BarrierState* addressOfNeedsIncrementalBarrier_;
 
-  // Pointer that should be freed (due to padding before the Instance).
-  void* allocatedBase_;
+ public:
+  // NOTE: All fields commonly accessed by the JIT must be above this method,
+  // and this method adapted for the last field present. This method is used
+  // to assert that we can use compact offsets on x86(-64) for these fields.
+  // We cannot have the assertion here, due to C++ 'offsetof' rules.
+  static constexpr size_t offsetOfLastCommonJitField() {
+    return offsetof(Instance, addressOfNeedsIncrementalBarrier_);
+  }
 
+ private:
   // When compiling with tiering, the jumpTable has one entry for each
   // baseline-compiled function.
   void** jumpTable_;
@@ -117,8 +128,10 @@ class alignas(16) Instance {
   // the stack for this.
   uint32_t baselineScratch_[2];
 
-  // Weak pointer to WasmInstanceObject that owns this instance
-  WeakHeapPtrWasmInstanceObject object_;
+  // The class_ of WasmValueBox, this is a per-process value. We could patch
+  // this into code, but the only use-sites are register restricted and cannot
+  // easily use a symbolic address.
+  const JSClass* valueBoxClass_;
 
   // Address of the JitRuntime's arguments rectifier trampoline
   void* jsJitArgsRectifier_;
@@ -128,6 +141,9 @@ class alignas(16) Instance {
 
   // Address of the JitRuntime's object prebarrier trampoline
   void* preBarrierCode_;
+
+  // Weak pointer to WasmInstanceObject that owns this instance
+  WeakHeapPtrWasmInstanceObject object_;
 
   // The wasm::Code for this instance
   const SharedCode code_;
@@ -152,6 +168,9 @@ class alignas(16) Instance {
   // necessary or not. Purely an optimization
   bool hasGcTypes_;
 #endif
+
+  // Pointer that should be freed (due to padding before the Instance).
+  void* allocatedBase_;
 
   // The globalArea must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
