@@ -52,6 +52,19 @@ FX_URLBAR_SELECTED_RESULT_METHOD
 Scalars
 -------
 
+urlbar.abandonment
+  A uint recording the number of abandoned engagements in the urlbar. An
+  abandonment occurs when the user begins using the urlbar but stops before
+  completing the engagement. This can happen when the user clicks outside the
+  urlbar to focus a different part of the window. It can also happen when the
+  user switches to another window while the urlbar is focused.
+
+urlbar.engagement
+  A uint recording the number of engagements the user completes in the urlbar.
+  An engagement occurs when the user navigates to a page using the urlbar, for
+  example by picking a result in the urlbar panel or typing a search term or URL
+  in the urlbar and pressing the enter key.
+
 urlbar.tips
   This is a keyed scalar whose values are uints and are incremented each time a
   tip result is shown, a tip is picked, and a tip's help button is picked. The
