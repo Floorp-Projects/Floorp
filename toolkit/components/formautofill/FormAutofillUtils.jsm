@@ -1135,6 +1135,24 @@ this.FormAutofillUtils = {
   isFathomCreditCardsEnabled() {
     return this.ccHeuristicsMode != this.CC_FATHOM_NONE;
   },
+
+  /**
+   * Transform the key in FormAutofillConfidences (defined in ChromeUtils.webidl)
+   * to fathom recognized field type.
+   * @param {string} key key from FormAutofillConfidences dictionary
+   * @returns {string} fathom field type
+   */
+  formAutofillConfidencesKeyToCCFieldType(key) {
+    const MAP = {
+      ccNumber: "cc-number",
+      ccName: "cc-name",
+      ccType: "cc-type",
+      ccExp: "cc-exp",
+      ccExpMonth: "cc-exp-month",
+      ccExpYear: "cc-exp-year",
+    };
+    return MAP[key];
+  },
 };
 
 const LabelUtils = {
