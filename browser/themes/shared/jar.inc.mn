@@ -14,7 +14,7 @@
   skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
   skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
-  skin/classic/browser/compacttheme.css                        (../shared/compacttheme.inc.css)
+  skin/classic/browser/light-dark-overrides.css          (../shared/light-dark-overrides.css)
   skin/classic/browser/error-pages.css                         (../shared/error-pages.css)
   skin/classic/browser/offlineSupportPages.css                 (../shared/offlineSupportPages.css)
   skin/classic/browser/searchbar.css                           (../shared/searchbar.css)
