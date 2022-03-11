@@ -3427,10 +3427,15 @@ class HTMLEditor final : public EditorBase,
    * And insert it into the DOM tree after removing the selected content.
    *
    * @param aTag                The element name to be created.
-   * @return                    Created new element.
+   * @param aInitializer        A function to initialize the new element before
+   *                            connecting the element into the DOM tree.
+   *                            Note that this should not touch outside given
+   *                            element because doing it would break range
+   *                            updater's result.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> DeleteSelectionAndCreateElement(
-      nsAtom& aTag);
+  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  DeleteSelectionAndCreateElement(
+      nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer);
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if
