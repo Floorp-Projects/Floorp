@@ -2636,6 +2636,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       return NS_ERROR_FAILURE;
     }
 
+    loadInfo.mTrials = aParent->Trials();
     loadInfo.mDomain = aParent->Domain();
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
@@ -2696,6 +2697,9 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       if (nsPIDOMWindowOuter* outerWindow = globalWindow->GetOuterWindow()) {
         loadInfo.mWindow = outerWindow->GetCurrentInnerWindow();
       }
+
+      loadInfo.mTrials =
+          OriginTrials::FromWindow(nsGlobalWindowInner::Cast(loadInfo.mWindow));
 
       BrowsingContext* browsingContext = globalWindow->GetBrowsingContext();
 

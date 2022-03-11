@@ -359,6 +359,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
 
   info.mReferrerInfo = aData.referrerInfo();
   info.mDomain = aData.domain();
+  info.mTrials = aData.originTrials();
   info.mPrincipal = principal;
   info.mPartitionedPrincipal = partitionedPrincipalOrErr.unwrap();
   info.mLoadingPrincipal = loadingPrincipalOrErr.unwrap();
