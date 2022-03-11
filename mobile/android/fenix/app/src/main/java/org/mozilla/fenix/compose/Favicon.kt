@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.IconRequest
@@ -23,6 +25,7 @@ import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Load and display the favicon of a particular website.
@@ -38,32 +41,55 @@ fun Favicon(
     size: Dp,
     isPrivate: Boolean = false
 ) {
-    components.core.icons.Loader(
-        url = url,
-        isPrivate = isPrivate,
-        size = size.toIconRequestSize()
-    ) {
-        Placeholder {
-            Box(
-                modifier = Modifier
-                    .size(size)
-                    .background(
-                        color = when (isSystemInDarkTheme()) {
-                            true -> PhotonColors.DarkGrey30
-                            false -> PhotonColors.LightGrey30
-                        }
-                    )
-            )
-        }
+    if (inComposePreview) {
+        FaviconPlaceholder(size = size)
+    } else {
+        components.core.icons.Loader(
+            url = url,
+            isPrivate = isPrivate,
+            size = size.toIconRequestSize()
+        ) {
+            Placeholder {
+                FaviconPlaceholder(size = size)
+            }
 
-        WithIcon { icon ->
-            Image(
-                painter = icon.painter,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(size)
-                    .clip(RoundedCornerShape(2.dp)),
-                contentScale = ContentScale.Fit
+            WithIcon { icon ->
+                Image(
+                    painter = icon.painter,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(size)
+                        .clip(RoundedCornerShape(2.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FaviconPlaceholder(size: Dp) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(2.dp))
+            .background(
+                color = when (isSystemInDarkTheme()) {
+                    true -> PhotonColors.DarkGrey30
+                    false -> PhotonColors.LightGrey30
+                }
+            )
+    )
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun FaviconPreview() {
+    FirefoxTheme {
+        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+            Favicon(
+                url = "www.mozilla.com",
+                size = 64.dp,
             )
         }
     }
