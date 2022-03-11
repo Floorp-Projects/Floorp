@@ -159,12 +159,7 @@ rawPackets.set(`inspect({a: 1})`, {
               "value": 1
             }
           },
-          "ownSymbols": [],
-          "privateProperties": [],
-          "ownPropertiesLength": 1,
-          "ownSymbolsLength": 0,
-          "privatePropertiesLength": 0,
-          "safeGetterValues": {}
+          "ownPropertiesLength": 1
         }
       },
       "actorID": "server0.conn2.windowGlobal10737418243/obj29"
@@ -481,12 +476,7 @@ rawPackets.set(`eval throw Object`, {
             "value": "cucumber"
           }
         },
-        "ownSymbols": [],
-        "privateProperties": [],
-        "ownPropertiesLength": 1,
-        "ownSymbolsLength": 0,
-        "privatePropertiesLength": 0,
-        "safeGetterValues": {}
+        "ownPropertiesLength": 1
       }
     },
     "actorID": "server0.conn2.windowGlobal10737418243/obj44"

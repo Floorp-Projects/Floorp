@@ -1609,8 +1609,7 @@ BrowserGlue.prototype = {
       let updateChannel;
       try {
         updateChannel = ChromeUtils.import(
-          "resource://gre/modules/UpdateUtils.jsm",
-          {}
+          "resource://gre/modules/UpdateUtils.jsm"
         ).UpdateUtils.UpdateChannel;
       } catch (ex) {}
       if (updateChannel) {

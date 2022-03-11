@@ -112,11 +112,11 @@ struct Control {
 //   "entry point" offsets are all inside the WasmCall. After such a Wasm
 //   function call, we add an MWasmLoadTls instruction representing a possibly
 //   thrown exception, which the throw mechanism would have stored in
-//   wasm::TlsData::pendingException. We then add a test which branches to a new
-//   pre-pad block if there is a pending exception, or continues with the
+//   wasm::Instance::pendingException. We then add a test which branches to a
+//   new pre-pad block if there is a pending exception, or continues with the
 //   opcodes in the try-code, if there was no pending exception. During this
 //   branch, any found exception is pushed to the pre-pad block, and the
-//   pending tag is pulled from wasm::TlsData::pendingExceptionTag. This tag
+//   pending tag is pulled from wasm::Instance::pendingExceptionTag. This tag
 //   is pushed to the pre-pad block as well.
 //
 // We end each pre-pad block with a jump to a nullptr, as is done when using
@@ -227,7 +227,7 @@ struct Control {
 //   __block5_____________________________________    |                        |
 //  |                                             |   | v6 = the new exception |
 //  | v11 = call $f                               |   |      now carrying v4   |
-//  | v12 = load exception from TlsData           |   | v7 = tag object $exn   |
+//  | v12 = load exception from Instance          |   | v7 = tag object $exn   |
 //  | v13 = Test (v12 not nullref?) block7 block6 |   | v8 = GoTo ?? -> block8 |
 //  |_____________________________________________|   |________________________|
 //       0|              1\                                                |
@@ -236,7 +236,7 @@ struct Control {
 //        |                  \     __ block7__(pre_pad)_______________     |
 //        V                   \-->|                                   |    |
 //  (last block in try code)      | v14 = clear the pending exception |    |
-//   __block6_________________    |       from TlsData and get v12's  |    |
+//   __block6_________________    |       from Instance and get v12's |    |
 //  |                         |   |       tag object &v15             |    |
 //  | v17 = f64.const 3       |   | v16 = GoTo ?? -> block8           |    |
 //  | v18 = f64.sub v4 v17    |   |___________________________________|    |
@@ -1077,7 +1077,7 @@ class FunctionCompiler {
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                             offsetof(wasm::TlsData, memoryBase),
+                             wasm::Instance::offsetOfMemoryBase(),
                              MIRType::Pointer, aliases);
     curBlock_->add(load);
 #endif
@@ -1109,7 +1109,7 @@ class FunctionCompiler {
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                                   offsetof(wasm::TlsData, boundsCheckLimit),
+                                   wasm::Instance::offsetOfBoundsCheckLimit(),
                                    type, aliases);
     curBlock_->add(load);
     return load;
@@ -1639,7 +1639,7 @@ class FunctionCompiler {
 
     MInstruction* load;
     if (isIndirect) {
-      // Pull a pointer to the value out of TlsData::globalArea, then
+      // Pull a pointer to the value out of Instance::globalArea, then
       // load from that pointer.  Note that the pointer is immutable
       // even though the value it points at may change, hence the use of
       // |true| for the first node's |isConst| value, irrespective of
@@ -1651,7 +1651,7 @@ class FunctionCompiler {
       curBlock_->add(cellPtr);
       load = MWasmLoadGlobalCell::New(alloc(), type, cellPtr);
     } else {
-      // Pull the value directly out of TlsData::globalArea.
+      // Pull the value directly out of Instance::globalArea.
       load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst,
                                      tlsPointer_);
     }
@@ -1668,7 +1668,7 @@ class FunctionCompiler {
     MInstruction* store;
     MInstruction* valueAddr = nullptr;
     if (isIndirect) {
-      // Pull a pointer to the value out of TlsData::globalArea, then
+      // Pull a pointer to the value out of Instance::globalArea, then
       // store through that pointer.
       auto* cellPtr =
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
@@ -1682,11 +1682,11 @@ class FunctionCompiler {
         store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
       }
     } else {
-      // Store the value directly in TlsData::globalArea.
+      // Store the value directly in Instance::globalArea.
       if (v->type() == MIRType::RefOrNull) {
         valueAddr = MWasmDerivedPointer::New(
             alloc(), tlsPointer_,
-            offsetof(wasm::TlsData, globalArea) + globalDataOffset);
+            wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
         curBlock_->add(valueAddr);
         store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
                                    AliasSet::WasmGlobalVar);
@@ -2668,7 +2668,7 @@ class FunctionCompiler {
 
   MDefinition* loadPendingException() {
     MWasmLoadTls* exn = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingException),
+        alloc(), tlsPointer_, wasm::Instance::offsetOfPendingException(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(exn);
     return exn;
@@ -2676,7 +2676,7 @@ class FunctionCompiler {
 
   MDefinition* loadPendingExceptionTag() {
     MWasmLoadTls* tag = MWasmLoadTls::New(
-        alloc(), tlsPointer_, offsetof(wasm::TlsData, pendingExceptionTag),
+        alloc(), tlsPointer_, wasm::Instance::offsetOfPendingExceptionTag(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(tag);
     return tag;
@@ -2685,7 +2685,7 @@ class FunctionCompiler {
   void clearPendingExceptionState() {
     // Clear the pending exception object
     auto* exceptionLoc = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, offsetof(TlsData, pendingException));
+        alloc(), tlsPointer_, Instance::offsetOfPendingException());
     curBlock_->add(exceptionLoc);
     auto* null = nullRefConstant();
     auto* clearException =
@@ -2696,7 +2696,7 @@ class FunctionCompiler {
 
     // Clear the pending exception tag object
     auto* exceptionTagLoc = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, offsetof(TlsData, pendingExceptionTag));
+        alloc(), tlsPointer_, Instance::offsetOfPendingExceptionTag());
     curBlock_->add(exceptionTagLoc);
     auto* clearExceptionTag =
         MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagLoc, null,
@@ -2757,7 +2757,7 @@ class FunctionCompiler {
 
   bool checkPendingExceptionAndBranch(uint32_t relativeTryDepth) {
     // Assuming we're in a Wasm try block, branch to a new pre-pad block, if
-    // there exists a pendingException in the Wasm TlsData.
+    // there exists a pendingException in the Wasm Instance.
 
     MOZ_ASSERT(inTryCode());
 

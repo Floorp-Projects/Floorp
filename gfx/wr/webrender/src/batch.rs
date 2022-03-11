@@ -1356,10 +1356,18 @@ impl BatchBuilder {
 
                                 let glyph_translation = DeviceVector2D::new(glyph_transform.m41, glyph_transform.m42);
 
+                                let mut use_tight_bounding_rect = true;
                                 for glyph in glyphs {
                                     let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.min.to_vector();
 
-                                    let raster_glyph_offset = (glyph_transform.transform_point2d(glyph_offset).unwrap() + snap_bias).floor();
+                                    let transformed_offset = match glyph_transform.transform_point2d(glyph_offset) {
+                                        Some(transformed_offset) => transformed_offset,
+                                        None => {
+                                            use_tight_bounding_rect = false;
+                                            break;
+                                        }
+                                    };
+                                    let raster_glyph_offset = (transformed_offset + snap_bias).floor();
                                     let raster_text_offset = (
                                         glyph_transform.transform_vector2d(text_offset) +
                                         glyph_translation +
@@ -1374,16 +1382,20 @@ impl BatchBuilder {
                                     device_bounding_rect = device_bounding_rect.union(&device_glyph_rect);
                                 }
 
-                                let map_device_to_surface: SpaceMapper<PicturePixel, DevicePixel> = SpaceMapper::new_with_target(
-                                    root_spatial_node_index,
-                                    surface_spatial_node_index,
-                                    device_bounding_rect,
-                                    ctx.spatial_tree,
-                                );
+                                if use_tight_bounding_rect {
+                                    let map_device_to_surface: SpaceMapper<PicturePixel, DevicePixel> = SpaceMapper::new_with_target(
+                                        root_spatial_node_index,
+                                        surface_spatial_node_index,
+                                        device_bounding_rect,
+                                        ctx.spatial_tree,
+                                    );
 
-                                match map_device_to_surface.unmap(&device_bounding_rect) {
-                                    Some(r) => r.intersection(bounding_rect),
-                                    None => Some(*bounding_rect),
+                                    match map_device_to_surface.unmap(&device_bounding_rect) {
+                                        Some(r) => r.intersection(bounding_rect),
+                                        None => Some(*bounding_rect),
+                                    }
+                                } else {
+                                    Some(*bounding_rect)
                                 }
                             } else {
                                 let mut local_bounding_rect = LayoutRect::default();

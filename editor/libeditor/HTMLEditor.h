@@ -1498,16 +1498,19 @@ class HTMLEditor final : public EditorBase,
    *                            Note that this point will be invalid once this
    *                            method inserts the new element.
    * @param aInitializer        A function to initialize the new element before
-   *                            connecting the element into the DOM tree.
-   *                            Note that this should not touch outside given
-   *                            element because doing it would break range
-   *                            updater's result.
+   *                            or after (depends on the pref) connecting the
+   *                            element into the DOM tree. Note that this should
+   *                            not touch outside given element because doing it
+   *                            would break range updater's result.
    * @return                    The created new element node or an error.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateAndInsertElement(WithTransaction aWithTransaction, nsAtom& aTagName,
-                         const EditorDOMPoint& aPointToInsert,
-                         const std::function<nsresult(Element&)>& aInitializer);
+  CreateAndInsertElement(
+      WithTransaction aWithTransaction, nsAtom& aTagName,
+      const EditorDOMPoint& aPointToInsert,
+      const std::function<nsresult(Element&)>& aInitializer = [](Element&) {
+        return NS_OK;
+      });
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
@@ -1545,17 +1548,19 @@ class HTMLEditor final : public EditorBase,
    *                            kept if and only if a <br> element follows
    *                            split point.
    * @param aInitializer        A function to initialize the new element before
-   *                            connecting the element into the DOM tree.
-   *                            Note that this should not touch outside given
-   *                            element because doing it would break range
-   *                            updater's result.
+   *                            or after (depends on the pref) connecting the
+   *                            element into the DOM tree. Note that this should
+   *                            not touch outside given element because doing it
+   *                            would break range updater's result.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
-      const std::function<nsresult(Element&)>& aInitializer);
+      const std::function<nsresult(Element&)>& aInitializer = [](Element&) {
+        return NS_OK;
+      });
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
@@ -3427,10 +3432,16 @@ class HTMLEditor final : public EditorBase,
    * And insert it into the DOM tree after removing the selected content.
    *
    * @param aTag                The element name to be created.
-   * @return                    Created new element.
+   * @param aInitializer        A function to initialize the new element before
+   *                            or after (depends on the pref) connecting the
+   *                            element into the DOM tree. Note that this should
+   *                            not touch outside given element because doing it
+   *                            would break range updater's result.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> DeleteSelectionAndCreateElement(
-      nsAtom& aTag);
+  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  DeleteSelectionAndCreateElement(
+      nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer =
+                        [](Element&) { return NS_OK; });
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if

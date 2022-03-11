@@ -1058,10 +1058,11 @@ class Element : public FragmentOrElement {
 #endif
 
   /**
-   * Append to aOutDescription a short (preferably one line) string
-   * describing the element.
+   * Append to aOutDescription a string describing the element and its
+   * attributes.
+   * If aShort is true, only the id and class attributes will be listed.
    */
-  void Describe(nsAString& aOutDescription) const;
+  void Describe(nsAString& aOutDescription, bool aShort = false) const;
 
   /*
    * Attribute Mapping Helpers

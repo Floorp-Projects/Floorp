@@ -30,6 +30,7 @@ jobs:
             max-run-time: 3600
             env:
                 PERFHERDER_EXTRA_OPTIONS: artifact
+                MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
                 MOZ_ARTIFACT_TASK: {task-reference: '<linux64-opt>'}
                 USE_ARTIFACT: '1'
         run:

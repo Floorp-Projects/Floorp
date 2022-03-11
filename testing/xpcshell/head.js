@@ -562,8 +562,7 @@ function _execute_test() {
   let coverageCollector = null;
   if (typeof _JSCOV_DIR === "string") {
     let _CoverageCollector = ChromeUtils.import(
-      "resource://testing-common/CoverageUtils.jsm",
-      {}
+      "resource://testing-common/CoverageUtils.jsm"
     ).CoverageCollector;
     coverageCollector = new _CoverageCollector(_JSCOV_DIR);
   }

@@ -17,6 +17,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/OriginTrials.h"
 #include "mozilla/PerformanceCounter.h"
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/Result.h"
@@ -211,6 +212,8 @@ class WorkerPrivate final
     MOZ_ASSERT(mDebugger);
     return mDebugger;
   }
+
+  const OriginTrials& Trials() const { return mLoadInfo.mTrials; }
 
   void SetDebugger(WorkerDebugger* aDebugger) {
     AssertIsOnMainThread();

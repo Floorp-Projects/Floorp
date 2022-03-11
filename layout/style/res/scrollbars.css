@@ -4,11 +4,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-%ifdef ANDROID
-scrollbar, resizer, scrollcorner {
-  pointer-events: none;
+@media (-moz-platform: android) {
+  scrollbar, resizer, scrollcorner {
+    pointer-events: none;
+  }
 }
-%endif
 
 scrollbar {
   appearance: auto;

@@ -123,7 +123,7 @@ CompositorManagerChild::CreateWidgetCompositorBridge(
     uint64_t aProcessToken, WebRenderLayerManager* aLayerManager,
     uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize) {
+    const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!sInstance || !sInstance->CanSend())) {
@@ -136,7 +136,8 @@ CompositorManagerChild::CreateWidgetCompositorBridge(
                                .GetVsyncRate();
 
   CompositorBridgeOptions options = WidgetCompositorOptions(
-      aScale, vsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
+      aScale, vsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize,
+      aInnerWindowId);
 
   RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
   if (NS_WARN_IF(

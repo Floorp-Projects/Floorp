@@ -46,10 +46,7 @@ add_task(async function test_iframe_autocomplete() {
   await expectWarningText(browser, "Also autofills organization, email");
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  let promiseShown = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popupshown"
-  );
+  let promiseShown = promiseNotificationShown();
 
   await new Promise(resolve => setTimeout(resolve, 1000));
 

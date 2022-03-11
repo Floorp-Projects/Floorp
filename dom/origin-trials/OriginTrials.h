@@ -12,6 +12,7 @@
 #include "nsStringFwd.h"
 
 class nsIPrincipal;
+class nsGlobalWindowInner;
 struct JSContext;
 class JSObject;
 
@@ -26,6 +27,13 @@ using OriginTrial = origin_trials_ffi::OriginTrial;
 // before we ship it to the general public.
 class OriginTrials final {
  public:
+  using RawType = EnumSet<OriginTrial>;
+
+  OriginTrials() = default;
+
+  static OriginTrials FromRaw(RawType aRaw) { return OriginTrials(aRaw); }
+  const RawType& Raw() const { return mEnabledTrials; }
+
   // Parses and verifies a base64-encoded token from either a header or a meta
   // tag. If the token is valid and not expired, this will enable the relevant
   // feature.
@@ -39,8 +47,13 @@ class OriginTrials final {
   // Checks whether a given origin trial is enabled for a given call.
   static bool IsEnabled(JSContext*, JSObject*, OriginTrial);
 
+  // Computes the currently-applying trials for our global.
+  static OriginTrials FromWindow(const nsGlobalWindowInner*);
+
  private:
-  EnumSet<OriginTrial> mEnabledTrials;
+  explicit OriginTrials(RawType aRaw) : mEnabledTrials(aRaw) {}
+
+  RawType mEnabledTrials;
 };
 
 }  // namespace mozilla

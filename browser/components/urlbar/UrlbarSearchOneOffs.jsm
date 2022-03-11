@@ -148,19 +148,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * @returns {number}
-   *   The selected index in the view.
+   * The selected index in the view or -1 if there is no selection.
    */
   get selectedViewIndex() {
     return this.view.selectedElementIndex;
   }
-
-  /**
-   * Sets the selected index in the view.
-   *
-   * @param {number} val
-   *   The selected index or -1 if no selection.
-   */
   set selectedViewIndex(val) {
     this.view.selectedElementIndex = val;
   }

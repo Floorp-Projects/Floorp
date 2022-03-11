@@ -31,6 +31,7 @@
 #include "vm/PlainObject.h"        // js::PlainObject
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
@@ -40,6 +41,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSAtom-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace js::jit;

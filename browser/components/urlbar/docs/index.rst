@@ -44,3 +44,12 @@ Table of Contents
    preferences
    testing
    contact
+
+API Reference
+-------------
+
+.. toctree::
+
+   UrlbarController
+   UrlbarInput
+   UrlbarView

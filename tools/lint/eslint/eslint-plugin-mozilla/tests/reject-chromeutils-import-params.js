@@ -82,5 +82,19 @@ const { My } = ChromeUtils.import("resource://some/path/to/My.jsm");`,
         },
       ],
     },
+    {
+      code: 'ChromeUtils.import("resource://some/path/to/My.js", {})',
+      errors: [
+        {
+          suggestions: [
+            {
+              desc:
+                "Passing an empty object to ChromeUtils.import is unnecessary - remove the empty object",
+              output: `ChromeUtils.import("resource://some/path/to/My.js")`,
+            },
+          ],
+        },
+      ],
+    },
   ],
 });

@@ -203,12 +203,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
                 "value": "foobar"
               }
             },
-            "ownSymbols": [],
-            "privateProperties": [],
-            "ownPropertiesLength": 1,
-            "ownSymbolsLength": 0,
-            "privatePropertiesLength": 0,
-            "safeGetterValues": {}
+            "ownPropertiesLength": 1
           }
         },
         "actorID": "server0.conn0.windowGlobal15032385537/obj32"
@@ -453,12 +448,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
                 "value": "blueValue"
               }
             },
-            "ownSymbols": [],
-            "privateProperties": [],
-            "ownPropertiesLength": 3,
-            "ownSymbolsLength": 0,
-            "privatePropertiesLength": 0,
-            "safeGetterValues": {}
+            "ownPropertiesLength": 3
           }
         },
         "actorID": "server0.conn0.windowGlobal15032385537/obj43"
@@ -694,12 +684,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
                 "value": "bar"
               }
             },
-            "ownSymbols": [],
-            "privateProperties": [],
-            "ownPropertiesLength": 1,
-            "ownSymbolsLength": 0,
-            "privatePropertiesLength": 0,
-            "safeGetterValues": {}
+            "ownPropertiesLength": 1
           }
         },
         "actorID": "server0.conn0.windowGlobal15032385537/obj53"
@@ -892,12 +877,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
                 "value": 1
               }
             },
-            "ownSymbols": [],
-            "privateProperties": [],
-            "ownPropertiesLength": 1,
-            "ownSymbolsLength": 0,
-            "privatePropertiesLength": 0,
-            "safeGetterValues": {}
+            "ownPropertiesLength": 1
           }
         },
         "actorID": "server0.conn0.windowGlobal15032385537/obj57"
@@ -1340,12 +1320,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
                 "value": "K"
               }
             },
-            "ownSymbols": [],
-            "privateProperties": [],
-            "ownPropertiesLength": 4,
-            "ownSymbolsLength": 0,
-            "privatePropertiesLength": 0,
-            "safeGetterValues": {}
+            "ownPropertiesLength": 4
           }
         },
         "actorID": "server0.conn0.windowGlobal15032385537/obj69"

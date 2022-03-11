@@ -25,6 +25,7 @@
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/Realm.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
 
 #if defined(XP_WIN)
@@ -521,7 +522,7 @@ struct AutoHandlingTrap {
   // though, the containing JSContext is the same.
 
   auto* frame = reinterpret_cast<Frame*>(ContextToFP(context));
-  Instance* instance = GetNearestEffectiveTls(frame)->instance;
+  Instance* instance = GetNearestEffectiveTls(frame);
   MOZ_RELEASE_ASSERT(&instance->code() == &segment.code() ||
                      trap == Trap::IndirectCallBadSig);
 
@@ -995,8 +996,8 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
       return false;
   }
 
-  Instance& instance =
-      *GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(regs.fp))->instance;
+  const Instance& instance =
+      *GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(regs.fp));
   MOZ_ASSERT(&instance.code() == &segment.code());
 
   switch (trap) {
@@ -1009,7 +1010,7 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
     case Trap::IndirectCallToNull:
       // Null pointer plus the appropriate offset.
       if (addr !=
-          reinterpret_cast<uint8_t*>(offsetof(wasm::TlsData, memoryBase))) {
+          reinterpret_cast<uint8_t*>(wasm::Instance::offsetOfMemoryBase())) {
         return false;
       }
       break;

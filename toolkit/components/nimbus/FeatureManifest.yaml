@@ -55,6 +55,10 @@ urlbar:
       type: int
       fallbackPref: browser.urlbar.merino.timeoutMs
       description: Timeout for Merino fetches (ms)
+    quickSuggestAllowPositionInSuggestions:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
+      description: Whether quick suggest results can be shown in position specified in the suggestions.
     quickSuggestDataCollectionEnabled:
       type: boolean
       description: Whether data collection should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) data collection, if the user has already toggled that preference.
@@ -62,6 +66,9 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.enabled
       description: Gate for the Firefox Suggest feature as a whole. If false, the Firefox Suggest preferences UI and Suggest suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn suggestions on or off.
+    quickSuggestNonSponsoredEnabled:
+      type: boolean
+      description: Whether non-sponsored suggestions should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) non-sponsored suggestions, if the user has already toggled that preference.
     quickSuggestNonSponsoredIndex:
       type: int
       fallbackPref: browser.urlbar.quicksuggest.nonSponsoredIndex
@@ -84,10 +91,6 @@ urlbar:
         - history
         - offline
         - online
-    quickSuggestAllowPositionInSuggestions:
-      type: boolean
-      fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
-      description: Whether quick suggest results can be shown in position specified in the suggestions.
     quickSuggestShouldShowOnboardingDialog:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.shouldShowOnboardingDialog

@@ -58,7 +58,8 @@ describe("visible column breakpoints", () => {
       pausePoints,
       breakpoints,
       viewport,
-      source
+      source,
+      source.content
     );
     expect(columnBps).toMatchSnapshot();
   });
@@ -74,7 +75,8 @@ describe("visible column breakpoints", () => {
       pausePoints,
       breakpoints,
       viewport,
-      source
+      source,
+      source.content
     );
     expect(columnBps).toMatchSnapshot();
   });
@@ -91,7 +93,8 @@ describe("visible column breakpoints", () => {
       pausePoints,
       breakpoints,
       viewport,
-      source
+      source,
+      source.content
     );
     expect(columnBps).toMatchSnapshot();
   });
@@ -108,7 +111,8 @@ describe("visible column breakpoints", () => {
       pausePoints,
       breakpoints,
       viewport,
-      source
+      source,
+      source.content
     );
     expect(columnBps).toMatchSnapshot();
   });

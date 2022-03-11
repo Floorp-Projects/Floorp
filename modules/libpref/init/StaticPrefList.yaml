@@ -1506,11 +1506,7 @@
 # be loaded normally as-if users normally navigated to the page.
 - name: browser.soft_reload.only_force_validate_top_level_document
   type: bool
-#if defined(EARLY_BETA_OR_EARLIER)
   value: true
-#else
-  value: false
-#endif
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -4418,6 +4414,13 @@
 # line of an `<hr>` element causes moving caret to immediatly after the `<hr>`
 # element, and then, another Backspace can delete it.
 - name: editor.hr_element.allow_to_delete_from_following_line
+  type: bool
+  value: true
+  mirror: always
+
+# Whether editor initializes attributes and/or child nodes of newly inserting
+# element before or after connecting to the DOM tree.
+- name: editor.initialize_element_before_connect
   type: bool
   value: true
   mirror: always

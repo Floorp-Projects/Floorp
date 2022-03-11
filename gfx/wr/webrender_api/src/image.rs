@@ -355,7 +355,7 @@ impl ImageData {
 /// The resources exposed by the resource cache available for use by the blob rasterizer.
 pub trait BlobImageResources {
     /// Returns the `FontTemplate` for the given key.
-    fn get_font_data(&self, key: FontKey) -> &FontTemplate;
+    fn get_font_data(&self, key: FontKey) -> Option<FontTemplate>;
     /// Returns the `FontInstanceData` for the given key, if found.
     fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData>;
 }

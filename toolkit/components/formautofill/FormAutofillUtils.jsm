@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
+var EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader", "LabelUtils"];
 
 const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
@@ -286,7 +286,7 @@ this.FormAutofillUtils = {
    * @returns {Array}
    */
   getCreditCardNetworks() {
-    return CreditCard.SUPPORTED_NETWORKS;
+    return CreditCard.getSupportedNetworks();
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -1128,6 +1128,141 @@ this.FormAutofillUtils = {
       this.localizeAttributeForElement(element, "data-localization-region");
     }
   },
+
+  CC_FATHOM_NONE: 0,
+  CC_FATHOM_JS: 1,
+  CC_FATHOM_NATIVE: 2,
+  isFathomCreditCardsEnabled() {
+    return this.ccHeuristicsMode != this.CC_FATHOM_NONE;
+  },
+
+  /**
+   * Transform the key in FormAutofillConfidences (defined in ChromeUtils.webidl)
+   * to fathom recognized field type.
+   * @param {string} key key from FormAutofillConfidences dictionary
+   * @returns {string} fathom field type
+   */
+  formAutofillConfidencesKeyToCCFieldType(key) {
+    const MAP = {
+      ccNumber: "cc-number",
+      ccName: "cc-name",
+      ccType: "cc-type",
+      ccExp: "cc-exp",
+      ccExpMonth: "cc-exp-month",
+      ccExpYear: "cc-exp-year",
+    };
+    return MAP[key];
+  },
+};
+
+const LabelUtils = {
+  // The tag name list is from Chromium except for "STYLE":
+  // eslint-disable-next-line max-len
+  // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e
+  EXCLUDED_TAGS: ["SCRIPT", "NOSCRIPT", "OPTION", "STYLE"],
+
+  // A map object, whose keys are the id's of form fields and each value is an
+  // array consisting of label elements correponding to the id.
+  // @type {Map<string, array>}
+  _mappedLabels: null,
+
+  // An array consisting of label elements whose correponding form field doesn't
+  // have an id attribute.
+  // @type {Array<HTMLLabelElement>}
+  _unmappedLabels: null,
+
+  // A weak map consisting of label element and extracted strings pairs.
+  // @type {WeakMap<HTMLLabelElement, array>}
+  _labelStrings: null,
+
+  /**
+   * Extract all strings of an element's children to an array.
+   * "element.textContent" is a string which is merged of all children nodes,
+   * and this function provides an array of the strings contains in an element.
+   *
+   * @param  {Object} element
+   *         A DOM element to be extracted.
+   * @returns {Array}
+   *          All strings in an element.
+   */
+  extractLabelStrings(element) {
+    if (this._labelStrings.has(element)) {
+      return this._labelStrings.get(element);
+    }
+    let strings = [];
+    let _extractLabelStrings = el => {
+      if (this.EXCLUDED_TAGS.includes(el.tagName)) {
+        return;
+      }
+
+      if (el.nodeType == el.TEXT_NODE || !el.childNodes.length) {
+        let trimmedText = el.textContent.trim();
+        if (trimmedText) {
+          strings.push(trimmedText);
+        }
+        return;
+      }
+
+      for (let node of el.childNodes) {
+        let nodeType = node.nodeType;
+        if (nodeType != node.ELEMENT_NODE && nodeType != node.TEXT_NODE) {
+          continue;
+        }
+        _extractLabelStrings(node);
+      }
+    };
+    _extractLabelStrings(element);
+    this._labelStrings.set(element, strings);
+    return strings;
+  },
+
+  generateLabelMap(doc) {
+    let mappedLabels = new Map();
+    let unmappedLabels = [];
+
+    for (let label of doc.querySelectorAll("label")) {
+      let id = label.htmlFor;
+      if (!id) {
+        let control = label.control;
+        if (!control) {
+          continue;
+        }
+        id = control.id;
+      }
+      if (id) {
+        let labels = mappedLabels.get(id);
+        if (labels) {
+          labels.push(label);
+        } else {
+          mappedLabels.set(id, [label]);
+        }
+      } else {
+        unmappedLabels.push(label);
+      }
+    }
+
+    this._mappedLabels = mappedLabels;
+    this._unmappedLabels = unmappedLabels;
+    this._labelStrings = new WeakMap();
+  },
+
+  clearLabelMap() {
+    this._mappedLabels = null;
+    this._unmappedLabels = null;
+    this._labelStrings = null;
+  },
+
+  findLabelElements(element) {
+    if (!this._mappedLabels) {
+      this.generateLabelMap(element.ownerDocument);
+    }
+
+    let id = element.id;
+    if (!id) {
+      return this._unmappedLabels.filter(label => label.control == element);
+    }
+    return this._mappedLabels.get(id) || [];
+  },
 };
 
 this.log = null;
@@ -1150,4 +1285,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "_reauthEnabledByUser",
   "extensions.formautofill.reauth.enabled",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsMode",
+  "extensions.formautofill.creditCards.heuristics.mode",
+  0
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsThreshold",
+  "extensions.formautofill.creditCards.heuristics.confidenceThreshold",
+  "0.5",
+  null,
+  pref => parseFloat(pref)
 );

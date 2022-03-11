@@ -1438,14 +1438,14 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     RefPtr<WorkerPermissionChallenge> challenge = new WorkerPermissionChallenge(
         workerPrivate, this, mFactory.clonePtr(), std::move(aPrincipalInfo));
     if (!challenge->Dispatch()) {
-      return IPC_FAIL_NO_REASON(this);
+      QM_WARNONLY_TRY(OkIf(SendPermissionRetry()));
     }
     return IPC_OK();
   }
 
   QM_TRY_UNWRAP(auto principal,
                 mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
-                IPC_FAIL_NO_REASON(this));
+                IPC_FAIL(this, "PrincipalInfoToPrincipal failed!"));
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
@@ -1457,9 +1457,7 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     if (NS_WARN_IF(!ownerElement)) {
       // If this fails, the page was navigated. Fail the permission check by
       // forcing an immediate retry.
-      if (!SendPermissionRetry()) {
-        return IPC_FAIL_NO_REASON(this);
-      }
+      QM_WARNONLY_TRY(OkIf(SendPermissionRetry()));
       return IPC_OK();
     }
 
@@ -1468,7 +1466,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
                                                ownerElement, principal);
 
     QM_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
-                   helper->PromptIfNeeded(), IPC_FAIL_NO_REASON(this));
+                   helper->PromptIfNeeded(),
+                   IPC_FAIL(this, "PromptIfNeeded failed!"));
 
     MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
                permission == PermissionRequestBase::kPermissionDenied ||
@@ -1715,7 +1714,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                    IDBTransaction::Mode::VersionChange);
     Unused << IDBRequest::NextSerialNumber();
 
-    // If we return IPC_FAIL_NO_REASON(this) here, we crash...
+    // No reason to IPC_FAIL here.
     return IPC_OK();
   }
 
@@ -2636,14 +2635,11 @@ mozilla::ipc::IPCResult BackgroundRequestChild::RecvPreprocess(
     }
 
     default:
-      MOZ_CRASH("Unknown params type!");
+      return IPC_FAIL(this, "Unknown params type!");
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendContinue(rv)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
+    QM_WARNONLY_TRY(OkIf(SendContinue(rv)));
   }
 
   return IPC_OK();

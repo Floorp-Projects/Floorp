@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {})
+  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm")
     .ExtensionParent.IconDetails;
 });
 

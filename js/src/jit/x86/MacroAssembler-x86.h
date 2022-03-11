@@ -12,7 +12,6 @@
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 #include "js/HeapAPI.h"
 #include "wasm/WasmBuiltins.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
 namespace jit {

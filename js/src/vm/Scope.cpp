@@ -22,11 +22,13 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
 #include "vm/JSScript.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 
 #include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/Shape-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace js::frontend;

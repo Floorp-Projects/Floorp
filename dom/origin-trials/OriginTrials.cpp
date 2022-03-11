@@ -16,6 +16,8 @@
 #include "js/Wrapper.h"
 #include "nsGlobalWindowInner.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "ScopedNSSTypes.h"
@@ -140,23 +142,35 @@ void OriginTrials::UpdateFromToken(const nsAString& aBase64EncodedToken,
   mEnabledTrials += trial;
 }
 
+OriginTrials OriginTrials::FromWindow(const nsGlobalWindowInner* aWindow) {
+  if (!aWindow) {
+    return {};
+  }
+  const dom::Document* doc = aWindow->GetExtantDoc();
+  if (!doc) {
+    return {};
+  }
+  return doc->Trials();
+}
+
 bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
                              OriginTrial aTrial) {
   if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
     return true;
   }
   LOG("OriginTrials::IsEnabled(%d)\n", int(aTrial));
-  if (NS_IsMainThread()) {
-    if (auto* win = xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject))) {
-      if (dom::Document* doc = win->GetExtantDoc()) {
-        return doc->Trials().IsEnabled(aTrial);
-      }
-    }
+
+  if (dom::WorkletThread::IsOnWorkletThread()) {
+    // TODO: Worklet support, clean up the assumption below than not main thread
+    // means worker.
     return false;
   }
-  // TODO(emilio): Worker support.
-  MOZ_ASSERT_UNREACHABLE("Not implemented yet");
-  return false;
+
+  const OriginTrials trials =
+      NS_IsMainThread()
+          ? FromWindow(xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject)))
+          : dom::GetWorkerPrivateFromContext(aCx)->Trials();
+  return trials.IsEnabled(aTrial);
 }
 
 #undef LOG

@@ -6,7 +6,7 @@ import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
   getSourceFromId,
-  getSourceWithContent,
+  getSourceTextContent,
   getSourceContent,
   getGeneratedSource,
   getSourcesEpoch,
@@ -137,9 +137,9 @@ export const loadSourceText = memoizeableAction("loadSourceText", {
       return null;
     }
 
-    const { content } = getSourceWithContent(getState(), source.id);
-    if (!content || content.state === "pending") {
-      return content;
+    const sourceTextContent = getSourceTextContent(getState(), source.id);
+    if (!sourceTextContent || sourceTextContent.state === "pending") {
+      return sourceTextContent;
     }
 
     // This currently swallows source-load-failure since we return fulfilled

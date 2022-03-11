@@ -73,7 +73,7 @@ export function createPrettySource(cx, sourceId) {
       source.thread
     );
 
-    dispatch({ type: "ADD_SOURCE", cx, source: prettySource });
+    dispatch({ type: "ADD_SOURCES", cx, sources: [prettySource] });
 
     await dispatch(selectSource(cx, id));
 

@@ -9,6 +9,8 @@ use std::ffi::c_void;
 pub enum OriginTrial {
     // NOTE(emilio): 0 is reserved for WebIDL usage.
     TestTrial = 1,
+
+    MAX,
 }
 
 impl OriginTrial {

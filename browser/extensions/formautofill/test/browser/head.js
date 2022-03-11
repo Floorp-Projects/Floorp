@@ -12,7 +12,7 @@
             sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
-            getNotification, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
+            getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
 
 "use strict";
 
@@ -476,6 +476,10 @@ function getNotification(index = 0) {
   ok(!!notifications.length, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   return notifications[index];
+}
+
+function promiseNotificationShown() {
+  return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 }
 
 /**

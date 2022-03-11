@@ -1223,10 +1223,10 @@ struct BaseCompiler final {
   // at the end of a series of catch blocks (if none matched the exception).
   [[nodiscard]] bool throwFrom(RegRef exn, uint32_t lineOrBytecode);
 
-  // Load the specified tag object from the TlsData.
+  // Load the specified tag object from the Instance.
   void loadTag(RegPtr tlsData, uint32_t tagIndex, RegRef tagDst);
 
-  // Load the pending exception state from the TlsData and then reset it.
+  // Load the pending exception state from the Instance and then reset it.
   void consumePendingException(RegRef* exnDst, RegRef* tagDst);
 #endif
 

@@ -34,7 +34,7 @@ import {
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
   getContext,
-  isSourceLoadingOrLoaded,
+  getSourceTextContent,
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
@@ -290,7 +290,7 @@ export function newGeneratedSources(sourceResources) {
       // when the HTML file has started loading
       if (
         isInlineScript(newSourceActor) &&
-        isSourceLoadingOrLoaded(getState(), newSourceActor.source)
+        getSourceTextContent(getState(), newSourceActor.source) != null
       ) {
         dispatch(setBreakableLines(cx, newSourceActor.source)).catch(error => {
           if (!(error instanceof ContextError)) {

@@ -17,9 +17,13 @@
 #include "js/Id.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
+
+namespace wasm {
+class Instance;
+}
+
 namespace jit {
 
 enum class FrameType;
@@ -162,7 +166,7 @@ struct ResumeFromException {
   uint8_t* stackPointer;
   uint8_t* target;
   uint32_t kind;
-  wasm::TlsData* tlsData;
+  wasm::Instance* tlsData;
 
   // Value to push when resuming into a |finally| block.
   // Also used by Wasm to send the exception object to the throw stub.

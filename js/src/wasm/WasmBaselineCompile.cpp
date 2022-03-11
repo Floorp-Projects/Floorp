@@ -293,24 +293,24 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 
 #ifdef JS_CODEGEN_X86
 void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
   MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
   fr.loadTlsPtr(regForTls);
-  masm.store32(r.low, Address(regForTls, offsetof(TlsData, baselineScratch)));
+  masm.store32(r.low, Address(regForTls, Instance::offsetOfBaselineScratch()));
   masm.store32(r.high,
-               Address(regForTls, offsetof(TlsData, baselineScratch) + 4));
+               Address(regForTls, Instance::offsetOfBaselineScratch() + 4));
 }
 
 void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
   fr.loadTlsPtr(regForTls);
   if (regForTls == r.low) {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch() + 4),
                 r.high);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
+    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch()), r.low);
   } else {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch()), r.low);
+    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch() + 4),
                 r.high);
   }
 }
@@ -1423,7 +1423,7 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
 
 void BaseCompiler::loadTag(RegPtr tlsData, uint32_t tagIndex, RegRef tagDst) {
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  size_t offset = offsetof(TlsData, globalArea) + tagDesc.globalDataOffset;
+  size_t offset = Instance::offsetOfGlobalArea() + tagDesc.globalDataOffset;
   masm.loadPtr(Address(tlsData, offset), tagDst);
 }
 
@@ -1431,14 +1431,14 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   RegPtr pendingAddr = RegPtr(PreBarrierReg);
   needPtr(pendingAddr);
   masm.computeEffectiveAddress(
-      Address(WasmTlsReg, offsetof(TlsData, pendingException)), pendingAddr);
+      Address(WasmTlsReg, Instance::offsetOfPendingException()), pendingAddr);
   *exnDst = needRef();
   masm.loadPtr(Address(pendingAddr, 0), *exnDst);
   emitBarrieredClear(pendingAddr);
 
   *tagDst = needRef();
   masm.computeEffectiveAddress(
-      Address(WasmTlsReg, offsetof(TlsData, pendingExceptionTag)), pendingAddr);
+      Address(WasmTlsReg, Instance::offsetOfPendingExceptionTag()), pendingAddr);
   masm.loadPtr(Address(pendingAddr, 0), *tagDst);
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
@@ -1888,7 +1888,7 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 // Global variable access.
 
 Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp) {
-  uint32_t globalToTlsOffset = offsetof(TlsData, globalArea) + global.offset();
+  uint32_t globalToTlsOffset = Instance::offsetOfGlobalArea() + global.offset();
   fr.loadTlsPtr(tmp);
   if (global.isIndirect()) {
     masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);
@@ -3825,9 +3825,9 @@ bool BaseCompiler::emitDelegate() {
   tryNote.entryPoint = tryNote.end;
   tryNote.framePushed = masm.framePushed();
 
-  // Store the TlsData that was left in WasmTlsReg by the exception handling
-  // mechanism, that is this frame's TlsData but with the exception filled in
-  // TlsData::pendingException.
+  // Store the Instance that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's Instance but with the exception filled in
+  // Instance::pendingException.
   fr.storeTlsPtr(WasmTlsReg);
 
   // If the target block is a non-try block, skip over it and find the next
@@ -3913,12 +3913,12 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     tryNote.end = tryNote.entryPoint;
   }
 
-  // Store the TlsData that was left in WasmTlsReg by the exception handling
-  // mechanism, that is this frame's TlsData but with the exception filled in
-  // TlsData::pendingException.
+  // Store the Instance that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's Instance but with the exception filled in
+  // Instance::pendingException.
   fr.storeTlsPtr(WasmTlsReg);
 
-  // Load exception pointer from TlsData and make sure that it is
+  // Load exception pointer from Instance and make sure that it is
   // saved before the following call will clear it.
   RegRef exn;
   RegRef tag;

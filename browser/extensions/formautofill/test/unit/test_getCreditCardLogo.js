@@ -10,7 +10,7 @@ add_task(async function test_getCreditCardLogo() {
   // Credit card logos can be either PNG or SVG
   // so we construct an array that includes both of these file extensions
   // and test to see if the logo from getCreditCardLogo matches.
-  for (let network of CreditCard.SUPPORTED_NETWORKS) {
+  for (let network of CreditCard.getSupportedNetworks()) {
     const PATH_PREFIX = "chrome://formautofill/content/third-party/cc-logo-";
     let actual = CreditCard.getCreditCardLogo(network);
     Assert.ok(

@@ -50,8 +50,30 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             app, binary, profile_class="firefox", **kwargs
         )
         self.config.update({"activity": activity, "intent": intent})
-        self.remote_test_root = None
         self.remote_profile = None
+
+    def _initialize_device(self):
+        if self.device is None:
+            self.device = ADBDeviceFactory(verbose=True)
+            if not self.config.get("disable_perf_tuning", False):
+                tune_performance(self.device, log=LOG)
+
+    @property
+    def android_external_storage(self):
+        if self._remote_test_root is None:
+            self._initialize_device()
+
+            external_storage = self.device.shell_output("echo $EXTERNAL_STORAGE")
+            self._remote_test_root = os.path.join(
+                external_storage,
+                "Android",
+                "data",
+                self.config["binary"],
+                "files",
+                "test_root",
+            )
+
+        return self._remote_test_root
 
     @property
     def browsertime_args(self):
@@ -159,25 +181,15 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         self.remove_mozprofile_delimiters_from_profile()
 
     def setup_adb_device(self):
-        if self.device is None:
-            self.device = ADBDeviceFactory(verbose=True)
-            if not self.config.get("disable_perf_tuning", False):
-                tune_performance(self.device, log=LOG)
+        self._initialize_device()
 
         self.clear_app_data()
         self.set_debug_app_flag()
         self.device.run_as_package = self.config["binary"]
-        external_storage = self.device.shell_output("echo $EXTERNAL_STORAGE")
-        self.remote_test_root = os.path.join(
-            external_storage,
-            "Android",
-            "data",
-            self.config["binary"],
-            "files",
-            "test_root",
-        )
+
         self.geckodriver_profile = os.path.join(
-            self.remote_test_root, "%s-geckodriver-profile" % self.config["binary"]
+            self.android_external_storage,
+            "%s-geckodriver-profile" % self.config["binary"],
         )
 
         # make sure no remote profile exists

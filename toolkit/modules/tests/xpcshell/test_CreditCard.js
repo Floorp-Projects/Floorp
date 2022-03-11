@@ -402,7 +402,7 @@ add_task(async function test_label() {
 });
 
 add_task(async function test_network() {
-  let supportedNetworks = CreditCard.SUPPORTED_NETWORKS;
+  let supportedNetworks = CreditCard.getSupportedNetworks();
   Assert.ok(
     supportedNetworks.length,
     "There are > 0 supported credit card networks"
@@ -435,7 +435,7 @@ add_task(async function test_network() {
 });
 
 add_task(async function test_isValidNetwork() {
-  for (let network of CreditCard.SUPPORTED_NETWORKS) {
+  for (let network of CreditCard.getSupportedNetworks()) {
     Assert.ok(CreditCard.isValidNetwork(network), "supported network is valid");
   }
   Assert.ok(!CreditCard.isValidNetwork(), "undefined is not a valid network");

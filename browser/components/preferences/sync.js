@@ -5,7 +5,7 @@
 /* import-globals-from preferences.js */
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
 const FXA_PAGE_LOGGED_OUT = 0;

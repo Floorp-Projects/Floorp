@@ -9,6 +9,10 @@
 #include "nsISupportsImpl.h"
 #include "nsIThread.h"
 
+namespace mozilla::baseprofiler {
+class BaseProfilerThreadId;
+}
+using ProfilerThreadId = mozilla::baseprofiler::BaseProfilerThreadId;
 class nsISerialEventTarget;
 class nsIThread;
 
@@ -43,6 +47,9 @@ class CompositorThreadHolder final {
 
   // Returns true if the calling thread is the compositor thread.
   static bool IsInCompositorThread();
+
+  // Thread id to use as a MarkerThreadId option for profiler markers.
+  static ProfilerThreadId GetThreadId();
 
  private:
   ~CompositorThreadHolder();

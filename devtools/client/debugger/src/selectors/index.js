@@ -25,6 +25,7 @@ export * from "./project-text-search";
 export * from "./quick-open";
 export * from "./source-actors";
 export * from "./source-tree";
+export * from "./sources-content";
 export * from "./sources";
 export * from "./tabs";
 export * from "./threads";

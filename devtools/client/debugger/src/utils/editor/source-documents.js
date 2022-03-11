@@ -122,7 +122,7 @@ function setMode(editor, source, content, symbols) {
   // Disable modes for minified files with 1+ million characters Bug 1569829
   if (
     content.type === "text" &&
-    isMinified(source) &&
+    isMinified(source, content) &&
     content.value.length > 1000000
   ) {
     return;
